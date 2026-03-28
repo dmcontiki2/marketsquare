@@ -1,0 +1,33 @@
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Emacs
+*.swp
+*.swo
+*~
+\#*\#
+
+# Node (if ever added)
+node_modules/
+npm-debug.log*
+
+# Temp / OS
+*.tmp
+*.bak
+*.log
+.DS_Store
