@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MarketSquare · Pretoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║  MarketSquare v8 · Single-File Architecture                  ║
+║                                                              ║
+║  STRUCTURE:                                                  ║
+║  1. DATA LAYER  (this script block)  ← Grok edits here      ║
+║  2. STYLES      (CSS)                ← Claude edits here     ║
+║  3. UI SCREENS  (HTML)               ← Claude edits here     ║
+║  4. LOGIC       (JS)                 ← Claude edits here     ║
+║                                                              ║
+║  PHASE 2: Replace DATA LAYER with Google Sheets API fetch    ║
+║  when live seller count exceeds ~50 listings.                ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- ════════════════════════════════════════════════════════════
+     ■ DATA LAYER
+       Edit listings, sellers and prospects here only.
+       Do not touch anything below the closing </script> tag.
+     ════════════════════════════════════════════════════════════ -->
+<script id="ms-data">
+
+// ── CATEGORY CONFIG ────────────────────────────────────────
+const CATS = {
+  Property: { icon: '🏡', bg: 'linear-gradient(140deg,#1e3a5f,#2a5298)', model: 'commit' },
+  Tutors:   { icon: '🎓', bg: 'linear-gradient(140deg,#14532d,#15803d)', model: 'queue'  },
+  Services: { icon: '⚙️', bg: 'linear-gradient(140deg,#7c2d12,#b45309)', model: 'queue'  }
+};
+
+// ── PROPERTY PHOTOS ────────────────────────────────────────
+// Replace with real Pretoria property photos when available.
+const PROP_PHOTOS = [
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80',
+  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80',
+  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80',
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&q=80',
+];
+
+// ── LISTINGS ───────────────────────────────────────────────
+// To add a listing: copy any block, increment id, set sellerIdx
+// to the matching SELLERS entry. photo: null = emoji fallback.
+const LISTINGS = [
+  {
+    id: 0, cat: 'Property', feat: true,
+    title: 'Modern Penthouse — Waterkloof',
+    area: 'Waterkloof, Pretoria', suburb: 'Waterkloof',
+    trust: 91, price: 'R18,500,000', per: '', priceNum: 18500000,
+    propType: 'Apartment', beds: 4, baths: 3, garages: 3,
+    desc: '4-bedroom penthouse. 380sqm. Panoramic city views. Private rooftop terrace, 3-car garage, 24/7 security.',
+    photo: PROP_PHOTOS[0], paused: false, queueCount: 0, sellerIdx: 0
+  },
+  {
+    id: 1, cat: 'Property', feat: false,
+    title: 'Family Home — Centurion',
+    area: 'Centurion, Pretoria', suburb: 'Centurion',
+    trust: 76, price: 'R4,200,000', per: '', priceNum: 4200000,
+    propType: 'House', beds: 4, baths: 3, garages: 2,
+    desc: '4-bed, 3-bath in a secure estate. Double garage, solar geyser, large garden.',
+    photo: PROP_PHOTOS[1], paused: true, queueCount: 0, sellerIdx: 1
+  },
+  {
+    id: 2, cat: 'Tutors', feat: true,
+    title: 'Maths & Science — Matric & University',
+    area: 'Pretoria East', suburb: 'Pretoria East',
+    trust: 94, price: 'R350', per: '/ hour', priceNum: 350,
+    subject: 'Maths & Science', level: 'Matric', mode: 'In-person',
+    desc: '14 years teaching. 98% matric pass rate. IEB and NSC. Available Centurion and Pretoria East.',
+    photo: null, paused: false, queueCount: 3, sellerIdx: 2
+  },
+  {
+    id: 3, cat: 'Tutors', feat: false,
+    title: 'Economics Tutor — UNISA & UP',
+    area: 'Pretoria CBD', suburb: 'Pretoria CBD',
+    trust: 86, price: 'R420', per: '/ hour', priceNum: 420,
+    subject: 'Economics', level: 'University', mode: 'Online',
+    desc: 'PhD Economics. Micro, macro and econometrics. Flexible scheduling.',
+    photo: null, paused: false, queueCount: 2, sellerIdx: 3
+  },
+  {
+    id: 4, cat: 'Services', feat: true,
+    title: 'Registered Electrician — COC',
+    area: 'Pretoria North', suburb: 'Pretoria North',
+    trust: 88, price: 'R850', per: '/ hour', priceNum: 850,
+    serviceType: 'Electrical', availability: 'Weekdays',
+    desc: '20+ years experience. Fault finding, solar integration, DB board upgrades. COC issued.',
+    photo: null, paused: false, queueCount: 2, sellerIdx: 4
+  },
+  {
+    id: 5, cat: 'Services', feat: false,
+    title: 'Bookkeeping & Tax — SARS Reg.',
+    area: 'Menlyn, Pretoria', suburb: 'Menlyn',
+    trust: 79, price: 'R1,200', per: '/ month', priceNum: 1200,
+    serviceType: 'Financial', availability: 'Weekdays',
+    desc: 'Monthly bookkeeping, VAT returns, provisional tax, CIPC filings.',
+    photo: null, paused: false, queueCount: 1, sellerIdx: 5
+  },
+];
+
+// ── SELLERS ────────────────────────────────────────────────
+// Anonymous CV data. sellerIdx must match LISTINGS[n].sellerIdx.
+// Identity (name, contact) is never stored here — only credentials.
+const SELLERS = [
+  {
+    idx: 0, cat: 'Property',
+    headline: 'Waterkloof & Pretoria East Residential Specialist',
+    about: '12 years focused on the Waterkloof and Pretoria East corridor. Deep knowledge of estate regulations, sectional title law, and market pricing.',
+    stats: [
+      { val: 'R420M+', label: 'Property sold'        },
+      { val: '12yrs',  label: 'Pretoria market'       },
+      { val: '98%',    label: 'Listing success rate'  },
+      { val: '34',     label: 'Active mandates'       }
+    ],
+    creds: [
+      { icon: '📋', label: 'Registered Estate Agent (PPRA)', sub: 'Full status'       },
+      { icon: '🏆', label: 'Top Performer 2023',             sub: 'Pretoria region'   },
+      { icon: '🎓', label: 'NQF Level 4 Real Estate',        sub: 'With distinction'  }
+    ],
+    tags: ['Waterkloof','Pretoria East','Luxury Residential','Sectional Title','Security Estates'],
+    avail: [
+      { day: 'Mon–Fri',  time: '08:00–17:00'    },
+      { day: 'Saturday', time: '09:00–13:00'    },
+      { day: 'Sunday',   time: 'By appointment' }
+    ],
+    portfolio: [PROP_PHOTOS[0], PROP_PHOTOS[1], PROP_PHOTOS[2]]
+  },
+  {
+    idx: 1, cat: 'Property',
+    headline: 'Centurion Family Homes & Estate Living',
+    about: 'Specialist in Centurion residential property with a focus on family homes, secure estates, and new developments.',
+    stats: [
+      { val: 'R180M+', label: 'Property sold'      },
+      { val: '8yrs',   label: 'Active in Centurion' },
+      { val: '47',     label: 'Deals closed 2024'  },
+      { val: '4.9★',   label: 'Buyer satisfaction' }
+    ],
+    creds: [
+      { icon: '📋', label: 'Registered Estate Agent (PPRA)', sub: 'Full status'              },
+      { icon: '🏘️', label: 'Centurion Estate Specialist',    sub: 'Accredited by 3 estates'  },
+      { icon: '🎓', label: 'Property Law Certificate',       sub: 'UNISA 2019'               }
+    ],
+    tags: ['Centurion','Family Homes','Secure Estates','New Developments','Buy-to-Let'],
+    avail: [
+      { day: 'Mon–Fri',  time: '08:30–17:30' },
+      { day: 'Saturday', time: '09:00–14:00' },
+      { day: 'Sunday',   time: 'Closed'      }
+    ],
+    portfolio: [PROP_PHOTOS[1], PROP_PHOTOS[2], PROP_PHOTOS[0]]
+  },
+  {
+    idx: 2, cat: 'Tutors',
+    headline: 'Senior Maths & Physical Science — 14 Years Teaching',
+    about: 'Experienced educator specialising in Grades 10–12 Maths and Physical Science. Structured, exam-focused approach with proven results across IEB and NSC curricula.',
+    stats: [
+      { val: '98%',   label: 'Matric pass rate'    },
+      { val: '14yrs', label: 'Teaching experience' },
+      { val: '340+',  label: 'Students tutored'    },
+      { val: '4.97★', label: 'Average rating'      }
+    ],
+    creds: [
+      { icon: '🎓', label: 'BSc Mathematics (UP)',        sub: 'With distinction'        },
+      { icon: '📘', label: 'PGCE — Secondary Education', sub: 'University of Pretoria'  },
+      { icon: '✅', label: 'IEB & NSC Certified',         sub: 'Registered with SACE'   }
+    ],
+    tags: ['Grade 10–12 Maths','Physical Science','IEB','NSC','First-year University','Exam Prep'],
+    avail: [
+      { day: 'Mon–Thu',  time: '14:00–19:00' },
+      { day: 'Saturday', time: '08:00–13:00' },
+      { day: 'Sunday',   time: 'Closed'      }
+    ],
+    portfolio: []
+  },
+  {
+    idx: 3, cat: 'Tutors',
+    headline: 'PhD Economics — Micro, Macro & Econometrics',
+    about: 'Postgraduate Economics specialist with a PhD from UNISA. Advanced tutoring for Honours and Masters students covering microeconomics, macroeconomics and econometrics.',
+    stats: [
+      { val: 'PhD',   label: 'Economics — UNISA'  },
+      { val: '9yrs',  label: 'Postgrad tutoring'  },
+      { val: '120+',  label: 'Postgrad students'  },
+      { val: '4.95★', label: 'Average rating'     }
+    ],
+    creds: [
+      { icon: '🎓', label: 'PhD Economics — UNISA',   sub: 'Monetary policy thesis'        },
+      { icon: '📊', label: 'Econometrics Specialist', sub: 'EViews, Stata, R'              },
+      { icon: '📝', label: 'Published Researcher',    sub: '3 peer-reviewed publications'  }
+    ],
+    tags: ['Microeconomics','Macroeconomics','Econometrics','Honours','Masters','UNISA','UP'],
+    avail: [
+      { day: 'Tue & Thu', time: '18:00–20:30'   },
+      { day: 'Saturday',  time: '09:00–12:00'   },
+      { day: 'Other',     time: 'By arrangement' }
+    ],
+    portfolio: []
+  },
+  {
+    idx: 4, cat: 'Services',
+    headline: 'Master Electrician — 20+ Years · COC Issued',
+    about: 'Fully qualified and registered Master Electrician with over 20 years experience in residential, commercial, and solar installations across Pretoria.',
+    stats: [
+      { val: '20yrs+', label: 'Experience'      },
+      { val: '1,200+', label: 'Installations'   },
+      { val: '100%',   label: 'COC compliance'  },
+      { val: '4.9★',   label: 'Client rating'   }
+    ],
+    creds: [
+      { icon: '⚡', label: 'Master Electrician — DoL Registered', sub: 'Registration on file'  },
+      { icon: '🔆', label: 'Solar PV Installer',                  sub: 'SAPVIA accredited'     },
+      { icon: '🛡️', label: 'ECSA Registered',                     sub: 'Engineering Council SA' }
+    ],
+    tags: ['Fault Finding','New Installations','DB Board Upgrades','Solar Integration','COC','Pretoria North'],
+    avail: [
+      { day: 'Mon–Fri',   time: '07:00–17:00' },
+      { day: 'Saturday',  time: '07:00–13:00' },
+      { day: 'Emergency', time: 'On request'  }
+    ],
+    portfolio: []
+  },
+  {
+    idx: 5, cat: 'Services',
+    headline: 'SARS Registered Tax Practitioner — SME Bookkeeping',
+    about: 'Registered Tax Practitioner with 11 years experience serving SMEs and sole traders. Handles full bookkeeping, VAT returns, provisional tax, and CIPC returns.',
+    stats: [
+      { val: '11yrs',  label: 'In practice'   },
+      { val: '85+',    label: 'Active clients' },
+      { val: 'R2.4M+', label: 'Tax savings'   },
+      { val: '4.9★',   label: 'Client rating'  }
+    ],
+    creds: [
+      { icon: '📊', label: 'SARS Registered Tax Practitioner', sub: 'Registration on file'      },
+      { icon: '🎓', label: 'BCom Accounting — TUT',            sub: 'Graduated 2012'            },
+      { icon: '📋', label: 'SAIPA Member',                     sub: 'Professional Accountants SA' }
+    ],
+    tags: ['Bookkeeping','VAT Returns','Provisional Tax','CIPC','Payroll','SME','Xero','Sage'],
+    avail: [
+      { day: 'Mon–Fri',    time: '08:00–17:00'   },
+      { day: 'Saturday',   time: 'By appointment' },
+      { day: 'Tax season', time: 'Extended hours' }
+    ],
+    portfolio: []
+  },
+];
+
+// ── CITY DEPLOYMENT PROSPECTS ──────────────────────────────
+// status options: 'prospect' | 'invited' | 'joined'
+const PROSPECTS = {
+  Property: [
+    { name: 'Pam Golding Pretoria', city: 'Pretoria', status: 'joined'   },
+    { name: 'RE/MAX Centurion',     city: 'Pretoria', status: 'invited'  },
+    { name: 'Seeff Pretoria East',  city: 'Pretoria', status: 'prospect' }
+  ],
+  Tutors: [
+    { name: 'Mrs T. Nkosi',   city: 'Pretoria East', status: 'joined'   },
+    { name: 'Lerato Dlamini', city: 'Sunnyside',     status: 'invited'  },
+    { name: 'Maria Ferreira', city: 'Centurion',     status: 'prospect' }
+  ],
+  Services: [
+    { name: 'Botha Electrical',   city: 'Pretoria North', status: 'joined'   },
+    { name: 'Swart IT',           city: 'Pretoria East',  status: 'invited'  },
+    { name: 'GreenScape Gauteng', city: 'Pretoria',       status: 'prospect' }
+  ]
+};
+
+// ── SELLER PROFILE PHOTOS ─────────────────────────────────
+// Stored as base64 after seller uploads. null = emoji fallback.
+// Displayed blurred on buyer CV views, sharp on own dashboard view.
+// Unblurred per-listing when introduction is accepted.
+const SELLER_PHOTOS = [null, null, null, null, null, null];
+
+// Track which seller+listing intros have been accepted (for blur reveal)
+const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
+
+// When live seller count exceeds ~50, replace this entire
+// DATA LAYER block with a single fetch() call:
+//
+// async function loadData() {
+//   const res = await fetch(GOOGLE_SHEETS_API_URL);
+//   const json = await res.json();
+//   LISTINGS = json.listings;
+//   SELLERS  = json.sellers;
+// }
+//
+// See Solar Council Codex v1.3 §Backend for full spec.
+// ──────────────────────────────────────────────────────────
+
+</script>
+<!-- ════════════════════════════════════════════════════════════
+     ■ END DATA LAYER
+     ════════════════════════════════════════════════════════════ -->
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   ■ STYLES — Claude edits this section
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f4f5f7;--surface:#ffffff;--surface-2:#eef0f3;--border:#e2e5ea;
+  --text:#111827;--text-2:#4b5563;--text-3:#9ca3af;
+  --accent:#1e3a5f;--accent-light:#eef2f8;
+  --navy:#111827;--navy-light:#1e3a5f;
+  --green:#065f46;--green-bg:#d1fae5;
+  --red:#991b1b;--red-bg:#fee2e2;
+  --blue:#1d4ed8;--blue-bg:#dbeafe;
+  --gold:#92400e;--gold-bg:#fef3c7;
+  --purple:#5b21b6;--purple-bg:#ede9fe;
+  --r:10px;--r-sm:6px;
+  --sh:0 1px 2px rgba(0,0,0,.04),0 3px 10px rgba(0,0,0,.04);
+  --sh-md:0 2px 6px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
+  --t:.15s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-serif;}
+/* Stat values: Syne only when large (hero context), Inter for card-level stats */
+.stat-val{font-size:18px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;}
+.dstat-val{font-size:22px;font-weight:700;font-family:'Inter',sans-serif;}
+.screen{display:none;min-height:100vh;padding-bottom:72px;}
+.screen.active{display:block;animation:fadeUp .18s ease;}
+#screen-detail,#screen-seller-cv{padding-bottom:160px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding:8px 0 max(env(safe-area-inset-bottom),8px);}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--text-3);font-size:10px;font-weight:600;font-family:'Inter',sans-serif;border:none;background:none;transition:color var(--t);}
+.nb svg{width:20px;height:20px;stroke-width:1.8;}
+.nb.active{color:var(--accent);}
+.nb.sell-btn{color:#fff;background:#111827;border-radius:10px;margin:0 5px;padding:4px 0;}
+.nb.sell-btn svg{stroke:#fff;}
+.tn-widget{position:relative;}
+.tn-badge{position:absolute;top:-2px;right:2px;background:var(--accent);color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid var(--surface);}
+.home-hero{background:#111827;padding:36px 20px 10px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.06);}
+.home-hero::before{display:none;}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0;position:relative;z-index:1;}
+.hero-logo{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
+.city-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:4px 10px;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:'Inter',sans-serif;}
+.cdot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#fbbf24;}
+.hero-body{position:relative;z-index:1;}
+.hero-eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:500;margin-bottom:10px;font-family:'Inter',sans-serif;}
+.home-hero h1{font-size:30px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:8px;letter-spacing:-.3px;}
+.home-hero p{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:0;line-height:1.6;font-weight:400;}
+
+
+.cpb{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 16px;}
+.cpb-label{font-size:10px;font-weight:600;color:var(--text-2);margin-bottom:3px;display:flex;justify-content:space-between;}
+.cpb-label span{color:var(--accent);}
+.cpb-track{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+.cpb-track:last-child{margin-bottom:0;}
+.cpb-cat{font-size:11px;font-weight:600;width:62px;color:var(--text-2);}
+.cpb-bar{flex:1;height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;}
+.cpb-fill{height:100%;border-radius:3px;background:var(--accent);}
+.cpb-count{font-size:11px;font-weight:600;color:var(--text-3);width:32px;text-align:right;}
+.stats-row{display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
+.stat{flex:1;padding:6px 8px;text-align:center;border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat-val{font-size:15px;font-weight:800;color:var(--navy);}
+.stat-label{font-size:9px;color:var(--text-3);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-top:1px;}
+.sec-head{display:flex;justify-content:space-between;align-items:center;padding:7px 14px 4px;}
+.sec-head h2{font-size:15px;font-weight:700;}
+.sec-head a{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 12px 2px;}
+.cat-tile{border-radius:var(--r);overflow:hidden;aspect-ratio:2/1;position:relative;cursor:pointer;transition:transform var(--t);}
+.cat-tile:active{transform:scale(.97);}
+.cat-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.cat-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px;}
+.cat-name{color:#fff;font-size:11px;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.2px;}
+.cat-count{color:rgba(255,255,255,.5);font-size:9px;margin-top:2px;font-weight:400;}
+.hscroll{display:flex;gap:8px;padding:0 12px 4px;overflow-x:auto;scrollbar-width:none;}
+.hscroll::-webkit-scrollbar{display:none;}
+.hcard{flex-shrink:0;width:155px;background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:none;cursor:pointer;border:1px solid var(--border);transition:border-color var(--t);}
+.hcard:active{border-color:#9ca3af;}
+.page-hdr{padding:52px 20px 14px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-hdr h1{font-size:22px;font-weight:800;letter-spacing:-.3px;}
+.page-hdr .sub{font-size:13px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.srchwrap{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:50px;padding:11px 16px;margin-top:12px;border:1.5px solid transparent;transition:border-color var(--t);}
+.srchwrap:focus-within{border-color:var(--accent);}
+.srchwrap svg{color:var(--text-3);width:14px;height:14px;flex-shrink:0;}
+.srchwrap input{border:none;background:transparent;font-family:'Inter',sans-serif;font-size:14px;width:100%;outline:none;color:var(--text);}
+.srchwrap input::placeholder{color:var(--text-3);}
+.chips{display:flex;gap:7px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);transition:all var(--t);white-space:nowrap;}
+.chip.active{background:#111827;border-color:#111827;color:#fff;}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 14px 8px;}
+.lcard{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:none;cursor:pointer;border:1px solid var(--border);transition:box-shadow var(--t),border-color var(--t);}
+.lcard.paused{opacity:.45;pointer-events:none;}
+.lcard:active{border-color:#9ca3af;box-shadow:var(--sh);}
+.lcard .ibox{height:118px;position:relative;overflow:hidden;}
+.lcard .ibox img{width:100%;height:100%;object-fit:cover;display:block;}
+.lcard .ibox .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;}
+.feat-badge{position:absolute;top:7px;left:7px;background:rgba(17,24,39,.72);color:rgba(255,255,255,.9);font-size:8px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 7px;border-radius:3px;font-family:'Inter',sans-serif;backdrop-filter:blur(4px);}
+.paused-badge{position:absolute;top:7px;left:7px;background:var(--gold);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;font-family:'Inter',sans-serif;}
+.model-badge{position:absolute;bottom:6px;right:6px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;font-family:'Inter',sans-serif;}
+.model-badge.commit{background:var(--gold-bg);color:var(--gold);}
+.model-badge.queue{background:var(--purple-bg);color:var(--purple);}
+.wish-btn{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.wish-btn svg{width:13px;height:13px;stroke:var(--text-3);}
+.wish-btn.saved svg{fill:var(--accent);stroke:var(--accent);}
+.cbody{padding:10px 11px 12px;}
+.ccat{font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);margin-bottom:3px;}
+.ctitle{font-size:13px;font-weight:600;line-height:1.35;color:var(--text);margin-bottom:3px;}
+.cloc{font-size:11px;color:var(--text-3);margin-bottom:6px;font-weight:400;}
+.cbot{display:flex;justify-content:space-between;align-items:center;}
+.cprice{font-size:13px;font-weight:700;color:var(--navy);}
+.cprice .per{font-size:10px;font-weight:400;color:var(--text-3);}
+.cprice .neg{font-size:11px;font-weight:500;color:var(--text-3);font-style:italic;}
+.tbadge{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;font-family:'Inter',sans-serif;}
+.seller-cv-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--navy);background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:3px 7px;margin-top:5px;cursor:pointer;transition:all var(--t);}
+.seller-cv-badge:active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.seller-cv-badge svg{width:10px;height:10px;}
+.dhero{position:relative;}
+.dhero .ibox{height:260px;overflow:hidden;position:relative;}
+.dhero .ibox img{width:100%;height:100%;object-fit:cover;display:block;}
+.dhero .ibox .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
+.dnav{position:absolute;top:0;left:0;right:0;padding:48px 16px 0;display:flex;justify-content:space-between;}
+.dib{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.dib svg{width:17px;height:17px;stroke:var(--text);}
+.dsheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px 20px 0;position:relative;z-index:2;}
+.dcat-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.dcat{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);padding:3px 8px;background:var(--accent-light);border-radius:4px;font-family:'Inter',sans-serif;}
+.dtitle{font-size:22px;font-weight:800;line-height:1.2;margin-bottom:10px;letter-spacing:-.3px;}
+.dmeta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.dmi{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:4px;font-weight:400;}
+.dmi svg{width:13px;height:13px;}
+.trust-block{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:var(--r-sm);margin-bottom:16px;border:1.5px solid;}
+.tscore{font-size:30px;font-weight:700;line-height:1;font-family:'Inter',sans-serif;}
+.tlabel{font-size:12px;font-weight:700;margin-top:2px;}
+.tsub{font-size:10px;opacity:.65;margin-top:2px;font-weight:400;}
+.tbar-wrap{flex:1;}
+.tbar{height:5px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-bottom:5px;}
+.tbar-fill{height:100%;border-radius:3px;}
+.tscale{font-size:9px;opacity:.6;line-height:1.5;font-family:'Inter',sans-serif;}
+.price-block{display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:16px;}
+.pamount{font-size:26px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;letter-spacing:-.3px;}
+.pper{font-size:12px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.pneg{font-size:15px;color:var(--text-2);font-style:italic;font-weight:400;}
+.dsec{margin-bottom:18px;}
+.dsec h3{font-size:14px;font-weight:700;margin-bottom:7px;}
+.dsec p{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;}
+.intro-model-block{border-radius:var(--r);padding:16px;margin-bottom:16px;}
+.intro-model-block.commit{background:var(--navy);}
+.intro-model-block.queue{background:var(--purple-bg);border:1.5px solid #c4b5fd;}
+.imb-label{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;padding:3px 8px;border-radius:4px;font-family:'Inter',sans-serif;}
+.imb-label.commit{background:var(--gold-bg);color:var(--gold);}
+.imb-label.queue{background:#fff;color:var(--purple);}
+.imb-title{font-size:14px;font-weight:700;margin-bottom:12px;}
+.commit .imb-title{color:#fff;}
+.queue .imb-title{color:var(--purple);}
+.commit-steps{display:flex;flex-direction:column;gap:0;}
+.cs{display:flex;align-items:flex-start;gap:10px;position:relative;padding-bottom:11px;}
+.cs:last-child{padding-bottom:0;}
+.cs::before{content:'';position:absolute;left:13px;top:24px;bottom:0;width:2px;background:rgba(255,255,255,.1);}
+.queue .cs::before{background:rgba(124,58,237,.15);}
+.cs:last-child::before{display:none;}
+.cs-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.cs-dot.buyer{background:var(--accent);}
+.cs-dot.system{background:rgba(255,255,255,.15);}
+.cs-dot.system.q{background:rgba(124,58,237,.2);}
+.cs-dot.seller{background:#1d4ed8;}
+.cs-dot.reveal{background:var(--green);}
+.cs-dot.penalty{background:var(--red);}
+.cs-dot.trust{background:var(--purple);}
+.cs-label{font-size:13px;font-weight:600;line-height:1.4;}
+.commit .cs-label{color:rgba(255,255,255,.9);}
+.queue .cs-label{color:var(--navy);}
+.cs-sub{font-size:11px;margin-top:2px;font-weight:400;}
+.commit .cs-sub{color:rgba(255,255,255,.45);}
+.queue .cs-sub{color:var(--purple);opacity:.7;}
+.anon-block{background:var(--surface-2);border:1.5px dashed var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:16px;text-align:center;}
+.anon-block .lock-icon{font-size:28px;margin-bottom:8px;}
+.anon-block h4{font-size:15px;font-weight:700;margin-bottom:4px;}
+.anon-block p{font-size:13px;color:var(--text-2);line-height:1.6;font-weight:400;}
+.sticky-cta{position:fixed;bottom:65px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);padding:12px 20px max(env(safe-area-inset-bottom),14px);border-top:1px solid var(--border);z-index:100;}
+.cta-btn{width:100%;border:none;border-radius:50px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--t);}
+.cta-btn.commit-cta{background:var(--accent);color:#fff;}
+.cta-btn.queue-cta{background:var(--purple);color:#fff;}
+.cta-btn:active{transform:scale(.98);}
+.cta-cost{font-size:11px;opacity:.8;margin-left:4px;font-weight:400;}
+.cv-hero{background:var(--navy);padding:52px 20px 28px;position:relative;overflow:hidden;}
+.cv-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(200,135,58,.08);}
+.cv-back{position:absolute;top:48px;left:16px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cv-back svg{width:16px;height:16px;stroke:#fff;}
+.cv-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px;position:relative;z-index:1;overflow:hidden;}
+.cv-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.cv-avatar img.blurred{filter:blur(8px);transform:scale(1.18);}
+.cv-avatar img.revealed{filter:none;transform:scale(1);transition:filter .6s ease,transform .6s ease;}
+.cv-mask{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--navy);}
+/* Larger blurred avatar for profile preview in dashboard */
+.cv-avatar-lg{width:88px;height:88px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.25);position:relative;flex-shrink:0;}
+.cv-avatar-lg img{width:100%;height:100%;object-fit:cover;}
+.cv-avatar-lg img.blurred{filter:blur(8px);transform:scale(1.18);}
+.cv-avatar-lg .cv-mask{bottom:-2px;right:-2px;width:22px;height:22px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--navy);position:absolute;}
+/* Photo upload in CV edit */
+.cv-photo-upload{border:2px dashed var(--border);border-radius:50%;width:88px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;background:var(--surface-2);transition:border-color var(--t);}
+.cv-photo-upload:hover{border-color:var(--accent);}
+.cv-photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.cv-photo-upload img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.cv-photo-upload .ph-label{font-size:10px;font-weight:600;color:var(--text-3);text-align:center;line-height:1.3;padding:0 6px;position:relative;z-index:1;}
+.cv-photo-edit-row{display:flex;align-items:center;gap:16px;margin-bottom:4px;}
+
+.cv-headline{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1.25;position:relative;z-index:1;}
+.cv-cat{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:14px;position:relative;z-index:1;letter-spacing:.3px;}
+.cv-trust-row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.cv-trust-num{font-size:28px;font-weight:700;line-height:1;font-family:'Inter',sans-serif;}
+.cv-trust-label{font-size:12px;font-weight:600;margin-top:2px;}
+.cv-trust-bar{flex:1;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;}
+.cv-trust-fill{height:100%;border-radius:2px;}
+.cv-body{padding:20px 20px 32px;background:var(--bg);}
+.cv-sec{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+.cv-sec-title{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-family:'Inter',sans-serif;}
+.cv-about{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;}
+.cv-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cv-stat{background:var(--surface-2);border-radius:var(--r-sm);padding:12px;text-align:center;}
+.cv-stat-val{font-size:22px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;letter-spacing:-.3px;}
+.cv-stat-label{font-size:12px;color:var(--text-2);margin-top:4px;font-weight:500;line-height:1.35;}
+.cv-creds{display:flex;flex-direction:column;gap:8px;}
+.cv-cred{display:flex;align-items:flex-start;gap:10px;}
+.cv-cred-dot{width:28px;height:28px;border-radius:50%;background:var(--accent-light);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
+.cv-cred-label{font-size:13px;font-weight:600;color:var(--text);}
+.cv-cred-sub{font-size:12px;color:var(--text-3);margin-top:2px;font-weight:400;}
+.cv-tags{display:flex;flex-wrap:wrap;gap:7px;}
+.cv-tag{background:var(--surface-2);border:1px solid var(--border);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--text-2);}
+.cv-avail{display:flex;flex-direction:column;gap:6px;}
+.cv-avail-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.cv-avail-row:last-child{border-bottom:none;}
+.cv-avail-day{font-size:13px;font-weight:600;}
+.cv-avail-time{font-size:12px;color:var(--text-3);font-weight:400;}
+.cv-avail-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.cv-portfolio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.cv-port-img{aspect-ratio:1;border-radius:var(--r-sm);overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.cv-port-img img{width:100%;height:100%;object-fit:cover;}
+.cv-identity-block{background:var(--navy);border-radius:var(--r-sm);padding:14px;display:flex;align-items:center;gap:12px;}
+.cv-identity-icon{font-size:22px;}
+.cv-identity-text h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
+.cv-identity-text p{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;font-weight:400;}
+.cv-sticky{position:fixed;bottom:65px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);padding:12px 20px max(env(safe-area-inset-bottom),14px);border-top:1px solid var(--border);}
+.cv-cta{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--t);}
+.cv-cta:active{transform:scale(.98);}
+#screen-onboard{background:var(--navy);min-height:100vh;}
+.ob-page{min-height:100vh;display:flex;flex-direction:column;}
+.ob-hero{padding:60px 24px 32px;flex:1;}
+.ob-logo{font-size:14px;font-weight:800;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:32px;font-family:'Syne',sans-serif;}
+.ob-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(200,135,58,.85);font-weight:600;margin-bottom:12px;font-family:'Inter',sans-serif;}
+.ob-hero h1{font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;}
+.ob-hero p{color:rgba(255,255,255,.55);font-size:14px;line-height:1.65;margin-bottom:28px;font-weight:400;}
+.ob-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.ob-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;}
+.ob-card-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+.ob-card h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
+.ob-card p{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;font-weight:400;}
+.ob-model-pills{display:flex;gap:8px;margin-bottom:28px;}
+.ob-model-pill{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-sm);padding:12px 8px;text-align:center;}
+.ob-model-pill .omp-icon{font-size:18px;margin-bottom:5px;}
+.ob-model-pill .omp-cat{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:3px;font-family:'Inter',sans-serif;}
+.ob-model-pill.commit .omp-cat{color:#fbbf24;}
+.ob-model-pill.queue .omp-cat{color:#c4b5fd;}
+.ob-model-pill .omp-desc{font-size:10px;color:rgba(255,255,255,.45);line-height:1.4;font-weight:400;}
+.ob-form{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px max(env(safe-area-inset-bottom),28px);}
+.ob-form h2{font-size:19px;font-weight:800;margin-bottom:4px;}
+.ob-form .osub{font-size:13px;color:var(--text-2);margin-bottom:20px;font-weight:400;}
+.ob-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.magic-banner{background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--r);padding:14px 16px;margin:16px 20px 0;display:flex;gap:12px;align-items:center;}
+.magic-banner svg{color:var(--accent);flex-shrink:0;width:20px;height:20px;}
+.magic-banner h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
+.magic-banner p{font-size:11px;color:rgba(255,255,255,.5);line-height:1.4;font-weight:400;}
+.magic-clear{font-size:10px;color:rgba(255,255,255,.35);cursor:pointer;margin-top:3px;text-decoration:underline;}
+.tn-header{background:var(--navy);padding:52px 20px 24px;color:#fff;}
+.tn-header h1{font-size:21px;font-weight:800;margin-bottom:3px;}
+.tn-header p{font-size:13px;opacity:.5;font-weight:400;}
+.tn-balance{display:flex;align-items:flex-end;gap:8px;margin-top:16px;}
+.tn-num{font-size:48px;font-weight:800;color:var(--accent);line-height:1;}
+.tn-unit{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:8px;font-weight:400;}
+.tn-usd{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:8px;font-weight:400;}
+.tn-body{padding:20px 20px 24px;}
+.tn-sec{margin-bottom:24px;}
+.tn-sec h2{font-size:15px;font-weight:700;margin-bottom:12px;}
+.tn-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.tn-row{display:flex;padding:11px 14px;border-bottom:1px solid var(--border);gap:8px;align-items:center;}
+.tn-row:last-child{border-bottom:none;}
+.tn-row-label{flex:1;font-size:13px;font-weight:500;}
+.tn-row-val{font-size:13px;font-weight:700;color:var(--accent);}
+.tn-row-sub{font-size:11px;color:var(--text-3);font-weight:400;}
+.topup-btns{display:flex;gap:8px;margin-top:12px;}
+.topup-btn{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 8px;text-align:center;cursor:pointer;transition:all var(--t);}
+.topup-btn:active{background:var(--accent-light);border-color:var(--accent);}
+.topup-btn .tb-val{font-size:17px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;}
+.topup-btn .tb-price{font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;}
+.model-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
+.mt-head{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--navy);padding:8px 10px;}
+.mt-head div{font-size:10px;font-weight:700;color:rgba(255,255,255,.7);text-align:center;font-family:'Inter',sans-serif;}
+.mt-head div:first-child{text-align:left;}
+.mt-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:9px 10px;border-bottom:1px solid var(--border);}
+.mt-row:last-child{border-bottom:none;}
+.mt-row div{font-size:12px;color:var(--text-2);text-align:center;font-weight:400;}
+.mt-row div:first-child{font-weight:600;color:var(--text);text-align:left;}
+.mt-row div.yes{color:var(--green);font-weight:700;}
+.mt-row div.no{color:var(--red);}
+.mt-row div.partial{color:var(--gold);font-weight:600;}
+.plans-header{background:var(--navy);padding:52px 20px 24px;color:#fff;text-align:center;}
+.plans-header h1{font-size:23px;font-weight:800;margin-bottom:6px;}
+.plans-header p{font-size:14px;opacity:.55;line-height:1.5;font-weight:400;}
+.plans-body{padding:20px 16px 32px;}
+.plan-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;position:relative;}
+.plan-card.recommended{border-color:var(--accent);background:var(--accent-light);}
+.plan-rec-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 12px;border-radius:50px;white-space:nowrap;font-family:'Inter',sans-serif;}
+.plan-name{font-size:17px;font-weight:800;margin-bottom:2px;}
+.plan-price{font-size:28px;font-weight:700;color:var(--navy);margin-bottom:4px;font-family:'Inter',sans-serif;letter-spacing:-.5px;}
+.plan-price .plan-period{font-size:13px;font-weight:400;color:var(--text-3);}
+.plan-zar{font-size:12px;color:var(--text-3);margin-bottom:14px;font-weight:400;}
+.plan-features{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
+.plan-feat{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-2);line-height:1.4;font-weight:400;}
+.plan-feat svg{width:14px;height:14px;flex-shrink:0;margin-top:2px;}
+.plan-feat.yes svg{stroke:var(--green);}
+.plan-feat.no svg{stroke:var(--text-3);}
+.plan-feat.no{color:var(--text-3);}
+.plan-btn{width:100%;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all var(--t);}
+.plan-btn.primary{background:var(--navy);color:#fff;}
+.plan-btn.secondary{background:transparent;border:1.5px solid var(--navy);color:var(--navy);}
+.plan-btn.accent{background:var(--accent);color:#fff;}
+.pub-phase{min-height:100vh;padding-bottom:80px;}
+.cat-big-tile{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all var(--t);}
+.cat-big-tile.selected{border-color:var(--accent);background:var(--accent-light);}
+.cat-big-tile:active{transform:scale(.98);}
+.cbt-icon{font-size:32px;flex-shrink:0;width:48px;text-align:center;}
+.cbt-body{flex:1;}
+.cbt-name{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:3px;font-family:'Syne',sans-serif;}
+.cbt-desc{font-size:12px;color:var(--text-2);margin-bottom:5px;font-weight:400;}
+.cbt-model{font-size:11px;font-weight:600;}
+.cbt-check{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0;transition:opacity var(--t);}
+.cat-big-tile.selected .cbt-check{opacity:1;}
+
+.pub-hdr{display:flex;align-items:center;gap:12px;padding:52px 20px 14px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.back-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.back-btn svg{width:16px;height:16px;stroke:var(--text);}
+.pub-hdr h1{font-size:19px;font-weight:800;}
+.steps{display:flex;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);}
+.sdot{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;}
+.sdot::after{content:'';position:absolute;top:9px;left:50%;right:-50%;height:2px;background:var(--border);z-index:0;}
+.sdot:last-child::after{display:none;}
+.snum{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--text-3);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;transition:all var(--t);}
+.sdot.active .snum{background:var(--accent);color:#fff;}
+.sdot.done .snum{background:var(--navy);color:#fff;}
+.slabel{font-size:9px;color:var(--text-3);font-weight:600;font-family:'Inter',sans-serif;}
+.sdot.active .slabel{color:var(--accent);}
+.sdot.done .slabel{color:var(--navy);}
+.pstep{display:none;padding:22px 20px;}
+.pstep.active{display:block;}
+.pstep-title{font-size:19px;font-weight:800;margin-bottom:4px;}
+.pstep-sub{font-size:14px;color:var(--text-2);margin-bottom:20px;font-weight:400;line-height:1.5;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;}
+.req{color:var(--accent);}
+.opt{font-size:11px;color:var(--text-3);font-weight:400;margin-left:3px;}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-family:'Inter',sans-serif;font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border-color var(--t);-webkit-appearance:none;line-height:1.5;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{height:96px;resize:none;}
+.hint{font-size:12px;color:var(--text-3);margin-top:4px;font-weight:400;}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;background:var(--surface);position:relative;}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.uz-icon{font-size:32px;margin-bottom:8px;}
+.uz-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.uz-sub{font-size:13px;color:var(--text-3);font-weight:400;}
+.uprev{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.uthumb{aspect-ratio:1;border-radius:var(--r-sm);overflow:hidden;position:relative;background:var(--surface-2);}
+.uthumb img{width:100%;height:100%;object-fit:cover;}
+.uthumb .rmv{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);border:none;cursor:pointer;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.cat-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.cat-opt{border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 8px;cursor:pointer;text-align:center;transition:all var(--t);background:var(--surface);}
+.cat-opt.sel{border-color:var(--accent);background:var(--accent-light);}
+.cat-opt .coi{font-size:22px;margin-bottom:5px;}
+.cat-opt .col{font-size:12px;font-weight:700;color:var(--text);}
+.cat-opt.sel .col{color:var(--accent);}
+.cat-model-hint{margin-top:14px;border-radius:var(--r-sm);padding:12px 13px;font-size:12px;line-height:1.6;display:none;font-weight:400;}
+.cat-model-hint.show{display:block;}
+.cat-model-hint.commit{background:var(--gold-bg);color:var(--gold);border:1px solid #fde68a;}
+.cat-model-hint.queue{background:var(--purple-bg);color:var(--purple);border:1px solid #c4b5fd;}
+.pub-footer{padding:14px 20px max(env(safe-area-inset-bottom),14px);background:var(--surface);border-top:1px solid var(--border);display:flex;gap:10px;position:fixed;bottom:65px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;}
+.btn-next{flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-bk{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;}
+.pub-success{display:none;flex-direction:column;align-items:center;padding:60px 30px;text-align:center;}
+.pub-success.show{display:flex;}
+.suc-icon{font-size:60px;margin-bottom:18px;}
+.pub-success h2{font-size:23px;font-weight:800;margin-bottom:8px;}
+.pub-success p{font-size:14px;color:var(--text-2);line-height:1.65;margin-bottom:22px;font-weight:400;}
+.btn-done{background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px 32px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.dash-hdr{background:var(--navy);padding:52px 20px 22px;color:#fff;}
+.dash-hdr h1{font-size:21px;font-weight:800;margin-bottom:3px;}
+.dash-hdr p{font-size:13px;opacity:.5;font-weight:400;}
+.dash-stats{display:flex;gap:10px;margin-top:14px;}
+.dstat{flex:1;background:rgba(255,255,255,.1);border-radius:var(--r-sm);padding:11px;text-align:center;}
+.dstat-val{font-size:22px;font-weight:800;}
+.dstat-label{font-size:10px;opacity:.6;margin-top:2px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;}
+.dash-sec{padding:18px 20px 0;}
+.dash-sec h2{font-size:15px;font-weight:700;margin-bottom:12px;}
+.mlcard{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:12px;display:flex;gap:11px;margin-bottom:10px;}
+.mlcard.paused-card{border-color:#fde68a;background:var(--gold-bg);}
+.mlcard.queue-card{border-color:#c4b5fd;background:var(--purple-bg);}
+.mlthumb{width:56px;height:56px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.mlthumb img{width:100%;height:100%;object-fit:cover;}
+.mlinfo{flex:1;min-width:0;}
+.mltitle{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mlcat{font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.3px;text-transform:uppercase;margin-top:2px;}
+.ml-status{display:inline-flex;align-items:center;gap:3px;margin-top:5px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'Inter',sans-serif;}
+.st-active{background:var(--green-bg);color:var(--green);}
+.st-paused{background:var(--gold-bg);color:var(--gold);}
+.st-queue{background:var(--purple-bg);color:var(--purple);}
+.ml-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.mla-btn{font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border:1.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-2);font-family:'Inter',sans-serif;}
+.mla-btn.danger{border-color:#fca5a5;color:var(--red);}
+.mla-btn.accent{border-color:var(--accent);color:var(--accent);}
+.mla-btn.purple{border-color:var(--purple);color:var(--purple);}
+.rec-hdr{background:var(--navy);padding:52px 20px 22px;color:#fff;}
+.rec-hdr h1{font-size:21px;font-weight:800;margin-bottom:3px;}
+.rec-hdr p{font-size:13px;opacity:.5;font-weight:400;}
+.rec-body{padding:16px 16px 24px;}
+.rec-cat-sec{margin-bottom:24px;}
+.rec-cat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.rec-cat-name{font-size:15px;font-weight:700;}
+.rec-prog{font-size:12px;font-weight:600;color:var(--accent);}
+.rec-pbar{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
+.rec-pfill{height:100%;border-radius:3px;background:var(--accent);}
+.rec-table{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;}
+.rec-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);}
+.rec-row:last-child{border-bottom:none;}
+.rec-name{flex:1;font-size:13px;font-weight:500;}
+.rec-city{font-size:11px;color:var(--text-3);width:70px;flex-shrink:0;font-weight:400;}
+.rec-stat{font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;font-family:'Inter',sans-serif;}
+.rs-p{background:var(--surface-2);color:var(--text-3);}
+.rs-i{background:var(--blue-bg);color:var(--blue);}
+.rs-j{background:var(--green-bg);color:var(--green);}
+.add-btn{width:100%;border:2px dashed var(--border);background:transparent;border-radius:var(--r);padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;margin-top:10px;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:6px 20px max(env(safe-area-inset-bottom),22px);width:100%;max-width:430px;animation:sheetUp .22s cubic-bezier(.32,.72,0,1);}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 18px;}
+.modal h2{font-size:19px;font-weight:800;margin-bottom:5px;}
+.modal-sub{font-size:14px;color:var(--text-2);line-height:1.55;margin-bottom:16px;font-weight:400;}
+.modal .field{margin-bottom:13px;}
+.modal-notice{display:flex;align-items:flex-start;gap:8px;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px;font-size:12px;font-weight:500;line-height:1.55;}
+.modal-notice svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;}
+.modal-notice.commit{background:var(--gold-bg);color:var(--gold);border:1px solid #fde68a;}
+.modal-notice.queue{background:var(--purple-bg);color:var(--purple);border:1px solid #c4b5fd;}
+.tn-deduct-notice{display:flex;align-items:center;gap:8px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:16px;font-size:13px;color:var(--accent);font-weight:600;}
+.tn-deduct-notice svg{width:16px;height:16px;flex-shrink:0;}
+.modal-cta{width:100%;border:none;border-radius:8px;padding:14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;color:#fff;letter-spacing:.2px;}
+.modal-cta.commit{background:#111827;}
+.modal-cta.queue{background:#5b21b6;}
+.modal-cancel{width:100%;background:none;border:none;color:var(--text-3);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:11px;cursor:pointer;}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--navy);color:#fff;border-radius:50px;padding:11px 20px;font-size:13px;font-weight:600;opacity:0;transition:all .25s ease;z-index:500;white-space:nowrap;pointer-events:none;font-family:'Inter',sans-serif;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* ── OFFLINE BANNER ──────────────────────────────────────── */
+.offline-banner{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#1c1a18;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;z-index:600;transition:transform .3s ease;transform:translateX(-50%) translateY(-100%);}
+.offline-banner.show{transform:translateX(-50%) translateY(0);}
+.offline-banner svg{width:14px;height:14px;stroke:#f87171;flex-shrink:0;}
+.offline-banner .ob-dot{width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0;animation:pulse 1.5s infinite;}
+.offline-banner.back-online{background:var(--green);color:#fff;}
+.offline-banner.back-online .ob-dot{background:#fff;animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.cv-edit-screen{min-height:100vh;padding-bottom:80px;background:var(--bg);}
+.cv-edit-hdr{background:var(--navy);padding:52px 20px 20px;display:flex;align-items:center;gap:12px;}
+.cv-edit-hdr h1{font-size:19px;font-weight:800;color:#fff;flex:1;}
+.cv-edit-save{background:var(--accent);color:#fff;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.cv-edit-body{padding:16px 16px 32px;}
+.cv-edit-sec{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+.cv-edit-sec-title{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;font-family:'Inter',sans-serif;}
+.cv-edit-field{margin-bottom:12px;}
+.cv-edit-field:last-child{margin-bottom:0;}
+.cv-edit-field label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px;}
+.cv-edit-field input,.cv-edit-field textarea,.cv-edit-field select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border-color var(--t);-webkit-appearance:none;line-height:1.5;}
+.cv-edit-field input:focus,.cv-edit-field textarea:focus{border-color:var(--accent);}
+.cv-edit-field textarea{height:88px;resize:none;}
+.cv-edit-hint{font-size:11px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.cv-cred-edit-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.cv-cred-edit-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.cv-cred-edit-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:10px;}
+.cv-cred-edit-fields{flex:1;display:flex;flex-direction:column;gap:6px;}
+.cv-avail-edit-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.cv-avail-edit-row:last-child{margin-bottom:0;}
+.cv-tags-edit{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.cv-tag-edit{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:50px;padding:5px 10px;font-size:12px;font-weight:500;color:var(--text-2);}
+.cv-tag-edit .rm{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:13px;line-height:1;padding:0;}
+.cv-tag-add{display:flex;gap:8px;margin-top:4px;}
+.cv-tag-add input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;}
+.cv-tag-add input:focus{border-color:var(--accent);}
+.cv-tag-add button{background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);padding:8px 14px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.dash-tab-row{display:flex;gap:0;border-bottom:2px solid var(--border);margin:0 20px;}
+.dash-tab{flex:1;padding:11px 0;text-align:center;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all var(--t);font-family:'Inter',sans-serif;}
+.dash-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.filter-bar{display:flex;gap:8px;padding:10px 16px 0;overflow-x:auto;scrollbar-width:none;align-items:center;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-pill{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);transition:all var(--t);white-space:nowrap;}
+.filter-pill svg{width:11px;height:11px;flex-shrink:0;}
+.filter-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.filter-pill.has-value{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.filter-sheet-bg{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:400;align-items:flex-end;justify-content:center;}
+.filter-sheet-bg.open{display:flex;}
+.filter-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:6px 20px max(env(safe-area-inset-bottom),24px);width:100%;max-width:430px;animation:sheetUp .22s cubic-bezier(.32,.72,0,1);max-height:88vh;overflow-y:auto;}
+.fs-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 16px;}
+.fs-title{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.fs-sub{font-size:13px;color:var(--text-3);margin-bottom:18px;font-weight:400;}
+.fs-section{margin-bottom:18px;}
+.fs-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-family:'Inter',sans-serif;}
+.fs-options{display:flex;flex-wrap:wrap;gap:7px;}
+.fs-opt{padding:8px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-2);transition:all var(--t);}
+.fs-opt.sel{background:var(--navy);border-color:var(--navy);color:#fff;}
+.fs-range{display:flex;gap:10px;align-items:center;}
+.fs-range input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;background:var(--surface);color:var(--text);outline:none;-webkit-appearance:none;}
+.fs-range input:focus{border-color:var(--accent);}
+.fs-range-sep{font-size:13px;color:var(--text-3);font-weight:500;}
+.fs-actions{display:flex;gap:10px;margin-top:6px;padding-top:14px;border-top:1px solid var(--border);}
+.fs-clear{flex:1;background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;}
+.fs-apply{flex:2;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.active-filters-row{display:flex;gap:6px;padding:8px 16px 0;flex-wrap:wrap;}
+.af-tag{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);border:1px solid var(--accent);border-radius:50px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;}
+.af-tag svg{width:10px;height:10px;}
+.results-count{font-size:12px;color:var(--text-3);padding:6px 16px 0;font-weight:500;}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 30px;text-align:center;}
+.empty-icon{font-size:48px;margin-bottom:14px;opacity:.4;}
+.empty-state h3{font-size:19px;font-weight:800;margin-bottom:6px;}
+.empty-state p{font-size:14px;color:var(--text-3);line-height:1.6;font-weight:400;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     ■ UI SCREENS — Claude edits this section
+     ════════════════════════════════════════════════════════════ -->
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="home-hero">
+    <div class="hero-top">
+      <div class="hero-logo">MarketSquare</div>
+      <div class="city-badge" onclick="goTo('recruit')"><span class="cdot"></span>Pretoria · Recruiting</div>
+    </div>
+    <div class="hero-body"></div>
+  </div>
+
+  <div class="cpb">
+    <div class="cpb-label"><span>Founding Seller Progress · Pretoria</span><span>23 / 60</span></div>
+    <div class="cpb-track"><div class="cpb-cat">Property</div><div class="cpb-bar"><div class="cpb-fill" style="width:40%"></div></div><div class="cpb-count">8/20</div></div>
+    <div class="cpb-track"><div class="cpb-cat">Tutors</div><div class="cpb-bar"><div class="cpb-fill" style="width:55%"></div></div><div class="cpb-count">11/20</div></div>
+    <div class="cpb-track"><div class="cpb-cat">Services</div><div class="cpb-bar"><div class="cpb-fill" style="width:20%"></div></div><div class="cpb-count">4/20</div></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val">23</div><div class="stat-label">Sellers</div></div>
+    <div class="stat"><div class="stat-val">31</div><div class="stat-label">Listings</div></div>
+    <div class="stat"><div class="stat-val" id="tn-home-bal">5</div><div class="stat-label">Tuppence</div></div>
+    <div class="stat"><div class="stat-val">3</div><div class="stat-label">Intros</div></div>
+  </div>
+  <div class="sec-head"><h2>Categories</h2><a onclick="goTo('browse')">All →</a></div>
+  <div class="cat-grid">
+    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:linear-gradient(140deg,#1e3a5f,#2a5298)">🏡</div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count">12 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:linear-gradient(140deg,#14532d,#15803d)">🎓</div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count">11 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:linear-gradient(140deg,#7c2d12,#b45309)">⚙️</div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count">8 listings</div></div></div>
+  </div>
+  <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
+  <div class="hscroll" id="home-featured"></div>
+</div>
+
+<!-- BROWSE -->
+<div id="screen-browse" class="screen">
+  <div class="page-hdr">
+    <h1>Browse</h1>
+    <div class="sub" id="browse-sub">All categories · Pretoria</div>
+  </div>
+
+  <!-- Category chips -->
+  <div class="chips" id="chip-row">
+    <div class="chip active" onclick="setFilter(this,'All')">All</div>
+    <div class="chip" onclick="setFilter(this,'Property')">🏡 Property</div>
+    <div class="chip" onclick="setFilter(this,'Tutors')">🎓 Tutors</div>
+    <div class="chip" onclick="setFilter(this,'Services')">⚙️ Services</div>
+  </div>
+
+  <!-- Context-specific filter pills (shown when category selected) -->
+  <div id="filter-bar-area"></div>
+
+  <!-- Active filter tags -->
+  <div id="active-filters-row" class="active-filters-row"></div>
+
+  <!-- Results count -->
+  <div id="results-count" class="results-count"></div>
+
+  <div class="lgrid" id="listing-grid"></div>
+</div>
+
+<!-- PROPERTY FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-property" onclick="closeFsBg(event,'fs-property')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">🏡 Property Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Price Range</div>
+      <div class="fs-range">
+        <input type="number" id="fp-min" placeholder="Min (R)">
+        <div class="fs-range-sep">to</div>
+        <input type="number" id="fp-max" placeholder="Max (R)">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Property Type</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">House</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">Apartment</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">Townhouse</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">Land</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-type')">Commercial</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Bedrooms</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">1+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">2+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">3+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">4+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-beds')">5+</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Bathrooms</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-baths')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-baths')">1+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-baths')">2+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-baths')">3+</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Garages</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-gar')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-gar')">1+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-gar')">2+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-gar')">3+</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Area / Suburb</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Waterkloof</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Centurion</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Pretoria East</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Pretoria North</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Menlyn</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-area')">Hatfield</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('property')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('property')">Show results</button>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORS FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-tutors" onclick="closeFsBg(event,'fs-tutors')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">🎓 Tutor Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Rate (per hour)</div>
+      <div class="fs-range">
+        <input type="number" id="ft-max" placeholder="Max R/hr">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Subject</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Maths & Science</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Economics</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">English</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Accounting</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Languages</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Level</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-level')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-level')">Primary</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-level')">Matric</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-level')">University</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-level')">Professional</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Mode</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-mode')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-mode')">In-person</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-mode')">Online</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-mode')">Either</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Area</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-area')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-area')">Pretoria East</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-area')">Pretoria CBD</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-area')">Centurion</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-area')">Hatfield</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('tutors')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('tutors')">Show results</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-services" onclick="closeFsBg(event,'fs-services')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">⚙️ Services Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Rate</div>
+      <div class="fs-range">
+        <input type="number" id="fv-max" placeholder="Max R/hr or R/mo">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Service Type</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Electrical</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Financial</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Plumbing</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">IT & Tech</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Legal</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Garden & Outdoor</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Cleaning</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Availability</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-avail')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-avail')">Weekdays</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-avail')">Weekends</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-avail')">Emergency</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Area</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Pretoria North</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Pretoria East</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Centurion</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Menlyn</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-area')">Hatfield</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('services')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('services')">Show results</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div id="screen-detail" class="screen"></div>
+
+<!-- SELLER CV -->
+<div id="screen-seller-cv" class="screen"></div>
+
+<!-- SAVED -->
+<div id="screen-saved" class="screen">
+  <div class="page-hdr"><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
+  <div id="saved-content"></div>
+</div>
+
+<!-- TUPPENCE -->
+<div id="screen-tuppence" class="screen">
+  <div class="tn-header">
+    <h1>Tuppence Wallet</h1><p>Your introduction currency</p>
+    <div class="tn-balance">
+      <div class="tn-num" id="tn-balance-display">5</div>
+      <div><div class="tn-unit">Tuppence</div><div class="tn-usd" id="tn-usd-display">≈ $10.00</div></div>
+    </div>
+  </div>
+  <div class="tn-body">
+    <div class="tn-sec">
+      <h2>Two introduction models</h2>
+      <div class="model-table">
+        <div class="mt-head"><div>Feature</div><div>🏡 Property</div><div>🎓⚙️ Tutors &amp; Services</div></div>
+        <div class="mt-row"><div>Listing paused on request</div><div class="yes">Yes</div><div class="no">No</div></div>
+        <div class="mt-row"><div>Multiple buyers at once</div><div class="no">No</div><div class="yes">Yes</div></div>
+        <div class="mt-row"><div>Seller penalty on ignore</div><div class="yes">1T penalty</div><div class="partial">Trust −3</div></div>
+        <div class="mt-row"><div>Buyer pays on acceptance</div><div class="yes">1T = $2</div><div class="yes">1T = $2</div></div>
+        <div class="mt-row"><div>Response window</div><div class="yes">48 hrs</div><div class="yes">48 hrs</div></div>
+      </div>
+    </div>
+    <div class="tn-sec">
+      <h2>Top up Tuppence</h2>
+      <div class="topup-btns">
+        <div class="topup-btn" onclick="topUp(5)"><div class="tb-val">5T</div><div class="tb-price">≈ R180 · $10</div></div>
+        <div class="topup-btn" onclick="topUp(10)"><div class="tb-val">10T</div><div class="tb-price">≈ R360 · $20</div></div>
+        <div class="topup-btn" onclick="topUp(25)"><div class="tb-val">25T</div><div class="tb-price">≈ R900 · $50</div></div>
+      </div>
+    </div>
+    <div class="tn-sec">
+      <h2>Transaction history</h2>
+      <div class="tn-table" id="tn-history">
+        <div class="tn-row"><div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created</div></div><div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div id="screen-plans" class="screen">
+  <div class="plans-header"><h1>Choose your plan</h1><p>Start free. Upgrade when your market grows.</p></div>
+  <div class="plans-body">
+    <div class="plan-card">
+      <div class="plan-name">Free</div><div class="plan-price">R0<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">No credit card required</div>
+      <div class="plan-features">
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>1 active listing</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller CV page</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility (Pretoria)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing active for 60 days</div>
+        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No search alerts</div>
+        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No country-wide visibility</div>
+      </div>
+      <button class="plan-btn secondary" onclick="showToast('You are on the Free plan')">Current plan</button>
+    </div>
+    <div class="plan-card recommended">
+      <div class="plan-rec-badge">Most popular</div>
+      <div class="plan-name">Standard</div><div class="plan-price">$5<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R90 / month</div>
+      <div class="plan-features">
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>5 active listings</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Country-wide visibility</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Search alerts when buyers match</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Extended listing duration (180 days)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in city search</div>
+        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No international visibility</div>
+      </div>
+      <button class="plan-btn accent" onclick="showToast('Upgrade — BEA integration coming')">Upgrade to Standard</button>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">International</div><div class="plan-price">$15<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R270 / month</div>
+      <div class="plan-features">
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited listings</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility (all cities)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Standard features</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>High-value multi-buyer pool (Phase 2)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing active 365 days</div>
+      </div>
+      <button class="plan-btn primary" onclick="showToast('Upgrade — BEA integration coming')">Upgrade to International</button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--text-3);padding:8px 0 16px;line-height:1.6;font-weight:400;">All prices exclude VAT. Tuppence intro fees apply on all plans.<br>No commission taken by MarketSquare. Introductions only.</div>
+  </div>
+</div>
+
+<!-- SELLER ONBOARDING -->
+<div id="screen-onboard" class="screen">
+  <div class="ob-page">
+    <div class="ob-hero">
+      <button style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.4);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:24px;" onclick="goTo('home')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> Back
+      </button>
+      <div class="ob-logo">MARKETSQUARE</div>
+      <div class="ob-eyebrow">Sell on MarketSquare · Pretoria</div>
+      <h1>Reach serious buyers.<br>No commission.</h1>
+      <p>MarketSquare connects you directly with qualified buyers via a secure introduction system. You stay anonymous until both parties agree to connect.</p>
+      <div class="ob-cards">
+        <div class="ob-card"><div class="ob-card-icon">🔒</div><div><h4>Your identity is protected</h4><p>Buyers see your credentials and listing details. Your name and contact are only revealed after a mutual introduction is accepted.</p></div></div>
+        <div class="ob-card"><div class="ob-card-icon">💰</div><div><h4>No commission — ever</h4><p>MarketSquare earns only from introductions, not from your sale. You keep 100% of your transaction value.</p></div></div>
+        <div class="ob-card"><div class="ob-card-icon">⭐</div><div><h4>Build your Trust Score</h4><p>Every successful introduction improves your Trust Score — a visible credential that attracts higher quality buyers over time.</p></div></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Your introduction model</div>
+      <div class="ob-model-pills">
+        <div class="ob-model-pill commit"><div class="omp-icon">🏡</div><div class="omp-cat">Property</div><div class="omp-desc">Listing pauses per request. One serious buyer at a time.</div></div>
+        <div class="ob-model-pill queue"><div class="omp-icon">🎓⚙️</div><div class="omp-cat">Tutors &amp; Services</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
+      </div>
+    </div>
+    <div class="ob-form">
+      <h2>Create your seller account</h2>
+      <div class="osub">Takes less than 3 minutes. Start with your profile, then publish your first listing.</div>
+      <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
+      <div class="field"><label>Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
+      <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="ob-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Your category</label><select id="ob-cat"><option>Property</option><option>Tutors</option><option>Services</option></select></div>
+      <button class="ob-submit" onclick="submitOnboard()">Continue — Build My Profile →</button>
+      <div style="text-align:center;margin-top:16px;">
+        <span style="font-size:13px;color:var(--text-3);">Already have a listing? </span>
+        <span style="font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;" onclick="goTo('dashboard')">Go to Dashboard →</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLISH — Listing-First Flow (v8.1) -->
+<div id="screen-publish" class="screen">
+
+  <!-- STEP A: Photo -->
+  <div id="pub-a" class="pub-phase">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="goTo('browse')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 1 of 3</div>
+        <h1>Add a photo</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6;font-weight:400;">Optional — listings with photos get far more attention. You can skip and add one later.</p>
+      <div class="upload-zone">
+        <input type="file" id="img-inp" accept="image/*" onchange="handleImg(event)">
+        <div id="uz-default"><div class="uz-icon">📷</div><div class="uz-title">Tap to add a photo</div><div class="uz-sub">JPG or PNG · under 2MB recommended</div></div>
+        <div id="uz-preview" style="display:none;"><img id="uz-img" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;"><button onclick="clearImg(event)" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text-2);">Remove photo</button></div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="goTo('browse')" style="display:block;">← Back</button>
+      <button class="btn-next" onclick="goPhase('b')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP B: Category (one tap) -->
+  <div id="pub-b" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="goPhase('a')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 2 of 3</div>
+        <h1>What are you selling?</h1>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Tap one — this sets your introduction model.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="cat-big-tile" id="cbt-Property" onclick="selCatBig('Property')">
+          <div class="cbt-icon">🏡</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Property</div>
+            <div class="cbt-desc">Home, apartment, land or commercial space</div>
+            <div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div>
+          </div>
+          <div class="cbt-check" id="chk-Property">✓</div>
+        </div>
+        <div class="cat-big-tile" id="cbt-Tutors" onclick="selCatBig('Tutors')">
+          <div class="cbt-icon">🎓</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Tutors</div>
+            <div class="cbt-desc">Teaching, coaching or academic support</div>
+            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
+          </div>
+          <div class="cbt-check" id="chk-Tutors">✓</div>
+        </div>
+        <div class="cat-big-tile" id="cbt-Services" onclick="selCatBig('Services')">
+          <div class="cbt-icon">⚙️</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Services</div>
+            <div class="cbt-desc">Trade, professional or skilled service</div>
+            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
+          </div>
+          <div class="cbt-check" id="chk-Services">✓</div>
+        </div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="goPhase('a')" style="display:block;">← Back</button>
+      <button class="btn-next" id="pub-b-next" onclick="goPhase('c')" style="opacity:.4;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP C: Title + Price (2 fields) -->
+  <div id="pub-c" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="goPhase('b')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 3 of 3</div>
+        <h1>Title &amp; price</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Two fields. That's it — you can add more detail after publishing.</p>
+      <div class="field">
+        <label>What are you offering? <span class="req">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;">
+      </div>
+      <div class="field">
+        <label>Price <span class="opt">(optional)</span></label>
+        <input type="text" id="f-price" placeholder="e.g. R4 200 000 or R350/hr">
+        <div class="hint">Leave blank to show "Negotiable"</div>
+      </div>
+      <div id="pub-c-model-note" style="border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.6;margin-top:4px;display:none;"></div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="goPhase('b')" style="display:block;">← Back</button>
+      <button class="btn-next" onclick="doPublish()">Publish now →</button>
+    </div>
+  </div>
+
+  <!-- CLAIM STEP — appears after publish -->
+  <div id="pub-claim" class="pub-phase" style="display:none;min-height:100vh;background:var(--navy);">
+    <div style="padding:52px 24px 32px;">
+      <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">Your listing is live</div>
+      <h2 id="claim-title" style="font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Claim it to start receiving introduction requests and build your Trust Score on MarketSquare Pretoria.</p>
+
+      <!-- Benefit cards -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+          <div style="font-size:20px;">🔔</div>
+          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Receive introduction requests</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Buyers can request to connect with you directly</div></div>
+        </div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+          <div style="font-size:20px;">⭐</div>
+          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Build your Trust Score</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Every accepted introduction improves your standing</div></div>
+        </div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+          <div style="font-size:20px;">🔒</div>
+          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity stays protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div>
+        </div>
+      </div>
+
+      <!-- Claim form -->
+      <div style="background:var(--surface);border-radius:16px;padding:20px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;color:var(--navy);">Enter your email to claim</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;font-weight:400;">We'll send a secure link — no password needed.</div>
+        <div class="field" style="margin-bottom:12px;">
+          <input type="email" id="claim-email" placeholder="you@example.com" style="font-size:15px;">
+        </div>
+        <button onclick="submitClaim()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Claim my listing →</button>
+        <button onclick="skipClaim()" style="width:100%;background:none;border:none;color:rgba(255,255,255,0);font-size:13px;padding:10px;cursor:pointer;margin-top:2px;font-family:'Inter',sans-serif;color:var(--text-3);">Skip for now — I'll claim later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAIMED SUCCESS -->
+  <div id="pub-done" class="pub-phase" style="display:none;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 30px;text-align:center;">
+    <div style="font-size:60px;margin-bottom:18px;">✅</div>
+    <h2 style="font-size:23px;font-weight:800;margin-bottom:8px;">All done!</h2>
+    <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin-bottom:24px;font-weight:400;" id="pub-done-msg">Check your email for your claim link.</p>
+    <button class="btn-done" onclick="goTo('browse')" style="background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px 32px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Browse listings</button>
+  </div>
+
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="dash-hdr">
+    <h1>My Seller Hub</h1><p>Manage listings &amp; profile · Pretoria</p>
+    <div class="dash-stats">
+      <div class="dstat"><div class="dstat-val">2</div><div class="dstat-label">Active</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-pending">1</div><div class="dstat-label">Pending</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-queue">2</div><div class="dstat-label">Queued</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-tn">5</div><div class="dstat-label">Tuppence</div></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="dash-tab-row">
+    <div class="dash-tab active" id="dtab-listings" onclick="switchDashTab('listings')">My Listings</div>
+    <div class="dash-tab" id="dtab-profile" onclick="switchDashTab('profile')">My Profile</div>
+  </div>
+
+  <!-- Listings tab -->
+  <div id="dash-panel-listings" class="dash-sec">
+    <div id="my-listings" style="margin-top:4px;"></div>
+    <button onclick="goTo('publish')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">+ Add New Listing</button>
+    <button onclick="goTo('plans')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">View Plans &amp; Upgrade</button>
+  </div>
+
+  <!-- Profile tab -->
+  <div id="dash-panel-profile" class="dash-sec" style="display:none;">
+    <div id="dash-profile-preview"></div>
+    <button onclick="openCVEdit()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">✏️ Edit My Seller Profile</button>
+    <div style="font-size:12px;color:var(--text-3);text-align:center;line-height:1.6;padding-bottom:24px;font-weight:400;">Your profile is anonymous — buyers see credentials only.<br>Identity revealed only on mutual introduction.</div>
+  </div>
+</div>
+
+<!-- CV EDIT SCREEN -->
+<div id="screen-cv-edit" class="screen">
+  <div class="cv-edit-screen">
+    <div class="cv-edit-hdr">
+      <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>Edit Seller Profile</h1>
+      <button class="cv-edit-save" onclick="saveCVEdit()">Save</button>
+    </div>
+    <div class="cv-edit-body" id="cv-edit-body"></div>
+  </div>
+</div>
+
+<!-- RECRUIT -->
+<div id="screen-recruit" class="screen">
+  <div class="rec-hdr"><h1>City Deployment</h1><p>Seller recruitment · Pretoria → New York → London → Berlin</p></div>
+  <div class="rec-body" id="rec-body"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="nb active" id="nav-home" onclick="goTo('home')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </button>
+  <button class="nb" id="nav-browse" onclick="goTo('browse')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Browse
+  </button>
+  <button class="nb sell-btn" id="nav-onboard" onclick="goTo('onboard')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Sell
+  </button>
+  <button class="nb tn-widget" id="nav-tuppence" onclick="goTo('tuppence')">
+    <div class="tn-badge" id="nav-tn-badge">5</div>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Wallet
+  </button>
+  <button class="nb" id="nav-dashboard" onclick="goTo('dashboard')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Seller
+  </button>
+</nav>
+
+<!-- INTRO MODAL -->
+<div class="modal-bg" id="intro-modal" onclick="closeMBg(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-title">Request Introduction</h2>
+    <p class="modal-sub" id="modal-desc"></p>
+    <div class="modal-notice commit" id="modal-notice-commit">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Listing paused on submission. If seller declines or ignores, you pay nothing. Seller pays 1T to resubmit.
+    </div>
+    <div class="modal-notice queue" id="modal-notice-queue" style="display:none">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Listing stays live. Multiple buyers can request simultaneously. Seller has 48hrs to respond.
+    </div>
+    <div class="tn-deduct-notice">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      1 Tuppence ($2) deducted only on seller acceptance
+    </div>
+    <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="m-name" placeholder="Full name"></div>
+    <div class="field"><label>Your email <span class="req">*</span></label><input type="email" id="m-email" placeholder="you@example.com"></div>
+    <div class="field"><label>Message <span class="opt">(optional)</span></label><textarea id="m-msg" style="height:64px;resize:none;" placeholder="Briefly tell the seller why you're interested…"></textarea></div>
+    <button class="modal-cta commit" id="modal-cta-btn" onclick="submitIntro()">Submit Introduction Request</button>
+    <button class="modal-cancel" onclick="document.getElementById('intro-modal').classList.remove('open')">Cancel</button>
+  </div>
+</div>
+
+<!-- Top-up Confirmation Modal -->
+<div class="modal-bg" id="topup-modal" onclick="closeTopUpModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Confirm Top-up</h2>
+    <p class="modal-sub" id="topup-modal-desc"></p>
+    <div class="modal-notice commit" style="margin-bottom:16px;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span>Secure payment via Paystack · ZAR · test mode</span>
+    </div>
+    <div style="margin-bottom:16px;margin-top:12px;">
+      <label style="font-size:13px;color:var(--text-2);font-weight:500;display:block;margin-bottom:6px;">Your email</label>
+      <input id="topup-email" type="email" placeholder="your@email.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:Inter,sans-serif;box-sizing:border-box;">
+    </div>
+    <div style="background:var(--surface-2);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:13px;color:var(--text-2);font-weight:500;">Bundle</span>
+        <span style="font-size:17px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;" id="topup-bundle-label"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:13px;color:var(--text-2);font-weight:500;">Amount (ZAR)</span>
+        <span style="font-size:15px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;" id="topup-zar-label"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--text-2);font-weight:500;">Amount (USD)</span>
+        <span style="font-size:15px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;" id="topup-usd-label"></span>
+      </div>
+    </div>
+    <button class="modal-cta commit" onclick="confirmTopUp()">Confirm Purchase</button>
+    <button class="modal-cancel" onclick="document.getElementById('topup-modal').classList.remove('open')">Cancel</button>
+  </div>
+</div>
+
+<div class="offline-banner" id="offline-banner">
+  <div class="ob-dot"></div>
+  <span id="offline-msg">You're offline — browsing cached content</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     ■ LOGIC — Claude edits this section
+     ════════════════════════════════════════════════════════════ -->
+<script id="ms-logic">
+
+// ── BEA API CONFIG ────────────────────────────────────────
+// Single source of truth for the live backend URL.
+// Phase 1: demo data. Phase 2: live BEA at trustsquare.co
+const BEA_URL = 'https://trustsquare.co';
+const BEA_ENABLED = true;
+
+// ── API HELPERS ───────────────────────────────────────────
+async function apiGet(path) {
+  try {
+    const res = await fetch(BEA_URL + path);
+    if (!res.ok) throw new Error('API error ' + res.status);
+    return await res.json();
+  } catch(e) {
+    console.warn('BEA GET failed:', path, e);
+    return null;
+  }
+}
+
+async function apiPost(path, data) {
+  try {
+    const res = await fetch(BEA_URL + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    return await res.json();
+  } catch(e) {
+    console.warn('BEA POST failed:', path, e);
+    return null;
+  }
+}
+
+async function apiPut(path) {
+  try {
+    const res = await fetch(BEA_URL + path, { method: 'PUT' });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    return await res.json();
+  } catch(e) {
+    console.warn('BEA PUT failed:', path, e);
+    return null;
+  }
+}
+
+// ── LIVE LISTINGS LOADER ──────────────────────────────────
+// Merges live BEA listings with demo data for founding sellers.
+// Once real sellers are onboarded, demo data will be removed.
+async function loadLiveListings() {
+  if (!BEA_ENABLED || isOffline()) return;
+  try {
+    const live = await apiGet('/listings?city=Pretoria');
+    if (live && live.length > 0) {
+      // Map BEA listing format to FEA format and prepend to LISTINGS
+      const mapped = live.map(l => ({
+        id: 'bea_' + l.id,
+        cat: l.category,
+        feat: false,
+        title: l.title,
+        area: l.area || 'Pretoria',
+        suburb: l.area || 'Pretoria',
+        trust: 40,
+        price: l.price || 'POA',
+        per: '',
+        priceNum: parseInt((l.price||'0').replace(/[^0-9]/g,'')) || 0,
+        desc: l.description || '',
+        photo: l.thumb_url || null,
+        paused: false,
+        queueCount: 0,
+        sellerIdx: null,
+        isLive: true
+      }));
+      // Add live listings to front of LISTINGS array
+      mapped.forEach(l => {
+        if (!LISTINGS.find(e => e.id === l.id)) LISTINGS.unshift(l);
+      });
+      renderGrid();
+      renderFeatured();
+    }
+  } catch(e) {
+    console.warn('loadLiveListings failed:', e);
+  }
+}
+
+// ── LIVE DASHBOARD LOADER ─────────────────────────────────
+// Fetches real pending intros from BEA and merges into dashState.
+async function loadLiveDash() {
+  if (!BEA_ENABLED || isOffline()) return;
+  try {
+    const intros = await apiGet('/intros');
+    if (!intros || !intros.length) return;
+
+    // Only process pending intros
+    const pending = intros.filter(i => i.status === 'pending');
+    if (!pending.length) return;
+
+    pending.forEach(intro => {
+      // Find which LISTINGS entry matches this intro's listing_id
+      // BEA listings are stored as 'bea_<id>' in the LISTINGS array
+      const listing = LISTINGS.find(l => l.id === 'bea_' + intro.listing_id || l.id === intro.listing_id);
+      const title = listing ? listing.title : (intro.listing_title || 'Live Listing #' + intro.listing_id);
+      const cat   = listing ? listing.cat   : (intro.category || 'Property');
+      const photo = listing ? listing.photo : null;
+
+      // Find or create a dashState entry for this listing
+      let dl = dashState.listings.find(d => d.beaListingId === intro.listing_id);
+      if (!dl) {
+        dl = {
+          id: 'bea_dl_' + intro.listing_id,
+          beaListingId: intro.listing_id,
+          title: title,
+          cat: cat,
+          status: 'active',
+          photo: photo,
+          isCommit: cat === 'Property',
+          intros: []
+        };
+        dashState.listings.unshift(dl);
+      }
+
+      // Add intro if not already present
+      const alreadyAdded = dl.intros.find(i => i.beaId === intro.id);
+      if (!alreadyAdded) {
+        dl.intros.push({
+          id: 'live_' + intro.id,
+          beaId: intro.id,
+          name: intro.buyer_email || 'Anonymous buyer',
+          msg: intro.message || 'Introduction request received.',
+          time: formatIntroTime(intro.created_at),
+          status: 'pending'
+        });
+        // Mark listing paused if commit model and has pending intro
+        if (dl.isCommit) dl.status = 'paused';
+      }
+    });
+  } catch(e) {
+    console.warn('loadLiveDash failed:', e);
+  }
+}
+
+function formatIntroTime(ts) {
+  if (!ts) return 'Recently';
+  try {
+    const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (diff < 60)   return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  } catch(e) { return 'Recently'; }
+}
+
+let activeFilter='All', wishlist=new Set(), prevScreen='browse';
+let tuppence=5, pendingIntroId=null;
+let magicLink={active:false,name:'',email:'',cat:'',area:''};
+
+// ── OFFLINE STATE ─────────────────────────────────────────
+function isOffline(){ return !navigator.onLine; }
+
+function showOfflineBanner(){
+  const b=document.getElementById('offline-banner');
+  const m=document.getElementById('offline-msg');
+  if(!b) return;
+  b.classList.remove('back-online');
+  if(m) m.textContent="You're offline — browsing cached content";
+  b.classList.add('show');
+}
+
+function showBackOnlineBanner(){
+  const b=document.getElementById('offline-banner');
+  const m=document.getElementById('offline-msg');
+  if(!b) return;
+  b.classList.add('back-online','show');
+  if(m) m.textContent='Back online ✓';
+  setTimeout(()=>b.classList.remove('show','back-online'), 2800);
+}
+
+window.addEventListener('offline', ()=>{ showOfflineBanner(); });
+window.addEventListener('online',  ()=>{ showBackOnlineBanner(); });
+
+// Check on load in case app opened while already offline
+window.addEventListener('DOMContentLoaded',()=>{
+  if(isOffline()) showOfflineBanner();
+  renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
+  // Load live listings from BEA on startup
+  loadLiveListings();
+  // Silent background refresh every 30 seconds — picks up new listings without manual reload
+  setInterval(() => {
+    if (!isOffline()) loadLiveListings();
+  }, 30000);
+});
+
+function trustTier(s){
+  if(s<40)return{label:'New',c:'#6b7280',bg:'#f3f4f6'};
+  if(s<70)return{label:'Established',c:'var(--blue)',bg:'var(--blue-bg)'};
+  if(s<90)return{label:'Trusted',c:'var(--green)',bg:'var(--green-bg)'};
+  return{label:'Highly Trusted',c:'var(--gold)',bg:'var(--gold-bg)'};
+}
+function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="background:${t.bg};color:${t.c};">● ${t.label} · ${s}</span>`;}
+
+function updateTuppenceUI(){
+  document.getElementById('nav-tn-badge').textContent=tuppence;
+  document.getElementById('tn-balance-display').textContent=tuppence;
+  document.getElementById('tn-usd-display').textContent=`≈ $${(tuppence*2).toFixed(2)}`;
+  document.getElementById('tn-home-bal').textContent=tuppence;
+  const d=document.getElementById('dash-tn');if(d)d.textContent=tuppence;
+}
+let pendingTopUpAmount=0;
+const topUpBundles={5:{zar:'R180',usd:'$10'},10:{zar:'R360',usd:'$20'},25:{zar:'R900',usd:'$50'}};
+function topUp(n){
+  if(isOffline()){ showToast("You're offline - top-up needs a connection"); return; }
+  pendingTopUpAmount=n;
+  const b=topUpBundles[n]||{zar:'R'+(n*36),usd:'$'+(n*2)};
+  document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence for your wallet.';
+  document.getElementById('topup-bundle-label').textContent=n+'T';
+  document.getElementById('topup-zar-label').textContent=b.zar;
+  document.getElementById('topup-usd-label').textContent=b.usd;
+  document.getElementById('topup-modal').classList.add('open');
+}
+async function confirmTopUp(){
+  const n=pendingTopUpAmount;
+  if(!n) return;
+  const emailEl=document.getElementById('topup-email');
+  const email=emailEl?emailEl.value.trim():'';
+  if(!email||!email.includes('@')){ showToast('Please enter your email address'); return; }
+  showToast('Redirecting to secure payment...');
+  document.getElementById('topup-modal').classList.remove('open');
+  pendingTopUpAmount=0;
+  try {
+    const res = await fetch(BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n, {method:'POST'});
+    const data = await res.json();
+    if(data.authorization_url){ window.location.href = data.authorization_url; }
+    else { showToast('Payment setup failed — please try again'); }
+  } catch(e) {
+    showToast('Payment error — please try again');
+  }
+}
+function closeTopUpModal(e){
+  if(e.target===document.getElementById('topup-modal'))
+    document.getElementById('topup-modal').classList.remove('open');
+}
+function addTx(label,sub,val,pos){
+  const h=document.getElementById('tn-history');if(!h)return;
+  const r=document.createElement('div');r.className='tn-row';
+  r.innerHTML=`<div><div class="tn-row-label">${label}</div><div class="tn-row-sub">${sub}</div></div><div style="text-align:right"><div class="tn-row-val" style="color:${pos?'var(--green)':'var(--red)'};">${val}</div></div>`;
+  h.insertBefore(r,h.firstChild);
+}
+
+function goTo(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  if(name==='browse'){ renderFilterBar(); renderGrid(); }
+  if(name==='saved')renderSaved();
+  if(name==='dashboard'){
+    renderDash();
+    switchDashTab('listings');
+    loadLiveDash().then(() => {
+      updateDashStats();
+      document.getElementById('my-listings').innerHTML =
+        dashState.listings.map(dl => renderDashCard(dl)).join('');
+    });
+  }
+  if(name==='recruit')renderRecruit();
+  if(name==='publish'){resetPublish();}
+  window.scrollTo(0,0);
+}
+function filterBrowse(cat){
+  activeFilter=cat; goTo('browse');
+  document.querySelectorAll('#chip-row .chip').forEach(c=>{
+    c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent==='All'));
+  });
+  renderFilterBar(); renderGrid();
+  const sub=document.getElementById('browse-sub');
+  if(sub) sub.textContent=cat==='All'?'All categories · Pretoria':`${cat} · Pretoria`;
+}
+
+
+const filterState = {
+  property: { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'' },
+  tutors:   { maxRate:'', subject:'', level:'', mode:'', area:'' },
+  services: { maxRate:'', serviceType:'', availability:'', area:'' },
+};
+
+function setFilter(el, cat){
+  activeFilter = cat;
+  document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderFilterBar();
+  renderGrid();
+  const sub = document.getElementById('browse-sub');
+  if(sub) sub.textContent = cat==='All' ? 'All categories · Pretoria' : `${cat} · Pretoria`;
+}
+
+function renderFilterBar(){
+  const area = document.getElementById('filter-bar-area');
+  if(!area) return;
+  if(activeFilter==='All'){ area.innerHTML=''; return; }
+
+  const cat = activeFilter.toLowerCase();
+  const fs = filterState[cat];
+  const hasFilters = Object.values(fs).some(v=>v!=='');
+
+  const pills = {
+    Property: [
+      { label:'Price', key:'price', icon:'💰' },
+      { label:'Type', key:'type', icon:'🏠' },
+      { label:'Beds', key:'beds', icon:'🛏' },
+      { label:'Baths', key:'baths', icon:'🚿' },
+      { label:'Garages', key:'garages', icon:'🚗' },
+      { label:'Area', key:'area', icon:'📍' },
+    ],
+    Tutors: [
+      { label:'Rate', key:'rate', icon:'💰' },
+      { label:'Subject', key:'subject', icon:'📚' },
+      { label:'Level', key:'level', icon:'🎓' },
+      { label:'Mode', key:'mode', icon:'💻' },
+      { label:'Area', key:'area', icon:'📍' },
+    ],
+    Services: [
+      { label:'Rate', key:'rate', icon:'💰' },
+      { label:'Type', key:'type', icon:'⚙️' },
+      { label:'Availability', key:'avail', icon:'📅' },
+      { label:'Area', key:'area', icon:'📍' },
+    ],
+  };
+
+  area.innerHTML = `<div class="filter-bar">
+    ${(pills[activeFilter]||[]).map(p=>`
+      <div class="filter-pill" onclick="openFilterSheet('${activeFilter.toLowerCase()}')">
+        ${p.icon} ${p.label}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>`).join('')}
+  </div>`;
+
+  renderActiveFilterTags();
+}
+
+function openFilterSheet(cat){
+  document.getElementById('fs-'+cat).classList.add('open');
+}
+function closeFsBg(e, id){
+  if(e.target.id===id) document.getElementById(id).classList.remove('open');
+}
+
+function toggleOpt(el, group){
+  // Single select within group — deselect others
+  const parent = el.closest('.fs-options');
+  parent.querySelectorAll('.fs-opt').forEach(o=>o.classList.remove('sel'));
+  if(el.textContent.trim()==='Any'){
+    // Any = clear
+  } else {
+    el.classList.add('sel');
+  }
+}
+
+function getSelOpt(sheetId, group){
+  const sheet = document.getElementById(sheetId);
+  if(!sheet) return '';
+  const sel = sheet.querySelector(`.fs-opt.sel`);
+  // Find which group this opt belongs to by data approach — use closest fs-section
+  const sections = sheet.querySelectorAll('.fs-section');
+  for(const sec of sections){
+    const opts = sec.querySelectorAll('.fs-opt');
+    for(const opt of opts){
+      if(opt.classList.contains('sel')) return opt.textContent.trim();
+    }
+  }
+  return '';
+}
+
+function getSelOptInSection(sectionLabel, sheetId){
+  const sheet = document.getElementById(sheetId);
+  if(!sheet) return '';
+  for(const sec of sheet.querySelectorAll('.fs-section')){
+    const label = sec.querySelector('.fs-label');
+    if(label && label.textContent.trim()===sectionLabel){
+      const sel = sec.querySelector('.fs-opt.sel');
+      return sel ? sel.textContent.trim() : '';
+    }
+  }
+  return '';
+}
+
+function applyFilters(cat){
+  if(cat==='property'){
+    filterState.property.minPrice = document.getElementById('fp-min')?.value || '';
+    filterState.property.maxPrice = document.getElementById('fp-max')?.value || '';
+    filterState.property.type     = getSelOptInSection('Property Type','fs-property');
+    filterState.property.beds     = getSelOptInSection('Bedrooms','fs-property');
+    filterState.property.baths    = getSelOptInSection('Bathrooms','fs-property');
+    filterState.property.garages  = getSelOptInSection('Garages','fs-property');
+    filterState.property.area     = getSelOptInSection('Area / Suburb','fs-property');
+  } else if(cat==='tutors'){
+    filterState.tutors.maxRate  = document.getElementById('ft-max')?.value || '';
+    filterState.tutors.subject  = getSelOptInSection('Subject','fs-tutors');
+    filterState.tutors.level    = getSelOptInSection('Level','fs-tutors');
+    filterState.tutors.mode     = getSelOptInSection('Mode','fs-tutors');
+    filterState.tutors.area     = getSelOptInSection('Area','fs-tutors');
+  } else if(cat==='services'){
+    filterState.services.maxRate      = document.getElementById('fv-max')?.value || '';
+    filterState.services.serviceType  = getSelOptInSection('Service Type','fs-services');
+    filterState.services.availability = getSelOptInSection('Availability','fs-services');
+    filterState.services.area         = getSelOptInSection('Area','fs-services');
+  }
+  document.getElementById('fs-'+cat).classList.remove('open');
+  renderActiveFilterTags();
+  renderGrid();
+}
+
+function clearFilters(cat){
+  if(cat==='property'){
+    filterState.property = { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'' };
+    ['fp-min','fp-max'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+    document.querySelectorAll('#fs-property .fs-opt').forEach(o=>o.classList.remove('sel'));
+  } else if(cat==='tutors'){
+    filterState.tutors = { maxRate:'', subject:'', level:'', mode:'', area:'' };
+    const el=document.getElementById('ft-max'); if(el)el.value='';
+    document.querySelectorAll('#fs-tutors .fs-opt').forEach(o=>o.classList.remove('sel'));
+  } else if(cat==='services'){
+    filterState.services = { maxRate:'', serviceType:'', availability:'', area:'' };
+    const el=document.getElementById('fv-max'); if(el)el.value='';
+    document.querySelectorAll('#fs-services .fs-opt').forEach(o=>o.classList.remove('sel'));
+  }
+  document.getElementById('fs-'+cat).classList.remove('open');
+  renderActiveFilterTags();
+  renderGrid();
+}
+
+function renderActiveFilterTags(){
+  const row = document.getElementById('active-filters-row');
+  if(!row) return;
+  const cat = activeFilter.toLowerCase();
+  const fs = filterState[cat] || {};
+  const tags = [];
+
+  if(cat==='property'){
+    if(fs.minPrice||fs.maxPrice) tags.push(`💰 R${fs.minPrice||'0'} – R${fs.maxPrice||'any'}`);
+    if(fs.type)    tags.push(`🏠 ${fs.type}`);
+    if(fs.beds)    tags.push(`🛏 ${fs.beds} beds`);
+    if(fs.baths)   tags.push(`🚿 ${fs.baths} baths`);
+    if(fs.garages) tags.push(`🚗 ${fs.garages} garages`);
+    if(fs.area)    tags.push(`📍 ${fs.area}`);
+  } else if(cat==='tutors'){
+    if(fs.maxRate)  tags.push(`💰 Max R${fs.maxRate}/hr`);
+    if(fs.subject)  tags.push(`📚 ${fs.subject}`);
+    if(fs.level)    tags.push(`🎓 ${fs.level}`);
+    if(fs.mode)     tags.push(`💻 ${fs.mode}`);
+    if(fs.area)     tags.push(`📍 ${fs.area}`);
+  } else if(cat==='services'){
+    if(fs.maxRate)      tags.push(`💰 Max R${fs.maxRate}`);
+    if(fs.serviceType)  tags.push(`⚙️ ${fs.serviceType}`);
+    if(fs.availability) tags.push(`📅 ${fs.availability}`);
+    if(fs.area)         tags.push(`📍 ${fs.area}`);
+  }
+
+  row.innerHTML = tags.map(t=>`
+    <div class="af-tag" onclick="clearFilters('${cat}')">
+      ${t}
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>`).join('');
+}
+
+function renderGrid(){
+  const filtered = LISTINGS.filter(l => {
+    if(activeFilter!=='All' && l.cat!==activeFilter) return false;
+    if(l.paused) return false;
+
+    // Category-specific filtering
+    if(l.cat==='Property'){
+      const fp = filterState.property;
+      if(fp.minPrice && l.priceNum < parseInt(fp.minPrice)) return false;
+      if(fp.maxPrice && l.priceNum > parseInt(fp.maxPrice)) return false;
+      if(fp.type && fp.type!=='' && l.propType !== fp.type) return false;
+      if(fp.beds){
+        const minBeds = parseInt(fp.beds);
+        if(!isNaN(minBeds) && l.beds < minBeds) return false;
+      }
+      if(fp.baths){
+        const minBaths = parseInt(fp.baths);
+        if(!isNaN(minBaths) && l.baths < minBaths) return false;
+      }
+      if(fp.garages){
+        const minGar = parseInt(fp.garages);
+        if(!isNaN(minGar) && l.garages < minGar) return false;
+      }
+      if(fp.area && fp.area!=='' && l.suburb !== fp.area) return false;
+    }
+
+    if(l.cat==='Tutors'){
+      const ft = filterState.tutors;
+      if(ft.maxRate && l.priceNum > parseInt(ft.maxRate)) return false;
+      if(ft.subject && ft.subject!=='' && l.subject !== ft.subject) return false;
+      if(ft.level && ft.level!=='' && l.level !== ft.level) return false;
+      if(ft.mode && ft.mode!=='' && ft.mode!=='Either' && l.mode !== ft.mode) return false;
+      if(ft.area && ft.area!=='' && l.suburb !== ft.area) return false;
+    }
+
+    if(l.cat==='Services'){
+      const fv = filterState.services;
+      if(fv.maxRate && l.priceNum > parseInt(fv.maxRate)) return false;
+      if(fv.serviceType && fv.serviceType!=='' && l.serviceType !== fv.serviceType) return false;
+      if(fv.availability && fv.availability!=='' && l.availability !== fv.availability) return false;
+      if(fv.area && fv.area!=='' && l.suburb !== fv.area) return false;
+    }
+
+    return true;
+  });
+
+  const grid = document.getElementById('listing-grid');
+  const countEl = document.getElementById('results-count');
+  if(countEl) countEl.textContent = filtered.length > 0 ? `${filtered.length} listing${filtered.length!==1?'s':''} found` : '';
+  if(!filtered.length){
+    grid.innerHTML='<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(cardHtml).join('');
+}
+
+
+function cardHtml(l){
+  const sv=wishlist.has(l.id);
+  const m=CATS[l.cat].model;
+  const imgHtml=l.photo
+    ?`<img src="${l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="display:none;background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div>`
+    :`<div class="emoji-fallback" style="background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div>`;
+  return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail(${l.id})`}">
+    <div class="ibox" style="background:${CATS[l.cat].bg}">
+      ${imgHtml}
+      ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
+      ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
+      <div class="model-badge ${m}">${m==='commit'?'⏳ Commit':'👥 Queue'}</div>
+      ${!l.paused?`<button class="wish-btn ${sv?'saved':''}" onclick="toggleWish(event,${l.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${sv?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>`:''}
+    </div>
+    <div class="cbody">
+      <div class="ccat">${l.cat}</div>
+      <div class="ctitle">${l.title}</div>
+      <div class="cloc">📍 ${l.area}</div>
+      <div class="cbot">
+        <div class="cprice">${l.price?`${l.price}<span class="per"> ${l.per}</span>`:'<span class="neg">Negotiable</span>'}</div>
+        ${tbadge(l.trust)}
+      </div>
+      <div class="seller-cv-badge" onclick="event.stopPropagation();openSellerCV(${l.sellerIdx},${l.id})">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        View seller profile
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFeatured(){
+  document.getElementById('home-featured').innerHTML=LISTINGS.filter(l=>l.feat&&!l.paused).map(l=>{
+    const imgHtml=l.photo
+      ?`<img src="${l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">`
+      :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${CATS[l.cat].icon}</div>`;
+    return`<div class="hcard" onclick="openDetail(${l.id})">
+      <div style="height:80px;overflow:hidden;background:${CATS[l.cat].bg};">${imgHtml}</div>
+      <div class="cbody" style="padding:9px 11px 12px;">
+        <div class="ccat">${l.cat}</div><div class="ctitle">${l.title}</div>
+        <div class="cloc">📍 ${l.area}</div>
+        <div class="cprice">${l.price||'<span class="neg">Negotiable</span>'}<span class="per"> ${l.per}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWish(e,id){
+  e.stopPropagation();
+  wishlist.has(id)?wishlist.delete(id):wishlist.add(id);
+  renderGrid(); showToast(wishlist.has(id)?'Added to saved':'Removed from saved');
+}
+function toggleWishDetail(id){
+  wishlist.has(id)?wishlist.delete(id):wishlist.add(id);
+  showToast(wishlist.has(id)?'Added to saved':'Removed from saved'); openDetail(id);
+}
+function renderSaved(){
+  const el=document.getElementById('saved-content');
+  const saved=LISTINGS.filter(l=>wishlist.has(l.id));
+  if(!saved.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🔖</div><h3>No saved listings</h3><p>Tap the heart icon on any listing to save it here.</p></div>';return;}
+  el.innerHTML=`<div class="lgrid">${saved.map(cardHtml).join('')}</div>`;
+}
+
+// ── SELLER AVATAR HELPER ─────────────────────────────────
+// isOwner: true = seller viewing their own (sharp)
+// isRevealed: true = intro accepted (sharp)
+function cvAvatarHtml(sellerIdx, listingId, isOwner){
+  const photo = SELLER_PHOTOS[sellerIdx];
+  const key = `${sellerIdx}-${listingId}`;
+  const isRevealed = isOwner || acceptedIntros.has(key);
+  const s = SELLERS[sellerIdx];
+
+  if(!photo){
+    // No photo — emoji fallback with lock badge
+    return `${CATS[s.cat].icon}${!isOwner?'<div class="cv-mask">🔒</div>':''}`;
+  }
+
+  if(isRevealed){
+    return `<img src="${photo}" class="revealed" alt="Seller photo">`;
+  } else {
+    return `<img src="${photo}" class="blurred" alt="Seller photo"><div class="cv-mask">🔒</div>`;
+  }
+}
+
+
+function openSellerCV(sellerIdx,listingId){
+  const s=SELLERS[sellerIdx],l=LISTINGS[listingId],t=trustTier(l.trust);
+  const active=document.querySelector('.screen.active');
+  prevScreen=active?active.id.replace('screen-',''):'browse';
+  const portfolioHtml=s.portfolio&&s.portfolio.length>0
+    ?s.portfolio.map(p=>`<div class="cv-port-img"><img src="${p}" loading="lazy" onerror="this.style.display='none'"></div>`).join('')
+    :`<div class="cv-port-img">🏠</div><div class="cv-port-img">🔧</div><div class="cv-port-img">📐</div>`;
+  document.getElementById('screen-seller-cv').innerHTML=`
+    <div class="cv-hero">
+      <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="cv-avatar" style="margin-top:8px;">${cvAvatarHtml(sellerIdx, listingId, false)}</div>
+      <div class="cv-headline">${s.headline}</div>
+      <div class="cv-cat">${s.cat} · Pretoria · Anonymous until introduction accepted</div>
+      <div class="cv-trust-row">
+        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
+        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
+      </div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-sec"><div class="cv-sec-title">About this seller</div><p class="cv-about">${s.about}</p></div>
+      <div class="cv-sec"><div class="cv-sec-title">Track record</div><div class="cv-stats">${s.stats.map(st=>`<div class="cv-stat"><div class="cv-stat-val">${st.val}</div><div class="cv-stat-label">${st.label}</div></div>`).join('')}</div></div>
+      <div class="cv-sec"><div class="cv-sec-title">Credentials &amp; qualifications</div><div class="cv-creds">${s.creds.map(c=>`<div class="cv-cred"><div class="cv-cred-dot">${c.icon}</div><div><div class="cv-cred-label">${c.label}</div><div class="cv-cred-sub">${c.sub}</div></div></div>`).join('')}</div></div>
+      <div class="cv-sec"><div class="cv-sec-title">Specialisations</div><div class="cv-tags">${s.tags.map(tag=>`<div class="cv-tag">${tag}</div>`).join('')}</div></div>
+      <div class="cv-sec"><div class="cv-sec-title">Availability</div><div class="cv-avail">${s.avail.map(a=>`<div class="cv-avail-row"><div class="cv-avail-dot"></div><div class="cv-avail-day">${a.day}</div><div class="cv-avail-time">${a.time}</div></div>`).join('')}</div></div>
+      ${s.cat==='Property'?`<div class="cv-sec"><div class="cv-sec-title">Portfolio</div><div class="cv-portfolio">${portfolioHtml}</div><div style="font-size:11px;color:var(--text-3);margin-top:8px;font-weight:400;">Representative properties — specific addresses revealed after introduction.</div></div>`:''}
+      <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected</h4><p>This seller's name, business name, contact details and specific location are revealed only after both parties accept a mutual introduction.</p></div></div></div>
+    </div>
+    <div class="cv-sticky">
+      <button class="cv-cta" onclick="openModal(${listingId})">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Request Introduction · 1T on acceptance
+      </button>
+    </div>`;
+  goTo('seller-cv');
+}
+
+function openDetail(id){
+  const l=LISTINGS[id];
+  const active=document.querySelector('.screen.active');
+  prevScreen=active?active.id.replace('screen-',''):'browse';
+  const t=trustTier(l.trust),m=CATS[l.cat].model,isCommit=m==='commit';
+  const imgHtml=l.photo
+    ?`<img src="${l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">`
+    :`<div class="emoji-fallback">${CATS[l.cat].icon}</div>`;
+  const flowHtml=isCommit?`
+    <div class="intro-model-block commit">
+      <div class="imb-label commit">⏳ Commitment Model · Property</div>
+      <div class="imb-title">Your introduction is protected</div>
+      <div class="commit-steps">
+        <div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You submit introduction request</div><div class="cs-sub">No Tuppence deducted yet</div></div></div>
+        <div class="cs"><div class="cs-dot system">⏸</div><div><div class="cs-label">Listing paused immediately</div><div class="cs-sub">Invisible to other buyers during review</div></div></div>
+        <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Seller has 48hrs to Accept or Decline</div><div class="cs-sub">Seller sees your message before deciding</div></div></div>
+        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Both parties connect directly</div></div></div>
+        <div class="cs"><div class="cs-dot penalty">✕</div><div><div class="cs-label">Declined or ignored → you pay nothing</div><div class="cs-sub">Seller pays 1T penalty to resubmit</div></div></div>
+      </div>
+    </div>`:`
+    <div class="intro-model-block queue">
+      <div class="imb-label queue">👥 Soft Queue · ${l.cat}</div>
+      <div class="imb-title">Listing stays live — always available</div>
+      <div class="commit-steps">
+        <div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You submit introduction request</div><div class="cs-sub">No Tuppence deducted yet · listing stays visible</div></div></div>
+        <div class="cs"><div class="cs-dot system q">👥</div><div><div class="cs-label">Added to seller's queue — listing stays live</div><div class="cs-sub">Other buyers can still request simultaneously</div></div></div>
+        <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Seller notified · has 48hrs to respond</div><div class="cs-sub">Seller reviews all queued requests</div></div></div>
+        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Connect directly with seller</div></div></div>
+        <div class="cs"><div class="cs-dot trust">↓</div><div><div class="cs-label">Ignored → you pay nothing · Trust Score −3</div><div class="cs-sub">No Tuppence penalty — accountability via trust</div></div></div>
+      </div>
+    </div>
+    ${l.queueCount>0?`<div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px;border:1.5px solid #c4b5fd;"><div style="font-size:24px;font-weight:700;color:var(--purple);font-family:'Inter',sans-serif;">${l.queueCount}</div><div><div style="font-size:13px;font-weight:600;color:var(--navy);">${l.queueCount} buyer${l.queueCount>1?'s':''} currently in queue</div><div style="font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px;">Seller responds to all requests within 48hrs</div></div></div>`:''}`;
+  document.getElementById('screen-detail').innerHTML=`
+    <div class="dhero">
+      <div class="ibox" style="background:${CATS[l.cat].bg};">${imgHtml}</div>
+      <div class="dnav">
+        <button class="dib" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="dib" onclick="toggleWishDetail(${id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+      </div>
+    </div>
+    <div class="dsheet">
+      <div class="dcat-row">
+        <span class="dcat">${l.cat}</span>
+        <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
+        ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}
+      </div>
+      <div class="dtitle">${l.title}</div>
+      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}</div></div>
+      <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
+        <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
+        <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
+      </div>
+      <div class="price-block">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+          ${l.price?`<div class="pamount">${l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`:`<div class="pneg">Negotiable — discuss with seller</div>`}
+        </div>
+      </div>
+      <div class="dsec"><h3>About this listing</h3><p>${l.desc}</p></div>
+      <div style="margin-bottom:16px;">
+        <button onclick="openSellerCV(${l.sellerIdx},${id})" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
+          <div style="width:40px;height:40px;border-radius:50%;background:${CATS[l.cat].bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${CATS[l.cat].icon}</div>
+          <div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      ${flowHtml}
+      <div class="anon-block">
+        <div class="lock-icon">🔒</div>
+        <h4>Identity protected until introduction</h4>
+        <p>Seller name, contact details and specific address are only revealed after both parties accept.</p>
+      </div>
+    </div>
+    <div class="sticky-cta">
+      <button class="cta-btn ${isCommit?'commit-cta':'queue-cta'}" onclick="openModal(${id})">
+        ${isCommit?'⏳ Request Introduction':'👥 Join Queue'}
+        <span class="cta-cost">· 1T on acceptance</span>
+      </button>
+    </div>`;
+  goTo('detail');
+}
+
+function openModal(id){
+  pendingIntroId=id;
+  const l=LISTINGS[id],isCommit=CATS[l.cat].model==='commit';
+  document.getElementById('modal-title').textContent=isCommit?'Request Introduction':'Join Queue';
+  document.getElementById('modal-desc').textContent=`${l.title} · ${l.area}`;
+  document.getElementById('modal-notice-commit').style.display=isCommit?'flex':'none';
+  document.getElementById('modal-notice-queue').style.display=isCommit?'none':'flex';
+  document.getElementById('modal-cta-btn').className=`modal-cta ${isCommit?'commit':'queue'}`;
+  document.getElementById('modal-cta-btn').textContent=isCommit?'Submit Introduction Request':'Join Queue · 1T on acceptance';
+  document.getElementById('intro-modal').classList.add('open');
+}
+function closeMBg(e){if(e.target.id==='intro-modal')document.getElementById('intro-modal').classList.remove('open');}
+function submitIntro(){
+  if(isOffline()){ showToast('You\'re offline — intro requests need a connection'); return; }
+  const name=document.getElementById('m-name').value.trim();
+  const email=document.getElementById('m-email').value.trim();
+  if(!name||!email){showToast('Please fill in your name and email');return;}
+  document.getElementById('intro-modal').classList.remove('open');
+  if(pendingIntroId!==null){
+    const l=LISTINGS[pendingIntroId],isCommit=CATS[l.cat].model==='commit';
+    if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
+    addTx(isCommit?'Introduction request sent':'Joined seller queue',l.title,'pending',false);
+    showToast(isCommit?'✓ Request sent · listing paused':'✓ Joined queue · waiting for seller');
+    renderGrid();
+    // Post to BEA if listing is a live listing
+    if(BEA_ENABLED && l.isLive) {
+      const beaId = parseInt(String(l.id).replace('bea_',''));
+      apiPost('/intros', { listing_id: beaId, buyer_email: email, message: name });
+    }
+  }
+}
+
+function renderMagicBanner(){
+  const area=document.getElementById('magic-banner-area');if(!area)return;
+  if(magicLink.active){
+    area.innerHTML=`<div class="magic-banner">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <div><h4>Invitation pre-filled for you</h4>
+      <p>${magicLink.name?`Welcome, ${magicLink.name}! `:''}Your invite details are ready — just complete the listing below.</p>
+      <div class="magic-clear" onclick="clearMagic()">Clear invitation data</div></div>
+    </div>`;
+    setTimeout(()=>{
+      if(magicLink.name){const el=document.getElementById('ob-name');if(el)el.value=magicLink.name;}
+      if(magicLink.email){const el=document.getElementById('ob-email');if(el)el.value=magicLink.email;}
+      if(magicLink.cat){const el=document.getElementById('ob-cat');if(el)el.value=magicLink.cat;}
+    },100);
+  } else {area.innerHTML='';}
+}
+function clearMagic(){magicLink={active:false,name:'',email:'',cat:'',area:''};renderMagicBanner();showToast('Invitation data cleared');}
+
+function submitOnboard(){
+  const name=document.getElementById('ob-name').value.trim();
+  const email=document.getElementById('ob-email').value.trim();
+  if(!name||!email){showToast('Please enter your name and email');return;}
+  showToast(`Welcome, ${name}! Building your profile…`);
+  setTimeout(()=>goTo('publish'),800);
+}
+
+// ── DASHBOARD TABS ────────────────────────────────────────
+function switchDashTab(tab){
+  ['listings','profile'].forEach(t=>{
+    document.getElementById('dtab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('dash-panel-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  if(tab==='profile') renderProfilePreview();
+}
+
+function renderProfilePreview(){
+  const s = SELLERS[0];
+  const el = document.getElementById('dash-profile-preview');
+  if(!el) return;
+  const photo = SELLER_PHOTOS[0];
+  const avatarInner = photo
+    ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Your photo">`
+    : `<span style="font-size:22px;">${CATS[s.cat].icon}</span>`;
+  el.innerHTML = `
+    <div style="background:var(--navy);border-radius:var(--r);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;">
+        ${avatarInner}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${s.headline}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);">${s.cat} · Your profile is anonymous to buyers</div>
+        ${photo?'<div style="font-size:10px;color:rgba(200,135,58,.8);margin-top:3px;font-weight:600;">📷 Photo uploaded · blurred for buyers</div>':'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">No photo yet · tap Edit to add one</div>'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      ${s.stats.map(st=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;">${st.val}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:500;">${st.label}</div>
+        </div>`).join('')}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Specialisations</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${s.tags.map(t=>`<span class="cv-tag">${t}</span>`).join('')}</div>
+    </div>`;
+}
+
+// ── CV EDIT ───────────────────────────────────────────────
+let editingSeller = null;
+let editTags = [];
+
+function openCVEdit(){
+  // Edit seller 0 as the "claimed" seller
+  editingSeller = JSON.parse(JSON.stringify(SELLERS[0]));
+  editTags = [...editingSeller.tags];
+  renderCVEditForm();
+  goTo('cv-edit');
+}
+
+function renderCVEditForm(){
+  const s = editingSeller;
+  document.getElementById('cv-edit-body').innerHTML = `
+
+    <!-- Profile photo -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">Profile Photo</div>
+      <div class="cv-photo-edit-row">
+        <div class="cv-photo-upload" id="cv-photo-circle">
+          <input type="file" id="cv-photo-inp" accept="image/*" onchange="handleCVPhoto(event)">
+          ${SELLER_PHOTOS[0]
+            ? `<img src="${SELLER_PHOTOS[0]}" id="cv-photo-preview" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            : `<div class="ph-label" id="cv-photo-label">📷<br>Add photo</div>`}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px;">Anonymous profile photo</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.55;font-weight:400;">Buyers see a blurred version — your face is never revealed until introduction is accepted. Adds trust without compromising anonymity.</div>
+          ${SELLER_PHOTOS[0]?`<button onclick="removeCVPhoto()" style="margin-top:8px;background:none;border:1px solid #fca5a5;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:var(--red);font-family:'Inter',sans-serif;">Remove photo</button>`:''}
+        </div>
+      </div>
+      <div class="cv-edit-hint" style="margin-top:8px;">JPG or PNG · under 2MB · Square crops work best</div>
+    </div>
+
+    <!-- Headline -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">Headline</div>
+      <div class="cv-edit-field">
+        <label>Professional headline</label>
+        <input type="text" id="ce-headline" value="${s.headline}" placeholder="e.g. Waterkloof Property Specialist">
+        <div class="cv-edit-hint">This is the first thing buyers see on your anonymous profile.</div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">About</div>
+      <div class="cv-edit-field">
+        <label>About this seller</label>
+        <textarea id="ce-about" placeholder="Describe your experience and approach…">${s.about}</textarea>
+        <div class="cv-edit-hint">Keep it factual and credential-focused. No names or contact details.</div>
+      </div>
+    </div>
+
+    <!-- Credentials -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">Credentials &amp; Qualifications</div>
+      ${s.creds.map((c,i)=>`
+        <div class="cv-cred-edit-row">
+          <div class="cv-cred-edit-num">${i+1}</div>
+          <div class="cv-cred-edit-fields">
+            <input type="text" id="ce-cred-icon-${i}" value="${c.icon}" placeholder="Icon (emoji)" style="width:64px;">
+            <input type="text" id="ce-cred-label-${i}" value="${c.label}" placeholder="Credential name">
+            <input type="text" id="ce-cred-sub-${i}" value="${c.sub}" placeholder="e.g. Issued 2021">
+          </div>
+        </div>`).join('')}
+      <div class="cv-edit-hint" style="margin-top:6px;">Edit each credential above. Icons are emoji — tap to change.</div>
+    </div>
+
+    <!-- Specialisation tags -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">Specialisation Tags</div>
+      <div class="cv-tags-edit" id="ce-tags-container">
+        ${editTags.map((t,i)=>`
+          <div class="cv-tag-edit">
+            ${t}
+            <button class="rm" onclick="removeTag(${i})">×</button>
+          </div>`).join('')}
+      </div>
+      <div class="cv-tag-add">
+        <input type="text" id="ce-tag-input" placeholder="Add a tag…" onkeydown="if(event.key==='Enter')addTag()">
+        <button onclick="addTag()">Add</button>
+      </div>
+    </div>
+
+    <!-- Availability -->
+    <div class="cv-edit-sec">
+      <div class="cv-edit-sec-title">Availability</div>
+      ${s.avail.map((a,i)=>`
+        <div class="cv-avail-edit-row">
+          <input type="text" id="ce-avail-day-${i}" value="${a.day}" placeholder="e.g. Mon–Fri">
+          <input type="text" id="ce-avail-time-${i}" value="${a.time}" placeholder="e.g. 08:00–17:00">
+        </div>`).join('')}
+      <div class="cv-edit-hint">Buyers see this when deciding whether to request an introduction.</div>
+    </div>
+
+    <!-- Save button at bottom -->
+    <button onclick="saveCVEdit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">Save Profile Changes</button>
+    <div style="height:20px;"></div>
+  `;
+}
+
+function handleCVPhoto(e){
+  const file = e.target.files[0]; if(!file) return;
+  if(file.size > 3*1024*1024){ showToast('⚠️ Photo is large — under 2MB works best'); }
+  const r = new FileReader();
+  r.onload = ev => {
+    SELLER_PHOTOS[0] = ev.target.result;
+    // Update circle preview
+    const circle = document.getElementById('cv-photo-circle');
+    const label  = document.getElementById('cv-photo-label');
+    if(label) label.style.display='none';
+    // Add or update preview img
+    let prev = document.getElementById('cv-photo-preview');
+    if(!prev){
+      prev = document.createElement('img');
+      prev.id = 'cv-photo-preview';
+      prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      if(circle) circle.appendChild(prev);
+    }
+    prev.src = ev.target.result;
+    showToast('✓ Photo uploaded — blurred for buyers');
+  };
+  r.readAsDataURL(file);
+}
+
+function removeCVPhoto(){
+  SELLER_PHOTOS[0] = null;
+  renderCVEditForm(); // re-render to show empty state
+  showToast('Photo removed');
+}
+
+
+function addTag(){
+  const inp = document.getElementById('ce-tag-input');
+  const val = inp.value.trim();
+  if(!val){ showToast('Enter a tag first'); return; }
+  if(editTags.includes(val)){ showToast('Tag already added'); return; }
+  if(editTags.length >= 10){ showToast('Maximum 10 tags'); return; }
+  editTags.push(val);
+  inp.value = '';
+  refreshTagsUI();
+}
+
+function removeTag(i){
+  editTags.splice(i,1);
+  refreshTagsUI();
+}
+
+function refreshTagsUI(){
+  const container = document.getElementById('ce-tags-container');
+  if(!container) return;
+  container.innerHTML = editTags.map((t,i)=>`
+    <div class="cv-tag-edit">
+      ${t}
+      <button class="rm" onclick="removeTag(${i})">×</button>
+    </div>`).join('');
+}
+
+function saveCVEdit(){
+  const s = editingSeller;
+
+  // Collect headline + about
+  s.headline = document.getElementById('ce-headline')?.value.trim() || s.headline;
+  s.about    = document.getElementById('ce-about')?.value.trim()    || s.about;
+
+  // Collect credentials
+  s.creds.forEach((c,i)=>{
+    c.icon  = document.getElementById(`ce-cred-icon-${i}`)?.value.trim()  || c.icon;
+    c.label = document.getElementById(`ce-cred-label-${i}`)?.value.trim() || c.label;
+    c.sub   = document.getElementById(`ce-cred-sub-${i}`)?.value.trim()   || c.sub;
+  });
+
+  // Collect tags
+  s.tags = [...editTags];
+
+  // Collect availability
+  s.avail.forEach((a,i)=>{
+    a.day  = document.getElementById(`ce-avail-day-${i}`)?.value.trim()  || a.day;
+    a.time = document.getElementById(`ce-avail-time-${i}`)?.value.trim() || a.time;
+  });
+
+  // Write back to SELLERS array
+  Object.assign(SELLERS[0], s);
+
+  showToast('✓ Profile saved');
+  goTo('dashboard');
+  switchDashTab('profile');
+}
+
+
+let pubImg=null, pubCat='', pubClaimed=false;
+
+function resetPublish(){
+  pubImg=null; pubCat=''; pubClaimed=false;
+  showPhase('a');
+  document.getElementById('uz-default').style.display='block';
+  document.getElementById('uz-preview').style.display='none';
+  const ti=document.getElementById('f-title'); if(ti)ti.value='';
+  const pi=document.getElementById('f-price'); if(pi)pi.value='';
+  const ce=document.getElementById('claim-email'); if(ce)ce.value='';
+  ['Property','Tutors','Services'].forEach(c=>{
+    const el=document.getElementById('cbt-'+c); if(el)el.classList.remove('selected');
+  });
+  document.getElementById('pub-b-next').style.opacity='.4';
+  document.getElementById('pub-b-next').style.pointerEvents='none';
+  document.getElementById('pub-c-model-note').style.display='none';
+  document.getElementById('pub-done').style.display='none';
+}
+
+function showPhase(p){
+  ['a','b','c','claim','done'].forEach(id=>{
+    const el=document.getElementById('pub-'+id); if(el)el.style.display='none';
+  });
+  const target=document.getElementById('pub-'+p);
+  if(target){ target.style.display='block'; window.scrollTo(0,0); }
+}
+
+function goPhase(p){
+  if(p==='c'&&!pubCat){ showToast('Please select a category'); return; }
+  if(p==='c') updateModelNote();
+  showPhase(p);
+}
+
+function handleImg(e){
+  const file=e.target.files[0]; if(!file) return;
+  if(file.size>3*1024*1024){ showToast('⚠️ Photo is large — compress if possible'); }
+  const r=new FileReader();
+  r.onload=ev=>{
+    pubImg=ev.target.result;
+    document.getElementById('uz-img').src=pubImg;
+    document.getElementById('uz-default').style.display='none';
+    document.getElementById('uz-preview').style.display='block';
+  };
+  r.readAsDataURL(file);
+}
+function clearImg(e){
+  e.stopPropagation(); pubImg=null;
+  document.getElementById('uz-default').style.display='block';
+  document.getElementById('uz-preview').style.display='none';
+  document.getElementById('img-inp').value='';
+}
+
+function selCatBig(cat){
+  pubCat=cat;
+  ['Property','Tutors','Services'].forEach(c=>{
+    document.getElementById('cbt-'+c).classList.toggle('selected', c===cat);
+  });
+  document.getElementById('pub-b-next').style.opacity='1';
+  document.getElementById('pub-b-next').style.pointerEvents='auto';
+}
+
+function updateModelNote(){
+  const note=document.getElementById('pub-c-model-note');
+  if(!pubCat){ note.style.display='none'; return; }
+  const isCommit=pubCat==='Property';
+  note.style.cssText=`display:block;background:${isCommit?'var(--gold-bg)':'var(--purple-bg)'};color:${isCommit?'var(--gold)':'var(--purple)'};border:1px solid ${isCommit?'#fde68a':'#c4b5fd'};border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.6;margin-top:4px;`;
+  note.innerHTML=isCommit
+    ?'<strong>⏳ Commitment Model</strong> — Your listing pauses on each intro request. Seller has 48hrs to accept or decline.'
+    :`<strong>👥 Soft Queue Model</strong> — Your listing stays live. Multiple buyers can request simultaneously. Ignoring reduces Trust Score.`;
+}
+
+function doPublish(){
+  if(isOffline()){ showToast('You\'re offline — publishing needs a connection'); return; }
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){ showToast('Please enter a title'); return; }
+  const price=document.getElementById('f-price').value.trim();
+  // Show claim screen
+  document.getElementById('claim-title').textContent=`"${title}" is live on MarketSquare Pretoria.`;
+  showPhase('claim');
+  showToast('✓ Listing published!');
+  // Post to BEA
+  if(BEA_ENABLED) {
+    apiPost('/listings', {
+      title: title,
+      price: price || 'POA',
+      category: pubCat || 'Services',
+      city: 'Pretoria',
+      area: 'Pretoria',
+      description: ''
+    }).then(result => {
+      if(result && result.id) {
+        console.log('Listing saved to BEA with id:', result.id);
+        // Reload live listings to show the new one
+        loadLiveListings();
+      }
+    });
+  }
+}
+
+function submitClaim(){
+  if(isOffline()){ showToast('You\'re offline — claiming needs a connection'); return; }
+  const email=document.getElementById('claim-email').value.trim();
+  if(!email||!email.includes('@')){ showToast('Please enter a valid email'); return; }
+  pubClaimed=true;
+  document.getElementById('pub-done-msg').textContent=`A claim link is on its way to ${email}. Check your inbox.`;
+  showPhase('done');
+  document.getElementById('pub-done').style.display='flex';
+  // Register user in BEA
+  if(BEA_ENABLED) {
+    apiPost('/users', { email: email, name: '' });
+  }
+}
+
+function skipClaim(){
+  document.getElementById('pub-done-msg').textContent='Your listing is live. You can claim it any time from the Seller dashboard.';
+  showPhase('done');
+  document.getElementById('pub-done').style.display='flex';
+}
+
+// ── DASHBOARD STATE ───────────────────────────────────────
+const dashState = {
+  listings: [
+    {id:'d0', title:'Modern Penthouse — Waterkloof', cat:'Property', status:'active', photo:PROP_PHOTOS[0], isCommit:true,
+     intros:[{id:'i0', name:'Thabo M.', msg:'Very interested in viewing this weekend.', time:'2h ago', status:'pending'}]},
+    {id:'d1', title:'Family Home — Centurion', cat:'Property', status:'paused', photo:PROP_PHOTOS[1], isCommit:true,
+     intros:[{id:'i1', name:'Priya N.', msg:'Looking for a family home in this area, price negotiable?', time:'14h ago', status:'pending'}]},
+    {id:'d2', title:'Maths & Science Tutor', cat:'Tutors', status:'active', photo:null, isCommit:false,
+     intros:[
+       {id:'i2', name:'Buyer A', msg:'Need help with Grade 12 maths urgently.', time:'1h ago', status:'pending'},
+       {id:'i3', name:'Buyer B', msg:'University first year calculus tutoring needed.', time:'3h ago', status:'pending'},
+       {id:'i4', name:'Buyer C', msg:'IEB matric prep — 3 months.', time:'5h ago', status:'pending'},
+     ]},
+  ]
+};
+
+function renderDash(){
+  updateDashStats();
+  document.getElementById('my-listings').innerHTML = dashState.listings.map(dl => renderDashCard(dl)).join('');
+}
+
+function updateDashStats(){
+  const pending = dashState.listings.reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
+  const active  = dashState.listings.filter(dl=>dl.status==='active').length;
+  const pd=document.getElementById('dash-pending'); if(pd)pd.textContent=pending;
+  const qd=document.getElementById('dash-queue');   if(qd)qd.textContent=dashState.listings.filter(dl=>!dl.isCommit).reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
+  const td=document.getElementById('dash-tn');      if(td)td.textContent=tuppence;
+}
+
+function renderDashCard(dl){
+  const pendingIntros = dl.intros.filter(i=>i.status==='pending');
+  const thumbHtml = dl.photo
+    ? `<img src="${dl.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
+    : CATS[dl.cat].icon;
+  const statusBadge = dl.status==='paused'
+    ? '<span class="ml-status st-paused">⏸ Paused — intro pending</span>'
+    : pendingIntros.length>0
+    ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
+    : '<span class="ml-status st-active">● Active</span>';
+
+  const introsHtml = pendingIntros.map(intro => `
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);">🙋 ${intro.name}</div>
+        <div style="font-size:10px;color:var(--text-3);">${intro.time}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;line-height:1.5;font-style:italic;">"${intro.msg}"</div>
+      <div style="display:flex;gap:8px;">
+        <button class="mla-btn accent" style="flex:1;padding:7px 0;text-align:center;"
+          onclick="handleIntro('${dl.id}','${intro.id}','accept')">✓ Accept · 1T</button>
+        <button class="mla-btn danger" style="flex:1;padding:7px 0;text-align:center;"
+          onclick="handleIntro('${dl.id}','${intro.id}','decline')">✕ Decline</button>
+      </div>
+    </div>`).join('');
+
+  return `<div class="mlcard ${dl.status==='paused'?'paused-card':pendingIntros.length>0?'queue-card':''}" id="dcard-${dl.id}">
+    <div class="mlthumb" style="background:${CATS[dl.cat].bg}">${thumbHtml}</div>
+    <div class="mlinfo" style="width:100%;">
+      <div class="mltitle">${dl.title}</div>
+      <div class="mlcat">${dl.cat}</div>
+      ${statusBadge}
+      ${introsHtml}
+      ${pendingIntros.length===0?`<div class="ml-actions"><button class="mla-btn" onclick="showToast('Edit listing — coming soon')">Edit</button><button class="mla-btn" onclick="showToast('Listing paused')">Pause</button></div>`:''}
+    </div>
+  </div>`;
+}
+
+async function handleIntro(dlId, introId, action){
+  const dl = dashState.listings.find(d=>d.id===dlId);
+  const intro = dl ? dl.intros.find(i=>i.id===introId) : null;
+  if(!intro) return;
+  if(action==='accept'){
+    if(tuppence<1){ showToast('Not enough Tuppence — top up first'); return; }
+    tuppence -= 1;
+    updateTuppenceUI();
+    addTx(`Intro accepted · ${intro.name}`, dl.title, '−1T', false);
+    intro.status = 'accepted';
+    dl.status = 'active';
+    const listing = LISTINGS.find(l=>l.title===dl.title);
+    if(listing) acceptedIntros.add(`${listing.sellerIdx}-${listing.id}`);
+    showToast(`✓ Accepted — ${intro.name}'s contact revealed. 1T deducted.`);
+    // Post to BEA if live intro
+    if(BEA_ENABLED && intro.beaId){
+      await apiPut('/intros/'+intro.beaId+'/accept');
+    }
+  } else {
+    intro.status = 'declined';
+    dl.status = 'active';
+    showToast(`Declined — ${intro.name} notified. Listing reactivated.`);
+    // Post to BEA if live intro
+    if(BEA_ENABLED && intro.beaId){
+      await apiPut('/intros/'+intro.beaId+'/decline');
+    }
+  }
+  renderDash();
+  updateTuppenceUI();
+}
+
+function renderRecruit(){
+  const body=document.getElementById('rec-body');if(!body)return;
+  body.innerHTML=Object.entries(PROSPECTS).map(([cat,list])=>{
+    const joined=list.filter(p=>p.status==='joined').length;
+    const pct=Math.round((joined/20)*100);
+    const statusMap={prospect:'rs-p',invited:'rs-i',joined:'rs-j'};
+    const statusLabel={prospect:'Prospect',invited:'Invited',joined:'Joined'};
+    return`<div class="rec-cat-sec">
+      <div class="rec-cat-head"><div class="rec-cat-name">${CATS[cat].icon} ${cat}</div><div class="rec-prog">${joined} / 20 joined</div></div>
+      <div class="rec-pbar"><div class="rec-pfill" style="width:${pct}%"></div></div>
+      <div class="rec-table">${list.map(p=>`<div class="rec-row"><div class="rec-name">${p.name}</div><div class="rec-city">${p.city}</div><span class="rec-stat ${statusMap[p.status]}">${statusLabel[p.status]}</span></div>`).join('')}</div>
+      <button class="add-btn" onclick="showToast('Add prospect — BEA coming')">+ Add prospect</button>
+    </div>`;
+  }).join('');
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+</script>
+<!-- ════════════════════════════════════════════════════════════
+     ■ END LOGIC
+     ════════════════════════════════════════════════════════════ -->
+
+</body>
+</html>

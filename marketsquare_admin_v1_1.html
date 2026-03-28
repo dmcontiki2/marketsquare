@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MarketSquare · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-2: #8b949e;
+  --text-3: #484f58;
+  --accent: #2a5298;
+  --accent-light: #1e3a5f;
+  --accent-bright: #4d8af0;
+  --gold: #d4a843;
+  --gold-bg: #2a1f00;
+  --green: #3fb950;
+  --green-bg: #0d2a16;
+  --red: #f85149;
+  --red-bg: #2a0d0d;
+  --purple: #a371f7;
+  --purple-bg: #1a0d2e;
+  --r: 10px;
+  --r-sm: 6px;
+  --sh: 0 4px 24px rgba(0,0,0,.4);
+  --t: .15s cubic-bezier(.4,0,.2,1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
+
+/* ── HEADER ────────────────────────────────────────────── */
+.admin-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
+.brand span { color: var(--accent-bright); }
+.version-badge {
+  font-size: 10px; font-weight: 700; background: var(--accent-light);
+  color: var(--accent-bright); border: 1px solid var(--accent);
+  border-radius: 4px; padding: 2px 8px; font-family: 'Inter', sans-serif;
+}
+
+/* ── PROGRESS BAR ──────────────────────────────────────── */
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  position: sticky;
+  top: 53px;
+  z-index: 99;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── STEPS ─────────────────────────────────────────────── */
+.step { display: none; padding: 24px 20px 100px; animation: fadeUp .2s ease; }
+.step.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.step-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent-bright); margin-bottom: 6px;
+}
+.step-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+.step-sub { font-size: 13px; color: var(--text-2); margin-bottom: 24px; line-height: 1.6; font-weight: 400; }
+
+/* ── FIELDS ────────────────────────────────────────────── */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--text-2); margin-bottom: 6px;
+}
+.req { color: var(--accent-bright); }
+.opt { font-size: 10px; color: var(--text-3); font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+
+.field input, .field textarea, .field select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--t);
+  -webkit-appearance: none;
+  line-height: 1.5;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent-bright); }
+.field select option { background: var(--surface-2); }
+.field textarea { height: 88px; resize: none; }
+.hint { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── CATEGORY TILES ─────────────────────────────────────── */
+.cat-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.cat-tile {
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all var(--t);
+  text-align: center;
+}
+.cat-tile:active { transform: scale(.97); }
+.cat-tile.selected { border-color: var(--accent-bright); background: var(--accent-light); }
+.cat-tile .ct-icon { font-size: 28px; margin-bottom: 8px; }
+.cat-tile .ct-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; font-family: 'Syne', sans-serif; }
+.cat-tile .ct-model { font-size: 10px; color: var(--text-3); font-weight: 500; line-height: 1.4; }
+.cat-tile.selected .ct-name { color: var(--accent-bright); }
+.cat-tile.selected .ct-model { color: var(--accent-bright); opacity: .7; }
+
+/* ── PHOTO UPLOAD ────────────────────────────────────────── */
+.photo-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-2);
+  position: relative;
+  transition: border-color var(--t);
+  margin-bottom: 12px;
+}
+.photo-zone:hover { border-color: var(--accent-bright); }
+.photo-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.pz-icon { font-size: 28px; margin-bottom: 8px; }
+.pz-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.pz-sub { font-size: 12px; color: var(--text-3); font-weight: 400; }
+
+.photo-preview-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.photo-thumb {
+  aspect-ratio: 4/3;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb .ph-status {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,.7); font-size: 9px; font-weight: 700;
+  text-align: center; padding: 3px 4px; color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+.photo-thumb .ph-remove {
+  position: absolute; top: 3px; right: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,0,0,.7); border: none; cursor: pointer;
+  color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center;
+}
+.photo-thumb.uploading { opacity: .6; }
+.photo-thumb.done .ph-status { background: rgba(63,185,80,.85); }
+.photo-thumb.error .ph-status { background: rgba(248,81,73,.85); }
+
+/* ── URL IMPORT ──────────────────────────────────────────── */
+.url-import { display: flex; gap: 8px; margin-bottom: 8px; }
+.url-import input {
+  flex: 1; background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 10px 12px; font-family: 'Inter', sans-serif;
+  font-size: 13px; color: var(--text); outline: none; transition: border-color var(--t);
+}
+.url-import input:focus { border-color: var(--accent-bright); }
+.url-import button {
+  background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 10px 14px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background var(--t);
+}
+.url-import button:hover { background: var(--accent-bright); }
+
+/* ── LISTING CARDS (summary) ────────────────────────────── */
+.listing-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.lc-thumb {
+  width: 52px; height: 52px; border-radius: var(--r-sm);
+  background: var(--accent-light); display: flex; align-items: center;
+  justify-content: center; font-size: 22px; flex-shrink: 0; overflow: hidden;
+}
+.lc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.lc-info { flex: 1; min-width: 0; }
+.lc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-cat { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 4px; }
+.lc-price { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.lc-status { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-top: 4px; }
+.lc-status.saved { background: var(--green-bg); color: var(--green); }
+.lc-status.pending { background: var(--gold-bg); color: var(--gold); }
+.lc-remove { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 16px; padding: 4px; flex-shrink: 0; line-height: 1; }
+.lc-remove:hover { color: var(--red); }
+
+/* ── SELLER ROW ──────────────────────────────────────────── */
+.seller-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sb-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--accent-light); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.sb-info { flex: 1; min-width: 0; }
+.sb-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-email { font-size: 11px; color: var(--text-3); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-cat { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--accent-bright); }
+.sb-change { font-size: 11px; color: var(--accent-bright); cursor: pointer; font-weight: 600; flex-shrink: 0; }
+
+/* ── MAGIC LINK ──────────────────────────────────────────── */
+.magic-link-box {
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.ml-label { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 6px; }
+.ml-url {
+  font-size: 12px; color: var(--text); word-break: break-all; line-height: 1.6;
+  background: var(--surface); border-radius: var(--r-sm); padding: 10px 12px;
+  border: 1px solid var(--border); margin-bottom: 10px; font-family: monospace;
+}
+.ml-copy {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 10px; font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: background var(--t);
+}
+.ml-copy:hover { background: var(--accent-bright); }
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.footer-bar {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 12px 20px max(env(safe-area-inset-bottom),12px);
+  display: flex; gap: 10px; z-index: 100;
+}
+.btn-primary {
+  flex: 1; background: var(--accent-bright); color: #fff; border: none;
+  border-radius: 50px; padding: 14px; font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--t);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary:hover { background: #5a96f5; }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .4; pointer-events: none; }
+.btn-secondary {
+  background: transparent; border: 1.5px solid var(--border); border-radius: 50px;
+  padding: 14px 18px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--text-2); cursor: pointer; transition: all var(--t);
+}
+.btn-secondary:hover { border-color: var(--text-2); color: var(--text); }
+
+.btn-add-listing {
+  width: 100%; background: transparent; border: 2px dashed var(--border);
+  border-radius: var(--r); padding: 13px; font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--text-3); cursor: pointer;
+  transition: all var(--t); margin-bottom: 8px;
+}
+.btn-add-listing:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+
+/* ── STATUS CHIPS ─────────────────────────────────────────── */
+.status-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px;
+}
+.chip-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+.chip-warning { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold); }
+.chip-error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+
+/* ── DIVIDER ──────────────────────────────────────────────── */
+.divider {
+  display: flex; align-items: center; gap: 10px; margin: 16px 0;
+  font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── INFO BOX ─────────────────────────────────────────────── */
+.info-box {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 14px;
+  font-size: 12px; color: var(--text-2); line-height: 1.6; font-weight: 400;
+}
+.info-box.warn { border-color: var(--gold); background: var(--gold-bg); color: var(--gold); }
+.info-box.ok   { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+
+/* ── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%) translateY(12px);
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 50px; padding: 10px 20px; font-size: 13px; font-weight: 600;
+  opacity: 0; transition: all .25s ease; z-index: 500; white-space: nowrap;
+  pointer-events: none; font-family: 'Inter', sans-serif; box-shadow: var(--sh);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SUMMARY SCREEN ────────────────────────────────────────── */
+.success-icon { font-size: 56px; margin-bottom: 16px; text-align: center; }
+.summary-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+}
+.ss-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px; text-align: center;
+}
+.ss-val { font-size: 26px; font-weight: 700; color: var(--accent-bright); font-family: 'Syne', sans-serif; }
+.ss-label { font-size: 11px; color: var(--text-3); margin-top: 3px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="admin-header">
+  <div class="brand">Market<span>Square</span> · Admin</div>
+  <div class="version-badge">v1.0</div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:25%"></div></div>
+
+<!-- ══ STEP 1: SELLER ══════════════════════════════════════ -->
+<div class="step active" id="step-1">
+  <div class="step-eyebrow">Step 1 of 4</div>
+  <div class="step-title">Who is the seller?</div>
+  <div class="step-sub">Enter the seller's details once. You can add multiple listings for the same seller in the next steps.</div>
+
+  <div class="field">
+    <label>Seller name <span class="req">*</span></label>
+    <input type="text" id="s-name" placeholder="e.g. Maroushke van der Berg">
+  </div>
+  <div class="field">
+    <label>Email address <span class="req">*</span></label>
+    <input type="email" id="s-email" placeholder="seller@example.com">
+  </div>
+  <div class="field">
+    <label>City <span class="req">*</span></label>
+    <select id="s-city">
+      <option value="Pretoria">Pretoria</option>
+      <option value="Johannesburg">Johannesburg</option>
+      <option value="Cape Town">Cape Town</option>
+      <option value="Durban">Durban</option>
+    </select>
+  </div>
+
+  <div class="info-box">
+    🔒 Seller identity is never shown to buyers. Name and email are only revealed after a mutual introduction is accepted.
+  </div>
+</div>
+
+<!-- ══ STEP 2: CATEGORY ════════════════════════════════════ -->
+<div class="step" id="step-2">
+  <div class="step-eyebrow">Step 2 of 4</div>
+  <div class="step-title">What are they selling?</div>
+  <div class="step-sub">Choose the category. This sets the introduction model and which fields appear.</div>
+
+  <div class="cat-tiles">
+    <div class="cat-tile" id="cat-Property" onclick="selectCat('Property')">
+      <div class="ct-icon">🏡</div>
+      <div class="ct-name">Property</div>
+      <div class="ct-model">⏳ Commitment model · listing pauses per intro</div>
+    </div>
+    <div class="cat-tile" id="cat-Tutors" onclick="selectCat('Tutors')">
+      <div class="ct-icon">🎓</div>
+      <div class="ct-name">Tutors</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Services" onclick="selectCat('Services')">
+      <div class="ct-icon">⚙️</div>
+      <div class="ct-name">Services</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Help Wanted" onclick="selectCat('Help Wanted')">
+      <div class="ct-icon">🤝</div>
+      <div class="ct-name">Help Wanted</div>
+      <div class="ct-model">👥 Soft queue · helper owns listing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 3: LISTINGS ════════════════════════════════════ -->
+<div class="step" id="step-3">
+  <div class="step-eyebrow">Step 3 of 4</div>
+  <div class="step-title" id="step3-title">Add listings</div>
+  <div class="step-sub" id="step3-sub">Add one or more listings. Each gets its own photo, price and details.</div>
+
+  <!-- Seller bar (summary) -->
+  <div class="seller-bar" id="seller-bar">
+    <div class="sb-avatar" id="sb-avatar">👤</div>
+    <div class="sb-info">
+      <div class="sb-name" id="sb-name">—</div>
+      <div class="sb-email" id="sb-email">—</div>
+      <div class="sb-cat" id="sb-cat">—</div>
+    </div>
+    <div class="sb-change" onclick="goStep(1)">Change</div>
+  </div>
+
+  <!-- Saved listings -->
+  <div id="listings-container"></div>
+
+  <!-- Add listing button -->
+  <button class="btn-add-listing" onclick="openListingForm()">+ Add listing</button>
+
+  <!-- ── LISTING FORM (inline, shown/hidden) ── -->
+  <div id="listing-form" style="display:none;">
+    <div style="background:var(--surface-2);border:1.5px solid var(--accent);border-radius:var(--r);padding:16px;margin-bottom:12px;">
+
+      <div style="font-size:12px;font-weight:700;color:var(--accent-bright);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;">
+        New listing
+      </div>
+
+      <!-- PHOTO -->
+      <div class="field">
+        <label>Photo <span class="opt">(optional — recommended)</span></label>
+
+        <div class="divider">From device</div>
+        <div class="photo-zone" id="photo-zone">
+          <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)">
+          <div class="pz-icon">📷</div>
+          <div class="pz-title">Tap to add photos</div>
+          <div class="pz-sub">JPEG or PNG · up to 5 photos · compressed automatically</div>
+        </div>
+        <div class="photo-preview-grid" id="photo-preview"></div>
+
+        <div class="divider">Or from URL</div>
+        <div class="url-import">
+          <input type="url" id="photo-url-input" placeholder="https://example.com/photo.jpg">
+          <button onclick="importPhotoUrl()">Import</button>
+        </div>
+        <div class="hint">⚠️ Only use photos you own or have rights to use. Imported photos are compressed and stored on MarketSquare servers — original URL is not retained.</div>
+      </div>
+
+      <!-- TITLE + PRICE -->
+      <div class="field">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. 3-bed family home in Waterkloof">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Price <span class="opt">(optional)</span></label>
+          <input type="text" id="f-price" placeholder="e.g. R4,200,000">
+        </div>
+        <div class="field">
+          <label>Price unit</label>
+          <select id="f-per">
+            <option value="">— (once-off)</option>
+            <option value="/ hour">/ hour</option>
+            <option value="/ month">/ month</option>
+            <option value="/ day">/ day</option>
+            <option value="/ session">/ session</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- AREA -->
+      <div class="field">
+        <label>Area / Suburb <span class="opt">(optional)</span></label>
+        <input type="text" id="f-area" placeholder="e.g. Waterkloof, Pretoria">
+      </div>
+
+      <!-- CATEGORY-SPECIFIC FIELDS -->
+      <div id="cat-fields-property" style="display:none;">
+        <div class="field-row-3">
+          <div class="field">
+            <label>Beds</label>
+            <input type="number" id="f-beds" min="0" max="20" placeholder="4">
+          </div>
+          <div class="field">
+            <label>Baths</label>
+            <input type="number" id="f-baths" min="0" max="20" placeholder="3">
+          </div>
+          <div class="field">
+            <label>Garages</label>
+            <input type="number" id="f-garages" min="0" max="20" placeholder="2">
+          </div>
+        </div>
+        <div class="field">
+          <label>Property type</label>
+          <select id="f-prop-type">
+            <option value="">Select type</option>
+            <option>House</option>
+            <option>Apartment</option>
+            <option>Townhouse</option>
+            <option>Land</option>
+            <option>Commercial</option>
+            <option>Smallholding</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="cat-fields-tutors" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Subject</label>
+            <select id="f-subject">
+              <option value="">Select subject</option>
+              <option>Maths & Science</option>
+              <option>Economics</option>
+              <option>English</option>
+              <option>Accounting</option>
+              <option>History</option>
+              <option>Languages</option>
+              <option>Computer Science</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Level</label>
+            <select id="f-level">
+              <option value="">Select level</option>
+              <option>Primary</option>
+              <option>Matric</option>
+              <option>University</option>
+              <option>Professional</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Mode</label>
+          <select id="f-mode">
+            <option value="">Select mode</option>
+            <option>In-person</option>
+            <option>Online</option>
+            <option>Either</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="cat-fields-services" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Service type</label>
+            <select id="f-service-type">
+              <option value="">Select type</option>
+              <option>Electrical</option>
+              <option>Plumbing</option>
+              <option>Financial</option>
+              <option>IT & Tech</option>
+              <option>Legal</option>
+              <option>Garden & Outdoor</option>
+              <option>Cleaning</option>
+              <option>Construction</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Availability</label>
+            <select id="f-availability">
+              <option value="">Select</option>
+              <option>Weekdays</option>
+              <option>Weekends</option>
+              <option>Both</option>
+              <option>Emergency</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="cat-fields-helpwanted" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Help type</label>
+            <select id="f-help-type">
+              <option value="">Select type</option>
+              <option>Gardening</option>
+              <option>Domestic</option>
+              <option>Plumbing</option>
+              <option>Electrical</option>
+              <option>Cleaning</option>
+              <option>Painting</option>
+              <option>Child minding</option>
+              <option>General household</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Availability</label>
+            <select id="f-hw-avail">
+              <option value="">Select</option>
+              <option>Weekdays</option>
+              <option>Weekends</option>
+              <option>Both</option>
+              <option>Flexible</option>
+            </select>
+          </div>
+        </div>
+        <div class="info-box warn" style="margin-top:4px;">
+          🇿🇦 NMW reminder: South African minimum wage is R28.79/hr · R121 minimum per day
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="field">
+        <label>Description <span class="opt">(optional)</span></label>
+        <textarea id="f-desc" placeholder="Key details, features, credentials..."></textarea>
+      </div>
+
+      <!-- FORM ACTIONS -->
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="cancelListingForm()" style="flex:1;background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:11px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;">Cancel</button>
+        <button onclick="saveListingToQueue()" style="flex:2;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Add to queue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 4: PUBLISH ═════════════════════════════════════ -->
+<div class="step" id="step-4">
+  <div class="step-eyebrow">Step 4 of 4</div>
+  <div class="step-title">Review & publish</div>
+  <div class="step-sub">Check everything looks right, then publish all listings to the live database.</div>
+
+  <div id="review-seller-bar" class="seller-bar" style="margin-bottom:20px;"></div>
+  <div id="review-listings"></div>
+
+  <div id="publish-result" style="display:none;">
+    <div class="success-icon">🎉</div>
+    <div class="summary-stats" id="publish-stats"></div>
+    <div class="info-box ok" id="publish-summary"></div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Magic claim link for seller</div>
+      <div class="magic-link-box">
+        <div class="ml-label">Send this to the seller</div>
+        <div class="ml-url" id="magic-url">—</div>
+        <button class="ml-copy" onclick="copyMagicLink()">📋 Copy claim link</button>
+      </div>
+      <div class="hint">Seller taps this link → lands on pre-filled MarketSquare claim page → enters email → receives secure claim link → listings are theirs. When n8n is ready, this link is emailed automatically.</div>
+    </div>
+
+    <button onclick="startFresh()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:24px;">+ Add another seller</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-bar" id="footer-bar">
+  <button class="btn-secondary" id="btn-back" onclick="goBack()" style="display:none;">← Back</button>
+  <button class="btn-primary" id="btn-next" onclick="goNext()">Continue →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const BEA_URL  = 'https://trustsquare.co';
+const API_KEY  = 'ms_mk_2026_pretoria_admin';
+const MS_URL   = 'https://trustsquare.co'; // FEA URL for magic link
+
+// ── STATE ─────────────────────────────────────────────────
+let currentStep = 1;
+let sellerData  = { name: '', email: '', city: 'Pretoria' };
+let selectedCat = '';
+let listingQueue = [];   // { formData, photos: [{thumbUrl, mediumUrl, localPreview}], status: 'queued'|'published' }
+let publishedIds = [];
+let editingIdx = null;
+
+const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '⚙️', 'Help Wanted': '🤝' };
+
+// ── NAVIGATION ────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+  document.getElementById('progress').style.width = (n * 25) + '%';
+  document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
+  updateNextBtn();
+  window.scrollTo(0, 0);
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById('btn-next');
+  if (currentStep === 4) {
+    const hasPublished = listingQueue.some(l => l.status === 'published');
+    btn.textContent = hasPublished ? 'Done ✓' : 'Publish all →';
+  } else {
+    btn.textContent = 'Continue →';
+  }
+}
+
+function goBack() {
+  if (currentStep > 1) goStep(currentStep - 1);
+}
+
+function goNext() {
+  if (currentStep === 1) {
+    const name  = document.getElementById('s-name').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    if (!name)  { showToast('Please enter the seller\'s name'); return; }
+    if (!email || !email.includes('@')) { showToast('Please enter a valid email'); return; }
+    sellerData = { name, email, city: document.getElementById('s-city').value };
+    goStep(2);
+
+  } else if (currentStep === 2) {
+    if (!selectedCat) { showToast('Please select a category'); return; }
+    updateStep3UI();
+    goStep(3);
+
+  } else if (currentStep === 3) {
+    if (listingQueue.length === 0) { showToast('Add at least one listing'); return; }
+    if (document.getElementById('listing-form').style.display !== 'none') {
+      showToast('Save or cancel the open listing form first'); return;
+    }
+    buildReviewScreen();
+    goStep(4);
+
+  } else if (currentStep === 4) {
+    const hasPublished = listingQueue.some(l => l.status === 'published');
+    if (hasPublished) { startFresh(); return; }
+    publishAll();
+  }
+}
+
+// ── CATEGORY ──────────────────────────────────────────────
+function selectCat(cat) {
+  selectedCat = cat;
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('cat-' + cat).classList.add('selected');
+}
+
+// ── STEP 3 UI ─────────────────────────────────────────────
+function updateStep3UI() {
+  document.getElementById('sb-avatar').textContent = CAT_ICONS[selectedCat] || '👤';
+  document.getElementById('sb-name').textContent   = sellerData.name;
+  document.getElementById('sb-email').textContent  = sellerData.email;
+  document.getElementById('sb-cat').textContent    = selectedCat + ' · ' + sellerData.city;
+  renderListingQueue();
+}
+
+function renderListingQueue() {
+  const c = document.getElementById('listings-container');
+  if (!listingQueue.length) { c.innerHTML = ''; return; }
+  c.innerHTML = listingQueue.map((l, i) => {
+    const thumb = l.photos.length ? `<img src="${l.photos[0].localPreview}">` : CAT_ICONS[selectedCat];
+    return `<div class="listing-card">
+      <div class="lc-thumb">${thumb}</div>
+      <div class="lc-info">
+        <div class="lc-cat">${selectedCat}</div>
+        <div class="lc-title">${l.formData.title || 'Untitled'}</div>
+        <div class="lc-price">${l.formData.price || 'Negotiable'}${l.formData.per ? ' ' + l.formData.per : ''}</div>
+        <div class="lc-status ${l.status === 'published' ? 'saved' : 'pending'}">
+          ${l.status === 'published' ? '✓ Published' : '⏳ In queue'}
+        </div>
+      </div>
+      ${l.status !== 'published' ? `<button class="lc-remove" onclick="removeListing(${i})">×</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── LISTING FORM ──────────────────────────────────────────
+function openListingForm() {
+  clearListingForm();
+  document.getElementById('listing-form').style.display = 'block';
+  showCatFields();
+  document.getElementById('listing-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelListingForm() {
+  document.getElementById('listing-form').style.display = 'none';
+  currentPhotos = [];
+  document.getElementById('photo-preview').innerHTML = '';
+}
+
+function showCatFields() {
+  ['property','tutors','services','helpwanted'].forEach(c => {
+    document.getElementById('cat-fields-' + c).style.display = 'none';
+  });
+  const map = { Property: 'property', Tutors: 'tutors', Services: 'services', 'Help Wanted': 'helpwanted' };
+  const key = map[selectedCat];
+  if (key) document.getElementById('cat-fields-' + key).style.display = 'block';
+}
+
+function clearListingForm() {
+  ['f-title','f-price','f-area','f-desc','f-beds','f-baths','f-garages',
+   'photo-url-input'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['f-per','f-prop-type','f-subject','f-level','f-mode',
+   'f-service-type','f-availability','f-help-type','f-hw-avail'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+  currentPhotos = [];
+  document.getElementById('photo-preview').innerHTML = '';
+}
+
+// ── PHOTOS ────────────────────────────────────────────────
+let currentPhotos = []; // { localPreview, thumbUrl, mediumUrl, status }
+
+function handlePhotos(e) {
+  const files = Array.from(e.target.files);
+  const remaining = 5 - currentPhotos.length;
+  if (!remaining) { showToast('Maximum 5 photos per listing'); e.target.value=''; return; }
+  let skipped = 0;
+  files.slice(0, remaining).forEach(file => {
+    if (file.size > 20 * 1024 * 1024) { skipped++; return; }
+    processPhoto(file);
+  });
+  if (skipped) showToast(`⚠️ ${skipped} photo${skipped>1?'s':''} over 20MB — skipped`);
+  if (files.length > remaining) showToast(`Only ${remaining} more photo${remaining>1?'s':''} allowed — others skipped`);
+  e.target.value = '';
+}
+
+async function importPhotoUrl() {
+  const url = document.getElementById('photo-url-input').value.trim();
+  if (!url || !url.startsWith('http')) { showToast('Please enter a valid URL'); return; }
+  if (currentPhotos.length >= 5) { showToast('Maximum 5 photos per listing'); return; }
+
+  showToast('Fetching photo...');
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Could not fetch');
+    const blob = await resp.blob();
+    if (!blob.type.startsWith('image/')) throw new Error('Not an image');
+    const file = new File([blob], 'imported.jpg', { type: blob.type });
+    processPhoto(file);
+    document.getElementById('photo-url-input').value = '';
+  } catch(e) {
+    showToast('Could not import photo — check the URL or try downloading it first');
+  }
+}
+
+function processPhoto(file) {
+  if (currentPhotos.length >= 5) { showToast('Maximum 5 photos'); return; }
+  const sizeMb = (file.size / (1024*1024)).toFixed(1);
+  const idx = currentPhotos.length;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const localPreview = ev.target.result;
+    currentPhotos.push({ localPreview, thumbUrl: null, mediumUrl: null, status: 'uploading', originalMb: sizeMb, file });
+    renderPhotoPreview();
+    uploadPhoto(file, idx);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadPhoto(file, idx) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch(BEA_URL + '/listings/photo', {
+      method: 'POST',
+      headers: { 'X-Api-Key': API_KEY },
+      body: formData
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || 'Upload failed ' + resp.status);
+    }
+    const data = await resp.json();
+    currentPhotos[idx].thumbUrl  = data.thumb_url;
+    currentPhotos[idx].mediumUrl = data.medium_url;
+    currentPhotos[idx].status    = 'done';
+    currentPhotos[idx].thumbKb   = data.thumb_kb;
+    currentPhotos[idx].mediumKb  = data.medium_kb;
+    showToast(`✓ Photo ${idx+1} compressed — ${data.thumb_kb}KB thumb · ${data.medium_kb}KB medium`);
+  } catch(e) {
+    currentPhotos[idx].status = 'error';
+    currentPhotos[idx].errorMsg = e.message;
+    showToast(`⚠️ Photo ${idx+1} failed — tap × to remove and try again`);
+  }
+  renderPhotoPreview();
+}
+
+function renderPhotoPreview() {
+  const grid = document.getElementById('photo-preview');
+  grid.innerHTML = currentPhotos.map((p, i) => `
+    <div class="photo-thumb ${p.status}">
+      <img src="${p.localPreview}">
+      <div class="ph-status">
+        ${p.status === 'uploading' ? `⏳ ${p.originalMb}MB` :
+          p.status === 'done'      ? `✓ ${p.thumbKb}KB` :
+                                     '✕ Failed'}
+      </div>
+      <button class="ph-remove" onclick="removePhoto(${i})">×</button>
+    </div>`).join('');
+}
+
+function removePhoto(idx) {
+  currentPhotos.splice(idx, 1);
+  renderPhotoPreview();
+}
+
+// ── SAVE TO QUEUE ─────────────────────────────────────────
+function saveListingToQueue() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { showToast('Please enter a title'); return; }
+
+  const uploading = currentPhotos.filter(p => p.status === 'uploading');
+  if (uploading.length) { showToast('⏳ Please wait — photos still uploading'); return; }
+  const errored = currentPhotos.filter(p => p.status === 'error');
+  if (errored.length) { showToast('⚠️ Remove failed photos before continuing'); return; }
+
+  const formData = {
+    title,
+    price:       document.getElementById('f-price').value.trim(),
+    per:         document.getElementById('f-per').value,
+    area:        document.getElementById('f-area').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    // Property
+    beds:        document.getElementById('f-beds')?.value || '',
+    baths:       document.getElementById('f-baths')?.value || '',
+    garages:     document.getElementById('f-garages')?.value || '',
+    propType:    document.getElementById('f-prop-type')?.value || '',
+    // Tutors
+    subject:     document.getElementById('f-subject')?.value || '',
+    level:       document.getElementById('f-level')?.value || '',
+    mode:        document.getElementById('f-mode')?.value || '',
+    // Services
+    serviceType: document.getElementById('f-service-type')?.value || '',
+    availability:document.getElementById('f-availability')?.value || '',
+    // Help Wanted
+    helpType:    document.getElementById('f-help-type')?.value || '',
+    hwAvail:     document.getElementById('f-hw-avail')?.value || '',
+  };
+
+  listingQueue.push({
+    formData,
+    photos: [...currentPhotos],
+    status: 'queued'
+  });
+
+  cancelListingForm();
+  renderListingQueue();
+  showToast('✓ Listing added to queue');
+}
+
+function removeListing(idx) {
+  listingQueue.splice(idx, 1);
+  renderListingQueue();
+}
+
+// ── REVIEW SCREEN ─────────────────────────────────────────
+function buildReviewScreen() {
+  const sellerBar = document.getElementById('review-seller-bar');
+  sellerBar.innerHTML = `
+    <div class="sb-avatar">${CAT_ICONS[selectedCat]}</div>
+    <div class="sb-info">
+      <div class="sb-name">${sellerData.name}</div>
+      <div class="sb-email">${sellerData.email}</div>
+      <div class="sb-cat">${selectedCat} · ${sellerData.city}</div>
+    </div>`;
+
+  const reviewListings = document.getElementById('review-listings');
+  reviewListings.innerHTML = listingQueue.map((l, i) => {
+    const thumb = l.photos.length ? `<img src="${l.photos[0].localPreview}">` : CAT_ICONS[selectedCat];
+    return `<div class="listing-card">
+      <div class="lc-thumb">${thumb}</div>
+      <div class="lc-info">
+        <div class="lc-cat">${selectedCat} · ${sellerData.city}</div>
+        <div class="lc-title">${l.formData.title}</div>
+        <div class="lc-price">${l.formData.price || 'Negotiable'}${l.formData.per ? ' ' + l.formData.per : ''}</div>
+        ${l.formData.area ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px;">📍 ${l.formData.area}</div>` : ''}
+        ${l.photos.length ? `<div style="font-size:10px;color:var(--accent-bright);margin-top:3px;">📷 ${l.photos.length} photo${l.photos.length>1?'s':''} ready</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('publish-result').style.display = 'none';
+  updateNextBtn();
+}
+
+// ── PUBLISH ───────────────────────────────────────────────
+async function publishAll() {
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true;
+  btn.textContent = 'Publishing...';
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < listingQueue.length; i++) {
+    const l = listingQueue[i];
+    if (l.status === 'published') continue;
+
+    try {
+      const thumb  = l.photos.find(p => p.thumbUrl)?.thumbUrl  || null;
+      const medium = l.photos.find(p => p.mediumUrl)?.mediumUrl || null;
+
+      const payload = {
+        title:       l.formData.title,
+        price:       l.formData.price || 'POA',
+        category:    selectedCat,
+        city:        sellerData.city,
+        area:        l.formData.area || sellerData.city,
+        description: l.formData.description || '',
+        thumb_url:   thumb,
+        medium_url:  medium,
+      };
+
+      const resp = await fetch(BEA_URL + '/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Api-Key': API_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+
+      // Register seller as user
+      await fetch(BEA_URL + '/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+        body: JSON.stringify({ email: sellerData.email, name: sellerData.name })
+      });
+
+      listingQueue[i].status = 'published';
+      listingQueue[i].beaId  = data.id;
+      publishedIds.push(data.id);
+      successCount++;
+    } catch(e) {
+      failCount++;
+      console.error('Publish failed for listing', i, e);
+    }
+  }
+
+  btn.disabled = false;
+
+  if (successCount > 0) {
+    showPublishSuccess(successCount, failCount);
+  } else {
+    showToast('Publish failed — check connection and try again');
+    btn.textContent = 'Retry publish →';
+  }
+}
+
+function showPublishSuccess(successCount, failCount) {
+  document.getElementById('publish-result').style.display = 'block';
+
+  document.getElementById('publish-stats').innerHTML = `
+    <div class="ss-card"><div class="ss-val">${successCount}</div><div class="ss-label">Published</div></div>
+    <div class="ss-card"><div class="ss-val">${listingQueue.length}</div><div class="ss-label">Total listings</div></div>`;
+
+  document.getElementById('publish-summary').textContent =
+    `✓ ${successCount} listing${successCount>1?'s':''} published to ${sellerData.city}.` +
+    (failCount ? ` ${failCount} failed — scroll up to retry.` : ' All listings are now live on MarketSquare.');
+
+  // Build magic link
+  const params = new URLSearchParams({
+    magic: '1',
+    name:  sellerData.name,
+    email: sellerData.email,
+    cat:   selectedCat,
+    city:  sellerData.city
+  });
+  const magicUrl = MS_URL + '?' + params.toString();
+  document.getElementById('magic-url').textContent = magicUrl;
+
+  document.getElementById('review-listings').innerHTML = '';
+  buildReviewScreen();
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = '+ Add another seller';
+  btn.disabled = false;
+
+  showToast(`🎉 ${successCount} listing${successCount>1?'s':''} live on MarketSquare!`);
+  window.scrollTo(0,0);
+}
+
+function copyMagicLink() {
+  const url = document.getElementById('magic-url').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✓ Magic link copied'));
+}
+
+function startFresh() {
+  sellerData   = { name: '', email: '', city: 'Pretoria' };
+  selectedCat  = '';
+  listingQueue = [];
+  publishedIds = [];
+  currentPhotos = [];
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-email').value = '';
+  document.getElementById('listing-form').style.display = 'none';
+  document.getElementById('publish-result').style.display = 'none';
+  goStep(1);
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
