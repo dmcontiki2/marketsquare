@@ -746,10 +746,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="stat"><div class="stat-val">3</div><div class="stat-label">Intros</div></div>
   </div>
   <div class="sec-head"><h2>Categories</h2><a onclick="goTo('browse')">All →</a></div>
-  <div class="cat-grid">
-    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:linear-gradient(140deg,#1e3a5f,#2a5298)">🏡</div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count">12 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:linear-gradient(140deg,#14532d,#15803d)">🎓</div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count">11 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:linear-gradient(140deg,#7c2d12,#b45309)">⚙️</div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count">8 listings</div></div></div>
+  <div class="cat-grid" id="home-cat-grid">
+    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:linear-gradient(140deg,#1e3a5f,#2a5298)">🏡</div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:linear-gradient(140deg,#14532d,#15803d)">🎓</div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:linear-gradient(140deg,#7c2d12,#b45309)">⚙️</div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count">0 listings</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
   <div class="hscroll" id="home-featured"></div>
@@ -1471,6 +1471,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 // Phase 1: demo data. Phase 2: live BEA at trustsquare.co
 const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
+const ACTIVE_CITY = 'Pretoria';
+
+// ── CATEGORY NORMALISER ───────────────────────────────────
+// Converts raw BEA category strings to exact CATS keys.
+function normCat(raw) {
+  const s = (raw || '').toLowerCase().trim();
+  if (s === 'property')                return 'Property';
+  if (s === 'tutors' || s === 'tutor') return 'Tutors';
+  if (s === 'services' || s === 'service') return 'Services';
+  return 'Services';
+}
 
 // ── API HELPERS ───────────────────────────────────────────
 async function apiGet(path) {
@@ -1516,18 +1527,9 @@ async function apiPut(path) {
 async function loadLiveListings() {
   if (!BEA_ENABLED || isOffline()) return;
   try {
-    const live = await apiGet('/listings?city=Pretoria');
+    const live = await apiGet('/listings?city=' + ACTIVE_CITY);
     if (live && live.length > 0) {
       // Map BEA listing format to FEA format and prepend to LISTINGS
-      // Normalise BEA category strings to match CATS keys exactly
-      // BEA may return 'property','PROPERTY','tutor','Tutor' etc.
-      function normCat(raw) {
-        const s = (raw || '').toLowerCase().trim();
-        if (s === 'property')           return 'Property';
-        if (s === 'tutors' || s === 'tutor') return 'Tutors';
-        if (s === 'services' || s === 'service') return 'Services';
-        return 'Services'; // safe fallback
-      }
       const mapped = live.map(l => {
         // Extract multi-photo URLs encoded as [photos:url1|url2|...] prefix
         let desc = l.description || '';
@@ -1582,6 +1584,7 @@ async function loadLiveListings() {
       });
       renderGrid();
       renderFeatured();
+      renderCatCounts();
     }
   } catch(e) {
     console.warn('loadLiveListings failed:', e);
@@ -2052,6 +2055,21 @@ function renderActiveFilterTags(){
       ${t}
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>`).join('');
+}
+
+function renderCatCounts() {
+  const grid = document.getElementById('home-cat-grid');
+  if (!grid) return;
+  const counts = {};
+  LISTINGS.filter(l => !l.id.startsWith('ph_')).forEach(l => {
+    const cat = normCat(l.cat);
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+  grid.querySelectorAll('.cat-tile').forEach(tile => {
+    const name = tile.querySelector('.cat-name').textContent.trim();
+    const n = counts[name] || 0;
+    tile.querySelector('.cat-count').textContent = n + (n === 1 ? ' listing' : ' listings');
+  });
 }
 
 function renderGrid(){
