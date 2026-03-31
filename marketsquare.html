@@ -193,6 +193,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0;position:relative;z-index:1;}
 .hero-logo{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
 .city-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:4px 10px;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:'Inter',sans-serif;}
+.city-badge.locked{cursor:default;pointer-events:none;opacity:.75;}
+.city-option{padding:13px 4px;border-bottom:1px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text);}
+.city-option:last-child{border-bottom:none;}
+.city-option.selected{color:var(--accent);font-weight:700;}
+.city-option:active{background:var(--surface-2);}
 .cdot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#fbbf24;}
 .hero-body{position:relative;z-index:1;}
 .hero-eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:500;margin-bottom:10px;font-family:'Inter',sans-serif;}
@@ -728,20 +733,20 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="home-hero">
     <div class="hero-top">
       <div class="hero-logo">MarketSquare</div>
-      <div class="city-badge" onclick="goTo('recruit')"><span class="cdot"></span>Pretoria · Recruiting</div>
+      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><span class="cdot"></span>Pretoria · Recruiting</div>
     </div>
     <div class="hero-body"></div>
   </div>
 
   <div class="cpb">
-    <div class="cpb-label"><span>Founding Seller Progress · Pretoria</span><span>23 / 60</span></div>
-    <div class="cpb-track"><div class="cpb-cat">Property</div><div class="cpb-bar"><div class="cpb-fill" style="width:40%"></div></div><div class="cpb-count">8/20</div></div>
-    <div class="cpb-track"><div class="cpb-cat">Tutors</div><div class="cpb-bar"><div class="cpb-fill" style="width:55%"></div></div><div class="cpb-count">11/20</div></div>
-    <div class="cpb-track"><div class="cpb-cat">Services</div><div class="cpb-bar"><div class="cpb-fill" style="width:20%"></div></div><div class="cpb-count">4/20</div></div>
+    <div class="cpb-label"><span id="cpb-city-name">Founding Seller Progress · Pretoria</span><span id="cpb-total">0 / 60</span></div>
+    <div class="cpb-track"><div class="cpb-cat">Property</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-property" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-property">0/20</div></div>
+    <div class="cpb-track"><div class="cpb-cat">Tutors</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-tutors" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-tutors">0/20</div></div>
+    <div class="cpb-track"><div class="cpb-cat">Services</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-services" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-services">0/20</div></div>
   </div>
   <div class="stats-row">
-    <div class="stat"><div class="stat-val">23</div><div class="stat-label">Sellers</div></div>
-    <div class="stat"><div class="stat-val">31</div><div class="stat-label">Listings</div></div>
+    <div class="stat"><div class="stat-val" id="home-sellers">0</div><div class="stat-label">Sellers</div></div>
+    <div class="stat"><div class="stat-val" id="home-listings">0</div><div class="stat-label">Listings</div></div>
     <div class="stat"><div class="stat-val" id="tn-home-bal">5</div><div class="stat-label">Tuppence</div></div>
     <div class="stat"><div class="stat-val">3</div><div class="stat-label">Intros</div></div>
   </div>
@@ -1454,6 +1459,19 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
+<!-- CITY SELECTOR SHEET -->
+<div class="filter-sheet-bg" id="city-selector-bg" onclick="if(event.target.id==='city-selector-bg')closeCitySelector()">
+  <div class="filter-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 id="city-selector-title" style="font-size:17px;font-weight:700;color:var(--navy);">Select City</h3>
+      <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+    </div>
+    <div id="city-selector-list"></div>
+    <div id="city-selector-note" style="font-size:11px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);line-height:1.5;"></div>
+  </div>
+</div>
+
 <div class="offline-banner" id="offline-banner">
   <div class="ob-dot"></div>
   <span id="offline-msg">You're offline — browsing cached content</span>
@@ -1471,7 +1489,14 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 // Phase 1: demo data. Phase 2: live BEA at trustsquare.co
 const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
-const ACTIVE_CITY = 'Pretoria';
+let activeCity = 'Pretoria'; // mutable — updated on city switch
+
+// FLAG: wire buyerTier to Paystack subscription state when Paystack goes live
+// Values: 'free' | 'starter' | 'premium'
+let buyerTier = 'free';
+
+// Populated by loadCities() — city list gated by tier
+let availableCities = ['Pretoria'];
 
 // ── CATEGORY NORMALISER ───────────────────────────────────
 // Converts raw BEA category strings to exact CATS keys.
@@ -1526,8 +1551,12 @@ async function apiPut(path) {
 // Once real sellers are onboarded, demo data will be removed.
 async function loadLiveListings() {
   if (!BEA_ENABLED || isOffline()) return;
+  // Clear previously fetched live listings before reload (needed on city switch)
+  for (let i = LISTINGS.length - 1; i >= 0; i--) {
+    if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
+  }
   try {
-    const live = await apiGet('/listings?city=' + ACTIVE_CITY);
+    const live = await apiGet('/listings?city=' + activeCity);
     if (live && live.length > 0) {
       // Map BEA listing format to FEA format and prepend to LISTINGS
       const mapped = live.map(l => {
@@ -1585,6 +1614,8 @@ async function loadLiveListings() {
       renderGrid();
       renderFeatured();
       renderCatCounts();
+      renderHomeProgress();
+      renderHomeStats();
     }
   } catch(e) {
     console.warn('loadLiveListings failed:', e);
@@ -1766,9 +1797,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
+  // Apply tier state to city badge (locked for Free tier)
+  const badge = document.getElementById('home-city-badge');
+  if (badge && buyerTier === 'free') badge.classList.add('locked');
+
   renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
-  // Load live listings from BEA on startup
-  loadLiveListings();
+  renderHomeProgress(); renderHomeStats();
+  // Load available cities then live listings from BEA on startup
+  loadCities().then(() => loadLiveListings());
   // Silent background refresh every 30 seconds — picks up new listings without manual reload
   setInterval(() => {
     if (!isOffline()) loadLiveListings();
@@ -2055,6 +2091,85 @@ function renderActiveFilterTags(){
       ${t}
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>`).join('');
+}
+
+// ── CITY SELECTOR ─────────────────────────────────────────
+// FLAG: BEA needs GET /cities?country=ZA (Starter) and GET /cities (Premium) endpoints
+async function loadCities() {
+  try {
+    const path = buyerTier === 'premium' ? '/cities' : '/cities?country=ZA';
+    const data = await apiGet(path);
+    if (Array.isArray(data) && data.length) { availableCities = data; return; }
+  } catch(e) { /* endpoint not yet live */ }
+  availableCities = ['Pretoria']; // placeholder until BEA /cities endpoint exists
+}
+
+function handleCityBadgeClick() {
+  if (buyerTier === 'free') return;
+  openCitySelector();
+}
+
+function openCitySelector() {
+  const title = document.getElementById('city-selector-title');
+  const note  = document.getElementById('city-selector-note');
+  const list  = document.getElementById('city-selector-list');
+  if (!list) return;
+  if (title) title.textContent = buyerTier === 'premium' ? 'Select City · Global' : 'Select City · South Africa';
+  if (note)  note.textContent  = availableCities.length <= 1
+    ? 'More cities coming soon — BEA /cities endpoint pending.'
+    : '';
+  list.innerHTML = availableCities.map(city =>
+    `<div class="city-option${city === activeCity ? ' selected' : ''}" onclick="selectCity('${city.replace(/'/g,"\\'")}')">${city}${city === activeCity ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+  ).join('');
+  document.getElementById('city-selector-bg').classList.add('open');
+}
+
+function closeCitySelector() {
+  const bg = document.getElementById('city-selector-bg');
+  if (bg) bg.classList.remove('open');
+}
+
+async function selectCity(city) {
+  closeCitySelector();
+  if (city === activeCity) return;
+  activeCity = city;
+  const badge = document.getElementById('home-city-badge');
+  if (badge) badge.innerHTML = `<span class="cdot"></span>${activeCity} · Recruiting`;
+  await loadLiveListings();
+}
+
+// ── HOME SCREEN PROGRESS + STATS ──────────────────────────
+function renderHomeProgress() {
+  const counts = { Property: 0, Tutors: 0, Services: 0 };
+  LISTINGS.filter(l => !l.id.startsWith('ph_')).forEach(l => {
+    const cat = normCat(l.cat);
+    if (Object.prototype.hasOwnProperty.call(counts, cat)) counts[cat]++;
+  });
+  const total  = counts.Property + counts.Tutors + counts.Services;
+  const target = 20;
+
+  const nameEl  = document.getElementById('cpb-city-name');
+  const totalEl = document.getElementById('cpb-total');
+  if (nameEl)  nameEl.textContent  = 'Founding Seller Progress · ' + activeCity;
+  if (totalEl) totalEl.textContent = total + ' / ' + (target * 3);
+
+  [['property', counts.Property], ['tutors', counts.Tutors], ['services', counts.Services]].forEach(([key, n]) => {
+    const fill  = document.getElementById('cpb-fill-'  + key);
+    const count = document.getElementById('cpb-count-' + key);
+    const pct   = Math.min(100, Math.round((n / target) * 100));
+    if (fill)  fill.style.width   = pct + '%';
+    if (count) count.textContent  = n + '/' + target;
+  });
+}
+
+function renderHomeStats() {
+  const live = LISTINGS.filter(l => !l.id.startsWith('ph_'));
+  const n    = live.length;
+  // FLAG: Sellers count needs BEA /sellers/count?city= endpoint — using listing count as proxy until then
+  const sellersEl  = document.getElementById('home-sellers');
+  const listingsEl = document.getElementById('home-listings');
+  if (sellersEl)  sellersEl.textContent  = n;
+  if (listingsEl) listingsEl.textContent = n;
 }
 
 function renderCatCounts() {
