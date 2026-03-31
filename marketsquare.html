@@ -688,14 +688,16 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
 /* ── PHOTO GALLERY STRIP (detail screen) ─────────────────── */
 .photo-strip-wrap{position:relative;height:260px;overflow:hidden;background:var(--navy);}
-.photo-strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.photo-strip::-webkit-scrollbar{display:none;}
+.photo-strip{display:flex;height:100%;overflow:hidden;scroll-behavior:smooth;}
 .photo-strip-slide{flex:0 0 100%;scroll-snap-align:start;position:relative;overflow:hidden;}
 .photo-strip-slide img{width:100%;height:100%;object-fit:cover;display:block;}
 .photo-strip-slide .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
 .photo-strip-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:3;}
 .psd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s;}
 .psd.active{background:#fff;width:16px;border-radius:3px;}
+.strip-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.85);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,.18);font-size:20px;color:var(--navy);line-height:1;padding:0;}
+.strip-arrow-left{left:10px;}
+.strip-arrow-right{right:10px;}
 
 /* ── RESPONSIVE: TABLET / LAPTOP ───────────────────────────── */
 @media (min-width: 768px) {
@@ -2285,6 +2287,7 @@ function openDetail(id){
         ${stripSlides}
       </div>
       ${dotsHtml}
+      ${photos.length>1?`<button class="strip-arrow strip-arrow-left" onclick="stripNav('${id}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" onclick="stripNav('${id}',1)">&#8250;</button>`:''}
       <div class="dnav">
         <button class="dib" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <button class="dib" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
@@ -2356,6 +2359,27 @@ function openDetail(id){
       </button>
     </div>`;
   goTo('detail');
+  if (photos.length > 1) {
+    const stripEl = document.getElementById('pstrip-' + id);
+    if (stripEl) {
+      let touchX = 0, touchScrollLeft = 0;
+      stripEl.addEventListener('touchstart', e => {
+        touchX = e.touches[0].clientX;
+        touchScrollLeft = stripEl.scrollLeft;
+      }, { passive: true });
+      stripEl.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 50) {
+          const w = stripEl.offsetWidth;
+          const count = stripEl.querySelectorAll('.photo-strip-slide').length;
+          const idx = Math.round(touchScrollLeft / w);
+          const next = Math.max(0, Math.min(count - 1, idx + (dx < 0 ? 1 : -1)));
+          stripEl.scrollTo({ left: next * w, behavior: 'smooth' });
+          setTimeout(() => updateStripDots(id, count), 80);
+        }
+      }, { passive: true });
+    }
+  }
 }
 
 function openModal(id){
@@ -2873,6 +2897,17 @@ function renderRecruit(){
 }
 
 // ── PHOTO STRIP DOT TRACKER ───────────────────────────────
+function stripNav(id, delta) {
+  const strip = document.getElementById('pstrip-' + id);
+  if (!strip) return;
+  const w = strip.offsetWidth;
+  const count = strip.querySelectorAll('.photo-strip-slide').length;
+  const idx = Math.round(strip.scrollLeft / w);
+  const next = Math.max(0, Math.min(count - 1, idx + delta));
+  strip.scrollTo({ left: next * w, behavior: 'smooth' });
+  setTimeout(() => updateStripDots(id, count), 80);
+}
+
 function updateStripDots(id, count) {
   if (count <= 1) return;
   const strip = document.getElementById('pstrip-' + id);
