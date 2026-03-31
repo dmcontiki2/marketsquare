@@ -296,6 +296,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .dsec{margin-bottom:18px;}
 .dsec h3{font-size:14px;font-weight:700;margin-bottom:7px;}
 .dsec p{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;}
+.desc-heading{font-size:13px;font-weight:700;color:var(--navy);margin:14px 0 4px;}
+.desc-p{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;margin:0 0 8px;}
+.dsec ul,.dsec ol{margin:6px 0 10px 18px;padding:0;}
+.dsec li{font-size:14px;color:var(--text-2);line-height:1.6;font-weight:400;margin-bottom:3px;}
 .intro-model-block{border-radius:var(--r);padding:16px;margin-bottom:16px;}
 .intro-model-block.commit{background:var(--navy);}
 .intro-model-block.queue{background:var(--purple-bg);border:1.5px solid #c4b5fd;}
@@ -1650,6 +1654,51 @@ function formatZAR(value) {
   return 'R' + parts[0] + '.' + parts[1];
 }
 
+function formatDesc(desc) {
+  if (!desc) return '';
+  const lines = desc.split('\n');
+  const out = [];
+  let listType = null;
+  const listItems = [];
+
+  function flushList() {
+    if (!listItems.length) return;
+    const tag = listType === 'ol' ? 'ol' : 'ul';
+    out.push(`<${tag}>${listItems.map(t=>`<li>${t}</li>`).join('')}</${tag}>`);
+    listItems.length = 0;
+    listType = null;
+  }
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { flushList(); continue; }
+
+    const bulletM  = line.match(/^[·\-\*•]\s+(.+)/);
+    const orderedM = line.match(/^\d+[)\.]\s+(.+)/);
+
+    if (bulletM) {
+      if (listType === 'ol') flushList();
+      listType = 'ul';
+      listItems.push(bulletM[1]);
+    } else if (orderedM) {
+      if (listType === 'ul') flushList();
+      listType = 'ol';
+      listItems.push(orderedM[1]);
+    } else {
+      flushList();
+      const isHeading = line.endsWith(':') ||
+        (line.length <= 50 && !/[.!?,;:]/.test(line));
+      if (isHeading) {
+        out.push(`<h4 class="desc-heading">${line.replace(/:$/, '')}</h4>`);
+      } else {
+        out.push(`<p class="desc-p">${line}</p>`);
+      }
+    }
+  }
+  flushList();
+  return out.join('');
+}
+
 function formatIntroTime(ts) {
   if (!ts) return 'Recently';
   try {
@@ -2285,7 +2334,7 @@ function openDetail(id){
           ${l.price?`<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`:`<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
-      <div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;">${l.desc}</p></div>
+      <div class="dsec"><h3>About this listing</h3>${formatDesc(l.desc)}</div>
       <div style="margin-bottom:16px;">
         <button onclick="openSellerCV(${l.sellerIdx},${id})" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
           <div style="width:40px;height:40px;border-radius:50%;background:${CATS[l.cat].bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${CATS[l.cat].icon}</div>
