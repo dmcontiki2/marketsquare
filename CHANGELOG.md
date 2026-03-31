@@ -213,3 +213,7 @@ scp C:\Users\David\Projects\MarketSquare\marketsquare_admin_v1_1.html root@178.1
 ### Task 1 — Currency formatting
 
 Added a shared `formatZAR(value)` helper to both `marketsquare.html` and `marketsquare_admin.html` that formats any numeric value as `R1,234,456.00` (capital R, comma thousands separators, two decimal places). Replaced all ad-hoc price display code: grid card prices, featured card prices, the detail modal price block, and the property filter range tag in `marketsquare.html`; and the listing queue cards (steps 3 & 4), the live listings manager price meta, and the deposit field in `marketsquare_admin.html`. The old `formatSAPrice` function (which used non-breaking-space thousands separators) has been removed and superseded. Values in storage are unchanged — formatting is display-only.
+
+### Task 2 — Property description formatting
+
+Added `formatDesc(desc)` to `marketsquare.html` which replaces the flat `<p style="white-space:pre-wrap">` description block in the listing detail screen with structured HTML. Rules: lines ending in `:` or short bare phrases (≤50 chars, no `.!?,;:`) become `<h4 class="desc-heading">` bold headings (trailing colon stripped); lines starting with `·`, `-`, `*`, or `•` become `<ul><li>` bullets; lines starting with `N)` or `N.` become `<ol><li>` items; remaining lines become `<p class="desc-p">` paragraphs. Consecutive list lines are grouped into a single `<ul>` or `<ol>` block. Four CSS rules added for the new classes. Stored description text is untouched.
