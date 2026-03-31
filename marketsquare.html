@@ -301,6 +301,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .dsec{margin-bottom:18px;}
 .dsec h3{font-size:14px;font-weight:700;margin-bottom:7px;}
 .dsec p{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;}
+.desc-headline{font-size:18px;font-weight:700;color:var(--navy);margin:0 0 6px;}
+.desc-tagline{font-size:14px;font-style:italic;color:var(--text-2);margin:0 0 12px;line-height:1.5;}
 .desc-heading{font-size:13px;font-weight:700;color:var(--navy);margin:14px 0 4px;}
 .desc-p{font-size:14px;color:var(--text-2);line-height:1.7;font-weight:400;margin:0 0 8px;}
 .dsec ul,.dsec ol{margin:6px 0 10px 18px;padding:0;}
@@ -1690,7 +1692,7 @@ function formatZAR(value) {
   return 'R' + parts[0] + '.' + parts[1];
 }
 
-function formatDesc(desc) {
+function formatDescLegacy(desc) {
   if (!desc) return '';
   const lines = desc.split('\n');
   const out = [];
@@ -1733,6 +1735,32 @@ function formatDesc(desc) {
   }
   flushList();
   return out.join('');
+}
+
+function formatDescJSON(d) {
+  const out = [];
+  if (d.headline) out.push(`<h2 class="desc-headline">${d.headline}</h2>`);
+  if (d.tagline)  out.push(`<p class="desc-tagline">${d.tagline}</p>`);
+  if (d.summary)  out.push(`<p class="desc-p">${d.summary}</p>`);
+  if (Array.isArray(d.sections)) {
+    for (const sec of d.sections) {
+      if (sec.heading) out.push(`<h4 class="desc-heading">${sec.heading}</h4>`);
+      if (Array.isArray(sec.bullets) && sec.bullets.length)
+        out.push(`<ul>${sec.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`);
+    }
+  }
+  return out.join('');
+}
+
+function formatDesc(desc) {
+  if (!desc) return '';
+  if (desc.trimStart().startsWith('{')) {
+    try {
+      const d = JSON.parse(desc);
+      return formatDescJSON(d);
+    } catch (e) { /* fall through to legacy */ }
+  }
+  return formatDescLegacy(desc);
 }
 
 function formatIntroTime(ts) {

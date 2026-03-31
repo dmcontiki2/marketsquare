@@ -120,6 +120,79 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent-bright); }
 .field select option { background: var(--surface-2); }
 .field textarea { height: 120px; resize: vertical; white-space: pre-wrap; }
+
+/* ── STRUCTURED DESCRIPTION EDITOR ─────────────────────── */
+.desc-editor { display: flex; flex-direction: column; gap: 10px; }
+.desc-editor .field { margin-bottom: 0; }
+.desc-section-block {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dsb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.dsb-remove {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.dsb-remove:hover { color: var(--accent-bright); }
+.dsb-heading {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.dsb-heading:focus { border-color: var(--accent-bright); }
+.dsb-bullets {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.dsb-bullets:focus { border-color: var(--accent-bright); }
+.desc-add-section {
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.desc-add-section:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
 .desc-preview { white-space: pre-wrap; }
 .hint { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
 
@@ -861,10 +934,25 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
         </div>
       </div>
 
-      <!-- DESCRIPTION -->
+      <!-- DESCRIPTION (structured editor) -->
       <div class="field">
         <label>Description <span class="opt">(optional)</span></label>
-        <textarea id="f-desc" placeholder="Key details, features, credentials..."></textarea>
+        <div class="desc-editor">
+          <div class="field">
+            <label style="font-size:10px;">Headline</label>
+            <input type="text" id="f-desc-headline" placeholder="e.g. Spacious 3-bed in Waterkloof Ridge">
+          </div>
+          <div class="field">
+            <label style="font-size:10px;">Tagline</label>
+            <input type="text" id="f-desc-tagline" placeholder="e.g. Quiet street · move-in ready · motivated seller">
+          </div>
+          <div class="field">
+            <label style="font-size:10px;">Summary</label>
+            <textarea id="f-desc-summary" style="height:80px;" placeholder="One or two sentences describing the listing..."></textarea>
+          </div>
+          <div id="desc-sections-container"></div>
+          <button type="button" class="desc-add-section" onclick="addDescSection()">+ Add section</button>
+        </div>
       </div>
 
       <!-- FORM ACTIONS -->
@@ -1193,7 +1281,10 @@ function showCatFields() {
 }
 
 function clearListingForm() {
-  ['f-title','f-price','f-area','f-desc','f-beds','f-baths','f-garages','f-parking',
+  descSections = [];
+  renderDescSections();
+  ['f-title','f-price','f-area','f-desc-headline','f-desc-tagline','f-desc-summary',
+   'f-beds','f-baths','f-garages','f-parking',
    'f-floor-size','f-prop-size','f-deposit','f-lease','f-occupation',
    'photo-url-input'].forEach(id => {
     const el = document.getElementById(id);
@@ -1344,7 +1435,10 @@ function saveListingToQueue() {
     price:         document.getElementById('f-price').value.trim(),
     per:           document.getElementById('f-per').value,
     area:          document.getElementById('f-area').value.trim(),
-    description:   document.getElementById('f-desc').value.trim(),
+    descHeadline:  document.getElementById('f-desc-headline').value.trim(),
+    descTagline:   document.getElementById('f-desc-tagline').value.trim(),
+    descSummary:   document.getElementById('f-desc-summary').value.trim(),
+    descSections:  getDescSections(),
     // Property
     beds:          document.getElementById('f-beds')?.value || '',
     baths:         document.getElementById('f-baths')?.value || '',
@@ -1419,51 +1513,100 @@ function buildReviewScreen() {
   updateNextBtn();
 }
 
+// ── STRUCTURED DESCRIPTION SECTION BUILDER ────────────────
+let descSections = [];
+
+function escAttr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderDescSections() {
+  const container = document.getElementById('desc-sections-container');
+  if (!container) return;
+  if (!descSections.length) { container.innerHTML = ''; return; }
+  container.innerHTML = descSections.map((sec, i) => `
+    <div class="desc-section-block">
+      <div class="dsb-head">
+        <span>Section ${i + 1}</span>
+        <button type="button" class="dsb-remove" onclick="removeDescSection(${i})" title="Remove section">×</button>
+      </div>
+      <input type="text" class="dsb-heading" placeholder="Section heading (optional)"
+             value="${escAttr(sec.heading)}"
+             oninput="descSections[${i}].heading=this.value">
+      <textarea class="dsb-bullets" placeholder="One bullet point per line"
+                oninput="descSections[${i}].bullets=this.value">${escAttr(sec.bullets)}</textarea>
+    </div>`).join('');
+}
+
+function addDescSection() {
+  descSections.push({ heading: '', bullets: '' });
+  renderDescSections();
+  // Focus the new section's heading input
+  const blocks = document.querySelectorAll('.desc-section-block');
+  if (blocks.length) {
+    const last = blocks[blocks.length - 1];
+    last.querySelector('.dsb-heading')?.focus();
+  }
+}
+
+function removeDescSection(idx) {
+  descSections.splice(idx, 1);
+  renderDescSections();
+}
+
+function getDescSections() {
+  return descSections.map(sec => ({
+    heading: sec.heading.trim(),
+    bullets: sec.bullets.split('\n').map(b => b.trim()).filter(b => b.length > 0)
+  })).filter(sec => sec.heading || sec.bullets.length);
+}
+
 // ── BUILD DESCRIPTION ─────────────────────────────────────
-// Combines structured fields + free-text description into
-// a single formatted string for the BEA payload.
+// Combines structured category fields + structured description
+// editor into a single JSON string for the BEA payload.
 function buildDescription(fd) {
-  const lines = [];
+  // Build auto-generated property specs as a section
+  const autoSections = [];
 
   if (selectedCat === 'Property') {
-    if (fd.listingType) lines.push(fd.listingType === 'rent' ? 'For rent' : 'For sale');
-    const specs = [];
-    if (fd.propType)  specs.push(fd.propType);
-    if (fd.beds)      specs.push(fd.beds + ' bed');
-    if (fd.baths)     specs.push(fd.baths + ' bath');
-    if (fd.garages)   specs.push(fd.garages + ' garage');
-    if (fd.parking)   specs.push(fd.parking + ' parking');
-    if (specs.length) lines.push(specs.join(' · '));
-
-    const sizes = [];
-    if (fd.floorSize) sizes.push('Floor: ' + fd.floorSize + ' m²');
-    if (fd.propSize)  sizes.push('Plot: ' + fd.propSize + ' m²');
-    if (sizes.length) lines.push(sizes.join(' · '));
-
-    const extras = [];
-    if (fd.furnished) extras.push(fd.furnished);
-    if (fd.pets)      extras.push('Pets: ' + fd.pets);
-    if (fd.internet)  extras.push('Internet: ' + fd.internet);
-    if (extras.length) lines.push(extras.join(' · '));
-
+    const specBullets = [];
+    if (fd.listingType) specBullets.push(fd.listingType === 'rent' ? 'For rent' : 'For sale');
+    if (fd.propType)    specBullets.push(fd.propType);
+    if (fd.beds)        specBullets.push(fd.beds + ' bed');
+    if (fd.baths)       specBullets.push(fd.baths + ' bath');
+    if (fd.garages)     specBullets.push(fd.garages + ' garage');
+    if (fd.parking)     specBullets.push(fd.parking + ' parking');
+    if (fd.floorSize)   specBullets.push('Floor: ' + fd.floorSize + ' m²');
+    if (fd.propSize)    specBullets.push('Plot: ' + fd.propSize + ' m²');
+    if (fd.furnished)   specBullets.push(fd.furnished);
+    if (fd.pets)        specBullets.push('Pets: ' + fd.pets);
+    if (fd.internet)    specBullets.push('Internet: ' + fd.internet);
     if (fd.features && fd.features.length)
-      lines.push('Features: ' + fd.features.join(', '));
-
+      specBullets.push('Features: ' + fd.features.join(', '));
     if (fd.listingType === 'rent') {
-      const rent = [];
-      if (fd.deposit)    rent.push('Deposit: ' + (formatZAR(fd.deposit) || fd.deposit));
-      if (fd.lease)      rent.push('Lease: ' + fd.lease);
-      if (fd.occupation) rent.push('Available: ' + fd.occupation);
-      if (rent.length) lines.push(rent.join(' · '));
+      if (fd.deposit)    specBullets.push('Deposit: ' + (formatZAR(fd.deposit) || fd.deposit));
+      if (fd.lease)      specBullets.push('Lease: ' + fd.lease);
+      if (fd.occupation) specBullets.push('Available: ' + fd.occupation);
     }
+    if (specBullets.length)
+      autoSections.push({ heading: 'Property details', bullets: specBullets });
   }
 
-  if (fd.description) {
-    if (lines.length) lines.push('');
-    lines.push(fd.description);
-  }
+  const userSections = (fd.descSections || []).map(sec => ({
+    heading: sec.heading || '',
+    bullets: sec.bullets || []
+  })).filter(sec => sec.heading || sec.bullets.length);
 
-  return lines.join('\n');
+  const obj = {
+    headline: fd.descHeadline || '',
+    tagline:  fd.descTagline  || '',
+    summary:  fd.descSummary  || '',
+    sections: [...autoSections, ...userSections]
+  };
+
+  // Only emit JSON if there is at least some content
+  const hasContent = obj.headline || obj.tagline || obj.summary || obj.sections.length;
+  return hasContent ? JSON.stringify(obj) : '';
 }
 
 // ── PUBLISH ───────────────────────────────────────────────
