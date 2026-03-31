@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketSquare · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-2: #8b949e;
+  --text-3: #484f58;
+  --accent: #2a5298;
+  --accent-light: #1e3a5f;
+  --accent-bright: #4d8af0;
+  --gold: #d4a843;
+  --gold-bg: #2a1f00;
+  --green: #3fb950;
+  --green-bg: #0d2a16;
+  --red: #f85149;
+  --red-bg: #2a0d0d;
+  --purple: #a371f7;
+  --purple-bg: #1a0d2e;
+  --r: 10px;
+  --r-sm: 6px;
+  --sh: 0 4px 24px rgba(0,0,0,.4);
+  --t: .15s cubic-bezier(.4,0,.2,1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
+
+/* ── HEADER ────────────────────────────────────────────── */
+.admin-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
+.brand span { color: var(--accent-bright); }
+.version-badge {
+  font-size: 10px; font-weight: 700; background: var(--accent-light);
+  color: var(--accent-bright); border: 1px solid var(--accent);
+  border-radius: 4px; padding: 2px 8px; font-family: 'Inter', sans-serif;
+}
+
+/* ── PROGRESS BAR ──────────────────────────────────────── */
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  position: sticky;
+  top: 53px;
+  z-index: 99;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── STEPS ─────────────────────────────────────────────── */
+.step { display: none; padding: 24px 20px 140px; animation: fadeUp .2s ease; }
+.step.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.step-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent-bright); margin-bottom: 6px;
+}
+.step-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+.step-sub { font-size: 13px; color: var(--text-2); margin-bottom: 24px; line-height: 1.6; font-weight: 400; }
+
+/* ── FIELDS ────────────────────────────────────────────── */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--text-2); margin-bottom: 6px;
+}
+.req { color: var(--accent-bright); }
+.opt { font-size: 10px; color: var(--text-3); font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+
+.field input, .field textarea, .field select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--t);
+  -webkit-appearance: none;
+  line-height: 1.5;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent-bright); }
+.field select option { background: var(--surface-2); }
+.field textarea { height: 120px; resize: vertical; white-space: pre-wrap; }
+.desc-preview { white-space: pre-wrap; }
+.hint { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── CATEGORY TILES ─────────────────────────────────────── */
+.cat-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.cat-tile {
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all var(--t);
+  text-align: center;
+}
+.cat-tile:active { transform: scale(.97); }
+.cat-tile.selected { border-color: var(--accent-bright); background: var(--accent-light); }
+.cat-tile .ct-icon { font-size: 28px; margin-bottom: 8px; }
+.cat-tile .ct-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; font-family: 'Syne', sans-serif; }
+.cat-tile .ct-model { font-size: 10px; color: var(--text-3); font-weight: 500; line-height: 1.4; }
+.cat-tile.selected .ct-name { color: var(--accent-bright); }
+.cat-tile.selected .ct-model { color: var(--accent-bright); opacity: .7; }
+
+/* ── PHOTO UPLOAD ────────────────────────────────────────── */
+.photo-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-2);
+  position: relative;
+  transition: border-color var(--t);
+  margin-bottom: 12px;
+}
+.photo-zone:hover { border-color: var(--accent-bright); }
+.photo-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.pz-icon { font-size: 28px; margin-bottom: 8px; }
+.pz-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.pz-sub { font-size: 12px; color: var(--text-3); font-weight: 400; }
+
+.photo-preview-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+.photo-preview-strip::-webkit-scrollbar { height: 4px; }
+.photo-preview-strip::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 2px; }
+.photo-preview-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.photo-thumb {
+  flex: 0 0 110px;
+  height: 82px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  scroll-snap-align: start;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb .ph-status {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,.7); font-size: 9px; font-weight: 700;
+  text-align: center; padding: 3px 4px; color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+.photo-thumb .ph-remove {
+  position: absolute; top: 3px; right: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,0,0,.7); border: none; cursor: pointer;
+  color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center;
+}
+.photo-thumb.uploading { opacity: .6; }
+.photo-thumb.done .ph-status { background: rgba(63,185,80,.85); }
+.photo-thumb.error .ph-status { background: rgba(248,81,73,.85); }
+
+/* ── URL IMPORT ──────────────────────────────────────────── */
+.url-import { display: flex; gap: 8px; margin-bottom: 8px; }
+.url-import input {
+  flex: 1; background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 10px 12px; font-family: 'Inter', sans-serif;
+  font-size: 13px; color: var(--text); outline: none; transition: border-color var(--t);
+}
+.url-import input:focus { border-color: var(--accent-bright); }
+.url-import button {
+  background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 10px 14px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background var(--t);
+}
+.url-import button:hover { background: var(--accent-bright); }
+
+/* ── LISTING CARDS (summary) ────────────────────────────── */
+.listing-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.lc-thumb {
+  width: 52px; height: 52px; border-radius: var(--r-sm);
+  background: var(--accent-light); display: flex; align-items: center;
+  justify-content: center; font-size: 22px; flex-shrink: 0; overflow: hidden;
+}
+.lc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.lc-info { flex: 1; min-width: 0; }
+.lc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-cat { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 4px; }
+.lc-price { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.lc-status { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-top: 4px; }
+.lc-status.saved { background: var(--green-bg); color: var(--green); }
+.lc-status.pending { background: var(--gold-bg); color: var(--gold); }
+.lc-remove { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 16px; padding: 4px; flex-shrink: 0; line-height: 1; }
+.lc-remove:hover { color: var(--red); }
+
+/* ── SELLER ROW ──────────────────────────────────────────── */
+.seller-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sb-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--accent-light); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.sb-info { flex: 1; min-width: 0; }
+.sb-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-email { font-size: 11px; color: var(--text-3); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-cat { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--accent-bright); }
+.sb-change { font-size: 11px; color: var(--accent-bright); cursor: pointer; font-weight: 600; flex-shrink: 0; }
+
+/* ── MAGIC LINK ──────────────────────────────────────────── */
+.magic-link-box {
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.ml-label { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 6px; }
+.ml-url {
+  font-size: 12px; color: var(--text); word-break: break-all; line-height: 1.6;
+  background: var(--surface); border-radius: var(--r-sm); padding: 10px 12px;
+  border: 1px solid var(--border); margin-bottom: 10px; font-family: monospace;
+}
+.ml-copy {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 10px; font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: background var(--t);
+}
+.ml-copy:hover { background: var(--accent-bright); }
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.footer-bar {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 12px 20px max(env(safe-area-inset-bottom),12px);
+  display: flex; gap: 10px; z-index: 100;
+}
+.btn-primary {
+  flex: 1; background: var(--accent-bright); color: #fff; border: none;
+  border-radius: 50px; padding: 14px; font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--t);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary:hover { background: #5a96f5; }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .4; pointer-events: none; }
+.btn-secondary {
+  background: transparent; border: 1.5px solid var(--border); border-radius: 50px;
+  padding: 14px 18px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  color: var(--text-2); cursor: pointer; transition: all var(--t);
+}
+.btn-secondary:hover { border-color: var(--text-2); color: var(--text); }
+
+.btn-add-listing {
+  width: 100%; background: transparent; border: 2px dashed var(--border);
+  border-radius: var(--r); padding: 13px; font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--text-3); cursor: pointer;
+  transition: all var(--t); margin-bottom: 8px;
+}
+.btn-add-listing:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+
+/* ── STATUS CHIPS ─────────────────────────────────────────── */
+.status-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px;
+}
+.chip-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+.chip-warning { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold); }
+.chip-error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+
+/* ── DIVIDER ──────────────────────────────────────────────── */
+.divider {
+  display: flex; align-items: center; gap: 10px; margin: 16px 0;
+  font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── INFO BOX ─────────────────────────────────────────────── */
+.info-box {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 14px;
+  font-size: 12px; color: var(--text-2); line-height: 1.6; font-weight: 400;
+}
+.info-box.warn { border-color: var(--gold); background: var(--gold-bg); color: var(--gold); }
+.info-box.ok   { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+
+/* ── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%) translateY(12px);
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 50px; padding: 10px 20px; font-size: 13px; font-weight: 600;
+  opacity: 0; transition: all .25s ease; z-index: 500; white-space: nowrap;
+  pointer-events: none; font-family: 'Inter', sans-serif; box-shadow: var(--sh);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SUMMARY SCREEN ────────────────────────────────────────── */
+.success-icon { font-size: 56px; margin-bottom: 16px; text-align: center; }
+.summary-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+}
+.ss-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px; text-align: center;
+}
+.ss-val { font-size: 26px; font-weight: 700; color: var(--accent-bright); font-family: 'Syne', sans-serif; }
+.ss-label { font-size: 11px; color: var(--text-3); margin-top: 3px; font-weight: 500; text-transform: uppercase; letter-spacing: .3px; }
+
+/* ── VIEWS ─────────────────────────────────────────────────── */
+.view { display: none; padding-bottom: 80px; }
+.view.active { display: block; }
+#view-onboard { padding-bottom: 0; }
+.view-header { font-size: 22px; font-weight: 800; font-family: 'Syne', sans-serif; padding: 20px 20px 4px; }
+.view-sub { font-size: 13px; color: var(--text-2); padding: 0 20px 16px; line-height: 1.6; }
+
+/* ── NAV BAR ──────────────────────────────────────────────── */
+.admin-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; align-items: stretch; z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; cursor: pointer;
+  font-size: 9px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase;
+  color: var(--text-3); transition: color var(--t);
+  -webkit-tap-highlight-color: transparent;
+  padding: 10px 2px 8px; border: none; background: none; font-family: 'Inter', sans-serif;
+}
+.nav-item .nav-icon { font-size: 18px; line-height: 1; }
+.nav-item.active { color: var(--accent-bright); }
+.nav-badge {
+  position: absolute; top: -4px; right: -6px;
+  background: var(--red); color: #fff; border-radius: 50%;
+  width: 14px; height: 14px; font-size: 8px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── FILTER CHIPS ───────────────────────────────────────────── */
+.filter-bar { display: flex; gap: 8px; padding: 0 20px 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex: 0 0 auto; background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: 50px; padding: 6px 14px; font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer;
+  transition: all var(--t); white-space: nowrap;
+}
+.filter-chip.active { background: var(--accent-light); border-color: var(--accent-bright); color: var(--accent-bright); }
+
+/* ── LISTING MANAGER CARDS ──────────────────────────────────── */
+.lm-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.lm-card-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.lm-thumb { width: 52px; height: 52px; border-radius: var(--r-sm); flex-shrink: 0; background: var(--accent-light); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.lm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.lm-info { flex: 1; min-width: 0; }
+.lm-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lm-meta { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.lm-actions { display: flex; gap: 8px; }
+.lm-btn {
+  flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 8px; font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--text-2); cursor: pointer;
+  transition: all var(--t); text-align: center;
+}
+.lm-btn.del { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+/* ── INTRO ALERT CARDS ──────────────────────────────────────── */
+.intro-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.intro-card.urgent { border-color: var(--gold); background: var(--gold-bg); }
+.intro-card.expired-card { border-color: var(--red); background: var(--red-bg); }
+.ic-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.ic-listing { font-size: 13px; font-weight: 700; }
+.ic-time { font-size: 11px; font-weight: 700; }
+.ic-time.ok { color: var(--green); }
+.ic-time.warn { color: var(--gold); }
+.ic-time.expired { color: var(--red); }
+.ic-meta { font-size: 12px; color: var(--text-2); margin-bottom: 10px; }
+.ic-actions { display: flex; gap: 8px; }
+
+/* ── RESPONSIVE: TABLET / LAPTOP ───────────────────────────── */
+@media (min-width: 768px) {
+  body { max-width: 760px; }
+  .admin-header, .footer-bar, .admin-nav { max-width: 760px; }
+  .progress-bar { max-width: 760px; left: 50%; transform: translateX(-50%); }
+  /* Wizard: two-column field rows on desktop */
+  .step { padding: 28px 28px 160px; }
+  /* Listings manager: 2-column card grid */
+  #lm-container { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 28px !important; }
+  #lm-container .lm-card { margin-bottom: 0; }
+  /* Analytics + summary stats: 4 per row */
+  .summary-stats { grid-template-columns: repeat(4, 1fr); }
+  /* General padding increase */
+  .view-header { padding: 24px 28px 4px; }
+  .view-sub { padding: 0 28px 16px; }
+  .filter-bar { padding: 0 28px 12px; }
+  .field-row { grid-template-columns: 1fr 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="admin-header">
+  <div class="brand">Market<span>Square</span> · Admin</div>
+  <div class="version-badge">v2.0</div>
+</div>
+<div id="view-onboard" class="view active">
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:25%"></div></div>
+
+<!-- ══ STEP 1: SELLER ══════════════════════════════════════ -->
+<div class="step active" id="step-1">
+  <div class="step-eyebrow">Step 1 of 4</div>
+  <div class="step-title">Who is the seller?</div>
+  <div class="step-sub">Enter the seller's details once. You can add multiple listings for the same seller in the next steps.</div>
+
+  <div class="field">
+    <label>Seller name <span class="req">*</span></label>
+    <input type="text" id="s-name" placeholder="e.g. Maroushke van der Berg">
+  </div>
+  <div class="field">
+    <label>Email address <span class="req">*</span></label>
+    <input type="email" id="s-email" placeholder="seller@example.com">
+  </div>
+  <div class="field">
+    <label>City <span class="req">*</span></label>
+    <select id="s-city">
+      <option value="Pretoria">Pretoria</option>
+      <option value="Johannesburg">Johannesburg</option>
+      <option value="Cape Town">Cape Town</option>
+      <option value="Durban">Durban</option>
+    </select>
+  </div>
+
+  <div class="info-box">
+    🔒 Seller identity is never shown to buyers. Name and email are only revealed after a mutual introduction is accepted.
+  </div>
+
+  <!-- Delete an existing listing by ID -->
+  <div style="margin-top:8px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px;">⚠️ Delete an existing listing</div>
+    <div style="display:flex;gap:8px;">
+      <input type="number" id="del-listing-id" placeholder="Listing ID (e.g. 7)"
+        style="flex:1;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;">
+      <button onclick="deleteListingById()"
+        style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:var(--r-sm);padding:10px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap;">
+        🗑 Delete
+      </button>
+    </div>
+    <div class="hint" style="margin-top:4px;">Enter the BEA listing ID to permanently remove it from the marketplace. Check the URL or BEA logs for the ID.</div>
+  </div>
+</div>
+
+<!-- ══ STEP 2: CATEGORY ════════════════════════════════════ -->
+<div class="step" id="step-2">
+  <div class="step-eyebrow">Step 2 of 4</div>
+  <div class="step-title">What are they selling?</div>
+  <div class="step-sub">Choose the category. This sets the introduction model and which fields appear.</div>
+
+  <div class="cat-tiles">
+    <div class="cat-tile" id="cat-Property" onclick="selectCat('Property')">
+      <div class="ct-icon">🏡</div>
+      <div class="ct-name">Property</div>
+      <div class="ct-model">⏳ Commitment model · listing pauses per intro</div>
+    </div>
+    <div class="cat-tile" id="cat-Tutors" onclick="selectCat('Tutors')">
+      <div class="ct-icon">🎓</div>
+      <div class="ct-name">Tutors</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Services" onclick="selectCat('Services')">
+      <div class="ct-icon">⚙️</div>
+      <div class="ct-name">Services</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Help Wanted" onclick="selectCat('Help Wanted')">
+      <div class="ct-icon">🤝</div>
+      <div class="ct-name">Help Wanted</div>
+      <div class="ct-model">👥 Soft queue · helper owns listing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 3: LISTINGS ════════════════════════════════════ -->
+<div class="step" id="step-3">
+  <div class="step-eyebrow">Step 3 of 4</div>
+  <div class="step-title" id="step3-title">Add listings</div>
+  <div class="step-sub" id="step3-sub">Add one or more listings. Each gets its own photo, price and details.</div>
+
+  <!-- Seller bar (summary) -->
+  <div class="seller-bar" id="seller-bar">
+    <div class="sb-avatar" id="sb-avatar">👤</div>
+    <div class="sb-info">
+      <div class="sb-name" id="sb-name">—</div>
+      <div class="sb-email" id="sb-email">—</div>
+      <div class="sb-cat" id="sb-cat">—</div>
+    </div>
+    <div class="sb-change" onclick="goStep(1)">Change</div>
+  </div>
+
+  <!-- Saved listings -->
+  <div id="listings-container"></div>
+
+  <!-- Add listing button -->
+  <button class="btn-add-listing" onclick="openListingForm()">+ Add listing</button>
+
+  <!-- ── LISTING FORM (inline, shown/hidden) ── -->
+  <div id="listing-form" style="display:none;">
+    <div style="background:var(--surface-2);border:1.5px solid var(--accent);border-radius:var(--r);padding:16px;margin-bottom:12px;">
+
+      <div style="font-size:12px;font-weight:700;color:var(--accent-bright);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;">
+        New listing
+      </div>
+
+      <!-- PHOTO -->
+      <div class="field">
+        <label>Photo <span class="opt">(optional — recommended)</span></label>
+
+        <div class="divider">From device</div>
+        <div class="photo-zone" id="photo-zone">
+          <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)">
+          <div class="pz-icon">📷</div>
+          <div class="pz-title">Tap to add photos</div>
+          <div class="pz-sub">JPEG or PNG · up to 10 photos · compressed automatically</div>
+        </div>
+        <div class="photo-preview-strip" id="photo-preview"></div>
+
+        <div class="divider">Or from URL</div>
+        <div class="url-import">
+          <input type="url" id="photo-url-input" placeholder="https://example.com/photo.jpg">
+          <button onclick="importPhotoUrl()">Import</button>
+        </div>
+        <div class="hint">⚠️ Only use photos you own or have rights to use. Imported photos are compressed and stored on MarketSquare servers — original URL is not retained.</div>
+      </div>
+
+      <!-- TITLE + PRICE -->
+      <div class="field">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. 3-bed family home in Waterkloof">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Price <span class="opt">(optional)</span></label>
+          <input type="text" id="f-price" placeholder="e.g. R4,200,000">
+        </div>
+        <div class="field">
+          <label>Price unit</label>
+          <select id="f-per">
+            <option value="">— (once-off)</option>
+            <option value="/ hour">/ hour</option>
+            <option value="/ month">/ month</option>
+            <option value="/ day">/ day</option>
+            <option value="/ session">/ session</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- AREA -->
+      <div class="field">
+        <label>Area / Suburb <span class="opt">(optional)</span></label>
+        <input type="text" id="f-area" placeholder="e.g. Waterkloof, Pretoria">
+      </div>
+
+      <!-- CATEGORY-SPECIFIC FIELDS -->
+      <div id="cat-fields-property" style="display:none;">
+        <!-- Property Type -->
+        <div class="field">
+          <label>Property type</label>
+          <select id="f-prop-type">
+            <option value="">Select type</option>
+            <option>House</option>
+            <option>Apartment / Flat</option>
+            <option>Townhouse</option>
+            <option>Cluster</option>
+            <option>Simplex</option>
+            <option>Duplex</option>
+            <option>Penthouse</option>
+            <option>Bachelor / Studio</option>
+            <option>Granny Flat</option>
+            <option>Smallholding</option>
+            <option>Farm</option>
+            <option>Land / Plot</option>
+            <option>Commercial</option>
+            <option>Industrial</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <!-- Beds / Baths / Garages / Parking -->
+        <div class="field-row">
+          <div class="field">
+            <label>Bedrooms</label>
+            <input type="number" id="f-beds" min="0" max="20" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Bathrooms</label>
+            <input type="number" id="f-baths" min="0" max="20" placeholder="0">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Garages</label>
+            <input type="number" id="f-garages" min="0" max="20" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Parking bays</label>
+            <input type="number" id="f-parking" min="0" max="20" placeholder="0">
+          </div>
+        </div>
+
+        <!-- Floor Size / Property Size -->
+        <div class="field-row">
+          <div class="field">
+            <label>Floor size (m²)</label>
+            <input type="number" id="f-floor-size" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Property size (m²)</label>
+            <input type="number" id="f-prop-size" min="0" placeholder="0">
+          </div>
+        </div>
+
+        <!-- Furnished / Pet Friendly / Internet -->
+        <div class="field">
+          <label>Furnished</label>
+          <select id="f-furnished">
+            <option value="">Select</option>
+            <option>Unfurnished</option>
+            <option>Semi-furnished</option>
+            <option>Fully furnished</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Pet friendly</label>
+            <select id="f-pets">
+              <option value="">Select</option>
+              <option>Yes</option>
+              <option>No</option>
+              <option>Negotiable</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Internet</label>
+            <select id="f-internet">
+              <option value="">Select</option>
+              <option>Fibre</option>
+              <option>ADSL</option>
+              <option>LTE / 5G</option>
+              <option>None</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Property Features -->
+        <div class="field">
+          <label>Property features <span class="opt">(tick all that apply)</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;">
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-pool" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Pool</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-borehole" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Borehole</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-garden" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Garden</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-gas-geyser" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Gas geyser</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-flatlet" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Flatlet</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-solar" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Solar panels</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-study" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Study</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-solar-geyser" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Solar geyser</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-water-tank" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Water tank</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-inverter" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Backup battery / Inverter</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-retirement" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Retirement estate</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" id="f-feat-security-estate" style="width:15px;height:15px;accent-color:var(--accent-bright);"> Security estate</label>
+          </div>
+        </div>
+
+        <!-- Listing type: sale or rent -->
+        <div class="field">
+          <label>Listing type</label>
+          <select id="f-listing-type" onchange="toggleRentalFields()">
+            <option value="">Select</option>
+            <option value="sale">For sale</option>
+            <option value="rent">For rent</option>
+          </select>
+        </div>
+
+        <!-- Rental terms (shown only when rent selected) -->
+        <div id="f-rental-fields" style="display:none;">
+          <div class="field">
+            <label>Deposit amount <span class="opt">(optional)</span></label>
+            <input type="text" id="f-deposit" placeholder="e.g. R10 000 or One Month's Rent">
+          </div>
+          <div class="field">
+            <label>Lease period <span class="opt">(optional)</span></label>
+            <input type="text" id="f-lease" placeholder="e.g. Month-to-Month or 6 Months">
+          </div>
+          <div class="field">
+            <label>Occupation date <span class="opt">(optional)</span></label>
+            <input type="text" id="f-occupation" placeholder="dd/MM/yyyy or Immediate">
+          </div>
+        </div>
+      </div>
+
+      <div id="cat-fields-tutors" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Subject</label>
+            <select id="f-subject">
+              <option value="">Select subject</option>
+              <option>Maths & Science</option>
+              <option>Economics</option>
+              <option>English</option>
+              <option>Accounting</option>
+              <option>History</option>
+              <option>Languages</option>
+              <option>Computer Science</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Level</label>
+            <select id="f-level">
+              <option value="">Select level</option>
+              <option>Primary</option>
+              <option>Matric</option>
+              <option>University</option>
+              <option>Professional</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Mode</label>
+          <select id="f-mode">
+            <option value="">Select mode</option>
+            <option>In-person</option>
+            <option>Online</option>
+            <option>Either</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="cat-fields-services" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Service type</label>
+            <select id="f-service-type">
+              <option value="">Select type</option>
+              <option>Electrical</option>
+              <option>Plumbing</option>
+              <option>Financial</option>
+              <option>IT & Tech</option>
+              <option>Legal</option>
+              <option>Garden & Outdoor</option>
+              <option>Cleaning</option>
+              <option>Construction</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Availability</label>
+            <select id="f-availability">
+              <option value="">Select</option>
+              <option>Weekdays</option>
+              <option>Weekends</option>
+              <option>Both</option>
+              <option>Emergency</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="cat-fields-helpwanted" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Help type</label>
+            <select id="f-help-type">
+              <option value="">Select type</option>
+              <option>Gardening</option>
+              <option>Domestic</option>
+              <option>Plumbing</option>
+              <option>Electrical</option>
+              <option>Cleaning</option>
+              <option>Painting</option>
+              <option>Child minding</option>
+              <option>General household</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Availability</label>
+            <select id="f-hw-avail">
+              <option value="">Select</option>
+              <option>Weekdays</option>
+              <option>Weekends</option>
+              <option>Both</option>
+              <option>Flexible</option>
+            </select>
+          </div>
+        </div>
+        <div class="info-box warn" style="margin-top:4px;">
+          🇿🇦 NMW reminder: South African minimum wage is R28.79/hr · R121 minimum per day
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="field">
+        <label>Description <span class="opt">(optional)</span></label>
+        <textarea id="f-desc" placeholder="Key details, features, credentials..."></textarea>
+      </div>
+
+      <!-- FORM ACTIONS -->
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="cancelListingForm()" style="flex:1;background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:11px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;">Cancel</button>
+        <button onclick="saveListingToQueue()" style="flex:2;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Add to queue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 4: PUBLISH ═════════════════════════════════════ -->
+<div class="step" id="step-4">
+  <div class="step-eyebrow">Step 4 of 4</div>
+  <div class="step-title">Review & publish</div>
+  <div class="step-sub">Check everything looks right, then publish all listings to the live database.</div>
+
+  <div id="review-seller-bar" class="seller-bar" style="margin-bottom:20px;"></div>
+  <div id="review-listings"></div>
+
+  <div id="publish-result" style="display:none;">
+    <div class="success-icon">🎉</div>
+    <div class="summary-stats" id="publish-stats"></div>
+    <div class="info-box ok" id="publish-summary"></div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Magic claim link for seller</div>
+      <div class="magic-link-box">
+        <div class="ml-label">Send this to the seller</div>
+        <div class="ml-url" id="magic-url">—</div>
+        <button class="ml-copy" onclick="copyMagicLink()">📋 Copy claim link</button>
+      </div>
+      <div class="hint">Seller taps this link → lands on pre-filled MarketSquare claim page → enters email → receives secure claim link → listings are theirs. When n8n is ready, this link is emailed automatically.</div>
+    </div>
+
+    <!-- Delete published listings -->
+    <div id="delete-listings-section" style="margin-bottom:16px;"></div>
+
+    <button onclick="startFresh()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:24px;">+ Add another seller</button>
+  </div>
+</div>
+
+</div><!-- /view-onboard -->
+
+<!-- ══ VIEW: LISTINGS ════════════════════════════════════ -->
+<div id="view-listings" class="view">
+  <div class="view-header">My Listings</div>
+  <div class="view-sub">All live listings on MarketSquare · Pretoria</div>
+  <div class="filter-bar">
+    <button class="filter-chip active" id="fc-all" onclick="setListingsFilter('')">All</button>
+    <button class="filter-chip" id="fc-Property" onclick="setListingsFilter('Property')">🏡 Property</button>
+    <button class="filter-chip" id="fc-Tutors" onclick="setListingsFilter('Tutors')">🎓 Tutors</button>
+    <button class="filter-chip" id="fc-Services" onclick="setListingsFilter('Services')">⚙️ Services</button>
+  </div>
+  <div id="lm-container" style="padding:0 20px;">
+    <div style="text-align:center;padding:40px 0;color:var(--text-3);">
+      <div style="font-size:32px;margin-bottom:12px;">📋</div>
+      <div style="font-size:13px;font-weight:600;">Tap refresh to load listings</div>
+    </div>
+  </div>
+  <div style="padding:16px 20px 0;">
+    <button onclick="loadAllListings()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔄 Refresh listings</button>
+  </div>
+</div>
+
+<!-- ══ VIEW: PROFILE ══════════════════════════════════════ -->
+<div id="view-profile" class="view">
+  <div class="view-header">Seller Profile</div>
+  <div class="view-sub">Look up a seller's account by email</div>
+  <div style="padding:0 20px;">
+    <div class="field">
+      <label>Seller email <span class="req">*</span></label>
+      <div style="display:flex;gap:8px;">
+        <input type="email" id="profile-email" placeholder="seller@example.com"
+          style="flex:1;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color var(--t);">
+        <button onclick="loadSellerProfile()" style="background:var(--accent-bright);color:#fff;border:none;border-radius:var(--r-sm);padding:11px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Look up</button>
+      </div>
+    </div>
+    <div id="profile-result"></div>
+  </div>
+</div>
+
+<!-- ══ VIEW: ANALYTICS ════════════════════════════════════ -->
+<div id="view-analytics" class="view">
+  <div class="view-header">Analytics</div>
+  <div class="view-sub">Performance overview across all listings</div>
+  <div style="padding:0 20px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Live — from BEA</div>
+    <div class="summary-stats">
+      <div class="ss-card"><div class="ss-val" id="a-pending">—</div><div class="ss-label">Pending intros</div></div>
+      <div class="ss-card"><div class="ss-val" id="a-listings">—</div><div class="ss-label">Live listings</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin:16px 0 10px;">Coming soon — BEA v1.2</div>
+    <div class="info-box">📊 Listing views, click rates, average response time and trust score history will be tracked in BEA v1.2. Placeholders shown below.</div>
+    <div class="summary-stats" style="margin-top:10px;">
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Listing views</div></div>
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Clicks</div></div>
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Avg response</div></div>
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Accepted</div></div>
+    </div>
+    <button onclick="loadAnalytics()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;">🔄 Refresh</button>
+  </div>
+</div>
+
+<!-- ══ VIEW: BILLING ══════════════════════════════════════ -->
+<div id="view-billing" class="view">
+  <div class="view-header">Account & Billing</div>
+  <div class="view-sub">Subscription, Tuppence balance and transactions</div>
+  <div style="padding:0 20px;">
+    <div class="info-box warn">💳 Billing features require Paystack live mode (pending CIPC registration). This section activates when Paystack goes live.</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin:16px 0 10px;">Tuppence Wallet</div>
+    <div class="summary-stats">
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Balance (T)</div></div>
+      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Total spent</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin:16px 0 10px;">Transaction log</div>
+    <div class="info-box">No transactions recorded yet.</div>
+  </div>
+</div>
+
+<!-- ══ VIEW: ALERTS ═══════════════════════════════════════ -->
+<div id="view-alerts" class="view">
+  <div class="view-header">Alerts</div>
+  <div class="view-sub">Pending introductions awaiting seller response</div>
+  <div id="alerts-container" style="padding:0 20px;">
+    <div style="text-align:center;padding:40px 0;color:var(--text-3);">
+      <div style="font-size:32px;margin-bottom:12px;">🔔</div>
+      <div style="font-size:13px;font-weight:600;">Tap refresh to check alerts</div>
+    </div>
+  </div>
+  <div style="padding:16px 20px 0;">
+    <button onclick="loadAlerts()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔄 Refresh alerts</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-bar" id="footer-bar">
+  <button class="btn-secondary" id="btn-back" onclick="goBack()" style="display:none;">← Back</button>
+  <button class="btn-primary" id="btn-next" onclick="goNext()">Continue →</button>
+</div>
+
+<!-- NAV BAR -->
+<nav class="admin-nav">
+  <button class="nav-item active" id="nav-onboard" onclick="goView('onboard')">
+    <span class="nav-icon">🧙</span>
+    <span>Onboard</span>
+  </button>
+  <button class="nav-item" id="nav-listings" onclick="goView('listings')">
+    <span class="nav-icon">📋</span>
+    <span>Listings</span>
+  </button>
+  <button class="nav-item" id="nav-profile" onclick="goView('profile')">
+    <span class="nav-icon">👤</span>
+    <span>Profile</span>
+  </button>
+  <button class="nav-item" id="nav-analytics" onclick="goView('analytics')">
+    <span class="nav-icon">📊</span>
+    <span>Analytics</span>
+  </button>
+  <button class="nav-item" id="nav-billing" onclick="goView('billing')">
+    <span class="nav-icon">💰</span>
+    <span>Billing</span>
+  </button>
+  <button class="nav-item" id="nav-alerts" onclick="goView('alerts')">
+    <span style="position:relative;display:inline-block;">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-badge" id="alerts-badge" style="display:none;">0</span>
+    </span>
+    <span>Alerts</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const BEA_URL  = 'https://trustsquare.co';
+const API_KEY  = 'ms_mk_2026_pretoria_admin';
+const MS_URL   = 'https://trustsquare.co'; // FEA URL for magic link
+
+// ── CURRENCY FORMATTER ────────────────────────────────────
+function formatZAR(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const numStr = String(value).replace(/[^0-9.]/g, '');
+  if (!numStr) return null;
+  const n = parseFloat(numStr);
+  if (isNaN(n)) return null;
+  const parts = n.toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return 'R' + parts[0] + '.' + parts[1];
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const priceInput = document.getElementById('f-price');
+  if (priceInput) {
+    priceInput.addEventListener('blur', () => {
+      const v = priceInput.value.trim();
+      if (v) priceInput.value = formatZAR(v) || v;
+    });
+  }
+});
+
+// ── STATE ─────────────────────────────────────────────────
+let currentStep = 1;
+let sellerData  = { name: '', email: '', city: 'Pretoria' };
+let selectedCat = '';
+let listingQueue = [];   // { formData, photos: [{thumbUrl, mediumUrl, localPreview}], status: 'queued'|'published' }
+let publishedIds = [];
+let editingIdx = null;
+
+const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '⚙️', 'Help Wanted': '🤝' };
+
+// ── NAVIGATION ────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+  document.getElementById('progress').style.width = (n * 25) + '%';
+  document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
+  updateNextBtn();
+  window.scrollTo(0, 0);
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById('btn-next');
+  if (currentStep === 4) {
+    const hasPublished = listingQueue.some(l => l.status === 'published');
+    btn.textContent = hasPublished ? 'Done ✓' : 'Publish all →';
+  } else {
+    btn.textContent = 'Continue →';
+  }
+}
+
+function goBack() {
+  if (currentStep > 1) goStep(currentStep - 1);
+}
+
+function goNext() {
+  if (currentStep === 1) {
+    const name  = document.getElementById('s-name').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    if (!name)  { showToast('Please enter the seller\'s name'); return; }
+    if (!email || !email.includes('@')) { showToast('Please enter a valid email'); return; }
+    sellerData = { name, email, city: document.getElementById('s-city').value };
+    goStep(2);
+
+  } else if (currentStep === 2) {
+    if (!selectedCat) { showToast('Please select a category'); return; }
+    updateStep3UI();
+    goStep(3);
+
+  } else if (currentStep === 3) {
+    if (listingQueue.length === 0) { showToast('Add at least one listing'); return; }
+    if (document.getElementById('listing-form').style.display !== 'none') {
+      showToast('Save or cancel the open listing form first'); return;
+    }
+    buildReviewScreen();
+    goStep(4);
+
+  } else if (currentStep === 4) {
+    const hasPublished = listingQueue.some(l => l.status === 'published');
+    if (hasPublished) { startFresh(); return; }
+    publishAll();
+  }
+}
+
+// ── CATEGORY ──────────────────────────────────────────────
+function selectCat(cat) {
+  selectedCat = cat;
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('cat-' + cat).classList.add('selected');
+}
+
+// ── STEP 3 UI ─────────────────────────────────────────────
+function updateStep3UI() {
+  document.getElementById('sb-avatar').textContent = CAT_ICONS[selectedCat] || '👤';
+  document.getElementById('sb-name').textContent   = sellerData.name;
+  document.getElementById('sb-email').textContent  = sellerData.email;
+  document.getElementById('sb-cat').textContent    = selectedCat + ' · ' + sellerData.city;
+  renderListingQueue();
+}
+
+function renderListingQueue() {
+  const c = document.getElementById('listings-container');
+  if (!listingQueue.length) { c.innerHTML = ''; return; }
+  c.innerHTML = listingQueue.map((l, i) => {
+    const thumbHtml = l.photos.length
+      ? l.photos.map(p => `<img src="${p.localPreview}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">`).join('')
+      : `<span style="font-size:22px;">${CAT_ICONS[selectedCat]}</span>`;
+    return `<div class="listing-card">
+      <div class="lc-thumb" style="overflow:visible;display:flex;gap:4px;flex-wrap:wrap;width:auto;max-width:100px;">${thumbHtml}</div>
+      <div class="lc-info">
+        <div class="lc-cat">${selectedCat}</div>
+        <div class="lc-title">${l.formData.title || 'Untitled'}</div>
+        <div class="lc-price">${formatZAR(l.formData.price) || l.formData.price || 'Negotiable'}${l.formData.per ? ' ' + l.formData.per : ''}</div>
+        <div class="lc-status ${l.status === 'published' ? 'saved' : 'pending'}">
+          ${l.status === 'published' ? '✓ Published' : '⏳ In queue'}
+        </div>
+      </div>
+      ${l.status !== 'published' ? `<button class="lc-remove" onclick="removeListing(${i})">×</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── LISTING FORM ──────────────────────────────────────────
+function openListingForm() {
+  clearListingForm();
+  document.getElementById('listing-form').style.display = 'block';
+  showCatFields();
+  document.getElementById('listing-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelListingForm() {
+  document.getElementById('listing-form').style.display = 'none';
+  currentPhotos = [];
+  document.getElementById('photo-preview').innerHTML = '';
+}
+
+function showCatFields() {
+  ['property','tutors','services','helpwanted'].forEach(c => {
+    document.getElementById('cat-fields-' + c).style.display = 'none';
+  });
+  const map = { Property: 'property', Tutors: 'tutors', Services: 'services', 'Help Wanted': 'helpwanted' };
+  const key = map[selectedCat];
+  if (key) document.getElementById('cat-fields-' + key).style.display = 'block';
+}
+
+function clearListingForm() {
+  ['f-title','f-price','f-area','f-desc','f-beds','f-baths','f-garages','f-parking',
+   'f-floor-size','f-prop-size','f-deposit','f-lease','f-occupation',
+   'photo-url-input'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['f-per','f-prop-type','f-furnished','f-pets','f-internet','f-listing-type',
+   'f-subject','f-level','f-mode','f-service-type','f-availability',
+   'f-help-type','f-hw-avail'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+  // Clear checkboxes
+  ['pool','borehole','garden','gas-geyser','flatlet','solar','study',
+   'solar-geyser','water-tank','inverter','retirement','security-estate'].forEach(f => {
+    const el = document.getElementById('f-feat-' + f);
+    if (el) el.checked = false;
+  });
+  const rf = document.getElementById('f-rental-fields');
+  if (rf) rf.style.display = 'none';
+  currentPhotos = [];
+  document.getElementById('photo-preview').innerHTML = '';
+}
+
+// ── PHOTOS ────────────────────────────────────────────────
+let currentPhotos = []; // { localPreview, thumbUrl, mediumUrl, status }
+
+function handlePhotos(e) {
+  const files = Array.from(e.target.files);
+  const remaining = 10 - currentPhotos.length;
+  if (!remaining) { showToast('Maximum 10 photos per listing'); e.target.value=''; return; }
+  let skipped = 0;
+  files.slice(0, remaining).forEach(file => {
+    if (file.size > 20 * 1024 * 1024) { skipped++; return; }
+    processPhoto(file);
+  });
+  if (skipped) showToast(`⚠️ ${skipped} photo${skipped>1?'s':''} over 20MB — skipped`);
+  if (files.length > remaining) showToast(`Only ${remaining} more photo${remaining>1?'s':''} allowed — others skipped`);
+  e.target.value = '';
+}
+
+async function importPhotoUrl() {
+  const url = document.getElementById('photo-url-input').value.trim();
+  if (!url || !url.startsWith('http')) { showToast('Please enter a valid URL'); return; }
+  if (currentPhotos.length >= 10) { showToast('Maximum 10 photos per listing'); return; }
+
+  showToast('Fetching photo...');
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Could not fetch');
+    const blob = await resp.blob();
+    if (!blob.type.startsWith('image/')) throw new Error('Not an image');
+    const file = new File([blob], 'imported.jpg', { type: blob.type });
+    processPhoto(file);
+    document.getElementById('photo-url-input').value = '';
+  } catch(e) {
+    showToast('Could not import photo — check the URL or try downloading it first');
+  }
+}
+
+function processPhoto(file) {
+  if (currentPhotos.length >= 10) { showToast('Maximum 10 photos'); return; }
+  const sizeMb = (file.size / (1024*1024)).toFixed(1);
+  const idx = currentPhotos.length;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const localPreview = ev.target.result;
+    currentPhotos.push({ localPreview, thumbUrl: null, mediumUrl: null, status: 'uploading', originalMb: sizeMb, file });
+    renderPhotoPreview();
+    uploadPhoto(file, idx);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadPhoto(file, idx) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch(BEA_URL + '/listings/photo', {
+      method: 'POST',
+      headers: { 'X-Api-Key': API_KEY },
+      body: formData
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || 'Upload failed ' + resp.status);
+    }
+    const data = await resp.json();
+    currentPhotos[idx].thumbUrl  = data.thumb_url;
+    currentPhotos[idx].mediumUrl = data.medium_url;
+    currentPhotos[idx].status    = 'done';
+    currentPhotos[idx].thumbKb   = data.thumb_kb;
+    currentPhotos[idx].mediumKb  = data.medium_kb;
+    showToast(`✓ Photo ${idx+1} compressed — ${data.thumb_kb}KB thumb · ${data.medium_kb}KB medium`);
+  } catch(e) {
+    currentPhotos[idx].status = 'error';
+    currentPhotos[idx].errorMsg = e.message;
+    showToast(`⚠️ Photo ${idx+1} failed — tap × to remove and try again`);
+  }
+  renderPhotoPreview();
+}
+
+function renderPhotoPreview() {
+  const grid = document.getElementById('photo-preview');
+  if (!currentPhotos.length) { grid.innerHTML = ''; return; }
+  grid.innerHTML = currentPhotos.map((p, i) => `
+    <div class="photo-thumb ${p.status}">
+      <img src="${p.localPreview}">
+      <div class="ph-status">
+        ${p.status === 'uploading' ? `⏳ ${p.originalMb}MB` :
+          p.status === 'done'      ? `✓ ${p.thumbKb}KB` :
+                                     '✕ Failed'}
+      </div>
+      <button class="ph-remove" onclick="removePhoto(${i})">×</button>
+    </div>`).join('');
+}
+
+function removePhoto(idx) {
+  currentPhotos.splice(idx, 1);
+  renderPhotoPreview();
+}
+
+// ── RENTAL FIELDS TOGGLE ──────────────────────────────────
+function toggleRentalFields() {
+  const type = document.getElementById('f-listing-type')?.value;
+  const rf = document.getElementById('f-rental-fields');
+  if (rf) rf.style.display = (type === 'rent') ? 'block' : 'none';
+}
+
+// ── SAVE TO QUEUE ─────────────────────────────────────────
+function saveListingToQueue() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { showToast('Please enter a title'); return; }
+
+  const uploading = currentPhotos.filter(p => p.status === 'uploading');
+  if (uploading.length) { showToast('⏳ Please wait — photos still uploading'); return; }
+  const errored = currentPhotos.filter(p => p.status === 'error');
+  if (errored.length) { showToast('⚠️ Remove failed photos before continuing'); return; }
+
+  // Collect property features checkboxes
+  const featIds = ['pool','borehole','garden','gas-geyser','flatlet','solar','study',
+                   'solar-geyser','water-tank','inverter','retirement','security-estate'];
+  const features = featIds.filter(f => document.getElementById('f-feat-' + f)?.checked)
+                           .map(f => f.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()));
+
+  const formData = {
+    title,
+    price:         document.getElementById('f-price').value.trim(),
+    per:           document.getElementById('f-per').value,
+    area:          document.getElementById('f-area').value.trim(),
+    description:   document.getElementById('f-desc').value.trim(),
+    // Property
+    beds:          document.getElementById('f-beds')?.value || '',
+    baths:         document.getElementById('f-baths')?.value || '',
+    garages:       document.getElementById('f-garages')?.value || '',
+    parking:       document.getElementById('f-parking')?.value || '',
+    floorSize:     document.getElementById('f-floor-size')?.value || '',
+    propSize:      document.getElementById('f-prop-size')?.value || '',
+    propType:      document.getElementById('f-prop-type')?.value || '',
+    furnished:     document.getElementById('f-furnished')?.value || '',
+    pets:          document.getElementById('f-pets')?.value || '',
+    internet:      document.getElementById('f-internet')?.value || '',
+    features:      features,
+    listingType:   document.getElementById('f-listing-type')?.value || '',
+    deposit:       document.getElementById('f-deposit')?.value || '',
+    lease:         document.getElementById('f-lease')?.value || '',
+    occupation:    document.getElementById('f-occupation')?.value || '',
+    // Tutors
+    subject:       document.getElementById('f-subject')?.value || '',
+    level:         document.getElementById('f-level')?.value || '',
+    mode:          document.getElementById('f-mode')?.value || '',
+    // Services
+    serviceType:   document.getElementById('f-service-type')?.value || '',
+    availability:  document.getElementById('f-availability')?.value || '',
+    // Help Wanted
+    helpType:      document.getElementById('f-help-type')?.value || '',
+    hwAvail:       document.getElementById('f-hw-avail')?.value || '',
+  };
+
+  listingQueue.push({
+    formData,
+    photos: [...currentPhotos],
+    status: 'queued'
+  });
+
+  cancelListingForm();
+  renderListingQueue();
+  showToast('✓ Listing added to queue');
+}
+
+function removeListing(idx) {
+  listingQueue.splice(idx, 1);
+  renderListingQueue();
+}
+
+// ── REVIEW SCREEN ─────────────────────────────────────────
+function buildReviewScreen() {
+  const sellerBar = document.getElementById('review-seller-bar');
+  sellerBar.innerHTML = `
+    <div class="sb-avatar">${CAT_ICONS[selectedCat]}</div>
+    <div class="sb-info">
+      <div class="sb-name">${sellerData.name}</div>
+      <div class="sb-email">${sellerData.email}</div>
+      <div class="sb-cat">${selectedCat} · ${sellerData.city}</div>
+    </div>`;
+
+  const reviewListings = document.getElementById('review-listings');
+  reviewListings.innerHTML = listingQueue.map((l, i) => {
+    const thumb = l.photos.length ? `<img src="${l.photos[0].localPreview}">` : CAT_ICONS[selectedCat];
+    return `<div class="listing-card">
+      <div class="lc-thumb">${thumb}</div>
+      <div class="lc-info">
+        <div class="lc-cat">${selectedCat} · ${sellerData.city}</div>
+        <div class="lc-title">${l.formData.title}</div>
+        <div class="lc-price">${formatZAR(l.formData.price) || l.formData.price || 'Negotiable'}${l.formData.per ? ' ' + l.formData.per : ''}</div>
+        ${l.formData.area ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px;">📍 ${l.formData.area}</div>` : ''}
+        ${l.photos.length ? `<div style="font-size:10px;color:var(--accent-bright);margin-top:3px;">📷 ${l.photos.length} photo${l.photos.length>1?'s':''} ready</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('publish-result').style.display = 'none';
+  updateNextBtn();
+}
+
+// ── BUILD DESCRIPTION ─────────────────────────────────────
+// Combines structured fields + free-text description into
+// a single formatted string for the BEA payload.
+function buildDescription(fd) {
+  const lines = [];
+
+  if (selectedCat === 'Property') {
+    if (fd.listingType) lines.push(fd.listingType === 'rent' ? 'For rent' : 'For sale');
+    const specs = [];
+    if (fd.propType)  specs.push(fd.propType);
+    if (fd.beds)      specs.push(fd.beds + ' bed');
+    if (fd.baths)     specs.push(fd.baths + ' bath');
+    if (fd.garages)   specs.push(fd.garages + ' garage');
+    if (fd.parking)   specs.push(fd.parking + ' parking');
+    if (specs.length) lines.push(specs.join(' · '));
+
+    const sizes = [];
+    if (fd.floorSize) sizes.push('Floor: ' + fd.floorSize + ' m²');
+    if (fd.propSize)  sizes.push('Plot: ' + fd.propSize + ' m²');
+    if (sizes.length) lines.push(sizes.join(' · '));
+
+    const extras = [];
+    if (fd.furnished) extras.push(fd.furnished);
+    if (fd.pets)      extras.push('Pets: ' + fd.pets);
+    if (fd.internet)  extras.push('Internet: ' + fd.internet);
+    if (extras.length) lines.push(extras.join(' · '));
+
+    if (fd.features && fd.features.length)
+      lines.push('Features: ' + fd.features.join(', '));
+
+    if (fd.listingType === 'rent') {
+      const rent = [];
+      if (fd.deposit)    rent.push('Deposit: ' + (formatZAR(fd.deposit) || fd.deposit));
+      if (fd.lease)      rent.push('Lease: ' + fd.lease);
+      if (fd.occupation) rent.push('Available: ' + fd.occupation);
+      if (rent.length) lines.push(rent.join(' · '));
+    }
+  }
+
+  if (fd.description) {
+    if (lines.length) lines.push('');
+    lines.push(fd.description);
+  }
+
+  return lines.join('\n');
+}
+
+// ── PUBLISH ───────────────────────────────────────────────
+async function publishAll() {
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true;
+  btn.textContent = 'Publishing...';
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < listingQueue.length; i++) {
+    const l = listingQueue[i];
+    if (l.status === 'published') continue;
+
+    try {
+      const thumb  = l.photos.find(p => p.thumbUrl)?.thumbUrl  || null;
+      const medium = l.photos.find(p => p.mediumUrl)?.mediumUrl || null;
+      // Encode all medium URLs for multi-photo display on frontend
+      const allMediumUrls = l.photos.filter(p => p.mediumUrl).map(p => p.mediumUrl);
+      const photoPrefix = allMediumUrls.length > 1
+        ? `[photos:${allMediumUrls.join('|')}]\n`
+        : '';
+
+      const payload = {
+        title:       l.formData.title,
+        price:       l.formData.price || 'POA',
+        category:    selectedCat,
+        city:        sellerData.city,
+        area:        l.formData.area || sellerData.city,
+        description: photoPrefix + buildDescription(l.formData),
+        thumb_url:   thumb,
+        medium_url:  medium,
+      };
+
+      const resp = await fetch(BEA_URL + '/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Api-Key': API_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+
+      // Register seller as user
+      await fetch(BEA_URL + '/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+        body: JSON.stringify({ email: sellerData.email, name: sellerData.name })
+      });
+
+      listingQueue[i].status = 'published';
+      listingQueue[i].beaId  = data.id;
+      publishedIds.push(data.id);
+      successCount++;
+    } catch(e) {
+      failCount++;
+      console.error('Publish failed for listing', i, e);
+    }
+  }
+
+  btn.disabled = false;
+
+  if (successCount > 0) {
+    showPublishSuccess(successCount, failCount);
+  } else {
+    showToast('Publish failed — check connection and try again');
+    btn.textContent = 'Retry publish →';
+  }
+}
+
+function showPublishSuccess(successCount, failCount) {
+  document.getElementById('publish-result').style.display = 'block';
+
+  document.getElementById('publish-stats').innerHTML = `
+    <div class="ss-card"><div class="ss-val">${successCount}</div><div class="ss-label">Published</div></div>
+    <div class="ss-card"><div class="ss-val">${listingQueue.length}</div><div class="ss-label">Total listings</div></div>`;
+
+  document.getElementById('publish-summary').textContent =
+    `✓ ${successCount} listing${successCount>1?'s':''} published to ${sellerData.city}.` +
+    (failCount ? ` ${failCount} failed — scroll up to retry.` : ' All listings are now live on MarketSquare.');
+
+  // Build magic link
+  const params = new URLSearchParams({
+    magic: '1',
+    name:  sellerData.name,
+    email: sellerData.email,
+    cat:   selectedCat,
+    city:  sellerData.city
+  });
+  const magicUrl = MS_URL + '?' + params.toString();
+  document.getElementById('magic-url').textContent = magicUrl;
+
+  document.getElementById('review-listings').innerHTML = '';
+  buildReviewScreen();
+
+  // Render delete section for published listings
+  renderDeleteSection();
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = '+ Add another seller';
+  btn.disabled = false;
+
+  showToast(`🎉 ${successCount} listing${successCount>1?'s':''} live on MarketSquare!`);
+  window.scrollTo(0,0);
+}
+
+function renderDeleteSection() {
+  const el = document.getElementById('delete-listings-section');
+  if (!el) return;
+  const published = listingQueue.filter(l => l.status === 'published' && l.beaId);
+  if (!published.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">Manage published listings</div>
+    ${published.map((l, i) => `
+      <div style="display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px;">
+        <div style="flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.formData.title}</div>
+        <div style="font-size:10px;color:var(--green);font-weight:700;flex-shrink:0;">ID ${l.beaId}</div>
+        <button onclick="confirmDeleteListing(${l.beaId}, '${l.formData.title.replace(/'/g, '\\\'')}')"
+          style="flex-shrink:0;background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r-sm);color:var(--red);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'Inter',sans-serif;">
+          🗑 Delete
+        </button>
+      </div>`).join('')}
+    <div class="hint" style="margin-top:2px;">Deleting a listing removes it from MarketSquare immediately. This cannot be undone.</div>`;
+}
+
+function confirmDeleteListing(beaId, title) {
+  if (!confirm(`Delete "${title}"?\n\nThis will remove the listing from MarketSquare immediately. This cannot be undone.`)) return;
+  deleteListing(beaId, title);
+}
+
+async function deleteListing(beaId, title) {
+  showToast('Deleting listing...');
+  try {
+    const resp = await fetch(BEA_URL + '/listings/' + beaId, {
+      method: 'DELETE',
+      headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+
+    // Remove from listingQueue
+    const idx = listingQueue.findIndex(l => l.beaId === beaId);
+    if (idx !== -1) listingQueue.splice(idx, 1);
+
+    showToast(`✓ "${title}" deleted from MarketSquare`);
+    renderDeleteSection();
+    buildReviewScreen();
+  } catch(e) {
+    showToast('⚠️ Delete failed — check connection and try again');
+    console.error('deleteListing error:', e);
+  }
+}
+
+async function deleteListingById() {
+  const idEl = document.getElementById('del-listing-id');
+  const id = parseInt(idEl?.value);
+  if (!id || isNaN(id)) { showToast('Please enter a valid listing ID'); return; }
+  if (!confirm(`Delete listing ID ${id} from MarketSquare?\n\nThis cannot be undone.`)) return;
+  showToast('Deleting...');
+  try {
+    const resp = await fetch(BEA_URL + '/listings/' + id, {
+      method: 'DELETE',
+      headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    showToast(`✓ Listing ${id} deleted`);
+    if (idEl) idEl.value = '';
+  } catch(e) {
+    showToast('⚠️ Delete failed — check the ID and connection');
+    console.error('deleteListingById error:', e);
+  }
+}
+
+function copyMagicLink() {
+  const url = document.getElementById('magic-url').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✓ Magic link copied'));
+}
+
+function startFresh() {
+  sellerData   = { name: '', email: '', city: 'Pretoria' };
+  selectedCat  = '';
+  listingQueue = [];
+  publishedIds = [];
+  currentPhotos = [];
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-email').value = '';
+  document.getElementById('listing-form').style.display = 'none';
+  document.getElementById('publish-result').style.display = 'none';
+  goStep(1);
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── VIEW MANAGEMENT ────────────────────────────────────────
+let currentView = 'onboard';
+
+function goView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-' + name).classList.add('active');
+  const isWizard = name === 'onboard';
+  document.getElementById('footer-bar').style.display = isWizard ? 'flex' : 'none';
+  currentView = name;
+  window.scrollTo(0, 0);
+  if (name === 'listings' && !allListings.length) loadAllListings();
+  if (name === 'alerts') loadAlerts();
+  if (name === 'analytics') loadAnalytics();
+}
+
+// ── MY LISTINGS ────────────────────────────────────────────
+let allListings = [];
+let listingsFilter = '';
+
+async function loadAllListings() {
+  const c = document.getElementById('lm-container');
+  c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Loading...</div>';
+  try {
+    const resp = await fetch(BEA_URL + '/listings?city=Pretoria');
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    allListings = Array.isArray(data) ? data : (data.listings || []);
+    renderListingsManager();
+    showToast('✓ ' + allListings.length + ' listing' + (allListings.length !== 1 ? 's' : '') + ' loaded');
+  } catch(e) {
+    c.innerHTML = '<div class="info-box" style="border-color:var(--red);background:var(--red-bg);color:var(--red);">⚠️ Could not load — ' + e.message + '</div>';
+  }
+}
+
+function setListingsFilter(cat) {
+  listingsFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+  const el = document.getElementById(cat ? 'fc-' + cat : 'fc-all');
+  if (el) el.classList.add('active');
+  renderListingsManager();
+}
+
+function renderListingsManager() {
+  const c = document.getElementById('lm-container');
+  if (!c) return;
+  const filtered = listingsFilter ? allListings.filter(l => l.category === listingsFilter) : allListings;
+  if (!filtered.length) {
+    c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">No listings found</div>';
+    return;
+  }
+  c.innerHTML = filtered.map(l => {
+    const icon = CAT_ICONS[l.category] || '📦';
+    const thumbHtml = l.thumb_url ? `<img src="${l.thumb_url}" onerror="this.style.display='none'">` : icon;
+    const safeTitle = (l.title || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return `<div class="lm-card">
+      <div class="lm-card-header">
+        <div class="lm-thumb">${thumbHtml}</div>
+        <div class="lm-info">
+          <div class="lm-title">${l.title || 'Untitled'}</div>
+          <div class="lm-meta">${l.category || '—'} · ${l.city || '—'}${l.area ? ' · ' + l.area : ''}</div>
+          <div class="lm-meta">${formatZAR(l.price) || l.price || 'POA'} · ID ${l.id}</div>
+        </div>
+      </div>
+      <div class="lm-actions">
+        <div class="lm-btn" style="cursor:default;color:var(--text-3);border-style:dashed;">⏸ Pause (BEA v1.2)</div>
+        <button class="lm-btn del" onclick="confirmDeleteLM(${l.id}, '${safeTitle}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmDeleteLM(id, title) {
+  if (!confirm('Delete "' + title + '"?\n\nID: ' + id + '\n\nRemoves from MarketSquare immediately. Cannot be undone.')) return;
+  deleteLM(id, title);
+}
+
+async function deleteLM(id, title) {
+  showToast('Deleting...');
+  try {
+    const resp = await fetch(BEA_URL + '/listings/' + id, {
+      method: 'DELETE', headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    allListings = allListings.filter(l => l.id !== id);
+    renderListingsManager();
+    showToast('✓ "' + title + '" deleted');
+  } catch(e) { showToast('⚠️ Delete failed — ' + e.message); }
+}
+
+// ── ALERTS ─────────────────────────────────────────────────
+async function loadAlerts() {
+  const c = document.getElementById('alerts-container');
+  c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Checking intros...</div>';
+  try {
+    const resp = await fetch(BEA_URL + '/intros');
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    const intros = Array.isArray(data) ? data : (data.intros || []);
+    renderAlerts(intros);
+    const badge = document.getElementById('alerts-badge');
+    if (intros.length > 0) {
+      badge.textContent = intros.length > 9 ? '9+' : intros.length;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {
+    c.innerHTML = '<div class="info-box" style="border-color:var(--red);background:var(--red-bg);color:var(--red);">⚠️ Could not load — ' + e.message + '</div>';
+  }
+}
+
+function renderAlerts(intros) {
+  const c = document.getElementById('alerts-container');
+  if (!intros.length) {
+    c.innerHTML = '<div style="text-align:center;padding:40px 0;"><div style="font-size:36px;margin-bottom:12px;">✅</div><div style="color:var(--green);font-size:14px;font-weight:600;">No pending introductions</div><div style="color:var(--text-3);font-size:12px;margin-top:4px;">All caught up!</div></div>';
+    return;
+  }
+  const now = Date.now();
+  c.innerHTML = intros.map(intro => {
+    const created = intro.created_at ? new Date(intro.created_at).getTime() : 0;
+    const hoursAgo = created ? Math.floor((now - created) / 3600000) : null;
+    const remaining = hoursAgo !== null ? Math.max(0, 48 - hoursAgo) : null;
+    let tClass = 'ok', tLabel = remaining !== null ? remaining + 'h left' : '—';
+    if (remaining !== null) {
+      if (remaining === 0) { tClass = 'expired'; tLabel = 'EXPIRED'; }
+      else if (remaining < 12) tClass = 'warn';
+    }
+    const cardExtra = tClass === 'expired' ? 'expired-card' : tClass === 'warn' ? 'urgent' : '';
+    return `<div class="intro-card ${cardExtra}">
+      <div class="ic-header">
+        <div>
+          <div class="ic-listing">Listing #${intro.listing_id}</div>
+          <div class="ic-meta">Intro #${intro.id}${hoursAgo !== null ? ' · ' + hoursAgo + 'h ago' : ''}</div>
+        </div>
+        <div class="ic-time ${tClass}">${tLabel}</div>
+      </div>
+      <div class="ic-actions">
+        <button class="lm-btn" onclick="doAcceptIntro(${intro.id})" style="border-color:var(--green);color:var(--green);">✓ Accept</button>
+        <button class="lm-btn" onclick="doDeclineIntro(${intro.id})" style="border-color:var(--red);color:var(--red);background:var(--red-bg);">✕ Decline</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function doAcceptIntro(id) {
+  if (!confirm('Accept intro #' + id + '? This will charge 1T to the buyer.')) return;
+  showToast('Accepting...');
+  try {
+    const resp = await fetch(BEA_URL + '/intros/' + id + '/accept', {
+      method: 'PUT', headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    showToast('✓ Introduction accepted');
+    loadAlerts();
+  } catch(e) { showToast('⚠️ Accept failed — ' + e.message); }
+}
+
+async function doDeclineIntro(id) {
+  if (!confirm('Decline intro #' + id + '?')) return;
+  showToast('Declining...');
+  try {
+    const resp = await fetch(BEA_URL + '/intros/' + id + '/decline', {
+      method: 'PUT', headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    showToast('✓ Introduction declined');
+    loadAlerts();
+  } catch(e) { showToast('⚠️ Decline failed — ' + e.message); }
+}
+
+// ── ANALYTICS ──────────────────────────────────────────────
+async function loadAnalytics() {
+  try {
+    const [iResp, lResp] = await Promise.all([
+      fetch(BEA_URL + '/intros'),
+      fetch(BEA_URL + '/listings?city=Pretoria')
+    ]);
+    if (iResp.ok) {
+      const d = await iResp.json();
+      const intros = Array.isArray(d) ? d : (d.intros || []);
+      document.getElementById('a-pending').textContent = intros.length;
+    }
+    if (lResp.ok) {
+      const d = await lResp.json();
+      const ls = Array.isArray(d) ? d : (d.listings || []);
+      document.getElementById('a-listings').textContent = ls.length;
+    }
+  } catch(e) { /* silent — placeholders remain */ }
+}
+
+// ── SELLER PROFILE LOOKUP ──────────────────────────────────
+async function loadSellerProfile() {
+  const email = document.getElementById('profile-email').value.trim();
+  if (!email || !email.includes('@')) { showToast('Please enter a valid email'); return; }
+  const result = document.getElementById('profile-result');
+  result.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">⏳ Looking up...</div>';
+  try {
+    const resp = await fetch(BEA_URL + '/users/' + encodeURIComponent(email));
+    if (resp.status === 404) {
+      result.innerHTML = '<div class="info-box warn">No seller found with that email address.</div>';
+      return;
+    }
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const u = await resp.json();
+    const safeEmail = email.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const safeName = (u.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    result.innerHTML = `
+      <div class="seller-bar" style="margin-bottom:16px;">
+        <div class="sb-avatar">${u.avatar || '👤'}</div>
+        <div class="sb-info">
+          <div class="sb-name">${u.name || '—'}</div>
+          <div class="sb-email">${u.email}</div>
+          <div class="sb-cat">${u.city || '—'} · Trust: ${u.trust_score !== undefined ? u.trust_score : '—'}</div>
+        </div>
+      </div>
+      <div class="info-box">
+        Registered: ${u.created_at ? new Date(u.created_at).toLocaleDateString('en-ZA') : '—'}<br>
+        Listings: ${u.listing_count !== undefined ? u.listing_count : '—'}
+      </div>
+      <div style="margin-top:12px;">
+        <button onclick="deleteSellerAccount('${safeEmail}','${safeName}')"
+          style="width:100%;background:var(--red-bg);border:1.5px solid var(--red);border-radius:var(--r-sm);padding:11px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--red);cursor:pointer;">
+          🗑 Delete seller account
+        </button>
+      </div>`;
+  } catch(e) {
+    result.innerHTML = '<div class="info-box" style="border-color:var(--red);background:var(--red-bg);color:var(--red);">⚠️ Lookup failed — ' + e.message + '</div>';
+  }
+}
+
+async function deleteSellerAccount(email, name) {
+  if (!confirm('Delete account for "' + name + '" (' + email + ')?\n\nThis cannot be undone. Listings must be deleted separately.')) return;
+  showToast('Deleting account...');
+  try {
+    const resp = await fetch(BEA_URL + '/users/' + encodeURIComponent(email), {
+      method: 'DELETE', headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    showToast('✓ Account deleted for ' + name);
+    document.getElementById('profile-result').innerHTML = '';
+    document.getElementById('profile-email').value = '';
+  } catch(e) { showToast('⚠️ Delete failed — ' + e.message); }
+}
+</script>
+</body>
+</html>
