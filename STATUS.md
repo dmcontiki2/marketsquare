@@ -19,25 +19,23 @@
 
 ## Last Completed Session · Session 7 (1 April 2026)
 
-- Tasks 1–5 completed (confirmed via git history):
+- Tasks 1–6 all complete:
   - Task 1 — Currency formatting R1,234,456.00 across both files
   - Task 2 — Structured description editor (admin) + renderer (buyer app)
   - Task 3 — Photo carousel with swipe support (detail screen)
   - Task 4 — Category listing counts city-scoped, excludes placeholders
   - Task 5 — City selector tier-gated (Free / Starter / Premium)
+  - Task 6 — Three-level location hierarchy (BEA + admin + buyer app) · deployed
 
 ---
 
-## Next Task · Session 7 (continued) or Session 8
+## Next Task · Session 8
 
-**Task 6 only — Three-level location hierarchy (Country → City → Suburb)**
-
-Run in this exact order:
-1. Part A — BEA: suburbs table, suburb field on listings, migration, seed, new endpoints
-2. Part B — Admin tool: suburb dropdown in listing form + City Management tab
-3. Part C — Buyer app: three-level location selector replacing current city selector
-
-Full spec in `SESSION_7_START_PROMPT.md` under Task 6.
+1. Maroushka real listings — delete experimental data, re-enter via admin tool using structured description editor and suburb field
+2. n8n email notifications — buyer emailed on intro accept/decline
+3. Hetzner Object Storage — migrate photos from local /media
+4. Paystack live mode — pending CIPC registration
+5. Add GEONAMES_USERNAME to BEA .env to enable auto-suburb seeding for new cities
 
 ---
 
