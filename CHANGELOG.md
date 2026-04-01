@@ -206,25 +206,104 @@ scp C:\Users\David\Projects\MarketSquare\marketsquare_admin_v1_1.html root@178.1
 7. Rename project files — remove Windows duplicate suffixes
 8. Paystack live mode — pending CIPC registration
 
----
-
 ## Session 6 · 1 April 2026
 
-### Task 1 — Currency formatting
+### Completed in this session
 
-Added a shared `formatZAR(value)` helper to both `marketsquare.html` and `marketsquare_admin.html` that formats any numeric value as `R1,234,456.00` (capital R, comma thousands separators, two decimal places). Replaced all ad-hoc price display code: grid card prices, featured card prices, the detail modal price block, and the property filter range tag in `marketsquare.html`; and the listing queue cards (steps 3 & 4), the live listings manager price meta, and the deposit field in `marketsquare_admin.html`. The old `formatSAPrice` function (which used non-breaking-space thousands separators) has been removed and superseded. Values in storage are unchanged — formatting is display-only.
+**Planning and architecture (claude.ai):**
+- Maroushka test review analysed — 4 bugs identified and task
+  instructions written for Claude Code
+- Security warning on start_marketsquare.bat diagnosed — Windows
+  SmartScreen false positive, not 360 antivirus; fix is to unblock
+  the file via Properties
+- Codex v4.2 produced — new §6 Buyer Subscription Tiers & Cost Model
+  added covering tier definitions, fixed infrastructure costs,
+  breakeven scenarios, and server capacity notes
 
-### Task 2 — Property description formatting
+**Five Claude Code tasks worded and ready for execution:**
 
-Added `formatDesc(desc)` to `marketsquare.html` which replaces the flat `<p style="white-space:pre-wrap">` description block in the listing detail screen with structured HTML. Rules: lines ending in `:` or short bare phrases (≤50 chars, no `.!?,;:`) become `<h4 class="desc-heading">` bold headings (trailing colon stripped); lines starting with `·`, `-`, `*`, or `•` become `<ul><li>` bullets; lines starting with `N)` or `N.` become `<ol><li>` items; remaining lines become `<p class="desc-p">` paragraphs. Consecutive list lines are grouped into a single `<ul>` or `<ol>` block. Four CSS rules added for the new classes. Stored description text is untouched.
+- Task 1 · Currency formatting — standardise all monetary values to
+  R1,234,456.00 format throughout both apps using a shared formatZAR()
+  helper function
+- Task 2 (revised) · Structured description — replace free-text
+  description field in admin tool with structured editor (headline,
+  tagline, summary, repeatable sections + bullets); serialise as JSON
+  into existing BEA description field; buyer app renderer detects JSON
+  and renders as formatted HTML, falls back to plain text for legacy
+  listings
+- Task 3 · Photo carousel — listing detail screen becomes a
+  horizontally swipeable carousel with arrow buttons, dot indicators,
+  and touch/swipe support; uses medium_url array from BEA listing
+- Task 4 · Category listing counts (city-scoped) — counts derived
+  dynamically from live listings filtered to active city only;
+  excludes ph_ placeholders; re-renders after loadLiveListings()
+  completes
+- Task 5 · City selector tier-gated — Free tier locked to local city
+  (non-interactive); Starter ($5/mo) opens country-scoped city
+  dropdown; Premium ($15/mo) opens global city dropdown; stats strip
+  updates to match selected city; BEA /cities endpoint flagged as
+  pending
 
-### Task 3 — Photo gallery / image scrolling
+**Buyer subscription tier model defined (preliminary):**
 
-Upgraded the listing detail screen image area in `marketsquare.html` to a full carousel when a listing has multiple photos. Changed `.photo-strip` from `overflow-x:auto` / scroll-snap to `overflow:hidden` + `scroll-behavior:smooth` so all navigation is JS-controlled with no native-scroll conflicts. Added `‹` / `›` arrow buttons (`.strip-arrow`) absolutely positioned at mid-left and mid-right of the strip, hidden when only one photo exists. Added `stripNav(id, delta)` which calculates the current index from `scrollLeft`, calls `scrollTo({behavior:'smooth'})` to the adjacent slide, then fires `updateStripDots` after 80 ms. Added `touchstart`/`touchend` listeners (passive) on the strip after each `openDetail` call: swipes >50 px trigger `stripNav` with the correct direction. Single-photo listings show the image statically with no controls, unchanged.
+| Tier     | Price   | Sessions/day | City scope                  |
+|----------|---------|-------------|------------------------------|
+| Free     | $0      | 3 (hard)    | Local city only              |
+| Starter  | $5/mo   | 20          | All cities in same country   |
+| Premium  | $15/mo  | 50          | All cities globally          |
 
-### Task 4 — Category listing counts (city-scoped)
+Note: prices and session limits are preliminary pending Paystack
+go-live and final product decision.
 
-Fixed the hardcoded category counts (12/11/8) on the home screen in `marketsquare.html`. Extracted `normCat()` from its previous location inside `loadLiveListings()` to module scope so it can be shared. Added `const ACTIVE_CITY = 'Pretoria'` as the single source of truth for the city filter, used in both the BEA `/listings?city=` query and the count function. Added `id="home-cat-grid"` to the categories div. Added `renderCatCounts()` which filters `LISTINGS` to non-placeholder entries (`!id.startsWith('ph_')`), normalises each `cat` value through `normCat()`, counts per key, and updates the `.cat-count` text in each tile. `renderCatCounts()` is called after `renderGrid()` and `renderFeatured()` completes in `loadLiveListings()`, so counts always reflect the live BEA data for the active city.
-### Task 5 — City selector and founding seller progress bar (tier-gated)
+**Infrastructure cost model established:**
+- Fixed costs: ~$10/month (Hetzner CPX22 + domain)
+- Breakeven: 2 Starter subscribers covers all infra costs
+- CPX22 can comfortably serve ~16,000 free-only users before upgrade
+- Next tier: Hetzner CPX32 at ~$17/month
+- AI agent app token costs are a separate model — not applicable to
+  MarketSquare itself
 
-Added a full tier-gated city selector to `marketsquare.html`. `const ACTIVE_CITY` replaced by `let activeCity = 'Pretoria'`. Two new state vars: `let buyerTier = 'free'` (FLAG: wire to Paystack when live) and `let availableCities = ['Pretoria']`. `loadCities()` attempts `GET /cities?country=ZA` (Starter) or `GET /cities` (Premium) from BEA, falls back to `['Pretoria']` on error (FLAG: BEA needs these endpoints). City badge gains `.locked` class for Free tier; Starter/Premium click opens a bottom sheet listing available cities. `selectCity(city)` updates `activeCity`, refreshes the badge, and re-calls `loadLiveListings()` which now clears all `isLive` entries from LISTINGS before re-fetching. Progress bar elements given IDs; `renderHomeProgress()` derives per-category counts from live non-placeholder LISTINGS and updates fills + labels for `activeCity`. `renderHomeStats()` updates Sellers and Listings cells (FLAG: Sellers needs `GET /sellers/count?city=` from BEA when available). Both render on `loadLiveListings()` success and on startup.
+### Open items for Session 7
+1. Execute Task 1 — currency formatting (Claude Code)
+2. Execute Task 2 — structured description editor + renderer (Claude Code)
+3. Execute Task 3 — photo carousel (Claude Code)
+4. Execute Task 4 — category listing counts city-scoped (Claude Code)
+5. Execute Task 5 — city selector tier-gated (Claude Code)
+6. Deploy all changes to server after testing
+7. Maroushka real listings — re-enter via admin tool using new
+   structured description editor once Task 2 is done
+8. n8n email notifications — buyer emailed on intro accept/decline
+9. Hetzner Object Storage — migrate photos from local /media
+10. Update start_marketsquare.bat — correct SCP deploy commands
+11. Paystack live mode — pending CIPC registration
+12. Rename project files — remove Windows duplicate suffixes
+
+---
+
+## Session 7 · 1 April 2026 (continued)
+
+### Completed in this session
+
+Tasks 1–5 confirmed complete via git history. The SESSION_7_START_PROMPT.md process was validated — agent correctly identified outstanding work and confirmed completed tasks instantly. Start prompt format confirmed solid for future sessions.
+
+- **Task 1 · Currency formatting** — formatZAR() helper implemented across both marketsquare.html and marketsquare_admin.html. All monetary values display as R1,234,456.00.
+- **Task 2 · Structured description** — admin tool listing form replaced with structured editor (headline, tagline, summary, sections + bullets), serialised as JSON. Buyer app renderer detects JSON and renders as formatted HTML, falls back to plain text for legacy listings.
+- **Task 3 · Photo carousel** — listing detail screen updated with swipeable carousel, arrow buttons, dot indicators, and touch/swipe support. Uses medium_url array from BEA listing object.
+- **Task 4 · Category listing counts** — counts now derived dynamically from live listings, filtered to active city and suburb scope, excluding ph_ placeholders. Re-renders after loadLiveListings() completes.
+- **Task 5 · City selector tier-gated** — Free locked to local city, Starter opens country-scoped selector, Premium opens global selector. Tier state defaults to Free pending Paystack go-live.
+
+### Open items for next session
+1. Task 6 Parts B & C — Admin suburb dropdown + buyer app three-level location selector
+2. Maroushka real listings — re-enter via admin tool using structured description editor
+3. n8n email notifications — buyer emailed on intro accept/decline
+4. Hetzner Object Storage — migrate photos from local /media
+5. Update start_marketsquare.bat with correct SCP deploy commands
+6. Paystack live mode — pending CIPC registration
+
+---
+
+## Session 7 · 1 April 2026 · Task 6 Part A — BEA suburbs & cities
+
+Added three-level location hierarchy support to the BEA (main.py). Migration runs on startup: creates `suburbs` table (id, name, city, country, active, created_at) with index on city+active, adds `suburb TEXT` column to listings, and defaults existing rows to "Central". Seed function loads suburbs_seed.json (31 Pretoria suburbs) on first start, skipping subsequent runs. `GET /listings` now accepts optional `&suburb=` filter. `POST /listings` now requires `suburb` field (400 if missing), and inserts it. New endpoints: `GET /suburbs?city=` returns sorted active suburb names; `GET /cities?country=` returns city list for that country; `GET /cities` returns all cities grouped by country; `POST /cities` (auth required) creates a city placeholder and triggers a background GeoNames fetch to seed its suburbs (requires GEONAMES_USERNAME in .env). `httpx` added as import for async GeoNames calls.
+
+**Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `scp suburbs_seed.json root@178.104.73.239:/var/www/marketsquare/suburbs_seed.json` then `systemctl restart marketsquare-bea`.
