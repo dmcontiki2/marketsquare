@@ -1,0 +1,10 @@
+scp C:\Users\David\Projects\MarketSquare\marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html
+
+
+Perfect — index.html is now 163K, Mar 30 04:43 in the right folder. Nginx reloaded cleanly too.
+Now also note the correct SCP path for all future deployments — save this for your records:
+bash
+
+scp C:\Users\David\Projects\MarketSquare\marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html
+
+Try trustsquare.co in a fresh incognito window now — Maroushka's listings should be fully clickable. Also worth updating start_marketsquare.bat to use the correct SCP path so future deploys are one click.
