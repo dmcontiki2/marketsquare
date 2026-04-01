@@ -293,7 +293,7 @@ Tasks 1–5 confirmed complete via git history. The SESSION_7_START_PROMPT.md pr
 - **Task 5 · City selector tier-gated** — Free locked to local city, Starter opens country-scoped selector, Premium opens global selector. Tier state defaults to Free pending Paystack go-live.
 
 ### Open items for next session
-1. Task 6 Parts B & C — Admin suburb dropdown + buyer app three-level location selector
+1. Deploy all Task 6 changes to server (both HTML files + bea_main.py)
 2. Maroushka real listings — re-enter via admin tool using structured description editor
 3. n8n email notifications — buyer emailed on intro accept/decline
 4. Hetzner Object Storage — migrate photos from local /media
@@ -306,7 +306,11 @@ Tasks 1–5 confirmed complete via git history. The SESSION_7_START_PROMPT.md pr
 
 Added three-level location hierarchy support to the BEA (main.py). Migration runs on startup: creates `suburbs` table (id, name, city, country, active, created_at) with index on city+active, adds `suburb TEXT` column to listings, and defaults existing rows to "Central". Seed function loads suburbs_seed.json (31 Pretoria suburbs) on first start, skipping subsequent runs. `GET /listings` now accepts optional `&suburb=` filter. `POST /listings` now requires `suburb` field (400 if missing), and inserts it. New endpoints: `GET /suburbs?city=` returns sorted active suburb names; `GET /cities?country=` returns city list for that country; `GET /cities` returns all cities grouped by country; `POST /cities` (auth required) creates a city placeholder and triggers a background GeoNames fetch to seed its suburbs (requires GEONAMES_USERNAME in .env). `httpx` added as import for async GeoNames calls.
 
-**Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `scp suburbs_seed.json root@178.104.73.239:/var/www/marketsquare/suburbs_seed.json` then `systemctl restart marketsquare-bea`.
+**Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `scp suburbs_seed.json root@178.104.73.239:/var/www/marketsquare/suburbs_seed.json` then `systemctl restart marketsquare.service`.
+
+## Session 7 · 1 April 2026 · Task 6 Part C — Buyer app three-level location selector
+
+Replaced the single-city badge with a Country → City → Suburb drill-down. Added `activeSuburb` (null = All suburbs) and `availableSuburbs` state variables. Added `updateBadgeLabel()` which sets the badge to `{city} · All suburbs` or `{city} · {suburb}`. The location bottom sheet now has two panels: city panel and suburb panel. `openLocPanel('city'|'suburb')` switches between them. Selecting a city drills directly into the suburb panel. `selectSuburb()` sets `activeSuburb`, updates the badge, and re-calls `loadLiveListings()`. `loadLiveListings()` now appends `&suburb=` to the BEA query when a suburb is active. Tier gating: Free opens suburb panel directly (city locked); Starter opens city panel filtered to ZA; Premium opens city panel globally. `renderCatCounts()` and `renderGrid()` both respect `activeSuburb`. Startup sequence: `loadCities → loadSuburbsForSelector → loadLiveListings`.
 
 ## Session 7 · 1 April 2026 · Task 6 Part B — Admin tool suburb dropdown + City Management tab
 
