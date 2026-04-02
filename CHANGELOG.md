@@ -315,3 +315,68 @@ Replaced the single-city badge with a Country → City → Suburb drill-down. Ad
 ## Session 7 · 1 April 2026 · Task 6 Part B — Admin tool suburb dropdown + City Management tab
 
 Added suburb selection to the listing form in Step 3 of the admin onboarding wizard. When the form opens, `loadSuburbsForForm()` fetches `GET /suburbs?city={sellerData.city}` and populates a dropdown. Suburb is required — `saveListingToQueue()` blocks submission if unset. The suburb value is stored in `formData.suburb` and included in the BEA publish payload. The old free-text "Area / Suburb" field is now labelled "Area" (still optional/freeform). Added a City Management tab (nav icon 🌍) with a cities table (city, country, suburb count) loaded from `GET /cities`, and an "Add city" form that POSTs to `POST /cities` and shows a "fetching suburbs in background" status. `goView('cities')` auto-loads the table on tab open.
+
+---
+
+## Session 8 · 2 April 2026 · Task 2 — n8n email notifications (BEA)
+
+Added fire-and-forget webhook calls to `PUT /intros/{id}/accept` and `PUT /intros/{id}/decline`. Two new env vars — `N8N_WEBHOOK_ACCEPT` and `N8N_WEBHOOK_DECLINE` — are read at startup via `os.getenv()`; if either is missing the BEA logs one warning and continues without sending that email. Both endpoints now accept `BackgroundTasks` and schedule an async `_fire_webhook()` call after the DB update completes. The webhook uses `httpx.AsyncClient` with a 5-second timeout; any failure is logged and the API response is unaffected. Webhook payloads include event type, intro/listing IDs, listing title, buyer email, city, and UTC timestamp. `buyer_name` and `seller_display_name` are sent as `null` — these fields are not yet stored in the current schema (noted as a future addition). No frontend changes required. **n8n setup is a one-time manual step — see deploy notes below.**
+
+**n8n server setup (one-time manual steps on Hetzner):**
+1. `npm install -g n8n`
+2. Create `/etc/systemd/system/n8n.service`:
+   ```
+   [Unit]
+   Description=n8n workflow automation
+   After=network.target
+   [Service]
+   Type=simple
+   User=root
+   ExecStart=/usr/bin/n8n start
+   Restart=on-failure
+   Environment=N8N_PORT=5678
+   Environment=N8N_PROTOCOL=http
+   Environment=N8N_HOST=localhost
+   Environment=WEBHOOK_URL=http://localhost:5678
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   Then: `systemctl enable n8n && systemctl start n8n`
+3. n8n runs on `localhost:5678` only — do NOT expose publicly; do not add nginx proxy.
+4. Access via SSH tunnel: `ssh -L 5678:localhost:5678 root@178.104.73.239` then open `http://localhost:5678`
+5. Create two workflows in n8n UI: Webhook trigger → Send Email (accepted), Webhook trigger → Send Email (declined). Configure SMTP credentials (Brevo / Mailgun / Resend — free tier sufficient).
+6. Add to `/var/www/marketsquare/.env`:
+   ```
+   N8N_WEBHOOK_ACCEPT=http://localhost:5678/webhook/<your-accept-uuid>
+   N8N_WEBHOOK_DECLINE=http://localhost:5678/webhook/<your-decline-uuid>
+   ```
+
+**Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `systemctl restart marketsquare.service`
+
+---
+
+## Session 8 · 2 April 2026 · Task 3 — Hetzner Object Storage photo migration (BEA)
+
+Added S3-compatible photo storage to the BEA with graceful local-disk fallback. Four new env vars — `HETZNER_S3_ENDPOINT`, `HETZNER_S3_BUCKET`, `HETZNER_S3_ACCESS_KEY`, `HETZNER_S3_SECRET_KEY` — are read at startup. If any are missing the BEA logs one warning and continues using local `/media` (existing behaviour unchanged). When all four are set, `boto3` client is initialised at startup and `POST /listings/photo` uploads the compressed medium JPEG to S3 (key pattern: `media/{uuid}_{filename}`), sets `ACL=public-read`, and returns the S3 public URL as both `thumb_url` and `medium_url` (Hetzner does not auto-generate thumbnails — same URL for now). New admin endpoint `POST /admin/migrate-photos` (API-key auth) scans all listings with local `/media/` paths, uploads each file (thumb + medium separately) to S3, and updates the DB rows in place. Returns `{"migrated": N, "failed": M, "skipped": K}`. Idempotent — skips rows already pointing to an S3 URL. Never deletes local files. `boto3` added to `requirements.txt`.
+
+**Deploy:**
+1. Add to `/var/www/marketsquare/.env`:
+   ```
+   HETZNER_S3_ENDPOINT=https://<your-region>.your-objectstorage.com
+   HETZNER_S3_BUCKET=<your-bucket-name>
+   HETZNER_S3_ACCESS_KEY=<your-access-key>
+   HETZNER_S3_SECRET_KEY=<your-secret-key>
+   ```
+2. `pip install -r requirements.txt` (installs `boto3` — required before restart)
+3. `scp requirements.txt root@178.104.73.239:/var/www/marketsquare/requirements.txt`
+4. `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py`
+5. `systemctl restart marketsquare.service`
+6. Once running: `curl -X POST https://trustsquare.co/admin/migrate-photos -H "X-Api-Key: ms_mk_2026_pretoria_admin"` to migrate existing local photos to S3.
+
+---
+
+## Session 8 · 2 April 2026 · Task 5 — GeoNames config guard (BEA)
+
+The `_fetch_geonames_suburbs` background task already checked for `GEONAMES_USERNAME` via `os.getenv()` (added in Session 7 Task 6). Updated the silent return to emit a `WARNING` log: `"GEONAMES_USERNAME not set in .env — suburb auto-seed skipped for city {city_name}"`. No other logic changes. To enable suburb auto-seeding for new cities, register free at geonames.org and add `GEONAMES_USERNAME=<your_username>` to `/var/www/marketsquare/.env`, then `systemctl restart marketsquare.service`.
+
+**Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `systemctl restart marketsquare.service`

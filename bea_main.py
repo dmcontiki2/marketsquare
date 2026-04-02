@@ -11,6 +11,8 @@ import json
 import httpx
 from PIL import Image
 import io
+import logging
+from datetime import datetime, timezone
 
 app = FastAPI(title="MarketSquare BEA", version="1.1.0")
 
@@ -69,6 +71,62 @@ _startup_conn = database.get_db()
 run_migrations(_startup_conn)
 seed_suburbs(_startup_conn)
 _startup_conn.close()
+
+# ── STARTUP LOGGING + ENV CONFIG ─────────────────────────────
+logging.basicConfig(level=logging.INFO)
+_log = logging.getLogger("bea")
+
+# n8n webhook URLs (Task 2 — optional, skip silently if not set)
+N8N_WEBHOOK_ACCEPT  = os.getenv("N8N_WEBHOOK_ACCEPT")
+N8N_WEBHOOK_DECLINE = os.getenv("N8N_WEBHOOK_DECLINE")
+if not N8N_WEBHOOK_ACCEPT:
+    _log.warning("N8N_WEBHOOK_ACCEPT not set — intro-accepted emails disabled")
+if not N8N_WEBHOOK_DECLINE:
+    _log.warning("N8N_WEBHOOK_DECLINE not set — intro-declined emails disabled")
+
+# Hetzner Object Storage (Task 3 — optional, falls back to local /media)
+HETZNER_S3_ENDPOINT   = os.getenv("HETZNER_S3_ENDPOINT")
+HETZNER_S3_BUCKET     = os.getenv("HETZNER_S3_BUCKET")
+HETZNER_S3_ACCESS_KEY = os.getenv("HETZNER_S3_ACCESS_KEY")
+HETZNER_S3_SECRET_KEY = os.getenv("HETZNER_S3_SECRET_KEY")
+_S3_CONFIGURED = all([HETZNER_S3_ENDPOINT, HETZNER_S3_BUCKET,
+                       HETZNER_S3_ACCESS_KEY, HETZNER_S3_SECRET_KEY])
+if _S3_CONFIGURED:
+    import boto3 as _boto3
+    _s3 = _boto3.client(
+        "s3",
+        endpoint_url=HETZNER_S3_ENDPOINT,
+        aws_access_key_id=HETZNER_S3_ACCESS_KEY,
+        aws_secret_access_key=HETZNER_S3_SECRET_KEY,
+    )
+    _log.info("Hetzner Object Storage configured: %s / %s", HETZNER_S3_ENDPOINT, HETZNER_S3_BUCKET)
+else:
+    _log.warning("Object Storage not configured — using local /media fallback")
+
+# GeoNames username — guard logged inside _fetch_geonames_suburbs (Task 5)
+
+# ── HELPERS ───────────────────────────────────────────────────
+
+def _s3_upload(data: bytes, key: str, content_type: str) -> str:
+    """Upload bytes to Hetzner Object Storage; return public URL."""
+    _s3.put_object(
+        Bucket=HETZNER_S3_BUCKET,
+        Key=key,
+        Body=data,
+        ContentType=content_type,
+        ACL="public-read",
+    )
+    return f"{HETZNER_S3_ENDPOINT}/{HETZNER_S3_BUCKET}/{key}"
+
+
+async def _fire_webhook(url: str, payload: dict):
+    """Fire-and-forget webhook POST — never raises, logs errors only."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.post(url, json=payload)
+    except Exception as exc:
+        _log.error("Webhook POST to %s failed: %s", url, exc)
+
 
 # Serve local media files (fallback when Hetzner Object Storage not yet configured)
 os.makedirs("/var/www/marketsquare/media", exist_ok=True)
@@ -226,7 +284,8 @@ async def _fetch_geonames_suburbs(city: str, country: str):
     """Background task: fetch suburbs from GeoNames and seed the suburbs table."""
     username = os.getenv("GEONAMES_USERNAME")
     if not username:
-        return  # Skip silently — no credentials configured
+        _log.warning("GEONAMES_USERNAME not set in .env — suburb auto-seed skipped for city %s", city)
+        return
     url = f"http://api.geonames.org/searchJSON?q={city}&featureClass=P&country={country}&maxRows=100&username={username}"
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -291,6 +350,20 @@ async def upload_listing_photo(
     medium_bytes = medium_buf.getvalue()
 
     # ── Upload both ─────────────────────────────────────────
+    if _S3_CONFIGURED:
+        # Upload to Hetzner Object Storage — same URL for thumb and medium
+        # (Hetzner does not auto-generate thumbnails)
+        orig_name = (file.filename or "photo.jpg").replace(" ", "_")
+        key = f"media/{uuid.uuid4().hex}_{orig_name}"
+        s3_url = _s3_upload(medium_bytes, key, "image/jpeg")
+        return {
+            "thumb_url":  s3_url,
+            "medium_url": s3_url,
+            "thumb_kb":   round(len(thumb_bytes)  / 1024, 1),
+            "medium_kb":  round(len(medium_bytes) / 1024, 1),
+        }
+
+    # Local /media fallback (used when Object Storage is not configured)
     base = storage.generate_filename("listing")
     thumb_name  = base.replace(".jpg", "_thumb.jpg")
     medium_name = base.replace(".jpg", "_medium.jpg")
@@ -383,25 +456,59 @@ def get_intros(listing_id: int):
     return [dict(r) for r in rows]
 
 @app.put("/intros/{intro_id}/accept")
-def accept_intro(intro_id: int, _key: str = Depends(auth.require_api_key)):
+def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
+    intro = conn.execute("SELECT * FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
+    if not intro:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Intro not found")
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro["listing_id"],)).fetchone()
     conn.execute(
         "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 WHERE id = ?",
         (intro_id,)
     )
     conn.commit()
     conn.close()
+    if N8N_WEBHOOK_ACCEPT:
+        payload = {
+            "event": "intro_accepted",
+            "intro_id": intro_id,
+            "listing_id": intro["listing_id"],
+            "listing_title": listing["title"] if listing else None,
+            "buyer_email": intro["buyer_email"],
+            "buyer_name": None,          # not stored in intro_requests schema
+            "seller_display_name": None, # not stored in listings schema
+            "city": listing["city"] if listing else None,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_ACCEPT, payload)
     return {"message": "Introduction accepted — 1T charged"}
 
 @app.put("/intros/{intro_id}/decline")
-def decline_intro(intro_id: int, _key: str = Depends(auth.require_api_key)):
+def decline_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
+    intro = conn.execute("SELECT * FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
+    if not intro:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Intro not found")
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro["listing_id"],)).fetchone()
     conn.execute(
         "UPDATE intro_requests SET status = 'declined' WHERE id = ?",
         (intro_id,)
     )
     conn.commit()
     conn.close()
+    if N8N_WEBHOOK_DECLINE:
+        payload = {
+            "event": "intro_declined",
+            "intro_id": intro_id,
+            "listing_id": intro["listing_id"],
+            "listing_title": listing["title"] if listing else None,
+            "buyer_email": intro["buyer_email"],
+            "buyer_name": None, # not stored in intro_requests schema
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_DECLINE, payload)
     return {"message": "Introduction declined"}
 
 # ── PAYMENTS (Paystack) ──────────────────────────────────────
@@ -449,3 +556,53 @@ def verify_payment(reference: str):
 def test_payment_connection():
     result = payments.get_balance()
     return {"status": "ok", "paystack_connected": result.get("status", False)}
+
+# ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
+
+@app.post("/admin/migrate-photos")
+def migrate_photos(_key: str = Depends(auth.require_api_key)):
+    """Migrate existing local photos to Hetzner Object Storage.
+    Idempotent — skips listings already pointing to an S3 URL.
+    Does NOT delete local files.
+    Returns: { migrated, failed, skipped }
+    """
+    if not _S3_CONFIGURED:
+        raise HTTPException(status_code=503, detail="Object Storage not configured — set HETZNER_S3_* env vars")
+    conn = database.get_db()
+    rows = conn.execute(
+        "SELECT id, thumb_url, medium_url FROM listings WHERE thumb_url LIKE '/media/%'"
+    ).fetchall()
+    migrated = failed = skipped = 0
+    for row in rows:
+        listing_id  = row["id"]
+        thumb_path  = row["thumb_url"]  or ""
+        medium_path = row["medium_url"] or ""
+        if not thumb_path.startswith("/media/"):
+            skipped += 1
+            continue
+        try:
+            thumb_local = f"/var/www/marketsquare{thumb_path}"
+            with open(thumb_local, "rb") as fh:
+                thumb_data = fh.read()
+            thumb_key = f"media/{uuid.uuid4().hex}_{os.path.basename(thumb_local)}"
+            new_thumb = _s3_upload(thumb_data, thumb_key, "image/jpeg")
+            # Upload medium separately if it also has a local path
+            new_medium = new_thumb
+            if medium_path.startswith("/media/"):
+                medium_local = f"/var/www/marketsquare{medium_path}"
+                if os.path.exists(medium_local):
+                    with open(medium_local, "rb") as fh:
+                        medium_data = fh.read()
+                    medium_key = f"media/{uuid.uuid4().hex}_{os.path.basename(medium_local)}"
+                    new_medium = _s3_upload(medium_data, medium_key, "image/jpeg")
+            conn.execute(
+                "UPDATE listings SET thumb_url = ?, medium_url = ? WHERE id = ?",
+                (new_thumb, new_medium, listing_id)
+            )
+            conn.commit()
+            migrated += 1
+        except Exception as exc:
+            _log.error("Photo migration failed for listing %s: %s", listing_id, exc)
+            failed += 1
+    conn.close()
+    return {"migrated": migrated, "failed": failed, "skipped": skipped}

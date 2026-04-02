@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 1 April 2026
+## Current State · 2 April 2026
 
 | Item | Detail |
 |---|---|
@@ -17,25 +17,22 @@
 
 ---
 
-## Last Completed Session · Session 7 (1 April 2026)
+## Last Completed Session · Session 8 (2 April 2026)
 
-- Tasks 1–6 all complete:
-  - Task 1 — Currency formatting R1,234,456.00 across both files
-  - Task 2 — Structured description editor (admin) + renderer (buyer app)
-  - Task 3 — Photo carousel with swipe support (detail screen)
-  - Task 4 — Category listing counts city-scoped, excludes placeholders
-  - Task 5 — City selector tier-gated (Free / Starter / Premium)
-  - Task 6 — Three-level location hierarchy (BEA + admin + buyer app) · deployed
+- Task 1 — Maroushka real listings re-entered (done prior to this session)
+- Task 2 — n8n email notifications: webhook fire-and-forget on intro accept/decline (BEA)
+- Task 3 — Hetzner Object Storage: S3 upload path + /admin/migrate-photos endpoint (BEA)
+- Task 5 — GeoNames config guard: warning log added when GEONAMES_USERNAME not set (BEA)
 
 ---
 
-## Next Task · Session 8
+## Next Task · Session 9
 
-1. Maroushka real listings — delete experimental data, re-enter via admin tool using structured description editor and suburb field
-2. n8n email notifications — buyer emailed on intro accept/decline
-3. Hetzner Object Storage — migrate photos from local /media
+1. Deploy Session 8 BEA changes to server (scp + pip install + restart — see CHANGELOG)
+2. Set up n8n as systemd service; create accept/decline workflows; add webhook URLs to .env
+3. Create Hetzner Object Storage bucket; add S3 env vars to .env; run migrate-photos
 4. Paystack live mode — pending CIPC registration
-5. Add GEONAMES_USERNAME to BEA .env to enable auto-suburb seeding for new cities
+5. Update start_marketsquare.bat with correct SCP deploy commands
 
 ---
 

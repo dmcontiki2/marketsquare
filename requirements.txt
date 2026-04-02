@@ -1,0 +1,6 @@
+fastapi>=0.100
+uvicorn>=0.20
+httpx>=0.24
+Pillow>=10.0
+boto3>=1.28
+python-multipart>=0.0.6
