@@ -19,20 +19,34 @@
 
 ## Last Completed Session · Session 8 (2 April 2026)
 
-- Task 1 — Maroushka real listings re-entered (done prior to this session)
-- Task 2 — n8n email notifications: webhook fire-and-forget on intro accept/decline (BEA)
-- Task 3 — Hetzner Object Storage: S3 upload path + /admin/migrate-photos endpoint (BEA)
-- Task 5 — GeoNames config guard: warning log added when GEONAMES_USERNAME not set (BEA)
+- Task 2 — n8n email notifications: fully deployed and live ✅
+  - n8n running as Docker container on server (localhost:5678 only)
+  - Two workflows created: Intro Accepted + Intro Declined (Brevo SMTP)
+  - N8N_WEBHOOK_ACCEPT and N8N_WEBHOOK_DECLINE set in /etc/environment
+- Task 3 — Hetzner Object Storage: BEA code deployed, bucket created ✅
+  - Bucket: marketsquare-media (nbg1.your-objectstorage.com)
+  - HETZNER_S3_ENDPOINT and HETZNER_S3_BUCKET set in /etc/environment
+  - HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY still need to be added ⚠️
+- Task 5 — GeoNames config guard: deployed ✅
 
 ---
 
 ## Next Task · Session 9
 
-1. Deploy Session 8 BEA changes to server (scp + pip install + restart — see CHANGELOG)
-2. Set up n8n as systemd service; create accept/decline workflows; add webhook URLs to .env
-3. Create Hetzner Object Storage bucket; add S3 env vars to .env; run migrate-photos
-4. Paystack live mode — pending CIPC registration
-5. Update start_marketsquare.bat with correct SCP deploy commands
+1. Finish Object Storage setup — add HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY to /etc/environment via nano, restart BEA, confirm INFO log appears
+2. Run POST /admin/migrate-photos to migrate existing local photos to S3
+3. Paystack live mode — pending CIPC registration
+4. Update start_marketsquare.bat with correct SCP deploy commands
+
+---
+
+## Known Server Facts (prevent drift)
+
+- Env vars live in /etc/environment (not /var/www/marketsquare/.env)
+- systemd drop-in: /etc/systemd/system/marketsquare.service.d/env.conf → points to /etc/environment
+- BEA venv: /var/www/marketsquare/venv/ — always use venv pip
+- n8n runs as Docker container — restart with: docker restart n8n
+- Access n8n UI via SSH tunnel: ssh -L 5678:localhost:5678 root@178.104.73.239
 
 ---
 

@@ -353,6 +353,14 @@ Added fire-and-forget webhook calls to `PUT /intros/{id}/accept` and `PUT /intro
 
 **Deploy:** `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` then `systemctl restart marketsquare.service`
 
+**Session 8 deploy notes (actual):**
+- Env vars live in `/etc/environment` (not `.env`) — systemd drop-in points there
+- n8n installed via Docker (npm global install failed on isolated-vm native build)
+- n8n Docker command: `docker run -d --name n8n --restart unless-stopped -p 127.0.0.1:5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/n8nio/n8n`
+- Access n8n UI via SSH tunnel: `ssh -L 5678:localhost:5678 root@178.104.73.239`
+- N8N_WEBHOOK_ACCEPT and N8N_WEBHOOK_DECLINE confirmed live ✅
+- HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY still to be added via `nano /etc/environment` ⚠️
+
 ---
 
 ## Session 8 · 2 April 2026 · Task 3 — Hetzner Object Storage photo migration (BEA)
@@ -367,7 +375,7 @@ Added S3-compatible photo storage to the BEA with graceful local-disk fallback. 
    HETZNER_S3_ACCESS_KEY=<your-access-key>
    HETZNER_S3_SECRET_KEY=<your-secret-key>
    ```
-2. `pip install -r requirements.txt` (installs `boto3` — required before restart)
+2. `/var/www/marketsquare/venv/bin/pip install -r requirements.txt` (installs `boto3` — use venv pip, not system pip)
 3. `scp requirements.txt root@178.104.73.239:/var/www/marketsquare/requirements.txt`
 4. `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py`
 5. `systemctl restart marketsquare.service`
