@@ -84,6 +84,8 @@ echo      to CHANGELOG.md.
 echo   3) Git commit with message: "Session X complete"
 echo   4) Push to GitHub.
 echo  ────────────────────────────────────────────────
+echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
+echo   scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
 echo.
 timeout /t 8 /nobreak >nul
 exit

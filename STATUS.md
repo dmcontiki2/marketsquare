@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 2 April 2026
+## Current State · 3 April 2026
 
 | Item | Detail |
 |---|---|
@@ -17,26 +17,18 @@
 
 ---
 
-## Last Completed Session · Session 8 (2 April 2026)
+## Last Completed Session · Session 9 (3 April 2026)
 
-- Task 2 — n8n email notifications: fully deployed and live ✅
-  - n8n running as Docker container on server (localhost:5678 only)
-  - Two workflows created: Intro Accepted + Intro Declined (Brevo SMTP)
-  - N8N_WEBHOOK_ACCEPT and N8N_WEBHOOK_DECLINE set in /etc/environment
-- Task 3 — Hetzner Object Storage: BEA code deployed, bucket created ✅
-  - Bucket: marketsquare-media (nbg1.your-objectstorage.com)
-  - HETZNER_S3_ENDPOINT and HETZNER_S3_BUCKET set in /etc/environment
-  - HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY still need to be added ⚠️
-- Task 5 — GeoNames config guard: deployed ✅
+- Activated Hetzner Object Storage — added S3 keys to /etc/environment, confirmed INFO log, restarted BEA ✅
+- Ran migrate-photos — 0 local photos found, new uploads will go direct to S3 ✅
+- Updated start_marketsquare.bat with correct SCP deploy commands ✅
 
 ---
 
-## Next Task · Session 9
+## Next Task · Session 10
 
-1. Finish Object Storage setup — add HETZNER_S3_ACCESS_KEY and HETZNER_S3_SECRET_KEY to /etc/environment via nano, restart BEA, confirm INFO log appears
-2. Run POST /admin/migrate-photos to migrate existing local photos to S3
-3. Paystack live mode — pending CIPC registration
-4. Update start_marketsquare.bat with correct SCP deploy commands
+1. buyer_name fix — confirm Claude Code ran it this session, then proceed
+2. Paystack live mode — pending CIPC registration
 
 ---
 
@@ -59,13 +51,11 @@
 
 ---
 
-## Open Items (non-session-7)
+## Open Items
 
-- n8n email notifications (buyer emailed on intro accept/decline)
-- Hetzner Object Storage (migrate photos from local /media)
 - Paystack live mode (pending CIPC registration)
 - Rename project files — remove Windows duplicate suffixes
-- Update `start_marketsquare.bat` with correct SCP deploy commands
+- buyer_name field — not yet stored in BEA schema (noted in Session 8 n8n task)
 
 ---
 *Update the "Last Completed" and "Next Task" sections at the end of every session. Do not let this file exceed 60 lines.*
