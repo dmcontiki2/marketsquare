@@ -565,31 +565,6 @@ def geo_nearby(lat: float, lng: float, radius_km: float = 10.0, limit: int = 20)
     return results[:limit]
 
 
-@app.post("/geo/cities")
-def geo_post_city(city: str, region_id: int, _key: str = Depends(auth.require_api_key)):
-    conn = database.get_db()
-    # Look up country_iso2 from region
-    region = conn.execute(
-        "SELECT country_iso2 FROM geo_regions WHERE id=?", (region_id,)
-    ).fetchone()
-    if not region:
-        conn.close()
-        raise HTTPException(status_code=400, detail="Region not found")
-    existing = conn.execute(
-        "SELECT id FROM geo_cities WHERE name=? AND region_id=?", (city, region_id)
-    ).fetchone()
-    if existing:
-        conn.close()
-        return {"id": existing["id"], "name": city, "status": "exists"}
-    cur = conn.execute(
-        "INSERT INTO geo_cities (name, region_id, country_iso2, active) VALUES (?,?,?,1)",
-        (city, region_id, region["country_iso2"])
-    )
-    city_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return {"id": city_id, "name": city, "status": "created"}
-
 @app.post("/geo/countries")
 def geo_add_country(
     iso2: str,
