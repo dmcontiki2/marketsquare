@@ -405,7 +405,7 @@ def geo_get_suburbs(city_id: int):
     return [dict(r) for r in rows]
 
 @app.post("/geo/cities")
-def geo_post_city(city: str, region_id: int, api_key: str = Depends(require_api_key)):
+def geo_post_city(city: str, region_id: int, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     # Look up country_iso2 from region
     region = conn.execute(
