@@ -18,13 +18,13 @@ echo   MARKETSQUARE  ^|  Session Starting...
 echo  ============================================================
 echo.
 
-:: ── Step 1: Copy last CHANGELOG entry to clipboard ──────────
-echo  [1/5] Copying last session summary to clipboard...
+:: ── Step 1: Copy SESSION_START_PROMPT to clipboard ──────────
+echo  [1/5] Copying session start prompt to clipboard...
 
-if exist "%CHANGELOG%" (
-    powershell -NoProfile -Command "$content = Get-Content '%CHANGELOG%' -Raw -Encoding UTF8; $blocks = $content -split '(?m)^## '; $last = $blocks[-1].Trim(); $formatted = '## ' + $last; Set-Clipboard -Value $formatted; Write-Host '  Done — last session summary is on your clipboard.'"
+if exist "%PROJECT%\SESSION_START_PROMPT.md" (
+    powershell -NoProfile -Command "Get-Content '%PROJECT%\SESSION_START_PROMPT.md' -Raw -Encoding UTF8 | Set-Clipboard; Write-Host '  Done — session start prompt is on your clipboard.'"
 ) else (
-    powershell -NoProfile -Command "Set-Clipboard -Value 'New MarketSquare session. No previous CHANGELOG entry found.'; Write-Host '  No CHANGELOG found — placeholder copied.'"
+    powershell -NoProfile -Command "Set-Clipboard -Value 'Read STATUS.md first, then AGENT_BRIEFING.md.'; Write-Host '  SESSION_START_PROMPT.md not found — fallback copied.'"
 )
 
 echo.
@@ -55,7 +55,7 @@ echo  ============================================================
 echo   ALL DONE — YOUR SESSION IS READY
 echo  ============================================================
 echo.
-echo  Your clipboard holds the last CHANGELOG session summary.
+echo  Your clipboard holds the session start prompt — just Ctrl+V + Enter in Claude Code.
 echo.
 echo  In Claude Chat:
 echo    1. Upload CLAUDE.md
