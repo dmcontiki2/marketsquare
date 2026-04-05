@@ -136,7 +136,7 @@ def seed_geo_za(conn):
         admin2_code = cols[11]
         if feat_cls == "A" and feat_code == "ADM1":
             adm1[admin1_code] = name
-        elif feat_cls == "P" and feat_code in ("PPLA", "PPLA2"):
+        elif feat_cls == "P" and feat_code in ("PPLC", "PPLA", "PPLA2", "PPLA3"):
             cities.append({"name": name, "admin1": admin1_code, "admin2": admin2_code, "code": feat_code})
         elif feat_cls == "P" and feat_code == "PPL":
             ppls.append({"name": name, "admin1": admin1_code, "admin2": admin2_code})
@@ -149,7 +149,8 @@ def seed_geo_za(conn):
 
     # Pass 1: cities — PPLA takes priority over PPLA2 for same admin2
     city_map = {}  # (admin1, admin2) -> city_id
-    for c in sorted(cities, key=lambda x: 0 if x["code"] == "PPLA" else 1):
+    priority = {"PPLC": 0, "PPLA": 1, "PPLA2": 2, "PPLA3": 3}
+    for c in sorted(cities, key=lambda x: priority.get(x["code"], 9)):
         region_id = region_map.get(c["admin1"])
         if not region_id:
             continue
@@ -192,15 +193,15 @@ def migrate_listings_to_geo_city(conn):
         _log.info("Migrated %d listings to geo_city_id", n)
 
 
+# ── STARTUP LOGGING + ENV CONFIG ─────────────────────────────
+logging.basicConfig(level=logging.INFO)
+_log = logging.getLogger("bea")
+
 _startup_conn = database.get_db()
 run_migrations(_startup_conn)
 seed_geo_za(_startup_conn)
 migrate_listings_to_geo_city(_startup_conn)
 _startup_conn.close()
-
-# ── STARTUP LOGGING + ENV CONFIG ─────────────────────────────
-logging.basicConfig(level=logging.INFO)
-_log = logging.getLogger("bea")
 
 # n8n webhook URLs (Task 2 — optional, skip silently if not set)
 N8N_WEBHOOK_ACCEPT  = os.getenv("N8N_WEBHOOK_ACCEPT")
