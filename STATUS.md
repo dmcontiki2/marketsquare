@@ -17,18 +17,15 @@
 
 ---
 
-## Last Completed Session · Session 9 (3 April 2026)
+## Last Completed Session · Session 10 (5 April 2026)
 
-- Activated Hetzner Object Storage — added S3 keys to /etc/environment, confirmed INFO log, restarted BEA ✅
-- Ran migrate-photos — 0 local photos found, new uploads will go direct to S3 ✅
-- Updated start_marketsquare.bat with correct SCP deploy commands ✅
+- buyer_name fix — column added to intro_requests via idempotent migration, stored in POST /intros, wired through both n8n webhook payloads ✅
 
 ---
 
-## Next Task · Session 10
+## Next Task · Session 11
 
-1. buyer_name fix — confirm Claude Code ran it this session, then proceed
-2. Paystack live mode — pending CIPC registration
+1. Paystack live mode — pending CIPC registration
 
 ---
 
@@ -55,7 +52,6 @@
 
 - Paystack live mode (pending CIPC registration)
 - Rename project files — remove Windows duplicate suffixes
-- buyer_name field — not yet stored in BEA schema (noted in Session 8 n8n task)
 
 ---
 *Update the "Last Completed" and "Next Task" sections at the end of every session. Do not let this file exceed 60 lines.*
