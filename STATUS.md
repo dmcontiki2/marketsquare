@@ -18,21 +18,24 @@
 
 ---
 
-## Last Completed Session · Session 10 (5 April 2026)
+## Last Completed Session · Session 11 (5 April 2026)
 
-- buyer_name fix — column + POST /intros + n8n webhooks ✅
-- buyer_name input field in buyer app intro form ✅
-- 4-level geo hierarchy DB — geo_countries/regions/cities/suburbs, ZA seeded (9/54/11679) ✅
-- /geo/* endpoints + POST /geo/cities + old shims preserved ✅
-- Buyer app: 4-panel location selector (tier-gated), 2-line badge, activeCity/Suburb as objects ✅
-- Admin: cascading Province→City dropdowns, geo_city_id, City Management with Province column ✅
+- Proximity search: lat/lng on geo_cities/geo_suburbs, _backfill_geo_coords() from GeoNames ZA dump ✅
+- GET /geo/nearby endpoint — bounding-box + Haversine, returns suburbs within radius ✅
+- GET /listings JOINs geo_suburbs for suburb_lat/suburb_lng per listing ✅
+- Buyer app: Leaflet.js map view + MarkerCluster, grid/map toggle, OSM tiles ✅
+- Browser geolocation → distance badges on cards, distance-sorted results ✅
+- "📍 Near me" suburb filter — 10km radius, client-side multi-suburb filtering ✅
+- Admin: replaced Add City form with search filter, removed POST /geo/cities endpoint ✅
+- Cleaned up duplicate lowercase "pretoria" (id 101) on server ✅
 
 ---
 
-## Next Task · Session 11
+## Next Task · Session 12
 
-1. Paystack live mode — pending CIPC registration
-2. n8n email notifications — buyer emailed on intro accept/decline
+1. Fix magic onboarding link (reported not working for Maroushka and Dave)
+2. Paystack live mode — pending CIPC registration
+3. n8n email notifications — buyer emailed on intro accept/decline
 
 ---
 
