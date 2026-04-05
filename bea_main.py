@@ -51,29 +51,151 @@ def run_migrations(conn):
     if "buyer_name" not in intro_cols:
         conn.execute("ALTER TABLE intro_requests ADD COLUMN buyer_name TEXT")
 
+    # ── 4-level geographic hierarchy ─────────────────────────
+    conn.execute("""CREATE TABLE IF NOT EXISTS geo_countries (
+        iso2 TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        region_label TEXT NOT NULL DEFAULT 'Region',
+        active INTEGER NOT NULL DEFAULT 1
+    )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS geo_regions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        country_iso2 TEXT NOT NULL REFERENCES geo_countries(iso2),
+        active INTEGER NOT NULL DEFAULT 1
+    )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS geo_cities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        region_id INTEGER NOT NULL REFERENCES geo_regions(id),
+        country_iso2 TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1
+    )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS geo_suburbs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        city_id INTEGER NOT NULL REFERENCES geo_cities(id),
+        active INTEGER NOT NULL DEFAULT 1
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_regions_country ON geo_regions(country_iso2, active)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_cities_region ON geo_cities(region_id, active)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_suburbs_city ON geo_suburbs(city_id, active)")
+
+    listing_cols = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
+    if "geo_city_id" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN geo_city_id INTEGER")
+
     conn.commit()
 
 
-def seed_suburbs(conn):
-    """Seed suburbs table from suburbs_seed.json on first run."""
-    count = conn.execute("SELECT COUNT(*) FROM suburbs").fetchone()[0]
+def seed_geo_za(conn):
+    """Seed ZA geographic hierarchy from GeoNames data dump. Skipped if geo_countries is already populated."""
+    import urllib.request
+    import zipfile
+
+    count = conn.execute("SELECT COUNT(*) FROM geo_countries").fetchone()[0]
     if count > 0:
         return
-    seed_path = os.path.join(os.path.dirname(__file__), "suburbs_seed.json")
-    if not os.path.exists(seed_path):
+
+    _log.info("Seeding ZA geographic data from GeoNames dump...")
+    zip_path = "/tmp/geonames_za.zip"
+    try:
+        urllib.request.urlretrieve("https://download.geonames.org/export/dump/ZA.zip", zip_path)
+    except Exception as exc:
+        _log.error("Failed to download GeoNames ZA dump: %s", exc)
         return
-    with open(seed_path) as f:
-        suburbs = json.load(f)
-    conn.executemany(
-        "INSERT INTO suburbs (name, city, country) VALUES (?, ?, ?)",
-        [(s["name"], s["city"], s["country"]) for s in suburbs]
+
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            with zf.open("ZA.txt") as f:
+                lines = f.read().decode("utf-8").splitlines()
+    except Exception as exc:
+        _log.error("Failed to parse GeoNames ZA dump: %s", exc)
+        return
+    finally:
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+
+    conn.execute(
+        "INSERT OR IGNORE INTO geo_countries (iso2, name, region_label) VALUES (?, ?, ?)",
+        ("ZA", "South Africa", "Province")
     )
+
+    adm1 = {}    # admin1_code -> name
+    cities = []  # {name, admin1, admin2, code}
+    ppls = []    # {name, admin1, admin2}
+
+    for line in lines:
+        cols = line.split("\t")
+        if len(cols) < 15:
+            continue
+        name        = cols[1]
+        feat_cls    = cols[6]
+        feat_code   = cols[7]
+        admin1_code = cols[10]
+        admin2_code = cols[11]
+        if feat_cls == "A" and feat_code == "ADM1":
+            adm1[admin1_code] = name
+        elif feat_cls == "P" and feat_code in ("PPLA", "PPLA2"):
+            cities.append({"name": name, "admin1": admin1_code, "admin2": admin2_code, "code": feat_code})
+        elif feat_cls == "P" and feat_code == "PPL":
+            ppls.append({"name": name, "admin1": admin1_code, "admin2": admin2_code})
+
+    # Pass 1: regions
+    region_map = {}  # admin1_code -> region_id
+    for code, rname in adm1.items():
+        cur = conn.execute("INSERT INTO geo_regions (name, country_iso2) VALUES (?, ?)", (rname, "ZA"))
+        region_map[code] = cur.lastrowid
+
+    # Pass 1: cities — PPLA takes priority over PPLA2 for same admin2
+    city_map = {}  # (admin1, admin2) -> city_id
+    for c in sorted(cities, key=lambda x: 0 if x["code"] == "PPLA" else 1):
+        region_id = region_map.get(c["admin1"])
+        if not region_id:
+            continue
+        key = (c["admin1"], c["admin2"])
+        if key in city_map:
+            continue
+        cur = conn.execute(
+            "INSERT INTO geo_cities (name, region_id, country_iso2) VALUES (?, ?, ?)",
+            (c["name"], region_id, "ZA")
+        )
+        city_map[key] = cur.lastrowid
+
+    # Pass 2: suburbs — link via matching admin1+admin2
+    n_suburbs = 0
+    for p in ppls:
+        city_id = city_map.get((p["admin1"], p["admin2"]))
+        if not city_id:
+            continue  # no matching city — skip, do not guess
+        conn.execute("INSERT INTO geo_suburbs (name, city_id) VALUES (?, ?)", (p["name"], city_id))
+        n_suburbs += 1
+
     conn.commit()
+    _log.info("ZA seed complete: %d provinces, %d cities, %d suburbs",
+              len(region_map), len(city_map), n_suburbs)
+
+
+def migrate_listings_to_geo_city(conn):
+    """One-time: set geo_city_id on listings where city name exactly matches geo_cities."""
+    rows = conn.execute("SELECT id, city FROM listings WHERE geo_city_id IS NULL").fetchall()
+    n = 0
+    for row in rows:
+        city_row = conn.execute(
+            "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (row["city"],)
+        ).fetchone()
+        if city_row:
+            conn.execute("UPDATE listings SET geo_city_id=? WHERE id=?", (city_row["id"], row["id"]))
+            n += 1
+    if n:
+        conn.commit()
+        _log.info("Migrated %d listings to geo_city_id", n)
 
 
 _startup_conn = database.get_db()
 run_migrations(_startup_conn)
-seed_suburbs(_startup_conn)
+seed_geo_za(_startup_conn)
+migrate_listings_to_geo_city(_startup_conn)
 _startup_conn.close()
 
 # ── STARTUP LOGGING + ENV CONFIG ─────────────────────────────
@@ -107,7 +229,8 @@ if _S3_CONFIGURED:
 else:
     _log.warning("Object Storage not configured — using local /media fallback")
 
-# GeoNames username — guard logged inside _fetch_geonames_suburbs (Task 5)
+# GeoNames username — used in seed_geo_za (ZA dump) and _seed_country_from_geonames (API)
+# Default: dmcontiki2. Override via GEONAMES_USERNAME in /etc/environment.
 
 # ── HELPERS ───────────────────────────────────────────────────
 
@@ -229,14 +352,184 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key)):
     conn.close()
     return {"message": "Listing deleted"}
 
-# ── SUBURBS & CITIES ─────────────────────────────────────────
+# ── GEO HIERARCHY ────────────────────────────────────────────
+
+@app.get("/geo/countries")
+def geo_get_countries():
+    conn = database.get_db()
+    rows = conn.execute(
+        "SELECT iso2, name, region_label FROM geo_countries WHERE active=1 ORDER BY name"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/geo/regions")
+def geo_get_regions(country: str = "ZA"):
+    conn = database.get_db()
+    rows = conn.execute(
+        "SELECT id, name FROM geo_regions WHERE country_iso2=? AND active=1 ORDER BY name",
+        (country,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/geo/cities")
+def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = None):
+    conn = database.get_db()
+    if region_id:
+        rows = conn.execute(
+            "SELECT id, name FROM geo_cities WHERE region_id=? AND active=1 ORDER BY name",
+            (region_id,)
+        ).fetchall()
+    elif country:
+        rows = conn.execute(
+            """SELECT c.id, c.name, r.name as region_name
+               FROM geo_cities c JOIN geo_regions r ON c.region_id=r.id
+               WHERE c.country_iso2=? AND c.active=1 ORDER BY c.name""",
+            (country,)
+        ).fetchall()
+    else:
+        rows = []
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/geo/suburbs")
+def geo_get_suburbs(city_id: int):
+    conn = database.get_db()
+    rows = conn.execute(
+        "SELECT id, name FROM geo_suburbs WHERE city_id=? AND active=1 ORDER BY name",
+        (city_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.post("/geo/countries")
+def geo_add_country(
+    iso2: str,
+    name: str,
+    region_label: str = "Region",
+    background_tasks: BackgroundTasks = None,
+    _key: str = Depends(auth.require_api_key)
+):
+    conn = database.get_db()
+    try:
+        conn.execute(
+            "INSERT INTO geo_countries (iso2, name, region_label) VALUES (?, ?, ?)",
+            (iso2.upper(), name, region_label)
+        )
+        conn.commit()
+    except Exception:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Country already exists or invalid data")
+    conn.close()
+    if background_tasks:
+        background_tasks.add_task(_seed_country_from_geonames, iso2.upper(), name, region_label)
+    return {"message": f"Country '{name}' added. Seeding geographic data in background."}
+
+
+async def _seed_country_from_geonames(iso2: str, name: str, region_label: str):
+    """Background task: seed a new country's geo hierarchy from GeoNames API."""
+    username = os.getenv("GEONAMES_USERNAME", "dmcontiki2")
+    base = "http://api.geonames.org/searchJSON"
+    _log.info("GeoNames seeding %s (%s)...", name, iso2)
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(base, params={
+                "country": iso2, "featureCode": "ADM1",
+                "maxRows": 100, "username": username
+            })
+            regions_data = r.json().get("geonames", [])
+    except Exception as exc:
+        _log.warning("GeoNames ADM1 fetch failed for %s: %s", iso2, exc)
+        return
+
+    conn = database.get_db()
+    try:
+        region_map = {}  # adminCode1 -> (region_id, admin1_code)
+        for reg in regions_data:
+            cur = conn.execute(
+                "INSERT INTO geo_regions (name, country_iso2) VALUES (?, ?)",
+                (reg["name"], iso2)
+            )
+            region_map[reg.get("adminCode1", "")] = cur.lastrowid
+        conn.commit()
+        _log.info("GeoNames: %d regions inserted for %s", len(region_map), iso2)
+
+        # Fetch cities per region
+        city_map = {}  # (admin1, admin2) -> city_id
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for admin1_code, region_id in region_map.items():
+                for feat_code in ("PPLA", "PPLA2"):
+                    try:
+                        r = await client.get(base, params={
+                            "country": iso2, "adminCode1": admin1_code,
+                            "featureCode": feat_code, "maxRows": 100,
+                            "username": username
+                        })
+                        for city in r.json().get("geonames", []):
+                            key = (admin1_code, city.get("adminCode2", ""))
+                            if key in city_map:
+                                continue
+                            cur = conn.execute(
+                                "INSERT INTO geo_cities (name, region_id, country_iso2) VALUES (?, ?, ?)",
+                                (city["name"], region_id, iso2)
+                            )
+                            city_map[key] = cur.lastrowid
+                    except Exception as exc:
+                        _log.warning("GeoNames %s fetch for %s/%s failed: %s",
+                                     feat_code, iso2, admin1_code, exc)
+        conn.commit()
+
+        # Fetch suburbs per region, link via admin1+admin2
+        n_suburbs = 0
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for admin1_code in region_map:
+                try:
+                    r = await client.get(base, params={
+                        "country": iso2, "adminCode1": admin1_code,
+                        "featureCode": "PPL", "maxRows": 500,
+                        "username": username
+                    })
+                    for sub in r.json().get("geonames", []):
+                        key = (admin1_code, sub.get("adminCode2", ""))
+                        city_id = city_map.get(key)
+                        if not city_id:
+                            continue
+                        conn.execute(
+                            "INSERT INTO geo_suburbs (name, city_id) VALUES (?, ?)",
+                            (sub["name"], city_id)
+                        )
+                        n_suburbs += 1
+                except Exception as exc:
+                    _log.warning("GeoNames PPL fetch for %s/%s failed: %s", iso2, admin1_code, exc)
+        conn.commit()
+        _log.info("GeoNames seed complete for %s: %d regions, %d cities, %d suburbs",
+                  iso2, len(region_map), len(city_map), n_suburbs)
+    except Exception as exc:
+        _log.error("GeoNames seed failed for %s: %s", iso2, exc)
+    finally:
+        conn.close()
+
+
+# ── COMPATIBILITY SHIMS (old /suburbs and /cities) ────────────
 
 @app.get("/suburbs")
 def get_suburbs(city: str = "Pretoria"):
     conn = database.get_db()
+    city_row = conn.execute(
+        "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (city,)
+    ).fetchone()
+    if city_row:
+        rows = conn.execute(
+            "SELECT name FROM geo_suburbs WHERE city_id=? AND active=1 ORDER BY name",
+            (city_row["id"],)
+        ).fetchall()
+        conn.close()
+        return [r["name"] for r in rows]
+    # Fallback: old suburbs table
     rows = conn.execute(
-        "SELECT name FROM suburbs WHERE city = ? AND active = 1 ORDER BY name ASC",
-        (city,)
+        "SELECT name FROM suburbs WHERE city=? AND active=1 ORDER BY name ASC", (city,)
     ).fetchall()
     conn.close()
     return [r["name"] for r in rows]
@@ -246,74 +539,20 @@ def get_cities(country: Optional[str] = None):
     conn = database.get_db()
     if country:
         rows = conn.execute(
-            "SELECT DISTINCT city FROM suburbs WHERE country = ? AND active = 1 ORDER BY city ASC",
+            "SELECT DISTINCT name FROM geo_cities WHERE country_iso2=? AND active=1 ORDER BY name",
             (country,)
         ).fetchall()
         conn.close()
-        return [r["city"] for r in rows]
-    # Group by country
+        return [r["name"] for r in rows]
     rows = conn.execute(
-        "SELECT DISTINCT city, country FROM suburbs WHERE active = 1 ORDER BY country, city ASC"
+        """SELECT c.name, c.country_iso2 as country
+           FROM geo_cities c WHERE c.active=1 ORDER BY c.country_iso2, c.name"""
     ).fetchall()
     conn.close()
     grouped: dict = {}
     for r in rows:
-        grouped.setdefault(r["country"], []).append(r["city"])
+        grouped.setdefault(r["country"], []).append(r["name"])
     return grouped
-
-@app.post("/cities")
-def add_city(
-    city: str,
-    country: str,
-    background_tasks: BackgroundTasks,
-    _key: str = Depends(auth.require_api_key)
-):
-    # Insert a placeholder row so the city appears immediately
-    conn = database.get_db()
-    existing = conn.execute(
-        "SELECT id FROM suburbs WHERE city = ? AND country = ?", (city, country)
-    ).fetchone()
-    if not existing:
-        conn.execute(
-            "INSERT INTO suburbs (name, city, country) VALUES (?, ?, ?)",
-            ("Central", city, country)
-        )
-        conn.commit()
-    conn.close()
-    background_tasks.add_task(_fetch_geonames_suburbs, city, country)
-    return {"message": f"City '{city}' added. Fetching suburbs in background."}
-    # FLAG: GEONAMES_USERNAME must be set in /var/www/marketsquare/.env
-
-
-async def _fetch_geonames_suburbs(city: str, country: str):
-    """Background task: fetch suburbs from GeoNames and seed the suburbs table."""
-    username = os.getenv("GEONAMES_USERNAME")
-    if not username:
-        _log.warning("GEONAMES_USERNAME not set in .env — suburb auto-seed skipped for city %s", city)
-        return
-    url = f"http://api.geonames.org/searchJSON?q={city}&featureClass=P&country={country}&maxRows=100&username={username}"
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.get(url)
-            data = resp.json()
-        names = [g["name"] for g in data.get("geonames", []) if g.get("name")]
-        if not names:
-            return
-        conn = database.get_db()
-        for name in names:
-            existing = conn.execute(
-                "SELECT id FROM suburbs WHERE name = ? AND city = ? AND country = ?",
-                (name, city, country)
-            ).fetchone()
-            if not existing:
-                conn.execute(
-                    "INSERT INTO suburbs (name, city, country) VALUES (?, ?, ?)",
-                    (name, city, country)
-                )
-        conn.commit()
-        conn.close()
-    except Exception:
-        pass  # Best-effort — failure is non-fatal
 
 
 # ── PHOTO UPLOAD ─────────────────────────────────────────────
