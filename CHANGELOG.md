@@ -2,6 +2,12 @@
 
 ---
 
+## Session 10 · 5 April 2026 · 4-level location hierarchy — buyer app + admin tool
+
+Replaced the flat city/suburb selectors in both frontends with a full Country → Region → City → Suburb drill-down. Buyer app: activeCity is now an object {id, name} (resolved to Pretoria's DB id on startup via _resolveActiveCity()); activeSuburb is {id, name} or null; activeCountry and activeRegion track the full hierarchy. updateBadgeLabel() shows all four levels. The location selector sheet now has four panels (country, region, city, suburb) driven by /geo/* API calls. Tier gating: free opens suburb panel directly; starter opens city panel; premium opens country panel. loadLiveListings() and renderGrid/renderCatCounts updated to use .name properties. Admin tool: static city dropdown replaced with cascading Province → City selects populated from /geo/regions?country_iso2=ZA and /geo/cities?region_id=. goNext() step 1 now stores geo_city_id on sellerData. loadSuburbsForForm() switched to /geo/suburbs?city_id= returning {id, name} objects.
+
+---
+
 ## Session 10 · 5 April 2026 · Geographic hierarchy — BEA database restructure
 
 Replaced the flat suburbs table with a proper 4-level relational schema: geo_countries, geo_regions, geo_cities, geo_suburbs. South Africa seeded on first startup from the GeoNames ZA data dump (downloaded to /tmp, parsed, deleted). Provinces, cities and suburbs linked relationally via admin1+admin2 codes. New /geo/* endpoints serve the full hierarchy. Old /suburbs and /cities endpoints preserved as compatibility shims. New POST /geo/countries endpoint triggers background GeoNames API seed for any new country. GEONAMES_USERNAME=dmcontiki2 added to /etc/environment. Existing listings migrated to geo_city_id where city name matches exactly.

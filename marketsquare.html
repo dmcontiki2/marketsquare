@@ -1461,29 +1461,49 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
-<!-- LOCATION SELECTOR SHEET (City → Suburb drill-down) -->
+<!-- LOCATION SELECTOR SHEET (Country → Region → City → Suburb) -->
 <div class="filter-sheet-bg" id="city-selector-bg" onclick="if(event.target.id==='city-selector-bg')closeCitySelector()">
   <div class="filter-sheet">
     <div class="modal-handle"></div>
 
-    <!-- ── CITY PANEL ── -->
-    <div id="loc-panel-city">
+    <!-- ── COUNTRY PANEL ── -->
+    <div id="loc-panel-country" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3 id="city-selector-title" style="font-size:17px;font-weight:700;color:var(--navy);">Select City</h3>
+        <h3 style="font-size:17px;font-weight:700;color:var(--navy);">Select Country</h3>
         <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
-      <div id="city-selector-list"></div>
+      <div id="loc-list-country"></div>
+    </div>
+
+    <!-- ── REGION PANEL ── -->
+    <div id="loc-panel-region" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <button onclick="openLocPanel('country');_loadAndRenderCountries()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Countries</button>
+        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+      </div>
+      <h3 id="loc-title-region" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select Region</h3>
+      <div id="loc-list-region"></div>
+    </div>
+
+    <!-- ── CITY PANEL ── -->
+    <div id="loc-panel-city">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <button id="city-back-btn" onclick="openLocPanel('region');_loadAndRenderRegions()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Regions</button>
+        <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
+      </div>
+      <h3 id="loc-title-city" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select City</h3>
+      <div id="loc-list-city"></div>
       <div id="city-selector-note" style="font-size:11px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);line-height:1.5;"></div>
     </div>
 
     <!-- ── SUBURB PANEL ── -->
     <div id="loc-panel-suburb" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <button id="suburb-back-btn" onclick="openLocPanel('city')" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Cities</button>
+        <button id="suburb-back-btn" onclick="openLocPanel('city');_loadAndRenderCities()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Cities</button>
         <button onclick="closeCitySelector()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3);line-height:1;padding:4px;">✕</button>
       </div>
       <h3 id="suburb-panel-title" style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;">Select Suburb</h3>
-      <div id="suburb-selector-list"></div>
+      <div id="loc-list-suburb"></div>
     </div>
   </div>
 </div>
@@ -1505,22 +1525,23 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 // Phase 1: demo data. Phase 2: live BEA at trustsquare.co
 const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
-let activeCity   = 'Pretoria'; // mutable — updated on city switch
-let activeSuburb = null;       // null = "All suburbs"; string = specific suburb
+let activeCountry = { iso2: 'ZA', name: 'South Africa' };
+let activeRegion  = null;                     // { id, name } or null
+let activeCity    = { id: null, name: 'Pretoria' }; // id resolved on startup
+let activeSuburb  = null;                     // { id, name } or null
 
 // FLAG: wire buyerTier to Paystack subscription state when Paystack goes live
 // Values: 'free' | 'starter' | 'premium'
 let buyerTier = 'free';
 
-// Populated by loadCities() / loadSuburbsForSelector()
-let availableCities  = ['Pretoria'];
-let availableSuburbs = [];
-
 function updateBadgeLabel() {
   const badge = document.getElementById('home-city-badge');
   if (!badge) return;
-  const loc = activeSuburb ? activeSuburb : 'All suburbs';
-  badge.innerHTML = `<span class="cdot"></span>${activeCity} · ${loc}`;
+  const parts = [activeCountry.name];
+  if (activeRegion) parts.push(activeRegion.name);
+  parts.push(activeCity.name);
+  parts.push(activeSuburb ? activeSuburb.name : 'All suburbs');
+  badge.innerHTML = `<span class="cdot"></span>${parts.join(' · ')}`;
 }
 
 // ── CATEGORY NORMALISER ───────────────────────────────────
@@ -1581,8 +1602,8 @@ async function loadLiveListings() {
     if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
   }
   try {
-    const suburbParam = activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb) : '';
-    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity) + suburbParam);
+    const suburbParam = activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '';
+    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam);
     if (live && live.length > 0) {
       // Map BEA listing format to FEA format and prepend to LISTINGS
       const mapped = live.map(l => {
@@ -1855,7 +1876,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
   renderHomeProgress(); renderHomeStats();
   // Load available cities + suburbs, then live listings from BEA on startup
-  loadCities().then(() => loadSuburbsForSelector()).then(() => loadLiveListings());
+  _resolveActiveCity().then(() => loadLiveListings());
   // Silent background refresh every 30 seconds — picks up new listings without manual reload
   setInterval(() => {
     if (!isOffline()) loadLiveListings();
@@ -2144,76 +2165,76 @@ function renderActiveFilterTags(){
     </div>`).join('');
 }
 
-// ── LOCATION SELECTOR (City → Suburb drill-down) ──────────
-async function loadCities() {
-  try {
-    const path = buyerTier === 'premium' ? '/cities' : '/cities?country=ZA';
-    const data = await apiGet(path);
-    if (Array.isArray(data) && data.length) { availableCities = data; return; }
-    // Premium returns object grouped by country — flatten
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      availableCities = Object.values(data).flat();
-      if (availableCities.length) return;
-    }
-  } catch(e) { /* endpoint not yet live */ }
-  availableCities = ['Pretoria'];
-}
+// ── LOCATION SELECTOR (4-level: Country → Region → City → Suburb) ──────────
 
-async function loadSuburbsForSelector() {
-  try {
-    const data = await apiGet('/suburbs?city=' + encodeURIComponent(activeCity));
-    if (Array.isArray(data) && data.length) { availableSuburbs = data; return; }
-  } catch(e) { /* silent */ }
-  availableSuburbs = [];
+async function _geoFetch(path) {
+  try { return await apiGet(path); } catch(e) { return []; }
 }
 
 function handleCityBadgeClick() {
-  // Free: locked to local city but can drill into suburbs
-  if (buyerTier === 'free') {
-    openLocPanel('suburb');
-    document.getElementById('city-selector-bg').classList.add('open');
-    return;
-  }
-  openCitySelector();
-}
-
-function openCitySelector() {
-  openLocPanel('city');
+  // Free: suburb only · Starter: city+suburb (ZA locked) · Premium: full hierarchy
+  const startPanel = buyerTier === 'premium' ? 'country' : buyerTier === 'starter' ? 'city' : 'suburb';
+  openLocPanel(startPanel);
   document.getElementById('city-selector-bg').classList.add('open');
 }
 
-function openLocPanel(panel) {
-  document.getElementById('loc-panel-city').style.display   = panel === 'city'   ? '' : 'none';
-  document.getElementById('loc-panel-suburb').style.display = panel === 'suburb' ? '' : 'none';
-  if (panel === 'city') _renderCityList();
-  if (panel === 'suburb') _renderSuburbList();
+async function openLocPanel(panel) {
+  ['country','region','city','suburb'].forEach(p => {
+    const el = document.getElementById('loc-panel-' + p);
+    if (el) el.style.display = p === panel ? '' : 'none';
+  });
+  if (panel === 'country') await _loadAndRenderCountries();
+  if (panel === 'region')  await _loadAndRenderRegions();
+  if (panel === 'city')    await _loadAndRenderCities();
+  if (panel === 'suburb')  await _loadAndRenderSuburbs();
 }
 
-function _renderCityList() {
-  const title = document.getElementById('city-selector-title');
-  const note  = document.getElementById('city-selector-note');
-  const list  = document.getElementById('city-selector-list');
+async function _loadAndRenderCountries() {
+  const list = document.getElementById('loc-list-country');
   if (!list) return;
-  if (title) title.textContent = buyerTier === 'premium' ? 'Select City · Global' : 'Select City · South Africa';
-  if (note)  note.textContent  = availableCities.length <= 1
-    ? 'More cities coming soon.' : '';
-  list.innerHTML = availableCities.map(city =>
-    `<div class="city-option${city === activeCity ? ' selected' : ''}" onclick="selectCity('${city.replace(/'/g,"\\'")}')">${city}${city === activeCity ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
-  ).join('');
+  const data = await _geoFetch('/geo/countries');
+  list.innerHTML = (Array.isArray(data) ? data : []).map(c =>
+    `<div class="city-option${c.iso2 === activeCountry.iso2 ? ' selected' : ''}" onclick="selectCountry('${c.iso2}','${c.name.replace(/'/g,"\\'")}')">${c.name}${c.iso2 === activeCountry.iso2 ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+  ).join('') || '<div class="city-option" style="opacity:.5">No countries available</div>';
 }
 
-function _renderSuburbList() {
+async function _loadAndRenderRegions() {
+  const title = document.getElementById('loc-title-region');
+  const list  = document.getElementById('loc-list-region');
+  if (!list) return;
+  if (title) title.textContent = activeCountry.name + ' · Region';
+  const data = await _geoFetch('/geo/regions?country_iso2=' + activeCountry.iso2);
+  list.innerHTML = (Array.isArray(data) ? data : []).map(r =>
+    `<div class="city-option${activeRegion && r.id === activeRegion.id ? ' selected' : ''}" onclick="selectRegion(${r.id},'${r.name.replace(/'/g,"\\'")}')">${r.name}${activeRegion && r.id === activeRegion.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+  ).join('') || '<div class="city-option" style="opacity:.5">No regions available</div>';
+}
+
+async function _loadAndRenderCities() {
+  const title = document.getElementById('loc-title-city');
+  const list  = document.getElementById('loc-list-city');
+  if (!list) return;
+  if (title) title.textContent = (activeRegion ? activeRegion.name : activeCountry.name) + ' · City';
+  const path = activeRegion
+    ? '/geo/cities?region_id=' + activeRegion.id
+    : '/geo/cities?country_iso2=' + activeCountry.iso2;
+  const data = await _geoFetch(path);
+  list.innerHTML = (Array.isArray(data) ? data : []).map(c =>
+    `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}')">${c.name}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+  ).join('') || '<div class="city-option" style="opacity:.5">No cities available</div>';
+}
+
+async function _loadAndRenderSuburbs() {
   const title = document.getElementById('suburb-panel-title');
-  const list  = document.getElementById('suburb-selector-list');
+  const list  = document.getElementById('loc-list-suburb');
   const back  = document.getElementById('suburb-back-btn');
   if (!list) return;
-  if (title) title.textContent = activeCity + ' · Suburb';
-  // Hide back button for Free tier (can't go to city panel)
+  if (title) title.textContent = activeCity.name + ' · Suburb';
   if (back) back.style.display = buyerTier === 'free' ? 'none' : '';
-  const opts = ['All suburbs', ...availableSuburbs];
+  const data = activeCity.id ? await _geoFetch('/geo/suburbs?city_id=' + activeCity.id) : [];
+  const opts = [{ id: null, name: 'All suburbs' }, ...(Array.isArray(data) ? data : [])];
   list.innerHTML = opts.map(s => {
-    const isSelected = s === 'All suburbs' ? !activeSuburb : s === activeSuburb;
-    return `<div class="city-option${isSelected ? ' selected' : ''}" onclick="selectSuburb('${s.replace(/'/g,"\\'")}')">${s}${isSelected ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`;
+    const isSelected = s.id === null ? !activeSuburb : activeSuburb && s.id === activeSuburb.id;
+    return `<div class="city-option${isSelected ? ' selected' : ''}" onclick="selectSuburb(${s.id === null ? 'null' : s.id},'${s.name.replace(/'/g,"\\'")}')">${s.name}${isSelected ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`;
   }).join('');
 }
 
@@ -2222,21 +2243,42 @@ function closeCitySelector() {
   if (bg) bg.classList.remove('open');
 }
 
-async function selectCity(city) {
-  if (city !== activeCity) {
-    activeCity   = city;
-    activeSuburb = null;
-    await loadSuburbsForSelector();
-  }
-  // After picking city, drill into suburb selection
-  openLocPanel('suburb');
+async function selectCountry(iso2, name) {
+  activeCountry = { iso2, name };
+  activeRegion  = null;
+  activeCity    = { id: null, name: '' };
+  activeSuburb  = null;
+  await openLocPanel('region');
 }
 
-async function selectSuburb(suburb) {
+async function selectRegion(id, name) {
+  activeRegion = { id, name };
+  activeCity   = { id: null, name: '' };
+  activeSuburb = null;
+  await openLocPanel('city');
+}
+
+async function selectCity(id, name) {
+  activeCity   = { id, name };
+  activeSuburb = null;
+  await openLocPanel('suburb');
+}
+
+async function selectSuburb(id, name) {
   closeCitySelector();
-  activeSuburb = suburb === 'All suburbs' ? null : suburb;
+  activeSuburb = id === null ? null : { id, name };
   updateBadgeLabel();
   await loadLiveListings();
+}
+
+async function _resolveActiveCity() {
+  // On startup: resolve city id for the default 'Pretoria' name
+  if (activeCity.id !== null) return;
+  const data = await _geoFetch('/geo/cities?country_iso2=ZA');
+  if (Array.isArray(data)) {
+    const match = data.find(c => c.name === activeCity.name);
+    if (match) activeCity = { id: match.id, name: match.name };
+  }
 }
 
 // ── HOME SCREEN PROGRESS + STATS ──────────────────────────
@@ -2252,7 +2294,7 @@ function renderHomeProgress() {
   const nameEl  = document.getElementById('cpb-city-name');
   const totalEl = document.getElementById('cpb-total');
   updateBadgeLabel();
-  if (nameEl)  nameEl.textContent  = 'Founding Seller Progress · ' + activeCity;
+  if (nameEl)  nameEl.textContent  = 'Founding Seller Progress · ' + activeCity.name;
   if (totalEl) totalEl.textContent = total + ' / ' + (target * 3);
 
   [['property', counts.Property], ['tutors', counts.Tutors], ['services', counts.Services]].forEach(([key, n]) => {
@@ -2280,7 +2322,7 @@ function renderCatCounts() {
   const counts = {};
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
-    if (activeSuburb && l.suburb !== activeSuburb) return false;
+    if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     return true;
   }).forEach(l => {
     const cat = normCat(l.cat);
@@ -2300,7 +2342,7 @@ function renderGrid(){
     const isPlaceholder = String(l.id).startsWith('ph_');
     if(l.paused && !isPlaceholder) return false;
     // Suburb filter — skip placeholders and only filter when a suburb is selected
-    if(activeSuburb && !isPlaceholder && l.suburb !== activeSuburb) return false;
+    if(activeSuburb && !isPlaceholder && l.suburb !== activeSuburb.name) return false;
 
     // Category-specific filtering
     if(l.cat==='Property'){

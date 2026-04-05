@@ -558,12 +558,15 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <input type="email" id="s-email" placeholder="seller@example.com">
   </div>
   <div class="field">
+    <label>Province <span class="req">*</span></label>
+    <select id="s-region" onchange="loadCitiesForRegion()">
+      <option value="">Loading provinces…</option>
+    </select>
+  </div>
+  <div class="field">
     <label>City <span class="req">*</span></label>
     <select id="s-city">
-      <option value="Pretoria">Pretoria</option>
-      <option value="Johannesburg">Johannesburg</option>
-      <option value="Cape Town">Cape Town</option>
-      <option value="Durban">Durban</option>
+      <option value="">Select province first</option>
     </select>
   </div>
 
@@ -1203,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (v) priceInput.value = formatZAR(v) || v;
     });
   }
+  loadRegionsForStep1();
 });
 
 // ── STATE ─────────────────────────────────────────────────
@@ -1246,7 +1250,11 @@ function goNext() {
     const email = document.getElementById('s-email').value.trim();
     if (!name)  { showToast('Please enter the seller\'s name'); return; }
     if (!email || !email.includes('@')) { showToast('Please enter a valid email'); return; }
-    sellerData = { name, email, city: document.getElementById('s-city').value };
+    const cityEl = document.getElementById('s-city');
+    const geo_city_id = parseInt(cityEl.value) || null;
+    if (!geo_city_id) { showToast('Please select a city'); return; }
+    const cityName = cityEl.options[cityEl.selectedIndex].text;
+    sellerData = { name, email, city: cityName, geo_city_id };
     goStep(2);
 
   } else if (currentStep === 2) {
@@ -1322,14 +1330,49 @@ async function loadSuburbsForForm() {
   sel.innerHTML = '<option value="">Loading suburbs…</option>';
   sel.disabled = true;
   try {
-    const resp = await fetch(BEA_URL + '/suburbs?city=' + encodeURIComponent(sellerData.city));
+    const resp = await fetch(BEA_URL + '/geo/suburbs?city_id=' + encodeURIComponent(sellerData.geo_city_id));
     const suburbs = await resp.json();
     sel.innerHTML = '<option value="">Select suburb *</option>' +
-      suburbs.map(s => `<option value="${s}">${s}</option>`).join('');
+      suburbs.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
     sel.disabled = false;
   } catch(e) {
     sel.innerHTML = '<option value="">Could not load — type manually</option>';
     sel.disabled = false;
+  }
+}
+
+async function loadRegionsForStep1() {
+  const sel = document.getElementById('s-region');
+  if (!sel) return;
+  try {
+    const resp = await fetch(BEA_URL + '/geo/regions?country_iso2=ZA');
+    const regions = await resp.json();
+    sel.innerHTML = '<option value="">Select province *</option>' +
+      regions.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  } catch(e) {
+    sel.innerHTML = '<option value="">Could not load provinces</option>';
+  }
+  // Reset city select
+  document.getElementById('s-city').innerHTML = '<option value="">Select province first</option>';
+}
+
+async function loadCitiesForRegion() {
+  const regionSel = document.getElementById('s-region');
+  const citySel   = document.getElementById('s-city');
+  if (!regionSel || !citySel) return;
+  const regionId = regionSel.value;
+  if (!regionId) { citySel.innerHTML = '<option value="">Select province first</option>'; return; }
+  citySel.innerHTML = '<option value="">Loading cities…</option>';
+  citySel.disabled = true;
+  try {
+    const resp = await fetch(BEA_URL + '/geo/cities?region_id=' + regionId);
+    const cities = await resp.json();
+    citySel.innerHTML = '<option value="">Select city *</option>' +
+      cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    citySel.disabled = false;
+  } catch(e) {
+    citySel.innerHTML = '<option value="">Could not load cities</option>';
+    citySel.disabled = false;
   }
 }
 
