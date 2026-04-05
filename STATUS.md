@@ -19,13 +19,18 @@
 
 ## Last Completed Session · Session 10 (5 April 2026)
 
-- buyer_name fix — column added to intro_requests via idempotent migration, stored in POST /intros, wired through both n8n webhook payloads ✅
+- buyer_name fix — column added to intro_requests, stored in POST /intros, wired through n8n webhook payloads ✅
+- buyer_name field added to intro request form in buyer app ✅
+- 4-level geo hierarchy — geo_countries/regions/cities/suburbs tables, ZA seeded from GeoNames dump: 9 provinces, 54 cities, 11,679 suburbs ✅
+- /geo/* endpoints live, old /suburbs and /cities preserved as shims ✅
+- GEONAMES_USERNAME=dmcontiki2 in /etc/environment ✅
 
 ---
 
 ## Next Task · Session 11
 
-1. Paystack live mode — pending CIPC registration
+1. Prompt B — frontend geo hierarchy (admin tool + buyer app suburb selectors)
+2. Paystack live mode — pending CIPC registration
 
 ---
 
