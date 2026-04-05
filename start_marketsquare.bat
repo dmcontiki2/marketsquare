@@ -84,8 +84,11 @@ echo      to CHANGELOG.md.
 echo   3) Git commit with message: "Session X complete"
 echo   4) Push to GitHub.
 echo  ────────────────────────────────────────────────
+echo   Or run deploy_marketsquare.bat to deploy all files.
 echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
 echo   scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
+echo   scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
+echo   ssh root@178.104.73.239 "systemctl restart marketsquare"
 echo.
 timeout /t 8 /nobreak >nul
 exit

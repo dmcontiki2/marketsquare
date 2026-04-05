@@ -48,22 +48,25 @@ Seller name and email are **never shown to buyers**. Identity is only revealed a
 
 ## 3 · File Map
 
-| File | Version | Live URL | Agent owner |
-|---|---|---|---|
-| `marketsquare_v8_6b.html` | v8.6b | trustsquare.co (served as index.html) | Frontend agent |
-| `marketsquare_admin_v1_1.html` | v1.1 | trustsquare.co/admin.html | Admin agent |
-| `Solar_Council_Codex_v4_2.docx` | v4.2 | Session upload only | Architect agent |
-| `CHANGELOG.md` | — | Project root | All agents append |
-| `CLAUDE.md` | — | Project root | Architect agent updates |
+| File | Live URL | Agent owner |
+|---|---|---|
+| `marketsquare.html` | trustsquare.co (served as index.html) | Frontend agent |
+| `marketsquare_admin.html` | trustsquare.co/admin.html | Admin agent |
+| `bea_main.py` | trustsquare.co:8000 (served as main.py) | BEA / Architect agent |
+| `Solar_Council_Codex_v4_3.docx` | Session upload only | Architect agent |
+| `CHANGELOG.md` | Project root | All agents append |
+| `CLAUDE.md` | Project root | Architect agent updates |
 
 All files live in `C:\Users\David\Projects\MarketSquare`.
 
 ### Server deployment commands
 ```
-scp marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html
-scp marketsquare_admin_v1_1.html root@178.104.73.239:/var/www/marketsquare/admin.html
-nginx -s reload
+scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
+scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
+scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
+ssh root@178.104.73.239 "systemctl restart marketsquare"
 ```
+Or use `deploy_marketsquare.bat` which does all four steps.
 
 ---
 
@@ -81,7 +84,7 @@ Responsibilities:
 
 ### 4b · Frontend Agent
 **File:** `agents/frontend/CLAUDE.md`
-**Owns:** `marketsquare_v8_6b.html` — the buyer-facing marketplace app.
+**Owns:** `marketsquare.html` — the buyer-facing marketplace app.
 
 **File structure (single file, do not restructure):**
 ```
@@ -106,7 +109,7 @@ Responsibilities:
 - `recruit` — referral / recruit screen
 
 **Key functions to know before editing:**
-- `loadLiveListings()` — async fetch from BEA `/listings?city=Pretoria`, 30-second background refresh
+- `loadLiveListings()` — async fetch from BEA `/listings?city=` + activeCity.name, 30-second background refresh
 - `loadLiveDash()` — async fetch from BEA `/intros`, populates seller dashboard
 - `renderGrid()` — renders listing cards into browse screen
 - `renderFeatured()` — renders featured carousel on home (has empty state message)
@@ -153,11 +156,11 @@ Parsed on DOMContentLoaded, routes to onboard screen with fields pre-filled.
 
 ### 4c · Admin Agent
 **File:** `agents/admin/CLAUDE.md`
-**Owns:** `marketsquare_admin_v1_1.html` — seller onboarding dashboard.
+**Owns:** `marketsquare_admin.html` — seller onboarding dashboard.
 
 **What the admin tool does:**
 The admin tool is used by David (founder) to manually onboard sellers. It is a 4-step wizard:
-1. **Who is the seller?** — name, email, city
+1. **Who is the seller?** — name, email, province, city
 2. **What are they selling?** — category selection (Property / Tutors / Services / Help Wanted)
 3. **Add listings** — title, price, photos, category-specific fields, commitment model
 4. **Review + publish** — sends to BEA, generates magic claim link for seller
@@ -165,7 +168,7 @@ The admin tool is used by David (founder) to manually onboard sellers. It is a 4
 **Magic claim link:** After publishing, a unique URL is generated for the seller. The seller taps the link, lands on the onboard screen with name, email and category pre-filled, enters their email, and the listing is claimed. (n8n email automation is pending — currently sent manually.)
 
 **Key JS globals:**
-- `sellerData` — `{ name, email, city }`
+- `sellerData` — `{ name, email, city, geo_city_id }`
 - `listingQueue[]` — array of `{ formData, photos, status: 'queued'|'published' }`
 - `selectedCat` — current category selection
 - `BEA_URL` / `MS_URL` — API base URLs
@@ -209,6 +212,13 @@ The admin tool is used by David (founder) to manually onboard sellers. It is a 4
 | PUT | `/intros/{id}/decline` | API key | Decline intro |
 | POST | `/payment/initialize` | None | Paystack checkout |
 | GET | `/payment/verify` | None | Verify payment · credit Tuppence |
+| GET | `/geo/countries` | None | Active countries |
+| GET | `/geo/regions?country=ZA` | None | Regions for country |
+| GET | `/geo/cities?region_id=N` | None | Cities for region |
+| GET | `/geo/cities?country=ZA` | None | All cities for country (includes region_name) |
+| GET | `/geo/suburbs?city_id=N` | None | Suburbs for city |
+| POST | `/geo/countries` | API key | Add country + trigger GeoNames seed |
+| POST | `/geo/cities?city=X&region_id=N` | API key | Add city to region |
 
 **Public endpoints:** all GETs + POST `/intros`
 **Protected:** all POST · PUT · DELETE (except POST `/intros`)
@@ -223,8 +233,8 @@ The admin tool is used by David (founder) to manually onboard sellers. It is a 4
 | Domain | trustsquare.co · Cloudflare DNS + DDoS | ✅ Active |
 | SSL | Let's Encrypt · expires 21 June 2026 | ✅ Secured |
 | nginx | Serves from /var/www/marketsquare/ · 20MB upload limit | ✅ Running |
-| FastAPI BEA | v1.1.0 · systemd · auto-restart | ✅ Running |
-| SQLite | WAL mode · 4 tables · 6 indexes | ✅ Active |
+| FastAPI BEA | v1.2.0 · systemd · auto-restart | ✅ Running |
+| SQLite | WAL mode · 8 tables (4 core + 4 geo) · 6 indexes | ✅ Active |
 | Redis | Session cache · rate limiting | ✅ Running |
 | Photo storage | Local /media (Object Storage migration pending) | 🔜 Pending |
 | Paystack | Test mode (live mode pending CIPC registration) | 🔜 Pending |
@@ -246,24 +256,15 @@ These rules apply to every agent without exception:
 
 ---
 
-## 8 · Open Items for Session 7
+## 8 · Open Items for Session 11
 
 | Priority | Item | Owner |
 |---|---|---|
-| 1 | Execute Task 1 — currency formatting R1,234,456.00 throughout both apps | Frontend + Admin agent |
-| 2 | Execute Task 2 — structured description editor in admin tool + JSON renderer in buyer app | Frontend + Admin agent |
-| 3 | Execute Task 3 — photo carousel with swipe support in listing detail screen | Frontend agent |
-| 4 | Execute Task 4 — category listing counts city-scoped, excludes placeholders | Frontend agent |
-| 5 | Execute Task 5 — city selector tier-gated (Free / Starter / Premium) | Frontend agent |
-| 6 | Execute Task 6 — three-level location hierarchy (Country → City → Suburb) across BEA, buyer app, and admin tool | All agents |
-| 7 | Compile suburbs_seed.json — Property24 suburb lists for all 12 SA cities | David (before Task 6) |
-| 8 | Deploy all changes to server after testing | David |
-| 9 | Maroushka real listings — delete experimental data, re-enter via admin tool using structured description editor and suburb field | Maroushka / Admin agent |
-| 10 | n8n email notifications — buyer emailed on intro accept/decline | Architect / BEA |
-| 11 | Hetzner Object Storage — migrate photos from local /media | Architect / BEA |
-| 12 | Update start_marketsquare.bat with correct SCP deploy commands | David |
-| 13 | Paystack live mode (pending CIPC registration) | Pending |
-| 14 | Rename project files — remove Windows duplicate suffixes | David / Claude Code |
+| 1 | Paystack live mode (pending CIPC registration) | Pending |
+| 2 | n8n email notifications — buyer emailed on intro accept/decline | Architect / BEA |
+| 3 | Hetzner Object Storage — migrate photos from local /media | Architect / BEA |
+| 4 | Maroushka real listings — re-enter via admin tool | Maroushka / Admin agent |
+| 5 | Rename project files — remove Windows duplicate suffixes | David / Claude Code |
 
 ---
 

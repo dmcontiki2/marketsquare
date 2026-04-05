@@ -1,18 +1,19 @@
 # MarketSquare — Project Intelligence
 
 ## What this project is
-A **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers via a Tuppence introduction currency. Deployed at **trustsquare.co**. Three core files:
-- `marketsquare_v8_6b.html` — buyer-facing marketplace app (FEA) · served as index.html
-- `marketsquare_admin_v1_1.html` — seller onboarding admin dashboard · served as admin.html
-- `Solar_Council_Codex_v4_1.docx` — canonical product rules, design principles, and version history
+A **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers via a Tuppence introduction currency. Deployed at **trustsquare.co**. Core files:
+- `marketsquare.html` — buyer-facing marketplace app (FEA) · served as index.html
+- `marketsquare_admin.html` — seller onboarding admin dashboard · served as admin.html
+- `bea_main.py` — FastAPI backend (BEA) · served as main.py on server
+- `Solar_Council_Codex_v4_3.docx` — canonical product rules, design principles, and version history
 
 **This is a marketplace app, not a game.**
 
 ## Agent roles
 This project uses a multi-agent Claude Code workflow. Each agent has a lane:
 - **Architect agent** — reads the Codex only, owns system design and rule arbitration
-- **Frontend agent** — works on `marketsquare_v8_6b.html`, references Codex excerpts only
-- **Admin agent** — works on `marketsquare_admin_v1_1.html`, references Codex excerpts only
+- **Frontend agent** — works on `marketsquare.html`, references Codex excerpts only
+- **Admin agent** — works on `marketsquare_admin.html`, references Codex excerpts only
 
 Read `AGENT_BRIEFING.md` at the start of every session — it is the single source of truth for all three agents.
 
@@ -38,20 +39,30 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 ## Server deployment
 - Server: Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04
 - Nginx serves from: /var/www/marketsquare/
-- Deploy buyer app: `scp marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html`
-- Deploy admin tool: `scp marketsquare_admin_v1_1.html root@178.104.73.239:/var/www/marketsquare/admin.html`
+- Deploy buyer app: `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`
+- Deploy admin tool: `scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html`
+- Deploy BEA: `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py`
+- Restart BEA: `ssh root@178.104.73.239 "systemctl restart marketsquare"`
 - Reload nginx after config changes: `nginx -s reload`
 
-## Key technical notes (Session 3)
+## Key technical notes
 - BEA listing ids are strings: 'bea_N' — always use findListing(id) not LISTINGS[id]
 - All onclick handlers interpolating listing ids must quote them: openDetail('${l.id}')
 - normCat() in loadLiveListings() normalises BEA category strings to CATS keys
 - Magic link URL params: ?magic=1&name=...&email=...&cat=...&city=...
 - Placeholder listings have ids starting with 'ph_' — used to bypass paused filter in renderGrid()
+- activeCity is an object {id, name} — use activeCity.name for display, activeCity.id for API calls
+- activeSuburb is {id, name} or null — use activeSuburb.name for comparisons
+- activeCountry is {iso2, name}, activeRegion is {id, name} or null
+- Geo API query param is `country` (not `country_iso2`) — e.g. /geo/regions?country=ZA
+- Location badge is 2-line: top=country+region (dim), bottom=city+suburb
+- Tier gating: free→suburb panel, starter→city panel, premium→country panel
+- Admin sellerData includes geo_city_id (int) for suburb lookups
 
 ## Current development status
 - Launch city: Pretoria, South Africa · 23 / 60 founding sellers
-- BEA v1.1.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
+- BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
 - GitHub backup: github.com/dmcontiki2/marketsquare
 - Paystack: test mode (live mode pending CIPC registration)
-- Next milestone: Maroushka real listings · n8n email notifications · Hetzner Object Storage
+- 4-level geo hierarchy live: Country → Region → City → Suburb (ZA seeded: 9 provinces, 54 cities, 11,679 suburbs)
+- Next milestone: Paystack live mode · n8n email notifications · Hetzner Object Storage
