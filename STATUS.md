@@ -12,8 +12,8 @@
 | **Admin file** | `marketsquare_admin.html` (local) → served as `admin.html` |
 | **BEA file** | `bea_main.py` (local) → served as `main.py` on server |
 | **Codex** | `Solar_Council_Codex_v4_3.docx` |
-| **BEA version** | v1.2.0 · live at trustsquare.co |
-| **Founding sellers** | 23 / 60 · Pretoria only |
+| **BEA version** | Live — check GET /health (returns current version) |
+| **Founding sellers** | Live — check trustsquare.co/admin.html or GET /listings?city=Pretoria |
 | **Paystack** | Test mode (live pending CIPC registration) |
 
 ---

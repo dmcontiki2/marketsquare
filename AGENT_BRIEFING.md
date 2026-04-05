@@ -11,7 +11,7 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 - No commission. Revenue comes from Tuppence introduction fees only.
 - Buyer and seller identities stay hidden until **both parties accept** an introduction.
 - Launch city: **Pretoria, South Africa**. Next cities: New York · London · Berlin.
-- Public launch threshold: 60 founding sellers (20 per category). Current: 23 / 60.
+- Public launch threshold: 60 founding sellers (20 per category). Current count: check trustsquare.co/admin.html or GET /listings?city=Pretoria.
 - Three categories live: **Property · Tutors · Services**. Help Wanted deferred.
 
 **This is a marketplace app, not a game.**
@@ -191,7 +191,7 @@ The admin tool is used by David (founder) to manually onboard sellers. It is a 4
 
 ---
 
-## 5 · Backend API (BEA v1.1.0)
+## 5 · Backend API (BEA — version: check GET /health)
 
 **Base URL:** `https://trustsquare.co`
 **API key header:** `X-Api-Key: ms_mk_2026_pretoria_admin`
@@ -232,9 +232,9 @@ The admin tool is used by David (founder) to manually onboard sellers. It is a 4
 |---|---|---|
 | Server | Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04 | ✅ Live |
 | Domain | trustsquare.co · Cloudflare DNS + DDoS | ✅ Active |
-| SSL | Let's Encrypt · expires 21 June 2026 | ✅ Secured |
+| SSL | Let's Encrypt · expiry: check cert on server or Cloudflare dashboard | ✅ Secured |
 | nginx | Serves from /var/www/marketsquare/ · 20MB upload limit | ✅ Running |
-| FastAPI BEA | v1.2.0 · systemd · auto-restart | ✅ Running |
+| FastAPI BEA | version: GET /health · systemd · auto-restart | ✅ Running |
 | SQLite | WAL mode · 8 tables (4 core + 4 geo) · 6 indexes | ✅ Active |
 | Redis | Session cache · rate limiting | ✅ Running |
 | Photo storage | Local /media (Object Storage migration pending) | 🔜 Pending |
