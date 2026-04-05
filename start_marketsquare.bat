@@ -70,7 +70,7 @@ echo    9. Press Enter — Claude is fully briefed
 echo.
 echo  Claude Code — paste this to START the session:
 echo  ────────────────────────────────────────────────
-echo   Read STATUS.md first, then AGENT_BRIEFING.md.
+echo   Read SESSION_START_PROMPT.md now.
 echo  ────────────────────────────────────────────────
 echo.
 echo  Claude Code — paste this to END the session:
