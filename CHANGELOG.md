@@ -2,6 +2,12 @@
 
 ---
 
+## Session 10 · 5 April 2026 · buyer_name fix (BEA)
+
+Added buyer_name field to the intro_requests table and throughout the intro submission flow. run_migrations() now detects and adds the column on startup (idempotent). IntroRequest Pydantic model accepts buyer_name as an optional field. POST /intros stores it. Both n8n webhook payloads (accept and decline) now read buyer_name from the DB row instead of sending null. No frontend changes required — the field is optional so existing intro submissions without it continue to work.
+
+---
+
 ## Session 1 · 28 March 2026 · Morning
 
 ### What was built

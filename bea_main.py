@@ -47,6 +47,10 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN suburb TEXT")
         conn.execute("UPDATE listings SET suburb = 'Central' WHERE suburb IS NULL")
 
+    intro_cols = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
+    if "buyer_name" not in intro_cols:
+        conn.execute("ALTER TABLE intro_requests ADD COLUMN buyer_name TEXT")
+
     conn.commit()
 
 
@@ -170,6 +174,7 @@ class User(BaseModel):
 class IntroRequest(BaseModel):
     listing_id: int
     buyer_email: str
+    buyer_name: Optional[str] = None
     message: Optional[str] = None
 
 # ── HEALTH ───────────────────────────────────────────────────
@@ -424,8 +429,8 @@ def create_intro(intro: IntroRequest):
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
     conn.execute(
-        "INSERT INTO intro_requests (listing_id, buyer_email, message) VALUES (?,?,?)",
-        (intro.listing_id, intro.buyer_email, intro.message)
+        "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
+        (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
     )
     conn.commit()
     conn.close()
@@ -476,7 +481,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = D
             "listing_id": intro["listing_id"],
             "listing_title": listing["title"] if listing else None,
             "buyer_email": intro["buyer_email"],
-            "buyer_name": None,          # not stored in intro_requests schema
+            "buyer_name": intro["buyer_name"],
             "seller_display_name": None, # not stored in listings schema
             "city": listing["city"] if listing else None,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -505,7 +510,7 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = 
             "listing_id": intro["listing_id"],
             "listing_title": listing["title"] if listing else None,
             "buyer_email": intro["buyer_email"],
-            "buyer_name": None, # not stored in intro_requests schema
+            "buyer_name": intro["buyer_name"],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_DECLINE, payload)
