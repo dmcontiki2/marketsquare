@@ -2203,7 +2203,7 @@ async function _loadAndRenderRegions() {
   const list  = document.getElementById('loc-list-region');
   if (!list) return;
   if (title) title.textContent = activeCountry.name + ' · Region';
-  const data = await _geoFetch('/geo/regions?country_iso2=' + activeCountry.iso2);
+  const data = await _geoFetch('/geo/regions?country=' + activeCountry.iso2);
   list.innerHTML = (Array.isArray(data) ? data : []).map(r =>
     `<div class="city-option${activeRegion && r.id === activeRegion.id ? ' selected' : ''}" onclick="selectRegion(${r.id},'${r.name.replace(/'/g,"\\'")}')">${r.name}${activeRegion && r.id === activeRegion.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
   ).join('') || '<div class="city-option" style="opacity:.5">No regions available</div>';
@@ -2216,7 +2216,7 @@ async function _loadAndRenderCities() {
   if (title) title.textContent = (activeRegion ? activeRegion.name : activeCountry.name) + ' · City';
   const path = activeRegion
     ? '/geo/cities?region_id=' + activeRegion.id
-    : '/geo/cities?country_iso2=' + activeCountry.iso2;
+    : '/geo/cities?country=' + activeCountry.iso2;
   const data = await _geoFetch(path);
   list.innerHTML = (Array.isArray(data) ? data : []).map(c =>
     `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}')">${c.name}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
@@ -2272,12 +2272,22 @@ async function selectSuburb(id, name) {
 }
 
 async function _resolveActiveCity() {
-  // On startup: resolve city id for the default 'Pretoria' name
+  // On startup: resolve city id + region for the default 'Pretoria' name
   if (activeCity.id !== null) return;
-  const data = await _geoFetch('/geo/cities?country_iso2=ZA');
-  if (Array.isArray(data)) {
-    const match = data.find(c => c.name === activeCity.name);
-    if (match) activeCity = { id: match.id, name: match.name };
+  const [cities, regions] = await Promise.all([
+    _geoFetch('/geo/cities?country=ZA'),
+    _geoFetch('/geo/regions?country=ZA')
+  ]);
+  if (Array.isArray(cities)) {
+    const match = cities.find(c => c.name === activeCity.name);
+    if (match) {
+      activeCity = { id: match.id, name: match.name };
+      // Also resolve the region so the badge shows all 4 levels
+      if (Array.isArray(regions) && match.region_name) {
+        const region = regions.find(r => r.name === match.region_name);
+        if (region) activeRegion = { id: region.id, name: region.name };
+      }
+    }
   }
 }
 

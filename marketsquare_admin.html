@@ -1109,17 +1109,17 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <!-- Add city form -->
     <div style="background:var(--surface-2);border:1.5px solid var(--accent);border-radius:var(--r);padding:16px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent-bright);margin-bottom:12px;">Add a new city</div>
-      <div class="field-row">
-        <div class="field">
-          <label>City name <span class="req">*</span></label>
-          <input type="text" id="new-city-name" placeholder="e.g. Johannesburg"
-            style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;">
-        </div>
-        <div class="field">
-          <label>Country (ISO2) <span class="req">*</span></label>
-          <input type="text" id="new-city-country" value="ZA" maxlength="2" placeholder="ZA"
-            style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;text-transform:uppercase;">
-        </div>
+      <div class="field">
+        <label>Province <span class="req">*</span></label>
+        <select id="new-city-region"
+          style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;">
+          <option value="">Loading provinces…</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>City name <span class="req">*</span></label>
+        <input type="text" id="new-city-name" placeholder="e.g. Johannesburg"
+          style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;">
       </div>
       <div id="add-city-status" style="display:none;font-size:12px;color:var(--text-2);margin-bottom:8px;"></div>
       <button onclick="addCity()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">+ Add city</button>
@@ -1342,18 +1342,22 @@ async function loadSuburbsForForm() {
 }
 
 async function loadRegionsForStep1() {
-  const sel = document.getElementById('s-region');
-  if (!sel) return;
+  const sel    = document.getElementById('s-region');
+  const newSel = document.getElementById('new-city-region');
   try {
-    const resp = await fetch(BEA_URL + '/geo/regions?country_iso2=ZA');
+    const resp = await fetch(BEA_URL + '/geo/regions?country=ZA');
     const regions = await resp.json();
-    sel.innerHTML = '<option value="">Select province *</option>' +
+    const opts = '<option value="">Select province *</option>' +
       regions.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    if (sel)    sel.innerHTML    = opts;
+    if (newSel) newSel.innerHTML = opts;
   } catch(e) {
-    sel.innerHTML = '<option value="">Could not load provinces</option>';
+    if (sel)    sel.innerHTML    = '<option value="">Could not load provinces</option>';
+    if (newSel) newSel.innerHTML = '<option value="">Could not load provinces</option>';
   }
-  // Reset city select
-  document.getElementById('s-city').innerHTML = '<option value="">Select province first</option>';
+  // Reset onboarding city select
+  const citySel = document.getElementById('s-city');
+  if (citySel) citySel.innerHTML = '<option value="">Select province first</option>';
 }
 
 async function loadCitiesForRegion() {
@@ -2106,26 +2110,17 @@ async function loadCities() {
   const container = document.getElementById('cities-table');
   container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">Loading…</div>';
   try {
-    const resp = await fetch(BEA_URL + '/cities');
+    const resp = await fetch(BEA_URL + '/geo/cities?country=ZA');
     if (!resp.ok) throw new Error();
-    const data = await resp.json();
-    // data is either array (country-filtered) or object grouped by country
-    let rows = [];
-    if (Array.isArray(data)) {
-      rows = data.map(city => ({ city, country: 'ZA' }));
-    } else {
-      Object.entries(data).forEach(([country, cities]) => {
-        cities.forEach(city => rows.push({ city, country }));
-      });
-    }
-    if (!rows.length) {
+    const cities = await resp.json();
+    if (!cities.length) {
       container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">No cities found.</div>';
       return;
     }
-    // For each city, fetch suburb count
-    const suburbCounts = await Promise.all(rows.map(async r => {
+    // Fetch suburb counts in parallel
+    const suburbCounts = await Promise.all(cities.map(async c => {
       try {
-        const sr = await fetch(BEA_URL + '/suburbs?city=' + encodeURIComponent(r.city));
+        const sr = await fetch(BEA_URL + '/geo/suburbs?city_id=' + c.id);
         const suburbs = await sr.json();
         return Array.isArray(suburbs) ? suburbs.length : 0;
       } catch { return 0; }
@@ -2135,15 +2130,15 @@ async function loadCities() {
         <thead>
           <tr style="border-bottom:1.5px solid var(--border);">
             <th style="text-align:left;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);">City</th>
-            <th style="text-align:left;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);">Country</th>
+            <th style="text-align:left;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);">Province</th>
             <th style="text-align:right;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);">Suburbs</th>
           </tr>
         </thead>
         <tbody>
-          ${rows.map((r, i) => `
+          ${cities.map((c, i) => `
             <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:10px 4px;font-weight:600;color:var(--text);">${r.city}</td>
-              <td style="padding:10px 4px;color:var(--text-2);">${r.country}</td>
+              <td style="padding:10px 4px;font-weight:600;color:var(--text);">${c.name}</td>
+              <td style="padding:10px 4px;color:var(--text-2);">${c.region_name || '—'}</td>
               <td style="padding:10px 4px;text-align:right;color:var(--accent-bright);font-weight:700;">${suburbCounts[i]}</td>
             </tr>`).join('')}
         </tbody>
@@ -2154,20 +2149,22 @@ async function loadCities() {
 }
 
 async function addCity() {
-  const name = document.getElementById('new-city-name').value.trim();
-  const country = document.getElementById('new-city-country').value.trim().toUpperCase();
-  if (!name) { showToast('Enter a city name'); return; }
-  if (!country || country.length !== 2) { showToast('Enter a valid 2-letter country code'); return; }
+  const name     = document.getElementById('new-city-name').value.trim();
+  const regionEl = document.getElementById('new-city-region');
+  const regionId = parseInt(regionEl.value) || 0;
+  if (!name)     { showToast('Enter a city name'); return; }
+  if (!regionId) { showToast('Select a province'); return; }
   const statusEl = document.getElementById('add-city-status');
   statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text-2)';
   statusEl.textContent = 'Adding city…';
   try {
     const resp = await fetch(
-      `${BEA_URL}/cities?city=${encodeURIComponent(name)}&country=${encodeURIComponent(country)}`,
+      `${BEA_URL}/geo/cities?city=${encodeURIComponent(name)}&region_id=${regionId}`,
       { method: 'POST', headers: { 'X-Api-Key': API_KEY } }
     );
     if (!resp.ok) throw new Error('API error ' + resp.status);
-    statusEl.textContent = '✓ City added. Fetching suburbs in background…';
+    statusEl.textContent = '✓ City added.';
     document.getElementById('new-city-name').value = '';
     loadCities();
   } catch(e) {
