@@ -56,6 +56,7 @@ Seller name and email are **never shown to buyers**. Identity is only revealed a
 | `Solar_Council_Codex_v4_3.docx` | Session upload only | Architect agent |
 | `CHANGELOG.md` | Project root | All agents append |
 | `CLAUDE.md` | Project root | Architect agent updates |
+| `Cost_Breakdown_GlobalLaunch.xlsx` | Project root (upload to Claude Chat) | Architect agent flags changes |
 
 All files live in `C:\Users\David\Projects\MarketSquare`.
 
@@ -253,6 +254,7 @@ These rules apply to every agent without exception:
 6. **No large rewrites** — Never rewrite large sections unless explicitly instructed.
 7. **Codex first** — Check Codex rules before adding any business logic.
 8. **Context management** — Run `/compact` when context starts filling up.
+9. **Cost model flag** — After any change that affects infrastructure, pricing, city launch mechanics, wave cascade assumptions, subscription tiers, payment processing, or server scaling: append a "Cost model impact:" line to the CHANGELOG.md entry describing what changed and how it affects the cost model. David will update the xlsx in Claude Chat.
 
 ---
 

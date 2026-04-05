@@ -6,6 +6,7 @@ A **mobile-first local marketplace** connecting buyers with trusted, anonymous s
 - `marketsquare_admin.html` — seller onboarding admin dashboard · served as admin.html
 - `bea_main.py` — FastAPI backend (BEA) · served as main.py on server
 - `Solar_Council_Codex_v4_3.docx` — canonical product rules, design principles, and version history
+- `Cost_Breakdown_GlobalLaunch.xlsx` — live cost model · updated in Claude Chat when assumptions change
 
 **This is a marketplace app, not a game.**
 
@@ -46,6 +47,9 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 - Reload nginx after config changes: `nginx -s reload`
 
 ## Key technical notes
+- Cost model lives in project root as .xlsx — Claude Code cannot edit it directly
+- When any session changes infrastructure, pricing, city launch mechanics, subscription tiers, or revenue model: flag the impact in CHANGELOG.md with a line starting "Cost model impact:"
+- David uploads the xlsx to Claude Chat for revision, downloads the updated file back to project root
 - BEA listing ids are strings: 'bea_N' — always use findListing(id) not LISTINGS[id]
 - All onclick handlers interpolating listing ids must quote them: openDetail('${l.id}')
 - normCat() in loadLiveListings() normalises BEA category strings to CATS keys

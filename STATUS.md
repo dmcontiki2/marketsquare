@@ -54,6 +54,7 @@
 - Placeholder listing ids start with `ph_` · BEA listing ids start with `bea_`
 - Always use `findListing(id)` — never `LISTINGS[id]`
 - BEA geo API query param is `country` (not `country_iso2`)
+- `Cost_Breakdown_GlobalLaunch.xlsx` is the live cost model — edit in Claude Chat only, not Claude Code
 
 ---
 
