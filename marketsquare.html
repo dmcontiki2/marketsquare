@@ -192,7 +192,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .home-hero::before{display:none;}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0;position:relative;z-index:1;}
 .hero-logo{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
-.city-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:4px 10px;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:'Inter',sans-serif;}
+.city-badge{display:inline-flex;align-items:flex-start;gap:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:5px 10px;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:'Inter',sans-serif;flex-direction:column;max-width:52vw;}
+.city-badge .badge-geo{font-size:9px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:flex;align-items:center;gap:4px;}
+.city-badge .badge-loc{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .city-badge.locked{cursor:default;pointer-events:none;opacity:.75;}
 .city-option{padding:13px 4px;border-bottom:1px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text);}
 .city-option:last-child{border-bottom:none;}
@@ -735,7 +737,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="home-hero">
     <div class="hero-top">
       <div class="hero-logo">MarketSquare</div>
-      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><span class="cdot"></span>Pretoria · Recruiting</div>
+      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria · All suburbs</div></div>
     </div>
     <div class="hero-body"></div>
   </div>
@@ -1537,11 +1539,14 @@ let buyerTier = 'free';
 function updateBadgeLabel() {
   const badge = document.getElementById('home-city-badge');
   if (!badge) return;
-  const parts = [activeCountry.name];
-  if (activeRegion) parts.push(activeRegion.name);
-  parts.push(activeCity.name);
-  parts.push(activeSuburb ? activeSuburb.name : 'All suburbs');
-  badge.innerHTML = `<span class="cdot"></span>${parts.join(' · ')}`;
+  // Top line: country + region (dimmer, smaller)
+  const geo = [activeCountry.name];
+  if (activeRegion) geo.push(activeRegion.name);
+  // Bottom line: city + suburb
+  const loc = [activeCity.name, activeSuburb ? activeSuburb.name : 'All suburbs'];
+  badge.innerHTML =
+    `<div class="badge-geo"><span class="cdot"></span>${geo.join(' · ')}</div>` +
+    `<div class="badge-loc">${loc.join(' · ')}</div>`;
 }
 
 // ── CATEGORY NORMALISER ───────────────────────────────────
