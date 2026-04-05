@@ -81,6 +81,17 @@ def run_migrations(conn):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_cities_region ON geo_cities(region_id, active)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_suburbs_city ON geo_suburbs(city_id, active)")
 
+    # ── Lat/lng for proximity search ────────────────────────
+    city_cols = [r[1] for r in conn.execute("PRAGMA table_info(geo_cities)").fetchall()]
+    if "lat" not in city_cols:
+        conn.execute("ALTER TABLE geo_cities ADD COLUMN lat REAL")
+        conn.execute("ALTER TABLE geo_cities ADD COLUMN lng REAL")
+    suburb_cols = [r[1] for r in conn.execute("PRAGMA table_info(geo_suburbs)").fetchall()]
+    if "lat" not in suburb_cols:
+        conn.execute("ALTER TABLE geo_suburbs ADD COLUMN lat REAL")
+        conn.execute("ALTER TABLE geo_suburbs ADD COLUMN lng REAL")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_geo_suburbs_name_city ON geo_suburbs(name, city_id)")
+
     listing_cols = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
     if "geo_city_id" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN geo_city_id INTEGER")
@@ -134,12 +145,14 @@ def seed_geo_za(conn):
         feat_code   = cols[7]
         admin1_code = cols[10]
         admin2_code = cols[11]
+        lat = float(cols[4]) if cols[4] else None
+        lng = float(cols[5]) if cols[5] else None
         if feat_cls == "A" and feat_code == "ADM1":
             adm1[admin1_code] = name
         elif feat_cls == "P" and feat_code in ("PPLC", "PPLA", "PPLA2", "PPLA3"):
-            cities.append({"name": name, "admin1": admin1_code, "admin2": admin2_code, "code": feat_code})
+            cities.append({"name": name, "lat": lat, "lng": lng, "admin1": admin1_code, "admin2": admin2_code, "code": feat_code})
         elif feat_cls == "P" and feat_code == "PPL":
-            ppls.append({"name": name, "admin1": admin1_code, "admin2": admin2_code})
+            ppls.append({"name": name, "lat": lat, "lng": lng, "admin1": admin1_code, "admin2": admin2_code})
 
     # Pass 1: regions
     region_map = {}  # admin1_code -> region_id
@@ -158,8 +171,8 @@ def seed_geo_za(conn):
         if key in city_map:
             continue
         cur = conn.execute(
-            "INSERT INTO geo_cities (name, region_id, country_iso2) VALUES (?, ?, ?)",
-            (c["name"], region_id, "ZA")
+            "INSERT INTO geo_cities (name, region_id, country_iso2, lat, lng) VALUES (?, ?, ?, ?, ?)",
+            (c["name"], region_id, "ZA", c["lat"], c["lng"])
         )
         city_map[key] = cur.lastrowid
 
@@ -169,7 +182,8 @@ def seed_geo_za(conn):
         city_id = city_map.get((p["admin1"], p["admin2"]))
         if not city_id:
             continue  # no matching city — skip, do not guess
-        conn.execute("INSERT INTO geo_suburbs (name, city_id) VALUES (?, ?)", (p["name"], city_id))
+        conn.execute("INSERT INTO geo_suburbs (name, city_id, lat, lng) VALUES (?, ?, ?, ?)",
+                     (p["name"], city_id, p["lat"], p["lng"]))
         n_suburbs += 1
 
     conn.commit()
@@ -193,6 +207,117 @@ def migrate_listings_to_geo_city(conn):
         _log.info("Migrated %d listings to geo_city_id", n)
 
 
+def _backfill_geo_coords(conn):
+    """One-time: populate lat/lng on geo_cities and geo_suburbs from GeoNames ZA dump."""
+    sample = conn.execute("SELECT lat FROM geo_cities WHERE lat IS NOT NULL LIMIT 1").fetchone()
+    if sample:
+        return  # already backfilled
+
+    import urllib.request
+    import zipfile
+
+    zip_path = "/tmp/geonames_za_coords.zip"
+    try:
+        urllib.request.urlretrieve("https://download.geonames.org/export/dump/ZA.zip", zip_path)
+    except Exception as exc:
+        _log.warning("Coord backfill: failed to download ZA dump: %s", exc)
+        return
+
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            with zf.open("ZA.txt") as f:
+                lines = f.read().decode("utf-8").splitlines()
+    except Exception as exc:
+        _log.warning("Coord backfill: failed to parse ZA dump: %s", exc)
+        return
+    finally:
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+
+    # Re-derive mapping from dump
+    adm1 = {}       # admin1_code -> name
+    cities_data = [] # {name, lat, lng, admin1, admin2, code}
+    suburbs_data = [] # {name, lat, lng, admin1, admin2}
+    for line in lines:
+        cols = line.split("\t")
+        if len(cols) < 15:
+            continue
+        name = cols[1]
+        lat = float(cols[4]) if cols[4] else None
+        lng = float(cols[5]) if cols[5] else None
+        feat_cls = cols[6]
+        feat_code = cols[7]
+        admin1_code = cols[10]
+        admin2_code = cols[11]
+        if feat_cls == "A" and feat_code == "ADM1":
+            adm1[admin1_code] = name
+        elif feat_cls == "P" and feat_code in ("PPLC", "PPLA", "PPLA2", "PPLA3"):
+            cities_data.append({"name": name, "lat": lat, "lng": lng,
+                                "admin1": admin1_code, "admin2": admin2_code, "code": feat_code})
+        elif feat_cls == "P" and feat_code == "PPL":
+            suburbs_data.append({"name": name, "lat": lat, "lng": lng,
+                                 "admin1": admin1_code, "admin2": admin2_code})
+
+    # Map DB regions by name
+    db_regions = conn.execute("SELECT id, name FROM geo_regions WHERE country_iso2='ZA'").fetchall()
+    region_name_to_id = {r["name"]: r["id"] for r in db_regions}
+
+    # admin1_code -> region_id
+    admin1_to_rid = {}
+    for code, rname in adm1.items():
+        rid = region_name_to_id.get(rname)
+        if rid:
+            admin1_to_rid[code] = rid
+
+    # Update cities — match by name + region_id
+    priority = {"PPLC": 0, "PPLA": 1, "PPLA2": 2, "PPLA3": 3}
+    city_key_map = {}  # (admin1, admin2) -> db city_id
+    n_cities = 0
+    for c in sorted(cities_data, key=lambda x: priority.get(x["code"], 9)):
+        region_id = admin1_to_rid.get(c["admin1"])
+        if not region_id:
+            continue
+        key = (c["admin1"], c["admin2"])
+        if key in city_key_map:
+            continue
+        db_city = conn.execute(
+            "SELECT id FROM geo_cities WHERE name=? AND region_id=? AND active=1 LIMIT 1",
+            (c["name"], region_id)
+        ).fetchone()
+        if db_city:
+            city_key_map[key] = db_city["id"]
+            conn.execute("UPDATE geo_cities SET lat=?, lng=? WHERE id=?",
+                         (c["lat"], c["lng"], db_city["id"]))
+            n_cities += 1
+
+    # Update suburbs — match by name + city_id
+    n_suburbs = 0
+    for s in suburbs_data:
+        city_id = city_key_map.get((s["admin1"], s["admin2"]))
+        if not city_id:
+            continue
+        result = conn.execute(
+            "UPDATE geo_suburbs SET lat=?, lng=? WHERE name=? AND city_id=? AND lat IS NULL",
+            (s["lat"], s["lng"], s["name"], city_id))
+        n_suburbs += result.rowcount
+
+    conn.commit()
+    _log.info("Coord backfill complete: %d cities, %d suburbs updated", n_cities, n_suburbs)
+
+
+import math
+
+def _haversine_km(lat1, lng1, lat2, lng2):
+    """Return distance in km between two lat/lng points (Haversine formula)."""
+    R = 6371
+    dLat = math.radians(lat2 - lat1)
+    dLng = math.radians(lng2 - lng1)
+    a = (math.sin(dLat / 2) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dLng / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
 # ── STARTUP LOGGING + ENV CONFIG ─────────────────────────────
 logging.basicConfig(level=logging.INFO)
 _log = logging.getLogger("bea")
@@ -201,6 +326,7 @@ _startup_conn = database.get_db()
 run_migrations(_startup_conn)
 seed_geo_za(_startup_conn)
 migrate_listings_to_geo_city(_startup_conn)
+_backfill_geo_coords(_startup_conn)
 _startup_conn.close()
 
 # n8n webhook URLs (Task 2 — optional, skip silently if not set)
@@ -312,17 +438,20 @@ def health():
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb: Optional[str] = None):
     conn = database.get_db()
-    clauses = ["city = ?"]
+    clauses = ["l.city = ?"]
     params: list = [city]
     if category:
-        clauses.append("category = ?")
+        clauses.append("l.category = ?")
         params.append(category)
     if suburb:
-        clauses.append("suburb = ?")
+        clauses.append("l.suburb = ?")
         params.append(suburb)
     where = " AND ".join(clauses)
     rows = conn.execute(
-        f"SELECT * FROM listings WHERE {where} ORDER BY created_at DESC LIMIT 50",
+        f"""SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+            FROM listings l
+            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+            WHERE {where} ORDER BY l.created_at DESC LIMIT 50""",
         params
     ).fetchall()
     conn.close()
@@ -379,12 +508,12 @@ def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = Non
     conn = database.get_db()
     if region_id:
         rows = conn.execute(
-            "SELECT id, name FROM geo_cities WHERE region_id=? AND active=1 ORDER BY name",
+            "SELECT id, name, lat, lng FROM geo_cities WHERE region_id=? AND active=1 ORDER BY name",
             (region_id,)
         ).fetchall()
     elif country:
         rows = conn.execute(
-            """SELECT c.id, c.name, r.name as region_name
+            """SELECT c.id, c.name, c.lat, c.lng, r.name as region_name
                FROM geo_cities c JOIN geo_regions r ON c.region_id=r.id
                WHERE c.country_iso2=? AND c.active=1 ORDER BY c.name""",
             (country,)
@@ -398,11 +527,43 @@ def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = Non
 def geo_get_suburbs(city_id: int):
     conn = database.get_db()
     rows = conn.execute(
-        "SELECT id, name FROM geo_suburbs WHERE city_id=? AND active=1 ORDER BY name",
+        "SELECT id, name, lat, lng FROM geo_suburbs WHERE city_id=? AND active=1 ORDER BY name",
         (city_id,)
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+@app.get("/geo/nearby")
+def geo_nearby(lat: float, lng: float, radius_km: float = 10.0, limit: int = 20):
+    """Return suburbs within radius_km of the given lat/lng, sorted by distance."""
+    conn = database.get_db()
+    # Bounding-box pre-filter for performance
+    lat_range = radius_km / 111.0
+    lng_range = radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
+    rows = conn.execute("""
+        SELECT s.id, s.name, s.city_id, s.lat, s.lng, c.name as city_name
+        FROM geo_suburbs s
+        JOIN geo_cities c ON s.city_id = c.id
+        WHERE s.lat IS NOT NULL
+          AND s.lat BETWEEN ? AND ?
+          AND s.lng BETWEEN ? AND ?
+          AND s.active = 1
+    """, (lat - lat_range, lat + lat_range, lng - lng_range, lng + lng_range)).fetchall()
+    conn.close()
+    results = []
+    for r in rows:
+        d = _haversine_km(lat, lng, r["lat"], r["lng"])
+        if d <= radius_km:
+            results.append({
+                "id": r["id"], "name": r["name"],
+                "city_id": r["city_id"], "city_name": r["city_name"],
+                "lat": r["lat"], "lng": r["lng"],
+                "distance_km": round(d, 2)
+            })
+    results.sort(key=lambda x: x["distance_km"])
+    return results[:limit]
+
 
 @app.post("/geo/cities")
 def geo_post_city(city: str, region_id: int, _key: str = Depends(auth.require_api_key)):
@@ -498,8 +659,9 @@ async def _seed_country_from_geonames(iso2: str, name: str, region_label: str):
                             if key in city_map:
                                 continue
                             cur = conn.execute(
-                                "INSERT INTO geo_cities (name, region_id, country_iso2) VALUES (?, ?, ?)",
-                                (city["name"], region_id, iso2)
+                                "INSERT INTO geo_cities (name, region_id, country_iso2, lat, lng) VALUES (?, ?, ?, ?, ?)",
+                                (city["name"], region_id, iso2,
+                                 float(city.get("lat", 0)), float(city.get("lng", 0)))
                             )
                             city_map[key] = cur.lastrowid
                     except Exception as exc:
@@ -523,8 +685,9 @@ async def _seed_country_from_geonames(iso2: str, name: str, region_label: str):
                         if not city_id:
                             continue
                         conn.execute(
-                            "INSERT INTO geo_suburbs (name, city_id) VALUES (?, ?)",
-                            (sub["name"], city_id)
+                            "INSERT INTO geo_suburbs (name, city_id, lat, lng) VALUES (?, ?, ?, ?)",
+                            (sub["name"], city_id,
+                             float(sub.get("lat", 0)), float(sub.get("lng", 0)))
                         )
                         n_suburbs += 1
                 except Exception as exc:

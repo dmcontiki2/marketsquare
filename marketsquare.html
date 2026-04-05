@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MarketSquare · Pretoria</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Leaflet map (proximity search + map view) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <!--
 ╔══════════════════════════════════════════════════════════════╗
@@ -689,6 +695,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .af-tag{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);border:1px solid var(--accent);border-radius:50px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;}
 .af-tag svg{width:10px;height:10px;}
 .results-count{font-size:12px;color:var(--text-3);padding:6px 16px 0;font-weight:500;}
+.view-btn{width:32px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text-2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.dist-badge{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px;}
 
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 30px;text-align:center;}
 .empty-icon{font-size:48px;margin-bottom:14px;opacity:.4;}
@@ -785,10 +794,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <!-- Active filter tags -->
   <div id="active-filters-row" class="active-filters-row"></div>
 
-  <!-- Results count -->
-  <div id="results-count" class="results-count"></div>
+  <!-- Results count + view toggle -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;">
+    <div id="results-count" class="results-count" style="padding:0;"></div>
+    <div id="view-toggle" style="display:flex;gap:4px;">
+      <button onclick="setViewMode('grid')" id="btn-view-grid" class="view-btn active" title="Grid view">▦</button>
+      <button onclick="setViewMode('map')" id="btn-view-map" class="view-btn" title="Map view">🗺</button>
+    </div>
+  </div>
 
   <div class="lgrid" id="listing-grid"></div>
+  <div id="listing-map" style="display:none;height:60vh;border-radius:12px;margin:0 16px 16px;z-index:1;"></div>
 </div>
 
 <!-- PROPERTY FILTER SHEET -->
@@ -1531,6 +1547,11 @@ let activeCountry = { iso2: 'ZA', name: 'South Africa' };
 let activeRegion  = null;                     // { id, name } or null
 let activeCity    = { id: null, name: 'Pretoria' }; // id resolved on startup
 let activeSuburb  = null;                     // { id, name } or null
+let buyerLat = null, buyerLng = null;         // buyer GPS (null = not yet detected)
+let nearbyMode = false;                       // true = showing results from multiple nearby suburbs
+let nearbySuburbs = [];                       // suburb names within radius when nearbyMode=true
+let viewMode = 'grid';                        // 'grid' | 'map'
+let _leafletMap = null, _markerLayer = null;  // Leaflet instances
 
 // FLAG: wire buyerTier to Paystack subscription state when Paystack goes live
 // Values: 'free' | 'starter' | 'premium'
@@ -1543,7 +1564,8 @@ function updateBadgeLabel() {
   const geo = [activeCountry.name];
   if (activeRegion) geo.push(activeRegion.name);
   // Bottom line: city + suburb
-  const loc = [activeCity.name, activeSuburb ? activeSuburb.name : 'All suburbs'];
+  const subLabel = nearbyMode ? '📍 Near me' : (activeSuburb ? activeSuburb.name : 'All suburbs');
+  const loc = [activeCity.name, subLabel];
   badge.innerHTML =
     `<div class="badge-geo"><span class="cdot"></span>${geo.join(' · ')}</div>` +
     `<div class="badge-loc">${loc.join(' · ')}</div>`;
@@ -1607,7 +1629,7 @@ async function loadLiveListings() {
     if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
   }
   try {
-    const suburbParam = activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '';
+    const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
     const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam);
     if (live && live.length > 0) {
       // Map BEA listing format to FEA format and prepend to LISTINGS
@@ -1656,6 +1678,8 @@ async function loadLiveListings() {
           queueCount: 0,
           sellerIdx: null,
           isLive: true,
+          suburb_lat: l.suburb_lat || null,
+          suburb_lng: l.suburb_lng || null,
           propType, beds, baths, garages, listingType, furnished, pets, features
         };
       });
@@ -1882,6 +1906,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   renderHomeProgress(); renderHomeStats();
   // Load available cities + suburbs, then live listings from BEA on startup
   _resolveActiveCity().then(() => loadLiveListings());
+  // Detect buyer location for distance badges + map centering
+  _detectLocation();
   // Silent background refresh every 30 seconds — picks up new listings without manual reload
   setInterval(() => {
     if (!isOffline()) loadLiveListings();
@@ -2237,10 +2263,16 @@ async function _loadAndRenderSuburbs() {
   if (back) back.style.display = buyerTier === 'free' ? 'none' : '';
   const data = activeCity.id ? await _geoFetch('/geo/suburbs?city_id=' + activeCity.id) : [];
   const opts = [{ id: null, name: 'All suburbs' }, ...(Array.isArray(data) ? data : [])];
-  list.innerHTML = opts.map(s => {
-    const isSelected = s.id === null ? !activeSuburb : activeSuburb && s.id === activeSuburb.id;
+  let html = '';
+  // "Near me" option — only shown when buyer GPS is available
+  if (buyerLat != null) {
+    html += `<div class="city-option${nearbyMode ? ' selected' : ''}" onclick="selectNearMe()">📍 Near me${nearbyMode ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`;
+  }
+  html += opts.map(s => {
+    const isSelected = !nearbyMode && (s.id === null ? !activeSuburb : activeSuburb && s.id === activeSuburb.id);
     return `<div class="city-option${isSelected ? ' selected' : ''}" onclick="selectSuburb(${s.id === null ? 'null' : s.id},'${s.name.replace(/'/g,"\\'")}')">${s.name}${isSelected ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`;
   }).join('');
+  list.innerHTML = html;
 }
 
 function closeCitySelector() {
@@ -2271,9 +2303,26 @@ async function selectCity(id, name) {
 
 async function selectSuburb(id, name) {
   closeCitySelector();
+  nearbyMode = false;
+  nearbySuburbs = [];
   activeSuburb = id === null ? null : { id, name };
   updateBadgeLabel();
   await loadLiveListings();
+}
+
+async function selectNearMe() {
+  if (buyerLat == null) return;
+  closeCitySelector();
+  try {
+    const nearby = await _geoFetch('/geo/nearby?lat=' + buyerLat + '&lng=' + buyerLng + '&radius_km=10&limit=30');
+    if (Array.isArray(nearby) && nearby.length) {
+      nearbyMode = true;
+      nearbySuburbs = nearby.map(s => s.name);
+      activeSuburb = null;
+      updateBadgeLabel();
+      await loadLiveListings();
+    }
+  } catch(e) { console.warn('selectNearMe failed:', e); }
 }
 
 async function _resolveActiveCity() {
@@ -2294,6 +2343,98 @@ async function _resolveActiveCity() {
       }
     }
   }
+}
+
+// ── PROXIMITY: HAVERSINE + GEOLOCATION + MAP ─────────────
+function _haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function _distLabel(listing){
+  if(buyerLat==null||!listing.suburb_lat) return '';
+  const d=_haversineKm(buyerLat,buyerLng,listing.suburb_lat,listing.suburb_lng);
+  return d<1?`<span class="dist-badge">${Math.round(d*1000)}m</span>`
+            :`<span class="dist-badge">${d.toFixed(1)}km</span>`;
+}
+
+function _detectLocation(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    buyerLat=pos.coords.latitude; buyerLng=pos.coords.longitude;
+    // Re-render cards with distance badges
+    renderGrid();
+    renderFeatured();
+  },()=>{/* permission denied — continue without location */},{timeout:8000});
+}
+
+function setViewMode(mode){
+  viewMode=mode;
+  document.getElementById('btn-view-grid').classList.toggle('active',mode==='grid');
+  document.getElementById('btn-view-map').classList.toggle('active',mode==='map');
+  document.getElementById('listing-grid').style.display=mode==='grid'?'':'none';
+  document.getElementById('listing-map').style.display=mode==='map'?'':'none';
+  if(mode==='map') renderMap();
+}
+
+function renderMap(){
+  const mapEl=document.getElementById('listing-map');
+  if(!mapEl) return;
+  // Initialize Leaflet map once
+  if(!_leafletMap){
+    _leafletMap=L.map(mapEl,{zoomControl:true,attributionControl:true});
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom:19
+    }).addTo(_leafletMap);
+  }
+  // Clear old markers
+  if(_markerLayer){_leafletMap.removeLayer(_markerLayer);}
+  _markerLayer=L.markerClusterGroup();
+
+  const listings=LISTINGS.filter(l=>{
+    if(String(l.id).startsWith('ph_')) return false;
+    if(l.paused) return false;
+    if(activeFilter!=='All'&&l.cat!==activeFilter) return false;
+    if(!l.suburb_lat) return false;
+    return true;
+  });
+
+  if(!listings.length){
+    // Center on active city or Pretoria default
+    _leafletMap.setView([-25.75,28.19],12);
+    return;
+  }
+
+  const bounds=[];
+  listings.forEach(l=>{
+    const latlng=[l.suburb_lat,l.suburb_lng];
+    bounds.push(latlng);
+    const cat=CATS[l.cat]||{icon:'📍'};
+    const dist=buyerLat!=null?` · ${_haversineKm(buyerLat,buyerLng,l.suburb_lat,l.suburb_lng).toFixed(1)}km`:'';
+    const marker=L.marker(latlng).bindPopup(
+      `<div style="min-width:160px;">
+        <strong>${l.title}</strong><br>
+        <span style="font-size:12px;color:#666;">${cat.icon} ${l.cat} · ${l.suburb||l.area}${dist}</span><br>
+        <span style="font-size:13px;font-weight:600;">${l.price?(formatZAR(l.price)||l.price):'Negotiable'}</span><br>
+        <a href="#" onclick="event.preventDefault();openDetail('${l.id}')" style="font-size:12px;color:var(--accent);">View listing →</a>
+      </div>`
+    );
+    _markerLayer.addLayer(marker);
+  });
+
+  // Add buyer location marker if available
+  if(buyerLat!=null){
+    const youMarker=L.circleMarker([buyerLat,buyerLng],{
+      radius:8,fillColor:'#4d8af0',fillOpacity:1,color:'#fff',weight:2
+    }).bindPopup('<strong>You are here</strong>');
+    _markerLayer.addLayer(youMarker);
+    bounds.push([buyerLat,buyerLng]);
+  }
+
+  _leafletMap.addLayer(_markerLayer);
+  if(bounds.length) _leafletMap.fitBounds(bounds,{padding:[30,30],maxZoom:14});
 }
 
 // ── HOME SCREEN PROGRESS + STATS ──────────────────────────
@@ -2357,7 +2498,8 @@ function renderGrid(){
     const isPlaceholder = String(l.id).startsWith('ph_');
     if(l.paused && !isPlaceholder) return false;
     // Suburb filter — skip placeholders and only filter when a suburb is selected
-    if(activeSuburb && !isPlaceholder && l.suburb !== activeSuburb.name) return false;
+    if(nearbyMode && !isPlaceholder && !nearbySuburbs.includes(l.suburb)) return false;
+    if(!nearbyMode && activeSuburb && !isPlaceholder && l.suburb !== activeSuburb.name) return false;
 
     // Category-specific filtering
     if(l.cat==='Property'){
@@ -2398,6 +2540,15 @@ function renderGrid(){
 
     return true;
   });
+
+  // Sort by distance when buyer GPS is available
+  if(buyerLat!=null){
+    filtered.sort((a,b)=>{
+      const dA=a.suburb_lat?_haversineKm(buyerLat,buyerLng,a.suburb_lat,a.suburb_lng):9999;
+      const dB=b.suburb_lat?_haversineKm(buyerLat,buyerLng,b.suburb_lat,b.suburb_lng):9999;
+      return dA-dB;
+    });
+  }
 
   const grid = document.getElementById('listing-grid');
   const countEl = document.getElementById('results-count');
@@ -2448,7 +2599,7 @@ function cardHtml(l){
     <div class="cbody">
       <div class="ccat">${l.cat}</div>
       <div class="ctitle">${l.title}</div>
-      <div class="cloc">📍 ${l.area}</div>
+      <div class="cloc">📍 ${l.area}${_distLabel(l)}</div>
       <div class="cbot">
         <div class="cprice">${l.price?`${formatZAR(l.price)||l.price}<span class="per"> ${l.per}</span>`:'<span class="neg">Negotiable</span>'}</div>
         ${tbadge(l.trust)}
