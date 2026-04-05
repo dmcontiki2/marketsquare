@@ -2,6 +2,12 @@
 
 ---
 
+## Session 10 · 5 April 2026 · buyer_name field in buyer app
+
+Added buyer_name input to the intro request form in marketsquare.html. Field appears above the email input, styled consistently. The POST /intros fetch payload now includes buyer_name (null if left blank — field is optional). Intro sheet reset now clears the name field alongside email and message. BEA stores and forwards the value through n8n webhook payloads on accept/decline.
+
+---
+
 ## Session 10 · 5 April 2026 · buyer_name fix (BEA)
 
 Added buyer_name field to the intro_requests table and throughout the intro submission flow. run_migrations() now detects and adds the column on startup (idempotent). IntroRequest Pydantic model accepts buyer_name as an optional field. POST /intros stores it. Both n8n webhook payloads (accept and decline) now read buyer_name from the DB row instead of sending null. No frontend changes required — the field is optional so existing intro submissions without it continue to work.

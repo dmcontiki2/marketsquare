@@ -2639,8 +2639,12 @@ function submitIntro(){
   if(isOffline()){ showToast('You\'re offline — intro requests need a connection'); return; }
   const name=document.getElementById('m-name').value.trim();
   const email=document.getElementById('m-email').value.trim();
+  const msg=document.getElementById('m-msg').value.trim();
   if(!name||!email){showToast('Please fill in your name and email');return;}
   document.getElementById('intro-modal').classList.remove('open');
+  document.getElementById('m-name').value='';
+  document.getElementById('m-email').value='';
+  document.getElementById('m-msg').value='';
   if(pendingIntroId!==null){
     const l=findListing(pendingIntroId),isCommit=CATS[l.cat].model==='commit';
     if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
@@ -2650,7 +2654,7 @@ function submitIntro(){
     // Post to BEA if listing is a live listing
     if(BEA_ENABLED && l.isLive) {
       const beaId = parseInt(String(l.id).replace('bea_',''));
-      apiPost('/intros', { listing_id: beaId, buyer_email: email, message: name });
+      apiPost('/intros', { listing_id: beaId, buyer_email: email, buyer_name: name, message: msg || null });
     }
   }
 }
