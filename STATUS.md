@@ -41,12 +41,14 @@
 
 ## Known Server Facts (prevent drift)
 
+- SSH key: `~/.ssh/id_ed25519` (ed25519, added 6 April 2026)
 - Env vars live in /etc/environment (not /var/www/marketsquare/.env)
 - systemd drop-in: /etc/systemd/system/marketsquare.service.d/env.conf → points to /etc/environment
 - BEA venv: /var/www/marketsquare/venv/ — always use venv pip
 - n8n runs as Docker container — restart with: docker restart n8n
 - Access n8n UI via SSH tunnel: ssh -L 5678:localhost:5678 root@178.104.73.239
 - GEONAMES_USERNAME=dmcontiki2 in /etc/environment
+- CityLauncher: /var/www/citylauncher/ · port 8001 · citylauncher.service · nginx at /launch/ and /launch-api/
 
 ---
 
