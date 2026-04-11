@@ -2,6 +2,22 @@
 
 ---
 
+## Cross-project update · 11 April 2026 · Cowork framework + AdvertAgent scaffold
+
+Updated `CLAUDE.md` Codex reference from v4_3 to v4_4. `AGENT_BRIEFING.md` was already at v1.3 (11 April 2026) with correct Codex reference. AdvertAgent project scaffolded at `C:\Users\David\Projects\AdvertAgent\` — governed by PRINCIPLE_REQUIREMENTS.md Part G (G1–G4), with its own AGENT_BRIEFING.md (v0.1 pre-kickoff), STATUS.md, CHANGELOG.md, and CLAUDE.md. PRINCIPLE_REQUIREMENTS.md v1.0 copied to both CityLauncher and AdvertAgent project roots. Architecture, subscription pricing, and UI integration point for AdvertAgent deferred to kickoff session.
+
+---
+
+## Cross-project update · 10 April 2026 (CityLauncher Session 9)
+
+### Photo storage migrated to Cloudflare R2, admin app UX fixes
+
+Photo storage moved from degraded Hetzner Object Storage (NBG1, down since 5 March 2026) to Cloudflare R2 EU jurisdiction. Bucket: `marketsquare-media`. Public URL: `pub-3c51d058a6494b93af4d242d07bdc4da.r2.dev`. Server env vars updated (`HETZNER_S3_*` reused — S3-compatible, no code changes). `_s3_upload()` in `main.py` updated to return R2 public dev URL. Three admin app fixes: (1) property feature checkboxes now clickable — excluded checkboxes from `-webkit-appearance: none`; (2) multiple photo upload race condition fixed — slots reserved synchronously; (3) removed extra click — direct onclick handler + drag-drop + clipboard paste support. Native `<select>` dropdowns restored on mobile with `appearance: menulist`.
+
+Cost model impact: Photo storage $0 (10 GB free, zero egress). Replaces Hetzner Object Storage which was unreliable and charged per-GB egress.
+
+---
+
 ## Session 10 · 5 April 2026 · 4-level location hierarchy — buyer app + admin tool
 
 Replaced the flat city/suburb selectors in both frontends with a full Country → Region → City → Suburb drill-down. Buyer app: activeCity is now an object {id, name} (resolved to Pretoria's DB id on startup via _resolveActiveCity()); activeSuburb is {id, name} or null; activeCountry and activeRegion track the full hierarchy. updateBadgeLabel() shows all four levels. The location selector sheet now has four panels (country, region, city, suburb) driven by /geo/* API calls. Tier gating: free opens suburb panel directly; starter opens city panel; premium opens country panel. loadLiveListings() and renderGrid/renderCatCounts updated to use .name properties. Admin tool: static city dropdown replaced with cascading Province → City selects populated from /geo/regions?country=ZA and /geo/cities?region_id=. goNext() step 1 now stores geo_city_id on sellerData. loadSuburbsForForm() switched to /geo/suburbs?city_id= returning {id, name} objects.
