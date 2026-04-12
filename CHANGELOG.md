@@ -2,6 +2,12 @@
 
 ---
 
+## Cross-project update · 12 April 2026 · PRINCIPLE_REQUIREMENTS v1.1
+
+PRINCIPLE_REQUIREMENTS.md v1.1 — Rule B7 added: no consumption-based external API without David's explicit approval and cost ceiling. Triggered by Google Cloud API incident (R3,612 charged without approval). Updated in all 3 project folders: MarketSquare, CityLauncher, AdvertAgent. Dated 12 April 2026.
+
+---
+
 ## Cross-project update · 11 April 2026 · Cowork framework + AdvertAgent scaffold
 
 Updated `CLAUDE.md` Codex reference from v4_3 to v4_4. `AGENT_BRIEFING.md` was already at v1.3 (11 April 2026) with correct Codex reference. AdvertAgent project scaffolded at `C:\Users\David\Projects\AdvertAgent\` — governed by PRINCIPLE_REQUIREMENTS.md Part G (G1–G4), with its own AGENT_BRIEFING.md (v0.1 pre-kickoff), STATUS.md, CHANGELOG.md, and CLAUDE.md. PRINCIPLE_REQUIREMENTS.md v1.0 copied to both CityLauncher and AdvertAgent project roots. Architecture, subscription pricing, and UI integration point for AdvertAgent deferred to kickoff session.
