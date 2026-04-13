@@ -777,7 +777,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .aa-btn-primary{flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity var(--t);}
 .aa-btn-primary:disabled{opacity:.4;cursor:not-allowed;}
 .aa-btn-secondary{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
-#screen-aa-home,#screen-aa-detail,#screen-aa-photos{padding-bottom:0;}
+#screen-aa-home{padding-bottom:32px;}
+#screen-aa-detail,#screen-aa-photos{padding-bottom:0;}
 </style>
 </head>
 <body>
@@ -2080,6 +2081,9 @@ function goTo(name){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  // Hide bottom nav on AA screens (they have their own navigation)
+  const bnav = document.querySelector('.bnav');
+  if(bnav) bnav.style.display = name.startsWith('aa-') ? 'none' : '';
   if(name==='browse'){ renderFilterBar(); renderGrid(); }
   if(name==='saved')renderSaved();
   if(name==='dashboard'){
@@ -3671,6 +3675,19 @@ const aaDB = (() => {
   return {getAll, get, put, remove};
 })();
 
+// ── AA currency helper ────────────────────────────────────────
+// Returns { code, symbol } for the active country. Drives price field labels.
+function aaCurrency() {
+  const map = {
+    ZA: { code: 'ZAR', symbol: 'R' },
+    US: { code: 'USD', symbol: '$' },
+    GB: { code: 'GBP', symbol: '£' },
+    DE: { code: 'EUR', symbol: '€' },
+    EU: { code: 'EUR', symbol: '€' },
+  };
+  return map[(activeCountry && activeCountry.iso2) || 'ZA'] || { code: 'USD', symbol: '$' };
+}
+
 // ── AA state ──────────────────────────────────────────────────
 let aaDraftId       = null;  // active draft id
 let aaActiveSlot    = null;  // photo slot being captured
@@ -3773,16 +3790,21 @@ function aaRenderDetailForm(category, values) {
   if (!cfg) return;
   document.getElementById('aa-detail-next').disabled = false;
 
+  const cur = aaCurrency();
+
   el.innerHTML = `<div class="aa-section-label">Listing Details</div>` +
     cfg.fields.map(f => {
       const val  = values[f.id] || '';
       const req  = f.id === 'title' || f.id === 'price' ? ' <span style="color:#e11d48">*</span>' : '';
+      // Substitute currency code into price field label and placeholder dynamically
+      const label       = f.label.replace(/\bUSD\b/g, cur.code);
+      const placeholder = f.placeholder.replace(/\$(?=\d)/g, cur.symbol);
       if (f.type === 'textarea') {
-        return `<div class="field"><label>${f.label}${req}</label>
-          <textarea id="aaf-${f.id}" placeholder="${f.placeholder}">${val}</textarea></div>`;
+        return `<div class="field"><label>${label}${req}</label>
+          <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea></div>`;
       }
-      return `<div class="field"><label>${f.label}${req}</label>
-        <input type="${f.type}" id="aaf-${f.id}" placeholder="${f.placeholder}" value="${val}"></div>`;
+      return `<div class="field"><label>${label}${req}</label>
+        <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"></div>`;
     }).join('');
 }
 
