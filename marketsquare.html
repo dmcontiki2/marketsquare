@@ -1159,6 +1159,26 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="tn-row"><div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created</div></div><div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div></div>
       </div>
     </div>
+
+    <!-- AI Coach Credits — visually separated, never merged with Tuppence balance -->
+    <div class="tn-sec" style="border-top:2px solid var(--border);margin-top:8px;padding-top:20px;">
+      <h2 style="margin-bottom:4px;">AI Coach Credits</h2>
+      <p style="font-size:12px;color:var(--text-3);margin:0 0 14px;font-weight:500;">Not used for introductions</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;color:var(--text-3);margin-bottom:2px;">Coaching sessions remaining</div>
+            <div id="tn-coach-sessions" style="font-size:28px;font-weight:800;color:var(--navy);">—</div>
+          </div>
+          <div style="font-size:32px;">🤖</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:6px;">1 free session included · packs do not expire</div>
+      </div>
+      <button onclick="aaBuyPackFromWallet()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+        Buy AI Pack — 8 sessions · 1T
+      </button>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:8px;">1T = R36 · used for AI coaching only</div>
+    </div>
   </div>
 </div>
 
@@ -1504,7 +1524,45 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 <!-- hidden file input for camera capture -->
-<input type="file" id="aa-photo-input" accept="image/*" capture="environment" style="display:none" onchange="aaHandlePhotoCapture(event)">
+<input type="file" id="aa-photo-input" accept="image/*" style="display:none" onchange="aaHandlePhotoCapture(event)">
+
+<!-- ── ADVERT AGENT: STAGE 3 — AI COACH ── -->
+<div id="screen-aa-coach" class="screen">
+  <div class="aa-hdr">
+    <div class="aa-hdr-row">
+      <button class="back-btn" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>AI Coach</h1>
+      <span class="aa-stage-pill">Stage 3 of 4</span>
+    </div>
+    <p>Optional — AI reviews your listing and suggests improvements</p>
+  </div>
+  <div class="aa-body" id="aa-coach-body" style="padding-bottom:80px;">
+    <!-- rendered by aaRenderCoachScreen() -->
+  </div>
+  <div class="aa-footer">
+    <button class="aa-btn-secondary" onclick="goTo('aa-publish')">Skip to Publish</button>
+    <button class="aa-btn-primary" id="aa-coach-run-btn" onclick="aaRunCoach()">Run AI Coach</button>
+  </div>
+</div>
+
+<!-- ── ADVERT AGENT: STAGE 4 — PUBLISH ── -->
+<div id="screen-aa-publish" class="screen">
+  <div class="aa-hdr">
+    <div class="aa-hdr-row">
+      <button class="back-btn" onclick="goTo('aa-coach')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>Publish</h1>
+      <span class="aa-stage-pill">Stage 4 of 4</span>
+    </div>
+    <p>Review your listing — it goes live once you publish</p>
+  </div>
+  <div class="aa-body" id="aa-publish-body" style="padding-bottom:80px;">
+    <!-- rendered by aaRenderPublishScreen() -->
+  </div>
+  <div class="aa-footer">
+    <button class="aa-btn-secondary" onclick="goTo('aa-coach')">Back</button>
+    <button class="aa-btn-primary" id="aa-publish-btn" onclick="aaDoPublish()">Publish Listing</button>
+  </div>
+</div>
 
 <!-- BOTTOM NAV -->
 <nav class="bnav">
@@ -2098,6 +2156,9 @@ function goTo(name){
   if(name==='recruit')renderRecruit();
   if(name==='publish'){resetPublish();}
   if(name==='aa-home')aaRenderHome();
+  if(name==='aa-coach')aaRenderCoachScreen();
+  if(name==='aa-publish')aaRenderPublishScreen();
+  if(name==='tuppence')aaLoadWalletSessions();
   window.scrollTo(0,0);
 }
 function filterBrowse(cat){
@@ -3497,14 +3558,17 @@ const AA_CATEGORIES = {
   'Real Estate': {
     emoji: '🏠',
     fields: [
-      {id:'title',     label:'Listing headline',    type:'text',   placeholder:'e.g. Spacious 3-bed family home'},
-      {id:'price',     label:'Asking price (USD)',  type:'number', placeholder:'e.g. 250000'},
-      {id:'bedrooms',  label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
-      {id:'bathrooms', label:'Bathrooms',           type:'number', placeholder:'e.g. 2'},
-      {id:'floor_area',label:'Floor area (m²)',     type:'number', placeholder:'e.g. 140'},
-      {id:'erf_size',  label:'Erf / plot size (m²)',type:'number', placeholder:'e.g. 600'},
-      {id:'suburb',    label:'Suburb',              type:'text',   placeholder:'e.g. Waterkloof Ridge'},
-      {id:'desc',      label:'Description',         type:'textarea',placeholder:'Key features, condition, standout details…'},
+      {id:'title',        label:'Listing headline',    type:'text',   placeholder:'e.g. Spacious 3-bed family home'},
+      {id:'price',        label:'Asking price (USD)',  type:'number', placeholder:'e.g. 250000'},
+      {id:'listing_type', label:'Listing type',        type:'select', options:['For Sale','For Rent']},
+      {id:'prop_type',    label:'Property type',       type:'select', options:['House','Apartment / Flat','Townhouse','Cluster','Simplex','Duplex','Bachelor / Studio','Granny Flat','Penthouse','Land / Plot','Smallholding','Farm','Commercial','Industrial','Other']},
+      {id:'beds',         label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
+      {id:'baths',        label:'Bathrooms',           type:'number', placeholder:'e.g. 2'},
+      {id:'garages',      label:'Garages / parking',   type:'number', placeholder:'e.g. 1'},
+      {id:'floor_area',   label:'Floor area (m²)',     type:'number', placeholder:'e.g. 140'},
+      {id:'erf_size',     label:'Erf / plot size (m²)',type:'number', placeholder:'e.g. 600'},
+      {id:'suburb',       label:'Suburb / area',       type:'text',   placeholder:'e.g. Waterkloof Ridge'},
+      {id:'desc',         label:'Description',         type:'textarea',placeholder:'Key features, condition, standout details…'},
     ],
     photos: [
       {slot:'lounge',         label:'Lounge / Living area',  hint:'Wide angle, good light',         required:true},
@@ -3688,6 +3752,19 @@ function aaCurrency() {
   return map[(activeCountry && activeCountry.iso2) || 'ZA'] || { code: 'USD', symbol: '$' };
 }
 
+// Formats a raw number as a price string using the active currency symbol.
+// e.g. 250000 → "R250,000.00" (ZAR) or "$250,000.00" (USD)
+function aaFormatPrice(val) {
+  const cur = aaCurrency();
+  const numStr = String(val).replace(/[^0-9.]/g, '');
+  if (!numStr) return '';
+  const n = parseFloat(numStr);
+  if (isNaN(n)) return '';
+  const parts = n.toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return cur.symbol + parts[0] + '.' + parts[1];
+}
+
 // ── AA state ──────────────────────────────────────────────────
 let aaDraftId       = null;  // active draft id
 let aaActiveSlot    = null;  // photo slot being captured
@@ -3803,6 +3880,21 @@ function aaRenderDetailForm(category, values) {
         return `<div class="field"><label>${label}${req}</label>
           <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea></div>`;
       }
+      if (f.type === 'select') {
+        const opts = (f.options || []).map(o =>
+          `<option value="${o}"${val===o?' selected':''}>${o}</option>`
+        ).join('');
+        return `<div class="field"><label>${label}${req}</label>
+          <select id="aaf-${f.id}"><option value="">— select —</option>${opts}</select></div>`;
+      }
+      if (f.id === 'price') {
+        const fmtVal = val ? aaFormatPrice(val) : '';
+        return `<div class="field"><label>${label}${req}</label>
+          <input type="number" id="aaf-price" placeholder="${placeholder}" value="${val}"
+                 oninput="(function(v){var d=document.getElementById('aaf-price-fmt');if(d)d.textContent=v?aaFormatPrice(v):'';})(this.value)">
+          <div id="aaf-price-fmt" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:4px;min-height:16px;">${fmtVal}</div>
+        </div>`;
+      }
       return `<div class="field"><label>${label}${req}</label>
         <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"></div>`;
     }).join('');
@@ -3913,6 +4005,284 @@ async function aaHandlePhotoCapture(event) {
   event.target.value = '';
 }
 
+// ── STAGE 3: AI COACH ─────────────────────────────────────────
+
+async function aaRenderCoachScreen() {
+  const draft = await aaDB.get(aaDraftId);
+  const el    = document.getElementById('aa-coach-body');
+  const btn   = document.getElementById('aa-coach-run-btn');
+  if (!draft || !el) return;
+
+  const email = draft.email || '';
+
+  // Session balance (fetch from BEA if email known, else show email prompt)
+  let balanceHtml = '';
+  if (!email) {
+    balanceHtml = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Enter your email to check coaching sessions</div>
+        <input type="email" id="aa-coach-email" placeholder="you@example.com"
+               style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:'Inter',sans-serif;">
+        <button onclick="aaSaveEmail()" class="aa-btn-primary" style="margin-top:10px;width:100%;">Confirm email</button>
+      </div>`;
+    if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
+  } else {
+    // Show balance from BEA
+    balanceHtml = `<div id="aa-session-badge" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:13px;">
+      <span style="color:var(--text-3);">Checking coaching sessions…</span></div>`;
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    // Async fetch balance
+    setTimeout(() => aaFetchSessionBadge(email), 50);
+  }
+
+  // Listing summary
+  const fields = draft.fields || {};
+  const catCfg = AA_CATEGORIES[draft.category] || {};
+  const summaryRows = (catCfg.fields || [])
+    .filter(f => fields[f.id])
+    .map(f => {
+      let val = fields[f.id];
+      if (f.id === 'price') val = aaFormatPrice(val) || val;
+      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-3);">${f.label.replace(/\s*\(USD\)/, '')}</span>
+        <span style="font-weight:600;text-align:right;max-width:60%;">${val}</span></div>`;
+    }).join('');
+
+  const photoCount = (draft.photos || []).length;
+
+  // Coach output (if already run)
+  const outputHtml = draft.coachOutput
+    ? `<div style="margin-top:16px;">
+        <div class="aa-section-label">AI Coaching Notes — edit before publishing</div>
+        <textarea id="aa-coach-output" style="width:100%;box-sizing:border-box;min-height:180px;padding:12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;line-height:1.6;font-family:'Inter',sans-serif;resize:vertical;">${draft.coachOutput}</textarea>
+        <button onclick="aaSaveCoachEdit()" style="margin-top:8px;background:none;border:1.5px solid var(--border);border-radius:50px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;color:var(--navy);">Save edits</button>
+      </div>`
+    : '';
+
+  el.innerHTML = `
+    ${balanceHtml}
+    <div class="aa-section-label">Listing summary</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:4px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">${catCfg.emoji || '📦'} ${draft.category}</div>
+      ${summaryRows || '<span style="color:var(--text-3);font-size:13px;">No fields saved yet</span>'}
+    </div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">📷 ${photoCount} photo${photoCount!==1?'s':''} captured</div>
+    ${outputHtml}`;
+}
+
+async function aaFetchSessionBadge(email) {
+  const badge = document.getElementById('aa-session-badge');
+  const btn   = document.getElementById('aa-coach-run-btn');
+  if (!badge) return;
+  try {
+    const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    const free    = !data.aa_free_used;
+    const sessions = data.aa_sessions_remaining || 0;
+
+    if (free) {
+      badge.innerHTML = `<span style="color:#16a34a;font-weight:700;">✓ 1 free coaching session included</span>`;
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
+    } else if (sessions > 0) {
+      badge.innerHTML = `<span style="font-weight:700;">${sessions} coaching session${sessions!==1?'s':''} remaining</span>`;
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
+    } else {
+      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:8px;">No coaching sessions remaining</div>
+        <button onclick="aaBuyPack()" class="aa-btn-primary" style="width:100%;">Buy AI Pack — 8 sessions · 1T</button>`;
+      if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
+    }
+  } catch (e) {
+    badge.innerHTML = `<span style="color:var(--text-3);font-size:13px;">Could not check sessions — you can still run the coach</span>`;
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+async function aaSaveEmail() {
+  const input = document.getElementById('aa-coach-email');
+  const email = (input?.value || '').trim();
+  if (!email || !email.includes('@')) { showToast('Enter a valid email'); return; }
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  await aaDB.put({ ...draft, email, updated_at: Date.now() });
+  aaRenderCoachScreen();
+}
+
+async function aaRunCoach() {
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  const email = draft.email || '';
+  if (!email) { showToast('Enter your email first'); return; }
+
+  const btn = document.getElementById('aa-coach-run-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
+
+  const photoSlots = (draft.photos || []).map(p => p.slot);
+
+  try {
+    const res = await fetch(`${BEA_URL}/advert-agent/coach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        category: draft.category,
+        fields: draft.fields || {},
+        photo_slots_completed: photoSlots,
+      }),
+    });
+    if (res.status === 402) {
+      const data = await res.json();
+      showToast(data.detail || 'No sessions remaining');
+      if (btn) { btn.disabled = false; btn.textContent = 'Run AI Coach'; }
+      aaFetchSessionBadge(email);
+      return;
+    }
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const updated = { ...draft, coachOutput: data.coaching, stage: Math.max(draft.stage || 3, 3), updated_at: Date.now() };
+    await aaDB.put(updated);
+    aaRenderCoachScreen();
+  } catch (e) {
+    showToast('AI Coach unavailable — try again');
+    if (btn) { btn.disabled = false; btn.textContent = 'Run AI Coach'; }
+  }
+}
+
+async function aaSaveCoachEdit() {
+  const ta = document.getElementById('aa-coach-output');
+  if (!ta) return;
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  await aaDB.put({ ...draft, coachOutput: ta.value, updated_at: Date.now() });
+  showToast('Notes saved');
+}
+
+function aaBuyPack() {
+  showToast('Tuppence pack purchase — coming soon');
+}
+
+// ── STAGE 4: PUBLISH ──────────────────────────────────────────
+
+async function aaRenderPublishScreen() {
+  const draft = await aaDB.get(aaDraftId);
+  const el    = document.getElementById('aa-publish-body');
+  if (!draft || !el) return;
+
+  const fields  = draft.fields || {};
+  const catCfg  = AA_CATEGORIES[draft.category] || {};
+  const photoCount = (draft.photos || []).length;
+  const email   = draft.email || '';
+
+  const summaryRows = (catCfg.fields || [])
+    .filter(f => fields[f.id] && f.type !== 'textarea')
+    .map(f => {
+      let val = fields[f.id];
+      if (f.id === 'price') val = aaFormatPrice(val) || val;
+      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-3);">${f.label.replace(/\s*\(USD\)/, '')}</span>
+        <span style="font-weight:600;text-align:right;max-width:60%;">${val}</span></div>`;
+    }).join('');
+
+  const descVal = fields.desc ? `<div style="margin-top:10px;font-size:13px;line-height:1.6;color:var(--text-2);">${fields.desc}</div>` : '';
+
+  const coachNote = draft.coachOutput
+    ? `<div style="margin-top:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">AI Coaching Notes</div>
+        <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${draft.coachOutput}</div>
+      </div>` : '';
+
+  const emailSection = `
+    <div style="margin-top:16px;">
+      <div class="aa-section-label">Your email (for claim link)</div>
+      <input type="email" id="aa-pub-email" placeholder="you@example.com" value="${email}"
+             style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:'Inter',sans-serif;">
+    </div>`;
+
+  el.innerHTML = `
+    <div class="aa-section-label">Final review</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:4px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">${catCfg.emoji || '📦'} ${draft.category}</div>
+      ${summaryRows}
+      ${descVal}
+    </div>
+    <div style="font-size:12px;color:var(--text-3);margin:8px 0 4px;">📷 ${photoCount} photo${photoCount!==1?'s':''} ready to upload</div>
+    ${coachNote}
+    ${emailSection}`;
+}
+
+async function aaDoPublish() {
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+
+  const emailInput = document.getElementById('aa-pub-email');
+  const email = (emailInput?.value || draft.email || '').trim();
+  if (!email || !email.includes('@')) { showToast('Enter a valid email to publish'); return; }
+
+  const btn = document.getElementById('aa-publish-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+
+  // Save email to draft
+  await aaDB.put({ ...draft, email, updated_at: Date.now() });
+
+  const fd = new FormData();
+  fd.append('email',        email);
+  fd.append('category',     draft.category);
+  fd.append('fields',       JSON.stringify(draft.fields || {}));
+  fd.append('coach_output', draft.coachOutput || '');
+
+  // Append photos
+  for (const p of (draft.photos || [])) {
+    if (p.blob) {
+      fd.append('photos', p.blob, `${p.slot}.jpg`);
+    }
+  }
+
+  try {
+    const res = await fetch(`${BEA_URL}/advert-agent/publish`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    // Mark draft complete
+    await aaDB.put({ ...draft, email, stage: 4, listing_id: data.listing_id, updated_at: Date.now() });
+    showToast('Listing published! 🎉');
+    goTo('aa-home');
+  } catch (e) {
+    showToast('Publish failed — please try again');
+    if (btn) { btn.disabled = false; btn.textContent = 'Publish Listing'; }
+  }
+}
+
+// ── WALLET: AI Coach Credits ──────────────────────────────────
+
+async function aaLoadWalletSessions() {
+  const el = document.getElementById('tn-coach-sessions');
+  if (!el) return;
+  // Try to get email from any draft in the DB
+  const drafts = await aaDB.getAll();
+  const email  = drafts.find(d => d.email)?.email || '';
+  if (!email) {
+    el.textContent = '—';
+    return;
+  }
+  try {
+    const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    const free    = !data.aa_free_used;
+    const sessions = data.aa_sessions_remaining || 0;
+    if (free) {
+      el.textContent = '1';
+      el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
+        '1 free coaching session included · packs do not expire';
+    } else {
+      el.textContent = sessions;
+    }
+  } catch (e) {
+    el.textContent = '—';
+  }
+}
+
+function aaBuyPackFromWallet() {
+  showToast('Tuppence pack purchase — coming soon');
+}
+
 async function aaSavePhotosAndNext() {
   const draft = await aaDB.get(aaDraftId);
   if (!draft) return;
@@ -3925,8 +4295,7 @@ async function aaSavePhotosAndNext() {
   }
   const updated = { ...draft, stage: Math.max(draft.stage || 2, 3), updated_at: Date.now() };
   await aaDB.put(updated);
-  showToast('Photos saved — AI Coach coming soon');
-  goTo('aa-home');
+  goTo('aa-coach');
 }
 
 </script>

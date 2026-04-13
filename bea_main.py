@@ -96,6 +96,13 @@ def run_migrations(conn):
     if "geo_city_id" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN geo_city_id INTEGER")
 
+    # ── Advert Agent columns on users ───────────────────────────
+    user_cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "aa_free_used" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN aa_free_used INTEGER DEFAULT 0")
+    if "aa_sessions_remaining" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN aa_sessions_remaining INTEGER DEFAULT 0")
+
     conn.commit()
 
 
@@ -355,6 +362,10 @@ if _S3_CONFIGURED:
     _log.info("Hetzner Object Storage configured: %s / %s", HETZNER_S3_ENDPOINT, HETZNER_S3_BUCKET)
 else:
     _log.warning("Object Storage not configured — using local /media fallback")
+
+# Anthropic — Advert Agent AI Coach
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+AA_MODEL = "claude-haiku-4-5-20251001"
 
 # GeoNames username — used in seed_geo_za (ZA dump) and _seed_country_from_geonames (API)
 # Default: dmcontiki2. Override via GEONAMES_USERNAME in /etc/environment.
@@ -1014,3 +1025,195 @@ def migrate_photos(_key: str = Depends(auth.require_api_key)):
             failed += 1
     conn.close()
     return {"migrated": migrated, "failed": failed, "skipped": skipped}
+
+
+# ── ADVERT AGENT ─────────────────────────────────────────────
+
+class AACoachRequest(BaseModel):
+    email: str
+    category: str
+    fields: dict
+    photo_slots_completed: list
+
+
+class AAPublishRequest(BaseModel):
+    email: str
+    category: str
+    fields: dict
+    coach_output: Optional[str] = None
+
+
+@app.get("/advert-agent/status")
+def aa_status(email: str):
+    """Return the seller's free-use flag and coaching sessions remaining."""
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT aa_free_used, aa_sessions_remaining FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return {"aa_free_used": 0, "aa_sessions_remaining": 0, "registered": False}
+    return {
+        "aa_free_used": row["aa_free_used"] or 0,
+        "aa_sessions_remaining": row["aa_sessions_remaining"] or 0,
+        "registered": True,
+    }
+
+
+@app.post("/advert-agent/coach")
+async def aa_coach(req: AACoachRequest):
+    """Gate check + Claude Haiku call + return coaching output."""
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI Coach not configured")
+
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT aa_free_used, aa_sessions_remaining FROM users WHERE email = ?", (req.email,)
+    ).fetchone()
+
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not registered")
+
+    free_used = row["aa_free_used"] or 0
+    sessions  = row["aa_sessions_remaining"] or 0
+
+    if free_used and sessions == 0:
+        conn.close()
+        raise HTTPException(
+            status_code=402,
+            detail="No coaching sessions remaining. Purchase an AI Pack (8 sessions · 1T) to continue."
+        )
+
+    # Build system prompt — Trust Score is hardcoded per A5 governance
+    system_prompt = (
+        "You are the MarketSquare Advert Agent — a listing coach that helps sellers "
+        "write better classified ads. Your job is to review a seller's draft listing "
+        "and return specific, actionable improvements. Be concise. Use bullet points. "
+        "Do not reveal seller identity. Focus on: title clarity, price positioning, "
+        "description completeness, and photo guidance for the category. "
+        "Never fabricate facts about the listing."
+    )
+
+    fields_text = "\n".join(f"  {k}: {v}" for k, v in req.fields.items() if v)
+    user_message = (
+        f"Category: {req.category}\n"
+        f"Listing details:\n{fields_text}\n"
+        f"Photos completed: {', '.join(req.photo_slots_completed) or 'none yet'}\n\n"
+        "Please review this listing and give me specific improvements to make it stronger."
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 1024,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_message}],
+                },
+            )
+        resp.raise_for_status()
+        coaching = resp.json()["content"][0]["text"]
+    except Exception as exc:
+        conn.close()
+        _log.error("AA coach Claude call failed: %s", exc)
+        raise HTTPException(status_code=502, detail="AI Coach unavailable — please try again")
+
+    # Deduct session: free first use or paid pack
+    if not free_used:
+        conn.execute("UPDATE users SET aa_free_used = 1 WHERE email = ?", (req.email,))
+    else:
+        conn.execute(
+            "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining - 1 WHERE email = ?",
+            (req.email,)
+        )
+    conn.commit()
+    conn.close()
+
+    return {"coaching": coaching, "sessions_remaining": max(0, sessions - (0 if not free_used else 1))}
+
+
+@app.post("/advert-agent/buy-pack")
+def aa_buy_pack(email: str):
+    """Credit seller with 8 coaching sessions (called after successful Tuppence payment)."""
+    conn = database.get_db()
+    row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not registered")
+    conn.execute(
+        "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + 8 WHERE email = ?",
+        (email,)
+    )
+    conn.commit()
+    new_bal = conn.execute(
+        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
+    ).fetchone()["aa_sessions_remaining"]
+    conn.close()
+    return {"sessions_remaining": new_bal}
+
+
+@app.post("/advert-agent/publish")
+async def aa_publish(
+    email: str = Form(...),
+    category: str = Form(...),
+    fields: str = Form(...),        # JSON string
+    coach_output: str = Form(""),
+    photos: list[UploadFile] = File(default=[]),
+):
+    """Receive draft + photos, upload to R2, create pending listing, return listing id."""
+    import json as _json
+
+    try:
+        field_data = _json.loads(fields)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid fields JSON")
+
+    title    = field_data.get("title") or field_data.get("item_name", "")
+    price    = field_data.get("price")
+    suburb   = field_data.get("suburb") or field_data.get("area", "")
+    desc     = field_data.get("desc", "")
+
+    if coach_output:
+        desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
+
+    # Upload photos to R2 (or local fallback)
+    thumb_url  = None
+    medium_url = None
+    for idx, photo in enumerate(photos):
+        data = await photo.read()
+        if _S3_CONFIGURED:
+            key = f"aa/{uuid.uuid4().hex}_{photo.filename or f'photo_{idx}.jpg'}"
+            url = _s3_upload(data, key, photo.content_type or "image/jpeg")
+        else:
+            fname = f"aa_{uuid.uuid4().hex}.jpg"
+            local_path = f"/var/www/marketsquare/media/{fname}"
+            try:
+                with open(local_path, "wb") as fh:
+                    fh.write(data)
+                url = f"/media/{fname}"
+            except Exception:
+                url = None
+        if url and idx == 0:
+            thumb_url  = url
+            medium_url = url
+
+    conn = database.get_db()
+    cursor = conn.execute(
+        """INSERT INTO listings
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url)
+           VALUES (?,?,?,?,?,?,?,?,?)""",
+        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url),
+    )
+    listing_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return {"listing_id": listing_id, "pdf_url": None}  # PDF generation added in Stage 4
