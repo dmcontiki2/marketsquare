@@ -1287,8 +1287,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       </div>
       <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Your introduction model</div>
       <div class="ob-model-pills">
-        <div class="ob-model-pill commit"><div class="omp-icon">🏡</div><div class="omp-cat">Property</div><div class="omp-desc">Listing pauses per request. One serious buyer at a time.</div></div>
-        <div class="ob-model-pill queue"><div class="omp-icon">🎓⚙️</div><div class="omp-cat">Tutors &amp; Services</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
+        <div class="ob-model-pill commit" id="omp-commit" onclick="obSelectModel('commit')" style="cursor:pointer;"><div class="omp-icon">🏡</div><div class="omp-cat">Property</div><div class="omp-desc">Listing pauses per request. One serious buyer at a time.</div></div>
+        <div class="ob-model-pill queue" id="omp-queue" onclick="obSelectModel('queue')" style="cursor:pointer;"><div class="omp-icon">🎓⚙️</div><div class="omp-cat">Tutors &amp; Services</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
       </div>
     </div>
     <div class="ob-form">
@@ -1297,8 +1297,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
       <div class="field"><label>Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
       <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="ob-email" placeholder="you@example.com"></div>
-      <div class="field"><label>Your category</label><select id="ob-cat"><option>Property</option><option>Tutors</option><option>Services</option></select></div>
-      <button class="ob-submit" onclick="submitOnboard()">Continue — Build My Profile →</button>
+      <div class="field"><label>Your category</label><select id="ob-cat"><option>Real Estate</option><option>Automotive</option><option>MTG / Collectibles</option><option>Philately</option><option>Services</option><option>Travel &amp; Experiences</option></select></div>
+      <button class="ob-submit" onclick="submitOnboard()">Continue — Start Listing →</button>
       <div style="text-align:center;margin-top:16px;">
         <span style="font-size:13px;color:var(--text-3);">Already have a listing? </span>
         <span style="font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;" onclick="goTo('dashboard')">Go to Dashboard →</span>
@@ -3140,12 +3140,21 @@ function renderMagicBanner(){
 }
 function clearMagic(){magicLink={active:false,name:'',email:'',cat:'',area:''};renderMagicBanner();showToast('Invitation data cleared');}
 
+let obModel = '';
+function obSelectModel(m){
+  obModel = m;
+  document.getElementById('omp-commit').style.outline = m==='commit' ? '2px solid var(--accent)' : '';
+  document.getElementById('omp-queue').style.outline  = m==='queue'  ? '2px solid var(--accent)' : '';
+}
+
 function submitOnboard(){
   const name=document.getElementById('ob-name').value.trim();
   const email=document.getElementById('ob-email').value.trim();
   if(!name||!email){showToast('Please enter your name and email');return;}
-  showToast(`Welcome, ${name}! Building your profile…`);
-  setTimeout(()=>goTo('publish'),800);
+  // Store email so AA screens can pre-fill it
+  sessionStorage.setItem('aa_email', email);
+  showToast(`Welcome, ${name.split(' ')[0]}! Let's build your first listing.`);
+  setTimeout(()=>goTo('aa-home'),800);
 }
 
 // ── DASHBOARD TABS ────────────────────────────────────────
@@ -3906,6 +3915,11 @@ function aaAgeLabel(ts) {
 // ── AA Draft management ───────────────────────────────────────
 function aaNewDraft() {
   aaDraftId = 'aa_' + Date.now();
+  const seedEmail = sessionStorage.getItem('aa_email') || '';
+  if (seedEmail) {
+    // Pre-seed email into the draft record so coach/publish screens don't need to ask
+    aaDB.put({ id: aaDraftId, email: seedEmail, stage: 1, created_at: Date.now(), updated_at: Date.now() });
+  }
   aaRenderDetailScreen(null);
   goTo('aa-detail');
 }

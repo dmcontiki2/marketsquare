@@ -1,96 +1,94 @@
 @echo off
-title MarketSquare · Starting Session...
+title Session Starting — All Projects...
 color 0A
 
 :: ════════════════════════════════════════════════════════════
 ::  start_marketsquare.bat
-::  MarketSquare · Session Startup Script
+::  Session Startup — All 4 Projects
 ::  Place this file on your Desktop
 ::  Double-click to begin any development session
+::
+::  Opens:
+::    - trustsquare.co (buyer app)
+::    - trustsquare.co/admin.html (admin tool)
+::    - trustsquare.co/launch/ (CityLauncher)
+::    - Projects folder in Explorer
+::    - Claude Code at C:\Users\David\Projects (all projects)
+::    - Claude Code at C:\Users\David\Projects\AdvertAgent
 :: ════════════════════════════════════════════════════════════
 
-set PROJECT=C:\Users\David\Projects\MarketSquare
-set CHANGELOG=%PROJECT%\CHANGELOG.md
+set PROJECTS=C:\Users\David\Projects
+set MS=%PROJECTS%\MarketSquare
+set AA=%PROJECTS%\AdvertAgent
+set CL=%PROJECTS%\CityLauncher
+set SS=%PROJECTS%\SellerScraper
 
 echo.
 echo  ============================================================
-echo   MARKETSQUARE  ^|  Session Starting...
+echo   SESSION STARTING  ^|  All Projects
 echo  ============================================================
 echo.
 
-:: ── Step 1: Copy SESSION_START_PROMPT to clipboard ──────────
+:: ── Step 1: Copy session start prompt to clipboard ───────────
 echo  [1/5] Copying session start prompt to clipboard...
-
-if exist "%PROJECT%\SESSION_START_PROMPT.md" (
-    powershell -NoProfile -Command "Get-Content '%PROJECT%\SESSION_START_PROMPT.md' -Raw -Encoding UTF8 | Set-Clipboard; Write-Host '  Done — session start prompt is on your clipboard.'"
+if exist "%MS%\SESSION_START_PROMPT.md" (
+    powershell -NoProfile -Command "Get-Content '%MS%\SESSION_START_PROMPT.md' -Raw -Encoding UTF8 | Set-Clipboard; Write-Host '  Done.'"
 ) else (
-    powershell -NoProfile -Command "Set-Clipboard -Value 'Read STATUS.md first, then AGENT_BRIEFING.md.'; Write-Host '  SESSION_START_PROMPT.md not found — fallback copied.'"
+    powershell -NoProfile -Command "Set-Clipboard -Value 'Read STATUS.md first, then AGENT_BRIEFING.md.'; Write-Host '  Fallback copied.'"
 )
-
 echo.
 
-:: ── Step 2: Open Claude Chat in browser ─────────────────────
-echo  [2/5] Opening Claude Chat...
-start "" "https://claude.ai/new"
-timeout /t 2 /nobreak >nul
-
-:: ── Step 3: Open project folder for file uploads ────────────
-echo  [3/5] Opening project folder...
-explorer "%PROJECT%"
-timeout /t 1 /nobreak >nul
-
-:: ── Step 4: Open live site, admin tool, and CityLauncher dashboard ──
-echo  [4/5] Opening trustsquare.co, admin panel, and CityLauncher...
+:: ── Step 2: Open live sites in browser ───────────────────────
+echo  [2/5] Opening live sites...
 start "" "https://trustsquare.co?v=%random%"
 timeout /t 1 /nobreak >nul
 start "" "https://trustsquare.co/admin.html?v=%random%"
 timeout /t 1 /nobreak >nul
-start "" "https://trustsquare.co/launch/"
+start "" "https://trustsquare.co/launch/?v=%random%"
 timeout /t 1 /nobreak >nul
-
-:: ── Step 5: Launch Claude Code in Windows Terminal (both projects) ──
-echo  [5/5] Launching Claude Code for MarketSquare and CityLauncher...
-wt -d "%PROJECT%" cmd /k "claude"
-timeout /t 2 /nobreak >nul
-wt -d "C:\Users\David\Projects\CityLauncher" cmd /k "claude"
-
 echo.
+
+:: ── Step 3: Open Projects folder in Explorer ─────────────────
+echo  [3/5] Opening Projects folder...
+explorer "%PROJECTS%"
+timeout /t 1 /nobreak >nul
+echo.
+
+:: ── Step 4: Launch Claude Code — root Projects window ────────
+echo  [4/5] Launching Claude Code (Projects root — all 4 projects)...
+wt -d "%PROJECTS%" cmd /k "claude"
+timeout /t 2 /nobreak >nul
+echo.
+
+:: ── Step 5: Launch Claude Code — AdvertAgent window ──────────
+echo  [5/5] Launching Claude Code (AdvertAgent)...
+wt -d "%AA%" cmd /k "claude"
+timeout /t 2 /nobreak >nul
+echo.
+
 echo  ============================================================
 echo   ALL DONE — YOUR SESSION IS READY
 echo  ============================================================
 echo.
-echo  Your clipboard holds the session start prompt — just Ctrl+V + Enter in Claude Code.
+echo  Browser:
+echo    trustsquare.co             buyer app
+echo    trustsquare.co/admin.html  admin tool
+echo    trustsquare.co/launch/     CityLauncher dashboard
 echo.
-echo  In Claude Chat:
-echo    1. Upload CLAUDE.md
-echo    2. Upload AGENT_BRIEFING.md
-echo    3. Upload Solar_Council_Codex_v4_3.docx
-echo    4. Upload STATUS.md
-echo    5. Upload marketsquare.html
-echo    6. Upload marketsquare_admin.html
-echo    7. Upload CHANGELOG.md
-echo    8. Press Ctrl+V to paste session context
-echo    9. Press Enter — Claude is fully briefed
+echo  Claude Code windows:
+echo    C:\Users\David\Projects          (all 4 projects)
+echo    C:\Users\David\Projects\AdvertAgent
 echo.
-echo  Claude Code — paste this to START the session:
-echo  ────────────────────────────────────────────────
-echo   Read SESSION_START_PROMPT.md now.
-echo  ────────────────────────────────────────────────
+echo  Clipboard holds SESSION_START_PROMPT — Ctrl+V in Claude Code.
 echo.
-echo  Claude Code — paste this to END the session:
-echo  ────────────────────────────────────────────────
-echo   Session complete. Now:
-echo   1) Update STATUS.md - move completed tasks to
-echo      Last Completed, write the exact next task.
-echo      Keep it under 60 lines.
-echo   2) Append one paragraph per completed task
-echo      to CHANGELOG.md.
-echo   3) Git commit with message: "Session X complete"
-echo   4) Push to GitHub.
-echo  ────────────────────────────────────────────────
-echo   Or run deploy_marketsquare.bat to deploy all files.
+echo  ── Deploy commands (or use deploy_marketsquare.bat) ────────
 echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
 echo   scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
+echo   scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
+echo   ssh root@178.104.73.239 "systemctl restart marketsquare"
+echo.
+echo  ── AdvertAgent deploy ──────────────────────────────────────
+echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
 echo   scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
 echo   ssh root@178.104.73.239 "systemctl restart marketsquare"
 echo.
