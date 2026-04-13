@@ -39,16 +39,20 @@ echo  [3/5] Opening project folder...
 explorer "%PROJECT%"
 timeout /t 1 /nobreak >nul
 
-:: ── Step 4: Open live site and admin tool ───────────────────
-echo  [4/5] Opening trustsquare.co and admin panel...
+:: ── Step 4: Open live site, admin tool, and CityLauncher dashboard ──
+echo  [4/5] Opening trustsquare.co, admin panel, and CityLauncher...
 start "" "https://trustsquare.co?v=%random%"
 timeout /t 1 /nobreak >nul
 start "" "https://trustsquare.co/admin.html?v=%random%"
 timeout /t 1 /nobreak >nul
+start "" "https://trustsquare.co/launch/"
+timeout /t 1 /nobreak >nul
 
-:: ── Step 5: Launch Claude Code in Windows Terminal ──────────
-echo  [5/5] Launching Claude Code...
+:: ── Step 5: Launch Claude Code in Windows Terminal (both projects) ──
+echo  [5/5] Launching Claude Code for MarketSquare and CityLauncher...
 wt -d "%PROJECT%" cmd /k "claude"
+timeout /t 2 /nobreak >nul
+wt -d "C:\Users\David\Projects\CityLauncher" cmd /k "claude"
 
 echo.
 echo  ============================================================

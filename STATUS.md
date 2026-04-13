@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 5 April 2026
+## Current State · 10 April 2026
 
 | Item | Detail |
 |---|---|
@@ -15,6 +15,7 @@
 | **BEA version** | Live — check GET /health (returns current version) |
 | **Founding sellers** | Live — check trustsquare.co/admin.html or GET /listings?city=Pretoria |
 | **Paystack** | Test mode (live pending CIPC registration) |
+| **Photo storage** | Cloudflare R2 (EU) — `marketsquare-media` bucket, $0 egress |
 
 ---
 
@@ -36,6 +37,7 @@
 1. Fix magic onboarding link (reported not working for Maroushka and Dave)
 2. Paystack live mode — pending CIPC registration
 3. n8n email notifications — buyer emailed on intro accept/decline
+4. (Done in CityLauncher Session 9) Photo storage → Cloudflare R2, admin app fixes
 
 ---
 
@@ -43,6 +45,8 @@
 
 - SSH key: `~/.ssh/id_ed25519` (ed25519, added 6 April 2026)
 - Env vars live in /etc/environment (not /var/www/marketsquare/.env)
+- Photo storage: Cloudflare R2 (EU) via HETZNER_S3_* env vars — endpoint uses `.eu.` for EU jurisdiction
+- DB backups: daily 3 AM cron → R2 `backups/YYYY-MM-DD/`, 14-day retention, script at `/usr/local/bin/backup_dbs_to_r2.py`
 - systemd drop-in: /etc/systemd/system/marketsquare.service.d/env.conf → points to /etc/environment
 - BEA venv: /var/www/marketsquare/venv/ — always use venv pip
 - n8n runs as Docker container — restart with: docker restart n8n
