@@ -733,6 +733,51 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   /* Slightly more padding on screens */
   .screen { padding-bottom: 80px; }
 }
+
+/* ── ADVERT AGENT ───────────────────────────────────────────── */
+.aa-hdr{background:var(--navy);padding:52px 20px 18px;color:#fff;display:flex;flex-direction:column;}
+.aa-hdr-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.aa-hdr h1{font-size:20px;font-weight:800;flex:1;}
+.aa-hdr p{font-size:12px;opacity:.5;font-weight:400;margin-top:0;}
+.aa-stage-pill{font-size:10px;font-weight:700;letter-spacing:.5px;background:rgba(255,255,255,.15);border-radius:50px;padding:4px 10px;font-family:'Inter',sans-serif;white-space:nowrap;}
+.aa-body{padding:16px 16px 24px;}
+.aa-cat-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.aa-cat-chip{padding:8px 14px;border-radius:50px;border:1.5px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--text-2);transition:all var(--t);font-family:'Inter',sans-serif;}
+.aa-cat-chip.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+.aa-section-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;margin-top:20px;}
+.aa-section-label:first-child{margin-top:0;}
+.aa-draft-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:14px;margin-bottom:10px;cursor:pointer;transition:box-shadow var(--t);}
+.aa-draft-card:active{box-shadow:var(--sh-md);}
+.aa-draft-cat{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.aa-draft-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.aa-draft-meta{display:flex;align-items:center;gap:8px;}
+.aa-stage-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.aa-stage-dot.done{background:var(--accent);}
+.aa-stage-dot.active{background:#fbbf24;}
+.aa-stage-dots{display:flex;gap:5px;align-items:center;}
+.aa-draft-age{font-size:11px;color:var(--text-3);margin-left:auto;}
+.aa-photo-slot{background:var(--surface);border-radius:var(--r);border:1.5px dashed var(--border);margin-bottom:10px;display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;transition:border-color var(--t),background var(--t);position:relative;overflow:hidden;}
+.aa-photo-slot.captured{border-style:solid;border-color:var(--accent);background:var(--accent-light);}
+.aa-photo-slot.required-slot::after{content:'Required';position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;}
+.aa-photo-thumb{width:56px;height:56px;border-radius:var(--r-sm);background:var(--surface-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;}
+.aa-photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.aa-photo-info{flex:1;min-width:0;}
+.aa-photo-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.aa-photo-hint{font-size:12px;color:var(--text-3);}
+.aa-photo-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--t);}
+.aa-photo-slot.captured .aa-photo-check{border-color:var(--accent);background:var(--accent);}
+.aa-photo-check svg{width:12px;height:12px;stroke:#fff;stroke-width:2.5;display:none;}
+.aa-photo-slot.captured .aa-photo-check svg{display:block;}
+.aa-empty{text-align:center;padding:40px 20px;color:var(--text-3);}
+.aa-empty-icon{font-size:36px;margin-bottom:12px;}
+.aa-empty p{font-size:14px;line-height:1.6;}
+.aa-progress-bar{height:3px;background:var(--surface-2);border-radius:2px;margin-bottom:16px;overflow:hidden;}
+.aa-progress-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s ease;}
+.aa-footer{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px max(env(safe-area-inset-bottom),12px);display:flex;gap:10px;}
+.aa-btn-primary{flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity var(--t);}
+.aa-btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.aa-btn-secondary{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
+#screen-aa-home,#screen-aa-detail,#screen-aa-photos{padding-bottom:0;}
 </style>
 </head>
 <body>
@@ -1370,7 +1415,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <!-- Listings tab -->
   <div id="dash-panel-listings" class="dash-sec">
     <div id="my-listings" style="margin-top:4px;"></div>
-    <button onclick="goTo('publish')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">+ Add New Listing</button>
+    <button onclick="goTo('aa-home')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">✨ List with AI Coach</button>
+    <button onclick="goTo('publish')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--border);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">+ Quick Add Listing</button>
     <button onclick="goTo('plans')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">View Plans &amp; Upgrade</button>
   </div>
 
@@ -1399,6 +1445,65 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="rec-hdr"><h1>City Deployment</h1><p>Seller recruitment · Pretoria → New York → London → Berlin</p></div>
   <div class="rec-body" id="rec-body"></div>
 </div>
+
+<!-- ── ADVERT AGENT: DRAFT HOME ── -->
+<div id="screen-aa-home" class="screen">
+  <div class="aa-hdr">
+    <div class="aa-hdr-row">
+      <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>Listing Coach</h1>
+    </div>
+    <p>AI-assisted listing creation · Stage your items before publishing</p>
+  </div>
+  <div class="aa-body">
+    <div class="aa-section-label">Your Drafts</div>
+    <div id="aa-draft-list"></div>
+    <button class="aa-btn-primary" style="width:100%;margin-top:8px;" onclick="aaNewDraft()">+ Start New Item</button>
+  </div>
+</div>
+
+<!-- ── ADVERT AGENT: STAGE 1 — ITEM DETAIL ── -->
+<div id="screen-aa-detail" class="screen">
+  <div class="aa-hdr">
+    <div class="aa-hdr-row">
+      <button class="back-btn" onclick="goTo('aa-home')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>Item Detail</h1>
+      <span class="aa-stage-pill">Stage 1 of 4</span>
+    </div>
+    <p>Select a category — the form adapts to your listing type</p>
+  </div>
+  <div class="aa-body">
+    <div class="aa-section-label">Category</div>
+    <div class="aa-cat-chip-row" id="aa-cat-chips"></div>
+    <div id="aa-detail-form"></div>
+  </div>
+  <div class="aa-footer">
+    <button class="aa-btn-secondary" onclick="goTo('aa-home')">Save Draft</button>
+    <button class="aa-btn-primary" id="aa-detail-next" onclick="aaSaveDetailAndNext()">Next: Photos</button>
+  </div>
+</div>
+
+<!-- ── ADVERT AGENT: STAGE 2 — ITEM PHOTOS ── -->
+<div id="screen-aa-photos" class="screen">
+  <div class="aa-hdr">
+    <div class="aa-hdr-row">
+      <button class="back-btn" onclick="goTo('aa-detail')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1>Item Photos</h1>
+      <span class="aa-stage-pill">Stage 2 of 4</span>
+    </div>
+    <p id="aa-photos-subtitle">Capture each shot — required slots must be filled to continue</p>
+  </div>
+  <div class="aa-body">
+    <div class="aa-progress-bar"><div class="aa-progress-fill" id="aa-photo-progress" style="width:0%"></div></div>
+    <div id="aa-photo-slots"></div>
+  </div>
+  <div class="aa-footer">
+    <button class="aa-btn-secondary" onclick="goTo('aa-detail')">Back</button>
+    <button class="aa-btn-primary" id="aa-photos-next" onclick="aaSavePhotosAndNext()" disabled>Save &amp; Continue</button>
+  </div>
+</div>
+<!-- hidden file input for camera capture -->
+<input type="file" id="aa-photo-input" accept="image/*" capture="environment" style="display:none" onchange="aaHandlePhotoCapture(event)">
 
 <!-- BOTTOM NAV -->
 <nav class="bnav">
@@ -1988,6 +2093,7 @@ function goTo(name){
   }
   if(name==='recruit')renderRecruit();
   if(name==='publish'){resetPublish();}
+  if(name==='aa-home')aaRenderHome();
   window.scrollTo(0,0);
 }
 function filterBrowse(cat){
@@ -3378,6 +3484,427 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── ADVERT AGENT ─────────────────────────────────────────────
+
+// Category definitions: fields (Stage 1) + photo slots (Stage 2)
+const AA_CATEGORIES = {
+  'Real Estate': {
+    emoji: '🏠',
+    fields: [
+      {id:'title',     label:'Listing headline',    type:'text',   placeholder:'e.g. Spacious 3-bed family home'},
+      {id:'price',     label:'Asking price (USD)',  type:'number', placeholder:'e.g. 250000'},
+      {id:'bedrooms',  label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
+      {id:'bathrooms', label:'Bathrooms',           type:'number', placeholder:'e.g. 2'},
+      {id:'floor_area',label:'Floor area (m²)',     type:'number', placeholder:'e.g. 140'},
+      {id:'erf_size',  label:'Erf / plot size (m²)',type:'number', placeholder:'e.g. 600'},
+      {id:'suburb',    label:'Suburb',              type:'text',   placeholder:'e.g. Waterkloof Ridge'},
+      {id:'desc',      label:'Description',         type:'textarea',placeholder:'Key features, condition, standout details…'},
+    ],
+    photos: [
+      {slot:'lounge',         label:'Lounge / Living area',  hint:'Wide angle, good light',         required:true},
+      {slot:'kitchen',        label:'Kitchen',               hint:'Show counters and fittings',      required:true},
+      {slot:'master_bed',     label:'Master bedroom',        hint:'Full room, beds made',            required:true},
+      {slot:'bathroom',       label:'Bathroom',              hint:'Each bathroom separately',        required:true},
+      {slot:'exterior_front', label:'Exterior — front',      hint:'Street-facing view',             required:true},
+      {slot:'exterior_rear',  label:'Exterior — rear',       hint:'Back of property',               required:true},
+      {slot:'garden',         label:'Garden / outdoor area', hint:'Lawn, patio, pool if present',   required:false},
+      {slot:'garage',         label:'Garage / parking',      hint:'Interior of garage or carport',  required:false},
+    ],
+  },
+  'Automotive': {
+    emoji: '🚗',
+    fields: [
+      {id:'title',   label:'Listing headline',   type:'text',   placeholder:'e.g. 2019 Toyota Hilux 2.8 GD-6'},
+      {id:'make',    label:'Make',               type:'text',   placeholder:'e.g. Toyota'},
+      {id:'model',   label:'Model',              type:'text',   placeholder:'e.g. Hilux 2.8 GD-6'},
+      {id:'year',    label:'Year',               type:'number', placeholder:'e.g. 2019'},
+      {id:'mileage', label:'Mileage (km)',        type:'number', placeholder:'e.g. 85000'},
+      {id:'price',   label:'Asking price (USD)', type:'number', placeholder:'e.g. 18000'},
+      {id:'suburb',  label:'Location (suburb)',  type:'text',   placeholder:'e.g. Centurion'},
+      {id:'desc',    label:'Description',        type:'textarea',placeholder:'Service history, modifications, condition notes…'},
+    ],
+    photos: [
+      {slot:'front',          label:'Front view',            hint:'Straight-on, daylight',          required:true},
+      {slot:'rear',           label:'Rear view',             hint:'Straight-on, number plate',      required:true},
+      {slot:'driver_side',    label:'Driver side',           hint:'Full side profile',              required:true},
+      {slot:'passenger_side', label:'Passenger side',        hint:'Full side profile',              required:true},
+      {slot:'interior',       label:'Interior / dashboard',  hint:'Steering wheel and dash',        required:true},
+      {slot:'odometer',       label:'Odometer reading',      hint:'Clear close-up of mileage',      required:true},
+      {slot:'engine',         label:'Engine bay',            hint:'Open bonnet, clean shot',        required:false},
+      {slot:'service_book',   label:'Service book',          hint:'Open to last service stamp',     required:false},
+    ],
+  },
+  'MTG / Collectibles': {
+    emoji: '🃏',
+    fields: [
+      {id:'title',     label:'Item name',          type:'text',   placeholder:'e.g. Black Lotus · Alpha · PSA 9'},
+      {id:'edition',   label:'Edition / series',   type:'text',   placeholder:'e.g. Alpha, Beta, Unlimited…'},
+      {id:'condition', label:'Condition grade',    type:'text',   placeholder:'e.g. PSA 9, NM, LP…'},
+      {id:'rarity',    label:'Rarity',             type:'text',   placeholder:'e.g. Mythic Rare, Rare…'},
+      {id:'price',     label:'Asking price (USD)', type:'number', placeholder:'e.g. 500'},
+      {id:'desc',      label:'Description',        type:'textarea',placeholder:'Provenance, defects, grading notes…'},
+    ],
+    photos: [
+      {slot:'card_front',      label:'Card face (front)',      hint:'Full frame, no glare',          required:true},
+      {slot:'card_back',       label:'Card back',              hint:'Full frame, centered',          required:true},
+      {slot:'condition_detail',label:'Condition close-up',     hint:'Corners and surface texture',   required:true},
+      {slot:'grading_label',   label:'Grading label',          hint:'PSA / BGS slab label if graded',required:false},
+    ],
+  },
+  'Philately': {
+    emoji: '📮',
+    fields: [
+      {id:'title',        label:'Item name',          type:'text',   placeholder:'e.g. 1d Cape of Good Hope Triangle 1853'},
+      {id:'year',         label:'Year of issue',      type:'number', placeholder:'e.g. 1853'},
+      {id:'condition',    label:'Condition',          type:'text',   placeholder:'e.g. Fine, VF, Mint…'},
+      {id:'catalogue_ref',label:'Catalogue reference',type:'text',   placeholder:'e.g. SG 1, Scott 1…'},
+      {id:'price',        label:'Asking price (USD)', type:'number', placeholder:'e.g. 1200'},
+      {id:'desc',         label:'Description',        type:'textarea',placeholder:'Gum, perforations, any faults or certificates…'},
+    ],
+    photos: [
+      {slot:'stamp_front',     label:'Stamp front',           hint:'Full frame, flat scan preferred', required:true},
+      {slot:'stamp_back',      label:'Stamp back / gum',      hint:'Show gum condition',             required:true},
+      {slot:'condition_detail',label:'Condition close-up',    hint:'Perforations and margins',       required:true},
+      {slot:'certificate',     label:'Expert certificate',    hint:'If expertised — show full cert', required:false},
+    ],
+  },
+  'Services': {
+    emoji: '🔧',
+    fields: [
+      {id:'title',       label:'Listing headline',   type:'text',   placeholder:'e.g. Licensed electrician · Pretoria'},
+      {id:'service_type',label:'Service type',       type:'text',   placeholder:'e.g. Electrical, Plumbing, Carpentry…'},
+      {id:'area',        label:'Area covered',       type:'text',   placeholder:'e.g. Pretoria East + surrounds'},
+      {id:'rate',        label:'Rate',               type:'text',   placeholder:'e.g. $40/hr or fixed quote'},
+      {id:'experience',  label:'Years of experience',type:'number', placeholder:'e.g. 12'},
+      {id:'desc',        label:'About your service', type:'textarea',placeholder:'What you offer, qualifications, availability…'},
+    ],
+    photos: [
+      {slot:'work_example_1',label:'Work example 1',          hint:'Completed job — best example',   required:true},
+      {slot:'work_example_2',label:'Work example 2',          hint:'Different job type',             required:true},
+      {slot:'qualification', label:'Qualification / licence', hint:'Certificate or ID card',         required:false},
+      {slot:'work_example_3',label:'Work example 3',          hint:'Additional portfolio shot',      required:false},
+    ],
+  },
+  'Travel & Experiences': {
+    emoji: '✈️',
+    fields: [
+      {id:'title',       label:'Experience title',   type:'text',   placeholder:'e.g. 5-day Kruger safari · private guide'},
+      {id:'destination', label:'Destination',        type:'text',   placeholder:'e.g. Kruger National Park, Limpopo'},
+      {id:'duration',    label:'Duration',           type:'text',   placeholder:'e.g. 5 days / 4 nights'},
+      {id:'price',       label:'Price per person (USD)',type:'number',placeholder:'e.g. 800'},
+      {id:'availability',label:'Availability',       type:'text',   placeholder:'e.g. Year-round · min 2 people'},
+      {id:'desc',        label:'What\'s included',   type:'textarea',placeholder:'Itinerary highlights, inclusions, exclusions…'},
+    ],
+    photos: [
+      {slot:'hero',    label:'Hero shot',     hint:'Best photo — sets the scene',        required:true},
+      {slot:'detail_1',label:'Detail shot 1', hint:'Activity or location highlight',     required:true},
+      {slot:'detail_2',label:'Detail shot 2', hint:'Another angle or highlight',         required:true},
+      {slot:'detail_3',label:'Detail shot 3', hint:'Additional scene or inclusions',     required:false},
+    ],
+  },
+};
+
+// ── aaDB: thin IndexedDB wrapper ──────────────────────────────
+const aaDB = (() => {
+  const DB_NAME = 'advertAgentDB';
+  const DB_VER  = 1;
+  const STORE   = 'aa_drafts';
+  let _db = null;
+
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          db.createObjectStore(STORE, {keyPath: 'id'});
+        }
+      };
+      req.onsuccess = e => { _db = e.target.result; res(_db); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  async function getAll() {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx  = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => res(req.result);
+      req.onerror   = () => rej(req.error);
+    });
+  }
+
+  async function get(id) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx  = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get(id);
+      req.onsuccess = () => res(req.result || null);
+      req.onerror   = () => rej(req.error);
+    });
+  }
+
+  async function put(draft) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx  = db.transaction(STORE, 'readwrite');
+      const req = tx.objectStore(STORE).put(draft);
+      req.onsuccess = () => res(req.result);
+      req.onerror   = () => rej(req.error);
+    });
+  }
+
+  async function remove(id) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx  = db.transaction(STORE, 'readwrite');
+      const req = tx.objectStore(STORE).delete(id);
+      req.onsuccess = () => res();
+      req.onerror   = () => rej(req.error);
+    });
+  }
+
+  return {getAll, get, put, remove};
+})();
+
+// ── AA state ──────────────────────────────────────────────────
+let aaDraftId       = null;  // active draft id
+let aaActiveSlot    = null;  // photo slot being captured
+
+// ── AA navigation ─────────────────────────────────────────────
+function aaGoTo(screenSuffix) {
+  goTo('aa-' + screenSuffix);
+}
+
+// ── AA Home: render draft list ────────────────────────────────
+async function aaRenderHome() {
+  const list = await aaDB.getAll();
+  const el   = document.getElementById('aa-draft-list');
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="aa-empty">
+        <div class="aa-empty-icon">📋</div>
+        <p>No drafts yet.<br>Tap <strong>Start New Item</strong> to begin.</p>
+      </div>`;
+    return;
+  }
+  list.sort((a,b) => b.updated_at - a.updated_at);
+  el.innerHTML = list.map(d => {
+    const catCfg  = AA_CATEGORIES[d.category] || {};
+    const emoji   = catCfg.emoji || '📦';
+    const title   = d.fields?.title || d.fields?.item_name || 'Untitled';
+    const stage   = d.stage || 1;
+    const age     = aaAgeLabel(d.updated_at);
+    const dots    = [1,2,3,4].map(s =>
+      `<span class="aa-stage-dot ${s < stage ? 'done' : s === stage ? 'active' : ''}"></span>`
+    ).join('');
+    return `
+      <div class="aa-draft-card" onclick="aaOpenDraft('${d.id}')">
+        <div class="aa-draft-cat">${emoji} ${d.category}</div>
+        <div class="aa-draft-title">${title}</div>
+        <div class="aa-draft-meta">
+          <div class="aa-stage-dots">${dots}</div>
+          <span style="font-size:11px;color:var(--text-3);">Stage ${stage} of 4</span>
+          <span class="aa-draft-age">${age}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function aaAgeLabel(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2)   return 'just now';
+  if (mins < 60)  return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return `${hrs}h ago`;
+  return `${Math.floor(hrs/24)}d ago`;
+}
+
+// ── AA Draft management ───────────────────────────────────────
+function aaNewDraft() {
+  aaDraftId = 'aa_' + Date.now();
+  aaRenderDetailScreen(null);
+  goTo('aa-detail');
+}
+
+async function aaOpenDraft(id) {
+  aaDraftId = id;
+  const draft = await aaDB.get(id);
+  aaRenderDetailScreen(draft);
+  goTo('aa-detail');
+}
+
+// ── Stage 1: Detail screen ────────────────────────────────────
+function aaRenderDetailScreen(draft) {
+  const cats    = Object.keys(AA_CATEGORIES);
+  const current = draft?.category || null;
+
+  // Category chips
+  document.getElementById('aa-cat-chips').innerHTML = cats.map(c =>
+    `<button class="aa-cat-chip ${c === current ? 'selected' : ''}"
+             onclick="aaSelectCategory('${c}')">${AA_CATEGORIES[c].emoji} ${c}</button>`
+  ).join('');
+
+  // Form fields
+  aaRenderDetailForm(current, draft?.fields || {});
+}
+
+function aaSelectCategory(cat) {
+  // Update chip selection
+  document.querySelectorAll('.aa-cat-chip').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent.trim().endsWith(cat) || btn.textContent.includes(cat));
+  });
+  aaRenderDetailForm(cat, {});
+}
+
+function aaRenderDetailForm(category, values) {
+  const el = document.getElementById('aa-detail-form');
+  if (!category) {
+    el.innerHTML = `<p style="color:var(--text-3);font-size:13px;text-align:center;padding:16px 0;">Select a category above to see the form</p>`;
+    document.getElementById('aa-detail-next').disabled = true;
+    return;
+  }
+  const cfg = AA_CATEGORIES[category];
+  if (!cfg) return;
+  document.getElementById('aa-detail-next').disabled = false;
+
+  el.innerHTML = `<div class="aa-section-label">Listing Details</div>` +
+    cfg.fields.map(f => {
+      const val  = values[f.id] || '';
+      const req  = f.id === 'title' || f.id === 'price' ? ' <span style="color:#e11d48">*</span>' : '';
+      if (f.type === 'textarea') {
+        return `<div class="field"><label>${f.label}${req}</label>
+          <textarea id="aaf-${f.id}" placeholder="${f.placeholder}">${val}</textarea></div>`;
+      }
+      return `<div class="field"><label>${f.label}${req}</label>
+        <input type="${f.type}" id="aaf-${f.id}" placeholder="${f.placeholder}" value="${val}"></div>`;
+    }).join('');
+}
+
+function aaGetSelectedCategory() {
+  const selected = document.querySelector('.aa-cat-chip.selected');
+  if (!selected) return null;
+  // Extract category name from chip text (strip emoji prefix)
+  const text = selected.textContent.trim();
+  return Object.keys(AA_CATEGORIES).find(k => text.includes(k)) || null;
+}
+
+async function aaSaveDetailAndNext() {
+  const category = aaGetSelectedCategory();
+  if (!category) { showToast('Please select a category first'); return; }
+
+  const cfg    = AA_CATEGORIES[category];
+  const fields = {};
+  for (const f of cfg.fields) {
+    const el = document.getElementById('aaf-' + f.id);
+    if (el) fields[f.id] = el.value.trim();
+  }
+  if (!fields.title && !fields.item_name) {
+    showToast('Add a title before continuing');
+    return;
+  }
+
+  const now   = Date.now();
+  const draft = await aaDB.get(aaDraftId) || {id: aaDraftId, photos: [], created_at: now};
+  const updated = {
+    ...draft,
+    category,
+    fields,
+    stage:      Math.max(draft.stage || 1, 2),
+    updated_at: now,
+  };
+  await aaDB.put(updated);
+  aaRenderPhotosScreen(updated);
+  goTo('aa-photos');
+}
+
+// ── Stage 2: Photos screen ────────────────────────────────────
+function aaRenderPhotosScreen(draft) {
+  const cfg    = AA_CATEGORIES[draft.category];
+  if (!cfg) return;
+  const photos = draft.photos || [];
+
+  document.getElementById('aa-photos-subtitle').textContent =
+    `${draft.category} · ${cfg.photos.filter(p=>p.required).length} required shots`;
+
+  const captured = new Set(photos.map(p => p.slot));
+  const required = cfg.photos.filter(p => p.required).map(p => p.slot);
+  const allReqDone = required.every(s => captured.has(s));
+
+  const pct = cfg.photos.length ? Math.round(captured.size / cfg.photos.length * 100) : 0;
+  document.getElementById('aa-photo-progress').style.width = pct + '%';
+  document.getElementById('aa-photos-next').disabled = !allReqDone;
+
+  document.getElementById('aa-photo-slots').innerHTML = cfg.photos.map(p => {
+    const done     = captured.has(p.slot);
+    const photoObj = photos.find(x => x.slot === p.slot);
+    const thumbHtml = photoObj?.dataUrl
+      ? `<div class="aa-photo-thumb"><img src="${photoObj.dataUrl}" alt="${p.label}"></div>`
+      : `<div class="aa-photo-thumb">${AA_CATEGORIES[draft.category].emoji}</div>`;
+    return `
+      <div class="aa-photo-slot ${done ? 'captured' : ''} ${p.required ? 'required-slot' : ''}"
+           onclick="aaTriggerCapture('${p.slot}')">
+        ${thumbHtml}
+        <div class="aa-photo-info">
+          <div class="aa-photo-name">${p.label}</div>
+          <div class="aa-photo-hint">${done ? 'Tap to retake' : p.hint}</div>
+        </div>
+        <div class="aa-photo-check">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function aaTriggerCapture(slot) {
+  aaActiveSlot = slot;
+  document.getElementById('aa-photo-input').click();
+}
+
+async function aaHandlePhotoCapture(event) {
+  const file = event.target.files[0];
+  if (!file || !aaDraftId) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    const now     = Date.now();
+    const draft   = await aaDB.get(aaDraftId);
+    if (!draft) return;
+
+    // Upsert photo for this slot (replace if re-captured)
+    const photos = (draft.photos || []).filter(p => p.slot !== aaActiveSlot);
+    photos.push({ slot: aaActiveSlot, dataUrl });
+
+    const updated = { ...draft, photos, stage: Math.max(draft.stage || 2, 2), updated_at: now };
+    await aaDB.put(updated);
+    aaRenderPhotosScreen(updated);
+    showToast('Photo saved');
+  };
+  reader.readAsDataURL(file);
+  // Reset input so same file can be re-selected
+  event.target.value = '';
+}
+
+async function aaSavePhotosAndNext() {
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  const cfg      = AA_CATEGORIES[draft.category];
+  const captured = new Set((draft.photos || []).map(p => p.slot));
+  const missing  = cfg.photos.filter(p => p.required && !captured.has(p.slot));
+  if (missing.length) {
+    showToast(`Still need: ${missing.map(m=>m.label).join(', ')}`);
+    return;
+  }
+  const updated = { ...draft, stage: Math.max(draft.stage || 2, 3), updated_at: Date.now() };
+  await aaDB.put(updated);
+  showToast('Photos saved — AI Coach coming soon');
+  goTo('aa-home');
 }
 
 </script>
