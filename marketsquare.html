@@ -1326,7 +1326,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
       <div class="field"><label>Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
       <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="ob-email" placeholder="you@example.com"></div>
-      <div class="field"><label>Your category</label><select id="ob-cat"><option>Real Estate</option><option>Automotive</option><option>MTG / Collectibles</option><option>Philately</option><option>Services</option><option>Travel &amp; Experiences</option></select></div>
+      <div class="field"><label>Your category</label><select id="ob-cat"><option>Property</option><option>Tutors</option><option>Services</option></select></div>
       <button class="ob-submit" onclick="submitOnboard()">Continue — Start Listing →</button>
       <div style="text-align:center;margin-top:16px;">
         <span style="font-size:13px;color:var(--text-3);">Already have a listing? </span>
@@ -3258,7 +3258,7 @@ function submitOnboard(){
     ...SELLERS[0],
     headline: biz || `${cat} seller`,
     about: '',
-    cat: cat === 'Real Estate' ? 'Property' : cat,
+    cat: cat,
     _name: name, _email: email, _biz: biz,
     yearsExp: '',
     region: '',
@@ -4656,8 +4656,8 @@ async function aaDoPublish() {
 // ── AA FLOW EXPLAINER ─────────────────────────────────────────
 
 const AA_FLOWS = {
-  'Real Estate': {
-    emoji: '🏠',
+  'Property': {
+    emoji: '🏡',
     heading: 'Your property listing, AI-improved',
     steps: [
       { n:'1', col:'c-blue',  title:'Fill in property details',
@@ -4670,79 +4670,81 @@ const AA_FLOWS = {
         sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
     ],
   },
-  'Automotive': {
-    emoji: '🚗',
-    heading: 'Your vehicle listing, AI-improved',
+  'Tutors': {
+    emoji: '🎓',
+    heading: 'Your tutoring listing, AI-improved',
     steps: [
-      { n:'1', col:'c-blue',  title:'Fill in vehicle details',
-        sub:'Make · model · year · mileage (km) · price · location suburb' },
-      { n:'2', col:'c-blue',  title:'Capture 6 required photos',
-        sub:'Front · rear · driver side · passenger side · interior/dash · odometer close-up' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks completeness · pricing vs market & buyer appeal · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'MTG / Collectibles': {
-    emoji: '🃏',
-    heading: 'Your collectible listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in item details',
-        sub:'Card name · edition / series · condition grade · rarity · asking price' },
-      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
-        sub:'Card face (front) · card back · condition close-up (corners & surface texture)' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks grading notes · market pricing & provenance description · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'Philately': {
-    emoji: '📮',
-    heading: 'Your stamp listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in stamp details',
-        sub:'Item name · year of issue · condition · catalogue reference (SG / Scott) · price' },
-      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
-        sub:'Stamp front · stamp back / gum · condition close-up (perforations & margins)' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks catalogue accuracy · condition language & pricing · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'Services': {
-    emoji: '🔧',
-    heading: 'Your services listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in service details',
-        sub:'Service type · area covered · hourly rate or fixed quote · years of experience' },
+      { n:'1', col:'c-blue',  title:'Fill in tutor details',
+        sub:'Subject(s) · level · mode (in-person / online / both) · rate · area covered' },
       { n:'2', col:'c-blue',  title:'Capture 2 required photos',
-        sub:'Work example 1 · work example 2 · qualification / licence (optional)' },
+        sub:'Profile headshot · teaching example (whiteboard, notes or workspace)' },
       { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks clarity · pricing competitiveness & trust factors · uses 1 session' },
+        sub:'Checks clarity · positioning vs other tutors & trust-building language · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · students can browse and request an introduction' },
+    ],
+  },
+  'Services · Technical': {
+    emoji: '🔧',
+    heading: 'Your Technical Services listing, AI-improved',
+    steps: [
+      { n:'1', col:'c-blue',  title:'Select Technical, then fill in details',
+        sub:'Service type · area covered · rate · years of experience · registered / accredited' },
+      { n:'2', col:'c-blue',  title:'Capture 2 required photos',
+        sub:'Work example 1 · work example 2 · qualification / certificate (optional)' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks credential clarity · pricing competitiveness & trust factors · uses 1 session' },
       { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
         sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
     ],
   },
-  'Travel & Experiences': {
-    emoji: '✈️',
-    heading: 'Your experience listing, AI-improved',
+  'Services · Casuals': {
+    emoji: '🤝',
+    heading: 'Your Casuals listing, AI-improved',
+    steps: [
+      { n:'1', col:'c-blue',  title:'Select Casuals, then fill in details',
+        sub:'Service type · availability · rate · days available · area · references available' },
+      { n:'2', col:'c-blue',  title:'Add optional photos',
+        sub:'Work example (optional) · reference letter (optional) — no required shots' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks approachability · reliability signals & clear description · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
+    ],
+  },
+  'Adventures': {
+    emoji: '🧭',
+    heading: 'Your adventure package listing, AI-improved',
+    phase: 2,
     steps: [
       { n:'1', col:'c-blue',  title:'Fill in experience details',
-        sub:'Title · destination · duration · price per person · availability windows' },
+        sub:'Title · destination · duration · group size · price per person · difficulty level' },
       { n:'2', col:'c-blue',  title:'Capture 3 required photos',
-        sub:'Hero shot (sets the scene) · detail shot 1 · detail shot 2' },
+        sub:'Hero shot (sets the scene) · experience shot 1 · experience shot 2' },
       { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks appeal · inclusions clarity · pricing & availability language · uses 1 session' },
+        sub:'Checks appeal · inclusions clarity · safety language & pricing · uses 1 session' },
       { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
+        sub:'Listing goes live as a pending draft · adventurers can browse and request an introduction' },
+    ],
+  },
+  'Collectors': {
+    emoji: '🏆',
+    heading: 'Your collector's item listing, AI-improved',
+    phase: 2,
+    steps: [
+      { n:'1', col:'c-blue',  title:'Fill in item details',
+        sub:'Collection type · item name · condition · catalogue reference · edition / year · price' },
+      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
+        sub:'Front / face · back · condition close-up (corners, margins or surface detail)' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks grading accuracy · catalogue language & provenance notes · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · collectors can browse and request an introduction' },
     ],
   },
 };
 
-let aaFlowActiveCat = 'Real Estate';
+let aaFlowActiveCat = 'Property';
 
 function aaShowFlowSheet(cat) {
   aaFlowActiveCat = cat || aaFlowActiveCat;
