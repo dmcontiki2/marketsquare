@@ -95,6 +95,8 @@ def run_migrations(conn):
     listing_cols = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
     if "geo_city_id" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN geo_city_id INTEGER")
+    if "service_class" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN service_class TEXT")
 
     # ── Advert Agent columns on users ───────────────────────────
     user_cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
@@ -424,7 +426,8 @@ class Listing(BaseModel):
     subject: Optional[str] = None
     level: Optional[str] = None
     mode: Optional[str] = None
-    # Services / Help Wanted fields
+    # Services fields
+    service_class: Optional[str] = None   # 'Technical' | 'Casuals'
     service_type: Optional[str] = None
     availability: Optional[str] = None
 
@@ -475,10 +478,11 @@ def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url)
-           VALUES (?,?,?,?,?,?,?,?,?)""",
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class)
+           VALUES (?,?,?,?,?,?,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
-         listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url)
+         listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
+         listing.service_class)
     )
     conn.commit()
     new_id = cursor.lastrowid
@@ -1090,9 +1094,23 @@ async def aa_coach(req: AACoachRequest):
         "You are the MarketSquare Advert Agent — a listing coach that helps sellers "
         "write better classified ads. Your job is to review a seller's draft listing "
         "and return specific, actionable improvements. Be concise. Use bullet points. "
-        "Do not reveal seller identity. Focus on: title clarity, price positioning, "
-        "description completeness, and photo guidance for the category. "
-        "Never fabricate facts about the listing."
+        "Focus on: title clarity, price positioning, description completeness, and "
+        "photo guidance for the category. Never fabricate facts about the listing.\n\n"
+        "ANONYMITY RULES — confirm these in every response:\n"
+        "1. The listing title and description must never contain the seller's name or "
+        "business name. The seller's identity is only revealed after both parties accept "
+        "a mutual introduction request.\n"
+        "2. Phone numbers and email addresses in listing descriptions are ALLOWED — "
+        "the MarketSquare platform automatically masks them with a blur and a lock icon "
+        "until introduction is accepted. Do NOT ask the seller to remove contact details.\n"
+        "3. The seller profile (About, credentials) should describe qualifications, "
+        "years of experience, and work history — no personal name or business name.\n"
+        "4. Credential certificate photos (e.g. Red Seal, COC, trade licences) are "
+        "blurred to buyers until introduction is accepted.\n"
+        "5. If the listing contains the seller's actual name or business name, flag it "
+        "with: '⚠️ NAME FOUND — remove before publishing: [item]'.\n"
+        "6. End every response with: '✓ Anonymity check passed.' or "
+        "'⚠️ Name/business identifier found — see above.'"
     )
 
     fields_text = "\n".join(f"  {k}: {v}" for k, v in req.fields.items() if v)
@@ -1176,10 +1194,11 @@ async def aa_publish(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid fields JSON")
 
-    title    = field_data.get("title") or field_data.get("item_name", "")
-    price    = field_data.get("price")
-    suburb   = field_data.get("suburb") or field_data.get("area", "")
-    desc     = field_data.get("desc", "")
+    title         = field_data.get("title") or field_data.get("item_name", "")
+    price         = field_data.get("price") or field_data.get("rate")
+    suburb        = field_data.get("suburb") or field_data.get("area", "")
+    desc          = field_data.get("desc", "")
+    service_class = field_data.get("service_class") or None
 
     if coach_output:
         desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
@@ -1208,9 +1227,9 @@ async def aa_publish(
     conn = database.get_db()
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url)
-           VALUES (?,?,?,?,?,?,?,?,?)""",
-        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url),
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class)
+           VALUES (?,?,?,?,?,?,?,?,?,?)""",
+        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url, service_class),
     )
     listing_id = cursor.lastrowid
     conn.commit()

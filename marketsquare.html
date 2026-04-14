@@ -650,6 +650,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .cv-edit-field input:focus,.cv-edit-field textarea:focus{border-color:var(--accent);}
 .cv-edit-field textarea{height:88px;resize:none;}
 .cv-edit-hint{font-size:11px;color:var(--text-3);margin-top:3px;font-weight:400;}
+.cred-photo-wrap{position:relative;margin-top:8px;border-radius:6px;overflow:hidden;max-width:180px;}
+.cred-photo-blurred{width:100%;border-radius:6px;filter:blur(10px);transform:scale(1.05);display:block;}
+.cred-photo-revealed{width:100%;border-radius:6px;display:block;}
+.cred-photo-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.45);}
+.cred-photo-lock-text{font-size:10px;font-weight:700;color:#fff;text-align:center;margin-top:3px;letter-spacing:.3px;}
+.cred-upload-row{margin-top:8px;}
+.cred-upload-label{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px dashed var(--border);border-radius:6px;font-size:11px;color:var(--text-2);cursor:pointer;font-weight:500;background:var(--surface-2);}
+.cred-upload-label:hover{border-color:var(--accent);color:var(--accent);}
+.cred-upload-label input[type=file]{display:none;}
+.contact-masked{display:inline-flex;align-items:center;gap:4px;background:#fef9c3;border:1px solid #fbbf24;border-radius:4px;padding:1px 7px;font-size:12px;font-weight:600;color:#78350f;cursor:default;white-space:nowrap;}
+.contact-masked svg{width:11px;height:11px;flex-shrink:0;}
 .cv-cred-edit-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 .cv-cred-edit-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
 .cv-cred-edit-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:10px;}
@@ -1103,6 +1114,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="fs-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
+      <div class="fs-label">Class</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-class')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-class')">Technical</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-class')">Casuals</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
       <div class="fs-label">Max Rate</div>
       <div class="fs-range">
         <input type="number" id="fv-max" placeholder="Max R/hr or R/mo">
@@ -1114,12 +1134,18 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="fs-options">
         <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Any</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Electrical</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Financial</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Plumbing</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">HVAC</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Solar</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">IT & Tech</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Legal</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Garden & Outdoor</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Cleaning</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Financial</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Landscaping</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Domestic</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Gardening</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Dog Walking</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">Child Minding</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fv-type')">General Labour</div>
       </div>
     </div>
 
@@ -1235,12 +1261,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>1 active listing</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller CV page</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility (Pretoria)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility (<span id="plans-home-city">your city</span>)</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing active for 60 days</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No search alerts</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No country-wide visibility</div>
       </div>
-      <button class="plan-btn secondary" onclick="showToast('You are on the Free plan')">Current plan</button>
+      <button class="plan-btn secondary" onclick="showToast('You are on the Free plan — local city only')">Current plan</button>
     </div>
     <div class="plan-card recommended">
       <div class="plan-rec-badge">Most popular</div>
@@ -1254,7 +1280,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in city search</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No international visibility</div>
       </div>
-      <button class="plan-btn accent" onclick="showToast('Upgrade — BEA integration coming')">Upgrade to Standard</button>
+      <button class="plan-btn accent" onclick="setPlan('starter','Standard')">Upgrade to Standard</button>
     </div>
     <div class="plan-card">
       <div class="plan-name">International</div><div class="plan-price">$15<span class="plan-period"> / month</span></div>
@@ -1266,7 +1292,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>High-value multi-buyer pool (Phase 2)</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing active 365 days</div>
       </div>
-      <button class="plan-btn primary" onclick="showToast('Upgrade — BEA integration coming')">Upgrade to International</button>
+      <button class="plan-btn primary" onclick="setPlan('premium','International')">Upgrade to International</button>
     </div>
     <div style="text-align:center;font-size:12px;color:var(--text-3);padding:8px 0 16px;line-height:1.6;font-weight:400;">All prices exclude VAT. Tuppence intro fees apply on all plans.<br>No commission taken by MarketSquare. Introductions only.</div>
   </div>
@@ -1826,9 +1852,9 @@ function updateBadgeLabel() {
 // Converts raw BEA category strings to exact CATS keys.
 function normCat(raw) {
   const s = (raw || '').toLowerCase().trim();
-  if (s === 'property')                return 'Property';
+  if (s === 'property' || s === 'real estate' || s === 'estate agents') return 'Property';
   if (s === 'tutors' || s === 'tutor') return 'Tutors';
-  if (s === 'services' || s === 'service') return 'Services';
+  if (s === 'services' || s === 'service' || s === 'technical services' || s === 'technical' || s === 'casuals' || s === 'casual') return 'Services';
   return 'Services';
 }
 
@@ -2158,6 +2184,14 @@ window.addEventListener('DOMContentLoaded',()=>{
     if (storedPhoto) SELLER_PHOTOS[0] = storedPhoto;
   } catch(_){}
 
+  // ── RESTORE USER CITY + SUBSCRIPTION TIER ──────────────────
+  try {
+    const storedCity = localStorage.getItem('ms_user_city');
+    if (storedCity) activeCity = { id: null, name: storedCity };
+    const storedTier = localStorage.getItem('ms_buyer_tier');
+    if (storedTier) buyerTier = storedTier;
+  } catch(_){}
+
   // Badge: Free tier no longer fully locked — opens suburb selector
   updateBadgeLabel();
 
@@ -2250,12 +2284,24 @@ function goTo(name){
   }
   if(name==='recruit')renderRecruit();
   if(name==='publish'){resetPublish();}
+  if(name==='plans'){
+    const el=document.getElementById('plans-home-city');
+    if(el) el.textContent=localStorage.getItem('ms_user_city')||activeCity.name||'your city';
+  }
   if(name==='aa-home')aaRenderHome();
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
   if(name==='tuppence')aaLoadWalletSessions();
   window.scrollTo(0,0);
 }
+function setPlan(tier, label){
+  // Stub: sets tier locally until Paystack is wired. Real payment gates this in production.
+  buyerTier = tier;
+  try { localStorage.setItem('ms_buyer_tier', tier); } catch(_){}
+  showToast(`${label} plan active — ${tier==='starter'?'nationwide':'international'} browsing unlocked`);
+  goTo('dashboard');
+}
+
 function filterBrowse(cat){
   activeFilter=cat; goTo('browse');
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
@@ -2270,7 +2316,7 @@ function filterBrowse(cat){
 const filterState = {
   property: { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'', listingType:'', furnished:'', pets:'', features:[] },
   tutors:   { maxRate:'', subject:'', level:'', mode:'', area:'' },
-  services: { maxRate:'', serviceType:'', availability:'', area:'' },
+  services: { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' },
 };
 
 function setFilter(el, cat){
@@ -2395,10 +2441,11 @@ function applyFilters(cat){
     filterState.tutors.mode     = getSelOptInSection('Mode','fs-tutors');
     filterState.tutors.area     = getSelOptInSection('Area','fs-tutors');
   } else if(cat==='services'){
-    filterState.services.maxRate      = document.getElementById('fv-max')?.value || '';
-    filterState.services.serviceType  = getSelOptInSection('Service Type','fs-services');
-    filterState.services.availability = getSelOptInSection('Availability','fs-services');
-    filterState.services.area         = getSelOptInSection('Area','fs-services');
+    filterState.services.maxRate       = document.getElementById('fv-max')?.value || '';
+    filterState.services.serviceClass  = getSelOptInSection('Class','fs-services');
+    filterState.services.serviceType   = getSelOptInSection('Service Type','fs-services');
+    filterState.services.availability  = getSelOptInSection('Availability','fs-services');
+    filterState.services.area          = getSelOptInSection('Area','fs-services');
   }
   document.getElementById('fs-'+cat).classList.remove('open');
   renderActiveFilterTags();
@@ -2415,7 +2462,7 @@ function clearFilters(cat){
     const el=document.getElementById('ft-max'); if(el)el.value='';
     document.querySelectorAll('#fs-tutors .fs-opt').forEach(o=>o.classList.remove('sel'));
   } else if(cat==='services'){
-    filterState.services = { maxRate:'', serviceType:'', availability:'', area:'' };
+    filterState.services = { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' };
     const el=document.getElementById('fv-max'); if(el)el.value='';
     document.querySelectorAll('#fs-services .fs-opt').forEach(o=>o.classList.remove('sel'));
   }
@@ -2449,6 +2496,7 @@ function renderActiveFilterTags(){
     if(fs.mode)     tags.push(`💻 ${fs.mode}`);
     if(fs.area)     tags.push(`📍 ${fs.area}`);
   } else if(cat==='services'){
+    if(fs.serviceClass) tags.push(fs.serviceClass==='Technical'?'🔧 Technical':'🤝 Casuals');
     if(fs.maxRate)      tags.push(`💰 Max R${fs.maxRate}`);
     if(fs.serviceType)  tags.push(`⚙️ ${fs.serviceType}`);
     if(fs.availability) tags.push(`📅 ${fs.availability}`);
@@ -2799,6 +2847,7 @@ function renderGrid(){
     if(l.cat==='Services'){
       const fv = filterState.services;
       if(fv.maxRate && l.priceNum > parseInt(fv.maxRate)) return false;
+      if(fv.serviceClass && fv.serviceClass!=='' && l.service_class !== fv.serviceClass) return false;
       if(fv.serviceType && fv.serviceType!=='' && l.serviceType !== fv.serviceType) return false;
       if(fv.availability && fv.availability!=='' && l.availability !== fv.availability) return false;
       if(fv.area && fv.area!=='' && l.suburb !== fv.area) return false;
@@ -2860,6 +2909,7 @@ function cardHtml(l){
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
       <div class="model-badge ${m}">${m==='commit'?'⏳ Commit':'👥 Queue'}</div>
+      ${l.cat==='Services'&&l.service_class?`<div class="model-badge queue" style="bottom:24px;">${l.service_class==='Technical'?'🔧 Technical':'🤝 Casuals'}</div>`:''}
       ${!l.paused?`<button class="wish-btn ${sv?'saved':''}" onclick="toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${sv?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>`:''}
     </div>
     <div class="cbody">
@@ -2920,10 +2970,11 @@ function renderSaved(){
 // isOwner: true = seller viewing their own (sharp)
 // isRevealed: true = intro accepted (sharp)
 function cvAvatarHtml(sellerIdx, listingId, isOwner){
-  const photo = SELLER_PHOTOS[sellerIdx];
-  const key = `${sellerIdx}-${listingId}`;
+  const idx = (sellerIdx == null) ? 0 : sellerIdx;
+  const photo = SELLER_PHOTOS[idx];
+  const key = `${idx}-${listingId}`;
   const isRevealed = isOwner || acceptedIntros.has(key);
-  const s = SELLERS[sellerIdx];
+  const s = SELLERS[idx];
 
   if(!photo){
     // No photo — emoji fallback with lock badge
@@ -2938,19 +2989,42 @@ function cvAvatarHtml(sellerIdx, listingId, isOwner){
 }
 
 
+function maskContactInfo(html, introAccepted){
+  if(introAccepted) return html;
+  // SA phone numbers: 0xx-xxx-xxxx, +27xx, 0xxxxxxxxx, spaces/dashes allowed
+  const phoneRe = /(\+27|0)[0-9][\s\-\.]?[0-9]{3}[\s\-\.]?[0-9]{4}/g;
+  // Email addresses
+  const emailRe = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+  return html
+    .replace(phoneRe, `<span class="contact-masked">${lockIcon}📞 Revealed after introduction</span>`)
+    .replace(emailRe, `<span class="contact-masked">${lockIcon}✉️ Revealed after introduction</span>`);
+}
+
+function credPhotoHtml(c, introAccepted){
+  if(!c.photo) return '';
+  if(introAccepted){
+    return `<div class="cred-photo-wrap"><img src="${c.photo}" class="cred-photo-revealed"></div>`;
+  }
+  return `<div class="cred-photo-wrap"><img src="${c.photo}" class="cred-photo-blurred"><div class="cred-photo-lock"><div style="font-size:18px;">🔒</div><div class="cred-photo-lock-text">Certificate revealed<br>after introduction</div></div></div>`;
+}
+
 function openSellerCV(sellerIdx,listingId){
-  const s=SELLERS[sellerIdx],l=findListing(listingId),t=trustTier(l.trust);
+  const idx = (sellerIdx == null) ? 0 : sellerIdx;
+  const s=SELLERS[idx],l=findListing(listingId),t=trustTier(l.trust);
+  const introAccepted = acceptedIntros.has(`${idx}-${listingId}`);
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
   const portfolioHtml=s.portfolio&&s.portfolio.length>0
     ?s.portfolio.map(p=>`<div class="cv-port-img"><img src="${p}" loading="lazy" onerror="this.style.display='none'"></div>`).join('')
     :`<div class="cv-port-img">🏠</div><div class="cv-port-img">🔧</div><div class="cv-port-img">📐</div>`;
+  const regionLabel = s.region || 'Pretoria and surrounds';
   document.getElementById('screen-seller-cv').innerHTML=`
     <div class="cv-hero">
       <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;">${cvAvatarHtml(sellerIdx, listingId, false)}</div>
+      <div class="cv-avatar" style="margin-top:8px;">${cvAvatarHtml(idx, listingId, false)}</div>
       <div class="cv-headline">${s.headline}</div>
-      <div class="cv-cat">${s.cat} · Pretoria · Anonymous until introduction accepted</div>
+      <div class="cv-cat">${s.cat} · ${regionLabel} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
         <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
@@ -2958,13 +3032,21 @@ function openSellerCV(sellerIdx,listingId){
       </div>
     </div>
     <div class="cv-body">
-      <div class="cv-sec"><div class="cv-sec-title">About this seller</div><p class="cv-about">${s.about}</p></div>
-      <div class="cv-sec"><div class="cv-sec-title">Track record</div><div class="cv-stats">${s.stats.map(st=>`<div class="cv-stat"><div class="cv-stat-val">${st.val}</div><div class="cv-stat-label">${st.label}</div></div>`).join('')}</div></div>
-      <div class="cv-sec"><div class="cv-sec-title">Credentials &amp; qualifications</div><div class="cv-creds">${s.creds.map(c=>`<div class="cv-cred"><div class="cv-cred-dot">${c.icon}</div><div><div class="cv-cred-label">${c.label}</div><div class="cv-cred-sub">${c.sub}</div></div></div>`).join('')}</div></div>
-      <div class="cv-sec"><div class="cv-sec-title">Specialisations</div><div class="cv-tags">${s.tags.map(tag=>`<div class="cv-tag">${tag}</div>`).join('')}</div></div>
-      <div class="cv-sec"><div class="cv-sec-title">Availability</div><div class="cv-avail">${s.avail.map(a=>`<div class="cv-avail-row"><div class="cv-avail-dot"></div><div class="cv-avail-day">${a.day}</div><div class="cv-avail-time">${a.time}</div></div>`).join('')}</div></div>
+      <div class="cv-sec">
+        <div class="cv-sec-title">Experience &amp; background</div>
+        <p class="cv-about">${s.about||'This seller has not yet added a background description.'}</p>
+        ${s.yearsExp?`<div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:700;color:var(--accent);">⏱ ${s.yearsExp} years experience</div>`:''}
+      </div>
+      <div class="cv-sec"><div class="cv-sec-title">Track record</div><div class="cv-stats">${s.stats&&s.stats.length?s.stats.map(st=>`<div class="cv-stat"><div class="cv-stat-val">${st.val}</div><div class="cv-stat-label">${st.label}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text-3);">Track record will build over time on MarketSquare.</div>'}</div></div>
+      <div class="cv-sec">
+        <div class="cv-sec-title">Credentials &amp; qualifications</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Certificate photos are blurred — revealed only after introduction is accepted.</div>
+        <div class="cv-creds">${s.creds&&s.creds.length?s.creds.map(c=>`<div class="cv-cred"><div class="cv-cred-dot">${c.icon}</div><div style="flex:1;"><div class="cv-cred-label">${c.label}</div><div class="cv-cred-sub">${c.sub}</div>${credPhotoHtml(c,introAccepted)}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text-3);">No credentials added yet.</div>'}</div>
+      </div>
+      ${s.tags&&s.tags.length?`<div class="cv-sec"><div class="cv-sec-title">Specialisations</div><div class="cv-tags">${s.tags.map(tag=>`<div class="cv-tag">${tag}</div>`).join('')}</div></div>`:''}
+      ${s.avail&&s.avail.length?`<div class="cv-sec"><div class="cv-sec-title">Availability</div><div class="cv-avail">${s.avail.map(a=>`<div class="cv-avail-row"><div class="cv-avail-dot"></div><div class="cv-avail-day">${a.day}</div><div class="cv-avail-time">${a.time}</div></div>`).join('')}</div></div>`:''}
       ${s.cat==='Property'?`<div class="cv-sec"><div class="cv-sec-title">Portfolio</div><div class="cv-portfolio">${portfolioHtml}</div><div style="font-size:11px;color:var(--text-3);margin-top:8px;font-weight:400;">Representative properties — specific addresses revealed after introduction.</div></div>`:''}
-      <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected</h4><p>This seller's name, business name, contact details and specific location are revealed only after both parties accept a mutual introduction.</p></div></div></div>
+      <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>This seller's name, business name, contact details and exact location are only revealed after both parties accept a mutual introduction. Certificate photos are also unlocked at that point.</p></div></div></div>
     </div>
     <div class="cv-sticky">
       <button class="cv-cta" onclick="openModal('${listingId}')">
@@ -2983,6 +3065,8 @@ function openDetail(id){
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
   const t=trustTier(l.trust),m=CATS[l.cat].model,isCommit=m==='commit';
+  const _introKey = `${l.sellerIdx==null?0:l.sellerIdx}-${l.id}`;
+  const _introAccepted = acceptedIntros.has(_introKey);
 
   // Build photo strip — supports 1..N photos with dot indicators
   const photos = (l.photos && l.photos.length) ? l.photos : (l.photo ? [l.photo] : []);
@@ -3052,9 +3136,9 @@ function openDetail(id){
           ${l.price?`<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`:`<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
-      <div class="dsec"><h3>About this listing</h3>${formatDesc(l.desc)}</div>
+      <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
-        <button onclick="openSellerCV(${l.sellerIdx},${id})" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
+        <button onclick="openSellerCV(${l.sellerIdx},'${id}')" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
           <div style="width:40px;height:40px;border-radius:50%;background:${CATS[l.cat].bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${CATS[l.cat].icon}</div>
           <div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
@@ -3166,16 +3250,22 @@ function submitOnboard(){
   if(!name||!email){showToast('Please enter your name and email');return;}
   // Store email so AA screens can pre-fill it
   sessionStorage.setItem('aa_email', email);
+  // Store home city — used to restore activeCity on next page load
+  const _homeCity = magicLink.active ? magicLink.area : activeCity.name;
+  localStorage.setItem('ms_user_city', _homeCity);
   // Seed seller profile with onboard data and persist
   const profile = {
     ...SELLERS[0],
     headline: biz || `${cat} seller`,
-    about: `Registered seller: ${name}`,
+    about: '',
     cat: cat === 'Real Estate' ? 'Property' : cat,
     _name: name, _email: email, _biz: biz,
+    yearsExp: '',
+    region: '',
     stats: [{val:'0',label:'Listings'},{val:'New',label:'Trust Score'},{val:'0',label:'Introductions'},{val:'Free',label:'Plan'}],
-    creds: [{icon:'📋',label:'Registered',sub:new Date().toLocaleDateString()}],
+    creds: [{icon:'📋',label:'Registered',sub:new Date().toLocaleDateString(),photo:null}],
     tags: [cat],
+    avail: [],
   };
   Object.assign(SELLERS[0], profile);
   localStorage.setItem('ms_seller_profile', JSON.stringify(SELLERS[0]));
@@ -3269,29 +3359,48 @@ function renderCVEditForm(){
       </div>
     </div>
 
-    <!-- About -->
+    <!-- About / Experience -->
     <div class="cv-edit-sec">
-      <div class="cv-edit-sec-title">About</div>
+      <div class="cv-edit-sec-title">Experience &amp; background</div>
       <div class="cv-edit-field">
         <label>About this seller</label>
-        <textarea id="ce-about" placeholder="Describe your experience and approach…">${s.about}</textarea>
-        <div class="cv-edit-hint">Keep it factual and credential-focused. No names or contact details.</div>
+        <textarea id="ce-about" placeholder="e.g. Qualified electrician with 15 years' experience in residential and commercial installations across Pretoria East. Specialise in solar, DB upgrades and fault-finding.">${s.about||''}</textarea>
+        <div class="cv-edit-hint">Describe your qualifications, work history and approach. No name, business name, phone or email — these are protected until introduction.</div>
       </div>
+      <div class="cv-edit-field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label>Years of experience</label>
+          <input type="number" id="ce-years-exp" value="${s.yearsExp||''}" placeholder="e.g. 12" min="0" max="60" style="max-width:100%;">
+        </div>
+        <div>
+          <label>Service region</label>
+          <input type="text" id="ce-region" value="${s.region||''}" placeholder="e.g. Pretoria East">
+        </div>
+      </div>
+      <div class="cv-edit-hint" style="margin-top:2px;">Service region shown to buyers as general area only — exact location revealed after introduction.</div>
     </div>
 
     <!-- Credentials -->
     <div class="cv-edit-sec">
       <div class="cv-edit-sec-title">Credentials &amp; Qualifications</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Certificate photos are blurred to buyers until introduction is accepted — they verify your credentials without revealing your identity.</div>
       ${s.creds.map((c,i)=>`
         <div class="cv-cred-edit-row">
           <div class="cv-cred-edit-num">${i+1}</div>
           <div class="cv-cred-edit-fields">
-            <input type="text" id="ce-cred-icon-${i}" value="${c.icon}" placeholder="Icon (emoji)" style="width:64px;">
-            <input type="text" id="ce-cred-label-${i}" value="${c.label}" placeholder="Credential name">
-            <input type="text" id="ce-cred-sub-${i}" value="${c.sub}" placeholder="e.g. Issued 2021">
+            <input type="text" id="ce-cred-icon-${i}" value="${c.icon||'📋'}" placeholder="Icon (emoji)" style="width:64px;">
+            <input type="text" id="ce-cred-label-${i}" value="${c.label||''}" placeholder="e.g. Red Seal Certificate">
+            <input type="text" id="ce-cred-sub-${i}" value="${c.sub||''}" placeholder="e.g. DOL Issued · 2019">
+            <div class="cred-upload-row">
+              <label class="cred-upload-label">
+                <input type="file" accept="image/*" onchange="handleCredPhoto(event,${i})">
+                📎 ${c.photo?'Replace certificate photo':'Upload certificate photo'}
+              </label>
+              ${c.photo?`<div style="font-size:11px;color:#16a34a;margin-top:3px;font-weight:600;">✓ Certificate photo uploaded — blurred until introduction</div>`:''}
+            </div>
           </div>
         </div>`).join('')}
-      <div class="cv-edit-hint" style="margin-top:6px;">Edit each credential above. Icons are emoji — tap to change.</div>
+      <div class="cv-edit-hint" style="margin-top:6px;">Use emoji icons like 🏆 📜 🔧 ⚡ to represent each credential type.</div>
     </div>
 
     <!-- Specialisation tags -->
@@ -3325,6 +3434,29 @@ function renderCVEditForm(){
     <button onclick="saveCVEdit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">Save Profile Changes</button>
     <div style="height:20px;"></div>
   `;
+}
+
+async function handleCredPhoto(e, credIdx){
+  const file = e.target.files[0]; if(!file) return;
+  showToast('Uploading certificate…');
+  let result;
+  if(file.size > 2*1024*1024){
+    result = await aaCompressImage(file, 1200, 0.8);
+  } else {
+    result = await new Promise(r=>{ const fr=new FileReader(); fr.onload=ev=>r(ev.target.result); fr.readAsDataURL(file); });
+  }
+  editingSeller.creds[credIdx].photo = result;
+  // Update label + show confirmation in the row
+  const row = e.target.closest('.cred-upload-row');
+  if(row){
+    const lbl = row.querySelector('.cred-upload-label');
+    if(lbl) lbl.innerHTML = `<input type="file" accept="image/*" onchange="handleCredPhoto(event,${credIdx})"> 📎 Replace certificate photo`;
+    let conf = row.querySelector('.cred-photo-confirm');
+    if(!conf){ conf=document.createElement('div'); conf.className='cred-photo-confirm'; row.appendChild(conf); }
+    conf.style.cssText='font-size:11px;color:#16a34a;margin-top:3px;font-weight:600;';
+    conf.textContent='✓ Certificate photo uploaded — blurred until introduction';
+  }
+  showToast('Certificate photo saved');
 }
 
 async function handleCVPhoto(e){
@@ -3391,11 +3523,13 @@ function refreshTagsUI(){
 function saveCVEdit(){
   const s = editingSeller;
 
-  // Collect headline + about
-  s.headline = document.getElementById('ce-headline')?.value.trim() || s.headline;
-  s.about    = document.getElementById('ce-about')?.value.trim()    || s.about;
+  // Collect headline + about + experience fields
+  s.headline  = document.getElementById('ce-headline')?.value.trim()   || s.headline;
+  s.about     = document.getElementById('ce-about')?.value.trim()      || s.about;
+  s.yearsExp  = document.getElementById('ce-years-exp')?.value.trim()  || '';
+  s.region    = document.getElementById('ce-region')?.value.trim()     || '';
 
-  // Collect credentials
+  // Collect credentials (photos already set on editingSeller.creds[i].photo by handleCredPhoto)
   s.creds.forEach((c,i)=>{
     c.icon  = document.getElementById(`ce-cred-icon-${i}`)?.value.trim()  || c.icon;
     c.label = document.getElementById(`ce-cred-label-${i}`)?.value.trim() || c.label;
@@ -3678,12 +3812,13 @@ function showToast(msg){
 // ── ADVERT AGENT ─────────────────────────────────────────────
 
 // Category definitions: fields (Stage 1) + photo slots (Stage 2)
+// Canonical register (locked 14 April 2026): Property · Tutors · Services · Adventures (P2) · Collectors (P2)
 const AA_CATEGORIES = {
-  'Real Estate': {
-    emoji: '🏠',
+  'Property': {
+    emoji: '🏡',
     fields: [
       {id:'title',        label:'Listing headline',    type:'text',   placeholder:'e.g. Spacious 3-bed family home'},
-      {id:'price',        label:'Asking price (USD)',  type:'number', placeholder:'e.g. 250000'},
+      {id:'price',        label:'Asking price',        type:'number', placeholder:'e.g. 2500000'},
       {id:'listing_type', label:'Listing type',        type:'select', options:['For Sale','For Rent']},
       {id:'prop_type',    label:'Property type',       type:'select', options:['House','Apartment / Flat','Townhouse','Cluster','Simplex','Duplex','Bachelor / Studio','Granny Flat','Penthouse','Land / Plot','Smallholding','Farm','Commercial','Industrial','Other']},
       {id:'beds',         label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
@@ -3705,98 +3840,114 @@ const AA_CATEGORIES = {
       {slot:'garage',         label:'Garage / parking',      hint:'Interior of garage or carport',  required:false},
     ],
   },
-  'Automotive': {
-    emoji: '🚗',
+  'Tutors': {
+    emoji: '🎓',
     fields: [
-      {id:'title',   label:'Listing headline',   type:'text',   placeholder:'e.g. 2019 Toyota Hilux 2.8 GD-6'},
-      {id:'make',    label:'Make',               type:'text',   placeholder:'e.g. Toyota'},
-      {id:'model',   label:'Model',              type:'text',   placeholder:'e.g. Hilux 2.8 GD-6'},
-      {id:'year',    label:'Year',               type:'number', placeholder:'e.g. 2019'},
-      {id:'mileage', label:'Mileage (km)',        type:'number', placeholder:'e.g. 85000'},
-      {id:'price',   label:'Asking price (USD)', type:'number', placeholder:'e.g. 18000'},
-      {id:'suburb',  label:'Location (suburb)',  type:'text',   placeholder:'e.g. Centurion'},
-      {id:'desc',    label:'Description',        type:'textarea',placeholder:'Service history, modifications, condition notes…'},
+      {id:'title',   label:'Listing headline',    type:'text',   placeholder:'e.g. Maths & Science tutor · Grades 10–12'},
+      {id:'subject', label:'Subject(s)',           type:'text',   placeholder:'e.g. Mathematics, Physics'},
+      {id:'level',   label:'Level',               type:'select', options:['Primary (Gr 1–7)','High School (Gr 8–12)','Tertiary','Adult / Professional','All levels']},
+      {id:'mode',    label:'Mode',                type:'select', options:['In-person','Online','Both']},
+      {id:'rate',    label:'Rate',                type:'text',   placeholder:'e.g. R300/hr'},
+      {id:'area',    label:'Area covered',        type:'text',   placeholder:'e.g. Pretoria East'},
+      {id:'desc',    label:'About your teaching', type:'textarea',placeholder:'Qualifications, experience, approach, successes…'},
     ],
     photos: [
-      {slot:'front',          label:'Front view',            hint:'Straight-on, daylight',          required:true},
-      {slot:'rear',           label:'Rear view',             hint:'Straight-on, number plate',      required:true},
-      {slot:'driver_side',    label:'Driver side',           hint:'Full side profile',              required:true},
-      {slot:'passenger_side', label:'Passenger side',        hint:'Full side profile',              required:true},
-      {slot:'interior',       label:'Interior / dashboard',  hint:'Steering wheel and dash',        required:true},
-      {slot:'odometer',       label:'Odometer reading',      hint:'Clear close-up of mileage',      required:true},
-      {slot:'engine',         label:'Engine bay',            hint:'Open bonnet, clean shot',        required:false},
-      {slot:'service_book',   label:'Service book',          hint:'Open to last service stamp',     required:false},
-    ],
-  },
-  'MTG / Collectibles': {
-    emoji: '🃏',
-    fields: [
-      {id:'title',     label:'Item name',          type:'text',   placeholder:'e.g. Black Lotus · Alpha · PSA 9'},
-      {id:'edition',   label:'Edition / series',   type:'text',   placeholder:'e.g. Alpha, Beta, Unlimited…'},
-      {id:'condition', label:'Condition grade',    type:'text',   placeholder:'e.g. PSA 9, NM, LP…'},
-      {id:'rarity',    label:'Rarity',             type:'text',   placeholder:'e.g. Mythic Rare, Rare…'},
-      {id:'price',     label:'Asking price (USD)', type:'number', placeholder:'e.g. 500'},
-      {id:'desc',      label:'Description',        type:'textarea',placeholder:'Provenance, defects, grading notes…'},
-    ],
-    photos: [
-      {slot:'card_front',      label:'Card face (front)',      hint:'Full frame, no glare',          required:true},
-      {slot:'card_back',       label:'Card back',              hint:'Full frame, centered',          required:true},
-      {slot:'condition_detail',label:'Condition close-up',     hint:'Corners and surface texture',   required:true},
-      {slot:'grading_label',   label:'Grading label',          hint:'PSA / BGS slab label if graded',required:false},
-    ],
-  },
-  'Philately': {
-    emoji: '📮',
-    fields: [
-      {id:'title',        label:'Item name',          type:'text',   placeholder:'e.g. 1d Cape of Good Hope Triangle 1853'},
-      {id:'year',         label:'Year of issue',      type:'number', placeholder:'e.g. 1853'},
-      {id:'condition',    label:'Condition',          type:'text',   placeholder:'e.g. Fine, VF, Mint…'},
-      {id:'catalogue_ref',label:'Catalogue reference',type:'text',   placeholder:'e.g. SG 1, Scott 1…'},
-      {id:'price',        label:'Asking price (USD)', type:'number', placeholder:'e.g. 1200'},
-      {id:'desc',         label:'Description',        type:'textarea',placeholder:'Gum, perforations, any faults or certificates…'},
-    ],
-    photos: [
-      {slot:'stamp_front',     label:'Stamp front',           hint:'Full frame, flat scan preferred', required:true},
-      {slot:'stamp_back',      label:'Stamp back / gum',      hint:'Show gum condition',             required:true},
-      {slot:'condition_detail',label:'Condition close-up',    hint:'Perforations and margins',       required:true},
-      {slot:'certificate',     label:'Expert certificate',    hint:'If expertised — show full cert', required:false},
+      {slot:'profile',         label:'Profile photo',         hint:'Professional headshot',           required:true},
+      {slot:'teaching_example',label:'Teaching example',      hint:'Whiteboard, lesson notes or workspace', required:true},
+      {slot:'certificate',     label:'Qualification / degree',hint:'Your highest relevant credential', required:false},
     ],
   },
   'Services': {
     emoji: '🔧',
+    // Services has two class variants. Fields and photos come from serviceClasses[service_class].
+    // If service_class is not yet set, the wizard shows a class selector chip row before the form.
+    serviceClasses: {
+      'Technical': {
+        fields: [
+          {id:'title',       label:'Listing headline',    type:'text',   placeholder:'e.g. Licensed electrician · Pretoria'},
+          {id:'service_type',label:'Service type',        type:'select', options:['Electrical','Plumbing','HVAC','Solar','IT & Tech','Legal','Financial','Landscaping','Other']},
+          {id:'area',        label:'Area covered',        type:'text',   placeholder:'e.g. Pretoria East + surrounds'},
+          {id:'rate',        label:'Rate',                type:'text',   placeholder:'e.g. R450/hr or fixed quote'},
+          {id:'experience',  label:'Years of experience', type:'number', placeholder:'e.g. 12'},
+          {id:'registered',  label:'Registered / accredited', type:'select', options:['Yes — fully registered','Yes — in progress','No — not applicable']},
+          {id:'desc',        label:'About your service',  type:'textarea',placeholder:'Qualifications, licences, scope of work, availability…'},
+        ],
+        photos: [
+          {slot:'work_example_1',label:'Work example 1',           hint:'Completed job — best example',   required:true},
+          {slot:'work_example_2',label:'Work example 2',           hint:'Different job or project',       required:true},
+          {slot:'certificate',   label:'Qualification / licence',  hint:'Certificate or registration card',required:false},
+        ],
+      },
+      'Casuals': {
+        fields: [
+          {id:'title',         label:'Listing headline',    type:'text',   placeholder:'e.g. Reliable domestic worker · Pretoria'},
+          {id:'service_type',  label:'Service type',        type:'select', options:['Domestic','Gardening','Dog Walking','Child Minding','Temp / Receptionist','General Labour','Other']},
+          {id:'availability',  label:'Availability',        type:'select', options:['Weekdays','Weekends','Weekdays & weekends','Flexible / negotiable']},
+          {id:'days_available',label:'Days available',      type:'text',   placeholder:'e.g. Mon–Fri, or 3 days/week'},
+          {id:'rate',          label:'Rate',                type:'text',   placeholder:'e.g. R200/day or R1800/month'},
+          {id:'area',          label:'Area covered',        type:'text',   placeholder:'e.g. Centurion, Midrand'},
+          {id:'references',    label:'References available',type:'select', options:['Yes — contactable references','On request','None currently']},
+          {id:'desc',          label:'About me',            type:'textarea',placeholder:'Experience, reliability, what makes you stand out…'},
+        ],
+        photos: [
+          {slot:'work_example',   label:'Work example (optional)',hint:'A photo showing your work or workspace', required:false},
+          {slot:'reference_letter',label:'Reference letter (optional)',hint:'Written reference if you have one',  required:false},
+        ],
+      },
+    },
+  },
+  'Adventures': {
+    emoji: '🧭',
+    phase: 2,
     fields: [
-      {id:'title',       label:'Listing headline',   type:'text',   placeholder:'e.g. Licensed electrician · Pretoria'},
-      {id:'service_type',label:'Service type',       type:'text',   placeholder:'e.g. Electrical, Plumbing, Carpentry…'},
-      {id:'area',        label:'Area covered',       type:'text',   placeholder:'e.g. Pretoria East + surrounds'},
-      {id:'rate',        label:'Rate',               type:'text',   placeholder:'e.g. $40/hr or fixed quote'},
-      {id:'experience',  label:'Years of experience',type:'number', placeholder:'e.g. 12'},
-      {id:'desc',        label:'About your service', type:'textarea',placeholder:'What you offer, qualifications, availability…'},
+      {id:'title',           label:'Experience title',        type:'text',   placeholder:'e.g. 5-day Kruger safari · private guide'},
+      {id:'destination',     label:'Destination',             type:'text',   placeholder:'e.g. Kruger National Park, Limpopo'},
+      {id:'duration',        label:'Duration',                type:'text',   placeholder:'e.g. 5 days / 4 nights'},
+      {id:'group_size',      label:'Group size',              type:'text',   placeholder:'e.g. 2–8 people'},
+      {id:'price_per_person',label:'Price per person',        type:'number', placeholder:'e.g. 8000'},
+      {id:'difficulty',      label:'Difficulty level',        type:'select', options:['Easy — anyone can do it','Moderate — some fitness required','Challenging — experienced participants','Expert — serious athletes / specialists']},
+      {id:'desc',            label:'What\'s included',        type:'textarea',placeholder:'Itinerary, inclusions, exclusions, what to bring…'},
     ],
     photos: [
-      {slot:'work_example_1',label:'Work example 1',          hint:'Completed job — best example',   required:true},
-      {slot:'work_example_2',label:'Work example 2',          hint:'Different job type',             required:true},
-      {slot:'qualification', label:'Qualification / licence', hint:'Certificate or ID card',         required:false},
-      {slot:'work_example_3',label:'Work example 3',          hint:'Additional portfolio shot',      required:false},
+      {slot:'hero',        label:'Hero shot',         hint:'Best photo — sets the scene',       required:true},
+      {slot:'experience_1',label:'Experience shot 1', hint:'Activity or highlight',             required:true},
+      {slot:'experience_2',label:'Experience shot 2', hint:'Another angle or moment',           required:true},
+      {slot:'experience_3',label:'Experience shot 3', hint:'Additional scene or detail',        required:false},
     ],
   },
-  'Travel & Experiences': {
-    emoji: '✈️',
+  'Collectors': {
+    emoji: '🏆',
+    phase: 2,
     fields: [
-      {id:'title',       label:'Experience title',   type:'text',   placeholder:'e.g. 5-day Kruger safari · private guide'},
-      {id:'destination', label:'Destination',        type:'text',   placeholder:'e.g. Kruger National Park, Limpopo'},
-      {id:'duration',    label:'Duration',           type:'text',   placeholder:'e.g. 5 days / 4 nights'},
-      {id:'price',       label:'Price per person (USD)',type:'number',placeholder:'e.g. 800'},
-      {id:'availability',label:'Availability',       type:'text',   placeholder:'e.g. Year-round · min 2 people'},
-      {id:'desc',        label:'What\'s included',   type:'textarea',placeholder:'Itinerary highlights, inclusions, exclusions…'},
+      {id:'title',       label:'Item name / headline',  type:'text',   placeholder:'e.g. 1d Cape of Good Hope Triangle 1853 · VF'},
+      {id:'item_type',   label:'Collection type',       type:'select', options:['Stamps','Trading Cards (MTG / Pokémon / Baseball)','Coins','Memorabilia','Other']},
+      {id:'condition',   label:'Condition',             type:'text',   placeholder:'e.g. PSA 9, VF, Fine, Mint…'},
+      {id:'catalogue_ref',label:'Catalogue reference',  type:'text',   placeholder:'e.g. SG 1, Scott 1, PSA label…'},
+      {id:'edition_year',label:'Edition / year of issue',type:'text',  placeholder:'e.g. 1853, Alpha set, 1st edition…'},
+      {id:'price',       label:'Asking price',          type:'number', placeholder:'e.g. 1200'},
+      {id:'desc',        label:'Description',           type:'textarea',placeholder:'Provenance, grading notes, any defects or certificates…'},
     ],
     photos: [
-      {slot:'hero',    label:'Hero shot',     hint:'Best photo — sets the scene',        required:true},
-      {slot:'detail_1',label:'Detail shot 1', hint:'Activity or location highlight',     required:true},
-      {slot:'detail_2',label:'Detail shot 2', hint:'Another angle or highlight',         required:true},
-      {slot:'detail_3',label:'Detail shot 3', hint:'Additional scene or inclusions',     required:false},
+      {slot:'front',           label:'Front / face',          hint:'Full frame, no glare',             required:true},
+      {slot:'back',            label:'Back',                  hint:'Full frame, centered',             required:true},
+      {slot:'condition_closeup',label:'Condition close-up',   hint:'Corners, margins or surface detail',required:true},
+      {slot:'certificate',     label:'Certificate / slab',    hint:'Expert cert or grading slab label', required:false},
     ],
   },
 };
+
+// Helper: return the correct fields+photos config for a draft (handles Services service_class split)
+function aaCatConfig(draft) {
+  const base = AA_CATEGORIES[draft.category];
+  if (!base) return null;
+  if (base.serviceClasses) {
+    const sc = draft.service_class;
+    if (sc && base.serviceClasses[sc]) return base.serviceClasses[sc];
+    // No service_class selected yet — return a stub so callers don't crash
+    return { fields: [], photos: [] };
+  }
+  return base;
+}
 
 // ── aaDB: thin IndexedDB wrapper ──────────────────────────────
 const aaDB = (() => {
@@ -3911,6 +4062,7 @@ async function aaRenderHome() {
     return;
   }
   list.sort((a,b) => b.updated_at - a.updated_at);
+  const stageNames = {1:'Item Details', 2:'Photos', 3:'AI Coach', 4:'Publish'};
   el.innerHTML = list.map(d => {
     const catCfg  = AA_CATEGORIES[d.category] || {};
     const emoji   = catCfg.emoji || '📦';
@@ -3920,14 +4072,20 @@ async function aaRenderHome() {
     const dots    = [1,2,3,4].map(s =>
       `<span class="aa-stage-dot ${s < stage ? 'done' : s === stage ? 'active' : ''}"></span>`
     ).join('');
+    const stageLabel = stage >= 4 ? 'Ready to publish' : `Next: ${stageNames[stage] || 'Details'}`;
     return `
-      <div class="aa-draft-card" onclick="aaOpenDraft('${d.id}')">
-        <div class="aa-draft-cat">${emoji} ${d.category}</div>
+      <div class="aa-draft-card">
+        <div class="aa-draft-cat">${emoji} ${d.category || 'No category'}</div>
         <div class="aa-draft-title">${title}</div>
         <div class="aa-draft-meta">
           <div class="aa-stage-dots">${dots}</div>
-          <span style="font-size:11px;color:var(--text-3);">Stage ${stage} of 4</span>
+          <span style="font-size:11px;color:var(--text-3);">Stage ${stage} of 4 · ${stageLabel}</span>
           <span class="aa-draft-age">${age}</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="aaOpenDraft('${d.id}')" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Continue</button>
+          <button onclick="event.stopPropagation();aaOpenDraftAt('${d.id}',1)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--text-2);">Edit</button>
+          <button onclick="event.stopPropagation();aaDeleteDraft('${d.id}')" style="background:none;border:1px solid #fca5a5;border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;color:#e11d48;">Delete</button>
         </div>
       </div>`;
   }).join('');
@@ -3953,6 +4111,22 @@ function aaNewDraft() {
   }
   aaRenderDetailScreen(null);
   goTo('aa-detail');
+}
+
+async function aaDeleteDraft(id) {
+  await aaDB.remove(id);
+  showToast('Draft deleted');
+  aaRenderHome();
+}
+
+async function aaOpenDraftAt(id, stage) {
+  aaDraftId = id;
+  const draft = await aaDB.get(id);
+  if (!draft) { aaRenderDetailScreen(null); goTo('aa-detail'); return; }
+  if (stage === 1) { aaRenderDetailScreen(draft); goTo('aa-detail'); return; }
+  if (stage === 2) { aaRenderPhotosScreen(draft); goTo('aa-photos'); return; }
+  if (stage === 3) { aaRenderCoachScreen(); goTo('aa-coach'); return; }
+  aaRenderPublishScreen(); goTo('aa-publish');
 }
 
 async function aaOpenDraft(id) {
@@ -3981,66 +4155,107 @@ function aaRenderDetailScreen(draft) {
   const cats    = Object.keys(AA_CATEGORIES);
   const current = draft?.category || null;
 
-  // Category chips
-  document.getElementById('aa-cat-chips').innerHTML = cats.map(c =>
-    `<button class="aa-cat-chip ${c === current ? 'selected' : ''}"
-             onclick="aaSelectCategory('${c}')">${AA_CATEGORIES[c].emoji} ${c}</button>`
-  ).join('');
+  // Category chips — Phase 2 categories shown with a "Phase 2" note
+  document.getElementById('aa-cat-chips').innerHTML = cats.map(c => {
+    const cfg = AA_CATEGORIES[c];
+    const p2 = cfg.phase === 2 ? ' <span style="font-size:9px;opacity:.6;vertical-align:middle;">P2</span>' : '';
+    return `<button class="aa-cat-chip ${c === current ? 'selected' : ''}"
+             onclick="aaSelectCategory('${c}')">${cfg.emoji} ${c}${p2}</button>`;
+  }).join('');
 
   // Form fields
-  aaRenderDetailForm(current, draft?.fields || {});
+  aaRenderDetailForm(current, draft?.fields || {}, draft?.service_class || null);
 }
 
 function aaSelectCategory(cat) {
-  // Update chip selection
-  document.querySelectorAll('.aa-cat-chip').forEach(btn => {
-    btn.classList.toggle('selected', btn.textContent.trim().endsWith(cat) || btn.textContent.includes(cat));
+  // Update chip selection — only category chips (not class chips)
+  document.querySelectorAll('#aa-cat-chips .aa-cat-chip').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent.includes(cat));
   });
-  aaRenderDetailForm(cat, {});
+  // Reset service_class when category changes
+  aaDB.get(aaDraftId).then(draft => {
+    const sc = (cat === (draft?.category)) ? (draft?.service_class || null) : null;
+    aaRenderDetailForm(cat, {}, sc);
+  });
 }
 
-function aaRenderDetailForm(category, values) {
+function aaRenderDetailForm(category, values, serviceClass) {
   const el = document.getElementById('aa-detail-form');
   if (!category) {
     el.innerHTML = `<p style="color:var(--text-3);font-size:13px;text-align:center;padding:16px 0;">Select a category above to see the form</p>`;
     document.getElementById('aa-detail-next').disabled = true;
     return;
   }
-  const cfg = AA_CATEGORIES[category];
-  if (!cfg) return;
+  const base = AA_CATEGORIES[category];
+  if (!base) return;
+
+  // Services: show class selector chips; if class not yet chosen, stop here
+  if (base.serviceClasses) {
+    const classHtml = `
+      <div class="aa-section-label">Service Class</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="aa-cat-chip ${serviceClass==='Technical'?'selected':''}" onclick="aaSelectServiceClass('Technical')">🔧 Technical</button>
+        <button class="aa-cat-chip ${serviceClass==='Casuals'?'selected':''}" onclick="aaSelectServiceClass('Casuals')">🤝 Casuals</button>
+      </div>
+      ${serviceClass?'':'<p style="color:var(--text-3);font-size:12px;margin-top:4px;">Choose Technical for licensed trades, or Casuals for domestic &amp; informal work</p>'}
+    `;
+    if (!serviceClass) {
+      el.innerHTML = classHtml;
+      document.getElementById('aa-detail-next').disabled = true;
+      return;
+    }
+    const cfg = base.serviceClasses[serviceClass];
+    document.getElementById('aa-detail-next').disabled = false;
+    el.innerHTML = classHtml + `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(cfg.fields, values);
+    return;
+  }
+
   document.getElementById('aa-detail-next').disabled = false;
+  el.innerHTML = `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(base.fields, values);
+}
 
+function aaFieldsHtml(fields, values) {
   const cur = aaCurrency();
-
-  el.innerHTML = `<div class="aa-section-label">Listing Details</div>` +
-    cfg.fields.map(f => {
-      const val  = values[f.id] || '';
-      const req  = f.id === 'title' || f.id === 'price' ? ' <span style="color:#e11d48">*</span>' : '';
-      // Substitute currency code into price field label and placeholder dynamically
-      const label       = f.label.replace(/\bUSD\b/g, cur.code);
-      const placeholder = f.placeholder.replace(/\$(?=\d)/g, cur.symbol);
-      if (f.type === 'textarea') {
-        return `<div class="field"><label>${label}${req}</label>
-          <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea></div>`;
-      }
-      if (f.type === 'select') {
-        const opts = (f.options || []).map(o =>
-          `<option value="${o}"${val===o?' selected':''}>${o}</option>`
-        ).join('');
-        return `<div class="field"><label>${label}${req}</label>
-          <select id="aaf-${f.id}"><option value="">— select —</option>${opts}</select></div>`;
-      }
-      if (f.id === 'price') {
-        const fmtVal = val ? aaFormatPrice(val) : '';
-        return `<div class="field"><label>${label}${req}</label>
-          <input type="number" id="aaf-price" placeholder="${placeholder}" value="${val}"
-                 oninput="(function(v){var d=document.getElementById('aaf-price-fmt');if(d)d.textContent=v?aaFormatPrice(v):'';})(this.value)">
-          <div id="aaf-price-fmt" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:4px;min-height:16px;">${fmtVal}</div>
-        </div>`;
-      }
+  return fields.map(f => {
+    const val  = values[f.id] || '';
+    const req  = f.id === 'title' || f.id === 'price' ? ' <span style="color:#e11d48">*</span>' : '';
+    const label       = f.label.replace(/\bUSD\b/g, cur.code);
+    const placeholder = (f.placeholder || '').replace(/\$(?=\d)/g, cur.symbol);
+    if (f.type === 'textarea') {
       return `<div class="field"><label>${label}${req}</label>
-        <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"></div>`;
-    }).join('');
+        <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea></div>`;
+    }
+    if (f.type === 'select') {
+      const opts = (f.options || []).map(o =>
+        `<option value="${o}"${val===o?' selected':''}>${o}</option>`
+      ).join('');
+      return `<div class="field"><label>${label}${req}</label>
+        <select id="aaf-${f.id}"><option value="">— select —</option>${opts}</select></div>`;
+    }
+    if (f.id === 'price' || f.id === 'price_per_person') {
+      const fmtVal = val ? aaFormatPrice(val) : '';
+      return `<div class="field"><label>${label}${req}</label>
+        <input type="number" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"
+               oninput="(function(v){var d=document.getElementById('aaf-${f.id}-fmt');if(d)d.textContent=v?aaFormatPrice(v):'';})(this.value)">
+        <div id="aaf-${f.id}-fmt" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:4px;min-height:16px;">${fmtVal}</div>
+      </div>`;
+    }
+    return `<div class="field"><label>${label}${req}</label>
+      <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"></div>`;
+  }).join('');
+}
+
+function aaSelectServiceClass(sc) {
+  // Persist service_class on draft and re-render form with the new class
+  aaDB.get(aaDraftId).then(draft => {
+    const d = draft || {id: aaDraftId, photos: [], created_at: Date.now()};
+    d.service_class = sc;
+    d.updated_at = Date.now();
+    aaDB.put(d).then(() => {
+      const category = aaGetSelectedCategory() || d.category;
+      aaRenderDetailForm(category, d.fields || {}, sc);
+    });
+  });
 }
 
 function aaGetSelectedCategory() {
@@ -4055,7 +4270,16 @@ async function aaSaveDetailAndNext() {
   const category = aaGetSelectedCategory();
   if (!category) { showToast('Please select a category first'); return; }
 
-  const cfg    = AA_CATEGORIES[category];
+  // For Services, get service_class from the draft (set by aaSelectServiceClass)
+  const existingDraft = await aaDB.get(aaDraftId) || {};
+  const service_class = (category === 'Services') ? (existingDraft.service_class || null) : null;
+  if (category === 'Services' && !service_class) {
+    showToast('Please choose Technical or Casuals first');
+    return;
+  }
+
+  const draftForConfig = { category, service_class };
+  const cfg    = aaCatConfig(draftForConfig);
   const fields = {};
   for (const f of cfg.fields) {
     const el = document.getElementById('aaf-' + f.id);
@@ -4073,6 +4297,7 @@ async function aaSaveDetailAndNext() {
   const updated = {
     ...draft,
     category,
+    service_class,
     fields,
     stage:      Math.max(draft.stage || 1, 2),
     updated_at: now,
@@ -4084,40 +4309,45 @@ async function aaSaveDetailAndNext() {
 
 // ── Stage 2: Photos screen ────────────────────────────────────
 function aaRenderPhotosScreen(draft) {
-  const cfg    = AA_CATEGORIES[draft.category];
+  const cfg    = aaCatConfig(draft);
   if (!cfg) return;
-  const photos = draft.photos || [];
+  const baseCfg = AA_CATEGORIES[draft.category];
+  const emoji   = baseCfg ? baseCfg.emoji : '📦';
+  const photos  = draft.photos || [];
+  const subLabel = draft.service_class ? `${draft.category} · ${draft.service_class}` : draft.category;
 
   document.getElementById('aa-photos-subtitle').textContent =
-    `${draft.category} · ${cfg.photos.filter(p=>p.required).length} required shots`;
+    `${subLabel} · ${cfg.photos.filter(p=>p.required).length} required shots`;
 
-  const captured = new Set(photos.map(p => p.slot));
-  const required = cfg.photos.filter(p => p.required).map(p => p.slot);
-  const allReqDone = required.every(s => captured.has(s));
+  const captured   = new Set(photos.map(p => p.slot));
+  const required   = cfg.photos.filter(p => p.required).map(p => p.slot);
+  const allReqDone = required.length === 0 || required.every(s => captured.has(s));
 
-  const pct = cfg.photos.length ? Math.round(captured.size / cfg.photos.length * 100) : 0;
+  const pct = cfg.photos.length ? Math.round(captured.size / cfg.photos.length * 100) : 100;
   document.getElementById('aa-photo-progress').style.width = pct + '%';
   document.getElementById('aa-photos-next').disabled = !allReqDone;
 
-  document.getElementById('aa-photo-slots').innerHTML = cfg.photos.map(p => {
-    const done     = captured.has(p.slot);
-    const photoObj = photos.find(x => x.slot === p.slot);
-    const thumbHtml = photoObj?.dataUrl
-      ? `<div class="aa-photo-thumb"><img src="${photoObj.dataUrl}" alt="${p.label}"></div>`
-      : `<div class="aa-photo-thumb">${AA_CATEGORIES[draft.category].emoji}</div>`;
-    return `
-      <div class="aa-photo-slot ${done ? 'captured' : ''} ${p.required ? 'required-slot' : ''}"
-           onclick="aaTriggerCapture('${p.slot}')">
-        ${thumbHtml}
-        <div class="aa-photo-info">
-          <div class="aa-photo-name">${p.label}</div>
-          <div class="aa-photo-hint">${done ? 'Tap to retake' : p.hint}</div>
-        </div>
-        <div class="aa-photo-check">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-      </div>`;
-  }).join('');
+  document.getElementById('aa-photo-slots').innerHTML = cfg.photos.length
+    ? cfg.photos.map(p => {
+        const done     = captured.has(p.slot);
+        const photoObj = photos.find(x => x.slot === p.slot);
+        const thumbHtml = photoObj?.dataUrl
+          ? `<div class="aa-photo-thumb"><img src="${photoObj.dataUrl}" alt="${p.label}"></div>`
+          : `<div class="aa-photo-thumb">${emoji}</div>`;
+        return `
+          <div class="aa-photo-slot ${done ? 'captured' : ''} ${p.required ? 'required-slot' : ''}"
+               onclick="aaTriggerCapture('${p.slot}')">
+            ${thumbHtml}
+            <div class="aa-photo-info">
+              <div class="aa-photo-name">${p.label}${p.required?'':' <span style="opacity:.55;font-size:10px;">(optional)</span>'}</div>
+              <div class="aa-photo-hint">${done ? 'Tap to retake' : p.hint}</div>
+            </div>
+            <div class="aa-photo-check">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>`;
+      }).join('')
+    : `<p style="color:var(--text-3);font-size:13px;text-align:center;padding:24px 0;">No required photos for this category — tap Next to continue</p>`;
 }
 
 function aaTriggerCapture(slot) {
@@ -4210,7 +4440,7 @@ async function aaRenderCoachScreen() {
 
   // Listing summary
   const fields = draft.fields || {};
-  const catCfg = AA_CATEGORIES[draft.category] || {};
+  const catCfg = aaCatConfig(draft) || {};
   const summaryRows = (catCfg.fields || [])
     .filter(f => fields[f.id])
     .map(f => {
@@ -4341,7 +4571,7 @@ async function aaRenderPublishScreen() {
   if (!draft || !el) return;
 
   const fields  = draft.fields || {};
-  const catCfg  = AA_CATEGORIES[draft.category] || {};
+  const catCfg  = aaCatConfig(draft) || {};
   const photoCount = (draft.photos || []).length;
   const email   = draft.email || '';
 
@@ -4609,9 +4839,9 @@ function aaBuyPackFromWallet() {
 async function aaSavePhotosAndNext() {
   const draft = await aaDB.get(aaDraftId);
   if (!draft) return;
-  const cfg      = AA_CATEGORIES[draft.category];
+  const cfg      = aaCatConfig(draft);
   const captured = new Set((draft.photos || []).map(p => p.slot));
-  const missing  = cfg.photos.filter(p => p.required && !captured.has(p.slot));
+  const missing  = (cfg?.photos || []).filter(p => p.required && !captured.has(p.slot));
   if (missing.length) {
     showToast(`Still need: ${missing.map(m=>m.label).join(', ')}`);
     return;

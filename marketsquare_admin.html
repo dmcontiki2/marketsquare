@@ -607,14 +607,9 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <div class="ct-model">👥 Soft queue · listing stays live</div>
     </div>
     <div class="cat-tile" id="cat-Services" onclick="selectCat('Services')">
-      <div class="ct-icon">⚙️</div>
+      <div class="ct-icon">🔧</div>
       <div class="ct-name">Services</div>
-      <div class="ct-model">👥 Soft queue · listing stays live</div>
-    </div>
-    <div class="cat-tile" id="cat-Help Wanted" onclick="selectCat('Help Wanted')">
-      <div class="ct-icon">🤝</div>
-      <div class="ct-name">Help Wanted</div>
-      <div class="ct-model">👥 Soft queue · helper owns listing</div>
+      <div class="ct-model">👥 Soft queue · Technical &amp; Casuals</div>
     </div>
   </div>
 </div>
@@ -886,63 +881,54 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <div id="cat-fields-services" style="display:none;">
         <div class="field-row">
           <div class="field">
+            <label>Service class</label>
+            <select id="f-service-class">
+              <option value="">Select class</option>
+              <option value="Technical">🔧 Technical — licensed / accredited trades</option>
+              <option value="Casuals">🤝 Casuals — domestic &amp; informal work</option>
+            </select>
+          </div>
+          <div class="field">
             <label>Service type</label>
             <select id="f-service-type">
               <option value="">Select type</option>
-              <option>Electrical</option>
-              <option>Plumbing</option>
-              <option>Financial</option>
-              <option>IT & Tech</option>
-              <option>Legal</option>
-              <option>Garden & Outdoor</option>
-              <option>Cleaning</option>
-              <option>Construction</option>
+              <optgroup label="Technical">
+                <option>Electrical</option>
+                <option>Plumbing</option>
+                <option>HVAC</option>
+                <option>Solar</option>
+                <option>IT &amp; Tech</option>
+                <option>Legal</option>
+                <option>Financial</option>
+                <option>Landscaping</option>
+              </optgroup>
+              <optgroup label="Casuals">
+                <option>Domestic</option>
+                <option>Gardening</option>
+                <option>Dog Walking</option>
+                <option>Child Minding</option>
+                <option>Temp / Receptionist</option>
+                <option>General Labour</option>
+              </optgroup>
               <option>Other</option>
             </select>
           </div>
+        </div>
+        <div class="field-row">
           <div class="field">
             <label>Availability</label>
             <select id="f-availability">
               <option value="">Select</option>
               <option>Weekdays</option>
               <option>Weekends</option>
-              <option>Both</option>
+              <option>Weekdays &amp; weekends</option>
+              <option>Flexible / negotiable</option>
               <option>Emergency</option>
             </select>
           </div>
         </div>
-      </div>
-
-      <div id="cat-fields-helpwanted" style="display:none;">
-        <div class="field-row">
-          <div class="field">
-            <label>Help type</label>
-            <select id="f-help-type">
-              <option value="">Select type</option>
-              <option>Gardening</option>
-              <option>Domestic</option>
-              <option>Plumbing</option>
-              <option>Electrical</option>
-              <option>Cleaning</option>
-              <option>Painting</option>
-              <option>Child minding</option>
-              <option>General household</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Availability</label>
-            <select id="f-hw-avail">
-              <option value="">Select</option>
-              <option>Weekdays</option>
-              <option>Weekends</option>
-              <option>Both</option>
-              <option>Flexible</option>
-            </select>
-          </div>
-        </div>
         <div class="info-box warn" style="margin-top:4px;">
-          🇿🇦 NMW reminder: South African minimum wage is R28.79/hr · R121 minimum per day
+          🇿🇦 NMW reminder: South African minimum wage is R28.79/hr · R121 minimum per day (Casuals)
         </div>
       </div>
 
@@ -1203,7 +1189,7 @@ let listingQueue = [];   // { formData, photos: [{thumbUrl, mediumUrl, localPrev
 let publishedIds = [];
 let editingIdx = null;
 
-const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '⚙️', 'Help Wanted': '🤝' };
+const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '🔧' };
 
 // ── NAVIGATION ────────────────────────────────────────────
 function goStep(n) {
@@ -1373,10 +1359,10 @@ function cancelListingForm() {
 }
 
 function showCatFields() {
-  ['property','tutors','services','helpwanted'].forEach(c => {
+  ['property','tutors','services'].forEach(c => {
     document.getElementById('cat-fields-' + c).style.display = 'none';
   });
-  const map = { Property: 'property', Tutors: 'tutors', Services: 'services', 'Help Wanted': 'helpwanted' };
+  const map = { Property: 'property', Tutors: 'tutors', Services: 'services' };
   const key = map[selectedCat];
   if (key) document.getElementById('cat-fields-' + key).style.display = 'block';
 }
@@ -1392,8 +1378,8 @@ function clearListingForm() {
     if (el) el.value = '';
   });
   ['f-per','f-prop-type','f-furnished','f-pets','f-internet','f-listing-type',
-   'f-subject','f-level','f-mode','f-service-type','f-availability',
-   'f-help-type','f-hw-avail','f-suburb'].forEach(id => {
+   'f-subject','f-level','f-mode','f-service-class','f-service-type','f-availability',
+   'f-suburb'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.selectedIndex = 0;
   });
@@ -1564,11 +1550,9 @@ function saveListingToQueue() {
     level:         document.getElementById('f-level')?.value || '',
     mode:          document.getElementById('f-mode')?.value || '',
     // Services
+    service_class: document.getElementById('f-service-class')?.value || '',
     serviceType:   document.getElementById('f-service-type')?.value || '',
     availability:  document.getElementById('f-availability')?.value || '',
-    // Help Wanted
-    helpType:      document.getElementById('f-help-type')?.value || '',
-    hwAvail:       document.getElementById('f-hw-avail')?.value || '',
   };
 
   listingQueue.push({

@@ -19,25 +19,27 @@
 
 ---
 
-## Last Completed Session · Session 11 (5 April 2026)
+## Last Completed Session · Session 12 (14 April 2026)
 
-- Proximity search: lat/lng on geo_cities/geo_suburbs, _backfill_geo_coords() from GeoNames ZA dump ✅
-- GET /geo/nearby endpoint — bounding-box + Haversine, returns suburbs within radius ✅
-- GET /listings JOINs geo_suburbs for suburb_lat/suburb_lng per listing ✅
-- Buyer app: Leaflet.js map view + MarkerCluster, grid/map toggle, OSM tiles ✅
-- Browser geolocation → distance badges on cards, distance-sorted results ✅
-- "📍 Near me" suburb filter — 10km radius, client-side multi-suburb filtering ✅
-- Admin: replaced Add City form with search filter, removed POST /geo/cities endpoint ✅
-- Cleaned up duplicate lowercase "pretoria" (id 101) on server ✅
+- Phase 1 category alignment across all files — canonical register locked ✅
+- Services split into Technical + Casuals (one browse tile, internal sub-filter) ✅
+- `service_class` field added: DB migration (BEA), filter state, card badge, AA wizard ✅
+- AA_CATEGORIES rebuilt: Property (renamed), Tutors (new), Services (split), Adventures+Collectors (Phase 2) ✅
+- `aaCatConfig(draft)` helper routes field/photo config via service_class for Services ✅
+- Services class chip selector added to AA Stage 1 form ✅
+- Admin: Help Wanted tile removed, absorbed into Casuals under Services ✅
+- Filter sheet: Class chips (Technical/Casuals) added to Services filters ✅
+- CityLauncher gumtree.py: outputs `service_class`, normalises Casuals→Services ✅
+- PRINCIPLE_REQUIREMENTS.md D7 updated to canonical 5-category register ✅
+- Deployed: marketsquare.html, marketsquare_admin.html, bea_main.py ✅
 
 ---
 
-## Next Task · Session 12
+## Next Task · Session 13
 
 1. Fix magic onboarding link (reported not working for Maroushka and Dave)
 2. Paystack live mode — pending CIPC registration
 3. n8n email notifications — buyer emailed on intro accept/decline
-4. (Done in CityLauncher Session 9) Photo storage → Cloudflare R2, admin app fixes
 
 ---
 
