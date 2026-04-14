@@ -474,7 +474,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .mt-row div.yes{color:var(--green);font-weight:700;}
 .mt-row div.no{color:var(--red);}
 .mt-row div.partial{color:var(--gold);font-weight:600;}
-.plans-header{background:var(--navy);padding:52px 20px 24px;color:#fff;text-align:center;}
+.plans-header{background:var(--navy);padding:52px 20px 24px;color:#fff;text-align:center;position:relative;}
 .plans-header h1{font-size:23px;font-weight:800;margin-bottom:6px;}
 .plans-header p{font-size:14px;opacity:.55;line-height:1.5;font-weight:400;}
 .plans-body{padding:20px 16px 32px;}
@@ -1224,7 +1224,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
 <!-- PLANS -->
 <div id="screen-plans" class="screen">
-  <div class="plans-header"><h1>Choose your plan</h1><p>Start free. Upgrade when your market grows.</p></div>
+  <div class="plans-header">
+    <button class="back-btn" onclick="goTo('dashboard')" style="position:absolute;left:16px;top:16px;border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>Choose your plan</h1><p>Start free. Upgrade when your market grows.</p>
+  </div>
   <div class="plans-body">
     <div class="plan-card">
       <div class="plan-name">Free</div><div class="plan-price">R0<span class="plan-period"> / month</span></div>
@@ -2146,6 +2149,14 @@ window.addEventListener('DOMContentLoaded',()=>{
     goTo('onboard');
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
+
+  // ── RESTORE SELLER PROFILE from localStorage ───────────────
+  try {
+    const storedProfile = localStorage.getItem('ms_seller_profile');
+    if (storedProfile) Object.assign(SELLERS[0], JSON.parse(storedProfile));
+    const storedPhoto = localStorage.getItem('ms_seller_photo');
+    if (storedPhoto) SELLER_PHOTOS[0] = storedPhoto;
+  } catch(_){}
 
   // Badge: Free tier no longer fully locked — opens suburb selector
   updateBadgeLabel();
@@ -3149,10 +3160,25 @@ function obSelectModel(m){
 
 function submitOnboard(){
   const name=document.getElementById('ob-name').value.trim();
+  const biz=document.getElementById('ob-biz').value.trim();
   const email=document.getElementById('ob-email').value.trim();
+  const cat=document.getElementById('ob-cat').value;
   if(!name||!email){showToast('Please enter your name and email');return;}
   // Store email so AA screens can pre-fill it
   sessionStorage.setItem('aa_email', email);
+  // Seed seller profile with onboard data and persist
+  const profile = {
+    ...SELLERS[0],
+    headline: biz || `${cat} seller`,
+    about: `Registered seller: ${name}`,
+    cat: cat === 'Real Estate' ? 'Property' : cat,
+    _name: name, _email: email, _biz: biz,
+    stats: [{val:'0',label:'Listings'},{val:'New',label:'Trust Score'},{val:'0',label:'Introductions'},{val:'Free',label:'Plan'}],
+    creds: [{icon:'📋',label:'Registered',sub:new Date().toLocaleDateString()}],
+    tags: [cat],
+  };
+  Object.assign(SELLERS[0], profile);
+  localStorage.setItem('ms_seller_profile', JSON.stringify(SELLERS[0]));
   showToast(`Welcome, ${name.split(' ')[0]}! Let's build your first listing.`);
   setTimeout(()=>goTo('aa-home'),800);
 }
@@ -3301,32 +3327,36 @@ function renderCVEditForm(){
   `;
 }
 
-function handleCVPhoto(e){
+async function handleCVPhoto(e){
   const file = e.target.files[0]; if(!file) return;
-  if(file.size > 3*1024*1024){ showToast('⚠️ Photo is large — under 2MB works best'); }
-  const r = new FileReader();
-  r.onload = ev => {
-    SELLER_PHOTOS[0] = ev.target.result;
-    // Update circle preview
-    const circle = document.getElementById('cv-photo-circle');
-    const label  = document.getElementById('cv-photo-label');
-    if(label) label.style.display='none';
-    // Add or update preview img
-    let prev = document.getElementById('cv-photo-preview');
-    if(!prev){
-      prev = document.createElement('img');
-      prev.id = 'cv-photo-preview';
-      prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;';
-      if(circle) circle.appendChild(prev);
-    }
-    prev.src = ev.target.result;
-    showToast('✓ Photo uploaded — blurred for buyers');
-  };
-  r.readAsDataURL(file);
+  let result;
+  if (file.size > 2*1024*1024) {
+    showToast('Compressing photo…');
+    result = await aaCompressImage(file, 800, 0.7);
+  } else {
+    result = await new Promise(r => { const fr = new FileReader(); fr.onload = ev => r(ev.target.result); fr.readAsDataURL(file); });
+  }
+  SELLER_PHOTOS[0] = result;
+  try { localStorage.setItem('ms_seller_photo', result); } catch(_){}
+  // Update circle preview
+  const circle = document.getElementById('cv-photo-circle');
+  const label  = document.getElementById('cv-photo-label');
+  if(label) label.style.display='none';
+  // Add or update preview img
+  let prev = document.getElementById('cv-photo-preview');
+  if(!prev){
+    prev = document.createElement('img');
+    prev.id = 'cv-photo-preview';
+    prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;';
+    if(circle) circle.appendChild(prev);
+  }
+  prev.src = result;
+  showToast('✓ Photo uploaded — blurred for buyers');
 }
 
 function removeCVPhoto(){
   SELLER_PHOTOS[0] = null;
+  localStorage.removeItem('ms_seller_photo');
   renderCVEditForm(); // re-render to show empty state
   showToast('Photo removed');
 }
@@ -3381,8 +3411,9 @@ function saveCVEdit(){
     a.time = document.getElementById(`ce-avail-time-${i}`)?.value.trim() || a.time;
   });
 
-  // Write back to SELLERS array
+  // Write back to SELLERS array and persist
   Object.assign(SELLERS[0], s);
+  localStorage.setItem('ms_seller_profile', JSON.stringify(SELLERS[0]));
 
   showToast('✓ Profile saved');
   goTo('dashboard');
@@ -3927,8 +3958,22 @@ function aaNewDraft() {
 async function aaOpenDraft(id) {
   aaDraftId = id;
   const draft = await aaDB.get(id);
-  aaRenderDetailScreen(draft);
-  goTo('aa-detail');
+  if (!draft) { aaRenderDetailScreen(null); goTo('aa-detail'); return; }
+
+  const stage = draft.stage || 1;
+  if (stage >= 4) {
+    aaRenderPublishScreen();
+    goTo('aa-publish');
+  } else if (stage >= 3) {
+    aaRenderCoachScreen();
+    goTo('aa-coach');
+  } else if (stage >= 2 && draft.category) {
+    aaRenderPhotosScreen(draft);
+    goTo('aa-photos');
+  } else {
+    aaRenderDetailScreen(draft);
+    goTo('aa-detail');
+  }
 }
 
 // ── Stage 1: Detail screen ────────────────────────────────────
@@ -4017,7 +4062,9 @@ async function aaSaveDetailAndNext() {
     if (el) fields[f.id] = el.value.trim();
   }
   if (!fields.title && !fields.item_name) {
-    showToast('Add a title before continuing');
+    showToast('Fill in the listing headline first');
+    const titleEl = document.getElementById('aaf-title') || document.getElementById('aaf-item_name');
+    if (titleEl) { titleEl.focus(); titleEl.style.borderColor = '#e11d48'; }
     return;
   }
 
@@ -4078,27 +4125,55 @@ function aaTriggerCapture(slot) {
   document.getElementById('aa-photo-input').click();
 }
 
+function aaCompressImage(file, maxW, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => {
+      // Fallback: read as-is
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.readAsDataURL(file);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 async function aaHandlePhotoCapture(event) {
   const file = event.target.files[0];
   if (!file || !aaDraftId) return;
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const dataUrl = e.target.result;
-    const now     = Date.now();
-    const draft   = await aaDB.get(aaDraftId);
-    if (!draft) return;
+  // Auto-compress: max 1200px wide, JPEG quality 0.7 for large files
+  let dataUrl;
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Compressing large photo…');
+    dataUrl = await aaCompressImage(file, 1200, 0.7);
+  } else if (file.size > 500 * 1024) {
+    dataUrl = await aaCompressImage(file, 1600, 0.8);
+  } else {
+    dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(file); });
+  }
 
-    // Upsert photo for this slot (replace if re-captured)
-    const photos = (draft.photos || []).filter(p => p.slot !== aaActiveSlot);
-    photos.push({ slot: aaActiveSlot, dataUrl });
+  const now   = Date.now();
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
 
-    const updated = { ...draft, photos, stage: Math.max(draft.stage || 2, 2), updated_at: now };
-    await aaDB.put(updated);
-    aaRenderPhotosScreen(updated);
-    showToast('Photo saved');
-  };
-  reader.readAsDataURL(file);
+  // Upsert photo for this slot (replace if re-captured)
+  const photos = (draft.photos || []).filter(p => p.slot !== aaActiveSlot);
+  photos.push({ slot: aaActiveSlot, dataUrl });
+
+  const updated = { ...draft, photos, stage: Math.max(draft.stage || 2, 2), updated_at: now };
+  await aaDB.put(updated);
+  aaRenderPhotosScreen(updated);
+  showToast('Photo saved');
+
   // Reset input so same file can be re-selected
   event.target.value = '';
 }
