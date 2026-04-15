@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 10 April 2026
+## Current State · 15 April 2026
 
 | Item | Detail |
 |---|---|
@@ -11,7 +11,7 @@
 | **Buyer app file** | `marketsquare.html` (local) → served as `index.html` |
 | **Admin file** | `marketsquare_admin.html` (local) → served as `admin.html` |
 | **BEA file** | `bea_main.py` (local) → served as `main.py` on server |
-| **Codex** | `Solar_Council_Codex_v4_3.docx` |
+| **Codex** | `Solar_Council_Codex_v4_5.docx` |
 | **BEA version** | Live — check GET /health (returns current version) |
 | **Founding sellers** | Live — check trustsquare.co/admin.html or GET /listings?city=Pretoria |
 | **Paystack** | Test mode (live pending CIPC registration) |
@@ -19,19 +19,17 @@
 
 ---
 
-## Last Completed Session · Session 14 (15 April 2026)
+## Last Completed Session · Session 15 (15 April 2026)
 
-- Trust Score criteria framework designed and documented — TRUST_SCORE_CRITERIA.md v1.0 ✅
-- Adventures split into Experiences / Accommodation sub-classes ✅
-- TRUST_SCORE_CODEX_AMENDMENT.md created — ready for Codex v4.5 ✅
-- onboarding/ONBOARDING_CHECKLIST.md created — manual per-category checklist ✅
-- bea_main.py — Advert Agent system prompt expanded with category-specific TS guidance ✅
-- AGENT_BRIEFING.md (both projects) updated with Adventures sub-classes and TS summary ✅
-- bea_main.py deployed: pending (David to deploy after review) ⏳
+- Cost_Breakdown_GlobalLaunch.xlsx updated — AI Coach revenue + Anthropic API costs + acceptance rate uplift ✅
+- Assumptions: intro acceptance 0.60 → 0.65, AI Coach params added (adoption 15%, 2 packs/yr, $0.01/session) ✅
+- Operating Costs: Anthropic API line added under Development, subtotal formula updated ✅
+- Revenue vs Cost: AI Coach pack revenue line added, all downstream formulas updated ✅
+- CHANGELOG.md Session 15 entry written ✅
 
 ---
 
-## Next Task · Session 15
+## Next Task · Session 16
 
 1. Send magic link to Maroushka — re-listing round 2 (Gate 0)
 2. Anthropic billing activation — follow up on support ticket
@@ -61,7 +59,7 @@
 - Placeholder listing ids start with `ph_` · BEA listing ids start with `bea_`
 - Always use `findListing(id)` — never `LISTINGS[id]`
 - BEA geo API query param is `country` (not `country_iso2`)
-- `Cost_Breakdown_GlobalLaunch.xlsx` is the live cost model — edit in Claude Chat only, not Claude Code
+- `Cost_Breakdown_GlobalLaunch.xlsx` is the live cost model — Claude Code edits via openpyxl (pandas not installed)
 
 ---
 

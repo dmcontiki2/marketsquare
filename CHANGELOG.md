@@ -2,6 +2,14 @@
 
 ---
 
+## Session 15 · 15 April 2026 · Cost model update — AI Coach + Trust Score acceptance uplift
+
+Updated `Cost_Breakdown_GlobalLaunch.xlsx` to reflect the Advert Agent (AI Coach) subscription revenue stream and its associated Anthropic API costs, and to capture the Trust Score-driven improvement in intro acceptance rate. Changes: (1) **Assumptions sheet** — intro acceptance rate raised from 0.60 to 0.65 (Trust Score uplift, +8.3% Tuppence revenue); three new AI Coach assumption rows added: adoption rate = 15% of active sellers, avg packs per seller = 2/yr, Anthropic Haiku 4.5 cost per session = $0.01. (2) **Operating Costs sheet** — new "Anthropic API — AI Coach (Haiku 4.5)" line in the Development section, formula-linked to Wave Growth seller count × adoption × packs × 8 sessions × cost/session; Development subtotal updated to include it. (3) **Revenue vs Cost sheet** — new "AI Coach pack revenue" line added (sellers × adoption × packs × $2 per pack), correctly ordered before TOTAL REVENUE; TOTAL REVENUE and all downstream formulas (Net Income, Operating Margin, Revenue per seller, Avg monthly revenue) updated to reference the new row. Net Y1 impact: +~$14,233 (+6.8%). File recalculates automatically on next Excel open.
+
+Cost model impact: Intro acceptance rate raised to 65% (was 60%) increases Tuppence revenue by ~8.3% across all years. AI Coach pack revenue adds ~$6,268 Y1 / ~$15,670 Y2 / ~$31,340 Y3. Anthropic API costs ~$251 Y1 / ~$628 Y2 / ~$1,256 Y3. Net margin impact is strongly positive: platform earns $2 per pack, spends $0.16 per pack in API costs.
+
+---
+
 ## Session 14b · 15 April 2026 · Advert Agent — Trust Score maximisation as primary mission
 
 Restructured the Advert Agent system prompt so that Trust Score maximisation is the explicit primary coaching mission, not a passive appendix. The AI is now instructed to: (1) scan every field the seller fills in for mentions of qualifications, registrations, certifications, experience years, memberships, star ratings, and tickets — each one is a credential they likely hold and can submit; (2) name each spotted credential specifically with the exact points it unlocks and the document needed to claim it; (3) list additional credentials they may hold but haven't mentioned; (4) calculate the approximate maximum score they appear entitled to vs. their current score and show the gap; (5) end every session with a numbered "YOUR TRUST SCORE ACTION PLAN" section, highest-value action first. DB query expanded to also fetch `trust_score` so the AI knows the seller's current tier at the start of every session. User message updated to pass current score and tier, and to explicitly ask for both listing improvements and a personalised Trust Score action plan. `max_tokens` raised from 1024 to 1800 to give the AI room for both sections. Deployed to Hetzner.
