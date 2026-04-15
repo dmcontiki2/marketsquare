@@ -1089,7 +1089,101 @@ async def aa_coach(req: AACoachRequest):
             detail="No coaching sessions remaining. Purchase an AI Pack (8 sessions · 1T) to continue."
         )
 
-    # Build system prompt — Trust Score is hardcoded per A5 governance
+    # Build system prompt — Trust Score criteria governed by A5 / TRUST_SCORE_CRITERIA.md
+    # Category-specific Trust Score guidance is appended below the base prompt
+    _TRUST_SCORE_GUIDANCE = {
+        "Property": (
+            "TRUST SCORE ADVICE FOR THIS SELLER (Property):\n"
+            "Tell the seller exactly what to upload to improve their Trust badge. "
+            "Each item below unlocks more points and raises their visibility:\n"
+            "• PPRA/EAAB Registration Certificate → biggest single gain (15 pts) — "
+            "verify number at ppra.org.za\n"
+            "• NQF4 Real Estate qualification certificate → 6 pts\n"
+            "• NQF5 Real Estate → additional 6 pts (cumulative 12)\n"
+            "• NQF6+ or professional designation → additional 8 pts (cumulative 20)\n"
+            "• Professional body membership (IEASA, SAPOA) → 5 pts\n"
+            "• ID verification by MarketSquare → 15 Universal pts (if not done)\n"
+            "• Accepted introductions build track record — always respond within 48 hrs\n"
+            "Unregistered Property sellers score 0 Category pts — PPRA registration "
+            "is the critical first step."
+        ),
+        "Tutors": (
+            "TRUST SCORE ADVICE FOR THIS SELLER (Tutors):\n"
+            "Tell the seller exactly what to upload to improve their Trust badge:\n"
+            "• SACE (South African Council for Educators) registration → 8 pts — "
+            "check sace.org.za\n"
+            "• Highest qualification: Diploma/Cert → 6 pts · Degree → 10 pts · "
+            "Honours/Postgrad → 14 pts (only highest counts)\n"
+            "• Subject specialisation certificate or transcript → 5 pts\n"
+            "• CV with verifiable teaching/tutoring experience: "
+            "2–5 yrs → 5 pts · 5+ yrs → 11 pts\n"
+            "• Well-structured CV (clear dates, no gaps) → 2 pts\n"
+            "• ID verification → 15 Universal pts (if not done)\n"
+            "• Verified referrals from students or parents → up to 10 pts\n"
+            "Tip: A postgrad qualification + SACE + 5+ years + ID = ~50 pts before "
+            "any track record — that is Established tier immediately."
+        ),
+        "Services": (
+            "TRUST SCORE ADVICE FOR THIS SELLER (Services):\n"
+            "Tell the seller exactly what to upload to improve their Trust badge.\n"
+            "FOR TECHNICAL TRADES:\n"
+            "• Professional/statutory body registration (ECSA, PIRB, NHBRC, FSCA, "
+            "SAICA, etc.) → 12 pts — the highest Category signal\n"
+            "• Trade certificate (City & Guilds, TVET, MERSETA, CETA, Red Seal) → 8 pts\n"
+            "• Primary industry ticket/licence (CoC, gas CoC, PIRB licence) → 5 pts\n"
+            "• Additional tickets (First Aid, working at heights, confined space) → "
+            "3 pts each, max 2 extra\n"
+            "• CV with years in trade: 3–7 yrs → 4 pts · 7+ yrs → 8 pts\n"
+            "FOR CASUALS:\n"
+            "• Reference letters from past employers or clients → 8 pts first, "
+            "+5 for second (13 pts max)\n"
+            "• Any NQF qualification or accredited short course → 8 pts\n"
+            "• Years in service: 2–4 yrs → 6 pts · 5+ yrs → 14 pts\n"
+            "• Strong profile description (specific services, suburb, availability) → 5 pts\n"
+            "• ID verification → 15 Universal pts — most important for Casuals"
+        ),
+        "Adventures": (
+            "TRUST SCORE ADVICE FOR THIS SELLER (Adventures):\n"
+            "Tell the seller exactly what to upload to improve their Trust badge.\n"
+            "FOR EXPERIENCES (guided activities):\n"
+            "• Guide/activity certification (FGASA, MCSA, PADI Divemaster+, SACAA) "
+            "→ 12 pts — must be current and active\n"
+            "• First Aid / Emergency Response certificate (valid, not expired) → 6 pts\n"
+            "• Liability/public indemnity insurance for the activity → 5 pts\n"
+            "• Additional safety cert (Wilderness First Responder, swift water rescue) "
+            "→ 4 pts\n"
+            "• CV with guided experience: 3–7 yrs → 5 pts · 7+ yrs → 10 pts\n"
+            "FOR ACCOMMODATION (B&B / Guesthouse / Hotel):\n"
+            "• TGCSA star grading (most important signal): "
+            "1★ = 6 pts · 2★ = 10 · 3★ = 14 · 4★ = 18 · 5★ = 22 pts — "
+            "verify at tourismgrading.co.za\n"
+            "• Municipal operating licence for B&B/guesthouse → 6 pts\n"
+            "• Health & safety compliance certificate → 5 pts\n"
+            "• Fire clearance certificate → 4 pts\n"
+            "• AA Travel Award or TripAdvisor/Booking.com recognition → 3 pts\n"
+            "Tip: A 5-star TGCSA-graded B&B with all compliance docs can reach "
+            "Category max (40 pts) before any track record."
+        ),
+        "Collectors": (
+            "TRUST SCORE ADVICE FOR THIS SELLER (Collectors):\n"
+            "Tell the seller exactly what builds their Trust badge in this category.\n"
+            "Collectors build Trust Score primarily through PLATFORM HISTORY — "
+            "each successful introduction improves the score automatically:\n"
+            "• 1–4 successful transactions → 8 pts\n"
+            "• 5–14 transactions → 14 pts (cumulative)\n"
+            "• 15+ transactions → 20 pts (cumulative)\n"
+            "Additional signals:\n"
+            "• Authentication certificate for a listed item (SANA, PCGS, PSA, CGC) "
+            "→ 8 pts — upload with the listing\n"
+            "• Professional appraisal or valuation document → 5 pts\n"
+            "• Collector association membership (SANA, Philatelic Foundation) → 3 pts\n"
+            "• Collecting domain declaration (specific, detailed description) → 4 pts\n"
+            "Tip: Respond to every introduction promptly — ghosting hurts your "
+            "score and your track record. This is the main lever for Collectors."
+        ),
+    }
+
+    _ts_advice = _TRUST_SCORE_GUIDANCE.get(req.category, "")
     system_prompt = (
         "You are the MarketSquare Advert Agent — a listing coach that helps sellers "
         "write better classified ads. Your job is to review a seller's draft listing "
@@ -1111,6 +1205,7 @@ async def aa_coach(req: AACoachRequest):
         "with: '⚠️ NAME FOUND — remove before publishing: [item]'.\n"
         "6. End every response with: '✓ Anonymity check passed.' or "
         "'⚠️ Name/business identifier found — see above.'"
+        + (f"\n\n{_ts_advice}" if _ts_advice else "")
     )
 
     fields_text = "\n".join(f"  {k}: {v}" for k, v in req.fields.items() if v)

@@ -19,27 +19,25 @@
 
 ---
 
-## Last Completed Session · Session 12 (14 April 2026)
+## Last Completed Session · Session 14 (15 April 2026)
 
-- Phase 1 category alignment across all files — canonical register locked ✅
-- Services split into Technical + Casuals (one browse tile, internal sub-filter) ✅
-- `service_class` field added: DB migration (BEA), filter state, card badge, AA wizard ✅
-- AA_CATEGORIES rebuilt: Property (renamed), Tutors (new), Services (split), Adventures+Collectors (Phase 2) ✅
-- `aaCatConfig(draft)` helper routes field/photo config via service_class for Services ✅
-- Services class chip selector added to AA Stage 1 form ✅
-- Admin: Help Wanted tile removed, absorbed into Casuals under Services ✅
-- Filter sheet: Class chips (Technical/Casuals) added to Services filters ✅
-- CityLauncher gumtree.py: outputs `service_class`, normalises Casuals→Services ✅
-- PRINCIPLE_REQUIREMENTS.md D7 updated to canonical 5-category register ✅
-- Deployed: marketsquare.html, marketsquare_admin.html, bea_main.py ✅
+- Trust Score criteria framework designed and documented — TRUST_SCORE_CRITERIA.md v1.0 ✅
+- Adventures split into Experiences / Accommodation sub-classes ✅
+- TRUST_SCORE_CODEX_AMENDMENT.md created — ready for Codex v4.5 ✅
+- onboarding/ONBOARDING_CHECKLIST.md created — manual per-category checklist ✅
+- bea_main.py — Advert Agent system prompt expanded with category-specific TS guidance ✅
+- AGENT_BRIEFING.md (both projects) updated with Adventures sub-classes and TS summary ✅
+- bea_main.py deployed: pending (David to deploy after review) ⏳
 
 ---
 
-## Next Task · Session 13
+## Next Task · Session 15
 
-1. Fix magic onboarding link (reported not working for Maroushka and Dave)
-2. Paystack live mode — pending CIPC registration
-3. n8n email notifications — buyer emailed on intro accept/decline
+1. Deploy updated bea_main.py to Hetzner (`scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py && ssh root@178.104.73.239 "systemctl restart marketsquare"`)
+2. Apply Codex amendment — upload Solar_Council_Codex_v4_4.docx to Claude Chat, apply TRUST_SCORE_CODEX_AMENDMENT.md, save as v4.5
+3. Send magic link to Maroushka — re-listing round 2 (Gate 0)
+4. Anthropic billing activation — follow up on support ticket
+5. n8n intro notification workflow — buyer emailed on accept/decline (Gate 0)
 
 ---
 

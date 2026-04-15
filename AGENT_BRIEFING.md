@@ -14,6 +14,7 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 - Public launch threshold: 60 founding sellers (20 per category). Current count: check trustsquare.co/admin.html or GET /listings?city=Pretoria.
 - Three categories live: **Property · Tutors · Services** (Services has Technical / Casuals sub-filter). Help Wanted absorbed into Casuals.
 - Phase 2 categories planned: **Adventures · Collectors** (not yet built — see PRINCIPLE_REQUIREMENTS.md D7).
+- Adventures has two sub-classes: **Experiences** (guided activities: hiking, diving, safaris, etc.) and **Accommodation** (B&B, guesthouses, boutique hotels). Sub-class is declared at listing creation and drives Trust Score credential signals.
 
 **This is a marketplace app, not a game.**
 
@@ -40,7 +41,10 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 | 70–89 | Trusted | Green badge |
 | 90–100 | Highly Trusted | Gold badge + featured priority |
 
-Penalties: seller ignores intro → 1T fee to resubmit (Commitment) or −3 Trust (Queue). Seller declines → 1T to resubmit (Commitment only).
+Score is earned across three groups: Universal (ID verification, profile, referrals — max 30), Category Credentials (qualifications, registrations, per-category signals — max 40), and Platform Track Record (intros, reliability, tenure — max 30). Full criteria: `TRUST_SCORE_CRITERIA.md`. Codex amendment: `TRUST_SCORE_CODEX_AMENDMENT.md`.
+
+Introduction penalties (A3): seller ignores intro → 1T fee to resubmit (Commitment) or −3 Trust (Queue). Seller declines → 1T to resubmit (Commitment only).
+Complaint penalties: −8/−5/−3/−2/−1 per complaint (diminishing), capped at −22 total. Bad referral confirmed: −10 pts + reversal of referral pts.
 
 ### Anonymity Rule
 Seller name and email are **never shown to buyers**. Identity is only revealed after mutual introduction acceptance. The seller CV shows an emoji avatar and anonymous stats until then.
