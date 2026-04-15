@@ -1,5 +1,5 @@
 # MarketSquare · Master Agent Briefing
-**Version 1.3 · 11 April 2026**
+**Version 1.4 · 15 April 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
@@ -26,6 +26,7 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 - Introduction currency. **1 Tuppence = USD $2.**
 - Only the **buyer** pays, and only **after the seller accepts** the introduction.
 - Seller earns zero commission — they simply get connected.
+- **AI Coach Credits** are a separate balance, never merged with intro Tuppence. Tiered packs: 5T=40 uses · 10T=100 uses · 25T=320 uses. Purchased via the same Paystack flow with `ai_pack_sessions` metadata.
 
 ### Introduction Models
 | Model | Categories | Behaviour |
@@ -138,8 +139,12 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | GET | `/intros/{listing_id}` | None | Intros for one listing |
 | PUT | `/intros/{id}/accept` | API key | Accept intro · charges 1T |
 | PUT | `/intros/{id}/decline` | API key | Decline intro |
-| POST | `/payment/initialize` | None | Paystack checkout |
-| GET | `/payment/verify` | None | Verify payment · credit Tuppence |
+| POST | `/payment/initialize?tuppence=N&ai_pack_sessions=M` | None | Paystack checkout — M=0 for intro Tuppence, M>0 for AI pack |
+| GET | `/payment/verify` | None | Verify payment · credit Tuppence + AI sessions if ai_pack_sessions>0 |
+| GET | `/advert-agent/status?email=` | None | AA session balance for seller |
+| POST | `/advert-agent/coach` | None | Run AI coach — auto-registers unknown emails |
+| POST | `/advert-agent/publish` | None | Submit draft listing + photos (FormData) |
+| POST | `/advert-agent/buy-pack?email=&sessions=N` | None | Admin: manually credit AI sessions |
 | GET | `/geo/countries` | None | Active countries |
 | GET | `/geo/regions?country=ZA` | None | Regions for country |
 | GET | `/geo/cities?region_id=N` | None | Cities for region |

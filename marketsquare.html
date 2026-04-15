@@ -462,7 +462,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .topup-btn{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 8px;text-align:center;cursor:pointer;transition:all var(--t);}
 .topup-btn:active{background:var(--accent-light);border-color:var(--accent);}
 .topup-btn .tb-val{font-size:17px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;}
-.topup-btn .tb-price{font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;}
+.topup-btn .tb-mid{font-size:11px;color:var(--text-2);font-weight:600;margin:3px 0 1px;}
+.topup-btn .tb-price{font-size:11px;color:var(--text-3);font-weight:400;}
 .model-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
 .mt-head{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--navy);padding:8px 10px;}
 .mt-head div{font-size:10px;font-weight:700;color:rgba(255,255,255,.7);text-align:center;font-family:'Inter',sans-serif;}
@@ -790,6 +791,27 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .aa-btn-secondary{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
 #screen-aa-home{padding-bottom:32px;}
 #screen-aa-detail,#screen-aa-photos{padding-bottom:0;}
+/* ── AA SUGGESTION PILLS ───────────────────────────────────── */
+.aa-suggestion-pill{display:flex;align-items:flex-start;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:6px;}
+.aa-sug-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.aa-sug-text{flex:1;font-size:12px;line-height:1.5;color:#1e40af;}
+.aa-sug-apply{flex-shrink:0;background:#1d4ed8;color:#fff;border:none;border-radius:50px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;}
+.aa-sug-apply:disabled{opacity:.5;cursor:default;}
+.aa-trust-action{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.aa-trust-action:last-child{border-bottom:none;}
+.aa-trust-num{min-width:26px;height:26px;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+/* ── AA MULTI-SELECT CHIPS ─────────────────────────────────── */
+.aa-multisel{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
+.aa-ms-chip{padding:7px 13px;border-radius:50px;border:1.5px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--text-2);transition:all .15s;font-family:'Inter',sans-serif;}
+.aa-ms-chip.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* ── AA RATE FIELD ─────────────────────────────────────────── */
+.aa-rate-wrap{display:flex;border-radius:var(--r-sm);border:1.5px solid var(--border);overflow:visible;}
+.aa-rate-wrap input,.aa-rate-wrap select{outline:none;}
+.aa-rate-wrap input:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm);}
+.aa-rate-wrap select:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0;}
+.aa-rate-wrap input{flex:1;min-width:0;padding:10px 12px;border:none;font-size:14px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);}
+.aa-rate-wrap input:focus{outline:none;}
+.aa-rate-wrap select{background:var(--surface-2);border:none;border-left:1.5px solid var(--border);padding:10px 8px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text-2);cursor:pointer;}
 
 /* ── AA FLOW SHEET ─────────────────────────────────────────── */
 .aa-flow-info-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Syne',sans-serif;transition:background .15s;}
@@ -1214,36 +1236,72 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="tn-sec">
       <h2>Top up Tuppence</h2>
       <div class="topup-btns">
-        <div class="topup-btn" onclick="topUp(5)"><div class="tb-val">5T</div><div class="tb-price">≈ R180 · $10</div></div>
-        <div class="topup-btn" onclick="topUp(10)"><div class="tb-val">10T</div><div class="tb-price">≈ R360 · $20</div></div>
-        <div class="topup-btn" onclick="topUp(25)"><div class="tb-val">25T</div><div class="tb-price">≈ R900 · $50</div></div>
+        <div class="topup-btn" onclick="topUp(5)">
+          <div class="tb-val">5T</div>
+          <div class="tb-mid">5 intros</div>
+          <div class="tb-price">$10 · R180</div>
+        </div>
+        <div class="topup-btn" onclick="topUp(10)">
+          <div class="tb-val">10T</div>
+          <div class="tb-mid">10 intros</div>
+          <div class="tb-price">$20 · R360</div>
+        </div>
+        <div class="topup-btn" onclick="topUp(25)">
+          <div class="tb-val">25T</div>
+          <div class="tb-mid">25 intros</div>
+          <div class="tb-price">$50 · R900</div>
+        </div>
       </div>
     </div>
     <div class="tn-sec">
       <h2>Transaction history</h2>
       <div class="tn-table" id="tn-history">
-        <div class="tn-row"><div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created</div></div><div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div></div>
+        <div class="tn-row">
+          <div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created · Introductions</div></div>
+          <div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div>
+        </div>
+        <div class="tn-row">
+          <div><div class="tn-row-label">AI coaching trial</div><div class="tn-row-sub">1 free session included</div></div>
+          <div style="text-align:right"><div class="tn-row-val" style="color:#6366f1;">+1 Use</div></div>
+        </div>
       </div>
     </div>
 
     <!-- AI Coach Credits — visually separated, never merged with Tuppence balance -->
     <div class="tn-sec" style="border-top:2px solid var(--border);margin-top:8px;padding-top:20px;">
-      <h2 style="margin-bottom:4px;">AI Coach Credits</h2>
-      <p style="font-size:12px;color:var(--text-3);margin:0 0 14px;font-weight:500;">Not used for introductions</p>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:13px;color:var(--text-3);margin-bottom:2px;">Coaching sessions remaining</div>
-            <div id="tn-coach-sessions" style="font-size:28px;font-weight:800;color:var(--navy);">—</div>
-          </div>
-          <div style="font-size:32px;">🤖</div>
+      <h2 style="margin-bottom:12px;">Balances</h2>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Introductions</div>
+          <div id="tn-wallet-intros" style="font-size:26px;font-weight:800;color:var(--navy);">5</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Tuppence</div>
         </div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:6px;">1 free session included · packs do not expire</div>
+        <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">AI Coach</div>
+          <div id="tn-coach-sessions" style="font-size:26px;font-weight:800;color:#6366f1;">—</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">uses left</div>
+        </div>
       </div>
-      <button onclick="aaBuyPackFromWallet()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
-        Buy AI Pack — 8 sessions · 1T
-      </button>
-      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:8px;">1T = R36 · used for AI coaching only</div>
+      <h3 style="font-size:13px;font-weight:700;color:var(--text-2);margin:0 0 10px;">Top up AI Coach</h3>
+      <div class="topup-btns">
+        <div class="topup-btn" onclick="aaBuyAIPack(5,40)">
+          <div class="tb-val">5T</div>
+          <div class="tb-mid">40 AI uses</div>
+          <div class="tb-price">$10 · R180</div>
+        </div>
+        <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="border-color:var(--accent);position:relative;">
+          <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;border-radius:50px;padding:2px 7px;white-space:nowrap;">BEST VALUE</div>
+          <div class="tb-val">10T</div>
+          <div class="tb-mid">100 AI uses</div>
+          <div class="tb-price">$20 · R360</div>
+        </div>
+        <div class="topup-btn" onclick="aaBuyAIPack(25,320)">
+          <div class="tb-val">25T</div>
+          <div class="tb-mid">320 AI uses</div>
+          <div class="tb-price">$50 · R900</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">8 uses/T standard · bulk packs include bonus uses · prices shown in USD with local ZAR equivalent</div>
     </div>
   </div>
 </div>
@@ -1321,6 +1379,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       </div>
     </div>
     <div class="ob-form">
+      <div id="magic-banner-area"></div>
       <h2>Create your seller account</h2>
       <div class="osub">Takes less than 3 minutes. Start with your profile, then publish your first listing.</div>
       <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
@@ -1560,7 +1619,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <button class="back-btn" onclick="goTo('aa-home')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Item Detail</h1>
       <button class="aa-flow-info-btn" onclick="aaShowFlowSheet(aaGetSelectedCategory())" title="How it works">?</button>
-      <span class="aa-stage-pill">Stage 1 of 4</span>
+      <span class="aa-stage-pill">Stage 1 of 3</span>
     </div>
     <p>Select a category — the form adapts to your listing type</p>
   </div>
@@ -1568,6 +1627,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="aa-section-label">Category</div>
     <div class="aa-cat-chip-row" id="aa-cat-chips"></div>
     <div id="aa-detail-form"></div>
+    <div id="aa-detail-ai"></div>
   </div>
   <div class="aa-footer">
     <button class="aa-btn-secondary" onclick="goTo('aa-home')">Save Draft</button>
@@ -1581,7 +1641,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="aa-hdr-row">
       <button class="back-btn" onclick="goTo('aa-detail')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Item Photos</h1>
-      <span class="aa-stage-pill">Stage 2 of 4</span>
+      <span class="aa-stage-pill">Stage 2 of 3</span>
     </div>
     <p id="aa-photos-subtitle">Capture each shot — required slots must be filled to continue</p>
   </div>
@@ -1620,9 +1680,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <div id="screen-aa-publish" class="screen">
   <div class="aa-hdr">
     <div class="aa-hdr-row">
-      <button class="back-btn" onclick="goTo('aa-coach')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" onclick="goTo('aa-photos')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <h1>Publish</h1>
-      <span class="aa-stage-pill">Stage 4 of 4</span>
+      <span class="aa-stage-pill">Stage 3 of 3</span>
     </div>
     <p>Review your listing — it goes live once you publish</p>
   </div>
@@ -1630,7 +1690,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <!-- rendered by aaRenderPublishScreen() -->
   </div>
   <div class="aa-footer">
-    <button class="aa-btn-secondary" onclick="goTo('aa-coach')">Back</button>
+    <button class="aa-btn-secondary" onclick="goTo('aa-photos')">Back</button>
     <button class="aa-btn-primary" id="aa-publish-btn" onclick="aaDoPublish()">Publish Listing</button>
   </div>
 </div>
@@ -1955,6 +2015,7 @@ async function loadLiveListings() {
           queueCount: 0,
           sellerIdx: null,
           isLive: true,
+          service_class: l.service_class || null,
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
           propType, beds, baths, garages, listingType, furnished, pets, features
@@ -2221,19 +2282,37 @@ function updateTuppenceUI(){
   document.getElementById('tn-usd-display').textContent=`≈ $${(tuppence*2).toFixed(2)}`;
   document.getElementById('tn-home-bal').textContent=tuppence;
   const d=document.getElementById('dash-tn');if(d)d.textContent=tuppence;
+  // Sync dual-balance widget in AI Coach Credits section
+  const dw=document.getElementById('tn-wallet-intros');if(dw)dw.textContent=tuppence;
 }
-let pendingTopUpAmount=0;
+// Local currency display — ZAR at R18/$1 (1T=$2, 1T=R36). Extend when live forex is added.
+function localPrice(usd) {
+  const zarRate = 18; // ZAR per USD — update to live rate when forex API is wired
+  return `$${usd} · R${usd * zarRate}`;
+}
+let pendingTopUpAmount=0, pendingAIPackSessions=0;
 const topUpBundles={5:{zar:'R180',usd:'$10'},10:{zar:'R360',usd:'$20'},25:{zar:'R900',usd:'$50'}};
 function topUp(n){
   if(isOffline()){ showToast("You're offline - top-up needs a connection"); return; }
-  pendingTopUpAmount=n;
-  const b=topUpBundles[n]||{zar:'R'+(n*36),usd:'$'+(n*2)};
-  document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence for your wallet.';
-  document.getElementById('topup-bundle-label').textContent=n+'T';
-  document.getElementById('topup-zar-label').textContent=b.zar;
-  document.getElementById('topup-usd-label').textContent=b.usd;
+  pendingTopUpAmount=n; pendingAIPackSessions=0;
+  const usd=n*2, lp=localPrice(usd);
+  document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence ('+n+' introductions).';
+  document.getElementById('topup-bundle-label').textContent=n+'T · '+n+' intros';
+  document.getElementById('topup-zar-label').textContent='R'+(n*36);
+  document.getElementById('topup-usd-label').textContent='$'+usd;
   document.getElementById('topup-modal').classList.add('open');
 }
+function aaBuyAIPack(t, sessions){
+  if(isOffline()){ showToast("You're offline - purchase needs a connection"); return; }
+  pendingTopUpAmount=t; pendingAIPackSessions=sessions;
+  const usd=t*2;
+  document.getElementById('topup-modal-desc').textContent='Purchase '+sessions+' AI coaching uses ('+t+'T).';
+  document.getElementById('topup-bundle-label').textContent=t+'T · '+sessions+' AI uses';
+  document.getElementById('topup-zar-label').textContent='R'+(t*36);
+  document.getElementById('topup-usd-label').textContent='$'+usd;
+  document.getElementById('topup-modal').classList.add('open');
+}
+function aaBuyPackFromWallet(){ aaBuyAIPack(5,40); }
 async function confirmTopUp(){
   const n=pendingTopUpAmount;
   if(!n) return;
@@ -2242,9 +2321,12 @@ async function confirmTopUp(){
   if(!email||!email.includes('@')){ showToast('Please enter your email address'); return; }
   showToast('Redirecting to secure payment...');
   document.getElementById('topup-modal').classList.remove('open');
-  pendingTopUpAmount=0;
+  const aiSessions=pendingAIPackSessions;
+  pendingTopUpAmount=0; pendingAIPackSessions=0;
   try {
-    const res = await fetch(BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n, {method:'POST'});
+    let url=BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n;
+    if(aiSessions) url+='&ai_pack_sessions='+aiSessions;
+    const res = await fetch(url, {method:'POST'});
     const data = await res.json();
     if(data.authorization_url){ window.location.href = data.authorization_url; }
     else { showToast('Payment setup failed — please try again'); }
@@ -2288,6 +2370,7 @@ function goTo(name){
     const el=document.getElementById('plans-home-city');
     if(el) el.textContent=localStorage.getItem('ms_user_city')||activeCity.name||'your city';
   }
+  if(name==='onboard') renderMagicBanner();
   if(name==='aa-home')aaRenderHome();
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
@@ -3009,7 +3092,48 @@ function credPhotoHtml(c, introAccepted){
   return `<div class="cred-photo-wrap"><img src="${c.photo}" class="cred-photo-blurred"><div class="cred-photo-lock"><div style="font-size:18px;">🔒</div><div class="cred-photo-lock-text">Certificate revealed<br>after introduction</div></div></div>`;
 }
 
+function openBEASellerProfile(l) {
+  const t = trustTier(l.trust);
+  const active = document.querySelector('.screen.active');
+  prevScreen = active ? active.id.replace('screen-', '') : 'browse';
+  const catBg   = CATS[l.cat] ? CATS[l.cat].bg : 'var(--navy)';
+  const catIcon = CATS[l.cat] ? CATS[l.cat].icon : '📦';
+  const scBadge = l.service_class ? `<span style="font-size:11px;background:rgba(255,255,255,.12);border-radius:50px;padding:3px 9px;">${l.service_class === 'Technical' ? '🔧 Technical' : '🤝 Casuals'}</span> · ` : '';
+  document.getElementById('screen-seller-cv').innerHTML = `
+    <div class="cv-hero" style="background:${catBg}">
+      <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="cv-avatar" style="margin-top:8px;"><div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div></div>
+      <div class="cv-headline">${l.title}</div>
+      <div class="cv-cat">${scBadge}${l.cat} · ${l.area} · 🔒 Anonymous until introduction</div>
+      <div class="cv-trust-row">
+        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
+        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
+      </div>
+    </div>
+    <div class="cv-body">
+      ${l.desc ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${maskContactInfo(formatDesc(l.desc), false)}</p></div>` : ''}
+      <div class="cv-sec">
+        <div class="cv-sec-title">Credentials &amp; qualifications</div>
+        <div style="font-size:12px;color:var(--text-3);">Seller credentials are verified and displayed here once the listing is claimed and Trust Score documents are submitted.</div>
+      </div>
+      <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>
+    </div>
+    <div class="cv-sticky">
+      <button class="cv-cta" onclick="openModal('${l.id}')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Request Introduction · 1T on acceptance
+      </button>
+    </div>`;
+  goTo('seller-cv');
+}
+
 function openSellerCV(sellerIdx,listingId){
+  // BEA (live) listings: sellerIdx is null — render a profile built from listing data
+  if (sellerIdx == null) {
+    const l = findListing(listingId);
+    if (l && l.isLive) { openBEASellerProfile(l); return; }
+  }
   const idx = (sellerIdx == null) ? 0 : sellerIdx;
   const s=SELLERS[idx],l=findListing(listingId),t=trustTier(l.trust);
   const introAccepted = acceptedIntros.has(`${idx}-${listingId}`);
@@ -3248,8 +3372,9 @@ function submitOnboard(){
   const email=document.getElementById('ob-email').value.trim();
   const cat=document.getElementById('ob-cat').value;
   if(!name||!email){showToast('Please enter your name and email');return;}
-  // Store email so AA screens can pre-fill it
+  // Store email so AA screens can pre-fill it (session + persisted)
   sessionStorage.setItem('aa_email', email);
+  localStorage.setItem('ms_aa_email', email);
   // Store home city — used to restore activeCity on next page load
   const _homeCity = magicLink.active ? magicLink.area : activeCity.name;
   localStorage.setItem('ms_user_city', _homeCity);
@@ -3844,17 +3969,19 @@ const AA_CATEGORIES = {
     emoji: '🎓',
     fields: [
       {id:'title',   label:'Listing headline',    type:'text',   placeholder:'e.g. Maths & Science tutor · Grades 10–12'},
-      {id:'subject', label:'Subject(s)',           type:'text',   placeholder:'e.g. Mathematics, Physics'},
+      {id:'subject', label:'Subject(s) — select all that apply', type:'multiselect',
+       options:['Mathematics','Mathematical Literacy','Physical Sciences','Life Sciences / Biology','English','Afrikaans','History','Geography','Accounting','Economics','Business Studies','Computer Applications Technology','Information Technology','Life Orientation','Chemistry','Statistics','Calculus','Physics','Music','Art / Drama','Other']},
       {id:'level',   label:'Level',               type:'select', options:['Primary (Gr 1–7)','High School (Gr 8–12)','Tertiary','Adult / Professional','All levels']},
       {id:'mode',    label:'Mode',                type:'select', options:['In-person','Online','Both']},
-      {id:'rate',    label:'Rate',                type:'text',   placeholder:'e.g. R300/hr'},
-      {id:'area',    label:'Area covered',        type:'text',   placeholder:'e.g. Pretoria East'},
+      {id:'rate',    label:'Rate',                type:'rate',   placeholder:'300', units:['/hr','/session','/month','once-off','POA']},
+      {id:'area',    label:'Area / suburb',       type:'text',   placeholder:'e.g. Pretoria East'},
+      {id:'radius',  label:'Travel radius',       type:'select', options:['5 km','10 km','15 km','20 km','30 km','50 km','Online only','City-wide']},
       {id:'desc',    label:'About your teaching', type:'textarea',placeholder:'Qualifications, experience, approach, successes…'},
     ],
     photos: [
-      {slot:'profile',         label:'Profile photo',         hint:'Professional headshot',           required:true},
-      {slot:'teaching_example',label:'Teaching example',      hint:'Whiteboard, lesson notes or workspace', required:true},
-      {slot:'certificate',     label:'Qualification / degree',hint:'Your highest relevant credential', required:false},
+      {slot:'profile',         label:'Profile photo',         hint:'Professional headshot',                required:true},
+      {slot:'teaching_example',label:'Teaching example',      hint:'Whiteboard, lesson notes or workspace', required:false},
+      {slot:'certificate',     label:'Qualification / degree',hint:'Your highest relevant credential',      required:false},
     ],
   },
   'Services': {
@@ -3865,9 +3992,11 @@ const AA_CATEGORIES = {
       'Technical': {
         fields: [
           {id:'title',       label:'Listing headline',    type:'text',   placeholder:'e.g. Licensed electrician · Pretoria'},
-          {id:'service_type',label:'Service type',        type:'select', options:['Electrical','Plumbing','HVAC','Solar','IT & Tech','Legal','Financial','Landscaping','Other']},
-          {id:'area',        label:'Area covered',        type:'text',   placeholder:'e.g. Pretoria East + surrounds'},
-          {id:'rate',        label:'Rate',                type:'text',   placeholder:'e.g. R450/hr or fixed quote'},
+          {id:'service_type',label:'Service type',        type:'select', options:['Electrical','Plumbing','HVAC','Solar','IT & Tech','Legal','Financial','Landscaping','Construction','Cleaning','Other']},
+          {id:'area',        label:'Area / suburb',       type:'text',   placeholder:'e.g. Pretoria East'},
+          {id:'radius',      label:'Travel radius',       type:'select', options:['5 km','10 km','15 km','20 km','30 km','50 km','City-wide']},
+          {id:'rate',        label:'Rate',                type:'rate',   placeholder:'450', units:['/hr','/day','/visit','once-off / fixed','POA']},
+          {id:'callout_fee', label:'Call-out fee (optional)', type:'rate', required:false, placeholder:'0', units:['/visit','flat fee','POA'], helpText:'Charged per call-out, in addition to your main rate'},
           {id:'experience',  label:'Years of experience', type:'number', placeholder:'e.g. 12'},
           {id:'registered',  label:'Registered / accredited', type:'select', options:['Yes — fully registered','Yes — in progress','No — not applicable']},
           {id:'desc',        label:'About your service',  type:'textarea',placeholder:'Qualifications, licences, scope of work, availability…'},
@@ -3884,8 +4013,10 @@ const AA_CATEGORIES = {
           {id:'service_type',  label:'Service type',        type:'select', options:['Domestic','Gardening','Dog Walking','Child Minding','Temp / Receptionist','General Labour','Other']},
           {id:'availability',  label:'Availability',        type:'select', options:['Weekdays','Weekends','Weekdays & weekends','Flexible / negotiable']},
           {id:'days_available',label:'Days available',      type:'text',   placeholder:'e.g. Mon–Fri, or 3 days/week'},
-          {id:'rate',          label:'Rate',                type:'text',   placeholder:'e.g. R200/day or R1800/month'},
-          {id:'area',          label:'Area covered',        type:'text',   placeholder:'e.g. Centurion, Midrand'},
+          {id:'rate',          label:'Rate',                type:'rate',   placeholder:'200', units:['/hr','/day','/week','/month','once-off','POA']},
+          {id:'callout_fee',   label:'Call-out fee (optional)', type:'rate', required:false, placeholder:'0', units:['/visit','flat fee','POA'], helpText:'Charged per call-out, in addition to your main rate'},
+          {id:'area',          label:'Area / suburb',       type:'text',   placeholder:'e.g. Centurion, Midrand'},
+          {id:'radius',        label:'Travel radius',       type:'select', options:['5 km','10 km','15 km','20 km','30 km','50 km','City-wide']},
           {id:'references',    label:'References available',type:'select', options:['Yes — contactable references','On request','None currently']},
           {id:'desc',          label:'About me',            type:'textarea',placeholder:'Experience, reliability, what makes you stand out…'},
         ],
@@ -4041,8 +4172,9 @@ function aaFormatPrice(val) {
 }
 
 // ── AA state ──────────────────────────────────────────────────
-let aaDraftId       = null;  // active draft id
-let aaActiveSlot    = null;  // photo slot being captured
+let aaDraftId            = null;  // active draft id
+let aaActiveSlot         = null;  // photo slot being captured
+let aaCurrentSuggestions = {};    // field suggestions from last AI coach run
 
 // ── AA navigation ─────────────────────────────────────────────
 function aaGoTo(screenSuffix) {
@@ -4062,17 +4194,17 @@ async function aaRenderHome() {
     return;
   }
   list.sort((a,b) => b.updated_at - a.updated_at);
-  const stageNames = {1:'Item Details', 2:'Photos', 3:'AI Coach', 4:'Publish'};
+  const stageNames = {1:'Item Details', 2:'Photos', 3:'Publish'};
   el.innerHTML = list.map(d => {
     const catCfg  = AA_CATEGORIES[d.category] || {};
     const emoji   = catCfg.emoji || '📦';
     const title   = d.fields?.title || d.fields?.item_name || 'Untitled';
-    const stage   = d.stage || 1;
+    const stage   = Math.min(d.stage || 1, 3);
     const age     = aaAgeLabel(d.updated_at);
-    const dots    = [1,2,3,4].map(s =>
+    const dots    = [1,2,3].map(s =>
       `<span class="aa-stage-dot ${s < stage ? 'done' : s === stage ? 'active' : ''}"></span>`
     ).join('');
-    const stageLabel = stage >= 4 ? 'Ready to publish' : `Next: ${stageNames[stage] || 'Details'}`;
+    const stageLabel = stage >= 3 ? 'Ready to publish' : `Next: ${stageNames[stage] || 'Details'}`;
     return `
       <div class="aa-draft-card">
         <div class="aa-draft-cat">${emoji} ${d.category || 'No category'}</div>
@@ -4102,14 +4234,13 @@ function aaAgeLabel(ts) {
 }
 
 // ── AA Draft management ───────────────────────────────────────
-function aaNewDraft() {
+async function aaNewDraft() {
   aaDraftId = 'aa_' + Date.now();
-  const seedEmail = sessionStorage.getItem('aa_email') || '';
-  if (seedEmail) {
-    // Pre-seed email into the draft record so coach/publish screens don't need to ask
-    aaDB.put({ id: aaDraftId, email: seedEmail, stage: 1, created_at: Date.now(), updated_at: Date.now() });
-  }
-  aaRenderDetailScreen(null);
+  // Cascade: sessionStorage (magic-link session) → localStorage (returning seller) → empty
+  const seedEmail = sessionStorage.getItem('aa_email') || localStorage.getItem('ms_aa_email') || '';
+  const draft = { id: aaDraftId, email: seedEmail, stage: 1, created_at: Date.now(), updated_at: Date.now() };
+  await aaDB.put(draft);
+  aaRenderDetailScreen(draft);
   goTo('aa-detail');
 }
 
@@ -4125,7 +4256,6 @@ async function aaOpenDraftAt(id, stage) {
   if (!draft) { aaRenderDetailScreen(null); goTo('aa-detail'); return; }
   if (stage === 1) { aaRenderDetailScreen(draft); goTo('aa-detail'); return; }
   if (stage === 2) { aaRenderPhotosScreen(draft); goTo('aa-photos'); return; }
-  if (stage === 3) { aaRenderCoachScreen(); goTo('aa-coach'); return; }
   aaRenderPublishScreen(); goTo('aa-publish');
 }
 
@@ -4135,12 +4265,9 @@ async function aaOpenDraft(id) {
   if (!draft) { aaRenderDetailScreen(null); goTo('aa-detail'); return; }
 
   const stage = draft.stage || 1;
-  if (stage >= 4) {
+  if (stage >= 3) {
     aaRenderPublishScreen();
     goTo('aa-publish');
-  } else if (stage >= 3) {
-    aaRenderCoachScreen();
-    goTo('aa-coach');
   } else if (stage >= 2 && draft.category) {
     aaRenderPhotosScreen(draft);
     goTo('aa-photos');
@@ -4163,8 +4290,14 @@ function aaRenderDetailScreen(draft) {
              onclick="aaSelectCategory('${c}')">${cfg.emoji} ${c}${p2}</button>`;
   }).join('');
 
-  // Form fields
-  aaRenderDetailForm(current, draft?.fields || {}, draft?.service_class || null);
+  // Restore suggestion store from draft (survives page navigation)
+  aaCurrentSuggestions = draft?.coachSuggestions?.fields || {};
+
+  // Form fields with inline suggestions
+  aaRenderDetailForm(current, draft?.fields || {}, draft?.service_class || null, aaCurrentSuggestions);
+
+  // AI coach panel below the form
+  aaRenderAIPanel(draft);
 }
 
 function aaSelectCategory(cat) {
@@ -4179,7 +4312,8 @@ function aaSelectCategory(cat) {
   });
 }
 
-function aaRenderDetailForm(category, values, serviceClass) {
+function aaRenderDetailForm(category, values, serviceClass, suggestions) {
+  suggestions = suggestions || {};
   const el = document.getElementById('aa-detail-form');
   if (!category) {
     el.innerHTML = `<p style="color:var(--text-3);font-size:13px;text-align:center;padding:16px 0;">Select a category above to see the form</p>`;
@@ -4206,31 +4340,72 @@ function aaRenderDetailForm(category, values, serviceClass) {
     }
     const cfg = base.serviceClasses[serviceClass];
     document.getElementById('aa-detail-next').disabled = false;
-    el.innerHTML = classHtml + `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(cfg.fields, values);
+    el.innerHTML = classHtml + `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(cfg.fields, values, suggestions);
     return;
   }
 
   document.getElementById('aa-detail-next').disabled = false;
-  el.innerHTML = `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(base.fields, values);
+  el.innerHTML = `<div class="aa-section-label">Listing Details</div>` + aaFieldsHtml(base.fields, values, suggestions);
 }
 
-function aaFieldsHtml(fields, values) {
+function aaFieldsHtml(fields, values, suggestions) {
+  suggestions = suggestions || {};
   const cur = aaCurrency();
   return fields.map(f => {
     const val  = values[f.id] || '';
     const req  = f.id === 'title' || f.id === 'price' ? ' <span style="color:#e11d48">*</span>' : '';
     const label       = f.label.replace(/\bUSD\b/g, cur.code);
     const placeholder = (f.placeholder || '').replace(/\$(?=\d)/g, cur.symbol);
+    const sug = suggestions[f.id];
+    const sugHtml = sug
+      ? `<div class="aa-suggestion-pill">
+           <span class="aa-sug-icon">💡</span>
+           <span class="aa-sug-text">${sug.suggestion}</span>
+           <button class="aa-sug-apply" data-sug-field="${f.id}" onclick="aaApplySuggestion('${f.id}',this)">✓ Apply</button>
+         </div>`
+      : '';
+    if (f.type === 'multiselect') {
+      const selected = new Set((val || '').split(',').map(v => v.trim()).filter(Boolean));
+      const chips = (f.options || []).map(o =>
+        `<button type="button" class="aa-ms-chip${selected.has(o)?' selected':''}"
+                 onclick="this.classList.toggle('selected')" data-val="${o}">${o}</button>`
+      ).join('');
+      return `<div class="field"><label>${label}${req}</label>
+        <div class="aa-multisel" id="aaf-${f.id}" data-type="multiselect">${chips}</div>
+        ${sugHtml}</div>`;
+    }
+    if (f.type === 'rate') {
+      const rateMatch = val.match(/^R?(\d+(?:\.\d+)?)\s*(.+)?$/);
+      const rateAmt   = rateMatch ? rateMatch[1] : '';
+      const rateUnit  = (rateMatch && rateMatch[2]) ? rateMatch[2].trim() : (f.units ? f.units[0] : '/hr');
+      const units     = f.units || ['/hr', '/day', '/month', 'once-off', 'POA'];
+      const opts      = units.map(u => `<option value="${u}"${rateUnit===u?' selected':''}>${u}</option>`).join('');
+      const previewId = `aaf-${f.id}-preview`;
+      const initPreview = rateAmt ? `R${rateAmt}${rateUnit}` : '';
+      const helpHtml  = f.helpText ? `<div style="font-size:11px;color:var(--text-3);margin-top:3px;">${f.helpText}</div>` : '';
+      return `<div class="field"><label>${label}${req}</label>
+        <div class="aa-rate-wrap" id="aaf-${f.id}" data-type="rate">
+          <input type="text" inputmode="decimal" id="aaf-${f.id}-amount" placeholder="${placeholder || '0'}" value="${rateAmt}"
+                 style="min-width:80px;"
+                 oninput="(function(){var a=document.getElementById('aaf-${f.id}-amount').value,u=document.getElementById('aaf-${f.id}-unit').value,p=document.getElementById('${previewId}');if(p)p.textContent=u==='POA'?'POA':(a?'R'+a+u:'');})()">
+          <select id="aaf-${f.id}-unit"
+                  onchange="(function(){var a=document.getElementById('aaf-${f.id}-amount').value,u=this.value,p=document.getElementById('${previewId}');if(p)p.textContent=u==='POA'?'POA':(a?'R'+a+u:'');}).call(this)">${opts}</select>
+        </div>
+        <div id="${previewId}" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:4px;min-height:16px;">${initPreview}</div>
+        ${helpHtml}${sugHtml}</div>`;
+    }
     if (f.type === 'textarea') {
       return `<div class="field"><label>${label}${req}</label>
-        <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea></div>`;
+        <textarea id="aaf-${f.id}" placeholder="${placeholder}">${val}</textarea>
+        ${sugHtml}</div>`;
     }
     if (f.type === 'select') {
       const opts = (f.options || []).map(o =>
         `<option value="${o}"${val===o?' selected':''}>${o}</option>`
       ).join('');
       return `<div class="field"><label>${label}${req}</label>
-        <select id="aaf-${f.id}"><option value="">— select —</option>${opts}</select></div>`;
+        <select id="aaf-${f.id}"><option value="">— select —</option>${opts}</select>
+        ${sugHtml}</div>`;
     }
     if (f.id === 'price' || f.id === 'price_per_person') {
       const fmtVal = val ? aaFormatPrice(val) : '';
@@ -4238,11 +4413,46 @@ function aaFieldsHtml(fields, values) {
         <input type="number" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"
                oninput="(function(v){var d=document.getElementById('aaf-${f.id}-fmt');if(d)d.textContent=v?aaFormatPrice(v):'';})(this.value)">
         <div id="aaf-${f.id}-fmt" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:4px;min-height:16px;">${fmtVal}</div>
-      </div>`;
+        ${sugHtml}</div>`;
     }
     return `<div class="field"><label>${label}${req}</label>
-      <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}"></div>`;
+      <input type="${f.type}" id="aaf-${f.id}" placeholder="${placeholder}" value="${val}">
+      ${sugHtml}</div>`;
   }).join('');
+}
+
+function aaApplySuggestion(fieldId, btn) {
+  const sug = (aaCurrentSuggestions || {})[fieldId];
+  if (!sug) return;
+  const el = document.getElementById('aaf-' + fieldId);
+  if (!el) return;
+  if (el.dataset.type === 'multiselect') {
+    // Tick any chips whose value appears in the suggestion string
+    const sugVals = sug.suggestion.split(',').map(v => v.trim().toLowerCase());
+    el.querySelectorAll('.aa-ms-chip').forEach(chip => {
+      if (sugVals.includes(chip.dataset.val.toLowerCase())) chip.classList.add('selected');
+    });
+  } else if (el.dataset.type === 'rate') {
+    // Parse "R300/hr" or "300 /hr" or "POA" from suggestion
+    const raw = sug.suggestion.trim();
+    if (raw.toUpperCase() === 'POA') {
+      const unitSel = document.getElementById('aaf-' + fieldId + '-unit');
+      if (unitSel) unitSel.value = 'POA';
+    } else {
+      const m = raw.match(/R?(\d+(?:\.\d+)?)\s*(.+)?/);
+      if (m) {
+        const amtEl  = document.getElementById('aaf-' + fieldId + '-amount');
+        const unitEl = document.getElementById('aaf-' + fieldId + '-unit');
+        if (amtEl)  amtEl.value  = m[1];
+        if (unitEl && m[2]) unitEl.value = m[2].trim();
+      }
+    }
+  } else {
+    el.value = sug.suggestion;
+    el.focus();
+    el.dispatchEvent(new Event('input'));
+  }
+  if (btn) { btn.textContent = '✓ Applied'; btn.disabled = true; }
 }
 
 function aaSelectServiceClass(sc) {
@@ -4253,7 +4463,7 @@ function aaSelectServiceClass(sc) {
     d.updated_at = Date.now();
     aaDB.put(d).then(() => {
       const category = aaGetSelectedCategory() || d.category;
-      aaRenderDetailForm(category, d.fields || {}, sc);
+      aaRenderDetailForm(category, d.fields || {}, sc, aaCurrentSuggestions || {});
     });
   });
 }
@@ -4283,7 +4493,19 @@ async function aaSaveDetailAndNext() {
   const fields = {};
   for (const f of cfg.fields) {
     const el = document.getElementById('aaf-' + f.id);
-    if (el) fields[f.id] = el.value.trim();
+    if (!el) continue;
+    if (el.dataset.type === 'multiselect') {
+      // Chip-based multi-select — collect selected chip values
+      fields[f.id] = Array.from(el.querySelectorAll('.aa-ms-chip.selected'))
+        .map(b => b.dataset.val).join(', ');
+    } else if (el.dataset.type === 'rate') {
+      // Compound rate field — number + unit dropdown
+      const amt  = (document.getElementById('aaf-' + f.id + '-amount')?.value || '').trim();
+      const unit = document.getElementById('aaf-' + f.id + '-unit')?.value || '/hr';
+      fields[f.id] = unit === 'POA' ? 'POA' : (amt ? `R${amt}${unit}` : '');
+    } else {
+      fields[f.id] = el.value.trim();
+    }
   }
   if (!fields.title && !fields.item_name) {
     showToast('Fill in the listing headline first');
@@ -4408,7 +4630,139 @@ async function aaHandlePhotoCapture(event) {
   event.target.value = '';
 }
 
-// ── STAGE 3: AI COACH ─────────────────────────────────────────
+// ── AI COACH PANEL (embedded in Stage 1) ─────────────────────
+
+function aaRenderAIPanel(draft) {
+  const el = document.getElementById('aa-detail-ai');
+  if (!el) return;
+  if (!draft) { el.innerHTML = ''; return; }
+
+  const email       = draft.email || '';
+  const suggestions = draft.coachSuggestions || null;
+  const actions     = suggestions?.trust_score_actions || [];
+  const anonWarn    = suggestions?.anonymity_warning;
+  const hasRun      = !!suggestions;
+
+  // Email section
+  let emailHtml;
+  if (!email) {
+    emailHtml = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Enter your email to use the AI Coach</div>
+        <input type="email" id="aa-detail-email" placeholder="you@example.com"
+               style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:'Inter',sans-serif;">
+        <button onclick="aaSaveDetailEmail()" class="aa-btn-primary" style="margin-top:10px;width:100%;">Save email</button>
+      </div>`;
+  } else {
+    emailHtml = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:2px;">Seller email</div>
+            <div style="font-size:13px;font-weight:600;">${email}</div>
+          </div>
+          <button onclick="aaClearDetailEmail()" style="background:none;border:none;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;padding:0;">Change</button>
+        </div>
+        <div id="aa-detail-session-badge" style="margin-top:8px;font-size:13px;color:var(--text-3);">Checking sessions…</div>
+      </div>`;
+    setTimeout(() => aaFetchDetailSessionBadge(email), 50);
+  }
+
+  // Anonymity warning
+  const anonHtml = anonWarn
+    ? `<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:13px;color:#dc2626;">⚠️ ${anonWarn}</div>`
+    : '';
+
+  // Trust Score action plan
+  let trustHtml = '';
+  if (actions.length > 0) {
+    const items = actions.map((a, i) =>
+      `<div class="aa-trust-action">
+        <div class="aa-trust-num">${i + 1}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">${a.action}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:2px;">📄 ${a.doc} · <strong>+${a.points} pts</strong></div>
+        </div>
+      </div>`
+    ).join('');
+    trustHtml = `
+      <div style="margin-top:16px;">
+        <div class="aa-section-label">🎯 Trust Score Action Plan</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px 14px;">${items}</div>
+      </div>`;
+  }
+
+  const btnLabel = hasRun ? '🔄 Re-run AI Coach' : '✨ Get AI Suggestions';
+  const btnDisabled = !email ? 'disabled' : '';
+
+  el.innerHTML = `
+    <div class="aa-section-label" style="margin-top:24px;">AI Coach</div>
+    ${emailHtml}
+    <button id="aa-detail-coach-btn" onclick="aaRunCoach()" class="aa-btn-primary" ${btnDisabled}
+            style="width:100%;margin-bottom:16px;${!email?'opacity:.4;':''}">
+      ${btnLabel}
+    </button>
+    ${anonHtml}
+    ${trustHtml}`;
+}
+
+async function aaFetchDetailSessionBadge(email) {
+  const badge = document.getElementById('aa-detail-session-badge');
+  const btn   = document.getElementById('aa-detail-coach-btn');
+  if (!badge) return;
+  try {
+    const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    const free     = !data.aa_free_used;
+    const sessions = data.aa_sessions_remaining || 0;
+    if (free) {
+      badge.innerHTML = `<span style="color:#16a34a;font-weight:700;">✓ 1 free coaching session included</span>`;
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    } else if (sessions > 0) {
+      badge.innerHTML = `<span style="font-weight:700;">${sessions} session${sessions !== 1 ? 's' : ''} remaining</span>`;
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    } else {
+      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:8px;">No coaching sessions remaining</div>
+        <div style="display:flex;gap:7px;margin-top:4px;">
+          <div class="topup-btn" onclick="aaBuyAIPack(5,40)" style="flex:1;padding:9px 6px;">
+            <div class="tb-val" style="font-size:14px;">40 uses</div><div class="tb-price">5T · R180</div>
+          </div>
+          <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="flex:1;padding:9px 6px;border-color:var(--accent);">
+            <div class="tb-val" style="font-size:14px;">100 uses</div><div class="tb-price">10T · R360 ★</div>
+          </div>
+          <div class="topup-btn" onclick="aaBuyAIPack(25,320)" style="flex:1;padding:9px 6px;">
+            <div class="tb-val" style="font-size:14px;">320 uses</div><div class="tb-price">25T · R900</div>
+          </div>
+        </div>`;
+      if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
+    }
+  } catch (e) {
+    if (badge) badge.innerHTML = `<span style="color:var(--text-3);font-size:12px;">Could not check sessions</span>`;
+    if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+async function aaSaveDetailEmail() {
+  const input = document.getElementById('aa-detail-email');
+  const email = (input?.value || '').trim();
+  if (!email || !email.includes('@')) { showToast('Enter a valid email'); return; }
+  sessionStorage.setItem('aa_email', email);
+  localStorage.setItem('ms_aa_email', email);  // persist for returning sellers
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  await aaDB.put({ ...draft, email, updated_at: Date.now() });
+  aaRenderAIPanel({ ...draft, email });
+}
+
+async function aaClearDetailEmail() {
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  await aaDB.put({ ...draft, email: '', updated_at: Date.now() });
+  aaRenderAIPanel({ ...draft, email: '' });
+}
+
+// ── STAGE 3 (LEGACY): AI COACH SCREEN ────────────────────────
+// Kept for back-compat — not reachable from normal 3-stage flow
 
 async function aaRenderCoachScreen() {
   const draft = await aaDB.get(aaDraftId);
@@ -4430,9 +4784,16 @@ async function aaRenderCoachScreen() {
       </div>`;
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
   } else {
-    // Show balance from BEA
-    balanceHtml = `<div id="aa-session-badge" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:13px;">
-      <span style="color:var(--text-3);">Checking coaching sessions…</span></div>`;
+    // Show email + change link + balance from BEA
+    balanceHtml = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--text-3);">Seller email</span>
+          <button onclick="aaClearEmail()" style="background:none;border:none;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;padding:0;">Change</button>
+        </div>
+        <div style="font-size:13px;font-weight:600;word-break:break-all;">${email}</div>
+        <div id="aa-session-badge" style="margin-top:8px;font-size:13px;color:var(--text-3);">Checking coaching sessions…</div>
+      </div>`;
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     // Async fetch balance
     setTimeout(() => aaFetchSessionBadge(email), 50);
@@ -4491,7 +4852,17 @@ async function aaFetchSessionBadge(email) {
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
     } else {
       badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:8px;">No coaching sessions remaining</div>
-        <button onclick="aaBuyPack()" class="aa-btn-primary" style="width:100%;">Buy AI Pack — 8 sessions · 1T</button>`;
+        <div style="display:flex;gap:7px;margin-top:4px;">
+          <div class="topup-btn" onclick="aaBuyAIPack(5,40)" style="flex:1;padding:9px 6px;">
+            <div class="tb-val" style="font-size:14px;">40 uses</div><div class="tb-price">5T · R180</div>
+          </div>
+          <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="flex:1;padding:9px 6px;border-color:var(--accent);">
+            <div class="tb-val" style="font-size:14px;">100 uses</div><div class="tb-price">10T · R360 ★</div>
+          </div>
+          <div class="topup-btn" onclick="aaBuyAIPack(25,320)" style="flex:1;padding:9px 6px;">
+            <div class="tb-val" style="font-size:14px;">320 uses</div><div class="tb-price">25T · R900</div>
+          </div>
+        </div>`;
       if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
     }
   } catch (e) {
@@ -4510,14 +4881,47 @@ async function aaSaveEmail() {
   aaRenderCoachScreen();
 }
 
-async function aaRunCoach() {
+async function aaClearEmail() {
   const draft = await aaDB.get(aaDraftId);
   if (!draft) return;
+  await aaDB.put({ ...draft, email: '', updated_at: Date.now() });
+  aaRenderCoachScreen();
+}
+
+async function aaRunCoach() {
+  // Save current form values first so AI analyses the latest input
+  let draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+
+  const category = aaGetSelectedCategory() || draft.category;
+  if (category) {
+    const sc = (category === 'Services') ? (draft.service_class || null) : null;
+    const cfg = aaCatConfig({ category, service_class: sc });
+    const fields = {};
+    for (const f of (cfg?.fields || [])) {
+      const el = document.getElementById('aaf-' + f.id);
+      if (!el) continue;
+      if (el.dataset.type === 'multiselect') {
+        fields[f.id] = Array.from(el.querySelectorAll('.aa-ms-chip.selected')).map(b => b.dataset.val).join(', ');
+      } else if (el.dataset.type === 'rate') {
+        const amt  = (document.getElementById('aaf-' + f.id + '-amount')?.value || '').trim();
+        const unit = document.getElementById('aaf-' + f.id + '-unit')?.value || '/hr';
+        fields[f.id] = unit === 'POA' ? 'POA' : (amt ? `R${amt}${unit}` : '');
+      } else {
+        fields[f.id] = el.value.trim();
+      }
+    }
+    if (Object.keys(fields).length) {
+      draft = { ...draft, category, service_class: sc, fields, updated_at: Date.now() };
+      await aaDB.put(draft);
+    }
+  }
+
   const email = draft.email || '';
   if (!email) { showToast('Enter your email first'); return; }
 
-  const btn = document.getElementById('aa-coach-run-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
+  const btn = document.getElementById('aa-detail-coach-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Analysing…'; }
 
   const photoSlots = (draft.photos || []).map(p => p.slot);
 
@@ -4535,18 +4939,35 @@ async function aaRunCoach() {
     if (res.status === 402) {
       const data = await res.json();
       showToast(data.detail || 'No sessions remaining');
-      if (btn) { btn.disabled = false; btn.textContent = 'Run AI Coach'; }
-      aaFetchSessionBadge(email);
+      if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
+      aaFetchDetailSessionBadge(email);
+      return;
+    }
+    if (res.status === 503) {
+      showToast('AI Coach is being activated — check back shortly');
+      if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
+      return;
+    }
+    if (res.status === 404) {
+      showToast('Email not recognised — use your onboarding email');
+      if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
+      aaClearDetailEmail();
       return;
     }
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    const updated = { ...draft, coachOutput: data.coaching, stage: Math.max(draft.stage || 3, 3), updated_at: Date.now() };
+    const coachSuggestions = data.coaching_json || {};
+    aaCurrentSuggestions   = coachSuggestions.fields || {};
+    const updated = { ...draft, coachSuggestions, stage: Math.max(draft.stage || 1, 2), updated_at: Date.now() };
     await aaDB.put(updated);
-    aaRenderCoachScreen();
+    // Re-render Stage 1 with inline suggestions
+    aaRenderDetailScreen(updated);
+    const fieldCount = Object.keys(aaCurrentSuggestions).length;
+    const planCount  = (coachSuggestions.trust_score_actions || []).length;
+    showToast(`AI suggestions ready — ${fieldCount} field tip${fieldCount !== 1 ? 's' : ''}, ${planCount} Trust Score action${planCount !== 1 ? 's' : ''}`);
   } catch (e) {
     showToast('AI Coach unavailable — try again');
-    if (btn) { btn.disabled = false; btn.textContent = 'Run AI Coach'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
   }
 }
 
@@ -4559,9 +4980,7 @@ async function aaSaveCoachEdit() {
   showToast('Notes saved');
 }
 
-function aaBuyPack() {
-  showToast('Tuppence pack purchase — coming soon');
-}
+function aaBuyPack() { aaBuyAIPack(5, 40); }
 
 // ── STAGE 4: PUBLISH ──────────────────────────────────────────
 
@@ -4587,11 +5006,17 @@ async function aaRenderPublishScreen() {
 
   const descVal = fields.desc ? `<div style="margin-top:10px;font-size:13px;line-height:1.6;color:var(--text-2);">${fields.desc}</div>` : '';
 
-  const coachNote = draft.coachOutput
+  const actions = draft.coachSuggestions?.trust_score_actions || [];
+  const coachNote = actions.length > 0
     ? `<div style="margin-top:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:12px 14px;">
-        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">AI Coaching Notes</div>
-        <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${draft.coachOutput}</div>
-      </div>` : '';
+        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🎯 Trust Score Action Plan</div>
+        ${actions.map((a, i) => `<div class="aa-trust-action">
+          <div class="aa-trust-num">${i + 1}</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${a.action}</div>
+          <div style="font-size:12px;color:#15803d;margin-top:2px;">📄 ${a.doc} · +${a.points} pts</div></div>
+        </div>`).join('')}
+      </div>`
+    : '';
 
   const emailSection = `
     <div style="margin-top:16px;">
@@ -4623,19 +5048,37 @@ async function aaDoPublish() {
   const btn = document.getElementById('aa-publish-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
 
-  // Save email to draft
+  // Save email to draft + persist for returning sessions
+  sessionStorage.setItem('aa_email', email);
+  localStorage.setItem('ms_aa_email', email);
   await aaDB.put({ ...draft, email, updated_at: Date.now() });
 
   const fd = new FormData();
-  fd.append('email',        email);
-  fd.append('category',     draft.category);
-  fd.append('fields',       JSON.stringify(draft.fields || {}));
-  fd.append('coach_output', draft.coachOutput || '');
+  fd.append('email',         email);
+  fd.append('category',      draft.category);
+  if (draft.service_class) fd.append('service_class', draft.service_class);
+  // Include service_class inside fields JSON so BEA can read it
+  const fieldsWithClass = { ...(draft.fields || {}) };
+  if (draft.service_class) fieldsWithClass.service_class = draft.service_class;
+  fd.append('fields',        JSON.stringify(fieldsWithClass));
+  // Summarise coach suggestions for BEA (appended to description in pending listing)
+  const actions = (draft.coachSuggestions?.trust_score_actions || []);
+  const coachNote = actions.length > 0
+    ? 'AI Trust Score Actions: ' + actions.map((a,i) => `${i+1}. ${a.action} (+${a.points} pts)`).join('; ')
+    : '';
+  fd.append('coach_output', coachNote);
 
-  // Append photos
+  // Append photos — convert base64 dataUrl to Blob for upload
   for (const p of (draft.photos || [])) {
-    if (p.blob) {
-      fd.append('photos', p.blob, `${p.slot}.jpg`);
+    if (p.dataUrl) {
+      try {
+        const parts = p.dataUrl.split(',');
+        const mime  = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+        const binary = atob(parts[1]);
+        const bytes  = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        fd.append('photos', new Blob([bytes], {type: mime}), `${p.slot}.jpg`);
+      } catch (e) { /* skip corrupt photo */ }
     }
   }
 
@@ -4644,7 +5087,7 @@ async function aaDoPublish() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     // Mark draft complete
-    await aaDB.put({ ...draft, email, stage: 4, listing_id: data.listing_id, updated_at: Date.now() });
+    await aaDB.put({ ...draft, email, stage: 3, listing_id: data.listing_id, updated_at: Date.now() });
     showToast('Listing published! 🎉');
     goTo('aa-home');
   } catch (e) {
@@ -4729,7 +5172,7 @@ const AA_FLOWS = {
   },
   'Collectors': {
     emoji: '🏆',
-    heading: 'Your collector's item listing, AI-improved',
+    heading: "Your collector's item listing, AI-improved",
     phase: 2,
     steps: [
       { n:'1', col:'c-blue',  title:'Fill in item details',
@@ -4850,7 +5293,8 @@ async function aaSavePhotosAndNext() {
   }
   const updated = { ...draft, stage: Math.max(draft.stage || 2, 3), updated_at: Date.now() };
   await aaDB.put(updated);
-  goTo('aa-coach');
+  aaRenderPublishScreen();
+  goTo('aa-publish');
 }
 
 </script>

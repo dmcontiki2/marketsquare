@@ -7,7 +7,7 @@ Read STATUS.md first, then AGENT_BRIEFING.md. They are the source of truth.
 - marketsquare.html → index.html (buyer app)
 - marketsquare_admin.html → admin.html (admin tool)
 - bea_main.py → main.py (BEA backend)
-- Solar_Council_Codex_v4_3.docx — canonical rules (upload to Claude Chat if needed)
+- Solar_Council_Codex_v4_5.docx — canonical rules (upload to Claude Chat if needed)
 - Cost_Breakdown_GlobalLaunch.xlsx — live cost model (upload to Claude Chat when flagged)
 
 ## Deploy (or use deploy_marketsquare.bat)

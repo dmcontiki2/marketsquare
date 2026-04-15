@@ -1,10 +1,10 @@
 @echo off
-title Session Starting — All Projects...
+title Session Starting — MarketSquare...
 color 0A
 
 :: ════════════════════════════════════════════════════════════
 ::  start_marketsquare.bat
-::  Session Startup — All 4 Projects
+::  Session Startup — MarketSquare + Related Projects
 ::  Place this file on your Desktop
 ::  Double-click to begin any development session
 ::
@@ -13,19 +13,23 @@ color 0A
 ::    - trustsquare.co/admin.html (admin tool)
 ::    - trustsquare.co/launch/ (CityLauncher)
 ::    - Projects folder in Explorer
-::    - Claude Code at C:\Users\David\Projects (all projects)
-::    - Claude Code at C:\Users\David\Projects\AdvertAgent
+::    - Claude Code at C:\Users\David\Projects\MarketSquare
+::
+::  Projects:
+::    MarketSquare  — main app (includes Advert Agent, BEA, FEA)
+::    CityLauncher  — launch dashboard at /launch/
+::    SellerScraper — lead generation tool
+::
+::  Note: Advert Agent (AA) is integrated into MarketSquare.
+::  No separate AdvertAgent project window needed.
 :: ════════════════════════════════════════════════════════════
 
 set PROJECTS=C:\Users\David\Projects
 set MS=%PROJECTS%\MarketSquare
-set AA=%PROJECTS%\AdvertAgent
-set CL=%PROJECTS%\CityLauncher
-set SS=%PROJECTS%\SellerScraper
 
 echo.
 echo  ============================================================
-echo   SESSION STARTING  ^|  All Projects
+echo   SESSION STARTING  ^|  MarketSquare
 echo  ============================================================
 echo.
 
@@ -49,20 +53,20 @@ timeout /t 1 /nobreak >nul
 echo.
 
 :: ── Step 3: Open Projects folder in Explorer ─────────────────
-echo  [3/5] Opening Projects folder...
-explorer "%PROJECTS%"
+echo  [3/5] Opening MarketSquare project folder...
+explorer "%MS%"
 timeout /t 1 /nobreak >nul
 echo.
 
-:: ── Step 4: Launch Claude Code — root Projects window ────────
-echo  [4/5] Launching Claude Code (Projects root — all 4 projects)...
-wt -d "%PROJECTS%" cmd /k "claude"
+:: ── Step 4: Launch Claude Code — MarketSquare ────────────────
+echo  [4/5] Launching Claude Code (MarketSquare)...
+wt -d "%MS%" cmd /k "claude"
 timeout /t 2 /nobreak >nul
 echo.
 
-:: ── Step 5: Launch Claude Code — AdvertAgent window ──────────
-echo  [5/5] Launching Claude Code (AdvertAgent)...
-wt -d "%AA%" cmd /k "claude"
+:: ── Step 5: Launch Claude Code — Projects root ───────────────
+echo  [5/5] Launching Claude Code (Projects root)...
+wt -d "%PROJECTS%" cmd /k "claude"
 timeout /t 2 /nobreak >nul
 echo.
 
@@ -71,24 +75,19 @@ echo   ALL DONE — YOUR SESSION IS READY
 echo  ============================================================
 echo.
 echo  Browser:
-echo    trustsquare.co             buyer app
+echo    trustsquare.co             buyer app (Advert Agent integrated)
 echo    trustsquare.co/admin.html  admin tool
 echo    trustsquare.co/launch/     CityLauncher dashboard
 echo.
 echo  Claude Code windows:
-echo    C:\Users\David\Projects          (all 4 projects)
-echo    C:\Users\David\Projects\AdvertAgent
+echo    C:\Users\David\Projects\MarketSquare   (primary — AA + BEA + FEA)
+echo    C:\Users\David\Projects               (all projects root)
 echo.
 echo  Clipboard holds SESSION_START_PROMPT — Ctrl+V in Claude Code.
 echo.
-echo  ── Deploy commands (or use deploy_marketsquare.bat) ────────
+echo  ── Quick deploy (or use deploy_marketsquare.bat) ───────────
 echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
 echo   scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
-echo   scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
-echo   ssh root@178.104.73.239 "systemctl restart marketsquare"
-echo.
-echo  ── AdvertAgent deploy ──────────────────────────────────────
-echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
 echo   scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
 echo   ssh root@178.104.73.239 "systemctl restart marketsquare"
 echo.

@@ -1,10 +1,19 @@
-scp C:\Users\David\Projects\MarketSquare\marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html
+MarketSquare · Deployment Reference
+Updated: Session 17 · 15 April 2026
 
+Local filenames carry NO version suffix. Always use:
+  marketsquare.html          (buyer app)
+  marketsquare_admin.html    (admin tool)
+  bea_main.py                (BEA backend)
 
-Perfect — index.html is now 163K, Mar 30 04:43 in the right folder. Nginx reloaded cleanly too.
-Now also note the correct SCP path for all future deployments — save this for your records:
-bash
+Deploy commands (or run deploy_marketsquare.bat for all steps):
 
-scp C:\Users\David\Projects\MarketSquare\marketsquare_v8_6b.html root@178.104.73.239:/var/www/marketsquare/index.html
+  scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
+  scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html
+  scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py
+  ssh root@178.104.73.239 "systemctl restart marketsquare"
 
-Try trustsquare.co in a fresh incognito window now — Maroushka's listings should be fully clickable. Also worth updating start_marketsquare.bat to use the correct SCP path so future deploys are one click.
+Server: Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04
+SSH key: ~/.ssh/id_ed25519 (ed25519, added 6 April 2026)
+Live URL: trustsquare.co (buyer) · trustsquare.co/admin.html (admin)
+BEA health: curl https://trustsquare.co/health

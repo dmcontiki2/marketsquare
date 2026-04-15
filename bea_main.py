@@ -97,6 +97,8 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN geo_city_id INTEGER")
     if "service_class" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN service_class TEXT")
+    if "seller_email" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN seller_email TEXT")
 
     # ── Advert Agent columns on users ───────────────────────────
     user_cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
@@ -339,8 +341,9 @@ _backfill_geo_coords(_startup_conn)
 _startup_conn.close()
 
 # n8n webhook URLs (Task 2 — optional, skip silently if not set)
-N8N_WEBHOOK_ACCEPT  = os.getenv("N8N_WEBHOOK_ACCEPT")
-N8N_WEBHOOK_DECLINE = os.getenv("N8N_WEBHOOK_DECLINE")
+N8N_WEBHOOK_ACCEPT     = os.getenv("N8N_WEBHOOK_ACCEPT")
+N8N_WEBHOOK_DECLINE    = os.getenv("N8N_WEBHOOK_DECLINE")
+N8N_WEBHOOK_NEW_INTRO  = os.getenv("N8N_WEBHOOK_NEW_INTRO")
 if not N8N_WEBHOOK_ACCEPT:
     _log.warning("N8N_WEBHOOK_ACCEPT not set — intro-accepted emails disabled")
 if not N8N_WEBHOOK_DECLINE:
@@ -840,7 +843,7 @@ def delete_user(email: str, _key: str = Depends(auth.require_api_key)):
 # Accept/decline are seller actions — protected.
 
 @app.post("/intros")
-def create_intro(intro: IntroRequest):
+def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     conn = database.get_db()
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro.listing_id,)).fetchone()
     if not listing:
@@ -852,6 +855,19 @@ def create_intro(intro: IntroRequest):
     )
     conn.commit()
     conn.close()
+    if N8N_WEBHOOK_NEW_INTRO:
+        payload = {
+            "event":         "intro_submitted",
+            "listing_id":    intro.listing_id,
+            "listing_title": listing["title"],
+            "category":      listing["category"],
+            "buyer_email":   intro.buyer_email,
+            "buyer_name":    intro.buyer_name,
+            "message":       intro.message,
+            "seller_email":  listing["seller_email"] if listing["seller_email"] else None,
+            "timestamp":     datetime.now(timezone.utc).isoformat(),
+        }
+        background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_NEW_INTRO, payload)
     return {"message": "Introduction request submitted"}
 
 @app.get("/intros")
@@ -890,19 +906,25 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = D
         "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 WHERE id = ?",
         (intro_id,)
     )
+    # Deduct 1 Tuppence from the buyer's wallet
+    conn.execute(
+        "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'intro_deduct', -1, ?)",
+        (intro["buyer_email"], f"Intro accepted · listing #{intro['listing_id']} · {listing['title'] if listing else ''}")
+    )
     conn.commit()
     conn.close()
     if N8N_WEBHOOK_ACCEPT:
         payload = {
-            "event": "intro_accepted",
-            "intro_id": intro_id,
-            "listing_id": intro["listing_id"],
-            "listing_title": listing["title"] if listing else None,
-            "buyer_email": intro["buyer_email"],
-            "buyer_name": intro["buyer_name"],
-            "seller_display_name": None, # not stored in listings schema
-            "city": listing["city"] if listing else None,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event":              "intro_accepted",
+            "intro_id":           intro_id,
+            "listing_id":         intro["listing_id"],
+            "listing_title":      listing["title"] if listing else None,
+            "category":           listing["category"] if listing else None,
+            "buyer_email":        intro["buyer_email"],
+            "buyer_name":         intro["buyer_name"],
+            "seller_email":       listing["seller_email"] if listing and listing["seller_email"] else None,
+            "city":               listing["city"] if listing else None,
+            "timestamp":          datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_ACCEPT, payload)
     return {"message": "Introduction accepted — 1T charged"}
@@ -939,14 +961,14 @@ import payments
 import uuid
 
 @app.post("/payment/initialize")
-def initialize_payment(email: str, tuppence: int):
+def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0):
     amount_rands = tuppence * 36
     reference = f"ms_tuppence_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
         email=email,
         amount_rands=amount_rands,
         reference=reference,
-        metadata={"tuppence": tuppence, "email": email}
+        metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions}
     )
     if result.get("status"):
         return {
@@ -954,6 +976,7 @@ def initialize_payment(email: str, tuppence: int):
             "reference": reference,
             "authorization_url": result["data"]["authorization_url"],
             "tuppence": tuppence,
+            "ai_pack_sessions": ai_pack_sessions,
             "amount_rands": amount_rands
         }
     raise HTTPException(status_code=400, detail="Payment initialization failed")
@@ -964,15 +987,26 @@ def verify_payment(reference: str):
     if result.get("status") and result["data"]["status"] == "success":
         metadata = result["data"]["metadata"]
         tuppence = metadata.get("tuppence", 0)
-        email = metadata.get("email", "")
+        email    = metadata.get("email", "")
+        ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
         conn = database.get_db()
         conn.execute(
             "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
             (email, "topup", tuppence, f"Tuppence top-up via Paystack · ref {reference}")
         )
+        if ai_sessions > 0:
+            # Ensure user record exists, then credit AI sessions
+            conn.execute(
+                "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) ON CONFLICT(email) DO NOTHING",
+                (email,)
+            )
+            conn.execute(
+                "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+                (ai_sessions, email)
+            )
         conn.commit()
         conn.close()
-        return {"status": "ok", "tuppence_credited": tuppence, "email": email}
+        return {"status": "ok", "tuppence_credited": tuppence, "ai_sessions_credited": ai_sessions, "email": email}
     raise HTTPException(status_code=400, detail="Payment verification failed")
 
 @app.get("/payment/test")
@@ -1077,8 +1111,16 @@ async def aa_coach(req: AACoachRequest):
     ).fetchone()
 
     if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Seller not registered")
+        # Auto-register — first-time sellers get 1 free coaching session
+        conn.execute(
+            "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0)",
+            (req.email,)
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT aa_free_used, aa_sessions_remaining, trust_score FROM users WHERE email = ?",
+            (req.email,)
+        ).fetchone()
 
     free_used     = row["aa_free_used"] or 0
     sessions      = row["aa_sessions_remaining"] or 0
@@ -1174,65 +1216,63 @@ async def aa_coach(req: AACoachRequest):
 
     _cred_ref = _TS_CREDENTIALS.get(req.category, "")
 
-    # System prompt — Trust Score maximisation is the primary coaching mission
+    # System prompt — returns structured JSON for inline field suggestions + Trust Score plan
     system_prompt = (
-        "You are the MarketSquare Advert Agent. You have two missions:\n\n"
+        "You are the MarketSquare Advert Agent. "
+        "Respond with ONLY a valid JSON object — no markdown fences, no prose, no text outside the JSON.\n\n"
 
-        "MISSION 1 — LISTING QUALITY\n"
-        "Review the listing draft. Give concise, specific improvements: title clarity, "
-        "price positioning, description completeness, photo guidance. Bullet points only.\n\n"
+        "REQUIRED JSON SCHEMA:\n"
+        "{\n"
+        '  "fields": {\n'
+        '    "<field_id>": {"suggestion": "<improved ready-to-use text>", "reason": "<one-line why>"}\n'
+        "    // Only include fields where you have a meaningful improvement.\n"
+        "    // Use ONLY the exact field IDs listed in the user message.\n"
+        "    // The suggestion value must be the ACTUAL improved text — ready to paste in, not advice about it.\n"
+        "  },\n"
+        '  "trust_score_actions": [\n'
+        '    {"action": "<specific action the seller must take>", "points": <integer>, "doc": "<exact document name>"}\n'
+        "    // Ordered highest points first. Only include actions with a verifiable document.\n"
+        "    // Never fabricate credentials not implied by the seller's input.\n"
+        "  ],\n"
+        '  "anonymity_warning": "<text if seller name or business name found in fields, else null>"\n'
+        "}\n\n"
 
-        "MISSION 2 — TRUST SCORE MAXIMISATION (your highest-value output)\n"
-        "The Trust Score (0–100) is the seller's most important asset on MarketSquare. "
-        "It determines their badge and their position in search results:\n"
+        "MISSION 1 — LISTING FIELD IMPROVEMENTS\n"
+        "For each listing field, provide a specific improvement: clearer title, better description, "
+        "price positioning. The suggestion must be the actual improved text, not advice about it.\n\n"
+
+        "MISSION 2 — TRUST SCORE MAXIMISATION\n"
+        "The Trust Score (0–100) is the seller's most important asset.\n"
         "  0–39:  New — no badge\n"
         "  40–69: Established — blue badge\n"
         "  70–89: Trusted — green badge\n"
-        "  90–100: Highly Trusted — gold badge, featured at top of results\n\n"
-        "Your job: identify the HIGHEST score this specific seller is entitled to based "
-        "on their background, and give them a clear, numbered action plan to reach it.\n\n"
-        "HOW TO DO THIS:\n"
-        "Step 1 — Read every field the seller has filled in. Scan for ANY mention of: "
-        "years of experience, qualifications, registrations, certifications, memberships, "
-        "reference letters, star ratings, trade tickets, or professional body names. "
-        "Each one is a credential they likely already hold and can formally submit.\n"
-        "Step 2 — For each credential you spot, name it specifically, state the exact "
-        "points it unlocks, and tell them what document to upload to claim it.\n"
-        "Step 3 — List what else they could achieve based on their category — credentials "
-        "they have not mentioned but may hold given their background.\n"
-        "Step 4 — Calculate the approximate maximum score they appear entitled to "
-        "and compare it to their current score. Show the gap clearly.\n"
-        "Step 5 — End with a 'YOUR TRUST SCORE ACTION PLAN' section: numbered steps, "
-        "highest-value action first, with exact points each step unlocks.\n\n"
-        "Never fabricate credentials the seller has not implied or stated. "
-        "Never be vague — every recommendation must name a specific document or action.\n\n"
+        "  90–100: Highly Trusted — gold badge, top of search results\n\n"
+        "STEPS:\n"
+        "1. Read every field. Identify ALL credentials mentioned: qualifications, registrations, "
+        "certifications, memberships, reference letters, experience years, trade tickets.\n"
+        "2. Assign exact points per credential using the CREDENTIAL REFERENCE below.\n"
+        "3. Include additional achievable credentials for this seller's background.\n"
+        "4. Order trust_score_actions by points descending — highest-value first.\n"
+        "5. Every action must name an exact document in 'doc'.\n\n"
 
-        "ANONYMITY RULES (apply in every response):\n"
-        "1. Listing title and description must never contain the seller's name or business name.\n"
-        "2. Phone numbers and email addresses in listings are ALLOWED — the platform masks "
-        "them until introduction is accepted. Do NOT ask the seller to remove them.\n"
-        "3. The seller profile should describe qualifications and experience with no personal "
-        "name or business name.\n"
-        "4. Credential certificate photos are blurred to buyers until introduction.\n"
-        "5. If the listing contains the seller's actual name or business name, flag it: "
-        "'⚠️ NAME FOUND — remove before publishing: [item]'\n"
-        "6. End every response with: '✓ Anonymity check passed.' or "
-        "'⚠️ Name/business identifier found — see above.'\n\n"
+        "ANONYMITY RULES:\n"
+        "Set anonymity_warning to null if no real name or business name appears in listing fields. "
+        "Phone numbers and email addresses in listings are ALLOWED — do not flag them. "
+        "If the seller's actual name or business name appears in title or description, set "
+        "anonymity_warning to: 'NAME FOUND — remove before publishing: [exact text found]'\n\n"
         + (f"CREDENTIAL REFERENCE FOR THIS CATEGORY:\n{_cred_ref}" if _cred_ref else "")
     )
 
-    fields_text = "\n".join(f"  {k}: {v}" for k, v in req.fields.items() if v)
+    import json as _json
+    field_ids = [k for k, v in req.fields.items() if v]
+    fields_text = "\n".join(f"  [{k}]: {v}" for k, v in req.fields.items() if v)
     user_message = (
         f"Category: {req.category}\n"
+        f"Available field IDs (use exactly these in your JSON): {field_ids}\n"
         f"My current Trust Score: {current_score} ({_tier_label(current_score)})\n"
-        f"Listing details:\n{fields_text}\n"
+        f"Listing fields:\n{fields_text}\n"
         f"Photos completed: {', '.join(req.photo_slots_completed) or 'none yet'}\n\n"
-        "Please do two things:\n"
-        "1. Review my listing and tell me how to make it stronger\n"
-        "2. Based on everything I have shared above about my background and experience, "
-        "tell me what credentials I should formally submit to reach the highest Trust Score "
-        "I am entitled to — and give me a numbered action plan with the highest-value "
-        "step first"
+        "Analyse my listing and return the JSON object as specified. Nothing else."
     )
 
     try:
@@ -1252,11 +1292,26 @@ async def aa_coach(req: AACoachRequest):
                 },
             )
         resp.raise_for_status()
-        coaching = resp.json()["content"][0]["text"]
+        coaching_text = resp.json()["content"][0]["text"]
     except Exception as exc:
         conn.close()
         _log.error("AA coach Claude call failed: %s", exc)
         raise HTTPException(status_code=502, detail="AI Coach unavailable — please try again")
+
+    # Parse structured JSON response; fall back gracefully if AI wraps it in markdown
+    try:
+        coaching_json = _json.loads(coaching_text)
+    except Exception:
+        import re as _re
+        m = _re.search(r'\{[\s\S]*\}', coaching_text)
+        try:
+            coaching_json = _json.loads(m.group(0)) if m else {}
+        except Exception:
+            coaching_json = {}
+    # Ensure required keys exist
+    coaching_json.setdefault("fields", {})
+    coaching_json.setdefault("trust_score_actions", [])
+    coaching_json.setdefault("anonymity_warning", None)
 
     # Deduct session: free first use or paid pack
     if not free_used:
@@ -1269,20 +1324,20 @@ async def aa_coach(req: AACoachRequest):
     conn.commit()
     conn.close()
 
-    return {"coaching": coaching, "sessions_remaining": max(0, sessions - (0 if not free_used else 1))}
+    return {"coaching_json": coaching_json, "sessions_remaining": max(0, sessions - (0 if not free_used else 1))}
 
 
 @app.post("/advert-agent/buy-pack")
-def aa_buy_pack(email: str):
-    """Credit seller with 8 coaching sessions (called after successful Tuppence payment)."""
+def aa_buy_pack(email: str, sessions: int = 8):
+    """Credit seller with coaching sessions. Default 8 (1T standard pack). Pass sessions= for bulk packs."""
     conn = database.get_db()
     row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="Seller not registered")
     conn.execute(
-        "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + 8 WHERE email = ?",
-        (email,)
+        "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+        (sessions, email)
     )
     conn.commit()
     new_bal = conn.execute(
@@ -1314,6 +1369,35 @@ async def aa_publish(
     desc          = field_data.get("desc", "")
     service_class = field_data.get("service_class") or None
 
+    # Build structured description block from all category-specific fields
+    structured_lines = []
+    field_labels = {
+        "subject":      "Subjects",
+        "level":        "Level",
+        "mode":         "Mode",
+        "rate":         "Rate",
+        "radius":       "Travel radius",
+        "area":         "Area",
+        "suburb":       "Suburb",
+        "service_type": "Service type",
+        "experience":   "Experience",
+        "availability": "Availability",
+        "languages":    "Languages",
+        "certifications": "Certifications",
+        "specialisation": "Specialisation",
+        "tools":        "Tools / equipment",
+        "payment":      "Payment",
+    }
+    skip_fields = {"title", "item_name", "desc", "price", "price_per_person", "service_class"}
+    for key, label in field_labels.items():
+        val = field_data.get(key, "").strip() if isinstance(field_data.get(key), str) else ""
+        if val:
+            structured_lines.append(f"**{label}:** {val}")
+
+    if structured_lines:
+        structured_block = "\n".join(structured_lines)
+        desc = f"{structured_block}\n\n{desc}".strip() if desc else structured_block
+
     if coach_output:
         desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
 
@@ -1341,11 +1425,16 @@ async def aa_publish(
     conn = database.get_db()
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class)
-           VALUES (?,?,?,?,?,?,?,?,?,?)""",
-        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url, service_class),
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url, service_class, email),
     )
     listing_id = cursor.lastrowid
+    # Upsert user record so seller can use AA coach going forward
+    conn.execute(
+        "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) ON CONFLICT(email) DO NOTHING",
+        (email,)
+    )
     conn.commit()
     conn.close()
 

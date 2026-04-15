@@ -669,12 +669,12 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <!-- TITLE + PRICE -->
       <div class="field">
         <label>Title <span class="req">*</span></label>
-        <input type="text" id="f-title" placeholder="e.g. 3-bed family home in Waterkloof">
+        <input type="text" id="f-title" placeholder="e.g. 3-bed family home in Waterkloof" autocomplete="off">
       </div>
       <div class="field-row">
         <div class="field">
           <label>Price <span class="opt">(optional)</span></label>
-          <input type="text" id="f-price" placeholder="e.g. R4,200,000">
+          <input type="text" id="f-price" placeholder="e.g. R4,200,000" autocomplete="off">
         </div>
         <div class="field">
           <label>Price unit</label>
@@ -691,7 +691,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <!-- AREA -->
       <div class="field">
         <label>Area <span class="opt">(optional — freeform)</span></label>
-        <input type="text" id="f-area" placeholder="e.g. Waterkloof Ridge">
+        <input type="text" id="f-area" placeholder="e.g. Waterkloof Ridge" autocomplete="off">
       </div>
 
       <!-- SUBURB -->
@@ -938,11 +938,11 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
         <div class="desc-editor">
           <div class="field">
             <label style="font-size:10px;">Headline</label>
-            <input type="text" id="f-desc-headline" placeholder="e.g. Spacious 3-bed in Waterkloof Ridge">
+            <input type="text" id="f-desc-headline" placeholder="e.g. Spacious 3-bed in Waterkloof Ridge" autocomplete="off">
           </div>
           <div class="field">
             <label style="font-size:10px;">Tagline</label>
-            <input type="text" id="f-desc-tagline" placeholder="e.g. Quiet street · move-in ready · motivated seller">
+            <input type="text" id="f-desc-tagline" placeholder="e.g. Quiet street · move-in ready · motivated seller" autocomplete="off">
           </div>
           <div class="field">
             <label style="font-size:10px;">Summary</label>
@@ -975,21 +975,20 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <div class="success-icon">🎉</div>
     <div class="summary-stats" id="publish-stats"></div>
     <div class="info-box ok" id="publish-summary"></div>
-
-    <div style="margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Magic claim link for seller</div>
-      <div class="magic-link-box">
-        <div class="ml-label">Send this to the seller</div>
-        <div class="ml-url" id="magic-url">—</div>
-        <button class="ml-copy" onclick="copyMagicLink()">📋 Copy claim link</button>
-      </div>
-      <div class="hint">Seller taps this link → lands on pre-filled MarketSquare claim page → enters email → receives secure claim link → listings are theirs. When n8n is ready, this link is emailed automatically.</div>
-    </div>
-
     <!-- Delete published listings -->
     <div id="delete-listings-section" style="margin-bottom:16px;"></div>
-
     <button onclick="startFresh()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:24px;">+ Add another seller</button>
+  </div>
+
+  <!-- Magic link — always visible once step 4 is reached -->
+  <div id="magic-link-section" style="display:none;margin-top:16px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Magic claim link for seller</div>
+    <div class="magic-link-box">
+      <div class="ml-label">Send this to the seller</div>
+      <div class="ml-url" id="magic-url">—</div>
+      <button class="ml-copy" onclick="copyMagicLink()">📋 Copy claim link</button>
+    </div>
+    <div class="hint">Seller taps this link → lands on their pre-filled onboarding page → completes their profile → AI Coach reviews their listing.</div>
   </div>
 </div>
 
@@ -1232,6 +1231,12 @@ function goNext() {
   } else if (currentStep === 2) {
     if (!selectedCat) { showToast('Please select a category'); return; }
     updateStep3UI();
+    // Reset listing form state when category changes
+    listingQueue = [];
+    document.getElementById('listings-container').innerHTML = '';
+    document.getElementById('listing-form').style.display = 'none';
+    clearListingForm();
+    showCatFields();
     goStep(3);
 
   } else if (currentStep === 3) {
@@ -1254,6 +1259,7 @@ function selectCat(cat) {
   selectedCat = cat;
   document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
   document.getElementById('cat-' + cat).classList.add('selected');
+  goNext();
 }
 
 // ── STEP 3 UI ─────────────────────────────────────────────
@@ -1365,6 +1371,42 @@ function showCatFields() {
   const map = { Property: 'property', Tutors: 'tutors', Services: 'services' };
   const key = map[selectedCat];
   if (key) document.getElementById('cat-fields-' + key).style.display = 'block';
+
+  // Update placeholders to match the selected category
+  const ph = {
+    Property: {
+      title:    'e.g. 3-bed family home in Waterkloof',
+      price:    'e.g. R4,200,000',
+      area:     'e.g. Waterkloof Ridge',
+      headline: 'e.g. Spacious 3-bed in Waterkloof Ridge',
+      tagline:  'e.g. Quiet street · move-in ready · motivated seller',
+      summary:  'One or two sentences describing the property…',
+    },
+    Tutors: {
+      title:    'e.g. Maths & Science tutor · Grades 8–12',
+      price:    'e.g. R350',
+      area:     'e.g. Pretoria East',
+      headline: 'e.g. Patient Maths tutor with 10 years experience',
+      tagline:  'e.g. Online & in-person · flexible hours',
+      summary:  'One or two sentences about your tutoring approach…',
+    },
+    Services: {
+      title:    'e.g. Certified electrician · COC guaranteed',
+      price:    'e.g. R450',
+      area:     'e.g. Centurion',
+      headline: 'e.g. Registered electrician serving Pretoria',
+      tagline:  'e.g. Fast response · guaranteed work · 20 years experience',
+      summary:  'One or two sentences describing your service…',
+    },
+  };
+  const p = ph[selectedCat] || ph.Property;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.placeholder = val; };
+  set('f-title',         p.title);
+  set('f-price',         p.price);
+  set('f-area',          p.area);
+  set('f-desc-headline', p.headline);
+  set('f-desc-tagline',  p.tagline);
+  set('f-desc-summary',  p.summary);
 }
 
 function clearListingForm() {
@@ -1581,6 +1623,14 @@ function buildReviewScreen() {
       <div class="sb-email">${sellerData.email}</div>
       <div class="sb-cat">${selectedCat} · ${sellerData.city}</div>
     </div>`;
+
+  // Always generate and show the magic link on step 4
+  const params = new URLSearchParams({
+    magic: '1', name: sellerData.name, email: sellerData.email,
+    cat: selectedCat, city: sellerData.city
+  });
+  document.getElementById('magic-url').textContent = MS_URL + '?' + params.toString();
+  document.getElementById('magic-link-section').style.display = 'block';
 
   const reviewListings = document.getElementById('review-listings');
   reviewListings.innerHTML = listingQueue.map((l, i) => {

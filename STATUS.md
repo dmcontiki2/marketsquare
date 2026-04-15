@@ -19,21 +19,29 @@
 
 ---
 
-## Last Completed Session · Session 15 (15 April 2026)
+## Last Completed Session · Session 17 (15 April 2026)
 
-- Cost_Breakdown_GlobalLaunch.xlsx updated — AI Coach revenue + Anthropic API costs + acceptance rate uplift ✅
-- Assumptions: intro acceptance 0.60 → 0.65, AI Coach params added (adoption 15%, 2 packs/yr, $0.01/session) ✅
-- Operating Costs: Anthropic API line added under Development, subtotal formula updated ✅
-- Revenue vs Cost: AI Coach pack revenue line added, all downstream formulas updated ✅
-- CHANGELOG.md Session 15 entry written ✅
+- Call-out fee field added to Services Technical + Casuals (optional, /visit, flat fee, POA) ✅
+- Rate input display fixed — text input, live R preview, overflow:visible CSS ✅
+- AI Coach email auto-register — unknown emails now auto-created in users table ✅
+- Dave's email added to users table + seller_email column on listings ✅
+- Tuppence deduction server-persisted on intro accept (intro_deduct transaction) ✅
+- N8N_WEBHOOK_NEW_INTRO endpoint wired in BEA (env var still to be set) ✅
+- Tiered AI packs live: 5T=40 uses · 10T=100 uses · 25T=320 uses ✅
+- Wallet UI unified — 3-row format on all 6 purchase buttons ✅
+- Dual balance widget (Tuppence + AI uses) in wallet screen ✅
+- localPrice() helper added — ZAR equivalent shown on all prices ✅
+- Cost model updated — tiered pack rows + blended sessions/T formula (B74) ✅
+- All project files consolidated and deployed to Hetzner ✅
 
 ---
 
-## Next Task · Session 16
+## Next Task · Session 18
 
-1. Send magic link to Maroushka — re-listing round 2 (Gate 0)
-2. Anthropic billing activation — follow up on support ticket
-3. n8n intro notification workflow — buyer emailed on accept/decline (Gate 0)
+1. Set N8N_WEBHOOK_NEW_INTRO in /etc/environment + build n8n "new intro alert" workflow
+2. Seller accept/decline via magic link (email → click to accept/decline intro)
+3. Anthropic billing activation follow-up
+4. Profile photo / credential reuse across drafts (needs BEA profile API)
 
 ---
 
