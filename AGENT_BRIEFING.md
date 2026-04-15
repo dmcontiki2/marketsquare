@@ -10,7 +10,7 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 
 - No commission. Revenue comes from Tuppence introduction fees + buyer subscriptions only.
 - Buyer and seller identities stay hidden until **both parties accept** an introduction.
-- Launch city: **Pretoria, South Africa**. Next cities: New York · London · Berlin.
+- Launch city: **Pretoria, South Africa**. Wave 1 cities: New York · London · Sydney (Australia). Berlin removed — replaced by Sydney due to Germany's email marketing laws (UWG/GDPR cold outreach restrictions).
 - Public launch threshold: 60 founding sellers (20 per category). Current count: check trustsquare.co/admin.html or GET /listings?city=Pretoria.
 - Three categories live: **Property · Tutors · Services** (Services has Technical / Casuals sub-filter). Help Wanted absorbed into Casuals.
 - Phase 2 categories planned: **Adventures · Collectors** (not yet built — see PRINCIPLE_REQUIREMENTS.md D7).
