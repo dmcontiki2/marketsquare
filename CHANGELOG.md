@@ -2,6 +2,12 @@
 
 ---
 
+## Session 18 · 15 April 2026 · Slide deck updated — live CityLauncher data
+
+Updated `MarketSquare_LaunchPlan.pptx` slides 2 and 5 to reflect the real current state from the CityLauncher dashboard. **Slide 2 ("Where We Are Now"):** Replaced the single "23/60 Founding Sellers (Pretoria)" stat card with four updated cards — 693 Total Sellers Live, 5 Cities at Threshold, 11 Cities in Pipeline, and BEA v1.2.0 Live. Updated "Still To Do" list: removed the now-obsolete "60 founding sellers (Pretoria)" and "NY/LON/BER pre-scrape" items; added "Sydney, Durban, Bloemfontein nearing threshold" and "Berlin pipeline not started". **Slide 5 ("City Pipeline · Launch Status"):** Complete redesign from a 4-city placeholder view to an 11-city dashboard layout. Top section shows the 5 threshold-met cities (Pretoria 62/60, New York 60/60, London 63/60, Cape Town 65/60, Johannesburg 63/60) as green-bordered cards. Bottom section shows the 6 in-progress cities (Durban 97%, Sydney 87%, Bloemfontein 90%, East London 78%, Port Elizabeth 67%, Polokwane 23%) as horizontal progress bars with count labels. Dark navy background, teal/green accents for threshold cities, blue bars for in-progress. Berlin excluded — not yet in pipeline.
+
+---
+
 ## Session 17d · 15 April 2026 · Cost model — tiered AI pack pricing on Assumptions + Operating Costs
 
 Updated `Cost_Breakdown_GlobalLaunch.xlsx` to reflect the tiered AI pack pricing introduced in Session 17b. **Assumptions sheet:** (1) C65 comment updated to "T spent per adopting seller per year across all tiers"; (2) new section "TIERED AI PACK PRICING" (row 68, bold header matching existing style) added with three tier rows (rows 69–71: 5T/40 uses, 10T/100 uses, 25T/320 uses) as blue hardcoded inputs, plus formula rows for sessions-per-T for each tier (rows 72–73) and a blended sessions-per-T formula `=(B72+B73+320/B71)/3` ≈ 10.27 (row 74, cell B74). **Operating Costs sheet:** row 20 Anthropic API formulas (columns B, C, D) updated to replace the hardcoded `*8*` multiplier with `*Assumptions!$B$74*` (the blended sessions-per-T cell); E20 comment updated accordingly. Cost model impact: Anthropic API costs in Operating Costs will now auto-update whenever tier pricing assumptions change, and the blended rate (~10.27 sessions/T vs. the previous 8) slightly reduces projected API cost per T of AI pack revenue.
