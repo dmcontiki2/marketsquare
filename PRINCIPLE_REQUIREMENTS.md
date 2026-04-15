@@ -1,7 +1,7 @@
 # PRINCIPLE_REQUIREMENTS.md
 **Solar Council · MarketSquare Platform**
 Version 1.1 · 12 April 2026
-Source of truth: Solar_Council_Codex_v4_4.docx · AGENT_BRIEFING.md v1.3 · STATUS.md 10 Apr 2026
+Source of truth: Solar_Council_Codex_v4_5.docx · AGENT_BRIEFING.md v1.3 · STATUS.md 10 Apr 2026
 
 This file is read-only. No agent or Cowork task may modify it.
 Place a copy in the root of every project folder (MarketApp, AdminApp, CityLauncher, AdvertAgent).
@@ -126,7 +126,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - Git commit after every completed task. Auto-commit — do not wait for approval.
 
 ### C5 · Codex first — check before adding business logic
-- `Solar_Council_Codex_v4_4.docx` is the canonical rules document.
+- `Solar_Council_Codex_v4_5.docx` is the canonical rules document.
 - Architect agent arbitrates via Codex. Escalate to David only if Codex cannot resolve.
 
 ### C6 · STATUS.md is read first, every session
@@ -250,7 +250,7 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 | Server IP | 178.104.73.239 |
 | Live domain | trustsquare.co |
 | API key header | X-Api-Key: ms_mk_2026_pretoria_admin |
-| Codex version | Solar_Council_Codex_v4_4.docx |
+| Codex version | Solar_Council_Codex_v4_5.docx |
 | AGENT_BRIEFING version | v1.3 · 11 April 2026 |
 | BEA geo param | `country` (NOT country_iso2) |
 | Photo storage | Cloudflare R2 (EU) · marketsquare-media |

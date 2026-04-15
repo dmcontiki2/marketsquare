@@ -33,11 +33,9 @@
 
 ## Next Task · Session 15
 
-1. Deploy updated bea_main.py to Hetzner (`scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py && ssh root@178.104.73.239 "systemctl restart marketsquare"`)
-2. Apply Codex amendment — upload Solar_Council_Codex_v4_4.docx to Claude Chat, apply TRUST_SCORE_CODEX_AMENDMENT.md, save as v4.5
-3. Send magic link to Maroushka — re-listing round 2 (Gate 0)
-4. Anthropic billing activation — follow up on support ticket
-5. n8n intro notification workflow — buyer emailed on accept/decline (Gate 0)
+1. Send magic link to Maroushka — re-listing round 2 (Gate 0)
+2. Anthropic billing activation — follow up on support ticket
+3. n8n intro notification workflow — buyer emailed on accept/decline (Gate 0)
 
 ---
 

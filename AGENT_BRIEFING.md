@@ -60,7 +60,7 @@ Seller name and email are **never shown to buyers**. Identity is only revealed a
 | `marketsquare.html` | `index.html` | trustsquare.co | Frontend agent |
 | `marketsquare_admin.html` | `admin.html` | trustsquare.co/admin.html | Admin agent |
 | `bea_main.py` | `main.py` | trustsquare.co:8000 | BEA / Architect agent |
-| `Solar_Council_Codex_v4_4.docx` | — | Session upload only | Architect agent |
+| `Solar_Council_Codex_v4_5.docx` | — | Session upload only | Architect agent |
 | `CHANGELOG.md` | — | Project root | All agents append |
 | `CLAUDE.md` | — | Project root | Architect agent updates |
 | `Cost_Breakdown_GlobalLaunch.xlsx` | — | Project root (upload to Claude Chat) | Architect agent flags changes |
@@ -82,7 +82,7 @@ Or use `deploy_marketsquare.bat` which does all four steps.
 
 ### 4a · Architect Agent
 **File:** `agents/architect/CLAUDE.md`
-**Owns:** Codex (`Solar_Council_Codex_v4_4.docx`), system design, rule arbitration.
+**Owns:** Codex (`Solar_Council_Codex_v4_5.docx`), system design, rule arbitration.
 
 Responsibilities:
 - Answers rule and design questions for the other two agents using the Codex as source of truth.
@@ -178,7 +178,7 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 4. **Definition of done** — Code works AND a one-paragraph summary is appended to `CHANGELOG.md`. Done means both.
 5. **Conflict resolution** — Architect agent arbitrates via Codex. Escalate to David only if Codex cannot resolve.
 6. **No large rewrites** — Never rewrite large sections unless explicitly instructed.
-7. **Codex first** — Check Codex (`Solar_Council_Codex_v4_4.docx`) before adding any business logic.
+7. **Codex first** — Check Codex (`Solar_Council_Codex_v4_5.docx`) before adding any business logic.
 8. **Context management** — Run `/compact` when context starts filling up.
 9. **Cost model flag** — Any change affecting infrastructure, pricing, city launch mechanics, subscription tiers, payment processing, or server scaling: append "Cost model impact:" to CHANGELOG.md entry.
 

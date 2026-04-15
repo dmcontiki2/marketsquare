@@ -5,7 +5,7 @@ A **mobile-first local marketplace** connecting buyers with trusted, anonymous s
 - `marketsquare.html` — buyer-facing marketplace app (FEA) · served as index.html
 - `marketsquare_admin.html` — seller onboarding admin dashboard · served as admin.html
 - `bea_main.py` — FastAPI backend (BEA) · served as main.py on server
-- `Solar_Council_Codex_v4_4.docx` — canonical product rules, design principles, and version history
+- `Solar_Council_Codex_v4_5.docx` — canonical product rules, design principles, and version history
 - `Cost_Breakdown_GlobalLaunch.xlsx` — live cost model · updated in Claude Chat when assumptions change
 
 **This is a marketplace app, not a game.**
