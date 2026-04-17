@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 15 April 2026
+## Current State · 17 April 2026
 
 | Item | Detail |
 |---|---|
@@ -36,12 +36,27 @@
 
 ---
 
-## Next Task · Session 18
+## Last Completed Session · Session 20 (17 April 2026)
 
-1. Set N8N_WEBHOOK_NEW_INTRO in /etc/environment + build n8n "new intro alert" workflow
-2. Seller accept/decline via magic link (email → click to accept/decline intro)
-3. Anthropic billing activation follow-up
-4. Profile photo / credential reuse across drafts (needs BEA profile API)
+- Edit-after-publish flow added to seller app (`marketsquare.html`) — full manual edit screen with per-category field sets ✅
+- Edit modal added to admin app (`marketsquare_admin.html`) — Edit + Version History buttons on every listing ✅
+- BEA: `listing_versions` table added — full JSON snapshot archived before every PUT ✅
+- BEA: `PUT /listings/{id}?email=` endpoint — email-auth, NULL seller_email stamped on first edit ✅
+- BEA: `GET /listings/mine`, `GET /listings/{id}`, version history endpoints added ✅
+- AI Coach integrated into both edit screens (pay-per-use, optional) ✅
+- Profile photo persistence fixed — photo uploaded to R2 via `POST /users/{email}/photo`, restored from BEA on login ✅
+- Dev tools added to admin app — free Tuppence + AI session seeding for dev testing, **remove before launch** ✅
+- `GET /tuppence/balance` endpoint + buyer app balance sync on load ✅
+- CHANGELOG.md, AGENT_BRIEFING.md, STATUS.md updated ✅
+
+## Next Task · Session 21
+
+1. Deploy all three updated files to Hetzner (`deploy_marketsquare.bat`)
+2. Maroushka + Dave test edit-after-publish on their live listings
+3. Paystack live mode (pending CIPC registration — David action)
+4. n8n email notifications — buyer emailed on intro accept/decline
+5. CityLauncher Cowork setup
+6. **Remove `/dev/credit` endpoint + Dev Tools nav tab before public launch**
 
 ---
 
@@ -75,6 +90,9 @@
 
 - Paystack live mode (pending CIPC registration)
 - Rename project files — remove Windows duplicate suffixes
+- ⚠️ Remove `/dev/credit` BEA endpoint before public launch
+- ⚠️ Remove Dev Tools nav tab from `marketsquare_admin.html` before public launch
+- n8n email notifications for intro accept/decline
 
 ---
 *Update the "Last Completed" and "Next Task" sections at the end of every session. Do not let this file exceed 60 lines.*

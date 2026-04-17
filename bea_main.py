@@ -99,6 +99,19 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN service_class TEXT")
     if "seller_email" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN seller_email TEXT")
+    if "updated_at" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN updated_at TEXT")
+
+    # ── Listing version history (audit trail for edits) ──────────
+    conn.execute("""CREATE TABLE IF NOT EXISTS listing_versions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        listing_id INTEGER NOT NULL,
+        version_num INTEGER NOT NULL DEFAULT 1,
+        changed_by TEXT,
+        changed_at TEXT DEFAULT (datetime('now')),
+        snapshot_json TEXT NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lv_listing ON listing_versions(listing_id, version_num)")
 
     # ── Advert Agent columns on users ───────────────────────────
     user_cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
@@ -106,6 +119,8 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE users ADD COLUMN aa_free_used INTEGER DEFAULT 0")
     if "aa_sessions_remaining" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN aa_sessions_remaining INTEGER DEFAULT 0")
+    if "photo_url" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN photo_url TEXT")
 
     conn.commit()
 
@@ -438,6 +453,24 @@ class User(BaseModel):
     email: str
     name: Optional[str] = None
 
+class ListingUpdate(BaseModel):
+    """Partial update model for seller edits — all fields optional."""
+    title: Optional[str] = None
+    price: Optional[str] = None
+    description: Optional[str] = None
+    suburb: Optional[str] = None
+    area: Optional[str] = None
+    prop_type: Optional[str] = None
+    beds: Optional[int] = None
+    baths: Optional[int] = None
+    garages: Optional[int] = None
+    subject: Optional[str] = None
+    level: Optional[str] = None
+    mode: Optional[str] = None
+    service_class: Optional[str] = None
+    service_type: Optional[str] = None
+    availability: Optional[str] = None
+
 class IntroRequest(BaseModel):
     listing_id: int
     buyer_email: str
@@ -491,6 +524,119 @@ def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
     new_id = cursor.lastrowid
     conn.close()
     return {"id": new_id, "message": "Listing created successfully"}
+
+@app.get("/listings/mine")
+def get_seller_listings(email: str):
+    """Return all listings for this seller email — no auth key required."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+           FROM listings l
+           LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+           WHERE l.seller_email = ? ORDER BY l.created_at DESC""",
+        (email,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/listings/{listing_id}")
+def get_listing(listing_id: int):
+    """Fetch a single listing by ID."""
+    conn = database.get_db()
+    row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return dict(row)
+
+@app.put("/listings/{listing_id}")
+def update_listing(listing_id: int, update: ListingUpdate, email: Optional[str] = None):
+    """Update a published listing.
+    Auth: ?email= must match seller_email on the listing.
+    If seller_email is NULL (admin-created listing with no owner yet), any email is
+    accepted and stamped onto the listing — this covers the testing / founding-seller
+    workflow where listings are created via the admin tool before sellers claim them.
+    Archives the current state as a version before applying changes (audit trail).
+    Changes go live immediately.
+    """
+    conn = database.get_db()
+    existing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    if not email:
+        conn.close()
+        raise HTTPException(status_code=401, detail="Seller email required — pass ?email=your@email.com")
+
+    # If listing has no seller_email yet (admin-created), accept the supplied email
+    # and stamp it — first editor becomes the owner.
+    if not existing["seller_email"]:
+        conn.execute("UPDATE listings SET seller_email = ? WHERE id = ?", (email, listing_id))
+    elif existing["seller_email"] != email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
+
+    # Archive current snapshot before updating
+    version_num = conn.execute(
+        "SELECT COALESCE(MAX(version_num), 0) + 1 FROM listing_versions WHERE listing_id = ?",
+        (listing_id,)
+    ).fetchone()[0]
+    conn.execute(
+        """INSERT INTO listing_versions (listing_id, version_num, changed_by, snapshot_json)
+           VALUES (?, ?, ?, ?)""",
+        (listing_id, version_num, email, json.dumps(dict(existing)))
+    )
+
+    # Apply only the non-None fields
+    d = {k: v for k, v in update.dict().items() if v is not None}
+    if not d:
+        conn.close()
+        return {"message": "No fields changed", "listing_id": listing_id}
+
+    sets = ", ".join(f"{k} = ?" for k in d.keys())
+    vals = list(d.values())
+    conn.execute(
+        f"UPDATE listings SET {sets}, updated_at = datetime('now') WHERE id = ?",
+        vals + [listing_id]
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Listing updated — live immediately", "listing_id": listing_id, "version_archived": version_num}
+
+@app.get("/listings/{listing_id}/versions")
+def get_listing_versions(listing_id: int, _key: str = Depends(auth.require_api_key)):
+    """Admin: return version history for a listing (snapshots excluded — metadata only)."""
+    conn = database.get_db()
+    existing = conn.execute("SELECT id FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    rows = conn.execute(
+        """SELECT id, listing_id, version_num, changed_by, changed_at
+           FROM listing_versions WHERE listing_id = ? ORDER BY version_num DESC""",
+        (listing_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/listings/{listing_id}/versions/{version_num}")
+def get_listing_version_snapshot(listing_id: int, version_num: int, _key: str = Depends(auth.require_api_key)):
+    """Admin: return the full JSON snapshot of a specific version."""
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT * FROM listing_versions WHERE listing_id = ? AND version_num = ?",
+        (listing_id, version_num)
+    ).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Version not found")
+    r = dict(row)
+    try:
+        r["snapshot"] = json.loads(r.pop("snapshot_json"))
+    except Exception:
+        pass
+    return r
 
 @app.delete("/listings/{listing_id}")
 def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key)):
@@ -829,6 +975,61 @@ def get_user(email: str):
     if not row:
         raise HTTPException(status_code=404, detail="User not found")
     return dict(row)
+
+@app.post("/users/{email}/photo")
+async def upload_user_photo(email: str, file: UploadFile = File(...)):
+    """Upload a seller profile photo. Compresses to 400×400 JPEG, stores to R2 or local,
+    saves URL to users.photo_url. No API key required — seller identifies by email."""
+    allowed = {"image/jpeg", "image/png", "image/webp"}
+    content_type = file.content_type or "image/jpeg"
+    if content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
+
+    raw = await file.read()
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Photo too large — max 10MB")
+
+    try:
+        img = Image.open(io.BytesIO(raw)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read image file")
+
+    # Square-crop to centre, then resize to 400×400
+    w, h = img.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top  = (h - side) // 2
+    img  = img.crop((left, top, left + side, top + side))
+    img  = img.resize((400, 400), Image.LANCZOS)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=82, optimize=True)
+    photo_bytes = buf.getvalue()
+
+    # Upload to R2 or local fallback
+    if _S3_CONFIGURED:
+        key = f"profiles/{uuid.uuid4().hex}_profile.jpg"
+        photo_url = _s3_upload(photo_bytes, key, "image/jpeg")
+    else:
+        fname = f"profile_{uuid.uuid4().hex}.jpg"
+        local_path = f"/var/www/marketsquare/media/{fname}"
+        try:
+            with open(local_path, "wb") as fh:
+                fh.write(photo_bytes)
+            photo_url = f"/media/{fname}"
+        except Exception as exc:
+            _log.error("Profile photo local save failed: %s", exc)
+            raise HTTPException(status_code=500, detail="Photo storage unavailable")
+
+    # Upsert user record and save photo_url
+    conn = database.get_db()
+    conn.execute(
+        "INSERT INTO users (email, photo_url) VALUES (?, ?) ON CONFLICT(email) DO UPDATE SET photo_url = excluded.photo_url",
+        (email, photo_url)
+    )
+    conn.commit()
+    conn.close()
+    return {"photo_url": photo_url}
 
 @app.delete("/users/{email}")
 def delete_user(email: str, _key: str = Depends(auth.require_api_key)):
@@ -1439,3 +1640,146 @@ async def aa_publish(
     conn.close()
 
     return {"listing_id": listing_id, "pdf_url": None}  # PDF generation added in Stage 4
+
+
+# ── TUPPENCE BALANCE (public read) ───────────────────────────
+
+@app.get("/tuppence/balance")
+def get_tuppence_balance(email: str):
+    """Return Tuppence balance for an email — sum of all transaction amounts.
+    Used by the buyer app to sync dev-seeded balances without Paystack.
+    """
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) as balance FROM transactions WHERE user_email = ?",
+        (email,)
+    ).fetchone()
+    conn.close()
+    return {"email": email, "balance": int(row["balance"])}
+
+
+# ── DEV TOOLS (disable before public launch) ─────────────────
+# Allows the development team to seed Tuppence and AI coaching sessions
+# without going through Paystack. All API costs run on the existing
+# Anthropic / Hetzner billing. Remove or gate with a hard env-var check
+# before the public launch of TrustSquare.
+
+@app.post("/dev/credit")
+def dev_credit(
+    email: str,
+    tuppence: int = 20,
+    ai_sessions: int = 500,
+    _key: str = Depends(auth.require_api_key)
+):
+    """Seed a dev/test account with Tuppence and AI coaching sessions.
+    DEV PHASE ONLY — protected by API key.
+    Remove this endpoint before public launch.
+    """
+    conn = database.get_db()
+
+    # Upsert user — create if not exists, credit AI sessions if exists
+    conn.execute(
+        """INSERT INTO users (email, aa_free_used, aa_sessions_remaining)
+           VALUES (?, 0, ?)
+           ON CONFLICT(email) DO UPDATE SET
+               aa_sessions_remaining = aa_sessions_remaining + ?""",
+        (email, ai_sessions, ai_sessions)
+    )
+
+    # Credit Tuppence as a dev transaction
+    if tuppence > 0:
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+            (email, "dev_topup", tuppence,
+             f"Dev credit — {tuppence}T Tuppence + {ai_sessions} AI sessions (pre-launch testing)")
+        )
+
+    conn.commit()
+
+    user = conn.execute(
+        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    balance = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (email,)
+    ).fetchone()
+    conn.close()
+
+    return {
+        "email": email,
+        "tuppence_balance": int(balance["bal"]),
+        "ai_sessions_remaining": user["aa_sessions_remaining"] if user else ai_sessions,
+        "warning": "⚠️ DEV ENDPOINT — disable before public launch"
+    }
+
+
+# ── EMAIL OPT-OUT ────────────────────────────────────────────
+# Called when a prospect clicks "Unsubscribe" in an outreach email.
+# Writes the suppression back into the CityLauncher SQLite DB via
+# the CityLauncher API (running on same server at localhost:8001).
+# Falls back to logging only if CityLauncher is unreachable.
+
+CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
+
+@app.get("/opt-out")
+async def opt_out(email: str, city_id: int = 0, category: str = ""):
+    """
+    One-click unsubscribe endpoint for outreach emails.
+    Marks the prospect as opted_out in the CityLauncher database.
+    Returns a friendly HTML confirmation page — no account needed.
+
+    Query params:
+      email      — prospect email address (URL-encoded)
+      city_id    — CityLauncher city ID (0 = all cities for this email)
+      category   — listing category (empty = all categories for this email)
+    """
+    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
+
+    suppressed = False
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(
+                f"{CITYLAUNCHER_API}/prospects/opt-out",
+                json={"email": email, "city_id": city_id, "category": category}
+            )
+            if resp.status_code in (200, 204):
+                suppressed = True
+                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
+            else:
+                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
+    except Exception as exc:
+        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
+
+    # Return a clean HTML confirmation regardless of backend success
+    html_response = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribed — TrustSquare</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; }}
+    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
+             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
+    .icon {{ font-size: 48px; margin-bottom: 16px; }}
+    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
+    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
+    a {{ color: #1a1a2e; font-weight: 600; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>You're unsubscribed</h1>
+    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
+    You won't receive any further emails from TrustSquare about listing opportunities.</p>
+    <p style="margin-top:24px; font-size:13px; color:#aaa;">
+      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
+    </p>
+  </div>
+</body>
+</html>"""
+
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_response, status_code=200)

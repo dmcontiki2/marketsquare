@@ -27,6 +27,10 @@ ssh root@178.104.73.239 "systemctl restart marketsquare"
 - Check Codex before adding business logic
 - Auto-commit after each completed task
 - Append to CHANGELOG.md — done = working code AND changelog entry
+- BEA FastAPI route order: `/listings/mine` MUST appear before `/listings/{id:int}` to avoid "mine" being cast to int
+- Edit auth: PUT /listings/{id}?email= uses email match; NULL seller_email accepts any email and stamps it (no API key needed for sellers)
+- listing_versions table archives full JSON snapshots — version_num increments per listing
+- ⚠️ /dev/credit endpoint and Dev Tools nav tab MUST be removed before public launch
 
 ## Session end checklist
 1. Update STATUS.md — move completed tasks, write next task

@@ -852,6 +852,28 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .aa-session-dot.zero{background:#fee2e2;color:#991b1b;}
 .aa-session-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:1px;}
 .aa-session-sub{font-size:11px;color:var(--text-3);line-height:1.4;}
+/* ── EDIT LISTING SCREEN ──────────────────────────────────── */
+#screen-edit-listing{padding-bottom:120px;}
+.el-hdr{background:var(--navy);color:#fff;padding:16px 16px 20px;display:flex;align-items:center;gap:12px;}
+.el-hdr h1{font-size:18px;font-weight:700;flex:1;margin:0;}
+.el-body{padding:16px;}
+.el-cat-badge{display:inline-flex;align-items:center;gap:6px;background:#f5f5f0;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:16px;}
+.el-field{margin-bottom:16px;}
+.el-field label{display:block;font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;}
+.el-field input,.el-field textarea,.el-field select{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color var(--t);}
+.el-field input:focus,.el-field textarea:focus,.el-field select:focus{border-color:var(--navy);}
+.el-field textarea{min-height:110px;resize:vertical;line-height:1.55;}
+.el-ai-strip{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.el-ai-strip p{flex:1;font-size:12px;color:#1e40af;line-height:1.5;margin:0;}
+.el-ai-btn{background:#1d4ed8;color:#fff;border:none;border-radius:20px;padding:7px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.el-ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.el-sug-pill{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:12px;color:#1e40af;line-height:1.5;}
+.el-sug-apply{background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:4px 10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-top:4px;}
+.el-footer{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px max(env(safe-area-inset-bottom),12px);display:flex;gap:10px;}
+.el-save-btn{flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.el-save-btn:disabled{opacity:.4;cursor:not-allowed;}
+.el-cancel-btn{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
+.el-version-note{font-size:11px;color:var(--text-3);text-align:center;padding:8px 16px 4px;font-weight:400;}
 </style>
 </head>
 <body>
@@ -1577,6 +1599,28 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
+<!-- ── EDIT LISTING SCREEN ── -->
+<div id="screen-edit-listing" class="screen">
+  <div class="el-hdr">
+    <button class="back-btn" onclick="goTo('dashboard')" style="border-color:rgba(255,255,255,.2);flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1 id="el-screen-title">Edit Listing</h1>
+  </div>
+  <div class="el-body">
+    <div id="el-cat-badge" class="el-cat-badge"></div>
+    <div class="el-ai-strip">
+      <p>✨ <strong>AI optional</strong> — edit freely below. Tap Ask AI to get suggestions (costs 1 session).</p>
+      <button class="el-ai-btn" id="el-ai-btn" onclick="editAISuggest()">Ask AI</button>
+    </div>
+    <div id="el-ai-output"></div>
+    <div id="el-form-fields"></div>
+  </div>
+  <div class="el-footer">
+    <button class="el-cancel-btn" onclick="goTo('dashboard')">Cancel</button>
+    <button class="el-save-btn" id="el-save-btn" onclick="saveEditedListing()">Save Changes</button>
+  </div>
+  <div class="el-version-note">Every save is version-archived for audit. Changes go live immediately.</div>
+</div>
+
 <!-- CV EDIT SCREEN -->
 <div id="screen-cv-edit" class="screen">
   <div class="cv-edit-screen">
@@ -2037,26 +2081,54 @@ async function loadLiveListings() {
 }
 
 // ── LIVE DASHBOARD LOADER ─────────────────────────────────
-// Fetches real pending intros from BEA and merges into dashState.
+// 1. Fetches seller's own published listings via /listings/mine
+// 2. Merges pending intros from /intros
 async function loadLiveDash() {
   if (!BEA_ENABLED || isOffline()) return;
+
+  // ── Step 1: Load seller's own listings ──────────────────
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (sellerEmail) {
+    try {
+      const mine = await apiGet('/listings/mine?email=' + encodeURIComponent(sellerEmail));
+      if (mine && mine.length) {
+        mine.forEach(l => {
+          let dl = dashState.listings.find(d => d.beaListingId === l.id);
+          if (!dl) {
+            dl = {
+              id: 'bea_dl_' + l.id,
+              beaListingId: l.id,
+              title: l.title,
+              cat: l.category,
+              status: 'active',
+              photo: l.thumb_url || null,
+              isCommit: l.category === 'Property',
+              intros: [],
+              _raw: l
+            };
+            dashState.listings.push(dl);
+          } else {
+            dl._raw = l;  // refresh full data for edit form
+          }
+        });
+      }
+    } catch(e) { console.warn('loadLiveDash /listings/mine failed:', e); }
+  }
+
+  // ── Step 2: Merge pending intros ────────────────────────
   try {
     const intros = await apiGet('/intros');
     if (!intros || !intros.length) return;
 
-    // Only process pending intros
     const pending = intros.filter(i => i.status === 'pending');
     if (!pending.length) return;
 
     pending.forEach(intro => {
-      // Find which LISTINGS entry matches this intro's listing_id
-      // BEA listings are stored as 'bea_<id>' in the LISTINGS array
       const listing = LISTINGS.find(l => l.id === 'bea_' + intro.listing_id || l.id === intro.listing_id);
       const title = listing ? listing.title : (intro.listing_title || 'Live Listing #' + intro.listing_id);
       const cat   = listing ? listing.cat   : (intro.category || 'Property');
       const photo = listing ? listing.photo : null;
 
-      // Find or create a dashState entry for this listing
       let dl = dashState.listings.find(d => d.beaListingId === intro.listing_id);
       if (!dl) {
         dl = {
@@ -2067,12 +2139,12 @@ async function loadLiveDash() {
           status: 'active',
           photo: photo,
           isCommit: cat === 'Property',
-          intros: []
+          intros: [],
+          _raw: null
         };
         dashState.listings.unshift(dl);
       }
 
-      // Add intro if not already present
       const alreadyAdded = dl.intros.find(i => i.beaId === intro.id);
       if (!alreadyAdded) {
         dl.intros.push({
@@ -2083,12 +2155,11 @@ async function loadLiveDash() {
           time: formatIntroTime(intro.created_at),
           status: 'pending'
         });
-        // Mark listing paused if commit model and has pending intro
         if (dl.isCommit) dl.status = 'paused';
       }
     });
   } catch(e) {
-    console.warn('loadLiveDash failed:', e);
+    console.warn('loadLiveDash intros failed:', e);
   }
 }
 
@@ -2244,6 +2315,44 @@ window.addEventListener('DOMContentLoaded',()=>{
     const storedPhoto = localStorage.getItem('ms_seller_photo');
     if (storedPhoto) SELLER_PHOTOS[0] = storedPhoto;
   } catch(_){}
+
+  // ── SYNC TUPPENCE BALANCE from BEA (dev phase) ──────────────
+  // Allows dev-seeded balances to reflect without Paystack.
+  // If BEA balance > local balance, use BEA value.
+  // Remove or gate behind a DEV_MODE flag before public launch.
+  (async () => {
+    try {
+      const buyerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+      if (!buyerEmail || !BEA_ENABLED) return;
+      const res = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.balance > tuppence) {
+        tuppence = data.balance;
+        updateTuppenceUI();
+      }
+    } catch(_) { /* silent — hardcoded default remains */ }
+  })();
+
+  // ── RESTORE PROFILE PHOTO from BEA if localStorage is empty ─
+  // Runs in background so it never slows page load.
+  // Covers the case where iOS/Safari cleared localStorage between sessions.
+  (async () => {
+    try {
+      if (SELLER_PHOTOS[0]) return;  // already restored from localStorage — done
+      const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+      if (!sellerEmail || !BEA_ENABLED) return;
+      const user = await apiGet('/users/' + encodeURIComponent(sellerEmail));
+      if (user && user.photo_url) {
+        // Cache it back to localStorage for next load
+        SELLER_PHOTOS[0] = user.photo_url;
+        try { localStorage.setItem('ms_seller_photo_url', user.photo_url); } catch(_){}
+        // Repaint any profile element already on screen
+        const preview = document.getElementById('dash-profile-preview');
+        if (preview) renderProfilePreview();
+      }
+    } catch(_) { /* silent — photo just won't show until next manual upload */ }
+  })();
 
   // ── RESTORE USER CITY + SUBSCRIPTION TIER ──────────────────
   try {
@@ -3595,6 +3704,25 @@ async function handleCVPhoto(e){
   }
   SELLER_PHOTOS[0] = result;
   try { localStorage.setItem('ms_seller_photo', result); } catch(_){}
+
+  // Upload to BEA so photo persists across devices and browser cache clears
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (BEA_ENABLED && sellerEmail) {
+    try {
+      // Convert base64 dataURL back to a Blob for upload
+      const res  = await fetch(result);
+      const blob = await res.blob();
+      const fd   = new FormData();
+      fd.append('file', blob, 'profile.jpg');
+      const up = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail) + '/photo', { method: 'POST', body: fd });
+      if (up.ok) {
+        const data = await up.json();
+        // Store the permanent URL alongside the local copy so we can restore from BEA next time
+        try { localStorage.setItem('ms_seller_photo_url', data.photo_url); } catch(_){}
+      }
+    } catch(_) { /* silent — local copy already set */ }
+  }
+
   // Update circle preview
   const circle = document.getElementById('cv-photo-circle');
   const label  = document.getElementById('cv-photo-label');
@@ -3614,6 +3742,7 @@ async function handleCVPhoto(e){
 function removeCVPhoto(){
   SELLER_PHOTOS[0] = null;
   localStorage.removeItem('ms_seller_photo');
+  localStorage.removeItem('ms_seller_photo_url');
   renderCVEditForm(); // re-render to show empty state
   showToast('Photo removed');
 }
@@ -3851,7 +3980,7 @@ function renderDashCard(dl){
       <div class="mlcat">${dl.cat}</div>
       ${statusBadge}
       ${introsHtml}
-      ${pendingIntros.length===0?`<div class="ml-actions"><button class="mla-btn" onclick="showToast('Edit listing — coming soon')">Edit</button><button class="mla-btn" onclick="showToast('Listing paused')">Pause</button></div>`:''}
+      ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions"><button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
     </div>
   </div>`;
 }
@@ -3901,6 +4030,270 @@ function renderRecruit(){
       <button class="add-btn" onclick="showToast('Add prospect — BEA coming')">+ Add prospect</button>
     </div>`;
   }).join('');
+}
+
+// ── EDIT LISTING (seller edit-after-publish) ──────────────
+let elCurrentId   = null;   // beaListingId (integer)
+let elCurrentCat  = null;   // category string e.g. 'Property'
+let elCurrentRaw  = null;   // full BEA listing object
+let elAISuggestions = {};   // { fieldId: {suggestion, reason} }
+
+// Entry point — called from Edit button in renderDashCard
+// Async: fetches listing data from BEA on demand if not already cached in _raw
+async function openEditListing(beaId) {
+  if (!beaId) { showToast('Cannot edit this listing'); return; }
+
+  let dl = dashState.listings.find(d => d.beaListingId === beaId);
+
+  // If _raw is missing (e.g. listing came from the intros path, not /listings/mine)
+  // fetch it directly from GET /listings/{id}
+  if (!dl || !dl._raw) {
+    showToast('Loading listing…');
+    try {
+      const raw = await apiGet('/listings/' + beaId);
+      if (!raw || !raw.id) { showToast('Listing not found on server'); return; }
+      if (!dl) {
+        dl = {
+          id: 'bea_dl_' + beaId,
+          beaListingId: beaId,
+          title: raw.title,
+          cat: raw.category,
+          status: 'active',
+          photo: raw.thumb_url || null,
+          isCommit: raw.category === 'Property',
+          intros: [],
+          _raw: raw
+        };
+        dashState.listings.push(dl);
+      } else {
+        dl._raw = raw;
+        dl.cat  = dl.cat || raw.category;
+      }
+    } catch(e) {
+      showToast('Could not load listing details — check your connection');
+      return;
+    }
+  }
+
+  elCurrentId  = beaId;
+  elCurrentCat = dl.cat || dl._raw.category;
+  elCurrentRaw = dl._raw;
+  elAISuggestions = {};
+
+  // Category badge
+  const catDef = AA_CATEGORIES[elCurrentCat] || {};
+  const badge  = document.getElementById('el-cat-badge');
+  if (badge) badge.innerHTML = `${catDef.emoji || '📋'} ${elCurrentCat}`;
+
+  // Clear AI output
+  const aiOut = document.getElementById('el-ai-output');
+  if (aiOut) { aiOut.innerHTML = ''; }
+
+  // Render form and navigate
+  renderEditForm(elCurrentRaw);
+  goTo('edit-listing');
+}
+
+// Resolve the field list for a given category + service class
+function _elGetFields(cat, serviceClass) {
+  const catDef = AA_CATEGORIES[cat];
+  if (!catDef) return [];
+  if (cat === 'Services' && catDef.serviceClasses) {
+    const sc = serviceClass || 'Technical';
+    return ((catDef.serviceClasses[sc] || catDef.serviceClasses['Technical']) || {}).fields || [];
+  }
+  return catDef.fields || [];
+}
+
+// Map BEA listing object keys to AA field IDs
+function _elFieldVal(raw, fieldId) {
+  const map = {
+    title:        raw.title        || '',
+    price:        raw.price        || '',
+    rate:         raw.price        || '',
+    desc:         raw.description  || '',
+    suburb:       raw.suburb       || '',
+    area:         raw.area || raw.suburb || '',
+    prop_type:    raw.prop_type    || '',
+    beds:         raw.beds    != null ? String(raw.beds)    : '',
+    baths:        raw.baths   != null ? String(raw.baths)   : '',
+    garages:      raw.garages != null ? String(raw.garages) : '',
+    subject:      raw.subject      || '',
+    level:        raw.level        || '',
+    mode:         raw.mode         || '',
+    service_class: raw.service_class || '',
+    service_type:  raw.service_type  || '',
+    availability:  raw.availability  || '',
+  };
+  return map[fieldId] !== undefined ? map[fieldId] : '';
+}
+
+// Build the edit form — mirrors AA field definitions but pre-populated & AI suggestions optional
+function renderEditForm(raw) {
+  const fields = _elGetFields(elCurrentCat, raw.service_class);
+  const container = document.getElementById('el-form-fields');
+  if (!container) return;
+
+  container.innerHTML = fields.map(f => {
+    const val = _elFieldVal(raw, f.id);
+    const sug = elAISuggestions[f.id];
+    const sugHtml = sug
+      ? `<div class="el-sug-pill">✨ <strong>Suggestion:</strong> ${sug.suggestion}<br>
+         <span style="font-size:10px;opacity:.7">${sug.reason}</span><br>
+         <button class="el-sug-apply" onclick="elApplySuggestion('${f.id}')">Apply</button></div>`
+      : '';
+
+    if (f.type === 'textarea') {
+      return `<div class="el-field">
+        <label>${f.label}</label>
+        <textarea id="elf-${f.id}" placeholder="${f.placeholder || ''}">${val}</textarea>
+        ${sugHtml}</div>`;
+    }
+    if (f.type === 'select') {
+      const opts = (f.options || []).map(o =>
+        `<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('');
+      return `<div class="el-field">
+        <label>${f.label}</label>
+        <select id="elf-${f.id}"><option value="">— select —</option>${opts}</select>
+        ${sugHtml}</div>`;
+    }
+    if (f.type === 'multiselect') {
+      // Render as editable text (comma-separated) — keeps the edit form simple
+      return `<div class="el-field">
+        <label>${f.label} <span style="font-weight:400;text-transform:none;font-size:10px;">(comma-separated)</span></label>
+        <input type="text" id="elf-${f.id}" value="${val}" placeholder="${f.placeholder || ''}">
+        ${sugHtml}</div>`;
+    }
+    if (f.type === 'rate') {
+      return `<div class="el-field">
+        <label>${f.label}</label>
+        <input type="text" id="elf-${f.id}" value="${val}" placeholder="${f.placeholder || ''}">
+        ${sugHtml}</div>`;
+    }
+    // Default: text / number
+    return `<div class="el-field">
+      <label>${f.label}</label>
+      <input type="text" id="elf-${f.id}" value="${val}" placeholder="${f.placeholder || ''}">
+      ${sugHtml}</div>`;
+  }).join('');
+}
+
+// Apply an AI suggestion directly into the field
+function elApplySuggestion(fieldId) {
+  const sug = elAISuggestions[fieldId];
+  if (!sug) return;
+  const el = document.getElementById('elf-' + fieldId);
+  if (el) { el.value = sug.suggestion; showToast('✓ Suggestion applied'); }
+}
+
+// Collect form field values into a plain object
+function _elCollectFields() {
+  const fields = _elGetFields(elCurrentCat, elCurrentRaw && elCurrentRaw.service_class);
+  const data = {};
+  fields.forEach(f => {
+    const el = document.getElementById('elf-' + f.id);
+    if (el) data[f.id] = el.value.trim();
+  });
+  return data;
+}
+
+// Save edited listing — PUT to BEA, versions the old data automatically
+async function saveEditedListing() {
+  if (!elCurrentId) return;
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!sellerEmail) { showToast('Cannot save — seller email not set'); return; }
+
+  const btn = document.getElementById('el-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  const fd = _elCollectFields();
+
+  // Map form field IDs → BEA model field names
+  const payload = {};
+  if (fd.title)        payload.title        = fd.title;
+  if (fd.price || fd.rate) payload.price    = fd.price || fd.rate;
+  if (fd.desc)         payload.description  = fd.desc;
+  if (fd.suburb)       payload.suburb       = fd.suburb;
+  if (fd.area)         payload.area         = fd.area;
+  if (fd.prop_type)    payload.prop_type    = fd.prop_type;
+  if (fd.beds)         payload.beds         = parseInt(fd.beds)    || undefined;
+  if (fd.baths)        payload.baths        = parseInt(fd.baths)   || undefined;
+  if (fd.garages)      payload.garages      = parseInt(fd.garages) || undefined;
+  if (fd.subject)      payload.subject      = fd.subject;
+  if (fd.level)        payload.level        = fd.level;
+  if (fd.mode)         payload.mode         = fd.mode;
+  if (fd.service_class) payload.service_class = fd.service_class;
+  if (fd.service_type)  payload.service_type  = fd.service_type;
+  if (fd.availability)  payload.availability  = fd.availability;
+
+  try {
+    const res = await fetch(
+      BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
+      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Save failed (' + res.status + ')');
+    }
+    showToast('✓ Listing updated — changes are live');
+    // Refresh dashboard data and re-render
+    await loadLiveDash();
+    renderDash();
+    goTo('dashboard');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+  }
+}
+
+// Optional AI suggestions in the edit screen — costs 1 coaching session
+async function editAISuggest() {
+  if (!elCurrentId || !elCurrentCat) return;
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!sellerEmail) { showToast('Set your seller email first'); return; }
+
+  const btn = document.getElementById('el-ai-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
+
+  // Collect current field values for the coach
+  const fd = _elCollectFields();
+  const fields = {};
+  Object.entries(fd).forEach(([k, v]) => { if (v) fields[k] = v; });
+
+  try {
+    const res = await fetch(BEA_URL + '/advert-agent/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sellerEmail, category: elCurrentCat, fields, photo_slots_completed: [] })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'AI unavailable');
+    }
+    const data = await res.json();
+    const cj   = data.coaching_json || {};
+    elAISuggestions = cj.fields || {};
+
+    // Show warnings + session count
+    const aiOut = document.getElementById('el-ai-output');
+    let html = '';
+    if (cj.anonymity_warning) {
+      html += `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:10px;">⚠️ ${cj.anonymity_warning}</div>`;
+    }
+    if (data.sessions_remaining !== undefined) {
+      html += `<div style="font-size:11px;color:var(--text-3);text-align:right;margin-bottom:8px;">Sessions remaining: <strong>${data.sessions_remaining}</strong></div>`;
+    }
+    if (aiOut) aiOut.innerHTML = html;
+
+    // Re-render form with suggestions inlined under each field
+    renderEditForm(elCurrentRaw);
+    showToast('✨ AI suggestions ready — review and apply each field');
+  } catch(e) {
+    showToast('AI: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ask AI'; }
+  }
 }
 
 // ── PHOTO STRIP DOT TRACKER ───────────────────────────────

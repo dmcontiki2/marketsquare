@@ -1,5 +1,5 @@
 # MarketSquare · Master Agent Briefing
-**Version 1.4 · 15 April 2026**
+**Version 1.5 · 17 April 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
@@ -152,6 +152,14 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | GET | `/geo/suburbs?city_id=N` | None | Suburbs for city (includes lat/lng) |
 | GET | `/geo/nearby?lat=X&lng=Y&radius=10` | None | Suburbs within radius (Haversine) |
 | POST | `/geo/countries` | API key | Add country + trigger GeoNames seed |
+| GET | `/listings/mine?email=` | None | Seller's own listings by email |
+| GET | `/listings/{id}` | None | Single listing by ID |
+| PUT | `/listings/{id}?email=` | Email match | Update listing — archives version snapshot before saving |
+| GET | `/listings/{id}/versions` | API key | Version history metadata for a listing |
+| GET | `/listings/{id}/versions/{version_num}` | API key | Full JSON snapshot of a specific version |
+| POST | `/users/{email}/photo` | None | Upload profile photo → square-cropped 400×400 JPEG → R2 → photo_url |
+| GET | `/tuppence/balance?email=` | None | Current Tuppence balance from transactions table |
+| POST | `/dev/credit?email=&tuppence=N&ai_sessions=N` | API key | **Dev-phase only** — seed account with T + AI sessions, no Paystack · **REMOVE BEFORE LAUNCH** |
 
 ---
 
@@ -165,7 +173,7 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | SSL | Let's Encrypt · expires 21 June 2026 | ✅ Secured |
 | nginx | /var/www/marketsquare/ · 20MB upload limit | ✅ Running |
 | FastAPI BEA | systemd · auto-restart · version via GET /health | ✅ Running |
-| SQLite | WAL mode · 8 tables (4 core + 4 geo) · 6 indexes | ✅ Active |
+| SQLite | WAL mode · 9 tables (5 core + 4 geo) · 7 indexes · `listing_versions` added Session 20 | ✅ Active |
 | Redis | Session cache · rate limiting | ✅ Running |
 | Photo storage | Cloudflare R2 (EU) · bucket: marketsquare-media · $0 egress · HETZNER_S3_* in /etc/environment | ✅ Active |
 | DB backups | Daily 3 AM cron → R2 backups/ · 14-day retention · /usr/local/bin/backup_dbs_to_r2.py | ✅ Active |
@@ -189,16 +197,18 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 ---
 
-## 8 · Open Items for Session 12
+## 8 · Open Items (updated Session 20)
 
 | Priority | Item | Owner |
 |---|---|---|
-| 1 | Fix magic onboarding link (not working for Maroushka + Dave) | Frontend agent |
-| 2 | Paystack live mode (pending CIPC registration) | David action |
-| 3 | n8n email notifications — buyer emailed on intro accept/decline | Architect / BEA |
-| 4 | CityLauncher Cowork setup — Principle Requirements + folder framework | In progress |
-| 5 | Real founding seller content — Maroushka re-listings via admin tool | Maroushka / Admin agent |
-| 6 | Rename project files — remove Windows duplicate suffixes | David / Claude Code |
+| 1 | Paystack live mode (pending CIPC registration) | David action |
+| 2 | n8n email notifications — buyer emailed on intro accept/decline | Architect / BEA |
+| 3 | CityLauncher Cowork setup — Principle Requirements + folder framework | In progress |
+| 4 | Real founding seller content — Maroushka re-listings via admin tool | Maroushka / Admin agent |
+| 5 | Rename project files — remove Windows duplicate suffixes | David / Claude Code |
+| 6 | **Remove `/dev/credit` endpoint before public launch** | BEA agent |
+| 7 | **Remove Dev Tools nav tab from admin app before public launch** | Admin agent |
+| 8 | Seller-facing intro accept/decline email notifications (n8n) | Architect / BEA |
 
 ---
 
@@ -211,4 +221,4 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 ---
 
-*End of briefing v1.3. Codex reference corrected to v4.4. File name rule clarified. Infrastructure updated to reflect actual server state. Append updates to CHANGELOG.md, not here.*
+*Updated v1.5: 8 new BEA endpoints added (edit-after-publish, version control, photo upload, Tuppence balance, dev credit). SQLite table count corrected to 9. Open Items updated to Session 20 state. REMOVE /dev/credit + Dev Tools nav before public launch.*

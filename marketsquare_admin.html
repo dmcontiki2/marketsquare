@@ -531,6 +531,61 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   .filter-bar { padding: 0 28px 12px; }
   .field-row { grid-template-columns: 1fr 1fr 1fr; }
 }
+/* ── DEV TOOLS VIEW ──────────────────────────────────────── */
+.dev-warning{background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin:0 16px 20px;display:flex;gap:10px;align-items:flex-start;}
+.dev-warning-icon{font-size:22px;flex-shrink:0;}
+.dev-warning-text{flex:1;}
+.dev-warning-title{font-size:13px;font-weight:800;color:#92400e;margin-bottom:3px;}
+.dev-warning-sub{font-size:11px;color:#b45309;line-height:1.5;}
+.dev-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin:0 16px 16px;}
+.dev-card-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.dev-card-sub{font-size:11px;color:var(--text-2);margin-bottom:14px;line-height:1.5;}
+.dev-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.dev-row label{font-size:11px;font-weight:700;color:var(--text-2);min-width:80px;text-transform:uppercase;letter-spacing:.3px;}
+.dev-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);}
+.dev-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.dev-btn:disabled{opacity:.4;}
+.dev-btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
+.dev-result{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#166534;line-height:1.6;display:none;}
+.dev-result.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b;}
+.dev-launch-note{margin:0 16px;padding:12px 14px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:10px;font-size:11px;color:#6b21a8;line-height:1.6;}
+.dev-launch-note strong{display:block;margin-bottom:3px;}
+
+/* ── EDIT LISTING MODAL (admin) ──────────────────────────── */
+.adm-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:800; align-items:flex-end; justify-content:center; }
+.adm-modal-bg.open { display:flex; }
+.adm-modal { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:92vh; overflow-y:auto; padding:0 0 max(env(safe-area-inset-bottom),16px); animation: sheetUp .22s cubic-bezier(.32,.72,0,1); }
+@keyframes sheetUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.adm-modal-hdr { position:sticky; top:0; background:#fff; border-bottom:1px solid #eee; padding:14px 16px; display:flex; align-items:center; gap:10px; z-index:10; }
+.adm-modal-hdr h2 { flex:1; font-size:16px; font-weight:700; margin:0; color:#1a1a2e; }
+.adm-modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:#666; padding:0 4px; line-height:1; }
+.adm-modal-body { padding:16px; }
+.adm-edit-field { margin-bottom:14px; }
+.adm-edit-field label { display:block; font-size:11px; font-weight:700; color:#666; margin-bottom:5px; letter-spacing:.4px; text-transform:uppercase; }
+.adm-edit-field input, .adm-edit-field textarea, .adm-edit-field select { width:100%; box-sizing:border-box; border:1.5px solid #ddd; border-radius:8px; padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px; color:#1a1a2e; background:#fff; outline:none; }
+.adm-edit-field textarea { min-height:100px; resize:vertical; line-height:1.55; }
+.adm-edit-field input:focus, .adm-edit-field textarea:focus, .adm-edit-field select:focus { border-color:#1a1a2e; }
+.adm-modal-ai-bar { background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 12px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.adm-modal-ai-bar p { flex:1; font-size:12px; color:#1e40af; margin:0; line-height:1.4; }
+.adm-ai-btn { background:#1d4ed8; color:#fff; border:none; border-radius:16px; padding:6px 12px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; cursor:pointer; }
+.adm-ai-btn:disabled { opacity:.5; }
+.adm-sug-pill { background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:7px 9px; margin-top:5px; font-size:11px; color:#1e40af; line-height:1.45; }
+.adm-sug-apply { background:#1d4ed8; color:#fff; border:none; border-radius:10px; padding:3px 9px; font-size:10px; font-weight:700; cursor:pointer; margin-top:3px; }
+.adm-modal-footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #eee; padding:12px 16px; display:flex; gap:8px; }
+.adm-save-btn { flex:1; background:#1a1a2e; color:#fff; border:none; border-radius:50px; padding:12px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; }
+.adm-save-btn:disabled { opacity:.4; }
+.adm-cancel-btn { background:transparent; border:1.5px solid #ddd; border-radius:50px; padding:12px 18px; font-family:'Syne',sans-serif; font-size:13px; font-weight:600; color:#666; cursor:pointer; }
+.adm-version-note { font-size:10px; color:#aaa; text-align:center; padding:6px 16px 0; }
+/* Version history panel */
+.adm-version-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+.adm-version-row:last-child { border-bottom:none; }
+.adm-ver-num { width:28px; height:28px; background:#1a1a2e; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.adm-ver-info { flex:1; }
+.adm-ver-by { font-size:12px; font-weight:600; color:#1a1a2e; }
+.adm-ver-at { font-size:11px; color:#999; }
+/* Add Edit button to lm-actions */
+.lm-btn.edit { background:transparent; border-color:#1a1a2e; color:#1a1a2e; }
+.lm-btn.hist { background:transparent; border-color:#6b7280; color:#6b7280; font-size:11px; }
 </style>
 </head>
 <body>
@@ -1114,6 +1169,50 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   <button class="btn-primary" id="btn-next" onclick="goNext()">Continue →</button>
 </div>
 
+<!-- ══ VIEW: DEV TOOLS ═════════════════════════════════════ -->
+<div id="view-devtools" class="view">
+  <div class="view-header">Dev Tools</div>
+  <div class="view-sub">Pre-launch testing only — seed accounts without payment</div>
+
+  <div class="dev-warning">
+    <div class="dev-warning-icon">⚠️</div>
+    <div class="dev-warning-text">
+      <div class="dev-warning-title">Development phase only</div>
+      <div class="dev-warning-sub">These tools bypass Paystack. All AI costs run on the existing Anthropic billing account. Tuppence issued here is not real money. Disable this view before public launch.</div>
+    </div>
+  </div>
+
+  <!-- Seed account -->
+  <div class="dev-card">
+    <div class="dev-card-title">🌱 Seed Dev Account</div>
+    <div class="dev-card-sub">Credit Tuppence + AI coaching sessions to any email for testing intros, accepts, and the AI Adviser. Use team members' emails.</div>
+    <div class="dev-row"><label>Email</label><input type="email" id="dev-seed-email" placeholder="team@example.com"></div>
+    <div class="dev-row"><label>Tuppence</label><input type="number" id="dev-seed-t" value="20" min="1" max="500"></div>
+    <div class="dev-row"><label>AI sessions</label><input type="number" id="dev-seed-ai" value="500" min="1" max="9999"></div>
+    <button class="dev-btn" onclick="devSeedAccount()">🌱 Seed account</button>
+    <div class="dev-result" id="dev-seed-result"></div>
+  </div>
+
+  <!-- Check balance -->
+  <div class="dev-card">
+    <div class="dev-card-title">🔍 Check Balances</div>
+    <div class="dev-card-sub">Verify Tuppence and AI session balance for any email.</div>
+    <div class="dev-row"><label>Email</label><input type="email" id="dev-check-email" placeholder="team@example.com"></div>
+    <button class="dev-btn secondary" onclick="devCheckBalance()">Check balance</button>
+    <div class="dev-result" id="dev-check-result"></div>
+  </div>
+
+  <!-- How to use -->
+  <div class="dev-launch-note">
+    <strong>How to use for testing:</strong>
+    1. Seed each team member's email above.<br>
+    2. Open the buyer app and log in (or use magic link) with that email — Tuppence syncs automatically on load.<br>
+    3. Use the AI Coach in Edit Listing — sessions are now available.<br>
+    4. Test full intro flow: request → seller accepts → 1T deducted from buyer balance.<br>
+    <span style="margin-top:8px;display:block;color:#7c3aed;font-weight:700;">Before launch: remove the Dev tab from the nav bar and delete <code>/dev/credit</code> from bea_main.py.</span>
+  </div>
+</div>
+
 <!-- NAV BAR -->
 <nav class="admin-nav">
   <button class="nav-item active" id="nav-onboard" onclick="goView('onboard')">
@@ -1146,6 +1245,10 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   <button class="nav-item" id="nav-cities" onclick="goView('cities')">
     <span class="nav-icon">🌍</span>
     <span>Cities</span>
+  </button>
+  <button class="nav-item" id="nav-devtools" onclick="goView('devtools')">
+    <span class="nav-icon">🛠</span>
+    <span>Dev</span>
   </button>
 </nav>
 
@@ -2019,7 +2122,8 @@ function renderListingsManager() {
         </div>
       </div>
       <div class="lm-actions">
-        <div class="lm-btn" style="cursor:default;color:var(--text-3);border-style:dashed;">⏸ Pause (BEA v1.2)</div>
+        <button class="lm-btn edit" onclick="openAdmEdit(${l.id})">✏️ Edit</button>
+        <button class="lm-btn hist" onclick="openAdmVersionHistory(${l.id}, '${safeTitle}')">📋 History</button>
         <button class="lm-btn del" onclick="confirmDeleteLM(${l.id}, '${safeTitle}')">🗑 Delete</button>
       </div>
     </div>`;
@@ -2251,6 +2355,330 @@ async function deleteSellerAccount(email, name) {
     document.getElementById('profile-email').value = '';
   } catch(e) { showToast('⚠️ Delete failed — ' + e.message); }
 }
+
+// ── DEV TOOLS ──────────────────────────────────────────────
+
+async function devSeedAccount() {
+  const email = document.getElementById('dev-seed-email').value.trim();
+  const t     = parseInt(document.getElementById('dev-seed-t').value)  || 20;
+  const ai    = parseInt(document.getElementById('dev-seed-ai').value) || 500;
+  const res   = document.getElementById('dev-seed-result');
+  if (!email) { showToast('Enter an email first'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Seeding…';
+  res.style.display = 'none';
+
+  try {
+    const resp = await fetch(
+      `${BEA_URL}/dev/credit?email=${encodeURIComponent(email)}&tuppence=${t}&ai_sessions=${ai}`,
+      { method: 'POST', headers: { 'X-Api-Key': API_KEY } }
+    );
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || 'API error ' + resp.status);
+    res.className = 'dev-result';
+    res.innerHTML = `✅ <strong>${email}</strong> seeded<br>
+      Tuppence balance: <strong>${data.tuppence_balance}T</strong><br>
+      AI sessions: <strong>${data.ai_sessions_remaining}</strong>`;
+    res.style.display = 'block';
+    showToast(`✓ ${email} seeded — ${t}T + ${ai} AI sessions`);
+  } catch(e) {
+    res.className = 'dev-result err';
+    res.textContent = '⚠️ ' + e.message;
+    res.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '🌱 Seed account';
+  }
+}
+
+async function devCheckBalance() {
+  const email = document.getElementById('dev-check-email').value.trim();
+  const res   = document.getElementById('dev-check-result');
+  if (!email) { showToast('Enter an email first'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Checking…';
+  res.style.display = 'none';
+
+  try {
+    const [tResp, uResp] = await Promise.all([
+      fetch(`${BEA_URL}/tuppence/balance?email=${encodeURIComponent(email)}`),
+      fetch(`${BEA_URL}/users/${encodeURIComponent(email)}`)
+    ]);
+    const tData = await tResp.json();
+    const uData = uResp.ok ? await uResp.json() : null;
+    res.className = 'dev-result';
+    res.innerHTML = `<strong>${email}</strong><br>
+      Tuppence balance: <strong>${tData.balance}T</strong><br>
+      AI sessions remaining: <strong>${uData ? (uData.aa_sessions_remaining || 0) : 'user not registered'}</strong><br>
+      Free AI session used: <strong>${uData ? (uData.aa_free_used ? 'Yes' : 'No') : '—'}</strong>`;
+    res.style.display = 'block';
+  } catch(e) {
+    res.className = 'dev-result err';
+    res.textContent = '⚠️ ' + e.message;
+    res.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Check balance';
+  }
+}
+
+// ── ADMIN EDIT LISTING ──────────────────────────────────────
+let admEditId      = null;   // listing id (integer)
+let admEditListing = null;   // full listing object
+let admEditSugs    = {};     // { fieldId: {suggestion, reason} }
+
+const ADM_FIELD_DEFS = {
+  'Property': [
+    {id:'title',       label:'Listing headline',   type:'text'},
+    {id:'price',       label:'Price / Rate',        type:'text'},
+    {id:'prop_type',   label:'Property type',       type:'text'},
+    {id:'beds',        label:'Bedrooms',            type:'number'},
+    {id:'baths',       label:'Bathrooms',           type:'number'},
+    {id:'garages',     label:'Garages / parking',   type:'number'},
+    {id:'area',        label:'Area / suburb',       type:'text'},
+    {id:'suburb',      label:'Suburb (exact)',       type:'text'},
+    {id:'description', label:'Description',         type:'textarea'},
+  ],
+  'Tutors': [
+    {id:'title',       label:'Listing headline',   type:'text'},
+    {id:'price',       label:'Rate',               type:'text'},
+    {id:'subject',     label:'Subject(s)',          type:'text'},
+    {id:'level',       label:'Level',              type:'text'},
+    {id:'mode',        label:'Mode',               type:'text'},
+    {id:'area',        label:'Area / suburb',      type:'text'},
+    {id:'suburb',      label:'Suburb (exact)',      type:'text'},
+    {id:'description', label:'Description',        type:'textarea'},
+  ],
+  'Services': [
+    {id:'title',        label:'Listing headline',  type:'text'},
+    {id:'price',        label:'Rate',              type:'text'},
+    {id:'service_class',label:'Service class',     type:'text'},
+    {id:'service_type', label:'Service type',      type:'text'},
+    {id:'availability', label:'Availability',      type:'text'},
+    {id:'area',         label:'Area / suburb',     type:'text'},
+    {id:'suburb',       label:'Suburb (exact)',     type:'text'},
+    {id:'description',  label:'Description',       type:'textarea'},
+  ],
+};
+const ADM_DEFAULT_FIELDS = [
+  {id:'title',       label:'Listing headline',  type:'text'},
+  {id:'price',       label:'Price / Rate',      type:'text'},
+  {id:'area',        label:'Area / suburb',     type:'text'},
+  {id:'suburb',      label:'Suburb (exact)',    type:'text'},
+  {id:'description', label:'Description',       type:'textarea'},
+];
+
+function openAdmEdit(id) {
+  const l = allListings.find(x => x.id === id);
+  if (!l) { showToast('Listing not found in loaded data'); return; }
+  admEditId      = id;
+  admEditListing = l;
+  admEditSugs    = {};
+  renderAdmEditModal(l);
+  document.getElementById('adm-edit-modal-bg').classList.add('open');
+}
+
+function closeAdmEdit() {
+  document.getElementById('adm-edit-modal-bg').classList.remove('open');
+  admEditId = null; admEditListing = null; admEditSugs = {};
+}
+
+function renderAdmEditModal(l) {
+  const fields = ADM_FIELD_DEFS[l.category] || ADM_DEFAULT_FIELDS;
+  const body = document.getElementById('adm-edit-body');
+  if (!body) return;
+
+  body.innerHTML = fields.map(f => {
+    const val = (l[f.id] != null ? String(l[f.id]) : '').replace(/"/g, '&quot;');
+    const sug = admEditSugs[f.id];
+    const sugHtml = sug
+      ? `<div class="adm-sug-pill">✨ ${sug.suggestion}<br><span style="font-size:10px;opacity:.7">${sug.reason}</span><br><button class="adm-sug-apply" onclick="admApplySug('${f.id}')">Apply</button></div>`
+      : '';
+    if (f.type === 'textarea') {
+      return `<div class="adm-edit-field"><label>${f.label}</label><textarea id="admf-${f.id}">${l[f.id] || ''}</textarea>${sugHtml}</div>`;
+    }
+    return `<div class="adm-edit-field"><label>${f.label}</label><input type="${f.type}" id="admf-${f.id}" value="${val}">${sugHtml}</div>`;
+  }).join('');
+}
+
+function admApplySug(fieldId) {
+  const sug = admEditSugs[fieldId];
+  if (!sug) return;
+  const el = document.getElementById('admf-' + fieldId);
+  if (el) { el.value = sug.suggestion; showToast('✓ Applied'); }
+}
+
+async function saveAdmEdit() {
+  if (!admEditId || !admEditListing) return;
+  const btn = document.getElementById('adm-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  const fields = ADM_FIELD_DEFS[admEditListing.category] || ADM_DEFAULT_FIELDS;
+  const payload = {};
+  fields.forEach(f => {
+    const el = document.getElementById('admf-' + f.id);
+    if (!el) return;
+    const v = el.value.trim();
+    if (v !== '') {
+      if (f.type === 'number') payload[f.id] = parseInt(v) || undefined;
+      else payload[f.id] = v;
+    }
+  });
+
+  // Admin uses seller_email as the edit auth — fall back to listing's seller_email
+  const sellerEmail = admEditListing.seller_email;
+  if (!sellerEmail) {
+    showToast('⚠️ No seller_email on listing — cannot authenticate edit');
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+    return;
+  }
+
+  try {
+    const resp = await fetch(
+      BEA_URL + '/listings/' + admEditId + '?email=' + encodeURIComponent(sellerEmail),
+      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+    );
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || 'API ' + resp.status);
+    }
+    // Update local cache
+    Object.assign(admEditListing, payload);
+    showToast('✓ Listing updated — live immediately');
+    closeAdmEdit();
+    renderListingsManager();
+  } catch(e) {
+    showToast('⚠️ Save failed — ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+  }
+}
+
+async function admAISuggest() {
+  if (!admEditId || !admEditListing) return;
+  const btn = document.getElementById('adm-ai-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
+
+  const fields = ADM_FIELD_DEFS[admEditListing.category] || ADM_DEFAULT_FIELDS;
+  const currentFields = {};
+  fields.forEach(f => {
+    const el = document.getElementById('admf-' + f.id);
+    if (el && el.value.trim()) currentFields[f.id] = el.value.trim();
+  });
+
+  const sellerEmail = admEditListing.seller_email || 'admin@trustsquare.co';
+
+  try {
+    const resp = await fetch(BEA_URL + '/advert-agent/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: sellerEmail,
+        category: admEditListing.category || 'Services',
+        fields: currentFields,
+        photo_slots_completed: []
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || 'AI unavailable');
+    }
+    const data  = await resp.json();
+    const cj    = data.coaching_json || {};
+    admEditSugs = cj.fields || {};
+
+    let infoHtml = '';
+    if (cj.anonymity_warning) {
+      infoHtml += `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:6px;padding:8px 10px;font-size:12px;color:#92400e;margin-bottom:10px;">⚠️ ${cj.anonymity_warning}</div>`;
+    }
+    if (data.sessions_remaining !== undefined) {
+      infoHtml += `<div style="font-size:11px;color:#999;text-align:right;margin-bottom:8px;">Sessions remaining: ${data.sessions_remaining}</div>`;
+    }
+    const infoEl = document.getElementById('adm-ai-info');
+    if (infoEl) infoEl.innerHTML = infoHtml;
+
+    // Re-render form with suggestions
+    renderAdmEditModal(admEditListing);
+    showToast('✨ AI suggestions ready');
+  } catch(e) {
+    showToast('AI: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ask AI'; }
+  }
+}
+
+async function openAdmVersionHistory(id, title) {
+  const safeTitle = title || 'Listing #' + id;
+  const histEl = document.getElementById('adm-hist-modal-bg');
+  const bodyEl = document.getElementById('adm-hist-body');
+  if (!histEl || !bodyEl) return;
+  bodyEl.innerHTML = '<div style="text-align:center;padding:32px;color:#999;font-size:13px;">⏳ Loading history…</div>';
+  histEl.classList.add('open');
+  document.getElementById('adm-hist-title').textContent = 'History: ' + safeTitle;
+  try {
+    const resp = await fetch(BEA_URL + '/listings/' + id + '/versions', {
+      headers: { 'X-Api-Key': API_KEY }
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const versions = await resp.json();
+    if (!versions.length) {
+      bodyEl.innerHTML = '<div style="text-align:center;padding:32px;color:#999;font-size:13px;">No versions yet — first edit creates v1.</div>';
+      return;
+    }
+    bodyEl.innerHTML = versions.map(v => `
+      <div class="adm-version-row">
+        <div class="adm-ver-num">v${v.version_num}</div>
+        <div class="adm-ver-info">
+          <div class="adm-ver-by">${v.changed_by || 'unknown'}</div>
+          <div class="adm-ver-at">${v.changed_at ? v.changed_at.replace('T', ' ').slice(0, 16) : '—'}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    bodyEl.innerHTML = `<div style="color:red;padding:16px;font-size:12px;">⚠️ ${e.message}</div>`;
+  }
+}
+
+function closeAdmHist() {
+  document.getElementById('adm-hist-modal-bg').classList.remove('open');
+}
 </script>
+
+<!-- ── EDIT LISTING MODAL ── -->
+<div id="adm-edit-modal-bg" class="adm-modal-bg" onclick="if(event.target===this)closeAdmEdit()">
+  <div class="adm-modal">
+    <div class="adm-modal-hdr">
+      <h2 id="adm-edit-title">Edit Listing</h2>
+      <button class="adm-modal-close" onclick="closeAdmEdit()">✕</button>
+    </div>
+    <div class="adm-modal-body">
+      <div class="adm-modal-ai-bar">
+        <p>✨ <strong>AI optional</strong> — edit fields below, then tap Ask AI for suggestions (costs 1 session).</p>
+        <button class="adm-ai-btn" id="adm-ai-btn" onclick="admAISuggest()">Ask AI</button>
+      </div>
+      <div id="adm-ai-info"></div>
+      <div id="adm-edit-body"></div>
+    </div>
+    <div class="adm-modal-footer">
+      <button class="adm-cancel-btn" onclick="closeAdmEdit()">Cancel</button>
+      <button class="adm-save-btn" id="adm-save-btn" onclick="saveAdmEdit()">Save Changes</button>
+    </div>
+    <div class="adm-version-note">Every save is version-archived for audit. Changes go live immediately.</div>
+  </div>
+</div>
+
+<!-- ── VERSION HISTORY MODAL ── -->
+<div id="adm-hist-modal-bg" class="adm-modal-bg" onclick="if(event.target===this)closeAdmHist()">
+  <div class="adm-modal">
+    <div class="adm-modal-hdr">
+      <h2 id="adm-hist-title">Version History</h2>
+      <button class="adm-modal-close" onclick="closeAdmHist()">✕</button>
+    </div>
+    <div class="adm-modal-body" id="adm-hist-body"></div>
+    <div class="adm-modal-footer">
+      <button class="adm-cancel-btn" style="flex:1" onclick="closeAdmHist()">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

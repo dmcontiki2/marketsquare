@@ -62,11 +62,18 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 - Location badge is 2-line: top=country+region (dim), bottom=city+suburb
 - Tier gating: free→suburb panel, starter→city panel, premium→country panel
 - Admin sellerData includes geo_city_id (int) for suburb lookups
+- Edit-after-publish: sellers use `PUT /listings/{id}?email=` — email-auth, no API key; NULL seller_email accepts first caller and stamps it
+- listing_versions table archives full JSON snapshot before every PUT — version_num increments per listing
+- BEA FastAPI route order critical: `GET /listings/mine` MUST be registered before `GET /listings/{listing_id: int}`
+- Profile photo: uploaded via `POST /users/{email}/photo` → R2 → stored in users.photo_url; restored on login via GET /users/{email}
+- Tuppence balance synced from `GET /tuppence/balance?email=` on buyer app load (server wins if greater than local)
+- ⚠️ Dev-only: `POST /dev/credit` endpoint and Dev Tools nav in admin app — **REMOVE BEFORE LAUNCH**
 
 ## Current development status
 - Launch city: Pretoria, South Africa · 23 / 60 founding sellers
-- BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
+- BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite (9 tables) + Redis on Hetzner CPX22
 - GitHub backup: github.com/dmcontiki2/marketsquare
 - Paystack: test mode (live mode pending CIPC registration)
 - 4-level geo hierarchy live: Country → Region → City → Suburb (ZA seeded: 9 provinces, 54 cities, 11,679 suburbs)
-- Next milestone: Paystack live mode · n8n email notifications · Hetzner Object Storage
+- Edit-after-publish with version control live in both apps (Session 20)
+- Next milestone: Deploy Session 20 changes · Paystack live mode · n8n email notifications
