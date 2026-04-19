@@ -2,6 +2,21 @@
 
 ---
 
+## Session 22d · 19 April 2026 · Fix Adventures browse screen — cards not rendering
+
+**Root cause found and fixed** — `renderAdvGrid()` called `esc()` (an HTML-escape helper) which was never defined anywhere in the codebase. When the function ran, it filtered listings and set the count text successfully, then crashed with `ReferenceError: esc is not defined` before it could set `grid.innerHTML` — leaving the grid visually empty despite the correct listing count appearing above it.
+
+**Fix applied:**
+- Added `const esc = s => ...` HTML-escape function directly above the Adventures screen code
+- Fixed `demo_adv_1–10` listings: changed `cat:'Adventures'` to proper subcategories (`adventures_experiences` for experiences, `adventures_accommodation` for demo_adv_6 (Waterberg Lodge) and demo_adv_7 (Waterkloof Guesthouse))
+- Added `country:'ZA'` to all `demo_adv_*` listings (previously missing, causing all to pass the ZA filter without being country-tagged)
+- Replaced `adventureType` field with `environment_type` on all `demo_adv_*` listings (matching the chip filter keys)
+- Normalised price strings to numeric format (`'R 2 450'` → `'2450'`) for correct currency display
+
+**Adventures ZA count:** 17 listings (12 experiences + 5 accommodation). All tab and environment chip filters now work correctly. JS syntax verified clean.
+
+---
+
 ## Session 22c · 19 April 2026 · Full demo listings for Property, Tutors and Services
 
 **Property demo listings (8)** — Waterkloof Ridge family home, Erasmuskloof Tuscan estate, Menlyn cluster, Brooklyn penthouse, Raslouw smallholding with income, Irene townhouse, Hatfield investment flat, Silver Lakes vacant stand. All with propType, beds, baths, garages, floor_area, erf_size, listingType, full descriptions and 3 Unsplash photos each.
