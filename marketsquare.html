@@ -78,6 +78,137 @@ const LISTINGS = [
     desc: 'Real property listings will appear here once sellers are onboarded via the admin tool.',
     photo: null, paused: true, queueCount: 0, sellerIdx: 0
   },
+
+  // ── DEMO LISTINGS: PROPERTY ───────────────────────────────
+  {
+    id: 'demo_prop_1', cat: 'Property', feat: true,
+    title: 'Modern 4-Bed Family Home — Waterkloof Ridge, Pretoria',
+    area: 'Pretoria', suburb: 'Waterkloof Ridge',
+    trust: 91, price: 'R 4 250 000', per: '', priceNum: 4250000,
+    propType: 'House', beds: 4, baths: 3, garages: 2,
+    listingType: 'For Sale', floor_area: '320m²', erf_size: '1 200m²',
+    desc: 'Beautifully maintained north-facing family home in one of Pretoria\'s most sought-after suburbs. Open-plan kitchen and living area flow onto a covered patio overlooking a heated pool and landscaped garden. Master suite with walk-in robe and en-suite. Study, guest suite downstairs. Double automated garage, staff quarters, borehole and solar backup. Highly rated school catchment.',
+    photo: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_2', cat: 'Property', feat: false,
+    title: 'Tuscan-Style Estate — Erasmuskloof, Pretoria',
+    area: 'Pretoria', suburb: 'Erasmuskloof',
+    trust: 87, price: 'R 6 800 000', per: '', priceNum: 6800000,
+    propType: 'House', beds: 5, baths: 4, garages: 3,
+    listingType: 'For Sale', floor_area: '520m²', erf_size: '2 800m²',
+    desc: 'Impressive Tuscan-inspired estate in a security enclave. Five bedrooms, four bathrooms, two full reception rooms, home theatre, wine cellar, and a chef\'s kitchen. Entertainer\'s patio with outdoor kitchen, gas firepit, and a resort-style pool. Three-car garage with staff flat. Full off-grid capability: 22-panel solar array, 20kWh battery, and borehole. Private and immaculate.',
+    photo: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_3', cat: 'Property', feat: false,
+    title: 'Lock-Up-and-Go Cluster — Menlyn, Pretoria',
+    area: 'Pretoria', suburb: 'Menlyn',
+    trust: 74, price: 'R 1 850 000', per: '', priceNum: 1850000,
+    propType: 'Townhouse', beds: 3, baths: 2, garages: 1,
+    listingType: 'For Sale', floor_area: '145m²', erf_size: '0m²',
+    desc: 'Contemporary cluster unit in a secure, well-run complex of 12 units. Open-plan living, granite kitchen with gas hob, three bedrooms with built-in cupboards, master en-suite. Single garage plus extra parking bay. Complex pool. Walking distance from Menlyn Maine and Mall of Africa. Ideal first home or investment — high rental demand in this node.',
+    photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
+      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_4', cat: 'Property', feat: false,
+    title: 'Penthouse Apartment — Brooklyn, Pretoria',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 83, price: 'R 3 100 000', per: '', priceNum: 3100000,
+    propType: 'Apartment', beds: 2, baths: 2, garages: 2,
+    listingType: 'For Sale', floor_area: '185m²', erf_size: '0m²',
+    desc: 'Top-floor penthouse in a boutique 8-storey development in the heart of Brooklyn. Wraparound balcony with Magaliesberg views. Italian-design kitchen, Smeg appliances, underfloor heating in both bathrooms. Two covered parking bays and a storeroom. 24hr concierge, rooftop gym, and residents\' lounge. Walking distance from embassies, Brooklyn Mall, and top restaurants.',
+    photo: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_5', cat: 'Property', feat: false,
+    title: 'Smallholding with Income — Raslouw, Centurion',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 68, price: 'R 5 500 000', per: '', priceNum: 5500000,
+    propType: 'Smallholding', beds: 4, baths: 3, garages: 4,
+    listingType: 'For Sale', floor_area: '380m²', erf_size: '8 500m²',
+    desc: 'Productive smallholding on 8,500m² in sought-after Raslouw. Main house: 4 beds, 3 baths, large farmhouse kitchen and covered stoep. Separate fully self-contained cottage (currently tenanted at R8,500/month). 4-car workshop, borehole with 10,000L tank, 3-phase power, and chicken runs. Highly accessible — 5 minutes from N14 and Centurion amenities. Rates R1,800/month.',
+    photo: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_6', cat: 'Property', feat: false,
+    title: 'Secure 3-Bed Townhouse — Irene, Centurion',
+    area: 'Pretoria', suburb: 'Irene',
+    trust: 72, price: 'R 2 450 000', per: '', priceNum: 2450000,
+    propType: 'Townhouse', beds: 3, baths: 2, garages: 2,
+    listingType: 'For Sale', floor_area: '210m²', erf_size: '0m²',
+    desc: 'Spacious townhouse in a sought-after, well-managed complex in Irene. Large open-plan living flowing to a private garden and entertainer\'s patio. Three good bedrooms, master with en-suite and walk-in. Double automated garage. Complex has pool, kiddies play area, and 24hr security. Close to Irene Farm, Centurion Lake, and top schools including Irene Primary and Zwartkop.',
+    photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_7', cat: 'Property', feat: false,
+    title: 'Investment Flat — Hatfield, Pretoria (Rental Income)',
+    area: 'Pretoria', suburb: 'Hatfield',
+    trust: 63, price: 'R 950 000', per: '', priceNum: 950000,
+    propType: 'Apartment', beds: 1, baths: 1, garages: 1,
+    listingType: 'For Sale', floor_area: '65m²', erf_size: '0m²',
+    desc: 'Well-maintained one-bedroom apartment in a popular Hatfield complex, currently tenanted at R7,200/month — a solid 9.1% gross yield. Modern kitchen, open plan living, good storage. One covered parking bay. Walking distance from University of Pretoria and Hatfield Square. Ideal buy-to-let — demand from students and young professionals consistently high in this node.',
+    photo: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
+      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 0
+  },
+  {
+    id: 'demo_prop_8', cat: 'Property', feat: false,
+    title: 'Vacant Stand — Silver Lakes Golf Estate, Pretoria',
+    area: 'Pretoria', suburb: 'Silver Lakes',
+    trust: 79, price: 'R 1 650 000', per: '', priceNum: 1650000,
+    propType: 'Vacant Land', beds: 0, baths: 0, garages: 0,
+    listingType: 'For Sale', floor_area: '0m²', erf_size: '1 050m²',
+    desc: 'Prime 1,050m² vacant stand on the Silver Lakes Golf Estate — one of Pretoria East\'s most prestigious gated communities. North-facing with fairway views. Building plans available (not approved). Estate offers 24hr security, golf course, tennis courts, clubhouse and walking trails. All bulk services in place. Build your dream home in a world-class secure environment.',
+    photo: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 0
+  },
+
   {
     id: 'ph_tutors', cat: 'Tutors', feat: false,
     title: 'PLACEHOLDER — Tutors listing coming soon',
@@ -87,6 +218,99 @@ const LISTINGS = [
     desc: 'Real tutor listings will appear here once sellers are onboarded via the admin tool.',
     photo: null, paused: true, queueCount: 0, sellerIdx: 1
   },
+
+  // ── DEMO LISTINGS: TUTORS ─────────────────────────────────
+  {
+    id: 'demo_tut_1', cat: 'Tutors', feat: true,
+    title: 'Mathematics & Physical Science — Matric Specialist',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 93, price: 'R 380', per: 'per hour', priceNum: 380,
+    subject: 'Mathematics', level: 'Grade 10–12', mode: 'In-person',
+    desc: 'Experienced matric tutor with 12 years\' teaching at top Pretoria schools. Specialises in Maths and Physical Science for Grades 10–12, with particular focus on exam technique and past-paper drilling. 94% of students improved by at least one symbol grade. Small groups (max 4) or one-on-one. Available weekdays after 15:00 and Saturdays. References from 60+ satisfied families.',
+    photo: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'
+    ],
+    paused: false, queueCount: 6, sellerIdx: 1
+  },
+  {
+    id: 'demo_tut_2', cat: 'Tutors', feat: false,
+    title: 'English Home Language & Literature — All Grades',
+    area: 'Pretoria', suburb: 'Waterkloof',
+    trust: 86, price: 'R 320', per: 'per hour', priceNum: 320,
+    subject: 'English', level: 'Grade 4–12', mode: 'Online',
+    desc: 'Honours-qualified English teacher offering tutoring in English Home Language and Literature for Grades 4–12. Focus on creative writing, essay structure, comprehension and set works. Online sessions via Google Meet — all materials provided. Available Mon–Fri 14:00–19:00 and Saturdays. Particular success with reluctant writers and students with dyslexia. DBS-cleared.',
+    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 1
+  },
+  {
+    id: 'demo_tut_3', cat: 'Tutors', feat: false,
+    title: 'Piano Lessons — Beginner to Grade 8 ABRSM',
+    area: 'Pretoria', suburb: 'Lynnwood',
+    trust: 78, price: 'R 280', per: 'per 45 min', priceNum: 280,
+    subject: 'Music (Piano)', level: 'Beginner–Grade 8', mode: 'In-person',
+    desc: 'UNISA-qualified pianist with 15 years\' teaching experience. Lessons cover theory, sight-reading, scales and repertoire, with exam preparation for ABRSM and UNISA syllabi. Students from age 5 upward. Own Steinway upright in dedicated studio. 100% of Grade 5–8 exam candidates passed in 2025. Saturdays fully booked — limited weekday slots remaining.',
+    photo: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80',
+      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 1
+  },
+  {
+    id: 'demo_tut_4', cat: 'Tutors', feat: false,
+    title: 'Accounting & Business Studies — IEB & NSC Matric',
+    area: 'Pretoria', suburb: 'Menlyn',
+    trust: 81, price: 'R 350', per: 'per hour', priceNum: 350,
+    subject: 'Accounting', level: 'Grade 10–12', mode: 'Either',
+    desc: 'CA(SA) with 8 years\' tutoring experience in Accounting and Business Studies for both IEB and NSC curricula. Structured approach: concept explanation, worked examples, then timed past papers. In-person (Menlyn area) or online. Trial lesson available. Also offers holiday intensives in June and September. 90% of students achieved a distinction in their final exam.',
+    photo: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 1
+  },
+  {
+    id: 'demo_tut_5', cat: 'Tutors', feat: false,
+    title: 'Afrikaans Home Language — Grades 4 to 12',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 69, price: 'R 260', per: 'per hour', priceNum: 260,
+    subject: 'Afrikaans', level: 'Grade 4–12', mode: 'In-person',
+    desc: 'Moedertaalspreker met 10 jaar onderwyservaring aan Pretoriase Afrikaanse skole. Bied bylesing in Afrikaans Huistaal vir Grade 4 tot 12, insluitend opstelskryf, begripstoetse en mondeling voorbereiding. Sessies by leerder se huis of by my in Centurion. Groepe van maksimum 3 leerders. Beskikbaar na skoolure en Saterdagoggende.',
+    photo: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 1
+  },
+  {
+    id: 'demo_tut_6', cat: 'Tutors', feat: false,
+    title: 'Life Sciences & Geography — Grade 8 to 12',
+    area: 'Pretoria', suburb: 'Garsfontein',
+    trust: 75, price: 'R 300', per: 'per hour', priceNum: 300,
+    subject: 'Life Sciences', level: 'Grade 8–12', mode: 'Either',
+    desc: 'BSc Biology graduate offering Life Sciences and Geography tutoring for Grades 8–12. Strong focus on understanding concepts rather than rote memorisation. Diagrams, mind maps and colour-coded notes provided. Online or in-person (Garsfontein / Pretoria East). Exam packs available on request. Parents report consistent improvement within 6 weeks.',
+    photo: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+      'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 1
+  },
+
   {
     id: 'ph_services', cat: 'Services', feat: false,
     title: 'PLACEHOLDER — Services listing coming soon',
@@ -95,6 +319,113 @@ const LISTINGS = [
     serviceType: '', availability: '',
     desc: 'Real service listings will appear here once sellers are onboarded via the admin tool.',
     photo: null, paused: true, queueCount: 0, sellerIdx: 2
+  },
+
+  // ── DEMO LISTINGS: SERVICES ───────────────────────────────
+  {
+    id: 'demo_svc_1', cat: 'Services', feat: true,
+    title: 'Registered Electrician — Fault Finding, Compliance Certs',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 89, price: 'R 650', per: 'call-out + R 280/hr', priceNum: 650,
+    service_class: 'Technical', serviceType: 'Electrical', availability: 'Mon–Sat',
+    desc: 'Master electrician with 18 years\' experience and current wireman\'s licence. Residential and light commercial work: fault finding, DB board upgrades, solar and battery installations, Certificate of Compliance (COC) for property sales, gate motor and intercom wiring. Same-day emergency call-outs available. All work guaranteed 12 months. Registered with ECSA. Fully insured.',
+    photo: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_2', cat: 'Services', feat: false,
+    title: 'Landscape Gardener — Design, Installation & Maintenance',
+    area: 'Pretoria', suburb: 'Waterkloof',
+    trust: 82, price: 'R 450', per: 'per hour', priceNum: 450,
+    service_class: 'Casuals', serviceType: 'Garden & Landscaping', availability: 'Mon–Fri',
+    desc: 'Qualified horticulturalist with 14 years\' experience in residential landscaping across Pretoria\'s top suburbs. Services include full garden redesign, irrigation installation, lawn establishment, indigenous planting, and ongoing maintenance contracts. Portfolio of 80+ established gardens available on request. Monthly contracts from R3,500. Fully insured. No job too large or small.',
+    photo: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
+      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_3', cat: 'Services', feat: false,
+    title: 'Plumber — Leak Detection, Geysers, General Plumbing',
+    area: 'Pretoria', suburb: 'Lynnwood',
+    trust: 76, price: 'R 600', per: 'call-out + R 300/hr', priceNum: 600,
+    service_class: 'Technical', serviceType: 'Plumbing', availability: 'Mon–Sat',
+    desc: 'Licensed plumber (PIRB registered) covering all residential and light commercial plumbing. Specialities: non-invasive leak detection, geyser replacement and solar geyser installation, burst pipe repairs, bathroom and kitchen plumbing, and water meter installation. Emergency service 7 days. 1-hour response time for emergency call-outs in Pretoria East, Centurion, and Lynnwood.',
+    photo: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+      'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_4', cat: 'Services', feat: false,
+    title: 'Web Developer — Small Business Websites & E-Commerce',
+    area: 'Pretoria', suburb: 'Hatfield',
+    trust: 84, price: 'R 12 500', per: 'per project', priceNum: 12500,
+    service_class: 'Technical', serviceType: 'IT & Development', availability: 'Weekdays',
+    desc: 'Freelance web developer with 9 years\' experience building websites and e-commerce stores for South African small businesses. Stack: React, Next.js, WordPress, WooCommerce. Includes hosting setup, SEO basics, Google Analytics, and 3 months\' post-launch support. Typical turnaround 3–4 weeks. Portfolio of 120+ live sites. References from established Pretoria businesses available.',
+    photo: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_5', cat: 'Services', feat: false,
+    title: 'Professional House Cleaner — Weekly & Monthly Contracts',
+    area: 'Pretoria', suburb: 'Menlyn',
+    trust: 71, price: 'R 220', per: 'per hour', priceNum: 220,
+    service_class: 'Casuals', serviceType: 'Cleaning', availability: 'Mon–Fri',
+    desc: 'Reliable, vetted house cleaner with 10 years\' experience in Pretoria East households. Weekly and monthly contracts preferred. Brings own quality cleaning products. Services include full house clean, laundry and ironing, oven and fridge cleans, and window washing. Police clearance certificate available. References from 12 current long-term clients on request. Non-smoker.',
+    photo: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
+    ],
+    paused: false, queueCount: 6, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_6', cat: 'Services', feat: false,
+    title: 'Chartered Accountant — Tax Returns & Small Business Accounting',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 88, price: 'R 1 800', per: 'per tax return', priceNum: 1800,
+    service_class: 'Technical', serviceType: 'Accounting & Tax', availability: 'Weekdays',
+    desc: 'CA(SA) offering personal income tax returns, provisional tax, small business accounting, VAT registration and returns, and payroll for businesses up to 20 employees. Registered SARS tax practitioner. Turnaround 48 hours for personal returns. Fixed-fee packages for small businesses from R2,200/month. 15 years\' experience. Fully remote — all documentation handled via secure portal.',
+    photo: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 2
+  },
+  {
+    id: 'demo_svc_7', cat: 'Services', feat: false,
+    title: 'Painter — Interior & Exterior, All Finishes',
+    area: 'Pretoria', suburb: 'Pretoria East',
+    trust: 67, price: 'R 85', per: 'per m²', priceNum: 85,
+    service_class: 'Casuals', serviceType: 'Painting', availability: 'Mon–Sat',
+    desc: 'Professional painter with 20 years\' experience in residential and commercial painting across Pretoria. Interior and exterior work, all paint systems including Dulux, Plascon, and Prominent Paints. Specialities: feature walls, textured finishes, varnishing, and damp remediation before painting. Full prep and clean-up included. Free quote within 24 hours. Scaffolding available for double-storeys.',
+    photo: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80',
+      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 2
   },
   // ── DEMO LISTINGS: ADVENTURES ─────────────────────────────
   {
@@ -909,21 +1240,39 @@ const LISTINGS = [
 const SELLERS = [
   {
     idx: 0, cat: 'Property',
-    headline: 'PLACEHOLDER — Awaiting first property seller',
-    about: 'This profile will be populated once a real property seller is onboarded.',
-    stats: [], creds: [], tags: [], avail: [], portfolio: []
+    headline: 'Verified Private Property Seller · Pretoria',
+    tagline: 'Selling privately. Identity protected until you\'re matched.',
+    about: 'Demo property seller profile. Real sellers will have their full property history, motivation for selling, preferred timeline, and any inclusions listed here. All identities are protected until a Tuppence introduction is accepted.',
+    stats: [{ label: 'Properties sold', val: '3' }, { label: 'Avg days to sell', val: '28' }, { label: 'Member since', val: '2024' }],
+    creds: ['✅ ID verified', '🏡 Title deed confirmed', '📋 Compliance docs ready', '⚡ Motivated seller'],
+    tags: ['Waterkloof', 'Menlyn', 'Centurion', 'Investment', 'Family homes', 'Vacant land'],
+    avail: ['Viewings by appointment · Flexible on timing'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80'
   },
   {
     idx: 1, cat: 'Tutors',
-    headline: 'PLACEHOLDER — Awaiting first tutor',
-    about: 'This profile will be populated once a real tutor is onboarded.',
-    stats: [], creds: [], tags: [], avail: [], portfolio: []
+    headline: 'Verified Tutor · Pretoria · Maths & Sciences Specialist',
+    tagline: 'Results-focused tutoring. Identity protected until you\'re ready.',
+    about: 'Demo tutor profile. Real tutors will have their full academic background, subjects, teaching methodology, availability, and past student results listed here. All identities protected until introduction accepted.',
+    stats: [{ label: 'Students tutored', val: '120+' }, { label: 'Pass rate', val: '96%' }, { label: 'Years teaching', val: '12' }],
+    creds: ['🎓 B.Sc Honours', '📋 SACE registered', '✅ Police clearance', '⭐ Top-rated tutor'],
+    tags: ['Mathematics', 'Physical Science', 'Accounting', 'English', 'Afrikaans', 'Life Sciences'],
+    avail: ['Weekdays 14:00–19:00 · Saturdays 08:00–13:00'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80'
   },
   {
     idx: 2, cat: 'Services',
-    headline: 'PLACEHOLDER — Awaiting first service provider',
-    about: 'This profile will be populated once a real service provider is onboarded.',
-    stats: [], creds: [], tags: [], avail: [], portfolio: []
+    headline: 'Verified Service Provider · Pretoria · Technical & Home Services',
+    tagline: 'Qualified, insured, and vetted. Identity protected until matched.',
+    about: 'Demo service provider profile. Real providers will have their full credentials, registration numbers, insurance details, service areas, and client references listed here. All identities protected until introduction accepted.',
+    stats: [{ label: 'Jobs completed', val: '340+' }, { label: 'Repeat clients', val: '78%' }, { label: 'Years active', val: '14' }],
+    creds: ['🔧 Trade-qualified', '🛡️ Fully insured', '✅ Police clearance', '📋 Registered with trade body'],
+    tags: ['Electrical', 'Plumbing', 'Painting', 'Cleaning', 'Gardening', 'Accounting', 'IT & Web'],
+    avail: ['Mon–Sat · Emergency call-outs available'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'
   },
   {
     idx: 3, cat: 'Adventures',

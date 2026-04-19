@@ -2,6 +2,18 @@
 
 ---
 
+## Session 22c · 19 April 2026 · Full demo listings for Property, Tutors and Services
+
+**Property demo listings (8)** — Waterkloof Ridge family home, Erasmuskloof Tuscan estate, Menlyn cluster, Brooklyn penthouse, Raslouw smallholding with income, Irene townhouse, Hatfield investment flat, Silver Lakes vacant stand. All with propType, beds, baths, garages, floor_area, erf_size, listingType, full descriptions and 3 Unsplash photos each.
+
+**Tutors demo listings (6)** — Maths & Science matric specialist, English Home Language online tutor, Piano lessons ABRSM Grade 8, Accounting & Business Studies CA(SA), Afrikaans Home Language, Life Sciences & Geography. All with subject, level, mode fields.
+
+**Services demo listings (7)** — Registered electrician, landscape gardener, PIRB plumber, web developer, house cleaner, chartered accountant, painter. All with service_class (Technical / Casuals) and serviceType fields.
+
+**Seller profiles updated** — Property, Tutors and Services seller profiles (sellerIdx 0, 1, 2) upgraded from empty placeholders to full demo profiles with stats, credentials, tags, availability and seller photos.
+
+---
+
 ## Session 22b · 19 April 2026 · Adventures multi-country demo listings + expanded country picker
 
 **Adventures demo data** — added 10 Accommodation and 10 Experiences demo listings spanning 7 countries: South Africa (ZA), Canada (CA), United States (US), United Kingdom (GB), Europe/EU, Australia (AU), New Zealand (NZ). Each listing has correct `cat` field (`adventures_accommodation` / `adventures_experiences`), `country` code, `environment_type` for chip filtering, real Unsplash hero and gallery photos, rich operator-grade descriptions, group size, duration, and Trust Score. Adventures browse screen now filters and displays these correctly with the matching flag and currency symbol per country.
