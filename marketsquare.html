@@ -2918,8 +2918,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="adv-env-chip" onclick="setAdvEnv('farm_and_rural',this)">🌾 Farm & Rural</div>
   </div>
 
-  <div id="adv-results-count" style="font-size:12px;color:var(--text-3);padding:6px 16px 0;"></div>
-  <div class="adv-grid" id="adv-grid"></div>
+  <div id="adv-results-count" style="font-size:12px;color:#6b7280;padding:6px 16px 4px;"></div>
+  <div id="adv-grid" style="padding:8px 16px 100px;display:flex;flex-direction:column;gap:12px;min-height:200px;"></div>
 </div>
 
 <!-- Adventures country picker sheet -->
@@ -4571,18 +4571,18 @@ function renderAdvGrid(){
       ? `<img class="adv-card-img" src="${esc(l.photo)}" alt="${esc(l.title||'')}" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
-    return `<div class="adv-card" onclick="openDetail('${esc(l.id)}')">
+    return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
       ${imgHtml}
-      <div class="adv-card-body">
-        <div class="adv-card-meta">
-          <span class="adv-card-subcat">${subcatLabel}</span>
-          <span class="adv-card-country">${flag} ${countryCode}</span>
+      <div style="padding:12px 14px 14px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#065f46;background:#d1fae5;padding:2px 8px;border-radius:10px;">${subcatLabel}</span>
+          <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag} ${countryCode}</span>
         </div>
-        <div class="adv-card-title">${esc(l.title||l.name||'Untitled')}</div>
-        ${envLabel ? `<div class="adv-card-env">${envLabel}</div>` : ''}
-        <div class="adv-card-footer">
-          <span class="adv-card-price">${priceLabel}</span>
-          <button class="adv-card-intro" onclick="event.stopPropagation();openDetail('${esc(l.id)}')">View →</button>
+        <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;line-height:1.3;">${esc(l.title||l.name||'Untitled')}</div>
+        ${envLabel ? `<div style="font-size:12px;color:#374151;margin-bottom:8px;">${envLabel}</div>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+          <span style="font-size:14px;font-weight:700;color:#111827;">${priceLabel}</span>
+          <button style="background:#111827;color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;" onclick="event.stopPropagation();openDetail('${esc(l.id)}')">View →</button>
         </div>
       </div>
     </div>`;
