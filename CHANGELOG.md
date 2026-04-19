@@ -2,6 +2,14 @@
 
 ---
 
+## Session 22b · 19 April 2026 · Adventures multi-country demo listings + expanded country picker
+
+**Adventures demo data** — added 10 Accommodation and 10 Experiences demo listings spanning 7 countries: South Africa (ZA), Canada (CA), United States (US), United Kingdom (GB), Europe/EU, Australia (AU), New Zealand (NZ). Each listing has correct `cat` field (`adventures_accommodation` / `adventures_experiences`), `country` code, `environment_type` for chip filtering, real Unsplash hero and gallery photos, rich operator-grade descriptions, group size, duration, and Trust Score. Adventures browse screen now filters and displays these correctly with the matching flag and currency symbol per country.
+
+**Country picker expanded** — Adventures country sheet now lists: South Africa, Namibia, Mozambique, United States, Canada, United Kingdom, Europe, Australia, New Zealand, All countries. `ADV_COUNTRY_FLAGS` and `ADV_COUNTRY_CURRENCY` maps updated to cover all codes. Price labels now show the correct currency prefix per country (R / $ / CA$ / £ / € / A$ / NZ$).
+
+---
+
 ## Session 22 · 19 April 2026 · Adventures screen, full category sell-side, founding seller bar removed
 
 **Adventures browse screen** — Adventures now opens a dedicated `screen-adventures` instead of the standard browse grid. Features: dark green hero header with country switcher pill (ZA / Namibia / Mozambique / All countries), Accommodation / Experiences subcategory toggle buttons, horizontal environment filter chips (Bush & Wildlife, Mountain, Coastal, Winelands, Karoo, Forest, Farm). Listing cards show subcategory badge, country flag, environment label, and price. Empty state shown when no listings match filters. Both the home screen category tile and browse chip route to this screen.
