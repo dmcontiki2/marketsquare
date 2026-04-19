@@ -2,6 +2,26 @@
 
 ---
 
+## Session 22 · 19 April 2026 · Adventures screen, full category sell-side, founding seller bar removed
+
+**Adventures browse screen** — Adventures now opens a dedicated `screen-adventures` instead of the standard browse grid. Features: dark green hero header with country switcher pill (ZA / Namibia / Mozambique / All countries), Accommodation / Experiences subcategory toggle buttons, horizontal environment filter chips (Bush & Wildlife, Mountain, Coastal, Winelands, Karoo, Forest, Farm). Listing cards show subcategory badge, country flag, environment label, and price. Empty state shown when no listings match filters. Both the home screen category tile and browse chip route to this screen.
+
+**Sell side — all 6 categories** — Category selector (pub-b step) now shows all 6: Property, Tutors, Services, Adventures, Collectors, Cars. Adventures routes through a sub-step (pub-b2) to choose Accommodation or Experiences. Onboarding dropdown updated with all categories including both Adventures subcategories. Model picker updated to list all queue-model categories.
+
+**AA_CATEGORIES expanded** — Adventures split into Accommodation (price/night, sleeps, amenities, environment) and Experiences (activity type, duration, group size, price/person, difficulty) service classes with separate photo slots. Cars added with full vehicle fields and 5 photo slots.
+
+**normCat() updated** — handles `adventures_accommodation` and `adventures_experiences` from BEA.
+
+**Founding seller progress bar removed** — removed from buyer home screen (CSS, HTML, JS function, 3 call sites). Remains in CityLauncher Ops Dashboard.
+
+---
+
+## Session 21 · 18 April 2026 · Photo carousel right arrow positioning fix
+
+Fixed a visual bug in the detail/listing screen's photo carousel where the right arrow button was misaligned and unreachable. **Buyer app (`marketsquare.html`):** added `z-index:5` to `.dnav` (the top navigation bar with back button and heart/wishlist button) to ensure it sits above the carousel slide arrows; added `pointer-events:none` to `.dnav` and `pointer-events:auto` to `.dib` buttons so the overlay doesn't block arrow clicks; changed `.photo-strip-wrap` overflow from `hidden` to `visible` to allow the absolutely-positioned arrow buttons to render fully outside the container bounds. The carousel now displays both left and right arrows correctly and both are clickable.
+
+---
+
 ## Session 20c · 17 April 2026 · Dev-phase tools — AI sessions + Tuppence seeding without payment
 
 Added pre-launch dev tooling so the development team can test the full intro flow, AI Coach, and listing accepts without Paystack being live. **BEA (`bea_main.py`):** added `GET /tuppence/balance?email=` (public) — returns SUM of all transaction amounts for an email, enabling the buyer app to sync BEA balance; added `POST /dev/credit?email=&tuppence=N&ai_sessions=N` (API key protected) — upserts the user record crediting AI sessions and inserts a `dev_topup` transaction for Tuppence without payment; returns new balances and a warning label. **Admin app (`marketsquare_admin.html`):** added 🛠 Dev nav tab and `#view-devtools` panel with: a prominent amber warning banner, a "Seed Dev Account" card (email + T amount + AI sessions + Seed button, calls `POST /dev/credit`), a "Check Balances" card (parallel fetch of `/tuppence/balance` + `/users/{email}` to show live balances), and a purple "Before launch" instruction note listing the two things to remove. `devSeedAccount()` and `devCheckBalance()` JS functions added. **Buyer app (`marketsquare.html`):** added a silent background fetch of `/tuppence/balance` on page load — if the BEA balance is higher than the local `tuppence` variable (default 5), the BEA value is used and the UI is updated; this means seeding an email via Dev Tools is immediately reflected in the buyer app without any extra step. Cost model impact: AI Coach calls in dev phase run against the existing Anthropic billing account — no additional infrastructure cost.
@@ -570,3 +590,56 @@ Full proximity search built across BEA and buyer app. BEA: added lat/lng REAL co
 ## Session 11 · 5 April 2026 · Admin city search + duplicate cleanup
 
 Replaced the "Add a new city" form in the admin Cities tab with a search input that filters the cities table by city name or province as you type. Removed POST /geo/cities endpoint from BEA — cities are seeded exclusively from GeoNames, not created manually. The old Add City form had caused a duplicate lowercase "pretoria" (id 101) with 0 suburbs; deactivated on server via UPDATE geo_cities SET active=0 WHERE id=101. Real Pretoria (id 47) has 140 suburbs.
+
+---
+
+## Session 21 · 17 April 2026 · Edit polish, smart sell flow, price fix, demo data, category photos
+
+### Bug fixes (marketsquare.html)
+
+**Edit screen photo wiring** — `elRenderPhotos()` now called inside both `openEditListing()` and `editAISuggest()` so uploaded photos and AI-warning badges appear correctly in the edit sheet.
+
+**Structured fields from DB columns** — `loadLiveListings()` now prefers dedicated DB columns (`l.beds`, `l.baths`, `l.garages`, `l.prop_type`, `l.listing_type`, `l.floor_area`, `l.erf_size`, `l.subject`, `l.level`, `l.mode`, `l.service_type`, `l.availability`) over description-text parsing. Regex updated to `/(\d+)[-\s]*bed/i` to match "3-bedroom" hyphenated forms. Result: structured info pills now survive AI rewrites of the description.
+
+**floor_area / erf_size** — Added to mapped listing object in `loadLiveListings()` and to `saveEditedListing()` payload. Both fields now display in the detail view and persist on save.
+
+**Stale buyer cache after save** — `saveEditedListing()` now calls `Promise.all([loadLiveDash(), loadLiveListings()])` after a successful PUT so the buyer grid refreshes immediately.
+
+**listing_type detection** — Regex expanded to match AI-written prose (`per month`, `monthly rent`, `to let`, `to-let`, `rental`) not just exact "for rent" strings.
+
+**Commitment Model step text** — Removed outdated "Seller pays 1T penalty" copy from the commitment flow. Step now reads "Listing becomes available to other buyers again."
+
+**Price corruption fix** — `saveEditedListing()` and `_elFieldVal()` now strip all non-numeric characters before saving price (`replace(/[^0-9.]/g, '')`). Prevents AI-suggested multi-option price strings (e.g. "R26,990/month (all-inclusive from R28,480)") from concatenating into a corrupt value. DB corrected via `fix_prices.py` (IDs 5–8).
+
+**Profile photo drag and drop** — Added `ondragover`, `ondragleave`, and `ondrop` inline handlers to the CV photo circle. New `handleCVPhotoDrop(e)` function processes dropped image files identically to the click-to-upload path.
+
+**Tutors & Services edit fields** — `_elFieldVal()` now maps `subject`, `level`, `mode`, `service_type`, `availability` from BEA raw data. Detail view shows info pills for all three categories (Property: beds/baths/garages/floor_area/erf_size; Tutors: subject/level/mode; Services: service_class/service_type/availability).
+
+### Smart + Sell routing (marketsquare.html)
+
+`+ Sell` nav button now calls `openSellNav()` instead of going directly to the onboard form. If `ms_aa_email` is present in localStorage an account-picker bottom sheet appears with two options: continue with the existing account, or start a fresh account for a second business. Sellers whose storage was cleared can also recover their session via a new "sign in with existing account" section at the bottom of the onboard form. `submitOnboard()` now stores `ms_aa_name` in localStorage. Fixed a bug where `sellSheetNewAccount()` was prematurely clearing the email key before the onboard form had a chance to write a new one. `.ob-form` padding-bottom increased to `max(calc(env(safe-area-inset-bottom) + 80px), 100px)` to prevent the submit button from hiding under the bottom nav bar on iOS.
+
+### Trust score column (bea_main.py)
+
+Added `("trust_score", "INTEGER")` to the `run_migrations()` migration loop (already present alongside `seller_email` from session prep). `Listing` Pydantic model gains `trust_score: Optional[int]` and `seller_email: Optional[str]`. `create_listing` POST endpoint INSERT updated to save all structured fields: `prop_type`, `beds`, `baths`, `garages`, `subject`, `level`, `mode`, `service_type`, `availability`, `trust_score`, `seller_email`. Previously only 10 base columns were saved; now 21.
+
+`loadLiveListings()` in `marketsquare.html` uses `l.trust_score || 40` instead of the hardcoded value `40`, so trust badges now reflect real DB data.
+
+### Demo seed data
+
+`seed_demo_data.py` creates 20 demo listings under `dmcontiki2@gmail.com` (all editable via the seller edit flow):
+- 10 Tutors: Maths/Physics (88), Piano (84), Stats/Data Science (92), Coding/Robotics (79), English/Afrikaans (76), Accounting (72), Life Sciences (61), Primary (67), Zulu/Sesotho (55), Chess (48)
+- 10 Services: Plumber (90), Electrician (87), Web Design (85), Bookkeeping/Tax (83), Personal Trainer (78), Photography (74), Graphic Design (69), House Cleaning (63), Garden (58), Car Valeting (52)
+
+Each listing has Unsplash royalty-free photos, full structured fields, and mock certificate text in the description. Trust scores vary 48–92 to demonstrate all four trust tiers.
+
+### Category shopfront photos (marketsquare.html)
+
+Category tiles on the home screen now show representative full-cover Unsplash photos instead of emoji on a gradient:
+- **Property** — `photo-1570129477492-45c003edd2be` (warm suburban house at golden hour)
+- **Tutors** — `photo-1580582932707-520aed937b7b` (teacher working with student)
+- **Services** — `photo-1621905251918-48416bd8575a` (skilled professional at work)
+
+Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
+
+**Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`

@@ -1,5 +1,5 @@
 # MarketSquare · Master Agent Briefing
-**Version 1.5 · 17 April 2026**
+**Version 1.6 · 17 April 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
@@ -197,18 +197,18 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 ---
 
-## 8 · Open Items (updated Session 20)
+## 8 · Open Items (updated Session 21)
 
 | Priority | Item | Owner |
 |---|---|---|
 | 1 | Paystack live mode (pending CIPC registration) | David action |
 | 2 | n8n email notifications — buyer emailed on intro accept/decline | Architect / BEA |
-| 3 | CityLauncher Cowork setup — Principle Requirements + folder framework | In progress |
+| 3 | Seller-facing intro accept/decline email notifications (n8n) | Architect / BEA |
 | 4 | Real founding seller content — Maroushka re-listings via admin tool | Maroushka / Admin agent |
-| 5 | Rename project files — remove Windows duplicate suffixes | David / Claude Code |
+| 5 | Tutors & Services edit parity — confirm all structured fields save/display correctly | Frontend agent |
 | 6 | **Remove `/dev/credit` endpoint before public launch** | BEA agent |
 | 7 | **Remove Dev Tools nav tab from admin app before public launch** | Admin agent |
-| 8 | Seller-facing intro accept/decline email notifications (n8n) | Architect / BEA |
+| 8 | CityLauncher Cowork setup — Principle Requirements + folder framework | In progress |
 
 ---
 
@@ -221,4 +221,4 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 ---
 
-*Updated v1.5: 8 new BEA endpoints added (edit-after-publish, version control, photo upload, Tuppence balance, dev credit). SQLite table count corrected to 9. Open Items updated to Session 20 state. REMOVE /dev/credit + Dev Tools nav before public launch.*
+*Updated v1.6: Session 21 — trust_score live from DB (no longer hardcoded to 40); create_listing now saves all 21 fields including structured category data; smart + Sell routing with account picker; price sanitisation preventing AI-suggested text corruption; 20 demo listings seeded under dmcontiki2@gmail.com (10 tutors + 10 services, trust 48–92); category shopfront photos (Property / Tutors / Services) on home screen tiles and as listing card fallbacks. REMOVE /dev/credit + Dev Tools nav before public launch.*

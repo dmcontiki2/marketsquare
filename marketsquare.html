@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MarketSquare · Pretoria</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>MarketSquare</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Leaflet map (proximity search + map view) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -36,9 +39,18 @@
 
 // ── CATEGORY CONFIG ────────────────────────────────────────
 const CATS = {
-  Property: { icon: '🏡', bg: 'linear-gradient(140deg,#1e3a5f,#2a5298)', model: 'commit' },
-  Tutors:   { icon: '🎓', bg: 'linear-gradient(140deg,#14532d,#15803d)', model: 'queue'  },
-  Services: { icon: '⚙️', bg: 'linear-gradient(140deg,#7c2d12,#b45309)', model: 'queue'  }
+  Property:   { icon: '🏡', bg: 'linear-gradient(140deg,#1e3a5f,#2a5298)', model: 'commit',
+                catPhoto: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
+  Tutors:     { icon: '🎓', bg: 'linear-gradient(140deg,#14532d,#15803d)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80' },
+  Services:   { icon: '⚙️', bg: 'linear-gradient(140deg,#7c2d12,#b45309)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80' },
+  Adventures: { icon: '🌿', bg: 'linear-gradient(140deg,#064e3b,#065f46)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80' },
+  Collectors: { icon: '🏺', bg: 'linear-gradient(140deg,#44403c,#78716c)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800&q=80' },
+  Cars:       { icon: '🚗', bg: 'linear-gradient(140deg,#0c1a2e,#1e3a5f)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80' }
 };
 
 // ── PROPERTY PHOTOS ────────────────────────────────────────
@@ -84,6 +96,486 @@ const LISTINGS = [
     desc: 'Real service listings will appear here once sellers are onboarded via the admin tool.',
     photo: null, paused: true, queueCount: 0, sellerIdx: 2
   },
+  // ── DEMO LISTINGS: ADVENTURES ─────────────────────────────
+  {
+    id: 'demo_adv_1', cat: 'Adventures', feat: true,
+    title: 'Hot Air Balloon Safari over the Magaliesberg',
+    area: 'Pretoria', suburb: 'Hartbeespoort',
+    trust: 88, price: 'R 2 450', per: 'per person', priceNum: 2450,
+    adventureType: 'Experiences', groupSize: '2–8 people', duration: '3 hours',
+    desc: 'Drift silently over the Magaliesberg at dawn in a luxury hot air balloon. One of South Africa\'s most iconic experiences — launch at sunrise, float above the valley for 60 minutes, and land to a champagne breakfast in the bush. SACAA-licensed pilots. Full safety briefing. Minimum age 10. All weather checks done 24hrs in advance.',
+    photo: 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80',
+      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_2', cat: 'Adventures', feat: false,
+    title: 'Big 5 Hunting Safari — Limpopo Concession',
+    area: 'Pretoria', suburb: 'Bela-Bela',
+    trust: 79, price: 'R 18 500', per: 'per day', priceNum: 18500,
+    adventureType: 'Experiences', groupSize: '1–4 hunters', duration: '3–7 days',
+    desc: 'Professional Hunter-led Big 5 safari on a private 12,000ha concession north of Bela-Bela. Full trophy hunting or photographic options. Walk-and-stalk methodology. All-inclusive: accommodation in bush camp, meals, field dressing, and transport from Pretoria. PHs registered with PHASA. Day packages and multi-day packages available.',
+    photo: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
+      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80',
+      'https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_3', cat: 'Adventures', feat: false,
+    title: 'Magaliesberg Gorge Abseil & Rock Climb',
+    area: 'Pretoria', suburb: 'Hartbeespoort',
+    trust: 72, price: 'R 750', per: 'per person', priceNum: 750,
+    adventureType: 'Experiences', groupSize: '2–10 people', duration: 'Full day',
+    desc: 'Abseil two cliff faces (18m and 24m) and learn basic rock climbing techniques in the Magaliesberg gorge. All gear provided. UIAA-certified guide with Wilderness First Aid. No experience needed — suitable from age 14. Includes trail snacks and lunch.',
+    photo: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
+      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_4', cat: 'Adventures', feat: false,
+    title: 'White Water Rafting — Ash River Grade 3–4',
+    area: 'Pretoria', suburb: 'Clarens',
+    trust: 65, price: 'R 980', per: 'per person', priceNum: 980,
+    adventureType: 'Experiences', groupSize: '4–12 people', duration: 'Full day',
+    desc: 'Grade 3–4 white water rafting on the Ash River, departing from Pretoria. Transport included. 6 hours on the water through spectacular Free State mountain scenery. Safety kayakers on the water at all times. Minimum age 16. Wetsuits and helmets provided.',
+    photo: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+      'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_5', cat: 'Adventures', feat: false,
+    title: 'Skydiving — 10,000ft Tandem Jump, Pretoria',
+    area: 'Pretoria', suburb: 'Bapsfontein',
+    trust: 83, price: 'R 1 850', per: 'per person', priceNum: 1850,
+    adventureType: 'Experiences', groupSize: '1–6 people', duration: 'Half day',
+    desc: 'Tandem skydive from 10,000ft above Gauteng with a PASA-licensed instructor. 30-second freefall followed by a 5-minute canopy glide over the Highveld. Video and photo packages available. No experience required. Minimum weight 40kg, maximum 110kg. Minimum age 16.',
+    photo: 'https://images.unsplash.com/photo-1622629797619-c100e3e67e2e?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1622629797619-c100e3e67e2e?w=800&q=80',
+      'https://images.unsplash.com/photo-1601024445121-e5b82f020549?w=800&q=80',
+      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800&q=80'
+    ],
+    paused: false, queueCount: 6, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_6', cat: 'Adventures', feat: false,
+    title: 'Luxury Bush Lodge — Waterberg Biosphere',
+    area: 'Pretoria', suburb: 'Vaalwater',
+    trust: 91, price: 'R 3 200', per: 'per person per night', priceNum: 3200,
+    adventureType: 'Accommodation', groupSize: '2–8 guests', duration: 'Per night',
+    desc: 'Malaria-free luxury safari lodge in the heart of the Waterberg. 4 tented chalets on stilts, each with private plunge pool and uninterrupted bushveld views. All-inclusive: game drives, bush walks, all meals and drinks. TGCSA 5-star rated. Transfer from Pretoria available. Book 2 nights minimum.',
+    photo: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
+      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80',
+      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_7', cat: 'Adventures', feat: false,
+    title: 'Boutique Guesthouse — Waterkloof Ridge',
+    area: 'Pretoria', suburb: 'Waterkloof Ridge',
+    trust: 85, price: 'R 1 850', per: 'per night', priceNum: 1850,
+    adventureType: 'Accommodation', groupSize: '1–4 guests', duration: 'Per night',
+    desc: 'TGCSA 4-star boutique guesthouse in a tranquil garden estate. 6 en-suite rooms, each with air conditioning, fast WiFi, and private patio. Full breakfast included. Secure parking. Walking distance from several embassies.',
+    photo: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80',
+      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80',
+      'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_8', cat: 'Adventures', feat: false,
+    title: 'Mountain Bike Trail — Groenkloof Nature Reserve',
+    area: 'Pretoria', suburb: 'Groenkloof',
+    trust: 61, price: 'R 450', per: 'per person', priceNum: 450,
+    adventureType: 'Experiences', groupSize: '2–8 people', duration: 'Half day',
+    desc: 'Guided mountain bike trail through Groenkloof Nature Reserve — Pretoria\'s oldest nature reserve. 18km of single track through indigenous bush with wildlife sightings guaranteed. Bikes, helmets and hydration packs supplied. Suitable for intermediate riders. Departs 6am daily.',
+    photo: 'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+      'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_9', cat: 'Adventures', feat: false,
+    title: 'Quad Biking & Zip Line — Hennops River Valley',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 67, price: 'R 620', per: 'per person', priceNum: 620,
+    adventureType: 'Experiences', groupSize: '2–15 people', duration: '3 hours',
+    desc: 'Quad biking through the Hennops River Valley followed by a 200m zip line over the gorge. Perfect for team builds and groups. Safety helmets and all equipment provided. No experience needed. Minimum age 12. Includes light refreshments.',
+    photo: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80',
+      'https://images.unsplash.com/photo-1504870712357-65ea720d6078?w=800&q=80',
+      'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 3
+  },
+  {
+    id: 'demo_adv_10', cat: 'Adventures', feat: false,
+    title: 'Fly Fishing — Trout Dam, Dullstroom',
+    area: 'Pretoria', suburb: 'Dullstroom',
+    trust: 74, price: 'R 890', per: 'per person', priceNum: 890,
+    adventureType: 'Experiences', groupSize: '1–4 people', duration: 'Full day',
+    desc: 'Guided fly fishing on a private trout dam near Dullstroom. Transport from Pretoria, all tackle and instruction provided. Suitable for complete beginners. Catch-and-release or table fish options. Includes streamside lunch.',
+    photo: 'https://images.unsplash.com/photo-1542372147193-a7aca54189cd?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1542372147193-a7aca54189cd?w=800&q=80',
+      'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 3
+  },
+  {
+    id: 'ph_adventures', cat: 'Adventures', feat: false,
+    title: 'PLACEHOLDER — Adventures listing coming soon',
+    area: 'Pretoria', suburb: 'Pretoria',
+    trust: 0, price: null, per: '', priceNum: 0,
+    adventureType: '', groupSize: '', duration: '',
+    desc: 'Real adventure listings will appear here once operators are onboarded.',
+    photo: null, paused: true, queueCount: 0, sellerIdx: 3
+  },
+  // ── DEMO LISTINGS: COLLECTORS ─────────────────────────────
+  {
+    id: 'demo_col_1', cat: 'Collectors', feat: true,
+    title: 'Signed Limited Edition Pierneef Print — Certificate of Authenticity',
+    area: 'Pretoria', suburb: 'Arcadia',
+    trust: 91, price: 'R 28 500', per: '', priceNum: 28500,
+    collectibleType: 'Art & Prints', condition: 'Excellent', era: '1940s',
+    desc: 'A hand-signed limited edition lithographic reproduction of J.H. Pierneef\'s iconic Bushveld scene, numbered 14/50. Full certificate of authenticity from a registered SA art appraiser. Original frame. Provenance documented from 1962.',
+    photo: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
+      'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&q=80',
+      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_2', cat: 'Collectors', feat: false,
+    title: 'Rare 1963 Voortrekker Monument Commemorative Silver Set',
+    area: 'Pretoria', suburb: 'Pretoria East',
+    trust: 64, price: 'R 4 200', per: '', priceNum: 4200,
+    collectibleType: 'Coins & Medals', condition: 'Good — minor toning', era: '1960s',
+    desc: 'Complete 4-piece sterling silver commemorative medallion set from the Voortrekker Monument centenary, 1963. Original velvet presentation box. All four medallions intact. SA Numismatic Society member seller. Independently valued at R5,800.',
+    photo: 'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
+      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80',
+      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80'
+    ],
+    paused: false, queueCount: 0, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_3', cat: 'Collectors', feat: false,
+    title: 'Vintage Leica M3 Camera — 1956, Working Condition',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 77, price: 'R 18 900', per: '', priceNum: 18900,
+    collectibleType: 'Cameras & Optical', condition: 'Very Good', era: '1956',
+    desc: '1956 Leica M3 double-stroke rangefinder. Shutter fires at all speeds. Viewfinder bright and clear. Minor brassing consistent with age. Original Summicron 50mm f/2 lens and leather case. Serviced 2023.',
+    photo: 'https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?w=800&q=80',
+      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80',
+      'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_4', cat: 'Collectors', feat: false,
+    title: 'SA Reserve Bank First Issue Banknote Collection — 1922',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 82, price: 'R 12 800', per: '', priceNum: 12800,
+    collectibleType: 'Banknotes', condition: 'Fine — some foxing', era: '1922',
+    desc: 'Set of 4 South African Reserve Bank first-issue banknotes from 1922, denominations 10s, £1, £5 and £10. Housed in archival sleeves. Accompanied by appraisal letter from a registered SA banknote dealer. A rare find — fewer than 20 complete sets known to exist in private hands.',
+    photo: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80',
+      'https://images.unsplash.com/photo-1561414927-6d86591d0c4f?w=800&q=80',
+      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_5', cat: 'Collectors', feat: false,
+    title: 'Antique Victorian Mahogany Writing Desk — 1880s',
+    area: 'Pretoria', suburb: 'Waterkloof',
+    trust: 69, price: 'R 22 000', per: '', priceNum: 22000,
+    collectibleType: 'Antique Furniture', condition: 'Good — light restoration', era: '1880s',
+    desc: 'An English Victorian mahogany pedestal writing desk, circa 1885. Green leather tooled writing surface, 6 drawers, brass fittings. Minor restoration to right pedestal base — otherwise original. Provenance from a Pretoria estate. Delivery available within Pretoria.',
+    photo: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80',
+      'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800&q=80',
+      'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800&q=80'
+    ],
+    paused: false, queueCount: 0, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_6', cat: 'Collectors', feat: false,
+    title: 'Complete Springbok Rugby Card Set — 1995 World Cup Squad',
+    area: 'Pretoria', suburb: 'Pretoria East',
+    trust: 55, price: 'R 3 400', per: '', priceNum: 3400,
+    collectibleType: 'Sports Cards & Memorabilia', condition: 'Near Mint', era: '1995',
+    desc: 'Complete 32-card set of the 1995 Rugby World Cup Springbok squad, including the full management team and squad cards. All cards graded NM or better. Housed in individual protective sleeves in original collector binder. Includes Lomu and Ellis Park final match programme.',
+    photo: 'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?w=800&q=80',
+      'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&q=80',
+      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_7', cat: 'Collectors', feat: false,
+    title: 'Restored 1920s Gramophone — His Master\'s Voice',
+    area: 'Pretoria', suburb: 'Arcadia',
+    trust: 73, price: 'R 8 500', per: '', priceNum: 8500,
+    collectibleType: 'Vintage Audio', condition: 'Excellent — fully restored', era: '1920s',
+    desc: 'A fully restored HMV (His Master\'s Voice) table-top gramophone, circa 1924. Original oak cabinet, brass horn and tonearm. New needle and diaphragm fitted. Plays 78rpm records at correct speed. Comes with 12 original 78rpm records. A stunning display piece that actually works.',
+    photo: 'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&q=80',
+      'https://images.unsplash.com/photo-1518459031867-a89b944bffe4?w=800&q=80',
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_8', cat: 'Collectors', feat: false,
+    title: 'Anglo-Boer War Medal Pair — Named to Soldier',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 88, price: 'R 9 200', per: '', priceNum: 9200,
+    collectibleType: 'Coins & Medals', condition: 'Very Good', era: '1900s',
+    desc: 'A named pair of Anglo-Boer War medals — Queen\'s South Africa Medal with 4 clasps and King\'s South Africa Medal, both engraved to Pte. J.H. Smit, Imperial Light Horse. Original ribbons. Full research document included tracing the soldier\'s service record. Verified by the SA Medal Society.',
+    photo: 'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80',
+      'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
+      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80'
+    ],
+    paused: false, queueCount: 0, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_9', cat: 'Collectors', feat: false,
+    title: 'First Edition — Wilbur Smith "When the Lion Feeds" 1964',
+    area: 'Pretoria', suburb: 'Menlyn',
+    trust: 66, price: 'R 6 800', per: '', priceNum: 6800,
+    collectibleType: 'Books & Manuscripts', condition: 'Good — light foxing', era: '1964',
+    desc: 'True first edition, first printing of Wilbur Smith\'s debut novel "When the Lion Feeds", published by William Heinemann, London, 1964. Original cloth boards, dust jacket present with minor edge wear. No ownership inscriptions. A cornerstone of any South African literature collection.',
+    photo: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80',
+      'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 4
+  },
+  {
+    id: 'demo_col_10', cat: 'Collectors', feat: false,
+    title: 'Antique Boer War Mauser Rifle — De-activated, With Papers',
+    area: 'Pretoria', suburb: 'Pretoria North',
+    trust: 71, price: 'R 14 500', per: '', priceNum: 14500,
+    collectibleType: 'Militaria', condition: 'Good — original patina', era: '1895',
+    desc: 'A Mauser Model 1895 rifle, serial number consistent with Transvaal Republic issue. Professionally de-activated to SAPS specifications with certificate. All matching numbers. Original stock with minor dings. A significant piece of South African history from the Anglo-Boer War period.',
+    photo: 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=800&q=80',
+      'https://images.unsplash.com/photo-1586771107445-d3ca888129ce?w=800&q=80',
+      'https://images.unsplash.com/photo-1518459031867-a89b944bffe4?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 4
+  },
+  {
+    id: 'ph_collectors', cat: 'Collectors', feat: false,
+    title: 'PLACEHOLDER — Collectors listing coming soon',
+    area: 'Pretoria', suburb: 'Pretoria',
+    trust: 0, price: null, per: '', priceNum: 0,
+    collectibleType: '', condition: '', era: '',
+    desc: 'Real collector listings will appear here once sellers are onboarded.',
+    photo: null, paused: true, queueCount: 0, sellerIdx: 4
+  },
+  // ── DEMO LISTINGS: CARS ───────────────────────────────────
+  {
+    id: 'demo_car_1', cat: 'Cars', feat: true,
+    title: '2022 Porsche 911 Carrera S — 8,200km, One Owner',
+    area: 'Pretoria', suburb: 'Waterkloof',
+    trust: 92, price: 'R 2 450 000', per: '', priceNum: 2450000,
+    carMake: 'Porsche', carModel: '911 Carrera S', year: 2022, mileage: '8,200km', transmission: 'PDK',
+    desc: '2022 Porsche 911 Carrera S in GT Silver Metallic. PDK transmission. Sport Chrono Package, PASM, Bose sound system, heated seats, panoramic roof. One owner from new, full Porsche dealer service history. Still under OEM warranty. A remarkable example in near-showroom condition.',
+    photo: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80',
+      'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80',
+      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_2', cat: 'Cars', feat: false,
+    title: '2021 BMW M4 Competition — Sakhir Orange, Manual',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 81, price: 'R 1 180 000', per: '', priceNum: 1180000,
+    carMake: 'BMW', carModel: 'M4 Competition', year: 2021, mileage: '22,400km', transmission: 'Manual',
+    desc: '2021 BMW M4 Competition in rare Sakhir Orange with black Merino leather. 6-speed manual — one of very few M4 Comps in SA with the manual box. M Driver\'s Package, carbon ceramic brakes, M Carbon seats. Full BMW dealer service history. Two keys.',
+    photo: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80',
+      'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800&q=80',
+      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_3', cat: 'Cars', feat: false,
+    title: '2020 Mercedes-AMG GT 63 S 4-Matic — 4-Door Coupé',
+    area: 'Pretoria', suburb: 'Pretoria East',
+    trust: 87, price: 'R 2 100 000', per: '', priceNum: 2100000,
+    carMake: 'Mercedes-AMG', carModel: 'GT 63 S', year: 2020, mileage: '31,000km', transmission: 'AMG Speedshift',
+    desc: 'AMG GT 63 S 4-door in Obsidian Black with Nappa leather and AMG Performance seats. 639hp twin-turbo V8. AMG Ride Control+, ceramic composite brakes, Burmester surround sound. Full AMG dealer history. Recent service completed.',
+    photo: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80',
+      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_4', cat: 'Cars', feat: false,
+    title: '2023 Ford Ranger Raptor — 4,100km, Immaculate',
+    area: 'Pretoria', suburb: 'Pretoria North',
+    trust: 74, price: 'R 895 000', per: '', priceNum: 895000,
+    carMake: 'Ford', carModel: 'Ranger Raptor', year: 2023, mileage: '4,100km', transmission: 'Automatic',
+    desc: '2023 Ford Ranger Raptor in Conquer Grey. 3.0L EcoBoost V6, Fox Racing suspension, Baja mode. Load bed liner, roller shutter, tow bar. Virtually new — 4,100km only. Full Ford dealer service history. Under full warranty.',
+    photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
+      'https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=800&q=80',
+      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_5', cat: 'Cars', feat: false,
+    title: '2019 Lamborghini Huracán EVO — 14,000km',
+    area: 'Pretoria', suburb: 'Waterkloof Ridge',
+    trust: 95, price: 'R 5 800 000', per: '', priceNum: 5800000,
+    carMake: 'Lamborghini', carModel: 'Huracán EVO', year: 2019, mileage: '14,000km', transmission: 'LDF Paddle Shift',
+    desc: 'Lamborghini Huracán EVO in Arancio Borealis (orange) with black Alcantara interior. 640hp V10, LDVI vehicle dynamics system, titanium exhaust. Full Lamborghini SA service history. All books, 2 keys, original wheels and caps. A genuine supercar in exceptional condition.',
+    photo: 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&q=80',
+      'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_6', cat: 'Cars', feat: false,
+    title: '2022 Toyota GR86 — Track-Ready, 18,000km',
+    area: 'Pretoria', suburb: 'Menlyn',
+    trust: 68, price: 'R 520 000', per: '', priceNum: 520000,
+    carMake: 'Toyota', carModel: 'GR86', year: 2022, mileage: '18,000km', transmission: 'Manual 6-speed',
+    desc: 'Toyota GR86 in Trueno Blue. Manual 6-speed. Standard car with zero modifications — kept completely stock. One owner, garage kept. Michelin Pilot Sport 4 tyres (80% remaining). Full Toyota service history. Perfect driver\'s car for someone who wants pure, unassisted handling.',
+    photo: 'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80',
+      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80',
+      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80'
+    ],
+    paused: false, queueCount: 3, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_7', cat: 'Cars', feat: false,
+    title: '2021 VW Golf 8 GTI Clubsport — 28,000km',
+    area: 'Pretoria', suburb: 'Brooklyn',
+    trust: 71, price: 'R 620 000', per: '', priceNum: 620000,
+    carMake: 'Volkswagen', carModel: 'Golf 8 GTI Clubsport', year: 2021, mileage: '28,000km', transmission: 'DSG',
+    desc: 'Golf 8 GTI Clubsport in Tornado Red with Nappa leather seats. 300hp, DSG, DCC adaptive suspension, Harman Kardon sound. Full VW service plan still active. Slight tint on all windows. Two keys and books. An exceptional hot hatch.',
+    photo: 'https://images.unsplash.com/photo-1471444928139-48c5bf5173f8?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1471444928139-48c5bf5173f8?w=800&q=80',
+      'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800&q=80',
+      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80'
+    ],
+    paused: false, queueCount: 4, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_8', cat: 'Cars', feat: false,
+    title: '1972 Ford Mustang Mach 1 — Fully Restored',
+    area: 'Pretoria', suburb: 'Pretoria East',
+    trust: 84, price: 'R 780 000', per: '', priceNum: 780000,
+    carMake: 'Ford', carModel: 'Mustang Mach 1', year: 1972, mileage: '82,000 miles', transmission: 'Manual 4-speed',
+    desc: 'Numbers-matching 1972 Mustang Mach 1, 351 Cleveland V8. Full nut-and-bolt restoration completed 2021 to original Grabber Blue specification. New interior trim, resprayed in original colour, rebuilt engine and gearbox. SA-registered. Stunning example of classic American muscle.',
+    photo: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80',
+      'https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=800&q=80',
+      'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80'
+    ],
+    paused: false, queueCount: 1, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_9', cat: 'Cars', feat: false,
+    title: '2023 Tesla Model 3 Performance — 11,000km',
+    area: 'Pretoria', suburb: 'Centurion',
+    trust: 76, price: 'R 1 080 000', per: '', priceNum: 1080000,
+    carMake: 'Tesla', carModel: 'Model 3 Performance', year: 2023, mileage: '11,000km', transmission: 'Single Speed',
+    desc: 'Tesla Model 3 Performance in Pearl White with black interior. Dual motor AWD, 0–100 in 3.3s. 18" Uberturbine wheels, glass roof, full self-driving hardware. Full OTA update history. Home charging cable included. One owner, no accidents.',
+    photo: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80',
+      'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+      'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=80'
+    ],
+    paused: false, queueCount: 5, sellerIdx: 5
+  },
+  {
+    id: 'demo_car_10', cat: 'Cars', feat: false,
+    title: '2020 Jeep Wrangler Rubicon — Lifted, Modified',
+    area: 'Pretoria', suburb: 'Pretoria North',
+    trust: 63, price: 'R 960 000', per: '', priceNum: 960000,
+    carMake: 'Jeep', carModel: 'Wrangler Rubicon', year: 2020, mileage: '42,000km', transmission: 'Automatic',
+    desc: '2020 Jeep Wrangler Rubicon 4-door in Firecracker Red. 2" lift kit, 35" BFG all-terrain tyres, ARB bull bar and rock sliders, dual recovery tracks. 3.6L Pentastar V6. Full service history. Hardtop and soft-top included. A serious off-roader that looks the part on the street too.',
+    photo: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80',
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
+      'https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=800&q=80'
+    ],
+    paused: false, queueCount: 2, sellerIdx: 5
+  },
+  {
+    id: 'ph_cars', cat: 'Cars', feat: false,
+    title: 'PLACEHOLDER — Cars listing coming soon',
+    area: 'Pretoria', suburb: 'Pretoria',
+    trust: 0, price: null, per: '', priceNum: 0,
+    carMake: '', carModel: '', year: 0, mileage: '', transmission: '',
+    desc: 'Real car listings will appear here once sellers are onboarded.',
+    photo: null, paused: true, queueCount: 0, sellerIdx: 5
+  },
 ];
 
 // ── PLACEHOLDER SELLERS ────────────────────────────────────
@@ -108,6 +600,42 @@ const SELLERS = [
     about: 'This profile will be populated once a real service provider is onboarded.',
     stats: [], creds: [], tags: [], avail: [], portfolio: []
   },
+  {
+    idx: 3, cat: 'Adventures',
+    headline: 'Certified Wilderness Guide & Guesthouse Host · Pretoria',
+    tagline: 'Authentic experiences. Curated accommodation. Always anonymous until you\'re ready.',
+    about: 'Demo adventure operator profile. Real operators will have full credentials, photos, safety certifications, and guest reviews listed here.',
+    stats: [{ label: 'Trips led', val: '200+' }, { label: 'Avg group', val: '6 pax' }, { label: 'Years active', val: '8' }],
+    creds: ['🏅 FGASA Level 2 Guide', '🚑 Wilderness First Aid', '🛡️ Fully insured', '⭐ TGCSA 4-star rated'],
+    tags: ['Hiking', 'Abseil', 'Gorge walks', 'City tours', 'B&B', 'Boutique accommodation'],
+    avail: ['Mon–Sun · Bookings 48hrs in advance'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80'
+  },
+  {
+    idx: 4, cat: 'Collectors',
+    headline: 'Verified Collector & Dealer · South African Art, Coins & Vintage',
+    tagline: 'Every item authenticated. Provenance documented. Identity protected.',
+    about: 'Demo collector profile. Real sellers will have authentication certificates, appraisal documents, SA Numismatic Society membership, and transaction history listed here.',
+    stats: [{ label: 'Items sold', val: '47' }, { label: 'Avg value', val: 'R 12k' }, { label: 'Member since', val: '2019' }],
+    creds: ['📜 SA Numismatic Society member', '🎨 Registered art dealer', '✅ Authentication certs on all items', '🔍 Independent appraisals available'],
+    tags: ['Pierneef', 'Coins & Medals', 'Vintage cameras', 'SA art', 'Antiques'],
+    avail: ['Viewings by appointment · Pretoria & Joburg'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&q=80'
+  },
+  {
+    idx: 5, cat: 'Cars',
+    headline: 'Verified Performance Cars Seller · Pretoria',
+    tagline: 'Exotic & performance cars. Identity protected until match confirmed.',
+    about: 'Demo Cars seller profile. Verified private seller specialising in performance and exotic vehicles. Full service histories, two keys, and roadworthy certificates on all cars.',
+    stats: [{ label: 'Cars sold', val: '12' }, { label: 'Avg value', val: 'R 1.2m' }, { label: 'Response time', val: '< 24hrs' }],
+    creds: ['✅ Identity verified', '🚗 All vehicles roadworthy certified', '📋 Full service histories', '💳 Secure payment process'],
+    tags: ['Porsche', 'BMW M', 'AMG', 'Lamborghini', 'Classic cars', 'Tesla'],
+    avail: ['Viewings by appointment · Pretoria & Centurion'],
+    portfolio: [],
+    sellerPhoto: 'https://images.unsplash.com/photo-1560250097-0dc05a977835?w=400&q=80'
+  },
 ];
 
 // ── CITY DEPLOYMENT PROSPECTS ──────────────────────────────
@@ -127,6 +655,20 @@ const PROSPECTS = {
     { name: 'Botha Electrical',   city: 'Pretoria North', status: 'joined'   },
     { name: 'Swart IT',           city: 'Pretoria East',  status: 'invited'  },
     { name: 'GreenScape Gauteng', city: 'Pretoria',       status: 'prospect' }
+  ],
+  Adventures: [
+    { name: 'Magaliesberg Trails',    city: 'Hartbeespoort', status: 'prospect' },
+    { name: 'Pretoria Heritage Tours', city: 'Pretoria CBD',  status: 'prospect' },
+    { name: 'Waterkloof Ridge B&B',   city: 'Pretoria',      status: 'prospect' }
+  ],
+  Collectors: [
+    { name: 'SA Art & Antiques',     city: 'Arcadia',       status: 'prospect' },
+    { name: 'Pretoria Coin House',   city: 'Pretoria East', status: 'prospect' },
+    { name: 'Brooklyn Camera Club',  city: 'Brooklyn',      status: 'prospect' }
+  ],
+  Cars: [
+    { name: 'Exotic Autos Pretoria', city: 'Pretoria East', status: 'prospect' },
+    { name: 'Performance Cars SA',   city: 'Centurion',     status: 'prospect' }
   ]
 };
 
@@ -134,7 +676,12 @@ const PROSPECTS = {
 // Stored as base64 after seller uploads. null = emoji fallback.
 // Displayed blurred on buyer CV views, sharp on own dashboard view.
 // Unblurred per-listing when introduction is accepted.
+// Seeded from SELLERS[n].sellerPhoto for demo profiles; overwritten by real uploads for idx:0
 const SELLER_PHOTOS = [null, null, null, null, null, null];
+// Populate from SELLERS data — runs after SELLERS is defined
+(function seedSellerPhotos(){
+  SELLERS.forEach((s,i) => { if(s.sellerPhoto) SELLER_PHOTOS[i] = s.sellerPhoto; });
+})();
 
 // Track which seller+listing intros have been accepted (for blur reveal)
 const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
@@ -213,15 +760,6 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .home-hero p{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:0;line-height:1.6;font-weight:400;}
 
 
-.cpb{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 16px;}
-.cpb-label{font-size:10px;font-weight:600;color:var(--text-2);margin-bottom:3px;display:flex;justify-content:space-between;}
-.cpb-label span{color:var(--accent);}
-.cpb-track{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
-.cpb-track:last-child{margin-bottom:0;}
-.cpb-cat{font-size:11px;font-weight:600;width:62px;color:var(--text-2);}
-.cpb-bar{flex:1;height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;}
-.cpb-fill{height:100%;border-radius:3px;background:var(--accent);}
-.cpb-count{font-size:11px;font-weight:600;color:var(--text-3);width:32px;text-align:right;}
 .stats-row{display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
 .stat{flex:1;padding:6px 8px;text-align:center;border-right:1px solid var(--border);}
 .stat:last-child{border-right:none;}
@@ -233,7 +771,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 12px 2px;}
 .cat-tile{border-radius:var(--r);overflow:hidden;aspect-ratio:2/1;position:relative;cursor:pointer;transition:transform var(--t);}
 .cat-tile:active{transform:scale(.97);}
-.cat-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.cat-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;}
+.cat-bg img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
 .cat-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px;}
 .cat-name{color:#fff;font-size:11px;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.2px;}
 .cat-count{color:rgba(255,255,255,.5);font-size:9px;margin-top:2px;font-weight:400;}
@@ -284,7 +823,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .dhero .ibox{height:260px;overflow:hidden;position:relative;}
 .dhero .ibox img{width:100%;height:100%;object-fit:cover;display:block;}
 .dhero .ibox .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
-.dnav{position:absolute;top:0;left:0;right:0;padding:48px 16px 0;display:flex;justify-content:space-between;}
+.dnav{display:flex;justify-content:space-between;}
 .dib{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .dib svg{width:17px;height:17px;stroke:var(--text);}
 .dsheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px 20px 0;position:relative;z-index:2;}
@@ -433,7 +972,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ob-model-pill.commit .omp-cat{color:#fbbf24;}
 .ob-model-pill.queue .omp-cat{color:#c4b5fd;}
 .ob-model-pill .omp-desc{font-size:10px;color:rgba(255,255,255,.45);line-height:1.4;font-weight:400;}
-.ob-form{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px max(env(safe-area-inset-bottom),28px);}
+.ob-form{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px max(calc(env(safe-area-inset-bottom) + 80px),100px);}
 .ob-form h2{font-size:19px;font-weight:800;margin-bottom:4px;}
 .ob-form .osub{font-size:13px;color:var(--text-2);margin-bottom:20px;font-weight:400;}
 .ob-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
@@ -685,6 +1224,46 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .filter-pill svg{width:11px;height:11px;flex-shrink:0;}
 .filter-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 .filter-pill.has-value{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+/* ── ADVENTURES SCREEN ────────────────────────────────── */
+.adv-hero{background:linear-gradient(160deg,#064e3b,#065f46);padding:20px 16px 16px;position:relative;}
+.adv-hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.adv-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
+.adv-hero h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin:0;}
+.adv-country-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:6px 12px;cursor:pointer;color:#fff;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;}
+.adv-country-pill:hover{background:rgba(255,255,255,.22);}
+.adv-subcat-row{display:flex;gap:8px;margin-top:4px;}
+.adv-subcat-btn{flex:1;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:20px;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;font-family:'Syne',sans-serif;padding:8px 0;cursor:pointer;transition:all .2s;}
+.adv-subcat-btn.active{background:#fff;border-color:#fff;color:#064e3b;}
+.adv-env-row{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 4px;scrollbar-width:none;}
+.adv-env-row::-webkit-scrollbar{display:none;}
+.adv-env-chip{flex-shrink:0;background:var(--surface-2);border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;white-space:nowrap;}
+.adv-env-chip.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.adv-grid{padding:12px 16px 100px;display:flex;flex-direction:column;gap:12px;}
+.adv-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;}
+.adv-card:active{transform:scale(.98);}
+.adv-card-img{width:100%;height:160px;object-fit:cover;background:var(--surface-2);}
+.adv-card-img-placeholder{width:100%;height:160px;background:linear-gradient(140deg,#064e3b,#065f46);display:flex;align-items:center;justify-content:center;font-size:48px;}
+.adv-card-body{padding:12px 14px 14px;}
+.adv-card-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.adv-card-subcat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px;}
+.adv-card-country{font-size:11px;color:var(--text-3);margin-left:auto;}
+.adv-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3;}
+.adv-card-env{font-size:12px;color:var(--text-2);margin-bottom:10px;}
+.adv-card-footer{display:flex;align-items:center;justify-content:space-between;}
+.adv-card-price{font-size:14px;font-weight:700;color:var(--text);}
+.adv-card-intro{background:var(--navy);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;}
+.adv-empty{text-align:center;padding:60px 20px;color:var(--text-3);}
+.adv-empty-icon{font-size:40px;margin-bottom:12px;}
+/* Country picker sheet */
+.adv-country-sheet-bg{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:500;align-items:flex-end;justify-content:center;}
+.adv-country-sheet-bg.open{display:flex;}
+.adv-country-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:16px 20px max(env(safe-area-inset-bottom),24px);width:100%;max-width:430px;}
+.adv-country-option{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:15px;font-weight:600;color:var(--text);}
+.adv-country-option:last-child{border-bottom:none;}
+.adv-country-option.active{color:var(--accent);}
+.adv-country-option .adv-co-check{margin-left:auto;color:var(--accent);font-size:16px;opacity:0;}
+.adv-country-option.active .adv-co-check{opacity:1;}
+
 .filter-sheet-bg{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:400;align-items:flex-end;justify-content:center;}
 .filter-sheet-bg.open{display:flex;}
 .filter-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:6px 20px max(env(safe-area-inset-bottom),24px);width:100%;max-width:430px;animation:sheetUp .22s cubic-bezier(.32,.72,0,1);max-height:88vh;overflow-y:auto;}
@@ -717,15 +1296,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .empty-state p{font-size:14px;color:var(--text-3);line-height:1.6;font-weight:400;}
 
 /* ── PHOTO GALLERY STRIP (detail screen) ─────────────────── */
-.photo-strip-wrap{position:relative;height:260px;overflow:hidden;background:var(--navy);}
-.photo-strip{display:flex;height:100%;overflow:hidden;scroll-behavior:smooth;}
+.photo-strip-wrap{position:relative;height:260px;background:var(--navy);}
+.photo-strip{display:flex;height:100%;overflow-x:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.dnav{position:absolute;top:0;left:0;right:0;padding:14px 16px 0;display:flex;justify-content:space-between;z-index:5;pointer-events:none;}
+.dnav button{pointer-events:auto;}
 .photo-strip-slide{flex:0 0 100%;scroll-snap-align:start;position:relative;overflow:hidden;}
 .photo-strip-slide img{width:100%;height:100%;object-fit:cover;display:block;}
 .photo-strip-slide .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
 .photo-strip-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:3;}
 .psd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s;}
 .psd.active{background:#fff;width:16px;border-radius:3px;}
-.strip-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.85);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,.18);font-size:20px;color:var(--navy);line-height:1;padding:0;}
+.strip-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.85);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.18);font-size:20px;color:var(--navy);line-height:1;padding:0;}
 .strip-arrow-left{left:10px;}
 .strip-arrow-right{right:10px;}
 
@@ -874,6 +1455,16 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .el-save-btn:disabled{opacity:.4;cursor:not-allowed;}
 .el-cancel-btn{background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
 .el-version-note{font-size:11px;color:var(--text-3);text-align:center;padding:8px 16px 4px;font-weight:400;}
+/* Edit screen — photo section */
+.el-photos-section{margin-bottom:20px;}
+.el-photos-label{font-size:11px;font-weight:700;color:var(--text-2);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px;}
+.el-photo-row{display:flex;gap:10px;flex-wrap:wrap;}
+.el-photo-card{position:relative;width:120px;flex-shrink:0;}
+.el-photo-card img{width:120px;height:90px;object-fit:cover;border-radius:10px;display:block;border:1.5px solid var(--border);}
+.el-photo-card .el-photo-warn{position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.el-photo-replace{width:100%;margin-top:5px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:5px 0;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;text-align:center;}
+.el-photo-replace:hover{border-color:var(--navy);color:var(--navy);}
+.el-photo-ai-note{font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:7px 9px;margin-top:6px;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -887,17 +1478,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="home-hero">
     <div class="hero-top">
       <div class="hero-logo">MarketSquare</div>
-      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria · All suburbs</div></div>
+      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div>
     </div>
     <div class="hero-body"></div>
   </div>
 
-  <div class="cpb">
-    <div class="cpb-label"><span id="cpb-city-name">Founding Seller Progress · Pretoria</span><span id="cpb-total">0 / 60</span></div>
-    <div class="cpb-track"><div class="cpb-cat">Property</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-property" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-property">0/20</div></div>
-    <div class="cpb-track"><div class="cpb-cat">Tutors</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-tutors" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-tutors">0/20</div></div>
-    <div class="cpb-track"><div class="cpb-cat">Services</div><div class="cpb-bar"><div class="cpb-fill" id="cpb-fill-services" style="width:0%"></div></div><div class="cpb-count" id="cpb-count-services">0/20</div></div>
-  </div>
   <div class="stats-row">
     <div class="stat"><div class="stat-val" id="home-sellers">0</div><div class="stat-label">Sellers</div></div>
     <div class="stat"><div class="stat-val" id="home-listings">0</div><div class="stat-label">Listings</div></div>
@@ -906,9 +1491,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
   <div class="sec-head"><h2>Categories</h2><a onclick="goTo('browse')">All →</a></div>
   <div class="cat-grid" id="home-cat-grid">
-    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:linear-gradient(140deg,#1e3a5f,#2a5298)">🏡</div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:linear-gradient(140deg,#14532d,#15803d)">🎓</div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:linear-gradient(140deg,#7c2d12,#b45309)">⚙️</div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:#1e3a5f"><img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80" alt="Property" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count" id="cat-count-Property">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:#14532d"><img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80" alt="Tutors" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count" id="cat-count-Tutors">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:#7c2d12"><img src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&q=80" alt="Services" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count" id="cat-count-Services">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Adventures')"><div class="cat-bg" style="background:#064e3b"><img src="https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=80" alt="Adventures" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count" id="cat-count-Adventures">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Collectors')"><div class="cat-bg" style="background:#44403c"><img src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&q=80" alt="Collectors" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count" id="cat-count-Collectors">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" alt="Cars" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
   <div class="hscroll" id="home-featured"></div>
@@ -927,6 +1515,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="chip" onclick="setFilter(this,'Property')">🏡 Property</div>
     <div class="chip" onclick="setFilter(this,'Tutors')">🎓 Tutors</div>
     <div class="chip" onclick="setFilter(this,'Services')">⚙️ Services</div>
+    <div class="chip" onclick="setFilter(this,'Adventures')">🌿 Adventures</div>
+    <div class="chip" onclick="setFilter(this,'Collectors')">🏺 Collectors</div>
+    <div class="chip" onclick="setFilter(this,'Cars')">🚗 Cars</div>
   </div>
 
   <!-- Context-specific filter pills (shown when category selected) -->
@@ -1222,6 +1813,198 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
+<!-- ADVENTURES FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-adventures" onclick="closeFsBg(event,'fs-adventures')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">🌿 Adventures Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Adventure Type</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Experiences</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Accommodation</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Price</div>
+      <div class="fs-range">
+        <input type="number" id="fa-max" placeholder="Max price (R)">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Duration</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-dur')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-dur')">Half day</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-dur')">Full day</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-dur')">Weekend</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-dur')">Multi-day</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Group Size</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-grp')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-grp')">Solo</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-grp')">Couple</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-grp')">Small group</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-grp')">Large group</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Area</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Pretoria North</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Pretoria East</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Centurion</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Bushveld</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-area')">Magaliesberg</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('adventures')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('adventures')">Show results</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLLECTORS FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-collectors" onclick="closeFsBg(event,'fs-collectors')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">🏺 Collectors Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Collectible Type</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Coins &amp; Notes</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Stamps</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Cards &amp; Memorabilia</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Art &amp; Prints</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Medals &amp; Militaria</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Books &amp; Maps</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Cameras &amp; Tech</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Antiques</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-type')">Firearms</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Price</div>
+      <div class="fs-range">
+        <input type="number" id="fc-max" placeholder="Max price (R)">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Condition</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-cond')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-cond')">Mint</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-cond')">Excellent</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-cond')">Good</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-cond')">Fair</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Era</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-era')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-era')">Pre-1900</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-era')">1900–1950</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-era')">1950–2000</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fc-era')">Post-2000</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('collectors')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('collectors')">Show results</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARS FILTER SHEET -->
+<div class="filter-sheet-bg" id="fs-cars" onclick="closeFsBg(event,'fs-cars')">
+  <div class="filter-sheet">
+    <div class="fs-handle"></div>
+    <div class="fs-title">🚗 Cars Filters</div>
+    <div class="fs-sub">Pretoria · narrow your search</div>
+
+    <div class="fs-section">
+      <div class="fs-label">Make</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Porsche</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">BMW</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Mercedes-AMG</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Ford</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Lamborghini</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Toyota</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Volkswagen</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Mustang</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Tesla</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Jeep</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Price</div>
+      <div class="fs-range">
+        <input type="number" id="fcar-max" placeholder="Max price (R)">
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Year From</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-yr')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-yr')">2020+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-yr')">2015+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-yr')">2010+</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-yr')">Pre-2010</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Transmission</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-trans')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-trans')">Automatic</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-trans')">Manual</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Max Mileage (km)</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-mil')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-mil')">Under 20 000</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-mil')">Under 50 000</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-mil')">Under 100 000</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-mil')">100 000+</div>
+      </div>
+    </div>
+
+    <div class="fs-actions">
+      <button class="fs-clear" onclick="clearFilters('cars')">Clear all</button>
+      <button class="fs-apply" onclick="applyFilters('cars')">Show results</button>
+    </div>
+  </div>
+</div>
+
 <!-- DETAIL -->
 <div id="screen-detail" class="screen"></div>
 
@@ -1237,33 +2020,93 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <!-- TUPPENCE -->
 <div id="screen-tuppence" class="screen">
   <div class="tn-header">
-    <h1>Tuppence Wallet</h1><p>Your introduction currency</p>
-    <div class="tn-balance">
-      <div class="tn-num" id="tn-balance-display">5</div>
-      <div><div class="tn-unit">Tuppence</div><div class="tn-usd" id="tn-usd-display">≈ $10.00</div></div>
+    <h1>Tuppence Wallet</h1>
+    <p>Your introduction &amp; AI guidance currency</p>
+    <!-- Split balance: Introductions vs AI Guidance -->
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:12px 10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">Introductions</div>
+        <div id="tn-balance-display" style="font-size:30px;font-weight:800;color:#fff;line-height:1;">5</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:3px;">Tuppence</div>
+      </div>
+      <div style="flex:1;background:rgba(99,102,241,.25);border-radius:12px;padding:12px 10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;">AI Guidance</div>
+        <div id="tn-coach-sessions" style="font-size:30px;font-weight:800;color:#a5b4fc;line-height:1;">—</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:3px;">uses left</div>
+      </div>
     </div>
   </div>
   <div class="tn-body">
+
+    <!-- HOW INTRODUCTIONS WORK -->
     <div class="tn-sec">
-      <h2>Two introduction models</h2>
-      <div class="model-table">
-        <div class="mt-head"><div>Feature</div><div>🏡 Property</div><div>🎓⚙️ Tutors &amp; Services</div></div>
-        <div class="mt-row"><div>Listing paused on request</div><div class="yes">Yes</div><div class="no">No</div></div>
-        <div class="mt-row"><div>Multiple buyers at once</div><div class="no">No</div><div class="yes">Yes</div></div>
-        <div class="mt-row"><div>Seller penalty on ignore</div><div class="yes">1T penalty</div><div class="partial">Trust −3</div></div>
-        <div class="mt-row"><div>Buyer pays on acceptance</div><div class="yes">1T = $2</div><div class="yes">1T = $2</div></div>
-        <div class="mt-row"><div>Response window</div><div class="yes">48 hrs</div><div class="yes">48 hrs</div></div>
+      <h2>How introductions work</h2>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each Tuppence buys one anonymous introduction. You pay only when you choose to connect — sellers are free to list, and there are no penalties for anyone.</p>
+
+      <!-- Three-column model table -->
+      <div class="model-table" style="font-size:11.5px;">
+        <div class="mt-head" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Feature</div>
+          <div>🏡 Property &amp; 🚗 Cars</div>
+          <div>🏕 Accommodation &amp; 🌿 Experiences</div>
+          <div>🎓 Tutors · ⚙️ Services · 🏺 Collectors</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Listing paused on intro</div>
+          <div class="yes">Yes — holds slot</div>
+          <div class="no">No</div>
+          <div class="no">No</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Multiple buyers at once</div>
+          <div class="partial">Up to 3</div>
+          <div class="yes">Unlimited</div>
+          <div class="yes">Unlimited</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Booking / scheduling</div>
+          <div class="no">No</div>
+          <div class="yes">Date-based slot</div>
+          <div class="partial">Availability match</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Buyer pays on acceptance</div>
+          <div class="yes">1T = $2</div>
+          <div class="yes">1T = $2</div>
+          <div class="yes">1T = $2</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>No response within 48hrs</div>
+          <div class="no">Trust −5</div>
+          <div class="no">Trust −5</div>
+          <div class="no">Trust −5</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Respond within 24hrs</div>
+          <div class="yes">Trust +3</div>
+          <div class="yes">Trust +3</div>
+          <div class="yes">Trust +3</div>
+        </div>
+        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
+          <div>Response window</div>
+          <div class="yes">48 hrs</div>
+          <div class="yes">48 hrs</div>
+          <div class="yes">48 hrs</div>
+        </div>
       </div>
     </div>
+
+    <!-- TOP UP INTRODUCTIONS -->
     <div class="tn-sec">
-      <h2>Top up Tuppence</h2>
+      <h2>Top up Introductions</h2>
       <div class="topup-btns">
         <div class="topup-btn" onclick="topUp(5)">
           <div class="tb-val">5T</div>
           <div class="tb-mid">5 intros</div>
           <div class="tb-price">$10 · R180</div>
         </div>
-        <div class="topup-btn" onclick="topUp(10)">
+        <div class="topup-btn" onclick="topUp(10)" style="border-color:var(--accent);position:relative;">
+          <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;border-radius:50px;padding:2px 7px;white-space:nowrap;">BEST VALUE</div>
           <div class="tb-val">10T</div>
           <div class="tb-mid">10 intros</div>
           <div class="tb-price">$20 · R360</div>
@@ -1275,44 +2118,19 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         </div>
       </div>
     </div>
-    <div class="tn-sec">
-      <h2>Transaction history</h2>
-      <div class="tn-table" id="tn-history">
-        <div class="tn-row">
-          <div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created · Introductions</div></div>
-          <div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div>
-        </div>
-        <div class="tn-row">
-          <div><div class="tn-row-label">AI coaching trial</div><div class="tn-row-sub">1 free session included</div></div>
-          <div style="text-align:right"><div class="tn-row-val" style="color:#6366f1;">+1 Use</div></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- AI Coach Credits — visually separated, never merged with Tuppence balance -->
-    <div class="tn-sec" style="border-top:2px solid var(--border);margin-top:8px;padding-top:20px;">
-      <h2 style="margin-bottom:12px;">Balances</h2>
-      <div style="display:flex;gap:10px;margin-bottom:16px;">
-        <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;text-align:center;">
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Introductions</div>
-          <div id="tn-wallet-intros" style="font-size:26px;font-weight:800;color:var(--navy);">5</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Tuppence</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;text-align:center;">
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">AI Coach</div>
-          <div id="tn-coach-sessions" style="font-size:26px;font-weight:800;color:#6366f1;">—</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">uses left</div>
-        </div>
-      </div>
-      <h3 style="font-size:13px;font-weight:700;color:var(--text-2);margin:0 0 10px;">Top up AI Coach</h3>
+    <!-- TOP UP AI GUIDANCE -->
+    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
+      <h2>Top up AI Guidance</h2>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">AI uses are separate from intro Tuppence — they power negotiation coaching, listing advice, and market insights. Kept apart so your intro budget is always clear.</p>
       <div class="topup-btns">
         <div class="topup-btn" onclick="aaBuyAIPack(5,40)">
           <div class="tb-val">5T</div>
           <div class="tb-mid">40 AI uses</div>
           <div class="tb-price">$10 · R180</div>
         </div>
-        <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="border-color:var(--accent);position:relative;">
-          <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;border-radius:50px;padding:2px 7px;white-space:nowrap;">BEST VALUE</div>
+        <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="border-color:#6366f1;position:relative;">
+          <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;font-size:9px;font-weight:700;border-radius:50px;padding:2px 7px;white-space:nowrap;">BEST VALUE</div>
           <div class="tb-val">10T</div>
           <div class="tb-mid">100 AI uses</div>
           <div class="tb-price">$20 · R360</div>
@@ -1323,8 +2141,24 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
           <div class="tb-price">$50 · R900</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">8 uses/T standard · bulk packs include bonus uses · prices shown in USD with local ZAR equivalent</div>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">8 uses/T standard · bulk packs include bonus uses</div>
     </div>
+
+    <!-- TRANSACTION HISTORY -->
+    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
+      <h2>Transaction history</h2>
+      <div class="tn-table" id="tn-history">
+        <div class="tn-row">
+          <div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created · Introductions</div></div>
+          <div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div>
+        </div>
+        <div class="tn-row">
+          <div><div class="tn-row-label">AI guidance trial</div><div class="tn-row-sub">1 free session included</div></div>
+          <div style="text-align:right"><div class="tn-row-val" style="color:#6366f1;">+1 Use</div></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1378,6 +2212,61 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
+<!-- ADVENTURES -->
+<div id="screen-adventures" class="screen">
+  <div class="adv-hero">
+    <div class="adv-hero-top">
+      <button class="adv-back" onclick="goTo('browse')">←</button>
+      <h1>🧭 Adventures</h1>
+      <div class="adv-country-pill" id="adv-country-pill" onclick="openAdvCountrySheet()">
+        <span id="adv-country-flag">🇿🇦</span>
+        <span id="adv-country-name">South Africa</span>
+        <span style="opacity:.6;font-size:11px;">▾</span>
+      </div>
+    </div>
+    <div class="adv-subcat-row">
+      <button class="adv-subcat-btn active" id="adv-btn-all" onclick="setAdvSubcat('all',this)">All</button>
+      <button class="adv-subcat-btn" id="adv-btn-accommodation" onclick="setAdvSubcat('adventures_accommodation',this)">🏕 Accommodation</button>
+      <button class="adv-subcat-btn" id="adv-btn-experiences" onclick="setAdvSubcat('adventures_experiences',this)">🌄 Experiences</button>
+    </div>
+  </div>
+
+  <!-- Environment filter chips -->
+  <div class="adv-env-row" id="adv-env-row">
+    <div class="adv-env-chip active" onclick="setAdvEnv('all',this)">All environments</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('bush_and_wildlife',this)">🦁 Bush & Wildlife</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('mountain_and_highlands',this)">⛰ Mountain</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('coastal_and_beach',this)">🏖 Coastal</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('garden_and_winelands',this)">🍷 Winelands</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('wetlands_and_lakes',this)">🌊 Wetlands</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('desert_and_karoo',this)">🏜 Karoo</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('forest_and_fynbos',this)">🌿 Forest</div>
+    <div class="adv-env-chip" onclick="setAdvEnv('farm_and_rural',this)">🌾 Farm & Rural</div>
+  </div>
+
+  <div id="adv-results-count" style="font-size:12px;color:var(--text-3);padding:6px 16px 0;"></div>
+  <div class="adv-grid" id="adv-grid"></div>
+</div>
+
+<!-- Adventures country picker sheet -->
+<div class="adv-country-sheet-bg" id="adv-country-sheet" onclick="closeAdvCountrySheet(event)">
+  <div class="adv-country-sheet">
+    <div style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Browse Adventures in</div>
+    <div class="adv-country-option active" id="adv-co-ZA" onclick="selectAdvCountry('ZA','South Africa','🇿🇦')">
+      <span>🇿🇦</span><span>South Africa</span><span class="adv-co-check">✓</span>
+    </div>
+    <div class="adv-country-option" id="adv-co-NA" onclick="selectAdvCountry('NA','Namibia','🇳🇦')">
+      <span>🇳🇦</span><span>Namibia</span><span class="adv-co-check">✓</span>
+    </div>
+    <div class="adv-country-option" id="adv-co-MZ" onclick="selectAdvCountry('MZ','Mozambique','🇲🇿')">
+      <span>🇲🇿</span><span>Mozambique</span><span class="adv-co-check">✓</span>
+    </div>
+    <div class="adv-country-option" id="adv-co-ALL" onclick="selectAdvCountry('ALL','All countries','🌍')">
+      <span>🌍</span><span>All countries</span><span class="adv-co-check">✓</span>
+    </div>
+  </div>
+</div>
+
 <!-- SELLER ONBOARDING -->
 <div id="screen-onboard" class="screen">
   <div class="ob-page">
@@ -1397,7 +2286,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Your introduction model</div>
       <div class="ob-model-pills">
         <div class="ob-model-pill commit" id="omp-commit" onclick="obSelectModel('commit')" style="cursor:pointer;"><div class="omp-icon">🏡</div><div class="omp-cat">Property</div><div class="omp-desc">Listing pauses per request. One serious buyer at a time.</div></div>
-        <div class="ob-model-pill queue" id="omp-queue" onclick="obSelectModel('queue')" style="cursor:pointer;"><div class="omp-icon">🎓⚙️</div><div class="omp-cat">Tutors &amp; Services</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
+        <div class="ob-model-pill queue" id="omp-queue" onclick="obSelectModel('queue')" style="cursor:pointer;"><div class="omp-icon">🎓⚙️🧭🏺🚗</div><div class="omp-cat">Tutors, Services, Adventures, Collectors &amp; Cars</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
       </div>
     </div>
     <div class="ob-form">
@@ -1407,11 +2296,29 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="ob-name" placeholder="Full name"></div>
       <div class="field"><label>Business or trading name <span class="opt">(optional)</span></label><input type="text" id="ob-biz" placeholder="e.g. Louw Tutoring or Botha Electrical"></div>
       <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="ob-email" placeholder="you@example.com"></div>
-      <div class="field"><label>Your category</label><select id="ob-cat"><option>Property</option><option>Tutors</option><option>Services</option></select></div>
+      <div class="field"><label>Your category</label><select id="ob-cat">
+        <option value="Property">Property</option>
+        <option value="Tutors">Tutors</option>
+        <option value="Services">Services</option>
+        <option value="adventures_accommodation">Adventures — Accommodation</option>
+        <option value="adventures_experiences">Adventures — Experiences</option>
+        <option value="Collectors">Collectors</option>
+        <option value="Cars">Cars</option>
+      </select></div>
       <button class="ob-submit" onclick="submitOnboard()">Continue — Start Listing →</button>
-      <div style="text-align:center;margin-top:16px;">
-        <span style="font-size:13px;color:var(--text-3);">Already have a listing? </span>
-        <span style="font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;" onclick="goTo('dashboard')">Go to Dashboard →</span>
+
+      <!-- Returning seller sign-in -->
+      <div style="border-top:1px solid var(--border);margin-top:24px;padding-top:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Already have a seller account?</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;font-weight:400;">Enter your registered email to restore access to your listings.</div>
+        <div style="display:flex;gap:8px;">
+          <input type="email" id="ob-signin-email" placeholder="your@email.com"
+            style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-size:14px;font-family:'Inter',sans-serif;background:var(--surface-2);color:var(--text);"
+            onkeydown="if(event.key==='Enter')signInSeller()">
+          <button onclick="signInSeller()"
+            style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:11px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Sign in →</button>
+        </div>
+        <div id="ob-signin-msg" style="font-size:12px;margin-top:8px;display:none;"></div>
       </div>
     </div>
   </div>
@@ -1482,11 +2389,76 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
           </div>
           <div class="cbt-check" id="chk-Services">✓</div>
         </div>
+        <div class="cat-big-tile" id="cbt-Adventures" onclick="selCatBig('Adventures')">
+          <div class="cbt-icon">🧭</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Adventures</div>
+            <div class="cbt-desc">Accommodation, guided experiences &amp; outdoor activities</div>
+            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
+          </div>
+          <div class="cbt-check" id="chk-Adventures">✓</div>
+        </div>
+        <div class="cat-big-tile" id="cbt-Collectors" onclick="selCatBig('Collectors')">
+          <div class="cbt-icon">🏺</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Collectors</div>
+            <div class="cbt-desc">Stamps, coins, cards, memorabilia &amp; collectibles</div>
+            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
+          </div>
+          <div class="cbt-check" id="chk-Collectors">✓</div>
+        </div>
+        <div class="cat-big-tile" id="cbt-Cars" onclick="selCatBig('Cars')">
+          <div class="cbt-icon">🚗</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Cars</div>
+            <div class="cbt-desc">Vehicle for sale or hire</div>
+            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
+          </div>
+          <div class="cbt-check" id="chk-Cars">✓</div>
+        </div>
       </div>
     </div>
     <div class="pub-footer">
       <button class="btn-bk" onclick="goPhase('a')" style="display:block;">← Back</button>
-      <button class="btn-next" id="pub-b-next" onclick="goPhase('c')" style="opacity:.4;pointer-events:none;">Continue →</button>
+      <button class="btn-next" id="pub-b-next" onclick="goPhaseB2OrC()" style="opacity:.4;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP B2: Adventures subcategory selector -->
+  <div id="pub-b2" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="goPhase('b')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 2b of 3</div>
+        <h1>What kind of Adventure?</h1>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Choose the type that best describes your listing.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="cat-big-tile" id="cbt-adv-accommodation" onclick="selAdvSubcat('adventures_accommodation')">
+          <div class="cbt-icon">🏕</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Accommodation</div>
+            <div class="cbt-desc">Guest house, bush camp, chalet, hostel or self-catering</div>
+            <div class="cbt-model" style="color:var(--purple);">Price per night · availability-based</div>
+          </div>
+          <div class="cbt-check" id="chk-adv-accommodation">✓</div>
+        </div>
+        <div class="cat-big-tile" id="cbt-adv-experiences" onclick="selAdvSubcat('adventures_experiences')">
+          <div class="cbt-icon">🌄</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Experiences</div>
+            <div class="cbt-desc">Guided hike, safari, dive, horse trail or activity</div>
+            <div class="cbt-model" style="color:var(--purple);">Price per person · group bookings</div>
+          </div>
+          <div class="cbt-check" id="chk-adv-experiences">✓</div>
+        </div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="goPhase('b')" style="display:block;">← Back</button>
+      <button class="btn-next" id="pub-b2-next" onclick="goPhase('c')" style="opacity:.4;pointer-events:none;">Continue →</button>
     </div>
   </div>
 
@@ -1524,7 +2496,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div style="font-size:48px;margin-bottom:16px;">🎉</div>
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">Your listing is live</div>
       <h2 id="claim-title" style="font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Claim it to start receiving introduction requests and build your Trust Score on MarketSquare Pretoria.</p>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Claim it to start receiving introduction requests and build your Trust Score on MarketSquare.</p>
 
       <!-- Benefit cards -->
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
@@ -1570,9 +2542,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="dash-hdr">
     <h1>My Seller Hub</h1><p>Manage listings &amp; profile · Pretoria</p>
     <div class="dash-stats">
-      <div class="dstat"><div class="dstat-val">2</div><div class="dstat-label">Active</div></div>
-      <div class="dstat"><div class="dstat-val" id="dash-pending">1</div><div class="dstat-label">Pending</div></div>
-      <div class="dstat"><div class="dstat-val" id="dash-queue">2</div><div class="dstat-label">Queued</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-active">0</div><div class="dstat-label">Active</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-pending">0</div><div class="dstat-label">Pending</div></div>
+      <div class="dstat"><div class="dstat-val" id="dash-queue">0</div><div class="dstat-label">Queued</div></div>
       <div class="dstat"><div class="dstat-val" id="dash-tn">5</div><div class="dstat-label">Tuppence</div></div>
     </div>
   </div>
@@ -1612,6 +2584,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <button class="el-ai-btn" id="el-ai-btn" onclick="editAISuggest()">Ask AI</button>
     </div>
     <div id="el-ai-output"></div>
+    <div id="el-photos-section" class="el-photos-section" style="display:none;">
+      <div class="el-photos-label">Current Photos</div>
+      <div id="el-photo-row" class="el-photo-row"></div>
+      <input type="file" id="el-photo-inp" accept="image/*" style="display:none" onchange="elReplacePhoto(event)">
+    </div>
     <div id="el-form-fields"></div>
   </div>
   <div class="el-footer">
@@ -1789,7 +2766,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <button class="nb" id="nav-browse" onclick="goTo('browse')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Browse
   </button>
-  <button class="nb sell-btn" id="nav-onboard" onclick="goTo('onboard')">
+  <button class="nb sell-btn" id="nav-onboard" onclick="openSellNav()">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Sell
   </button>
   <button class="nb tn-widget" id="nav-tuppence" onclick="goTo('tuppence')">
@@ -1800,6 +2777,24 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Seller
   </button>
 </nav>
+
+<!-- SELL ACCOUNT PICKER SHEET -->
+<div class="modal-bg" id="sell-account-sheet" onclick="closeSellSheet(event)">
+  <div class="modal">
+    <div class="modal-handle" onclick="document.getElementById('sell-account-sheet').classList.remove('open')" style="cursor:pointer;"></div>
+    <h2>List something new</h2>
+    <p class="modal-sub" id="sell-sheet-sub">Continue with your existing seller account, or register a separate account for a second business.</p>
+    <div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🧑</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);" id="sell-sheet-name">—</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="sell-sheet-email">—</div>
+      </div>
+    </div>
+    <button class="modal-cta commit" onclick="sellSheetContinue()" style="margin-bottom:8px;">Continue with this account →</button>
+    <button class="modal-cancel" onclick="sellSheetNewAccount()">Use a different account</button>
+  </div>
+</div>
 
 <!-- INTRO MODAL -->
 <div class="modal-bg" id="intro-modal" onclick="closeMBg(event)">
@@ -1895,7 +2890,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div id="city-selector-note" style="font-size:11px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);line-height:1.5;"></div>
     </div>
 
-    <!-- ── SUBURB PANEL ── -->
+    <!-- ── SUBURB PANEL ── used internally only, not reachable from the location badge -->
     <div id="loc-panel-suburb" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <button id="suburb-back-btn" onclick="openLocPanel('city');_loadAndRenderCities()" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">← Cities</button>
@@ -1941,15 +2936,14 @@ let buyerTier = 'free';
 function updateBadgeLabel() {
   const badge = document.getElementById('home-city-badge');
   if (!badge) return;
-  // Top line: country + region (dimmer, smaller)
+  // Top line: country + region (dimmer)
   const geo = [activeCountry.name];
   if (activeRegion) geo.push(activeRegion.name);
-  // Bottom line: city + suburb
-  const subLabel = nearbyMode ? '📍 Near me' : (activeSuburb ? activeSuburb.name : 'All suburbs');
-  const loc = [activeCity.name, subLabel];
+  // Bottom line: city only — suburbs are used internally, not exposed in the badge
+  const cityLabel = nearbyMode ? '📍 Near me' : (activeCity.name || 'Select city');
   badge.innerHTML =
     `<div class="badge-geo"><span class="cdot"></span>${geo.join(' · ')}</div>` +
-    `<div class="badge-loc">${loc.join(' · ')}</div>`;
+    `<div class="badge-loc">${cityLabel}</div>`;
 }
 
 // ── CATEGORY NORMALISER ───────────────────────────────────
@@ -1959,6 +2953,10 @@ function normCat(raw) {
   if (s === 'property' || s === 'real estate' || s === 'estate agents') return 'Property';
   if (s === 'tutors' || s === 'tutor') return 'Tutors';
   if (s === 'services' || s === 'service' || s === 'technical services' || s === 'technical' || s === 'casuals' || s === 'casual') return 'Services';
+  if (s === 'adventures' || s === 'adventure' || s === 'experiences' || s === 'accommodation' ||
+      s === 'adventures_accommodation' || s === 'adventures_experiences') return 'Adventures';
+  if (s === 'collectors' || s === 'collectibles' || s === 'collectible') return 'Collectors';
+  if (s === 'cars' || s === 'car' || s === 'vehicles' || s === 'vehicle' || s === 'help wanted') return 'Cars';
   return 'Services';
 }
 
@@ -2025,16 +3023,19 @@ async function loadLiveListings() {
         }
         if (l.medium_url && !photos.length) photos = [l.medium_url];
         else if (l.medium_url && photos.length && photos[0] !== l.medium_url) photos.unshift(l.medium_url);
-        // Parse property-specific fields from description text
+        // Property-specific fields — prefer dedicated DB columns, fall back to description parsing
         const knownPropTypes = ['Apartment / Flat','Bachelor / Studio','Granny Flat','Land / Plot','Smallholding','Townhouse','Penthouse','Cluster','Simplex','Duplex','Commercial','Industrial','Farm','House','Other'];
         let propType='', beds=0, baths=0, garages=0, listingType='', furnished='', pets='', features=[];
         if(normCat(l.category)==='Property'){
-          for(const pt of knownPropTypes){ if(desc.includes(pt)){ propType=pt; break; } }
-          const bedsM=desc.match(/(\d+)\s*bed/); if(bedsM) beds=parseInt(bedsM[1]);
-          const bathsM=desc.match(/(\d+)\s*bath/); if(bathsM) baths=parseInt(bathsM[1]);
-          const garM=desc.match(/(\d+)\s*garage/); if(garM) garages=parseInt(garM[1]);
-          if(/\bfor rent\b/i.test(desc)) listingType='rent';
-          else if(/\bfor sale\b/i.test(desc)) listingType='sale';
+          // Dedicated columns (set by edit-after-publish)
+          if(l.prop_type) propType = l.prop_type;
+          else { for(const pt of knownPropTypes){ if(desc.includes(pt)){ propType=pt; break; } } }
+          beds    = (l.beds    && l.beds    > 0) ? l.beds    : (desc.match(/(\d+)[-\s]*bed/i)    ? parseInt(desc.match(/(\d+)[-\s]*bed/i)[1])    : 0);
+          baths   = (l.baths   && l.baths   > 0) ? l.baths   : (desc.match(/(\d+)[-\s]*bath/i)   ? parseInt(desc.match(/(\d+)[-\s]*bath/i)[1])   : 0);
+          garages = (l.garages && l.garages > 0) ? l.garages : (desc.match(/(\d+)[-\s]*garage/i) ? parseInt(desc.match(/(\d+)[-\s]*garage/i)[1]) : 0);
+          if(l.listing_type) listingType = l.listing_type === 'For Rent' ? 'rent' : 'sale';
+          else if(/for rent|per month|monthly rent|to let|to-let|rental/i.test(desc)) listingType='rent';
+          else if(/for sale|asking price|selling price/i.test(desc)) listingType='sale';
           if(/fully furnished/i.test(desc)) furnished='Fully furnished';
           else if(/semi-furnished/i.test(desc)) furnished='Semi-furnished';
           else if(/\bunfurnished\b/i.test(desc)) furnished='Unfurnished';
@@ -2048,7 +3049,7 @@ async function loadLiveListings() {
           title: l.title,
           area: l.area || 'Pretoria',
           suburb: l.area || 'Pretoria',
-          trust: 40,
+          trust: l.trust_score || 40,
           price: l.price || 'POA',
           per: '',
           priceNum: parseInt((l.price||'0').replace(/[^0-9]/g,'')) || 0,
@@ -2062,7 +3063,14 @@ async function loadLiveListings() {
           service_class: l.service_class || null,
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
-          propType, beds, baths, garages, listingType, furnished, pets, features
+          propType, beds, baths, garages, listingType, furnished, pets, features,
+          floor_area:   l.floor_area   || null,
+          erf_size:     l.erf_size     || null,
+          subject:      l.subject      || null,
+          level:        l.level        || null,
+          mode:         l.mode         || null,
+          service_type: l.service_type || null,
+          availability: l.availability || null
         };
       });
       // Add live listings to front of LISTINGS array
@@ -2072,7 +3080,6 @@ async function loadLiveListings() {
       renderGrid();
       renderFeatured();
       renderCatCounts();
-      renderHomeProgress();
       renderHomeStats();
     }
   } catch(e) {
@@ -2099,10 +3106,10 @@ async function loadLiveDash() {
               id: 'bea_dl_' + l.id,
               beaListingId: l.id,
               title: l.title,
-              cat: l.category,
-              status: 'active',
+              cat: normCat(l.category),
+              status: l.paused ? 'paused' : 'active',
               photo: l.thumb_url || null,
-              isCommit: l.category === 'Property',
+              isCommit: normCat(l.category) === 'Property',
               intros: [],
               _raw: l
             };
@@ -2366,7 +3373,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   updateBadgeLabel();
 
   renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
-  renderHomeProgress(); renderHomeStats();
+  renderHomeStats();
   // Load available cities + suburbs, then live listings from BEA on startup
   _resolveActiveCity().then(() => loadLiveListings());
   // Detect buyer location for distance badges + map centering
@@ -2387,12 +3394,9 @@ function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="backg
 
 function updateTuppenceUI(){
   document.getElementById('nav-tn-badge').textContent=tuppence;
-  document.getElementById('tn-balance-display').textContent=tuppence;
-  document.getElementById('tn-usd-display').textContent=`≈ $${(tuppence*2).toFixed(2)}`;
+  const bd=document.getElementById('tn-balance-display');if(bd)bd.textContent=tuppence;
   document.getElementById('tn-home-bal').textContent=tuppence;
   const d=document.getElementById('dash-tn');if(d)d.textContent=tuppence;
-  // Sync dual-balance widget in AI Coach Credits section
-  const dw=document.getElementById('tn-wallet-intros');if(dw)dw.textContent=tuppence;
 }
 // Local currency display — ZAR at R18/$1 (1T=$2, 1T=R36). Extend when live forex is added.
 function localPrice(usd) {
@@ -2454,6 +3458,71 @@ function addTx(label,sub,val,pos){
   h.insertBefore(r,h.firstChild);
 }
 
+// Smart routing for + Sell button.
+// New sellers → full onboarding screen.
+// Returning sellers → account picker sheet (continue or use different account).
+async function signInSeller() {
+  const email = (document.getElementById('ob-signin-email').value || '').trim();
+  const msg   = document.getElementById('ob-signin-msg');
+  if (!email) { showToast('Enter your email first'); return; }
+  msg.style.display = 'block';
+  msg.style.color   = 'var(--text-3)';
+  msg.textContent   = 'Checking…';
+  try {
+    const user = await apiGet('/users/' + encodeURIComponent(email));
+    if (user && user.email) {
+      const name = user.name || email;
+      localStorage.setItem('ms_aa_email', email);
+      localStorage.setItem('ms_aa_name',  name);
+      sessionStorage.setItem('aa_email',   email);
+      msg.style.color   = 'var(--green)';
+      msg.textContent   = '✓ Signed in as ' + name;
+      setTimeout(async () => {
+        await loadLiveDash();
+        renderDash();
+        goTo('dashboard');
+      }, 600);
+    } else {
+      msg.style.color = '#ef4444';
+      msg.textContent = 'No account found for that email.';
+    }
+  } catch(e) {
+    msg.style.color = '#ef4444';
+    msg.textContent = 'Could not connect — try again.';
+  }
+}
+
+function openSellNav() {
+  const email = localStorage.getItem('ms_aa_email');
+  if (email) {
+    // Populate sheet with stored name + email
+    const name = localStorage.getItem('ms_aa_name') || 'Your account';
+    const nameEl  = document.getElementById('sell-sheet-name');
+    const emailEl = document.getElementById('sell-sheet-email');
+    if (nameEl)  nameEl.textContent  = name;
+    if (emailEl) emailEl.textContent = email;
+    document.getElementById('sell-account-sheet').classList.add('open');
+  } else {
+    goTo('onboard');
+  }
+}
+function closeSellSheet(e) {
+  if (e.target === document.getElementById('sell-account-sheet'))
+    document.getElementById('sell-account-sheet').classList.remove('open');
+}
+function sellSheetContinue() {
+  document.getElementById('sell-account-sheet').classList.remove('open');
+  loadLiveDash().then(() => { renderDash(); });
+  goTo('dashboard');
+}
+function sellSheetNewAccount() {
+  document.getElementById('sell-account-sheet').classList.remove('open');
+  // Don't clear the stored email here — submitOnboard() will overwrite it only
+  // when the seller actually completes registration with the new account.
+  // This means backing out of onboard always preserves the existing account.
+  goTo('onboard');
+}
+
 function goTo(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -2495,6 +3564,8 @@ function setPlan(tier, label){
 }
 
 function filterBrowse(cat){
+  // Adventures gets its own dedicated screen
+  if(cat==='Adventures'){ goTo('adventures'); renderAdvGrid(); return; }
   activeFilter=cat; goTo('browse');
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
     c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent==='All'));
@@ -2506,12 +3577,16 @@ function filterBrowse(cat){
 
 
 const filterState = {
-  property: { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'', listingType:'', furnished:'', pets:'', features:[] },
-  tutors:   { maxRate:'', subject:'', level:'', mode:'', area:'' },
-  services: { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' },
+  property:   { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'', listingType:'', furnished:'', pets:'', features:[] },
+  tutors:     { maxRate:'', subject:'', level:'', mode:'', area:'' },
+  services:   { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' },
+  adventures: { adventureType:'', maxPrice:'', duration:'', groupSize:'', area:'' },
+  collectors: { collectibleType:'', maxPrice:'', condition:'', era:'', area:'' },
+  cars:       { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' },
 };
 
 function setFilter(el, cat){
+  if(cat==='Adventures'){ goTo('adventures'); renderAdvGrid(); return; }
   activeFilter = cat;
   document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
@@ -2638,6 +3713,24 @@ function applyFilters(cat){
     filterState.services.serviceType   = getSelOptInSection('Service Type','fs-services');
     filterState.services.availability  = getSelOptInSection('Availability','fs-services');
     filterState.services.area          = getSelOptInSection('Area','fs-services');
+  } else if(cat==='adventures'){
+    filterState.adventures.adventureType = getSelOptInSection('Adventure Type','fs-adventures');
+    filterState.adventures.maxPrice      = document.getElementById('fa-max')?.value || '';
+    filterState.adventures.duration      = getSelOptInSection('Duration','fs-adventures');
+    filterState.adventures.groupSize     = getSelOptInSection('Group Size','fs-adventures');
+    filterState.adventures.area          = getSelOptInSection('Area','fs-adventures');
+  } else if(cat==='collectors'){
+    filterState.collectors.collectibleType = getSelOptInSection('Collectible Type','fs-collectors');
+    filterState.collectors.maxPrice        = document.getElementById('fc-max')?.value || '';
+    filterState.collectors.condition       = getSelOptInSection('Condition','fs-collectors');
+    filterState.collectors.era             = getSelOptInSection('Era','fs-collectors');
+    filterState.collectors.area            = getSelOptInSection('Area','fs-collectors');
+  } else if(cat==='cars'){
+    filterState.cars.make         = getSelOptInSection('Make','fs-cars');
+    filterState.cars.maxPrice     = document.getElementById('fcar-max')?.value || '';
+    filterState.cars.yearFrom     = getSelOptInSection('Year From','fs-cars');
+    filterState.cars.transmission = getSelOptInSection('Transmission','fs-cars');
+    filterState.cars.mileage      = getSelOptInSection('Max Mileage (km)','fs-cars');
   }
   document.getElementById('fs-'+cat).classList.remove('open');
   renderActiveFilterTags();
@@ -2657,10 +3750,149 @@ function clearFilters(cat){
     filterState.services = { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' };
     const el=document.getElementById('fv-max'); if(el)el.value='';
     document.querySelectorAll('#fs-services .fs-opt').forEach(o=>o.classList.remove('sel'));
+  } else if(cat==='adventures'){
+    filterState.adventures = { adventureType:'', maxPrice:'', duration:'', groupSize:'', area:'' };
+    const el=document.getElementById('fa-max'); if(el)el.value='';
+    document.querySelectorAll('#fs-adventures .fs-opt').forEach(o=>o.classList.remove('sel'));
+  } else if(cat==='collectors'){
+    filterState.collectors = { collectibleType:'', maxPrice:'', condition:'', era:'', area:'' };
+    const el=document.getElementById('fc-max'); if(el)el.value='';
+    document.querySelectorAll('#fs-collectors .fs-opt').forEach(o=>o.classList.remove('sel'));
+  } else if(cat==='cars'){
+    filterState.cars = { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' };
+    const el=document.getElementById('fcar-max'); if(el)el.value='';
+    document.querySelectorAll('#fs-cars .fs-opt').forEach(o=>o.classList.remove('sel'));
   }
   document.getElementById('fs-'+cat).classList.remove('open');
   renderActiveFilterTags();
   renderGrid();
+}
+
+// ── ADVENTURES SCREEN ─────────────────────────────────────────
+let advCountry = 'ZA';
+let advCountryName = 'South Africa';
+let advCountryFlag = '🇿🇦';
+let advSubcat = 'all';
+let advEnv = 'all';
+
+const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', ALL:'🌍' };
+const ADV_ENV_LABELS = {
+  bush_and_wildlife:'🦁 Bush & Wildlife', mountain_and_highlands:'⛰ Mountain',
+  coastal_and_beach:'🏖 Coastal', garden_and_winelands:'🍷 Winelands',
+  wetlands_and_lakes:'🌊 Wetlands', desert_and_karoo:'🏜 Karoo',
+  forest_and_fynbos:'🌿 Forest', urban_and_township:'🏙 Urban',
+  farm_and_rural:'🌾 Farm & Rural',
+};
+const ADV_SUBCAT_LABELS = {
+  adventures_accommodation:'🏕 Accommodation',
+  adventures_experiences:'🌄 Experiences',
+};
+
+function setAdvSubcat(sc, btn){
+  advSubcat = sc;
+  document.querySelectorAll('.adv-subcat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdvGrid();
+}
+
+function setAdvEnv(env, chip){
+  advEnv = env;
+  document.querySelectorAll('.adv-env-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  renderAdvGrid();
+}
+
+function openAdvCountrySheet(){
+  // Mark current country active
+  ['ZA','NA','MZ','ALL'].forEach(c=>{
+    const el=document.getElementById('adv-co-'+c);
+    if(el) el.classList.toggle('active', c===advCountry);
+  });
+  document.getElementById('adv-country-sheet').classList.add('open');
+}
+
+function closeAdvCountrySheet(e){
+  if(e.target===document.getElementById('adv-country-sheet'))
+    document.getElementById('adv-country-sheet').classList.remove('open');
+}
+
+function selectAdvCountry(code, name, flag){
+  advCountry=code; advCountryName=name; advCountryFlag=flag;
+  document.getElementById('adv-country-name').textContent=name;
+  document.getElementById('adv-country-flag').textContent=flag;
+  document.getElementById('adv-country-sheet').classList.remove('open');
+  renderAdvGrid();
+}
+
+function renderAdvGrid(){
+  const grid = document.getElementById('adv-grid');
+  const countEl = document.getElementById('adv-results-count');
+  if(!grid) return;
+
+  // Filter listings
+  let items = LISTINGS.filter(l => {
+    const cat = (l.cat||'').toLowerCase();
+    if(!cat.startsWith('adventures')) return false;
+
+    // Subcategory filter
+    if(advSubcat !== 'all' && cat !== advSubcat) return false;
+
+    // Country filter
+    if(advCountry !== 'ALL'){
+      const lc = (l.country||l.city_country||'').toUpperCase();
+      if(lc && lc !== advCountry) return false;
+    }
+
+    // Environment filter
+    if(advEnv !== 'all'){
+      const env = (l.environment_type||l.suburb||'').toLowerCase().replace(/\s+/g,'_');
+      if(env && env !== advEnv) return false;
+    }
+    return true;
+  });
+
+  countEl.textContent = items.length
+    ? `${items.length} listing${items.length===1?'':'s'} · ${advCountryName}`
+    : '';
+
+  if(!items.length){
+    grid.innerHTML = `<div class="adv-empty">
+      <div class="adv-empty-icon">🧭</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">No Adventures yet</div>
+      <div style="font-size:13px;line-height:1.6;">Operators are being onboarded — check back soon, or try a different country or environment filter.</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(l => {
+    const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
+    const subcatLabel = isAccom ? '🏕 Accommodation' : '🌄 Experiences';
+    const envLabel = ADV_ENV_LABELS[(l.environment_type||l.suburb||'').toLowerCase().replace(/\s+/g,'_')] || '';
+    const priceLabel = isAccom
+      ? (l.price ? `From R${Number(l.price).toLocaleString()}/night` : '')
+      : (l.price ? `R${Number(l.price).toLocaleString()}/person` : '');
+    const countryCode = (l.country||'ZA').toUpperCase();
+    const flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
+    const imgHtml = l.photo
+      ? `<img class="adv-card-img" src="${esc(l.photo)}" alt="${esc(l.title||'')}" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
+
+    return `<div class="adv-card" onclick="openDetail('${esc(l.id)}')">
+      ${imgHtml}
+      <div class="adv-card-body">
+        <div class="adv-card-meta">
+          <span class="adv-card-subcat">${subcatLabel}</span>
+          <span class="adv-card-country">${flag} ${countryCode}</span>
+        </div>
+        <div class="adv-card-title">${esc(l.title||l.name||'Untitled')}</div>
+        ${envLabel ? `<div class="adv-card-env">${envLabel}</div>` : ''}
+        <div class="adv-card-footer">
+          <span class="adv-card-price">${priceLabel}</span>
+          <button class="adv-card-intro" onclick="event.stopPropagation();openDetail('${esc(l.id)}')">View →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderActiveFilterTags(){
@@ -2693,6 +3925,24 @@ function renderActiveFilterTags(){
     if(fs.serviceType)  tags.push(`⚙️ ${fs.serviceType}`);
     if(fs.availability) tags.push(`📅 ${fs.availability}`);
     if(fs.area)         tags.push(`📍 ${fs.area}`);
+  } else if(cat==='adventures'){
+    if(fs.adventureType) tags.push(`🌿 ${fs.adventureType}`);
+    if(fs.maxPrice)      tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.duration)      tags.push(`⏱ ${fs.duration}`);
+    if(fs.groupSize)     tags.push(`👥 ${fs.groupSize}`);
+    if(fs.area)          tags.push(`📍 ${fs.area}`);
+  } else if(cat==='collectors'){
+    if(fs.collectibleType) tags.push(`🏺 ${fs.collectibleType}`);
+    if(fs.maxPrice)        tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.condition)       tags.push(`✨ ${fs.condition}`);
+    if(fs.era)             tags.push(`📅 ${fs.era}`);
+    if(fs.area)            tags.push(`📍 ${fs.area}`);
+  } else if(cat==='cars'){
+    if(fs.make)         tags.push(`🚗 ${fs.make}`);
+    if(fs.maxPrice)     tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.yearFrom)     tags.push(`📅 ${fs.yearFrom}`);
+    if(fs.transmission) tags.push(`⚙️ ${fs.transmission}`);
+    if(fs.mileage)      tags.push(`🛣 ${fs.mileage}`);
   }
 
   row.innerHTML = tags.map(t=>`
@@ -2709,8 +3959,8 @@ async function _geoFetch(path) {
 }
 
 function handleCityBadgeClick() {
-  // Free: suburb only · Starter: city+suburb (ZA locked) · Premium: full hierarchy
-  const startPanel = buyerTier === 'premium' ? 'country' : buyerTier === 'starter' ? 'city' : 'suburb';
+  // Badge selector: Country → Region → City only. Suburbs are used internally, never exposed here.
+  const startPanel = buyerTier === 'premium' ? 'country' : 'region';
   openLocPanel(startPanel);
   document.getElementById('city-selector-bg').classList.add('open');
 }
@@ -2804,7 +4054,10 @@ async function selectRegion(id, name) {
 async function selectCity(id, name) {
   activeCity   = { id, name };
   activeSuburb = null;
-  await openLocPanel('suburb');
+  closeCitySelector();
+  updateBadgeLabel();
+  renderGrid();
+  renderCatCounts();
 }
 
 async function selectSuburb(id, name) {
@@ -2943,30 +4196,7 @@ function renderMap(){
   if(bounds.length) _leafletMap.fitBounds(bounds,{padding:[30,30],maxZoom:14});
 }
 
-// ── HOME SCREEN PROGRESS + STATS ──────────────────────────
-function renderHomeProgress() {
-  const counts = { Property: 0, Tutors: 0, Services: 0 };
-  LISTINGS.filter(l => !l.id.startsWith('ph_')).forEach(l => {
-    const cat = normCat(l.cat);
-    if (Object.prototype.hasOwnProperty.call(counts, cat)) counts[cat]++;
-  });
-  const total  = counts.Property + counts.Tutors + counts.Services;
-  const target = 20;
-
-  const nameEl  = document.getElementById('cpb-city-name');
-  const totalEl = document.getElementById('cpb-total');
-  updateBadgeLabel();
-  if (nameEl)  nameEl.textContent  = 'Founding Seller Progress · ' + activeCity.name;
-  if (totalEl) totalEl.textContent = total + ' / ' + (target * 3);
-
-  [['property', counts.Property], ['tutors', counts.Tutors], ['services', counts.Services]].forEach(([key, n]) => {
-    const fill  = document.getElementById('cpb-fill-'  + key);
-    const count = document.getElementById('cpb-count-' + key);
-    const pct   = Math.min(100, Math.round((n / target) * 100));
-    if (fill)  fill.style.width   = pct + '%';
-    if (count) count.textContent  = n + '/' + target;
-  });
-}
+// ── HOME SCREEN STATS ──────────────────────────────────────
 
 function renderHomeStats() {
   const live = LISTINGS.filter(l => !l.id.startsWith('ph_'));
@@ -3045,6 +4275,40 @@ function renderGrid(){
       if(fv.area && fv.area!=='' && l.suburb !== fv.area) return false;
     }
 
+    if(l.cat==='Adventures'){
+      const fa = filterState.adventures;
+      if(fa.adventureType && fa.adventureType!=='' && l.adventureType && l.adventureType!==fa.adventureType) return false;
+      if(fa.maxPrice && l.priceNum > parseInt(fa.maxPrice)) return false;
+      if(fa.duration && fa.duration!=='' && l.duration && l.duration!==fa.duration) return false;
+      if(fa.groupSize && fa.groupSize!=='' && l.groupSize && l.groupSize!==fa.groupSize) return false;
+      if(fa.area && fa.area!=='' && l.suburb !== fa.area) return false;
+    }
+
+    if(l.cat==='Collectors'){
+      const fc = filterState.collectors;
+      if(fc.collectibleType && fc.collectibleType!=='' && l.collectibleType && l.collectibleType!==fc.collectibleType) return false;
+      if(fc.maxPrice && l.priceNum > parseInt(fc.maxPrice)) return false;
+      if(fc.condition && fc.condition!=='' && l.condition && l.condition!==fc.condition) return false;
+      if(fc.era && fc.era!=='' && l.era && l.era!==fc.era) return false;
+      if(fc.area && fc.area!=='' && l.suburb !== fc.area) return false;
+    }
+
+    if(l.cat==='Cars'){
+      const fcar = filterState.cars;
+      if(fcar.make && fcar.make!=='' && l.make && l.make!==fcar.make) return false;
+      if(fcar.maxPrice && l.priceNum > parseInt(fcar.maxPrice)) return false;
+      if(fcar.yearFrom && fcar.yearFrom!==''){
+        const yrMatch = fcar.yearFrom.match(/(\d{4})/);
+        if(yrMatch && l.year){
+          const minYr = parseInt(yrMatch[1]);
+          if(fcar.yearFrom.startsWith('Pre-')){ if(l.year>=minYr) return false; }
+          else { if(l.year < minYr) return false; }
+        }
+      }
+      if(fcar.transmission && fcar.transmission!=='' && l.transmission && l.transmission!==fcar.transmission) return false;
+      if(fcar.area && fcar.area!=='' && l.suburb !== fcar.area) return false;
+    }
+
     return true;
   });
 
@@ -3092,9 +4356,14 @@ function cardHtml(l){
   </div>`;
   }
 
+  const _catCfg=CATS[l.cat]||{};
+  const _fallbackPhoto=_catCfg.catPhoto;
+  const _fallbackDiv=`<div class="emoji-fallback" style="background:${_catCfg.bg}">${_catCfg.icon}</div>`;
   const imgHtml=l.photo
-    ?`<img src="${l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="display:none;background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div>`
-    :`<div class="emoji-fallback" style="background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div>`;
+    ?`<img src="${l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}">${_fallbackPhoto?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="display:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`:_fallbackDiv}`
+    :(_fallbackPhoto
+        ?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`
+        :_fallbackDiv);
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
     <div class="ibox" style="background:${CATS[l.cat].bg}">
       ${imgHtml}
@@ -3128,9 +4397,12 @@ function renderFeatured(){
     return;
   }
   document.getElementById('home-featured').innerHTML=featured.map(l=>{
+    const _fCfg=CATS[l.cat]||{};
     const imgHtml=l.photo
       ?`<img src="${l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">`
-      :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${CATS[l.cat].icon}</div>`;
+      :(_fCfg.catPhoto
+          ?`<img src="${_fCfg.catPhoto}" alt="${l.cat}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;\'>${_fCfg.icon}</div>')">`
+          :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${_fCfg.icon}</div>`);
     return`<div class="hcard" onclick="openDetail('${l.id}')">
       <div style="height:80px;overflow:hidden;background:${CATS[l.cat].bg};">${imgHtml}</div>
       <div class="cbody" style="padding:9px 11px 12px;">
@@ -3334,7 +4606,7 @@ function openDetail(id){
         <div class="cs"><div class="cs-dot system">⏸</div><div><div class="cs-label">Listing paused immediately</div><div class="cs-sub">Invisible to other buyers during review</div></div></div>
         <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Seller has 48hrs to Accept or Decline</div><div class="cs-sub">Seller sees your message before deciding</div></div></div>
         <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Both parties connect directly</div></div></div>
-        <div class="cs"><div class="cs-dot penalty">✕</div><div><div class="cs-label">Declined or ignored → you pay nothing</div><div class="cs-sub">Seller pays 1T penalty to resubmit</div></div></div>
+        <div class="cs"><div class="cs-dot penalty">✕</div><div><div class="cs-label">Declined → you pay nothing · listing reopens</div><div class="cs-sub">Ignored within 48hrs → seller Trust −5 · you pay nothing</div></div></div>
       </div>
     </div>`:`
     <div class="intro-model-block queue">
@@ -3345,7 +4617,7 @@ function openDetail(id){
         <div class="cs"><div class="cs-dot system q">👥</div><div><div class="cs-label">Added to seller's queue — listing stays live</div><div class="cs-sub">Other buyers can still request simultaneously</div></div></div>
         <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Seller notified · has 48hrs to respond</div><div class="cs-sub">Seller reviews all queued requests</div></div></div>
         <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Connect directly with seller</div></div></div>
-        <div class="cs"><div class="cs-dot trust">↓</div><div><div class="cs-label">Ignored → you pay nothing · Trust Score −3</div><div class="cs-sub">No Tuppence penalty — accountability via trust</div></div></div>
+        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Respond within 24hrs → Trust Score +3</div><div class="cs-sub">No response within 48hrs → Trust Score −5</div></div></div>
       </div>
     </div>
     ${l.queueCount>0?`<div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px;border:1.5px solid #c4b5fd;"><div style="font-size:24px;font-weight:700;color:var(--purple);font-family:'Inter',sans-serif;">${l.queueCount}</div><div><div style="font-size:13px;font-weight:600;color:var(--navy);">${l.queueCount} buyer${l.queueCount>1?'s':''} currently in queue</div><div style="font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px;">Seller responds to all requests within 48hrs</div></div></div>`:''}`;
@@ -3369,6 +4641,28 @@ function openDetail(id){
           ${l.price?`<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`:`<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
+      ${l.cat==='Tutors' && (l.subject||l.level||l.mode) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        ${l.subject ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📚 ${l.subject}</span>` : ''}
+        ${l.level   ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🎓 ${l.level}</span>` : ''}
+        ${l.mode    ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.mode}</span>` : ''}
+      </div>` : ''}
+      ${l.cat==='Services' && (l.service_type||l.availability||l.service_class) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        ${l.service_class ? `<span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">⚙️ ${l.service_class}</span>` : ''}
+        ${l.service_type  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🔧 ${l.service_type}</span>` : ''}
+        ${l.availability  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📅 ${l.availability}</span>` : ''}
+      </div>` : ''}
+      ${l.cat==='Property' && (l.propType||l.beds||l.baths||l.garages||l.listingType) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        ${l.listingType ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">${l.listingType==='rent'?'🔑 For Rent':'🏦 For Sale'}</span>` : ''}
+        ${l.propType ? `<span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🏠 ${l.propType}</span>` : ''}
+        ${l.beds ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🛏 ${l.beds} bed${l.beds>1?'s':''}</span>` : ''}
+        ${l.baths ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🚿 ${l.baths} bath${l.baths>1?'s':''}</span>` : ''}
+        ${l.garages    ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🚗 ${l.garages} garage${l.garages>1?'s':''}</span>` : ''}
+        ${l.floor_area ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📐 ${l.floor_area} m² floor</span>` : ''}
+        ${l.erf_size   ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🌳 ${l.erf_size} m² erf</span>` : ''}
+      </div>` : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
         <button onclick="openSellerCV(${l.sellerIdx},'${id}')" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
@@ -3481,9 +4775,10 @@ function submitOnboard(){
   const email=document.getElementById('ob-email').value.trim();
   const cat=document.getElementById('ob-cat').value;
   if(!name||!email){showToast('Please enter your name and email');return;}
-  // Store email so AA screens can pre-fill it (session + persisted)
+  // Store email + name so AA screens can pre-fill and account picker can display
   sessionStorage.setItem('aa_email', email);
   localStorage.setItem('ms_aa_email', email);
+  localStorage.setItem('ms_aa_name', name);
   // Store home city — used to restore activeCity on next page load
   const _homeCity = magicLink.active ? magicLink.area : activeCity.name;
   localStorage.setItem('ms_user_city', _homeCity);
@@ -3568,7 +4863,10 @@ function renderCVEditForm(){
     <div class="cv-edit-sec">
       <div class="cv-edit-sec-title">Profile Photo</div>
       <div class="cv-photo-edit-row">
-        <div class="cv-photo-upload" id="cv-photo-circle">
+        <div class="cv-photo-upload" id="cv-photo-circle"
+             ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+             ondragleave="this.style.borderColor=''"
+             ondrop="handleCVPhotoDrop(event)">
           <input type="file" id="cv-photo-inp" accept="image/*" onchange="handleCVPhoto(event)">
           ${SELLER_PHOTOS[0]
             ? `<img src="${SELLER_PHOTOS[0]}" id="cv-photo-preview" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">`
@@ -3691,6 +4989,16 @@ async function handleCredPhoto(e, credIdx){
     conf.textContent='✓ Certificate photo uploaded — blurred until introduction';
   }
   showToast('Certificate photo saved');
+}
+
+async function handleCVPhotoDrop(e) {
+  e.preventDefault();
+  const circle = document.getElementById('cv-photo-circle');
+  if (circle) circle.style.borderColor = '';
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file'); return; }
+  // Reuse existing upload logic by forwarding as a synthetic event
+  await handleCVPhoto({ target: { files: [file] } });
 }
 
 async function handleCVPhoto(e){
@@ -3838,6 +5146,8 @@ function showPhase(p){
 
 function goPhase(p){
   if(p==='c'&&!pubCat){ showToast('Please select a category'); return; }
+  // If coming from b and Adventures selected, route through b2 instead
+  if(p==='c' && pubCat==='Adventures'){ showToast('Please choose Accommodation or Experiences'); return; }
   if(p==='c') updateModelNote();
   showPhase(p);
 }
@@ -3863,11 +5173,39 @@ function clearImg(e){
 
 function selCatBig(cat){
   pubCat=cat;
-  ['Property','Tutors','Services'].forEach(c=>{
-    document.getElementById('cbt-'+c).classList.toggle('selected', c===cat);
+  ['Property','Tutors','Services','Adventures','Collectors','Cars'].forEach(c=>{
+    const el=document.getElementById('cbt-'+c);
+    if(el) el.classList.toggle('selected', c===cat);
   });
   document.getElementById('pub-b-next').style.opacity='1';
   document.getElementById('pub-b-next').style.pointerEvents='auto';
+}
+
+function goPhaseB2OrC(){
+  // If Adventures selected, show subcategory step first
+  if(pubCat==='Adventures'){
+    // reset sub-selection
+    ['adv-accommodation','adv-experiences'].forEach(k=>{
+      const el=document.getElementById('cbt-'+k);
+      if(el) el.classList.remove('selected');
+    });
+    document.getElementById('pub-b2-next').style.opacity='0.4';
+    document.getElementById('pub-b2-next').style.pointerEvents='none';
+    showPhase('b2');
+  } else {
+    goPhase('c');
+  }
+}
+
+function selAdvSubcat(subcat){
+  // subcat is 'adventures_accommodation' or 'adventures_experiences'
+  pubCat=subcat;
+  ['adv-accommodation','adv-experiences'].forEach(k=>{
+    const el=document.getElementById('cbt-'+k);
+    if(el) el.classList.toggle('selected', 'adventures_'+k.replace('adv-','')===subcat);
+  });
+  document.getElementById('pub-b2-next').style.opacity='1';
+  document.getElementById('pub-b2-next').style.pointerEvents='auto';
 }
 
 function updateModelNote(){
@@ -3886,7 +5224,7 @@ function doPublish(){
   if(!title){ showToast('Please enter a title'); return; }
   const price=document.getElementById('f-price').value.trim();
   // Show claim screen
-  document.getElementById('claim-title').textContent=`"${title}" is live on MarketSquare Pretoria.`;
+  document.getElementById('claim-title').textContent=`"${title}" is live on MarketSquare.`;
   showPhase('claim');
   showToast('✓ Listing published!');
   // Post to BEA
@@ -3942,6 +5280,7 @@ function renderDash(){
 function updateDashStats(){
   const pending = dashState.listings.reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
   const active  = dashState.listings.filter(dl=>dl.status==='active').length;
+  const ad=document.getElementById('dash-active');  if(ad)ad.textContent=active;
   const pd=document.getElementById('dash-pending'); if(pd)pd.textContent=pending;
   const qd=document.getElementById('dash-queue');   if(qd)qd.textContent=dashState.listings.filter(dl=>!dl.isCommit).reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
   const td=document.getElementById('dash-tn');      if(td)td.textContent=tuppence;
@@ -4091,6 +5430,7 @@ async function openEditListing(beaId) {
 
   // Render form and navigate
   renderEditForm(elCurrentRaw);
+  elRenderPhotos(elCurrentRaw, '');
   goTo('edit-listing');
 }
 
@@ -4107,17 +5447,33 @@ function _elGetFields(cat, serviceClass) {
 
 // Map BEA listing object keys to AA field IDs
 function _elFieldVal(raw, fieldId) {
+  // For Property listings created before dedicated columns existed,
+  // fall back to parsing values from the description text.
+  const desc = raw.description || '';
+  function parseDescNum(pattern) {
+    const m = desc.match(pattern);
+    return m ? m[1] : '';
+  }
+  function parseDescPropType() {
+    const known = ['Apartment / Flat','Bachelor / Studio','Granny Flat','Land / Plot','Smallholding','Townhouse','Penthouse','Cluster','Simplex','Duplex','Commercial','Industrial','Farm','House','Other'];
+    for (const pt of known) { if (desc.includes(pt)) return pt; }
+    return '';
+  }
+
   const map = {
     title:        raw.title        || '',
-    price:        raw.price        || '',
-    rate:         raw.price        || '',
-    desc:         raw.description  || '',
+    price:        (raw.price || '').replace(/[^0-9.]/g, '') || '',
+    rate:         (raw.price || '').replace(/[^0-9.]/g, '') || '',
+    desc:         desc,
     suburb:       raw.suburb       || '',
     area:         raw.area || raw.suburb || '',
-    prop_type:    raw.prop_type    || '',
-    beds:         raw.beds    != null ? String(raw.beds)    : '',
-    baths:        raw.baths   != null ? String(raw.baths)   : '',
-    garages:      raw.garages != null ? String(raw.garages) : '',
+    prop_type:    raw.prop_type    || parseDescPropType(),
+    beds:         raw.beds    != null && raw.beds    !== 0 ? String(raw.beds)    : parseDescNum(/(\d+)[-\s]*bed/i),
+    baths:        raw.baths   != null && raw.baths   !== 0 ? String(raw.baths)   : parseDescNum(/(\d+)[-\s]*bath/i),
+    garages:      raw.garages != null && raw.garages !== 0 ? String(raw.garages) : parseDescNum(/(\d+)[-\s]*garage/i),
+    floor_area:   raw.floor_area   != null ? String(raw.floor_area)   : parseDescNum(/(\d+)\s*m²?\s*(floor|internal|living)/i),
+    erf_size:     raw.erf_size     != null ? String(raw.erf_size)     : parseDescNum(/(\d+)\s*m²?\s*(erf|plot|stand)/i),
+    listing_type: raw.listing_type || (/for rent|per month|monthly rent|to let|to-let|rental/i.test(desc) ? 'For Rent' : /for sale|asking price|selling price/i.test(desc) ? 'For Sale' : ''),
     subject:      raw.subject      || '',
     level:        raw.level        || '',
     mode:         raw.mode         || '',
@@ -4186,6 +5542,92 @@ function elApplySuggestion(fieldId) {
   if (el) { el.value = sug.suggestion; showToast('✓ Suggestion applied'); }
 }
 
+// ── EDIT SCREEN PHOTO SECTION ─────────────────────────────
+// Shows current listing photos with Replace button.
+// AI photo warnings (from anonymity_warning or trust_score_actions) appear
+// as amber notes below the relevant photo.
+
+let _elPhotoWarning = '';  // AI photo feedback text, set by editAISuggest
+
+function elRenderPhotos(raw, photoWarning) {
+  const section  = document.getElementById('el-photos-section');
+  const photoRow = document.getElementById('el-photo-row');
+  if (!section || !photoRow) return;
+
+  // Collect all available photo URLs from the listing
+  const photos = [];
+  if (raw.medium_url) photos.push({ url: raw.medium_url, label: 'Main photo' });
+  else if (raw.thumb_url) photos.push({ url: raw.thumb_url, label: 'Main photo' });
+
+  if (!photos.length) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  const warnLower = (photoWarning || '').toLowerCase();
+  const hasPhotoIssue = warnLower.includes('photo') || warnLower.includes('watermark') ||
+                        warnLower.includes('logo') || warnLower.includes('name') ||
+                        warnLower.includes('text') || warnLower.includes('image');
+
+  photoRow.innerHTML = photos.map((p, i) => `
+    <div class="el-photo-card" id="el-pcard-${i}">
+      <img src="${p.url}" alt="${p.label}">
+      ${hasPhotoIssue ? '<div class="el-photo-warn">!</div>' : ''}
+      <button class="el-photo-replace" onclick="elTriggerPhotoReplace(${i})">🔄 Replace</button>
+      ${hasPhotoIssue ? `<div class="el-photo-ai-note">⚠️ ${photoWarning}</div>` : ''}
+    </div>`).join('');
+}
+
+let _elPhotoReplaceIdx = 0;
+function elTriggerPhotoReplace(idx) {
+  _elPhotoReplaceIdx = idx;
+  const inp = document.getElementById('el-photo-inp');
+  if (inp) inp.click();
+}
+
+async function elReplacePhoto(event) {
+  const file = event.target.files[0];
+  if (!file || !elCurrentId) return;
+  showToast('Uploading photo…');
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('listing_id', String(elCurrentId));
+
+  try {
+    const res = await fetch(BEA_URL + '/listings/photo', {
+      method: 'POST',
+      headers: { 'X-Api-Key': API_KEY },
+      body: fd
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const data = await res.json();
+
+    // Update the displayed photo immediately
+    const card = document.getElementById('el-pcard-' + _elPhotoReplaceIdx);
+    if (card) {
+      const img = card.querySelector('img');
+      if (img && data.medium_url) img.src = data.medium_url;
+      // Remove the warning once replaced
+      const note = card.querySelector('.el-photo-ai-note');
+      const warn = card.querySelector('.el-photo-warn');
+      if (note) note.remove();
+      if (warn) warn.remove();
+    }
+
+    // Patch the raw object so Save picks up the new URLs
+    if (elCurrentRaw) {
+      elCurrentRaw.thumb_url  = data.thumb_url  || elCurrentRaw.thumb_url;
+      elCurrentRaw.medium_url = data.medium_url || elCurrentRaw.medium_url;
+    }
+
+    showToast('✓ Photo replaced — tap Save Changes to apply');
+  } catch(e) {
+    showToast('Photo upload failed: ' + e.message);
+  }
+
+  // Reset file input so the same file can be re-selected if needed
+  event.target.value = '';
+}
+
 // Collect form field values into a plain object
 function _elCollectFields() {
   const fields = _elGetFields(elCurrentCat, elCurrentRaw && elCurrentRaw.service_class);
@@ -4211,14 +5653,21 @@ async function saveEditedListing() {
   // Map form field IDs → BEA model field names
   const payload = {};
   if (fd.title)        payload.title        = fd.title;
-  if (fd.price || fd.rate) payload.price    = fd.price || fd.rate;
+  if (fd.price || fd.rate) {
+    // Strip currency symbols, spaces, commas and any text — keep digits and one decimal point only
+    const rawP = (fd.price || fd.rate).replace(/[^0-9.]/g, '');
+    payload.price = rawP || (fd.price || fd.rate);
+  }
   if (fd.desc)         payload.description  = fd.desc;
   if (fd.suburb)       payload.suburb       = fd.suburb;
   if (fd.area)         payload.area         = fd.area;
   if (fd.prop_type)    payload.prop_type    = fd.prop_type;
-  if (fd.beds)         payload.beds         = parseInt(fd.beds)    || undefined;
-  if (fd.baths)        payload.baths        = parseInt(fd.baths)   || undefined;
-  if (fd.garages)      payload.garages      = parseInt(fd.garages) || undefined;
+  if (fd.beds)         payload.beds         = parseInt(fd.beds)       || undefined;
+  if (fd.baths)        payload.baths        = parseInt(fd.baths)      || undefined;
+  if (fd.garages)      payload.garages      = parseInt(fd.garages)    || undefined;
+  if (fd.floor_area)   payload.floor_area   = parseInt(fd.floor_area) || undefined;
+  if (fd.erf_size)     payload.erf_size     = parseInt(fd.erf_size)   || undefined;
+  if (fd.listing_type) payload.listing_type = fd.listing_type;
   if (fd.subject)      payload.subject      = fd.subject;
   if (fd.level)        payload.level        = fd.level;
   if (fd.mode)         payload.mode         = fd.mode;
@@ -4236,8 +5685,8 @@ async function saveEditedListing() {
       throw new Error(err.detail || 'Save failed (' + res.status + ')');
     }
     showToast('✓ Listing updated — changes are live');
-    // Refresh dashboard data and re-render
-    await loadLiveDash();
+    // Refresh both dashboard and buyer-side listing cache
+    await Promise.all([loadLiveDash(), loadLiveListings()]);
     renderDash();
     goTo('dashboard');
   } catch(e) {
@@ -4288,6 +5737,8 @@ async function editAISuggest() {
 
     // Re-render form with suggestions inlined under each field
     renderEditForm(elCurrentRaw);
+    const photoWarn = (cj && cj.anonymity_warning) ? cj.anonymity_warning : '';
+    elRenderPhotos(elCurrentRaw, photoWarn);
     showToast('✨ AI suggestions ready — review and apply each field');
   } catch(e) {
     showToast('AI: ' + e.message);
@@ -4300,8 +5751,9 @@ async function editAISuggest() {
 function stripNav(id, delta) {
   const strip = document.getElementById('pstrip-' + id);
   if (!strip) return;
-  const w = strip.offsetWidth;
   const count = strip.querySelectorAll('.photo-strip-slide').length;
+  const w = strip.offsetWidth || strip.getBoundingClientRect().width || (strip.scrollWidth / count);
+  if (!w) return;
   const idx = Math.round(strip.scrollLeft / w);
   const next = Math.max(0, Math.min(count - 1, idx + delta));
   strip.scrollTo({ left: next * w, behavior: 'smooth' });
@@ -4422,22 +5874,49 @@ const AA_CATEGORIES = {
   },
   'Adventures': {
     emoji: '🧭',
-    phase: 2,
-    fields: [
-      {id:'title',           label:'Experience title',        type:'text',   placeholder:'e.g. 5-day Kruger safari · private guide'},
-      {id:'destination',     label:'Destination',             type:'text',   placeholder:'e.g. Kruger National Park, Limpopo'},
-      {id:'duration',        label:'Duration',                type:'text',   placeholder:'e.g. 5 days / 4 nights'},
-      {id:'group_size',      label:'Group size',              type:'text',   placeholder:'e.g. 2–8 people'},
-      {id:'price_per_person',label:'Price per person',        type:'number', placeholder:'e.g. 8000'},
-      {id:'difficulty',      label:'Difficulty level',        type:'select', options:['Easy — anyone can do it','Moderate — some fitness required','Challenging — experienced participants','Expert — serious athletes / specialists']},
-      {id:'desc',            label:'What\'s included',        type:'textarea',placeholder:'Itinerary, inclusions, exclusions, what to bring…'},
-    ],
-    photos: [
-      {slot:'hero',        label:'Hero shot',         hint:'Best photo — sets the scene',       required:true},
-      {slot:'experience_1',label:'Experience shot 1', hint:'Activity or highlight',             required:true},
-      {slot:'experience_2',label:'Experience shot 2', hint:'Another angle or moment',           required:true},
-      {slot:'experience_3',label:'Experience shot 3', hint:'Additional scene or detail',        required:false},
-    ],
+    // Adventures has two class variants: Accommodation and Experiences.
+    // Fields and photos come from serviceClasses[service_class].
+    serviceClasses: {
+      'adventures_accommodation': {
+        label: '🏕 Accommodation',
+        fields: [
+          {id:'title',            label:'Listing headline',        type:'text',   placeholder:'e.g. Bushveld chalet · Waterberg'},
+          {id:'accommodation_type',label:'Accommodation type',     type:'select', options:['Guest House','Bush Camp','Chalet','Hostel','Self-catering','Caravan / Camp site','Wilderness Hut','Alpine Hut','Other']},
+          {id:'destination',      label:'Location / area',         type:'text',   placeholder:'e.g. Waterberg, Limpopo'},
+          {id:'environment_type', label:'Environment',             type:'select', options:['Bush & Wildlife','Mountain & Highlands','Coastal & Beach','Garden & Winelands','Wetlands & Lakes','Desert & Karoo','Forest & Fynbos','Urban & Township','Farm & Rural']},
+          {id:'price_per_night',  label:'Price per night (from)',  type:'number', placeholder:'e.g. 1200'},
+          {id:'sleeps',           label:'Sleeps (max guests)',      type:'number', placeholder:'e.g. 6'},
+          {id:'amenities',        label:'Amenities',               type:'text',   placeholder:'e.g. Pool, braai, WiFi, full kitchen'},
+          {id:'desc',             label:'About the property',      type:'textarea',placeholder:'Setting, vibe, what makes it special, nearby activities…'},
+        ],
+        photos: [
+          {slot:'hero',       label:'Hero shot',          hint:'Best exterior or setting shot',       required:true},
+          {slot:'interior_1', label:'Interior — main area',hint:'Living area, lounge or main room',   required:true},
+          {slot:'bedroom',    label:'Bedroom',            hint:'Main sleeping area',                  required:true},
+          {slot:'outdoor',    label:'Outdoor / surrounds',hint:'Braai, pool, deck or bush view',      required:false},
+        ],
+      },
+      'adventures_experiences': {
+        label: '🌄 Experiences',
+        fields: [
+          {id:'title',           label:'Experience title',         type:'text',   placeholder:'e.g. Guided Drakensberg hike · 2 days'},
+          {id:'activity_type',   label:'Activity type',            type:'select', options:['Hiking & Trails','Water Sports','Wildlife & Birding','Horse & Farm','Cycling & MTB','Climbing & Abseiling','Cultural & Township','Food & Wine','Wellness & Retreat','Arts & Craft','Family & Kids','Photography & Creative','Sky & Extreme','Other']},
+          {id:'destination',     label:'Destination / location',   type:'text',   placeholder:'e.g. Drakensberg, KwaZulu-Natal'},
+          {id:'environment_type',label:'Environment',              type:'select', options:['Bush & Wildlife','Mountain & Highlands','Coastal & Beach','Garden & Winelands','Wetlands & Lakes','Desert & Karoo','Forest & Fynbos','Urban & Township','Farm & Rural']},
+          {id:'duration',        label:'Duration',                 type:'text',   placeholder:'e.g. Full day · 8 hours'},
+          {id:'group_size',      label:'Group size',               type:'text',   placeholder:'e.g. 2–10 people'},
+          {id:'price_per_person',label:'Price per person',         type:'number', placeholder:'e.g. 850'},
+          {id:'difficulty',      label:'Difficulty level',         type:'select', options:['Easy — anyone can do it','Moderate — some fitness required','Challenging — experienced participants','Expert — serious athletes / specialists']},
+          {id:'desc',            label:'What\'s included',         type:'textarea',placeholder:'Itinerary, inclusions, exclusions, what to bring…'},
+        ],
+        photos: [
+          {slot:'hero',         label:'Hero shot',          hint:'Best action or setting photo',      required:true},
+          {slot:'activity_1',   label:'Activity shot 1',    hint:'Participants in the experience',    required:true},
+          {slot:'activity_2',   label:'Activity shot 2',    hint:'Another angle or highlight moment', required:true},
+          {slot:'activity_3',   label:'Activity shot 3',    hint:'Detail, scenery or group',          required:false},
+        ],
+      },
+    },
   },
   'Collectors': {
     emoji: '🏆',
@@ -4456,6 +5935,30 @@ const AA_CATEGORIES = {
       {slot:'back',            label:'Back',                  hint:'Full frame, centered',             required:true},
       {slot:'condition_closeup',label:'Condition close-up',   hint:'Corners, margins or surface detail',required:true},
       {slot:'certificate',     label:'Certificate / slab',    hint:'Expert cert or grading slab label', required:false},
+    ],
+  },
+  'Cars': {
+    emoji: '🚗',
+    fields: [
+      {id:'title',       label:'Listing headline',       type:'text',   placeholder:'e.g. 2019 Toyota Hilux 2.8 GD-6 4x4 · low km'},
+      {id:'make',        label:'Make',                   type:'text',   placeholder:'e.g. Toyota'},
+      {id:'model',       label:'Model',                  type:'text',   placeholder:'e.g. Hilux 2.8 GD-6'},
+      {id:'year',        label:'Year',                   type:'number', placeholder:'e.g. 2019'},
+      {id:'mileage',     label:'Mileage (km)',            type:'number', placeholder:'e.g. 85000'},
+      {id:'colour',      label:'Colour',                 type:'text',   placeholder:'e.g. White'},
+      {id:'transmission',label:'Transmission',           type:'select', options:['Manual','Automatic','Semi-automatic']},
+      {id:'fuel_type',   label:'Fuel type',              type:'select', options:['Petrol','Diesel','Hybrid','Electric','LPG']},
+      {id:'body_type',   label:'Body type',              type:'select', options:['Sedan','Hatchback','SUV / 4x4','Bakkie / Truck','Coupe','Convertible','Minivan / MPV','Station Wagon','Crossover','Other']},
+      {id:'price',       label:'Asking price',           type:'number', placeholder:'e.g. 380000'},
+      {id:'listing_type',label:'Listing type',           type:'select', options:['For Sale','For Hire / Rental']},
+      {id:'desc',        label:'Description',            type:'textarea',placeholder:'Condition, service history, extras, reason for selling…'},
+    ],
+    photos: [
+      {slot:'exterior_front', label:'Exterior — front',     hint:'Head-on, good light, clean background', required:true},
+      {slot:'exterior_side',  label:'Exterior — side',      hint:'Full profile shot',                      required:true},
+      {slot:'interior',       label:'Interior',             hint:'Dashboard and front seats',              required:true},
+      {slot:'engine',         label:'Engine bay',           hint:'Clean, well-lit',                        required:false},
+      {slot:'service_book',   label:'Service book (optional)',hint:'Open to last service entry',           required:false},
     ],
   },
 };

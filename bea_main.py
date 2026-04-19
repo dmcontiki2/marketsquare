@@ -101,6 +101,24 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN seller_email TEXT")
     if "updated_at" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN updated_at TEXT")
+    # ── Category-specific edit fields (ListingUpdate) ────────────
+    for _col, _type in [
+        ("trust_score",  "INTEGER"),
+        ("beds",         "INTEGER"),
+        ("baths",        "INTEGER"),
+        ("garages",      "INTEGER"),
+        ("prop_type",    "TEXT"),
+        ("floor_area",   "INTEGER"),
+        ("erf_size",     "INTEGER"),
+        ("listing_type", "TEXT"),
+        ("subject",      "TEXT"),
+        ("level",        "TEXT"),
+        ("mode",         "TEXT"),
+        ("service_type", "TEXT"),
+        ("availability", "TEXT"),
+    ]:
+        if _col not in listing_cols:
+            conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
 
     # ── Listing version history (audit trail for edits) ──────────
     conn.execute("""CREATE TABLE IF NOT EXISTS listing_versions (
@@ -448,6 +466,9 @@ class Listing(BaseModel):
     service_class: Optional[str] = None   # 'Technical' | 'Casuals'
     service_type: Optional[str] = None
     availability: Optional[str] = None
+    # Trust
+    trust_score: Optional[int] = None
+    seller_email: Optional[str] = None
 
 class User(BaseModel):
     email: str
@@ -464,6 +485,9 @@ class ListingUpdate(BaseModel):
     beds: Optional[int] = None
     baths: Optional[int] = None
     garages: Optional[int] = None
+    floor_area: Optional[int] = None
+    erf_size: Optional[int] = None
+    listing_type: Optional[str] = None
     subject: Optional[str] = None
     level: Optional[str] = None
     mode: Optional[str] = None
@@ -514,11 +538,16 @@ def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class)
-           VALUES (?,?,?,?,?,?,?,?,?,?)""",
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url,
+            service_class, prop_type, beds, baths, garages,
+            subject, level, mode, service_type, availability,
+            trust_score, seller_email)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
-         listing.service_class)
+         listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
+         listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
+         listing.trust_score, listing.seller_email)
     )
     conn.commit()
     new_id = cursor.lastrowid

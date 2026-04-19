@@ -37,14 +37,21 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 
+## Local environment
+- **David's working directory:** `C:\Users\David\Projects\MarketSquare` — always cd here before any scp/git command
+- **PowerShell rules:** never use `&&` in SSH commands — chain with `;` or split into separate commands. Never pass Python inline via SSH — always write a .py file, scp it, then run it.
+- Git remote: github.com/dmcontiki2/marketsquare
+
 ## Server deployment
 - Server: Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04
 - Nginx serves from: /var/www/marketsquare/
+- **Always cd to working directory first:** `cd C:\Users\David\Projects\MarketSquare`
 - Deploy buyer app: `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`
 - Deploy admin tool: `scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html`
 - Deploy BEA: `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py`
 - Restart BEA: `ssh root@178.104.73.239 "systemctl restart marketsquare"`
 - Reload nginx after config changes: `nginx -s reload`
+- CityLauncher: /var/www/citylauncher/ · port 8001 · citylauncher.service · nginx /launch/ + /launch-api/
 
 ## Key technical notes
 - Cost model lives in project root as .xlsx — Claude Code cannot edit it directly
