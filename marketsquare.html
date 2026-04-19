@@ -4867,7 +4867,7 @@ function renderMap(){
   listings.forEach(l=>{
     const latlng=[l.suburb_lat,l.suburb_lng];
     bounds.push(latlng);
-    const cat=CATS[l.cat]||{icon:'📍'};
+    const cat=catCfg(l)||{icon:'📍'};
     const dist=buyerLat!=null?` · ${_haversineKm(buyerLat,buyerLng,l.suburb_lat,l.suburb_lng).toFixed(1)}km`:'';
     const marker=L.marker(latlng).bindPopup(
       `<div style="min-width:160px;">
@@ -5033,14 +5033,14 @@ function renderGrid(){
 function cardHtml(l){
   const isPlaceholder = String(l.id).startsWith('ph_');
   const sv=wishlist.has(l.id);
-  const m=CATS[l.cat].model;
+  const m=catCfg(l).model;
 
   // Placeholder card — visually distinct, non-clickable
   if(isPlaceholder){
     return`<div class="lcard" style="opacity:.55;pointer-events:none;border:2px dashed var(--border);">
-    <div class="ibox" style="background:${CATS[l.cat].bg};display:flex;align-items:center;justify-content:center;">
+    <div class="ibox" style="background:${catCfg(l).bg};display:flex;align-items:center;justify-content:center;">
       <div style="text-align:center;padding:16px;">
-        <div style="font-size:28px;margin-bottom:6px;">${CATS[l.cat].icon}</div>
+        <div style="font-size:28px;margin-bottom:6px;">${catCfg(l).icon}</div>
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Coming soon</div>
       </div>
     </div>
@@ -5053,7 +5053,7 @@ function cardHtml(l){
   </div>`;
   }
 
-  const _catCfg=CATS[l.cat]||{};
+  const _catCfg=catCfg(l)||{};
   const _fallbackPhoto=_catCfg.catPhoto;
   const _fallbackDiv=`<div class="emoji-fallback" style="background:${_catCfg.bg}">${_catCfg.icon}</div>`;
   const imgHtml=l.photo
@@ -5062,7 +5062,7 @@ function cardHtml(l){
         ?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`
         :_fallbackDiv);
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
-    <div class="ibox" style="background:${CATS[l.cat].bg}">
+    <div class="ibox" style="background:${catCfg(l).bg}">
       ${imgHtml}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
@@ -5094,14 +5094,14 @@ function renderFeatured(){
     return;
   }
   document.getElementById('home-featured').innerHTML=featured.map(l=>{
-    const _fCfg=CATS[l.cat]||{};
+    const _fCfg=catCfg(l)||{};
     const imgHtml=l.photo
       ?`<img src="${l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'">`
       :(_fCfg.catPhoto
           ?`<img src="${_fCfg.catPhoto}" alt="${l.cat}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;\'>${_fCfg.icon}</div>')">`
           :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${_fCfg.icon}</div>`);
     return`<div class="hcard" onclick="openDetail('${l.id}')">
-      <div style="height:80px;overflow:hidden;background:${CATS[l.cat].bg};">${imgHtml}</div>
+      <div style="height:80px;overflow:hidden;background:${catCfg(l).bg};">${imgHtml}</div>
       <div class="cbody" style="padding:9px 11px 12px;">
         <div class="ccat">${l.cat}</div><div class="ctitle">${l.title}</div>
         <div class="cloc">📍 ${l.area}</div>
@@ -5174,8 +5174,8 @@ function openBEASellerProfile(l) {
   const t = trustTier(l.trust);
   const active = document.querySelector('.screen.active');
   prevScreen = active ? active.id.replace('screen-', '') : 'browse';
-  const catBg   = CATS[l.cat] ? CATS[l.cat].bg : 'var(--navy)';
-  const catIcon = CATS[l.cat] ? CATS[l.cat].icon : '📦';
+  const catBg   = catCfg(l) ? catCfg(l).bg : 'var(--navy)';
+  const catIcon = catCfg(l) ? catCfg(l).icon : '📦';
   const scBadge = l.service_class ? `<span style="font-size:11px;background:rgba(255,255,255,.12);border-radius:50px;padding:3px 9px;">${l.service_class === 'Technical' ? '🔧 Technical' : '🤝 Casuals'}</span> · ` : '';
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
@@ -5262,11 +5262,19 @@ function openSellerCV(sellerIdx,listingId){
 // Safe listing lookup — works for both numeric ids (demo data) and 'bea_N' string ids (live data)
 function findListing(id){ return LISTINGS.find(l=>l.id==id)||LISTINGS.find(l=>String(l.id)===String(id)); }
 
+// Safe CATS lookup — maps Adventures subcategories to the 'Adventures' entry
+function catCfg(l){
+  const key = l.cat;
+  if(CATS[key]) return CATS[key];
+  if(key==='adventures_accommodation'||key==='adventures_experiences') return CATS['Adventures'];
+  return { icon:'📦', bg:'var(--navy)', model:'queue' };
+}
+
 function openDetail(id){
   const l=findListing(id);
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
-  const t=trustTier(l.trust),m=CATS[l.cat].model,isCommit=m==='commit';
+  const t=trustTier(l.trust),m=catCfg(l).model,isCommit=m==='commit';
   const _introKey = `${l.sellerIdx==null?0:l.sellerIdx}-${l.id}`;
   const _introAccepted = acceptedIntros.has(_introKey);
 
@@ -5276,9 +5284,9 @@ function openDetail(id){
     ? photos.map(url =>
         `<div class="photo-strip-slide">
           <img src="${url}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="emoji-fallback" style="display:none;background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div>
+          <div class="emoji-fallback" style="display:none;background:${catCfg(l).bg}">${catCfg(l).icon}</div>
         </div>`).join('')
-    : `<div class="photo-strip-slide"><div class="emoji-fallback" style="background:${CATS[l.cat].bg}">${CATS[l.cat].icon}</div></div>`;
+    : `<div class="photo-strip-slide"><div class="emoji-fallback" style="background:${catCfg(l).bg}">${catCfg(l).icon}</div></div>`;
   const dotsHtml = photos.length > 1
     ? `<div class="photo-strip-dots">${photos.map((_,i)=>`<div class="psd${i===0?' active':''}" id="psd-${id}-${i}"></div>`).join('')}</div>`
     : '';
@@ -5318,16 +5326,27 @@ function openDetail(id){
       </div>
     </div>
     ${l.queueCount>0?`<div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px;border:1.5px solid #c4b5fd;"><div style="font-size:24px;font-weight:700;color:var(--purple);font-family:'Inter',sans-serif;">${l.queueCount}</div><div><div style="font-size:13px;font-weight:600;color:var(--navy);">${l.queueCount} buyer${l.queueCount>1?'s':''} currently in queue</div><div style="font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px;">Seller responds to all requests within 48hrs</div></div></div>`:''}`;
+  // Adventures category display label + price formatting
+  const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences';
+  const catDisplayLabel = l.cat==='adventures_accommodation' ? '🏕 Accommodation'
+    : l.cat==='adventures_experiences' ? '🌄 Experiences'
+    : l.cat;
+  const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
+  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
+  const advPriceDisplay = isAdv && l.price
+    ? `${advCur}${Number(l.price).toLocaleString()}`
+    : null;
+
   document.getElementById('screen-detail').innerHTML=`
     ${heroHtml}
     <div class="dsheet">
       <div class="dcat-row">
-        <span class="dcat">${l.cat}</span>
+        <span class="dcat">${catDisplayLabel}</span>
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}
       </div>
       <div class="dtitle">${l.title}</div>
-      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}</div></div>
+      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||''} ${l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
       <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
         <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
@@ -5335,9 +5354,19 @@ function openDetail(id){
       <div class="price-block">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
-          ${l.price?`<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`:`<div class="pneg">Negotiable — discuss with seller</div>`}
+          ${isAdv && advPriceDisplay
+            ? `<div class="pamount">${advPriceDisplay}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`
+            : l.price
+              ? `<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`
+              : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
+      ${isAdv && (l.groupSize||l.duration) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        ${l.groupSize ? `<span style="background:#f0fdf4;color:#065f46;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">👥 ${l.groupSize}</span>` : ''}
+        ${l.duration  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">⏱ ${l.duration}</span>` : ''}
+        ${advEnvLabel ? `<span style="background:#ecfdf5;color:#064e3b;border:1px solid #a7f3d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">${advEnvLabel}</span>` : ''}
+      </div>` : ''}
       ${l.cat==='Tutors' && (l.subject||l.level||l.mode) ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         ${l.subject ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📚 ${l.subject}</span>` : ''}
@@ -5363,7 +5392,7 @@ function openDetail(id){
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
         <button onclick="openSellerCV(${l.sellerIdx},'${id}')" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">
-          <div style="width:40px;height:40px;border-radius:50%;background:${CATS[l.cat].bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${CATS[l.cat].icon}</div>
+          <div style="width:40px;height:40px;border-radius:50%;background:${catCfg(l).bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${catCfg(l).icon}</div>
           <div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
@@ -5407,7 +5436,7 @@ function openDetail(id){
 
 function openModal(id){
   pendingIntroId=id;
-  const l=findListing(id),isCommit=CATS[l.cat].model==='commit';
+  const l=findListing(id),isCommit=catCfg(l).model==='commit';
   document.getElementById('modal-title').textContent=isCommit?'Request Introduction':'Join Queue';
   document.getElementById('modal-desc').textContent=`${l.title} · ${l.area}`;
   document.getElementById('modal-notice-commit').style.display=isCommit?'flex':'none';
@@ -5428,7 +5457,7 @@ function submitIntro(){
   document.getElementById('m-email').value='';
   document.getElementById('m-msg').value='';
   if(pendingIntroId!==null){
-    const l=findListing(pendingIntroId),isCommit=CATS[l.cat].model==='commit';
+    const l=findListing(pendingIntroId),isCommit=catCfg(l).model==='commit';
     if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
     addTx(isCommit?'Introduction request sent':'Joined seller queue',l.title,'pending',false);
     showToast(isCommit?'✓ Request sent · listing paused':'✓ Joined queue · waiting for seller');

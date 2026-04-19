@@ -2,6 +2,20 @@
 
 ---
 
+## Session 22e · 19 April 2026 · Fix Adventures detail view — CATS lookup crash + rich detail fields
+
+**Root cause** — `openDetail()` called `CATS[l.cat]` with `l.cat = 'adventures_accommodation'` or `'adventures_experiences'`, neither of which exists in the `CATS` object (which only has `'Adventures'`), causing an immediate crash.
+
+**Fix:**
+- Added `catCfg(l)` helper that maps Adventures subcategories to `CATS['Adventures']` with a safe fallback
+- Replaced all 21 `CATS[l.cat]` usages in `openDetail`, `cardHtml`, `renderFeatured`, and related functions with `catCfg(l)`
+- Adventures detail screen now shows correct category display label (🏕 Accommodation / 🌄 Experiences)
+- Location meta now includes country flag + code and environment label
+- Price shown with correct per-country currency symbol (R / $ / CA$ / £ / € / A$ / NZ$)
+- Adventure-specific detail chips: group size, duration, environment type
+
+---
+
 ## Session 22d · 19 April 2026 · Fix Adventures browse screen — cards not rendering
 
 **Root cause found and fixed** — `renderAdvGrid()` called `esc()` (an HTML-escape helper) which was never defined anywhere in the codebase. When the function ran, it filtered listings and set the count text successfully, then crashed with `ReferenceError: esc is not defined` before it could set `grid.innerHTML` — leaving the grid visually empty despite the correct listing count appearing above it.
