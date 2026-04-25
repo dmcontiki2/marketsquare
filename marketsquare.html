@@ -1983,6 +1983,30 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .strip-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.85);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.18);font-size:20px;color:var(--navy);line-height:1;padding:0;}
 .strip-arrow-left{left:10px;}
 .strip-arrow-right{right:10px;}
+/* ── FEATURED CAROUSEL desktop scroll arrows ── */
+.featured-wrap{position:relative;}
+.feat-scroll-btn{display:none;position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);cursor:pointer;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:20px;color:var(--navy);align-items:center;justify-content:center;padding:0;transition:all var(--t);}
+.feat-scroll-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.feat-scroll-btn-left{left:-18px;}
+.feat-scroll-btn-right{right:-18px;}
+@media(pointer:fine){.feat-scroll-btn{display:flex;}}
+/* ── PHOTO LIGHTBOX ── */
+#photo-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:1000;align-items:center;justify-content:center;flex-direction:column;}
+#photo-lightbox.open{display:flex;}
+#photo-lightbox img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:4px;user-select:none;pointer-events:none;}
+.plb-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;}
+.plb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.plb-arrow-left{left:12px;}
+.plb-arrow-right{right:12px;}
+.plb-counter{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600;font-family:'Inter',sans-serif;}
+/* ── BACK BUTTON in page-hdr ── */
+.page-hdr{display:flex;align-items:center;gap:12px;}
+.page-hdr h1{flex:1;}
+.page-hdr .back-btn{flex-shrink:0;}
+/* rec-hdr back button */
+.rec-hdr{display:flex;flex-direction:column;position:relative;}
+.rec-hdr .back-btn{position:absolute;top:16px;left:20px;border-color:rgba(255,255,255,.25);}
+.rec-hdr .back-btn svg{stroke:#fff;}
 
 /* ── RESPONSIVE: TABLET / LAPTOP ───────────────────────────── */
 @media (min-width: 768px) {
@@ -2173,12 +2197,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" alt="Cars" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
-  <div class="hscroll" id="home-featured"></div>
+  <div class="featured-wrap">
+    <button class="feat-scroll-btn feat-scroll-btn-left" onclick="featScroll(-1)" aria-label="Scroll left">&#8249;</button>
+    <div class="hscroll" id="home-featured"></div>
+    <button class="feat-scroll-btn feat-scroll-btn-right" onclick="featScroll(1)" aria-label="Scroll right">&#8250;</button>
+  </div>
 </div>
 
 <!-- BROWSE -->
 <div id="screen-browse" class="screen">
   <div class="page-hdr">
+    <button class="back-btn" onclick="goTo('home')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1>Browse</h1>
     <div class="sub" id="browse-sub">All categories · Pretoria</div>
   </div>
@@ -2687,13 +2716,14 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
 <!-- SAVED -->
 <div id="screen-saved" class="screen">
-  <div class="page-hdr"><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
+  <div class="page-hdr"><button class="back-btn" onclick="goTo('browse')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
   <div id="saved-content"></div>
 </div>
 
 <!-- TUPPENCE -->
 <div id="screen-tuppence" class="screen">
-  <div class="tn-header">
+  <div class="tn-header" style="position:relative;">
+    <button class="back-btn" onclick="goTo('home')" aria-label="Back" style="position:absolute;top:16px;left:20px;border-color:rgba(255,255,255,.25);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1>Tuppence Wallet</h1>
     <p>Your introduction &amp; AI guidance currency</p>
     <!-- Split balance: Introductions vs AI Guidance -->
@@ -3244,6 +3274,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <!-- Tabs -->
   <div class="dash-tab-row">
     <div class="dash-tab active" id="dtab-listings" onclick="switchDashTab('listings')">My Listings</div>
+    <div class="dash-tab" id="dtab-requests" onclick="switchDashTab('requests')">My Requests</div>
     <div class="dash-tab" id="dtab-profile" onclick="switchDashTab('profile')">My Profile</div>
   </div>
 
@@ -3253,6 +3284,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <button onclick="goTo('aa-home')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">✨ List with AI Coach</button>
     <button onclick="goTo('publish')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--border);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">+ Quick Add Listing</button>
     <button onclick="goTo('plans')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">View Plans &amp; Upgrade</button>
+  </div>
+
+  <!-- Requests tab -->
+  <div id="dash-panel-requests" class="dash-sec" style="display:none;">
+    <div id="dash-requests-content" style="margin-top:4px;"></div>
   </div>
 
   <!-- Profile tab -->
@@ -3304,7 +3340,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
 <!-- RECRUIT -->
 <div id="screen-recruit" class="screen">
-  <div class="rec-hdr"><h1>City Deployment</h1><p>Seller recruitment · Pretoria → New York → London → Berlin</p></div>
+  <div class="rec-hdr">
+    <button class="back-btn" onclick="goTo('home')" aria-label="Back" style="position:absolute;top:16px;left:20px;border-color:rgba(255,255,255,.25);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>City Deployment</h1><p>Seller recruitment · Pretoria → New York → London → Berlin</p></div>
   <div class="rec-body" id="rec-body"></div>
 </div>
 
@@ -3600,6 +3638,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── PHOTO LIGHTBOX OVERLAY ── -->
+<div id="photo-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" onclick="closeLightbox(event)">
+  <button class="plb-close" onclick="closeLightbox()" aria-label="Close">&#10005;</button>
+  <button class="plb-arrow plb-arrow-left" onclick="event.stopPropagation();lightboxNav(-1)" aria-label="Previous photo">&#8249;</button>
+  <img id="plb-img" src="" alt="Listing photo">
+  <button class="plb-arrow plb-arrow-right" onclick="event.stopPropagation();lightboxNav(1)" aria-label="Next photo">&#8250;</button>
+  <div class="plb-counter" id="plb-counter"></div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
@@ -5017,6 +5064,12 @@ function renderGrid(){
       return dA-dB;
     });
   }
+  // Placeholders always go last — push "Coming soon" cards to the end
+  filtered.sort((a,b)=>{
+    const aph=String(a.id).startsWith('ph_')?1:0;
+    const bph=String(b.id).startsWith('ph_')?1:0;
+    return aph-bph;
+  });
 
   const grid = document.getElementById('listing-grid');
   const countEl = document.getElementById('results-count');
@@ -5232,6 +5285,7 @@ function openSellerCV(sellerIdx,listingId){
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:8px;line-height:1.5;font-weight:400;">Score is built from: verified credentials · completed introductions · response rate · buyer ratings · years active. Verified by MarketSquare — not self-reported.</div>
     </div>
     <div class="cv-body">
       <div class="cv-sec">
@@ -5243,7 +5297,10 @@ function openSellerCV(sellerIdx,listingId){
       <div class="cv-sec">
         <div class="cv-sec-title">Credentials &amp; qualifications</div>
         <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Certificate photos are blurred — revealed only after introduction is accepted.</div>
-        <div class="cv-creds">${s.creds&&s.creds.length?s.creds.map(c=>`<div class="cv-cred"><div class="cv-cred-dot">${c.icon}</div><div style="flex:1;"><div class="cv-cred-label">${c.label}</div><div class="cv-cred-sub">${c.sub}</div>${credPhotoHtml(c,introAccepted)}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text-3);">No credentials added yet.</div>'}</div>
+        <div class="cv-creds">${s.creds&&s.creds.length?s.creds.map(c=>{
+          if(typeof c==='string'){return`<div class="cv-cred"><div class="cv-cred-dot" style="font-size:18px;line-height:1;">·</div><div style="flex:1;"><div class="cv-cred-label">${c}</div></div></div>`;}
+          return`<div class="cv-cred"><div class="cv-cred-dot">${c.icon||'·'}</div><div style="flex:1;"><div class="cv-cred-label">${c.label||''}</div>${c.sub?`<div class="cv-cred-sub">${c.sub}</div>`:''} ${credPhotoHtml(c,introAccepted)}</div></div>`;
+        }).join(''):'<div style="font-size:12px;color:var(--text-3);">No credentials added yet.</div>'}</div>
       </div>
       ${s.tags&&s.tags.length?`<div class="cv-sec"><div class="cv-sec-title">Specialisations</div><div class="cv-tags">${s.tags.map(tag=>`<div class="cv-tag">${tag}</div>`).join('')}</div></div>`:''}
       ${s.avail&&s.avail.length?`<div class="cv-sec"><div class="cv-sec-title">Availability</div><div class="cv-avail">${s.avail.map(a=>`<div class="cv-avail-row"><div class="cv-avail-dot"></div><div class="cv-avail-day">${a.day}</div><div class="cv-avail-time">${a.time}</div></div>`).join('')}</div></div>`:''}
@@ -5280,11 +5337,13 @@ function openDetail(id){
 
   // Build photo strip — supports 1..N photos with dot indicators
   const photos = (l.photos && l.photos.length) ? l.photos : (l.photo ? [l.photo] : []);
+  // Store photos globally keyed by listing id so lightbox onclick avoids JSON-in-attribute issues
+  _listingPhotosCache[id] = photos;
   const stripSlides = photos.length
-    ? photos.map(url =>
-        `<div class="photo-strip-slide">
-          <img src="${url}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="emoji-fallback" style="display:none;background:${catCfg(l).bg}">${catCfg(l).icon}</div>
+    ? photos.map((url,pi) =>
+        `<div class="photo-strip-slide" style="cursor:zoom-in;" onclick="openLightboxById('${id}',${pi})">
+          <img src="${url}" alt="${l.title}" loading="lazy" style="pointer-events:none;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="emoji-fallback" style="display:none;background:${catCfg(l).bg};pointer-events:none;">${catCfg(l).icon}</div>
         </div>`).join('')
     : `<div class="photo-strip-slide"><div class="emoji-fallback" style="background:${catCfg(l).bg}">${catCfg(l).icon}</div></div>`;
   const dotsHtml = photos.length > 1
@@ -5530,11 +5589,12 @@ function submitOnboard(){
 
 // ── DASHBOARD TABS ────────────────────────────────────────
 function switchDashTab(tab){
-  ['listings','profile'].forEach(t=>{
+  ['listings','requests','profile'].forEach(t=>{
     document.getElementById('dtab-'+t).classList.toggle('active', t===tab);
     document.getElementById('dash-panel-'+t).style.display = t===tab ? 'block' : 'none';
   });
   if(tab==='profile') renderProfilePreview();
+  if(tab==='requests') renderMyRequests();
 }
 
 function renderProfilePreview(){
@@ -6503,6 +6563,84 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── FEATURED CAROUSEL desktop scroll ─────────────────────────
+function featScroll(dir){
+  const el=document.getElementById('home-featured');
+  if(!el)return;
+  const card=el.querySelector('.hcard');
+  const step=card?(card.offsetWidth+8)*2:240;
+  el.scrollBy({left:dir*step,behavior:'smooth'});
+}
+
+// ── PHOTO LIGHTBOX ────────────────────────────────────────────
+let _lbPhotos=[], _lbIdx=0, _listingPhotosCache={};
+function openLightboxById(listingId, idx){
+  const photos=_listingPhotosCache[listingId]||[];
+  if(!photos.length)return;
+  openLightbox(photos, idx);
+}
+function openLightbox(photos, idx){
+  _lbPhotos=photos; _lbIdx=idx||0;
+  _renderLightbox();
+  const lb=document.getElementById('photo-lightbox');
+  lb.classList.add('open');
+  document.addEventListener('keydown',_lbKeyHandler);
+}
+function _renderLightbox(){
+  document.getElementById('plb-img').src=_lbPhotos[_lbIdx];
+  const ctr=document.getElementById('plb-counter');
+  ctr.textContent=_lbPhotos.length>1?`${_lbIdx+1} / ${_lbPhotos.length}`:'';
+  // hide arrows if only 1 photo
+  document.querySelector('.plb-arrow-left').style.display=_lbPhotos.length>1?'':'none';
+  document.querySelector('.plb-arrow-right').style.display=_lbPhotos.length>1?'':'none';
+}
+function lightboxNav(dir){
+  _lbIdx=(_lbIdx+dir+_lbPhotos.length)%_lbPhotos.length;
+  _renderLightbox();
+}
+function closeLightbox(e){
+  // Allow close from: backdrop click, close button, or called directly (no event)
+  if(e&&e.target&&e.target.closest&&e.target.closest('.plb-arrow'))return;
+  document.getElementById('photo-lightbox').classList.remove('open');
+  document.getElementById('plb-img').src='';
+  document.removeEventListener('keydown',_lbKeyHandler);
+}
+function _lbKeyHandler(e){
+  if(e.key==='Escape')closeLightbox({target:document.getElementById('photo-lightbox')});
+  if(e.key==='ArrowRight')lightboxNav(1);
+  if(e.key==='ArrowLeft')lightboxNav(-1);
+}
+
+// ── MY REQUESTS (dashboard tab) ──────────────────────────────
+function renderMyRequests(){
+  const el=document.getElementById('dash-requests-content');
+  if(!el)return;
+  // Gather listings the user has interacted with: wishlist + accepted intros
+  const interacted=[...wishlist].map(id=>findListing(id)).filter(Boolean);
+  // Also add any intro-accepted listings not already in wishlist
+  [...acceptedIntros].forEach(key=>{
+    const id=key.split('-').slice(1).join('-');
+    const l=findListing(id);
+    if(l&&!wishlist.has(id))interacted.push(l);
+  });
+  if(!interacted.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>No requests yet</h3><p>When you save a listing or send an introduction request, it will appear here.</p></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="lgrid">${interacted.map(l=>{
+    const hasIntro=([...acceptedIntros]).some(k=>k.endsWith('-'+l.id));
+    const badge=hasIntro?'<span style="font-size:10px;font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 6px;margin-left:6px;">Intro sent</span>':'<span style="font-size:10px;font-weight:700;color:var(--text-3);background:var(--surface-2);border-radius:4px;padding:2px 6px;margin-left:6px;">Saved</span>';
+    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;" onclick="openDetail('${l.id}')">
+      <div style="height:90px;background:${catCfg(l).bg};overflow:hidden;">${l.photo?`<img src="${l.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${catCfg(l).icon}</div>`}</div>
+      <div style="padding:10px 12px 12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">${l.cat}${badge}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px;line-height:1.3;">${l.title}</div>
+        <div style="font-size:12px;color:var(--text-3);">📍 ${l.area}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 // ── ADVERT AGENT ─────────────────────────────────────────────
@@ -7889,40 +8027,4 @@ async function aaLoadWalletSessions() {
     const sessions = data.aa_sessions_remaining || 0;
     if (free) {
       el.textContent = '1';
-      el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
-        '1 free coaching session included · packs do not expire';
-    } else {
-      el.textContent = sessions;
-    }
-  } catch (e) {
-    el.textContent = '—';
-  }
-}
-
-function aaBuyPackFromWallet() {
-  showToast('Tuppence pack purchase — coming soon');
-}
-
-async function aaSavePhotosAndNext() {
-  const draft = await aaDB.get(aaDraftId);
-  if (!draft) return;
-  const cfg      = aaCatConfig(draft);
-  const captured = new Set((draft.photos || []).map(p => p.slot));
-  const missing  = (cfg?.photos || []).filter(p => p.required && !captured.has(p.slot));
-  if (missing.length) {
-    showToast(`Still need: ${missing.map(m=>m.label).join(', ')}`);
-    return;
-  }
-  const updated = { ...draft, stage: Math.max(draft.stage || 2, 3), updated_at: Date.now() };
-  await aaDB.put(updated);
-  aaRenderPublishScreen();
-  goTo('aa-publish');
-}
-
-</script>
-<!-- ════════════════════════════════════════════════════════════
-     ■ END LOGIC
-     ════════════════════════════════════════════════════════════ -->
-
-</body>
-</html>
+      el.closest('div').querySelector('div[style*="font-si

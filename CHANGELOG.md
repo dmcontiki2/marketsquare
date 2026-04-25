@@ -2,6 +2,16 @@
 
 ---
 
+## Session 23 · 25 April 2026 · UX feedback round + cost model + whitepaper + launch campaign
+
+**Cost model:** ZAR/USD rate added (Assumptions B62 = R18.50). Three new overhead rows: Accountant R2,000/mo, software R500/mo, SA corporate tax 27% (Year 1 = $0). Revenue vs Cost rows 21–25 number format fixed (was showing $ on unit counts).
+
+**FEA:** Desktop Featured carousel scroll arrows (pointer:fine only). Photo lightbox — tap photo to full-screen, arrows + keyboard + Escape to close. My Requests dashboard tab added. Back buttons on Browse, Saved, Wallet, Recruit screens. Coming soon cards now always sort last in grid. Credentials renderer fixed (string vs object — was showing "undefined"). Trust Score composition note added to seller CV hero. Browse back button added. Deployed to Hetzner.
+
+**WhitePaper v3:** Full IP hardening — 7 patent claims (Unified Participation Model, Tuppence currency, anonymous intro protocol, Trust Score, geo-tier visibility, founding cohort, combination claim). Added database schema specificity, dual-entity structure (SA + international IP-holding entity), infrastructure redundancy roadmap, security architecture, trademark filing guide (CIPRO Classes 35/36/42 + Madrid Protocol), 5 independent timestamp authorities, provisional patent filing instructions. Saved as `TrustSquare_WhitePaper_v3.docx`.
+
+**Launch campaign:** 5-wave email sequence written for Pretoria property agents, Keller Williams RSA, and global agents. Wave 1 (launch 9 AM) · Wave 2 (+2h, scarcity) · Wave 3 (+4h, objections) · Wave 4 (Day 2, personal founder note) · Wave 5 (Day 5, final close). Full sending guidelines, UTM tracking, suppression logic, and post-wave-5 nurture plan included. Saved as `TrustSquare_LaunchEmails_5Wave.docx`.
+
 ## Session 22e · 19 April 2026 · Fix Adventures detail view — CATS lookup crash + rich detail fields
 
 **Root cause** — `openDetail()` called `CATS[l.cat]` with `l.cat = 'adventures_accommodation'` or `'adventures_experiences'`, neither of which exists in the `CATS` object (which only has `'Adventures'`), causing an immediate crash.
@@ -672,23 +682,4 @@ Replaced the "Add a new city" form in the admin Cities tab with a search input t
 
 Added `("trust_score", "INTEGER")` to the `run_migrations()` migration loop (already present alongside `seller_email` from session prep). `Listing` Pydantic model gains `trust_score: Optional[int]` and `seller_email: Optional[str]`. `create_listing` POST endpoint INSERT updated to save all structured fields: `prop_type`, `beds`, `baths`, `garages`, `subject`, `level`, `mode`, `service_type`, `availability`, `trust_score`, `seller_email`. Previously only 10 base columns were saved; now 21.
 
-`loadLiveListings()` in `marketsquare.html` uses `l.trust_score || 40` instead of the hardcoded value `40`, so trust badges now reflect real DB data.
-
-### Demo seed data
-
-`seed_demo_data.py` creates 20 demo listings under `dmcontiki2@gmail.com` (all editable via the seller edit flow):
-- 10 Tutors: Maths/Physics (88), Piano (84), Stats/Data Science (92), Coding/Robotics (79), English/Afrikaans (76), Accounting (72), Life Sciences (61), Primary (67), Zulu/Sesotho (55), Chess (48)
-- 10 Services: Plumber (90), Electrician (87), Web Design (85), Bookkeeping/Tax (83), Personal Trainer (78), Photography (74), Graphic Design (69), House Cleaning (63), Garden (58), Car Valeting (52)
-
-Each listing has Unsplash royalty-free photos, full structured fields, and mock certificate text in the description. Trust scores vary 48–92 to demonstrate all four trust tiers.
-
-### Category shopfront photos (marketsquare.html)
-
-Category tiles on the home screen now show representative full-cover Unsplash photos instead of emoji on a gradient:
-- **Property** — `photo-1570129477492-45c003edd2be` (warm suburban house at golden hour)
-- **Tutors** — `photo-1580582932707-520aed937b7b` (teacher working with student)
-- **Services** — `photo-1621905251918-48416bd8575a` (skilled professional at work)
-
-Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
-
-**Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`
+`loadLiveListings()` in `marketsquare.html` uses `l.trust_score || 40` 
