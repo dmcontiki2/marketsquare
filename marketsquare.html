@@ -2262,7 +2262,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">🏡 Property Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Price Range</div>
@@ -2399,7 +2399,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">🎓 Tutor Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Max Rate (per hour)</div>
@@ -2464,7 +2464,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">⚙️ Services Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Class</div>
@@ -2536,7 +2536,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">🌿 Adventures Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Adventure Type</div>
@@ -2600,7 +2600,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">🏺 Collectors Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Collectible Type</div>
@@ -2659,7 +2659,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="filter-sheet">
     <div class="fs-handle"></div>
     <div class="fs-title">🚗 Cars Filters</div>
-    <div class="fs-sub">Pretoria · narrow your search</div>
+    <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
     <div class="fs-section">
       <div class="fs-label">Make</div>
@@ -3788,6 +3788,25 @@ function updateBadgeLabel() {
   badge.innerHTML =
     `<div class="badge-geo"><span class="cdot"></span>${geo.join(' · ')}</div>` +
     `<div class="badge-loc">${cityLabel}</div>`;
+  // Keep all city-bound display strings in sync with activeCity (geo bug fix).
+  _refreshCityLabels();
+}
+
+// All places in the static DOM that show the current city use class
+// `js-city-sub`. Every time activeCity changes, this rewrites them — so
+// switching from Pretoria to Johannesburg flows through the entire UI.
+function _refreshCityLabels() {
+  const cityLabel = activeCity.name || 'your city';
+  // Filter sheet subtitles
+  document.querySelectorAll('.js-city-sub').forEach(el => {
+    el.textContent = `${cityLabel} · narrow your search`;
+  });
+  // Browse subtitle — recompute so the active filter chip's label updates too
+  const sub = document.getElementById('browse-sub');
+  if (sub) {
+    const f = (typeof activeFilter !== 'undefined' && activeFilter) ? activeFilter : 'All';
+    sub.textContent = f === 'All' ? `All categories · ${cityLabel}` : `${f} · ${cityLabel}`;
+  }
 }
 
 // ── CATEGORY NORMALISER ───────────────────────────────────
@@ -3891,8 +3910,8 @@ async function loadLiveListings() {
           cat: normCat(l.category),
           feat: false,
           title: l.title,
-          area: l.area || 'Pretoria',
-          suburb: l.area || 'Pretoria',
+          area:   l.area || l.suburb || activeCity.name,
+          suburb: l.suburb || l.area || activeCity.name,
           trust: l.trust_score || 40,
           price: l.price || 'POA',
           per: '',
@@ -4150,7 +4169,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       name:   decodeURIComponent(sp.get('name')  || ''),
       email:  decodeURIComponent(sp.get('email') || ''),
       cat:    decodeURIComponent(sp.get('cat')   || ''),
-      area:   decodeURIComponent(sp.get('city')  || 'Pretoria')
+      area:   decodeURIComponent(sp.get('city')  || activeCity.name || '')
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
@@ -4416,7 +4435,8 @@ function filterBrowse(cat){
   });
   renderFilterBar(); renderGrid();
   const sub=document.getElementById('browse-sub');
-  if(sub) sub.textContent=cat==='All'?'All categories · Pretoria':`${cat} · Pretoria`;
+  const cityLabel = activeCity.name || 'your city';
+  if(sub) sub.textContent=cat==='All'?`All categories · ${cityLabel}`:`${cat} · ${cityLabel}`;
 }
 
 
@@ -4437,7 +4457,8 @@ function setFilter(el, cat){
   renderFilterBar();
   renderGrid();
   const sub = document.getElementById('browse-sub');
-  if(sub) sub.textContent = cat==='All' ? 'All categories · Pretoria' : `${cat} · Pretoria`;
+  const cityLabel = activeCity.name || 'your city';
+  if(sub) sub.textContent = cat==='All' ? `All categories · ${cityLabel}` : `${cat} · ${cityLabel}`;
 }
 
 function renderFilterBar(){
@@ -6118,14 +6139,16 @@ function doPublish(){
   document.getElementById('claim-title').textContent=`"${title}" is live on MarketSquare.`;
   showPhase('claim');
   showToast('✓ Listing published!');
-  // Post to BEA
+  // Post to BEA — city/area come from live app state (geo bug fix)
   if(BEA_ENABLED) {
     apiPost('/listings', {
       title: title,
       price: price || 'POA',
       category: pubCat || 'Services',
-      city: 'Pretoria',
-      area: 'Pretoria',
+      city:   activeCity.name,
+      area:   (activeSuburb && activeSuburb.name) || activeCity.name,
+      suburb: (activeSuburb && activeSuburb.name) || activeCity.name,
+      geo_city_id: activeCity.id || null,
       description: ''
     }).then(result => {
       if(result && result.id) {
@@ -7969,4 +7992,666 @@ const AA_FLOWS = {
     heading: 'Your property listing, AI-improved',
     steps: [
       { n:'1', col:'c-blue',  title:'Fill in property details',
-        sub:'Li
+        sub:'Listing type · property type · beds · baths · garage · suburb · price' },
+      { n:'2', col:'c-blue',  title:'Capture 6 required photos',
+        sub:'Lounge · kitchen · master bed · bathroom · front exterior · rear exterior' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Suggests headline wording · price positioning & description improvements · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
+    ],
+  },
+  'Tutors': {
+    emoji: '🎓',
+    heading: 'Your tutoring listing, AI-improved',
+    steps: [
+      { n:'1', col:'c-blue',  title:'Fill in tutor details',
+        sub:'Subject(s) · level · mode (in-person / online / both) · rate · area covered' },
+      { n:'2', col:'c-blue',  title:'Capture 2 required photos',
+        sub:'Profile headshot · teaching example (whiteboard, notes or workspace)' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks clarity · positioning vs other tutors & trust-building language · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · students can browse and request an introduction' },
+    ],
+  },
+  'Services · Technical': {
+    emoji: '🔧',
+    heading: 'Your Technical Services listing, AI-improved',
+    steps: [
+      { n:'1', col:'c-blue',  title:'Select Technical, then fill in details',
+        sub:'Service type · area covered · rate · years of experience · registered / accredited' },
+      { n:'2', col:'c-blue',  title:'Capture 2 required photos',
+        sub:'Work example 1 · work example 2 · qualification / certificate (optional)' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks credential clarity · pricing competitiveness & trust factors · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
+    ],
+  },
+  'Services · Casuals': {
+    emoji: '🤝',
+    heading: 'Your Casuals listing, AI-improved',
+    steps: [
+      { n:'1', col:'c-blue',  title:'Select Casuals, then fill in details',
+        sub:'Service type · availability · rate · days available · area · references available' },
+      { n:'2', col:'c-blue',  title:'Add optional photos',
+        sub:'Work example (optional) · reference letter (optional) — no required shots' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks approachability · reliability signals & clear description · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
+    ],
+  },
+  'Adventures': {
+    emoji: '🧭',
+    heading: 'Your adventure package listing, AI-improved',
+    phase: 2,
+    steps: [
+      { n:'1', col:'c-blue',  title:'Fill in experience details',
+        sub:'Title · destination · duration · group size · price per person · difficulty level' },
+      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
+        sub:'Hero shot (sets the scene) · experience shot 1 · experience shot 2' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks appeal · inclusions clarity · safety language & pricing · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · adventurers can browse and request an introduction' },
+    ],
+  },
+  'Collectors': {
+    emoji: '🏆',
+    heading: "Your collector's item listing, AI-improved",
+    phase: 2,
+    steps: [
+      { n:'1', col:'c-blue',  title:'Fill in item details',
+        sub:'Collection type · item name · condition · catalogue reference · edition / year · price' },
+      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
+        sub:'Front / face · back · condition close-up (corners, margins or surface detail)' },
+      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
+        sub:'Checks grading accuracy · catalogue language & provenance notes · uses 1 session' },
+      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
+        sub:'Listing goes live as a pending draft · collectors can browse and request an introduction' },
+    ],
+  },
+};
+
+let aaFlowActiveCat = 'Property';
+
+function aaShowFlowSheet(cat) {
+  aaFlowActiveCat = cat || aaFlowActiveCat;
+  // Build category chips
+  const chipRow = document.getElementById('aa-flow-cat-row');
+  if (chipRow) {
+    chipRow.innerHTML = Object.keys(AA_FLOWS).map(c =>
+      `<button class="aa-flow-cat-chip${c === aaFlowActiveCat ? ' sel' : ''}"
+               onclick="aaRenderFlow('${c}')">${AA_FLOWS[c].emoji} ${c}</button>`
+    ).join('');
+  }
+  aaRenderFlow(aaFlowActiveCat);
+  document.getElementById('aa-flow-sheet-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function aaRenderFlow(cat) {
+  aaFlowActiveCat = cat;
+  // Update chip selection
+  document.querySelectorAll('.aa-flow-cat-chip').forEach(btn => {
+    btn.classList.toggle('sel', btn.textContent.includes(cat));
+  });
+  const flow = AA_FLOWS[cat];
+  if (!flow) return;
+  const wrap = document.getElementById('aa-flow-card-wrap');
+  if (!wrap) return;
+
+  const stepsHtml = flow.steps.map((s, i) => {
+    const isLast = i === flow.steps.length - 1;
+    return `
+      <div class="aa-flow-step">
+        <div class="aa-flow-left">
+          <div class="aa-flow-circle ${s.col}">${s.n}</div>
+          ${!isLast ? '<div class="aa-flow-line"></div>' : ''}
+        </div>
+        <div class="aa-flow-content">
+          <div class="aa-flow-step-title">${s.title}</div>
+          <div class="aa-flow-step-sub">${s.sub}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="aa-flow-card">
+      <div class="aa-flow-pill">⚡ AI COACH FLOW · ${cat.toUpperCase()}</div>
+      <div class="aa-flow-heading">${flow.emoji} ${flow.heading}</div>
+      ${stepsHtml}
+    </div>`;
+}
+
+function aaCloseFlowSheet(e) {
+  if (e && e.target !== document.getElementById('aa-flow-sheet-bg')) return;
+  aaCloseFlowSheetBtn();
+}
+
+function aaCloseFlowSheetBtn() {
+  document.getElementById('aa-flow-sheet-bg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── WALLET: AI Coach Credits ──────────────────────────────────
+
+async function aaLoadWalletSessions() {
+  const el = document.getElementById('tn-coach-sessions');
+  if (!el) return;
+  // Try to get email from any draft in the DB
+  const drafts = await aaDB.getAll();
+  const email  = drafts.find(d => d.email)?.email || '';
+  if (!email) {
+    el.textContent = '—';
+    return;
+  }
+  try {
+    const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    const free    = !data.aa_free_used;
+    const sessions = data.aa_sessions_remaining || 0;
+    if (free) {
+      el.textContent = '1';
+      el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
+        '1 free coaching session included · packs do not expire';
+    } else {
+      el.textContent = sessions;
+    }
+  } catch (e) {
+    el.textContent = '—';
+  }
+}
+
+function aaBuyPackFromWallet() {
+  showToast('Tuppence pack purchase — coming soon');
+}
+
+async function aaSavePhotosAndNext() {
+  const draft = await aaDB.get(aaDraftId);
+  if (!draft) return;
+  const cfg      = aaCatConfig(draft);
+  const captured = new Set((draft.photos || []).map(p => p.slot));
+  const missing  = (cfg?.photos || []).filter(p => p.required && !captured.has(p.slot));
+  if (missing.length) {
+    showToast(`Still need: ${missing.map(m=>m.label).join(', ')}`);
+    return;
+  }
+  const updated = { ...draft, stage: Math.max(draft.stage || 2, 3), updated_at: Date.now() };
+  await aaDB.put(updated);
+  aaRenderPublishScreen();
+  goTo('aa-publish');
+}
+
+// ════════════════════════════════════════════════════════════
+// ■ WISHLIST FEED (Section 4 · v1.2.0)
+// Push-marketplace foundation. Buyer browsing builds wishlist
+// signals against an anonymous buyer_token. The bottom-half
+// scroll feed surfaces matched listings. Settings screen lets
+// the buyer manage signals, Trust Score floor, and ping toggles.
+// Anonymity: no seller identity is ever rendered.
+// ════════════════════════════════════════════════════════════
+
+const WL_TOKEN_KEY = 'ms_buyer_token';
+const WL_TRUST_KEY = 'ms_wl_trust_floor';
+const WL_PING_KEY  = 'ms_wl_push_enabled';
+const WL_DEBOUNCE_MS = 600;
+const WL_POLL_MS = 60000; // PR-31
+
+let _wlToken = null;
+let _wlPollTimer = null;
+let _wlSearchDebounce = null;
+let _wlSignalsCache = [];
+let _wlLastFeed = { tier: 'free', cards: [], upgrade_prompt: null };
+
+async function wlBootToken() {
+  let tok = localStorage.getItem(WL_TOKEN_KEY);
+  if (tok && tok.length >= 16) { _wlToken = tok; return tok; }
+  // Mint anonymous token via BEA — works without an email
+  try {
+    const r = await fetch(BEA_URL + '/buyer-token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
+    if (r.ok) {
+      const j = await r.json();
+      tok = j.buyer_token;
+      localStorage.setItem(WL_TOKEN_KEY, tok);
+      _wlToken = tok;
+      return tok;
+    }
+  } catch(e) { /* fall through to local fallback */ }
+  // Last-resort offline fallback — generate a UUID-ish token client-side
+  tok = 'wl_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+  localStorage.setItem(WL_TOKEN_KEY, tok);
+  _wlToken = tok;
+  return tok;
+}
+
+async function wlSendSignal(payload) {
+  if (!_wlToken) await wlBootToken();
+  payload.buyer_token = _wlToken;
+  // Attach geo context if available
+  if (!payload.country_iso2) payload.country_iso2 = (activeCountry && activeCountry.iso2) || 'ZA';
+  if (!payload.city_id && activeCity && activeCity.id) payload.city_id = activeCity.id;
+  if (!payload.suburb_id && activeSuburb && activeSuburb.id) payload.suburb_id = activeSuburb.id;
+  // Attach the buyer's current Trust Score floor as the per-signal min_trust_score
+  const floor = parseInt(localStorage.getItem(WL_TRUST_KEY) || '0', 10) || 0;
+  if (payload.min_trust_score == null) payload.min_trust_score = floor;
+  try {
+    await fetch(BEA_URL + '/wishlist/signal', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { /* silent — signal capture must never throw user-visible errors */ }
+}
+
+// ── Signal capture hooks (called from existing UI handlers) ──
+function wlCaptureCategory(cat) {
+  if (!cat || cat === 'All') return;
+  wlSendSignal({ signal_type: 'browse_search', raw_text: cat, category: cat });
+}
+function wlCaptureView(listing) {
+  if (!listing) return;
+  const cat = listing.cat || listing.category;
+  const txt = (listing.title || '') + ' ' + (listing.description || listing.desc || '');
+  wlSendSignal({ signal_type: 'browse_view', raw_text: txt.slice(0, 240), category: cat });
+  // Bump server-side view counter for the demand signal on cards
+  if (listing.id != null) {
+    fetch(BEA_URL + '/listings/' + encodeURIComponent(listing.id) + '/view', { method:'POST' }).catch(()=>{});
+  }
+}
+function wlCaptureSearch(query, cat) {
+  if (!query || query.length < 2) return;
+  if (_wlSearchDebounce) clearTimeout(_wlSearchDebounce);
+  _wlSearchDebounce = setTimeout(() => {
+    wlSendSignal({ signal_type: 'browse_search', raw_text: query.slice(0, 240), category: cat || null });
+  }, WL_DEBOUNCE_MS);
+}
+
+// ── Feed rendering ───────────────────────────────────────────
+function _wlTrustBadge(score) {
+  const s = parseInt(score || 0, 10);
+  if (s >= 90) return '<div class="wf-card-trust wf-trust-gold">★★★ ' + s + '</div>';
+  if (s >= 70) return '<div class="wf-card-trust wf-trust-green">'  + s + '</div>';
+  if (s >= 40) return '<div class="wf-card-trust wf-trust-blue">'   + s + '</div>';
+  return '<div class="wf-card-trust wf-trust-grey">' + s + '</div>';
+}
+
+function _wlEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function _wlRenderCards(cards, isShowcase) {
+  if (!cards || !cards.length) {
+    return '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">No matches yet — keep browsing.</div>';
+  }
+  return cards.map(c => {
+    const img = c.thumb_url
+      ? '<img src="' + _wlEsc(c.thumb_url) + '" class="wf-card-img" loading="lazy" onerror="this.style.display=\'none\'">'
+      : '<div class="wf-card-img"></div>';
+    const featBadge = c.is_featured ? '<div class="wf-card-feat">FEATURED</div>' : '';
+    const trustBadge = _wlTrustBadge(c.trust_score);
+    const meta = [];
+    if (c.suburb) meta.push(_wlEsc(c.suburb));
+    else if (c.city) meta.push(_wlEsc(c.city));
+    if (c.age_label) meta.push(_wlEsc(c.age_label));
+    if (typeof c.view_count === 'number' && c.view_count > 0) meta.push((c.view_count) + ' views');
+    const onClick = isShowcase
+      ? "wfShowcaseTap('" + c.listing_id + "')"
+      : "wfFeedTap(" + (c.match_id || 0) + ", '" + c.listing_id + "')";
+    return (
+      '<div class="wf-card" onclick="' + onClick + '">'
+      + featBadge + trustBadge + img
+      + '<div class="wf-card-body">'
+      +   '<div class="wf-card-title">' + _wlEsc(c.title || '') + '</div>'
+      +   '<div class="wf-card-meta">' + meta.join(' · ') + '</div>'
+      + '</div>'
+      + '</div>'
+    );
+  }).join('');
+}
+
+function wfFeedTap(matchId, listingId) {
+  if (matchId && _wlToken) {
+    fetch(BEA_URL + '/wishlist/feed/seen/' + matchId + '?buyer_token=' + encodeURIComponent(_wlToken), { method:'POST' }).catch(()=>{});
+  }
+  // Defer to existing detail flow — unifies with the rest of the app
+  if (typeof openDetail === 'function') openDetail(listingId);
+}
+function wfShowcaseTap(listingId) {
+  if (typeof openDetail === 'function') openDetail(listingId);
+}
+
+function wfScroll(dir) {
+  const el = document.getElementById('wishlist-feed');
+  if (!el) return;
+  el.scrollBy({ left: dir * 280, behavior: 'smooth' });
+}
+
+async function wlLoadFeed() {
+  const wrap = document.getElementById('wishlist-feed');
+  const heading = document.getElementById('wf-heading');
+  const upBox = document.getElementById('wf-upgrade');
+  const emptyHint = document.getElementById('wf-empty-hint');
+  if (!wrap) return;
+  if (!_wlToken) await wlBootToken();
+  // First decide showcase vs personalised by signal count
+  let signals = [];
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/signals?buyer_token=' + encodeURIComponent(_wlToken));
+    if (r.ok) signals = await r.json();
+  } catch(e) {}
+  _wlSignalsCache = signals;
+  const useShowcase = signals.length < 3;
+  if (useShowcase) {
+    if (heading) heading.textContent = 'Today on the Square';
+    if (emptyHint) emptyHint.style.display = signals.length > 0 ? 'block' : 'none';
+    if (upBox) upBox.style.display = 'none';
+    try {
+      const r = await fetch(BEA_URL + '/wishlist/showcase');
+      const sc = r.ok ? await r.json() : [];
+      wrap.innerHTML = _wlRenderCards(sc, true);
+    } catch(e) {
+      wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn’t load feed.</div>';
+    }
+    return;
+  }
+  // Personalised feed
+  if (heading) heading.textContent = 'For You';
+  if (emptyHint) emptyHint.style.display = 'none';
+  const floor = parseInt(localStorage.getItem(WL_TRUST_KEY) || '0', 10) || 0;
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/feed?buyer_token=' + encodeURIComponent(_wlToken) + '&min_trust_override=' + floor + '&limit=30');
+    if (!r.ok) throw new Error('feed ' + r.status);
+    const data = await r.json();
+    _wlLastFeed = data;
+    wrap.innerHTML = _wlRenderCards(data.cards, false);
+    if (data.upgrade_prompt && upBox) {
+      upBox.innerHTML =
+        '✨ <strong>' + data.upgrade_prompt.matches_elsewhere + '</strong> matching listing'
+        + (data.upgrade_prompt.matches_elsewhere === 1 ? '' : 's')
+        + ' in <strong>' + _wlEsc(data.upgrade_prompt.sample_country || 'another country') + '</strong>. '
+        + '<a onclick="goTo(\'wishlist\')" style="color:var(--accent-bright);cursor:pointer;font-weight:700;">Upgrade to Global &rarr;</a>';
+      upBox.style.display = 'block';
+    } else if (upBox) {
+      upBox.style.display = 'none';
+    }
+  } catch(e) {
+    wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn’t load feed.</div>';
+  }
+}
+
+function wlStartPolling() {
+  if (_wlPollTimer) return;
+  _wlPollTimer = setInterval(() => {
+    // Only poll when home screen is the active one
+    const home = document.getElementById('screen-home');
+    if (home && home.classList.contains('active')) wlLoadFeed();
+  }, WL_POLL_MS);
+}
+
+// ── Settings screen logic ───────────────────────────────────
+function wlSetTrustFilter(score) {
+  localStorage.setItem(WL_TRUST_KEY, String(score));
+  document.querySelectorAll('.wl-trust-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.trust, 10) === score);
+  });
+  const labels = {0:'Any seller', 40:'Established+ (40)', 70:'Trusted+ (70)', 90:'Highly Trusted (90)'};
+  const cur = document.getElementById('wl-trust-current');
+  if (cur) cur.textContent = 'Showing sellers rated ' + (labels[score] || 'Any seller') + '.';
+  // Also update min_trust_score on every existing signal so wearable pings honour the floor
+  if (_wlToken && Array.isArray(_wlSignalsCache)) {
+    _wlSignalsCache.forEach(s => {
+      fetch(BEA_URL + '/wishlist/signals/' + s.id + '?buyer_token=' + encodeURIComponent(_wlToken), {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ min_trust_score: score })
+      }).catch(()=>{});
+    });
+  }
+  wlLoadFeed();
+}
+
+async function wlAddExplicit() {
+  const txt = (document.getElementById('wl-explicit-text').value || '').trim();
+  const cat = document.getElementById('wl-explicit-cat').value || null;
+  if (!txt) return;
+  await wlSendSignal({ signal_type: 'explicit', raw_text: txt, category: cat });
+  document.getElementById('wl-explicit-text').value = '';
+  await wlRenderSettings();
+  wlLoadFeed();
+}
+
+async function wlDeleteSignal(id) {
+  if (!_wlToken) return;
+  if (!confirm('Remove this wishlist item?')) return;
+  await fetch(BEA_URL + '/wishlist/signals/' + id + '?buyer_token=' + encodeURIComponent(_wlToken), { method:'DELETE' });
+  wlRenderSettings();
+  wlLoadFeed();
+}
+
+async function wlForgetMe() {
+  if (!_wlToken) return;
+  if (!confirm('Delete all your wishlist data? This cannot be undone.')) return;
+  await fetch(BEA_URL + '/wishlist/signals?buyer_token=' + encodeURIComponent(_wlToken), { method:'DELETE' });
+  wlRenderSettings();
+  wlLoadFeed();
+}
+
+async function wlRenderSettings() {
+  if (!_wlToken) await wlBootToken();
+  // Trust filter active state
+  const floor = parseInt(localStorage.getItem(WL_TRUST_KEY) || '0', 10) || 0;
+  document.querySelectorAll('.wl-trust-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.trust, 10) === floor);
+  });
+  const labels = {0:'Any seller', 40:'Established+ (40)', 70:'Trusted+ (70)', 90:'Highly Trusted (90)'};
+  const cur = document.getElementById('wl-trust-current');
+  if (cur) cur.textContent = 'Showing sellers rated ' + (labels[floor] || 'Any seller') + '.';
+  // Subscription tier
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/subscription/status?buyer_token=' + encodeURIComponent(_wlToken));
+    if (r.ok) {
+      const j = await r.json();
+      const isGlobal = j.tier === 'global';
+      document.getElementById('wl-tier-name').textContent = isGlobal ? 'Global · Worldwide' : 'Free · National';
+      document.getElementById('wl-tier-detail').textContent = isGlobal
+        ? 'Matching listings from every country on the platform.'
+        : 'Matches listings within your country only.';
+      document.getElementById('wl-upgrade-btn').style.display = isGlobal ? 'none' : '';
+    }
+  } catch(e) {}
+  // Signals list
+  let signals = [];
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/signals?buyer_token=' + encodeURIComponent(_wlToken));
+    if (r.ok) signals = await r.json();
+  } catch(e) {}
+  _wlSignalsCache = signals;
+  const list = document.getElementById('wl-signals-list');
+  if (!list) return;
+  if (!signals.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">No signals yet — start browsing.</div>';
+    return;
+  }
+  list.innerHTML = signals.map(s => {
+    const badge = s.signal_type === 'explicit' ? 'WISH' : (s.signal_type === 'browse_search' ? 'SEARCH' : 'VIEW');
+    const txt = (s.raw_text || s.category || '(empty)');
+    return (
+      '<div class="wl-sig-row">'
+      + '<span class="wl-sig-badge">' + badge + '</span>'
+      + '<span class="wl-sig-text" title="' + _wlEsc(txt) + '">' + _wlEsc(txt) + '</span>'
+      + '<button class="wl-sig-del" onclick="wlDeleteSignal(' + s.id + ')" title="Remove">&times;</button>'
+      + '</div>'
+    );
+  }).join('');
+  // Push button label
+  const en = localStorage.getItem(WL_PING_KEY) === '1';
+  const btn = document.getElementById('wl-push-btn');
+  if (btn) btn.textContent = en ? 'Disable pings' : 'Enable pings on this device';
+}
+
+async function wlStartGlobalCheckout() {
+  // Email is required by Paystack — use stored email if present
+  const email = localStorage.getItem('ms_user_email') || prompt('Email for Paystack receipt:');
+  if (!email) return;
+  if (!_wlToken) await wlBootToken();
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/subscription/initialize?buyer_token=' + encodeURIComponent(_wlToken) + '&email=' + encodeURIComponent(email), { method:'POST' });
+    if (!r.ok) throw new Error('init ' + r.status);
+    const j = await r.json();
+    if (j.authorization_url) location.href = j.authorization_url;
+  } catch(e) {
+    alert('Could not start subscription. Try again.');
+  }
+}
+
+// ── Web Push registration (Section 5 — free VAPID) ──────────
+// Uses the standard browser Web Push API. No paid push service.
+
+function _b64UrlToUint8(b64) {
+  const padding = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + padding).replace(/-/g, '+').replace(/_/g, '/'));
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function _wlRegisterPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    throw new Error('Push not supported on this browser');
+  }
+  // Register the service worker (served from site root by nginx)
+  const reg = await navigator.serviceWorker.register('/service-worker.js');
+  await navigator.serviceWorker.ready;
+  // Get VAPID public key from BEA
+  const r = await fetch(BEA_URL + '/wishlist/vapid-public-key');
+  if (!r.ok) throw new Error('VAPID key unavailable');
+  const { public_key } = await r.json();
+  const applicationServerKey = _b64UrlToUint8(public_key);
+  // Ask the user for permission and subscribe
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permission denied');
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+  // Send subscription to the BEA — push_keys are the per-subscription crypto
+  // pair the browser hands us; without them the server cannot encrypt payloads
+  // for this device.
+  const body = sub.toJSON();
+  const platform = /Android/i.test(navigator.userAgent)
+    ? 'android'
+    : /iPhone|iPad/i.test(navigator.userAgent) ? 'ios' : 'web';
+  const resp = await fetch(BEA_URL + '/wishlist/wearable/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      buyer_token:   _wlToken,
+      push_endpoint: body.endpoint,
+      push_keys:     body.keys,
+      platform,
+      device_label:  navigator.userAgent.split(' ').slice(-2).join(' ').slice(0, 64),
+    }),
+  });
+  if (!resp.ok) throw new Error('register ' + resp.status);
+  const j = await resp.json();
+  return j.id;
+}
+
+async function _wlUnregisterPush() {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.getRegistration('/service-worker.js');
+  if (!reg) return;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) await sub.unsubscribe();
+  // Clean up server-side via list+delete
+  try {
+    const r = await fetch(BEA_URL + '/wishlist/wearable/list?buyer_token=' + encodeURIComponent(_wlToken));
+    if (r.ok) {
+      const devices = await r.json();
+      await Promise.all(devices.map(d =>
+        fetch(BEA_URL + '/wishlist/wearable/' + d.id + '?buyer_token=' + encodeURIComponent(_wlToken),
+              { method:'DELETE' }).catch(()=>{})
+      ));
+    }
+  } catch(e) {}
+}
+
+async function wlTogglePush() {
+  const btn = document.getElementById('wl-push-btn');
+  const status = document.getElementById('wl-push-status');
+  const en = localStorage.getItem(WL_PING_KEY) === '1';
+  if (en) {
+    btn.disabled = true;
+    status.textContent = 'Disabling…';
+    try {
+      await _wlUnregisterPush();
+      localStorage.setItem(WL_PING_KEY, '0');
+      btn.textContent = 'Enable pings on this device';
+      status.textContent = 'Pings disabled.';
+    } catch(e) {
+      status.textContent = 'Could not disable: ' + e.message;
+    } finally { btn.disabled = false; }
+    return;
+  }
+  btn.disabled = true;
+  status.textContent = 'Setting up…';
+  try {
+    if (!_wlToken) await wlBootToken();
+    const deviceId = await _wlRegisterPush();
+    localStorage.setItem(WL_PING_KEY, '1');
+    btn.textContent = 'Disable pings';
+    status.textContent = 'Pings enabled · device #' + deviceId;
+  } catch(e) {
+    status.textContent = 'Could not enable: ' + e.message;
+  } finally { btn.disabled = false; }
+}
+
+// ── Hooks into existing functions ───────────────────────────
+// Wrap goTo so the settings screen renders on entry and openDetail so views are captured.
+(function wlInstallHooks() {
+  if (typeof window === 'undefined') return;
+  const origGoTo = window.goTo;
+  if (typeof origGoTo === 'function') {
+    window.goTo = function(name) {
+      const r = origGoTo.apply(this, arguments);
+      if (name === 'wishlist') wlRenderSettings();
+      if (name === 'home') wlLoadFeed();
+      return r;
+    };
+  }
+  const origOpenDetail = window.openDetail;
+  if (typeof origOpenDetail === 'function') {
+    window.openDetail = function(id) {
+      try { wlCaptureView(findListing(id)); } catch(e){}
+      return origOpenDetail.apply(this, arguments);
+    };
+  }
+  const origFilterBrowse = window.filterBrowse;
+  if (typeof origFilterBrowse === 'function') {
+    window.filterBrowse = function(cat) { wlCaptureCategory(cat); return origFilterBrowse.apply(this, arguments); };
+  }
+  const origSetFilter = window.setFilter;
+  if (typeof origSetFilter === 'function') {
+    window.setFilter = function(el, cat) { wlCaptureCategory(cat); return origSetFilter.apply(this, arguments); };
+  }
+})();
+
+// Boot — runs after DOM is ready and existing init has finished
+window.addEventListener('load', () => {
+  wlBootToken().then(() => {
+    wlLoadFeed();
+    wlStartPolling();
+  });
+});
+
+</script>
+<!-- ════════════════════════════════════════════════════════════
+     ■ END LOGIC
+     ════════════════════════════════════════════════════════════ -->
+
+</body>
+</html>

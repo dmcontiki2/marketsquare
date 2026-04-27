@@ -2,6 +2,20 @@
 
 ---
 
+## Session 27 · 27 April 2026 · Geo/city selector bug fix (Section 1 of Local Market build)
+
+**Root cause — listing creation hardcoded city='Pretoria'.** The publish flow in `marketsquare.html` (`doPublish`) sent `city: 'Pretoria', area: 'Pretoria'` to `POST /listings` regardless of which city the seller had selected. This was the dominant geo bug — every seller's listing got stamped Pretoria server-side, which then propagated everywhere else through the live-listings normalizer. The fix reads from `activeCity.name` and `activeCity.id`, attaches `geo_city_id` for the new geo hierarchy, and supplies the required `suburb` field (which was missing entirely — the server-side validator would have rejected publishes silently). A secondary bug in `loadLiveListings` was also corrected: the BEA returns both `area` and `suburb` distinctly, but the normalizer was overwriting both with `l.area`, ignoring `l.suburb`.
+
+**Subtitle staleness across browse and filter sheets.** The browse page subtitle (`#browse-sub`) and six filter-sheet subtitles (Property, Tutors, Services, Adventures, Collectors, Cars) all hardcoded "Pretoria · …" strings. After switching cities the subtitles never updated. Fixed by reading `activeCity.name` in `filterBrowse` and `setFilter`, and by tagging the six static filter-sheet subtitles with `js-city-sub` for centralised refresh. Added a new `_refreshCityLabels()` helper called from `updateBadgeLabel()` so every city change flows through every dependent display string in one pass.
+
+**Magic-link parser fallback.** The campaign magic-link parser fell back to the literal `'Pretoria'` when the `city` query param was absent. Fixed to fall back to `activeCity.name` (and empty string if also unset). Defensive — campaign emails should always include the param, but a malformed link no longer pre-fills the wrong city.
+
+**What was confirmed not a bug.** The initial seed `let activeCity = { id: null, name: 'Pretoria' }` is correct — it's the bootstrap value before `_resolveActiveCity()` runs. The static demo `LISTINGS` and `SELLERS` arrays contain Pretoria strings as content (not state) — out of scope. The single live-listings GET (`/listings?city=...&suburb=...`) was already reading `activeCity.name` correctly.
+
+**Verification.** Standalone commit. Frontend-only — no BEA changes. File structure preserved (1383 `<div>` / `</div>` paired, 8621 lines, 4 `</script>` blocks unchanged). After the fix, only two `'Pretoria'` references remain in app logic: the seed value and an explanatory comment in `_resolveActiveCity`.
+
+---
+
 ## Session 26 · 27 April 2026 · Local Market + Trust Score Hub — requirements documents
 
 **Local Market requirements written** as `LOCAL_MARKET_REQUIREMENTS.md` v0.1. Full specification for the new open-ended peer-to-peer trading category: dedicated page separate from all structured categories, unique seller-pays Tuppence model (1T deducted from seller on first introduction request per listing), Commitment introduction flow with 48hr response window and Trust Score incentives (+3 for <24hr response, −1 for ignoring), buyer no-show complaint flow (−3 buyer Trust Score, 1T seller credit on uphold), Trust Score minimum gates (30 to publish, 20 to submit intro), bad actor suspension policy (auto-suspend listings below score 30, Tuppence frozen not forfeited, three-strike escalation to permanent ban), and full EULA clauses covering all of the above. Wishlist Feed integration specified — Local Market listings feed into the "For You" home screen via semantic matching, badged separately. Home page stats row removed permanently to make space for the feed. Browse page gets a dedicated Local Market entry point.
