@@ -2202,6 +2202,21 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="hscroll" id="home-featured"></div>
     <button class="feat-scroll-btn feat-scroll-btn-right" onclick="featScroll(1)" aria-label="Scroll right">&#8250;</button>
   </div>
+
+  <!-- ══ WISHLIST FEED · bottom-half scroll (PR-26) ═══════════ -->
+  <div class="sec-head" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;">
+    <h2 id="wf-heading">For You</h2>
+    <a onclick="goTo('wishlist')" title="Wishlist settings" style="cursor:pointer;font-size:13px;">⚙️</a>
+  </div>
+  <div id="wf-upgrade" style="display:none;margin:0 16px 10px;padding:10px 12px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.4);border-radius:10px;font-size:12.5px;color:var(--text);"></div>
+  <div class="featured-wrap" id="wf-wrap">
+    <button class="feat-scroll-btn feat-scroll-btn-left" onclick="wfScroll(-1)" aria-label="Scroll left">&#8249;</button>
+    <div class="hscroll" id="wishlist-feed">
+      <div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Loading…</div>
+    </div>
+    <button class="feat-scroll-btn feat-scroll-btn-right" onclick="wfScroll(1)" aria-label="Scroll right">&#8250;</button>
+  </div>
+  <div id="wf-empty-hint" style="display:none;text-align:center;font-size:12px;color:var(--text-3);margin:6px 16px 0;">Browse above to personalise this feed.</div>
 </div>
 
 <!-- BROWSE -->
@@ -2719,6 +2734,96 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="page-hdr"><button class="back-btn" onclick="goTo('browse')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
   <div id="saved-content"></div>
 </div>
+
+<!-- WISHLIST SETTINGS -->
+<div id="screen-wishlist" class="screen">
+  <div class="page-hdr">
+    <button class="back-btn" onclick="goTo('home')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>Wishlist</h1>
+    <div class="sub">Your wishlist never leaves MarketSquare.</div>
+  </div>
+
+  <div style="padding:14px 16px 110px;">
+    <!-- Subscription tier card -->
+    <div id="wl-tier-card" style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;opacity:.7;">Reach</div>
+      <div id="wl-tier-name" style="font-size:20px;font-weight:800;margin:4px 0;">Free · National</div>
+      <div id="wl-tier-detail" style="font-size:13px;opacity:.8;line-height:1.4;">Matches listings within South Africa.</div>
+      <button id="wl-upgrade-btn" onclick="wlStartGlobalCheckout()" style="margin-top:10px;background:#ffc107;color:#1a1a2e;border:none;border-radius:50px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:13px;">Upgrade to Global · $5/mo</button>
+    </div>
+
+    <!-- Trust Score filter -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Trust Score floor</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.5;">
+        Only show listings from sellers above this trust level. Recommended: <strong>Highly Trusted</strong> for high-value items.
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+        <button class="wl-trust-btn" data-trust="0" onclick="wlSetTrustFilter(0)">Any seller</button>
+        <button class="wl-trust-btn" data-trust="40" onclick="wlSetTrustFilter(40)">Established+ (40)</button>
+        <button class="wl-trust-btn" data-trust="70" onclick="wlSetTrustFilter(70)">Trusted+ (70)</button>
+        <button class="wl-trust-btn" data-trust="90" onclick="wlSetTrustFilter(90)">Highly Trusted (90)</button>
+      </div>
+      <div id="wl-trust-current" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
+    </div>
+
+    <!-- Add explicit wishlist item -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Add a wishlist item</div>
+      <input type="text" id="wl-explicit-text" placeholder="e.g. red mountain bike, 21-speed"
+        style="width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);margin-bottom:8px;">
+      <select id="wl-explicit-cat" style="width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);margin-bottom:8px;">
+        <option value="">Any category</option>
+        <option>Property</option><option>Tutors</option><option>Services</option>
+        <option>Adventures</option><option>Collectors</option><option>Cars</option>
+      </select>
+      <button onclick="wlAddExplicit()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-weight:700;cursor:pointer;font-size:14px;">+ Add to wishlist</button>
+    </div>
+
+    <!-- Saved signals -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0;">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);">Your wishlist signals</div>
+      <a onclick="wlForgetMe()" style="font-size:12px;color:var(--accent-bright);cursor:pointer;">Forget me</a>
+    </div>
+    <div id="wl-signals-list">
+      <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
+    </div>
+
+    <!-- Wearable / push toggle -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:14px;">
+      <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Wearable pings</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.5;">
+        Push a soft notification to a connected wearable when a strong match appears (≥80 confidence). Maximum 3 per hour.
+      </div>
+      <button id="wl-push-btn" onclick="wlTogglePush()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-weight:700;cursor:pointer;font-size:14px;">Enable pings on this device</button>
+      <div id="wl-push-status" style="font-size:12px;color:var(--text-3);margin-top:8px;"></div>
+    </div>
+
+    <div style="margin-top:18px;padding:12px;background:rgba(0,0,0,.04);border-radius:10px;font-size:12px;color:var(--text-3);line-height:1.5;">
+      🔒 We never sell or share your wishlist. It is used only to surface matching listings on your device. Data is purged after 90 days of inactivity.
+    </div>
+  </div>
+</div>
+<style>
+  .wl-trust-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;}
+  .wl-trust-btn.active{background:var(--accent-bright);color:#fff;border-color:var(--accent-bright);}
+  .wf-card{flex:0 0 auto;width:170px;margin-right:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;position:relative;}
+  .wf-card:hover{border-color:var(--accent-bright);}
+  .wf-card-img{width:100%;height:120px;object-fit:cover;background:var(--surface-2);}
+  .wf-card-body{padding:8px 10px 10px;}
+  .wf-card-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .wf-card-meta{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;align-items:center;gap:4px;}
+  .wf-card-feat{position:absolute;top:6px;left:6px;background:rgba(255,193,7,.95);color:#1a1a2e;font-size:10px;font-weight:800;padding:3px 7px;border-radius:50px;letter-spacing:.5px;}
+  .wf-card-trust{position:absolute;top:6px;right:6px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px;}
+  .wf-trust-blue{background:#3b82f6;color:#fff;}
+  .wf-trust-green{background:#10b981;color:#fff;}
+  .wf-trust-gold{background:#fbbf24;color:#1a1a2e;}
+  .wf-trust-grey{background:#9ca3af;color:#fff;}
+  .wl-sig-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;}
+  .wl-sig-text{flex:1;min-width:0;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .wl-sig-badge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);padding:3px 7px;border-radius:50px;}
+  .wl-sig-del{background:transparent;border:1px solid var(--border);color:var(--text-3);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;}
+</style>
 
 <!-- TUPPENCE -->
 <div id="screen-tuppence" class="screen">
@@ -7864,167 +7969,4 @@ const AA_FLOWS = {
     heading: 'Your property listing, AI-improved',
     steps: [
       { n:'1', col:'c-blue',  title:'Fill in property details',
-        sub:'Listing type · property type · beds · baths · garage · suburb · price' },
-      { n:'2', col:'c-blue',  title:'Capture 6 required photos',
-        sub:'Lounge · kitchen · master bed · bathroom · front exterior · rear exterior' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Suggests headline wording · price positioning & description improvements · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'Tutors': {
-    emoji: '🎓',
-    heading: 'Your tutoring listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in tutor details',
-        sub:'Subject(s) · level · mode (in-person / online / both) · rate · area covered' },
-      { n:'2', col:'c-blue',  title:'Capture 2 required photos',
-        sub:'Profile headshot · teaching example (whiteboard, notes or workspace)' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks clarity · positioning vs other tutors & trust-building language · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · students can browse and request an introduction' },
-    ],
-  },
-  'Services · Technical': {
-    emoji: '🔧',
-    heading: 'Your Technical Services listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Select Technical, then fill in details',
-        sub:'Service type · area covered · rate · years of experience · registered / accredited' },
-      { n:'2', col:'c-blue',  title:'Capture 2 required photos',
-        sub:'Work example 1 · work example 2 · qualification / certificate (optional)' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks credential clarity · pricing competitiveness & trust factors · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'Services · Casuals': {
-    emoji: '🤝',
-    heading: 'Your Casuals listing, AI-improved',
-    steps: [
-      { n:'1', col:'c-blue',  title:'Select Casuals, then fill in details',
-        sub:'Service type · availability · rate · days available · area · references available' },
-      { n:'2', col:'c-blue',  title:'Add optional photos',
-        sub:'Work example (optional) · reference letter (optional) — no required shots' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks approachability · reliability signals & clear description · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · buyers can browse and request an introduction' },
-    ],
-  },
-  'Adventures': {
-    emoji: '🧭',
-    heading: 'Your adventure package listing, AI-improved',
-    phase: 2,
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in experience details',
-        sub:'Title · destination · duration · group size · price per person · difficulty level' },
-      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
-        sub:'Hero shot (sets the scene) · experience shot 1 · experience shot 2' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks appeal · inclusions clarity · safety language & pricing · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · adventurers can browse and request an introduction' },
-    ],
-  },
-  'Collectors': {
-    emoji: '🏆',
-    heading: "Your collector's item listing, AI-improved",
-    phase: 2,
-    steps: [
-      { n:'1', col:'c-blue',  title:'Fill in item details',
-        sub:'Collection type · item name · condition · catalogue reference · edition / year · price' },
-      { n:'2', col:'c-blue',  title:'Capture 3 required photos',
-        sub:'Front / face · back · condition close-up (corners, margins or surface detail)' },
-      { n:'✦', col:'c-gold',  title:'AI Coach reviews your listing',
-        sub:'Checks grading accuracy · catalogue language & provenance notes · uses 1 session' },
-      { n:'✓', col:'c-green', title:'Review & publish to MarketSquare',
-        sub:'Listing goes live as a pending draft · collectors can browse and request an introduction' },
-    ],
-  },
-};
-
-let aaFlowActiveCat = 'Property';
-
-function aaShowFlowSheet(cat) {
-  aaFlowActiveCat = cat || aaFlowActiveCat;
-  // Build category chips
-  const chipRow = document.getElementById('aa-flow-cat-row');
-  if (chipRow) {
-    chipRow.innerHTML = Object.keys(AA_FLOWS).map(c =>
-      `<button class="aa-flow-cat-chip${c === aaFlowActiveCat ? ' sel' : ''}"
-               onclick="aaRenderFlow('${c}')">${AA_FLOWS[c].emoji} ${c}</button>`
-    ).join('');
-  }
-  aaRenderFlow(aaFlowActiveCat);
-  document.getElementById('aa-flow-sheet-bg').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function aaRenderFlow(cat) {
-  aaFlowActiveCat = cat;
-  // Update chip selection
-  document.querySelectorAll('.aa-flow-cat-chip').forEach(btn => {
-    btn.classList.toggle('sel', btn.textContent.includes(cat));
-  });
-  const flow = AA_FLOWS[cat];
-  if (!flow) return;
-  const wrap = document.getElementById('aa-flow-card-wrap');
-  if (!wrap) return;
-
-  const stepsHtml = flow.steps.map((s, i) => {
-    const isLast = i === flow.steps.length - 1;
-    return `
-      <div class="aa-flow-step">
-        <div class="aa-flow-left">
-          <div class="aa-flow-circle ${s.col}">${s.n}</div>
-          ${!isLast ? '<div class="aa-flow-line"></div>' : ''}
-        </div>
-        <div class="aa-flow-content">
-          <div class="aa-flow-step-title">${s.title}</div>
-          <div class="aa-flow-step-sub">${s.sub}</div>
-        </div>
-      </div>`;
-  }).join('');
-
-  wrap.innerHTML = `
-    <div class="aa-flow-card">
-      <div class="aa-flow-pill">⚡ AI COACH FLOW · ${cat.toUpperCase()}</div>
-      <div class="aa-flow-heading">${flow.emoji} ${flow.heading}</div>
-      ${stepsHtml}
-    </div>`;
-}
-
-function aaCloseFlowSheet(e) {
-  if (e && e.target !== document.getElementById('aa-flow-sheet-bg')) return;
-  aaCloseFlowSheetBtn();
-}
-
-function aaCloseFlowSheetBtn() {
-  document.getElementById('aa-flow-sheet-bg').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── WALLET: AI Coach Credits ──────────────────────────────────
-
-async function aaLoadWalletSessions() {
-  const el = document.getElementById('tn-coach-sessions');
-  if (!el) return;
-  // Try to get email from any draft in the DB
-  const drafts = await aaDB.getAll();
-  const email  = drafts.find(d => d.email)?.email || '';
-  if (!email) {
-    el.textContent = '—';
-    return;
-  }
-  try {
-    const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
-    const data = await res.json();
-    const free    = !data.aa_free_used;
-    const sessions = data.aa_sessions_remaining || 0;
-    if (free) {
-      el.textContent = '1';
-      el.closest('div').querySelector('div[style*="font-si
+        sub:'Li

@@ -14,7 +14,7 @@ import io
 import logging
 from datetime import datetime, timezone
 
-app = FastAPI(title="MarketSquare BEA", version="1.1.0")
+app = FastAPI(title="MarketSquare BEA", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -139,6 +139,94 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE users ADD COLUMN aa_sessions_remaining INTEGER DEFAULT 0")
     if "photo_url" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN photo_url TEXT")
+    if "buyer_token" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN buyer_token TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_users_buyer_token ON users(buyer_token)")
+
+    # ── Wishlist Feed feature (v1.2.0) ──────────────────────────
+    # Per-buyer signals: implicit (browse_search/browse_view) + explicit
+    conn.execute("""CREATE TABLE IF NOT EXISTS wishlist_signals (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        buyer_token     TEXT NOT NULL,
+        signal_type     TEXT NOT NULL,
+        raw_text        TEXT,
+        category        TEXT,
+        suburb_id       INTEGER,
+        city_id         INTEGER,
+        country_iso2    TEXT,
+        price_min       REAL,
+        price_max       REAL,
+        min_trust_score INTEGER NOT NULL DEFAULT 0,
+        weight          REAL NOT NULL DEFAULT 1.0,
+        ping_enabled    INTEGER NOT NULL DEFAULT 1,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at      TEXT NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_buyer ON wishlist_signals(buyer_token)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_category ON wishlist_signals(category)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_expires ON wishlist_signals(expires_at)")
+
+    # Match queue per buyer — populated by the matching job
+    conn.execute("""CREATE TABLE IF NOT EXISTS wishlist_matches (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        buyer_token     TEXT NOT NULL,
+        listing_id      INTEGER NOT NULL,
+        signal_id       INTEGER,
+        match_score     REAL NOT NULL,
+        seller_trust    INTEGER NOT NULL DEFAULT 0,
+        matched_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        seen            INTEGER NOT NULL DEFAULT 0,
+        pinged          INTEGER NOT NULL DEFAULT 0,
+        boost_rank      INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(buyer_token, listing_id)
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wm_buyer ON wishlist_matches(buyer_token, matched_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wm_listing ON wishlist_matches(listing_id)")
+
+    # Wearable / web-push device registrations
+    conn.execute("""CREATE TABLE IF NOT EXISTS wearable_devices (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        buyer_token     TEXT NOT NULL,
+        push_endpoint   TEXT NOT NULL,
+        push_keys       TEXT NOT NULL,
+        platform        TEXT NOT NULL,
+        device_label    TEXT,
+        enabled         INTEGER NOT NULL DEFAULT 1,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        last_ping_at    TEXT,
+        UNIQUE(buyer_token, push_endpoint)
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wd_buyer ON wearable_devices(buyer_token, enabled)")
+
+    # Editorially curated showcase scroll for empty-state buyers
+    conn.execute("""CREATE TABLE IF NOT EXISTS wishlist_showcase (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        listing_id      INTEGER NOT NULL UNIQUE,
+        sort_order      INTEGER NOT NULL DEFAULT 0,
+        added_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        added_by        TEXT NOT NULL DEFAULT 'admin'
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_show_order ON wishlist_showcase(sort_order)")
+
+    # Buyer subscription tier — controls geographic reach of the wishlist feed
+    conn.execute("""CREATE TABLE IF NOT EXISTS wishlist_subscriptions (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        buyer_token     TEXT NOT NULL UNIQUE,
+        tier            TEXT NOT NULL DEFAULT 'free',
+        activated_at    TEXT,
+        expires_at      TEXT,
+        paystack_ref    TEXT
+    )""")
+
+    # Listing publish timestamp + boost columns for the matching job
+    listing_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
+    if "published_at" not in listing_cols2:
+        conn.execute("ALTER TABLE listings ADD COLUMN published_at TEXT")
+        conn.execute("UPDATE listings SET published_at = COALESCE(created_at, datetime('now')) WHERE published_at IS NULL")
+    if "boost_until" not in listing_cols2:
+        conn.execute("ALTER TABLE listings ADD COLUMN boost_until TEXT")
+    if "view_count" not in listing_cols2:
+        conn.execute("ALTER TABLE listings ADD COLUMN view_count INTEGER NOT NULL DEFAULT 0")
 
     conn.commit()
 
@@ -505,7 +593,7 @@ class IntroRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "MarketSquare BEA", "version": "1.1.0"}
+    return {"status": "ok", "service": "MarketSquare BEA", "version": "1.2.0"}
 
 # ── LISTINGS (public read, protected write) ──────────────────
 
@@ -532,7 +620,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb:
     return [dict(r) for r in rows]
 
 @app.post("/listings")
-def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
+def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
     conn = database.get_db()
@@ -541,8 +629,8 @@ def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
             subject, level, mode, service_type, availability,
-            trust_score, seller_email)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            trust_score, seller_email, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
@@ -552,6 +640,8 @@ def create_listing(listing: Listing, _key: str = Depends(auth.require_api_key)):
     conn.commit()
     new_id = cursor.lastrowid
     conn.close()
+    # Wishlist matching — async, never blocks publish (PR-14)
+    background_tasks.add_task(run_match_job, new_id)
     return {"id": new_id, "message": "Listing created successfully"}
 
 @app.get("/listings/mine")
@@ -579,7 +669,7 @@ def get_listing(listing_id: int):
     return dict(row)
 
 @app.put("/listings/{listing_id}")
-def update_listing(listing_id: int, update: ListingUpdate, email: Optional[str] = None):
+def update_listing(listing_id: int, update: ListingUpdate, background_tasks: BackgroundTasks, email: Optional[str] = None):
     """Update a published listing.
     Auth: ?email= must match seller_email on the listing.
     If seller_email is NULL (admin-created listing with no owner yet), any email is
@@ -631,6 +721,8 @@ def update_listing(listing_id: int, update: ListingUpdate, email: Optional[str] 
     )
     conn.commit()
     conn.close()
+    # Re-match on edit — listing content may have changed enough to surface new buyers
+    background_tasks.add_task(run_match_job, listing_id)
     return {"message": "Listing updated — live immediately", "listing_id": listing_id, "version_archived": version_num}
 
 @app.get("/listings/{listing_id}/versions")
@@ -1579,6 +1671,7 @@ def aa_buy_pack(email: str, sessions: int = 8):
 
 @app.post("/advert-agent/publish")
 async def aa_publish(
+    background_tasks: BackgroundTasks,
     email: str = Form(...),
     category: str = Form(...),
     fields: str = Form(...),        # JSON string
@@ -1655,8 +1748,8 @@ async def aa_publish(
     conn = database.get_db()
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
         (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url, service_class, email),
     )
     listing_id = cursor.lastrowid
@@ -1668,6 +1761,8 @@ async def aa_publish(
     conn.commit()
     conn.close()
 
+    # Wishlist matching — async, never blocks publish (PR-14)
+    background_tasks.add_task(run_match_job, listing_id)
     return {"listing_id": listing_id, "pdf_url": None}  # PDF generation added in Stage 4
 
 
@@ -1687,128 +1782,338 @@ def get_tuppence_balance(email: str):
     return {"email": email, "balance": int(row["balance"])}
 
 
-# ── DEV TOOLS (disable before public launch) ─────────────────
-# Allows the development team to seed Tuppence and AI coaching sessions
-# without going through Paystack. All API costs run on the existing
-# Anthropic / Hetzner billing. Remove or gate with a hard env-var check
-# before the public launch of TrustSquare.
+# ── WISHLIST MATCHING ENGINE (zero-cost, Section 2) ──────────
+# Local keyword + lightweight stem matcher. NO external API calls.
+# Hot-swappable: a future Haiko 4.5 implementation can replace
+# LocalKeywordMatcher behind the same interface (extract_intent +
+# score_match). Until then, this IS the V1 implementation — not a
+# placeholder. The Haiko agent socket is defined as MATCHER below.
 
-@app.post("/dev/credit")
-def dev_credit(
-    email: str,
-    tuppence: int = 20,
-    ai_sessions: int = 500,
-    _key: str = Depends(auth.require_api_key)
-):
-    """Seed a dev/test account with Tuppence and AI coaching sessions.
-    DEV PHASE ONLY — protected by API key.
-    Remove this endpoint before public launch.
+import re as _re_match
+from datetime import timedelta
+
+# Stop words filtered before keyword scoring — keeps matches signal-rich
+_STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "for", "with", "of", "in", "on",
+    "at", "to", "from", "by", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "this", "that", "these", "those",
+    "i", "you", "he", "she", "it", "we", "they", "my", "your", "our",
+    "their", "his", "her", "its", "as", "if", "than", "then", "so",
+    "very", "really", "just", "some", "any", "all", "no", "not", "yes",
+    "looking", "want", "need", "like", "wanted", "wanting", "after",
+    "near", "around", "good", "great", "nice", "best",
+}
+
+# Common synonyms — symmetric expansion. Tuned to MarketSquare verticals.
+# Keeping this small and conservative on purpose; semantic richness comes
+# from stemming + token overlap, not from a giant manually-curated list.
+_SYNONYMS = {
+    "bike": {"bicycle", "cycle"},
+    "bicycle": {"bike", "cycle"},
+    "cycle": {"bike", "bicycle"},
+    "house": {"home", "property"},
+    "home": {"house", "property"},
+    "apartment": {"flat", "unit"},
+    "flat": {"apartment", "unit"},
+    "car": {"vehicle", "auto", "motor"},
+    "vehicle": {"car", "auto", "motor"},
+    "tutor": {"tutoring", "teacher", "lessons", "lesson", "tuition"},
+    "tutoring": {"tutor", "teacher", "lessons", "lesson", "tuition"},
+    "teacher": {"tutor", "tutoring", "lessons", "lesson"},
+    "math": {"mathematics", "maths"},
+    "maths": {"mathematics", "math"},
+    "mathematics": {"math", "maths"},
+    "plumbing": {"plumber"},
+    "plumber": {"plumbing"},
+    "electric": {"electrician", "electrical"},
+    "electrician": {"electric", "electrical"},
+    "electrical": {"electric", "electrician"},
+    "garden": {"gardening", "gardener", "landscaping"},
+    "gardening": {"garden", "gardener", "landscaping"},
+    "cleaning": {"cleaner", "clean", "housekeeping"},
+    "cleaner": {"cleaning", "clean"},
+    "hike": {"hiking", "trek", "trekking"},
+    "hiking": {"hike", "trek", "trekking"},
+    "dive": {"diving", "scuba"},
+    "diving": {"dive", "scuba"},
+    "coin": {"coins", "numismatic", "numismatics"},
+    "stamp": {"stamps", "philatelic", "philatelics"},
+    "watch": {"watches", "timepiece"},
+    "rolex": {"watch", "watches", "timepiece"},
+    "card": {"cards", "trading"},
+    "red": {"crimson", "scarlet"},
+    "crimson": {"red", "scarlet"},
+}
+
+
+def _light_stem(token: str) -> str:
+    """Tiny inline Porter-style stemmer. NOT pip nltk — zero dependencies.
+    Strips a few high-frequency English suffixes. Good enough for V1; the
+    interface stays stable so a real Snowball stemmer can drop in later.
     """
-    conn = database.get_db()
+    if len(token) <= 3:
+        return token
+    for suf in ("ingly", "edly"):
+        if token.endswith(suf) and len(token) > len(suf) + 2:
+            return token[: -len(suf)]
+    for suf in ("ing", "ies", "ied"):
+        if token.endswith(suf) and len(token) > len(suf) + 2:
+            stem = token[: -len(suf)]
+            if suf in ("ies", "ied"):
+                stem += "y"
+            return stem
+    for suf in ("ed", "es", "ly"):
+        if token.endswith(suf) and len(token) > len(suf) + 2:
+            return token[: -len(suf)]
+    if token.endswith("s") and not token.endswith("ss") and len(token) > 3:
+        return token[:-1]
+    return token
 
-    # Upsert user — create if not exists, credit AI sessions if exists
-    conn.execute(
-        """INSERT INTO users (email, aa_free_used, aa_sessions_remaining)
-           VALUES (?, 0, ?)
-           ON CONFLICT(email) DO UPDATE SET
-               aa_sessions_remaining = aa_sessions_remaining + ?""",
-        (email, ai_sessions, ai_sessions)
-    )
 
-    # Credit Tuppence as a dev transaction
-    if tuppence > 0:
-        conn.execute(
-            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
-            (email, "dev_topup", tuppence,
-             f"Dev credit — {tuppence}T Tuppence + {ai_sessions} AI sessions (pre-launch testing)")
-        )
+def _tokenize(text: str) -> list[str]:
+    """Lowercase, split on non-alphanumerics, strip stopwords, return raw tokens."""
+    if not text:
+        return []
+    raw = _re_match.findall(r"[a-z0-9]+", text.lower())
+    return [t for t in raw if t and t not in _STOP_WORDS and len(t) > 1]
 
-    conn.commit()
 
-    user = conn.execute(
-        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
+def _expand_tokens(tokens: list[str]) -> set[str]:
+    """Return the set of tokens + their stems + synonyms — used for matching."""
+    out: set[str] = set()
+    for t in tokens:
+        out.add(t)
+        out.add(_light_stem(t))
+        out.update(_SYNONYMS.get(t, set()))
+    return out
+
+
+class LocalKeywordMatcher:
+    """V1 matcher — pure Python, zero external API cost.
+
+    extract_intent(listing) → dict of structured matchable features
+    score_match(signal, listing) → float in [0, 100]
+
+    The Haiko agent socket can later replace this class with a semantic
+    implementation; the call surface stays identical.
+    """
+
+    name = "local_keyword_v1"
+
+    @staticmethod
+    def extract_intent(listing: dict) -> dict:
+        """Pull keywords + structured fields out of a listing for matching."""
+        text_parts = [
+            listing.get("title") or "",
+            listing.get("description") or "",
+            listing.get("subject") or "",
+            listing.get("level") or "",
+            listing.get("service_type") or "",
+            listing.get("prop_type") or "",
+        ]
+        title_tokens = _expand_tokens(_tokenize(listing.get("title") or ""))
+        all_tokens = _expand_tokens(_tokenize(" ".join(text_parts)))
+        # Numeric price extraction — strip currency symbols and commas
+        price_raw = (listing.get("price") or "").replace(",", "")
+        price_match = _re_match.search(r"\d+(?:\.\d+)?", price_raw)
+        price_val = float(price_match.group(0)) if price_match else None
+        return {
+            "title_tokens": title_tokens,
+            "all_tokens": all_tokens,
+            "category": listing.get("category"),
+            "suburb": (listing.get("suburb") or "").lower() or None,
+            "geo_city_id": listing.get("geo_city_id"),
+            "city": (listing.get("city") or "").lower() or None,
+            "price": price_val,
+        }
+
+    @staticmethod
+    def score_match(signal: dict, listing_intent: dict) -> float:
+        """Score 0–100. Components:
+           - Category exact match: +30 (or hard-zero if signal specifies a different category)
+           - Title-token overlap: up to +35 (highest-signal text)
+           - Body-token overlap: up to +20
+           - Suburb / city match: +10
+           - Price-range fit: +5
+        """
+        # Category gate: if the signal specifies a category and it doesn't match, no score
+        sig_cat = signal.get("category")
+        if sig_cat and listing_intent["category"] and sig_cat != listing_intent["category"]:
+            return 0.0
+
+        sig_tokens = _expand_tokens(_tokenize(signal.get("raw_text") or ""))
+        # Explicit signals with no text but a category still match weakly
+        if not sig_tokens and not sig_cat:
+            return 0.0
+
+        score = 0.0
+        # Category bonus
+        if sig_cat and sig_cat == listing_intent["category"]:
+            score += 30.0
+        elif not sig_cat and listing_intent["category"]:
+            # No category preference stated — neutral, no bonus, no penalty
+            pass
+
+        # Title-token overlap (highest weight — title is the cleanest signal)
+        title_overlap = len(sig_tokens & listing_intent["title_tokens"])
+        if sig_tokens:
+            title_ratio = title_overlap / max(len(sig_tokens), 1)
+            score += min(35.0, title_ratio * 35.0 + (3.0 if title_overlap >= 2 else 0))
+
+        # Body-token overlap
+        body_overlap = len(sig_tokens & listing_intent["all_tokens"])
+        if sig_tokens:
+            body_ratio = body_overlap / max(len(sig_tokens), 1)
+            score += min(20.0, body_ratio * 20.0)
+
+        # Suburb / city match
+        sig_suburb_id = signal.get("suburb_id")
+        sig_city_id = signal.get("city_id")
+        if sig_city_id and listing_intent.get("geo_city_id") and sig_city_id == listing_intent["geo_city_id"]:
+            score += 10.0
+        elif signal.get("raw_text") and listing_intent.get("suburb"):
+            # Loose suburb mention in raw_text
+            sub = listing_intent["suburb"]
+            if sub and sub in (signal.get("raw_text") or "").lower():
+                score += 6.0
+
+        # Price-range fit
+        price = listing_intent.get("price")
+        pmin = signal.get("price_min")
+        pmax = signal.get("price_max")
+        if price is not None:
+            in_range = True
+            if pmin is not None and price < pmin:
+                in_range = False
+            if pmax is not None and price > pmax:
+                in_range = False
+            if in_range and (pmin is not None or pmax is not None):
+                score += 5.0
+
+        return min(100.0, score)
+
+
+# Hot-swap socket — replace with HaikoMatcher() instance to switch implementations.
+MATCHER = LocalKeywordMatcher()
+
+
+def _seller_country_for_listing(conn, listing_row: dict) -> Optional[str]:
+    """Return the listing's country ISO2 via geo_cities lookup."""
+    geo_city_id = listing_row.get("geo_city_id")
+    if geo_city_id:
+        row = conn.execute(
+            "SELECT country_iso2 FROM geo_cities WHERE id = ?", (geo_city_id,)
+        ).fetchone()
+        if row:
+            return row["country_iso2"]
+    # Fallback: match by city name
+    city = listing_row.get("city")
+    if city:
+        row = conn.execute(
+            "SELECT country_iso2 FROM geo_cities WHERE name = ? LIMIT 1", (city,)
+        ).fetchone()
+        if row:
+            return row["country_iso2"]
+    return None
+
+
+def _buyer_tier(conn, buyer_token: str) -> str:
+    """Return 'free' or 'global' for this buyer_token. Defaults to 'free'."""
+    row = conn.execute(
+        "SELECT tier, expires_at FROM wishlist_subscriptions WHERE buyer_token = ?",
+        (buyer_token,)
     ).fetchone()
-    balance = conn.execute(
-        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (email,)
+    if not row:
+        return "free"
+    if row["tier"] != "global":
+        return "free"
+    # Check expiry
+    if row["expires_at"]:
+        try:
+            if datetime.fromisoformat(row["expires_at"]) < datetime.now(timezone.utc):
+                return "free"
+        except Exception:
+            pass
+    return "global"
+
+
+def _ping_quota_ok(conn, buyer_token: str) -> bool:
+    """Return True if buyer is under the 3-pings-per-hour limit (PR-36).
+    Counted off wishlist_matches.matched_at WHERE pinged=1."""
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    row = conn.execute(
+        """SELECT COUNT(*) AS n FROM wishlist_matches
+           WHERE buyer_token = ? AND pinged = 1 AND matched_at >= ?""",
+        (buyer_token, one_hour_ago)
     ).fetchone()
-    conn.close()
-
-    return {
-        "email": email,
-        "tuppence_balance": int(balance["bal"]),
-        "ai_sessions_remaining": user["aa_sessions_remaining"] if user else ai_sessions,
-        "warning": "⚠️ DEV ENDPOINT — disable before public launch"
-    }
+    return (row["n"] or 0) < 3
 
 
-# ── EMAIL OPT-OUT ────────────────────────────────────────────
-# Called when a prospect clicks "Unsubscribe" in an outreach email.
-# Writes the suppression back into the CityLauncher SQLite DB via
-# the CityLauncher API (running on same server at localhost:8001).
-# Falls back to logging only if CityLauncher is unreachable.
-
-CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
-
-@app.get("/opt-out")
-async def opt_out(email: str, city_id: int = 0, category: str = ""):
-    """
-    One-click unsubscribe endpoint for outreach emails.
-    Marks the prospect as opted_out in the CityLauncher database.
-    Returns a friendly HTML confirmation page — no account needed.
-
-    Query params:
-      email      — prospect email address (URL-encoded)
-      city_id    — CityLauncher city ID (0 = all cities for this email)
-      category   — listing category (empty = all categories for this email)
-    """
-    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
-
-    suppressed = False
+def run_match_job(listing_id: int):
+    """Background worker — score this listing against every active wishlist signal,
+    insert qualifying matches, flag pings. Never raises — logs and exits.
+    Re-entrant: the unique (buyer_token, listing_id) constraint on wishlist_matches
+    means re-running for the same listing is a no-op for already-matched buyers."""
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(
-                f"{CITYLAUNCHER_API}/prospects/opt-out",
-                json={"email": email, "city_id": city_id, "category": category}
-            )
-            if resp.status_code in (200, 204):
-                suppressed = True
-                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
-            else:
-                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
-    except Exception as exc:
-        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
+        conn = database.get_db()
+        listing = conn.execute(
+            "SELECT * FROM listings WHERE id = ?", (listing_id,)
+        ).fetchone()
+        if not listing:
+            conn.close()
+            return
+        listing = dict(listing)
+        intent = MATCHER.extract_intent(listing)
+        seller_trust = int(listing.get("trust_score") or 0)
+        listing_country = _seller_country_for_listing(conn, listing)
 
-    # Return a clean HTML confirmation regardless of backend success
-    html_response = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unsubscribed — TrustSquare</title>
-  <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; }}
-    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
-             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
-    .icon {{ font-size: 48px; margin-bottom: 16px; }}
-    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
-    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
-    a {{ color: #1a1a2e; font-weight: 600; }}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">✅</div>
-    <h1>You're unsubscribed</h1>
-    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
-    You won't receive any further emails from TrustSquare about listing opportunities.</p>
-    <p style="margin-top:24px; font-size:13px; color:#aaa;">
-      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
-    </p>
-  </div>
-</body>
-</html>"""
+        # Determine if this listing is currently boosted (PR-39: looser threshold)
+        boost_until = listing.get("boost_until")
+        is_boosted = False
+        if boost_until:
+            try:
+                is_boosted = datetime.fromisoformat(boost_until) > datetime.now(timezone.utc)
+            except Exception:
+                is_boosted = False
+        feed_threshold = 45.0 if is_boosted else 60.0
 
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=html_response, status_code=200)
+        signals = conn.execute(
+            """SELECT * FROM wishlist_signals
+               WHERE expires_at > ?""",
+            (datetime.now(timezone.utc).isoformat(),)
+        ).fetchall()
+
+        match_inserts = 0
+        for s in signals:
+            sig = dict(s)
+            buyer_token = sig["buyer_token"]
+            # Trust gate — absolute (PR-08, PR-43)
+            min_trust = int(sig.get("min_trust_score") or 0)
+            if seller_trust < min_trust:
+                continue
+            # Geo gate — free buyer = same country only; global = any (PR-16/17, PR-39)
+            tier = _buyer_tier(conn, buyer_token)
+            if tier == "free" and not is_boosted:
+                buyer_country = sig.get("country_iso2")
+                if buyer_country and listing_country and buyer_country != listing_country:
+                    continue
+            # Score
+            score = MATCHER.score_match(sig, intent)
+            if score < feed_threshold:
+                continue
+            # Apply explicit-vs-browse weight (PR-03) — multiplied in, capped at 100
+            weighted = min(100.0, score * float(sig.get("weight") or 1.0))
+            # Insert (silently ignore unique-constraint violations — already matched)
+            try:
+                cur = conn.execute(
+                    """INSERT INTO wishlist_matches
+                       (buyer_token, listing_id, signal_id, match_score, seller_trust, boost_rank, matched_at)
+                       VALUES (?,?,?,?,?,?, ?)""",
+                    (buyer_token, listing_id, sig["id"], weighted, seller_trust,
+                     1 if is_boosted else 0,
+                     datetime.now(timezone.utc).isoformat())
+                )
+                new_match_id = cur.lastrowid
+                match_inserts += 1
+                # Ping decision
