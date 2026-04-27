@@ -14,7 +14,7 @@ import io
 import logging
 from datetime import datetime, timezone
 
-app = FastAPI(title="MarketSquare BEA", version="1.2.0")
+app = FastAPI(title="MarketSquare BEA", version="1.3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -227,6 +227,117 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN boost_until TEXT")
     if "view_count" not in listing_cols2:
         conn.execute("ALTER TABLE listings ADD COLUMN view_count INTEGER NOT NULL DEFAULT 0")
+
+    # ── Local Market feature (v1.3.0) ───────────────────────────
+    # Local Market = open-ended peer-to-peer category. Discriminator is
+    # listings.category = 'local_market'. Seller pays 1T (or 2T if boosted)
+    # on the FIRST intro per listing — opposite of every other category.
+
+    # Listing-level columns specific to LM
+    if "suspension_reason" not in listing_cols2:
+        conn.execute("ALTER TABLE listings ADD COLUMN suspension_reason TEXT")
+    if "lm_intro_charged" not in listing_cols2:
+        # Idempotency flag — set to 1 the first time a buyer requests an intro
+        # on this listing, so subsequent intros don't double-charge the seller.
+        conn.execute("ALTER TABLE listings ADD COLUMN lm_intro_charged INTEGER NOT NULL DEFAULT 0")
+
+    # intro_requests gets an intro_type column to distinguish standard vs LM
+    intro_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
+    if "intro_type" not in intro_cols2:
+        conn.execute("ALTER TABLE intro_requests ADD COLUMN intro_type TEXT NOT NULL DEFAULT 'standard'")
+
+    # Buyer Trust Score — buyers don't have a users row in V1, so a
+    # standalone keyed-by-buyer_token table is the cleanest home for it.
+    conn.execute("""CREATE TABLE IF NOT EXISTS buyer_trust (
+        buyer_token     TEXT PRIMARY KEY,
+        score           INTEGER NOT NULL DEFAULT 0,
+        last_changed_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+
+    # Local Market no-show complaints — manual review by ops (LM-T3)
+    conn.execute("""CREATE TABLE IF NOT EXISTS lm_complaints (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        listing_id      INTEGER NOT NULL,
+        seller_email    TEXT NOT NULL,
+        buyer_token     TEXT NOT NULL,
+        intro_id        INTEGER NOT NULL,
+        reason          TEXT,
+        status          TEXT NOT NULL DEFAULT 'pending',
+        filed_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        resolved_at     TEXT,
+        credit_issued   INTEGER NOT NULL DEFAULT 0
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lmc_listing ON lm_complaints(listing_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lmc_buyer ON lm_complaints(buyer_token)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lmc_status ON lm_complaints(status)")
+
+    # Suspension history for repeat-offender escalation (LM-14e)
+    # Each row is one suspension event. The 90-day repeat detector and
+    # third-strike permanent ban both read from this table.
+    conn.execute("""CREATE TABLE IF NOT EXISTS lm_suspensions (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_email    TEXT NOT NULL,
+        suspended_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        restored_at     TEXT,
+        reason          TEXT NOT NULL DEFAULT 'trust_score_below_30',
+        cooling_off_until TEXT,
+        is_permanent    INTEGER NOT NULL DEFAULT 0
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lmsus_seller ON lm_suspensions(seller_email, suspended_at DESC)")
+
+    # users gains the LM-specific lifecycle flags
+    user_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "lm_eula_accepted_at" not in user_cols2:
+        conn.execute("ALTER TABLE users ADD COLUMN lm_eula_accepted_at TEXT")
+    if "lm_banned_at" not in user_cols2:
+        # Permanent ban from Local Market — third-strike (LM-14e). Other
+        # categories remain accessible. Tuppence balance is unaffected.
+        conn.execute("ALTER TABLE users ADD COLUMN lm_banned_at TEXT")
+    if "country" not in user_cols2:
+        # Required on seller profile for LM listings (LM-29). Default to
+        # ZA so existing sellers don't break — admin tool prompts them
+        # to confirm on next profile edit.
+        conn.execute("ALTER TABLE users ADD COLUMN country TEXT DEFAULT 'ZA'")
+    if "primary_category" not in user_cols2:
+        # Drives which Group 3 credential checklist the seller sees in the
+        # Trust Score Hub. Set on first listing publish; admin can override.
+        conn.execute("ALTER TABLE users ADD COLUMN primary_category TEXT")
+
+    # ── Trust Score Hub (Section 3 · v1.3.0) ────────────────────
+    # Per-credential verification state. Drives the Hub's earned/pending/
+    # missing checklist. Aggregate trust_score on users is recomputed from
+    # this table whenever an admin verifies a credential.
+    conn.execute("""CREATE TABLE IF NOT EXISTS user_credentials (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        email           TEXT NOT NULL,
+        signal_id       TEXT NOT NULL,
+        status          TEXT NOT NULL DEFAULT 'pending',
+        points          INTEGER NOT NULL DEFAULT 0,
+        evidence_url    TEXT,
+        notes           TEXT,
+        submitted_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        verified_at     TEXT,
+        verified_by     TEXT,
+        UNIQUE(email, signal_id)
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_uc_email ON user_credentials(email)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_uc_status ON user_credentials(status)")
+
+    # Seller complaints — diminishing-scale penalties per TRUST_SCORE_CRITERIA §5a.
+    # Distinct from lm_complaints which targets BUYERS for no-shows.
+    conn.execute("""CREATE TABLE IF NOT EXISTS seller_complaints (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_email    TEXT NOT NULL,
+        buyer_token     TEXT,
+        listing_id      INTEGER,
+        reason_code     TEXT NOT NULL,
+        notes           TEXT,
+        status          TEXT NOT NULL DEFAULT 'pending',
+        filed_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        resolved_at     TEXT,
+        points_deducted INTEGER NOT NULL DEFAULT 0
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_sc_seller ON seller_complaints(seller_email, filed_at DESC)")
 
     conn.commit()
 
@@ -593,18 +704,23 @@ class IntroRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "MarketSquare BEA", "version": "1.2.0"}
+    return {"status": "ok", "service": "MarketSquare BEA", "version": "1.3.0"}
 
 # ── LISTINGS (public read, protected write) ──────────────────
 
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb: Optional[str] = None):
     conn = database.get_db()
-    clauses = ["l.city = ?"]
+    # Hide suspended Local Market listings + keep LM out of the main grid
+    # unless explicitly requested (LM-02 separation principle).
+    clauses = ["l.city = ?", "(l.suspension_reason IS NULL OR l.suspension_reason = '')"]
     params: list = [city]
     if category:
         clauses.append("l.category = ?")
         params.append(category)
+    else:
+        clauses.append("l.category != ?")
+        params.append(LM_CATEGORY)
     if suburb:
         clauses.append("l.suburb = ?")
         params.append(suburb)
@@ -3026,6 +3142,1139 @@ def _send_push_for_match(buyer_token: str, match_id: int, listing: dict):
                       match_id, delivered, buyer_token[:8])
     except Exception as exc:
         _log.error("_send_push_for_match failed: %s", exc)
+
+
+# ── LOCAL MARKET (Section 2 · v1.3.0) ───────────────────────
+# Open-ended peer-to-peer category. Seller pays 1T (or 2T if boosted)
+# on the FIRST intro per listing — opposite of every other category.
+# Anonymity absolute throughout — no seller identity in any LM response.
+#
+# COST CONSTRAINT (locked): no external API calls. Tag extraction reuses
+# the existing LocalKeywordMatcher from the wishlist engine.
+
+LM_CATEGORY = "local_market"
+LM_INTRO_COST_T = 1
+LM_BOOST_COST_T = 2
+LM_SELLER_MIN_TRUST = 30
+LM_BUYER_MIN_TRUST  = 20
+LM_REPEAT_WINDOW_DAYS = 90
+LM_COOLING_OFF_DAYS  = 30
+LM_BUYER_NOSHOW_PENALTY = 3   # PR LM-T4 / LM-16
+
+
+class LMListingIn(BaseModel):
+    """Local Market listing creation payload — no category field, free description."""
+    title: str
+    price: Optional[str] = None
+    description: Optional[str] = None
+    suburb: str
+    city: str
+    geo_city_id: Optional[int] = None
+    country: Optional[str] = None
+    seller_email: str
+    thumb_url: Optional[str] = None
+    medium_url: Optional[str] = None
+
+
+class LMIntroIn(BaseModel):
+    listing_id: int
+    buyer_token: str
+    buyer_email: Optional[str] = None      # used only for n8n notifications
+    buyer_name: Optional[str] = None
+    message: Optional[str] = None
+
+
+class LMComplaintIn(BaseModel):
+    intro_id: int
+    seller_email: str
+    reason: str
+
+
+# ── Helpers — server-side gates ───────────────────────────────
+
+def _seller_trust(conn, email: str) -> int:
+    row = conn.execute("SELECT trust_score FROM users WHERE email = ?", (email,)).fetchone()
+    return int(row["trust_score"] or 0) if row else 0
+
+
+def _buyer_trust(conn, buyer_token: str) -> int:
+    row = conn.execute("SELECT score FROM buyer_trust WHERE buyer_token = ?", (buyer_token,)).fetchone()
+    return int(row["score"] or 0) if row else 0
+
+
+def _set_buyer_trust(conn, buyer_token: str, delta: int):
+    """Apply a Trust Score delta to a buyer. Floors at 0, caps at 100."""
+    cur = _buyer_trust(conn, buyer_token)
+    new = max(0, min(100, cur + delta))
+    conn.execute(
+        """INSERT INTO buyer_trust (buyer_token, score) VALUES (?, ?)
+           ON CONFLICT(buyer_token) DO UPDATE SET
+               score = ?, last_changed_at = datetime('now')""",
+        (buyer_token, new, new)
+    )
+
+
+def _lm_active_suspension(conn, seller_email: str) -> Optional[dict]:
+    """Return the seller's currently-active suspension record, or None."""
+    row = conn.execute(
+        """SELECT * FROM lm_suspensions
+           WHERE seller_email = ? AND restored_at IS NULL
+           ORDER BY suspended_at DESC LIMIT 1""",
+        (seller_email,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def _lm_is_banned(conn, seller_email: str) -> bool:
+    """Permanent LM ban flag (third-strike — LM-14e). Other categories unaffected."""
+    row = conn.execute(
+        "SELECT lm_banned_at FROM users WHERE email = ?", (seller_email,)
+    ).fetchone()
+    return bool(row and row["lm_banned_at"])
+
+
+def _lm_check_seller_can_publish(conn, seller_email: str) -> Optional[str]:
+    """Return None if seller may publish a Local Market listing, else error string."""
+    if _lm_is_banned(conn, seller_email):
+        return "permanent_lm_ban"
+    susp = _lm_active_suspension(conn, seller_email)
+    if susp:
+        if susp.get("cooling_off_until"):
+            return f"cooling_off_until_{susp['cooling_off_until']}"
+        return "trust_score_below_30"
+    if _seller_trust(conn, seller_email) < LM_SELLER_MIN_TRUST:
+        return "trust_score_below_30"
+    return None
+
+
+def _lm_apply_suspension(conn, seller_email: str, reason: str = "trust_score_below_30"):
+    """Suspend a seller from Local Market. Marks all their LM listings with
+    suspension_reason and writes a row to lm_suspensions. Implements LM-14e
+    escalation: second suspension within 90 days adds a 30-day cooling-off
+    period; third becomes permanent. Idempotent — does nothing if a suspension
+    is already active for this seller."""
+    if _lm_active_suspension(conn, seller_email):
+        return  # already suspended
+    if _lm_is_banned(conn, seller_email):
+        return  # already permanently banned
+
+    # Count past suspensions in the rolling 90-day window
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=LM_REPEAT_WINDOW_DAYS)).isoformat()
+    count_recent = conn.execute(
+        """SELECT COUNT(*) AS n FROM lm_suspensions
+           WHERE seller_email = ? AND suspended_at >= ?""",
+        (seller_email, cutoff)
+    ).fetchone()["n"] or 0
+    total_lifetime = conn.execute(
+        "SELECT COUNT(*) AS n FROM lm_suspensions WHERE seller_email = ?", (seller_email,)
+    ).fetchone()["n"] or 0
+
+    cooling_off = None
+    permanent = 0
+    if total_lifetime >= 2:
+        # This will be the third strike — permanent LM ban (LM-14e third clause)
+        permanent = 1
+        conn.execute(
+            "UPDATE users SET lm_banned_at = datetime('now') WHERE email = ?", (seller_email,)
+        )
+    elif count_recent >= 1:
+        # Second suspension within 90 days — 30-day cooling-off (LM-14e middle clause)
+        cooling_off = (datetime.now(timezone.utc) + timedelta(days=LM_COOLING_OFF_DAYS)).isoformat()
+
+    conn.execute(
+        """INSERT INTO lm_suspensions (seller_email, reason, cooling_off_until, is_permanent)
+           VALUES (?, ?, ?, ?)""",
+        (seller_email, reason, cooling_off, permanent)
+    )
+    # Hide all this seller's LM listings from public surfaces
+    conn.execute(
+        "UPDATE listings SET suspension_reason = ? WHERE seller_email = ? AND category = ?",
+        (reason, seller_email, LM_CATEGORY)
+    )
+    _log.warning("LM suspended seller=%s reason=%s permanent=%s cooling_off=%s",
+                 seller_email, reason, permanent, cooling_off)
+
+
+def _lm_try_restore(conn, seller_email: str):
+    """Auto-reactivate a seller's LM listings if their Trust Score recovered
+    AND any cooling-off has expired AND they're not permanently banned (LM-14d)."""
+    if _lm_is_banned(conn, seller_email):
+        return
+    susp = _lm_active_suspension(conn, seller_email)
+    if not susp:
+        return
+    # Must clear cooling-off window first
+    if susp.get("cooling_off_until"):
+        try:
+            if datetime.fromisoformat(susp["cooling_off_until"]) > datetime.now(timezone.utc):
+                return  # still in cooling-off
+        except Exception:
+            pass
+    # Must clear Trust Score floor
+    if _seller_trust(conn, seller_email) < LM_SELLER_MIN_TRUST:
+        return
+    # Restore
+    conn.execute(
+        "UPDATE lm_suspensions SET restored_at = datetime('now') WHERE id = ?",
+        (susp["id"],)
+    )
+    conn.execute(
+        "UPDATE listings SET suspension_reason = NULL WHERE seller_email = ? AND category = ?",
+        (seller_email, LM_CATEGORY)
+    )
+    _log.info("LM restored seller=%s", seller_email)
+
+
+def _lm_recompute_seller_state(conn, seller_email: str):
+    """Hook to call any time a seller's Trust Score changes. Suspends if below
+    floor, restores if above. Safe to call repeatedly."""
+    if _seller_trust(conn, seller_email) < LM_SELLER_MIN_TRUST:
+        _lm_apply_suspension(conn, seller_email)
+    else:
+        _lm_try_restore(conn, seller_email)
+
+
+# ── Endpoints ────────────────────────────────────────────────
+
+@app.post("/local-market/listings")
+def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
+                      _key: str = Depends(auth.require_api_key)):
+    """Create a Local Market listing. Seller must have Trust Score ≥ 30 (LM-08)."""
+    conn = database.get_db()
+    err = _lm_check_seller_can_publish(conn, listing.seller_email)
+    if err:
+        conn.close()
+        raise HTTPException(status_code=403, detail=err)
+    # Persist country on the user row if supplied (LM-29)
+    if listing.country:
+        conn.execute(
+            "UPDATE users SET country = ? WHERE email = ?",
+            (listing.country, listing.seller_email)
+        )
+    cur = conn.execute(
+        """INSERT INTO listings
+           (title, price, category, city, area, suburb, description,
+            thumb_url, medium_url, geo_city_id, seller_email, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+        (listing.title, listing.price, LM_CATEGORY, listing.city, listing.suburb,
+         listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
+         listing.geo_city_id, listing.seller_email)
+    )
+    new_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    # Run wishlist matching against this new LM listing — same engine as Wishlist Feed
+    background_tasks.add_task(run_match_job, new_id)
+    return {"id": new_id, "message": "Local Market listing created"}
+
+
+@app.get("/local-market/listings")
+def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
+                     min_trust: int = 0, q: Optional[str] = None, limit: int = 50):
+    """Public list endpoint. Anonymous-stripped cards. Suspended listings hidden."""
+    conn = database.get_db()
+    clauses = ["l.category = ?", "l.suspension_reason IS NULL",
+               "COALESCE(l.trust_score, 0) >= ?"]
+    params: list = [LM_CATEGORY, max(0, min_trust)]
+    if city:
+        clauses.append("l.city = ?")
+        params.append(city)
+    if suburb:
+        clauses.append("l.suburb = ?")
+        params.append(suburb)
+    where = " AND ".join(clauses)
+    rows = conn.execute(
+        f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
+                   l.thumb_url, l.medium_url, l.description, l.published_at,
+                   l.view_count, l.boost_until,
+                   COALESCE(l.trust_score, 0) AS trust_score
+            FROM listings l
+            WHERE {where}
+            ORDER BY l.published_at DESC LIMIT ?""",
+        params + [limit]
+    ).fetchall()
+    conn.close()
+    # Free-text scoring (zero-cost) — sort by Haiko score if q is supplied
+    cards = [dict(r) for r in rows]
+    if q and q.strip():
+        sig = {"raw_text": q, "category": None}
+        scored = []
+        for c in cards:
+            score = MATCHER.score_match(sig, MATCHER.extract_intent(c))
+            if score >= 30:  # softer threshold for browse than wishlist
+                scored.append((score, c))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        cards = [c for _, c in scored]
+    # Anonymity-strip — defensive (these SELECTs already exclude seller_email,
+    # but keep _strip_seller_identity in the chain in case helpers are reused)
+    return [_strip_seller_identity(c) for c in cards]
+
+
+@app.get("/local-market/listings/{listing_id}")
+def lm_get_listing(listing_id: int):
+    """Public detail endpoint. Suspension-aware. No seller identity returned."""
+    conn = database.get_db()
+    row = conn.execute(
+        """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.country,
+                  l.thumb_url, l.medium_url, l.description, l.published_at,
+                  l.view_count, l.boost_until,
+                  COALESCE(l.trust_score, 0) AS trust_score
+           FROM listings l
+           WHERE l.id = ? AND l.category = ? AND l.suspension_reason IS NULL""",
+        (listing_id, LM_CATEGORY)
+    ).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return _strip_seller_identity(dict(row))
+
+
+@app.post("/local-market/intro")
+def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
+    """Buyer submits an intro on a Local Market listing. Server-side gates:
+    - listing must exist, be Local Market, not suspended
+    - buyer Trust Score ≥ 20 (LM-15)
+    - buyer not in 7-day cooldown after a previous decline/auto-close on this listing (LM-F3)
+    - seller must have at least LM_INTRO_COST_T Tuppence (or 2T if boosted)
+    - first-intro idempotency: deduct from seller exactly once per listing (LM-T1)
+    """
+    conn = database.get_db()
+    listing = conn.execute(
+        "SELECT * FROM listings WHERE id = ? AND category = ?",
+        (req.listing_id, LM_CATEGORY)
+    ).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    listing = dict(listing)
+    if listing.get("suspension_reason"):
+        conn.close()
+        raise HTTPException(status_code=410, detail="Listing is suspended")
+    seller_email = listing.get("seller_email")
+    if not seller_email:
+        conn.close()
+        raise HTTPException(status_code=409, detail="Listing has no seller — cannot accept intros")
+
+    # Buyer trust gate (LM-15)
+    buyer_score = _buyer_trust(conn, req.buyer_token)
+    if buyer_score < LM_BUYER_MIN_TRUST:
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail=f"buyer_trust_below_{LM_BUYER_MIN_TRUST}"
+        )
+
+    # 7-day cooldown after declined/auto-closed intro from same buyer (LM-F3)
+    cooldown_cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    recent_block = conn.execute(
+        """SELECT id FROM intro_requests
+           WHERE listing_id = ? AND buyer_email = ?
+             AND status IN ('declined', 'auto_closed')
+             AND created_at >= ?
+           LIMIT 1""",
+        (req.listing_id, req.buyer_email or req.buyer_token, cooldown_cutoff)
+    ).fetchone()
+    if recent_block:
+        conn.close()
+        raise HTTPException(status_code=429, detail="cooldown_7_days")
+
+    # Determine boost
+    boost_until = listing.get("boost_until")
+    is_boosted = False
+    if boost_until:
+        try:
+            is_boosted = datetime.fromisoformat(boost_until) > datetime.now(timezone.utc)
+        except Exception:
+            pass
+    cost_T = LM_BOOST_COST_T if is_boosted else LM_INTRO_COST_T
+
+    # First-intro idempotency — only deduct from seller on the FIRST intro per listing (LM-T1)
+    first_intro = (int(listing.get("lm_intro_charged") or 0) == 0)
+
+    # Seller balance check (only if this is the first chargeable intro)
+    if first_intro:
+        bal = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+            (seller_email,)
+        ).fetchone()["bal"] or 0
+        if int(bal) < cost_T:
+            conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail=f"seller_insufficient_tuppence (needs {cost_T}T, has {bal}T)"
+            )
+
+    # Insert the intro
+    cur = conn.execute(
+        """INSERT INTO intro_requests
+             (listing_id, buyer_email, buyer_name, message, intro_type)
+           VALUES (?, ?, ?, ?, 'local_market')""",
+        (req.listing_id, req.buyer_email or req.buyer_token, req.buyer_name, req.message)
+    )
+    new_intro_id = cur.lastrowid
+
+    # Charge the seller on the first intro per listing (LM-T1, LM-T5)
+    if first_intro:
+        txn_type = "lm_boost_deduct" if is_boosted else "lm_intro_deduct"
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+            (seller_email, txn_type, -cost_T,
+             f"Local Market intro · listing #{req.listing_id} · {listing.get('title','')}")
+        )
+        conn.execute(
+            "UPDATE listings SET lm_intro_charged = 1 WHERE id = ?",
+            (req.listing_id,)
+        )
+
+    conn.commit()
+    conn.close()
+
+    # n8n webhook (existing pattern — anonymous-safe payload)
+    if N8N_WEBHOOK_NEW_INTRO:
+        payload = {
+            "event":          "lm_intro_submitted",
+            "intro_id":       new_intro_id,
+            "listing_id":     req.listing_id,
+            "listing_title":  listing.get("title"),
+            "buyer_name":     req.buyer_name,
+            "seller_email":   seller_email,
+            "tuppence_charged_to_seller": cost_T if first_intro else 0,
+            "timestamp":      datetime.now(timezone.utc).isoformat(),
+        }
+        background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_NEW_INTRO, payload)
+
+    return {
+        "intro_id": new_intro_id,
+        "message": "Local Market intro submitted",
+        "tuppence_charged_to_seller": cost_T if first_intro else 0,
+        "boosted": is_boosted,
+    }
+
+
+@app.post("/local-market/complaint")
+def lm_file_complaint(req: LMComplaintIn, _key: str = Depends(auth.require_api_key)):
+    """Seller files a no-show complaint. Status starts 'pending' and is
+    resolved manually by ops via /local-market/complaint/{id}/uphold|dismiss."""
+    conn = database.get_db()
+    intro = conn.execute(
+        "SELECT * FROM intro_requests WHERE id = ? AND intro_type = 'local_market'",
+        (req.intro_id,)
+    ).fetchone()
+    if not intro:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Local Market intro not found")
+    intro = dict(intro)
+    listing = conn.execute(
+        "SELECT seller_email FROM listings WHERE id = ?", (intro["listing_id"],)
+    ).fetchone()
+    if not listing or listing["seller_email"] != req.seller_email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not your listing")
+    # Buyer token is stored in buyer_email when buyer is anonymous; both forms accepted
+    buyer_id = intro.get("buyer_email") or ""
+    cur = conn.execute(
+        """INSERT INTO lm_complaints (listing_id, seller_email, buyer_token, intro_id, reason)
+           VALUES (?, ?, ?, ?, ?)""",
+        (intro["listing_id"], req.seller_email, buyer_id, req.intro_id, req.reason)
+    )
+    new_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return {"complaint_id": new_id, "status": "pending"}
+
+
+@app.put("/local-market/complaint/{complaint_id}/uphold")
+def lm_uphold_complaint(complaint_id: int, _key: str = Depends(auth.require_api_key)):
+    """Ops upholds the complaint: −3 buyer Trust (LM-T4 / LM-16), 1T credit to
+    seller IF listing still active (LM-T3), buyer auto-blocked if Trust < 20 (LM-17)."""
+    conn = database.get_db()
+    row = conn.execute("SELECT * FROM lm_complaints WHERE id = ?", (complaint_id,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    if row["status"] != "pending":
+        conn.close()
+        raise HTTPException(status_code=409, detail=f"Already resolved ({row['status']})")
+    listing = conn.execute(
+        "SELECT id, suspension_reason, title FROM listings WHERE id = ?",
+        (row["listing_id"],)
+    ).fetchone()
+    listing_active = bool(listing and not listing["suspension_reason"])
+
+    # 1) Buyer Trust Score penalty (−3, LM-T4)
+    _set_buyer_trust(conn, row["buyer_token"], -LM_BUYER_NOSHOW_PENALTY)
+
+    # 2) Seller credit if listing still active (LM-T3)
+    credit_amount = 0
+    if listing_active:
+        credit_amount = LM_INTRO_COST_T
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+            (row["seller_email"], "lm_credit", credit_amount,
+             f"Local Market no-show credit · listing #{row['listing_id']} · {listing['title']}")
+        )
+
+    conn.execute(
+        """UPDATE lm_complaints
+           SET status = 'upheld', resolved_at = datetime('now'), credit_issued = ?
+           WHERE id = ?""",
+        (1 if credit_amount else 0, complaint_id)
+    )
+    conn.commit()
+    conn.close()
+    return {
+        "message": "Complaint upheld",
+        "buyer_trust_penalty": -LM_BUYER_NOSHOW_PENALTY,
+        "seller_credit": credit_amount,
+    }
+
+
+@app.put("/local-market/complaint/{complaint_id}/dismiss")
+def lm_dismiss_complaint(complaint_id: int, _key: str = Depends(auth.require_api_key)):
+    """Ops dismisses the complaint — no Trust Score penalty, no credit."""
+    conn = database.get_db()
+    res = conn.execute(
+        """UPDATE lm_complaints
+           SET status = 'dismissed', resolved_at = datetime('now')
+           WHERE id = ? AND status = 'pending'""",
+        (complaint_id,)
+    )
+    if res.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Complaint not found or already resolved")
+    conn.commit()
+    conn.close()
+    return {"message": "Complaint dismissed"}
+
+
+@app.get("/local-market/complaints")
+def lm_list_complaints(status: str = "pending", _key: str = Depends(auth.require_api_key)):
+    """Ops queue. Returns pending (default) / upheld / dismissed."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT c.*, l.title AS listing_title
+           FROM lm_complaints c
+           LEFT JOIN listings l ON l.id = c.listing_id
+           WHERE c.status = ?
+           ORDER BY c.filed_at DESC""",
+        (status,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/local-market/suspension/check")
+def lm_suspension_check(email: str):
+    """Recovery-path query for the admin tool (LM-14c). Returns the seller's
+    current state — banned / cooling-off / suspended / clear — and the gap
+    to recovery."""
+    conn = database.get_db()
+    score = _seller_trust(conn, email)
+    if _lm_is_banned(conn, email):
+        conn.close()
+        return {
+            "state": "permanent_ban",
+            "trust_score": score,
+            "min_required": LM_SELLER_MIN_TRUST,
+            "message": "You are permanently banned from the Local Market. Other categories remain available.",
+        }
+    susp = _lm_active_suspension(conn, email)
+    conn.close()
+    if susp and susp.get("cooling_off_until"):
+        return {
+            "state": "cooling_off",
+            "trust_score": score,
+            "min_required": LM_SELLER_MIN_TRUST,
+            "cooling_off_until": susp["cooling_off_until"],
+            "message": "You are in a 30-day mandatory cooling-off period. Listings stay suspended even if your Trust Score recovers during this time.",
+        }
+    if susp:
+        return {
+            "state": "suspended",
+            "trust_score": score,
+            "min_required": LM_SELLER_MIN_TRUST,
+            "delta_to_recover": max(0, LM_SELLER_MIN_TRUST - score),
+            "message": "Your Local Market listings are suspended. Restore your Trust Score to 30 or above to reactivate them.",
+        }
+    return {
+        "state": "clear",
+        "trust_score": score,
+        "min_required": LM_SELLER_MIN_TRUST,
+    }
+
+
+@app.post("/local-market/eula/accept")
+def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key)):
+    """Records that the seller has read and accepted the EULA clauses for
+    Local Market (§11). Required once on first LM activation (LM-14f)."""
+    conn = database.get_db()
+    conn.execute(
+        "UPDATE users SET lm_eula_accepted_at = datetime('now') WHERE email = ?",
+        (email,)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "EULA accepted"}
+
+
+# ── TRUST SCORE HUB (Section 3 · v1.3.0) ─────────────────────
+# Per-credential checklist + Haiko tip + penalties section.
+# All point values mirror TRUST_SCORE_CRITERIA.md v1.0 EXACTLY.
+# Any future change to a value must be made there first and then
+# reflected in this _TRUST_SIGNALS dict.
+#
+# COST CONSTRAINT (locked): Haiko tip generation is pure local Python.
+
+# Tier thresholds (locked — Principle A5)
+TRUST_TIERS = [
+    (0,  39,  "New",            "grey"),
+    (40, 69,  "Established",    "blue"),
+    (70, 89,  "Trusted",        "green"),
+    (90, 100, "Highly Trusted", "gold"),
+]
+
+def _trust_tier(score: int) -> dict:
+    s = max(0, min(100, int(score or 0)))
+    for lo, hi, name, color in TRUST_TIERS:
+        if lo <= s <= hi:
+            # Find the next tier
+            next_t = None
+            for lo2, hi2, name2, color2 in TRUST_TIERS:
+                if lo2 > hi:
+                    next_t = {"name": name2, "threshold": lo2, "delta": lo2 - s, "color": color2}
+                    break
+            return {"name": name, "color": color, "score": s, "next_tier": next_t}
+    return {"name": "New", "color": "grey", "score": s, "next_tier": None}
+
+
+# Every signal id matches the pattern <group>.<key>. Group is one of
+# 'universal' | 'track_record' | 'category.<cat_key>'. Numbers below
+# come straight out of TRUST_SCORE_CRITERIA.md — do not edit without
+# updating the spec first.
+_TRUST_SIGNALS = {
+    # ── Group 1 · Universal (max 30) ─────────────────────────
+    "universal.id_verified": {
+        "name": "Government-issued ID verified",
+        "points": 15, "max": 15,
+        "how_to_earn": "Upload your ID or passport — verified by MarketSquare.",
+        "evidence_required": True,
+    },
+    "universal.profile_complete": {
+        "name": "Complete profile",
+        "points": 5, "max": 5,
+        "how_to_earn": "Bio, suburb, listing, and category description all set.",
+        "evidence_required": False,  # system-calculated
+    },
+    "universal.referral_1": {
+        "name": "1st verified referral",
+        "points": 5, "max": 5,
+        "how_to_earn": "Share your referral link with a client.",
+        "evidence_required": False,
+    },
+    "universal.referral_3": {
+        "name": "3rd verified referral",
+        "points": 3, "max": 3,
+        "how_to_earn": "2 more verified referrals after the first.",
+        "evidence_required": False,
+    },
+    "universal.referral_5plus": {
+        "name": "5th+ verified referral",
+        "points": 2, "max": 2,
+        "how_to_earn": "Cap: 10 pts total from referrals.",
+        "evidence_required": False,
+    },
+
+    # ── Group 2 · Platform Track Record (max 30) ─────────────
+    "track_record.intro_1": {
+        "name": "1st successful introduction",
+        "points": 5, "max": 5,
+        "how_to_earn": "Accept a buyer introduction and complete it.",
+        "evidence_required": False,
+    },
+    "track_record.intro_5": {
+        "name": "5+ successful introductions",
+        "points": 5, "max": 5,
+        "how_to_earn": "Five completed introductions.",
+        "evidence_required": False,
+    },
+    "track_record.intro_20": {
+        "name": "20+ successful introductions",
+        "points": 5, "max": 5,
+        "how_to_earn": "Twenty completed introductions.",
+        "evidence_required": False,
+    },
+    "track_record.zero_ignored_90d": {
+        "name": "Zero ignored introductions (rolling 90 days)",
+        "points": 10, "max": 10,
+        "how_to_earn": "Respond to every introduction within 48 hours.",
+        "evidence_required": False,
+    },
+    "track_record.tenure_6mo": {
+        "name": "Account active 6+ months with live listing",
+        "points": 5, "max": 5,
+        "how_to_earn": "Keep at least one live listing for 6 months.",
+        "evidence_required": False,
+    },
+}
+
+# ── Group 3 · Category Credentials (max 40 per category) ─────
+# Per-category checklists. The points field is the value awarded
+# when this signal is verified. Mutually-exclusive replacement signals
+# (e.g. NQF7 replaces NQF6) are noted in the 'replaces' field.
+_CATEGORY_SIGNALS = {
+    "Property": {
+        "category.property.ppra":          {"name": "Active PPRA / EAAB Registration", "points": 15, "how_to_earn": "Upload PPRA certificate — verified against PPRA register."},
+        "category.property.nqf4":          {"name": "NQF4 Real Estate qualification", "points": 6,  "how_to_earn": "Upload certificate."},
+        "category.property.nqf5":          {"name": "NQF5 Real Estate qualification", "points": 6,  "how_to_earn": "Upload certificate (additional to NQF4).", "additional_to": "category.property.nqf4"},
+        "category.property.nqf6_plus":     {"name": "NQF6+ / Professional designation", "points": 8, "how_to_earn": "Upload certificate.", "additional_to": "category.property.nqf5"},
+        "category.property.body":          {"name": "Professional body membership (IEASA, SAPOA, NAR)", "points": 5, "how_to_earn": "Upload membership card or letter."},
+    },
+    "Tutors": {
+        "category.tutors.sace":            {"name": "SACE registration", "points": 8,  "how_to_earn": "Upload SACE number — verified at sace.org.za."},
+        "category.tutors.cert_diploma":    {"name": "Certificate or Diploma (NQF5–6)", "points": 6, "how_to_earn": "Upload certificate."},
+        "category.tutors.bachelor":        {"name": "Bachelor's Degree (NQF7)", "points": 10, "how_to_earn": "Upload certificate (replaces diploma points).", "replaces": "category.tutors.cert_diploma"},
+        "category.tutors.honours":         {"name": "Honours / Postgraduate (NQF8+)", "points": 14, "how_to_earn": "Upload certificate (replaces bachelor's points).", "replaces": "category.tutors.bachelor"},
+        "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload subject-specific cert or transcript."},
+        "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV — reviewed by MarketSquare."},
+        "category.tutors.exp_5plus":       {"name": "Teaching experience 5+ years", "points": 6, "how_to_earn": "Upload CV.", "additional_to": "category.tutors.exp_2_5"},
+        "category.tutors.strong_cv":       {"name": "Strong structured CV", "points": 2, "how_to_earn": "Upload CV — assessed at onboarding."},
+    },
+    "Services-Technical": {
+        "category.services_tech.trade_cert": {"name": "Formal trade certificate", "points": 8, "how_to_earn": "Upload (City & Guilds, TVET, MERSETA, CETA, Red Seal)."},
+        "category.services_tech.body_reg":   {"name": "Professional body registration", "points": 12, "how_to_earn": "Upload (ECSA, PIRB, NHBRC, FSCA, SAICA) — verified."},
+        "category.services_tech.coc":        {"name": "Primary industry licence / CoC", "points": 5, "how_to_earn": "Upload with expiry date."},
+        "category.services_tech.tickets":    {"name": "Additional tickets (max 2 counted)", "points": 6, "how_to_earn": "Upload First Aid, heights, confined space etc. (3 pts each, max 2)."},
+        "category.services_tech.exp_3_7":    {"name": "Years in trade 3–7", "points": 4, "how_to_earn": "Upload CV."},
+        "category.services_tech.exp_7plus":  {"name": "Years in trade 7+", "points": 4, "how_to_earn": "Upload CV.", "additional_to": "category.services_tech.exp_3_7"},
+        "category.services_tech.strong_cv":  {"name": "Strong verifiable CV", "points": 2, "how_to_earn": "Upload CV."},
+    },
+    "Services-Casuals": {
+        "category.services_cas.nqf":         {"name": "Any NQF qualification or short course", "points": 8, "how_to_earn": "Upload certificate."},
+        "category.services_cas.exp_2_4":     {"name": "2–4 years in service", "points": 6, "how_to_earn": "Upload CV or written statement."},
+        "category.services_cas.exp_5plus":   {"name": "5+ years in service", "points": 8, "how_to_earn": "Upload CV.", "additional_to": "category.services_cas.exp_2_4"},
+        "category.services_cas.ref_1":       {"name": "Reference letter", "points": 8, "how_to_earn": "Upload scanned letter with verifiable contact."},
+        "category.services_cas.ref_2":       {"name": "Second reference letter", "points": 5, "how_to_earn": "Upload second letter — max 2 counted."},
+        "category.services_cas.profile":     {"name": "Strong profile description", "points": 5, "how_to_earn": "Complete your profile description in detail."},
+    },
+    "Adventures-Experiences": {
+        "category.adv_exp.guide_cert":       {"name": "Activity-specific guide cert", "points": 12, "how_to_earn": "FGASA, PADI, MCSA, SACAA — verified."},
+        "category.adv_exp.first_aid":        {"name": "Current First Aid / Emergency Response", "points": 6, "how_to_earn": "Upload with expiry date."},
+        "category.adv_exp.exp_3_7":          {"name": "Guided experience 3–7 years", "points": 5, "how_to_earn": "Upload CV."},
+        "category.adv_exp.exp_7plus":        {"name": "Guided experience 7+ years", "points": 5, "how_to_earn": "Upload CV.", "additional_to": "category.adv_exp.exp_3_7"},
+        "category.adv_exp.safety_cert":      {"name": "Additional safety cert", "points": 4, "how_to_earn": "Wilderness First Responder, swift water rescue etc."},
+        "category.adv_exp.insurance":        {"name": "Liability / indemnity insurance", "points": 5, "how_to_earn": "Upload policy summary with expiry."},
+        "category.adv_exp.secondary_qual":   {"name": "Secondary qualification in declared activity", "points": 3, "how_to_earn": "Upload certificate."},
+    },
+    "Adventures-Accommodation": {
+        # TGCSA grading is mutually exclusive — only ONE star level counts at a time.
+        # The replaces chain enforces this.
+        "category.adv_acc.tgcsa_1":          {"name": "TGCSA 1-star grading", "points": 6,  "how_to_earn": "Upload grading number — verified."},
+        "category.adv_acc.tgcsa_2":          {"name": "TGCSA 2-star grading", "points": 10, "how_to_earn": "Replaces 1-star pts.", "replaces": "category.adv_acc.tgcsa_1"},
+        "category.adv_acc.tgcsa_3":          {"name": "TGCSA 3-star grading", "points": 14, "how_to_earn": "Replaces 2-star pts.", "replaces": "category.adv_acc.tgcsa_2"},
+        "category.adv_acc.tgcsa_4":          {"name": "TGCSA 4-star grading", "points": 18, "how_to_earn": "Replaces 3-star pts.", "replaces": "category.adv_acc.tgcsa_3"},
+        "category.adv_acc.tgcsa_5":          {"name": "TGCSA 5-star grading", "points": 22, "how_to_earn": "Replaces 4-star pts.", "replaces": "category.adv_acc.tgcsa_4"},
+        "category.adv_acc.licence":          {"name": "Municipal licence to operate", "points": 6, "how_to_earn": "Upload licence document."},
+        "category.adv_acc.health_safety":    {"name": "Health & safety compliance", "points": 5, "how_to_earn": "Upload certificate."},
+        "category.adv_acc.fire":             {"name": "Fire clearance certificate", "points": 4, "how_to_earn": "Upload certificate."},
+        "category.adv_acc.award":            {"name": "AA Travel / TripAdvisor / Booking.com award", "points": 3, "how_to_earn": "Upload award certificate or screenshot."},
+    },
+    "Collectors": {
+        "category.collectors.specialisation": {"name": "Category specialisation declared", "points": 4, "how_to_earn": "Write your collecting domain in your profile."},
+        "category.collectors.tx_1_4":         {"name": "1–4 successful transactions", "points": 8, "how_to_earn": "Complete introductions — system tracked."},
+        "category.collectors.tx_5_14":        {"name": "5–14 successful transactions", "points": 6, "how_to_earn": "System tracked.", "additional_to": "category.collectors.tx_1_4"},
+        "category.collectors.tx_15plus":      {"name": "15+ successful transactions", "points": 6, "how_to_earn": "System tracked.", "additional_to": "category.collectors.tx_5_14"},
+        "category.collectors.auth_cert":      {"name": "Third-party authentication certificate", "points": 8, "how_to_earn": "Upload per item — counted once per listing."},
+        "category.collectors.appraisal":      {"name": "Professional appraisal or valuation", "points": 5, "how_to_earn": "Upload appraisal document."},
+        "category.collectors.assoc":          {"name": "Collector association membership", "points": 3, "how_to_earn": "Upload membership card or certificate."},
+    },
+    # Local Market sellers reuse the buyer-onboarding signal set per
+    # TRUST_SCORE_HUB_REQUIREMENTS §3 last block. Universal identity
+    # carries highest weight here.
+    "local_market": {
+        "category.lm.phone_verified":        {"name": "Phone number verified", "points": 8, "how_to_earn": "Add and verify your phone number."},
+        "category.lm.banking":               {"name": "Banking details added", "points": 5, "how_to_earn": "Add banking details — required for payments."},
+    },
+}
+
+# Penalty scale per TRUST_SCORE_CRITERIA §5a — diminishing
+_COMPLAINT_PENALTY_SCALE = [-8, -5, -3, -2, -1]
+_COMPLAINT_PENALTY_CAP = -22
+
+
+def _category_key_for_user(conn, email: str) -> str:
+    """Decide which Group 3 checklist to render for this seller. If the
+    seller has an LM listing OR `primary_category` is 'local_market',
+    return 'local_market'. Otherwise look at primary_category."""
+    row = conn.execute(
+        "SELECT primary_category FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    primary = (row["primary_category"] if row else None) or ""
+    if primary:
+        # Normalise common forms — Services-Technical / Services-Casuals /
+        # Adventures-Experiences / Adventures-Accommodation come direct
+        return primary
+    # Inspect listings
+    has_lm = conn.execute(
+        "SELECT 1 FROM listings WHERE seller_email = ? AND category = 'local_market' LIMIT 1",
+        (email,)
+    ).fetchone()
+    if has_lm:
+        return "local_market"
+    cat_row = conn.execute(
+        """SELECT category, service_class FROM listings
+           WHERE seller_email = ? ORDER BY created_at DESC LIMIT 1""",
+        (email,)
+    ).fetchone()
+    if not cat_row:
+        return ""
+    cat = cat_row["category"] or ""
+    sc  = cat_row["service_class"] or ""
+    if cat == "Services" and sc:
+        return "Services-Technical" if sc.lower().startswith("tech") else "Services-Casuals"
+    if cat == "Adventures":
+        # Adventures sub-class lives in service_class for now
+        return "Adventures-Accommodation" if sc.lower().startswith("accom") else "Adventures-Experiences"
+    return cat or ""
+
+
+def _compute_universal_track_status(conn, email: str) -> dict:
+    """Return computed status for system-calculated signals (profile, referrals,
+    introductions, tenure). These don't require an admin upload — BEA derives
+    them from existing data."""
+    out = {}
+
+    # Profile completeness — bio, suburb, listing, category description set
+    user_row = conn.execute(
+        "SELECT name, country, photo_url FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    has_listing = conn.execute(
+        "SELECT 1 FROM listings WHERE seller_email = ? LIMIT 1", (email,)
+    ).fetchone()
+    profile_complete = bool(
+        user_row and user_row["name"] and user_row["country"]
+        and user_row["photo_url"] and has_listing
+    )
+    out["universal.profile_complete"] = "earned" if profile_complete else "missing"
+
+    # Referrals — placeholder for V1: not yet tracked. Always missing.
+    for k in ("universal.referral_1", "universal.referral_3", "universal.referral_5plus"):
+        out[k] = "missing"
+
+    # Successful intros (accepted)
+    intro_count = conn.execute(
+        """SELECT COUNT(*) AS n FROM intro_requests i
+           JOIN listings l ON l.id = i.listing_id
+           WHERE l.seller_email = ? AND i.status = 'accepted'""",
+        (email,)
+    ).fetchone()["n"] or 0
+    out["track_record.intro_1"]  = "earned" if intro_count >= 1  else "missing"
+    out["track_record.intro_5"]  = "earned" if intro_count >= 5  else "missing"
+    out["track_record.intro_20"] = "earned" if intro_count >= 20 else "missing"
+
+    # Zero ignored intros in 90 days
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+    ignored = conn.execute(
+        """SELECT COUNT(*) AS n FROM intro_requests i
+           JOIN listings l ON l.id = i.listing_id
+           WHERE l.seller_email = ? AND i.status = 'pending'
+             AND i.created_at < ?""",
+        (email, (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat())
+    ).fetchone()["n"] or 0
+    out["track_record.zero_ignored_90d"] = "earned" if ignored == 0 else "missing"
+
+    # Tenure 6+ months — needs first listing date
+    first_row = conn.execute(
+        "SELECT MIN(created_at) AS first FROM listings WHERE seller_email = ?", (email,)
+    ).fetchone()
+    has_6mo = False
+    if first_row and first_row["first"]:
+        try:
+            first_dt = datetime.fromisoformat(first_row["first"].replace("Z", "+00:00"))
+            if first_dt.tzinfo is None:
+                first_dt = first_dt.replace(tzinfo=timezone.utc)
+            has_6mo = (datetime.now(timezone.utc) - first_dt).days >= 180
+        except Exception:
+            pass
+    out["track_record.tenure_6mo"] = "earned" if has_6mo else "missing"
+
+    return out
+
+
+def _build_breakdown_items(conn, email: str, signals_dict: dict, computed: dict) -> list:
+    """Build a list of {signal_id, name, points, status, how_to_earn} items
+    from a signal set. Reads user_credentials for upload-required signals."""
+    rows = conn.execute(
+        "SELECT signal_id, status FROM user_credentials WHERE email = ?", (email,)
+    ).fetchall()
+    cred_status = {r["signal_id"]: r["status"] for r in rows}
+    items = []
+    for sig_id, sig in signals_dict.items():
+        if sig_id in computed:
+            status = computed[sig_id]
+        elif sig_id in cred_status:
+            # 'pending' | 'earned' | 'rejected'
+            status = cred_status[sig_id]
+            if status not in ("earned", "pending", "rejected"):
+                status = "missing"
+        else:
+            status = "missing"
+        items.append({
+            "signal_id":   sig_id,
+            "name":        sig["name"],
+            "points":      sig["points"],
+            "status":      status,
+            "how_to_earn": sig["how_to_earn"],
+        })
+    return items
+
+
+def _sum_earned_with_replaces(items: list, signals_dict: dict) -> int:
+    """Sum points but honour mutually-exclusive replacement chains.
+    Example: if both NQF6 and NQF7 are earned, NQF7 replaces NQF6 — only NQF7 counts."""
+    earned_ids = {it["signal_id"] for it in items if it["status"] == "earned"}
+    replaced_ids = set()
+    for sig_id in earned_ids:
+        sig = signals_dict.get(sig_id, {})
+        replaces = sig.get("replaces")
+        if replaces and replaces in earned_ids:
+            replaced_ids.add(replaces)
+    total = 0
+    for it in items:
+        if it["status"] != "earned":
+            continue
+        if it["signal_id"] in replaced_ids:
+            continue
+        total += it["points"]
+    return total
+
+
+def _seller_active_complaints(conn, email: str) -> list:
+    """Return active (non-decayed, non-disputed) seller complaints with their
+    deduction values per the diminishing scale, capped at -22 total."""
+    rows = conn.execute(
+        """SELECT id, reason_code, notes, status, filed_at, points_deducted
+           FROM seller_complaints
+           WHERE seller_email = ? AND status IN ('pending', 'upheld')
+           ORDER BY filed_at ASC""",
+        (email,)
+    ).fetchall()
+    out = []
+    cumulative = 0
+    for i, r in enumerate(rows):
+        # Diminishing scale based on order
+        scale_idx = min(i, len(_COMPLAINT_PENALTY_SCALE) - 1)
+        raw = _COMPLAINT_PENALTY_SCALE[scale_idx]
+        # Decay older than 24 months → 50% deduction
+        try:
+            filed = datetime.fromisoformat(r["filed_at"].replace("Z", "+00:00"))
+            if filed.tzinfo is None:
+                filed = filed.replace(tzinfo=timezone.utc)
+            age_days = (datetime.now(timezone.utc) - filed).days
+            if age_days >= 730:
+                raw = int(raw / 2)
+        except Exception:
+            pass
+        # Apply cap
+        if cumulative + raw < _COMPLAINT_PENALTY_CAP:
+            raw = _COMPLAINT_PENALTY_CAP - cumulative
+        cumulative += raw
+        out.append({
+            "id": r["id"], "reason_code": r["reason_code"], "notes": r["notes"],
+            "status": r["status"], "filed_at": r["filed_at"], "points": raw,
+        })
+    return out
+
+
+def _haiko_tip(items_universal: list, items_track: list, items_category: list,
+               cat_signals: dict, score: int, tier: dict) -> dict:
+    """Pick the single highest-impact uncompleted action. Pure local logic
+    — zero external API. If the seller is within 5 points of the next tier,
+    prefer the smallest-effort action that closes the gap."""
+    open_items = []
+    for source_name, source_items, source_dict in [
+        ("Universal",     items_universal, _TRUST_SIGNALS),
+        ("Track Record",  items_track,     _TRUST_SIGNALS),
+        ("Category",      items_category,  cat_signals),
+    ]:
+        for it in source_items:
+            if it["status"] not in ("earned",):
+                sig = source_dict.get(it["signal_id"], {})
+                # Don't recommend a signal whose 'replaces' or 'additional_to'
+                # prerequisite hasn't been earned yet — they only make sense
+                # in sequence
+                blocker = sig.get("additional_to")
+                if blocker:
+                    earned_ids = {x["signal_id"] for x in items_universal + items_track + items_category if x["status"] == "earned"}
+                    if blocker not in earned_ids:
+                        continue
+                open_items.append({**it, "group": source_name, "evidence_required": sig.get("evidence_required", True)})
+
+    if not open_items:
+        return {
+            "text": "Your score is maximised. Keep responding to introductions to build your track record.",
+            "action_label": None,
+            "action_url": None,
+            "points_available": 0,
+        }
+
+    # Default — highest single value
+    open_items.sort(key=lambda x: x["points"], reverse=True)
+    pick = open_items[0]
+
+    # If within 5 of next tier and a smaller-value item closes the gap, prefer that
+    if tier["next_tier"] and tier["next_tier"]["delta"] <= 5:
+        gap = tier["next_tier"]["delta"]
+        gap_closers = [x for x in open_items if x["points"] >= gap]
+        if gap_closers:
+            # Prefer the one with the smallest-effort path (fewest points but
+            # >= gap)
+            gap_closers.sort(key=lambda x: x["points"])
+            pick = gap_closers[0]
+
+    text = (
+        f"{pick['how_to_earn']} This adds {pick['points']} points"
+        + (f" — enough to reach {tier['next_tier']['name']} tier."
+           if tier['next_tier'] and pick['points'] >= tier['next_tier']['delta']
+           else ".")
+    )
+    return {
+        "text": text,
+        "action_label": "Upload now →" if pick.get("evidence_required") else "Complete now →",
+        "action_url": None,  # admin tool resolves this from the signal_id
+        "points_available": pick["points"],
+        "signal_id": pick["signal_id"],
+    }
+
+
+@app.get("/trust-score/breakdown")
+def trust_score_breakdown(email: str):
+    """Return a structured Trust Score breakdown for the given seller.
+    Frontend renders Universal / Track Record / Category groups + a Haiko
+    tip + active penalties. Score is recomputed from credentials each call;
+    users.trust_score is updated as a side-effect so wishlist matching and
+    Local Market gates see the live value."""
+    conn = database.get_db()
+    user = conn.execute(
+        "SELECT trust_score, primary_category FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    cat_key = _category_key_for_user(conn, email)
+    cat_signals = _CATEGORY_SIGNALS.get(cat_key, {})
+
+    # System-calculated statuses
+    computed = _compute_universal_track_status(conn, email)
+
+    # Build group items
+    universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
+    track_signals     = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("track_record.")}
+
+    items_u = _build_breakdown_items(conn, email, universal_signals, computed)
+    items_t = _build_breakdown_items(conn, email, track_signals, computed)
+    items_c = _build_breakdown_items(conn, email, cat_signals, {}) if cat_signals else []
+
+    # Sums (max-capped)
+    earned_u = min(30, _sum_earned_with_replaces(items_u, _TRUST_SIGNALS))
+    earned_t = min(30, _sum_earned_with_replaces(items_t, _TRUST_SIGNALS))
+    earned_c = min(40, _sum_earned_with_replaces(items_c, cat_signals))
+
+    # Penalties
+    penalties = _seller_active_complaints(conn, email)
+    penalty_total = sum(p["points"] for p in penalties)
+
+    score_total = max(0, min(100, earned_u + earned_t + earned_c + penalty_total))
+    tier = _trust_tier(score_total)
+
+    # Persist the recomputed score (drives wishlist matching trust gate +
+    # Local Market suspension state)
+    prior_score = int(user["trust_score"] or 0)
+    if prior_score != score_total:
+        conn.execute(
+            "UPDATE users SET trust_score = ? WHERE email = ?",
+            (score_total, email)
+        )
+        conn.commit()
+        # Hook into LM suspension/restoration
+        _lm_recompute_seller_state(conn, email)
+        conn.commit()
+
+    tip = _haiko_tip(items_u, items_t, items_c, cat_signals, score_total, tier)
+    conn.close()
+
+    return {
+        "email": email,
+        "score": score_total,
+        "tier": tier["name"],
+        "tier_color": tier["color"],
+        "next_tier": tier["next_tier"],
+        "category_key": cat_key,
+        "groups": {
+            "universal":    {"earned": earned_u, "max": 30, "items": items_u},
+            "track_record": {"earned": earned_t, "max": 30, "items": items_t},
+            "category":     {"earned": earned_c, "max": 40, "items": items_c, "label": cat_key or "—"},
+        },
+        "haiko_tip":  tip,
+        "penalties":  penalties,
+        "penalty_total": penalty_total,
+    }
+
+
+class CredentialUpdateReq(BaseModel):
+    email: str
+    signal_id: str
+    status: str         # 'pending' | 'earned' | 'rejected'
+    evidence_url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@app.post("/trust-score/credential")
+def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(auth.require_api_key)):
+    """Admin sets the verification state of a credential. Status='pending' is
+    the seller-uploaded state; 'earned' is the verified state; 'rejected' clears
+    it. Score recomputes on next /trust-score/breakdown call."""
+    if req.status not in ("pending", "earned", "rejected"):
+        raise HTTPException(status_code=400, detail="status must be pending|earned|rejected")
+    # Validate signal_id is known
+    all_signals = dict(_TRUST_SIGNALS)
+    for cat_set in _CATEGORY_SIGNALS.values():
+        all_signals.update(cat_set)
+    sig = all_signals.get(req.signal_id)
+    if not sig:
+        raise HTTPException(status_code=400, detail=f"unknown signal_id: {req.signal_id}")
+    conn = database.get_db()
+    pts = sig["points"] if req.status == "earned" else 0
+    verified_at = datetime.now(timezone.utc).isoformat() if req.status == "earned" else None
+    conn.execute(
+        """INSERT INTO user_credentials (email, signal_id, status, points, evidence_url, notes, verified_at, verified_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'admin')
+           ON CONFLICT(email, signal_id) DO UPDATE SET
+               status = excluded.status,
+               points = excluded.points,
+               evidence_url = COALESCE(excluded.evidence_url, user_credentials.evidence_url),
+               notes = COALESCE(excluded.notes, user_credentials.notes),
+               verified_at = excluded.verified_at,
+               verified_by = 'admin'""",
+        (req.email, req.signal_id, req.status, pts, req.evidence_url, req.notes, verified_at)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Credential updated", "signal_id": req.signal_id, "status": req.status}
+
+
+@app.get("/trust-score/credentials/pending")
+def trust_score_pending_queue(_key: str = Depends(auth.require_api_key)):
+    """Ops queue — credentials awaiting manual review across all sellers."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT id, email, signal_id, evidence_url, notes, submitted_at
+           FROM user_credentials
+           WHERE status = 'pending'
+           ORDER BY submitted_at ASC"""
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 # ── DEV TOOLS (disable before public launch) ─────────────────

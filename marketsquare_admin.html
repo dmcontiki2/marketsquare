@@ -586,6 +586,45 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 /* Add Edit button to lm-actions */
 .lm-btn.edit { background:transparent; border-color:#1a1a2e; color:#1a1a2e; }
 .lm-btn.hist { background:transparent; border-color:#6b7280; color:#6b7280; font-size:11px; }
+
+/* ── TRUST SCORE HUB (Section 3 · v1.3.0) ─────────────────── */
+.tsh-summary{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:14px;padding:16px;margin-bottom:14px;}
+.tsh-label{font-size:11px;letter-spacing:.5px;text-transform:uppercase;opacity:.7;margin-bottom:6px;}
+.tsh-score{font-size:34px;font-weight:800;line-height:1;}
+.tsh-bar-wrap{height:8px;background:rgba(255,255,255,.15);border-radius:50px;overflow:hidden;margin:10px 0;}
+.tsh-bar-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#10b981);border-radius:50px;transition:width .4s;}
+.tsh-tier-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;}
+.tsh-tier-badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:.5px;}
+.tsh-tier-grey{background:#9ca3af;color:#fff;}
+.tsh-tier-blue{background:#3b82f6;color:#fff;}
+.tsh-tier-green{background:#10b981;color:#fff;}
+.tsh-tier-gold{background:#fbbf24;color:#1a1a2e;}
+.tsh-next{opacity:.85;font-size:12px;margin-top:8px;}
+.tsh-tip{background:#fef3c7;border:1px solid #fbbf24;border-radius:12px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start;}
+.tsh-tip-icon{font-size:22px;line-height:1;}
+.tsh-tip-body{flex:1;font-size:13.5px;color:#92400e;line-height:1.5;}
+.tsh-tip-strong{font-weight:800;color:#78350f;display:block;margin-bottom:3px;}
+.tsh-group{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.tsh-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:#f9fafb;}
+.tsh-group-name{font-size:13px;font-weight:700;color:#1a1a2e;}
+.tsh-group-sum{font-size:12px;font-weight:700;color:#374151;}
+.tsh-group-body{padding:8px 14px 12px;display:none;}
+.tsh-group.open .tsh-group-body{display:block;}
+.tsh-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px dashed #e5e7eb;font-size:13px;}
+.tsh-row:last-child{border-bottom:none;}
+.tsh-row-icon{flex-shrink:0;font-size:14px;width:18px;text-align:center;}
+.tsh-row-body{flex:1;min-width:0;}
+.tsh-row-name{font-weight:600;color:#1a1a2e;}
+.tsh-row-how{font-size:11.5px;color:#6b7280;line-height:1.4;margin-top:1px;}
+.tsh-row-pts{font-size:12px;font-weight:700;color:#10b981;flex-shrink:0;}
+.tsh-row-pts.muted{color:#9ca3af;}
+.tsh-pen{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:12px 14px;margin-top:6px;}
+.tsh-pen-row{font-size:13px;color:#991b1b;padding:6px 0;}
+.tsh-cred-actions{display:flex;gap:6px;margin-top:6px;}
+.tsh-cred-btn{background:transparent;border:1px solid #d1d5db;color:#374151;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;}
+.tsh-cred-btn.earn{border-color:#10b981;color:#10b981;}
+.tsh-cred-btn.pend{border-color:#f59e0b;color:#f59e0b;}
+.tsh-cred-btn.rej{border-color:#ef4444;color:#ef4444;}
 </style>
 </head>
 <body>
@@ -1058,6 +1097,11 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <button class="filter-chip" id="fc-Property" onclick="setListingsFilter('Property')">🏡 Property</button>
     <button class="filter-chip" id="fc-Tutors" onclick="setListingsFilter('Tutors')">🎓 Tutors</button>
     <button class="filter-chip" id="fc-Services" onclick="setListingsFilter('Services')">⚙️ Services</button>
+    <button class="filter-chip" id="fc-local_market" onclick="setListingsFilter('local_market')">🛍️ Local Market</button>
+  </div>
+  <!-- Quick action when Local Market filter is active -->
+  <div id="lm-listing-actions" style="display:none;padding:0 20px 12px;">
+    <button onclick="lmOpenCreateForm()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">+ Create Local Market listing</button>
   </div>
   <div id="lm-container" style="padding:0 20px;">
     <div style="text-align:center;padding:40px 0;color:var(--text-3);">
@@ -1083,6 +1127,19 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
         <button onclick="loadSellerProfile()" style="background:var(--accent-bright);color:#fff;border:none;border-radius:var(--r-sm);padding:11px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Look up</button>
       </div>
     </div>
+    <!-- LM-29 country selector — required for Local Market listings -->
+    <div class="field">
+      <label>Country <span class="req">*</span></label>
+      <select id="profile-country" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;">
+        <option value="">Loading…</option>
+      </select>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Required for Local Market listings — drives geographic filtering in the wishlist feed.</div>
+      <button onclick="saveSellerCountry()" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Save country</button>
+    </div>
+    <!-- LM-14c recovery panel — populated when seller is suspended/banned -->
+    <div id="lm-suspension-panel" style="display:none;"></div>
+    <!-- ── TRUST SCORE HUB (Section 3) — populated by tsh.js logic ── -->
+    <div id="tsh-panel" style="display:none;margin-top:14px;"></div>
     <div id="profile-result"></div>
   </div>
 </div>
@@ -1287,6 +1344,79 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 </nav>
 
 <div class="toast" id="toast"></div>
+
+<!-- ══ LOCAL MARKET — EULA modal (§11, LM-14f) ═══════════════════ -->
+<div id="lm-eula-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 22px 18px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;">Local Market — Terms</div>
+    <h2 style="font-size:20px;font-weight:800;color:#1a1a2e;margin:6px 0 10px;">Before your first Local Market listing goes live</h2>
+    <p style="font-size:13.5px;color:#374151;line-height:1.6;margin-bottom:12px;">By activating a Local Market listing, you confirm you have read and accept the following terms:</p>
+    <div style="font-size:13px;color:#1f2937;line-height:1.55;">
+      <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> Balances may be frozen if your account is suspended but are never confiscated. Frozen Tuppence is restored automatically when your account is reinstated.</div>
+      <div style="margin-bottom:12px;"><strong>2. Trust Score minimum.</strong> A minimum Trust Score of 30 is required to publish and maintain Local Market listings. If your score drops below 30, your listings are automatically suspended and re-activate when your score recovers.</div>
+      <div style="margin-bottom:12px;"><strong>3. Repeat-offender escalation.</strong> First suspension: until score recovers. Second within 90 days: 30-day mandatory cooling-off. Third: permanent ban from Local Market (other categories remain available).</div>
+      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. Buyers below 20 are blocked from submitting Local Market intros.</div>
+      <div style="margin-bottom:12px;"><strong>5. Seller pays on introduction.</strong> Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore. A 1T credit is issued if a buyer no-show complaint is upheld and the listing remains active.</div>
+      <div style="margin-bottom:12px;"><strong>6. EULA updates.</strong> These terms may be updated with 14 days in-app notice. Continued use after the notice period constitutes acceptance.</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button onclick="lmCloseEulaModal(false)" style="flex:1;background:transparent;color:#374151;border:1.5px solid #d1d5db;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+      <button onclick="lmCloseEulaModal(true)" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">I accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOCAL MARKET — Listing creation modal (LM-28) ════════════ -->
+<div id="lm-create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;padding:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;">Local Market — new listing</div>
+      <button onclick="lmCloseCreateForm()" style="background:transparent;border:none;color:#9ca3af;font-size:22px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <h2 style="font-size:20px;font-weight:800;color:#1a1a2e;margin:0 0 14px;">Create listing</h2>
+
+    <div class="field">
+      <label>Seller email <span class="req">*</span></label>
+      <input type="email" id="lm-create-email" placeholder="seller@example.com"
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;">
+    </div>
+    <div class="field">
+      <label>Title <span class="req">*</span></label>
+      <input type="text" id="lm-create-title" placeholder="e.g. Vintage 1965 brass desk lamp"
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;">
+    </div>
+    <div class="field">
+      <label>Description <span class="req">*</span></label>
+      <textarea id="lm-create-desc" rows="5" placeholder="Describe the item freely — condition, history, dimensions, anything a buyer would want to know."
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;resize:vertical;"></textarea>
+    </div>
+    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <label>Price (or "POA")</label>
+        <input type="text" id="lm-create-price" placeholder="R 850" style="width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;">
+      </div>
+      <div>
+        <label>Suburb <span class="req">*</span></label>
+        <input type="text" id="lm-create-suburb" placeholder="Brooklyn" style="width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;">
+      </div>
+    </div>
+    <div class="field">
+      <label>City <span class="req">*</span></label>
+      <input type="text" id="lm-create-city" placeholder="Pretoria" style="width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;font-size:14px;color:var(--text);outline:none;">
+    </div>
+    <div class="field">
+      <label>Photos (up to 5)</label>
+      <input type="file" id="lm-create-photos" accept="image/*" multiple
+        style="width:100%;font-size:13px;">
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">First photo becomes the thumbnail.</div>
+    </div>
+    <div id="lm-create-status" style="font-size:12px;color:var(--text-3);min-height:18px;margin-bottom:6px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="lmCloseCreateForm()" style="flex:1;background:transparent;color:#374151;border:1.5px solid #d1d5db;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+      <button id="lm-create-submit" onclick="lmSubmitCreate()" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Publish</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────
@@ -2132,6 +2262,9 @@ function setListingsFilter(cat) {
   document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
   const el = document.getElementById(cat ? 'fc-' + cat : 'fc-all');
   if (el) el.classList.add('active');
+  // LM-27 — surface the "+ Create Local Market listing" action only on the LM tab
+  const actions = document.getElementById('lm-listing-actions');
+  if (actions) actions.style.display = (cat === 'local_market') ? 'block' : 'none';
   renderListingsManager();
 }
 
@@ -2462,6 +2595,372 @@ function escapeHtml(s) {
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// ── LOCAL MARKET — admin tooling (Section 2 · v1.3.0) ─────
+let _lmCreatePending = null;  // post-EULA continuation closure
+
+// Populate the country dropdown on profile view from BEA
+async function _lmPopulateCountrySelect() {
+  const sel = document.getElementById('profile-country');
+  if (!sel || sel.options.length > 1) return;
+  try {
+    const r = await fetch(BEA_URL + '/geo/countries');
+    if (!r.ok) return;
+    const list = await r.json();
+    sel.innerHTML = '<option value="">— select country —</option>'
+      + list.map(c => `<option value="${escapeHtml(c.iso2)}">${escapeHtml(c.name)} (${escapeHtml(c.iso2)})</option>`).join('');
+  } catch(e) {}
+}
+
+async function saveSellerCountry() {
+  const email = (document.getElementById('profile-email').value || '').trim();
+  const country = (document.getElementById('profile-country').value || '').trim();
+  if (!email) { showToast('Look up a seller first'); return; }
+  if (!country) { showToast('Pick a country'); return; }
+  try {
+    // Reuse the existing /users PATCH-like flow via direct UPDATE through users PUT
+    // Currently no /users PUT exists — use POST upsert on user with country only
+    // For V1, we set the country by re-creating-or-updating the user row.
+    // Since there's no dedicated endpoint, we'll surface this through the LM listing creation flow which persists country server-side (LM-29).
+    // Show advisory toast for now:
+    showToast('Country saved with next Local Market listing publish');
+    // Persist locally so the LM creation form pre-fills and the BEA receives it
+    localStorage.setItem('lm_seller_country_' + email, country);
+  } catch(e) {
+    showToast('Could not save: ' + e.message);
+  }
+}
+
+async function lmRenderSuspensionPanel(email) {
+  const panel = document.getElementById('lm-suspension-panel');
+  if (!panel) return;
+  panel.style.display = 'none';
+  panel.innerHTML = '';
+  try {
+    const r = await fetch(BEA_URL + '/local-market/suspension/check?email=' + encodeURIComponent(email));
+    if (!r.ok) return;
+    const s = await r.json();
+    if (s.state === 'clear') return;
+    let html = '';
+    if (s.state === 'permanent_ban') {
+      html = `<div class="info-box" style="border-color:var(--red);background:var(--red-bg);color:var(--red);">
+        🚫 <strong>Local Market — permanently banned</strong><br>
+        ${escapeHtml(s.message)}
+      </div>`;
+    } else if (s.state === 'cooling_off') {
+      html = `<div class="info-box warn">
+        ⏱ <strong>Local Market — cooling-off period</strong><br>
+        ${escapeHtml(s.message)}<br>
+        <span style="font-size:11px;color:var(--text-3);">Until: ${escapeHtml(s.cooling_off_until || '')}</span>
+      </div>`;
+    } else if (s.state === 'suspended') {
+      html = `<div class="info-box warn">
+        ⚠️ <strong>Local Market — listings suspended</strong><br>
+        Trust Score: ${s.trust_score} / 30 minimum.
+        Need <strong>${s.delta_to_recover}</strong> more points to reactivate.<br>
+        <span style="font-size:12px;color:var(--text-3);">${escapeHtml(s.message)}</span>
+      </div>`;
+    }
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+  } catch(e) {}
+}
+
+function lmOpenCreateForm() {
+  const m = document.getElementById('lm-create-modal');
+  if (!m) return;
+  // Pre-fill from active profile lookup if present
+  const profileEmail = (document.getElementById('profile-email').value || '').trim();
+  const cityFromInput = 'Pretoria';
+  if (profileEmail) document.getElementById('lm-create-email').value = profileEmail;
+  if (!document.getElementById('lm-create-city').value) {
+    document.getElementById('lm-create-city').value = cityFromInput;
+  }
+  document.getElementById('lm-create-status').textContent = '';
+  m.style.display = 'flex';
+}
+
+function lmCloseCreateForm() {
+  const m = document.getElementById('lm-create-modal');
+  if (m) m.style.display = 'none';
+}
+
+async function _lmCheckEulaAccepted(email) {
+  try {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email));
+    if (!r.ok) return false;
+    const u = await r.json();
+    return !!u.lm_eula_accepted_at;
+  } catch(e) { return false; }
+}
+
+function lmCloseEulaModal(accepted) {
+  const m = document.getElementById('lm-eula-modal');
+  if (m) m.style.display = 'none';
+  const cont = _lmCreatePending;
+  _lmCreatePending = null;
+  if (accepted && cont) {
+    cont().catch(e => { /* surfaces inside the continuation already */ });
+  }
+}
+
+async function _lmRecordEulaAccept(email) {
+  try {
+    await fetch(BEA_URL + '/local-market/eula/accept?email=' + encodeURIComponent(email), {
+      method: 'POST',
+      headers: { 'X-Api-Key': API_KEY }
+    });
+  } catch(e) {}
+}
+
+async function lmSubmitCreate() {
+  const email   = (document.getElementById('lm-create-email').value || '').trim();
+  const title   = (document.getElementById('lm-create-title').value || '').trim();
+  const desc    = (document.getElementById('lm-create-desc').value || '').trim();
+  const price   = (document.getElementById('lm-create-price').value || '').trim();
+  const suburb  = (document.getElementById('lm-create-suburb').value || '').trim();
+  const city    = (document.getElementById('lm-create-city').value || '').trim();
+  const photos  = document.getElementById('lm-create-photos').files;
+  const country = localStorage.getItem('lm_seller_country_' + email) || 'ZA';
+  const status  = document.getElementById('lm-create-status');
+  const btn     = document.getElementById('lm-create-submit');
+
+  if (!email || !title || !suburb || !city) {
+    status.textContent = 'Please fill in email, title, suburb, and city.';
+    return;
+  }
+
+  // EULA gate (LM-14f / §11) — show modal once if not yet accepted
+  const eulaOk = await _lmCheckEulaAccepted(email);
+  if (!eulaOk) {
+    _lmCreatePending = async () => {
+      await _lmRecordEulaAccept(email);
+      await lmSubmitCreate();
+    };
+    document.getElementById('lm-eula-modal').style.display = 'flex';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Uploading photos…';
+
+  // Upload first photo (if any) — reuse the existing /listings/photo endpoint
+  let thumb_url = null, medium_url = null;
+  try {
+    if (photos && photos.length) {
+      const f = photos[0];
+      const fd = new FormData();
+      fd.append('file', f);
+      const up = await fetch(BEA_URL + '/listings/photo', {
+        method: 'POST',
+        headers: { 'X-Api-Key': API_KEY },
+        body: fd
+      });
+      if (up.ok) {
+        const data = await up.json();
+        thumb_url  = data.thumb_url;
+        medium_url = data.medium_url;
+      }
+    }
+    status.textContent = 'Publishing listing…';
+    const resp = await fetch(BEA_URL + '/local-market/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+      body: JSON.stringify({
+        title, description: desc, price, suburb, city,
+        country,
+        seller_email: email,
+        thumb_url, medium_url,
+      })
+    });
+    if (resp.status === 403) {
+      const j = await resp.json().catch(()=>({}));
+      const detail = (j.detail || '').toString();
+      if (detail.startsWith('cooling_off')) {
+        status.textContent = 'Seller is in a 30-day cooling-off period — cannot publish.';
+      } else if (detail === 'permanent_lm_ban') {
+        status.textContent = 'Seller is permanently banned from Local Market.';
+      } else {
+        status.textContent = 'Trust Score below 30 — seller cannot publish Local Market listings yet.';
+      }
+      btn.disabled = false;
+      return;
+    }
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error(resp.status + ' ' + t);
+    }
+    const j = await resp.json();
+    showToast('✓ Listing published · #' + j.id);
+    lmCloseCreateForm();
+    // Refresh My Listings if it's loaded
+    if (typeof loadAllListings === 'function') loadAllListings();
+  } catch(e) {
+    status.textContent = 'Could not publish: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+// Hook population of country dropdown when Profile view opens
+(function _lmInstallProfileHook() {
+  const orig = window.goView;
+  if (typeof orig === 'function') {
+    window.goView = function(name) {
+      const r = orig.apply(this, arguments);
+      if (name === 'profile') _lmPopulateCountrySelect();
+      return r;
+    };
+  }
+})();
+
+// ── TRUST SCORE HUB (Section 3 · v1.3.0) ───────────────────
+// Renders the Hub inside the Profile view after a seller is looked up.
+// Hits GET /trust-score/breakdown and renders summary panel, Haiko tip,
+// three groups, and penalties. Admin can flip credential states inline
+// via POST /trust-score/credential.
+
+let _tshLastEmail = null;
+
+function _tshTierClass(color) {
+  return ({grey:'tsh-tier-grey', blue:'tsh-tier-blue', green:'tsh-tier-green', gold:'tsh-tier-gold'})[color] || 'tsh-tier-grey';
+}
+
+function _tshIcon(status) {
+  if (status === 'earned')   return '<span style="color:#10b981;">✓</span>';
+  if (status === 'pending')  return '<span style="color:#f59e0b;">⏳</span>';
+  if (status === 'rejected') return '<span style="color:#ef4444;">✗</span>';
+  return '<span style="color:#9ca3af;">○</span>';
+}
+
+function _tshGroup(label, group, allowAdmin) {
+  const items = group.items || [];
+  if (!items.length) return '';
+  const rows = items.map(it => {
+    const ptsClass = it.status === 'earned' ? '' : 'muted';
+    const adminBtns = allowAdmin
+      ? `<div class="tsh-cred-actions">
+           <button class="tsh-cred-btn earn" onclick="tshSetCred('${escapeHtml(it.signal_id)}','earned')">Mark earned</button>
+           <button class="tsh-cred-btn pend" onclick="tshSetCred('${escapeHtml(it.signal_id)}','pending')">Pending</button>
+           <button class="tsh-cred-btn rej"  onclick="tshSetCred('${escapeHtml(it.signal_id)}','rejected')">Reject</button>
+         </div>`
+      : '';
+    return `
+      <div class="tsh-row">
+        <div class="tsh-row-icon">${_tshIcon(it.status)}</div>
+        <div class="tsh-row-body">
+          <div class="tsh-row-name">${escapeHtml(it.name)}</div>
+          <div class="tsh-row-how">${escapeHtml(it.how_to_earn)}</div>
+          ${adminBtns}
+        </div>
+        <div class="tsh-row-pts ${ptsClass}">+${it.points}</div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="tsh-group" id="tsh-g-${escapeHtml(label.toLowerCase().replace(/\W+/g,'_'))}">
+      <div class="tsh-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <div class="tsh-group-name">${escapeHtml(label)}${group.label && group.label !== label ? ' · ' + escapeHtml(group.label) : ''}</div>
+        <div class="tsh-group-sum">${group.earned} / ${group.max}</div>
+      </div>
+      <div class="tsh-group-body">${rows}</div>
+    </div>`;
+}
+
+async function tshLoad(email) {
+  _tshLastEmail = email;
+  const panel = document.getElementById('tsh-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="text-align:center;padding:18px;color:var(--text-3);font-size:13px;">⏳ Loading Trust Score…</div>';
+  try {
+    const r = await fetch(BEA_URL + '/trust-score/breakdown?email=' + encodeURIComponent(email));
+    if (!r.ok) {
+      if (r.status === 404) {
+        panel.innerHTML = '';
+        panel.style.display = 'none';
+        return;
+      }
+      throw new Error('API ' + r.status);
+    }
+    const data = await r.json();
+    const tierClass = _tshTierClass(data.tier_color);
+    const next = data.next_tier
+      ? `<div class="tsh-next">Next: <strong>${escapeHtml(data.next_tier.name)}</strong> (${data.next_tier.threshold}) — <strong>${data.next_tier.delta}</strong> more points needed.</div>`
+      : `<div class="tsh-next">You are at the top tier.</div>`;
+    const tipBlock = data.haiko_tip ? `
+      <div class="tsh-tip">
+        <div class="tsh-tip-icon">💡</div>
+        <div class="tsh-tip-body">
+          <span class="tsh-tip-strong">Best next step</span>
+          ${escapeHtml(data.haiko_tip.text)}
+          ${data.haiko_tip.points_available ? `<div style="margin-top:5px;font-size:12px;color:#92400e;font-weight:700;">+${data.haiko_tip.points_available} points available.</div>` : ''}
+        </div>
+      </div>` : '';
+    const penaltiesBlock = (data.penalties && data.penalties.length)
+      ? `<div class="tsh-pen">
+           <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#991b1b;margin-bottom:6px;">⚠️ Active penalties · ${data.penalty_total} pts</div>
+           ${data.penalties.map(p => `
+             <div class="tsh-pen-row">
+               ${escapeHtml(p.reason_code)} · ${escapeHtml(new Date(p.filed_at).toLocaleDateString('en-ZA'))} · ${p.points} pts
+               <span style="opacity:.6;font-size:11px;">[${escapeHtml(p.status)}]</span>
+             </div>`).join('')}
+           <div style="font-size:11px;color:#6b7280;margin-top:6px;">Complaints decay to 50% after 24 months.</div>
+         </div>`
+      : '';
+    panel.innerHTML = `
+      <div class="tsh-summary">
+        <div class="tsh-label">Trust Score</div>
+        <div class="tsh-score">${data.score} / 100</div>
+        <div class="tsh-bar-wrap"><div class="tsh-bar-fill" style="width:${data.score}%;"></div></div>
+        <div class="tsh-tier-row">
+          <span class="tsh-tier-badge ${tierClass}">${escapeHtml(data.tier)}</span>
+          <span style="opacity:.85;font-size:12px;">${escapeHtml(data.category_key || 'No category yet')}</span>
+        </div>
+        ${next}
+      </div>
+      ${tipBlock}
+      ${_tshGroup('Universal',     data.groups.universal,    true)}
+      ${_tshGroup('Track Record',  data.groups.track_record, false)}
+      ${_tshGroup('Category',      data.groups.category,     true)}
+      ${penaltiesBlock}
+    `;
+  } catch(e) {
+    panel.innerHTML = '<div class="info-box" style="border-color:var(--red);background:var(--red-bg);color:var(--red);">⚠️ Could not load Trust Score: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function tshSetCred(signalId, status) {
+  if (!_tshLastEmail) return;
+  try {
+    const r = await fetch(BEA_URL + '/trust-score/credential', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+      body: JSON.stringify({ email: _tshLastEmail, signal_id: signalId, status })
+    });
+    if (!r.ok) throw new Error('API ' + r.status);
+    showToast('✓ Credential ' + status);
+    // Refresh — also re-renders suspension panel since LM hook recomputes
+    await tshLoad(_tshLastEmail);
+    if (typeof lmRenderSuspensionPanel === 'function') lmRenderSuspensionPanel(_tshLastEmail);
+  } catch(e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+// Hook into loadSellerProfile so the Trust Score Hub auto-loads after lookup.
+(function _tshInstallHook() {
+  const orig = window.loadSellerProfile;
+  if (typeof orig === 'function') {
+    window.loadSellerProfile = async function() {
+      const r = orig.apply(this, arguments);
+      const email = (document.getElementById('profile-email').value || '').trim();
+      if (email) {
+        // Wait briefly for the original lookup network call, then load the Hub
+        setTimeout(() => tshLoad(email).catch(()=>{}), 150);
+      }
+      return r;
+    };
+  }
+})();
+
 // ── ANALYTICS ──────────────────────────────────────────────
 async function loadAnalytics() {
   try {
@@ -2498,6 +2997,11 @@ async function loadSellerProfile() {
     const u = await resp.json();
     const safeEmail = email.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const safeName = (u.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    // Reflect saved country into the selector
+    const cs = document.getElementById('profile-country');
+    if (cs && u.country) cs.value = u.country;
+    // Render LM suspension panel if applicable (LM-14c)
+    lmRenderSuspensionPanel(email);
     result.innerHTML = `
       <div class="seller-bar" style="margin-bottom:16px;">
         <div class="sb-avatar">${u.avatar || '👤'}</div>

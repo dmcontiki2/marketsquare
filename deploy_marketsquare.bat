@@ -139,6 +139,18 @@ ssh %SERVER% "grep -q 'wlBootToken\|wishlist-feed' %REMOTE%/index.html && echo  
 
 ssh %SERVER% "test -f %REMOTE%/service-worker.js && echo   [OK] Service worker confirmed on server || echo   [FAIL] service-worker.js missing - redeploy needed"
 
+ssh %SERVER% "grep -q 'local-market/listings' %REMOTE%/main.py && echo   [OK] BEA: Local Market endpoints confirmed || echo   [FAIL] BEA: Local Market endpoints missing - redeploy needed"
+
+ssh %SERVER% "grep -q 'trust-score/breakdown' %REMOTE%/main.py && echo   [OK] BEA: Trust Score Hub endpoint confirmed || echo   [FAIL] BEA: Trust Score Hub endpoint missing - redeploy needed"
+
+ssh %SERVER% "grep -q 'screen-local-market' %REMOTE%/index.html && echo   [OK] Buyer app: Local Market page confirmed || echo   [FAIL] Buyer app: Local Market page missing - redeploy needed"
+
+ssh %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: Local Market form + EULA modal confirmed || echo   [FAIL] Admin: Local Market form missing - redeploy needed"
+
+ssh %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
+
+ssh %SERVER% "curl -s http://localhost:8000/health | grep -q '1.3.0' && echo   [OK] BEA reports v1.3.0 || echo   [FAIL] BEA version mismatch - check service restart"
+
 echo.
 echo  ============================================================
 echo   DEPLOY COMPLETE

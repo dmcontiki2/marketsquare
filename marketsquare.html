@@ -2163,6 +2163,44 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .el-photo-replace{width:100%;margin-top:5px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:5px 0;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;text-align:center;}
 .el-photo-replace:hover{border-color:var(--navy);color:var(--navy);}
 .el-photo-ai-note{font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:7px 9px;margin-top:6px;line-height:1.4;}
+
+/* ══ LOCAL MARKET (Section 2 · v1.3.0) ════════════════════════ */
+.lm-banner{display:flex;align-items:center;gap:14px;margin:14px 16px 6px;padding:14px 14px;background:linear-gradient(135deg,#1f2937,#111827);color:#fff;border-radius:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18);}
+.lm-banner-icon{font-size:32px;line-height:1;flex-shrink:0;}
+.lm-banner-body{flex:1;min-width:0;}
+.lm-banner-title{font-size:15px;font-weight:800;letter-spacing:.3px;}
+.lm-banner-sub{font-size:12px;opacity:.78;margin-top:2px;}
+.lm-banner-chev{font-size:24px;opacity:.6;font-weight:300;}
+.lm-trust-row{display:flex;gap:8px;padding:0 16px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.lm-trust-chip{flex:0 0 auto;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;cursor:pointer;}
+.lm-trust-chip.active{background:var(--accent-bright);color:#fff;border-color:var(--accent-bright);}
+.lm-search{margin:0 16px 12px;}
+.lm-search input{width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:11px 16px;font-size:14px;color:var(--text);outline:none;}
+.lm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 100px;}
+.lm-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;position:relative;}
+.lm-card:hover{border-color:var(--accent-bright);}
+.lm-card-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--surface-2);display:block;}
+.lm-card-body{padding:8px 10px 10px;}
+.lm-card-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.lm-card-meta{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.lm-card-feat{position:absolute;top:6px;left:6px;background:rgba(255,193,7,.95);color:#1a1a2e;font-size:10px;font-weight:800;padding:3px 7px;border-radius:50px;letter-spacing:.5px;}
+.lm-card-trust{position:absolute;top:6px;right:6px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px;}
+.lm-trust-blue{background:#3b82f6;color:#fff;}
+.lm-trust-green{background:#10b981;color:#fff;}
+.lm-trust-gold{background:#fbbf24;color:#1a1a2e;}
+.lm-trust-grey{background:#9ca3af;color:#fff;}
+.lm-guidance{margin:0 16px 14px;padding:11px 13px;font-size:12.5px;color:var(--text);background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:10px;line-height:1.5;}
+.wf-badge-lm{position:absolute;bottom:6px;left:6px;background:rgba(31,41,55,.92);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:50px;letter-spacing:.5px;}
+.lm-detail-hero{width:100%;aspect-ratio:1/1;background:var(--surface-2);overflow:hidden;}
+.lm-detail-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+.lm-detail-body{padding:18px 16px 100px;}
+.lm-detail-title{font-size:20px;font-weight:800;line-height:1.25;color:var(--text);}
+.lm-detail-price{font-size:18px;font-weight:700;color:var(--accent-bright);margin:6px 0 8px;}
+.lm-detail-meta{font-size:13px;color:var(--text-3);margin-bottom:14px;}
+.lm-detail-desc{font-size:14px;color:var(--text);line-height:1.55;white-space:pre-wrap;margin-bottom:18px;}
+.lm-trust-banner{padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12.5px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.lm-cta{width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;}
+.lm-cta:disabled{opacity:.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -2181,12 +2219,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="hero-body"></div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat"><div class="stat-val" id="home-sellers">0</div><div class="stat-label">Sellers</div></div>
-    <div class="stat"><div class="stat-val" id="home-listings">0</div><div class="stat-label">Listings</div></div>
-    <div class="stat"><div class="stat-val" id="tn-home-bal">5</div><div class="stat-label">Tuppence</div></div>
-    <div class="stat"><div class="stat-val">3</div><div class="stat-label">Intros</div></div>
-  </div>
+  <!-- LM-19: stats-row permanently removed — bottom-half real estate now belongs to the "For You" wishlist feed below -->
   <div class="sec-head"><h2>Categories</h2><a onclick="goTo('browse')">All →</a></div>
   <div class="cat-grid" id="home-cat-grid">
     <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:#1e3a5f"><img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80" alt="Property" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count" id="cat-count-Property">0 listings</div></div></div>
@@ -2225,6 +2258,16 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <button class="back-btn" onclick="goTo('home')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1>Browse</h1>
     <div class="sub" id="browse-sub">All categories · Pretoria</div>
+  </div>
+
+  <!-- ══ LM-20: Local Market entry — distinct from structured grid ══ -->
+  <div class="lm-banner" onclick="goTo('local-market')" role="button" tabindex="0">
+    <div class="lm-banner-icon">🛍️</div>
+    <div class="lm-banner-body">
+      <div class="lm-banner-title">Local Market</div>
+      <div class="lm-banner-sub">Anything goes — vintage finds, second-hand, rare items.</div>
+    </div>
+    <div class="lm-banner-chev">›</div>
   </div>
 
   <!-- Category chips -->
@@ -2735,6 +2778,49 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div id="saved-content"></div>
 </div>
 
+<!-- ══ LOCAL MARKET (LM-01 dedicated page) ═════════════════════ -->
+<div id="screen-local-market" class="screen">
+  <div class="page-hdr">
+    <button class="back-btn" onclick="goTo('browse')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>Local Market</h1>
+    <div class="sub" id="lm-page-sub">Anything goes — Pretoria</div>
+  </div>
+
+  <!-- LM-12 trust guidance -->
+  <div class="lm-guidance">
+    🛡 <strong>Filter by Trust Score</strong> to find serious sellers. Highly Trusted sellers have verified ID, phone, and a strong track record.
+  </div>
+
+  <!-- Trust Score filter (LM-11) -->
+  <div class="lm-trust-row" id="lm-trust-row">
+    <div class="lm-trust-chip active" data-min-trust="0"  onclick="setLmTrust(0)">Any seller</div>
+    <div class="lm-trust-chip"        data-min-trust="40" onclick="setLmTrust(40)">Established+ (40)</div>
+    <div class="lm-trust-chip"        data-min-trust="70" onclick="setLmTrust(70)">Trusted+ (70)</div>
+    <div class="lm-trust-chip"        data-min-trust="90" onclick="setLmTrust(90)">Highly Trusted (90)</div>
+  </div>
+
+  <!-- Free-text search (LM-03) -->
+  <div class="lm-search">
+    <input type="text" id="lm-search-input" placeholder="Search Local Market…" oninput="lmDebouncedSearch()">
+  </div>
+
+  <div class="lm-grid" id="lm-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ══ LOCAL MARKET DETAIL (LM-05 separate from openDetail) ═══ -->
+<div id="screen-local-market-detail" class="screen">
+  <div class="page-hdr">
+    <button class="back-btn" onclick="goTo('local-market')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>Listing</h1>
+    <div class="sub">Local Market</div>
+  </div>
+  <div id="lm-detail-container">
+    <div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">Loading…</div>
+  </div>
+</div>
+
 <!-- WISHLIST SETTINGS -->
 <div id="screen-wishlist" class="screen">
   <div class="page-hdr">
@@ -2767,16 +2853,14 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div id="wl-trust-current" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
     </div>
 
-    <!-- Add explicit wishlist item -->
+    <!-- Add explicit wishlist item — LM-22: free-text only, no category selector.
+         Haiko's semantic engine extracts intent and matches against ALL listing
+         types including Local Market. -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
       <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Add a wishlist item</div>
-      <input type="text" id="wl-explicit-text" placeholder="e.g. red mountain bike, 21-speed"
-        style="width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);margin-bottom:8px;">
-      <select id="wl-explicit-cat" style="width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);margin-bottom:8px;">
-        <option value="">Any category</option>
-        <option>Property</option><option>Tutors</option><option>Services</option>
-        <option>Adventures</option><option>Collectors</option><option>Cars</option>
-      </select>
+      <input type="text" id="wl-explicit-text" placeholder="Describe what you want — e.g. red mountain bike, 21-speed"
+        style="width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);margin-bottom:6px;">
+      <div style="font-size:11.5px;color:var(--text-3);margin-bottom:10px;line-height:1.4;">Free-text — describe in your own words. We match across every category, including the Local Market.</div>
       <button onclick="wlAddExplicit()" style="width:100%;background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:11px;font-weight:700;cursor:pointer;font-size:14px;">+ Add to wishlist</button>
     </div>
 
@@ -4256,10 +4340,10 @@ function trustTier(s){
 function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="background:${t.bg};color:${t.c};">● ${t.label} · ${s}</span>`;}
 
 function updateTuppenceUI(){
-  document.getElementById('nav-tn-badge').textContent=tuppence;
-  const bd=document.getElementById('tn-balance-display');if(bd)bd.textContent=tuppence;
-  document.getElementById('tn-home-bal').textContent=tuppence;
-  const d=document.getElementById('dash-tn');if(d)d.textContent=tuppence;
+  const navBadge = document.getElementById('nav-tn-badge'); if(navBadge) navBadge.textContent=tuppence;
+  const bd=document.getElementById('tn-balance-display');   if(bd) bd.textContent=tuppence;
+  const hb=document.getElementById('tn-home-bal');          if(hb) hb.textContent=tuppence;  // LM-19: element removed but check defensively
+  const d =document.getElementById('dash-tn');              if(d) d.textContent=tuppence;
 }
 // Local currency display — ZAR at R18/$1 (1T=$2, 1T=R36). Extend when live forex is added.
 function localPrice(usd) {
@@ -4395,6 +4479,7 @@ function goTo(name){
   const bnav = document.querySelector('.bnav');
   if(bnav) bnav.style.display = name.startsWith('aa-') ? 'none' : '';
   if(name==='browse'){ renderFilterBar(); renderGrid(); }
+  if(name==='local-market') lmLoadGrid();
   if(name==='saved')renderSaved();
   if(name==='dashboard'){
     renderDash();
@@ -8419,9 +8504,11 @@ function wlSetTrustFilter(score) {
 
 async function wlAddExplicit() {
   const txt = (document.getElementById('wl-explicit-text').value || '').trim();
-  const cat = document.getElementById('wl-explicit-cat').value || null;
   if (!txt) return;
-  await wlSendSignal({ signal_type: 'explicit', raw_text: txt, category: cat });
+  // LM-22: free-text only — no category. Haiko/LocalKeywordMatcher extracts
+  // intent and the BEA's category gate is a no-op when signal.category is null,
+  // so this matches across Property/Tutors/Services/Adventures/Collectors/Local Market.
+  await wlSendSignal({ signal_type: 'explicit', raw_text: txt, category: null });
   document.getElementById('wl-explicit-text').value = '';
   await wlRenderSettings();
   wlLoadFeed();
@@ -8647,6 +8734,178 @@ window.addEventListener('load', () => {
     wlStartPolling();
   });
 });
+
+// ════════════════════════════════════════════════════════════
+// ■ LOCAL MARKET (Section 2 · v1.3.0)
+// Dedicated buyer page, anonymous cards, free-text search via
+// the same zero-cost matcher as the Wishlist Feed.
+// ════════════════════════════════════════════════════════════
+
+let _lmMinTrust = 0;
+let _lmSearchQ  = '';
+let _lmSearchTimer = null;
+
+function _lmEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function _lmTrustBadge(score) {
+  const s = parseInt(score || 0, 10);
+  if (s >= 90) return '<div class="lm-card-trust lm-trust-gold">★★★ ' + s + '</div>';
+  if (s >= 70) return '<div class="lm-card-trust lm-trust-green">'  + s + '</div>';
+  if (s >= 40) return '<div class="lm-card-trust lm-trust-blue">'   + s + '</div>';
+  return '<div class="lm-card-trust lm-trust-grey">' + s + '</div>';
+}
+
+function setLmTrust(min) {
+  _lmMinTrust = min;
+  document.querySelectorAll('.lm-trust-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.minTrust, 10) === min);
+  });
+  lmLoadGrid();
+}
+
+function lmDebouncedSearch() {
+  if (_lmSearchTimer) clearTimeout(_lmSearchTimer);
+  _lmSearchTimer = setTimeout(() => {
+    _lmSearchQ = (document.getElementById('lm-search-input').value || '').trim();
+    lmLoadGrid();
+    // Capture as a wishlist signal too — the buyer's free-text search reveals intent
+    if (_lmSearchQ.length >= 2 && typeof wlCaptureSearch === 'function') {
+      wlCaptureSearch(_lmSearchQ, null);
+    }
+  }, 400);
+}
+
+async function lmLoadGrid() {
+  const grid = document.getElementById('lm-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:var(--text-3);font-size:13px;">Loading…</div>';
+  // Update subtitle with active city
+  const sub = document.getElementById('lm-page-sub');
+  if (sub) sub.textContent = 'Anything goes — ' + (activeCity.name || 'your city');
+  const params = new URLSearchParams();
+  params.set('city', activeCity.name || '');
+  if (_lmMinTrust)  params.set('min_trust', String(_lmMinTrust));
+  if (_lmSearchQ)   params.set('q', _lmSearchQ);
+  params.set('limit', '60');
+  try {
+    const r = await fetch(BEA_URL + '/local-market/listings?' + params.toString());
+    if (!r.ok) throw new Error('API ' + r.status);
+    const cards = await r.json();
+    if (!cards.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet — check back soon.</div>';
+      return;
+    }
+    grid.innerHTML = cards.map(c => {
+      const img = c.thumb_url
+        ? `<img src="${_lmEsc(c.thumb_url)}" class="lm-card-img" loading="lazy" onerror="this.style.display='none'">`
+        : `<div class="lm-card-img"></div>`;
+      const now = Date.now();
+      let isFeat = false;
+      if (c.boost_until) {
+        try { isFeat = new Date(c.boost_until).getTime() > now; } catch(e){}
+      }
+      const featBadge = isFeat ? '<div class="lm-card-feat">FEATURED</div>' : '';
+      const trustBadge = _lmTrustBadge(c.trust_score);
+      const meta = [];
+      if (c.suburb) meta.push(_lmEsc(c.suburb));
+      else if (c.city) meta.push(_lmEsc(c.city));
+      if (c.price) meta.push(_lmEsc(c.price));
+      return (
+        '<div class="lm-card" onclick="lmOpenDetail(' + c.id + ')">'
+        + featBadge + trustBadge + img
+        + '<div class="lm-card-body">'
+        +   '<div class="lm-card-title">' + _lmEsc(c.title || '') + '</div>'
+        +   '<div class="lm-card-meta">' + meta.join(' · ') + '</div>'
+        + '</div>'
+        + '</div>'
+      );
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:var(--text-3);font-size:13px;">Could not load Local Market.</div>';
+  }
+}
+
+async function lmOpenDetail(listingId) {
+  goTo('local-market-detail');
+  const el = document.getElementById('lm-detail-container');
+  el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">Loading…</div>';
+  // Bump server-side view counter (same pattern as wishlist)
+  fetch(BEA_URL + '/listings/' + listingId + '/view', { method:'POST' }).catch(()=>{});
+  try {
+    const r = await fetch(BEA_URL + '/local-market/listings/' + listingId);
+    if (!r.ok) throw new Error('API ' + r.status);
+    const c = await r.json();
+    const trustBadge = _lmTrustBadge(c.trust_score);
+    const trustLabel = c.trust_score >= 90 ? 'Highly Trusted'
+                     : c.trust_score >= 70 ? 'Trusted'
+                     : c.trust_score >= 40 ? 'Established'
+                     : 'New';
+    el.innerHTML =
+      `<div class="lm-detail-hero">` +
+      (c.thumb_url
+        ? `<img src="${_lmEsc(c.medium_url || c.thumb_url)}" alt="" loading="lazy">`
+        : '') +
+      `</div>` +
+      `<div class="lm-detail-body">` +
+        `<div class="lm-detail-title">${_lmEsc(c.title || '')}</div>` +
+        (c.price ? `<div class="lm-detail-price">${_lmEsc(c.price)}</div>` : '') +
+        `<div class="lm-detail-meta">${_lmEsc(c.suburb || c.city || '')}</div>` +
+        `<div class="lm-trust-banner">${trustBadge}<div>Seller is rated <strong>${trustLabel}</strong>.</div></div>` +
+        `<div class="lm-detail-desc">${_lmEsc(c.description || '')}</div>` +
+        `<button class="lm-cta" onclick="lmRequestIntro(${c.id})">Request introduction</button>` +
+      `</div>`;
+  } catch(e) {
+    el.innerHTML = '<div style="padding:40px 16px;color:var(--text-3);font-size:13px;text-align:center;">Could not load this listing.</div>';
+  }
+}
+
+async function lmRequestIntro(listingId) {
+  if (!_wlToken) { try { await wlBootToken(); } catch(e){} }
+  if (!_wlToken) { alert('Could not establish your buyer profile. Please reload.'); return; }
+  const name = (localStorage.getItem('ms_user_name')  || '').trim();
+  const email = (localStorage.getItem('ms_user_email') || '').trim();
+  const message = prompt('Add an optional message to the seller (Local Market intros are seller-pays — they pay 1T when your request lands):') || '';
+  try {
+    const resp = await fetch(BEA_URL + '/local-market/intro', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        listing_id: listingId,
+        buyer_token: _wlToken,
+        buyer_email: email || _wlToken,  // server uses buyer_email field as the buyer identifier
+        buyer_name: name || null,
+        message: message || null,
+      })
+    });
+    if (resp.status === 403) {
+      const j = await resp.json().catch(()=>({}));
+      if ((j.detail||'').startsWith('buyer_trust_below')) {
+        alert('Your Trust Score is too low to submit Local Market introductions yet. Verify your email and phone to raise it above 20.');
+      } else {
+        alert('Not allowed: ' + (j.detail || 'unknown'));
+      }
+      return;
+    }
+    if (resp.status === 402) {
+      alert('The seller does not have enough Tuppence to receive this introduction right now. Please try again later.');
+      return;
+    }
+    if (resp.status === 429) {
+      alert('You requested an introduction on this listing recently. Please wait 7 days before trying again.');
+      return;
+    }
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error(resp.status + ' ' + t);
+    }
+    alert('Introduction requested. The seller has 48 hours to respond.');
+  } catch(e) {
+    alert('Could not submit introduction: ' + e.message);
+  }
+}
 
 </script>
 <!-- ════════════════════════════════════════════════════════════
