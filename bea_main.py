@@ -586,6 +586,15 @@ HETZNER_S3_ENDPOINT   = os.getenv("HETZNER_S3_ENDPOINT")
 HETZNER_S3_BUCKET     = os.getenv("HETZNER_S3_BUCKET")
 HETZNER_S3_ACCESS_KEY = os.getenv("HETZNER_S3_ACCESS_KEY")
 HETZNER_S3_SECRET_KEY = os.getenv("HETZNER_S3_SECRET_KEY")
+# R2 public-read URL — required for buyers to actually see uploaded photos.
+# The S3 API endpoint requires auth-signed requests (returns InvalidArgument
+# on anonymous GETs). Cloudflare R2 exposes a public dev URL per bucket
+# (https://pub-<id>.r2.dev) which we use for read access. Optionally
+# replace with a custom domain like media.trustsquare.co.
+R2_PUBLIC_URL = os.getenv(
+    "R2_PUBLIC_URL",
+    "https://pub-3c51d058a6494b93af4d242d07bdc4da.r2.dev"
+).rstrip("/")
 _S3_CONFIGURED = all([HETZNER_S3_ENDPOINT, HETZNER_S3_BUCKET,
                        HETZNER_S3_ACCESS_KEY, HETZNER_S3_SECRET_KEY])
 if _S3_CONFIGURED:
@@ -610,7 +619,11 @@ AA_MODEL = "claude-haiku-4-5-20251001"
 # ── HELPERS ───────────────────────────────────────────────────
 
 def _s3_upload(data: bytes, key: str, content_type: str) -> str:
-    """Upload bytes to Hetzner Object Storage; return public URL."""
+    """Upload bytes to R2; return browser-fetchable public URL.
+
+    Writes go through the authenticated S3 API endpoint (signed by boto3 with
+    the secret key). Reads must use the public dev URL (or a configured custom
+    domain) because the S3 API rejects anonymous GETs with InvalidArgument."""
     _s3.put_object(
         Bucket=HETZNER_S3_BUCKET,
         Key=key,
@@ -618,7 +631,7 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
         ContentType=content_type,
         ACL="public-read",
     )
-    return f"{HETZNER_S3_ENDPOINT}/{HETZNER_S3_BUCKET}/{key}"
+    return f"{R2_PUBLIC_URL}/{key}"
 
 
 async def _fire_webhook(url: str, payload: dict):
@@ -3397,10 +3410,13 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
 @app.get("/local-market/listings")
 def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
                      min_trust: int = 0, q: Optional[str] = None, limit: int = 50):
-    """Public list endpoint. Anonymous-stripped cards. Suspended listings hidden."""
+    """Public list endpoint. Anonymous-stripped cards. Suspended listings hidden.
+    Trust score is read live from the seller's users.trust_score (joined) so
+    that buyer trust filters always reflect the seller's current standing —
+    not a stale value copied at listing time."""
     conn = database.get_db()
     clauses = ["l.category = ?", "l.suspension_reason IS NULL",
-               "COALESCE(l.trust_score, 0) >= ?"]
+               "COALESCE(u.trust_score, 0) >= ?"]
     params: list = [LM_CATEGORY, max(0, min_trust)]
     if city:
         clauses.append("l.city = ?")
@@ -3413,8 +3429,9 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
         f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
                    l.thumb_url, l.medium_url, l.description, l.published_at,
                    l.view_count, l.boost_until,
-                   COALESCE(l.trust_score, 0) AS trust_score
+                   COALESCE(u.trust_score, 0) AS trust_score
             FROM listings l
+            LEFT JOIN users u ON u.email = l.seller_email
             WHERE {where}
             ORDER BY l.published_at DESC LIMIT ?""",
         params + [limit]
@@ -3438,14 +3455,16 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
 
 @app.get("/local-market/listings/{listing_id}")
 def lm_get_listing(listing_id: int):
-    """Public detail endpoint. Suspension-aware. No seller identity returned."""
+    """Public detail endpoint. Suspension-aware. No seller identity returned.
+    Trust score read live from joined users table — never the listing column."""
     conn = database.get_db()
     row = conn.execute(
         """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.country,
                   l.thumb_url, l.medium_url, l.description, l.published_at,
                   l.view_count, l.boost_until,
-                  COALESCE(l.trust_score, 0) AS trust_score
+                  COALESCE(u.trust_score, 0) AS trust_score
            FROM listings l
+           LEFT JOIN users u ON u.email = l.seller_email
            WHERE l.id = ? AND l.category = ? AND l.suspension_reason IS NULL""",
         (listing_id, LM_CATEGORY)
     ).fetchone()
