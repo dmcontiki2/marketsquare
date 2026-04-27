@@ -2116,4 +2116,1040 @@ def run_match_job(listing_id: int):
                 )
                 new_match_id = cur.lastrowid
                 match_inserts += 1
-                # Ping decision
+                # Ping decision — PR-13/PR-34: ≥80 + ping_enabled + rate-limit OK
+                if (weighted >= 80.0 and int(sig.get("ping_enabled") or 0) == 1
+                        and _ping_quota_ok(conn, buyer_token)):
+                    conn.execute(
+                        "UPDATE wishlist_matches SET pinged = 1 WHERE id = ?",
+                        (new_match_id,)
+                    )
+                    # Section 5: actually deliver the push. Synchronous-ish (8s timeout
+                    # per device), but this whole function is already running in a
+                    # FastAPI BackgroundTask so it never blocks the request handler.
+                    _send_push_for_match(buyer_token, new_match_id, listing)
+            except Exception:
+                # Unique-constraint violation = already matched — skip silently
+                pass
+        conn.commit()
+        conn.close()
+        _log.info("run_match_job listing=%s matcher=%s inserts=%d boosted=%s",
+                  listing_id, MATCHER.name, match_inserts, is_boosted)
+    except Exception as exc:
+        _log.error("run_match_job failed for listing %s: %s", listing_id, exc)
+
+
+# ── WISHLIST FEED — buyer_token + signal capture (v1.2.0) ────
+# Push-marketplace foundation. Buyer browsing/searches build wishlist
+# signals against an anonymous buyer_token (UUID). The matching engine
+# (Section 2) consumes these signals to surface matched listings in the
+# bottom-half scroll feed. NO seller identity is ever returned in any
+# wishlist response — anonymity is absolute.
+#
+# COST CONSTRAINT (locked): all matching/intent extraction is local
+# Python — no OpenAI / Google / Anthropic / vector DB calls in this path.
+
+class BuyerTokenRequest(BaseModel):
+    email: Optional[str] = None  # if provided, links token to users row
+
+class WishlistSignalIn(BaseModel):
+    buyer_token: str
+    signal_type: str            # 'browse_search' | 'browse_view' | 'explicit'
+    raw_text: Optional[str] = None
+    category: Optional[str] = None
+    suburb_id: Optional[int] = None
+    city_id: Optional[int] = None
+    country_iso2: Optional[str] = None
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    min_trust_score: int = 0
+    ping_enabled: int = 1
+
+class WishlistSignalUpdate(BaseModel):
+    raw_text: Optional[str] = None
+    category: Optional[str] = None
+    suburb_id: Optional[int] = None
+    city_id: Optional[int] = None
+    country_iso2: Optional[str] = None
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    min_trust_score: Optional[int] = None
+    ping_enabled: Optional[int] = None
+
+
+def _signal_weight(signal_type: str) -> float:
+    """Explicit wishlist items count double — see PR-03."""
+    return 2.0 if signal_type == "explicit" else 1.0
+
+
+def _signal_expiry_iso() -> str:
+    """90 days from now (PR-06). Refreshed every time a signal is touched."""
+    return (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
+
+
+def _purge_expired_signals(conn):
+    """Lazy purge — called on signal reads. Keeps the table small without a cron."""
+    conn.execute(
+        "DELETE FROM wishlist_signals WHERE expires_at < ?",
+        (datetime.now(timezone.utc).isoformat(),)
+    )
+
+
+@app.post("/buyer-token")
+def mint_buyer_token(req: BuyerTokenRequest):
+    """Issue or fetch an anonymous buyer_token.
+    If email is provided AND a users row exists with a buyer_token, return that.
+    If email is provided AND users row exists without one, mint and store.
+    If no email: mint a fresh anonymous token — never linked to any users row.
+    """
+    new_token = uuid.uuid4().hex
+    if not req.email:
+        return {"buyer_token": new_token, "linked": False}
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT buyer_token FROM users WHERE email = ?", (req.email,)
+    ).fetchone()
+    if row and row["buyer_token"]:
+        conn.close()
+        return {"buyer_token": row["buyer_token"], "linked": True}
+    if row:
+        conn.execute(
+            "UPDATE users SET buyer_token = ? WHERE email = ?",
+            (new_token, req.email)
+        )
+        conn.commit()
+        conn.close()
+        return {"buyer_token": new_token, "linked": True}
+    # No users row — return token but don't auto-create row (per build plan)
+    conn.close()
+    return {"buyer_token": new_token, "linked": False}
+
+
+@app.post("/wishlist/signal")
+def create_wishlist_signal(sig: WishlistSignalIn):
+    """Capture a wishlist signal. Public — no API key required.
+    Identical (buyer_token, signal_type, raw_text, category) signals refresh
+    expires_at instead of inserting duplicates — keeps the table compact while
+    treating repeated browses as a stronger signal of intent.
+    """
+    if sig.signal_type not in ("browse_search", "browse_view", "explicit"):
+        raise HTTPException(status_code=400, detail="signal_type must be browse_search, browse_view, or explicit")
+    if not sig.buyer_token or len(sig.buyer_token) < 8:
+        raise HTTPException(status_code=400, detail="valid buyer_token required")
+    weight = _signal_weight(sig.signal_type)
+    conn = database.get_db()
+    # Dedup on (buyer_token, signal_type, lower(raw_text), category)
+    existing = conn.execute(
+        """SELECT id FROM wishlist_signals
+           WHERE buyer_token = ? AND signal_type = ?
+             AND COALESCE(LOWER(raw_text), '') = COALESCE(LOWER(?), '')
+             AND COALESCE(category, '') = COALESCE(?, '')
+           LIMIT 1""",
+        (sig.buyer_token, sig.signal_type, sig.raw_text, sig.category)
+    ).fetchone()
+    if existing:
+        conn.execute(
+            """UPDATE wishlist_signals SET
+                 expires_at = ?,
+                 suburb_id = COALESCE(?, suburb_id),
+                 city_id = COALESCE(?, city_id),
+                 country_iso2 = COALESCE(?, country_iso2),
+                 price_min = COALESCE(?, price_min),
+                 price_max = COALESCE(?, price_max),
+                 min_trust_score = ?,
+                 ping_enabled = ?
+               WHERE id = ?""",
+            (_signal_expiry_iso(), sig.suburb_id, sig.city_id, sig.country_iso2,
+             sig.price_min, sig.price_max, sig.min_trust_score, sig.ping_enabled,
+             existing["id"])
+        )
+        conn.commit()
+        conn.close()
+        return {"id": existing["id"], "refreshed": True}
+    cur = conn.execute(
+        """INSERT INTO wishlist_signals
+           (buyer_token, signal_type, raw_text, category, suburb_id, city_id, country_iso2,
+            price_min, price_max, min_trust_score, weight, ping_enabled, expires_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (sig.buyer_token, sig.signal_type, sig.raw_text, sig.category,
+         sig.suburb_id, sig.city_id, sig.country_iso2,
+         sig.price_min, sig.price_max, sig.min_trust_score, weight,
+         sig.ping_enabled, _signal_expiry_iso())
+    )
+    conn.commit()
+    new_id = cur.lastrowid
+    conn.close()
+    return {"id": new_id, "refreshed": False}
+
+
+@app.get("/wishlist/signals")
+def list_wishlist_signals(buyer_token: str):
+    """Buyer reads their own signals. Public — buyer_token IS the auth here.
+    Anyone holding the token can read; the token itself never leaves the buyer's
+    device under normal flows."""
+    conn = database.get_db()
+    _purge_expired_signals(conn)
+    rows = conn.execute(
+        """SELECT id, signal_type, raw_text, category, suburb_id, city_id, country_iso2,
+                  price_min, price_max, min_trust_score, weight, ping_enabled,
+                  created_at, expires_at
+           FROM wishlist_signals
+           WHERE buyer_token = ?
+           ORDER BY created_at DESC""",
+        (buyer_token,)
+    ).fetchall()
+    conn.commit()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.put("/wishlist/signals/{signal_id}")
+def update_wishlist_signal(signal_id: int, update: WishlistSignalUpdate, buyer_token: str):
+    """Edit a single signal — change min_trust_score, edit explicit text, toggle ping."""
+    conn = database.get_db()
+    existing = conn.execute(
+        "SELECT id FROM wishlist_signals WHERE id = ? AND buyer_token = ?",
+        (signal_id, buyer_token)
+    ).fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Signal not found for this buyer_token")
+    d = {k: v for k, v in update.dict().items() if v is not None}
+    if not d:
+        conn.close()
+        return {"message": "No fields changed", "signal_id": signal_id}
+    sets = ", ".join(f"{k} = ?" for k in d.keys())
+    vals = list(d.values())
+    conn.execute(
+        f"UPDATE wishlist_signals SET {sets}, expires_at = ? WHERE id = ?",
+        vals + [_signal_expiry_iso(), signal_id]
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Signal updated", "signal_id": signal_id}
+
+
+@app.delete("/wishlist/signals/{signal_id}")
+def delete_wishlist_signal(signal_id: int, buyer_token: str):
+    """Permanent, immediate deletion (PR-05). Also drops any existing matches
+    surfaced from this signal so the feed never shows orphaned cards."""
+    conn = database.get_db()
+    existing = conn.execute(
+        "SELECT id FROM wishlist_signals WHERE id = ? AND buyer_token = ?",
+        (signal_id, buyer_token)
+    ).fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Signal not found for this buyer_token")
+    conn.execute("DELETE FROM wishlist_signals WHERE id = ?", (signal_id,))
+    conn.execute("DELETE FROM wishlist_matches WHERE signal_id = ?", (signal_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Signal and related matches deleted", "signal_id": signal_id}
+
+
+@app.delete("/wishlist/signals")
+def delete_all_wishlist_signals(buyer_token: str):
+    """Wipe everything for a buyer_token — used by the 'forget me' control."""
+    conn = database.get_db()
+    conn.execute("DELETE FROM wishlist_signals WHERE buyer_token = ?", (buyer_token,))
+    conn.execute("DELETE FROM wishlist_matches WHERE buyer_token = ?", (buyer_token,))
+    conn.commit()
+    conn.close()
+    return {"message": "All wishlist data deleted for this buyer_token"}
+
+
+# ── WISHLIST FEED · matches, showcase, boost, subscription ────
+# All responses scrub seller identity. Anonymity is absolute (PR-04).
+# These endpoints serve the bottom-half scroll feed in marketsquare.html.
+
+def _strip_seller_identity(row: dict) -> dict:
+    """Remove every field that could identify a seller. Used on every row
+    returned by feed/showcase endpoints. PR-29: no seller name, no seller_email,
+    no aa_* fields, no buyer_token leakage."""
+    forbidden = {"seller_email", "name", "email", "aa_free_used",
+                 "aa_sessions_remaining", "photo_url"}
+    return {k: v for k, v in row.items() if k not in forbidden}
+
+
+def _listing_age_label(published_at: Optional[str]) -> str:
+    """Human-readable 'time since listed' for the feed card (PR-30)."""
+    if not published_at:
+        return "just now"
+    try:
+        if published_at.endswith("Z"):
+            published_at = published_at[:-1] + "+00:00"
+        dt = datetime.fromisoformat(published_at)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        delta = datetime.now(timezone.utc) - dt
+        secs = int(delta.total_seconds())
+        if secs < 60: return "just now"
+        if secs < 3600: return f"{secs // 60}m ago"
+        if secs < 86400: return f"{secs // 3600}h ago"
+        return f"{secs // 86400}d ago"
+    except Exception:
+        return "recently"
+
+
+@app.get("/wishlist/feed")
+def get_wishlist_feed(buyer_token: str, min_trust_override: int = 0, limit: int = 30):
+    """Return the buyer's personalised feed — anonymised listing cards.
+    Cards are sorted boosted-first (PR-39 'Featured'), then newest-match-first.
+    `min_trust_override` lets the buyer apply a session-level Trust Score floor
+    on top of per-signal thresholds (PR-07). Free-tier buyers get a flag in the
+    response if cross-country matches exist they cannot see (PR-17).
+    """
+    conn = database.get_db()
+    # Increment view_count opportunistically when a card surfaces (lazy mark-as-seen
+    # happens on tap, not here — we only count appearances)
+    rows = conn.execute(
+        """SELECT m.id AS match_id, m.match_score, m.seller_trust, m.matched_at,
+                  m.seen, m.boost_rank, m.signal_id,
+                  l.id AS listing_id, l.title, l.category, l.city, l.suburb,
+                  l.area, l.thumb_url, l.medium_url, l.published_at, l.view_count,
+                  l.geo_city_id, l.boost_until,
+                  l.price, l.beds, l.baths, l.garages, l.prop_type,
+                  l.subject, l.level, l.mode, l.service_type, l.service_class,
+                  l.trust_score AS listing_trust_score
+           FROM wishlist_matches m
+           JOIN listings l ON l.id = m.listing_id
+           WHERE m.buyer_token = ?
+             AND m.seller_trust >= ?
+           ORDER BY m.boost_rank DESC, m.matched_at DESC
+           LIMIT ?""",
+        (buyer_token, max(0, min_trust_override), limit)
+    ).fetchall()
+
+    # Detect cross-country matches the buyer is missing on free tier (PR-17)
+    tier = _buyer_tier(conn, buyer_token)
+    upgrade_prompt = None
+    if tier == "free":
+        # Find buyer's most-recent country signal
+        country_row = conn.execute(
+            """SELECT country_iso2 FROM wishlist_signals
+               WHERE buyer_token = ? AND country_iso2 IS NOT NULL
+               ORDER BY created_at DESC LIMIT 1""",
+            (buyer_token,)
+        ).fetchone()
+        if country_row and country_row["country_iso2"]:
+            buyer_country = country_row["country_iso2"]
+            # Count listings the matcher would surface in OTHER countries by category overlap
+            # Approximated by: any listing in a country ≠ buyer's whose category appears in any of this buyer's signals
+            cats_row = conn.execute(
+                "SELECT DISTINCT category FROM wishlist_signals WHERE buyer_token = ? AND category IS NOT NULL",
+                (buyer_token,)
+            ).fetchall()
+            cats = [c["category"] for c in cats_row]
+            if cats:
+                placeholders = ",".join("?" * len(cats))
+                row = conn.execute(
+                    f"""SELECT COUNT(DISTINCT l.id) AS n,
+                              (SELECT gc2.country_iso2 FROM listings l2
+                               JOIN geo_cities gc2 ON gc2.id = l2.geo_city_id
+                               WHERE l2.category IN ({placeholders})
+                                 AND gc2.country_iso2 != ?
+                               ORDER BY l2.published_at DESC LIMIT 1) AS sample_country
+                       FROM listings l
+                       JOIN geo_cities gc ON gc.id = l.geo_city_id
+                       WHERE l.category IN ({placeholders})
+                         AND gc.country_iso2 != ?""",
+                    (*cats, buyer_country, *cats, buyer_country)
+                ).fetchone()
+                if row and (row["n"] or 0) > 0:
+                    upgrade_prompt = {
+                        "matches_elsewhere": int(row["n"]),
+                        "sample_country": row["sample_country"],
+                        "message": "Upgrade to Global to see matching listings in other countries."
+                    }
+
+    conn.close()
+
+    cards = []
+    now = datetime.now(timezone.utc)
+    for r in rows:
+        d = dict(r)
+        boost_until = d.get("boost_until")
+        is_boosted = False
+        if boost_until:
+            try:
+                is_boosted = datetime.fromisoformat(boost_until) > now
+            except Exception:
+                is_boosted = False
+        cards.append({
+            "match_id":        d["match_id"],
+            "listing_id":      d["listing_id"],
+            "title":           d["title"],
+            "category":        d["category"],
+            "thumb_url":       d["thumb_url"],
+            "medium_url":      d["medium_url"],
+            "city":            d["city"],
+            "suburb":          d["suburb"],
+            "area":            d["area"],
+            "price":           d["price"],
+            "beds":            d.get("beds"),
+            "baths":           d.get("baths"),
+            "garages":         d.get("garages"),
+            "prop_type":       d.get("prop_type"),
+            "subject":         d.get("subject"),
+            "level":           d.get("level"),
+            "mode":            d.get("mode"),
+            "service_type":    d.get("service_type"),
+            "service_class":   d.get("service_class"),
+            "trust_score":     d["listing_trust_score"] or 0,
+            "match_score":     round(float(d["match_score"]), 1),
+            "seller_trust":    int(d["seller_trust"] or 0),
+            "view_count":      int(d.get("view_count") or 0),
+            "age_label":       _listing_age_label(d.get("published_at")),
+            "is_featured":     bool(is_boosted) or (d.get("boost_rank") or 0) > 0,
+            "matched_at":      d["matched_at"],
+            "seen":            bool(d.get("seen")),
+        })
+    return {
+        "tier": tier,
+        "upgrade_prompt": upgrade_prompt,
+        "cards": cards,
+        "matcher": MATCHER.name,
+    }
+
+
+@app.post("/wishlist/feed/seen/{match_id}")
+def mark_match_seen(match_id: int, buyer_token: str):
+    """Buyer tapped or scrolled past — mark seen so it doesn't keep re-surfacing."""
+    conn = database.get_db()
+    conn.execute(
+        "UPDATE wishlist_matches SET seen = 1 WHERE id = ? AND buyer_token = ?",
+        (match_id, buyer_token)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "marked seen"}
+
+
+@app.post("/listings/{listing_id}/view")
+def increment_listing_view(listing_id: int):
+    """Public view counter — feeds PR-30 demand signal on the feed card."""
+    conn = database.get_db()
+    conn.execute(
+        "UPDATE listings SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?",
+        (listing_id,)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "view counted"}
+
+
+# ── SHOWCASE (curated empty-state feed) ──────────────────────
+
+@app.get("/wishlist/showcase")
+def get_showcase(limit: int = 30):
+    """Public, anonymous. Curated by David via the admin tool. Drives the
+    empty-state scroll for new visitors and registered buyers with <3 signals."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT s.id AS showcase_id, s.sort_order, s.added_at,
+                  l.id AS listing_id, l.title, l.category, l.city, l.suburb,
+                  l.thumb_url, l.medium_url, l.price,
+                  l.trust_score AS listing_trust_score,
+                  l.published_at, l.view_count
+           FROM wishlist_showcase s
+           JOIN listings l ON l.id = s.listing_id
+           ORDER BY s.sort_order ASC, s.added_at DESC
+           LIMIT ?""",
+        (limit,)
+    ).fetchall()
+    conn.close()
+    return [{
+        "showcase_id":   r["showcase_id"],
+        "listing_id":    r["listing_id"],
+        "title":         r["title"],
+        "category":      r["category"],
+        "thumb_url":     r["thumb_url"],
+        "medium_url":    r["medium_url"],
+        "city":          r["city"],
+        "suburb":        r["suburb"],
+        "price":         r["price"],
+        "trust_score":   r["listing_trust_score"] or 0,
+        "view_count":    int(r["view_count"] or 0),
+        "age_label":     _listing_age_label(r["published_at"]),
+        "sort_order":    r["sort_order"],
+    } for r in rows]
+
+
+@app.post("/wishlist/showcase")
+def add_showcase(listing_id: int, sort_order: int = 0, _key: str = Depends(auth.require_api_key)):
+    """Admin-only — add a listing to the curated showcase."""
+    conn = database.get_db()
+    listing = conn.execute("SELECT id FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    try:
+        conn.execute(
+            "INSERT INTO wishlist_showcase (listing_id, sort_order, added_by) VALUES (?, ?, 'admin')",
+            (listing_id, sort_order)
+        )
+        conn.commit()
+    except Exception:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Listing already in showcase")
+    conn.close()
+    return {"message": "Added to showcase", "listing_id": listing_id}
+
+
+@app.put("/wishlist/showcase/{showcase_id}")
+def reorder_showcase(showcase_id: int, sort_order: int, _key: str = Depends(auth.require_api_key)):
+    """Admin-only — change the sort_order of an existing showcase entry."""
+    conn = database.get_db()
+    res = conn.execute(
+        "UPDATE wishlist_showcase SET sort_order = ? WHERE id = ?",
+        (sort_order, showcase_id)
+    )
+    if res.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Showcase entry not found")
+    conn.commit()
+    conn.close()
+    return {"message": "Reordered", "showcase_id": showcase_id, "sort_order": sort_order}
+
+
+@app.delete("/wishlist/showcase/{showcase_id}")
+def remove_showcase(showcase_id: int, _key: str = Depends(auth.require_api_key)):
+    """Admin-only — remove a listing from the curated showcase."""
+    conn = database.get_db()
+    res = conn.execute("DELETE FROM wishlist_showcase WHERE id = ?", (showcase_id,))
+    if res.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Showcase entry not found")
+    conn.commit()
+    conn.close()
+    return {"message": "Removed from showcase"}
+
+
+# ── BOOST (2 Tuppence — PR-38) ───────────────────────────────
+
+class BoostRequest(BaseModel):
+    listing_id: int
+    seller_email: str  # used to check seller owns the listing AND to charge transactions
+
+BOOST_COST_T = 2
+BOOST_DAYS = 7
+
+
+@app.post("/wishlist/boost")
+def boost_listing(req: BoostRequest, background_tasks: BackgroundTasks):
+    """Spend 2T to boost a listing into matched feeds for 7 days.
+    Verifies the seller owns the listing (seller_email match), checks Tuppence
+    balance, deducts via the standard transactions table (type='boost_deduct'),
+    extends boost_until, and re-runs the match job to surface this listing
+    under the boosted threshold (45 instead of 60) — PR-38, PR-39, PR-41.
+    """
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (req.listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if not listing["seller_email"] or listing["seller_email"] != req.seller_email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="You do not own this listing")
+    # Check Tuppence balance
+    bal_row = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+        (req.seller_email,)
+    ).fetchone()
+    balance = int(bal_row["bal"] or 0)
+    if balance < BOOST_COST_T:
+        conn.close()
+        raise HTTPException(status_code=402, detail=f"Insufficient Tuppence — boost requires {BOOST_COST_T}T (you have {balance}T)")
+    # Deduct 2T
+    conn.execute(
+        "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+        (req.seller_email, "boost_deduct", -BOOST_COST_T,
+         f"Listing boost · listing #{req.listing_id} · {BOOST_DAYS} days")
+    )
+    # Extend boost — if already boosted, extend by 7 more days from current expiry
+    current_until = listing["boost_until"]
+    base = datetime.now(timezone.utc)
+    if current_until:
+        try:
+            existing_dt = datetime.fromisoformat(current_until)
+            if existing_dt > base:
+                base = existing_dt
+        except Exception:
+            pass
+    new_until = (base + timedelta(days=BOOST_DAYS)).isoformat()
+    conn.execute(
+        "UPDATE listings SET boost_until = ? WHERE id = ?",
+        (new_until, req.listing_id)
+    )
+    conn.commit()
+    conn.close()
+    # Re-run the match job under the boosted threshold (45) to surface to more buyers
+    background_tasks.add_task(run_match_job, req.listing_id)
+    return {
+        "message": f"Listing boosted for {BOOST_DAYS} days",
+        "listing_id": req.listing_id,
+        "boost_until": new_until,
+        "tuppence_charged": BOOST_COST_T,
+    }
+
+
+@app.get("/wishlist/boost/stats")
+def boost_stats(listing_id: int, seller_email: str):
+    """Aggregate-only stats for a boosted listing — never returns buyer identity (PR-42)."""
+    conn = database.get_db()
+    listing = conn.execute(
+        "SELECT seller_email, boost_until FROM listings WHERE id = ?", (listing_id,)
+    ).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if listing["seller_email"] != seller_email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="You do not own this listing")
+    row = conn.execute(
+        """SELECT COUNT(*) AS shown_to,
+                  SUM(CASE WHEN seen = 1 THEN 1 ELSE 0 END) AS seen_by,
+                  SUM(CASE WHEN pinged = 1 THEN 1 ELSE 0 END) AS pinged_to
+           FROM wishlist_matches WHERE listing_id = ?""",
+        (listing_id,)
+    ).fetchone()
+    conn.close()
+    return {
+        "listing_id": listing_id,
+        "boost_until": listing["boost_until"],
+        "shown_to_buyers": int(row["shown_to"] or 0),
+        "seen_by_buyers": int(row["seen_by"] or 0),
+        "pinged_to_buyers": int(row["pinged_to"] or 0),
+        # Deliberately NO buyer_token, NO email, NO any identifier — PR-42
+    }
+
+
+# ── GLOBAL SUBSCRIPTION ($5/month — PR-16, PR-18) ────────────
+
+# Paystack only quotes ZAR. $5 USD ≈ R90 at typical rates; pricing reviewed
+# in cost model when activated. Currency conversion lives in payments helper.
+WISHLIST_GLOBAL_USD = 5
+WISHLIST_GLOBAL_ZAR = 90  # update from cost model when FX shifts
+
+
+@app.post("/wishlist/subscription/initialize")
+def init_global_subscription(buyer_token: str, email: str):
+    """Start the Paystack flow for $5/month Global tier. Email is required by
+    Paystack but is NOT stored against wishlist data — it lives only in the
+    Paystack reference and the resulting subscription row's paystack_ref."""
+    if not buyer_token or len(buyer_token) < 8:
+        raise HTTPException(status_code=400, detail="valid buyer_token required")
+    reference = f"ms_wishlist_{uuid.uuid4().hex[:12]}"
+    result = payments.initialize_payment(
+        email=email,
+        amount_rands=WISHLIST_GLOBAL_ZAR,
+        reference=reference,
+        metadata={
+            "wishlist_global": 1,
+            "buyer_token": buyer_token,
+            "tier": "global",
+        }
+    )
+    if result.get("status"):
+        return {
+            "status": "ok",
+            "reference": reference,
+            "authorization_url": result["data"]["authorization_url"],
+            "amount_rands": WISHLIST_GLOBAL_ZAR,
+            "amount_usd": WISHLIST_GLOBAL_USD,
+        }
+    raise HTTPException(status_code=400, detail="Subscription initialization failed")
+
+
+@app.get("/wishlist/subscription/verify")
+def verify_global_subscription(reference: str):
+    """Paystack callback — activate Global tier on success."""
+    result = payments.verify_payment(reference)
+    if result.get("status") and result["data"]["status"] == "success":
+        meta = result["data"].get("metadata") or {}
+        if int(meta.get("wishlist_global", 0)) != 1:
+            raise HTTPException(status_code=400, detail="Reference is not a wishlist subscription")
+        buyer_token = meta.get("buyer_token", "")
+        if not buyer_token:
+            raise HTTPException(status_code=400, detail="Missing buyer_token in metadata")
+        now = datetime.now(timezone.utc)
+        expires = (now + timedelta(days=30)).isoformat()
+        conn = database.get_db()
+        conn.execute(
+            """INSERT INTO wishlist_subscriptions (buyer_token, tier, activated_at, expires_at, paystack_ref)
+               VALUES (?, 'global', ?, ?, ?)
+               ON CONFLICT(buyer_token) DO UPDATE SET
+                   tier = 'global',
+                   activated_at = excluded.activated_at,
+                   expires_at = excluded.expires_at,
+                   paystack_ref = excluded.paystack_ref""",
+            (buyer_token, now.isoformat(), expires, reference)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "ok", "tier": "global", "expires_at": expires}
+    raise HTTPException(status_code=400, detail="Payment verification failed")
+
+
+@app.get("/wishlist/subscription/status")
+def get_subscription_status(buyer_token: str):
+    """Return current tier (free|global) for a buyer_token."""
+    conn = database.get_db()
+    tier = _buyer_tier(conn, buyer_token)
+    row = conn.execute(
+        "SELECT activated_at, expires_at FROM wishlist_subscriptions WHERE buyer_token = ?",
+        (buyer_token,)
+    ).fetchone()
+    conn.close()
+    return {
+        "buyer_token": buyer_token,
+        "tier": tier,
+        "activated_at": row["activated_at"] if row else None,
+        "expires_at": row["expires_at"] if row else None,
+    }
+
+
+# ── WEARABLE WEB PUSH (free VAPID — Section 5) ───────────────
+# Uses the open Web Push standard with VAPID auth (RFC 8292). Free —
+# no paid push service. Compatible with Android, modern Chrome / Edge /
+# Firefox / Safari 16+, and most smartwatches that mirror phone notifs.
+# Apple Watch via APNs requires a future native PWA wrapper — out of
+# scope for V1 (PR-33). For V1 the same Web Push subscription a user
+# creates on their phone surfaces on their wrist via OS notification
+# mirroring on iOS 16+ and Wear OS.
+#
+# COST CONSTRAINT: pywebpush is a free Python library that talks
+# directly to the browser push services (FCM/Mozilla/Apple) using the
+# user's VAPID-signed subscription. NO paid SaaS in the path.
+
+VAPID_KEY_PATH = os.getenv("MS_VAPID_KEY_PATH", "/etc/marketsquare-vapid.json")
+VAPID_SUBJECT  = os.getenv("MS_VAPID_SUBJECT", "mailto:dmcontiki2@gmail.com")
+
+_vapid_private_pem: Optional[str] = None
+_vapid_public_b64: Optional[str] = None
+_PUSH_AVAILABLE = False
+
+try:
+    from pywebpush import webpush as _webpush, WebPushException as _WebPushException
+    _PUSH_AVAILABLE = True
+except Exception as _exc:
+    _log.warning("pywebpush not installed — wearable pings disabled (%s)", _exc)
+    _webpush = None
+    _WebPushException = Exception
+
+def _bootstrap_vapid_keys():
+    """Load VAPID keypair from disk; generate if missing. ZERO cost — pure
+    elliptic-curve crypto from the cryptography stdlib. Safe to call repeatedly."""
+    global _vapid_private_pem, _vapid_public_b64
+    if not _PUSH_AVAILABLE:
+        return
+    if os.path.exists(VAPID_KEY_PATH):
+        try:
+            with open(VAPID_KEY_PATH, "r") as fh:
+                cfg = json.load(fh)
+            _vapid_private_pem = cfg.get("private_pem")
+            _vapid_public_b64  = cfg.get("public_b64")
+            if _vapid_private_pem and _vapid_public_b64:
+                _log.info("VAPID keys loaded from %s", VAPID_KEY_PATH)
+                return
+        except Exception as exc:
+            _log.warning("Could not load VAPID keys from %s: %s — regenerating", VAPID_KEY_PATH, exc)
+    # Generate
+    try:
+        import base64
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives import serialization
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pem  = priv.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode()
+        pub_numbers = priv.public_key().public_numbers()
+        # Uncompressed P-256 point: 0x04 || X(32) || Y(32)
+        raw = b"\x04" + pub_numbers.x.to_bytes(32, "big") + pub_numbers.y.to_bytes(32, "big")
+        pub_b64 = base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+        try:
+            os.makedirs(os.path.dirname(VAPID_KEY_PATH), exist_ok=True)
+            with open(VAPID_KEY_PATH, "w") as fh:
+                json.dump({"private_pem": pem, "public_b64": pub_b64}, fh)
+            os.chmod(VAPID_KEY_PATH, 0o600)
+        except Exception as exc:
+            _log.warning("Could not persist VAPID keys to %s: %s — keeping in-memory only", VAPID_KEY_PATH, exc)
+        _vapid_private_pem = pem
+        _vapid_public_b64  = pub_b64
+        _log.info("VAPID keypair generated · public_b64=%s…", pub_b64[:16])
+    except Exception as exc:
+        _log.error("VAPID bootstrap failed: %s", exc)
+
+_bootstrap_vapid_keys()
+
+
+class WearableRegisterReq(BaseModel):
+    buyer_token: str
+    push_endpoint: str
+    push_keys: dict        # {"p256dh": "...", "auth": "..."}
+    platform: str = "web"  # 'web' | 'android' | 'ios'
+    device_label: Optional[str] = None
+
+
+@app.get("/wishlist/vapid-public-key")
+def get_vapid_public_key():
+    """Frontend fetches this once during push subscription setup."""
+    if not _vapid_public_b64:
+        raise HTTPException(status_code=503, detail="Push not configured on server")
+    return {"public_key": _vapid_public_b64}
+
+
+@app.post("/wishlist/wearable/register")
+def register_wearable(req: WearableRegisterReq):
+    """Buyer subscribes a device. Idempotent on (buyer_token, push_endpoint).
+    The endpoint URL alone is harmless — it cannot be used to find the buyer's
+    identity. The browser-managed push_keys are needed to encrypt payloads
+    so only the buyer's device can read them."""
+    if not req.buyer_token or len(req.buyer_token) < 8:
+        raise HTTPException(status_code=400, detail="valid buyer_token required")
+    if not req.push_endpoint or not req.push_keys:
+        raise HTTPException(status_code=400, detail="push_endpoint and push_keys required")
+    conn = database.get_db()
+    conn.execute(
+        """INSERT INTO wearable_devices
+             (buyer_token, push_endpoint, push_keys, platform, device_label)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(buyer_token, push_endpoint) DO UPDATE SET
+             push_keys = excluded.push_keys,
+             platform = excluded.platform,
+             device_label = COALESCE(excluded.device_label, wearable_devices.device_label),
+             enabled = 1""",
+        (req.buyer_token, req.push_endpoint, json.dumps(req.push_keys),
+         req.platform, req.device_label)
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT id FROM wearable_devices WHERE buyer_token = ? AND push_endpoint = ?",
+        (req.buyer_token, req.push_endpoint)
+    ).fetchone()
+    conn.close()
+    return {"id": row["id"], "message": "Wearable registered"}
+
+
+@app.get("/wishlist/wearable/list")
+def list_wearables(buyer_token: str):
+    """Return the buyer's registered devices — never includes push_keys."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT id, platform, device_label, enabled, created_at, last_ping_at
+           FROM wearable_devices WHERE buyer_token = ? ORDER BY created_at DESC""",
+        (buyer_token,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.delete("/wishlist/wearable/{device_id}")
+def delete_wearable(device_id: int, buyer_token: str):
+    """Buyer removes a device — sets enabled=0 and deletes the row."""
+    conn = database.get_db()
+    res = conn.execute(
+        "DELETE FROM wearable_devices WHERE id = ? AND buyer_token = ?",
+        (device_id, buyer_token)
+    )
+    if res.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Device not found for this buyer_token")
+    conn.commit()
+    conn.close()
+    return {"message": "Wearable removed"}
+
+
+def _send_push_for_match(buyer_token: str, match_id: int, listing: dict):
+    """Fan out a push to every active wearable device for this buyer_token.
+    Payload contains category + suburb/city + short description excerpt only —
+    NO seller identity, NO price, NO listing_id (PR-35). Listing_id is fetched
+    when the buyer opens the app via the standard feed flow.
+    Never raises: failures are logged. Disabled devices (410 Gone) are auto-removed."""
+    if not _PUSH_AVAILABLE or not _vapid_private_pem:
+        return
+    try:
+        conn = database.get_db()
+        rows = conn.execute(
+            """SELECT id, push_endpoint, push_keys, platform FROM wearable_devices
+               WHERE buyer_token = ? AND enabled = 1""",
+            (buyer_token,)
+        ).fetchall()
+        if not rows:
+            conn.close()
+            return
+        suburb_or_city = listing.get("suburb") or listing.get("city") or ""
+        desc = (listing.get("description") or listing.get("title") or "").strip()
+        if len(desc) > 90:
+            desc = desc[:87] + "…"
+        payload = json.dumps({
+            "title": "✨ Match in your wishlist",
+            "body":  f"{listing.get('category') or ''} · {suburb_or_city} · {desc}".strip(" ·"),
+            "match_id": match_id,
+            # NO seller_email, NO listing.id, NO price (PR-35)
+        })
+        delivered = 0
+        for r in rows:
+            try:
+                _webpush(
+                    subscription_info={
+                        "endpoint": r["push_endpoint"],
+                        "keys": json.loads(r["push_keys"]),
+                    },
+                    data=payload,
+                    vapid_private_key=_vapid_private_pem,
+                    vapid_claims={"sub": VAPID_SUBJECT},
+                    timeout=8,
+                )
+                conn.execute(
+                    "UPDATE wearable_devices SET last_ping_at = ? WHERE id = ?",
+                    (datetime.now(timezone.utc).isoformat(), r["id"])
+                )
+                delivered += 1
+            except _WebPushException as exc:
+                # 404/410 = subscription gone; remove the dead device
+                resp = getattr(exc, "response", None)
+                status = getattr(resp, "status_code", None)
+                if status in (404, 410):
+                    conn.execute("DELETE FROM wearable_devices WHERE id = ?", (r["id"],))
+                    _log.info("Removed dead push subscription %s (status %s)", r["id"], status)
+                else:
+                    _log.warning("Push failed for device %s: %s", r["id"], exc)
+            except Exception as exc:
+                _log.warning("Push failed for device %s: %s", r["id"], exc)
+        conn.commit()
+        conn.close()
+        if delivered:
+            _log.info("Pushed match %s to %d device(s) for buyer %s…",
+                      match_id, delivered, buyer_token[:8])
+    except Exception as exc:
+        _log.error("_send_push_for_match failed: %s", exc)
+
+
+# ── DEV TOOLS (disable before public launch) ─────────────────
+# Allows the development team to seed Tuppence and AI coaching sessions
+# without going through Paystack. All API costs run on the existing
+# Anthropic / Hetzner billing. Remove or gate with a hard env-var check
+# before the public launch of TrustSquare.
+
+@app.post("/dev/credit")
+def dev_credit(
+    email: str,
+    tuppence: int = 20,
+    ai_sessions: int = 500,
+    _key: str = Depends(auth.require_api_key)
+):
+    """Seed a dev/test account with Tuppence and AI coaching sessions.
+    DEV PHASE ONLY — protected by API key.
+    Remove this endpoint before public launch.
+    """
+    conn = database.get_db()
+
+    # Upsert user — create if not exists, credit AI sessions if exists
+    conn.execute(
+        """INSERT INTO users (email, aa_free_used, aa_sessions_remaining)
+           VALUES (?, 0, ?)
+           ON CONFLICT(email) DO UPDATE SET
+               aa_sessions_remaining = aa_sessions_remaining + ?""",
+        (email, ai_sessions, ai_sessions)
+    )
+
+    # Credit Tuppence as a dev transaction
+    if tuppence > 0:
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
+            (email, "dev_topup", tuppence,
+             f"Dev credit — {tuppence}T Tuppence + {ai_sessions} AI sessions (pre-launch testing)")
+        )
+
+    conn.commit()
+
+    user = conn.execute(
+        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    balance = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (email,)
+    ).fetchone()
+    conn.close()
+
+    return {
+        "email": email,
+        "tuppence_balance": int(balance["bal"]),
+        "ai_sessions_remaining": user["aa_sessions_remaining"] if user else ai_sessions,
+        "warning": "⚠️ DEV ENDPOINT — disable before public launch"
+    }
+
+
+# ── EMAIL OPT-OUT ────────────────────────────────────────────
+# Called when a prospect clicks "Unsubscribe" in an outreach email.
+# Writes the suppression back into the CityLauncher SQLite DB via
+# the CityLauncher API (running on same server at localhost:8001).
+# Falls back to logging only if CityLauncher is unreachable.
+
+CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
+
+@app.get("/opt-out")
+async def opt_out(email: str, city_id: int = 0, category: str = ""):
+    """
+    One-click unsubscribe endpoint for outreach emails.
+    Marks the prospect as opted_out in the CityLauncher database.
+    Returns a friendly HTML confirmation page — no account needed.
+
+    Query params:
+      email      — prospect email address (URL-encoded)
+      city_id    — CityLauncher city ID (0 = all cities for this email)
+      category   — listing category (empty = all categories for this email)
+    """
+    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
+
+    suppressed = False
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(
+                f"{CITYLAUNCHER_API}/prospects/opt-out",
+                json={"email": email, "city_id": city_id, "category": category}
+            )
+            if resp.status_code in (200, 204):
+                suppressed = True
+                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
+            else:
+                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
+    except Exception as exc:
+        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
+
+    # Return a clean HTML confirmation regardless of backend success
+    html_response = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribed — TrustSquare</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; }}
+    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
+             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
+    .icon {{ font-size: 48px; margin-bottom: 16px; }}
+    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
+    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
+    a {{ color: #1a1a2e; font-weight: 600; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>You're unsubscribed</h1>
+    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
+    You won't receive any further emails from TrustSquare about listing opportunities.</p>
+    <p style="margin-top:24px; font-size:13px; color:#aaa;">
+      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
+    </p>
+  </div>
+</body>
+</html>"""
+
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_response, status_code=200)

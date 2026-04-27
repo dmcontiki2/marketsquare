@@ -133,4 +133,28 @@ ssh %SERVER% "grep -q 'dev-tools\|devtools' %REMOTE%/admin.html && echo   [OK] A
 
 ssh %SERVER% "grep -q 'view-showcase' %REMOTE%/admin.html && echo   [OK] Admin: showcase tab confirmed || echo   [FAIL] Admin: showcase tab missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'screen-ed
+ssh %SERVER% "grep -q 'screen-edit-listing' %REMOTE%/index.html && echo   [OK] Buyer app: new index.html confirmed on server || echo   [FAIL] Buyer app: old index.html still on server"
+
+ssh %SERVER% "grep -q 'wlBootToken\|wishlist-feed' %REMOTE%/index.html && echo   [OK] Buyer app: wishlist feed UI confirmed || echo   [FAIL] Buyer app: wishlist UI missing - redeploy needed"
+
+ssh %SERVER% "test -f %REMOTE%/service-worker.js && echo   [OK] Service worker confirmed on server || echo   [FAIL] service-worker.js missing - redeploy needed"
+
+echo.
+echo  ============================================================
+echo   DEPLOY COMPLETE
+echo  ============================================================
+echo.
+echo  trustsquare.co        ^|  buyer app updated
+echo  trustsquare.co/admin  ^|  admin tool updated
+echo  BEA backend           ^|  restarted and verified
+echo.
+echo  If any [FAIL] lines appear above, that file did not deploy.
+echo  Re-run this script or manually SCP the failing file.
+echo.
+echo  Opening sites in browser to verify (cache-busted)...
+timeout /t 2 /nobreak >nul
+start "" "https://trustsquare.co?v=%random%"
+start "" "https://trustsquare.co/admin.html?v=%random%"
+echo.
+timeout /t 6 /nobreak >nul
+exit
