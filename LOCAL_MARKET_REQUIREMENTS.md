@@ -1,6 +1,6 @@
 # MarketSquare · Local Market — Requirements & Architecture
-**Version 0.1 · 27 April 2026**
-*Draft for review. Not yet approved for implementation.*
+**Version 0.2 · 27 April 2026**
+*v0.2 — Trust Score model corrected: buyer-side filter only, never a bootstrap publish gate. v0.1 contained an internal contradiction between LM-08 (publish gate at score ≥ 30) and LM-14 (sub-40 listings still visible with seller warning). LM-14 was always the intended design — see updated LM-08, LM-15, LM-17, and §11.5 below.*
 
 ---
 
@@ -143,7 +143,7 @@ Seller notified (push + in-app) — 48 hour response window
 
 **LM-07** — No category field. The seller describes the item freely. The AI (Haiko) extracts tags at publish time for matching — these are internal only, never shown to the seller or buyer.
 
-**LM-08** — The seller must have a minimum Trust Score of 30 to publish a Local Market listing. Below this threshold, the app prompts the seller to complete their profile and earn more Trust Score points before listing.
+**LM-08** — *(v0.2 — REWRITTEN)* New sellers may publish a Local Market listing immediately, regardless of Trust Score. The Trust Score is a **buyer-side filter signal**, not a publish gate. Sellers below 40 are shown a soft notice on publish that buyers filtering for Established+ sellers will not see their listing yet (LM-14). The only states that block publish are bad-actor outcomes — permanent LM ban (third strike, LM-14e) or active 30-day cooling-off period (second suspension within 90 days, LM-14e).
 
 **LM-09** — On publish, the seller is shown: "Your listing is live. You will pay 1 Tuppence when your first buyer expresses interest. Build your Trust Score to attract more serious buyers."
 
@@ -159,13 +159,13 @@ Seller notified (push + in-app) — 48 hour response window
 
 **LM-13** — When a seller views their Local Market listing in the admin tool, they see: their current Trust Score, their Trust Score tier, and a Haiko-generated tip on the single highest-impact action they can take to increase it.
 
-**LM-14** — Sellers below Trust Score 40 (New tier) are shown a warning on their listing: *"Your listing is visible but buyers filtering for Established sellers or above will not see it. Complete your profile to improve your reach."*
+**LM-14** — *(v0.2 — clarified)* Sellers below Trust Score 40 (New tier) are shown a warning at publish time and on their listing: *"Your listing is visible but buyers filtering for Established sellers or above will not see it. Complete your profile to improve your reach."* This is the canonical model — listings are visible to "Any seller" filter from publish; trust drives reach, not existence.
 
 ---
 
 ### 5.3a Trust Score Enforcement — Bad Actor Suspension
 
-**LM-14a** — If a seller's Trust Score drops below 30 at any time (due to penalties, complaints, or ignored introductions), all their Local Market listings are **automatically suspended** — hidden from all buyers and the wishlist feed immediately. The seller sees their listings in the admin tool marked "Suspended — Trust Score too low."
+**LM-14a** — *(v0.2 — clarified)* If a seller's Trust Score drops below 30 **due to upheld complaints**, all their Local Market listings are **automatically suspended** — hidden from all buyers and the wishlist feed immediately. The seller sees their listings in the admin tool marked "Suspended — restore Trust Score above 30 to reactivate." Note: a NEW seller starting at score 0 with no complaints is NOT auto-suspended — bootstrap-by-low-score is not a bad-actor signal. Suspension fires only when complaint history exists.
 
 **LM-14b** — A suspended seller's Tuppence balance is **frozen but not forfeited**. Purchased Tuppence is never confiscated — it was bought with real money. The balance is restored in full when the seller restores their Trust Score above 30.
 
@@ -184,11 +184,11 @@ Seller notified (push + in-app) — 48 hour response window
 
 ### 5.4 Buyer Trust Score & Accountability
 
-**LM-15** — Buyers who submit introduction requests on Local Market listings must have a minimum Trust Score of 20. Below this, they are prompted to verify their email and phone number first.
+**LM-15** — *(v0.2 — REWRITTEN)* New buyers may submit Local Market introduction requests immediately. The buyer's Trust Score is **shown to the seller on the intro request** so the seller can decide whether to accept. The seller is therefore the gatekeeper of buyer trust at the moment that matters — when contact details are about to be exchanged. New buyers start at 0 and earn trust by following through on accepted intros; serial no-show buyers fall to 0 and are naturally declined by sellers.
 
 **LM-16** — A no-show complaint by a seller, once upheld, deducts 3 Trust Score points from the buyer.
 
-**LM-17** — A buyer whose Trust Score falls below 20 as a result of no-show complaints is automatically blocked from submitting Local Market introduction requests until they restore their score.
+**LM-17** — *(v0.2 — REWRITTEN)* There is no automatic block on intro submission based on buyer Trust Score. Sellers see the score on every intro request (LM-15) and self-select. A buyer whose score has fallen due to no-show complaints will see fewer accepted introductions naturally — sellers are unlikely to accept a 0-score buyer when they're paying 1T per intro and care about completion. The market self-regulates without a hard gate.
 
 **LM-18** — Buyers can see their own Local Market introduction history in the Tuppence Wallet / My Activity screen.
 
@@ -360,7 +360,9 @@ Tuppence is a platform introduction currency purchased with real money. Tuppence
 
 ### 11.2 Trust Score Minimum & Listing Suspension
 
-To publish and maintain an active Local Market listing, a seller must maintain a minimum Trust Score of 30. If a seller's Trust Score falls below 30 at any time, all Local Market listings are automatically suspended without notice. Listings are automatically reactivated when the Trust Score is restored to 30 or above.
+*(v0.2 — REWRITTEN)* New sellers may publish Local Market listings from registration with no minimum Trust Score requirement. Trust Score is a buyer-side filter — buyers may choose to view only Established (≥40), Trusted (≥70), or Highly Trusted (≥90) sellers. Sellers below 40 are visible to buyers using the "Any seller" filter (default).
+
+If a seller's Trust Score falls below 30 **due to upheld no-show or misconduct complaints**, all Local Market listings are automatically suspended without notice and reactivated automatically when the Trust Score recovers to 30 or above. This applies only to complaint-driven score collapse, not to new sellers with no complaints on file.
 
 ### 11.3 Repeat Offender Policy
 
@@ -374,7 +376,7 @@ MarketSquare reserves the right to apply these measures without prior notice whe
 
 ### 11.4 Buyer No-Show Accountability
 
-By submitting an introduction request on a Local Market listing, the buyer acknowledges that failing to follow through on an accepted introduction may result in a Trust Score penalty of −3 points per upheld complaint. A Trust Score below 20 will result in suspension from submitting Local Market introduction requests until the score is restored.
+*(v0.2 — REWRITTEN)* By submitting an introduction request on a Local Market listing, the buyer acknowledges that failing to follow through on an accepted introduction may result in a Trust Score penalty of −3 points per upheld complaint. The buyer's current Trust Score is shown to the seller on every introduction request, and the seller may decline introductions from buyers with a track record of no-shows. There is no automatic suspension based on Trust Score — sellers self-select.
 
 ### 11.5 Seller Pays on Introduction
 

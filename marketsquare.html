@@ -8882,11 +8882,13 @@ async function lmRequestIntro(listingId) {
     });
     if (resp.status === 403) {
       const j = await resp.json().catch(()=>({}));
-      if ((j.detail||'').startsWith('buyer_trust_below')) {
-        alert('Your Trust Score is too low to submit Local Market introductions yet. Verify your email and phone to raise it above 20.');
-      } else {
-        alert('Not allowed: ' + (j.detail || 'unknown'));
-      }
+      // Trust Score is no longer a hard gate (Session 28 hotfix) — 403 here
+      // means the listing's seller is permanently banned or in cooling-off.
+      alert('Not allowed: ' + (j.detail || 'unknown'));
+      return;
+    }
+    if (resp.status === 410) {
+      alert('This listing has been suspended and is no longer accepting introductions.');
       return;
     }
     if (resp.status === 402) {

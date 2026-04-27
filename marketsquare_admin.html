@@ -1353,9 +1353,9 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <p style="font-size:13.5px;color:#374151;line-height:1.6;margin-bottom:12px;">By activating a Local Market listing, you confirm you have read and accept the following terms:</p>
     <div style="font-size:13px;color:#1f2937;line-height:1.55;">
       <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> Balances may be frozen if your account is suspended but are never confiscated. Frozen Tuppence is restored automatically when your account is reinstated.</div>
-      <div style="margin-bottom:12px;"><strong>2. Trust Score minimum.</strong> A minimum Trust Score of 30 is required to publish and maintain Local Market listings. If your score drops below 30, your listings are automatically suspended and re-activate when your score recovers.</div>
+      <div style="margin-bottom:12px;"><strong>2. Trust Score and visibility.</strong> You may publish from day one with no minimum Trust Score. Buyers may filter Local Market listings by seller Trust Score (Established+ ≥40, Trusted+ ≥70, Highly Trusted ≥90). Sellers below 40 are visible to buyers using the default "Any seller" filter. If your Trust Score falls below 30 due to upheld complaints, your listings are automatically suspended until your score recovers.</div>
       <div style="margin-bottom:12px;"><strong>3. Repeat-offender escalation.</strong> First suspension: until score recovers. Second within 90 days: 30-day mandatory cooling-off. Third: permanent ban from Local Market (other categories remain available).</div>
-      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. Buyers below 20 are blocked from submitting Local Market intros.</div>
+      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. The buyer's current Trust Score is shown to you on every introduction request — you decide whether to accept.</div>
       <div style="margin-bottom:12px;"><strong>5. Seller pays on introduction.</strong> Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore. A 1T credit is issued if a buyer no-show complaint is upheld and the listing remains active.</div>
       <div style="margin-bottom:12px;"><strong>6. EULA updates.</strong> These terms may be updated with 14 days in-app notice. Continued use after the notice period constitutes acceptance.</div>
     </div>
@@ -2775,12 +2775,15 @@ async function lmSubmitCreate() {
     if (resp.status === 403) {
       const j = await resp.json().catch(()=>({}));
       const detail = (j.detail || '').toString();
+      // Trust Score is no longer a publish gate (Session 28 hotfix) — only
+      // bad-actor states still block: cooling-off after second suspension
+      // in 90 days, or permanent third-strike ban.
       if (detail.startsWith('cooling_off')) {
         status.textContent = 'Seller is in a 30-day cooling-off period — cannot publish.';
       } else if (detail === 'permanent_lm_ban') {
         status.textContent = 'Seller is permanently banned from Local Market.';
       } else {
-        status.textContent = 'Trust Score below 30 — seller cannot publish Local Market listings yet.';
+        status.textContent = 'Not allowed: ' + detail;
       }
       btn.disabled = false;
       return;
@@ -2790,7 +2793,25 @@ async function lmSubmitCreate() {
       throw new Error(resp.status + ' ' + t);
     }
     const j = await resp.json();
-    showToast('✓ Listing published · #' + j.id);
+    // Soft-warning toast if the seller is below 40 — listing IS live, but
+    // buyers filtering for Established+ won't see it. Educates the seller
+    // to build their Trust Score for wider reach (LM-14, the correct model).
+    try {
+      const ts = await fetch(BEA_URL + '/users/' + encodeURIComponent(email));
+      if (ts.ok) {
+        const u = await ts.json();
+        const score = parseInt(u.trust_score || 0, 10);
+        if (score < 40) {
+          showToast('✓ Listing published · #' + j.id + ' — score ' + score + '/40 limits reach. Build Trust to widen visibility.');
+        } else {
+          showToast('✓ Listing published · #' + j.id);
+        }
+      } else {
+        showToast('✓ Listing published · #' + j.id);
+      }
+    } catch(e) {
+      showToast('✓ Listing published · #' + j.id);
+    }
     lmCloseCreateForm();
     // Refresh My Listings if it's loaded
     if (typeof loadAllListings === 'function') loadAllListings();

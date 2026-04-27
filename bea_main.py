@@ -3234,16 +3234,25 @@ def _lm_is_banned(conn, seller_email: str) -> bool:
 
 
 def _lm_check_seller_can_publish(conn, seller_email: str) -> Optional[str]:
-    """Return None if seller may publish a Local Market listing, else error string."""
+    """Return None if seller may publish a Local Market listing, else error string.
+
+    DESIGN NOTE (Session 28 hotfix): Trust Score is a BUYER-SIDE FILTER, not a
+    publish gate. New sellers can publish from day one with score 0 — they are
+    visible to buyers using the 'Any seller' filter. Only ACTIVE bad-actor
+    states (permanent ban or cooling-off after repeat suspensions) block publish.
+
+    Bootstrap-by-low-score (sub-30) is NOT a gate — that would block every new
+    seller from publishing their first listing, which contradicts the marketplace
+    philosophy of 'visibility universal, trust signalled'. The original LM-08
+    spec was inconsistent with LM-14 ('listings below 40 still visible, with
+    seller warning') — LM-14 is the correct model and is now the implemented one.
+    """
     if _lm_is_banned(conn, seller_email):
         return "permanent_lm_ban"
     susp = _lm_active_suspension(conn, seller_email)
-    if susp:
-        if susp.get("cooling_off_until"):
-            return f"cooling_off_until_{susp['cooling_off_until']}"
-        return "trust_score_below_30"
-    if _seller_trust(conn, seller_email) < LM_SELLER_MIN_TRUST:
-        return "trust_score_below_30"
+    if susp and susp.get("cooling_off_until"):
+        # Mandatory 30-day cooling-off after second suspension in 90 days (LM-14e)
+        return f"cooling_off_until_{susp['cooling_off_until']}"
     return None
 
 
@@ -3326,12 +3335,29 @@ def _lm_try_restore(conn, seller_email: str):
 
 
 def _lm_recompute_seller_state(conn, seller_email: str):
-    """Hook to call any time a seller's Trust Score changes. Suspends if below
-    floor, restores if above. Safe to call repeatedly."""
-    if _seller_trust(conn, seller_email) < LM_SELLER_MIN_TRUST:
-        _lm_apply_suspension(conn, seller_email)
-    else:
+    """Hook to call any time a seller's Trust Score changes. Restores listings
+    if the seller climbs back above the floor; suspends ONLY if the seller has
+    active complaints AND has fallen below the floor (LM-14a — bad-actor case).
+
+    DESIGN NOTE (Session 28 hotfix): Trust Score is a buyer-filter, not a
+    bootstrap gate. A NEW seller with score 0 and zero complaints is not a
+    bad actor — they're just new. The LM-14 spec describes auto-suspension
+    as a consequence of complaint-driven score collapse, not of unproven
+    sellers existing. Without this distinction every new seller would be
+    instantly suspended on first listing publish.
+    """
+    if _seller_trust(conn, seller_email) >= LM_SELLER_MIN_TRUST:
         _lm_try_restore(conn, seller_email)
+        return
+    # Below the floor — only suspend if there ARE active complaints that
+    # caused the drop. New sellers with no complaints stay live.
+    has_complaints = conn.execute(
+        """SELECT 1 FROM seller_complaints
+           WHERE seller_email = ? AND status IN ('pending', 'upheld') LIMIT 1""",
+        (seller_email,)
+    ).fetchone()
+    if has_complaints:
+        _lm_apply_suspension(conn, seller_email)
 
 
 # ── Endpoints ────────────────────────────────────────────────
@@ -3455,14 +3481,17 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
         conn.close()
         raise HTTPException(status_code=409, detail="Listing has no seller — cannot accept intros")
 
-    # Buyer trust gate (LM-15)
-    buyer_score = _buyer_trust(conn, req.buyer_token)
-    if buyer_score < LM_BUYER_MIN_TRUST:
-        conn.close()
-        raise HTTPException(
-            status_code=403,
-            detail=f"buyer_trust_below_{LM_BUYER_MIN_TRUST}"
-        )
+    # DESIGN NOTE (Session 28 hotfix): Buyer trust is no longer a hard gate
+    # for submitting intros. New buyers must be able to participate from day
+    # one — they start at score 0 and stay visible to "Any seller" filters.
+    # The seller sees the buyer's Trust Score on the intro request and decides
+    # whether to accept, exactly the way the platform's flywheel intends:
+    # buyers earn trust by following through, sellers prefer high-trust buyers.
+    # The original LM-15 (block below 20) blocked every new buyer — wrong model.
+    # Bad-actor enforcement still works through the no-show complaint path
+    # (LM-T4, −3 per upheld), which can drive a serial-no-show buyer down to 0;
+    # sellers will simply decline those intros, which is the correct dynamic.
+    buyer_score = _buyer_trust(conn, req.buyer_token)  # noqa: F841 — exposed in response
 
     # 7-day cooldown after declined/auto-closed intro from same buyer (LM-F3)
     cooldown_cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
@@ -3537,6 +3566,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
             "listing_id":     req.listing_id,
             "listing_title":  listing.get("title"),
             "buyer_name":     req.buyer_name,
+            "buyer_trust_score": buyer_score,   # seller's accept/decline signal
             "seller_email":   seller_email,
             "tuppence_charged_to_seller": cost_T if first_intro else 0,
             "timestamp":      datetime.now(timezone.utc).isoformat(),
@@ -3547,6 +3577,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
         "intro_id": new_intro_id,
         "message": "Local Market intro submitted",
         "tuppence_charged_to_seller": cost_T if first_intro else 0,
+        "buyer_trust_score": buyer_score,
         "boosted": is_boosted,
     }
 
@@ -3694,7 +3725,7 @@ def lm_suspension_check(email: str):
             "trust_score": score,
             "min_required": LM_SELLER_MIN_TRUST,
             "delta_to_recover": max(0, LM_SELLER_MIN_TRUST - score),
-            "message": "Your Local Market listings are suspended. Restore your Trust Score to 30 or above to reactivate them.",
+            "message": "Your Local Market listings are suspended due to upheld complaints. Restore your Trust Score to 30 or above — by resolving outstanding complaints and earning credentials — to reactivate them.",
         }
     return {
         "state": "clear",

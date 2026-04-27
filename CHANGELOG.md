@@ -2,6 +2,22 @@
 
 ---
 
+## Session 28 · 27 April 2026 · Hotfix — Trust Score is buyer-filter, not server gate (LM-08 / LM-15 design correction)
+
+**Defect found in V1 of Local Market.** As shipped in `0baa67b`, `_lm_check_seller_can_publish` rejected `POST /local-market/listings` with HTTP 403 if the seller's Trust Score was below 30. `lm_create_intro` rejected `POST /local-market/intro` with HTTP 403 if the buyer's score was below 20. `_lm_recompute_seller_state` auto-suspended a seller's listings any time the score recomputed below 30, regardless of cause. All three behaviours faithfully implemented LM-08 / LM-15 / LM-17 as written in the v0.1 spec. All three were wrong: every new seller starts at 0 and every new buyer starts at 0, so the gates blocked the entire bootstrap path. The first user to try to publish on production hit `trust_score_below_30` and could not proceed without a manual DB poke (the conversation thread that surfaced this — the admin's own seller email computed to 10 after the Trust Score Hub recomputation, well below the 30 threshold).
+
+**Root cause — internal contradiction in `LOCAL_MARKET_REQUIREMENTS.md` v0.1.** LM-08 said "Trust Score ≥ 30 to publish." LM-14 said "sellers below 40 are visible but warned." Both clauses cannot be true simultaneously. The build agent in Session 28 implemented LM-08 literally without flagging the contradiction. LM-14 was always the correct intent, consistent with `WISHLIST_REQUIREMENTS.md` PR-08/PR-09 (Trust Score is a buyer-set filter with "Any seller" as the default), the marketplace philosophy of universal visibility + buyer-side trust signalling, and the platform principle that buyers earn the right to filter while sellers earn the right to be seen.
+
+**Fix.** `_lm_check_seller_can_publish` now blocks publish only on permanent LM ban (third-strike, LM-14e) or active 30-day cooling-off period (second suspension within 90 days, LM-14e). Bootstrap-by-low-score is no longer a gate. `lm_create_intro` no longer gates on buyer Trust Score — instead, the buyer's score is exposed in the response and in the n8n notification payload so the seller can see it on the intro request and decide whether to accept. `_lm_recompute_seller_state` only auto-suspends a seller when there are active complaints AND the score is below 30 — a new seller with score 0 and zero complaints stays live. Frontend updated: dead `buyer_trust_below` 403 branch removed from `lmRequestIntro`; admin LM creation modal now shows a soft toast warning when the seller's score is below 40 ("score X/40 limits reach. Build Trust to widen visibility.") instead of erroring out; suspension panel message clarified to attribute suspension to upheld complaints rather than mere score collapse; EULA modal clauses 2 and 4 rewritten to match the corrected design.
+
+**`LOCAL_MARKET_REQUIREMENTS.md` bumped to v0.2.** LM-08, LM-14, LM-14a, LM-15, LM-17, §11.2, §11.4 all rewritten with `(v0.2 — REWRITTEN)` or `(v0.2 — clarified)` markers preserving the audit trail. The bad-actor suspension logic (LM-14a–f, three-strike escalation, permanent ban) is unchanged — those are complaint-driven, not bootstrap-driven, and they're correct as designed.
+
+**Privacy / cost confirmations.** Anonymity unchanged — buyer Trust Score is surfaced to the seller as a number on the intro request, never an identifier. The seller does not see the buyer's email or token at any point before mutual acceptance. Zero new external API calls — the soft-warning lookup uses the existing `GET /users/{email}` endpoint to read the score back after publish. SQLite-only.
+
+**Cost model impact:** none. No new infrastructure, no new pricing.
+
+---
+
 ## Session 28 · 27 April 2026 · Section 5 — version bump, deploy verifications, final review (BEA v1.2.0 → v1.3.0)
 
 **BEA bumped to v1.3.0** in both the FastAPI app constructor and the `/health` response. Sessions 27/28 land Local Market and Trust Score Hub end-to-end.
