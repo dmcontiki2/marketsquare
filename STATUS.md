@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 26 April 2026
+## Current State · 27 April 2026
 
 | Item | Detail |
 |---|---|
@@ -20,28 +20,24 @@
 
 ---
 
-## Last Completed Session · Session 24 (26 April 2026)
+## Last Completed Session · Session 26 (27 April 2026)
 
-- Wishlist Feed — full requirements document written: `WISHLIST_REQUIREMENTS.md` v0.2 ✅
-- Trust Score filter as first-class safety gate (≥90 = Highly Trusted) locked in ✅
-- Free (national) / Global ($5/month) subscription tiers defined ✅
-- Tuppence boost at 2T with expanded reach and match tolerance specified ✅
-- Empty-state showcase (gold coins, Rolex, rare cards) — wow factor confirmed ✅
-- Haiko 4.5 as matching agent socket, keyword fallback specified ✅
-- Apple Watch (APNs) in scope for V1 ✅
-- Privacy architecture formalised: "Your wishlist never leaves MarketSquare" ✅
-- CHANGELOG.md updated for both MarketSquare and CityLauncher ✅
+- `LOCAL_MARKET_REQUIREMENTS.md` v0.1 — full spec, Tuppence model, bad actor rules, EULA clauses ✅
+- `TRUST_SCORE_HUB_REQUIREMENTS.md` v0.1 — full UI spec with exact point values per category ✅
+- Showcase seed script deployed — 12 aspirational listings live (IDs 40–51) ✅
+- CHANGELOG.md updated ✅
 
 ---
 
-## Next Tasks · Session 25
+## Next Tasks · Session 27
 
-1. **Wishlist Feed build** — hand `WISHLIST_REQUIREMENTS.md` to Opus · implement BEA tables, matching job, scroll feed UI, wearable push
-2. Update cost model — add Global subscription ($5/mo) + boost (2T) revenue projections to Cost_Breakdown_GlobalLaunch.xlsx
-3. Maroushka + Dave test on phone (lightbox, back buttons, My Requests tab) — from Session 23
-4. Paystack live mode (pending CIPC registration — David action)
-5. n8n email notifications — buyer emailed on intro accept/decline
-6. **Remove `/dev/credit` endpoint + Dev Tools nav tab before public launch**
+1. **Local Market build** — hand `LOCAL_MARKET_REQUIREMENTS.md` to Opus
+2. **Trust Score Hub build** — hand `TRUST_SCORE_HUB_REQUIREMENTS.md` to Opus
+3. **Showcase photos** — add `thumb_url` to listings 40–51 (royalty-free images)
+4. **Geo/city selector bug** — audit all `activeCity` references in `marketsquare.html`
+5. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
+6. Paystack live mode (pending CIPC registration — David action)
+7. **Remove `/dev/credit` endpoint + Dev Tools nav tab before public launch**
 
 ---
 

@@ -2,6 +2,14 @@
 
 ---
 
+## Session 26 · 27 April 2026 · Local Market + Trust Score Hub — requirements documents
+
+**Local Market requirements written** as `LOCAL_MARKET_REQUIREMENTS.md` v0.1. Full specification for the new open-ended peer-to-peer trading category: dedicated page separate from all structured categories, unique seller-pays Tuppence model (1T deducted from seller on first introduction request per listing), Commitment introduction flow with 48hr response window and Trust Score incentives (+3 for <24hr response, −1 for ignoring), buyer no-show complaint flow (−3 buyer Trust Score, 1T seller credit on uphold), Trust Score minimum gates (30 to publish, 20 to submit intro), bad actor suspension policy (auto-suspend listings below score 30, Tuppence frozen not forfeited, three-strike escalation to permanent ban), and full EULA clauses covering all of the above. Wishlist Feed integration specified — Local Market listings feed into the "For You" home screen via semantic matching, badged separately. Home page stats row removed permanently to make space for the feed. Browse page gets a dedicated Local Market entry point.
+
+**Trust Score Hub requirements written** as `TRUST_SCORE_HUB_REQUIREMENTS.md` v0.1. Full UI spec for the My Seller Hub Trust Score breakdown screen in the admin tool. Covers: summary panel with progress bar, tier badge, points-to-next-tier gap, and Haiko "best next step" tip card; three collapsible groups (Universal 30pts, Platform Track Record 30pts, Category Credentials 40pts) each showing exact point values, earned/pending/not-done status, and a direct upload action per credential; category-specific credential checklists for all 7 categories (Property, Tutors, Services Technical, Services Casuals, Adventures Experiences, Adventures Accommodation, Collectors, Local Market); penalties section showing active deductions with dispute link. All point values sourced directly from `TRUST_SCORE_CRITERIA.md` v1.0.
+
+**Showcase seed script** `seed_showcase.py` deployed and run — 12 aspirational listings created (IDs 40–51): 1933 Double Eagle gold coin, Rolex Submariner, Penny Black stamp, MTG Alpha Black Lotus PSA 8, 1908 Ford Model T, 50-year Krugerrand set, Rolex Daytona Paul Newman, Inverted Jenny stamp, Pokémon Charizard PSA 10, Patek Philippe Grand Complication, 1994 Mandela inauguration gold coin, MTG Beta Mox Sapphire. All added to `wishlist_showcase` table. Photos pending (no thumb_url set — to be added in next session).
+
 ## Session 25 · 27 April 2026 · Wishlist Feed — full implementation (BEA + frontend + Web Push)
 
 **Wishlist Feed v1 shipped end-to-end** per `WISHLIST_REQUIREMENTS.md` v0.2. The platform now hunts on the buyer's behalf: browsing builds a wishlist, the matching engine surfaces hits within 60 seconds in a bottom-half scroll feed on the home screen, and strong matches push to a connected wearable. Zero external API cost — all matching runs locally on the existing Hetzner CPX22.
@@ -669,3 +677,62 @@ STATUS.md + AGENT_BRIEFING.md: replaced stale hardcoded values with live pointer
 ## Session 10 · 5 April 2026 · Proximity search — lat/lng, distance badges, map view, near-me filter
 
 Full proximity search built across BEA and buyer app. BEA: added lat/lng REAL columns to geo_cities and geo_suburbs; updated seed_geo_za() and _seed_country_from_geonames() to store coordinates from GeoNames data; added _backfill_geo_coords() one-time function that re-downloads ZA.zip and UPDATEs existing rows with lat/lng; added _haversine_km() helper; new GET /geo/nearby endpoint returns suburbs within a configurable radius sorted by distance (bounding-box pre-filter + Haversine); GET /geo/suburbs and /geo/cities now return lat/lng; GET /listings JOINs geo_suburbs for suburb_lat/suburb_lng on each listing. Buyer app: added Leaflet.js 1.9.4 + MarkerCluster CDN; browser Geolocation API detects buyer GPS on startup; distance badges ("2.3 km") shown on listing cards; grid/map view toggle with Leaflet map using OpenStreetMap tiles, clustered listing pins with popups, blue circle for buyer location; "📍 Near me" option in suburb panel calls /geo/nearby (10 km radius), filters listings client-side to matching suburbs; listings sort by distance when GPS is available. Zero-cost tile solution: OpenStreetMap/OpenFreeMap, scalable to self-hosted Protomaps on Hetzner if needed.
+
+---
+
+## Session 11 · 5 April 2026 · Admin city search + duplicate cleanup
+
+Replaced the "Add a new city" form in the admin Cities tab with a search input that filters the cities table by city name or province as you type. Removed POST /geo/cities endpoint from BEA — cities are seeded exclusively from GeoNames, not created manually. The old Add City form had caused a duplicate lowercase "pretoria" (id 101) with 0 suburbs; deactivated on server via UPDATE geo_cities SET active=0 WHERE id=101. Real Pretoria (id 47) has 140 suburbs.
+
+---
+
+## Session 21 · 17 April 2026 · Edit polish, smart sell flow, price fix, demo data, category photos
+
+### Bug fixes (marketsquare.html)
+
+**Edit screen photo wiring** — `elRenderPhotos()` now called inside both `openEditListing()` and `editAISuggest()` so uploaded photos and AI-warning badges appear correctly in the edit sheet.
+
+**Structured fields from DB columns** — `loadLiveListings()` now prefers dedicated DB columns (`l.beds`, `l.baths`, `l.garages`, `l.prop_type`, `l.listing_type`, `l.floor_area`, `l.erf_size`, `l.subject`, `l.level`, `l.mode`, `l.service_type`, `l.availability`) over description-text parsing. Regex updated to `/(\d+)[-\s]*bed/i` to match "3-bedroom" hyphenated forms. Result: structured info pills now survive AI rewrites of the description.
+
+**floor_area / erf_size** — Added to mapped listing object in `loadLiveListings()` and to `saveEditedListing()` payload. Both fields now display in the detail view and persist on save.
+
+**Stale buyer cache after save** — `saveEditedListing()` now calls `Promise.all([loadLiveDash(), loadLiveListings()])` after a successful PUT so the buyer grid refreshes immediately.
+
+**listing_type detection** — Regex expanded to match AI-written prose (`per month`, `monthly rent`, `to let`, `to-let`, `rental`) not just exact "for rent" strings.
+
+**Commitment Model step text** — Removed outdated "Seller pays 1T penalty" copy from the commitment flow. Step now reads "Listing becomes available to other buyers again."
+
+**Price corruption fix** — `saveEditedListing()` and `_elFieldVal()` now strip all non-numeric characters before saving price (`replace(/[^0-9.]/g, '')`). Prevents AI-suggested multi-option price strings (e.g. "R26,990/month (all-inclusive from R28,480)") from concatenating into a corrupt value. DB corrected via `fix_prices.py` (IDs 5–8).
+
+**Profile photo drag and drop** — Added `ondragover`, `ondragleave`, and `ondrop` inline handlers to the CV photo circle. New `handleCVPhotoDrop(e)` function processes dropped image files identically to the click-to-upload path.
+
+**Tutors & Services edit fields** — `_elFieldVal()` now maps `subject`, `level`, `mode`, `service_type`, `availability` from BEA raw data. Detail view shows info pills for all three categories (Property: beds/baths/garages/floor_area/erf_size; Tutors: subject/level/mode; Services: service_class/service_type/availability).
+
+### Smart + Sell routing (marketsquare.html)
+
+`+ Sell` nav button now calls `openSellNav()` instead of going directly to the onboard form. If `ms_aa_email` is present in localStorage an account-picker bottom sheet appears with two options: continue with the existing account, or start a fresh account for a second business. Sellers whose storage was cleared can also recover their session via a new "sign in with existing account" section at the bottom of the onboard form. `submitOnboard()` now stores `ms_aa_name` in localStorage. Fixed a bug where `sellSheetNewAccount()` was prematurely clearing the email key before the onboard form had a chance to write a new one. `.ob-form` padding-bottom increased to `max(calc(env(safe-area-inset-bottom) + 80px), 100px)` to prevent the submit button from hiding under the bottom nav bar on iOS.
+
+### Trust score column (bea_main.py)
+
+Added `("trust_score", "INTEGER")` to the `run_migrations()` migration loop (already present alongside `seller_email` from session prep). `Listing` Pydantic model gains `trust_score: Optional[int]` and `seller_email: Optional[str]`. `create_listing` POST endpoint INSERT updated to save all structured fields: `prop_type`, `beds`, `baths`, `garages`, `subject`, `level`, `mode`, `service_type`, `availability`, `trust_score`, `seller_email`. Previously only 10 base columns were saved; now 21.
+
+`loadLiveListings()` in `marketsquare.html` uses `l.trust_score || 40` instead of the hardcoded value `40`, so trust badges now reflect real DB data.
+
+### Demo seed data
+
+`seed_demo_data.py` creates 20 demo listings under `dmcontiki2@gmail.com` (all editable via the seller edit flow):
+- 10 Tutors: Maths/Physics (88), Piano (84), Stats/Data Science (92), Coding/Robotics (79), English/Afrikaans (76), Accounting (72), Life Sciences (61), Primary (67), Zulu/Sesotho (55), Chess (48)
+- 10 Services: Plumber (90), Electrician (87), Web Design (85), Bookkeeping/Tax (83), Personal Trainer (78), Photography (74), Graphic Design (69), House Cleaning (63), Garden (58), Car Valeting (52)
+
+Each listing has Unsplash royalty-free photos, full structured fields, and mock certificate text in the description. Trust scores vary 48–92 to demonstrate all four trust tiers.
+
+### Category shopfront photos (marketsquare.html)
+
+Category tiles on the home screen now show representative full-cover Unsplash photos instead of emoji on a gradient:
+- **Property** — `photo-1570129477492-45c003edd2be` (warm suburban house at golden hour)
+- **Tutors** — `photo-1580582932707-520aed937b7b` (teacher working with student)
+- **Services** — `photo-1621905251918-48416bd8575a` (skilled professional at work)
+
+Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
+
+**Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`
