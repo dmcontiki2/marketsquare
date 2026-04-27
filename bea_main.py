@@ -3459,9 +3459,10 @@ def lm_get_listing(listing_id: int):
     Trust score read live from joined users table — never the listing column."""
     conn = database.get_db()
     row = conn.execute(
-        """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.country,
+        """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
                   l.thumb_url, l.medium_url, l.description, l.published_at,
                   l.view_count, l.boost_until,
+                  COALESCE(u.country, 'ZA') AS country,
                   COALESCE(u.trust_score, 0) AS trust_score
            FROM listings l
            LEFT JOIN users u ON u.email = l.seller_email
