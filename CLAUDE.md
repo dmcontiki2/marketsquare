@@ -53,10 +53,18 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 - Reload nginx after config changes: `nginx -s reload`
 - CityLauncher: /var/www/citylauncher/ · port 8001 · citylauncher.service · nginx /launch/ + /launch-api/
 
+## Server Dependency Installation
+BEA dependencies must be installed into the BEA venv, not system Python. Always use `/var/www/marketsquare/venv/bin/pip install <package>` — never `pip install` or `pip3 install` directly on the server. This tripped up the Session 25 build (pywebpush install).
+
 ## Key technical notes
-- Cost model lives in project root as .xlsx — Claude Code cannot edit it directly
+- Cost model lives in project root as .xlsx — edited via openpyxl in the sandbox
+- ⚠️ XLSX WRITE RULE: After ANY cost model change, Claude must remind David to run these three commands in PowerShell before ending the session — the sandbox cannot reliably write binary files to the Projects folder mount:
+  ```
+  cd C:\Users\David\Projects\MarketSquare
+  git add Cost_Breakdown_GlobalLaunch.xlsx
+  git commit -m "Cost model update"
+  ```
 - When any session changes infrastructure, pricing, city launch mechanics, subscription tiers, or revenue model: flag the impact in CHANGELOG.md with a line starting "Cost model impact:"
-- David uploads the xlsx to Claude Chat for revision, downloads the updated file back to project root
 - BEA listing ids are strings: 'bea_N' — always use findListing(id) not LISTINGS[id]
 - All onclick handlers interpolating listing ids must quote them: openDetail('${l.id}')
 - normCat() in loadLiveListings() normalises BEA category strings to CATS keys
