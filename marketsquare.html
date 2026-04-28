@@ -6238,13 +6238,23 @@ function goPhase(p){
 
 function handleImg(e){
   const file=e.target.files[0]; if(!file) return;
-  if(file.size>3*1024*1024){ showToast('⚠️ Photo is large — compress if possible'); }
   const r=new FileReader();
   r.onload=ev=>{
-    pubImg=ev.target.result;
-    document.getElementById('uz-img').src=pubImg;
-    document.getElementById('uz-default').style.display='none';
-    document.getElementById('uz-preview').style.display='block';
+    const img=new Image();
+    img.onload=()=>{
+      // Compress to max 1200px / 80% JPEG — silent, no user friction
+      const MAX=1200, Q=0.80;
+      let w=img.width, h=img.height;
+      if(w>MAX||h>MAX){ const s=Math.min(MAX/w,MAX/h); w=Math.round(w*s); h=Math.round(h*s); }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      pubImg=canvas.toDataURL('image/jpeg',Q);
+      document.getElementById('uz-img').src=pubImg;
+      document.getElementById('uz-default').style.display='none';
+      document.getElementById('uz-preview').style.display='block';
+    };
+    img.src=ev.target.result;
   };
   r.readAsDataURL(file);
 }
