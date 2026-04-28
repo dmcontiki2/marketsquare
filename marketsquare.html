@@ -4546,8 +4546,8 @@ function closeSellSheet(e) {
 }
 function sellSheetContinue() {
   document.getElementById('sell-account-sheet').classList.remove('open');
-  loadLiveDash().then(() => { renderDash(); });
-  goTo('dashboard');
+  resetPublish();
+  goTo('publish');
 }
 function sellSheetNewAccount() {
   document.getElementById('sell-account-sheet').classList.remove('open');
