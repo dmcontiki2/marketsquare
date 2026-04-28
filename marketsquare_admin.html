@@ -1425,6 +1425,19 @@ const BEA_URL  = 'https://trustsquare.co';
 const API_KEY  = 'ms_mk_2026_pretoria_admin';
 const MS_URL   = 'https://trustsquare.co'; // FEA URL for magic link
 
+// ── SUPERUSER ──────────────────────────────────────────────
+// Core team bypass — all gates disabled until launch day.
+const SUPERUSER_EMAILS = [
+  'dmcontiki2@gmail.com',
+  'miconradie1@gmail.com',
+  'davidconradie1234@gmail.com',
+  'mauriceconradie@yahoo.com',
+];
+function isSuperuser(email) {
+  if (localStorage.getItem('ms_superuser') === '1') return true;
+  return SUPERUSER_EMAILS.includes((email || '').toLowerCase().trim());
+}
+
 // ── CURRENCY FORMATTER ────────────────────────────────────
 function formatZAR(value) {
   if (value === null || value === undefined || value === '') return null;
@@ -2802,7 +2815,7 @@ async function lmSubmitCreate() {
       if (ts.ok) {
         const u = await ts.json();
         const score = parseInt(u.trust_score || 0, 10);
-        if (score < 40) {
+        if (score < 40 && !isSuperuser(email)) {
           showToast('✓ Listing published · #' + j.id + ' — score ' + score + '/40 limits reach. Build Trust to widen visibility.');
         } else {
           showToast('✓ Listing published · #' + j.id);
@@ -3384,4 +3397,7 @@ function closeAdmHist() {
       <button class="adm-cancel-btn" style="flex:1" onclick="closeAdmHist()">Close</button>
     </div>
   </div>
-</div
+</div>
+
+</body>
+</html>

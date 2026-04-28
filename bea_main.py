@@ -302,6 +302,25 @@ def run_migrations(conn):
         # Drives which Group 3 credential checklist the seller sees in the
         # Trust Score Hub. Set on first listing publish; admin can override.
         conn.execute("ALTER TABLE users ADD COLUMN primary_category TEXT")
+    if "is_superuser" not in user_cols2:
+        # Superuser flag — bypasses all publish gates and trust filters.
+        # Seeded for the four core team emails on every startup.
+        # Will be superseded by the owner dashboard on launch day.
+        conn.execute("ALTER TABLE users ADD COLUMN is_superuser INTEGER NOT NULL DEFAULT 0")
+
+    # ── Seed superuser flag for core team ───────────────────────
+    SUPERUSER_EMAILS = [
+        "dmcontiki2@gmail.com",
+        "miconradie1@gmail.com",
+        "davidconradie1234@gmail.com",
+        "mauriceconradie@yahoo.com",
+    ]
+    for su_email in SUPERUSER_EMAILS:
+        conn.execute(
+            "UPDATE users SET is_superuser = 1 WHERE email = ? AND is_superuser = 0",
+            (su_email,)
+        )
+    conn.commit()
 
     # ── Trust Score Hub (Section 3 · v1.3.0) ────────────────────
     # Per-credential verification state. Drives the Hub's earned/pending/
@@ -3259,7 +3278,15 @@ def _lm_check_seller_can_publish(conn, seller_email: str) -> Optional[str]:
     philosophy of 'visibility universal, trust signalled'. The original LM-08
     spec was inconsistent with LM-14 ('listings below 40 still visible, with
     seller warning') — LM-14 is the correct model and is now the implemented one.
+
+    Superusers bypass all gates until launch day — see is_superuser on users table.
     """
+    # Superuser bypass — no restrictions until launch day
+    row = conn.execute(
+        "SELECT is_superuser FROM users WHERE email = ?", (seller_email,)
+    ).fetchone()
+    if row and row["is_superuser"]:
+        return None
     if _lm_is_banned(conn, seller_email):
         return "permanent_lm_ban"
     susp = _lm_active_suspension(conn, seller_email)
@@ -4425,7 +4452,7 @@ async def opt_out(email: str, city_id: int = 0, category: str = ""):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unsubscribed — TrustSquare</title>
+  <title>Unsubscribed - TrustSquare</title>
   <style>
     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: #f5f5f0; display: flex; align-items: center; justify-content: center;
@@ -4441,9 +4468,9 @@ async def opt_out(email: str, city_id: int = 0, category: str = ""):
 <body>
   <div class="card">
     <div class="icon">✅</div>
-    <h1>You're unsubscribed</h1>
-    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
-    You won't receive any further emails from TrustSquare about listing opportunities.</p>
+    <h1>You’re unsubscribed</h1>
+    <p>We’ve removed <strong>{email}</strong> from our outreach list.<br>
+    You won’t receive any further emails from TrustSquare about listing opportunities.</p>
     <p style="margin-top:24px; font-size:13px; color:#aaa;">
       Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
     </p>

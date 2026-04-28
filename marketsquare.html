@@ -4218,6 +4218,10 @@ let magicLink={active:false,name:'',email:'',cat:'',area:''};
 // ── OFFLINE STATE ─────────────────────────────────────────
 function isOffline(){ return !navigator.onLine; }
 
+// ── SUPERUSER ──────────────────────────────────────────────
+// Core team bypass — all gates disabled until launch day.
+function isSuperuser(){ return localStorage.getItem('ms_superuser') === '1'; }
+
 function showOfflineBanner(){
   const b=document.getElementById('offline-banner');
   const m=document.getElementById('offline-msg');
@@ -4421,6 +4425,7 @@ async function signInSeller() {
       const name = user.name || email;
       localStorage.setItem('ms_aa_email', email);
       localStorage.setItem('ms_aa_name',  name);
+      localStorage.setItem('ms_superuser', user.is_superuser ? '1' : '0');
       sessionStorage.setItem('aa_email',   email);
       msg.style.color   = 'var(--green)';
       msg.textContent   = '✓ Signed in as ' + name;
