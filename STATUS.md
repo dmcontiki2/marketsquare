@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 27 April 2026
+## Current State · 28 April 2026
 
 | Item | Detail |
 |---|---|
@@ -13,45 +13,46 @@
 | **BEA file** | `bea_main.py` (local) → served as `main.py` on server |
 | **Codex** | `Solar_Council_Codex_v4_5.docx` |
 | **Cost model** | `Cost_Breakdown_GlobalLaunch.xlsx` — ZAR/USD rate B62, accountant rows added |
-| **BEA version** | Live — check GET /health |
+| **BEA version** | v1.3.0 live — check GET /health |
 | **Founding sellers** | 23 / 60 · check trustsquare.co/admin.html |
 | **Paystack** | Test mode (live pending CIPC registration) |
 | **Photo storage** | Cloudflare R2 (EU) — `marketsquare-media` bucket, $0 egress |
 
 ---
 
-## Last Completed Session · Session 28 (27 April 2026)
+## Last Completed Session · Session 29 (28 April 2026)
 
-- Local Market end-to-end live: BEA v1.3.0, buyer page, admin form, intro flow ✅
-- Trust Score Hub live: credential checklist, Haiko tip card, per-category awareness ✅
-- Geo/city selector bug fixed — all views now consume activeCity dynamically ✅
-- Wishlist category dropdown removed — free-text only ✅
-- Hotfix: Trust Score is buyer-filter not server gate (spec corrected to v0.2) ✅
-- Hotfix: R2 public URL, lm_get_listing 500, LM trust filter live-join ✅
-- All commits pushed to GitHub by Opus (a93f69c is HEAD) ✅
-- ⚠️ One invisible button in Local Market admin modal — CSS fix pending next session
+- Fixed invisible Confirm button in LM admin modal (`--navy` CSS var added) ✅
+- SSH deploy from sandbox fixed permanently (project `.ssh/` folder) ✅
+- Superuser access added for David, Maroushka, Dave, Maurice (client + BEA) ✅
+- `.gitattributes` eol=lf enforced — CRLF truncation bug fixed permanently ✅
+- Local Market tile added to sell wizard Step 2 ✅
+- `sellSheetContinue()` fixed — routes to wizard not dashboard ✅
+- Photo auto-compress >2MB silently (canvas 1200px/80% JPEG) ✅
+- `API_KEY` added to marketsquare.html (fixed LM publish connection error) ✅
+- Double photo field in LM modal fixed (Step A photo passed through) ✅
+- Local Market full-width tile added to home Categories grid ✅
+- HEAD: 4e7c97f
 
 ---
 
-## Next Tasks · Session 29
+## Next Tasks · Session 30
 
-1. **Fix invisible Confirm button** in Local Market admin modal — CSS only, ~5 min
-2. **Showcase photos** — add thumb_url to listings 40–51 (royalty-free images)
-3. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
-4. Paystack live mode (pending CIPC registration — David action)
-5. n8n email notifications — buyer emailed on intro accept/decline
-6. **Remove `/dev/credit` endpoint + Dev Tools nav tab before public launch**
+1. **Showcase photos** — add thumb_url to listings 40–51 (royalty-free images)
+2. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
+3. Paystack live mode (pending CIPC registration — David action)
+4. n8n email notifications — buyer emailed on intro accept/decline
+5. **Remove `/dev/credit` endpoint + Dev Tools nav tab before public launch**
 
 ---
 
 ## Known Server Facts
 
-- SSH key: `~/.ssh/id_ed25519` · Server: 178.104.73.239 · Ubuntu 24.04
+- SSH key: `.ssh/id_ed25519` in project folder · Server: 178.104.73.239 · Ubuntu 24.04
 - Env vars: /etc/environment · BEA venv: /var/www/marketsquare/venv/
 - Photo storage: Cloudflare R2 (EU) via HETZNER_S3_* env vars
 - DB backups: daily 3 AM cron → R2 `backups/YYYY-MM-DD/`, 14-day retention
 - n8n: Docker container — restart: `docker restart n8n` · UI: SSH tunnel port 5678
-- CityLauncher: /var/www/citylauncher/ · port 8001 · nginx at /launch/ + /launch-api/
 
 ## Known File Facts
 
@@ -59,6 +60,7 @@
 - Placeholder listing ids: `ph_*` · BEA listing ids: `bea_*` · Always use `findListing(id)`
 - BEA geo API param: `country` (not `country_iso2`)
 - Cost model edited via openpyxl (pandas not installed in sandbox)
+- ⚠️ Never use Edit tool on marketsquare.html — always use Python scripts (file is 9000+ lines)
 
 ## Open Items
 

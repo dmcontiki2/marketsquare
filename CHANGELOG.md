@@ -2,6 +2,20 @@
 
 ---
 
+## Session 29 · 28 April 2026 · LM sell flow, photo compress, home grid, superuser, CRLF fix
+
+- **CSS fix**: Added `--navy` CSS variable to admin app `:root` — Confirm button in LM modal was transparent/invisible.
+- **SSH deploy**: Project `.ssh/id_ed25519` key committed — sandbox can now deploy autonomously every session without PowerShell.
+- **Superuser system**: `isSuperuser()` helper in both apps; BEA `is_superuser` column seeded for David, Maroushka, Dave, Maurice — bypasses trust score gates and LM publish checks until launch day.
+- **CRLF fix (permanent)**: `.gitattributes` enforces `eol=lf` on all text files — eliminates recurring UTF-8 truncation from Windows CRLF conversion.
+- **Sell wizard**: Local Market tile added to Step 2 category picker in marketsquare.html.
+- **sellSheetContinue()**: Fixed routing — now opens publish wizard instead of going to dashboard.
+- **Photo compression**: `handleImg()` silently compresses photos >2MB via canvas (1200px max, 80% JPEG) instead of warning.
+- **API_KEY fix**: Added `const API_KEY` to marketsquare.html config block — was undefined, causing "Connection error" on LM publish.
+- **Double photo fix**: Step A photo (pubImg) passed to LM modal; photo row hidden if photo already chosen.
+- **Home grid**: Full-width Local Market tile added to Categories grid (`grid-column:1/-1`, aspect-ratio 6/1) — ready for future boosted ad scroll strip.
+- HEAD: 4e7c97f
+
 ## Session 28 · 27 April 2026 · Hotfix — Trust Score is buyer-filter, not server gate (LM-08 / LM-15 design correction)
 
 **Defect found in V1 of Local Market.** As shipped in `0baa67b`, `_lm_check_seller_can_publish` rejected `POST /local-market/listings` with HTTP 403 if the seller's Trust Score was below 30. `lm_create_intro` rejected `POST /local-market/intro` with HTTP 403 if the buyer's score was below 20. `_lm_recompute_seller_state` auto-suspended a seller's listings any time the score recomputed below 30, regardless of cause. All three behaviours faithfully implemented LM-08 / LM-15 / LM-17 as written in the v0.1 spec. All three were wrong: every new seller starts at 0 and every new buyer starts at 0, so the gates blocked the entire bootstrap path. The first user to try to publish on production hit `trust_score_below_30` and could not proceed without a manual DB poke (the conversation thread that surfaced this — the admin's own seller email computed to 10 after the Trust Score Hub recomputation, well below the 30 threshold).
