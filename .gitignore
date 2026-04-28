@@ -31,3 +31,4 @@ npm-debug.log*
 *.bak
 *.log
 .DS_Store
+.ssh/
