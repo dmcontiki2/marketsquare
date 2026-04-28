@@ -2228,6 +2228,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="cat-tile" onclick="filterBrowse('Adventures')"><div class="cat-bg" style="background:#064e3b"><img src="https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=80" alt="Adventures" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count" id="cat-count-Adventures">0 listings</div></div></div>
     <div class="cat-tile" onclick="filterBrowse('Collectors')"><div class="cat-bg" style="background:#44403c"><img src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&q=80" alt="Collectors" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count" id="cat-count-Collectors">0 listings</div></div></div>
     <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" alt="Cars" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
+    <div class="cat-tile" onclick="goTo('local-market')" style="grid-column:span 2;"><div class="cat-bg" style="background:linear-gradient(135deg,#1f2937,#111827)"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80" alt="Local Market" loading="lazy" onerror="this.style.display='none'"></div><div class="cat-overlay"><div class="cat-name">🛍️ Local Market</div><div class="cat-count">Second-hand, vintage &amp; more</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
   <div class="featured-wrap">
@@ -3897,7 +3898,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <input type="text" id="fea-lm-city" placeholder="Pretoria"
         style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
     </div>
-    <div style="margin-bottom:12px;">
+    <img id="fea-lm-photo-preview" src="" alt="Photo preview"
+      style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;">
+    <div id="fea-lm-photo-row" style="margin-bottom:12px;">
       <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Photos (up to 5)</label>
       <input type="file" id="fea-lm-photos" accept="image/*" multiple style="width:100%;font-size:13px;color:var(--text-2);">
       <div style="font-size:11px;color:var(--text-3);margin-top:4px;">First photo becomes the thumbnail.</div>
@@ -3929,6 +3932,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 // Phase 1: demo data. Phase 2: live BEA at trustsquare.co
 const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
+const API_KEY = 'ms_mk_2026_pretoria_admin';
 let activeCountry = { iso2: 'ZA', name: 'South Africa' };
 let activeRegion  = null;                     // { id, name } or null
 let activeCity    = { id: null, name: 'Pretoria' }; // id resolved on startup
@@ -6242,7 +6246,6 @@ function handleImg(e){
   r.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
-      // Compress to max 1200px / 80% JPEG — silent, no user friction
       const MAX=1200, Q=0.80;
       let w=img.width, h=img.height;
       if(w>MAX||h>MAX){ const s=Math.min(MAX/w,MAX/h); w=Math.round(w*s); h=Math.round(h*s); }
@@ -6901,6 +6904,16 @@ function openLMCreateFromWizard() {
   document.getElementById('fea-lm-photos').value = '';
   document.getElementById('fea-lm-status').textContent = '';
   document.getElementById('fea-lm-submit').disabled = false;
+  // If seller already added a photo in Step A, show it and hide the photo field
+  const photoRow = document.getElementById('fea-lm-photo-row');
+  const photoPreview = document.getElementById('fea-lm-photo-preview');
+  if (pubImg) {
+    if (photoPreview) { photoPreview.src = pubImg; photoPreview.style.display = 'block'; }
+    if (photoRow) photoRow.style.display = 'none';
+  } else {
+    if (photoPreview) photoPreview.style.display = 'none';
+    if (photoRow) photoRow.style.display = 'block';
+  }
   // Show create modal directly (EULA check happens on submit)
   document.getElementById('fea-lm-create-modal').style.display = 'flex';
 }
@@ -6969,12 +6982,22 @@ async function feaLmSubmit() {
   btn.disabled = true;
   status.textContent = 'Uploading photos...';
 
-  // Upload photos
+  // Upload photos — use Step A photo (pubImg) if no new file chosen in modal
   let thumbUrl = null, mediumUrl = null;
-  if (photos && photos.length > 0) {
+  const hasNewFile = photos && photos.length > 0;
+  const hasStepAPhoto = !!pubImg;
+
+  if (hasNewFile || hasStepAPhoto) {
     try {
+      let blob;
+      if (hasNewFile) {
+        blob = photos[0];
+      } else {
+        const res = await fetch(pubImg);
+        blob = await res.blob();
+      }
       const fd = new FormData();
-      fd.append('file', photos[0]);
+      fd.append('file', blob, 'photo.jpg');
       const pr = await fetch(BEA_URL + '/listings/photo', {
         method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
       });
