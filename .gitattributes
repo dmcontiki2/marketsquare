@@ -1,0 +1,22 @@
+# Force LF line endings for all text files — prevents Windows CRLF corruption
+# of multi-byte Unicode characters (em-dashes, curly quotes etc.) in Python source.
+# Python 3.12 on the server is strict about byte sequences; CRLF conversion breaks them.
+
+* text=auto eol=lf
+
+# Explicitly enforce LF for the files we deploy to the Linux server
+bea_main.py text eol=lf
+marketsquare.html text eol=lf
+marketsquare_admin.html text eol=lf
+CHANGELOG.md text eol=lf
+STATUS.md text eol=lf
+AGENT_BRIEFING.md text eol=lf
+CLAUDE.md text eol=lf
+
+# Binary files — never touch line endings
+*.xlsx binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
