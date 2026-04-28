@@ -3327,6 +3327,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
           </div>
           <div class="cbt-check" id="chk-Cars">✓</div>
         </div>
+        <div class="cat-big-tile" id="cbt-LocalMarket" onclick="selCatBig('LocalMarket')">
+          <div class="cbt-icon">🛍️</div>
+          <div class="cbt-body">
+            <div class="cbt-name">Local Market</div>
+            <div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div>
+            <div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div>
+          </div>
+          <div class="cbt-check" id="chk-LocalMarket">✓</div>
+        </div>
       </div>
     </div>
     <div class="pub-footer">
@@ -3827,6 +3836,79 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ══ LOCAL MARKET — EULA modal (from wizard sell flow) ═════════════ -->
+<div id="fea-lm-eula-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#1c2128;border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 22px 18px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);">Local Market — Terms</div>
+    <h2 style="font-size:20px;font-weight:800;color:var(--text);margin:6px 0 10px;">Before your first Local Market listing goes live</h2>
+    <p style="font-size:13.5px;color:var(--text-2);line-height:1.6;margin-bottom:12px;">By activating a Local Market listing, you confirm you have read and accept the following terms:</p>
+    <div style="font-size:13px;color:var(--text);line-height:1.55;">
+      <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> Balances may be frozen if your account is suspended but are never confiscated. Frozen Tuppence is restored automatically when your account is reinstated.</div>
+      <div style="margin-bottom:12px;"><strong>2. Trust Score and visibility.</strong> You may publish from day one with no minimum Trust Score. Buyers may filter Local Market listings by seller Trust Score. Sellers below 40 are visible to buyers using the default "Any seller" filter.</div>
+      <div style="margin-bottom:12px;"><strong>3. Repeat-offender escalation.</strong> First suspension: until score recovers. Second within 90 days: 30-day mandatory cooling-off. Third: permanent ban from Local Market (other categories remain available).</div>
+      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. The buyer's current Trust Score is shown to you on every introduction request.</div>
+      <div style="margin-bottom:12px;"><strong>5. Seller pays on introduction.</strong> Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore.</div>
+      <div style="margin-bottom:12px;"><strong>6. EULA updates.</strong> These terms may be updated with 14 days in-app notice. Continued use after the notice period constitutes acceptance.</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;position:sticky;bottom:-18px;background:#1c2128;padding:12px 0 0;border-top:1px solid var(--border);">
+      <button onclick="feaLmCloseEula(false)" style="flex:1;background:transparent;color:var(--text-2);border:1.5px solid var(--border);border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+      <button onclick="feaLmCloseEula(true)" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">I accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOCAL MARKET — Create listing modal (from wizard sell flow) ════ -->
+<div id="fea-lm-create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#1c2128;border-radius:14px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;padding:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);">Local Market — new listing</div>
+      <button onclick="feaLmCloseCreate()" style="background:transparent;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <h2 style="font-size:20px;font-weight:800;color:var(--text);margin:0 0 6px;">Create listing</h2>
+    <!-- Session email — display only, never editable -->
+    <div id="fea-lm-seller-bar" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;color:var(--text-2);margin-bottom:14px;">
+      Listing as: <strong id="fea-lm-seller-email" style="color:var(--text);"></strong>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Title <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fea-lm-title" placeholder="e.g. Vintage 1965 brass desk lamp"
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Description <span style="color:var(--red);">*</span></label>
+      <textarea id="fea-lm-desc" rows="4" placeholder="Describe the item — condition, history, dimensions, anything a buyer would want to know."
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Price (or "POA")</label>
+        <input type="text" id="fea-lm-price" placeholder="R 850"
+          style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Suburb <span style="color:var(--red);">*</span></label>
+        <input type="text" id="fea-lm-suburb" placeholder="Brooklyn"
+          style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">City <span style="color:var(--red);">*</span></label>
+      <input type="text" id="fea-lm-city" placeholder="Pretoria"
+        style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px;">Photos (up to 5)</label>
+      <input type="file" id="fea-lm-photos" accept="image/*" multiple style="width:100%;font-size:13px;color:var(--text-2);">
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">First photo becomes the thumbnail.</div>
+    </div>
+    <div id="fea-lm-status" style="font-size:12px;color:var(--text-3);min-height:18px;margin-bottom:6px;"></div>
+    <div style="display:flex;gap:8px;position:sticky;bottom:-22px;background:#1c2128;padding:12px 0 0;border-top:1px solid var(--border);">
+      <button onclick="feaLmCloseCreate()" style="flex:1;background:transparent;color:var(--text-2);border:1.5px solid var(--border);border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
+      <button id="fea-lm-submit" onclick="feaLmSubmit()" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Publish listing</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── PHOTO LIGHTBOX OVERLAY ── -->
 <div id="photo-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" onclick="closeLightbox(event)">
@@ -6175,7 +6257,7 @@ function clearImg(e){
 
 function selCatBig(cat){
   pubCat=cat;
-  ['Property','Tutors','Services','Adventures','Collectors','Cars'].forEach(c=>{
+  ['Property','Tutors','Services','Adventures','Collectors','Cars','LocalMarket'].forEach(c=>{
     const el=document.getElementById('cbt-'+c);
     if(el) el.classList.toggle('selected', c===cat);
   });
@@ -6184,9 +6266,13 @@ function selCatBig(cat){
 }
 
 function goPhaseB2OrC(){
-  // If Adventures selected, show subcategory step first
+  // Local Market — bypass standard wizard, go to LM create flow
+  if(pubCat==='LocalMarket'){
+    openLMCreateFromWizard();
+    return;
+  }
+  // Adventures — show subcategory step first
   if(pubCat==='Adventures'){
-    // reset sub-selection
     ['adv-accommodation','adv-experiences'].forEach(k=>{
       const el=document.getElementById('cbt-'+k);
       if(el) el.classList.remove('selected');
@@ -6773,6 +6859,160 @@ function updateStripDots(id, count) {
     const dot = document.getElementById(`psd-${id}-${i}`);
     if (dot) dot.classList.toggle('active', i === idx);
   }
+}
+
+// ── LOCAL MARKET — sell wizard flow ───────────────────────
+let _feaLmEulaPending = null;
+
+function openLMCreateFromWizard() {
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (!email) {
+    // Not logged in — gate with friendly message, redirect to sell account sheet
+    showToast('Please sign in to create a Local Market listing');
+    // Reset category selection so they can try again after login
+    pubCat = null;
+    document.getElementById('pub-b-next').style.opacity = '.4';
+    document.getElementById('pub-b-next').style.pointerEvents = 'none';
+    document.querySelectorAll('.cat-big-tile').forEach(t => t.classList.remove('selected'));
+    setTimeout(() => openSellNav(), 800);
+    return;
+  }
+  // Pre-fill city from active geo state
+  const cityInput = document.getElementById('fea-lm-city');
+  if (cityInput && activeCity && activeCity.name) cityInput.value = activeCity.name;
+  const suburbInput = document.getElementById('fea-lm-suburb');
+  if (suburbInput && activeSuburb && activeSuburb.name) suburbInput.value = activeSuburb.name;
+  // Show seller email in display bar
+  document.getElementById('fea-lm-seller-email').textContent = email;
+  // Clear any previous state
+  ['fea-lm-title','fea-lm-desc','fea-lm-price'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('fea-lm-photos').value = '';
+  document.getElementById('fea-lm-status').textContent = '';
+  document.getElementById('fea-lm-submit').disabled = false;
+  // Show create modal directly (EULA check happens on submit)
+  document.getElementById('fea-lm-create-modal').style.display = 'flex';
+}
+
+function feaLmCloseCreate() {
+  document.getElementById('fea-lm-create-modal').style.display = 'none';
+  // Reset wizard category so seller can pick again
+  pubCat = null;
+  document.getElementById('pub-b-next').style.opacity = '.4';
+  document.getElementById('pub-b-next').style.pointerEvents = 'none';
+  document.querySelectorAll('.cat-big-tile').forEach(t => t.classList.remove('selected'));
+}
+
+function feaLmCloseEula(accepted) {
+  document.getElementById('fea-lm-eula-modal').style.display = 'none';
+  const cont = _feaLmEulaPending;
+  _feaLmEulaPending = null;
+  if (accepted && cont) cont().catch(() => {});
+}
+
+async function _feaLmCheckEula(email) {
+  try {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email));
+    if (!r.ok) return false;
+    const u = await r.json();
+    return !!u.lm_eula_accepted_at;
+  } catch(e) { return false; }
+}
+
+async function _feaLmRecordEula(email) {
+  try {
+    await fetch(BEA_URL + '/local-market/eula/accept?email=' + encodeURIComponent(email), {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }
+    });
+  } catch(e) {}
+}
+
+async function feaLmSubmit() {
+  const email  = localStorage.getItem('ms_aa_email') || '';
+  const title  = (document.getElementById('fea-lm-title').value || '').trim();
+  const desc   = (document.getElementById('fea-lm-desc').value || '').trim();
+  const price  = (document.getElementById('fea-lm-price').value || '').trim();
+  const suburb = (document.getElementById('fea-lm-suburb').value || '').trim();
+  const city   = (document.getElementById('fea-lm-city').value || '').trim();
+  const photos = document.getElementById('fea-lm-photos').files;
+  const status = document.getElementById('fea-lm-status');
+  const btn    = document.getElementById('fea-lm-submit');
+
+  if (!email) { status.textContent = 'Please sign in first.'; return; }
+  if (!title || !suburb || !city) {
+    status.textContent = 'Please fill in title, suburb, and city.';
+    return;
+  }
+
+  // EULA gate — show once, then record acceptance
+  const eulaOk = await _feaLmCheckEula(email);
+  if (!eulaOk) {
+    _feaLmEulaPending = async () => {
+      await _feaLmRecordEula(email);
+      await feaLmSubmit();
+    };
+    document.getElementById('fea-lm-eula-modal').style.display = 'flex';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Uploading photos...';
+
+  // Upload photos
+  let thumbUrl = null, mediumUrl = null;
+  if (photos && photos.length > 0) {
+    try {
+      const fd = new FormData();
+      fd.append('file', photos[0]);
+      const pr = await fetch(BEA_URL + '/listings/photo', {
+        method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
+      });
+      if (pr.ok) {
+        const pd = await pr.json();
+        thumbUrl  = pd.thumb_url  || null;
+        mediumUrl = pd.medium_url || null;
+      }
+    } catch(e) {}
+  }
+
+  status.textContent = 'Publishing listing...';
+  try {
+    const country = localStorage.getItem('lm_seller_country_' + email) || 'ZA';
+    const resp = await fetch(BEA_URL + '/local-market/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+      body: JSON.stringify({
+        title, description: desc, price: price || null,
+        suburb, city, seller_email: email,
+        geo_city_id: activeCity ? activeCity.id : null,
+        country, thumb_url: thumbUrl, medium_url: mediumUrl
+      })
+    });
+    const j = await resp.json();
+    if (!resp.ok) {
+      status.textContent = 'Error: ' + (j.detail || resp.status);
+      btn.disabled = false;
+      return;
+    }
+    // Success — close create modal, show success screen
+    document.getElementById('fea-lm-create-modal').style.display = 'none';
+    _feaLmShowSuccess(title, j.id);
+  } catch(e) {
+    status.textContent = 'Connection error — please try again.';
+    btn.disabled = false;
+  }
+}
+
+function _feaLmShowSuccess(title, listingId) {
+  // Reuse the pub-claim success screen with LM-specific copy
+  document.getElementById('claim-title').textContent = `"${title}" is live on Local Market.`;
+  const claimSub = document.getElementById('claim-sub');
+  if (claimSub) claimSub.textContent = 'Your listing is live. Buyers in your area can find it now.';
+  const claimId = document.getElementById('claim-listing-id');
+  if (claimId) claimId.textContent = 'Listing #' + listingId;
+  showPhase('claim');
+  showToast('Local Market listing published!');
 }
 
 let toastTimer;
