@@ -4303,7 +4303,7 @@ function formatIntroTime(ts) {
 }
 
 let activeFilter='All', wishlist=new Set(), prevScreen='browse';
-let tuppence=5, pendingIntroId=null;
+let tuppence=5, pendingIntroId=null, pendingLMIntroId=null;
 let magicLink={active:false,name:'',email:'',cat:'',area:''};
 
 // ── OFFLINE STATE ─────────────────────────────────────────
@@ -5876,7 +5876,12 @@ function submitIntro(){
   document.getElementById('m-name').value='';
   document.getElementById('m-email').value='';
   document.getElementById('m-msg').value='';
-  if(pendingIntroId!==null){
+  if(pendingLMIntroId!==null){
+    // Local Market intro — goes via /local-market/intro (seller-pays model)
+    const lmId = pendingLMIntroId;
+    pendingLMIntroId = null;
+    lmSubmitIntro(lmId, name, email, msg);
+  } else if(pendingIntroId!==null){
     const l=findListing(pendingIntroId),isCommit=catCfg(l).model==='commit';
     if(isCommit){l.paused=true;}else{l.queueCount=(l.queueCount||0)+1;}
     addTx(isCommit?'Introduction request sent':'Joined seller queue',l.title,'pending',false);
@@ -9081,6 +9086,7 @@ window.addEventListener('load', () => {
 let _lmMinTrust = 0;
 let _lmSearchQ  = '';
 let _lmSearchTimer = null;
+let _lmCurrentListing = null; // holds the last-fetched LM listing object for profile/modal
 
 function _lmEsc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
@@ -9178,6 +9184,7 @@ async function lmOpenDetail(listingId) {
     const r = await fetch(BEA_URL + '/local-market/listings/' + listingId);
     if (!r.ok) throw new Error('API ' + r.status);
     const c = await r.json();
+    _lmCurrentListing = c; // store for openLMSellerProfile() and openLMModal()
     const trust = c.trust_score || 0;
     const tInfo = tbadge(trust);
     const tLabel = trust >= 90 ? 'Highly Trusted' : trust >= 70 ? 'Trusted' : trust >= 40 ? 'Established' : 'New';
@@ -9201,20 +9208,85 @@ async function lmOpenDetail(listingId) {
         `</div>` +
         `<div class="price-block"><div><div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>${priceHtml}</div></div>` +
         `<div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc(c.description || '')}</p></div>` +
+        `<div style="margin-bottom:16px;">` +
+          `<button onclick="openLMSellerProfile()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">` +
+            `<div style="width:40px;height:40px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🛍️</div>` +
+            `<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Trust Score · Credentials · 🔒 Identity masked</div></div>` +
+            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>` +
+          `</button>` +
+        `</div>` +
         `<div class="anon-block"><div class="lock-icon">🔒</div><h4>Identity protected until introduction</h4><p>Seller name and contact details are only revealed after both parties accept.</p></div>` +
       `</div>` +
-      `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="lmRequestIntro(${c.id})">👥 Request Introduction <span class="cta-cost">· 1T on acceptance</span></button></div>`;
+      `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="openLMModal()">👥 Request Introduction <span class="cta-cost">· 1T on acceptance</span></button></div>`;
   } catch(e) {
     el.innerHTML = '<div style="padding:40px 16px;color:var(--text-3);font-size:13px;text-align:center;">Could not load this listing.</div>';
   }
 }
 
-async function lmRequestIntro(listingId) {
+
+// Open the standard intro modal for a Local Market listing.
+// Uses _lmCurrentListing (set in lmOpenDetail) — no ID argument needed.
+function openLMModal() {
+  const c = _lmCurrentListing;
+  if (!c) return;
+  const loc = c.suburb || c.city || '';
+  document.getElementById('modal-title').textContent = 'Request Introduction';
+  document.getElementById('modal-desc').textContent = (c.title || 'Local Market item') + (loc ? ' · ' + loc : '');
+  document.getElementById('modal-notice-commit').style.display = 'none';
+  document.getElementById('modal-notice-queue').style.display = 'flex';
+  document.getElementById('modal-cta-btn').className = 'modal-cta queue';
+  document.getElementById('modal-cta-btn').textContent = 'Request Introduction · 1T on acceptance';
+  pendingIntroId = null;
+  pendingLMIntroId = c.id;
+  const savedName  = localStorage.getItem('ms_user_name')  || '';
+  const savedEmail = localStorage.getItem('ms_user_email') || '';
+  if (savedName)  document.getElementById('m-name').value  = savedName;
+  if (savedEmail) document.getElementById('m-email').value = savedEmail;
+  document.getElementById('intro-modal').classList.add('open');
+}
+
+// Open seller profile screen for a Local Market listing.
+// Uses _lmCurrentListing — no ID argument needed.
+function openLMSellerProfile() {
+  const c = _lmCurrentListing;
+  if (!c) return;
+  const trust = c.trust_score || 0;
+  const t = trustTier(trust);
+  const active = document.querySelector('.screen.active');
+  prevScreen = active ? active.id.replace('screen-', '') : 'local-market-detail';
+  const loc = c.suburb || c.city || '';
+  document.getElementById('screen-seller-cv').innerHTML =
+    `<div class="cv-hero" style="background:#1f2937">` +
+      `<button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>` +
+      `<div class="cv-avatar" style="margin-top:8px;"><div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">🛍️</div></div>` +
+      `<div class="cv-headline">${_lmEsc(c.title || 'Local Market Item')}</div>` +
+      `<div class="cv-cat">Local Market · ${_lmEsc(loc)} · 🔒 Anonymous until introduction</div>` +
+      `<div class="cv-trust-row">` +
+        `<div style="color:${t.c};"><div class="cv-trust-num">${trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>` +
+        `<div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${trust}%;background:${t.c};"></div></div>` +
+        `<div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>` +
+      `</div>` +
+    `</div>` +
+    `<div class="cv-body">` +
+      (c.description ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${_lmEsc(c.description)}</p></div>` : '') +
+      `<div class="cv-sec"><div class="cv-sec-title">Credentials &amp; qualifications</div>` +
+        `<div style="font-size:12px;color:var(--text-3);">Seller credentials are verified and displayed here once Trust Score documents are submitted.</div>` +
+      `</div>` +
+      `<div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>` +
+    `</div>` +
+    `<div class="cv-sticky">` +
+      `<button class="cv-cta" onclick="openLMModal()">` +
+        `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>` +
+        ` Request Introduction · 1T on acceptance` +
+      `</button>` +
+    `</div>`;
+  goTo('seller-cv');
+}
+
+// Low-level LM intro API call — called from submitIntro() when pendingLMIntroId is set.
+async function lmSubmitIntro(listingId, name, email, message) {
   if (!_wlToken) { try { await wlBootToken(); } catch(e){} }
-  if (!_wlToken) { alert('Could not establish your buyer profile. Please reload.'); return; }
-  const name = (localStorage.getItem('ms_user_name')  || '').trim();
-  const email = (localStorage.getItem('ms_user_email') || '').trim();
-  const message = prompt('Add an optional message to the seller (Local Market intros are seller-pays — they pay 1T when your request lands):') || '';
+  if (!_wlToken) { showToast('Could not establish your buyer profile. Please reload.'); return; }
   try {
     const resp = await fetch(BEA_URL + '/local-market/intro', {
       method: 'POST',
@@ -9222,37 +9294,23 @@ async function lmRequestIntro(listingId) {
       body: JSON.stringify({
         listing_id: listingId,
         buyer_token: _wlToken,
-        buyer_email: email || _wlToken,  // server uses buyer_email field as the buyer identifier
+        buyer_email: email || _wlToken,
         buyer_name: name || null,
         message: message || null,
       })
     });
     if (resp.status === 403) {
       const j = await resp.json().catch(()=>({}));
-      // Trust Score is no longer a hard gate (Session 28 hotfix) — 403 here
-      // means the listing's seller is permanently banned or in cooling-off.
-      alert('Not allowed: ' + (j.detail || 'unknown'));
+      showToast('Not allowed: ' + (j.detail || 'unknown'));
       return;
     }
-    if (resp.status === 410) {
-      alert('This listing has been suspended and is no longer accepting introductions.');
-      return;
-    }
-    if (resp.status === 402) {
-      alert('The seller does not have enough Tuppence to receive this introduction right now. Please try again later.');
-      return;
-    }
-    if (resp.status === 429) {
-      alert('You requested an introduction on this listing recently. Please wait 7 days before trying again.');
-      return;
-    }
-    if (!resp.ok) {
-      const t = await resp.text();
-      throw new Error(resp.status + ' ' + t);
-    }
-    alert('Introduction requested. The seller has 48 hours to respond.');
+    if (resp.status === 410) { showToast('This listing has been suspended and is no longer accepting introductions.'); return; }
+    if (resp.status === 402) { showToast('The seller does not have enough Tuppence right now. Please try again later.'); return; }
+    if (resp.status === 429) { showToast('You already requested an introduction on this listing recently. Please wait 7 days.'); return; }
+    if (!resp.ok) { const t = await resp.text(); throw new Error(resp.status + ' ' + t); }
+    showToast('✓ Introduction requested · seller has 48hrs to respond');
   } catch(e) {
-    alert('Could not submit introduction: ' + e.message);
+    showToast('Could not submit introduction: ' + e.message);
   }
 }
 

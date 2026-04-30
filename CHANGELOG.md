@@ -2,6 +2,12 @@
 
 ---
 
+## Session 33 · 30 April 2026 · LM detail: View Seller Profile + proper intro modal wired
+
+**L1 + L2 (pre-session):** Removed `POST /dev/credit` BEA endpoint and Dev Tools nav tab from admin app — pre-launch security cleanup. **H1 (pre-session):** Local Market cards and detail screen updated to use standard `lcard`/`dsheet` CSS classes for visual parity with standard listings. **H1 fixes:** Three items added to LM detail screen that were missing after H1: (1) "View Seller Profile" button — taps through to seller CV screen using `openLMSellerProfile()`, same layout as standard BEA seller profile; (2) sticky-CTA "Request Introduction" now opens the standard `intro-modal` (nice sheet UI) via `openLMModal()` instead of a raw browser `prompt()`; (3) `submitIntro()` updated to detect `pendingLMIntroId` and route to `lmSubmitIntro()` which calls `/local-market/intro` with all correct error handling (403/410/402/429). `_lmCurrentListing` module variable holds the fetched LM listing so both new functions have access without passing arguments through onclick strings.
+
+---
+
 ## Session 32 · 30 April 2026 · Zero listings bug fixed — truncated HTML restored
 
 **Root cause:** `marketsquare.html` was silently truncated mid-line during a previous write, cutting off the last 63 lines including the closing `</script>` tag. The entire `ms-logic` script block was dead — `loadLiveListings` was never defined, so no listings ever loaded. Restored missing tail from git commit ff2f4cd. Added HTML tail-check rule to CLAUDE.md to prevent recurrence. Also added retry logic to `loadLiveListings` (retries once after 4s on BEA failure) and placeholder fallback to `renderCatCounts` so tiles never show "0 listings".

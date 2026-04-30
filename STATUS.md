@@ -22,24 +22,23 @@
 
 ---
 
-## Last Completed Session · Session 32 (30 April 2026)
+## Last Completed Session · Session 33 (30 April 2026)
 
-- Diagnosed + fixed zero listings bug — root cause: marketsquare.html truncated mid-line (missing last 63 lines), entire ms-logic script block was dead ✅
-- Restored missing tail from git commit ff2f4cd ✅
-- Added retry logic to `loadLiveListings` — retries once after 4s on BEA failure ✅
-- Added placeholder fallback to `renderCatCounts` — tiles never show "0 listings" ✅
-- Added HTML truncation check rule to `CLAUDE.md` — verify tail after every write ✅
-- HEAD: 07aedec
+- Removed `/dev/credit` BEA endpoint + Dev Tools nav tab from admin app (L1+L2) ✅
+- H1: LM cards + detail screen updated to standard lcard/dsheet layout ✅
+- H1 fixes: View Seller Profile button added to LM detail → `openLMSellerProfile()` ✅
+- H1 fixes: sticky-CTA now opens standard intro modal → `openLMModal()` + `pendingLMIntroId` branch in `submitIntro()` ✅
+- Deployed marketsquare.html (9323 lines) — verified closes with `</html>` ✅
+- HEAD: commit pending (see git instructions below)
 
 ---
 
-## Next Tasks · Session 33
+## Next Tasks · Session 34
 
-1. **Remove `/dev/credit` endpoint + Dev Tools nav tab** (L1+L2 — launch blockers)
+1. **AI Guidance (Haiku 4.5)** — seller guidance panel during listing publish flow, category-specific, shows evidence needed to reach Trust Score 50
 2. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
-3. **Local Market listing parity** (H1) — cards/detail/browse to match standard listings
-4. n8n email notifications — buyer emailed on intro accept/decline
-5. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
+3. n8n email notifications — buyer emailed on intro accept/decline
+4. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
 
 ---
 
