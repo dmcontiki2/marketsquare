@@ -4034,7 +4034,7 @@ async function apiPut(path) {
 // ── LIVE LISTINGS LOADER ──────────────────────────────────
 // Merges live BEA listings with demo data for founding sellers.
 // Once real sellers are onboarded, demo data will be removed.
-async function loadLiveListings() {
+async function loadLiveListings(retryCount) {
   if (!BEA_ENABLED || isOffline()) return;
   // Clear previously fetched live listings before reload (needed on city switch)
   for (let i = LISTINGS.length - 1; i >= 0; i--) {
@@ -4043,6 +4043,11 @@ async function loadLiveListings() {
   try {
     const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
     const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam);
+    if (!live && !retryCount) {
+      // First failure — retry once after 4 seconds (handles brief BEA restarts)
+      setTimeout(() => loadLiveListings(1), 4000);
+      return;
+    }
     if (live && live.length > 0) {
       // Map BEA listing format to FEA format and prepend to LISTINGS
       const mapped = live.map(l => {
@@ -5299,14 +5304,27 @@ function renderCatCounts() {
   const grid = document.getElementById('home-cat-grid');
   if (!grid) return;
   const counts = {};
+  // Count live listings only (non-placeholder); suburb filter applies
+  const liveCounts = {};
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     return true;
   }).forEach(l => {
     const cat = normCat(l.cat);
-    counts[cat] = (counts[cat] || 0) + 1;
+    liveCounts[cat] = (liveCounts[cat] || 0) + 1;
   });
+  // Use live counts if any exist; fall back to counting all (including placeholders)
+  // so tiles never display "0 listings" when placeholder cards are present.
+  const hasLive = Object.keys(liveCounts).length > 0;
+  if (hasLive) {
+    Object.assign(counts, liveCounts);
+  } else {
+    LISTINGS.forEach(l => {
+      const cat = normCat(l.cat);
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+  }
   grid.querySelectorAll('.cat-tile').forEach(tile => {
     const name = tile.querySelector('.cat-name').textContent.trim();
     const n = counts[name] || 0;
