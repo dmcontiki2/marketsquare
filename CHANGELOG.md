@@ -2,6 +2,12 @@
 
 ---
 
+## Session 33 · 30 April 2026 · LM home tile: cycling photos + live count + card photo fix
+
+LM home tile now shows live listing count ("12 listings") via `initLMHomeTile()` which fetches `/local-market/listings` on load and updates `#lm-home-count`. Background image cycles through all 12 LM listing thumbs (random start, 3.5s interval, 0.6s fade transition) while the 🛍️ icon and "Local Market" label stay fixed in the centre overlay. LM card grid photos fixed: added `referrerpolicy="no-referrer"` to all LM `<img>` tags (card thumbs + detail strip slides) so Unsplash serves images without requiring a page referrer header — was causing emoji fallback to show instead of real photos.
+
+---
+
 ## Session 33 · 30 April 2026 · LM multi-photo strip + 12 example listings
 
 **LM photo strip:** `lm_get_listing` BEA endpoint updated to SELECT `l.photo_urls` and return it in the response. `lmOpenDetail` frontend updated to parse the `photo_urls` JSON array and render a full `photo-strip-wrap` / `photo-strip` / `photo-strip-slide` structure — identical to standard listing detail: swipe/scroll with snap, dot indicators, left/right arrow buttons, lightbox on tap (using generic `openLightboxById`/`_listingPhotosCache` keyed as `lm-{id}`), dnav back button (→ `local-market`) and wishlist heart. Falls back to `medium_url` or `thumb_url` if no `photo_urls`. **12 new example LM listings** (ids 57–68) inserted into live DB with 5 Unsplash photos each: Bee Lady honey/beauty, MtG rare cards, Samsung S24 Ultra, MacBook Pro M3, Gaming PC RTX 4080, Samsung washing machine, Rare SA stamps, Rare SA coins/Krugerrands, Leica M6 camera, Vintage vinyl records, Antique riempie chair, Hermès Birkin 30. `photo_urls` TEXT column added to `listings` table via ALTER TABLE. All verified live at trustsquare.co.
