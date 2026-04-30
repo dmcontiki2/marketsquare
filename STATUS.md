@@ -29,7 +29,9 @@
 - H1 fixes: View Seller Profile + intro modal (openLMModal/openLMSellerProfile/lmSubmitIntro) ✅
 - AI Guidance: POST /trust-score/guidance (Haiku 4.5) — category-specific Trust Score action plan ✅
 - Admin app: AI Guidance panel auto-renders in publish-result after first publish ✅
-- Smoke tested: Haiku returning correct steps for Services-Technical, Tutors, local_market ✅
+- LM multi-photo strip: lm_get_listing returns photo_urls; lmOpenDetail renders full strip with swipe, dots, arrows, lightbox, back button, wishlist heart ✅
+- 12 new LM example listings (ids 57–68) with 5 Unsplash photos each — live on server ✅
+- photo_urls TEXT column added to listings table on live DB ✅
 - HEAD: commit pending (see git instructions below)
 
 ---

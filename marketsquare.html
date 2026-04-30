@@ -9180,6 +9180,7 @@ async function lmLoadGrid() {
         `<div class="ibox" style="background:#1f2937">` +
           imgHtml +
           (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
+          `<div class="model-badge queue">🛍️ Queue</div>` +
           `<button class="wish-btn ${svLM?'saved':''}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
         `</div>` +
         `<div class="cbody">` +
@@ -9213,9 +9214,39 @@ async function lmOpenDetail(listingId) {
     const tLabel = trust >= 90 ? 'Highly Trusted' : trust >= 70 ? 'Trusted' : trust >= 40 ? 'Established' : 'New';
     const tColor = trust >= 90 ? 'var(--gold)' : trust >= 70 ? 'var(--green)' : trust >= 40 ? 'var(--blue)' : '#6b7280';
     const tBg    = trust >= 90 ? 'var(--gold-bg)' : trust >= 70 ? 'var(--green-bg)' : trust >= 40 ? 'var(--blue-bg)' : '#f3f4f6';
-    const heroHtml = c.medium_url || c.thumb_url
-      ? `<div class="photo-strip-wrap"><div class="photo-strip" id="lm-pstrip-${c.id}"><div class="photo-strip-slide"><img src="${_lmEsc(c.medium_url || c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div></div></div>`
-      : `<div style="height:220px;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:48px;">🛍️</div>`;
+    // Build multi-photo strip (uses photo_urls JSON array from BEA; falls back to medium_url/thumb_url)
+    let lmPhotos = [];
+    if (c.photo_urls) {
+      try { lmPhotos = JSON.parse(c.photo_urls); } catch(e) { lmPhotos = []; }
+    }
+    if (!lmPhotos.length && c.medium_url) lmPhotos = [c.medium_url];
+    else if (!lmPhotos.length && c.thumb_url) lmPhotos = [c.thumb_url];
+    const lmStripId = 'lm-' + c.id;
+    _listingPhotosCache[lmStripId] = lmPhotos;
+    const lmSlides = lmPhotos.length
+      ? lmPhotos.map((url, pi) =>
+          `<div class="photo-strip-slide" style="cursor:zoom-in;" onclick="openLightboxById('${lmStripId}',${pi})">` +
+            `<img src="${_lmEsc(url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" style="pointer-events:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` +
+            `<div class="emoji-fallback" style="display:none;background:#1f2937;pointer-events:none;">🛍️</div>` +
+          `</div>`).join('')
+      : `<div class="photo-strip-slide"><div class="emoji-fallback" style="background:#1f2937;">🛍️</div></div>`;
+    const lmDotsHtml = lmPhotos.length > 1
+      ? `<div class="photo-strip-dots">${lmPhotos.map((_,i) => `<div class="psd${i===0?' active':''}" id="psd-${lmStripId}-${i}"></div>`).join('')}</div>`
+      : '';
+    const lmArrows = lmPhotos.length > 1
+      ? `<button class="strip-arrow strip-arrow-left" onclick="stripNav('${lmStripId}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" onclick="stripNav('${lmStripId}',1)">&#8250;</button>`
+      : '';
+    const heroHtml =
+      `<div class="photo-strip-wrap" id="pstrip-wrap-${lmStripId}">` +
+        `<div class="photo-strip" id="pstrip-${lmStripId}" onscroll="updateStripDots('${lmStripId}',${lmPhotos.length})">` +
+          lmSlides +
+        `</div>` +
+        lmDotsHtml + lmArrows +
+        `<div class="dnav">` +
+          `<button class="dib" onclick="goTo('local-market')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>` +
+          `<button class="dib" onclick="lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has('lm_'+c.id)?'#c8873a':'none'}" stroke="${wishlist.has('lm_'+c.id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
+        `</div>` +
+      `</div>`;
     const priceHtml = c.price
       ? `<div class="pamount">${formatZAR(c.price) || _lmEsc(c.price)}</div>`
       : `<div class="pneg">Negotiable — discuss with seller</div>`;

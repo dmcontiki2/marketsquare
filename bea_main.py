@@ -3566,7 +3566,7 @@ def lm_get_listing(listing_id: int):
     conn = database.get_db()
     row = conn.execute(
         """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
-                  l.thumb_url, l.medium_url, l.description, l.published_at,
+                  l.thumb_url, l.medium_url, l.photo_urls, l.description, l.published_at,
                   l.view_count, l.boost_until,
                   COALESCE(u.country, 'ZA') AS country,
                   COALESCE(u.trust_score, 0) AS trust_score

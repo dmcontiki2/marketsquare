@@ -2,6 +2,12 @@
 
 ---
 
+## Session 33 · 30 April 2026 · LM multi-photo strip + 12 example listings
+
+**LM photo strip:** `lm_get_listing` BEA endpoint updated to SELECT `l.photo_urls` and return it in the response. `lmOpenDetail` frontend updated to parse the `photo_urls` JSON array and render a full `photo-strip-wrap` / `photo-strip` / `photo-strip-slide` structure — identical to standard listing detail: swipe/scroll with snap, dot indicators, left/right arrow buttons, lightbox on tap (using generic `openLightboxById`/`_listingPhotosCache` keyed as `lm-{id}`), dnav back button (→ `local-market`) and wishlist heart. Falls back to `medium_url` or `thumb_url` if no `photo_urls`. **12 new example LM listings** (ids 57–68) inserted into live DB with 5 Unsplash photos each: Bee Lady honey/beauty, MtG rare cards, Samsung S24 Ultra, MacBook Pro M3, Gaming PC RTX 4080, Samsung washing machine, Rare SA stamps, Rare SA coins/Krugerrands, Leica M6 camera, Vintage vinyl records, Antique riempie chair, Hermès Birkin 30. `photo_urls` TEXT column added to `listings` table via ALTER TABLE. All verified live at trustsquare.co.
+
+---
+
 ## Session 33 · 30 April 2026 · LM cards: heart icon + View Seller Profile + flow diagram
 
 LM cards now match standard cards: heart/wishlist button added to top-right of image box (uses `lm_N` key to avoid collision with standard listing ids); "View seller profile" badge added to card bottom — taps through to LM seller CV screen via `lmOpenDetailAndProfile()`. LM detail screen now has full Soft Queue flow diagram (🛍️ Soft Queue · Local Market, 5 steps, seller-pays copy). Grid updated to 3 columns. Intro modal copy corrected: Tuppence notice updated to seller-pays, CTA reads "free for buyers". Immediate `addTx` + toast feedback in `lmSubmitIntro` so buyer sees confirmation instantly.
