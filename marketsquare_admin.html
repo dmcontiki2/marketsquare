@@ -87,6 +87,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 .step { display: none; padding: 24px 20px 140px; animation: fadeUp .2s ease; }
 .step.active { display: block; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 
 .step-eyebrow {
   font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
@@ -1052,6 +1053,8 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <div class="info-box ok" id="publish-summary"></div>
     <!-- Delete published listings -->
     <div id="delete-listings-section" style="margin-bottom:16px;"></div>
+    <!-- AI Guidance panel — populated by loadAIGuidance() after publish -->
+    <div id="ai-guidance-panel" style="display:none;margin-bottom:20px;border-radius:12px;overflow:hidden;border:1.5px solid #a78bfa;background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);"></div>
     <button onclick="startFresh()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:24px;">+ Add another seller</button>
   </div>
 
@@ -2067,6 +2070,56 @@ function showPublishSuccess(successCount, failCount) {
 
   showToast(`🎉 ${successCount} listing${successCount>1?'s':''} live on MarketSquare!`);
   window.scrollTo(0,0);
+  // Load AI guidance panel after successful publish
+  if (successCount > 0 && sellerData && sellerData.email) {
+    loadAIGuidance(sellerData.email, selectedCat || '');
+  }
+}
+
+async function loadAIGuidance(email, category) {
+  const panel = document.getElementById('ai-guidance-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="padding:16px 18px;font-size:13px;color:#6d28d9;display:flex;align-items:center;gap:8px;"><span style="animation:spin 1s linear infinite;display:inline-block;">⚙️</span> Generating your personalised Trust Score action plan…</div>';
+  try {
+    const r = await fetch(BEA_URL + '/trust-score/guidance', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: email, category: category })
+    });
+    if (!r.ok) throw new Error('API ' + r.status);
+    const g = await r.json();
+    const aiLabel = g.ai_available
+      ? '<span style="font-size:10px;background:#7c3aed;color:#fff;border-radius:50px;padding:2px 8px;font-weight:700;letter-spacing:.5px;">AI · Haiku 4.5</span>'
+      : '<span style="font-size:10px;background:#6b7280;color:#fff;border-radius:50px;padding:2px 8px;font-weight:700;letter-spacing:.5px;">Local guide</span>';
+    const scoreBar = g.current_score !== undefined
+      ? `<div style="margin:10px 0 4px;"><div style="display:flex;justify-content:space-between;font-size:11px;color:#7c3aed;font-weight:600;margin-bottom:4px;"><span>Trust Score: ${g.current_score}</span><span>Target: ${g.score_target} (Established)</span></div><div style="height:6px;background:#ddd8fe;border-radius:3px;overflow:hidden;"><div style="height:100%;background:#7c3aed;border-radius:3px;width:${Math.min(100,g.current_score)}%;"></div></div></div>`
+      : '';
+    const steps = (g.steps || []).map((s, i) => `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;${i < (g.steps.length-1) ? 'border-bottom:1px solid #ddd8fe;' : ''}">
+        <div style="min-width:26px;height:26px;border-radius:50%;background:#7c3aed;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#1f1235;line-height:1.4;">${escapeHtml(s.action || '')}</div>
+          <div style="font-size:11px;color:#6d28d9;margin-top:2px;">${escapeHtml(s.why || '')} <strong style="background:#ede9fe;padding:1px 6px;border-radius:8px;">+${s.points || 0} pts</strong></div>
+        </div>
+      </div>`).join('');
+    panel.innerHTML = `
+      <div style="padding:14px 18px 10px;border-bottom:1px solid #c4b5fd;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">🎯</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#4c1d95;">Your Trust Score Action Plan</div>
+        </div>
+        ${aiLabel}
+      </div>
+      <div style="padding:14px 18px;">
+        ${scoreBar}
+        <div style="font-size:13px;color:#4c1d95;margin-bottom:12px;line-height:1.5;">${escapeHtml(g.intro || '')}</div>
+        <div>${steps}</div>
+        ${g.closing ? `<div style="font-size:12px;color:#6d28d9;margin-top:12px;font-style:italic;border-top:1px solid #ddd8fe;padding-top:10px;">${escapeHtml(g.closing)}</div>` : ''}
+      </div>`;
+  } catch(e) {
+    panel.innerHTML = '<div style="padding:12px 16px;font-size:12px;color:#6d28d9;">Could not load AI guidance — check Trust Score Hub for next steps.</div>';
+  }
 }
 
 function renderDeleteSection() {

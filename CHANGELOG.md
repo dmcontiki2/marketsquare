@@ -2,6 +2,14 @@
 
 ---
 
+## Session 33 · 30 April 2026 · AI Guidance (Haiku 4.5) + LM detail fixes
+
+**AI Guidance feature:** New `POST /trust-score/guidance` BEA endpoint calls Haiku 4.5 (`claude-haiku-4-5-20251001`) to generate a personalised, category-specific action plan showing sellers exactly what evidence to upload to reach Trust Score 50 (Established tier). Endpoint computes current score from DB, identifies unearned signals, sends a structured prompt to Haiku, and returns `{intro, steps[{action, points, why}], closing, current_score, points_needed}`. Falls back to pure-local logic if API key is absent. Admin app: after `publishAll()` succeeds, `loadAIGuidance()` is automatically called and renders a purple-branded panel inside the publish-result area — shows score bar, numbered action steps with point values, and AI/local badge. `@keyframes spin` added for the loading spinner. Smoke tested live: Haiku returning correct category-specific steps for Services-Technical, Tutors, and local_market.
+
+**LM detail fixes:** View Seller Profile button added → `openLMSellerProfile()` renders into standard `screen-seller-cv`. Sticky-CTA now opens standard `intro-modal` via `openLMModal()`. `submitIntro()` updated with `pendingLMIntroId` branch → `lmSubmitIntro()` calls `/local-market/intro` with full error handling (403/410/402/429) and `showToast()` instead of `alert()`.
+
+---
+
 ## Session 33 · 30 April 2026 · LM detail: View Seller Profile + proper intro modal wired
 
 **L1 + L2 (pre-session):** Removed `POST /dev/credit` BEA endpoint and Dev Tools nav tab from admin app — pre-launch security cleanup. **H1 (pre-session):** Local Market cards and detail screen updated to use standard `lcard`/`dsheet` CSS classes for visual parity with standard listings. **H1 fixes:** Three items added to LM detail screen that were missing after H1: (1) "View Seller Profile" button — taps through to seller CV screen using `openLMSellerProfile()`, same layout as standard BEA seller profile; (2) sticky-CTA "Request Introduction" now opens the standard `intro-modal` (nice sheet UI) via `openLMModal()` instead of a raw browser `prompt()`; (3) `submitIntro()` updated to detect `pendingLMIntroId` and route to `lmSubmitIntro()` which calls `/local-market/intro` with all correct error handling (403/410/402/429). `_lmCurrentListing` module variable holds the fetched LM listing so both new functions have access without passing arguments through onclick strings.

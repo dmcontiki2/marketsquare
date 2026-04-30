@@ -26,19 +26,20 @@
 
 - Removed `/dev/credit` BEA endpoint + Dev Tools nav tab from admin app (L1+L2) ✅
 - H1: LM cards + detail screen updated to standard lcard/dsheet layout ✅
-- H1 fixes: View Seller Profile button added to LM detail → `openLMSellerProfile()` ✅
-- H1 fixes: sticky-CTA now opens standard intro modal → `openLMModal()` + `pendingLMIntroId` branch in `submitIntro()` ✅
-- Deployed marketsquare.html (9323 lines) — verified closes with `</html>` ✅
+- H1 fixes: View Seller Profile + intro modal (openLMModal/openLMSellerProfile/lmSubmitIntro) ✅
+- AI Guidance: POST /trust-score/guidance (Haiku 4.5) — category-specific Trust Score action plan ✅
+- Admin app: AI Guidance panel auto-renders in publish-result after first publish ✅
+- Smoke tested: Haiku returning correct steps for Services-Technical, Tutors, local_market ✅
 - HEAD: commit pending (see git instructions below)
 
 ---
 
 ## Next Tasks · Session 34
 
-1. **AI Guidance (Haiku 4.5)** — seller guidance panel during listing publish flow, category-specific, shows evidence needed to reach Trust Score 50
-2. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
-3. n8n email notifications — buyer emailed on intro accept/decline
-4. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
+1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
+2. **n8n email notifications** — buyer emailed on intro accept/decline
+3. **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab
+4. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 
 ---
 

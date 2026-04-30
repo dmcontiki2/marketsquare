@@ -4434,6 +4434,168 @@ def trust_score_pending_queue(_key: str = Depends(auth.require_api_key)):
     return [dict(r) for r in rows]
 
 
+# ── AI GUIDANCE (Trust Score Coach · Haiku 4.5) ─────────────────────────────
+# Called after a seller's first listing is published. Generates a
+# category-specific personalised action plan showing what evidence is needed
+# to reach Trust Score 50 (Established tier). Uses Haiku 4.5 via Anthropic
+# API — same key and client pattern as AA Coach.
+
+class AIGuidanceRequest(BaseModel):
+    email: str
+    category: str  # normalised category key, e.g. "Services-Technical"
+
+
+@app.post("/trust-score/guidance")
+async def trust_score_guidance(req: AIGuidanceRequest):
+    cat_signals       = _CATEGORY_SIGNALS.get(req.category, {})
+    universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
+
+    conn = database.get_db()
+    try:
+        earned_rows = conn.execute(
+            "SELECT signal_id, status FROM user_credentials WHERE email = ?",
+            (req.email,)
+        ).fetchall()
+    except Exception:
+        earned_rows = []
+    finally:
+        conn.close()
+
+    earned_map = {r["signal_id"]: r["status"] for r in earned_rows} if earned_rows else {}
+
+    universal_earned_pts = 0
+    universal_missing = []
+    for sig_id, sig in universal_signals.items():
+        if earned_map.get(sig_id) == "earned":
+            universal_earned_pts += sig["points"]
+        else:
+            universal_missing.append({
+                "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]
+            })
+
+    cat_earned_pts = 0
+    cat_missing = []
+    for sig_id, sig in cat_signals.items():
+        if earned_map.get(sig_id) == "earned":
+            cat_earned_pts += sig.get("points", 0)
+        else:
+            cat_missing.append({
+                "name": sig["name"],
+                "points": sig.get("points", 0),
+                "how": sig.get("how_to_earn", ""),
+            })
+
+    current_score = universal_earned_pts + cat_earned_pts
+    points_needed = max(0, 50 - current_score)
+    all_missing   = sorted(universal_missing + cat_missing, key=lambda x: x["points"], reverse=True)
+
+    if not ANTHROPIC_API_KEY:
+        return {
+            "ai_available":  False,
+            "current_score": current_score,
+            "score_target":  50,
+            "points_needed": points_needed,
+            "intro":   "To reach Established tier (score 50), focus on the steps below.",
+            "steps":   _build_local_guidance(req.category, all_missing),
+            "closing": "Every step builds buyer confidence.",
+        }
+
+    missing_lines = "\n".join(
+        "- " + m["name"] + " (+" + str(m["points"]) + " pts): " + m["how"]
+        for m in all_missing[:8]
+    )
+
+    system_prompt = (
+        "You are a friendly Trust Score coach for MarketSquare, a South African marketplace. "
+        "Help sellers understand exactly what evidence to upload to reach Trust Score 50 "
+        "('Established' tier). Be warm, direct, and specific to their category. "
+        'Reply ONLY with a valid JSON object — no markdown, no preamble. '
+        'Format: {"intro": "one encouraging sentence", '
+        '"steps": [{"action": "...", "points": N, "why": "..."}], '
+        '"closing": "one motivating sentence"} '
+        "Order steps by impact (most points first). Maximum 5 steps. "
+        "Keep each action and why under 20 words."
+    )
+
+    user_message = (
+        "Seller category: " + req.category + "\n"
+        "Current Trust Score: " + str(current_score) + " / 100\n"
+        "Points needed to reach Established (50): " + str(points_needed) + "\n\n"
+        "Evidence not yet submitted:\n" + (missing_lines or "None — all signals earned!") + "\n\n"
+        "Generate a personalised action plan to reach score 50."
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model":      AA_MODEL,
+                    "max_tokens": 600,
+                    "system":     system_prompt,
+                    "messages":   [{"role": "user", "content": user_message}],
+                },
+            )
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"]
+    except Exception as exc:
+        _log.warning("AI guidance Haiku call failed: %s", exc)
+        return {
+            "ai_available":  False,
+            "current_score": current_score,
+            "score_target":  50,
+            "points_needed": points_needed,
+            "intro":   "To reach Established tier (score 50), focus on the steps below.",
+            "steps":   _build_local_guidance(req.category, all_missing),
+            "closing": "Every step builds buyer confidence.",
+        }
+
+    import re as _re
+    guidance = {}
+    try:
+        guidance = _json.loads(raw)
+    except Exception:
+        m2 = _re.search(r'\{[\s\S]*\}', raw)
+        try:
+            guidance = _json.loads(m2.group(0)) if m2 else {}
+        except Exception:
+            guidance = {}
+
+    guidance.setdefault("intro",   "Here is your personalised path to Trust Score 50.")
+    guidance.setdefault("steps",   _build_local_guidance(req.category, all_missing))
+    guidance.setdefault("closing", "Every step you complete builds buyer confidence.")
+    guidance["ai_available"]  = True
+    guidance["current_score"] = current_score
+    guidance["score_target"]  = 50
+    guidance["points_needed"] = points_needed
+    return guidance
+
+
+def _build_local_guidance(category: str, all_missing: list = None) -> list:
+    if all_missing is None:
+        cat_sigs = _CATEGORY_SIGNALS.get(category, {})
+        all_missing = [
+            {"name": "Government-issued ID verified", "points": 15,
+             "how": "Upload your ID or passport — verified by MarketSquare."},
+            {"name": "Complete profile", "points": 5,
+             "how": "Bio, suburb, listing, and category description all set."},
+        ] + sorted(
+            [{"name": s["name"], "points": s.get("points", 0), "how": s.get("how_to_earn", "")}
+             for s in cat_sigs.values()],
+            key=lambda x: x["points"], reverse=True
+        )
+    return [
+        {"action": m["how"] or m["name"], "points": m["points"],
+         "why": "Adds " + str(m["points"]) + " points to your Trust Score."}
+        for m in all_missing[:5]
+    ]
+
+
 # ── EMAIL OPT-OUT ────────────────────────────────────────────
 # Called when a prospect clicks "Unsubscribe" in an outreach email.
 # Writes the suppression back into the CityLauncher SQLite DB via
