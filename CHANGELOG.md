@@ -2,6 +2,12 @@
 
 ---
 
+## Session 33 · 30 April 2026 · LM grid 3-column + intro modal flow fixed
+
+LM browse grid changed from 2 columns to 3 (`repeat(3,1fr)`, gap 8px, padding 12px) to match standard listing grid. Adventures/Experiences grid stays single-column (flex column) as designed. LM intro modal flow fixed: `openLMModal()` now updates the Tuppence deduction notice to "Seller-pays model — no Tuppence deducted from you" and sets the CTA to "Request Introduction · free for buyers". `lmSubmitIntro()` now calls `addTx()` + `showToast('⏳ Sending…')` immediately for visible feedback before the async API call. `openModal()` (standard) now resets the Tuppence notice text and clears `pendingLMIntroId` so LM state never leaks into standard listing modals.
+
+---
+
 ## Session 33 · 30 April 2026 · AI Guidance (Haiku 4.5) + LM detail fixes
 
 **AI Guidance feature:** New `POST /trust-score/guidance` BEA endpoint calls Haiku 4.5 (`claude-haiku-4-5-20251001`) to generate a personalised, category-specific action plan showing sellers exactly what evidence to upload to reach Trust Score 50 (Established tier). Endpoint computes current score from DB, identifies unearned signals, sends a structured prompt to Haiku, and returns `{intro, steps[{action, points, why}], closing, current_score, points_needed}`. Falls back to pure-local logic if API key is absent. Admin app: after `publishAll()` succeeds, `loadAIGuidance()` is automatically called and renders a purple-branded panel inside the publish-result area — shows score bar, numbered action steps with point values, and AI/local badge. `@keyframes spin` added for the loading spinner. Smoke tested live: Haiku returning correct category-specific steps for Services-Technical, Tutors, and local_market.
