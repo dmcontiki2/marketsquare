@@ -748,10 +748,10 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb:
     clauses = ["l.city = ?", "(l.suspension_reason IS NULL OR l.suspension_reason = '')"]
     params: list = [city]
     if category:
-        clauses.append("l.category = ?")
+        clauses.append("LOWER(l.category) = LOWER(?)")
         params.append(category)
     else:
-        clauses.append("l.category != ?")
+        clauses.append("LOWER(l.category) != LOWER(?)")
         params.append(LM_CATEGORY)
     if suburb:
         clauses.append("l.suburb = ?")
