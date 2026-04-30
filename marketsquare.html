@@ -4352,6 +4352,46 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
+  // ── PAYSTACK RETURN HANDLER ────────────────────────────────
+  // Paystack redirects back to trustsquare.co?ps_return=1&reference=ms_tuppence_xxx
+  // We verify the payment server-side, update the balance, and show a result.
+  if(sp.get('ps_return')==='1'){
+    const ref = sp.get('reference') || sp.get('trxref') || '';
+    window.history.replaceState({}, '', window.location.pathname);
+    if(ref){
+      (async()=>{
+        try{
+          const r = await fetch(BEA_URL+'/payment/verify?reference='+encodeURIComponent(ref));
+          const d = await r.json();
+          if(d.status==='ok'){
+            const credited = d.tuppence_credited || 0;
+            const aiCredited = d.ai_sessions_credited || 0;
+            // Update local Tuppence balance
+            tuppence += credited;
+            updateTuppenceDisplay();
+            // Show success message
+            let msg = '';
+            if(credited>0 && aiCredited>0) msg=`Payment successful — ${credited}T and ${aiCredited} AI uses added!`;
+            else if(credited>0) msg=`Payment successful — ${credited} Tuppence added to your wallet!`;
+            else if(aiCredited>0) msg=`Payment successful — ${aiCredited} AI coaching uses added!`;
+            else msg='Payment confirmed!';
+            showToast(msg, 5000);
+            // Navigate to wallet so they see the new balance
+            goTo('tuppence');
+          } else {
+            showToast('Payment could not be verified — contact support if you were charged.');
+          }
+        } catch(e){
+          showToast('Could not verify payment — please check your wallet balance.');
+        }
+      })();
+    } else {
+      // ps_return=1 but no reference — Paystack cancelled or back button
+      showToast('Payment was cancelled.');
+    }
+  }
+  // ── END PAYSTACK RETURN HANDLER ───────────────────────────
+
   // ── RESTORE SELLER PROFILE from localStorage ───────────────
   try {
     const storedProfile = localStorage.getItem('ms_seller_profile');
@@ -4474,7 +4514,8 @@ async function confirmTopUp(){
   const aiSessions=pendingAIPackSessions;
   pendingTopUpAmount=0; pendingAIPackSessions=0;
   try {
-    let url=BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n;
+    const callbackUrl = encodeURIComponent(window.location.origin + window.location.pathname + '?ps_return=1');
+    let url=BEA_URL+'/payment/initialize?email='+encodeURIComponent(email)+'&tuppence='+n+'&callback_url='+callbackUrl;
     if(aiSessions) url+='&ai_pack_sessions='+aiSessions;
     const res = await fetch(url, {method:'POST'});
     const data = await res.json();

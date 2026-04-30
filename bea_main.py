@@ -1431,14 +1431,15 @@ import payments
 import uuid
 
 @app.post("/payment/initialize")
-def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0):
+def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
     amount_rands = tuppence * 36
     reference = f"ms_tuppence_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
         email=email,
         amount_rands=amount_rands,
         reference=reference,
-        metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions}
+        metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions},
+        callback_url=callback_url or None
     )
     if result.get("status"):
         return {

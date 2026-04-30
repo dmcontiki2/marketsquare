@@ -2,6 +2,10 @@
 
 ---
 
+## Session 31 · 30 April 2026 · Full Paystack payment flow wired end-to-end
+
+`confirmTopUp()` in the buyer app now passes a `callback_url` (`?ps_return=1`) to `/payment/initialize`, which forwards it to Paystack so buyers are returned to the app after checkout. Added a `ps_return` URL param handler in `DOMContentLoaded` — detects the Paystack redirect, calls `/payment/verify`, credits the local Tuppence balance, shows a success toast, and navigates to the wallet screen. Cancellation (no reference param) shows a "Payment was cancelled" toast. BEA `/payment/initialize` endpoint updated to accept and forward `callback_url`. Smoke tested: real Paystack checkout URLs generated correctly from the live server. Full flow is ready to test end-to-end the moment Paystack live mode is approved.
+
 ## Session 31 · 30 April 2026 · payments.py created, Paystack webhook endpoint, live mode ready
 
 `payments.py` written from scratch and added to the local repo. Module reads `PAYSTACK_SECRET_KEY` from the server `.env` — works transparently in both test and live mode with no code changes. Exports `initialize_payment`, `verify_payment`, `get_balance`, and `verify_webhook_signature`. Added `POST /payment/webhook` endpoint to `bea_main.py` — handles Paystack `charge.success` events, validates HMAC-SHA512 signature using `PAYSTACK_WEBHOOK_SECRET`, and credits Tuppence/AI sessions with idempotency guard (skips re-processing the same reference). This is now the authoritative server-side credit path; the existing client-side `/payment/verify` remains as a belt-and-braces backup. Added `.env.example` template documenting all required server environment variables. Added `PAYSTACK_SETUP_GUIDE.md` with step-by-step instructions for completing Paystack business verification (CIPC cert + FNB bank details), configuring the webhook URL, retrieving live keys, and running end-to-end test card verification.
@@ -832,4 +836,17 @@ Added `("trust_score", "INTEGER")` to the `run_migrations()` migration loop (alr
 
 `seed_demo_data.py` creates 20 demo listings under `dmcontiki2@gmail.com` (all editable via the seller edit flow):
 - 10 Tutors: Maths/Physics (88), Piano (84), Stats/Data Science (92), Coding/Robotics (79), English/Afrikaans (76), Accounting (72), Life Sciences (61), Primary (67), Zulu/Sesotho (55), Chess (48)
-- 10 Services: Plumber (90), Electric
+- 10 Services: Plumber (90), Electrician (87), Web Design (85), Bookkeeping/Tax (83), Personal Trainer (78), Photography (74), Graphic Design (69), House Cleaning (63), Garden (58), Car Valeting (52)
+
+Each listing has Unsplash royalty-free photos, full structured fields, and mock certificate text in the description. Trust scores vary 48–92 to demonstrate all four trust tiers.
+
+### Category shopfront photos (marketsquare.html)
+
+Category tiles on the home screen now show representative full-cover Unsplash photos instead of emoji on a gradient:
+- **Property** — `photo-1570129477492-45c003edd2be` (warm suburban house at golden hour)
+- **Tutors** — `photo-1580582932707-520aed937b7b` (teacher working with student)
+- **Services** — `photo-1621905251918-48416bd8575a` (skilled professional at work)
+
+Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
+
+**Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`
