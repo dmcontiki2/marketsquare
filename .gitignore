@@ -71,6 +71,9 @@ admin.html)
 *.docx
 *.pptx
 
+# CityLauncher session breakdown files
+CITYLAUNCHER_SESSION_*.md
+
 # Utility / one-off scripts (not part of the app)
 add_listing_columns.py
 check_listings.py
