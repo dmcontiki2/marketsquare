@@ -35,3 +35,57 @@ npm-debug.log*
 
 # SSH key for Claude sandbox access — never commit this
 ssh_hetzner_key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Scratch / output files
+*.zip
+excel_structure.json
+settings.json
+unpacked/
+unpacked_launch/
+unpacked_lp/
+pptx_tools/
+n8n/
+Obsidian/
+.claude/
+
+# Slide images (generated assets)
+slide-*.jpg
+
+# Leftover HTML exports (server copies, not source)
+index.html)
+admin.html)
+
+# Lock file remnants
+*.lock
+
+# Office temp files
+~$*
+
+# PDFs, Word docs, and presentation assets (not source code)
+*.pdf
+*.docx
+*.pptx
+
+# Utility / one-off scripts (not part of the app)
+add_listing_columns.py
+check_listings.py
+check_photos.py
+check_prices.py
+check_regex.py
+check_users.py
+fix_price.py
+fix_prices.py
+stamp_seller_emails.py
+seed_demo_data.py
+seed_showcase.py
+appstore_panels.html
+citylauncher_ops.html
+marketsquare_process_flow.html
+deploy_n8n_templates.bat
+setup_nginx_ratelimit.sh
+files.zip

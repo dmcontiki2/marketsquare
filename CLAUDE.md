@@ -31,7 +31,7 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 
 **Change size:** Maximum one feature or one bug fix per task. If a change touches more than one file section, split it and complete each part fully before starting the next.
 
-**Git commits:** Auto-commit after every completed task with a clear descriptive commit message. Do not wait for user approval.
+**Git commits:** Always ask David to run git add/commit/push from PowerShell — never commit from the sandbox. The sandbox and Windows share the same folder mount under different OS users; sandbox-created index.lock files block Windows git and vice versa, and neither side can remove the other's lock.
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
 
