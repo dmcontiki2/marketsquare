@@ -1484,6 +1484,84 @@ def test_payment_connection():
     result = payments.get_balance()
     return {"status": "ok", "paystack_connected": result.get("status", False)}
 
+@app.post("/payment/webhook")
+async def paystack_webhook(request: Request):
+    """
+    Paystack server-side webhook — receives charge.success events.
+
+    This is the production-reliable credit path. Paystack retries failed
+    webhooks, so Tuppence is always credited even if the buyer closes the
+    browser before the client-side /payment/verify call fires.
+
+    Setup: In your Paystack dashboard → Settings → API Keys & Webhooks,
+    set the webhook URL to: https://trustsquare.co/payment/webhook
+    Copy the 'Webhook Secret' value into PAYSTACK_WEBHOOK_SECRET in .env.
+    """
+    raw_body = await request.body()
+    signature = request.headers.get("X-Paystack-Signature", "")
+
+    # Validate HMAC-SHA512 signature
+    if not payments.verify_webhook_signature(raw_body, signature):
+        _log.warning("Paystack webhook: invalid signature — ignored")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    import json as _json
+    try:
+        event = _json.loads(raw_body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    event_type = event.get("event")
+    data = event.get("data", {})
+
+    if event_type == "charge.success":
+        reference = data.get("reference", "")
+        metadata  = data.get("metadata", {}) or {}
+        email     = metadata.get("email", "")
+        tuppence  = int(metadata.get("tuppence", 0) or 0)
+        ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
+
+        if not email or not reference:
+            _log.warning("Paystack webhook charge.success missing email/reference: %s", reference)
+            return {"status": "ok"}  # Always return 200 to Paystack
+
+        conn = database.get_db()
+        # Idempotency: skip if this reference was already processed
+        existing = conn.execute(
+            "SELECT id FROM transactions WHERE description LIKE ?",
+            (f"%ref {reference}%",)
+        ).fetchone()
+
+        if existing:
+            _log.info("Paystack webhook: ref %s already processed — skipping", reference)
+            conn.close()
+            return {"status": "ok"}
+
+        if tuppence > 0:
+            conn.execute(
+                "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
+                (email, "topup", tuppence, f"Tuppence top-up via Paystack · ref {reference}")
+            )
+            _log.info("Paystack webhook: credited %dT to %s (ref %s)", tuppence, email, reference)
+
+        if ai_sessions > 0:
+            conn.execute(
+                "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
+                "ON CONFLICT(email) DO NOTHING",
+                (email,)
+            )
+            conn.execute(
+                "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+                (ai_sessions, email)
+            )
+            _log.info("Paystack webhook: credited %d AI sessions to %s (ref %s)", ai_sessions, email, reference)
+
+        conn.commit()
+        conn.close()
+
+    # Always return 200 — Paystack will retry on any non-2xx
+    return {"status": "ok"}
+
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
 
 @app.post("/admin/migrate-photos")
@@ -4409,74 +4487,4 @@ def dev_credit(
     }
 
 
-# ── EMAIL OPT-OUT ────────────────────────────────────────────
-# Called when a prospect clicks "Unsubscribe" in an outreach email.
-# Writes the suppression back into the CityLauncher SQLite DB via
-# the CityLauncher API (running on same server at localhost:8001).
-# Falls back to logging only if CityLauncher is unreachable.
-
-CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
-
-@app.get("/opt-out")
-async def opt_out(email: str, city_id: int = 0, category: str = ""):
-    """
-    One-click unsubscribe endpoint for outreach emails.
-    Marks the prospect as opted_out in the CityLauncher database.
-    Returns a friendly HTML confirmation page — no account needed.
-
-    Query params:
-      email      — prospect email address (URL-encoded)
-      city_id    — CityLauncher city ID (0 = all cities for this email)
-      category   — listing category (empty = all categories for this email)
-    """
-    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
-
-    suppressed = False
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(
-                f"{CITYLAUNCHER_API}/prospects/opt-out",
-                json={"email": email, "city_id": city_id, "category": category}
-            )
-            if resp.status_code in (200, 204):
-                suppressed = True
-                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
-            else:
-                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
-    except Exception as exc:
-        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
-
-    # Return a clean HTML confirmation regardless of backend success
-    html_response = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unsubscribed - TrustSquare</title>
-  <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; }}
-    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
-             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
-    .icon {{ font-size: 48px; margin-bottom: 16px; }}
-    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
-    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
-    a {{ color: #1a1a2e; font-weight: 600; }}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">✅</div>
-    <h1>You’re unsubscribed</h1>
-    <p>We’ve removed <strong>{email}</strong> from our outreach list.<br>
-    You won’t receive any further emails from TrustSquare about listing opportunities.</p>
-    <p style="margin-top:24px; font-size:13px; color:#aaa;">
-      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
-    </p>
-  </div>
-</body>
-</html>"""
-
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=html_response, status_code=200)
+# ── EMAIL OPT-OUT ───────────────────────────────────

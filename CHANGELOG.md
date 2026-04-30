@@ -2,6 +2,20 @@
 
 ---
 
+## Session 31 · 30 April 2026 · payments.py created, Paystack webhook endpoint, live mode ready
+
+`payments.py` written from scratch and added to the local repo. Module reads `PAYSTACK_SECRET_KEY` from the server `.env` — works transparently in both test and live mode with no code changes. Exports `initialize_payment`, `verify_payment`, `get_balance`, and `verify_webhook_signature`. Added `POST /payment/webhook` endpoint to `bea_main.py` — handles Paystack `charge.success` events, validates HMAC-SHA512 signature using `PAYSTACK_WEBHOOK_SECRET`, and credits Tuppence/AI sessions with idempotency guard (skips re-processing the same reference). This is now the authoritative server-side credit path; the existing client-side `/payment/verify` remains as a belt-and-braces backup. Added `.env.example` template documenting all required server environment variables. Added `PAYSTACK_SETUP_GUIDE.md` with step-by-step instructions for completing Paystack business verification (CIPC cert + FNB bank details), configuring the webhook URL, retrieving live keys, and running end-to-end test card verification.
+
+Cost model impact: Paystack live mode will incur 2.9% + R1 per ZAR transaction (capped at R2,000/month at high volume). At R36 per Tuppence, net per T ≈ R33.96. Settlement T+1 to FNB account 63208160117.
+
+## Session 30 · 29 April 2026 · CIPC registration confirmed — banking & payment unblocked
+
+TRUSTSQUARE (PTY) LTD (registration number 2026/340128/07) was formally incorporated on 29 April 2026 under the Companies Act, 2008. Director and sole incorporator: David Maurice Conradie. Financial year end: February. Two official CIPC documents confirmed and saved to the MarketSquare project folder: `CoR15_1_A_9457451003.pdf` (COR 14.3 Registration Certificate + COR15.1A Memorandum of Incorporation) and `9457451884.pdf` (COR9.4 Name Reservation Confirmation — TRUSTSQUARE reserved until 29 October 2026). Registration unblocks Paystack live mode and the FNB Business Account application. Critical follow-up actions logged in STATUS.md: Beneficial Ownership filing with CIPC (legal obligation, due by ~13 May 2026), FNB account (prerequisite for Paystack live mode), and international entity decision for Stripe (required before Wave 1 global launch — NY/LON/BER cannot process payments through a SA entity alone; cost model already budgets $100/month for this). TRUSTSQUARE name challenge window runs until 29 July 2026 — monitor CIPC correspondence. First Annual Return due Feb/Mar 2027.
+
+Cost model impact: None to current model. International entity cost ($100/mo) already included in Operating Costs sheet from Day 1. Paystack live mode activation will shift SA transactions from test to live — blended 2.5% rate assumption in cost model is correct.
+
+---
+
 ## Session 29 · 28 April 2026 · LM sell flow, photo compress, home grid, superuser, CRLF fix
 
 - **CSS fix**: Added `--navy` CSS variable to admin app `:root` — Confirm button in LM modal was transparent/invisible.
@@ -818,17 +832,4 @@ Added `("trust_score", "INTEGER")` to the `run_migrations()` migration loop (alr
 
 `seed_demo_data.py` creates 20 demo listings under `dmcontiki2@gmail.com` (all editable via the seller edit flow):
 - 10 Tutors: Maths/Physics (88), Piano (84), Stats/Data Science (92), Coding/Robotics (79), English/Afrikaans (76), Accounting (72), Life Sciences (61), Primary (67), Zulu/Sesotho (55), Chess (48)
-- 10 Services: Plumber (90), Electrician (87), Web Design (85), Bookkeeping/Tax (83), Personal Trainer (78), Photography (74), Graphic Design (69), House Cleaning (63), Garden (58), Car Valeting (52)
-
-Each listing has Unsplash royalty-free photos, full structured fields, and mock certificate text in the description. Trust scores vary 48–92 to demonstrate all four trust tiers.
-
-### Category shopfront photos (marketsquare.html)
-
-Category tiles on the home screen now show representative full-cover Unsplash photos instead of emoji on a gradient:
-- **Property** — `photo-1570129477492-45c003edd2be` (warm suburban house at golden hour)
-- **Tutors** — `photo-1580582932707-520aed937b7b` (teacher working with student)
-- **Services** — `photo-1621905251918-48416bd8575a` (skilled professional at work)
-
-Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
-
-**Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`
+- 10 Services: Plumber (90), Electric
