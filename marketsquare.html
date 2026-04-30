@@ -9092,6 +9092,22 @@ let _lmSearchQ  = '';
 let _lmSearchTimer = null;
 let _lmCurrentListing = null; // holds the last-fetched LM listing object for profile/modal
 
+// Toggle wishlist for an LM listing (uses 'lm_N' key to avoid collision with standard ids)
+function lmToggleWish(event, listingId) {
+  event.stopPropagation();
+  const key = 'lm_' + listingId;
+  wishlist.has(key) ? wishlist.delete(key) : wishlist.add(key);
+  showToast(wishlist.has(key) ? 'Added to saved' : 'Removed from saved');
+  lmLoadGrid(); // re-render to update heart state
+}
+
+// Open LM detail then immediately open the seller profile (card-level shortcut)
+async function lmOpenDetailAndProfile(listingId) {
+  await lmOpenDetail(listingId);
+  // Wait a tick for _lmCurrentListing to be set, then open profile
+  setTimeout(() => { if (_lmCurrentListing) openLMSellerProfile(); }, 100);
+}
+
 function _lmEsc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9158,17 +9174,20 @@ async function lmLoadGrid() {
       const imgHtml = c.thumb_url
         ? `<img src="${_lmEsc(c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
         : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
+      const svLM = wishlist.has('lm_' + c.id);
       return (
         `<div class="lcard" onclick="lmOpenDetail(${c.id})">` +
         `<div class="ibox" style="background:#1f2937">` +
           imgHtml +
           (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
+          `<button class="wish-btn ${svLM?'saved':''}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
         `</div>` +
         `<div class="cbody">` +
           `<div class="ccat">Local Market</div>` +
           `<div class="ctitle">${_lmEsc(c.title || '')}</div>` +
           `<div class="cloc">📍 ${loc}</div>` +
           `<div class="cbot"><div class="cprice">${price}</div>${t}</div>` +
+          `<div class="seller-cv-badge" onclick="event.stopPropagation();lmOpenDetailAndProfile(${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>` +
         `</div>` +
         `</div>`
       );

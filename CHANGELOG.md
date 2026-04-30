@@ -2,6 +2,12 @@
 
 ---
 
+## Session 33 · 30 April 2026 · LM cards: heart icon + View Seller Profile + flow diagram
+
+LM cards now match standard cards: heart/wishlist button added to top-right of image box (uses `lm_N` key to avoid collision with standard listing ids); "View seller profile" badge added to card bottom — taps through to LM seller CV screen via `lmOpenDetailAndProfile()`. LM detail screen now has full Soft Queue flow diagram (🛍️ Soft Queue · Local Market, 5 steps, seller-pays copy). Grid updated to 3 columns. Intro modal copy corrected: Tuppence notice updated to seller-pays, CTA reads "free for buyers". Immediate `addTx` + toast feedback in `lmSubmitIntro` so buyer sees confirmation instantly.
+
+---
+
 ## Session 33 · 30 April 2026 · LM grid 3-column + intro modal flow fixed
 
 LM browse grid changed from 2 columns to 3 (`repeat(3,1fr)`, gap 8px, padding 12px) to match standard listing grid. Adventures/Experiences grid stays single-column (flex column) as designed. LM intro modal flow fixed: `openLMModal()` now updates the Tuppence deduction notice to "Seller-pays model — no Tuppence deducted from you" and sets the CTA to "Request Introduction · free for buyers". `lmSubmitIntro()` now calls `addTx()` + `showToast('⏳ Sending…')` immediately for visible feedback before the async API call. `openModal()` (standard) now resets the Tuppence notice text and clears `pendingLMIntroId` so LM state never leaks into standard listing modals.
