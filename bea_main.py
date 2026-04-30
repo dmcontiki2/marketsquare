@@ -4434,60 +4434,6 @@ def trust_score_pending_queue(_key: str = Depends(auth.require_api_key)):
     return [dict(r) for r in rows]
 
 
-# ── DEV TOOLS (disable before public launch) ─────────────────
-# Allows the development team to seed Tuppence and AI coaching sessions
-# without going through Paystack. All API costs run on the existing
-# Anthropic / Hetzner billing. Remove or gate with a hard env-var check
-# before the public launch of TrustSquare.
-
-@app.post("/dev/credit")
-def dev_credit(
-    email: str,
-    tuppence: int = 20,
-    ai_sessions: int = 500,
-    _key: str = Depends(auth.require_api_key)
-):
-    """Seed a dev/test account with Tuppence and AI coaching sessions.
-    DEV PHASE ONLY — protected by API key.
-    Remove this endpoint before public launch.
-    """
-    conn = database.get_db()
-
-    # Upsert user — create if not exists, credit AI sessions if exists
-    conn.execute(
-        """INSERT INTO users (email, aa_free_used, aa_sessions_remaining)
-           VALUES (?, 0, ?)
-           ON CONFLICT(email) DO UPDATE SET
-               aa_sessions_remaining = aa_sessions_remaining + ?""",
-        (email, ai_sessions, ai_sessions)
-    )
-
-    # Credit Tuppence as a dev transaction
-    if tuppence > 0:
-        conn.execute(
-            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, ?, ?, ?)",
-            (email, "dev_topup", tuppence,
-             f"Dev credit — {tuppence}T Tuppence + {ai_sessions} AI sessions (pre-launch testing)")
-        )
-
-    conn.commit()
-
-    user = conn.execute(
-        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
-    ).fetchone()
-    balance = conn.execute(
-        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (email,)
-    ).fetchone()
-    conn.close()
-
-    return {
-        "email": email,
-        "tuppence_balance": int(balance["bal"]),
-        "ai_sessions_remaining": user["aa_sessions_remaining"] if user else ai_sessions,
-        "warning": "⚠️ DEV ENDPOINT — disable before public launch"
-    }
-
-
 # ── EMAIL OPT-OUT ────────────────────────────────────────────
 # Called when a prospect clicks "Unsubscribe" in an outreach email.
 # Writes the suppression back into the CityLauncher SQLite DB via

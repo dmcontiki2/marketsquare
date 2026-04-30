@@ -532,26 +532,6 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   .filter-bar { padding: 0 28px 12px; }
   .field-row { grid-template-columns: 1fr 1fr 1fr; }
 }
-/* ── DEV TOOLS VIEW ──────────────────────────────────────── */
-.dev-warning{background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin:0 16px 20px;display:flex;gap:10px;align-items:flex-start;}
-.dev-warning-icon{font-size:22px;flex-shrink:0;}
-.dev-warning-text{flex:1;}
-.dev-warning-title{font-size:13px;font-weight:800;color:#92400e;margin-bottom:3px;}
-.dev-warning-sub{font-size:11px;color:#b45309;line-height:1.5;}
-.dev-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin:0 16px 16px;}
-.dev-card-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
-.dev-card-sub{font-size:11px;color:var(--text-2);margin-bottom:14px;line-height:1.5;}
-.dev-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
-.dev-row label{font-size:11px;font-weight:700;color:var(--text-2);min-width:80px;text-transform:uppercase;letter-spacing:.3px;}
-.dev-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);}
-.dev-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
-.dev-btn:disabled{opacity:.4;}
-.dev-btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
-.dev-result{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#166534;line-height:1.6;display:none;}
-.dev-result.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b;}
-.dev-launch-note{margin:0 16px;padding:12px 14px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:10px;font-size:11px;color:#6b21a8;line-height:1.6;}
-.dev-launch-note strong{display:block;margin-bottom:3px;}
-
 /* ── EDIT LISTING MODAL (admin) ──────────────────────────── */
 .adm-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:800; align-items:flex-end; justify-content:center; }
 .adm-modal-bg.open { display:flex; }
@@ -1257,50 +1237,6 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   </div>
 </div>
 
-<!-- ══ VIEW: DEV TOOLS ═════════════════════════════════════ -->
-<div id="view-devtools" class="view">
-  <div class="view-header">Dev Tools</div>
-  <div class="view-sub">Pre-launch testing only — seed accounts without payment</div>
-
-  <div class="dev-warning">
-    <div class="dev-warning-icon">⚠️</div>
-    <div class="dev-warning-text">
-      <div class="dev-warning-title">Development phase only</div>
-      <div class="dev-warning-sub">These tools bypass Paystack. All AI costs run on the existing Anthropic billing account. Tuppence issued here is not real money. Disable this view before public launch.</div>
-    </div>
-  </div>
-
-  <!-- Seed account -->
-  <div class="dev-card">
-    <div class="dev-card-title">🌱 Seed Dev Account</div>
-    <div class="dev-card-sub">Credit Tuppence + AI coaching sessions to any email for testing intros, accepts, and the AI Adviser. Use team members' emails.</div>
-    <div class="dev-row"><label>Email</label><input type="email" id="dev-seed-email" placeholder="team@example.com"></div>
-    <div class="dev-row"><label>Tuppence</label><input type="number" id="dev-seed-t" value="20" min="1" max="500"></div>
-    <div class="dev-row"><label>AI sessions</label><input type="number" id="dev-seed-ai" value="500" min="1" max="9999"></div>
-    <button class="dev-btn" onclick="devSeedAccount()">🌱 Seed account</button>
-    <div class="dev-result" id="dev-seed-result"></div>
-  </div>
-
-  <!-- Check balance -->
-  <div class="dev-card">
-    <div class="dev-card-title">🔍 Check Balances</div>
-    <div class="dev-card-sub">Verify Tuppence and AI session balance for any email.</div>
-    <div class="dev-row"><label>Email</label><input type="email" id="dev-check-email" placeholder="team@example.com"></div>
-    <button class="dev-btn secondary" onclick="devCheckBalance()">Check balance</button>
-    <div class="dev-result" id="dev-check-result"></div>
-  </div>
-
-  <!-- How to use -->
-  <div class="dev-launch-note">
-    <strong>How to use for testing:</strong>
-    1. Seed each team member's email above.<br>
-    2. Open the buyer app and log in (or use magic link) with that email — Tuppence syncs automatically on load.<br>
-    3. Use the AI Coach in Edit Listing — sessions are now available.<br>
-    4. Test full intro flow: request → seller accepts → 1T deducted from buyer balance.<br>
-    <span style="margin-top:8px;display:block;color:#7c3aed;font-weight:700;">Before launch: remove the Dev tab from the nav bar and delete <code>/dev/credit</code> from bea_main.py.</span>
-  </div>
-</div>
-
 <!-- NAV BAR -->
 <nav class="admin-nav">
   <button class="nav-item active" id="nav-onboard" onclick="goView('onboard')">
@@ -1337,10 +1273,6 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   <button class="nav-item" id="nav-showcase" onclick="goView('showcase')">
     <span class="nav-icon">✨</span>
     <span>Showcase</span>
-  </button>
-  <button class="nav-item" id="nav-devtools" onclick="goView('devtools')">
-    <span class="nav-icon">🛠</span>
-    <span>Dev</span>
   </button>
 </nav>
 
@@ -3075,45 +3007,6 @@ async function deleteSellerAccount(email, name) {
   } catch(e) { showToast('⚠️ Delete failed — ' + e.message); }
 }
 
-// ── DEV TOOLS ──────────────────────────────────────────────
-
-async function devSeedAccount() {
-  const email = document.getElementById('dev-seed-email').value.trim();
-  const t     = parseInt(document.getElementById('dev-seed-t').value)  || 20;
-  const ai    = parseInt(document.getElementById('dev-seed-ai').value) || 500;
-  const res   = document.getElementById('dev-seed-result');
-  if (!email) { showToast('Enter an email first'); return; }
-
-  const btn = event.target;
-  btn.disabled = true; btn.textContent = 'Seeding…';
-  res.style.display = 'none';
-
-  try {
-    const resp = await fetch(
-      `${BEA_URL}/dev/credit?email=${encodeURIComponent(email)}&tuppence=${t}&ai_sessions=${ai}`,
-      { method: 'POST', headers: { 'X-Api-Key': API_KEY } }
-    );
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'API error ' + resp.status);
-    res.className = 'dev-result';
-    res.innerHTML = `✅ <strong>${email}</strong> seeded<br>
-      Tuppence balance: <strong>${data.tuppence_balance}T</strong><br>
-      AI sessions: <strong>${data.ai_sessions_remaining}</strong>`;
-    res.style.display = 'block';
-    showToast(`✓ ${email} seeded — ${t}T + ${ai} AI sessions`);
-  } catch(e) {
-    res.className = 'dev-result err';
-    res.textContent = '⚠️ ' + e.message;
-    res.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = '🌱 Seed account';
-  }
-}
-
-async function devCheckBalance() {
-  const email = document.getElementById('dev-check-email').value.trim();
-  const res   = document.getElementById('dev-check-result');
-  if (!email) { showToast('Enter an email first'); return; }
 
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Checking…';
