@@ -22,26 +22,24 @@
 
 ---
 
-## Last Completed Session · Session 31 (30 April 2026)
+## Last Completed Session · Session 32 (30 April 2026)
 
-- `payments.py` written — reads `PAYSTACK_SECRET_KEY` from `.env`, test/live transparent ✅
-- `POST /payment/webhook` added to BEA — server-side Paystack credit with HMAC validation ✅
-- `callback_url` wired through `confirmTopUp()` → `/payment/initialize` → Paystack ✅
-- Paystack return handler added to `DOMContentLoaded` — verifies, credits balance, shows toast ✅
-- Sandbox SSH key fixed permanently — `load_sandbox_ssh.sh` + `setup_sandbox_ssh.ps1` ✅
-- `.gitignore` cleaned up — excludes PDFs, pycache, temp files, utility scripts ✅
-- Git auto-maintenance disabled — `maintenance.auto false`, `gc.auto 0` ✅
-- HEAD: ff2f4cd
+- Diagnosed + fixed zero listings bug — root cause: marketsquare.html truncated mid-line (missing last 63 lines), entire ms-logic script block was dead ✅
+- Restored missing tail from git commit ff2f4cd ✅
+- Added retry logic to `loadLiveListings` — retries once after 4s on BEA failure ✅
+- Added placeholder fallback to `renderCatCounts` — tiles never show "0 listings" ✅
+- Added HTML truncation check rule to `CLAUDE.md` — verify tail after every write ✅
+- HEAD: 07aedec
 
 ---
 
-## Next Tasks · Session 32
+## Next Tasks · Session 33
 
-1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
-2. **Remove `/dev/credit` endpoint + Dev Tools nav tab** before public launch
-3. n8n email notifications — buyer emailed on intro accept/decline
-4. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
-5. Showcase photos — add thumb_url to listings 40–51
+1. **Remove `/dev/credit` endpoint + Dev Tools nav tab** (L1+L2 — launch blockers)
+2. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
+3. **Local Market listing parity** (H1) — cards/detail/browse to match standard listings
+4. n8n email notifications — buyer emailed on intro accept/decline
+5. Maroushka + Dave phone test (lightbox, back buttons, My Requests tab)
 
 ---
 

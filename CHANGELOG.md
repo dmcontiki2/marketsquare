@@ -2,6 +2,12 @@
 
 ---
 
+## Session 32 · 30 April 2026 · Zero listings bug fixed — truncated HTML restored
+
+**Root cause:** `marketsquare.html` was silently truncated mid-line during a previous write, cutting off the last 63 lines including the closing `</script>` tag. The entire `ms-logic` script block was dead — `loadLiveListings` was never defined, so no listings ever loaded. Restored missing tail from git commit ff2f4cd. Added HTML tail-check rule to CLAUDE.md to prevent recurrence. Also added retry logic to `loadLiveListings` (retries once after 4s on BEA failure) and placeholder fallback to `renderCatCounts` so tiles never show "0 listings".
+
+---
+
 ## Session 31 · 30 April 2026 · Full Paystack payment flow wired end-to-end
 
 `confirmTopUp()` in the buyer app now passes a `callback_url` (`?ps_return=1`) to `/payment/initialize`, which forwards it to Paystack so buyers are returned to the app after checkout. Added a `ps_return` URL param handler in `DOMContentLoaded` — detects the Paystack redirect, calls `/payment/verify`, credits the local Tuppence balance, shows a success toast, and navigates to the wallet screen. Cancellation (no reference param) shows a "Payment was cancelled" toast. BEA `/payment/initialize` endpoint updated to accept and forward `callback_url`. Smoke tested: real Paystack checkout URLs generated correctly from the live server. Full flow is ready to test end-to-end the moment Paystack live mode is approved.
