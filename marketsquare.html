@@ -9136,28 +9136,31 @@ async function lmLoadGrid() {
       return;
     }
     grid.innerHTML = cards.map(c => {
-      const img = c.thumb_url
-        ? `<img src="${_lmEsc(c.thumb_url)}" class="lm-card-img" loading="lazy" onerror="this.style.display='none'">`
-        : `<div class="lm-card-img"></div>`;
       const now = Date.now();
       let isFeat = false;
       if (c.boost_until) {
         try { isFeat = new Date(c.boost_until).getTime() > now; } catch(e){}
       }
-      const featBadge = isFeat ? '<div class="lm-card-feat">FEATURED</div>' : '';
-      const trustBadge = _lmTrustBadge(c.trust_score);
-      const meta = [];
-      if (c.suburb) meta.push(_lmEsc(c.suburb));
-      else if (c.city) meta.push(_lmEsc(c.city));
-      if (c.price) meta.push(_lmEsc(c.price));
+      const trust = c.trust_score || 0;
+      const t = tbadge(trust);
+      const loc = _lmEsc(c.suburb || c.city || activeCity.name || '');
+      const price = c.price ? (formatZAR(c.price) || _lmEsc(c.price)) : '<span class="neg">Negotiable</span>';
+      const imgHtml = c.thumb_url
+        ? `<img src="${_lmEsc(c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
+        : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
       return (
-        '<div class="lm-card" onclick="lmOpenDetail(' + c.id + ')">'
-        + featBadge + trustBadge + img
-        + '<div class="lm-card-body">'
-        +   '<div class="lm-card-title">' + _lmEsc(c.title || '') + '</div>'
-        +   '<div class="lm-card-meta">' + meta.join(' · ') + '</div>'
-        + '</div>'
-        + '</div>'
+        `<div class="lcard" onclick="lmOpenDetail(${c.id})">` +
+        `<div class="ibox" style="background:#1f2937">` +
+          imgHtml +
+          (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
+        `</div>` +
+        `<div class="cbody">` +
+          `<div class="ccat">Local Market</div>` +
+          `<div class="ctitle">${_lmEsc(c.title || '')}</div>` +
+          `<div class="cloc">📍 ${loc}</div>` +
+          `<div class="cbot"><div class="cprice">${price}</div>${t}</div>` +
+        `</div>` +
+        `</div>`
       );
     }).join('');
   } catch(e) {
@@ -9175,25 +9178,32 @@ async function lmOpenDetail(listingId) {
     const r = await fetch(BEA_URL + '/local-market/listings/' + listingId);
     if (!r.ok) throw new Error('API ' + r.status);
     const c = await r.json();
-    const trustBadge = _lmTrustBadge(c.trust_score);
-    const trustLabel = c.trust_score >= 90 ? 'Highly Trusted'
-                     : c.trust_score >= 70 ? 'Trusted'
-                     : c.trust_score >= 40 ? 'Established'
-                     : 'New';
+    const trust = c.trust_score || 0;
+    const tInfo = tbadge(trust);
+    const tLabel = trust >= 90 ? 'Highly Trusted' : trust >= 70 ? 'Trusted' : trust >= 40 ? 'Established' : 'New';
+    const tColor = trust >= 90 ? 'var(--gold)' : trust >= 70 ? 'var(--green)' : trust >= 40 ? 'var(--blue)' : '#6b7280';
+    const tBg    = trust >= 90 ? 'var(--gold-bg)' : trust >= 70 ? 'var(--green-bg)' : trust >= 40 ? 'var(--blue-bg)' : '#f3f4f6';
+    const heroHtml = c.medium_url || c.thumb_url
+      ? `<div class="photo-strip-wrap"><div class="photo-strip" id="lm-pstrip-${c.id}"><div class="photo-strip-slide"><img src="${_lmEsc(c.medium_url || c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div></div></div>`
+      : `<div style="height:220px;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:48px;">🛍️</div>`;
+    const priceHtml = c.price
+      ? `<div class="pamount">${formatZAR(c.price) || _lmEsc(c.price)}</div>`
+      : `<div class="pneg">Negotiable — discuss with seller</div>`;
     el.innerHTML =
-      `<div class="lm-detail-hero">` +
-      (c.thumb_url
-        ? `<img src="${_lmEsc(c.medium_url || c.thumb_url)}" alt="" loading="lazy">`
-        : '') +
+      heroHtml +
+      `<div class="dsheet">` +
+        `<div class="dcat-row"><span class="dcat">Local Market</span></div>` +
+        `<div class="dtitle">${_lmEsc(c.title || '')}</div>` +
+        `<div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(c.suburb || c.city || '')}</div></div>` +
+        `<div class="trust-block" style="background:${tBg};border-color:${tColor}30;">` +
+          `<div><div class="tscore" style="color:${tColor};">${trust}</div><div class="tlabel" style="color:${tColor};">${tLabel}</div><div class="tsub" style="color:${tColor};">Trust Score</div></div>` +
+          `<div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${trust}%;background:${tColor};"></div></div><div class="tscale" style="color:${tColor};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>` +
+        `</div>` +
+        `<div class="price-block"><div><div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>${priceHtml}</div></div>` +
+        `<div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc(c.description || '')}</p></div>` +
+        `<div class="anon-block"><div class="lock-icon">🔒</div><h4>Identity protected until introduction</h4><p>Seller name and contact details are only revealed after both parties accept.</p></div>` +
       `</div>` +
-      `<div class="lm-detail-body">` +
-        `<div class="lm-detail-title">${_lmEsc(c.title || '')}</div>` +
-        (c.price ? `<div class="lm-detail-price">${_lmEsc(c.price)}</div>` : '') +
-        `<div class="lm-detail-meta">${_lmEsc(c.suburb || c.city || '')}</div>` +
-        `<div class="lm-trust-banner">${trustBadge}<div>Seller is rated <strong>${trustLabel}</strong>.</div></div>` +
-        `<div class="lm-detail-desc">${_lmEsc(c.description || '')}</div>` +
-        `<button class="lm-cta" onclick="lmRequestIntro(${c.id})">Request introduction</button>` +
-      `</div>`;
+      `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="lmRequestIntro(${c.id})">👥 Request Introduction <span class="cta-cost">· 1T on acceptance</span></button></div>`;
   } catch(e) {
     el.innerHTML = '<div style="padding:40px 16px;color:var(--text-3);font-size:13px;text-align:center;">Could not load this listing.</div>';
   }
