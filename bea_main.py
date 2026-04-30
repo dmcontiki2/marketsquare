@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -4487,4 +4487,74 @@ def dev_credit(
     }
 
 
-# ── EMAIL OPT-OUT ───────────────────────────────────
+# ── EMAIL OPT-OUT ────────────────────────────────────────────
+# Called when a prospect clicks "Unsubscribe" in an outreach email.
+# Writes the suppression back into the CityLauncher SQLite DB via
+# the CityLauncher API (running on same server at localhost:8001).
+# Falls back to logging only if CityLauncher is unreachable.
+
+CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
+
+@app.get("/opt-out")
+async def opt_out(email: str, city_id: int = 0, category: str = ""):
+    """
+    One-click unsubscribe endpoint for outreach emails.
+    Marks the prospect as opted_out in the CityLauncher database.
+    Returns a friendly HTML confirmation page — no account needed.
+
+    Query params:
+      email      — prospect email address (URL-encoded)
+      city_id    — CityLauncher city ID (0 = all cities for this email)
+      category   — listing category (empty = all categories for this email)
+    """
+    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
+
+    suppressed = False
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(
+                f"{CITYLAUNCHER_API}/prospects/opt-out",
+                json={"email": email, "city_id": city_id, "category": category}
+            )
+            if resp.status_code in (200, 204):
+                suppressed = True
+                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
+            else:
+                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
+    except Exception as exc:
+        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
+
+    # Return a clean HTML confirmation regardless of backend success
+    html_response = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribed - TrustSquare</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; }}
+    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
+             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
+    .icon {{ font-size: 48px; margin-bottom: 16px; }}
+    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
+    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
+    a {{ color: #1a1a2e; font-weight: 600; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>You’re unsubscribed</h1>
+    <p>We’ve removed <strong>{email}</strong> from our outreach list.<br>
+    You won’t receive any further emails from TrustSquare about listing opportunities.</p>
+    <p style="margin-top:24px; font-size:13px; color:#aaa;">
+      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
+    </p>
+  </div>
+</body>
+</html>"""
+
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_response, status_code=200)

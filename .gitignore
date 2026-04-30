@@ -32,3 +32,6 @@ npm-debug.log*
 *.log
 .DS_Store
 .ssh/
+
+# SSH key for Claude sandbox access — never commit this
+ssh_hetzner_key

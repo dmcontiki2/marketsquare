@@ -37,6 +37,13 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 
+## Sandbox SSH setup (run at the start of every session before any SSH/SCP)
+The sandbox does not persist SSH keys between sessions. At the start of every session, run this before any SSH or SCP command:
+```bash
+bash /sessions/quirky-brave-galileo/mnt/MarketSquare/load_sandbox_ssh.sh
+```
+If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from PowerShell — it copies `~/.ssh/id_ed25519` into the project folder as `ssh_hetzner_key` (gitignored, never committed).
+
 ## Local environment
 - **David's working directory:** `C:\Users\David\Projects\MarketSquare` — always cd here before any scp/git command
 - **PowerShell rules:** never use `&&` in SSH commands — chain with `;` or split into separate commands. Never pass Python inline via SSH — always write a .py file, scp it, then run it.
