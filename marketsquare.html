@@ -6662,7 +6662,7 @@ async function elLoadSidebarPanels(email, category) {
     agSec.style.display = 'block';
     agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">✨ Generating Trust Score action plan…</div>';
     try {
-      const g = await apiPost('/trust-score/guidance', { email, category });
+      const g = await apiPostAuth('/trust-score/guidance', { email, category });
       if (g && g.guidance) {
         agSec.innerHTML = `
           <div style="border:1.5px solid #a78bfa;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#f5f3ff,#ede9fe);">
@@ -7037,15 +7037,20 @@ async function elDocHubUpload(email) {
   }
 }
 
-// Helper: POST JSON and return parsed response
-async function apiPost(path, body) {
-  const r = await fetch(BEA_URL + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) throw new Error('API ' + r.status);
-  return r.json();
+// Helper: POST JSON with API key auth (used for seller-facing endpoints)
+async function apiPostAuth(path, body) {
+  try {
+    const r = await fetch(BEA_URL + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('API ' + r.status);
+    return r.json();
+  } catch(e) {
+    console.warn('BEA POST (auth) failed:', path, e);
+    return null;
+  }
 }
 
 async function saveEditedListing() {
