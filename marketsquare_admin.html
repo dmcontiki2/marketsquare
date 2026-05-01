@@ -2544,7 +2544,7 @@ function renderShowcasePicker(q) {
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l.title||'(untitled)')}</div>
           <div style="font-size:11px;color:var(--text-3);">${escapeHtml(l.category||'')} · ${escapeHtml(l.suburb||l.city||'')}</div>
         </div>
-        <button onclick="addShowcase(${l.id})" style="background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:6px 12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ Add</button>
+        <button onclick="addShowcase(${l.id})" style="background:var(--accent-bright);color:#fff;border:none;border-radius:50px;padding:6px 12px;font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ Add</button>
       </div>`;
   }).join('');
 }
@@ -3077,7 +3077,7 @@ async function deleteSellerAccount(email, name) {
   } catch(e) { showToast('⚠️ Delete failed — ' + e.message); }
 }
 
-
+async function devCheckBalance(email, res) {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Checking…';
   res.style.display = 'none';
@@ -3194,7 +3194,7 @@ function admEditRenderPhotos() {
             onchange="admEditUploadPhoto(this.files[0]); this.value='';">
         </label>
         ${_admEditPhotoUrls.length !== (admEditListing && admEditListing.photo_urls ? (()=>{try{return JSON.parse(admEditListing.photo_urls).length}catch{return 0}})() : 0)
-          ? '<button onclick="admEditSavePhotos()" style="margin-left:10px;background:#059669;color:#fff;border:none;border-radius:50px;padding:9px 16px;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;">💾 Save Photos</button>'
+          ? '<button onclick="admEditSavePhotos()" style="margin-left:10px;background:#059669;color:#fff;border:none;border-radius:50px;padding:9px 16px;font-size:13px;font-weight:700;font-family:\'Syne\',sans-serif;cursor:pointer;">💾 Save Photos</button>'
           : ''}
       </div>
     </div>`;
@@ -3586,7 +3586,7 @@ function _docHubRender(docs, idStatus) {
             <input type="file" id="dh-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" style="display:none;" onchange="this.parentElement.childNodes[2].textContent=' '+this.files[0]?.name">
           </label>
           <div id="dh-status" style="font-size:11px;color:var(--text-3);min-height:14px;"></div>
-          <button onclick="docHubUpload()" style="background:var(--navy);color:#fff;border:none;border-radius:50px;padding:10px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Upload Document</button>
+          <button onclick="docHubUpload()" style="background:var(--navy);color:#fff;border:none;border-radius:50px;padding:10px 16px;font-family:\'Syne\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Upload Document</button>
         </div>
       </div>
     </div>
@@ -3675,7 +3675,7 @@ function docHubShowIdVerify(docUrl, docId) {
         </div>
         <div id="dh-id-verify-status" style="font-size:12px;color:var(--text-3);min-height:14px;"></div>
         <div style="display:flex;gap:8px;">
-          <button onclick="docHubSubmitIdVerify()" style="flex:1;background:#4f46e5;color:#fff;border:none;border-radius:50px;padding:10px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          <button onclick="docHubSubmitIdVerify()" style="flex:1;background:#4f46e5;color:#fff;border:none;border-radius:50px;padding:10px 14px;font-family:\'Syne\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
             ✅ Verify Now
           </button>
           <button onclick="document.getElementById('dh-id-verify-panel').remove()" style="background:var(--surface-2);color:var(--text-3);border:1.5px solid var(--border);border-radius:50px;padding:10px 14px;font-size:13px;cursor:pointer;">
@@ -3942,7 +3942,7 @@ async function cityExtendAdd(cityId, cityName) {
 
 async function cityExtendRemove(cityId) {
   if (!_cityExtendEmail || !_cityExtendListingId) return;
-  if (!confirm('Remove this city from your listing's reach?')) return;
+  if (!confirm('Remove this city from your listing\'s reach?')) return;
   try {
     await fetch(BEA_URL + '/listings/' + _cityExtendListingId + '/cities/' + cityId +
                 '?email=' + encodeURIComponent(_cityExtendEmail), { method: 'DELETE' });
