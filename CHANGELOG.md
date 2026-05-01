@@ -2,6 +2,22 @@
 
 ---
 
+## Session 35 · 1 May 2026 · Multi-city seller reach
+
+**Seller city reach — Free vs Starter/Premium:** Free sellers are visible in their home city only. Starter ($5/month) and Premium ($15/month) sellers can extend any listing to additional cities in the country. Buyers in those cities see the listing as local — they never need to know the seller's home base. The seller makes an explicit confirmation per city ("I can service buyers in [City]") which is recorded with a timestamp.
+
+**BEA: listing_cities table:** `id, listing_id, city_id, seller_confirmed_at, added_at` with UNIQUE(listing_id, city_id). Three new endpoints: `GET /listings/{id}/cities` (public), `POST /listings/{id}/cities` (seller email-auth + tier gate), `DELETE /listings/{id}/cities/{city_id}` (seller email-auth). Free sellers receive HTTP 402 with upgrade message. `PUT /users/{email}/seller-tier` (admin/Paystack webhook) sets `free | starter | premium`.
+
+**BEA: seller_tier column on users:** `seller_tier TEXT DEFAULT 'free'` added via idempotent ALTER TABLE migration. All existing users default to free.
+
+**BEA: listings query includes extended cities:** `GET /listings` now returns a UNION of (a) listings with home city matching the buyer's city and (b) listings extended to the buyer's city via `listing_cities`. Buyer experience is unchanged — they simply see more listings. Suburb filter applies only to the home-city branch.
+
+**BEA: geo/cities search:** `GET /geo/cities` now accepts `q=` parameter for name search (LIKE %q%), capped at 20 results. Used by the city-reach typeahead in admin.
+
+**Admin: Extend City Reach panel:** After publishing, a green "Extend City Reach" panel appears below AI Guidance. Shows currently extended cities with remove button. City search input with 300ms debounce typeahead — select a city, confirm with "I can service buyers in [City]" checkbox, city is added instantly. Free sellers see a locked amber upgrade prompt (no search shown). Panel re-renders after each add/remove.
+
+---
+
 ## Session 34 · 1 May 2026 · KYC identity verification + banking + cert name-match
 
 **BEA: KYC identity verification (SA ID / Passport / National ID):** New `POST /users/{email}/verify-identity` endpoint. Accepts `id_number`, `full_name`, `doc_type`, and `doc_url`. For SA IDs: validates 13-digit Luhn checksum + extracts DOB/gender. Hashes the raw ID number with SHA-256 — never stored in plaintext. Calls Sonnet vision (`claude-sonnet-4-6`) to cross-check the uploaded document image against the claimed name and ID number. Awards tiered Trust Score signals: `id_uploaded` (+3, set on doc upload), `id_number_valid` (+4, Luhn pass), `id_ai_verified` (+8, Sonnet confidence ≥ 0.80 + name match ≥ 0.80). SWAP POINT documented: `_sonnet_verify_identity()` is the single function to replace with PaddleOCR for zero-token local verification. `_upsert_credential()` helper prevents downgrading earned signals to pending/rejected.

@@ -135,6 +135,8 @@ def run_migrations(conn):
         "ALTER TABLE users ADD COLUMN banking_added_at TEXT",
         # user_credentials column added in Session 34
         "ALTER TABLE user_credentials ADD COLUMN updated_at TEXT",
+        # seller subscription tier — added Session 35
+        "ALTER TABLE users ADD COLUMN seller_tier TEXT NOT NULL DEFAULT 'free'",
     ]:
         try:
             conn.execute(col_def)
@@ -153,6 +155,18 @@ def run_migrations(conn):
             uploaded_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
         )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_seller_docs_email ON seller_documents(email)")
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS listing_cities (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            listing_id          INTEGER NOT NULL,
+            city_id             INTEGER NOT NULL,
+            seller_confirmed_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+            added_at            TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+            UNIQUE(listing_id, city_id)
+        )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lc_listing ON listing_cities(listing_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lc_city ON listing_cities(city_id)")
 
     conn.execute("""CREATE TABLE IF NOT EXISTS listing_versions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -776,27 +790,60 @@ def health():
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb: Optional[str] = None):
     conn = database.get_db()
-    # Hide suspended Local Market listings + keep LM out of the main grid
-    # unless explicitly requested (LM-02 separation principle).
-    clauses = ["l.city = ?", "(l.suspension_reason IS NULL OR l.suspension_reason = '')"]
-    params: list = [city]
-    if category:
-        clauses.append("LOWER(l.category) = LOWER(?)")
-        params.append(category)
-    else:
-        clauses.append("LOWER(l.category) != LOWER(?)")
-        params.append(LM_CATEGORY)
+
+    # Resolve city name → geo_city_id for extended-city matching
+    city_row = conn.execute(
+        "SELECT id FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (city,)
+    ).fetchone()
+    buyer_city_id = city_row["id"] if city_row else None
+
+    # Base filters shared by both branches of the UNION
+    # Branch A: listing's home city matches buyer city (original behaviour)
+    # Branch B: listing extended to buyer's city via listing_cities table
+    suspension_filter = "(l.suspension_reason IS NULL OR l.suspension_reason = '')"
+    lm_filter_a = "LOWER(l.category) = LOWER(?)" if category else "LOWER(l.category) != LOWER(?)"
+    lm_filter_b = lm_filter_a  # same category filter on both branches
+
+    cat_param = category if category else LM_CATEGORY
+
     if suburb:
-        clauses.append("l.suburb = ?")
-        params.append(suburb)
-    where = " AND ".join(clauses)
-    rows = conn.execute(
-        f"""SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+        # Suburb filter only applies to home-city branch (extended listings have no suburb match)
+        branch_a = f"""
+            SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
             FROM listings l
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE {where} ORDER BY l.created_at DESC LIMIT 50""",
-        params
-    ).fetchall()
+            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} AND l.suburb = ?"""
+        params_a = [city, cat_param, suburb]
+    else:
+        branch_a = f"""
+            SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+            FROM listings l
+            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a}"""
+        params_a = [city, cat_param]
+
+    # Branch B: extended city reach (only runs when we have a valid city_id)
+    if buyer_city_id:
+        branch_b = f"""
+            SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+            FROM listings l
+            JOIN listing_cities lc ON lc.listing_id = l.id AND lc.city_id = ?
+            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+            WHERE l.city != ? AND {suspension_filter} AND {lm_filter_b}"""
+        params_b = [buyer_city_id, city, cat_param]
+
+        sql = f"""
+            SELECT * FROM (
+                {branch_a}
+                UNION
+                {branch_b}
+            ) ORDER BY created_at DESC LIMIT 50"""
+        params = params_a + params_b
+    else:
+        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT 50"
+        params = params_a
+
+    rows = conn.execute(sql, params).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -970,9 +1017,27 @@ def geo_get_regions(country: str = "ZA"):
     return [dict(r) for r in rows]
 
 @app.get("/geo/cities")
-def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = None):
+def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = None,
+                   q: Optional[str] = None):
+    """Return cities filtered by region, country, and/or search query.
+    q= does a prefix/contains search on city name — used by the city-reach typeahead."""
     conn = database.get_db()
-    if region_id:
+    if q:
+        pattern = f"%{q}%"
+        if country:
+            rows = conn.execute(
+                """SELECT c.id, c.name, c.lat, c.lng, r.name as region_name
+                   FROM geo_cities c JOIN geo_regions r ON c.region_id=r.id
+                   WHERE c.country_iso2=? AND c.active=1 AND c.name LIKE ?
+                   ORDER BY c.name LIMIT 20""",
+                (country, pattern)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT id, name, lat, lng FROM geo_cities WHERE active=1 AND name LIKE ? ORDER BY name LIMIT 20",
+                (pattern,)
+            ).fetchall()
+    elif region_id:
         rows = conn.execute(
             "SELECT id, name, lat, lng FROM geo_cities WHERE region_id=? AND active=1 ORDER BY name",
             (region_id,)
@@ -5353,6 +5418,134 @@ def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
     if not row:
         raise HTTPException(status_code=404, detail="Seller not found")
     return dict(row)
+
+
+# ── MULTI-CITY REACH ─────────────────────────────────────────────────────────
+# Free sellers: home city only.
+# Starter/Premium sellers: can extend a listing to any city in their country
+# by confirming they can service buyers there.
+# Buyers always see listings as "local" — they never see the seller's home city.
+
+_PAID_TIERS = {"starter", "premium"}
+
+@app.get("/listings/{listing_id}/cities")
+def get_listing_cities(listing_id: int):
+    """Return all extended cities for a listing (public)."""
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT lc.city_id, g.name as city_name, lc.seller_confirmed_at
+           FROM listing_cities lc
+           LEFT JOIN geo_cities g ON g.id = lc.city_id
+           WHERE lc.listing_id = ?
+           ORDER BY g.name""",
+        (listing_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+class ListingCityIn(BaseModel):
+    email: str
+    city_id: int
+
+
+@app.post("/listings/{listing_id}/cities")
+def add_listing_city(listing_id: int, payload: ListingCityIn):
+    """Seller extends their listing to an additional city.
+    Requires Starter or Premium tier. Seller authenticates by email
+    (same pattern as edit-after-publish: email must match listing.seller_email).
+    """
+    email = payload.email.lower().strip()
+    conn = database.get_db()
+    try:
+        # Verify listing belongs to this seller
+        listing = conn.execute(
+            "SELECT id, seller_email, geo_city_id FROM listings WHERE id=?",
+            (listing_id,)
+        ).fetchone()
+        if not listing:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if listing["seller_email"] and listing["seller_email"].lower() != email:
+            raise HTTPException(status_code=403, detail="Email does not match listing owner")
+
+        # Check seller tier
+        user = conn.execute(
+            "SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)
+        ).fetchone()
+        tier = (user["seller_tier"] if user else "free") or "free"
+        if tier not in _PAID_TIERS:
+            raise HTTPException(
+                status_code=402,
+                detail="Multi-city reach requires a Starter subscription ($5/month). Upgrade at trustsquare.co/admin.html"
+            )
+
+        # Verify city exists
+        city = conn.execute(
+            "SELECT id, name FROM geo_cities WHERE id=?", (payload.city_id,)
+        ).fetchone()
+        if not city:
+            raise HTTPException(status_code=404, detail="City not found")
+
+        # Don't duplicate home city
+        if payload.city_id == listing["geo_city_id"]:
+            raise HTTPException(status_code=400, detail="That is already your listing's home city")
+
+        # Insert (ignore duplicate)
+        conn.execute(
+            """INSERT OR IGNORE INTO listing_cities (listing_id, city_id)
+               VALUES (?, ?)""",
+            (listing_id, payload.city_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"listing_id": listing_id, "city_id": payload.city_id,
+            "city_name": city["name"], "status": "added"}
+
+
+@app.delete("/listings/{listing_id}/cities/{city_id}")
+def remove_listing_city(listing_id: int, city_id: int, email: str):
+    """Remove an extended city from a listing."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    try:
+        listing = conn.execute(
+            "SELECT seller_email FROM listings WHERE id=?", (listing_id,)
+        ).fetchone()
+        if not listing:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if listing["seller_email"] and listing["seller_email"].lower() != email:
+            raise HTTPException(status_code=403, detail="Email does not match listing owner")
+        conn.execute(
+            "DELETE FROM listing_cities WHERE listing_id=? AND city_id=?",
+            (listing_id, city_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"status": "removed"}
+
+
+@app.put("/users/{email}/seller-tier")
+def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_key)):
+    """Admin / Paystack webhook: set seller subscription tier.
+    tier must be: free | starter | premium
+    """
+    email = email.lower().strip()
+    if tier not in ("free", "starter", "premium"):
+        raise HTTPException(status_code=400, detail="tier must be free, starter, or premium")
+    conn = database.get_db()
+    try:
+        result = conn.execute(
+            "UPDATE users SET seller_tier=? WHERE LOWER(email)=?", (tier, email)
+        )
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        conn.commit()
+    finally:
+        conn.close()
+    return {"email": email, "seller_tier": tier}
 
 
 # ── EMAIL OPT-OUT ────────────────────────────────────────────

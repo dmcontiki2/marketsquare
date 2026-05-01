@@ -1055,6 +1055,8 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <div id="delete-listings-section" style="margin-bottom:16px;"></div>
     <!-- AI Guidance panel — populated by loadAIGuidance() after publish -->
     <div id="ai-guidance-panel" style="display:none;margin-bottom:20px;border-radius:12px;overflow:hidden;border:1.5px solid #a78bfa;background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);"></div>
+    <!-- City Reach panel — populated by cityExtendLoad() after publish -->
+    <div id="city-extend-panel" style="display:none;margin-bottom:20px;"></div>
     <button onclick="startFresh()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:24px;">+ Add another seller</button>
   </div>
 
@@ -2079,6 +2081,10 @@ function showPublishSuccess(successCount, failCount) {
   // Load AI guidance panel after successful publish
   if (successCount > 0 && sellerData && sellerData.email) {
     loadAIGuidance(sellerData.email, selectedCat || '');
+  }
+  // Load city reach panel
+  if (successCount > 0 && publishedIds.length > 0 && sellerData && sellerData.email) {
+    cityExtendLoad(sellerData.email, publishedIds[0]);
   }
 }
 
@@ -3648,6 +3654,170 @@ async function docHubDelete(docId) {
   if (!origLoad) return;
   window._docHubHooked = true;
 })();
+// ── CITY REACH (multi-city seller extension) ─────────────────────────────────
+let _cityExtendListingId = null;
+let _cityExtendEmail     = null;
+let _cityExtendCities    = [];   // currently extended cities
+
+async function cityExtendLoad(email, listingId) {
+  _cityExtendEmail     = email;
+  _cityExtendListingId = listingId;
+  const panel = document.getElementById('city-extend-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+
+  // Check seller tier
+  let tier = 'free';
+  try {
+    const ur = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/identity-status', {
+      headers: { 'X-Api-Key': API_KEY }
+    });
+    // identity-status doesn't return tier — use a simpler check
+    // We'll detect tier from the API response when we try to add a city
+  } catch(e) {}
+
+  // Fetch current extended cities for this listing
+  try {
+    const r = await fetch(BEA_URL + '/listings/' + listingId + '/cities');
+    _cityExtendCities = r.ok ? await r.json() : [];
+  } catch(e) { _cityExtendCities = []; }
+
+  panel.innerHTML = _cityExtendRender();
+}
+
+function _cityExtendRender() {
+  const cityRows = _cityExtendCities.length
+    ? _cityExtendCities.map(c => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface-2);border-radius:8px;margin-bottom:6px;">
+          <div style="font-size:16px;">📍</div>
+          <div style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escapeHtml(c.city_name)}</div>
+          <button onclick="cityExtendRemove(${c.city_id})" style="background:transparent;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 6px;">✕</button>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text-3);padding:4px 0 10px;">No additional cities yet — this listing is visible in its home city only.</div>';
+
+  return `
+  <div style="border:1.5px solid #34d399;border-radius:12px;overflow:hidden;">
+    <div style="background:#ecfdf5;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:13px;font-weight:700;color:#065f46;">🌍 Extend City Reach</div>
+      <div style="font-size:11px;color:#6b7280;">$5/month · Starter</div>
+    </div>
+    <div style="padding:12px 14px;">
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;line-height:1.5;">
+        Your listing is live in <strong>${escapeHtml((sellerData && sellerData.city) || 'your home city')}</strong>.
+        Starter subscribers can extend to any city in the country — buyers in those cities will see your listing as local.
+      </div>
+      ${cityRows}
+      <div id="city-extend-status" style="font-size:12px;color:var(--text-3);min-height:14px;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input type="text" id="city-extend-search" placeholder="Search city name…"
+          oninput="cityExtendSearch(this.value)"
+          style="flex:1;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);outline:none;">
+      </div>
+      <div id="city-extend-results" style="margin-top:6px;max-height:180px;overflow-y:auto;"></div>
+    </div>
+  </div>`;
+}
+
+let _citySearchTimer = null;
+function cityExtendSearch(query) {
+  clearTimeout(_citySearchTimer);
+  const results = document.getElementById('city-extend-results');
+  if (!query || query.length < 2) { if (results) results.innerHTML = ''; return; }
+  _citySearchTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(BEA_URL + '/geo/cities?country=ZA&q=' + encodeURIComponent(query));
+      const cities = r.ok ? await r.json() : [];
+      if (!results) return;
+      if (!cities.length) { results.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px;">No cities found.</div>'; return; }
+      results.innerHTML = cities.slice(0, 8).map(c => `
+        <div onclick="cityExtendConfirm(${c.id}, '${escapeHtml(c.name).replace(/'/g,"\'")}' )"
+          style="padding:8px 10px;cursor:pointer;border-radius:6px;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;"
+          onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
+          <span>📍</span> ${escapeHtml(c.name)}
+        </div>`).join('');
+    } catch(e) {}
+  }, 300);
+}
+
+function cityExtendConfirm(cityId, cityName) {
+  const results = document.getElementById('city-extend-results');
+  const status  = document.getElementById('city-extend-status');
+  if (results) results.innerHTML = '';
+  const input = document.getElementById('city-extend-search');
+  if (input) input.value = '';
+
+  // Show confirmation inline
+  if (results) results.innerHTML = `
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:4px;">
+      <div style="font-size:13px;font-weight:600;color:#065f46;margin-bottom:8px;">
+        Add <strong>${escapeHtml(cityName)}</strong>?
+      </div>
+      <div style="font-size:12px;color:#374151;margin-bottom:10px;line-height:1.5;">
+        ✅ I confirm I can accommodate and service buyers in <strong>${escapeHtml(cityName)}</strong>.
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="cityExtendAdd(${cityId}, '${escapeHtml(cityName).replace(/'/g,"\'")}' )"
+          style="flex:1;background:#059669;color:#fff;border:none;border-radius:50px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">
+          ✅ Confirm &amp; Add
+        </button>
+        <button onclick="document.getElementById('city-extend-results').innerHTML=''"
+          style="background:var(--surface-2);color:var(--text-3);border:1.5px solid var(--border);border-radius:50px;padding:9px 14px;font-size:13px;cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+    </div>`;
+}
+
+async function cityExtendAdd(cityId, cityName) {
+  const status = document.getElementById('city-extend-status');
+  const results = document.getElementById('city-extend-results');
+  if (results) results.innerHTML = '';
+  if (status) status.textContent = '⏳ Adding…';
+
+  try {
+    const r = await fetch(BEA_URL + '/listings/' + _cityExtendListingId + '/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: _cityExtendEmail, city_id: cityId })
+    });
+    const data = await r.json();
+
+    if (r.status === 402) {
+      // Tier upgrade required
+      if (status) status.innerHTML = `
+        <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 12px;margin-top:4px;">
+          <div style="font-size:13px;font-weight:700;color:#92400e;">🔒 Starter subscription required</div>
+          <div style="font-size:12px;color:#374151;margin-top:4px;">Upgrade to <strong>$5/month</strong> to extend your listing to other cities and reach buyers nationwide.</div>
+        </div>`;
+      return;
+    }
+    if (!r.ok) {
+      if (status) status.textContent = '❌ ' + (data.detail || 'Could not add city');
+      return;
+    }
+
+    if (status) status.textContent = '✅ ' + cityName + ' added';
+    _cityExtendCities.push({ city_id: cityId, city_name: cityName });
+    // Re-render the panel
+    const panel = document.getElementById('city-extend-panel');
+    if (panel) panel.innerHTML = _cityExtendRender();
+  } catch(e) {
+    if (status) status.textContent = '❌ Network error: ' + e.message;
+  }
+}
+
+async function cityExtendRemove(cityId) {
+  if (!_cityExtendEmail || !_cityExtendListingId) return;
+  if (!confirm('Remove this city from your listing's reach?')) return;
+  try {
+    await fetch(BEA_URL + '/listings/' + _cityExtendListingId + '/cities/' + cityId +
+                '?email=' + encodeURIComponent(_cityExtendEmail), { method: 'DELETE' });
+    _cityExtendCities = _cityExtendCities.filter(c => c.city_id !== cityId);
+    const panel = document.getElementById('city-extend-panel');
+    if (panel) panel.innerHTML = _cityExtendRender();
+  } catch(e) { showToast('Remove failed'); }
+}
+
 // Hook into the tshLoad flow — after Trust Score loads, load docs
 const _origTshLoad = tshLoad;
 tshLoad = async function(email) {

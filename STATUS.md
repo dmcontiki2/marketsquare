@@ -22,34 +22,34 @@
 
 ---
 
-## Last Completed Session · Session 34 (1 May 2026) — Part 2: KYC
+## Last Completed Session · Session 35 (1 May 2026) — Multi-city seller reach
 
-- BEA: SA ID Luhn validator + Sonnet vision identity verification (POST /users/{email}/verify-identity) ✅
-- BEA: Banking details storage + fuzzy name-match against verified ID (POST /users/{email}/banking) ✅
-- BEA: Certificate name-match via Sonnet background task (_run_cert_name_check) ✅
-- Admin: ID verification UI panel in Document Hub — inline after id_doc upload ✅
-- DB: user_credentials.updated_at column + 10 KYC columns on users table ✅
-- Trust signal hierarchy live: id_uploaded(+3) → id_number_valid(+4) → id_ai_verified(+8) → id_admin_confirmed(+10) ✅
-- All endpoints smoke-tested on live server ✅
+- listing_cities table + seller_tier column on users (free/starter/premium) ✅
+- POST /listings/{id}/cities: tier-gate (free→402), seller confirmation recorded ✅
+- GET /listings now UNIONs home city + extended cities for buyer browse ✅
+- GET /geo/cities: q= search param added for typeahead ✅
+- Admin: "Extend City Reach" panel after publish — city search, confirm, add/remove ✅
+- All smoke-tested on live server ✅
 - HEAD: commit pending
 
 ---
 
-## Previous Session · Session 34 Part 1 (1 May 2026)
+## Previous Session · Session 34 (1 May 2026) — KYC + Document Hub
 
-- LM multi-photo upload (up to 5), Document Hub (9 doc types, visibility toggle), seller_documents DB table ✅
-- 12 LM Trust Score signals (was 2) · buyer seller profile shows post_intro docs ✅
+- KYC: SA ID Luhn + Sonnet vision verify-identity, banking name-match, cert name-match (background) ✅
+- Document Hub: 9 doc types, visibility toggle, ID verify inline panel ✅
+- 12 LM Trust Score signals · listing_cities table · seller_tier column ✅
 
 
 ---
 
-## Next Tasks · Session 35
+## Next Tasks · Session 36
 
-1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
+1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, set seller_tier via webhook on payment
 2. **n8n email notifications** — buyer emailed on intro accept/decline
 3. **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab
-4. **LM edit flow** — add multi-photo management and Document Hub to edit-after-publish screen
-5. **KYC cost analysis** — estimate Sonnet vision tokens per verification vs PaddleOCR on-server option
+4. **LM edit flow** — multi-photo management + Document Hub in edit-after-publish screen
+5. **KYC cost analysis** — Sonnet vision tokens per verification vs PaddleOCR on-server
 6. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 
 ---
