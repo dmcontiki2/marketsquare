@@ -22,28 +22,26 @@
 
 ---
 
-## Last Completed Session · Session 35 (1 May 2026) — Edit Screen Full Feature Parity
+## Last Completed Session · Session 36 (1 May 2026) — Declaration System + Trust Score Live Updates
 
-- **Buyer app edit screen** (`screen-edit-listing` in marketsquare.html): ✅
-  - Multi-photo management: add, replace, remove (up to 10), auto-save via PUT
-  - Trust Score panel: score bar + tier label + Haiku tip loaded on edit open
-  - AI Guidance panel: personalised action plan from POST /trust-score/guidance
-  - Document Hub: full upload + listing, reloads Trust Score on new upload
-  - `_elPhotoUrls` module-level array; `saveEditedListing()` persists `photo_urls`
-- Multi-city seller reach: listing_cities, seller_tier, UNION browse query ✅
-- KYC: SA ID Luhn + Sonnet vision, banking name-match, cert name-match ✅
-- Deployed to trustsquare.co · HEAD: commit pending
+- **Declaration system** (`POST /users/{email}/declare`): free-text declaration awards 80% of signal pts immediately; evidence upload awards remaining 20%; `user_declarations` DB table ✅
+- **Local Market 40-pt base score**: all LM sellers start at Established tier; credentials push above 40; penalties can pull below ✅
+- **Stacking signal chains** (`_DOC_TYPE_SIGNAL_CHAINS`): multiple uploads of same doc type fill sequential slots ✅
+- **Auto-earn model**: all non-ID docs earn immediately on upload (self-attestation); ID docs use Sonnet vision ✅
+- **AI upload comment** (Haiku 4.5): personalised 2-sentence feedback after each document upload ✅
+- **Declaration cards in Doc Hub**: amber "Declare" cards for each declarable signal; turn green after submission; live Trust Score refresh ✅
+- **Four declarable LM signals**: `assoc_role` (12/3 pts), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1) ✅
+- Deployed to trustsquare.co · Git committed ✅
 
 ---
 
-## Next Tasks · Session 36
+## Next Tasks · Session 37
 
-1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, set seller_tier via webhook on payment
-2. **n8n email notifications** — buyer emailed on intro accept/decline
-3. **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab
-4. **LM edit flow** — multi-photo management + Document Hub in LM edit-after-publish screen
-5. **KYC cost analysis** — Sonnet vision tokens per verification vs PaddleOCR on-server
-6. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
+1. **Admin app verification** — check declaration cards + Trust Score panel in marketsquare_admin.html edit modal
+2. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
+3. **Real Estate category signals** — sit with Maroushka/David: PPRA/FFC signals, agent vs private seller distinction, specialist services (valuers, bond originators)
+4. **n8n email notifications** — buyer emailed on intro accept/decline
+5. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 
 ---
 
