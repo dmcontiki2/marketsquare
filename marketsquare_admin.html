@@ -2257,10 +2257,16 @@ async function loadAllListings() {
   const c = document.getElementById('lm-container');
   c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Loading...</div>';
   try {
-    const resp = await fetch(BEA_URL + '/listings?city=Pretoria');
-    if (!resp.ok) throw new Error('API ' + resp.status);
-    const data = await resp.json();
-    allListings = Array.isArray(data) ? data : (data.listings || []);
+    const [regResp, lmResp] = await Promise.all([
+      fetch(BEA_URL + '/listings?city=Pretoria'),
+      fetch(BEA_URL + '/local-market/listings', { headers: { 'X-Api-Key': API_KEY } })
+    ]);
+    if (!regResp.ok) throw new Error('Listings API ' + regResp.status);
+    const regData = await regResp.json();
+    const lmData  = lmResp.ok ? await lmResp.json() : [];
+    // Normalise LM listings to same shape as regular listings
+    const lmNorm = lmData.map(l => Object.assign({}, l, { category: 'local_market' }));
+    allListings = [...(Array.isArray(regData) ? regData : []), ...lmNorm];
     renderListingsManager();
     showToast('✓ ' + allListings.length + ' listing' + (allListings.length !== 1 ? 's' : '') + ' loaded');
   } catch(e) {
