@@ -157,6 +157,18 @@ def run_migrations(conn):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_seller_docs_email ON seller_documents(email)")
 
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_declarations (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            email        TEXT    NOT NULL,
+            signal_id    TEXT    NOT NULL,
+            declaration  TEXT    NOT NULL,
+            points_awarded INTEGER NOT NULL DEFAULT 0,
+            declared_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+            UNIQUE(email, signal_id)
+        )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_decl_email ON user_declarations(email)")
+
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS listing_cities (
             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
             listing_id          INTEGER NOT NULL,
@@ -4178,7 +4190,7 @@ _CATEGORY_SIGNALS = {
         "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 2,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
         # ── Experience (self-declared, modest weight) ─────────────────────
         "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 2,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
-        "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 3,  "how_to_earn": "Upload evidence of 5+ years experience (CV, references, or written statement).", "evidence_required": True, "replaces": "category.lm.experience_1yr"},
+        "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 3,  "declaration_points": 2, "evidence_points": 1, "how_to_earn": "Declare your years of experience — 2 pts awarded immediately. Upload a CV or reference letter to claim the final 1 pt.", "evidence_required": True, "replaces": "category.lm.experience_1yr", "declaration_prompt": "Briefly describe your experience and how long you have been active in this field."},
         # ── Qualifications / certificates (stacking, max 3) ──────────────
         # Accredited, traceable — meaningful signal of structured learning.
         "category.lm.training_course":     {"name": "Formal training course (1st)",         "points": 4,  "how_to_earn": "Upload a certificate from a recognised training provider.", "evidence_required": True},
@@ -4190,14 +4202,14 @@ _CATEGORY_SIGNALS = {
         # Being vetted by an independent organisation is strong signal.
         # Two different bodies = convergent external validation.
         "category.lm.prof_body":           {"name": "Association / professional body membership (1st)", "points": 8, "how_to_earn": "Upload membership card or letter from a recognised body (e.g. SABI, NBA, SATMA, guild).", "evidence_required": True},
-        "category.lm.prof_body_2":         {"name": "Second association membership",        "points": 6,  "how_to_earn": "Upload proof from a second recognised body — two independent organisations = strong credibility.", "evidence_required": True, "additional_to": "category.lm.prof_body"},
+        "category.lm.prof_body_2":         {"name": "Second association membership",        "points": 6,  "declaration_points": 5, "evidence_points": 1, "how_to_earn": "Declare your second membership — 5 pts awarded immediately. Upload your membership card or letter to claim the final 1 pt.", "evidence_required": True, "additional_to": "category.lm.prof_body", "declaration_prompt": "Name the second organisation you are a member of and your membership number if available."},
         # ── Named role in association ─────────────────────────────────────
         # Highest-value single credential: being accountable to an organisation
         # as secretary/chair/committee puts your name on public record.
         # National Secretary of NBA = top-3 management role in SA beekeeping.
-        "category.lm.assoc_role":          {"name": "Named role in association (secretary, chair, committee)", "points": 15, "how_to_earn": "Upload appointment letter, signed minutes, or association confirmation of your named role (e.g. NBA National Secretary, SABI chair, provincial committee member).", "evidence_required": True},
+        "category.lm.assoc_role":          {"name": "Named role in association (secretary, chair, committee)", "points": 15, "declaration_points": 12, "evidence_points": 3, "how_to_earn": "Declare your role and organisation — 12 pts awarded immediately. Upload your appointment letter or signed minutes to claim the final 3 pts.", "evidence_required": True, "declaration_prompt": "Describe your role, organisation, and when you were appointed (e.g. 'National Secretary, NBA, appointed Jan 2024')."},
         # ── Official government / regulatory appointment ───────────────────
-        "category.lm.provincial_role":     {"name": "Official government / regulatory appointment", "points": 10, "how_to_earn": "Upload appointment letter or certificate confirming an official government or regulatory role.", "evidence_required": True},
+        "category.lm.provincial_role":     {"name": "Official government / regulatory appointment", "points": 10, "declaration_points": 8, "evidence_points": 2, "how_to_earn": "Declare your appointment — 8 pts awarded immediately. Upload your official appointment letter to claim the final 2 pts.", "evidence_required": True, "declaration_prompt": "Describe your role, the appointing body, and when you were appointed (e.g. 'Provincial Bee Inspector, Gauteng Dept of Agriculture, 2022')."},
         # ── Knowledge evidence (stacking, max 3) — soft signal ───────────
         "category.lm.product_guide":       {"name": "Product guide / recipe authored (1st)","points": 2,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have written.", "evidence_required": True},
         "category.lm.product_guide_2":     {"name": "Second product guide / recipe",        "points": 1,  "how_to_earn": "Upload a second original guide or recipe.", "evidence_required": True, "additional_to": "category.lm.product_guide"},
@@ -4314,49 +4326,81 @@ def _compute_universal_track_status(conn, email: str) -> dict:
 
 def _build_breakdown_items(conn, email: str, signals_dict: dict, computed: dict) -> list:
     """Build a list of {signal_id, name, points, status, how_to_earn} items
-    from a signal set. Reads user_credentials for upload-required signals."""
+    from a signal set. Reads user_credentials for upload-required signals.
+
+    Supports 'declared' status: seller has submitted a free-text declaration
+    and earned declaration_points (80%). The remaining evidence_points (20%)
+    are shown as pending_declaration_evidence so the frontend can surface the
+    'upload evidence' prompt."""
     rows = conn.execute(
         "SELECT signal_id, status FROM user_credentials WHERE email = ?", (email,)
     ).fetchall()
     cred_status = {r["signal_id"]: r["status"] for r in rows}
+
+    # Load declaration points already awarded (for 'declared' credentials)
+    decl_rows = conn.execute(
+        "SELECT signal_id, points_awarded FROM user_declarations WHERE email = ?", (email,)
+    ).fetchall()
+    decl_pts = {r["signal_id"]: r["points_awarded"] for r in decl_rows}
+
     items = []
     for sig_id, sig in signals_dict.items():
         if sig_id in computed:
             status = computed[sig_id]
         elif sig_id in cred_status:
-            # 'pending' | 'earned' | 'rejected'
-            status = cred_status[sig_id]
-            if status not in ("earned", "pending", "rejected"):
+            raw_status = cred_status[sig_id]
+            if raw_status in ("earned", "pending", "rejected", "declared"):
+                status = raw_status
+            else:
                 status = "missing"
         else:
             status = "missing"
+
+        # For declared signals, surface how many points were awarded and what remains
+        awarded_pts = sig["points"]  # default: full points if earned
+        evidence_pts_remaining = 0
+        if status == "declared":
+            awarded_pts = decl_pts.get(sig_id, sig.get("declaration_points", sig["points"]))
+            evidence_pts_remaining = sig.get("evidence_points", 0)
+
         items.append({
-            "signal_id":   sig_id,
-            "name":        sig["name"],
-            "points":      sig["points"],
-            "status":      status,
-            "how_to_earn": sig["how_to_earn"],
+            "signal_id":                 sig_id,
+            "name":                      sig["name"],
+            "points":                    sig["points"],
+            "declaration_points":        sig.get("declaration_points"),   # pts on declaration (80%)
+            "evidence_points":           sig.get("evidence_points", 0),   # pts on evidence upload (20%)
+            "awarded_points":            awarded_pts,
+            "evidence_points_remaining": evidence_pts_remaining,
+            "status":                    status,
+            "how_to_earn":               sig.get("how_to_earn", ""),
+            "declaration_prompt":        sig.get("declaration_prompt"),
+            "has_declaration":           sig.get("declaration_points") is not None,
         })
     return items
 
 
 def _sum_earned_with_replaces(items: list, signals_dict: dict) -> int:
     """Sum points but honour mutually-exclusive replacement chains.
-    Example: if both NQF6 and NQF7 are earned, NQF7 replaces NQF6 — only NQF7 counts."""
-    earned_ids = {it["signal_id"] for it in items if it["status"] == "earned"}
+
+    Counts both 'earned' (full points) and 'declared' (partial points via
+    awarded_points) credentials. Replaces logic still applies so that a
+    higher credential supersedes a lower one in the same chain.
+    """
+    active_ids = {it["signal_id"] for it in items if it["status"] in ("earned", "declared")}
     replaced_ids = set()
-    for sig_id in earned_ids:
+    for sig_id in active_ids:
         sig = signals_dict.get(sig_id, {})
         replaces = sig.get("replaces")
-        if replaces and replaces in earned_ids:
+        if replaces and replaces in active_ids:
             replaced_ids.add(replaces)
     total = 0
     for it in items:
-        if it["status"] != "earned":
+        if it["status"] not in ("earned", "declared"):
             continue
         if it["signal_id"] in replaced_ids:
             continue
-        total += it["points"]
+        # Use awarded_points for declared; full points for earned
+        total += it.get("awarded_points", it["points"])
     return total
 
 
@@ -4951,6 +4995,8 @@ async def upload_seller_document(
 
     conn = database.get_db()
     auto_earned = False
+    evidence_pts_awarded = 0
+    declaration_completed = False
     try:
         conn.execute(
             """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
@@ -4963,14 +5009,35 @@ async def upload_seller_document(
             # ── Auto-earn strategy (no human in the loop) ────────────────
             # ID documents: set pending now; verify-identity endpoint runs
             #   Sonnet vision and auto-earns on confidence >= 0.60
+            # Declared signals: seller already earned declaration_points (80%).
+            #   Upload earns the remaining evidence_points (20%) by upgrading
+            #   the credential from 'declared' → 'earned'.
             # All other doc types: auto-earn immediately (self-attestation).
-            #   If seller has a verified ID name on file, also queue a
-            #   background cert-name-check that can earn cert_name_verified.
             is_id_doc = doc_type == "id_doc"
-            initial_status = "pending" if is_id_doc else "earned"
+            # Check if this signal was already declared (80% already awarded)
+            existing_cred = conn.execute(
+                "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+                (email, effective_signal)
+            ).fetchone()
+            already_declared = existing_cred and existing_cred["status"] == "declared"
+
+            if is_id_doc:
+                initial_status = "pending"
+            else:
+                initial_status = "earned"
+
             _upsert_credential(conn, email, effective_signal, initial_status)
+
             if not is_id_doc:
                 auto_earned = True
+
+            # If upgrading from declared → earned, note it for the response
+            if already_declared and not is_id_doc:
+                declaration_completed = True
+                for _cat_sigs in ALL_TRUST_SIGNALS.values():
+                    if effective_signal in _cat_sigs:
+                        evidence_pts_awarded = _cat_sigs[effective_signal].get("evidence_points", 0)
+                        break
 
         conn.commit()
     finally:
@@ -4992,9 +5059,14 @@ async def upload_seller_document(
                 _run_cert_name_check, email, url, id_name, doc_type
             )
 
-    return {"id": doc_id, "url": url, "doc_type": doc_type, "label": label or orig_name,
-            "visibility": visibility, "signal_id": effective_signal,
-            "auto_earned": auto_earned}
+    # Build response — include evidence_points_awarded if this completed a declaration
+    return {
+        "id": doc_id, "url": url, "doc_type": doc_type, "label": label or orig_name,
+        "visibility": visibility, "signal_id": effective_signal,
+        "auto_earned": auto_earned,
+        "evidence_points_awarded": evidence_pts_awarded,
+        "declaration_completed": declaration_completed,
+    }
 
 
 @app.get("/users/{email}/documents")
@@ -5058,6 +5130,129 @@ def delete_seller_document(
     conn.commit()
     conn.close()
     return {"deleted": doc_id}
+
+
+# ── TRUST SCORE: DECLARATION ENDPOINT ────────────────────────────────────────
+
+class DeclarationIn(BaseModel):
+    signal_id: str
+    declaration_text: str
+
+@app.post("/users/{email}/declare")
+def declare_credential(
+    email: str,
+    payload: DeclarationIn,
+    _key: str = Depends(auth.require_api_key),
+):
+    """Record a free-text declaration for a declarable signal.
+
+    Awards `declaration_points` (80%) immediately and records the declaration
+    text as an audit trail.  The remaining `evidence_points` (20%) are awarded
+    later when the seller uploads documentary evidence.
+
+    Returns:
+        points_awarded      — declaration_points credited now
+        evidence_points     — points that can still be earned by uploading evidence
+        next_step_message   — human-readable prompt for what to upload
+        total_possible      — full signal value (declaration + evidence)
+    """
+    email = email.lower().strip()
+
+    # Resolve signal definition
+    signal_def = None
+    for cat_signals in ALL_TRUST_SIGNALS.values():
+        if payload.signal_id in cat_signals:
+            signal_def = cat_signals[payload.signal_id]
+            break
+
+    if signal_def is None:
+        raise HTTPException(status_code=404, detail=f"Signal '{payload.signal_id}' not found")
+
+    declaration_points = signal_def.get("declaration_points")
+    evidence_points    = signal_def.get("evidence_points", 0)
+
+    if declaration_points is None:
+        raise HTTPException(
+            status_code=400,
+            detail="This signal does not support declarations — upload a document instead."
+        )
+
+    if not payload.declaration_text or len(payload.declaration_text.strip()) < 10:
+        raise HTTPException(
+            status_code=422,
+            detail="Declaration text must be at least 10 characters."
+        )
+
+    conn = database.get_db()
+
+    # Check seller exists
+    seller = conn.execute("SELECT email FROM users WHERE email=?", (email,)).fetchone()
+    if not seller:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    # Idempotency: if already declared for this signal, return current state
+    existing_decl = conn.execute(
+        "SELECT id, points_awarded FROM user_declarations WHERE email=? AND signal_id=?",
+        (email, payload.signal_id)
+    ).fetchone()
+
+    existing_cred = conn.execute(
+        "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+        (email, payload.signal_id)
+    ).fetchone()
+
+    if existing_cred and existing_cred["status"] == "earned":
+        conn.close()
+        return {
+            "points_awarded": 0,
+            "evidence_points": evidence_points,
+            "next_step_message": "This credential is already fully earned.",
+            "total_possible": signal_def.get("points", declaration_points + evidence_points),
+            "already_complete": True,
+        }
+
+    if existing_decl:
+        # Already declared — update the declaration text but don't re-award points
+        conn.execute(
+            "UPDATE user_declarations SET declaration=?, declared_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE email=? AND signal_id=?",
+            (payload.declaration_text.strip(), email, payload.signal_id)
+        )
+        conn.commit()
+        conn.close()
+        return {
+            "points_awarded": 0,
+            "evidence_points": evidence_points,
+            "next_step_message": signal_def.get("how_to_earn", "Upload evidence to claim the remaining points."),
+            "total_possible": signal_def.get("points", declaration_points + evidence_points),
+            "already_declared": True,
+        }
+
+    # First-time declaration — insert record and award points
+    conn.execute(
+        """INSERT INTO user_declarations (email, signal_id, declaration, points_awarded)
+           VALUES (?, ?, ?, ?)""",
+        (email, payload.signal_id, payload.declaration_text.strip(), declaration_points)
+    )
+
+    # Upsert credential to 'declared' status so upload logic awards evidence_points only
+    _upsert_credential(conn, email, payload.signal_id, "declared")
+
+    conn.commit()
+    conn.close()
+
+    next_step = signal_def.get(
+        "how_to_earn",
+        f"Upload supporting evidence to claim the remaining {evidence_points} pt(s)."
+    )
+
+    return {
+        "points_awarded": declaration_points,
+        "evidence_points": evidence_points,
+        "next_step_message": next_step,
+        "total_possible": signal_def.get("points", declaration_points + evidence_points),
+        "already_declared": False,
+    }
 
 
 # ── SELLER DOCUMENTS ─────────────────────────────────────────────────────────

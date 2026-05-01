@@ -1046,3 +1046,30 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 - New seller, no evidence: **40** (Established, can trade)
 
 ### UI: Trust Score progress bar now shows grey base (40) + coloured earned segment
+
+## Session 36 — Declaration System + Trust Score Live Updates
+
+### Changes
+- **BEA: Declaration endpoint** — `POST /users/{email}/declare` records a free-text declaration, awards `declaration_points` (80%) immediately, sets credential to `declared` status. Idempotent: re-declaring updates text but does not re-award points.
+- **BEA: Evidence upgrade** — `upload_seller_document` now detects if target signal is already `declared` and upgrades to `earned` on upload. Response includes `evidence_points_awarded` and `declaration_completed` flags.
+- **BEA: Stacking signal chains** — `_DOC_TYPE_SIGNAL_CHAINS` routes each upload of the same doc type to the next unfilled slot (e.g. 3 certificates fill cert_1, cert_2, cert_3 in sequence).
+- **BEA: Breakdown includes declaration fields** — `_build_breakdown_items` now returns `declaration_points`, `evidence_points`, `awarded_points`, `evidence_points_remaining`, `has_declaration`, `declaration_prompt` per item.
+- **BEA: Declared status counted in score** — `_sum_earned_with_replaces` counts both `earned` (full pts) and `declared` (partial pts via `awarded_points`) credentials.
+- **BEA: 40-pt base for local market** — local_market sellers start at 40 pts (Established immediately); earned credentials push above this; penalties can pull below.
+- **BEA: Auto-earn AI comment** — `POST /trust-score/upload-comment` returns personalised 2-sentence Haiku 4.5 feedback after each upload.
+- **BEA: DB** — `user_declarations` table added (auto-created on restart): stores free-text declaration, signal_id, points_awarded, timestamp.
+- **Frontend: Declaration cards** — Doc Hub now shows amber "Declare" cards for each declarable signal not yet earned. Seller writes free text and clicks "Declare — Earn +X pts immediately". Cards turn green after declaration, showing evidence upload nudge.
+- **Frontend: Live Trust Score refresh** — After declaration or upload, both the Trust Score panel and Doc Hub reload automatically so the new score is visible immediately.
+- **Frontend: Correct pts display** — Declaration button shows `declaration_points` (80%) not total; evidence hint shows remaining `evidence_points` (20%).
+
+### Signal point structure (local market)
+| Signal | Total | Declare | Evidence |
+|---|---|---|---|
+| Named role in association | 15 | 12 | 3 |
+| Govt/regulatory appointment | 10 | 8 | 2 |
+| Second association membership | 6 | 5 | 1 |
+| 5+ years experience | 3 | 2 | 1 |
+
+### Deployment
+- `bea_main.py` → `/var/www/marketsquare/main.py` · BEA restarted active
+- `marketsquare.html` → `/var/www/marketsquare/index.html`

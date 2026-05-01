@@ -6691,10 +6691,27 @@ async function elLoadSidebarPanels(email, category) {
     dhSec.style.display = 'block';
     dhSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading documents…</div>';
     try {
-      const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY);
-      dhSec.innerHTML = elRenderDocHub(docs || [], email);
+      const [docs, tsData] = await Promise.all([
+        apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
+        apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email)).catch(() => null)
+      ]);
+      // Extract declarable signals from all category items
+      const declarableItems = [];
+      if (tsData && tsData.groups) {
+        const allItems = [
+          ...(tsData.groups.category?.items || []),
+          ...(tsData.groups.universal?.items || []),
+          ...(tsData.groups.track_record?.items || []),
+        ];
+        allItems.forEach(it => {
+          if (it.has_declaration && it.status !== 'earned') {
+            declarableItems.push(it);
+          }
+        });
+      }
+      dhSec.innerHTML = elRenderDocHub(docs || [], email, declarableItems);
     } catch(e) {
-      dhSec.innerHTML = elRenderDocHub([], email);
+      dhSec.innerHTML = elRenderDocHub([], email, []);
     }
   }
 }
@@ -6986,7 +7003,8 @@ const EL_DOC_STACKING = {
   id_doc:            { slots: 1, pts: [9],          hint: 'ID upload + AI verification = up to 9 pts' },
 };
 
-function elRenderDocHub(docs, email) {
+function elRenderDocHub(docs, email, declarableItems) {
+  declarableItems = declarableItems || [];
   const typeOpts = Object.entries(EL_DOC_LABELS)
     .map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
 
@@ -7001,6 +7019,65 @@ function elRenderDocHub(docs, email) {
     </div>`).join('')
     : '<div style="font-size:12px;color:var(--text-3);padding:4px 0 10px;">No documents uploaded yet.</div>';
 
+  // ── Declaration cards ─────────────────────────────────────────────────────
+  // One card per declarable signal that hasn't been fully earned yet.
+  // Status 'missing' → declare form. Status 'declared' → evidence nudge.
+  const declCards = declarableItems.map(it => {
+    const sigId = it.signal_id;
+    const safeId = sigId.replace(/\./g, '_');
+    const declPts = it.declaration_points || (it.points - (it.evidence_points || 0));
+    const evPts   = (it.status === 'declared') ? (it.evidence_points_remaining || 0) : (it.evidence_points || 0);
+
+    if (it.status === 'declared') {
+      // Already declared — nudge to upload evidence
+      return `
+      <div id="decl-card-${safeId}" style="border:1.5px solid #86efac;border-radius:10px;padding:11px 13px;margin-bottom:8px;background:#f0fdf4;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#166534;">✅ Declared — <strong>+${declPts} pts</strong> earned</div>
+            <div style="font-size:12px;color:#374151;margin-top:2px;">${it.name}</div>
+          </div>
+          <div style="font-size:11px;color:#059669;font-weight:700;white-space:nowrap;">+${declPts} pts</div>
+        </div>
+        ${evPts > 0 ? `
+        <div style="margin-top:8px;background:#ecfdf5;border:1px dashed #6ee7b7;border-radius:7px;padding:8px 10px;font-size:11px;color:#065f46;line-height:1.5;">
+          📎 <strong>Upload evidence to earn the final ${evPts} pt${evPts>1?'s':''}.</strong><br>
+          ${it.how_to_earn || 'Upload a supporting document to complete this credential.'}
+        </div>` : ''}
+        <div id="decl-status-${safeId}" style="font-size:11px;color:var(--text-3);margin-top:4px;min-height:0;"></div>
+      </div>`;
+    }
+
+    // Not yet declared — show declaration form
+    const prompt = it.declaration_prompt || 'Describe your experience or qualification in your own words.';
+    return `
+    <div id="decl-card-${safeId}" style="border:1.5px solid #fbbf24;border-radius:10px;padding:11px 13px;margin-bottom:8px;background:#fffbeb;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#92400e;">📝 Declare to earn <strong>+${declPts} pts now</strong></div>
+          <div style="font-size:12px;color:#374151;margin-top:2px;">${it.name}</div>
+        </div>
+        <div style="font-size:11px;color:#d97706;font-weight:700;white-space:nowrap;">+${declPts}${evPts>0?` / ${it.points}`:''} pts</div>
+      </div>
+      <textarea id="decl-text-${safeId}" rows="3" placeholder="${prompt}"
+        style="width:100%;box-sizing:border-box;background:#fff;border:1.5px solid #fde68a;border-radius:7px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical;outline:none;color:#374151;"></textarea>
+      ${evPts > 0 ? `<div style="font-size:10px;color:#92400e;margin-top:4px;">After declaring, upload evidence to earn the remaining <strong>+${evPts} pt${evPts>1?'s':''}</strong>.</div>` : ''}
+      <div id="decl-status-${safeId}" style="font-size:11px;color:var(--text-3);min-height:14px;margin-top:4px;"></div>
+      <button onclick="elSubmitDeclaration('${email}','${sigId}')"
+        style="margin-top:8px;width:100%;background:#d97706;color:#fff;border:none;border-radius:50px;padding:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+        Declare — Earn +${declPts} pts immediately
+      </button>
+    </div>`;
+  }).join('');
+
+  const declSection = declarableItems.length ? `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;">📝 Professional Declarations</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">Declare your role or experience to earn most points immediately. Upload evidence afterwards to complete each credential.</div>
+      ${declCards}
+    </div>
+    <div style="border-top:1px solid var(--border);margin-bottom:12px;"></div>` : '';
+
   return `
   <div style="border:1.5px solid #e0e7ff;border-radius:12px;overflow:hidden;">
     <div style="background:#f0f4ff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -7009,6 +7086,7 @@ function elRenderDocHub(docs, email) {
     </div>
     <div style="padding:12px 14px;">
       <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Private docs used for Trust Score verification. Tick "Visible after intro" to share with buyers.</div>
+      ${declSection}
       ${rows}
       <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:12px;">
         <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Upload new document</div>
@@ -7046,6 +7124,41 @@ function elUpdateDocHint(docType) {
   }
 }
 
+async function elSubmitDeclaration(email, signalId) {
+  const safeId  = signalId.replace(/\./g, '_');
+  const textarea = document.getElementById('decl-text-' + safeId);
+  const statusEl = document.getElementById('decl-status-' + safeId);
+  const card     = document.getElementById('decl-card-' + safeId);
+  if (!textarea) return;
+  const text = textarea.value.trim();
+  if (text.length < 10) {
+    if (statusEl) statusEl.textContent = 'Please write at least a sentence describing your experience.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = '⏳ Submitting…';
+  try {
+    const res = await apiPostAuth('/users/' + encodeURIComponent(email) + '/declare', {
+      signal_id: signalId,
+      declaration_text: text
+    });
+    if (res && res.points_awarded > 0) {
+      if (statusEl) statusEl.innerHTML =
+        `<span style="color:#059669;font-weight:700;">✅ +${res.points_awarded} pts earned!</span>`;
+      // Refresh both Trust Score panel and Doc Hub after a short delay
+      setTimeout(async () => {
+        await elLoadSidebarPanels(email, elCurrentCat);
+      }, 600);
+    } else if (res && res.already_declared) {
+      if (statusEl) statusEl.textContent = 'Already declared — declaration text updated.';
+    } else {
+      if (statusEl) statusEl.textContent = res?.next_step_message || '✅ Submitted.';
+      setTimeout(() => elLoadSidebarPanels(email, elCurrentCat), 800);
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = '⚠️ Could not submit — please try again.';
+  }
+}
+
 async function elDocHubUpload(email) {
   const fileInput = document.getElementById('el-dh-file');
   const docType   = document.getElementById('el-dh-type')?.value || 'other';
@@ -7067,10 +7180,22 @@ async function elDocHubUpload(email) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const uploadData = await r.json().catch(() => ({}));
     if (status) status.textContent = '✅ Uploaded — fetching AI feedback…';
-    // Reload doc list
-    const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []);
+    // Reload doc list + re-fetch declarations state
+    const [docs, tsDataUp] = await Promise.all([
+      apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
+      apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email)).catch(() => null)
+    ]);
     const dhSec = document.getElementById('el-dochub-section');
-    if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email);
+    const declarableItemsUp = [];
+    if (tsDataUp && tsDataUp.groups) {
+      const allItemsUp = [
+        ...(tsDataUp.groups.category?.items || []),
+        ...(tsDataUp.groups.universal?.items || []),
+        ...(tsDataUp.groups.track_record?.items || []),
+      ];
+      allItemsUp.forEach(it => { if (it.has_declaration && it.status !== 'earned') declarableItemsUp.push(it); });
+    }
+    if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email, declarableItemsUp);
     // AI comment on this upload
     try {
       const commentRes = await apiPostAuth('/trust-score/upload-comment', {
@@ -9792,7 +9917,6 @@ async function lmSubmitIntro(listingId, name, email, message) {
     if (resp.status === 410) { showToast('This listing has been suspended and is no longer accepting introductions.'); return; }
     if (resp.status === 402) { showToast('The seller does not have enough Tuppence right now. Please try again later.'); return; }
     if (resp.status === 429) { showToast('You already requested an introduction on this listing recently. Please wait 7 days.'); return; }
-    if (!resp.ok) { const t = await resp.text(); throw new Error(resp.status + ' ' + t); }
     showToast('✓ Introduction requested · seller has 48hrs to respond');
   } catch(e) {
     showToast('Could not submit introduction: ' + e.message);
