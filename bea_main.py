@@ -5034,7 +5034,7 @@ async def upload_seller_document(
             # If upgrading from declared → earned, note it for the response
             if already_declared and not is_id_doc:
                 declaration_completed = True
-                for _cat_sigs in ALL_TRUST_SIGNALS.values():
+                for _cat_sigs in [_TRUST_SIGNALS] + list(_CATEGORY_SIGNALS.values()):
                     if effective_signal in _cat_sigs:
                         evidence_pts_awarded = _cat_sigs[effective_signal].get("evidence_points", 0)
                         break
@@ -5160,7 +5160,7 @@ def declare_credential(
 
     # Resolve signal definition
     signal_def = None
-    for cat_signals in ALL_TRUST_SIGNALS.values():
+    for cat_signals in [_TRUST_SIGNALS] + list(_CATEGORY_SIGNALS.values()):
         if payload.signal_id in cat_signals:
             signal_def = cat_signals[payload.signal_id]
             break
