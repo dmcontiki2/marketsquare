@@ -940,3 +940,14 @@ Category tiles on the home screen now show representative full-cover Unsplash ph
 Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/load-error cases. `.cat-overlay` gradient keeps category name and listing count legible over any photo. Category photo URLs also added to `CATS` config as `catPhoto` and used as fallback in `cardHtml()` when a live listing has no uploaded photo.
 
 **Deploy:** `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html` · `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` · `ssh root@178.104.73.239 "systemctl restart marketsquare"`
+
+## Session 35 (continued) — Edit Screen: Multi-photo, Document Hub, Trust Score + AI Guidance
+
+### marketsquare.html (buyer app seller self-edit screen)
+- **Multi-photo management on edit screen**: `elRenderPhotos()` now reads `photo_urls` JSON array (falls back to `medium_url`/`thumb_url`). Shows all photos with 🔄 Replace + ✕ Remove buttons plus an "+ Add Photo" card (up to 10 photos). `elRemovePhoto(idx)` splices `_elPhotoUrls` and auto-saves. `elAddPhoto(event)` uploads to `/listings/photo`, pushes URL, auto-saves via PUT.
+- **Trust Score panel on edit screen**: `elLoadSidebarPanels()` loads score bar, tier label, and Haiku tip into `el-tsh-section` on edit open (GET `/trust-score/breakdown`).
+- **AI Guidance panel on edit screen**: POST `/trust-score/guidance` loads personalised action plan into `el-aiguidance-section` so the seller knows exactly what evidence to upload next.
+- **Document Hub on edit screen**: `elRenderDocHub()` renders full upload + listing in `el-dochub-section`. `elDocHubUpload()` uploads doc and refreshes Trust Score + Doc Hub in one pass.
+- **`_elPhotoUrls` module-level array**: tracks photo state during edit session; `saveEditedListing()` now includes `photo_urls: JSON.stringify(_elPhotoUrls)` in PUT payload.
+- **`apiPost` helper**: added for clean JSON POST calls with API key header.
+- Deployed to trustsquare.co (index.html). 9740 lines, tail verified.

@@ -22,24 +22,17 @@
 
 ---
 
-## Last Completed Session · Session 35 (1 May 2026) — Multi-city seller reach
+## Last Completed Session · Session 35 (1 May 2026) — Edit Screen Full Feature Parity
 
-- listing_cities table + seller_tier column on users (free/starter/premium) ✅
-- POST /listings/{id}/cities: tier-gate (free→402), seller confirmation recorded ✅
-- GET /listings now UNIONs home city + extended cities for buyer browse ✅
-- GET /geo/cities: q= search param added for typeahead ✅
-- Admin: "Extend City Reach" panel after publish — city search, confirm, add/remove ✅
-- All smoke-tested on live server ✅
-- HEAD: commit pending
-
----
-
-## Previous Session · Session 34 (1 May 2026) — KYC + Document Hub
-
-- KYC: SA ID Luhn + Sonnet vision verify-identity, banking name-match, cert name-match (background) ✅
-- Document Hub: 9 doc types, visibility toggle, ID verify inline panel ✅
-- 12 LM Trust Score signals · listing_cities table · seller_tier column ✅
-
+- **Buyer app edit screen** (`screen-edit-listing` in marketsquare.html): ✅
+  - Multi-photo management: add, replace, remove (up to 10), auto-save via PUT
+  - Trust Score panel: score bar + tier label + Haiku tip loaded on edit open
+  - AI Guidance panel: personalised action plan from POST /trust-score/guidance
+  - Document Hub: full upload + listing, reloads Trust Score on new upload
+  - `_elPhotoUrls` module-level array; `saveEditedListing()` persists `photo_urls`
+- Multi-city seller reach: listing_cities, seller_tier, UNION browse query ✅
+- KYC: SA ID Luhn + Sonnet vision, banking name-match, cert name-match ✅
+- Deployed to trustsquare.co · HEAD: commit pending
 
 ---
 
@@ -48,7 +41,7 @@
 1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, set seller_tier via webhook on payment
 2. **n8n email notifications** — buyer emailed on intro accept/decline
 3. **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab
-4. **LM edit flow** — multi-photo management + Document Hub in edit-after-publish screen
+4. **LM edit flow** — multi-photo management + Document Hub in LM edit-after-publish screen
 5. **KYC cost analysis** — Sonnet vision tokens per verification vs PaddleOCR on-server
 6. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 

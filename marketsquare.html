@@ -3515,8 +3515,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div class="el-photos-label">Current Photos</div>
       <div id="el-photo-row" class="el-photo-row"></div>
       <input type="file" id="el-photo-inp" accept="image/*" style="display:none" onchange="elReplacePhoto(event)">
+      <input type="file" id="el-photo-add-inp" accept="image/*" style="display:none" onchange="elAddPhoto(event)">
     </div>
     <div id="el-form-fields"></div>
+    <!-- Trust Score panel -->
+    <div id="el-tsh-section" style="margin-top:20px;display:none;"></div>
+    <!-- AI Guidance panel -->
+    <div id="el-aiguidance-section" style="margin-top:12px;display:none;"></div>
+    <!-- Document Hub -->
+    <div id="el-dochub-section" style="margin-top:12px;display:none;"></div>
   </div>
   <div class="el-footer">
     <button class="el-cancel-btn" onclick="goTo('dashboard')">Cancel</button>
@@ -6605,6 +6612,81 @@ async function openEditListing(beaId) {
   renderEditForm(elCurrentRaw);
   elRenderPhotos(elCurrentRaw, '');
   goTo('edit-listing');
+
+  // Load Trust Score + Document Hub + AI Guidance after navigation
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (sellerEmail) {
+    setTimeout(() => elLoadSidebarPanels(sellerEmail, elCurrentCat), 200);
+  }
+}
+
+async function elLoadSidebarPanels(email, category) {
+  // ── Trust Score panel ──
+  const tshSec = document.getElementById('el-tsh-section');
+  if (tshSec) {
+    tshSec.style.display = 'block';
+    tshSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading Trust Score…</div>';
+    try {
+      const ts = await apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email));
+      if (ts && ts.score !== undefined) {
+        const tierColor = ts.tier_color === 'green' ? '#059669' : ts.tier_color === 'blue' ? '#2563eb' : '#6b7280';
+        const next = ts.next_tier
+          ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Next: <strong>${ts.next_tier.name}</strong> — ${ts.next_tier.delta} more pts</div>`
+          : '';
+        const tip = ts.haiko_tip
+          ? `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12px;color:#92400e;line-height:1.5;">
+               💡 <strong>Best next step:</strong> ${ts.haiko_tip.text}
+               ${ts.haiko_tip.points_available ? '<div style="margin-top:4px;font-weight:700;">+' + ts.haiko_tip.points_available + ' pts available</div>' : ''}
+             </div>` : '';
+        tshSec.innerHTML = `
+          <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--surface-2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;font-weight:700;color:var(--text);">⭐ Trust Score</div>
+              <div style="font-size:13px;font-weight:700;color:${tierColor};">${ts.score} / 100</div>
+            </div>
+            <div style="padding:10px 14px;">
+              <div style="background:var(--surface-2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px;">
+                <div style="background:${tierColor};width:${ts.score}%;height:100%;border-radius:4px;"></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:${tierColor};">${ts.tier || ''}</div>
+              ${next}${tip}
+            </div>
+          </div>`;
+      } else { tshSec.style.display = 'none'; }
+    } catch(e) { tshSec.style.display = 'none'; }
+  }
+
+  // ── AI Guidance panel ──
+  const agSec = document.getElementById('el-aiguidance-section');
+  if (agSec && category) {
+    agSec.style.display = 'block';
+    agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">✨ Generating Trust Score action plan…</div>';
+    try {
+      const g = await apiPost('/trust-score/guidance', { email, category });
+      if (g && g.guidance) {
+        agSec.innerHTML = `
+          <div style="border:1.5px solid #a78bfa;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#f5f3ff,#ede9fe);">
+            <div style="padding:10px 14px;font-size:13px;font-weight:700;color:#5b21b6;">✨ Trust Score Action Plan</div>
+            <div style="padding:0 14px 12px;font-size:12px;color:#374151;line-height:1.6;">${g.guidance.replace(/
+/g,'<br>')}</div>
+          </div>`;
+      } else { agSec.style.display = 'none'; }
+    } catch(e) { agSec.style.display = 'none'; }
+  }
+
+  // ── Document Hub ──
+  const dhSec = document.getElementById('el-dochub-section');
+  if (dhSec) {
+    dhSec.style.display = 'block';
+    dhSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading documents…</div>';
+    try {
+      const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents',
+        { headers: { 'X-Api-Key': API_KEY } });
+      dhSec.innerHTML = elRenderDocHub(docs || [], email);
+    } catch(e) {
+      dhSec.innerHTML = elRenderDocHub([], email);
+    }
+  }
 }
 
 // Resolve the field list for a given category + service class
@@ -6722,17 +6804,26 @@ function elApplySuggestion(fieldId) {
 
 let _elPhotoWarning = '';  // AI photo feedback text, set by editAISuggest
 
+// Module-level photo array for the listing being edited
+let _elPhotoUrls = [];
+
 function elRenderPhotos(raw, photoWarning) {
   const section  = document.getElementById('el-photos-section');
   const photoRow = document.getElementById('el-photo-row');
   if (!section || !photoRow) return;
 
-  // Collect all available photo URLs from the listing
-  const photos = [];
-  if (raw.medium_url) photos.push({ url: raw.medium_url, label: 'Main photo' });
-  else if (raw.thumb_url) photos.push({ url: raw.thumb_url, label: 'Main photo' });
-
-  if (!photos.length) { section.style.display = 'none'; return; }
+  // Build photo list — prefer photo_urls array, fall back to single medium/thumb
+  _elPhotoUrls = [];
+  try {
+    if (raw.photo_urls) {
+      const parsed = typeof raw.photo_urls === 'string' ? JSON.parse(raw.photo_urls) : raw.photo_urls;
+      if (Array.isArray(parsed) && parsed.length) _elPhotoUrls = parsed;
+    }
+  } catch(e) {}
+  if (!_elPhotoUrls.length) {
+    if (raw.medium_url) _elPhotoUrls = [raw.medium_url];
+    else if (raw.thumb_url) _elPhotoUrls = [raw.thumb_url];
+  }
 
   section.style.display = 'block';
   const warnLower = (photoWarning || '').toLowerCase();
@@ -6740,13 +6831,62 @@ function elRenderPhotos(raw, photoWarning) {
                         warnLower.includes('logo') || warnLower.includes('name') ||
                         warnLower.includes('text') || warnLower.includes('image');
 
-  photoRow.innerHTML = photos.map((p, i) => `
+  photoRow.innerHTML = _elPhotoUrls.map((url, i) => `
     <div class="el-photo-card" id="el-pcard-${i}">
-      <img src="${p.url}" alt="${p.label}">
-      ${hasPhotoIssue ? '<div class="el-photo-warn">!</div>' : ''}
-      <button class="el-photo-replace" onclick="elTriggerPhotoReplace(${i})">🔄 Replace</button>
-      ${hasPhotoIssue ? `<div class="el-photo-ai-note">⚠️ ${photoWarning}</div>` : ''}
-    </div>`).join('');
+      <img src="${url}" alt="Photo ${i+1}" referrerpolicy="no-referrer">
+      ${hasPhotoIssue && i===0 ? '<div class="el-photo-warn">!</div>' : ''}
+      <div style="display:flex;gap:4px;margin-top:5px;">
+        <button class="el-photo-replace" onclick="elTriggerPhotoReplace(${i})" style="flex:1;">🔄</button>
+        <button class="el-photo-replace" onclick="elRemovePhoto(${i})" style="flex:0 0 32px;color:#ef4444;">✕</button>
+      </div>
+      ${hasPhotoIssue && i===0 ? `<div class="el-photo-ai-note">⚠️ ${photoWarning}</div>` : ''}
+    </div>`).join('') +
+    (_elPhotoUrls.length < 10 ? `
+    <div class="el-photo-card" style="display:flex;align-items:center;justify-content:center;">
+      <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:120px;height:90px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;color:var(--text-3);font-size:11px;gap:4px;">
+        <span style="font-size:24px;">＋</span>Add Photo
+        <input type="file" accept="image/*" style="display:none" onchange="elAddPhoto(event)">
+      </label>
+    </div>` : '');
+
+  // Update photo status text
+  const statusEl = document.getElementById('el-photo-status');
+  if (statusEl) statusEl.textContent = _elPhotoUrls.length + ' photo' + (_elPhotoUrls.length !== 1 ? 's' : '');
+}
+
+function elRemovePhoto(idx) {
+  _elPhotoUrls.splice(idx, 1);
+  if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+  elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
+  showToast('Photo removed — tap Save Changes to apply');
+}
+
+async function elAddPhoto(event) {
+  const file = event.target.files[0];
+  if (!file || !elCurrentId) return;
+  if (_elPhotoUrls.length >= 10) { showToast('Maximum 10 photos'); return; }
+  showToast('⏳ Uploading photo…');
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch(BEA_URL + '/listings/photo', {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const data = await res.json();
+    _elPhotoUrls.push(data.medium_url || data.thumb_url);
+    if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+    elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
+    // Auto-save photos immediately
+    const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+    if (sellerEmail && elCurrentId) {
+      await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
+        { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo_urls: JSON.stringify(_elPhotoUrls) }) });
+    }
+    showToast('✅ Photo added and saved');
+  } catch(e) { showToast('Photo upload failed: ' + e.message); }
+  event.target.value = '';
 }
 
 let _elPhotoReplaceIdx = 0;
@@ -6813,6 +6953,101 @@ function _elCollectFields() {
 }
 
 // Save edited listing — PUT to BEA, versions the old data automatically
+// ── SELLER EDIT: DOCUMENT HUB ─────────────────────────────────────────────
+const EL_DOC_LABELS = {
+  id_doc:'🪪 ID / Passport', certificate:'🎓 Certificate', training:'📚 Training',
+  membership:'🏛 Professional Body', professional_role:'⭐ Official Role',
+  guide:'📖 Product Guide', recipe:'🍯 Recipe', presentation:'📊 Presentation', other:'📎 Other'
+};
+
+function elRenderDocHub(docs, email) {
+  const typeOpts = Object.entries(EL_DOC_LABELS)
+    .map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+
+  const rows = docs.length ? docs.map(d => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--surface-2);border-radius:8px;margin-bottom:6px;">
+      <div style="font-size:20px;">${(EL_DOC_LABELS[d.doc_type]||'📎').split(' ')[0]}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.label}</div>
+        <div style="font-size:11px;color:var(--text-3);">${EL_DOC_LABELS[d.doc_type]||d.doc_type} · <span style="color:${d.visibility==='post_intro'?'#059669':'#9ca3af'}">${d.visibility==='post_intro'?'👁 Visible after intro':'🔒 Private'}</span></div>
+      </div>
+      <a href="${d.url}" target="_blank" style="font-size:11px;color:var(--navy);text-decoration:none;">View</a>
+    </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text-3);padding:4px 0 10px;">No documents uploaded yet.</div>';
+
+  return `
+  <div style="border:1.5px solid #e0e7ff;border-radius:12px;overflow:hidden;">
+    <div style="background:#f0f4ff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:13px;font-weight:700;color:#1e3a8a;">📁 Trust Score Documents</div>
+      <div style="font-size:11px;color:#6b7280;">Certificates · ID · Guides</div>
+    </div>
+    <div style="padding:12px 14px;">
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Private docs used for Trust Score verification. Tick "Visible after intro" to share with buyers.</div>
+      ${rows}
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Upload new document</div>
+        <div style="display:grid;gap:8px;">
+          <select id="el-dh-type" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;">${typeOpts}</select>
+          <input type="text" id="el-dh-label" placeholder="Label (e.g. 'Beekeeping Certificate')"
+            style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" id="el-dh-postintro" style="width:15px;height:15px;accent-color:var(--green);">
+            Visible to buyer after introduction
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1.5px dashed var(--border);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;color:var(--text-3);">
+            📎 Choose file
+            <input type="file" id="el-dh-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" style="display:none;">
+          </label>
+          <div id="el-dh-status" style="font-size:11px;color:var(--text-3);min-height:14px;"></div>
+          <button onclick="elDocHubUpload('${email}')" style="background:var(--navy);color:#fff;border:none;border-radius:50px;padding:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Upload Document</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function elDocHubUpload(email) {
+  const fileInput = document.getElementById('el-dh-file');
+  const docType   = document.getElementById('el-dh-type')?.value || 'other';
+  const label     = document.getElementById('el-dh-label')?.value.trim() || '';
+  const postIntro = document.getElementById('el-dh-postintro')?.checked;
+  const status    = document.getElementById('el-dh-status');
+  if (!fileInput?.files?.length) { if (status) status.textContent = 'Please choose a file first.'; return; }
+  if (status) status.textContent = '⏳ Uploading…';
+  const fd = new FormData();
+  fd.append('file', fileInput.files[0]);
+  fd.append('doc_type', docType);
+  fd.append('label', label || fileInput.files[0].name);
+  fd.append('visibility', postIntro ? 'post_intro' : 'private');
+  try {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents', {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
+    // Reload doc list
+    const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents',
+      { headers: { 'X-Api-Key': API_KEY } }).catch(() => []);
+    const dhSec = document.getElementById('el-dochub-section');
+    if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email);
+    // Reload Trust Score panel
+    elLoadSidebarPanels(email, elCurrentCat);
+  } catch(e) {
+    if (status) status.textContent = '❌ Upload failed: ' + e.message;
+  }
+}
+
+// Helper: POST JSON and return parsed response
+async function apiPost(path, body) {
+  const r = await fetch(BEA_URL + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('API ' + r.status);
+  return r.json();
+}
+
 async function saveEditedListing() {
   if (!elCurrentId) return;
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
@@ -6847,6 +7082,10 @@ async function saveEditedListing() {
   if (fd.service_class) payload.service_class = fd.service_class;
   if (fd.service_type)  payload.service_type  = fd.service_type;
   if (fd.availability)  payload.availability  = fd.availability;
+  // Include updated photo_urls if photos were changed
+  if (_elPhotoUrls && _elPhotoUrls.length) {
+    payload.photo_urls = JSON.stringify(_elPhotoUrls);
+  }
 
   try {
     const res = await fetch(
@@ -9381,7 +9620,7 @@ function openLMModal() {
 
 // Open seller profile screen for a Local Market listing.
 // Uses _lmCurrentListing — no ID argument needed.
-function openLMSellerProfile() {
+async function openLMSellerProfile() {
   const c = _lmCurrentListing;
   if (!c) return;
   const trust = c.trust_score || 0;
@@ -9389,6 +9628,8 @@ function openLMSellerProfile() {
   const active = document.querySelector('.screen.active');
   prevScreen = active ? active.id.replace('screen-', '') : 'local-market-detail';
   const loc = c.suburb || c.city || '';
+
+  // Render immediately with loading placeholder for docs section
   document.getElementById('screen-seller-cv').innerHTML =
     `<div class="cv-hero" style="background:#1f2937">` +
       `<button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>` +
@@ -9403,8 +9644,8 @@ function openLMSellerProfile() {
     `</div>` +
     `<div class="cv-body">` +
       (c.description ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${_lmEsc(c.description)}</p></div>` : '') +
-      `<div class="cv-sec"><div class="cv-sec-title">Credentials &amp; qualifications</div>` +
-        `<div style="font-size:12px;color:var(--text-3);">Seller credentials are verified and displayed here once Trust Score documents are submitted.</div>` +
+      `<div class="cv-sec" id="lm-cv-docs-section"><div class="cv-sec-title">Seller credentials &amp; documents</div>` +
+        `<div style="font-size:12px;color:var(--text-3);">⏳ Loading…</div>` +
       `</div>` +
       `<div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>` +
     `</div>` +
@@ -9415,6 +9656,44 @@ function openLMSellerProfile() {
       `</button>` +
     `</div>`;
   goTo('seller-cv');
+
+  // Async: fetch post-intro documents and render into credentials section
+  const docSection = document.getElementById('lm-cv-docs-section');
+  if (!docSection) return;
+  try {
+    const sellerEmail = c.seller_email || '';
+    // Use public endpoint — no API key needed, returns only post_intro docs
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail) + '/documents/public');
+    const docs = r.ok ? await r.json() : [];
+    const DOC_ICONS = {
+      id_doc:'🪪', certificate:'🎓', training:'📚', membership:'🏛',
+      professional_role:'⭐', guide:'📖', recipe:'🍯', presentation:'📊', other:'📎'
+    };
+    if (!docs.length) {
+      docSection.innerHTML =
+        `<div class="cv-sec-title">Seller credentials &amp; documents</div>` +
+        `<div style="font-size:12px;color:var(--text-3);">Seller credentials and evidence documents will appear here once submitted.</div>`;
+      return;
+    }
+    const docRows = docs.map(d =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">` +
+        `<div style="font-size:22px;flex-shrink:0;">${DOC_ICONS[d.doc_type] || '📎'}</div>` +
+        `<div style="flex:1;min-width:0;">` +
+          `<div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_lmEsc(d.label)}</div>` +
+          `<div style="font-size:11px;color:var(--text-3);margin-top:1px;">Shared by seller · 👁 Available after introduction</div>` +
+        `</div>` +
+        `<a href="${_lmEsc(d.url)}" target="_blank" rel="noopener" style="font-size:12px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:20px;padding:5px 10px;color:var(--text);text-decoration:none;flex-shrink:0;">View</a>` +
+      `</div>`
+    ).join('');
+    docSection.innerHTML =
+      `<div class="cv-sec-title">Seller credentials &amp; documents</div>` +
+      `<div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">These documents have been shared by the seller to help you make an informed introduction decision.</div>` +
+      docRows;
+  } catch(e) {
+    if (docSection) docSection.innerHTML =
+      `<div class="cv-sec-title">Seller credentials &amp; documents</div>` +
+      `<div style="font-size:12px;color:var(--text-3);">Could not load seller documents.</div>`;
+  }
 }
 
 // Low-level LM intro API call — called from submitIntro() when pendingLMIntroId is set.
