@@ -6679,8 +6679,7 @@ async function elLoadSidebarPanels(email, category) {
     dhSec.style.display = 'block';
     dhSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading documents…</div>';
     try {
-      const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents',
-        { headers: { 'X-Api-Key': API_KEY } });
+      const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY);
       dhSec.innerHTML = elRenderDocHub(docs || [], email);
     } catch(e) {
       dhSec.innerHTML = elRenderDocHub([], email);
@@ -6879,9 +6878,14 @@ async function elAddPhoto(event) {
     // Auto-save photos immediately
     const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
     if (sellerEmail && elCurrentId) {
+      const photoPayload = { photo_urls: JSON.stringify(_elPhotoUrls) };
+      if (_elPhotoUrls.length >= 1) {
+        photoPayload.thumb_url  = data.thumb_url  || _elPhotoUrls[0];
+        photoPayload.medium_url = data.medium_url || _elPhotoUrls[0];
+      }
       await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
         { method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo_urls: JSON.stringify(_elPhotoUrls) }) });
+          body: JSON.stringify(photoPayload) });
     }
     showToast('✅ Photo added and saved');
   } catch(e) { showToast('Photo upload failed: ' + e.message); }
@@ -7019,14 +7023,13 @@ async function elDocHubUpload(email) {
   fd.append('label', label || fileInput.files[0].name);
   fd.append('visibility', postIntro ? 'post_intro' : 'private');
   try {
-    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents', {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY, {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
     // Reload doc list
-    const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents',
-      { headers: { 'X-Api-Key': API_KEY } }).catch(() => []);
+    const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []);
     const dhSec = document.getElementById('el-dochub-section');
     if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email);
     // Reload Trust Score panel

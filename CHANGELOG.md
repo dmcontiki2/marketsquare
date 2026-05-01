@@ -951,3 +951,16 @@ Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/l
 - **`_elPhotoUrls` module-level array**: tracks photo state during edit session; `saveEditedListing()` now includes `photo_urls: JSON.stringify(_elPhotoUrls)` in PUT payload.
 - **`apiPost` helper**: added for clean JSON POST calls with API key header.
 - Deployed to trustsquare.co (index.html). 9740 lines, tail verified.
+
+## Session 36 — Document Hub + Photo fixes (2026-05-01)
+
+### Bugs fixed
+- **Document Hub 401 / empty** — Cloudflare strips `X-Api-Key` headers on GET requests before they reach the BEA. Fixed by: (1) adding `require_api_key_header_or_query` dependency to `auth.py` that accepts key as `?api_key=` query param; (2) updating `GET /users/{email}/documents`, `POST /users/{email}/documents`, and `DELETE /users/{email}/documents/{doc_id}` to use it; (3) updating all front-end document fetches to pass `?api_key=API_KEY` in the URL.
+- **Photo not persisting after edit-screen save** — `ListingUpdate` Pydantic model was missing `photo_urls`, `thumb_url`, and `medium_url` fields, so the PUT body was silently discarding them. Added all three fields. Also updated the auto-save on photo upload to send `thumb_url` / `medium_url` from the newly uploaded photo so listing card thumbnails update too.
+- **`apiGet` ignores options** — the function signature only takes `path`; callers passing `{ headers: { 'X-Api-Key': ... } }` as a second arg were being silently ignored. Fixed by moving auth to query param (see above).
+- **Listing 69 `photo_urls` backfilled** — updated DB directly to set `photo_urls` to the existing `medium_url` so the edit screen shows the correct photo strip on next open.
+
+### Files changed
+- `auth.py` — added `require_api_key_header_or_query` dependency
+- `bea_main.py` — document endpoints use new dependency; `ListingUpdate` gets `photo_urls`, `thumb_url`, `medium_url`
+- `marketsquare.html` — document fetches pass `?api_key=`; photo auto-save sends `thumb_url` + `medium_url`

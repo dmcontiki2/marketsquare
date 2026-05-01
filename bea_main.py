@@ -772,6 +772,9 @@ class ListingUpdate(BaseModel):
     service_class: Optional[str] = None
     service_type: Optional[str] = None
     availability: Optional[str] = None
+    photo_urls: Optional[str] = None    # JSON-encoded array of photo URLs
+    thumb_url: Optional[str] = None     # primary thumbnail
+    medium_url: Optional[str] = None    # primary medium photo
 
 class IntroRequest(BaseModel):
     listing_id: int
@@ -4739,7 +4742,7 @@ async def upload_seller_document(
     label: str = Form(""),
     visibility: str = Form("private"),
     signal_id: str = Form(None),
-    _key: str = Depends(auth.require_api_key),
+    _key: str = Depends(auth.require_api_key_header_or_query),
 ):
     """Upload a document for a seller. Stores to R2, records in seller_documents.
     If the doc_type maps to a Trust Score signal, auto-sets it to pending."""
@@ -4814,7 +4817,7 @@ async def upload_seller_document(
 @app.get("/users/{email}/documents")
 def list_seller_documents(
     email: str,
-    _key: str = Depends(auth.require_api_key),
+    _key: str = Depends(auth.require_api_key_header_or_query),
 ):
     """List all documents for a seller (admin-only view — all visibility levels)."""
     email = email.lower().strip()
@@ -4857,7 +4860,7 @@ def list_public_documents(email: str, intro_id: int = None):
 def delete_seller_document(
     email: str,
     doc_id: int,
-    _key: str = Depends(auth.require_api_key),
+    _key: str = Depends(auth.require_api_key_header_or_query),
 ):
     """Delete a document record (does not delete from R2 — orphan cleanup runs separately)."""
     email = email.lower().strip()
