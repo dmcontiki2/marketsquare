@@ -991,3 +991,27 @@ Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/l
 
 ### DB patch
 - Retroactively earned `category.lm.formal_cert`, `category.lm.training_course`, `category.lm.product_guide` for dmcontiki2@gmail.com — score: 26 → 34
+
+## Session 36d — Stacking Trust Score signals for Local Market (2026-05-01)
+
+### New features
+- **Stacking credentials** — uploading multiple relevant documents now earns points for each one, up to a per-type cap:
+  - Certificates/diplomas: 1st = 6 pts, 2nd = 4 pts, 3rd = 3 pts (max 3)
+  - Training courses: 1st = 4 pts, 2nd = 3 pts (max 2)
+  - Association memberships: 1st = 5 pts, 2nd = 4 pts (max 2)
+  - Product guides/recipes: 1st = 3 pts, 2nd = 2 pts, 3rd = 2 pts (max 3)
+- **Named role in association** — new `category.lm.assoc_role` signal (+7 pts) for secretary, chair, committee member etc. Upload an appointment letter, meeting minutes, or association confirmation. Higher value than plain membership.
+- **Smart signal routing** — `_next_signal_for_doc()` function checks which slots are already filled and routes each new upload to the correct next slot automatically. Sellers don't choose the slot — the system handles it.
+- **Doc Hub stacking hints** — selecting a document type in the upload form now shows a blue hint bar explaining how many uploads count and what each is worth (e.g. "Up to 3 counted — 6, 4, then 3 pts each").
+
+### Theoretical max score for a Local Market seller now
+Universal (30) + Track Record (30) + Category (40) = 100. Category breakdown:
+- Identity signals: up to ~33 pts
+- Credentials (3 certs + 2 training): up to 20 pts  
+- Memberships (2) + role (1): up to 16 pts
+- Guides (3) + media + social: up to 10 pts
+- Experience (5yr path): up to 8 pts
+
+### Files changed
+- `bea_main.py` — `local_market` signals expanded with stacking slots; `_DOC_TYPE_TO_SIGNAL` replaced by `_DOC_TYPE_SIGNAL_CHAINS` + `_next_signal_for_doc()`
+- `marketsquare.html` — `EL_DOC_LABELS` updated; `EL_DOC_STACKING` hints map added; `elUpdateDocHint()` shows hint on type select

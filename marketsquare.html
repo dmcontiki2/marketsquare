@@ -6966,9 +6966,20 @@ function _elCollectFields() {
 // Save edited listing — PUT to BEA, versions the old data automatically
 // ── SELLER EDIT: DOCUMENT HUB ─────────────────────────────────────────────
 const EL_DOC_LABELS = {
-  id_doc:'🪪 ID / Passport', certificate:'🎓 Certificate', training:'📚 Training',
-  membership:'🏛 Professional Body', professional_role:'⭐ Official Role',
-  guide:'📖 Product Guide', recipe:'🍯 Recipe', presentation:'📊 Presentation', other:'📎 Other'
+  id_doc:'🪪 ID / Passport', certificate:'🎓 Certificate / Diploma', training:'📚 Training Course',
+  membership:'🏛 Association / Body Membership', professional_role:'⭐ Named Role in Association',
+  guide:'📖 Product Guide', recipe:'🍯 Recipe / Care Instructions', presentation:'📊 Presentation', other:'📎 Other'
+};
+
+// Points available per doc type and how many uploads count
+const EL_DOC_STACKING = {
+  certificate:       { slots: 3, pts: [6, 4, 3], hint: 'Up to 3 counted — 6, 4, then 3 pts each' },
+  training:          { slots: 2, pts: [4, 3],    hint: 'Up to 2 counted — 4 then 3 pts' },
+  membership:        { slots: 2, pts: [5, 4],    hint: 'Up to 2 associations counted — 5 then 4 pts' },
+  professional_role: { slots: 2, pts: [7, 6],    hint: 'Named role (secretary/chair) 7 pts; official appointment 6 pts' },
+  guide:             { slots: 3, pts: [3, 2, 2], hint: 'Up to 3 counted — 3, 2, then 2 pts each' },
+  recipe:            { slots: 3, pts: [3, 2, 2], hint: 'Up to 3 counted — 3, 2, then 2 pts each' },
+  id_doc:            { slots: 1, pts: [15],       hint: 'ID + AI verification = up to 15 pts total' },
 };
 
 function elRenderDocHub(docs, email) {
@@ -6998,7 +7009,9 @@ function elRenderDocHub(docs, email) {
       <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:12px;">
         <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Upload new document</div>
         <div style="display:grid;gap:8px;">
-          <select id="el-dh-type" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;">${typeOpts}</select>
+          <select id="el-dh-type" onchange="elUpdateDocHint(this.value)"
+            style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;">${typeOpts}</select>
+          <div id="el-dh-hint" style="font-size:11px;color:#6b7280;background:#f0f9ff;border-radius:6px;padding:5px 9px;display:none;"></div>
           <input type="text" id="el-dh-label" placeholder="Label (e.g. 'Beekeeping Certificate')"
             style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
@@ -7015,6 +7028,18 @@ function elRenderDocHub(docs, email) {
       </div>
     </div>
   </div>`;
+}
+
+function elUpdateDocHint(docType) {
+  const hint = document.getElementById('el-dh-hint');
+  if (!hint) return;
+  const info = EL_DOC_STACKING[docType];
+  if (info) {
+    hint.textContent = '💡 ' + info.hint;
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
 }
 
 async function elDocHubUpload(email) {

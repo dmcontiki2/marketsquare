@@ -4146,10 +4146,14 @@ _CATEGORY_SIGNALS = {
         "category.collectors.appraisal":      {"name": "Professional appraisal or valuation", "points": 5, "how_to_earn": "Upload appraisal document."},
         "category.collectors.assoc":          {"name": "Collector association membership", "points": 3, "how_to_earn": "Upload membership card or certificate."},
     },
-    # Local Market sellers reuse the buyer-onboarding signal set per
-    # TRUST_SCORE_HUB_REQUIREMENTS §3 last block. Universal identity
-    # carries highest weight here.
+    # Local Market sellers — identity + stacking subject-matter credentials.
+    # Stacking pattern: upload cert → lm.formal_cert (6 pts)
+    #                   upload 2nd cert → lm.formal_cert_2 (4 pts, additional_to cert_1)
+    #                   upload 3rd cert → lm.formal_cert_3 (3 pts, additional_to cert_2) — capped
+    # Same for training, guides, memberships.
+    # Leadership/official role is its own high-value signal.
     "local_market": {
+        # ── Identity ──────────────────────────────────────────────────────
         "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 3,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
         "category.lm.banking":             {"name": "Banking details on file",              "points": 3,  "how_to_earn": "Add your bank account details — required for Tuppence payouts.", "evidence_required": False},
         "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 5,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
@@ -4158,13 +4162,30 @@ _CATEGORY_SIGNALS = {
         "category.lm.id_ai_verified":      {"name": "Identity AI-verified (Sonnet vision)", "points": 8,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
         "category.lm.id_admin_verified":   {"name": "Identity admin-confirmed",             "points": 10, "how_to_earn": "TrustSquare admin has manually confirmed your identity documents.", "evidence_required": True},
         "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 3,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
+        # ── Experience ────────────────────────────────────────────────────
         "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 4,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
         "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 4,  "how_to_earn": "Upload evidence of 5+ years experience (CV, references, or written statement).", "evidence_required": True, "replaces": "category.lm.experience_1yr"},
-        "category.lm.training_course":     {"name": "Formal training / short course",       "points": 4,  "how_to_earn": "Upload a certificate from a recognised training provider.", "evidence_required": True},
-        "category.lm.formal_cert":         {"name": "Formal qualification / diploma",       "points": 6,  "how_to_earn": "Upload your certificate or diploma from an accredited institution.", "evidence_required": True, "replaces": "category.lm.training_course"},
-        "category.lm.prof_body":           {"name": "Professional body membership",          "points": 5,  "how_to_earn": "Upload membership card or letter from a recognised professional body (e.g. SABIO, SABI, guild, association).", "evidence_required": True},
-        "category.lm.provincial_role":     {"name": "Official provincial / national role",  "points": 6,  "how_to_earn": "Upload appointment letter or certificate confirming an official role (e.g. provincial bee secretary, guild chair).", "evidence_required": True},
-        "category.lm.product_guide":       {"name": "Product guide or recipe published",    "points": 3,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have authored.", "evidence_required": True},
+        # ── Qualifications / certificates (stacking, capped at 3) ─────────
+        # First cert: full 6 pts. Second cert: +4 pts. Third cert: +3 pts. No more counted.
+        "category.lm.training_course":     {"name": "Formal training course (1st)",         "points": 4,  "how_to_earn": "Upload a certificate from a recognised training provider.", "evidence_required": True},
+        "category.lm.training_course_2":   {"name": "Second training course",               "points": 3,  "how_to_earn": "Upload a second relevant training certificate.", "evidence_required": True, "additional_to": "category.lm.training_course"},
+        "category.lm.formal_cert":         {"name": "Formal qualification / diploma (1st)", "points": 6,  "how_to_earn": "Upload your certificate or diploma from an accredited institution.", "evidence_required": True, "replaces": "category.lm.training_course"},
+        "category.lm.formal_cert_2":       {"name": "Second relevant qualification",        "points": 4,  "how_to_earn": "Upload a second subject-relevant certificate or diploma.", "evidence_required": True, "additional_to": "category.lm.formal_cert"},
+        "category.lm.formal_cert_3":       {"name": "Third relevant qualification",         "points": 3,  "how_to_earn": "Upload a third certificate — maximum 3 qualifications counted.", "evidence_required": True, "additional_to": "category.lm.formal_cert_2"},
+        # ── Memberships / associations (stacking, up to 2) ───────────────
+        # First membership: 5 pts. Second (different body): +4 pts.
+        "category.lm.prof_body":           {"name": "Association / professional body membership (1st)", "points": 5, "how_to_earn": "Upload membership card or letter from a recognised body (e.g. SABIO, SABI, NBE, NEBA, SATMA, guild).", "evidence_required": True},
+        "category.lm.prof_body_2":         {"name": "Second association membership",        "points": 4,  "how_to_earn": "Upload membership proof from a second recognised body — each association adds credibility.", "evidence_required": True, "additional_to": "category.lm.prof_body"},
+        # ── Leadership role in association ────────────────────────────────
+        # Separate from membership — being secretary/chair/committee member is stronger evidence.
+        "category.lm.assoc_role":          {"name": "Named role in association (secretary, chair, committee)", "points": 7, "how_to_earn": "Upload appointment letter, minutes, or association confirmation of your named role (e.g. NBE provincial secretary, SABI chair).", "evidence_required": True},
+        # ── Official / provincial role ────────────────────────────────────
+        "category.lm.provincial_role":     {"name": "Official provincial / national appointment", "points": 6, "how_to_earn": "Upload appointment letter or certificate confirming an official government or regulatory role.", "evidence_required": True},
+        # ── Knowledge evidence (stacking, up to 3) ───────────────────────
+        "category.lm.product_guide":       {"name": "Product guide / recipe authored (1st)","points": 3,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have written.", "evidence_required": True},
+        "category.lm.product_guide_2":     {"name": "Second product guide / recipe",        "points": 2,  "how_to_earn": "Upload a second original guide or recipe.", "evidence_required": True, "additional_to": "category.lm.product_guide"},
+        "category.lm.product_guide_3":     {"name": "Third product guide / recipe",         "points": 2,  "how_to_earn": "Upload a third guide — maximum 3 counted.", "evidence_required": True, "additional_to": "category.lm.product_guide_2"},
+        # ── Media & social ────────────────────────────────────────────────
         "category.lm.media_feature":       {"name": "Media feature or press coverage",      "points": 3,  "how_to_earn": "Upload a scan or screenshot of a magazine, newspaper, or online article featuring your work.", "evidence_required": True},
         "category.lm.social_proof":        {"name": "Active social media presence",         "points": 2,  "how_to_earn": "Add your Instagram, Facebook page, or website URL showing your products/services.", "evidence_required": False},
     },
@@ -4826,16 +4847,33 @@ ALLOWED_DOC_TYPES = {
     "professional_role", "guide", "recipe", "presentation", "other"
 }
 
-# Map doc_type → signal_id that should be set to 'pending' on upload
-_DOC_TYPE_TO_SIGNAL = {
-    "id_doc":            "category.lm.id_uploaded",
-    "certificate":       "category.lm.formal_cert",
-    "training":          "category.lm.training_course",
-    "membership":        "category.lm.prof_body",
-    "professional_role": "category.lm.provincial_role",
-    "guide":             "category.lm.product_guide",
-    "recipe":            "category.lm.product_guide",
+# Stacking chains: doc_type → ordered list of signal_ids.
+# When a doc is uploaded, we find the first slot in the chain not yet earned/pending.
+_DOC_TYPE_SIGNAL_CHAINS = {
+    "id_doc":            ["category.lm.id_uploaded"],
+    "certificate":       ["category.lm.formal_cert", "category.lm.formal_cert_2", "category.lm.formal_cert_3"],
+    "training":          ["category.lm.training_course", "category.lm.training_course_2"],
+    "membership":        ["category.lm.prof_body", "category.lm.prof_body_2"],
+    "professional_role": ["category.lm.assoc_role", "category.lm.provincial_role"],
+    "guide":             ["category.lm.product_guide", "category.lm.product_guide_2", "category.lm.product_guide_3"],
+    "recipe":            ["category.lm.product_guide", "category.lm.product_guide_2", "category.lm.product_guide_3"],
 }
+
+def _next_signal_for_doc(doc_type: str, conn, email: str) -> Optional[str]:
+    """Return the first unfilled signal slot in the stacking chain for this doc_type.
+    If all slots are filled (earned or pending), return the last slot so the upload
+    still records against the document type even if no new points are awarded."""
+    chain = _DOC_TYPE_SIGNAL_CHAINS.get(doc_type)
+    if not chain:
+        return None
+    rows = conn.execute(
+        "SELECT signal_id, status FROM user_credentials WHERE email=?", (email,)
+    ).fetchall()
+    filled = {r["signal_id"] for r in rows if r["status"] in ("earned", "pending")}
+    for sig_id in chain:
+        if sig_id not in filled:
+            return sig_id
+    return chain[-1]  # all filled — map to last slot (no extra points)
 
 @app.post("/users/{email}/documents")
 async def upload_seller_document(
@@ -4882,8 +4920,13 @@ async def upload_seller_document(
             fh.write(raw)
         url = f"/media/{safe}"
 
-    # Determine signal_id for this doc type
-    effective_signal = signal_id or _DOC_TYPE_TO_SIGNAL.get(doc_type)
+    # Determine signal_id for this doc type — uses stacking chain
+    # so each additional upload of the same type fills the next slot
+    conn_pre = database.get_db()
+    try:
+        effective_signal = signal_id or _next_signal_for_doc(doc_type, conn_pre, email)
+    finally:
+        conn_pre.close()
 
     conn = database.get_db()
     auto_earned = False
@@ -5004,17 +5047,6 @@ def delete_seller_document(
 ALLOWED_DOC_TYPES = {
     "id_doc", "certificate", "training", "membership",
     "professional_role", "guide", "recipe", "presentation", "other"
-}
-
-# Map doc_type → signal_id that should be set to 'pending' on upload
-_DOC_TYPE_TO_SIGNAL = {
-    "id_doc":            "category.lm.id_uploaded",
-    "certificate":       "category.lm.formal_cert",
-    "training":          "category.lm.training_course",
-    "membership":        "category.lm.prof_body",
-    "professional_role": "category.lm.provincial_role",
-    "guide":             "category.lm.product_guide",
-    "recipe":            "category.lm.product_guide",
 }
 
 def _sa_id_validate(id_number: str) -> dict:
