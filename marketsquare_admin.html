@@ -3150,6 +3150,105 @@ const ADM_DEFAULT_FIELDS = [
   {id:'description', label:'Description',       type:'textarea'},
 ];
 
+// ── EDIT MODAL: PHOTO MANAGEMENT ─────────────────────────────────────────────
+let _admEditPhotoUrls = [];   // current photo_urls array for the listing being edited
+
+function admEditLoadPhotos(l) {
+  _admEditPhotoUrls = [];
+  try {
+    const raw = l.photo_urls;
+    if (raw) _admEditPhotoUrls = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+  } catch(e) {
+    if (l.medium_url) _admEditPhotoUrls = [l.medium_url];
+    else if (l.thumb_url) _admEditPhotoUrls = [l.thumb_url];
+  }
+  admEditRenderPhotos();
+}
+
+function admEditRenderPhotos() {
+  const container = document.getElementById('adm-edit-photos');
+  if (!container) return;
+
+  const thumbs = _admEditPhotoUrls.map((url, i) => `
+    <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+      <img src="${escapeHtml(url)}" referrerpolicy="no-referrer"
+        style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);">
+      <button onclick="admEditRemovePhoto(${i})"
+        style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0;">✕</button>
+    </div>`).join('');
+
+  container.innerHTML = `
+    <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:var(--surface-2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📸 Photos (${_admEditPhotoUrls.length}/10)</div>
+        <div style="font-size:11px;color:var(--text-3);">Tap ✕ to remove · Add up to 10</div>
+      </div>
+      <div style="padding:12px 14px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+          ${thumbs || '<div style="font-size:12px;color:var(--text-3);">No photos yet.</div>'}
+        </div>
+        <div id="adm-edit-photo-status" style="font-size:12px;color:var(--text-3);min-height:14px;margin-bottom:8px;"></div>
+        <label style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border-radius:50px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;">
+          + Add Photo
+          <input type="file" accept="image/*" style="display:none;"
+            onchange="admEditUploadPhoto(this.files[0]); this.value='';">
+        </label>
+        ${_admEditPhotoUrls.length !== (admEditListing && admEditListing.photo_urls ? (()=>{try{return JSON.parse(admEditListing.photo_urls).length}catch{return 0}})() : 0)
+          ? '<button onclick="admEditSavePhotos()" style="margin-left:10px;background:#059669;color:#fff;border:none;border-radius:50px;padding:9px 16px;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;">💾 Save Photos</button>'
+          : ''}
+      </div>
+    </div>`;
+}
+
+async function admEditUploadPhoto(file) {
+  if (!file) return;
+  if (_admEditPhotoUrls.length >= 10) { showToast('Maximum 10 photos'); return; }
+  const status = document.getElementById('adm-edit-photo-status');
+  if (status) status.textContent = '⏳ Uploading…';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(BEA_URL + '/listings/photo', {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    _admEditPhotoUrls.push(data.medium_url || data.thumb_url);
+    admEditRenderPhotos();
+    if (status) status.textContent = '✅ Photo added — tap Save Photos to update the listing.';
+    // Auto-save
+    await admEditSavePhotos(true);
+  } catch(e) {
+    if (status) status.textContent = '❌ Upload failed: ' + e.message;
+  }
+}
+
+function admEditRemovePhoto(idx) {
+  _admEditPhotoUrls.splice(idx, 1);
+  admEditRenderPhotos();
+  // Auto-save after removal
+  admEditSavePhotos(true);
+}
+
+async function admEditSavePhotos(silent) {
+  if (!admEditId || !admEditListing || !admEditListing.seller_email) return;
+  const status = document.getElementById('adm-edit-photo-status');
+  try {
+    const r = await fetch(
+      BEA_URL + '/listings/' + admEditId + '?email=' + encodeURIComponent(admEditListing.seller_email),
+      { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_urls: JSON.stringify(_admEditPhotoUrls) }) }
+    );
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    admEditListing.photo_urls = JSON.stringify(_admEditPhotoUrls);
+    if (!silent) showToast('✅ Photos saved');
+    if (status) status.textContent = '✅ Photos updated live.';
+    admEditRenderPhotos();
+  } catch(e) {
+    if (status) status.textContent = '❌ Save failed: ' + e.message;
+  }
+}
+
 function openAdmEdit(id) {
   const l = allListings.find(x => x.id === id);
   if (!l) { showToast('Listing not found in loaded data'); return; }
@@ -3158,11 +3257,46 @@ function openAdmEdit(id) {
   admEditSugs    = {};
   renderAdmEditModal(l);
   document.getElementById('adm-edit-modal-bg').classList.add('open');
+  // Load supplementary panels
+  admEditLoadPhotos(l);
+  if (l.seller_email) {
+    // Trust Score Hub
+    const tshDiv = document.getElementById('adm-edit-tsh');
+    if (tshDiv) {
+      tshDiv.innerHTML = '<div id="tsh-panel" style="display:none;margin-top:4px;"></div>';
+      tshLoad(l.seller_email);
+    }
+    // Document Hub
+    const dhDiv = document.getElementById('adm-edit-dochub');
+    if (dhDiv) {
+      dhDiv.innerHTML = '<div id="doc-hub-panel" style="display:none;margin-top:4px;"></div>';
+      docHubLoad(l.seller_email);
+    }
+    // AI Guidance
+    const agDiv = document.getElementById('adm-edit-aiguidance');
+    if (agDiv) {
+      agDiv.style.display = 'block';
+      agDiv.innerHTML = '<div style="padding:14px 16px;font-size:13px;color:#6d28d9;">⏳ Loading Trust Score guidance…</div>';
+      loadAIGuidance(l.seller_email, l.category || '').then(() => {
+        // loadAIGuidance writes into #ai-guidance-panel — copy into our div
+        const src = document.getElementById('ai-guidance-panel');
+        if (src && src.innerHTML) { agDiv.innerHTML = src.innerHTML; }
+        else { agDiv.style.display = 'none'; }
+      });
+    }
+  }
 }
 
 function closeAdmEdit() {
   document.getElementById('adm-edit-modal-bg').classList.remove('open');
   admEditId = null; admEditListing = null; admEditSugs = {};
+  // Clear dynamic panels so stale content doesn't flash next open
+  ['adm-edit-photos','adm-edit-tsh','adm-edit-dochub','adm-edit-aiguidance'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  const ag = document.getElementById('adm-edit-aiguidance');
+  if (ag) ag.style.display = 'none';
 }
 
 function renderAdmEditModal(l) {
@@ -3840,6 +3974,14 @@ tshLoad = async function(email) {
       </div>
       <div id="adm-ai-info"></div>
       <div id="adm-edit-body"></div>
+      <!-- Photos panel -->
+      <div id="adm-edit-photos" style="margin-top:18px;"></div>
+      <!-- Trust Score panel -->
+      <div id="adm-edit-tsh" style="margin-top:18px;"></div>
+      <!-- Document Hub panel -->
+      <div id="adm-edit-dochub" style="margin-top:4px;"></div>
+      <!-- AI Guidance panel -->
+      <div id="adm-edit-aiguidance" style="display:none;margin-top:14px;border-radius:12px;overflow:hidden;border:1.5px solid #a78bfa;background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);"></div>
     </div>
     <div class="adm-modal-footer">
       <button class="adm-cancel-btn" onclick="closeAdmEdit()">Cancel</button>
