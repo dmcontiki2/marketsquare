@@ -44,6 +44,10 @@ MarketSquare is a **mobile-first local marketplace** connecting buyers with trus
 
 Score is earned across three groups: Universal (ID verification, profile, referrals — max 30), Category Credentials (qualifications, registrations, per-category signals — max 40), and Platform Track Record (intros, reliability, tenure — max 30). Full criteria: `TRUST_SCORE_CRITERIA.md`. Codex amendment: `TRUST_SCORE_CODEX_AMENDMENT.md`.
 
+**Local Market base score:** local_market sellers start at 40 pts automatically (Established tier immediately). Credentials earned on top push the score higher. Penalties can pull below 40.
+
+**Declaration system (Session 36):** Declarable signals have `declaration_points` (80%) and `evidence_points` (20%). Seller submits free-text declaration via `POST /users/{email}/declare` → awarded declaration_points immediately, credential set to `declared` status. Uploading evidence later upgrades `declared` → `earned` and awards evidence_points. Audit trail stored in `user_declarations` table. Four LM signals currently declarable: `assoc_role` (12/3), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1).
+
 Introduction penalties (A3): seller ignores intro → 1T fee to resubmit (Commitment) or −3 Trust (Queue). Seller declines → 1T to resubmit (Commitment only).
 Complaint penalties: −8/−5/−3/−2/−1 per complaint (diminishing), capped at −22 total. Bad referral confirmed: −10 pts + reversal of referral pts.
 
@@ -222,3 +226,5 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 ---
 
 *Updated v1.6: Session 21 — trust_score live from DB (no longer hardcoded to 40); create_listing now saves all 21 fields including structured category data; smart + Sell routing with account picker; price sanitisation preventing AI-suggested text corruption; 20 demo listings seeded under dmcontiki2@gmail.com (10 tutors + 10 services, trust 48–92); category shopfront photos (Property / Tutors / Services) on home screen tiles and as listing card fallbacks. REMOVE /dev/credit + Dev Tools nav before public launch.*
+
+*Updated v1.7: Session 36 — Declaration system: `POST /users/{email}/declare` awards 80% of signal points immediately on free-text declaration; evidence upload awards remaining 20%. `user_declarations` DB table added. Local Market 40-pt base score (Established tier on signup). Stacking signal chains (`_DOC_TYPE_SIGNAL_CHAINS`). Auto-earn for all non-ID docs. AI upload comment (Haiku 4.5). Live Trust Score refresh after declaration or upload. Declaration cards rendered in buyer app Doc Hub. Four LM declarable signals: `assoc_role` (12/3 pts), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1). REMOVE /dev/credit + Dev Tools nav before public launch.*
