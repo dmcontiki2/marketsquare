@@ -6638,6 +6638,13 @@ async function elLoadSidebarPanels(email, category) {
                💡 <strong>Best next step:</strong> ${ts.haiko_tip.text}
                ${ts.haiko_tip.points_available ? '<div style="margin-top:4px;font-weight:700;">+' + ts.haiko_tip.points_available + ' pts available</div>' : ''}
              </div>` : '';
+        const pendingPts   = ts.pending_points || 0;
+        const pendingBar   = pendingPts > 0
+          ? `<div style="background:#fbbf24;width:${Math.min(pendingPts,100-ts.score)}%;height:100%;border-radius:4px;"></div>` : '';
+        const pendingBadge = pendingPts > 0
+          ? `<div style="display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:#92400e;background:#fef3c7;border-radius:6px;padding:4px 8px;">
+               ⏳ <strong>+${pendingPts} pts pending</strong> — waiting for admin verification
+             </div>` : '';
         tshSec.innerHTML = `
           <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
             <div style="background:var(--surface-2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -6645,11 +6652,12 @@ async function elLoadSidebarPanels(email, category) {
               <div style="font-size:13px;font-weight:700;color:${tierColor};">${ts.score} / 100</div>
             </div>
             <div style="padding:10px 14px;">
-              <div style="background:var(--surface-2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px;">
-                <div style="background:${tierColor};width:${ts.score}%;height:100%;border-radius:4px;"></div>
+              <div style="background:var(--surface-2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px;display:flex;">
+                <div style="background:${tierColor};width:${ts.score}%;height:100%;border-radius:4px 0 0 4px;"></div>
+                ${pendingBar}
               </div>
               <div style="font-size:12px;font-weight:700;color:${tierColor};">${ts.tier || ''}</div>
-              ${next}${tip}
+              ${next}${pendingBadge}${tip}
             </div>
           </div>`;
       } else { tshSec.style.display = 'none'; }
@@ -7027,12 +7035,33 @@ async function elDocHubUpload(email) {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
+    const uploadData = await r.json().catch(() => ({}));
+    if (status) status.textContent = '✅ Uploaded — fetching AI feedback…';
     // Reload doc list
     const docs = await apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []);
     const dhSec = document.getElementById('el-dochub-section');
     if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email);
-    // Reload Trust Score panel
+    // AI comment on this upload
+    try {
+      const commentRes = await apiPostAuth('/trust-score/upload-comment', {
+        email,
+        category: elCurrentCat || '',
+        doc_type: docType,
+        label: label || fileInput.files[0].name,
+        signal_id: uploadData.signal_id || null
+      });
+      if (commentRes && commentRes.comment) {
+        if (status) status.innerHTML =
+          `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:9px 11px;font-size:12px;color:#166534;line-height:1.5;margin-top:6px;">
+             ✨ ${commentRes.comment}
+           </div>`;
+      } else {
+        if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
+      }
+    } catch(_) {
+      if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
+    }
+    // Reload Trust Score panel to show updated pending points
     elLoadSidebarPanels(email, elCurrentCat);
   } catch(e) {
     if (status) status.textContent = '❌ Upload failed: ' + e.message;

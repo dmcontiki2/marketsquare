@@ -4461,6 +4461,14 @@ def trust_score_breakdown(email: str):
     score_total = max(0, min(100, earned_u + earned_t + earned_c + penalty_total))
     tier = _trust_tier(score_total)
 
+    # Pending points (uploaded but not yet verified by admin)
+    all_items = items_u + items_t + items_c
+    pending_signals = [
+        {"signal_id": it["signal_id"], "name": it["name"], "points": it["points"]}
+        for it in all_items if it["status"] == "pending"
+    ]
+    pending_pts = sum(it["points"] for it in pending_signals)
+
     # Persist the recomputed score (drives wishlist matching trust gate +
     # Local Market suspension state)
     prior_score = int(user["trust_score"] or 0)
@@ -4492,6 +4500,8 @@ def trust_score_breakdown(email: str):
         "haiko_tip":  tip,
         "penalties":  penalties,
         "penalty_total": penalty_total,
+        "pending_points": pending_pts,
+        "pending_signals": pending_signals,
     }
 
 
@@ -4711,6 +4721,99 @@ def _build_local_guidance(category: str, all_missing: list = None) -> list:
          "why": "Adds " + str(m["points"]) + " points to your Trust Score."}
         for m in all_missing[:5]
     ]
+
+
+class UploadCommentRequest(BaseModel):
+    email: str
+    category: str
+    doc_type: str
+    label: str
+    signal_id: Optional[str] = None
+
+
+@app.post("/trust-score/upload-comment")
+async def trust_score_upload_comment(req: UploadCommentRequest):
+    """After a seller uploads a document, return a short AI comment:
+    what this contributes to their Trust Score and what to upload next."""
+    conn = database.get_db()
+    try:
+        earned_rows = conn.execute(
+            "SELECT signal_id, status FROM user_credentials WHERE email = ?",
+            (req.email,)
+        ).fetchall()
+        user_row = conn.execute(
+            "SELECT trust_score FROM users WHERE email = ?", (req.email,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    cred_status = {r["signal_id"]: r["status"] for r in (earned_rows or [])}
+    current_score = int(user_row["trust_score"] or 0) if user_row else 0
+
+    all_signals = {**_TRUST_SIGNALS, **_CATEGORY_SIGNALS.get(req.category, {})}
+    signal = all_signals.get(req.signal_id or "", {})
+    signal_name = signal.get("name", req.label)
+    signal_pts  = signal.get("points", 0)
+
+    submitted_ids = {sid for sid, st in cred_status.items() if st in ("earned", "pending")}
+    missing = [
+        {"name": s["name"], "points": s.get("points", 0), "how": s.get("how_to_earn", "")}
+        for sid, s in all_signals.items()
+        if sid not in submitted_ids and s.get("points", 0) > 0
+    ]
+    missing.sort(key=lambda x: x["points"], reverse=True)
+    next_suggestion = missing[0] if missing else None
+
+    if not ANTHROPIC_API_KEY:
+        comment = f"✅ {signal_name} submitted for verification — worth +{signal_pts} pts once approved."
+        if next_suggestion:
+            comment += f" Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)."
+        return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
+
+    next_line = (
+        f"Best next upload: {next_suggestion['name']} (+{next_suggestion['points']} pts) — {next_suggestion['how']}"
+        if next_suggestion else "All key signals submitted — great work!"
+    )
+
+    system_prompt = (
+        "You are a warm, encouraging Trust Score coach for MarketSquare, a South African marketplace. "
+        "Write exactly 2 sentences: sentence 1 confirms what was just uploaded and what it will add "
+        "to the Trust Score once verified. Sentence 2 gives ONE specific next-step upload suggestion. "
+        "Be concrete, warm, under 45 words total. No bullet points. No markdown."
+    )
+    user_message = (
+        f"Seller just uploaded: {req.label} (type: {req.doc_type})\n"
+        f"Signal: {signal_name} (+{signal_pts} pts once verified)\n"
+        f"Current Trust Score: {current_score}/100\n"
+        f"{next_line}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 120,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_message}],
+                },
+            )
+        resp.raise_for_status()
+        comment = resp.json()["content"][0]["text"].strip()
+    except Exception as exc:
+        _log.warning("upload-comment Haiku call failed: %s", exc)
+        comment = (
+            f"✅ {signal_name} submitted (+{signal_pts} pts once verified). "
+            + (f"Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)." if next_suggestion else "")
+        )
+
+    return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
 
 
 # ── SELLER DOCUMENTS ─────────────────────────────────────────────────────────

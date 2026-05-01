@@ -964,3 +964,13 @@ Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/l
 - `auth.py` — added `require_api_key_header_or_query` dependency
 - `bea_main.py` — document endpoints use new dependency; `ListingUpdate` gets `photo_urls`, `thumb_url`, `medium_url`
 - `marketsquare.html` — document fetches pass `?api_key=`; photo auto-save sends `thumb_url` + `medium_url`
+
+## Session 36b — Trust Score live feedback after document upload (2026-05-01)
+
+### New features
+- **Pending points indicator** — Trust Score panel now shows earned score + a yellow bar for points pending admin verification (e.g. "26 pts earned + 8 pts pending review"). Score recomputes correctly on every `/trust-score/breakdown` call; pending signals don't inflate the live score.
+- **AI comment after each upload** — new `POST /trust-score/upload-comment` endpoint calls Haiku 4.5 to generate a personalised 2-sentence response: what the uploaded document will contribute once verified, plus a specific next-step suggestion (highest-value unsubmitted signal). Shown inline in the Document Hub in a green confirmation panel.
+
+### Files changed
+- `bea_main.py` — `trust_score_breakdown` returns `pending_points` + `pending_signals`; new `UploadCommentRequest` model + `POST /trust-score/upload-comment` endpoint
+- `marketsquare.html` — Trust Score panel renders pending bar + badge; `elDocHubUpload` calls upload-comment and renders AI feedback in green panel
