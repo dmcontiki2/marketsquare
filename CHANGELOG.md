@@ -1015,3 +1015,34 @@ Universal (30) + Track Record (30) + Category (40) = 100. Category breakdown:
 ### Files changed
 - `bea_main.py` — `local_market` signals expanded with stacking slots; `_DOC_TYPE_TO_SIGNAL` replaced by `_DOC_TYPE_SIGNAL_CHAINS` + `_next_signal_for_doc()`
 - `marketsquare.html` — `EL_DOC_LABELS` updated; `EL_DOC_STACKING` hints map added; `elUpdateDocHint()` shows hint on type select
+
+## Session 36e — 40-point base score + rebalanced Local Market signals (2026-05-01)
+
+### Design decision: 40-point base for Local Market
+Every Local Market seller now starts at 40 — "Established" tier begins at 40 so sellers can trade immediately without waiting. Penalties pull below 40 (bad actors); credentials push above. Other categories (Property, Tutors, Services) unchanged.
+
+### Tier thresholds (unchanged values, new meaning):
+- 0–39: New / penalised (LM suspension triggers below 30)
+- 40–69: Established ← where every new seller lands on day 1
+- 70–89: Trusted ← serious practitioners with credentials
+- 90–100: Highly Trusted ← top of field nationally
+
+### Signal rebalancing (anti-gaming principle: hard-to-fake = high value):
+| Signal | Old | New | Reasoning |
+|--------|-----|-----|-----------|
+| Named association role | 7 | **15** | NBA Secretary = top-3 national role, publicly accountable |
+| Government/regulatory appointment | 6 | **10** | Independently verifiable |
+| 1st membership | 5 | **8** | External org vetted them |
+| 2nd membership | 4 | **6** | Convergent external validation |
+| 1st formal diploma | 6 | **7** | Accredited, SAQA-traceable |
+| 2nd cert | 4 | **5** | Still meaningful |
+| Product guides | 3/2/2 | **2/1/1** | Soft signal, easy to pad |
+| Social proof | 2 | **1** | Easiest to produce |
+
+### Score benchmarks verified live (dmcontiki2 with 3 docs):
+- Current: **74/100 Trusted** (base 40 + 34 earned)
+- Add NBA membership: ~82
+- Add NBA Secretary role: ~97 (Highly Trusted)
+- New seller, no evidence: **40** (Established, can trade)
+
+### UI: Trust Score progress bar now shows grey base (40) + coloured earned segment

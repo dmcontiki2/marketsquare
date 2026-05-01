@@ -6639,12 +6639,15 @@ async function elLoadSidebarPanels(email, category) {
                ${ts.haiko_tip.points_available ? '<div style="margin-top:4px;font-weight:700;">+' + ts.haiko_tip.points_available + ' pts available</div>' : ''}
              </div>` : '';
         const pendingPts   = ts.pending_points || 0;
+        const earnedAboveBase = Math.max(0, ts.score - 40);
         const pendingBar   = pendingPts > 0
-          ? `<div style="background:#fbbf24;width:${Math.min(pendingPts,100-ts.score)}%;height:100%;border-radius:4px;"></div>` : '';
+          ? `<div style="background:#fbbf24;width:${Math.min(pendingPts, 100 - ts.score)}%;height:100%;border-radius:4px;"></div>` : '';
         const pendingBadge = pendingPts > 0
           ? `<div style="display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:#92400e;background:#fef3c7;border-radius:6px;padding:4px 8px;">
-               ⏳ <strong>+${pendingPts} pts pending</strong> — waiting for admin verification
+               ⏳ <strong>+${pendingPts} pts pending</strong> — uploading more evidence will raise your score
              </div>` : '';
+        const baseBadge = ts.score >= 40
+          ? `<div style="font-size:11px;color:var(--text-3);margin-top:3px;">Base 40 + <strong style="color:${tierColor};">+${earnedAboveBase} earned</strong></div>` : '';
         tshSec.innerHTML = `
           <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
             <div style="background:var(--surface-2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
@@ -6652,12 +6655,13 @@ async function elLoadSidebarPanels(email, category) {
               <div style="font-size:13px;font-weight:700;color:${tierColor};">${ts.score} / 100</div>
             </div>
             <div style="padding:10px 14px;">
-              <div style="background:var(--surface-2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px;display:flex;">
-                <div style="background:${tierColor};width:${ts.score}%;height:100%;border-radius:4px 0 0 4px;"></div>
+              <div style="background:var(--surface-2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px;display:flex;">
+                <div style="background:#d1d5db;width:40%;height:100%;border-radius:4px 0 0 4px;" title="Base score (40)"></div>
+                <div style="background:${tierColor};width:${earnedAboveBase}%;height:100%;" title="Earned credentials"></div>
                 ${pendingBar}
               </div>
               <div style="font-size:12px;font-weight:700;color:${tierColor};">${ts.tier || ''}</div>
-              ${next}${pendingBadge}${tip}
+              ${baseBadge}${next}${pendingBadge}${tip}
             </div>
           </div>`;
       } else { tshSec.style.display = 'none'; }
@@ -6973,13 +6977,13 @@ const EL_DOC_LABELS = {
 
 // Points available per doc type and how many uploads count
 const EL_DOC_STACKING = {
-  certificate:       { slots: 3, pts: [6, 4, 3], hint: 'Up to 3 counted — 6, 4, then 3 pts each' },
-  training:          { slots: 2, pts: [4, 3],    hint: 'Up to 2 counted — 4 then 3 pts' },
-  membership:        { slots: 2, pts: [5, 4],    hint: 'Up to 2 associations counted — 5 then 4 pts' },
-  professional_role: { slots: 2, pts: [7, 6],    hint: 'Named role (secretary/chair) 7 pts; official appointment 6 pts' },
-  guide:             { slots: 3, pts: [3, 2, 2], hint: 'Up to 3 counted — 3, 2, then 2 pts each' },
-  recipe:            { slots: 3, pts: [3, 2, 2], hint: 'Up to 3 counted — 3, 2, then 2 pts each' },
-  id_doc:            { slots: 1, pts: [15],       hint: 'ID + AI verification = up to 15 pts total' },
+  certificate:       { slots: 3, pts: [7, 5, 3],  hint: 'Up to 3 counted — 7, 5, then 3 pts each' },
+  training:          { slots: 2, pts: [4, 3],      hint: 'Up to 2 counted — 4 then 3 pts' },
+  membership:        { slots: 2, pts: [8, 6],      hint: 'Up to 2 associations — 8 pts first, +6 pts for a second body' },
+  professional_role: { slots: 2, pts: [15, 10],    hint: 'Named role (secretary/chair) = 15 pts — highest single credential. Official government role = 10 pts.' },
+  guide:             { slots: 3, pts: [2, 1, 1],   hint: 'Up to 3 counted — 2, 1, then 1 pts each' },
+  recipe:            { slots: 3, pts: [2, 1, 1],   hint: 'Up to 3 counted — 2, 1, then 1 pts each' },
+  id_doc:            { slots: 1, pts: [9],          hint: 'ID upload + AI verification = up to 9 pts' },
 };
 
 function elRenderDocHub(docs, email) {

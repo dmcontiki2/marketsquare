@@ -4152,42 +4152,59 @@ _CATEGORY_SIGNALS = {
     #                   upload 3rd cert → lm.formal_cert_3 (3 pts, additional_to cert_2) — capped
     # Same for training, guides, memberships.
     # Leadership/official role is its own high-value signal.
+    # Local Market sellers start at 40 (base_score in trust_score_breakdown).
+    # Category signals add on top — max 60 additional pts = score 100.
+    # Point values reflect how hard the evidence is to fake and how much
+    # it signals domain expertise / accountability.
+    #
+    # Anti-gaming principle: soft signals (social, guides) are worth little;
+    # hard signals (association role, formal membership) are worth a lot.
+    # Anyone can claim a hobby — few people are NBE Secretary.
+    #
+    # Target scores:
+    #   Regular seller, 1 cert + 1 membership         → 40 + ~15 = 55 (Established ✓)
+    #   Serious seller, 2 certs + 2 memberships        → 40 + ~25 = 65 (Established ✓)
+    #   Expert, dual membership + named role + certs   → 40 + ~45 = 85 (Trusted ✓)
+    #   Top of field, national role + full profile     → 40 + ~55 = 95 (Highly Trusted ✓)
     "local_market": {
-        # ── Identity ──────────────────────────────────────────────────────
-        "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 3,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
-        "category.lm.banking":             {"name": "Banking details on file",              "points": 3,  "how_to_earn": "Add your bank account details — required for Tuppence payouts.", "evidence_required": False},
-        "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 5,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
-        "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 3,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
-        "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 4,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
-        "category.lm.id_ai_verified":      {"name": "Identity AI-verified (Sonnet vision)", "points": 8,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
-        "category.lm.id_admin_verified":   {"name": "Identity admin-confirmed",             "points": 10, "how_to_earn": "TrustSquare admin has manually confirmed your identity documents.", "evidence_required": True},
-        "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 3,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
-        # ── Experience ────────────────────────────────────────────────────
-        "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 4,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
-        "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 4,  "how_to_earn": "Upload evidence of 5+ years experience (CV, references, or written statement).", "evidence_required": True, "replaces": "category.lm.experience_1yr"},
-        # ── Qualifications / certificates (stacking, capped at 3) ─────────
-        # First cert: full 6 pts. Second cert: +4 pts. Third cert: +3 pts. No more counted.
+        # ── Identity (max ~20 from category — Universal also contributes) ──
+        "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
+        "category.lm.banking":             {"name": "Banking details on file",              "points": 2,  "how_to_earn": "Add your bank account details — required for Tuppence payouts.", "evidence_required": False},
+        "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 3,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
+        "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 2,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
+        "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 2,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
+        "category.lm.id_ai_verified":      {"name": "Identity AI-verified",                "points": 5,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
+        "category.lm.id_admin_verified":   {"name": "Identity manually confirmed",          "points": 5,  "how_to_earn": "MarketSquare has manually confirmed your identity documents.", "evidence_required": True},
+        "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 2,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
+        # ── Experience (self-declared, modest weight) ─────────────────────
+        "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 2,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
+        "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 3,  "how_to_earn": "Upload evidence of 5+ years experience (CV, references, or written statement).", "evidence_required": True, "replaces": "category.lm.experience_1yr"},
+        # ── Qualifications / certificates (stacking, max 3) ──────────────
+        # Accredited, traceable — meaningful signal of structured learning.
         "category.lm.training_course":     {"name": "Formal training course (1st)",         "points": 4,  "how_to_earn": "Upload a certificate from a recognised training provider.", "evidence_required": True},
         "category.lm.training_course_2":   {"name": "Second training course",               "points": 3,  "how_to_earn": "Upload a second relevant training certificate.", "evidence_required": True, "additional_to": "category.lm.training_course"},
-        "category.lm.formal_cert":         {"name": "Formal qualification / diploma (1st)", "points": 6,  "how_to_earn": "Upload your certificate or diploma from an accredited institution.", "evidence_required": True, "replaces": "category.lm.training_course"},
-        "category.lm.formal_cert_2":       {"name": "Second relevant qualification",        "points": 4,  "how_to_earn": "Upload a second subject-relevant certificate or diploma.", "evidence_required": True, "additional_to": "category.lm.formal_cert"},
+        "category.lm.formal_cert":         {"name": "Formal qualification / diploma (1st)", "points": 7,  "how_to_earn": "Upload your certificate or diploma from an accredited institution.", "evidence_required": True, "replaces": "category.lm.training_course"},
+        "category.lm.formal_cert_2":       {"name": "Second relevant qualification",        "points": 5,  "how_to_earn": "Upload a second subject-relevant certificate or diploma.", "evidence_required": True, "additional_to": "category.lm.formal_cert"},
         "category.lm.formal_cert_3":       {"name": "Third relevant qualification",         "points": 3,  "how_to_earn": "Upload a third certificate — maximum 3 qualifications counted.", "evidence_required": True, "additional_to": "category.lm.formal_cert_2"},
-        # ── Memberships / associations (stacking, up to 2) ───────────────
-        # First membership: 5 pts. Second (different body): +4 pts.
-        "category.lm.prof_body":           {"name": "Association / professional body membership (1st)", "points": 5, "how_to_earn": "Upload membership card or letter from a recognised body (e.g. SABIO, SABI, NBE, NEBA, SATMA, guild).", "evidence_required": True},
-        "category.lm.prof_body_2":         {"name": "Second association membership",        "points": 4,  "how_to_earn": "Upload membership proof from a second recognised body — each association adds credibility.", "evidence_required": True, "additional_to": "category.lm.prof_body"},
-        # ── Leadership role in association ────────────────────────────────
-        # Separate from membership — being secretary/chair/committee member is stronger evidence.
-        "category.lm.assoc_role":          {"name": "Named role in association (secretary, chair, committee)", "points": 7, "how_to_earn": "Upload appointment letter, minutes, or association confirmation of your named role (e.g. NBE provincial secretary, SABI chair).", "evidence_required": True},
-        # ── Official / provincial role ────────────────────────────────────
-        "category.lm.provincial_role":     {"name": "Official provincial / national appointment", "points": 6, "how_to_earn": "Upload appointment letter or certificate confirming an official government or regulatory role.", "evidence_required": True},
-        # ── Knowledge evidence (stacking, up to 3) ───────────────────────
-        "category.lm.product_guide":       {"name": "Product guide / recipe authored (1st)","points": 3,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have written.", "evidence_required": True},
-        "category.lm.product_guide_2":     {"name": "Second product guide / recipe",        "points": 2,  "how_to_earn": "Upload a second original guide or recipe.", "evidence_required": True, "additional_to": "category.lm.product_guide"},
-        "category.lm.product_guide_3":     {"name": "Third product guide / recipe",         "points": 2,  "how_to_earn": "Upload a third guide — maximum 3 counted.", "evidence_required": True, "additional_to": "category.lm.product_guide_2"},
+        # ── Memberships / associations (stacking, max 2) ─────────────────
+        # Being vetted by an independent organisation is strong signal.
+        # Two different bodies = convergent external validation.
+        "category.lm.prof_body":           {"name": "Association / professional body membership (1st)", "points": 8, "how_to_earn": "Upload membership card or letter from a recognised body (e.g. SABI, NBA, SATMA, guild).", "evidence_required": True},
+        "category.lm.prof_body_2":         {"name": "Second association membership",        "points": 6,  "how_to_earn": "Upload proof from a second recognised body — two independent organisations = strong credibility.", "evidence_required": True, "additional_to": "category.lm.prof_body"},
+        # ── Named role in association ─────────────────────────────────────
+        # Highest-value single credential: being accountable to an organisation
+        # as secretary/chair/committee puts your name on public record.
+        # National Secretary of NBA = top-3 management role in SA beekeeping.
+        "category.lm.assoc_role":          {"name": "Named role in association (secretary, chair, committee)", "points": 15, "how_to_earn": "Upload appointment letter, signed minutes, or association confirmation of your named role (e.g. NBA National Secretary, SABI chair, provincial committee member).", "evidence_required": True},
+        # ── Official government / regulatory appointment ───────────────────
+        "category.lm.provincial_role":     {"name": "Official government / regulatory appointment", "points": 10, "how_to_earn": "Upload appointment letter or certificate confirming an official government or regulatory role.", "evidence_required": True},
+        # ── Knowledge evidence (stacking, max 3) — soft signal ───────────
+        "category.lm.product_guide":       {"name": "Product guide / recipe authored (1st)","points": 2,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have written.", "evidence_required": True},
+        "category.lm.product_guide_2":     {"name": "Second product guide / recipe",        "points": 1,  "how_to_earn": "Upload a second original guide or recipe.", "evidence_required": True, "additional_to": "category.lm.product_guide"},
+        "category.lm.product_guide_3":     {"name": "Third product guide / recipe",         "points": 1,  "how_to_earn": "Upload a third guide — maximum 3 counted.", "evidence_required": True, "additional_to": "category.lm.product_guide_2"},
         # ── Media & social ────────────────────────────────────────────────
-        "category.lm.media_feature":       {"name": "Media feature or press coverage",      "points": 3,  "how_to_earn": "Upload a scan or screenshot of a magazine, newspaper, or online article featuring your work.", "evidence_required": True},
-        "category.lm.social_proof":        {"name": "Active social media presence",         "points": 2,  "how_to_earn": "Add your Instagram, Facebook page, or website URL showing your products/services.", "evidence_required": False},
+        "category.lm.media_feature":       {"name": "Media feature or press coverage",      "points": 2,  "how_to_earn": "Upload a scan or screenshot of a magazine, newspaper, or online article featuring your work.", "evidence_required": True},
+        "category.lm.social_proof":        {"name": "Active social media presence",         "points": 1,  "how_to_earn": "Add your Instagram, Facebook page, or website URL showing your products/services.", "evidence_required": False},
     },
 }
 
@@ -4479,7 +4496,11 @@ def trust_score_breakdown(email: str):
     penalties = _seller_active_complaints(conn, email)
     penalty_total = sum(p["points"] for p in penalties)
 
-    score_total = max(0, min(100, earned_u + earned_t + earned_c + penalty_total))
+    # Local Market sellers start at 40 — allows immediate trading.
+    # Penalties pull below 40 (bad actors); credentials push above 40.
+    # All other categories keep 0-base earned model.
+    base_score = 40 if cat_key == "local_market" else 0
+    score_total = max(0, min(100, base_score + earned_u + earned_t + earned_c + penalty_total))
     tier = _trust_tier(score_total)
 
     # Pending points (uploaded but not yet verified by admin)
