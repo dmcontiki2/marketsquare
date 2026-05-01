@@ -121,6 +121,39 @@ def run_migrations(conn):
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
 
     # ── Listing version history (audit trail for edits) ──────────
+    # KYC columns added Session 34 — ALTER TABLE safely (idempotent)
+    for col_def in [
+        "ALTER TABLE users ADD COLUMN id_number_hash TEXT",
+        "ALTER TABLE users ADD COLUMN id_name TEXT",
+        "ALTER TABLE users ADD COLUMN id_doc_type TEXT",
+        "ALTER TABLE users ADD COLUMN id_verified_at TEXT",
+        "ALTER TABLE users ADD COLUMN id_ai_score REAL",
+        "ALTER TABLE users ADD COLUMN banking_holder TEXT",
+        "ALTER TABLE users ADD COLUMN banking_bank TEXT",
+        "ALTER TABLE users ADD COLUMN banking_account_last4 TEXT",
+        "ALTER TABLE users ADD COLUMN banking_branch TEXT",
+        "ALTER TABLE users ADD COLUMN banking_added_at TEXT",
+        # user_credentials column added in Session 34
+        "ALTER TABLE user_credentials ADD COLUMN updated_at TEXT",
+    ]:
+        try:
+            conn.execute(col_def)
+        except Exception:
+            pass  # column already exists
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS seller_documents (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            email        TEXT    NOT NULL,
+            doc_type     TEXT    NOT NULL DEFAULT 'other',
+            label        TEXT    NOT NULL DEFAULT '',
+            url          TEXT    NOT NULL,
+            visibility   TEXT    NOT NULL DEFAULT 'private',
+            signal_id    TEXT,
+            uploaded_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+        )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_seller_docs_email ON seller_documents(email)")
+
     conn.execute("""CREATE TABLE IF NOT EXISTS listing_versions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         listing_id INTEGER NOT NULL,
@@ -3285,6 +3318,7 @@ class LMListingIn(BaseModel):
     seller_email: str
     thumb_url: Optional[str] = None
     medium_url: Optional[str] = None
+    photo_urls: Optional[str] = None  # JSON array of up to 5 photo URLs
 
 
 class LMIntroIn(BaseModel):
@@ -3499,11 +3533,11 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
     cur = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description,
-            thumb_url, medium_url, geo_city_id, seller_email, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+            thumb_url, medium_url, photo_urls, geo_city_id, seller_email, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
         (listing.title, listing.price, LM_CATEGORY, listing.city, listing.suburb,
          listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
-         listing.geo_city_id, listing.seller_email)
+         listing.photo_urls, listing.geo_city_id, listing.seller_email)
     )
     new_id = cur.lastrowid
     conn.commit()
@@ -4048,8 +4082,23 @@ _CATEGORY_SIGNALS = {
     # TRUST_SCORE_HUB_REQUIREMENTS §3 last block. Universal identity
     # carries highest weight here.
     "local_market": {
-        "category.lm.phone_verified":        {"name": "Phone number verified", "points": 8, "how_to_earn": "Add and verify your phone number."},
-        "category.lm.banking":               {"name": "Banking details added", "points": 5, "how_to_earn": "Add banking details — required for payments."},
+        "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 3,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
+        "category.lm.banking":             {"name": "Banking details on file",              "points": 3,  "how_to_earn": "Add your bank account details — required for Tuppence payouts.", "evidence_required": False},
+        "category.lm.banking_name_match":  {"name": "Bank account holder name verified",   "points": 5,  "how_to_earn": "Account holder name on bank details matches your verified ID name.", "evidence_required": False},
+        "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 3,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
+        "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 4,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
+        "category.lm.id_ai_verified":      {"name": "Identity AI-verified (Sonnet vision)", "points": 8,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
+        "category.lm.id_admin_verified":   {"name": "Identity admin-confirmed",             "points": 10, "how_to_earn": "TrustSquare admin has manually confirmed your identity documents.", "evidence_required": True},
+        "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 3,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
+        "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 4,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
+        "category.lm.experience_5yr":      {"name": "5+ years of relevant experience",      "points": 4,  "how_to_earn": "Upload evidence of 5+ years experience (CV, references, or written statement).", "evidence_required": True, "replaces": "category.lm.experience_1yr"},
+        "category.lm.training_course":     {"name": "Formal training / short course",       "points": 4,  "how_to_earn": "Upload a certificate from a recognised training provider.", "evidence_required": True},
+        "category.lm.formal_cert":         {"name": "Formal qualification / diploma",       "points": 6,  "how_to_earn": "Upload your certificate or diploma from an accredited institution.", "evidence_required": True, "replaces": "category.lm.training_course"},
+        "category.lm.prof_body":           {"name": "Professional body membership",          "points": 5,  "how_to_earn": "Upload membership card or letter from a recognised professional body (e.g. SABIO, SABI, guild, association).", "evidence_required": True},
+        "category.lm.provincial_role":     {"name": "Official provincial / national role",  "points": 6,  "how_to_earn": "Upload appointment letter or certificate confirming an official role (e.g. provincial bee secretary, guild chair).", "evidence_required": True},
+        "category.lm.product_guide":       {"name": "Product guide or recipe published",    "points": 3,  "how_to_earn": "Upload a product guide, recipe, care instructions, or usage guide you have authored.", "evidence_required": True},
+        "category.lm.media_feature":       {"name": "Media feature or press coverage",      "points": 3,  "how_to_earn": "Upload a scan or screenshot of a magazine, newspaper, or online article featuring your work.", "evidence_required": True},
+        "category.lm.social_proof":        {"name": "Active social media presence",         "points": 2,  "how_to_earn": "Add your Instagram, Facebook page, or website URL showing your products/services.", "evidence_required": False},
     },
 }
 
@@ -4594,6 +4643,716 @@ def _build_local_guidance(category: str, all_missing: list = None) -> list:
          "why": "Adds " + str(m["points"]) + " points to your Trust Score."}
         for m in all_missing[:5]
     ]
+
+
+# ── SELLER DOCUMENTS ─────────────────────────────────────────────────────────
+# Documents are stored in R2 / local media. Each doc has a visibility flag:
+#   private     — never shown to buyers
+#   post_intro  — shown on seller profile after buyer's intro is accepted
+
+ALLOWED_DOC_TYPES = {
+    "id_doc", "certificate", "training", "membership",
+    "professional_role", "guide", "recipe", "presentation", "other"
+}
+
+# Map doc_type → signal_id that should be set to 'pending' on upload
+_DOC_TYPE_TO_SIGNAL = {
+    "id_doc":            "category.lm.id_uploaded",
+    "certificate":       "category.lm.formal_cert",
+    "training":          "category.lm.training_course",
+    "membership":        "category.lm.prof_body",
+    "professional_role": "category.lm.provincial_role",
+    "guide":             "category.lm.product_guide",
+    "recipe":            "category.lm.product_guide",
+}
+
+@app.post("/users/{email}/documents")
+async def upload_seller_document(
+    email: str,
+    file: UploadFile = File(...),
+    doc_type: str = Form("other"),
+    label: str = Form(""),
+    visibility: str = Form("private"),
+    signal_id: str = Form(None),
+    _key: str = Depends(auth.require_api_key),
+):
+    """Upload a document for a seller. Stores to R2, records in seller_documents.
+    If the doc_type maps to a Trust Score signal, auto-sets it to pending."""
+    email = email.lower().strip()
+    if doc_type not in ALLOWED_DOC_TYPES:
+        doc_type = "other"
+    if visibility not in ("private", "post_intro"):
+        visibility = "private"
+
+    allowed_mime = {
+        "application/pdf", "image/jpeg", "image/png", "image/webp",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+    ct = file.content_type or "application/octet-stream"
+    if ct not in allowed_mime:
+        raise HTTPException(status_code=400, detail="Only PDF, JPEG, PNG, WebP, or Word documents accepted")
+
+    raw = await file.read()
+    if len(raw) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Document too large — max 25MB")
+
+    # Upload to R2 or local fallback
+    orig_name = (file.filename or "document").replace(" ", "_")
+    key = f"docs/{uuid.uuid4().hex}_{orig_name}"
+    if _S3_CONFIGURED:
+        url = _s3_upload(raw, key, ct)
+    else:
+        safe = key.replace("/", "_")
+        path = os.path.join(MEDIA_DIR, safe)
+        with open(path, "wb") as fh:
+            fh.write(raw)
+        url = f"/media/{safe}"
+
+    # Determine signal_id to auto-trigger pending
+    effective_signal = signal_id or _DOC_TYPE_TO_SIGNAL.get(doc_type)
+
+    conn = database.get_db()
+    try:
+        conn.execute(
+            """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (email, doc_type, label or orig_name, url, visibility, effective_signal)
+        )
+        doc_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        # Auto-set signal to pending if not already earned
+        if effective_signal:
+            existing = conn.execute(
+                "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+                (email, effective_signal)
+            ).fetchone()
+            if not existing:
+                conn.execute(
+                    """INSERT INTO user_credentials (email, signal_id, status, updated_at)
+                       VALUES (?, ?, 'pending', strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
+                    (email, effective_signal)
+                )
+            elif existing["status"] not in ("earned", "pending"):
+                conn.execute(
+                    """UPDATE user_credentials SET status='pending', updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+                       WHERE email=? AND signal_id=?""",
+                    (email, effective_signal)
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"id": doc_id, "url": url, "doc_type": doc_type, "label": label or orig_name,
+            "visibility": visibility, "signal_id": effective_signal}
+
+
+@app.get("/users/{email}/documents")
+def list_seller_documents(
+    email: str,
+    _key: str = Depends(auth.require_api_key),
+):
+    """List all documents for a seller (admin-only view — all visibility levels)."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT id, doc_type, label, url, visibility, signal_id, uploaded_at
+           FROM seller_documents WHERE email=? ORDER BY uploaded_at DESC""",
+        (email,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/users/{email}/documents/public")
+def list_public_documents(email: str, intro_id: int = None):
+    """Return post_intro documents for a seller. Called by buyer app after intro accepted.
+    No API key required — documents are intentionally shared post-introduction."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    # Verify intro exists and is accepted before revealing docs
+    if intro_id:
+        intro = conn.execute(
+            "SELECT status FROM intro_requests WHERE id=? AND seller_email=?",
+            (intro_id, email)
+        ).fetchone()
+        if not intro or intro["status"] != "accepted":
+            conn.close()
+            return []
+    rows = conn.execute(
+        """SELECT id, doc_type, label, url, uploaded_at
+           FROM seller_documents WHERE email=? AND visibility='post_intro'
+           ORDER BY uploaded_at DESC""",
+        (email,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.delete("/users/{email}/documents/{doc_id}")
+def delete_seller_document(
+    email: str,
+    doc_id: int,
+    _key: str = Depends(auth.require_api_key),
+):
+    """Delete a document record (does not delete from R2 — orphan cleanup runs separately)."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT id FROM seller_documents WHERE id=? AND email=?", (doc_id, email)
+    ).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Document not found")
+    conn.execute("DELETE FROM seller_documents WHERE id=?", (doc_id,))
+    conn.commit()
+    conn.close()
+    return {"deleted": doc_id}
+
+
+# ── SELLER DOCUMENTS ─────────────────────────────────────────────────────────
+# Documents are stored in R2 / local media. Each doc has a visibility flag:
+#   private     — never shown to buyers
+#   post_intro  — shown on seller profile after buyer's intro is accepted
+
+ALLOWED_DOC_TYPES = {
+    "id_doc", "certificate", "training", "membership",
+    "professional_role", "guide", "recipe", "presentation", "other"
+}
+
+# Map doc_type → signal_id that should be set to 'pending' on upload
+_DOC_TYPE_TO_SIGNAL = {
+    "id_doc":            "category.lm.id_uploaded",
+    "certificate":       "category.lm.formal_cert",
+    "training":          "category.lm.training_course",
+    "membership":        "category.lm.prof_body",
+    "professional_role": "category.lm.provincial_role",
+    "guide":             "category.lm.product_guide",
+    "recipe":            "category.lm.product_guide",
+}
+
+@app.post("/users/{email}/documents")
+async def upload_seller_document(
+    email: str,
+    file: UploadFile = File(...),
+    doc_type: str = Form("other"),
+    label: str = Form(""),
+    visibility: str = Form("private"),
+    signal_id: str = Form(None),
+    _key: str = Depends(auth.require_api_key),
+):
+    """Upload a document for a seller. Stores to R2, records in seller_documents.
+    If the doc_type maps to a Trust Score signal, auto-sets it to pending."""
+    email = email.lower().strip()
+    if doc_type not in ALLOWED_DOC_TYPES:
+        doc_type = "other"
+    if visibility not in ("private", "post_intro"):
+        visibility = "private"
+
+    allowed_mime = {
+        "application/pdf", "image/jpeg", "image/png", "image/webp",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+    ct = file.content_type or "application/octet-stream"
+    if ct not in allowed_mime:
+        raise HTTPException(status_code=400, detail="Only PDF, JPEG, PNG, WebP, or Word documents accepted")
+
+    raw = await file.read()
+    if len(raw) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Document too large — max 25MB")
+
+    # Upload to R2 or local fallback
+    orig_name = (file.filename or "document").replace(" ", "_")
+    key = f"docs/{uuid.uuid4().hex}_{orig_name}"
+    if _S3_CONFIGURED:
+        url = _s3_upload(raw, key, ct)
+    else:
+        safe = key.replace("/", "_")
+        path = os.path.join(MEDIA_DIR, safe)
+        with open(path, "wb") as fh:
+            fh.write(raw)
+        url = f"/media/{safe}"
+
+    # Determine signal_id to auto-trigger pending
+    effective_signal = signal_id or _DOC_TYPE_TO_SIGNAL.get(doc_type)
+
+    conn = database.get_db()
+    try:
+        conn.execute(
+            """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (email, doc_type, label or orig_name, url, visibility, effective_signal)
+        )
+        doc_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        # Auto-set signal to pending if not already earned
+        if effective_signal:
+            existing = conn.execute(
+                "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+                (email, effective_signal)
+            ).fetchone()
+            if not existing:
+                conn.execute(
+                    """INSERT INTO user_credentials (email, signal_id, status, updated_at)
+                       VALUES (?, ?, 'pending', strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
+                    (email, effective_signal)
+                )
+            elif existing["status"] not in ("earned", "pending"):
+                conn.execute(
+                    """UPDATE user_credentials SET status='pending', updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+                       WHERE email=? AND signal_id=?""",
+                    (email, effective_signal)
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"id": doc_id, "url": url, "doc_type": doc_type, "label": label or orig_name,
+            "visibility": visibility, "signal_id": effective_signal}
+
+
+@app.get("/users/{email}/documents")
+def list_seller_documents(
+    email: str,
+    _key: str = Depends(auth.require_api_key),
+):
+    """List all documents for a seller (admin-only view — all visibility levels)."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    rows = conn.execute(
+        """SELECT id, doc_type, label, url, visibility, signal_id, uploaded_at
+           FROM seller_documents WHERE email=? ORDER BY uploaded_at DESC""",
+        (email,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/users/{email}/documents/public")
+def list_public_documents(email: str, intro_id: int = None):
+    """Return post_intro documents for a seller. Called by buyer app after intro accepted.
+    No API key required — documents are intentionally shared post-introduction."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    # Verify intro exists and is accepted before revealing docs
+    if intro_id:
+        intro = conn.execute(
+            "SELECT status FROM intro_requests WHERE id=? AND seller_email=?",
+            (intro_id, email)
+        ).fetchone()
+        if not intro or intro["status"] != "accepted":
+            conn.close()
+            return []
+    rows = conn.execute(
+        """SELECT id, doc_type, label, url, uploaded_at
+           FROM seller_documents WHERE email=? AND visibility='post_intro'
+           ORDER BY uploaded_at DESC""",
+        (email,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.delete("/users/{email}/documents/{doc_id}")
+def delete_seller_document(
+    email: str,
+    doc_id: int,
+    _key: str = Depends(auth.require_api_key),
+):
+    """Delete a document record (does not delete from R2 — orphan cleanup runs separately)."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT id FROM seller_documents WHERE id=? AND email=?", (doc_id, email)
+    ).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Document not found")
+    conn.execute("DELETE FROM seller_documents WHERE id=?", (doc_id,))
+    conn.commit()
+    conn.close()
+    return {"deleted": doc_id}
+
+
+# ── IDENTITY VERIFICATION (KYC) ──────────────────────────────────────────────
+# Design principles (Session 34):
+#   - Never store raw ID numbers — SHA-256 hash only
+#   - SA ID number: validate via Luhn checksum (free, instant, 100% reliable)
+#   - Passport / national ID: AI vision (Sonnet) extracts and confirms
+#   - Swap point: replace _sonnet_verify_identity() with PaddleOCR when cost warrants
+#   - Admin always has final confirm — AI result is pre-check only
+
+import hashlib
+import re
+import base64
+import urllib.request
+
+SONNET_MODEL = "claude-sonnet-4-6"
+
+
+def _sa_id_validate(id_number: str) -> dict:
+    """Validate a South African ID number (13 digits).
+    Returns dict: valid(bool), dob(str), gender(str), citizen(str), error(str|None)."""
+    n = re.sub(r"\D", "", id_number)
+    if len(n) != 13:
+        return {"valid": False, "error": "SA ID number must be exactly 13 digits"}
+    # Luhn checksum
+    total = 0
+    for i, ch in enumerate(n[:-1]):
+        d = int(ch)
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    check = (10 - (total % 10)) % 10
+    if check != int(n[12]):
+        return {"valid": False, "error": "ID number checksum failed — please check for typos"}
+    # Extract DOB (YYMMDD)
+    yy, mm, dd = n[0:2], n[2:4], n[4:6]
+    year = int(yy)
+    century = 1900 if year >= 24 else 2000  # SA IDs: >=24 = 1900s
+    dob = f"{century + year}-{mm}-{dd}"
+    gender = "Male" if int(n[6:10]) >= 5000 else "Female"
+    citizen = "SA Citizen" if n[10] == "0" else "Permanent Resident"
+    return {"valid": True, "dob": dob, "gender": gender, "citizen": citizen, "error": None}
+
+
+def _hash_id_number(id_number: str) -> str:
+    """SHA-256 hash of normalised ID number. Never store the raw number."""
+    normalised = re.sub(r"\D", "", id_number).upper()
+    return hashlib.sha256(normalised.encode()).hexdigest()
+
+
+def _normalise_name(name: str) -> str:
+    """Lowercase, strip extra spaces, remove punctuation for fuzzy comparison."""
+    return re.sub(r"[^a-z ]", "", name.lower().strip())
+
+
+def _names_match(name_a: str, name_b: str) -> float:
+    """Simple fuzzy name match — returns 0.0–1.0 confidence.
+    Handles initials: 'J Smith' matches 'John Smith' at 0.8+."""
+    a = _normalise_name(name_a).split()
+    b = _normalise_name(name_b).split()
+    if not a or not b:
+        return 0.0
+    # Check surname always present
+    surname_a = a[-1]
+    surname_b = b[-1]
+    if surname_a != surname_b:
+        return 0.2
+    # Count matching given names / initials
+    given_a = a[:-1]
+    given_b = b[:-1]
+    if not given_a or not given_b:
+        return 0.7  # surname match, no given names to compare
+    matches = 0
+    for ga in given_a:
+        for gb in given_b:
+            if ga == gb or (len(ga) == 1 and gb.startswith(ga)) or (len(gb) == 1 and ga.startswith(gb)):
+                matches += 1
+                break
+    score = 0.7 + 0.3 * (matches / max(len(given_a), len(given_b)))
+    return round(min(score, 1.0), 2)
+
+
+async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
+                                   claimed_id: str, doc_type: str) -> dict:
+    """Call Sonnet vision to verify identity document.
+    SWAP POINT: replace this function with PaddleOCR/PassportEye for zero-token operation.
+    Returns: {verified(bool), confidence(float), extracted_name(str),
+              extracted_id(str), notes(str), model(str)}"""
+    if not ANTHROPIC_API_KEY:
+        return {"verified": False, "confidence": 0.0, "extracted_name": "",
+                "extracted_id": "", "notes": "AI verification unavailable — API key not set",
+                "model": "none"}
+    try:
+        # Fetch the document image
+        req = urllib.request.Request(doc_url, headers={"User-Agent": "TrustSquare-KYC/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            img_bytes = resp.read()
+        img_b64 = base64.standard_b64encode(img_bytes).decode()
+        # Detect media type
+        media_type = "image/jpeg"
+        if doc_url.lower().endswith(".png"):
+            media_type = "image/png"
+        elif doc_url.lower().endswith(".webp"):
+            media_type = "image/webp"
+
+        import anthropic as _anthropic
+        client = _anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        prompt = f"""You are a document verification assistant for TrustSquare marketplace.
+Examine this identity document image carefully.
+
+The seller claims:
+- Full name: {claimed_name}
+- ID/passport number: {claimed_id}
+- Document type: {doc_type}
+
+Your task:
+1. Extract the FULL NAME exactly as printed on the document
+2. Extract the ID NUMBER / PASSPORT NUMBER exactly as printed
+3. Determine if the claimed name matches the document name (allow for initials, middle names)
+4. Determine if the claimed number matches the document number
+
+Respond ONLY with valid JSON in this exact format:
+{{
+  "extracted_name": "<full name from document>",
+  "extracted_id": "<id/passport number from document>",
+  "name_match": <true/false>,
+  "id_match": <true/false>,
+  "confidence": <0.0-1.0>,
+  "document_appears_genuine": <true/false>,
+  "notes": "<any concerns or observations, empty string if none>"
+}}
+
+If you cannot read the document clearly, set confidence below 0.5 and explain in notes."""
+
+        message = client.messages.create(
+            model=SONNET_MODEL,
+            max_tokens=300,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image", "source": {
+                        "type": "base64", "media_type": media_type, "data": img_b64
+                    }},
+                    {"type": "text", "text": prompt}
+                ]
+            }]
+        )
+        raw = message.content[0].text.strip()
+        # Parse JSON from response
+        json_match = re.search(r'\{[\s\S]*\}', raw)
+        if not json_match:
+            raise ValueError("No JSON in Sonnet response")
+        result = json.loads(json_match.group())
+        verified = (result.get("name_match") and result.get("id_match") and
+                    result.get("confidence", 0) >= 0.75 and
+                    result.get("document_appears_genuine", True))
+        return {
+            "verified": bool(verified),
+            "confidence": float(result.get("confidence", 0)),
+            "extracted_name": result.get("extracted_name", ""),
+            "extracted_id": result.get("extracted_id", ""),
+            "notes": result.get("notes", ""),
+            "model": SONNET_MODEL,
+        }
+    except Exception as e:
+        return {"verified": False, "confidence": 0.0, "extracted_name": "",
+                "extracted_id": "", "notes": f"Verification error: {str(e)}", "model": SONNET_MODEL}
+
+
+class IdentityVerifyIn(BaseModel):
+    id_number: str          # SA ID (13 digits) or passport number
+    full_name: str          # As it appears on the document
+    doc_type: str = "sa_id" # sa_id | passport | national_id
+    doc_url: str            # URL of the already-uploaded ID document in R2
+
+
+class BankingIn(BaseModel):
+    account_holder: str
+    bank_name: str
+    account_number: str   # We store last 4 digits only
+    branch_code: str = ""
+
+
+@app.post("/users/{email}/verify-identity")
+async def verify_identity(
+    email: str,
+    payload: IdentityVerifyIn,
+    _key: str = Depends(auth.require_api_key),
+):
+    """Step 1: Validate format. Step 2: Sonnet vision cross-check.
+    Step 3: Award trust signals based on confidence. Never store raw ID number."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    result = {
+        "format_valid": False, "ai_verified": False,
+        "confidence": 0.0, "notes": "", "signals_awarded": []
+    }
+
+    # ── Step 1: Format validation ─────────────────────────────────────────
+    doc_type = payload.doc_type.lower()
+    id_clean = re.sub(r"\D", "", payload.id_number) if doc_type == "sa_id" else payload.id_number.strip()
+
+    if doc_type == "sa_id":
+        sa_check = _sa_id_validate(id_clean)
+        if not sa_check["valid"]:
+            conn.close()
+            return {**result, "error": sa_check["error"]}
+        result["format_valid"] = True
+        result["dob"] = sa_check.get("dob")
+        result["gender"] = sa_check.get("gender")
+    else:
+        # Passport / national ID — basic length check
+        result["format_valid"] = len(id_clean) >= 6
+        if not result["format_valid"]:
+            conn.close()
+            return {**result, "error": "Document number too short"}
+
+    # Award format-valid signal
+    _upsert_credential(conn, email, "category.lm.id_number_valid", "earned")
+    result["signals_awarded"].append("category.lm.id_number_valid")
+
+    # Store hashed ID + name
+    id_hash = _hash_id_number(id_clean)
+    conn.execute(
+        """UPDATE users SET id_number_hash=?, id_name=?, id_doc_type=?
+           WHERE email=?""",
+        (id_hash, payload.full_name.strip(), doc_type, email)
+    )
+    conn.commit()
+
+    # ── Step 2: Sonnet vision verification ───────────────────────────────
+    ai = await _sonnet_verify_identity(
+        payload.doc_url, payload.full_name, payload.id_number, doc_type
+    )
+    result["ai_verified"]    = ai["verified"]
+    result["confidence"]     = ai["confidence"]
+    result["extracted_name"] = ai["extracted_name"]
+    result["notes"]          = ai["notes"]
+    result["model"]          = ai["model"]
+
+    if ai["verified"] and ai["confidence"] >= 0.75:
+        _upsert_credential(conn, email, "category.lm.id_ai_verified", "earned")
+        result["signals_awarded"].append("category.lm.id_ai_verified")
+        conn.execute(
+            "UPDATE users SET id_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'), id_ai_score=? WHERE email=?",
+            (ai["confidence"], email)
+        )
+    elif ai["confidence"] >= 0.5:
+        # Partial confidence — set pending for admin review
+        _upsert_credential(conn, email, "category.lm.id_ai_verified", "pending")
+        result["signals_awarded"].append("category.lm.id_ai_verified (pending — admin review)")
+
+    conn.commit()
+    conn.close()
+    return result
+
+
+async def _run_cert_name_check(email: str, doc_url: str, id_name: str, doc_type: str):
+    """Background task: Sonnet vision checks that the name on a certificate
+    matches the seller's verified ID name. Awards cert_name_verified if
+    confidence >= 0.75 and name match >= 0.70.
+
+    SWAP POINT: replace _sonnet_verify_identity() here with
+    PaddleOCR + local name extraction when token cost warrants it.
+    """
+    import logging
+    _log = logging.getLogger(__name__)
+    try:
+        result = await _sonnet_verify_identity(
+            doc_url=doc_url,
+            claimed_name=id_name,
+            claimed_id="",
+            doc_type=doc_type,
+        )
+        confidence  = result.get("confidence", 0.0)
+        name_match  = _names_match(id_name, result.get("extracted_name", ""))
+        verified_ok = confidence >= 0.75 and name_match >= 0.70
+        new_status  = "earned" if verified_ok else "pending"
+
+        conn = database.get_db()
+        try:
+            _upsert_credential(conn, email, "category.lm.cert_name_verified", new_status)
+            conn.commit()
+            _log.info("cert_name_check %s → %s (conf=%.2f name_match=%.2f)",
+                      email, new_status, confidence, name_match)
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("cert_name_check failed for %s: %s", email, exc)
+
+
+def _upsert_credential(conn, email: str, signal_id: str, status: str):
+    """Insert or update a credential — never downgrade earned to pending."""
+    existing = conn.execute(
+        "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
+        (email, signal_id)
+    ).fetchone()
+    if not existing:
+        conn.execute(
+            """INSERT INTO user_credentials (email, signal_id, status, updated_at)
+               VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
+            (email, signal_id, status)
+        )
+    elif existing["status"] != "earned":  # never downgrade earned
+        conn.execute(
+            """UPDATE user_credentials SET status=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+               WHERE email=? AND signal_id=?""",
+            (status, email, signal_id)
+        )
+
+
+@app.post("/users/{email}/banking")
+def add_banking(
+    email: str,
+    payload: BankingIn,
+    _key: str = Depends(auth.require_api_key),
+):
+    """Store bank details (last 4 digits only). Cross-check account holder name
+    against verified ID name on file. Award trust signals."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    user = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Seller not found")
+
+    last4 = re.sub(r"\D", "", payload.account_number)[-4:] if payload.account_number else ""
+    conn.execute(
+        """UPDATE users SET banking_holder=?, banking_bank=?,
+           banking_account_last4=?, banking_branch=?,
+           banking_added_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+           WHERE email=?""",
+        (payload.account_holder, payload.bank_name, last4,
+         payload.branch_code, email)
+    )
+    signals = []
+    _upsert_credential(conn, email, "category.lm.banking", "earned")
+    signals.append("category.lm.banking")
+
+    # Name match against ID name on file
+    name_match_score = 0.0
+    id_name = user["id_name"] if user["id_name"] else ""
+    if id_name:
+        name_match_score = _names_match(payload.account_holder, id_name)
+        if name_match_score >= 0.75:
+            _upsert_credential(conn, email, "category.lm.banking_name_match", "earned")
+            signals.append("category.lm.banking_name_match")
+        else:
+            _upsert_credential(conn, email, "category.lm.banking_name_match", "pending")
+            signals.append("category.lm.banking_name_match (pending — name mismatch, admin review)")
+
+    conn.commit()
+    conn.close()
+    return {
+        "signals_awarded": signals,
+        "name_match_score": name_match_score,
+        "account_last4": last4,
+        "name_on_file": id_name or "No ID name on file yet",
+    }
+
+
+@app.get("/users/{email}/identity-status")
+def identity_status(email: str, _key: str = Depends(auth.require_api_key)):
+    """Return KYC status for a seller — used by admin Document Hub."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    row = conn.execute(
+        """SELECT id_name, id_doc_type, id_verified_at, id_ai_score,
+                  banking_holder, banking_bank, banking_account_last4, banking_added_at
+           FROM users WHERE email=?""", (email,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    return dict(row)
 
 
 # ── EMAIL OPT-OUT ────────────────────────────────────────────

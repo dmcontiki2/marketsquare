@@ -2,6 +2,36 @@
 
 ---
 
+## Session 34 · 1 May 2026 · KYC identity verification + banking + cert name-match
+
+**BEA: KYC identity verification (SA ID / Passport / National ID):** New `POST /users/{email}/verify-identity` endpoint. Accepts `id_number`, `full_name`, `doc_type`, and `doc_url`. For SA IDs: validates 13-digit Luhn checksum + extracts DOB/gender. Hashes the raw ID number with SHA-256 — never stored in plaintext. Calls Sonnet vision (`claude-sonnet-4-6`) to cross-check the uploaded document image against the claimed name and ID number. Awards tiered Trust Score signals: `id_uploaded` (+3, set on doc upload), `id_number_valid` (+4, Luhn pass), `id_ai_verified` (+8, Sonnet confidence ≥ 0.80 + name match ≥ 0.80). SWAP POINT documented: `_sonnet_verify_identity()` is the single function to replace with PaddleOCR for zero-token local verification. `_upsert_credential()` helper prevents downgrading earned signals to pending/rejected.
+
+**BEA: Banking details + name-match:** New `POST /users/{email}/banking` endpoint. Stores account holder name, bank name, account last-4 digits, and branch code. Fuzzy-matches the account holder name against the verified `id_name` (if set) using `_names_match()` — handles initials, surname-first ordering, returns 0.0–1.0 confidence. Scores ≥ 0.70 auto-award `banking_name_match` (+5 pts) signal as earned; below threshold sets it to pending for admin review. `banking` (+3 pts) signal always awarded on submit.
+
+**BEA: Certificate name-match via Sonnet (background task):** Document upload endpoint for `certificate`, `training`, and `membership` doc types now triggers `_run_cert_name_check()` as a FastAPI BackgroundTask after upload. If the seller has a verified ID (`id_verified_at` set), Sonnet reads the certificate and checks whether the name on the cert matches `id_name` (fuzzy match ≥ 0.70 + Sonnet confidence ≥ 0.75). Awards `cert_name_verified` (+3 pts) as earned or pending accordingly. Upload response is instant — check runs in background.
+
+**Admin: ID verification UI in Document Hub:** After uploading an `id_doc` type document, the Document Hub shows an inline "Verify Identity" panel (purple border) with fields for full name, doc type selector (SA ID / Passport / National ID), and ID/passport number. Calls `POST /users/{email}/verify-identity`, displays Sonnet confidence %, name match %, ID format validity, signals awarded, and AI notes. Existing verified status shown as a green banner on panel load; unverified-but-doc-uploaded state shows an amber "Verify Now" prompt. "Skip" button dismisses the panel.
+
+**DB migration:** `user_credentials.updated_at` column added to live DB (idempotent ALTER TABLE added to `init_db` migration block for future redeploys). Ten KYC columns added to `users` table: `id_number_hash`, `id_name`, `id_doc_type`, `id_verified_at`, `id_ai_score`, `banking_holder`, `banking_bank`, `banking_account_last4`, `banking_branch`, `banking_added_at`.
+
+**Trust signal hierarchy (max 25 pts for full identity verification):** uploaded(+3) → number valid(+4) → AI verified(+8) → admin confirmed(+10). Privacy principle: raw ID numbers are never stored.
+
+---
+
+## Session 34 · 1 May 2026 · LM multi-photo upload + Document Hub + 12 LM Trust Score signals
+
+**LM multi-photo upload (admin):** LM create modal now uploads up to 5 photos in sequence via `/listings/photo`, collects all URLs into `photo_urls` JSON array, and sends it with the listing POST. Photo preview thumbnails shown inline as files are selected. `LMListingIn` Pydantic model and `lm_create_listing` INSERT both updated to accept and store `photo_urls`.
+
+**Document Hub (admin):** New Document Hub panel renders below the Trust Score Hub whenever a seller profile is looked up. Seller can upload PDF/image/Word documents, label them, choose doc type (ID, Certificate, Training, Professional Body, Official Role, Product Guide, Recipe, Presentation, Other), and set visibility: **Private** (never shown to buyers) or **Visible after introduction** (shown on seller profile once intro is accepted). Uploading certain doc types auto-sets the matching Trust Score signal to `pending` — e.g. uploading an ID doc triggers `category.lm.id_uploaded`, uploading a certificate triggers `category.lm.formal_cert`. Admin can then mark as earned/rejected from the Trust Score Hub. Document list shows with emoji icon, label, visibility badge, View link, and delete button.
+
+**New seller_documents DB table:** `id, email, doc_type, label, url, visibility, signal_id, uploaded_at` — created via `init_db` on BEA restart. Four new BEA endpoints: `POST /users/{email}/documents`, `GET /users/{email}/documents` (admin), `GET /users/{email}/documents/public` (buyer, returns only post_intro), `DELETE /users/{email}/documents/{id}`.
+
+**12 LM Trust Score signals:** `local_market` category group expanded from 2 to 12 signals (max 40 pts total): phone verified (+5), banking (+5), ID uploaded (+10), 1yr experience (+4), 5yr experience (+4, replaces 1yr), training course (+4), formal cert (+6, replaces training), professional body (+5), official role (+6), product guide/recipe (+3), media feature (+3), social proof (+2).
+
+**Buyer app — seller documents visible:** `openLMSellerProfile()` now async — fetches `/users/{email}/documents/public` and renders shared documents in the credentials section. Seller-chosen `post_intro` docs (guides, recipes, certificates, etc.) appear with emoji icon, label, and View link. Private docs are never exposed.
+
+---
+
 ## Session 33 · 30 April 2026 · LM home tile: cycling photos + live count + card photo fix
 
 LM home tile now shows live listing count ("12 listings") via `initLMHomeTile()` which fetches `/local-market/listings` on load and updates `#lm-home-count`. Background image cycles through all 12 LM listing thumbs (random start, 3.5s interval, 0.6s fade transition) while the 🛍️ icon and "Local Market" label stay fixed in the centre overlay. LM card grid photos fixed: added `referrerpolicy="no-referrer"` to all LM `<img>` tags (card thumbs + detail strip slides) so Unsplash serves images without requiring a page referrer header — was causing emoji fallback to show instead of real photos.

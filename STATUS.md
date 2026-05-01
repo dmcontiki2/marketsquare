@@ -3,7 +3,7 @@
 
 ---
 
-## Current State · 30 April 2026
+## Current State · 1 May 2026
 
 | Item | Detail |
 |---|---|
@@ -13,7 +13,7 @@
 | **BEA file** | `bea_main.py` (local) → served as `main.py` on server |
 | **Codex** | `Solar_Council_Codex_v4_5.docx` |
 | **Cost model** | `Cost_Breakdown_GlobalLaunch.xlsx` — ZAR/USD rate B62 |
-| **BEA version** | v1.3.0 live — check GET /health |
+| **BEA version** | v1.3.0 live — KYC endpoints active |
 | **Founding sellers** | 23 / 60 · check trustsquare.co/admin.html |
 | **Paystack** | Test mode — **awaiting Paystack live mode review** (submitted 30 Apr 2026) |
 | **CIPC** | TRUSTSQUARE (PTY) LTD · 2026/340128/07 · registered 29/04/2026 |
@@ -22,26 +22,35 @@
 
 ---
 
-## Last Completed Session · Session 33 (30 April 2026)
+## Last Completed Session · Session 34 (1 May 2026) — Part 2: KYC
 
-- Removed `/dev/credit` BEA endpoint + Dev Tools nav tab from admin app (L1+L2) ✅
-- H1: LM cards + detail screen updated to standard lcard/dsheet layout ✅
-- H1 fixes: View Seller Profile + intro modal (openLMModal/openLMSellerProfile/lmSubmitIntro) ✅
-- AI Guidance: POST /trust-score/guidance (Haiku 4.5) — category-specific Trust Score action plan ✅
-- Admin app: AI Guidance panel auto-renders in publish-result after first publish ✅
-- LM multi-photo strip: lm_get_listing returns photo_urls; lmOpenDetail renders full strip with swipe, dots, arrows, lightbox, back button, wishlist heart ✅
-- 12 new LM example listings (ids 57–68) with 5 Unsplash photos each — live on server ✅
-- photo_urls TEXT column added to listings table on live DB ✅
-- HEAD: commit pending (see git instructions below)
+- BEA: SA ID Luhn validator + Sonnet vision identity verification (POST /users/{email}/verify-identity) ✅
+- BEA: Banking details storage + fuzzy name-match against verified ID (POST /users/{email}/banking) ✅
+- BEA: Certificate name-match via Sonnet background task (_run_cert_name_check) ✅
+- Admin: ID verification UI panel in Document Hub — inline after id_doc upload ✅
+- DB: user_credentials.updated_at column + 10 KYC columns on users table ✅
+- Trust signal hierarchy live: id_uploaded(+3) → id_number_valid(+4) → id_ai_verified(+8) → id_admin_confirmed(+10) ✅
+- All endpoints smoke-tested on live server ✅
+- HEAD: commit pending
 
 ---
 
-## Next Tasks · Session 34
+## Previous Session · Session 34 Part 1 (1 May 2026)
+
+- LM multi-photo upload (up to 5), Document Hub (9 doc types, visibility toggle), seller_documents DB table ✅
+- 12 LM Trust Score signals (was 2) · buyer seller profile shows post_intro docs ✅
+
+
+---
+
+## Next Tasks · Session 35
 
 1. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`, restart, test with real card
 2. **n8n email notifications** — buyer emailed on intro accept/decline
 3. **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab
-4. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
+4. **LM edit flow** — add multi-photo management and Document Hub to edit-after-publish screen
+5. **KYC cost analysis** — estimate Sonnet vision tokens per verification vs PaddleOCR on-server option
+6. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 
 ---
 
