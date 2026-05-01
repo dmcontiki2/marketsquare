@@ -7024,7 +7024,8 @@ async function elDocHubUpload(email) {
   const postIntro = document.getElementById('el-dh-postintro')?.checked;
   const status    = document.getElementById('el-dh-status');
   if (!fileInput?.files?.length) { if (status) status.textContent = 'Please choose a file first.'; return; }
-  if (status) status.textContent = '⏳ Uploading…';
+  const isIdDoc = docType === 'id_doc';
+  if (status) status.textContent = isIdDoc ? '⏳ Uploading — AI verification in progress…' : '⏳ Uploading…';
   const fd = new FormData();
   fd.append('file', fileInput.files[0]);
   fd.append('doc_type', docType);
@@ -7059,9 +7060,11 @@ async function elDocHubUpload(email) {
         if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
       }
     } catch(_) {
-      if (status) status.textContent = '✅ Uploaded — Trust Score signal set to pending';
+      if (status) status.textContent = uploadData.auto_earned
+        ? '✅ Uploaded — Trust Score updated!'
+        : '⏳ Uploaded — AI verification running, score will update shortly';
     }
-    // Reload Trust Score panel to show updated pending points
+    // Reload Trust Score panel to show updated points
     elLoadSidebarPanels(email, elCurrentCat);
   } catch(e) {
     if (status) status.textContent = '❌ Upload failed: ' + e.message;

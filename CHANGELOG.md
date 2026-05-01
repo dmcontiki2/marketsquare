@@ -974,3 +974,20 @@ Solid-colour fallback (`#1e3a5f` / `#14532d` / `#7c2d12`) retained for offline/l
 ### Files changed
 - `bea_main.py` — `trust_score_breakdown` returns `pending_points` + `pending_signals`; new `UploadCommentRequest` model + `POST /trust-score/upload-comment` endpoint
 - `marketsquare.html` — Trust Score panel renders pending bar + badge; `elDocHubUpload` calls upload-comment and renders AI feedback in green panel
+
+## Session 36c — Fully automated Trust Score verification (2026-05-01)
+
+### No humans in the loop — ever
+
+**Design decision**: Removed all "pending → admin review" paths. Verification is now 100% automated:
+
+- **Certificates, training docs, memberships, guides** → auto-earn the signal the moment the document is uploaded (self-attestation model, same as Fiverr/Upwork/LinkedIn). If a verified ID name exists, a background Sonnet task also checks the cert name and can award `cert_name_verified` (+3 pts).
+- **ID/Passport** → Sonnet vision auto-earns `id_ai_verified` at confidence ≥ 0.60 (lowered from 0.75). Format-valid check always earns `id_number_valid`. No fallback to admin queue.
+- **Future upgrade path**: Swap in Smile Identity or Datanamix SA DHA API call (~R1–R3/check) in `_sonnet_verify_identity` — zero code changes needed in upload flow.
+
+### Files changed
+- `bea_main.py` — `upload_seller_document` auto-earns all non-ID signals; uses `BackgroundTasks` for cert name check; ID verify confidence threshold lowered to 0.60; cert_name_check always earns
+- `marketsquare.html` — upload status message reflects earned vs pending per doc type
+
+### DB patch
+- Retroactively earned `category.lm.formal_cert`, `category.lm.training_course`, `category.lm.product_guide` for dmcontiki2@gmail.com — score: 26 → 34

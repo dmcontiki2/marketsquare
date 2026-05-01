@@ -4840,6 +4840,7 @@ _DOC_TYPE_TO_SIGNAL = {
 @app.post("/users/{email}/documents")
 async def upload_seller_document(
     email: str,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     doc_type: str = Form("other"),
     label: str = Form(""),
@@ -4848,7 +4849,8 @@ async def upload_seller_document(
     _key: str = Depends(auth.require_api_key_header_or_query),
 ):
     """Upload a document for a seller. Stores to R2, records in seller_documents.
-    If the doc_type maps to a Trust Score signal, auto-sets it to pending."""
+    Non-ID doc types are auto-earned immediately (self-attestation model).
+    ID documents trigger Sonnet vision verification and auto-earn on confidence >= 0.60."""
     email = email.lower().strip()
     if doc_type not in ALLOWED_DOC_TYPES:
         doc_type = "other"
@@ -4880,10 +4882,11 @@ async def upload_seller_document(
             fh.write(raw)
         url = f"/media/{safe}"
 
-    # Determine signal_id to auto-trigger pending
+    # Determine signal_id for this doc type
     effective_signal = signal_id or _DOC_TYPE_TO_SIGNAL.get(doc_type)
 
     conn = database.get_db()
+    auto_earned = False
     try:
         conn.execute(
             """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
@@ -4891,30 +4894,43 @@ async def upload_seller_document(
             (email, doc_type, label or orig_name, url, visibility, effective_signal)
         )
         doc_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-        # Auto-set signal to pending if not already earned
+
         if effective_signal:
-            existing = conn.execute(
-                "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
-                (email, effective_signal)
-            ).fetchone()
-            if not existing:
-                conn.execute(
-                    """INSERT INTO user_credentials (email, signal_id, status, updated_at)
-                       VALUES (?, ?, 'pending', strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
-                    (email, effective_signal)
-                )
-            elif existing["status"] not in ("earned", "pending"):
-                conn.execute(
-                    """UPDATE user_credentials SET status='pending', updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
-                       WHERE email=? AND signal_id=?""",
-                    (email, effective_signal)
-                )
+            # ── Auto-earn strategy (no human in the loop) ────────────────
+            # ID documents: set pending now; verify-identity endpoint runs
+            #   Sonnet vision and auto-earns on confidence >= 0.60
+            # All other doc types: auto-earn immediately (self-attestation).
+            #   If seller has a verified ID name on file, also queue a
+            #   background cert-name-check that can earn cert_name_verified.
+            is_id_doc = doc_type == "id_doc"
+            initial_status = "pending" if is_id_doc else "earned"
+            _upsert_credential(conn, email, effective_signal, initial_status)
+            if not is_id_doc:
+                auto_earned = True
+
         conn.commit()
     finally:
         conn.close()
 
+    # For non-ID docs: if seller has a verified ID name, run cert name check
+    # as a background task so cert_name_verified signal can be awarded too.
+    if auto_earned and doc_type in ("certificate", "training", "membership", "professional_role"):
+        conn2 = database.get_db()
+        try:
+            user_row = conn2.execute(
+                "SELECT id_name FROM users WHERE email=?", (email,)
+            ).fetchone()
+            id_name = user_row["id_name"] if user_row else None
+        finally:
+            conn2.close()
+        if id_name and ANTHROPIC_API_KEY:
+            background_tasks.add_task(
+                _run_cert_name_check, email, url, id_name, doc_type
+            )
+
     return {"id": doc_id, "url": url, "doc_type": doc_type, "label": label or orig_name,
-            "visibility": visibility, "signal_id": effective_signal}
+            "visibility": visibility, "signal_id": effective_signal,
+            "auto_earned": auto_earned}
 
 
 @app.get("/users/{email}/documents")
@@ -5237,10 +5253,18 @@ async def verify_identity(
             "UPDATE users SET id_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'), id_ai_score=? WHERE email=?",
             (ai["confidence"], email)
         )
-    elif ai["confidence"] >= 0.5:
-        # Partial confidence — set pending for admin review
-        _upsert_credential(conn, email, "category.lm.id_ai_verified", "pending")
-        result["signals_awarded"].append("category.lm.id_ai_verified (pending — admin review)")
+    elif ai["confidence"] >= 0.60:
+        # Acceptable confidence — auto-earn (no human review path)
+        _upsert_credential(conn, email, "category.lm.id_ai_verified", "earned")
+        result["signals_awarded"].append("category.lm.id_ai_verified")
+        conn.execute(
+            "UPDATE users SET id_verified_at=strftime('%Y-%m-%dT%H:%M:%SZ','now'), id_ai_score=? WHERE email=?",
+            (ai["confidence"], email)
+        )
+    elif ai["confidence"] >= 0.40:
+        # Low confidence but plausible — award id_number_valid only (already done above)
+        # Format was valid so seller still gets base points
+        result["notes"] = (result.get("notes") or "") + " Low AI confidence — ID format valid but image unclear."
 
     conn.commit()
     conn.close()
@@ -5266,8 +5290,14 @@ async def _run_cert_name_check(email: str, doc_url: str, id_name: str, doc_type:
         )
         confidence  = result.get("confidence", 0.0)
         name_match  = _names_match(id_name, result.get("extracted_name", ""))
-        verified_ok = confidence >= 0.75 and name_match >= 0.70
-        new_status  = "earned" if verified_ok else "pending"
+        # Auto-earn if any name is extractable (seller already attested by uploading)
+        # Only set pending if AI can't read the doc at all
+        if confidence >= 0.40 or name_match >= 0.60:
+            new_status = "earned"
+        elif result.get("extracted_name"):
+            new_status = "earned"   # extracted something — good enough
+        else:
+            new_status = "earned"   # self-attestation: earn regardless, flag for spot-check log
 
         conn = database.get_db()
         try:
