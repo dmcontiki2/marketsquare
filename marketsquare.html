@@ -4065,7 +4065,8 @@ async function loadLiveListings(retryCount) {
   }
   try {
     const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
-    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam);
+    const demoParam = DEMO_MODE ? '&demo=1' : '';
+    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam);
     if (!live && !retryCount) {
       // First failure — retry once after 4 seconds (handles brief BEA restarts)
       setTimeout(() => loadLiveListings(1), 4000);
@@ -9625,7 +9626,7 @@ let _lmCurrentListing = null; // holds the last-fetched LM listing object for pr
 let _lmHomeCycleTimer = null; // module-level so GC never clears it
 async function initLMHomeTile() {
   try {
-    const r = await fetch(BEA_URL + '/local-market/listings?limit=50');
+    const r = await fetch(BEA_URL + '/local-market/listings?limit=50' + (DEMO_MODE ? '&demo=1' : ''));
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     const listings = Array.isArray(data) ? data : (data.listings || []);
@@ -9746,6 +9747,7 @@ async function lmLoadGrid() {
   if (_lmSearchQ)   params.set('q', _lmSearchQ);
   params.set('limit', '60');
   try {
+    if (DEMO_MODE) params.set('demo', '1');
     const r = await fetch(BEA_URL + '/local-market/listings?' + params.toString());
     if (!r.ok) throw new Error('API ' + r.status);
     const cards = await r.json();

@@ -139,6 +139,7 @@ def run_migrations(conn):
         "ALTER TABLE users ADD COLUMN seller_tier TEXT NOT NULL DEFAULT 'free'",
         # category-scoped credentials — added Session 37
         "ALTER TABLE user_credentials ADD COLUMN listing_category TEXT",
+        "ALTER TABLE listings ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0",
     ]:
         try:
             conn.execute(col_def)
@@ -805,7 +806,8 @@ def health():
 # ── LISTINGS (public read, protected write) ──────────────────
 
 @app.get("/listings")
-def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb: Optional[str] = None):
+def get_listings(city: str = "Pretoria", category: Optional[str] = None,
+                 suburb: Optional[str] = None, demo: int = 0):
     conn = database.get_db()
 
     # Resolve city name → geo_city_id for extended-city matching
@@ -820,6 +822,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb:
     suspension_filter = "(l.suspension_reason IS NULL OR l.suspension_reason = '')"
     lm_filter_a = "LOWER(l.category) = LOWER(?)" if category else "LOWER(l.category) != LOWER(?)"
     lm_filter_b = lm_filter_a  # same category filter on both branches
+    # demo=0 (real app): hide seed data; demo=1: show everything including seed
+    demo_filter = "" if demo else "AND (l.is_demo = 0 OR l.is_demo IS NULL)"
 
     cat_param = category if category else LM_CATEGORY
 
@@ -829,14 +833,14 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb:
             SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
             FROM listings l
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} AND l.suburb = ?"""
+            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter} AND l.suburb = ?"""
         params_a = [city, cat_param, suburb]
     else:
         branch_a = f"""
             SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
             FROM listings l
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a}"""
+            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter}"""
         params_a = [city, cat_param]
 
     # Branch B: extended city reach (only runs when we have a valid city_id)
@@ -846,7 +850,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None, suburb:
             FROM listings l
             JOIN listing_cities lc ON lc.listing_id = l.id AND lc.city_id = ?
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE l.city != ? AND {suspension_filter} AND {lm_filter_b}"""
+            WHERE l.city != ? AND {suspension_filter} AND {lm_filter_b} {demo_filter}"""
         params_b = [buyer_city_id, city, cat_param]
 
         sql = f"""
@@ -3652,14 +3656,16 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
 
 @app.get("/local-market/listings")
 def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
-                     min_trust: int = 0, q: Optional[str] = None, limit: int = 50):
+                     min_trust: int = 0, q: Optional[str] = None,
+                     limit: int = 50, demo: int = 0):
     """Public list endpoint. Anonymous-stripped cards. Suspended listings hidden.
     Trust score is read live from the seller's users.trust_score (joined) so
-    that buyer trust filters always reflect the seller's current standing —
-    not a stale value copied at listing time."""
+    that buyer trust filters always reflect the seller's current standing.
+    demo=1 includes seed/showcase listings; demo=0 (default) hides them."""
     conn = database.get_db()
     clauses = ["l.category = ?", "l.suspension_reason IS NULL",
-               "COALESCE(u.trust_score, 0) >= ?"]
+               "COALESCE(u.trust_score, 0) >= ?",
+               "(l.is_demo = 0 OR l.is_demo IS NULL)" if not demo else "1=1"]
     params: list = [LM_CATEGORY, max(0, min_trust)]
     if city:
         clauses.append("l.city = ?")

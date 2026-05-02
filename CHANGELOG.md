@@ -1074,6 +1074,12 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 - `bea_main.py` → `/var/www/marketsquare/main.py` · BEA restarted active
 - `marketsquare.html` → `/var/www/marketsquare/index.html`
 
+## Session 38 (cont.) · 2 May 2026 · is_demo flag — real vs seed data separation
+
+**is_demo column on listings** — Added `is_demo INTEGER DEFAULT 0` to the listings table. All seed/showcase data marked `is_demo=1`: 10 Services + 10 Tutors (dmcontiki2@), 12 Collectors + 12 LM (showcase@trustsquare.co). Real data stays `is_demo=0`: bee LM listing (dmcontiki2@) and 4 Property listings (miconradie1@). Both `/listings` and `/local-market/listings` BEA endpoints now accept `?demo=1` — real app (default) filters seed data out, demo mode passes demo=1 to include it. Frontend passes the flag automatically based on DEMO_MODE. Smoke test confirmed: real app returns 4 Property + 1 LM (real only); demo returns 30 + 13 (all). Zero contamination risk going into financials work.
+
+---
+
 ## Session 38 · 2 May 2026 · Demo mode
 
 **Demo mode** — `trustsquare.co/demo` now serves the marketplace in a read-only showcase mode. Nginx redirects `/demo` to `/?demo=1`. The frontend detects the flag and: (1) hides Sell, Wallet, and Seller nav buttons; (2) shows a sticky blue demo banner with a "Join as a founding seller →" CTA that routes to the real app; (3) navigates directly to Browse so prospects see the marketplace immediately; (4) blocks navigation to tuppence, dashboard, onboard, publish, and plans screens with a toast. The real app at `trustsquare.co` is completely unaffected — no seller flows or data are changed. Also fixed: category-scoped document list (bee certs no longer show in plumber edit screen), trust score DB write blocked when category override active, listings.trust_score synced on breakdown call so card badge matches edit screen.
