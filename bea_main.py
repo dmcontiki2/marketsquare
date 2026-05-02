@@ -4636,9 +4636,35 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
             "UPDATE users SET trust_score = ? WHERE email = ?",
             (score_total, email)
         )
+        # Sync score to all listing rows for this seller+category so the
+        # browse card badge stays accurate without a separate job.
+        conn.execute(
+            "UPDATE listings SET trust_score = ? WHERE seller_email = ?",
+            (score_total, email)
+        )
         conn.commit()
         # Hook into LM suspension/restoration
         _lm_recompute_seller_state(conn, email)
+        conn.commit()
+    elif category:
+        # Category-override call: sync score only to listings in this category
+        # so each listing's card badge reflects its own category score.
+        # Map frontend category param back to DB category values
+        _cat_listing_map = {
+            "LocalMarket": "local_market", "local_market": "local_market",
+            "Property": "Property", "Tutors": "Tutors",
+            "Services-Technical": "Services", "Services": "Services",
+            "Services-Casuals": "Services",
+            "Adventures-Experiences": "Adventures",
+            "Adventures-Accommodation": "Adventures",
+            "Adventures": "Adventures",
+            "Collectors": "Collectors", "Cars": "Cars",
+        }
+        db_cat = _cat_listing_map.get(category, category)
+        conn.execute(
+            "UPDATE listings SET trust_score = ? WHERE seller_email = ? AND category = ?",
+            (score_total, email, db_cat)
+        )
         conn.commit()
 
     tip = _haiko_tip(items_u, items_t, items_c, cat_signals, score_total, tier)
