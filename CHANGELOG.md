@@ -1074,6 +1074,12 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 - `bea_main.py` → `/var/www/marketsquare/main.py` · BEA restarted active
 - `marketsquare.html` → `/var/www/marketsquare/index.html`
 
+## Session 37 (cont.) · 2 May 2026 · Category-scoped document list
+
+**Category-scoped Document Hub** — `GET /users/{email}/documents` now accepts an optional `?category=` parameter. When supplied, the BEA returns only documents whose `signal_id` matches that category prefix (e.g. `category.lm.*` for LocalMarket), plus universal and track_record documents, plus any doc with no signal_id. Documents from other categories are hidden. Frontend passes `&category=elCurrentCat` on both the initial load and the post-upload reload, so each listing's edit screen only shows its own relevant evidence — bee certificates no longer bleed into the plumber listing.
+
+---
+
 ## Session 37 — LocalMarket category normalisation fix
 
 **Problem:** `normCat()` had no case for `'local_market'` or `'LocalMarket'`, so all Local Market listings fell through to `'Services'`. This caused:

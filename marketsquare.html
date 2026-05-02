@@ -6699,7 +6699,7 @@ async function elLoadSidebarPanels(email, category) {
     dhSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading documents…</div>';
     try {
       const [docs, tsData] = await Promise.all([
-        apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
+        apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY + (category ? '&category=' + encodeURIComponent(category) : '')).catch(() => []),
         apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (category ? '&category=' + encodeURIComponent(category) : '')).catch(() => null)
       ]);
       // Extract declarable signals from all category items
@@ -7189,7 +7189,7 @@ async function elDocHubUpload(email) {
     if (status) status.textContent = '✅ Uploaded — fetching AI feedback…';
     // Reload doc list + re-fetch declarations state
     const [docs, tsDataUp] = await Promise.all([
-      apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
+      apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY + (elCurrentCat ? '&category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => []),
       apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (elCurrentCat ? '&category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => null)
     ]);
     const dhSec = document.getElementById('el-dochub-section');

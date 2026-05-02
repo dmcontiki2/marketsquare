@@ -5144,16 +5144,49 @@ async def upload_seller_document(
 @app.get("/users/{email}/documents")
 def list_seller_documents(
     email: str,
+    category: Optional[str] = None,
     _key: str = Depends(auth.require_api_key_header_or_query),
 ):
-    """List all documents for a seller (admin-only view — all visibility levels)."""
+    """List documents for a seller. If category is provided, returns only docs
+    whose signal_id matches that category prefix, plus universal/track_record docs
+    and docs with no signal_id. Without category, returns all docs."""
     email = email.lower().strip()
     conn = database.get_db()
-    rows = conn.execute(
-        """SELECT id, doc_type, label, url, visibility, signal_id, uploaded_at
-           FROM seller_documents WHERE email=? ORDER BY uploaded_at DESC""",
-        (email,)
-    ).fetchall()
+    _cat_prefix_map = {
+        "LocalMarket": "category.lm.",
+        "local_market": "category.lm.",
+        "Property": "category.property.",
+        "Tutors": "category.tutors.",
+        "Services-Technical": "category.services_tech.",
+        "Services-Casuals": "category.services_cas.",
+        "Services": "category.services_tech.",
+        "Adventures-Experiences": "category.adv_exp.",
+        "Adventures-Accommodation": "category.adv_acc.",
+        "Adventures": "category.adv_exp.",
+        "Collectors": "category.collectors.",
+        "Cars": "category.cars.",
+    }
+    prefix = _cat_prefix_map.get(category, "") if category else ""
+    if prefix:
+        rows = conn.execute(
+            """SELECT id, doc_type, label, url, visibility, signal_id, uploaded_at
+               FROM seller_documents
+               WHERE email=?
+                 AND (
+                   signal_id IS NULL
+                   OR signal_id LIKE ?
+                   OR signal_id LIKE 'universal.%'
+                   OR signal_id LIKE 'track_record.%'
+                 )
+               ORDER BY uploaded_at DESC""",
+            (email, prefix + "%")
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """SELECT id, doc_type, label, url, visibility, signal_id, uploaded_at
+               FROM seller_documents WHERE email=? ORDER BY uploaded_at DESC""",
+            (email,)
+        ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
