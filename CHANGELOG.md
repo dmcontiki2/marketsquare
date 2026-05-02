@@ -1073,3 +1073,45 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 ### Deployment
 - `bea_main.py` → `/var/www/marketsquare/main.py` · BEA restarted active
 - `marketsquare.html` → `/var/www/marketsquare/index.html`
+
+## Session 37 — LocalMarket category normalisation fix
+
+**Problem:** `normCat()` had no case for `'local_market'` or `'LocalMarket'`, so all Local Market listings fell through to `'Services'`. This caused:
+- Seller dashboard showing "SERVICES" label and Services icon/colour for bee listings
+- `openEditListing` setting `elCurrentCat = 'Services'`, so the edit form showed Services fields instead of LM fields
+- Confusion when a new Property listing attempt opened with mismatched fields
+
+**Fixes applied to marketsquare.html:**
+1. `normCat()` — added `'localmarket' | 'local_market' | 'local market'` → `'LocalMarket'`
+2. `CATS` — added `LocalMarket: { icon: '🛒', bg: green gradient, model: 'queue' }` so dashboard cards render correctly
+3. `AA_CATEGORIES` — added `'LocalMarket'` entry with 4 simple fields: title, price, desc, area — so the edit form renders correct fields for LM listings
+4. `renderDashCard` label — `'LocalMarket'` displays as `'Local Market'` (readable label)
+
+**Deployed:** marketsquare.html → /var/www/marketsquare/index.html (9947 lines, file intact)
+
+## Session 37 (continued) — Category-scoped Trust Score credentials
+
+**Problem:** One email = one trust score meant a multi-category seller (bee products + real estate) had their LM credentials bleed into the Property listing's Doc Hub and vice versa. The system assumed a seller lists in only one category.
+
+**Design:** Trust Score credentials are now category-scoped.
+- Universal + Track Record signals remain person-scoped (NULL listing_category) — ID, referrals, intros belong to the person not the listing type.
+- Category signals store `listing_category` matching the signal prefix (e.g. `category.lm.*` → `local_market`, `category.property.*` → `Property`).
+- `trust_score_breakdown` now accepts an optional `?category=` param. The edit screen always passes `elCurrentCat`, so each listing gets the correct signal set.
+
+**BEA changes (bea_main.py):**
+1. DB migration: `ALTER TABLE user_credentials ADD COLUMN listing_category TEXT`
+2. `_signal_listing_category(signal_id)` helper — derives category from signal_id prefix
+3. `_build_breakdown_items` — filters credentials by `listing_category` (NULL = applies everywhere; category-signal row only applies if its listing_category is in the current signal set)
+4. `trust_score_breakdown` — accepts `?category=` param, normalises frontend names to `_CATEGORY_SIGNALS` keys
+5. `_upsert_credential` — stores `listing_category` on insert/update
+6. `trust_score_set_credential` (admin) — stores `listing_category`
+7. Live DB backfill: 12/17 existing credential rows assigned correct `listing_category`
+
+**Frontend changes (marketsquare.html):**
+8. All 3 breakdown fetch calls now pass `&category=<elCurrentCat>`
+
+**Smoke test:**
+- `?category=local_market` → score 100, LM signals ✓
+- `?category=Property` → score 25, Property signals only (no LM bleed) ✓
+
+**Deployed:** bea_main.py + marketsquare.html → trustsquare.co

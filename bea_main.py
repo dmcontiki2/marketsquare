@@ -137,6 +137,8 @@ def run_migrations(conn):
         "ALTER TABLE user_credentials ADD COLUMN updated_at TEXT",
         # seller subscription tier — added Session 35
         "ALTER TABLE users ADD COLUMN seller_tier TEXT NOT NULL DEFAULT 'free'",
+        # category-scoped credentials — added Session 37
+        "ALTER TABLE user_credentials ADD COLUMN listing_category TEXT",
     ]:
         try:
             conn.execute(col_def)
@@ -1006,6 +1008,27 @@ def get_listing_version_snapshot(listing_id: int, version_num: int, _key: str = 
 def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Listing deleted"}
+
+
+@app.delete("/listings/{listing_id}/seller")
+def delete_listing_by_seller(listing_id: int, email: str):
+    """Seller-authenticated delete. No API key required — email must match
+    seller_email on the listing. Used by buyer-facing edit screen."""
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT seller_email FROM listings WHERE id = ?", (listing_id,)
+    ).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if (row["seller_email"] or "").lower() != email.lower():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Email does not match listing owner")
+    conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
+    conn.execute("DELETE FROM listing_cities WHERE listing_id = ?", (listing_id,))
     conn.commit()
     conn.close()
     return {"message": "Listing deleted"}
@@ -4324,6 +4347,29 @@ def _compute_universal_track_status(conn, email: str) -> dict:
     return out
 
 
+def _signal_listing_category(signal_id: str) -> str:
+    """Derive the listing_category a credential belongs to from its signal_id prefix.
+    Universal and track_record signals belong to the person (return empty string).
+    Category signals return the matching _CATEGORY_SIGNALS key."""
+    if signal_id.startswith("category.lm."):
+        return "local_market"
+    if signal_id.startswith("category.property."):
+        return "Property"
+    if signal_id.startswith("category.tutors."):
+        return "Tutors"
+    if signal_id.startswith("category.services_tech."):
+        return "Services-Technical"
+    if signal_id.startswith("category.services_cas."):
+        return "Services-Casuals"
+    if signal_id.startswith("category.adv_exp."):
+        return "Adventures-Experiences"
+    if signal_id.startswith("category.adv_acc."):
+        return "Adventures-Accommodation"
+    if signal_id.startswith("category.collectors."):
+        return "Collectors"
+    return ""  # universal / track_record — person-scoped, no listing_category
+
+
 def _build_breakdown_items(conn, email: str, signals_dict: dict, computed: dict) -> list:
     """Build a list of {signal_id, name, points, status, how_to_earn} items
     from a signal set. Reads user_credentials for upload-required signals.
@@ -4333,9 +4379,18 @@ def _build_breakdown_items(conn, email: str, signals_dict: dict, computed: dict)
     are shown as pending_declaration_evidence so the frontend can surface the
     'upload evidence' prompt."""
     rows = conn.execute(
-        "SELECT signal_id, status FROM user_credentials WHERE email = ?", (email,)
+        "SELECT signal_id, status, listing_category FROM user_credentials WHERE email = ?", (email,)
     ).fetchall()
-    cred_status = {r["signal_id"]: r["status"] for r in rows}
+    # Build status map: for category signals, only pick up credentials whose
+    # listing_category matches one of the signal_ids we're being asked about.
+    # Universal/track_record signals (listing_category IS NULL or '') always apply.
+    cred_status = {}
+    for r in rows:
+        lc = r["listing_category"] or ""
+        if not lc:
+            cred_status[r["signal_id"]] = r["status"]  # person-scoped
+        elif r["signal_id"] in signals_dict:
+            cred_status[r["signal_id"]] = r["status"]  # matches this signal set
 
     # Load declaration points already awarded (for 'declared' credentials)
     decl_rows = conn.execute(
@@ -4503,12 +4558,14 @@ def _haiko_tip(items_universal: list, items_track: list, items_category: list,
 
 
 @app.get("/trust-score/breakdown")
-def trust_score_breakdown(email: str):
+def trust_score_breakdown(email: str, category: Optional[str] = None):
     """Return a structured Trust Score breakdown for the given seller.
     Frontend renders Universal / Track Record / Category groups + a Haiko
     tip + active penalties. Score is recomputed from credentials each call;
     users.trust_score is updated as a side-effect so wishlist matching and
-    Local Market gates see the live value."""
+    Local Market gates see the live value.
+    `category` param overrides auto-detection so multi-category sellers get
+    the correct signal set for the listing being edited."""
     conn = database.get_db()
     user = conn.execute(
         "SELECT trust_score, primary_category FROM users WHERE email = ?", (email,)
@@ -4517,7 +4574,20 @@ def trust_score_breakdown(email: str):
         conn.close()
         raise HTTPException(status_code=404, detail="Seller not found")
 
-    cat_key = _category_key_for_user(conn, email)
+    # Use explicit category if provided (edit screen passes elCurrentCat);
+    # otherwise fall back to auto-detection from listings.
+    if category:
+        # Normalise frontend category names to _CATEGORY_SIGNALS keys
+        _cat_norm = {
+            "LocalMarket": "local_market", "Local Market": "local_market",
+            "Property": "Property", "Tutors": "Tutors",
+            "Services": "Services-Technical",  # default subclass
+            "Adventures": "Adventures-Experiences",
+            "Collectors": "Collectors", "Cars": "Cars",
+        }
+        cat_key = _cat_norm.get(category, category)
+    else:
+        cat_key = _category_key_for_user(conn, email)
     cat_signals = _CATEGORY_SIGNALS.get(cat_key, {})
 
     # System-calculated statuses
@@ -4616,17 +4686,19 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
     conn = database.get_db()
     pts = sig["points"] if req.status == "earned" else 0
     verified_at = datetime.now(timezone.utc).isoformat() if req.status == "earned" else None
+    lc = _signal_listing_category(req.signal_id)
     conn.execute(
-        """INSERT INTO user_credentials (email, signal_id, status, points, evidence_url, notes, verified_at, verified_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'admin')
+        """INSERT INTO user_credentials (email, signal_id, status, points, evidence_url, notes, verified_at, verified_by, listing_category)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', ?)
            ON CONFLICT(email, signal_id) DO UPDATE SET
                status = excluded.status,
                points = excluded.points,
                evidence_url = COALESCE(excluded.evidence_url, user_credentials.evidence_url),
                notes = COALESCE(excluded.notes, user_credentials.notes),
                verified_at = excluded.verified_at,
-               verified_by = 'admin'""",
-        (req.email, req.signal_id, req.status, pts, req.evidence_url, req.notes, verified_at)
+               verified_by = 'admin',
+               listing_category = COALESCE(excluded.listing_category, user_credentials.listing_category)""",
+        (req.email, req.signal_id, req.status, pts, req.evidence_url, req.notes, verified_at, lc or None)
     )
     conn.commit()
     conn.close()
@@ -5560,22 +5632,25 @@ async def _run_cert_name_check(email: str, doc_url: str, id_name: str, doc_type:
 
 
 def _upsert_credential(conn, email: str, signal_id: str, status: str):
-    """Insert or update a credential — never downgrade earned to pending."""
+    """Insert or update a credential — never downgrade earned to pending.
+    Stores listing_category derived from signal_id prefix for category signals."""
+    lc = _signal_listing_category(signal_id) or None
     existing = conn.execute(
         "SELECT status FROM user_credentials WHERE email=? AND signal_id=?",
         (email, signal_id)
     ).fetchone()
     if not existing:
         conn.execute(
-            """INSERT INTO user_credentials (email, signal_id, status, updated_at)
-               VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
-            (email, signal_id, status)
+            """INSERT INTO user_credentials (email, signal_id, status, listing_category, updated_at)
+               VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))""",
+            (email, signal_id, status, lc)
         )
     elif existing["status"] != "earned":  # never downgrade earned
         conn.execute(
-            """UPDATE user_credentials SET status=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
+            """UPDATE user_credentials SET status=?, listing_category=COALESCE(?,listing_category),
+               updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
                WHERE email=? AND signal_id=?""",
-            (status, email, signal_id)
+            (status, lc, email, signal_id)
         )
 
 

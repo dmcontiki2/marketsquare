@@ -50,7 +50,9 @@ const CATS = {
   Collectors: { icon: '🏺', bg: 'linear-gradient(140deg,#44403c,#78716c)', model: 'queue',
                 catPhoto: 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800&q=80' },
   Cars:       { icon: '🚗', bg: 'linear-gradient(140deg,#0c1a2e,#1e3a5f)', model: 'queue',
-                catPhoto: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80' }
+                catPhoto: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80' },
+  LocalMarket: { icon: '🛒', bg: 'linear-gradient(140deg,#14532d,#166534)', model: 'queue',
+                catPhoto: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' }
 };
 
 // ── PROPERTY PHOTOS ────────────────────────────────────────
@@ -3529,6 +3531,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <button class="el-cancel-btn" onclick="goTo('dashboard')">Cancel</button>
     <button class="el-save-btn" id="el-save-btn" onclick="saveEditedListing()">Save Changes</button>
   </div>
+  <div style="padding:0 16px 4px;text-align:center;">
+    <button id="el-delete-btn" onclick="elConfirmDeleteListing()" style="background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer;padding:8px 12px;font-family:'Syne',sans-serif;text-decoration:underline;">Delete this listing</button>
+  </div>
   <div class="el-version-note">Every save is version-archived for audit. Changes go live immediately.</div>
 </div>
 
@@ -3997,6 +4002,7 @@ function normCat(raw) {
       s === 'adventures_accommodation' || s === 'adventures_experiences') return 'Adventures';
   if (s === 'collectors' || s === 'collectibles' || s === 'collectible') return 'Collectors';
   if (s === 'cars' || s === 'car' || s === 'vehicles' || s === 'vehicle' || s === 'help wanted') return 'Cars';
+  if (s === 'localmarket' || s === 'local_market' || s === 'local market') return 'LocalMarket';
   return 'Services';
 }
 
@@ -6496,7 +6502,7 @@ function renderDashCard(dl){
     <div class="mlthumb" style="background:${CATS[dl.cat].bg}">${thumbHtml}</div>
     <div class="mlinfo" style="width:100%;">
       <div class="mltitle">${dl.title}</div>
-      <div class="mlcat">${dl.cat}</div>
+      <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
       ${introsHtml}
       ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions"><button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
@@ -6627,7 +6633,8 @@ async function elLoadSidebarPanels(email, category) {
     tshSec.style.display = 'block';
     tshSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading Trust Score…</div>';
     try {
-      const ts = await apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email));
+      const catParam = category ? '&category=' + encodeURIComponent(category) : '';
+      const ts = await apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + catParam);
       if (ts && ts.score !== undefined) {
         const tierColor = ts.tier_color === 'green' ? '#059669' : ts.tier_color === 'blue' ? '#2563eb' : '#6b7280';
         const next = ts.next_tier
@@ -6693,7 +6700,7 @@ async function elLoadSidebarPanels(email, category) {
     try {
       const [docs, tsData] = await Promise.all([
         apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
-        apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email)).catch(() => null)
+        apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (category ? '&category=' + encodeURIComponent(category) : '')).catch(() => null)
       ]);
       // Extract declarable signals from all category items
       const declarableItems = [];
@@ -7183,7 +7190,7 @@ async function elDocHubUpload(email) {
     // Reload doc list + re-fetch declarations state
     const [docs, tsDataUp] = await Promise.all([
       apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY).catch(() => []),
-      apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email)).catch(() => null)
+      apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (elCurrentCat ? '&category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => null)
     ]);
     const dhSec = document.getElementById('el-dochub-section');
     const declarableItemsUp = [];
@@ -7298,6 +7305,37 @@ async function saveEditedListing() {
     showToast('Error: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+  }
+}
+
+async function elConfirmDeleteListing() {
+  if (!elCurrentId) return;
+  const title = elCurrentRaw && elCurrentRaw.title ? '"' + elCurrentRaw.title + '"' : 'this listing';
+  if (!confirm('Delete ' + title + '? This cannot be undone.')) return;
+  if (!confirm('Are you sure? All listing data, photos and evidence links will be permanently deleted and cannot be recovered.')) return;
+  const email = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Seller email not set'); return; }
+  const btn = document.getElementById('el-delete-btn');
+  if (btn) { btn.textContent = 'Deleting...'; btn.style.pointerEvents = 'none'; }
+  try {
+    const res = await fetch(
+      BEA_URL + '/listings/' + elCurrentId + '/seller?email=' + encodeURIComponent(email),
+      { method: 'DELETE' }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Delete failed (' + res.status + ')');
+    }
+    // Remove from local dashState so dashboard re-renders correctly
+    dashState.listings = dashState.listings.filter(dl => dl.beaListingId !== elCurrentId);
+    elCurrentId = null; elCurrentCat = null; elCurrentRaw = null;
+    await loadLiveListings();
+    renderDash();
+    showToast('Listing deleted');
+    goTo('dashboard');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    if (btn) { btn.textContent = 'Delete this listing'; btn.style.pointerEvents = 'auto'; }
   }
 }
 
@@ -7816,6 +7854,18 @@ const AA_CATEGORIES = {
       {slot:'interior',       label:'Interior',             hint:'Dashboard and front seats',              required:true},
       {slot:'engine',         label:'Engine bay',           hint:'Clean, well-lit',                        required:false},
       {slot:'service_book',   label:'Service book (optional)',hint:'Open to last service entry',           required:false},
+    ],
+  },
+  'LocalMarket': {
+    emoji: '🛒',
+    fields: [
+      {id:'title', label:'Product / service title', type:'text',     placeholder:'e.g. Organic honey — 500ml jar'},
+      {id:'price', label:'Price',                   type:'text',     placeholder:'e.g. R120 per jar'},
+      {id:'desc',  label:'Description',             type:'textarea', placeholder:'What you’re offering, quantity, freshness, delivery options…'},
+      {id:'area',  label:'Area / suburb',           type:'text',     placeholder:'e.g. Pretoria East'},
+    ],
+    photos: [
+      {slot:'product', label:'Product photo', hint:'Clear photo showing your product', required:true},
     ],
   },
 };
