@@ -3707,14 +3707,14 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <button class="nb" id="nav-browse" onclick="goTo('browse')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Browse
   </button>
-  <button class="nb sell-btn" id="nav-onboard" onclick="openSellNav()" style="display:none;">
+  <button class="nb sell-btn" id="nav-onboard" onclick="openSellNav()">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Sell
   </button>
-  <button class="nb tn-widget" id="nav-tuppence" onclick="goTo('tuppence')" style="display:none;">
+  <button class="nb tn-widget" id="nav-tuppence" onclick="goTo('tuppence')">
     <div class="tn-badge" id="nav-tn-badge">5</div>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Wallet
   </button>
-  <button class="nb" id="nav-dashboard" onclick="goTo('dashboard')" style="display:none;">
+  <button class="nb" id="nav-dashboard" onclick="goTo('dashboard')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Seller
   </button>
   <!-- DEMO MODE: join CTA replaces Sell/Wallet/Seller -->
@@ -4364,6 +4364,11 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // ── DEMO MODE ACTIVATION ─────────────────────────────────
   if (DEMO_MODE) {
+    // Hide real seller nav buttons, show demo join CTA
+    ['nav-onboard','nav-tuppence','nav-dashboard'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
     const demoJoin = document.getElementById('nav-demo-join');
     if (demoJoin) demoJoin.style.display = '';
     // Sticky demo banner
