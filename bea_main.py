@@ -4625,10 +4625,13 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     ]
     pending_pts = sum(it["points"] for it in pending_signals)
 
-    # Persist the recomputed score (drives wishlist matching trust gate +
-    # Local Market suspension state)
+    # Persist the recomputed score only when using the seller's natural/primary
+    # category (no ?category= override). When the edit screen requests a specific
+    # category, we compute and return the score but do NOT write it back to
+    # users.trust_score — that column must always reflect the primary listing
+    # score so the listing card badge stays accurate.
     prior_score = int(user["trust_score"] or 0)
-    if prior_score != score_total:
+    if not category and prior_score != score_total:
         conn.execute(
             "UPDATE users SET trust_score = ? WHERE email = ?",
             (score_total, email)
