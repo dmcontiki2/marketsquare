@@ -1074,6 +1074,12 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 - `bea_main.py` → `/var/www/marketsquare/main.py` · BEA restarted active
 - `marketsquare.html` → `/var/www/marketsquare/index.html`
 
+## Session 38 · 2 May 2026 · Demo mode
+
+**Demo mode** — `trustsquare.co/demo` now serves the marketplace in a read-only showcase mode. Nginx redirects `/demo` to `/?demo=1`. The frontend detects the flag and: (1) hides Sell, Wallet, and Seller nav buttons; (2) shows a sticky blue demo banner with a "Join as a founding seller →" CTA that routes to the real app; (3) navigates directly to Browse so prospects see the marketplace immediately; (4) blocks navigation to tuppence, dashboard, onboard, publish, and plans screens with a toast. The real app at `trustsquare.co` is completely unaffected — no seller flows or data are changed. Also fixed: category-scoped document list (bee certs no longer show in plumber edit screen), trust score DB write blocked when category override active, listings.trust_score synced on breakdown call so card badge matches edit screen.
+
+---
+
 ## Session 37 (cont.) · 2 May 2026 · Category-scoped document list
 
 **Category-scoped Document Hub** — `GET /users/{email}/documents` now accepts an optional `?category=` parameter. When supplied, the BEA returns only documents whose `signal_id` matches that category prefix (e.g. `category.lm.*` for LocalMarket), plus universal and track_record documents, plus any doc with no signal_id. Documents from other categories are hidden. Frontend passes `&category=elCurrentCat` on both the initial load and the post-upload reload, so each listing's edit screen only shows its own relevant evidence — bee certificates no longer bleed into the plumber listing.
