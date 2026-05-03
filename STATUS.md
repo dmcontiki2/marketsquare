@@ -22,25 +22,23 @@
 
 ---
 
-## Last Completed Session · Session 36 (1 May 2026) — Declaration System + Trust Score Live Updates
+## Last Completed Session · Session 38 (3 May 2026) — Two-Path Sell Flow
 
-- **Declaration system** (`POST /users/{email}/declare`): free-text declaration awards 80% of signal pts immediately; evidence upload awards remaining 20%; `user_declarations` DB table ✅
-- **Local Market 40-pt base score**: all LM sellers start at Established tier; credentials push above 40; penalties can pull below ✅
-- **Stacking signal chains** (`_DOC_TYPE_SIGNAL_CHAINS`): multiple uploads of same doc type fill sequential slots ✅
-- **Auto-earn model**: all non-ID docs earn immediately on upload (self-attestation); ID docs use Sonnet vision ✅
-- **AI upload comment** (Haiku 4.5): personalised 2-sentence feedback after each document upload ✅
-- **Declaration cards in Doc Hub**: amber "Declare" cards for each declarable signal; turn green after submission; live Trust Score refresh ✅
-- **Four declarable LM signals**: `assoc_role` (12/3 pts), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1) ✅
-- Deployed to trustsquare.co · Git committed ✅
+- **Path A (new seller, 3 taps)**: `screen-publish` replaced with 3-step flow: photo → category/headline/price + inline AI market note → identity + EULA → live. `openSellNav()` routes no-email to Path A ✅
+- **Path B (returning seller, B1–B8)**: new `screen-sell-b` with full AI-guided flow. B1 account confirm → B2 category + agent/private gate → B3 structured fields + inline AI note → B4 AI description draft → B5 dynamic photo gallery → B6 skippable selfie → B7 Trust Score checklist with signal tables → B8 publish ✅
+- **Routing wired**: `sellSheetContinue()` → `goTo('sell-b')`, `goTo()` calls `sbReset()` for sell-b, demo mode blocks sell-b ✅
+- **File integrity**: rebuilt after truncation — 11,095 lines, ends with `</html>` ✅
+- Not yet deployed — git commit + deploy pending
 
 ---
 
-## Next Tasks · Session 37
+## Next Tasks · Session 39
 
-1. **Admin app verification** — check declaration cards + Trust Score panel in marketsquare_admin.html edit modal
-2. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
-3. **Real Estate category signals** — sit with Maroushka/David: PPRA/FFC signals, agent vs private seller distinction, specialist services (valuers, bond originators)
-4. **n8n email notifications** — buyer emailed on intro accept/decline
+1. **Git commit + deploy** — commit Session 38 changes, `scp marketsquare.html` to server, restart BEA
+2. **Test Path A end-to-end** — new seller: photo → category/price → submit → confirm listing goes live + 3 AI sessions credited
+3. **Test Path B end-to-end** — returning seller: account sheet → B1–B8 → publish
+4. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
+5. **n8n email notifications** — buyer emailed on intro accept/decline
 5. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
 
 ---

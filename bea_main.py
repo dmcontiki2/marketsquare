@@ -420,6 +420,30 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sc_seller ON seller_complaints(seller_email, filed_at DESC)")
 
+    # ── Listing State Machine columns (Session 37) ───────────────
+    # listing_status drives the 7-state machine: DRAFT, LIVE, PAUSED,
+    # FADE_OUT, WITHDRAWN, BLOCKED, ARCHIVED. Default 'live' so all
+    # existing listings remain visible without a data backfill.
+    listing_cols_sm = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
+    if "listing_status" not in listing_cols_sm:
+        conn.execute("ALTER TABLE listings ADD COLUMN listing_status TEXT NOT NULL DEFAULT 'live'")
+    if "status_changed_at" not in listing_cols_sm:
+        conn.execute("ALTER TABLE listings ADD COLUMN status_changed_at TEXT")
+    if "block_cause" not in listing_cols_sm:
+        # B1–B6 cause codes stored here on BLOCKED/ARCHIVED transitions
+        conn.execute("ALTER TABLE listings ADD COLUMN block_cause TEXT")
+    if "fade_nudge_sent_at" not in listing_cols_sm:
+        # Timestamp when the Fade Out nudge email was sent (Day 23/53/113)
+        conn.execute("ALTER TABLE listings ADD COLUMN fade_nudge_sent_at TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(listing_status)")
+
+    # ── EULA acceptance gate (Session 37) ────────────────────────
+    # eula_accepted_at must be non-NULL before a seller can publish.
+    # Separate from lm_eula_accepted_at (Local Market supplemental EULA).
+    user_cols_eula = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "eula_accepted_at" not in user_cols_eula:
+        conn.execute("ALTER TABLE users ADD COLUMN eula_accepted_at TEXT")
+
     conn.commit()
 
 
@@ -819,7 +843,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
     # Base filters shared by both branches of the UNION
     # Branch A: listing's home city matches buyer city (original behaviour)
     # Branch B: listing extended to buyer's city via listing_cities table
-    suspension_filter = "(l.suspension_reason IS NULL OR l.suspension_reason = '')"
+    suspension_filter = "(l.suspension_reason IS NULL OR l.suspension_reason = '') AND (l.listing_status IS NULL OR l.listing_status = 'live')"
     lm_filter_a = "LOWER(l.category) = LOWER(?)" if category else "LOWER(l.category) != LOWER(?)"
     lm_filter_b = lm_filter_a  # same category filter on both branches
     # demo=0 (real app): hide seed data; demo=1: show everything including seed
@@ -1459,6 +1483,10 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     if not listing:
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
+    listing_status = listing["listing_status"] if listing["listing_status"] else "live"
+    if listing_status != "live":
+        conn.close()
+        raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {listing_status})")
     conn.execute(
         "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
         (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
@@ -3664,6 +3692,7 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
     demo=1 includes seed/showcase listings; demo=0 (default) hides them."""
     conn = database.get_db()
     clauses = ["l.category = ?", "l.suspension_reason IS NULL",
+               "(l.listing_status IS NULL OR l.listing_status = 'live')",
                "COALESCE(u.trust_score, 0) >= ?",
                "(l.is_demo = 0 OR l.is_demo IS NULL)" if not demo else "1=1"]
     params: list = [LM_CATEGORY, max(0, min_trust)]
@@ -3715,7 +3744,8 @@ def lm_get_listing(listing_id: int):
                   COALESCE(u.trust_score, 0) AS trust_score
            FROM listings l
            LEFT JOIN users u ON u.email = l.seller_email
-           WHERE l.id = ? AND l.category = ? AND l.suspension_reason IS NULL""",
+           WHERE l.id = ? AND l.category = ? AND l.suspension_reason IS NULL
+             AND (l.listing_status IS NULL OR l.listing_status = 'live')""",
         (listing_id, LM_CATEGORY)
     ).fetchone()
     conn.close()
@@ -3745,6 +3775,10 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
     if listing.get("suspension_reason"):
         conn.close()
         raise HTTPException(status_code=410, detail="Listing is suspended")
+    lm_status = listing.get("listing_status") or "live"
+    if lm_status != "live":
+        conn.close()
+        raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {lm_status})")
     seller_email = listing.get("seller_email")
     if not seller_email:
         conn.close()
@@ -5975,9 +6009,9 @@ async def opt_out(email: str, city_id: int = 0, category: str = ""):
 <body>
   <div class="card">
     <div class="icon">✅</div>
-    <h1>You’re unsubscribed</h1>
-    <p>We’ve removed <strong>{email}</strong> from our outreach list.<br>
-    You won’t receive any further emails from TrustSquare about listing opportunities.</p>
+    <h1>You're unsubscribed</h1>
+    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
+    You won't receive any further emails from TrustSquare about listing opportunities.</p>
     <p style="margin-top:24px; font-size:13px; color:#aaa;">
       Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
     </p>

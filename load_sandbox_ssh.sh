@@ -6,7 +6,9 @@
 # The key file (ssh_hetzner_key) lives in the MarketSquare project folder and
 # is gitignored — it never gets committed to GitHub.
 
-KEY_SOURCE="/sessions/quirky-brave-galileo/mnt/MarketSquare/ssh_hetzner_key"
+# Resolve path relative to this script's location — works regardless of session name
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+KEY_SOURCE="$SCRIPT_DIR/ssh_hetzner_key"
 KEY_DEST="$HOME/.ssh/id_ed25519"
 
 if [ ! -f "$KEY_SOURCE" ]; then
@@ -18,4 +20,4 @@ fi
 mkdir -p "$HOME/.ssh"
 cp "$KEY_SOURCE" "$KEY_DEST"
 chmod 600 "$KEY_DEST"
-echo "✅ SSH key loaded into sandbox — Hetzner server accessible."
+echo "SSH key loaded into sandbox — Hetzner server accessible."

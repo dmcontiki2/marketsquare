@@ -2,6 +2,26 @@
 
 ---
 
+## Session 38 · 3 May 2026 · Two-Path Sell Flow (SELL_FLOW.md v3.0)
+
+**New sell flow — Path A (new seller, 3 taps to live):** Replaced the old `screen-publish` wizard with a streamlined 3-step Path A: (1) single photo upload with preview, (2) category + headline + price with inline Haiku AI market note, (3) identity fields + EULA on submit → listing goes live immediately with 3 free AI sessions credited. `openSellNav()` now routes no-email users to `goTo('publish')` (Path A) instead of the old onboard screen.
+
+**New sell flow — Path B (returning seller, B1–B8):** Added `screen-sell-b` with a full 8-step AI-guided listing flow. B1: account confirmation. B2: category selection + agent/private gate for Property. B3: structured fields (dynamic per category via `SB_FIELDS` config) + inline Haiku AI market note. B4: AI drafts description via `/advert-agent/coach`. B5: room-by-room photo gallery with dynamic slots per category (`SB_PHOTO_SLOTS`). B6: skippable selfie. B7: Trust Score checklist with full signal tables per category/gate (`SB_SIGNALS`), live score preview, and AI coaching scripts per signal. B8: publish review + async submit. `sellSheetContinue()` now routes returning sellers to `goTo('sell-b')`.
+
+**Routing wired:** `goTo('sell-b')` calls `sbReset()` on navigation. `sell-b` added to DEMO_MODE block list. File integrity restored after truncation — working file rebuilt from new content + git HEAD tail, ending correctly with `</html>` at 11,274 lines.
+
+**Session 38 fixes (testing feedback):** (1) Photo step label on B1 intro is now category-specific — "Room-by-room photos" for Property, "Full vehicle walkthrough" for Cars, "Teaching environment photos" for Tutors, etc. Updated dynamically when B5 renders. (2) Skip buttons on B7 Trust Score now work correctly — skipped signals collapse to a small "+ Add [signal]" restore link; `sbRestoreSignal()` brings them back. (3) Experience tier mutual exclusivity — declaring/uploading a higher tier (10+, 7+, 5+) hides the lower tier card automatically. (4) All sellers start at Trust Score 40 (Established tier) — base score applies to all categories not just LocalMarket. (5) Publish error messages are now descriptive — raw BEA error body is read and shown with actionable guidance. (6) Draft save/resume — `sbSaveDraft()` saves state to IndexedDB (`aaDB`) keyed by email. Auto-saves on every forward step. "Save draft — finish later" button on B7 and B8. Resume banner appears on B1 when a draft exists. Dashboard shows "Continue draft" banner. Draft deleted on successful publish. Drafts expire after 7 days.
+
+## Session 37 · 2 May 2026 · Listing State Machine — BEA Schema + Query Guards
+
+**BEA schema migration — listing state machine columns:** Added `listing_status TEXT NOT NULL DEFAULT 'live'`, `status_changed_at TEXT`, `block_cause TEXT`, and `fade_nudge_sent_at TEXT` to the listings table via an idempotent `run_migrations` block. Added `eula_accepted_at TEXT` to the users table (separate from `lm_eula_accepted_at` which is the Local Market supplemental EULA). Created `idx_listings_status` index on `listing_status` for efficient filtered queries. All existing listings default to `'live'` — no data backfill required. Default is intentionally `'live'` so current production data remains visible without a migration script.
+
+**BEA query guards — `listing_status = 'live'` enforcement:** Five endpoints now enforce the state machine. `GET /listings` (main public browse) — `suspension_filter` extended to include `listing_status IS NULL OR listing_status = 'live'`, covering both branch A (home city) and branch B (extended city reach via UNION). `GET /local-market/listings` — added `listing_status` guard to the WHERE clauses list. `GET /local-market/listings/{listing_id}` — same guard in the single-row fetch. `POST /intros` (standard intro creation) — returns HTTP 409 with detail `"Listing is not available for introductions (status: X)"` if listing is not live. `POST /local-market/intro` — same 409 gate immediately after the existing suspension_reason check. The `IS NULL OR = 'live'` pattern is used deliberately on all read paths so that the `DEFAULT 'live'` rows added before the migration guard runs correctly in production.
+
+**File tail restored:** The working copy of `bea_main.py` was pre-truncated (20 lines missing from the `/opt-out` endpoint function body — same truncation bug as noted in CLAUDE.md). Tail restored from `git show HEAD` before syntax check. File now passes `python -m py_compile` cleanly at 6022 lines.
+
+---
+
 ## Session 35 · 1 May 2026 · Multi-city seller reach
 
 **Seller city reach — Free vs Starter/Premium:** Free sellers are visible in their home city only. Starter ($5/month) and Premium ($15/month) sellers can extend any listing to additional cities in the country. Buyers in those cities see the listing as local — they never need to know the seller's home base. The seller makes an explicit confirmation per city ("I can service buyers in [City]") which is recorded with a timestamp.

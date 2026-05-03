@@ -3238,224 +3238,400 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
-<!-- PUBLISH — Listing-First Flow (v8.1) -->
+<!-- ═══════════════════════════════════════════════════════
+     PATH A — New Seller (3 taps to live)
+     Session 38 · SELL_FLOW.md v3.0
+     Reached via: openSellNav() when no stored email
+     goTo('publish') → resetPublish() → shows pa-1
+  ═══════════════════════════════════════════════════════ -->
 <div id="screen-publish" class="screen">
 
-  <!-- STEP A: Photo -->
-  <div id="pub-a" class="pub-phase">
+  <!-- PA-1: Single photo -->
+  <div id="pa-1" class="pub-phase">
     <div class="pub-hdr">
       <button class="back-btn" onclick="goTo('browse')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
-        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 1 of 3</div>
+        <div class="pub-step-pill">Step 1 of 3</div>
         <h1>Add a photo</h1>
       </div>
     </div>
     <div style="padding:20px 20px 0;">
-      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6;font-weight:400;">Optional — listings with photos get far more attention. You can skip and add one later.</p>
-      <div class="upload-zone">
-        <input type="file" id="img-inp" accept="image/*" onchange="handleImg(event)">
-        <div id="uz-default"><div class="uz-icon">📷</div><div class="uz-title">Tap to add a photo</div><div class="uz-sub">JPG or PNG · under 2MB recommended</div></div>
-        <div id="uz-preview" style="display:none;"><img id="uz-img" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;"><button onclick="clearImg(event)" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text-2);">Remove photo</button></div>
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6;font-weight:400;">Listings with photos get 3× more intro requests. You can skip and add one later.</p>
+      <div class="upload-zone" onclick="document.getElementById('pa-img-inp').click()">
+        <input type="file" id="pa-img-inp" accept="image/*" style="display:none" onchange="paHandleImg(event)">
+        <div id="pa-uz-default"><div class="uz-icon">📷</div><div class="uz-title">Tap to add a photo</div><div class="uz-sub">Camera or gallery · JPG or PNG</div></div>
+        <div id="pa-uz-preview" style="display:none;"><img id="pa-uz-img" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;"><button onclick="paClearImg(event)" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text-2);">Remove photo</button></div>
       </div>
     </div>
     <div class="pub-footer">
-      <button class="btn-bk" onclick="goTo('browse')" style="display:block;">← Back</button>
-      <button class="btn-next" onclick="goPhase('b')">Continue →</button>
+      <button class="btn-bk" onclick="goTo('browse')">← Back</button>
+      <button class="btn-next" onclick="paGoStep(2)">Continue →</button>
     </div>
   </div>
 
-  <!-- STEP B: Category (one tap) -->
-  <div id="pub-b" class="pub-phase" style="display:none;">
+  <!-- PA-2: Category + headline + price -->
+  <div id="pa-2" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="goPhase('a')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" onclick="paGoStep(1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
-        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 2 of 3</div>
+        <div class="pub-step-pill">Step 2 of 3</div>
         <h1>What are you selling?</h1>
       </div>
     </div>
     <div style="padding:20px;">
-      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Tap one — this sets your introduction model.</p>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="cat-big-tile" id="cbt-Property" onclick="selCatBig('Property')">
-          <div class="cbt-icon">🏡</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Property</div>
-            <div class="cbt-desc">Home, apartment, land or commercial space</div>
-            <div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div>
-          </div>
-          <div class="cbt-check" id="chk-Property">✓</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <div class="cat-big-tile" id="pa-cbt-Property" onclick="paSelCat('Property')">
+          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-Tutors" onclick="selCatBig('Tutors')">
-          <div class="cbt-icon">🎓</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Tutors</div>
-            <div class="cbt-desc">Teaching, coaching or academic support</div>
-            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
-          </div>
-          <div class="cbt-check" id="chk-Tutors">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-Tutors" onclick="paSelCat('Tutors')">
+          <div class="cbt-icon">🎓</div><div class="cbt-body"><div class="cbt-name">Tutors</div><div class="cbt-desc">Teaching, coaching or academic support</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-Services" onclick="selCatBig('Services')">
-          <div class="cbt-icon">⚙️</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Services</div>
-            <div class="cbt-desc">Trade, professional or skilled service</div>
-            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
-          </div>
-          <div class="cbt-check" id="chk-Services">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-Services" onclick="paSelCat('Services')">
+          <div class="cbt-icon">⚙️</div><div class="cbt-body"><div class="cbt-name">Services</div><div class="cbt-desc">Trade, professional or skilled service</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-Adventures" onclick="selCatBig('Adventures')">
-          <div class="cbt-icon">🧭</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Adventures</div>
-            <div class="cbt-desc">Accommodation, guided experiences &amp; outdoor activities</div>
-            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
-          </div>
-          <div class="cbt-check" id="chk-Adventures">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-Adventures" onclick="paSelCat('Adventures')">
+          <div class="cbt-icon">🧭</div><div class="cbt-body"><div class="cbt-name">Adventures</div><div class="cbt-desc">Accommodation, guided experiences &amp; outdoor activities</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-Collectors" onclick="selCatBig('Collectors')">
-          <div class="cbt-icon">🏺</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Collectors</div>
-            <div class="cbt-desc">Stamps, coins, cards, memorabilia &amp; collectibles</div>
-            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
-          </div>
-          <div class="cbt-check" id="chk-Collectors">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-Collectors" onclick="paSelCat('Collectors')">
+          <div class="cbt-icon">🏺</div><div class="cbt-body"><div class="cbt-name">Collectors</div><div class="cbt-desc">Stamps, coins, cards, memorabilia &amp; collectibles</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-Cars" onclick="selCatBig('Cars')">
-          <div class="cbt-icon">🚗</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Cars</div>
-            <div class="cbt-desc">Vehicle for sale or hire</div>
-            <div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div>
-          </div>
-          <div class="cbt-check" id="chk-Cars">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-Cars" onclick="paSelCat('Cars')">
+          <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
-        <div class="cat-big-tile" id="cbt-LocalMarket" onclick="selCatBig('LocalMarket')">
-          <div class="cbt-icon">🛍️</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Local Market</div>
-            <div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div>
-            <div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div>
-          </div>
-          <div class="cbt-check" id="chk-LocalMarket">✓</div>
+        <div class="cat-big-tile" id="pa-cbt-LocalMarket" onclick="paSelCat('LocalMarket')">
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div></div><div class="cbt-check">✓</div>
         </div>
       </div>
+      <div class="field">
+        <label>What are you offering? <span class="req">*</span></label>
+        <input type="text" id="pa-title" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;" oninput="paCheckStep2()">
+      </div>
+      <div class="field">
+        <label>Price / rate <span class="opt">(optional)</span></label>
+        <input type="text" id="pa-price" placeholder="e.g. R4 200 000 or R350/hr">
+        <div class="hint">Leave blank to show "Negotiable"</div>
+      </div>
+      <div id="pa-model-note" style="display:none;border-radius:var(--r-sm);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-top:4px;">Property listings pause when a buyer requests an intro — you respond within 48 hours.</div>
     </div>
     <div class="pub-footer">
-      <button class="btn-bk" onclick="goPhase('a')" style="display:block;">← Back</button>
-      <button class="btn-next" id="pub-b-next" onclick="goPhaseB2OrC()" style="opacity:.4;pointer-events:none;">Continue →</button>
+      <button class="btn-bk" onclick="paGoStep(1)">← Back</button>
+      <button class="btn-next" id="pa-2-next" onclick="paGoStep(3)" style="opacity:.4;pointer-events:none;">Continue →</button>
     </div>
   </div>
 
-  <!-- STEP B2: Adventures subcategory selector -->
-  <div id="pub-b2" class="pub-phase" style="display:none;">
+  <!-- PA-3: Identity + EULA -->
+  <div id="pa-3" class="pub-phase" style="display:none;">
     <div class="pub-hdr">
-      <button class="back-btn" onclick="goPhase('b')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="back-btn" onclick="paGoStep(2)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div>
-        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 2b of 3</div>
-        <h1>What kind of Adventure?</h1>
-      </div>
-    </div>
-    <div style="padding:20px;">
-      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Choose the type that best describes your listing.</p>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="cat-big-tile" id="cbt-adv-accommodation" onclick="selAdvSubcat('adventures_accommodation')">
-          <div class="cbt-icon">🏕</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Accommodation</div>
-            <div class="cbt-desc">Guest house, bush camp, chalet, hostel or self-catering</div>
-            <div class="cbt-model" style="color:var(--purple);">Price per night · availability-based</div>
-          </div>
-          <div class="cbt-check" id="chk-adv-accommodation">✓</div>
-        </div>
-        <div class="cat-big-tile" id="cbt-adv-experiences" onclick="selAdvSubcat('adventures_experiences')">
-          <div class="cbt-icon">🌄</div>
-          <div class="cbt-body">
-            <div class="cbt-name">Experiences</div>
-            <div class="cbt-desc">Guided hike, safari, dive, horse trail or activity</div>
-            <div class="cbt-model" style="color:var(--purple);">Price per person · group bookings</div>
-          </div>
-          <div class="cbt-check" id="chk-adv-experiences">✓</div>
-        </div>
-      </div>
-    </div>
-    <div class="pub-footer">
-      <button class="btn-bk" onclick="goPhase('b')" style="display:block;">← Back</button>
-      <button class="btn-next" id="pub-b2-next" onclick="goPhase('c')" style="opacity:.4;pointer-events:none;">Continue →</button>
-    </div>
-  </div>
-
-  <!-- STEP C: Title + Price (2 fields) -->
-  <div id="pub-c" class="pub-phase" style="display:none;">
-    <div class="pub-hdr">
-      <button class="back-btn" onclick="goPhase('b')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Step 3 of 3</div>
-        <h1>Title &amp; price</h1>
+        <div class="pub-step-pill">Step 3 of 3</div>
+        <h1>Almost live</h1>
       </div>
     </div>
     <div style="padding:20px 20px 0;">
-      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Two fields. That's it — you can add more detail after publishing.</p>
-      <div class="field">
-        <label>What are you offering? <span class="req">*</span></label>
-        <input type="text" id="f-title" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.6;font-weight:400;">Your listing goes live immediately. You stay anonymous — buyers see credentials only.</p>
+      <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="pa-name" placeholder="Full name"></div>
+      <div class="field"><label>Email address <span class="req">*</span></label><input type="email" id="pa-email" placeholder="you@example.com"></div>
+      <div class="field"><label>City <span class="req">*</span></label><input type="text" id="pa-city" placeholder="e.g. Pretoria" value="Pretoria"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px;margin-bottom:6px;">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;color:var(--text-2);line-height:1.5;">
+          <input type="checkbox" id="pa-eula" style="margin-top:2px;flex-shrink:0;" onchange="paCheckStep3()">
+          <span>I accept the <a href="#" style="color:var(--accent);">Terms of Service &amp; Privacy Policy</a></span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;color:var(--text-2);line-height:1.5;">
+          <input type="checkbox" id="pa-block-ack" style="margin-top:2px;flex-shrink:0;" onchange="paCheckStep3()">
+          <span>I understand that listings with inappropriate photos or content will be permanently removed</span>
+        </label>
       </div>
-      <div class="field">
-        <label>Price <span class="opt">(optional)</span></label>
-        <input type="text" id="f-price" placeholder="e.g. R4 200 000 or R350/hr">
-        <div class="hint">Leave blank to show "Negotiable"</div>
-      </div>
-      <div id="pub-c-model-note" style="border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.6;margin-top:4px;display:none;"></div>
+      <div id="pa-3-err" style="display:none;color:#dc2626;font-size:12px;margin-top:8px;"></div>
     </div>
     <div class="pub-footer">
-      <button class="btn-bk" onclick="goPhase('b')" style="display:block;">← Back</button>
-      <button class="btn-next" onclick="doPublish()">Publish now →</button>
+      <button class="btn-bk" onclick="paGoStep(2)">← Back</button>
+      <button class="btn-next" id="pa-3-next" onclick="paDoPublish()" style="opacity:.4;pointer-events:none;">List now →</button>
     </div>
   </div>
 
-  <!-- CLAIM STEP — appears after publish -->
-  <div id="pub-claim" class="pub-phase" style="display:none;min-height:100vh;background:var(--navy);">
-    <div style="padding:52px 24px 32px;">
-      <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">Your listing is live</div>
-      <h2 id="claim-title" style="font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Claim it to start receiving introduction requests and build your Trust Score on MarketSquare.</p>
-
-      <!-- Benefit cards -->
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
-          <div style="font-size:20px;">🔔</div>
-          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Receive introduction requests</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Buyers can request to connect with you directly</div></div>
-        </div>
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
-          <div style="font-size:20px;">⭐</div>
-          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Build your Trust Score</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Every accepted introduction improves your standing</div></div>
-        </div>
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
-          <div style="font-size:20px;">🔒</div>
-          <div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity stays protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div>
-        </div>
+  <!-- PA-SUCCESS: live confirmation -->
+  <div id="pa-success" class="pub-phase" style="display:none;min-height:100vh;background:var(--navy);">
+    <div style="padding:60px 24px 40px;text-align:center;">
+      <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+      <h2 id="pa-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your email. You've been given 3 free AI sessions to enhance your listing whenever you're ready.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Receive introduction requests</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Buyers connect directly — no commission ever</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">3 free AI sessions credited</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Enhance your listing with AI from your dashboard</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
       </div>
-
-      <!-- Claim form -->
-      <div style="background:var(--surface);border-radius:16px;padding:20px;">
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px;color:var(--navy);">Enter your email to claim</div>
-        <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;font-weight:400;">We'll send a secure link — no password needed.</div>
-        <div class="field" style="margin-bottom:12px;">
-          <input type="email" id="claim-email" placeholder="you@example.com" style="font-size:15px;">
-        </div>
-        <button onclick="submitClaim()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Claim my listing →</button>
-        <button onclick="skipClaim()" style="width:100%;background:none;border:none;color:rgba(255,255,255,0);font-size:13px;padding:10px;cursor:pointer;margin-top:2px;font-family:'Inter',sans-serif;color:var(--text-3);">Skip for now — I'll claim later</button>
-      </div>
+      <button onclick="goTo('dashboard')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
+      <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
     </div>
   </div>
 
-  <!-- CLAIMED SUCCESS -->
-  <div id="pub-done" class="pub-phase" style="display:none;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 30px;text-align:center;">
-    <div style="font-size:60px;margin-bottom:18px;">✅</div>
-    <h2 style="font-size:23px;font-weight:800;margin-bottom:8px;">All done!</h2>
-    <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin-bottom:24px;font-weight:400;" id="pub-done-msg">Check your email for your claim link.</p>
-    <button class="btn-done" onclick="goTo('browse')" style="background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px 32px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Browse listings</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PATH B — Returning Seller (Full AI-guided, B1–B8)
+     Session 38 · SELL_FLOW.md v3.0
+     Reached via: sell-account-sheet → "Add new listing"
+     goTo('sell-b') → sbReset() → shows sb-b1
+  ═══════════════════════════════════════════════════════ -->
+<div id="screen-sell-b" class="screen">
+
+  <!-- B1: Account picker (already handled by sell-account-sheet bottom sheet,
+       this step is the entry point — shows a brief confirmation then goes to B2) -->
+  <div id="sb-b1" class="pub-phase">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbClosePath()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">New listing</div>
+        <h1>Add a listing</h1>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <div style="background:var(--surface-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>
+        <div><div style="font-size:14px;font-weight:700;" id="sb-b1-name">—</div><div style="font-size:12px;color:var(--text-3);" id="sb-b1-email">—</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin-bottom:24px;font-weight:400;">The AI will guide you through every step — category, structured details, description, photos, and your Trust Score. Takes about 5 minutes.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--surface-2);border-radius:12px;padding:13px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:18px;">🏗️</div><div style="font-size:13px;color:var(--text-2);line-height:1.4;"><strong style="color:var(--text);">Structured listing</strong> — AI drafts your description from your details</div></div>
+        <div style="background:var(--surface-2);border-radius:12px;padding:13px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:18px;">📸</div><div style="font-size:13px;color:var(--text-2);line-height:1.4;"><strong style="color:var(--text);" id="sb-b1-photo-label">Guided photos</strong> — AI tells you exactly what to shoot</div></div>
+        <div style="background:var(--surface-2);border-radius:12px;padding:13px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:18px;">⭐</div><div style="font-size:13px;color:var(--text-2);line-height:1.4;"><strong style="color:var(--text);">Trust Score</strong> — earn credentials that attract better buyers</div></div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbClosePath()">← Back</button>
+      <button class="btn-next" onclick="sbGoStep('b2')">Let's go →</button>
+    </div>
+  </div>
+
+  <!-- B2: Category + agent/private gate -->
+  <div id="sb-b2" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b1')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 1 of 7</div>
+        <h1>Category</h1>
+      </div>
+    </div>
+    <div style="padding:20px;">
+      <div id="sb-b2-cats" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="cat-big-tile" id="sb-cbt-Property" onclick="sbSelCat('Property')">
+          <div class="cbt-icon">🏡</div><div class="cbt-body"><div class="cbt-name">Property</div><div class="cbt-desc">Home, apartment, land or commercial space</div><div class="cbt-model" style="color:var(--gold);">⏳ Commitment model — listing pauses per intro request</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-Tutors" onclick="sbSelCat('Tutors')">
+          <div class="cbt-icon">🎓</div><div class="cbt-body"><div class="cbt-name">Tutors</div><div class="cbt-desc">Teaching, coaching or academic support</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-Services" onclick="sbSelCat('Services')">
+          <div class="cbt-icon">⚙️</div><div class="cbt-body"><div class="cbt-name">Services</div><div class="cbt-desc">Trade, professional or skilled service</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-Adventures" onclick="sbSelCat('Adventures')">
+          <div class="cbt-icon">🧭</div><div class="cbt-body"><div class="cbt-name">Adventures</div><div class="cbt-desc">Accommodation, guided experiences &amp; outdoor activities</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-Collectors" onclick="sbSelCat('Collectors')">
+          <div class="cbt-icon">🏺</div><div class="cbt-body"><div class="cbt-name">Collectors</div><div class="cbt-desc">Stamps, coins, cards, memorabilia &amp; collectibles</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-Cars" onclick="sbSelCat('Cars')">
+          <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
+        </div>
+        <div class="cat-big-tile" id="sb-cbt-LocalMarket" onclick="sbSelCat('LocalMarket')">
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays intro fee on connection</div></div><div class="cbt-check">✓</div>
+        </div>
+      </div>
+      <!-- Agent/private gate — shown only for Property and Cars -->
+      <div id="sb-b2-gate" style="display:none;margin-top:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;" id="sb-b2-gate-label">Are you a registered estate agent or a private seller?</div>
+        <div style="display:flex;gap:10px;">
+          <button class="sb-gate-btn" id="sb-gate-agent" onclick="sbSetGate('agent')">Registered agent / dealer</button>
+          <button class="sb-gate-btn" id="sb-gate-private" onclick="sbSetGate('private')">Private seller</button>
+        </div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b1')">← Back</button>
+      <button class="btn-next" id="sb-b2-next" onclick="sbGoStep('b3')" style="opacity:.4;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- B3: Structured fields + inline AI market note -->
+  <div id="sb-b3" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b2')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 2 of 7</div>
+        <h1 id="sb-b3-title">Details</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;" id="sb-b3-form">
+      <!-- Rendered dynamically by sbRenderB3() -->
+    </div>
+    <!-- Inline AI market note (free Haiku call) -->
+    <div id="sb-b3-ai-note" style="display:none;margin:0 20px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(59,130,246,.06));border:1px solid rgba(139,92,246,.2);padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:14px;">✨</span><span style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;">AI Market Context</span></div>
+      <div id="sb-b3-ai-text" style="font-size:13px;color:var(--text-2);line-height:1.6;font-weight:400;font-style:italic;">Analysing your market…</div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b2')">← Back</button>
+      <button class="btn-next" id="sb-b3-next" onclick="sbGoStep('b4')" style="opacity:.4;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- B4: AI drafts description -->
+  <div id="sb-b4" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b3')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 3 of 7</div>
+        <h1>Your description</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;">
+      <div id="sb-b4-loading" style="text-align:center;padding:40px 20px;">
+        <div style="font-size:32px;margin-bottom:12px;">✨</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Writing your description…</div>
+        <div style="font-size:13px;color:var(--text-3);font-weight:400;">Using your details to craft something compelling</div>
+      </div>
+      <div id="sb-b4-editor" style="display:none;">
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px;font-weight:400;font-style:italic;">We wrote this from your details — edit anything that's not right.</p>
+        <textarea id="sb-b4-desc" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface-2);line-height:1.65;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="font-size:12px;color:var(--text-3);margin-top:8px;">Edit freely. This is your listing — make it sound like you.</div>
+      </div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b3')">← Back</button>
+      <button class="btn-next" id="sb-b4-next" onclick="sbGoStep('b5')" style="opacity:.4;pointer-events:none;">Looks good →</button>
+    </div>
+  </div>
+
+  <!-- B5: Room-by-room photo gallery -->
+  <div id="sb-b5" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b4')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 4 of 7</div>
+        <h1>Photos</h1>
+      </div>
+    </div>
+    <div style="padding:0 20px 0;">
+      <div style="padding:16px 0 12px;border-bottom:1px solid var(--border);margin-bottom:16px;">
+        <p style="font-size:14px;color:var(--text-2);line-height:1.6;font-weight:400;font-style:italic;" id="sb-b5-intro">Now let's add photos for each part of your listing. Buyers scroll through these before deciding to connect — the more you add, the stronger your listing.</p>
+      </div>
+      <div id="sb-b5-slots">
+        <!-- Rendered dynamically by sbRenderB5() -->
+      </div>
+    </div>
+    <input type="file" id="sb-photo-inp" accept="image/*" style="display:none" onchange="sbHandlePhotoCapture(event)">
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b4')">← Back</button>
+      <button class="btn-next" onclick="sbGoStep('b6')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- B6: Seller profile photo (selfie) -->
+  <div id="sb-b6" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b5')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 5 of 7</div>
+        <h1>Profile photo</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;text-align:center;">
+      <div style="font-size:48px;margin-bottom:14px;">🤳</div>
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:6px;line-height:1.65;font-weight:400;">Add your profile photo — buyers want to see who they're dealing with. You stay anonymous until both of you agree to connect.</p>
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:24px;font-style:italic;font-weight:400;">A clear, front-facing photo improves buyer confidence significantly. You can update it any time from your profile.</p>
+      <div id="sb-b6-preview" style="width:120px;height:120px;border-radius:50%;background:var(--surface-2);border:2px dashed var(--border);margin:0 auto 20px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>
+      <button onclick="document.getElementById('sb-selfie-inp').click()" style="background:var(--navy);color:#fff;border:none;border-radius:50px;padding:12px 28px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">Add photo</button>
+      <input type="file" id="sb-selfie-inp" accept="image/*" capture="user" style="display:none" onchange="sbHandleSelfie(event)">
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b5')">← Back</button>
+      <button class="btn-next" onclick="sbGoStep('b7')">Continue →</button>
+    </div>
+    <div style="text-align:center;padding:0 20px 16px;">
+      <button onclick="sbGoStep('b7')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip — I'll add a photo later</button>
+    </div>
+  </div>
+
+  <!-- B7: Trust Score checklist -->
+  <div id="sb-b7" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b6')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 6 of 7</div>
+        <h1>Trust Score</h1>
+      </div>
+    </div>
+    <!-- Live score strip -->
+    <div style="padding:14px 20px;background:var(--surface-2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);">Your Trust Score</div>
+        <div style="font-size:28px;font-weight:800;color:var(--navy);" id="sb-b7-score">—</div>
+      </div>
+      <div id="sb-b7-badge" style="font-size:13px;font-weight:700;padding:6px 14px;border-radius:50px;background:var(--surface);border:1.5px solid var(--border);">—</div>
+    </div>
+    <div style="padding:14px 20px 8px;">
+      <p style="font-size:13px;color:var(--text-2);line-height:1.6;font-weight:400;">Your Trust Score determines how visible and credible you are to buyers. You don't need to complete this now — but the higher your score, the more intros you'll receive.</p>
+    </div>
+    <div id="sb-b7-signals" style="padding:0 20px 16px;">
+      <!-- Rendered dynamically by sbRenderB7() -->
+    </div>
+    <input type="file" id="sb-doc-inp" accept="image/*,application/pdf" style="display:none" onchange="sbHandleDocUpload(event)">
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b6')">← Back</button>
+      <button class="btn-next" onclick="sbGoStep('b8')">Continue →</button>
+    </div>
+    <div style="text-align:center;padding:0 20px 4px;">
+      <button onclick="sbGoStep('b8')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Skip Trust Score — I'll add credentials later</button>
+    </div>
+    <div style="text-align:center;padding:0 20px 16px;">
+      <button onclick="sbSaveDraftAndExit()" style="background:none;border:none;color:var(--text-3);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">💾 Save draft — finish later</button>
+    </div>
+  </div>
+
+  <!-- B8: Publish / review -->
+  <div id="sb-b8" class="pub-phase" style="display:none;">
+    <div class="pub-hdr">
+      <button class="back-btn" onclick="sbGoStep('b7')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div>
+        <div class="pub-step-pill">Step 7 of 7</div>
+        <h1>Ready to publish</h1>
+      </div>
+    </div>
+    <div style="padding:20px 20px 0;">
+      <div id="sb-b8-preview" style="background:var(--surface-2);border-radius:14px;padding:18px;margin-bottom:20px;">
+        <!-- Rendered by sbRenderB8Preview() -->
+      </div>
+      <div id="sb-b8-score-summary" style="background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.18);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:none;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--purple);margin-bottom:6px;">Trust Score</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;font-weight:800;" id="sb-b8-score">—</div>
+          <div id="sb-b8-badge" style="font-size:13px;font-weight:700;padding:5px 12px;border-radius:50px;border:1.5px solid var(--border);">—</div>
+        </div>
+        <div id="sb-b8-skipped" style="font-size:12px;color:var(--text-3);margin-top:8px;line-height:1.5;"></div>
+      </div>
+      <div id="sb-b8-err" style="display:none;color:#dc2626;font-size:13px;margin-bottom:12px;border-radius:8px;background:rgba(220,38,38,.07);padding:10px 13px;"></div>
+    </div>
+    <div class="pub-footer">
+      <button class="btn-bk" onclick="sbGoStep('b7')">← Back</button>
+      <button class="btn-next" id="sb-b8-publish-btn" onclick="sbDoPublish()">Publish listing →</button>
+    </div>
+    <div style="text-align:center;padding:0 20px 20px;">
+      <button onclick="sbSaveDraftAndExit()" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">💾 Save draft — finish later</button>
+    </div>
+  </div>
+
+  <!-- B-SUCCESS -->
+  <div id="sb-success" class="pub-phase" style="display:none;min-height:100vh;background:var(--navy);">
+    <div style="padding:60px 24px 40px;text-align:center;">
+      <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+      <h2 id="sb-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your dashboard. Your Trust Score is building.</p>
+      <button onclick="goTo('dashboard')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
+      <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
+    </div>
   </div>
 
 </div>
@@ -4646,7 +4822,7 @@ function openSellNav() {
     if (emailEl) emailEl.textContent = email;
     document.getElementById('sell-account-sheet').classList.add('open');
   } else {
-    goTo('onboard');
+    goTo('publish');   // Path A — new seller, no stored email
   }
 }
 function closeSellSheet(e) {
@@ -4654,9 +4830,9 @@ function closeSellSheet(e) {
     document.getElementById('sell-account-sheet').classList.remove('open');
 }
 function sellSheetContinue() {
+  // Returning seller → Path B (full AI-guided flow)
   document.getElementById('sell-account-sheet').classList.remove('open');
-  resetPublish();
-  goTo('publish');
+  goTo('sell-b');
 }
 function sellSheetNewAccount() {
   document.getElementById('sell-account-sheet').classList.remove('open');
@@ -4668,7 +4844,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='plans')) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans')) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -4693,6 +4869,7 @@ function goTo(name){
   }
   if(name==='recruit')renderRecruit();
   if(name==='publish'){resetPublish();}
+  if(name==='sell-b'){sbReset();}
   if(name==='plans'){
     const el=document.getElementById('plans-home-city');
     if(el) el.textContent=localStorage.getItem('ms_user_city')||activeCity.name||'your city';
@@ -6346,167 +6523,1201 @@ function saveCVEdit(){
 
 let pubImg=null, pubCat='', pubClaimed=false;
 
+// ══════════════════════════════════════════════════════════
+// PATH A — NEW SELLER (3 taps to live)
+// Session 38 · SELL_FLOW.md v3.0
+// ══════════════════════════════════════════════════════════
+let paState = { img: null, imgFile: null, cat: '', title: '', price: '' };
+
 function resetPublish(){
-  pubImg=null; pubCat=''; pubClaimed=false;
-  showPhase('a');
-  document.getElementById('uz-default').style.display='block';
-  document.getElementById('uz-preview').style.display='none';
-  const ti=document.getElementById('f-title'); if(ti)ti.value='';
-  const pi=document.getElementById('f-price'); if(pi)pi.value='';
-  const ce=document.getElementById('claim-email'); if(ce)ce.value='';
-  ['Property','Tutors','Services'].forEach(c=>{
-    const el=document.getElementById('cbt-'+c); if(el)el.classList.remove('selected');
+  paState = { img: null, imgFile: null, cat: '', title: '', price: '' };
+  paShowStep(1);
+  // reset photo zone
+  const uzd=document.getElementById('pa-uz-default'); if(uzd)uzd.style.display='block';
+  const uzp=document.getElementById('pa-uz-preview'); if(uzp)uzp.style.display='none';
+  const inp=document.getElementById('pa-img-inp');     if(inp)inp.value='';
+  // reset cats
+  ['Property','Tutors','Services','Adventures','Collectors','Cars','LocalMarket'].forEach(c=>{
+    const el=document.getElementById('pa-cbt-'+c); if(el)el.classList.remove('selected');
   });
-  document.getElementById('pub-b-next').style.opacity='.4';
-  document.getElementById('pub-b-next').style.pointerEvents='none';
-  document.getElementById('pub-c-model-note').style.display='none';
-  document.getElementById('pub-done').style.display='none';
+  const ti=document.getElementById('pa-title'); if(ti)ti.value='';
+  const pi=document.getElementById('pa-price'); if(pi)pi.value='';
+  const mn=document.getElementById('pa-model-note'); if(mn)mn.style.display='none';
+  const n2=document.getElementById('pa-2-next'); if(n2){n2.style.opacity='.4';n2.style.pointerEvents='none';}
+  const n3=document.getElementById('pa-3-next'); if(n3){n3.style.opacity='.4';n3.style.pointerEvents='none';}
+  const eu=document.getElementById('pa-eula'); if(eu)eu.checked=false;
+  const ba=document.getElementById('pa-block-ack'); if(ba)ba.checked=false;
+  const er=document.getElementById('pa-3-err'); if(er)er.style.display='none';
 }
 
-function showPhase(p){
-  ['a','b','c','claim','done'].forEach(id=>{
-    const el=document.getElementById('pub-'+id); if(el)el.style.display='none';
+function paShowStep(n){
+  [1,2,3,'success'].forEach(s=>{
+    const el=document.getElementById('pa-'+s); if(el)el.style.display='none';
   });
-  const target=document.getElementById('pub-'+p);
-  if(target){ target.style.display='block'; window.scrollTo(0,0); }
+  const t=document.getElementById('pa-'+n); if(t){t.style.display='block'; window.scrollTo(0,0);}
 }
 
-function goPhase(p){
-  if(p==='c'&&!pubCat){ showToast('Please select a category'); return; }
-  // If coming from b and Adventures selected, route through b2 instead
-  if(p==='c' && pubCat==='Adventures'){ showToast('Please choose Accommodation or Experiences'); return; }
-  if(p==='c') updateModelNote();
-  showPhase(p);
+function paGoStep(n){
+  if(n===3){
+    const t=document.getElementById('pa-title').value.trim();
+    if(!t){ showToast('Please enter a title for your listing'); return; }
+    if(!paState.cat){ showToast('Please select a category'); return; }
+  }
+  paShowStep(n);
 }
 
-function handleImg(e){
+function paHandleImg(e){
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
   r.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
-      const MAX=1200, Q=0.80;
-      let w=img.width, h=img.height;
-      if(w>MAX||h>MAX){ const s=Math.min(MAX/w,MAX/h); w=Math.round(w*s); h=Math.round(h*s); }
-      const canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      pubImg=canvas.toDataURL('image/jpeg',Q);
-      document.getElementById('uz-img').src=pubImg;
-      document.getElementById('uz-default').style.display='none';
-      document.getElementById('uz-preview').style.display='block';
+      const MAX=1200,Q=0.80;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const s=Math.min(MAX/w,MAX/h);w=Math.round(w*s);h=Math.round(h*s);}
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      paState.img=c.toDataURL('image/jpeg',Q);
+      paState.imgFile=file;
+      document.getElementById('pa-uz-img').src=paState.img;
+      document.getElementById('pa-uz-default').style.display='none';
+      document.getElementById('pa-uz-preview').style.display='block';
     };
     img.src=ev.target.result;
   };
   r.readAsDataURL(file);
 }
-function clearImg(e){
-  e.stopPropagation(); pubImg=null;
-  document.getElementById('uz-default').style.display='block';
-  document.getElementById('uz-preview').style.display='none';
-  document.getElementById('img-inp').value='';
+
+function paClearImg(e){
+  e.stopPropagation();
+  paState.img=null; paState.imgFile=null;
+  document.getElementById('pa-uz-default').style.display='block';
+  document.getElementById('pa-uz-preview').style.display='none';
+  document.getElementById('pa-img-inp').value='';
 }
 
-function selCatBig(cat){
-  pubCat=cat;
+function paSelCat(cat){
+  paState.cat=cat;
   ['Property','Tutors','Services','Adventures','Collectors','Cars','LocalMarket'].forEach(c=>{
-    const el=document.getElementById('cbt-'+c);
-    if(el) el.classList.toggle('selected', c===cat);
+    const el=document.getElementById('pa-cbt-'+c);
+    if(el) el.classList.toggle('selected',c===cat);
   });
-  document.getElementById('pub-b-next').style.opacity='1';
-  document.getElementById('pub-b-next').style.pointerEvents='auto';
+  const mn=document.getElementById('pa-model-note');
+  mn.style.display=(cat==='Property')?'block':'none';
+  paCheckStep2();
 }
 
-function goPhaseB2OrC(){
-  // Local Market — bypass standard wizard, go to LM create flow
-  if(pubCat==='LocalMarket'){
-    openLMCreateFromWizard();
+function paCheckStep2(){
+  const title=(document.getElementById('pa-title')||{}).value||'';
+  const ok=paState.cat && title.trim();
+  const btn=document.getElementById('pa-2-next');
+  if(btn){btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';}
+}
+
+function paCheckStep3(){
+  const eu=(document.getElementById('pa-eula')||{}).checked;
+  const ba=(document.getElementById('pa-block-ack')||{}).checked;
+  const name=(document.getElementById('pa-name')||{}).value||'';
+  const email=(document.getElementById('pa-email')||{}).value||'';
+  const ok=eu&&ba&&name.trim()&&email.includes('@');
+  const btn=document.getElementById('pa-3-next');
+  if(btn){btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';}
+}
+
+async function paDoPublish(){
+  if(isOffline()){ showToast('You\'re offline — publishing needs a connection'); return; }
+  const name=document.getElementById('pa-name').value.trim();
+  const email=document.getElementById('pa-email').value.trim();
+  const city=document.getElementById('pa-city').value.trim()||activeCity.name;
+  const title=document.getElementById('pa-title').value.trim();
+  const price=document.getElementById('pa-price').value.trim();
+  const cat=paState.cat;
+  const errEl=document.getElementById('pa-3-err');
+  const btn=document.getElementById('pa-3-next');
+
+  if(!name||!email||!title||!cat){
+    errEl.textContent='Please fill in all required fields.'; errEl.style.display='block'; return;
+  }
+
+  btn.textContent='Publishing…'; btn.style.opacity='.7'; btn.style.pointerEvents='none';
+  errEl.style.display='none';
+
+  try {
+    // 1. Register user (POST /users)
+    if(BEA_ENABLED){
+      await apiPost('/users',{
+        name, email,
+        city: city,
+        geo_city_id: activeCity.id||null,
+        ai_sessions: 3        // 3 free AI sessions on first listing
+      });
+    }
+    // 2. Create listing (POST /listings)
+    let listingId=null;
+    if(BEA_ENABLED){
+      const res=await apiPost('/listings',{
+        title, price:price||'POA', category:cat,
+        city: activeCity.name,
+        area:(activeSuburb&&activeSuburb.name)||activeCity.name,
+        suburb:(activeSuburb&&activeSuburb.name)||activeCity.name,
+        geo_city_id:activeCity.id||null,
+        description:'',
+        seller_email:email,
+        listing_status:'live'
+      });
+      if(res&&res.id) listingId=res.id;
+    }
+    // 3. Upload photo if provided
+    if(BEA_ENABLED && paState.img && listingId){
+      const fd=new FormData();
+      const blob=await (await fetch(paState.img)).blob();
+      fd.append('file',blob,'photo.jpg');
+      fd.append('listing_id',listingId);
+      await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>{});
+    }
+    // 4. Store email for returning seller recognition
+    localStorage.setItem('ms_aa_email',email);
+    localStorage.setItem('ms_aa_name',name);
+    // 5. Show success
+    const st=document.getElementById('pa-success-title');
+    if(st) st.textContent=`"${title}" is live on MarketSquare.`;
+    paShowStep('success');
+    showToast('✓ You\'re live!');
+    loadLiveListings();
+  } catch(err){
+    errEl.textContent='Something went wrong — please try again.'; errEl.style.display='block';
+    btn.textContent='List now →'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// PATH B — RETURNING SELLER (Full AI-guided flow, B1–B8)
+// Session 38 · SELL_FLOW.md v3.0
+// ══════════════════════════════════════════════════════════
+
+// State object for the full B path
+let sbState = {
+  cat: '',           // e.g. 'Property', 'Tutors', 'Services', etc.
+  subcat: '',        // e.g. 'adventures_accommodation', 'services_technical'
+  gate: '',          // 'agent' | 'private' — Property and Cars only
+  fields: {},        // filled structured fields from B3
+  description: '',   // B4 draft (edited by seller)
+  photos: [],        // [{slot, prompt, dataUrl, caption}]
+  selfieUrl: null,   // B6
+  signals: {},       // signalId → {status:'skipped'|'declared'|'uploaded', pts:0}
+  currentDocSignal: null  // which signal is being acted on in B7
+};
+
+// ── Draft save / resume ────────────────────────────────────
+function sbDraftKey(){
+  const email=localStorage.getItem('ms_aa_email')||'anon';
+  return 'sb_draft_'+email;
+}
+
+async function sbSaveDraft(step){
+  try {
+    const draft={
+      id: sbDraftKey(),
+      step: step||sbState._step||'b3',
+      state: {
+        cat:sbState.cat, subcat:sbState.subcat, gate:sbState.gate,
+        fields:sbState.fields, description:sbState.description,
+        selfieUrl:sbState.selfieUrl, signals:sbState.signals
+        // photos omitted — dataUrls too large for IDB quota; user re-adds on resume
+      },
+      saved_at: new Date().toISOString()
+    };
+    await aaDB.put(draft);
+  } catch(e){ console.warn('sbSaveDraft failed',e); }
+}
+
+async function sbSaveDraftAndExit(){
+  const step=sbState._step||'b7';
+  await sbSaveDraft(step);
+  showToast('💾 Draft saved — continue from your dashboard anytime');
+  goTo('dashboard');
+}
+
+async function sbCheckResumeDraft(){
+  try {
+    const draft=await aaDB.get(sbDraftKey());
+    if(!draft||!draft.state||!draft.state.cat) return false;
+    const saved=new Date(draft.saved_at);
+    const age=Date.now()-saved.getTime();
+    if(age>7*24*60*60*1000) { await aaDB.remove(sbDraftKey()); return false; } // expire after 7 days
+    // Show resume banner on B1
+    const b1footer=document.querySelector('#sb-b1 .pub-footer');
+    if(b1footer){
+      const banner=document.createElement('div');
+      banner.id='sb-draft-banner';
+      banner.style.cssText='padding:12px 20px;background:rgba(37,99,235,.07);border-top:1px solid rgba(37,99,235,.15);text-align:center;';
+      banner.innerHTML=`<div style="font-size:13px;font-weight:600;color:#2563eb;margin-bottom:6px;">You have an unfinished listing</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">${draft.state.cat} · saved ${saved.toLocaleDateString()}</div>
+        <button onclick="sbResumeDraft()" style="background:#2563eb;color:#fff;border:none;border-radius:50px;padding:9px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">Resume listing →</button>
+        <button onclick="sbDiscardDraft()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;color:var(--text-3);">Start fresh</button>`;
+      b1footer.parentNode.insertBefore(banner, b1footer);
+    }
+    return true;
+  } catch(e){ return false; }
+}
+
+async function sbResumeDraft(){
+  try {
+    const draft=await aaDB.get(sbDraftKey());
+    if(!draft) return;
+    Object.assign(sbState, draft.state);
+    sbState._step=draft.step;
+    // Remove banner
+    const b=document.getElementById('sb-draft-banner'); if(b)b.remove();
+    sbGoStep(draft.step||'b3');
+    showToast('Listing resumed from where you left off');
+  } catch(e){ showToast('Could not load draft'); }
+}
+
+async function sbDiscardDraft(){
+  await aaDB.remove(sbDraftKey()).catch(()=>{});
+  const b=document.getElementById('sb-draft-banner'); if(b)b.remove();
+  showToast('Draft discarded');
+}
+
+function sbReset(){
+  sbState = { cat:'', subcat:'', gate:'', fields:{}, description:'', photos:[], selfieUrl:null, signals:{}, currentDocSignal:null, _step:'b1' };
+  // populate B1 name/email from localStorage
+  const name=localStorage.getItem('ms_aa_name')||'';
+  const email=localStorage.getItem('ms_aa_email')||'';
+  const n1=document.getElementById('sb-b1-name'); if(n1)n1.textContent=name||'Your account';
+  const e1=document.getElementById('sb-b1-email'); if(e1)e1.textContent=email;
+  // Check for saved draft and show resume banner if found
+  sbCheckResumeDraft();
+}
+
+function sbClosePath(){
+  document.getElementById('sell-account-sheet').classList.remove('open');
+  goTo('browse');
+}
+
+function sbGoStep(step){
+  ['b1','b2','b3','b4','b5','b6','b7','b8','success'].forEach(s=>{
+    const el=document.getElementById('sb-'+s); if(el)el.style.display='none';
+  });
+  const t=document.getElementById('sb-'+step);
+  if(t){t.style.display='block'; window.scrollTo(0,0);}
+
+  // Track step and auto-save draft on forward steps (not b1/success/going back)
+  const forwardSteps=['b2','b3','b4','b5','b6','b7','b8'];
+  if(forwardSteps.includes(step)){
+    sbState._step=step;
+    sbSaveDraft(step).catch(()=>{});
+  }
+  if(step==='success'){
+    // Published — delete draft
+    aaDB.remove(sbDraftKey()).catch(()=>{});
+  }
+
+  // Render step-specific content
+  if(step==='b3') sbRenderB3();
+  if(step==='b4') sbRenderB4();
+  if(step==='b5') sbRenderB5();
+  if(step==='b7') sbRenderB7();
+  if(step==='b8') sbRenderB8Preview();
+}
+
+// ── B2: category + agent/private gate ─────────────────────
+function sbSelCat(cat){
+  sbState.cat=cat; sbState.gate=''; sbState.subcat='';
+  ['Property','Tutors','Services','Adventures','Collectors','Cars','LocalMarket'].forEach(c=>{
+    const el=document.getElementById('sb-cbt-'+c); if(el)el.classList.toggle('selected',c===cat);
+  });
+  // Show gate for Property and Cars
+  const gateDiv=document.getElementById('sb-b2-gate');
+  const gateLabel=document.getElementById('sb-b2-gate-label');
+  const gateAgentBtn=document.getElementById('sb-gate-agent');
+  const gatePrivateBtn=document.getElementById('sb-gate-private');
+  if(gateDiv && gateLabel){
+    if(cat==='Property'){
+      gateDiv.style.display='block';
+      gateLabel.textContent='Are you a registered estate agent or a private seller?';
+      if(gateAgentBtn) gateAgentBtn.textContent='Registered estate agent';
+      if(gatePrivateBtn) gatePrivateBtn.textContent='Private seller';
+      sbCheckB2();
+    } else if(cat==='Cars'){
+      gateDiv.style.display='block';
+      gateLabel.textContent='Are you a registered dealer or selling your own vehicle privately?';
+      if(gateAgentBtn) gateAgentBtn.textContent='Registered dealer';
+      if(gatePrivateBtn) gatePrivateBtn.textContent='Private seller';
+      sbCheckB2();
+    } else {
+      gateDiv.style.display='none';
+      sbState.gate='';
+      sbCheckB2();
+    }
+  }
+  // Handle LocalMarket separately
+  if(cat==='LocalMarket'){ openLMCreateFromWizard(); return; }
+}
+
+function sbSetGate(gate){
+  sbState.gate=gate;
+  const ga=document.getElementById('sb-gate-agent');
+  const gp=document.getElementById('sb-gate-private');
+  if(ga) ga.style.background=gate==='agent'?'var(--navy)':'';
+  if(ga) ga.style.color=gate==='agent'?'#fff':'';
+  if(gp) gp.style.background=gate==='private'?'var(--navy)':'';
+  if(gp) gp.style.color=gate==='private'?'#fff':'';
+  sbCheckB2();
+}
+
+function sbCheckB2(){
+  const needsGate=sbState.cat==='Property'||sbState.cat==='Cars';
+  const ok=sbState.cat && (!needsGate || sbState.gate);
+  const btn=document.getElementById('sb-b2-next');
+  if(btn){btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';}
+}
+
+// ── B3: structured fields ──────────────────────────────────
+const SB_FIELDS = {
+  Property: [
+    {id:'listing_type',  label:'Listing type',    type:'select', opts:['For Sale','To Let','Commercial Sale','Commercial Rental']},
+    {id:'property_type', label:'Property type',   type:'select', opts:['House','Apartment','Townhouse','Land','Commercial','Farm']},
+    {id:'bedrooms',      label:'Bedrooms',         type:'select', opts:['Studio','1','2','3','4','5','6+']},
+    {id:'bathrooms',     label:'Bathrooms',        type:'select', opts:['1','1.5','2','2.5','3','4+']},
+    {id:'garages',       label:'Garages',          type:'select', opts:['0','1','2','3+']},
+    {id:'floor_size',    label:'Floor size (m²)',  type:'number', placeholder:'e.g. 180'},
+    {id:'stand_size',    label:'Stand size (m²)',  type:'number', placeholder:'e.g. 600'},
+    {id:'suburb',        label:'Suburb',           type:'text',   placeholder:'e.g. Waterkloof'},
+    {id:'price',         label:'Asking price',     type:'text',   placeholder:'e.g. R2 500 000'}
+  ],
+  Tutors: [
+    {id:'subjects',      label:'Subjects',         type:'text',   placeholder:'e.g. Maths, Science'},
+    {id:'level',         label:'Level',            type:'select', opts:['Primary school','High school','Grade 12','University','Adult']},
+    {id:'format',        label:'Format',           type:'select', opts:['In-person','Online','Both']},
+    {id:'rate',          label:'Rate per hour',    type:'text',   placeholder:'e.g. R280/hr'},
+    {id:'suburb',        label:'Suburb (for in-person)', type:'text', placeholder:'e.g. Menlyn'}
+  ],
+  Services_Technical: [
+    {id:'trade_type',    label:'Trade / profession', type:'text', placeholder:'e.g. Electrician'},
+    {id:'coc',           label:'CoC held?',         type:'select', opts:['Yes','No','Not required for my trade']},
+    {id:'callout_area',  label:'Call-out area',     type:'text',   placeholder:'e.g. Pretoria East'},
+    {id:'rate',          label:'Call-out rate',     type:'text',   placeholder:'e.g. R800/hr + materials'}
+  ],
+  Services_Casuals: [
+    {id:'work_type',     label:'Type of work',      type:'text',   placeholder:'e.g. Garden maintenance'},
+    {id:'in_home',       label:'In-home service?',  type:'select', opts:['Yes — I come to the client','No — client comes to me','Both']},
+    {id:'availability',  label:'Availability',      type:'text',   placeholder:'e.g. Weekdays 8am–5pm'},
+    {id:'rate',          label:'Rate',              type:'text',   placeholder:'e.g. R200/hr or R1500/day'}
+  ],
+  Adventures_Experiences: [
+    {id:'activity_type', label:'Activity type',     type:'text',   placeholder:'e.g. Mountain hike'},
+    {id:'group_size',    label:'Group size',        type:'text',   placeholder:'e.g. 2–8 people'},
+    {id:'duration',      label:'Duration',          type:'text',   placeholder:'e.g. Full day (8hrs)'},
+    {id:'location',      label:'Location / area',   type:'text',   placeholder:'e.g. Magaliesberg'},
+    {id:'rate',          label:'Rate per person',   type:'text',   placeholder:'e.g. R850/person'}
+  ],
+  Adventures_Accommodation: [
+    {id:'property_type', label:'Property type',     type:'select', opts:['Guest house','B&B','Bush camp','Self-catering','Hostel','Boutique hotel']},
+    {id:'rooms',         label:'Rooms / units',     type:'number', placeholder:'e.g. 5'},
+    {id:'grading',       label:'TGCSA grading (if held)', type:'select', opts:['None','1-star','2-star','3-star','4-star','5-star']},
+    {id:'nightly_rate',  label:'Nightly rate',      type:'text',   placeholder:'e.g. R1 200/night'},
+    {id:'location',      label:'Location / area',   type:'text',   placeholder:'e.g. Pilanesberg'}
+  ],
+  Collectors: [
+    {id:'item_category', label:'Item category',     type:'text',   placeholder:'e.g. Coins, Art, Stamps'},
+    {id:'condition',     label:'Condition',         type:'select', opts:['Mint','Excellent','Good','Fair','As-is']},
+    {id:'value',         label:'Estimated value',   type:'text',   placeholder:'e.g. R8 500'},
+    {id:'auth_status',   label:'Authentication status', type:'select', opts:['Authenticated by third party','Self-certified','Not authenticated']}
+  ],
+  Cars: [
+    {id:'make',          label:'Make',              type:'text',   placeholder:'e.g. Toyota'},
+    {id:'model',         label:'Model',             type:'text',   placeholder:'e.g. Fortuner'},
+    {id:'year',          label:'Year',              type:'number', placeholder:'e.g. 2019'},
+    {id:'mileage',       label:'Mileage (km)',      type:'number', placeholder:'e.g. 85000'},
+    {id:'colour',        label:'Colour',            type:'text',   placeholder:'e.g. White'},
+    {id:'transmission',  label:'Transmission',      type:'select', opts:['Automatic','Manual']},
+    {id:'engine',        label:'Engine',            type:'text',   placeholder:'e.g. 2.8 GD6'},
+    {id:'condition',     label:'Condition',         type:'select', opts:['Excellent','Good','Fair','Needs work']},
+    {id:'price',         label:'Asking price',      type:'text',   placeholder:'e.g. R420 000'}
+  ]
+};
+
+function sbGetFieldKey(){
+  const c=sbState.cat;
+  if(c==='Services'){
+    return sbState.subcat==='services_technical'?'Services_Technical':'Services_Casuals';
+  }
+  if(c==='Adventures'){
+    return sbState.subcat==='adventures_accommodation'?'Adventures_Accommodation':'Adventures_Experiences';
+  }
+  return c;
+}
+
+function sbRenderB3(){
+  const key=sbGetFieldKey();
+  const fields=SB_FIELDS[key]||SB_FIELDS['Tutors'];
+  const hdr=document.getElementById('sb-b3-title');
+  if(hdr) hdr.textContent = sbState.cat==='Services' ? (sbState.subcat==='services_technical'?'Trade details':'Service details') : (sbState.cat||'Details');
+
+  // Services / Adventures need subcat selection first
+  let subcatHtml='';
+  if(sbState.cat==='Services'||sbState.cat==='Adventures'){
+    const opts=sbState.cat==='Services'
+      ? [{v:'services_technical',l:'Technical (trade/professional)'},{v:'services_casual',l:'Casuals (in-home/general)'}]
+      : [{v:'adventures_experiences',l:'Guided experience'},{v:'adventures_accommodation',l:'Accommodation'}];
+    subcatHtml=`<div style="margin-bottom:18px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Sub-type</div>
+      <div style="display:flex;gap:8px;">${opts.map(o=>`
+        <button onclick="sbSetSubcat('${o.v}')" id="sb-sub-${o.v}"
+          style="flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:${sbState.subcat===o.v?'var(--navy)':'var(--surface-2)'};color:${sbState.subcat===o.v?'#fff':'var(--text)'};font-size:12px;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;">
+          ${o.l}
+        </button>`).join('')}
+      </div></div>`;
+  }
+
+  const formHtml=fields.map(f=>{
+    const val=sbState.fields[f.id]||'';
+    if(f.type==='select'){
+      return `<div class="field"><label>${f.label}</label>
+        <select id="sb-f-${f.id}" onchange="sbSaveField('${f.id}',this.value)">
+          <option value="">— Select —</option>
+          ${f.opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+        </select></div>`;
+    }
+    return `<div class="field"><label>${f.label}</label>
+      <input type="${f.type||'text'}" id="sb-f-${f.id}" placeholder="${f.placeholder||''}" value="${val}"
+        oninput="sbSaveField('${f.id}',this.value)" onchange="sbSaveField('${f.id}',this.value)"></div>`;
+  }).join('');
+
+  const form=document.getElementById('sb-b3-form');
+  if(form) form.innerHTML=subcatHtml+formHtml;
+
+  // Also need headline + price
+  const titleVal=sbState.fields['title']||'';
+  const priceVal=sbState.fields['price']||sbState.fields['rate']||'';
+  if(form) form.innerHTML += `
+    <div class="field"><label>Headline <span class="req">*</span></label>
+      <input type="text" id="sb-f-title" placeholder="e.g. 3-bed home in Waterkloof" value="${titleVal}"
+        oninput="sbSaveField('title',this.value)" style="font-size:16px;"></div>`;
+
+  sbCheckB3();
+  // Trigger AI market note after a short delay
+  if(sbState.fields['suburb']||sbState.fields['subjects']||sbState.fields['trade_type']){
+    sbTriggerMarketNote();
+  }
+}
+
+function sbSetSubcat(sub){
+  sbState.subcat=sub;
+  sbRenderB3();
+}
+
+function sbSaveField(id,val){
+  sbState.fields[id]=val;
+  sbCheckB3();
+  // Trigger market note when key fields are filled
+  if(['suburb','subjects','trade_type','level','activity_type'].includes(id) && val.trim()){
+    clearTimeout(window._sbMarketNoteTimer);
+    window._sbMarketNoteTimer=setTimeout(sbTriggerMarketNote, 800);
+  }
+}
+
+function sbCheckB3(){
+  const title=sbState.fields['title']||'';
+  const ok=title.trim().length>0;
+  const btn=document.getElementById('sb-b3-next');
+  if(btn){btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';}
+}
+
+async function sbTriggerMarketNote(){
+  const noteDiv=document.getElementById('sb-b3-ai-note');
+  const textDiv=document.getElementById('sb-b3-ai-text');
+  if(!noteDiv||!textDiv) return;
+  noteDiv.style.display='block';
+  textDiv.textContent='Analysing your market…';
+
+  const cat=sbState.cat;
+  const f=sbState.fields;
+  let prompt='';
+  if(cat==='Property'){
+    const beds=f.bedrooms||''; const baths=f.bathrooms||''; const sub=f.suburb||''; const price=f.price||'';
+    prompt=`In 1 sentence, give a market context note for a ${beds}-bed, ${baths}-bath property in ${sub}, Pretoria. Mention approximate comparable asking prices if you know them. Be specific and brief.`;
+  } else if(cat==='Tutors'){
+    const sub=f.subjects||''; const level=f.level||''; const format=f.format||'';
+    prompt=`In 1 sentence, give a market context note for a ${format} ${level} ${sub} tutor in Pretoria. Mention typical hourly rates. Be specific and brief.`;
+  } else if(cat==='Services'){
+    const trade=f.trade_type||'';
+    prompt=`In 1 sentence, give a market context note for a ${trade} in Pretoria. Mention typical call-out rates. Be specific and brief.`;
+  } else {
+    textDiv.textContent='Fill in your details above and I\'ll give you a market context note.';
     return;
   }
-  // Adventures — show subcategory step first
-  if(pubCat==='Adventures'){
-    ['adv-accommodation','adv-experiences'].forEach(k=>{
-      const el=document.getElementById('cbt-'+k);
-      if(el) el.classList.remove('selected');
+
+  try {
+    if(!BEA_ENABLED){ textDiv.textContent=sbFallbackMarketNote(cat,f); return; }
+    const res=await fetch(BEA_URL+'/advert-agent/coach',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true})
     });
-    document.getElementById('pub-b2-next').style.opacity='0.4';
-    document.getElementById('pub-b2-next').style.pointerEvents='none';
-    showPhase('b2');
-  } else {
-    goPhase('c');
+    const data=await res.json();
+    textDiv.textContent=data.response||sbFallbackMarketNote(cat,f);
+  } catch(e){
+    textDiv.textContent=sbFallbackMarketNote(cat,f);
   }
 }
 
-function selAdvSubcat(subcat){
-  // subcat is 'adventures_accommodation' or 'adventures_experiences'
-  pubCat=subcat;
-  ['adv-accommodation','adv-experiences'].forEach(k=>{
-    const el=document.getElementById('cbt-'+k);
-    if(el) el.classList.toggle('selected', 'adventures_'+k.replace('adv-','')===subcat);
-  });
-  document.getElementById('pub-b2-next').style.opacity='1';
-  document.getElementById('pub-b2-next').style.pointerEvents='auto';
+function sbFallbackMarketNote(cat,f){
+  if(cat==='Property'){
+    const beds=f.bedrooms||''; const sub=f.suburb||activeCity.name;
+    return `A ${beds}-bed home in ${sub} — based on recent listings, comparable properties are currently asking R1.8m–R3.2m depending on finish and size.`;
+  }
+  if(cat==='Tutors'){
+    return `Online and in-person tutors in ${activeCity.name} typically charge R200–R400/hr depending on subject and level.`;
+  }
+  if(cat==='Services'){
+    return `${f.trade_type||'Service providers'} in ${activeCity.name} typically charge R650–R950/hr call-out, depending on qualifications and area.`;
+  }
+  return 'Fill in your details above for a personalised market context note.';
 }
 
-function updateModelNote(){
-  const note=document.getElementById('pub-c-model-note');
-  if(!pubCat){ note.style.display='none'; return; }
-  const isCommit=pubCat==='Property';
-  note.style.cssText=`display:block;background:${isCommit?'var(--gold-bg)':'var(--purple-bg)'};color:${isCommit?'var(--gold)':'var(--purple)'};border:1px solid ${isCommit?'#fde68a':'#c4b5fd'};border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.6;margin-top:4px;`;
-  note.innerHTML=isCommit
-    ?'<strong>⏳ Commitment Model</strong> — Your listing pauses on each intro request. Seller has 48hrs to accept or decline.'
-    :`<strong>👥 Soft Queue Model</strong> — Your listing stays live. Multiple buyers can request simultaneously. Ignoring reduces Trust Score.`;
+// ── B4: AI description draft ────────────────────────────────
+async function sbRenderB4(){
+  const loadDiv=document.getElementById('sb-b4-loading');
+  const editDiv=document.getElementById('sb-b4-editor');
+  const descTa=document.getElementById('sb-b4-desc');
+  const nextBtn=document.getElementById('sb-b4-next');
+
+  // If we already have a description (came back from B5), show edit mode
+  if(sbState.description){
+    if(loadDiv)loadDiv.style.display='none';
+    if(editDiv)editDiv.style.display='block';
+    if(descTa)descTa.value=sbState.description;
+    if(nextBtn){nextBtn.style.opacity='1';nextBtn.style.pointerEvents='auto';}
+    return;
+  }
+
+  if(loadDiv)loadDiv.style.display='block';
+  if(editDiv)editDiv.style.display='none';
+  if(nextBtn){nextBtn.style.opacity='.4';nextBtn.style.pointerEvents='none';}
+
+  const f=sbState.fields;
+  const cat=sbState.cat;
+  let prompt=`Write a 3–5 sentence listing description for a ${cat} listing on a marketplace. Use these details: ${JSON.stringify(f)}. Write in first person from the seller's perspective, warm and professional. No fluff.`;
+
+  let draft='';
+  try {
+    if(BEA_ENABLED){
+      const res=await fetch(BEA_URL+'/advert-agent/coach',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true})
+      });
+      const data=await res.json();
+      draft=data.response||sbFallbackDesc(cat,f);
+    } else {
+      draft=sbFallbackDesc(cat,f);
+    }
+  } catch(e){ draft=sbFallbackDesc(cat,f); }
+
+  sbState.description=draft;
+  if(loadDiv)loadDiv.style.display='none';
+  if(editDiv)editDiv.style.display='block';
+  if(descTa)descTa.value=draft;
+  if(nextBtn){nextBtn.style.opacity='1';nextBtn.style.pointerEvents='auto';}
+  // Save edits to state
+  if(descTa) descTa.addEventListener('input',()=>{ sbState.description=descTa.value; });
 }
 
-function doPublish(){
-  if(isOffline()){ showToast('You\'re offline — publishing needs a connection'); return; }
-  const title=document.getElementById('f-title').value.trim();
-  if(!title){ showToast('Please enter a title'); return; }
-  const price=document.getElementById('f-price').value.trim();
-  // Show claim screen
-  document.getElementById('claim-title').textContent=`"${title}" is live on MarketSquare.`;
-  showPhase('claim');
-  showToast('✓ Listing published!');
-  // Post to BEA — city/area come from live app state (geo bug fix)
-  if(BEA_ENABLED) {
-    apiPost('/listings', {
-      title: title,
-      price: price || 'POA',
-      category: pubCat || 'Services',
-      city:   activeCity.name,
-      area:   (activeSuburb && activeSuburb.name) || activeCity.name,
-      suburb: (activeSuburb && activeSuburb.name) || activeCity.name,
-      geo_city_id: activeCity.id || null,
-      description: ''
-    }).then(result => {
-      if(result && result.id) {
-        console.log('Listing saved to BEA with id:', result.id);
-        // Reload live listings to show the new one
-        loadLiveListings();
+function sbFallbackDesc(cat,f){
+  if(cat==='Property') return `I'm offering a ${f.bedrooms||''}-bedroom, ${f.bathrooms||''}-bathroom ${(f.property_type||'home').toLowerCase()} in ${f.suburb||activeCity.name}. Floor size ${f.floor_size||'—'} m² on a ${f.stand_size||'—'} m² stand. ${f.listing_type==='To Let'?'Available to let':'Priced to sell'} at ${f.price||'a negotiable price'}. Serious buyers only — intro requests welcome.`;
+  if(cat==='Tutors') return `I offer ${f.format||'in-person and online'} tutoring for ${f.subjects||'various subjects'} at ${f.level||'school and university'} level. Based in ${f.suburb||activeCity.name}. My rate is ${f.rate||'competitive'}. I'm passionate about helping students achieve their best results.`;
+  if(cat==='Cars') return `I'm selling my ${f.year||''} ${f.make||''} ${f.model||''} in ${f.condition||'good'} condition with ${f.mileage||'—'} km on the clock. ${f.colour||''}, ${f.transmission||''} transmission, ${f.engine||''} engine. Asking ${f.price||'negotiable'}. Serious buyers only.`;
+  return `I'm offering a professional ${cat.toLowerCase()} service in ${activeCity.name}. ${f.rate?`Rate: ${f.rate}.`:''} Contact me via the introduction system for more details.`;
+}
+
+// ── B5: room-by-room photo gallery ─────────────────────────
+const SB_PHOTO_SLOTS = {
+  Property: (f) => {
+    const rooms=[{key:'exterior',prompt:'Step back to get the whole house in frame. Late afternoon light is flattering.'}];
+    const beds=parseInt(f.bedrooms)||0;
+    rooms.push({key:'lounge',prompt:'Shoot from the corner to show the whole room.'});
+    rooms.push({key:'kitchen',prompt:'Kitchen photos sell houses. Natural light works best.'});
+    for(let i=1;i<=Math.min(beds,4);i++) rooms.push({key:`bedroom_${i}`,prompt:`Bedroom ${i}: Show the bed and the window if you can — buyers want to picture themselves here.`});
+    rooms.push({key:'bathroom_main',prompt:'Clean and tidy before shooting — tile and fixture quality matters to buyers.'});
+    if(parseInt(f.garages)>0) rooms.push({key:'garage',prompt:'Show the garage space — buyers want to see the size and condition.'});
+    rooms.push({key:'garden',prompt:'Garden / outdoor area: show the space and any features.'});
+    rooms.push({key:'street_view',prompt:'Optional — helps buyers confirm the neighbourhood.'});
+    return rooms;
+  },
+  Tutors: () => [
+    {key:'workspace', prompt:'Add a photo of you in your element — at a desk, whiteboard, or with learning materials.'},
+    {key:'qualifications', prompt:'Photograph your qualifications or certificates on display.'},
+    {key:'materials', prompt:'Show your study materials or resources — it signals preparation.'},
+    {key:'optional_4', prompt:'Any other photo that shows your teaching environment. Skippable.'}
+  ],
+  Services_Technical: () => [
+    {key:'job_completed', prompt:'Show a completed job — before/after pairs are very effective.'},
+    {key:'tools_equipment', prompt:'Your tools and equipment tell buyers about your professionalism.'},
+    {key:'certification', prompt:'Photograph your trade certificate or registration on display.'},
+    {key:'optional_4', prompt:'Any other photo showing your work quality. Skippable.'}
+  ],
+  Services_Casuals: () => [
+    {key:'headshot', prompt:'A friendly, clear photo of you builds confidence with buyers who will have you in their home.'},
+    {key:'reference_letter', prompt:'Photograph a reference letter from a previous client.'},
+    {key:'work_example', prompt:'Show an example of your work.'}
+  ],
+  Adventures_Experiences: () => [
+    {key:'activity_action', prompt:'Show the experience in action — real guests, real scenery. Action beats studio shots.'},
+    {key:'location', prompt:'A wide shot of the location or scenery.'},
+    {key:'group', prompt:'Group or participants enjoying the activity.'},
+    {key:'safety', prompt:'Safety equipment or setup — guests want to see you take safety seriously.'},
+    {key:'optional_5', prompt:'Any other photo of the experience. Skippable.'},
+    {key:'optional_6', prompt:'A sixth photo if you have one. Skippable.'}
+  ],
+  Adventures_Accommodation: (f) => {
+    const rooms=[
+      {key:'exterior', prompt:'The exterior or entrance — first impressions matter.'},
+      {key:'main_room', prompt:'The main room or living area.'},
+      {key:'bedroom', prompt:'The bedroom — show the bed, linen, and window.'},
+      {key:'bathroom', prompt:'The bathroom — clean and well-lit.'},
+      {key:'view', prompt:'The view from the property, if there is one.'},
+      {key:'communal', prompt:'Any communal areas — pool, braai, garden.'}
+    ];
+    if(parseInt(f.rooms||'1')>2) rooms.push({key:'room_2',prompt:'A second room or unit.'});
+    if(parseInt(f.rooms||'1')>4) rooms.push({key:'room_3',prompt:'A third room or unit.'});
+    return rooms;
+  },
+  Collectors: () => [
+    {key:'front', prompt:'The item from the front — clear, well-lit.'},
+    {key:'back', prompt:'The back of the item.'},
+    {key:'detail', prompt:'Close-up of any markings, signatures, or notable features — buyers respect honesty.'},
+    {key:'packaging', prompt:'The original box or packaging, if present.'},
+    {key:'certificate', prompt:'Authentication certificate or provenance document alongside the item.'},
+    {key:'optional_6', prompt:'Any other angle or detail. Skippable.'}
+  ],
+  Cars: () => [
+    {key:'front', prompt:'Front of the vehicle — centred, standing back.'},
+    {key:'rear', prompt:'Rear of the vehicle.'},
+    {key:'driver_side', prompt:'Driver\'s side profile.'},
+    {key:'passenger_side', prompt:'Passenger side profile.'},
+    {key:'interior_front', prompt:'Interior — dashboard and front seats.'},
+    {key:'interior_rear', prompt:'Rear seats.'},
+    {key:'dashboard', prompt:'Dashboard close-up — odometer visible.'},
+    {key:'engine_bay', prompt:'Engine bay — open bonnet.'},
+    {key:'boot', prompt:'Boot / load area.'},
+    {key:'damage', prompt:'Any dents, scratches, or wear — buyers respect honesty and it reduces disputes.'}
+  ]
+};
+
+function sbGetPhotoSlots(){
+  const key=sbGetFieldKey();
+  const fn=SB_PHOTO_SLOTS[key];
+  if(!fn) return SB_PHOTO_SLOTS['Tutors']();
+  return fn(sbState.fields);
+}
+
+function sbRenderB5(){
+  const slots=sbGetPhotoSlots();
+  // Update B1 photo feature label to be category-specific
+  const photoLabels={
+    Property:'Room-by-room photos',
+    Tutors:'Teaching environment photos',
+    Services_Technical:'Work example photos',
+    Services_Casuals:'Personal & work photos',
+    Adventures_Experiences:'Experience action shots',
+    Adventures_Accommodation:'Property room photos',
+    Collectors:'Multi-angle item photos',
+    Cars:'Full vehicle walkthrough',
+    LocalMarket:'Business & work photos'
+  };
+  const b1lbl=document.getElementById('sb-b1-photo-label');
+  if(b1lbl) b1lbl.textContent=photoLabels[sbGetFieldKey()]||'Guided photos';
+
+  const intro=document.getElementById('sb-b5-intro');
+  if(intro){
+    const intros={
+      Property:"Now let's add photos for each part of your listing. Buyers scroll through these before deciding to connect — the more you add, the stronger your listing.",
+      Tutors:"Add a photo that shows you in your element — at a desk, whiteboard, or with learning materials.",
+      Cars:"Car buyers want to see everything. Photograph all four sides, interior, engine bay, and any damage.",
+      Services:"Show your work, your tools, or a completed job. Before/after pairs are very effective.",
+      Adventures:"Show the experience in action — real guests, real scenery.",
+      Collectors:"Photograph the item from multiple angles. Include any markings, signatures, or wear — buyers respect honesty."
+    };
+    intro.textContent=intros[sbState.cat]||intros['Services'];
+  }
+  const slotsDiv=document.getElementById('sb-b5-slots');
+  if(!slotsDiv) return;
+  slotsDiv.innerHTML=slots.map((s,i)=>{
+    const existing=sbState.photos.find(p=>p.slot===s.key);
+    const imgHtml=existing
+      ?`<img src="${existing.dataUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:6px;">`
+      :'';
+    return `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;" id="sb-slot-${s.key}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div style="font-size:13px;font-weight:700;">${sbSlotLabel(s.key)}</div>
+        <button onclick="sbSkipSlot('${s.key}')" style="background:none;border:none;color:var(--text-3);font-size:11px;cursor:pointer;padding:0;font-family:'Inter',sans-serif;">Skip</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-3);margin-bottom:10px;font-style:italic;line-height:1.5;">"${s.prompt}"</p>
+      ${imgHtml}
+      ${existing
+        ?`<div style="display:flex;gap:8px;"><input type="text" placeholder="Caption (optional)" value="${existing.caption||''}" oninput="sbUpdateCaption('${s.key}',this.value)" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;background:var(--surface-2);color:var(--text);">
+           <button onclick="sbRemovePhoto('${s.key}')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--text-2);cursor:pointer;">Remove</button></div>`
+        :`<div style="display:flex;gap:8px;">
+           <button onclick="sbOpenPhotoSlot('${s.key}')" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📷 Add photo</button>
+         </div>`
       }
-    });
+    </div>`;
+  }).join('');
+}
+
+function sbSlotLabel(key){
+  const labels={exterior:'Exterior / street view',lounge:'Lounge',kitchen:'Kitchen',bedroom_1:'Bedroom 1',bedroom_2:'Bedroom 2',bedroom_3:'Bedroom 3',bedroom_4:'Bedroom 4',bathroom_main:'Main bathroom',garage:'Garage',garden:'Garden / outdoor',street_view:'Street view',workspace:'Workspace',qualifications:'Qualifications',materials:'Study materials',job_completed:'Completed job',tools_equipment:'Tools & equipment',certification:'Trade certificate',headshot:'Profile photo',reference_letter:'Reference letter',work_example:'Work example',activity_action:'Activity in action',location:'Location / scenery',group:'Group / participants',safety:'Safety equipment',view:'View from property',communal:'Communal areas',room_2:'Room 2',room_3:'Room 3',front:'Front',back:'Back / rear',detail:'Detail / markings',packaging:'Box / packaging',certificate:'Authentication cert',driver_side:'Driver side',passenger_side:'Passenger side',interior_front:'Interior (front)',interior_rear:'Interior (rear)',dashboard:'Dashboard',engine_bay:'Engine bay',boot:'Boot',damage:'Damage disclosure'};
+  if(labels[key]) return labels[key];
+  if(key.startsWith('optional_')) return `Optional photo ${key.split('_')[1]}`;
+  return key.replace(/_/g,' ');
+}
+
+let sbCurrentPhotoSlot=null;
+function sbOpenPhotoSlot(key){
+  sbCurrentPhotoSlot=key;
+  document.getElementById('sb-photo-inp').click();
+}
+function sbHandlePhotoCapture(e){
+  const file=e.target.files[0]; if(!file||!sbCurrentPhotoSlot) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1200,Q=0.80;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const s=Math.min(MAX/w,MAX/h);w=Math.round(w*s);h=Math.round(h*s);}
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=c.toDataURL('image/jpeg',Q);
+      sbState.photos=sbState.photos.filter(p=>p.slot!==sbCurrentPhotoSlot);
+      sbState.photos.push({slot:sbCurrentPhotoSlot,dataUrl,caption:''});
+      sbRenderB5();
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(file);
+  e.target.value='';
+}
+function sbSkipSlot(key){
+  const el=document.getElementById('sb-slot-'+key);
+  if(el) el.style.opacity='.4';
+}
+function sbRemovePhoto(key){
+  sbState.photos=sbState.photos.filter(p=>p.slot!==key);
+  sbRenderB5();
+}
+function sbUpdateCaption(key,val){
+  const p=sbState.photos.find(p=>p.slot===key);
+  if(p) p.caption=val;
+}
+
+// ── B6: selfie ──────────────────────────────────────────────
+function sbHandleSelfie(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      // Square crop to 400px
+      const SIZE=400;
+      const c=document.createElement('canvas'); c.width=SIZE; c.height=SIZE;
+      const ctx=c.getContext('2d');
+      const side=Math.min(img.width,img.height);
+      const sx=(img.width-side)/2, sy=(img.height-side)/2;
+      ctx.drawImage(img,sx,sy,side,side,0,0,SIZE,SIZE);
+      sbState.selfieUrl=c.toDataURL('image/jpeg',0.85);
+      const prev=document.getElementById('sb-b6-preview');
+      if(prev){ prev.innerHTML=`<img src="${sbState.selfieUrl}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;">`; }
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(file);
+  e.target.value='';
+}
+
+// ── B7: Trust Score checklist ───────────────────────────────
+const SB_SIGNALS = {
+  Property_agent: [
+    {id:'property.ppra',         pts:15, declPts:0,   label:'PPRA / EAAB Registration',      how:'upload', script:"Your PPRA certificate is the most important credential you can show. Upload it — I'll confirm the number and expiry."},
+    {id:'property.ffc',          pts:10, declPts:0,   label:'Fidelity Fund Certificate (FFC)',how:'upload', script:"The FFC lapses every year. Upload your current FFC — buyers and the law require it."},
+    {id:'property.mandate',      pts:8,  declPts:0,   label:'Mandate / instruction letter',   how:'upload', script:"Upload the signed mandate from the property owner — proves you're authorised to market this property."},
+    {id:'property.nqf6_plus',    pts:8,  declPts:0,   label:'NQF6+ / Professional designation',how:'upload',script:"An NQF6 or professional designation puts you in the top tier. Upload your certificate."},
+    {id:'property.body',         pts:5,  declPts:0,   label:'Professional body membership',   how:'upload', script:"IEASA, SAPOA, or NAR — upload your membership certificate."},
+    {id:'property.nqf4',         pts:6,  declPts:0,   label:'NQF4 Real Estate qualification', how:'upload', script:"Upload your NQF4 — the foundation qualification for PPRA."},
+    {id:'property.nqf5',         pts:6,  declPts:0,   label:'NQF5 Real Estate qualification', how:'upload', script:"Upload your NQF5 — stacks on top of NQF4 for 6 more points."},
+    {id:'property.exp_10plus',   pts:5,  declPts:4,   label:'Experience 10+ years',           how:'declare',script:"10+ years is a strong signal. Declare now — upload CV for the final point."},
+    {id:'property.exp_2_5',      pts:4,  declPts:3,   label:'Experience 2–5 years',           how:'declare',script:"Declare your years of practice — 3 points immediately, 1 more with your CV."},
+    {id:'property.specialist_services',pts:3,declPts:3,label:'Specialist services declaration',how:'declare',script:"Valuations, bond origination, conveyancing referrals? Buyers filter by this — one tap."}
+  ],
+  Property_private: [
+    {id:'property.private_seller',pts:0, declPts:0,   label:'Private seller declaration',     how:'declare',script:"Tell buyers you're a private seller — one tap. They need to know this upfront."},
+    {id:'property.exp_10plus',   pts:5,  declPts:4,   label:'Experience 10+ years',           how:'declare',script:"10+ years in property is a strong signal. Declare now."},
+    {id:'property.exp_2_5',      pts:4,  declPts:3,   label:'Experience 2–5 years',           how:'declare',script:"Declare your years of ownership or experience — 3 points immediately."}
+  ],
+  Tutors: [
+    {id:'tutors.clearance',      pts:8,  declPts:0,   label:'Police clearance / DBS check',   how:'upload', script:"Parents expect a clearance check. Upload your SAPS clearance — it's the most trust-building thing you can do."},
+    {id:'tutors.honours',        pts:14, declPts:0,   label:'Honours / Postgraduate (NQF8+)', how:'upload', script:"Your highest qualification earns the most points. Upload your honours or postgrad degree."},
+    {id:'tutors.sace',           pts:8,  declPts:0,   label:'SACE registration',              how:'upload', script:"Required for school teachers. Upload your SACE certificate — I'll verify the number."},
+    {id:'tutors.bachelor',       pts:10, declPts:0,   label:'Bachelor\'s Degree (NQF7)',      how:'upload', script:"Upload your degree. If you have an honours degree, upload that instead — it earns more."},
+    {id:'tutors.cert_diploma',   pts:6,  declPts:0,   label:'Certificate or Diploma (NQF5–6)',how:'upload', script:"Upload your diploma. A bachelor's earns more if you have one."},
+    {id:'tutors.specialisation', pts:5,  declPts:0,   label:'Subject specialisation cert',    how:'upload', script:"A subject-specific cert shows you specialise. Upload any relevant cert or transcript."},
+    {id:'tutors.exp_5plus',      pts:6,  declPts:5,   label:'Teaching experience 5+ years',   how:'declare',script:"5+ years is a strong differentiator. Declare now for 5 points — upload CV for the last 1."},
+    {id:'tutors.exp_2_5',        pts:5,  declPts:4,   label:'Teaching experience 2–5 years',  how:'declare',script:"Tell buyers how long you've been teaching. 4 points on declaration, 1 more with CV."},
+    {id:'tutors.safeguarding',   pts:3,  declPts:0,   label:'Safeguarding / child protection',how:'upload', script:"For tutors with learners under 18, this reassures parents. Upload your certificate."},
+    {id:'tutors.strong_cv',      pts:2,  declPts:0,   label:'Structured CV',                  how:'upload', script:"Upload a well-structured CV — it rounds out your profile."},
+    {id:'tutors.online_ready',   pts:1,  declPts:1,   label:'Online platform proficiency',    how:'declare',script:"Declare which online platforms you use — Zoom, Google Classroom, Teams. One tap."}
+  ],
+  Services_Technical: [
+    {id:'services_tech.body_reg', pts:12,declPts:0,   label:'Professional body registration', how:'upload', script:"ECSA, PIRB, NHBRC, FSCA, or SAICA — your most powerful credential. Upload your registration."},
+    {id:'services_tech.trade_cert',pts:8,declPts:0,   label:'Formal trade certificate',        how:'upload', script:"City & Guilds, TVET, MERSETA, CETA, or Red Seal — the foundation credential. Upload it."},
+    {id:'services_tech.cidb',    pts:6,  declPts:0,   label:'CIDB grading (construction)',    how:'upload', script:"If you do construction above R200k in SA, CIDB grading is legally required."},
+    {id:'services_tech.tickets', pts:6,  declPts:0,   label:'Additional tickets (up to 2)',    how:'upload', script:"First Aid, working at heights, confined space — 3 pts each, up to 2. Upload yours."},
+    {id:'services_tech.coc',     pts:5,  declPts:0,   label:'Primary industry licence / CoC', how:'upload', script:"Your CoC proves you're legally authorised. Upload it — buyers look for this before hiring."},
+    {id:'services_tech.insurance',pts:5, declPts:0,   label:'Public liability insurance',     how:'upload', script:"Clients want to know you're insured. Upload your current liability policy — expiry included."},
+    {id:'services_tech.exp_7plus',pts:4, declPts:3,   label:'Trade experience 7+ years',      how:'declare',script:"7+ years is significant. Declare now — 3 points, 1 more with your CV."},
+    {id:'services_tech.exp_3_7', pts:4,  declPts:3,   label:'Trade experience 3–7 years',     how:'declare',script:"Declare your years in trade. 3 points on declaration, 1 more with CV."},
+    {id:'services_tech.strong_cv',pts:2, declPts:0,   label:'Strong verifiable CV',           how:'upload', script:"A CV with references is a strong supporting document."}
+  ],
+  Services_Casuals: [
+    {id:'services_cas.clearance', pts:10,declPts:0,   label:'Police clearance check',         how:'upload', script:"You declared you work in clients' homes. A police clearance is the #1 thing clients expect. Upload your SAPS clearance — 10 points."},
+    {id:'services_cas.exp_5plus', pts:8, declPts:6,   label:'5+ years in service',            how:'declare',script:"5+ years is a strong signal. Declare now — 6 points, 8 with CV."},
+    {id:'services_cas.nqf',       pts:8, declPts:0,   label:'NQF qualification or short course',how:'upload',script:"Any formal qualification or short course earns 8 points. Upload your certificate."},
+    {id:'services_cas.ref_1',     pts:6, declPts:0,   label:'Reference letter (1st)',         how:'upload', script:"A reference letter from a previous client is the most powerful thing you can show."},
+    {id:'services_cas.exp_2_4',   pts:6, declPts:4,   label:'2–4 years in service',           how:'declare',script:"Declare your experience. 4 points on declaration, 6 with a CV."},
+    {id:'services_cas.ref_2',     pts:4, declPts:0,   label:'Reference letter (2nd)',         how:'upload', script:"A second reference adds credibility. Upload it if you have one."}
+  ],
+  Adventures_Experiences: [
+    {id:'adv_exp.guide_cert',    pts:12, declPts:0,   label:'Activity-specific guide cert',   how:'upload', script:"FGASA, PADI, MCSA, SACAA — upload the most relevant certificate. I'll verify the body and number."},
+    {id:'adv_exp.permit',        pts:6,  declPts:0,   label:'Operator permit / concession',   how:'upload', script:"If you operate in a national park or controlled waterway, upload your permit — proves you're authorised."},
+    {id:'adv_exp.first_aid',     pts:6,  declPts:0,   label:'First Aid / Emergency Response', how:'upload', script:"First Aid with a current expiry is essential for high-risk activities. Upload yours — I'll check the expiry."},
+    {id:'adv_exp.regulator',     pts:5,  declPts:0,   label:'Regulatory compliance (SACAA/SAMSA)',how:'upload',script:"Some activities need a regulatory certificate — SACAA Part 135 for aviation, SAMSA for maritime."},
+    {id:'adv_exp.insurance',     pts:5,  declPts:0,   label:'Liability / indemnity insurance',how:'upload', script:"For activities involving physical risk, liability insurance is non-negotiable. Upload your current policy."},
+    {id:'adv_exp.exp_7plus',     pts:5,  declPts:4,   label:'Guided experience 7+ years',     how:'declare',script:"7+ years of guiding — declare now for 4 points, 1 more with CV."},
+    {id:'adv_exp.exp_3_7',       pts:5,  declPts:4,   label:'Guided experience 3–7 years',    how:'declare',script:"Declare your guiding experience. 4 points on declaration, 5 with CV."},
+    {id:'adv_exp.safety_cert',   pts:4,  declPts:0,   label:'Additional safety certificate',  how:'upload', script:"WFR, swift water rescue, avalanche cert — each adds credibility. Upload one."}
+  ],
+  Adventures_Accommodation: [
+    {id:'adv_acc.tgcsa_5',       pts:22, declPts:0,   label:'TGCSA 5-star grading',           how:'upload', script:"5-star is the gold standard. Upload your current TGCSA certificate — I'll check the expiry."},
+    {id:'adv_acc.tgcsa_4',       pts:18, declPts:0,   label:'TGCSA 4-star grading',           how:'upload', script:"Upload your TGCSA 4-star certificate."},
+    {id:'adv_acc.tgcsa_3',       pts:14, declPts:0,   label:'TGCSA 3-star grading',           how:'upload', script:"Upload your TGCSA 3-star certificate."},
+    {id:'adv_acc.licence',       pts:6,  declPts:0,   label:'Municipal trading licence',      how:'upload', script:"Your local authority trading licence proves you're operating legally."},
+    {id:'adv_acc.health_safety', pts:5,  declPts:0,   label:'Health & safety compliance',     how:'upload', script:"Upload your health and safety certificate — guests expect accommodation to meet safety standards."},
+    {id:'adv_acc.fire',          pts:4,  declPts:0,   label:'Fire clearance certificate',     how:'upload', script:"Upload your fire clearance — it's a legal requirement for accommodation."},
+    {id:'adv_acc.tourism_levy',  pts:4,  declPts:0,   label:'Tourism levy registration',      how:'upload', script:"Upload your tourism levy registration — it signals a legitimate, accountable operation."}
+  ],
+  Collectors: [
+    {id:'collectors.provenance', pts:8,  declPts:0,   label:'Item provenance documentation',  how:'upload', script:"Provenance is the chain of custody. Upload an auction receipt, gallery invoice, or inheritance document."},
+    {id:'collectors.auth_cert',  pts:6,  declPts:0,   label:'Third-party authentication cert',how:'upload', script:"Upload a certificate from PSA, PCGS, GIA, or Beckett. I'll confirm the authenticator."},
+    {id:'collectors.dealer_reg', pts:6,  declPts:0,   label:'Dealer / reseller registration', how:'upload', script:"Upload your dealer registration. Buyers need to know if they're dealing with a registered dealer."},
+    {id:'collectors.appraisal',  pts:5,  declPts:0,   label:'Professional appraisal',         how:'upload', script:"Upload an appraisal document — it gives buyers a price anchor and shows independent assessment."},
+    {id:'collectors.auth_guarantee',pts:2,declPts:2,  label:'Authenticity guarantee declaration',how:'declare',script:"Declare whether you offer a return if the item proves inauthentic. Buyers look for this."},
+    {id:'collectors.specialisation',pts:4,declPts:4,  label:'Category specialisation',        how:'declare',script:"Tell buyers what you specialise in — coins, art, stamps, wine, vintage watches. One tap."}
+  ],
+  Cars_dealer: [
+    {id:'cars.dealer_reg',       pts:8,  declPts:0,   label:'Dealer / trader registration',   how:'upload', script:"Upload your MIRA dealer registration. Buyers with a registered dealer have different legal protections."},
+    {id:'cars.ownership',        pts:10, declPts:0,   label:'Vehicle ownership (NATIS)',       how:'upload', script:"Upload your NATIS registration papers — proves you own the vehicle. Most important thing a car buyer looks for."},
+    {id:'cars.finance_clear',    pts:4,  declPts:0,   label:'Finance clearance',              how:'upload', script:"Upload a letter confirming no outstanding finance. Without this, a buyer could unknowingly take on your debt."},
+    {id:'cars.rwc',              pts:6,  declPts:0,   label:'Roadworthy certificate (RWC)',    how:'upload', script:"Upload your roadworthy certificate — mandatory for change of ownership in SA."},
+    {id:'cars.inspection',       pts:5,  declPts:0,   label:'AA / independent inspection',    how:'upload', script:"Upload an AA or independent inspection report — the most reassuring thing for a serious buyer."},
+    {id:'cars.service_history',  pts:4,  declPts:0,   label:'Service history',                how:'upload', script:"Upload your service book — full history increases buyer confidence and the asking price."},
+    {id:'cars.safety_recall_clear',pts:3,declPts:0,   label:'DEKRA / NRCS recall check',      how:'upload', script:"Upload a DEKRA or NRCS recall clearance — shows buyers you've done your homework."}
+  ],
+  Cars_private: [
+    {id:'cars.private_seller',   pts:0,  declPts:0,   label:'Private seller declaration',     how:'declare',script:"Tell buyers you're a private seller — one tap. Consumer protection differs from dealer sales."},
+    {id:'cars.ownership',        pts:10, declPts:0,   label:'Vehicle ownership (NATIS)',       how:'upload', script:"Upload your NATIS papers — proves you own the vehicle."},
+    {id:'cars.finance_clear',    pts:4,  declPts:0,   label:'Finance clearance',              how:'upload', script:"Confirm no outstanding finance — a buyer could unknowingly take on your debt without this."},
+    {id:'cars.rwc',              pts:6,  declPts:0,   label:'Roadworthy certificate',         how:'upload', script:"Mandatory for change of ownership in SA."},
+    {id:'cars.inspection',       pts:5,  declPts:0,   label:'AA / independent inspection',    how:'upload', script:"The most reassuring thing for a serious buyer."},
+    {id:'cars.service_history',  pts:4,  declPts:0,   label:'Service history',                how:'upload', script:"Full history increases buyer confidence and the asking price."},
+    {id:'cars.safety_recall_clear',pts:3,declPts:0,   label:'DEKRA / NRCS recall check',      how:'upload', script:"Shows buyers you've done your homework."}
+  ]
+};
+
+function sbGetSignalSet(){
+  const key=sbGetFieldKey();
+  if(key==='Property') return SB_SIGNALS[`Property_${sbState.gate||'agent'}`]||SB_SIGNALS.Property_agent;
+  if(key==='Cars')     return SB_SIGNALS[`Cars_${sbState.gate||'dealer'}`]||SB_SIGNALS.Cars_dealer;
+  return SB_SIGNALS[key]||SB_SIGNALS.Tutors;
+}
+
+function sbCalcScore(){
+  const signals=sbGetSignalSet();
+  let pts=40; // All new sellers start at Established tier (40-pt base)
+  signals.forEach(s=>{
+    const st=sbState.signals[s.id];
+    if(!st) return;
+    if(st.status==='uploaded') pts+=s.pts;
+    else if(st.status==='declared') pts+=s.declPts||0;
+  });
+  return Math.min(100,pts);
+}
+
+function sbScoreBadge(score){
+  if(score>=90) return {tier:'Highly Trusted',color:'#C8873A',bg:'rgba(200,135,58,.12)'};
+  if(score>=70) return {tier:'Trusted',color:'#16a34a',bg:'rgba(22,163,74,.12)'};
+  if(score>=40) return {tier:'Established',color:'#2563eb',bg:'rgba(37,99,235,.12)'};
+  return {tier:'New',color:'var(--text-3)',bg:'var(--surface-2)'};
+}
+
+function sbUpdateB7Score(){
+  const score=sbCalcScore();
+  const badge=sbScoreBadge(score);
+  const sc=document.getElementById('sb-b7-score'); if(sc)sc.textContent=score;
+  const bd=document.getElementById('sb-b7-badge');
+  if(bd){bd.textContent=badge.tier; bd.style.background=badge.bg; bd.style.color=badge.color; bd.style.borderColor=badge.color;}
+}
+
+function sbRenderB7(){
+  sbUpdateB7Score();
+  const signals=sbGetSignalSet();
+  const container=document.getElementById('sb-b7-signals');
+  if(!container) return;
+  // Sort by pts descending (highest value first per AI rule 2)
+  const sorted=[...signals].sort((a,b)=>b.pts-a.pts);
+
+  // Mutual exclusivity: experience tiers — if higher tier is done, lower tier is hidden
+  // Pattern: signals whose ids end in _10plus / _7plus / _5plus exclude the matching lower tier
+  const higherExpDone = new Set();
+  sorted.forEach(sig=>{
+    const st=sbState.signals[sig.id];
+    if(!st||st.status==='skipped'||st.status==='empty') return;
+    if(sig.id.match(/exp_10plus|exp_7plus|exp_5plus/)) {
+      // Mark corresponding lower tiers as excluded
+      const prefix=sig.id.replace(/exp_10plus|exp_7plus|exp_5plus/,'');
+      higherExpDone.add(prefix+'lower');
+    }
+  });
+
+  container.innerHTML=sorted.map(sig=>{
+    const st=sbState.signals[sig.id]||{status:'empty'};
+    const isSkipped=st.status==='skipped';
+    // Hide skipped signals — they collapse to a small "restore" link
+    if(isSkipped){
+      return `<div style="text-align:right;margin-bottom:4px;">
+        <button onclick="sbRestoreSignal('${sig.id}')" style="background:none;border:none;color:var(--text-3);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;">+ Add ${sig.label} (+${sig.pts} pts)</button>
+      </div>`;
+    }
+    // Hide lower experience tiers when a higher tier is done
+    const isLowerExp=sig.id.match(/exp_2_5|exp_3_7|exp_2_4/);
+    const prefix=sig.id.replace(/exp_2_5|exp_3_7|exp_2_4/,'');
+    if(isLowerExp && higherExpDone.has(prefix+'lower')) return '';
+
+    const isUploaded=st.status==='uploaded';
+    const isDeclared=st.status==='declared';
+    const ringIcon=isUploaded?'●':isDeclared?'◑':'○';
+    const ringColor=isUploaded?'#16a34a':isDeclared?'#2563eb':'var(--text-3)';
+    const canDeclare=sig.declPts>0;
+    return `<div style="border:1.5px solid ${isUploaded?'rgba(22,163,74,.3)':isDeclared?'rgba(37,99,235,.3)':'var(--border)'};border-radius:12px;padding:14px;margin-bottom:10px;background:${isUploaded?'rgba(22,163,74,.04)':isDeclared?'rgba(37,99,235,.04)':'var(--surface)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;color:${ringColor};font-weight:700;">${ringIcon}</span>
+          <span style="font-size:13px;font-weight:700;">${sig.label}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--navy);">+${sig.pts} pts</span>
+          ${isUploaded||isDeclared?'':`<button onclick="sbSkipSignal('${sig.id}')" style="background:none;border:none;color:var(--text-3);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;">Skip</button>`}
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-2);line-height:1.55;margin-bottom:10px;font-style:italic;">"${sig.script}"</p>
+      ${isUploaded||isDeclared
+        ? `<div style="font-size:12px;color:#16a34a;font-weight:600;">✓ ${isUploaded?'Evidence uploaded':'Declared'} · ${isUploaded?sig.pts:sig.declPts||0} pts earned</div>`
+        : `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+             ${sig.how!=='declare_only'?`<button onclick="sbTriggerDocUpload('${sig.id}')" style="flex:1;min-width:120px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📎 Upload evidence</button>`:''}
+             ${canDeclare?`<button onclick="sbDeclareSignal('${sig.id}')" style="flex:1;min-width:100px;background:transparent;border:1.5px solid var(--border);border-radius:50px;padding:9px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);">Declare (+${sig.declPts} pts)</button>`:''}
+           </div>`
+      }
+      <div id="sb-sig-feedback-${sig.id}" style="display:none;margin-top:8px;font-size:12px;border-radius:8px;padding:8px 10px;"></div>
+    </div>`;
+  }).join('');
+}
+
+function sbTriggerDocUpload(signalId){
+  sbState.currentDocSignal=signalId;
+  document.getElementById('sb-doc-inp').click();
+}
+
+async function sbHandleDocUpload(e){
+  const file=e.target.files[0]; if(!file||!sbState.currentDocSignal) return;
+  const signalId=sbState.currentDocSignal;
+  const sig=sbGetSignalSet().find(s=>s.id===signalId);
+  if(!sig) return;
+  const feedbackEl=document.getElementById('sb-sig-feedback-'+signalId);
+  if(feedbackEl){
+    feedbackEl.style.display='block';
+    feedbackEl.style.background='rgba(37,99,235,.07)';
+    feedbackEl.style.color='#2563eb';
+    feedbackEl.textContent='Reviewing your document…';
+  }
+
+  // For now accept all uploads (AI vision review to be added to BEA)
+  sbState.signals[signalId]={status:'uploaded', pts:sig.pts};
+  if(feedbackEl){
+    feedbackEl.style.background='rgba(22,163,74,.08)';
+    feedbackEl.style.color='#16a34a';
+    feedbackEl.textContent=`✓ Document received — +${sig.pts} points awarded.`;
+  }
+  sbUpdateB7Score();
+  setTimeout(()=>sbRenderB7(), 800);
+  e.target.value='';
+}
+
+function sbDeclareSignal(signalId){
+  const sig=sbGetSignalSet().find(s=>s.id===signalId);
+  if(!sig||!sig.declPts) return;
+  sbState.signals[signalId]={status:'declared', pts:sig.declPts};
+  sbUpdateB7Score();
+  sbRenderB7();
+  showToast(`✓ Declared — +${sig.declPts} points`);
+}
+
+function sbSkipSignal(signalId){
+  sbState.signals[signalId]={status:'skipped', pts:0};
+  sbUpdateB7Score();
+  sbRenderB7();
+}
+
+function sbRestoreSignal(signalId){
+  delete sbState.signals[signalId];
+  sbUpdateB7Score();
+  sbRenderB7();
+}
+
+// ── B8: publish preview ─────────────────────────────────────
+function sbRenderB8Preview(){
+  // Clear stale error and reset publish button every time B8 is entered
+  const _errEl=document.getElementById('sb-b8-err');
+  if(_errEl){_errEl.style.display='none';_errEl.innerHTML='';}
+  const _btn=document.getElementById('sb-b8-publish-btn');
+  if(_btn){_btn.textContent='Publish listing →';_btn.style.opacity='1';_btn.style.pointerEvents='auto';}
+  const f=sbState.fields;
+  const title=f.title||'Untitled listing';
+  const cat=sbState.cat;
+  const photoCount=sbState.photos.length;
+  const score=sbCalcScore();
+  const badge=sbScoreBadge(score);
+
+  const prevEl=document.getElementById('sb-b8-preview');
+  if(prevEl) prevEl.innerHTML=`
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">${cat}</div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:6px;">${title}</div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">${sbState.description||'—'}</div>
+    <div style="display:flex;gap:10px;font-size:12px;color:var(--text-3);">
+      <span>📸 ${photoCount} photo${photoCount!==1?'s':''}</span>
+      ${f.price||f.rate?`<span>💰 ${f.price||f.rate}</span>`:''}
+      ${sbState.selfieUrl?'<span>👤 Profile photo added</span>':''}
+    </div>`;
+
+  // Trust Score summary
+  const scoreEl=document.getElementById('sb-b8-score-summary');
+  const scoreNum=document.getElementById('sb-b8-score');
+  const scoreBadge=document.getElementById('sb-b8-badge');
+  const skippedEl=document.getElementById('sb-b8-skipped');
+  if(scoreEl){ scoreEl.style.display='block'; }
+  if(scoreNum) scoreNum.textContent=score;
+  if(scoreBadge){scoreBadge.textContent=badge.tier;scoreBadge.style.background=badge.bg;scoreBadge.style.color=badge.color;}
+  // Count skipped signals
+  const allSigs=sbGetSignalSet();
+  const skipped=allSigs.filter(s=>!sbState.signals[s.id]||sbState.signals[s.id].status==='skipped');
+  const skippedPts=skipped.reduce((a,s)=>a+s.pts,0);
+  if(skippedEl && skipped.length>0){
+    skippedEl.textContent=`You skipped ${skipped.length} signal${skipped.length!==1?'s':''} worth ${skippedPts} points. You can add these any time from your profile.`;
   }
 }
 
-function submitClaim(){
-  if(isOffline()){ showToast('You\'re offline — claiming needs a connection'); return; }
-  const email=document.getElementById('claim-email').value.trim();
-  if(!email||!email.includes('@')){ showToast('Please enter a valid email'); return; }
-  pubClaimed=true;
-  document.getElementById('pub-done-msg').textContent=`A claim link is on its way to ${email}. Check your inbox.`;
-  showPhase('done');
-  document.getElementById('pub-done').style.display='flex';
-  // Register user in BEA
-  if(BEA_ENABLED) {
-    apiPost('/users', { email: email, name: '' });
+async function sbDoPublish(){
+  if(isOffline()){ showToast('You\'re offline — publishing needs a connection'); return; }
+  const btn=document.getElementById('sb-b8-publish-btn');
+  const errEl=document.getElementById('sb-b8-err');
+  const email=localStorage.getItem('ms_aa_email')||'';
+  const f=sbState.fields;
+  const title=f.title||'';
+  if(!title.trim()||!email){
+    if(errEl){errEl.textContent='Missing title or account — please go back and check your details.';errEl.style.display='block';} return;
+  }
+  if(btn){btn.textContent='Publishing…';btn.style.opacity='.7';btn.style.pointerEvents='none';}
+  if(errEl) errEl.style.display='none';
+  try {
+    let listingId=null;
+    if(BEA_ENABLED){
+      // Use raw fetch so we can read the error body if the request fails
+      const rawRes=await fetch(BEA_URL+'/listings',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          title,
+          price:f.price||f.rate||'POA',
+          category:sbState.cat,
+          city:activeCity.name,
+          area:(activeSuburb&&activeSuburb.name)||activeCity.name,
+          suburb:f.suburb||(activeSuburb&&activeSuburb.name)||activeCity.name,
+          geo_city_id:activeCity.id||null,
+          description:sbState.description||'',
+          seller_email:email,
+          listing_status:'live',
+          structured_fields:JSON.stringify(f)
+        })
+      });
+      if(!rawRes.ok){
+        let detail='Server error '+rawRes.status;
+        try{ const j=await rawRes.json(); detail=j.detail||j.message||detail; }catch(_){}
+        if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${detail}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your details and try again, or go back to edit.</span>`;errEl.style.display='block';}
+        if(btn){btn.textContent='Publish listing →';btn.style.opacity='1';btn.style.pointerEvents='auto';}
+        return;
+      }
+      const res=await rawRes.json();
+      if(res&&res.id) listingId=res.id;
+    }
+    // Upload selfie if provided
+    if(BEA_ENABLED && sbState.selfieUrl && email){
+      const fd=new FormData();
+      const blob=await (await fetch(sbState.selfieUrl)).blob();
+      fd.append('file',blob,'selfie.jpg');
+      await fetch(BEA_URL+`/users/${encodeURIComponent(email)}/photo`,{method:'POST',body:fd}).catch(()=>{});
+    }
+    // First listing photo as main photo
+    if(BEA_ENABLED && sbState.photos.length>0 && listingId){
+      const fd=new FormData();
+      const blob=await (await fetch(sbState.photos[0].dataUrl)).blob();
+      fd.append('file',blob,'photo.jpg');
+      fd.append('listing_id',listingId);
+      await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>{});
+    }
+    // Show success
+    const st=document.getElementById('sb-success-title');
+    if(st) st.textContent=`"${title}" is live on MarketSquare.`;
+    sbGoStep('success');
+    showToast('✓ Listing published!');
+    loadLiveListings();
+  } catch(err){
+    const msg=err&&err.message?err.message:'Unknown error';
+    if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${msg}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your connection and try again.</span>`;errEl.style.display='block';}
+    if(btn){btn.textContent='Publish listing →';btn.style.opacity='1';btn.style.pointerEvents='auto';}
   }
 }
 
-function skipClaim(){
-  document.getElementById('pub-done-msg').textContent='Your listing is live. You can claim it any time from the Seller dashboard.';
-  showPhase('done');
-  document.getElementById('pub-done').style.display='flex';
-}
+// ── CSS class needed for gate buttons ──────────────────────
+// Injected at runtime so no separate stylesheet edit needed
+(function(){
+  const s=document.createElement('style');
+  s.textContent=`.sb-gate-btn{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface-2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;}
+.pub-step-pill{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;}`;
+  document.head.appendChild(s);
+})();
+
+// Legacy stubs — kept for any remaining references
+function goPhase(p){ resetPublish(); }
+function showPhase(p){ resetPublish(); }
+function handleImg(e){ paHandleImg(e); }
+function clearImg(e){ paClearImg(e); }
+function selCatBig(c){ paSelCat(c); }
+function goPhaseB2OrC(){ paGoStep(3); }
+function selAdvSubcat(s){ paSelCat(s); }
+function doPublish(){ paDoPublish(); }
+function submitClaim(){ goTo('dashboard'); }
+function skipClaim(){ goTo('browse'); }
 
 // ── DASHBOARD STATE ───────────────────────────────────────
 // Populated by loadLiveDash() from BEA. Empty until seller claims listings.
@@ -6517,6 +7728,33 @@ const dashState = {
 function renderDash(){
   updateDashStats();
   document.getElementById('my-listings').innerHTML = dashState.listings.map(dl => renderDashCard(dl)).join('');
+  // Show draft resume banner if an unfinished sell-flow draft exists
+  sbShowDashDraftBanner();
+}
+
+async function sbShowDashDraftBanner(){
+  try {
+    const draft=await aaDB.get(sbDraftKey());
+    const el=document.getElementById('dash-draft-banner');
+    if(!draft||!draft.state||!draft.state.cat){
+      if(el) el.remove(); return;
+    }
+    if(el) return; // already showing
+    const saved=new Date(draft.saved_at);
+    const banner=document.createElement('div');
+    banner.id='dash-draft-banner';
+    banner.style.cssText='margin:0 16px 16px;background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    banner.innerHTML=`<div>
+        <div style="font-size:13px;font-weight:700;color:#2563eb;">Unfinished listing</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">${draft.state.cat} · saved ${saved.toLocaleDateString()}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button onclick="goTo('sell-b')" style="background:#2563eb;color:#fff;border:none;border-radius:50px;padding:8px 16px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Resume →</button>
+        <button onclick="sbDiscardDraft();document.getElementById('dash-draft-banner').remove();" style="background:none;border:1px solid var(--border);border-radius:50px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;color:var(--text-3);">Discard</button>
+      </div>`;
+    const myListings=document.getElementById('my-listings');
+    if(myListings) myListings.parentNode.insertBefore(banner, myListings);
+  } catch(e){}
 }
 
 function updateDashStats(){
@@ -9107,6 +10345,7 @@ function aaCloseFlowSheetBtn() {
   document.body.style.overflow = '';
 }
 
+
 // ── WALLET: AI Coach Credits ──────────────────────────────────
 
 async function aaLoadWalletSessions() {
@@ -9938,6 +11177,7 @@ async function openLMSellerProfile() {
       `<div class="cv-cat">Local Market · ${_lmEsc(loc)} · 🔒 Anonymous until introduction</div>` +
       `<div class="cv-trust-row">` +
         `<div style="color:${t.c};"><div class="cv-trust-num">${trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>` +
+
         `<div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${trust}%;background:${t.c};"></div></div>` +
         `<div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>` +
       `</div>` +
