@@ -42,6 +42,12 @@
 6. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
 7. **n8n email notifications** — buyer emailed on intro accept/decline
 
+## Session 38 — Additional Hotfixes (deployed 3 May 2026, Part 2)
+
+- **0-listings root cause identified** — BEA had restarted 19,594 times in 7 days due to the `opt_out` duplicate crash (fixed in Part 1). Since BEA fix: 1 restart only. Startup blank screen was the BEA crash loop, not a client timing issue ✅
+- **Inline `<script>` tag in template literal** — credentials section fix introduced a `<script>` tag inside a JS template literal string; browser closed outer script block early, breaking entire app JS → 0 listings. Fixed by rewriting as pure IIFE expression inside template literal ✅
+- **loadLiveListings retry** — upgraded from single 4s retry to 3× exponential backoff (3s→6s→12s) with "Tap to refresh" fallback. Safety net for genuine network blips only — BEA crash loop was the real cause ✅
+
 ## Session 38 Hotfixes (deployed 3 May 2026)
 
 - **BEA crash fixed** — `opt_out` function body was duplicated 3× in `bea_main.py` (tail-repair artifact); removed 102 duplicate lines; syntax clean; server restarted ✅

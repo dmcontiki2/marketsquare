@@ -1173,3 +1173,9 @@ Photo upload loop now iterates all `sbState.photos` (not just index 0), with `is
 ### Fix: Seller CV credentials section dead for BEA listings
 `openBEASellerProfile()` showed static placeholder text. Now parses `structured_fields._signals` from the listing and renders each signal the seller claimed or uploaded. Blurred seller photo shown in CV hero if available.
 
+
+### Fix: 0-listings startup — root cause was BEA crash loop
+BEA had restarted 19,594 times in 7 days due to the opt_out duplicate body bug (fixed earlier this session). Every time a user loaded the app during a restart window (~30s cycle), the BEA was unavailable and listings returned nothing. Since the BEA fix: one restart only, server stable. The startup blank screen was not a client-side timing issue — it was the server crashing continuously. Added 3× exponential backoff retry to loadLiveListings() as a safety net for genuine network blips.
+
+### Fix: Inline script tag in template literal broke entire app
+The credentials section fix (openBEASellerProfile) injected a `<script>` tag inside a JavaScript template literal. The browser parser sees the closing `</script>` inside the string and terminates the outer script block early, silently breaking all JS on the page. Fixed by rewriting as a pure IIFE expression returning HTML — no script tags involved.
