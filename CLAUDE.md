@@ -65,7 +65,7 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 
 ## Key technical notes
 - Cost model lives in project root as .xlsx — edited via openpyxl in the sandbox
-- ⚠️ HTML WRITE RULE: After every Edit to marketsquare.html or marketsquare_admin.html, Claude MUST immediately run: `tail -5 /sessions/quirky-brave-galileo/mnt/MarketSquare/marketsquare.html` and verify the file ends with `</html>`. If truncated, restore the tail from git before deploying. This truncation bug has happened twice.
+- ⚠️ HTML WRITE RULE: **NEVER use the Write tool or Edit tool on marketsquare.html or marketsquare_admin.html. These files are too large and WILL be truncated.** ALL changes must use Python `open(path,'r') / content.replace() / open(path,'w')`. After every Python write, verify with: `python3 -c "c=open('marketsquare.html',encoding='utf-8').read();print('OK' if c.rstrip().endswith('</html>') else 'TRUNCATED:'+repr(c[-60:]))"`. If truncated, restore using the git-anchor method in the session log.
 - ⚠️ XLSX WRITE RULE: After ANY cost model change, Claude must remind David to run these three commands in PowerShell before ending the session — the sandbox cannot reliably write binary files to the Projects folder mount:
   ```
   cd C:\Users\David\Projects\MarketSquare

@@ -34,7 +34,10 @@
      ■ DATA LAYER
        Edit listings, sellers and prospects here only.
        Do not touch anything below the closing </script> tag.
-     ════════════════════════════════════════════════════════════ -->
+     ═════════════════════════ -->
+
+</body>
+</html>═══════════════════════════════════ -->
 <script id="ms-data">
 
 // ── CATEGORY CONFIG ────────────────────────────────────────
@@ -4235,6 +4238,7 @@ async function apiPut(path) {
 // Once real sellers are onboarded, demo data will be removed.
 async function loadLiveListings(retryCount) {
   if (!BEA_ENABLED || isOffline()) return;
+  const attempt = retryCount || 0;
   // Clear previously fetched live listings before reload (needed on city switch)
   for (let i = LISTINGS.length - 1; i >= 0; i--) {
     if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
@@ -4243,9 +4247,21 @@ async function loadLiveListings(retryCount) {
     const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
     const demoParam = DEMO_MODE ? '&demo=1' : '';
     const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam);
-    if (!live && !retryCount) {
-      // First failure — retry once after 4 seconds (handles brief BEA restarts)
-      setTimeout(() => loadLiveListings(1), 4000);
+    if (!live) {
+      if (attempt < 3) {
+        // Exponential backoff: 3s → 6s → 12s
+        const delay = 3000 * Math.pow(2, attempt);
+        // Show subtle retry indicator on home Local Market tile
+        const lmCount = document.getElementById('lm-home-count');
+        if (lmCount && attempt === 0) lmCount.textContent = 'Connecting…';
+        setTimeout(() => loadLiveListings(attempt + 1), delay);
+      } else {
+        // All retries exhausted — show offline-style message
+        const lmCount = document.getElementById('lm-home-count');
+        if (lmCount) lmCount.textContent = 'Tap to refresh';
+        const lmTile = document.getElementById('lm-home-tile');
+        if (lmTile) lmTile.onclick = () => { loadLiveListings(0); initLMHomeTile(); };
+      }
       return;
     }
     if (live && live.length > 0) {
@@ -4319,6 +4335,9 @@ async function loadLiveListings(retryCount) {
       renderFeatured();
       renderCatCounts();
       renderHomeStats();
+    } else {
+      // Even if no live listings, still update counts (shows demo listings)
+      renderCatCounts();
     }
   } catch(e) {
     console.warn('loadLiveListings failed:', e);
@@ -5855,17 +5874,15 @@ function openBEASellerProfile(l) {
       ${l.desc ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${maskContactInfo(formatDesc(l.desc), false)}</p></div>` : ''}
       <div class="cv-sec">
         <div class="cv-sec-title">Credentials &amp; qualifications</div>
-        <div id="bea-creds-${l.id}" style="font-size:12px;color:var(--text-3);">Loading credentials…</div>
+        <div id="bea-creds-${l.id}">${(()=>{
+          const SIG_LABELS={id_verified:'Identity verified',address_verified:'Address verified',phone_verified:'Phone verified',bank_verified:'Bank account verified',years_2_5:'2–5 yrs experience',years_5_10:'5–10 yrs experience',years_10plus:'10+ yrs experience',ffc:'FFC registered',paia:'PAIA compliant',cpa:'CPA compliant',estate_agency:'Estate agency registered',qualification:'Qualification on file',professional_body:'Professional body member',portfolio:'Portfolio uploaded',insurance:'Professional insurance',references:'References available'};
+          let sf={};try{sf=JSON.parse(l.structured_fields||'{}');}catch(e){}
+          const sigs=sf._signals||{};
+          let html='';
+          Object.keys(sigs).forEach(k=>{const st=sigs[k];if(!st||st.status==='skipped')return;const lbl=SIG_LABELS[k]||k;const ok=st.status==='uploaded';const icon=ok?'✓':'○';const col=ok?'var(--accent)':'var(--text-3)';html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);"><div style="width:22px;height:22px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};">${icon}</div><div style="font-size:13px;font-weight:600;color:var(--text);">${lbl}</div></div>`;});
+          return html||'<span style="font-size:12px;color:var(--text-3);">Seller credentials build over time as they complete their Trust Score checklist.</span>';
+        })()}</div>
       </div>
-      <script>(function(){
-        var sf={};try{sf=JSON.parse(${JSON.stringify(l.structured_fields||'{}')}||'{}');}catch(e){}
-        var sigs=sf._signals||{};
-        var labels={id_verified:'Identity verified',address_verified:'Address verified',phone_verified:'Phone verified',bank_verified:'Bank account verified',years_2_5:'2–5 yrs experience',years_5_10:'5–10 yrs experience',years_10plus:'10+ yrs experience',ffc:'FFC registered',paia:'PAIA compliant',cpa:'CPA compliant',estate_agency:'Estate agency registered',qualification:'Qualification on file',professional_body:'Professional body member',portfolio:'Portfolio uploaded',insurance:'Professional insurance',references:'References available'};
-        var html='';
-        Object.keys(sigs).forEach(function(k){var st=sigs[k];if(!st||st.status==='skipped')return;var lbl=labels[k]||k;var ok=st.status==='uploaded';var icon=ok?'✓':'○';var col=ok?'var(--accent)':'var(--text-3)';html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);"><div style="width:22px;height:22px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+col+';">'+icon+'</div><div style="font-size:13px;font-weight:600;color:var(--text);">'+lbl+'</div></div>';});
-        var el=document.getElementById('bea-creds-${l.id}');
-        if(el)el.innerHTML=html||'<span style="font-size:12px;color:var(--text-3);">Seller credentials build over time as they complete their Trust Score checklist.</span>';
-      })();</script>
       <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>
     </div>
     <div class="cv-sticky">
