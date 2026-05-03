@@ -5842,7 +5842,7 @@ function openBEASellerProfile(l) {
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;"><div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div></div>
+      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${l.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);filter:blur(6px);" onerror="this.style.display='none'">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
       <div class="cv-headline">${l.title}</div>
       <div class="cv-cat">${scBadge}${l.cat} · ${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
@@ -5855,8 +5855,17 @@ function openBEASellerProfile(l) {
       ${l.desc ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${maskContactInfo(formatDesc(l.desc), false)}</p></div>` : ''}
       <div class="cv-sec">
         <div class="cv-sec-title">Credentials &amp; qualifications</div>
-        <div style="font-size:12px;color:var(--text-3);">Seller credentials are verified and displayed here once the listing is claimed and Trust Score documents are submitted.</div>
+        <div id="bea-creds-${l.id}" style="font-size:12px;color:var(--text-3);">Loading credentials…</div>
       </div>
+      <script>(function(){
+        var sf={};try{sf=JSON.parse(${JSON.stringify(l.structured_fields||'{}')}||'{}');}catch(e){}
+        var sigs=sf._signals||{};
+        var labels={id_verified:'Identity verified',address_verified:'Address verified',phone_verified:'Phone verified',bank_verified:'Bank account verified',years_2_5:'2–5 yrs experience',years_5_10:'5–10 yrs experience',years_10plus:'10+ yrs experience',ffc:'FFC registered',paia:'PAIA compliant',cpa:'CPA compliant',estate_agency:'Estate agency registered',qualification:'Qualification on file',professional_body:'Professional body member',portfolio:'Portfolio uploaded',insurance:'Professional insurance',references:'References available'};
+        var html='';
+        Object.keys(sigs).forEach(function(k){var st=sigs[k];if(!st||st.status==='skipped')return;var lbl=labels[k]||k;var ok=st.status==='uploaded';var icon=ok?'✓':'○';var col=ok?'var(--accent)':'var(--text-3)';html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);"><div style="width:22px;height:22px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+col+';">'+icon+'</div><div style="font-size:13px;font-weight:600;color:var(--text);">'+lbl+'</div></div>';});
+        var el=document.getElementById('bea-creds-${l.id}');
+        if(el)el.innerHTML=html||'<span style="font-size:12px;color:var(--text-3);">Seller credentials build over time as they complete their Trust Score checklist.</span>';
+      })();</script>
       <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>
     </div>
     <div class="cv-sticky">
@@ -7645,7 +7654,7 @@ async function sbDoPublish(){
       // Use raw fetch so we can read the error body if the request fails
       const rawRes=await fetch(BEA_URL+'/listings',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
         body:JSON.stringify({
           title,
           price:f.price||f.rate||'POA',
@@ -7657,6 +7666,14 @@ async function sbDoPublish(){
           description:sbState.description||'',
           seller_email:email,
           listing_status:'live',
+          trust_score:sbCalcScore(),
+          beds:       f.beds       ? parseInt(f.beds)       : null,
+          baths:      f.baths      ? parseInt(f.baths)      : null,
+          garages:    f.garages    ? parseInt(f.garages)    : null,
+          floor_area: f.floor_area ? parseInt(f.floor_area) : null,
+          erf_size:   f.erf_size   ? parseInt(f.erf_size)   : null,
+          prop_type:  f.prop_type  || null,
+          listing_type: f.listing_type || null,
           structured_fields:JSON.stringify(f)
         })
       });
@@ -7675,15 +7692,18 @@ async function sbDoPublish(){
       const fd=new FormData();
       const blob=await (await fetch(sbState.selfieUrl)).blob();
       fd.append('file',blob,'selfie.jpg');
-      await fetch(BEA_URL+`/users/${encodeURIComponent(email)}/photo`,{method:'POST',body:fd}).catch(()=>{});
+      await fetch(BEA_URL+`/users/${encodeURIComponent(email)}/photo`,{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>{});
     }
-    // First listing photo as main photo
+    // Upload all listing photos (first is primary)
     if(BEA_ENABLED && sbState.photos.length>0 && listingId){
-      const fd=new FormData();
-      const blob=await (await fetch(sbState.photos[0].dataUrl)).blob();
-      fd.append('file',blob,'photo.jpg');
-      fd.append('listing_id',listingId);
-      await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>{});
+      for(let pi=0;pi<sbState.photos.length;pi++){
+        const pfd=new FormData();
+        const pblob=await (await fetch(sbState.photos[pi].dataUrl)).blob();
+        pfd.append('file',pblob,'photo_'+pi+'.jpg');
+        pfd.append('listing_id',listingId);
+        if(pi===0) pfd.append('is_primary','true');
+        await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:pfd}).catch(()=>{});
+      }
     }
     // Show success
     const st=document.getElementById('sb-success-title');

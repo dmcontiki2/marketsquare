@@ -22,24 +22,33 @@
 
 ---
 
-## Last Completed Session · Session 38 (3 May 2026) — Two-Path Sell Flow
+## Last Completed Session · Session 38 (3 May 2026) — Two-Path Sell Flow + Post-Publish Bug Fixes
 
 - **Path A (new seller, 3 taps)**: `screen-publish` replaced with 3-step flow: photo → category/headline/price + inline AI market note → identity + EULA → live. `openSellNav()` routes no-email to Path A ✅
 - **Path B (returning seller, B1–B8)**: new `screen-sell-b` with full AI-guided flow. B1 account confirm → B2 category + agent/private gate → B3 structured fields + inline AI note → B4 AI description draft → B5 dynamic photo gallery → B6 skippable selfie → B7 Trust Score checklist with signal tables → B8 publish ✅
 - **Routing wired**: `sellSheetContinue()` → `goTo('sell-b')`, `goTo()` calls `sbReset()` for sell-b, demo mode blocks sell-b ✅
-- **File integrity**: rebuilt after truncation — 11,095 lines, ends with `</html>` ✅
-- Not yet deployed — git commit + deploy pending
+- **Post-publish fixes deployed**: X-Api-Key added to `sbDoPublish()` fetch; trust_score + structured fields (beds/baths/garages/floor_area/erf_size/prop_type/listing_type) sent as top-level POST fields; all photos uploaded (not just first); selfie upload X-Api-Key fixed; seller CV credentials section parses signals from structured_fields ✅
+- **File**: 11,299 lines, ends with `</html>` ✅
 
 ---
 
 ## Next Tasks · Session 39
 
-1. **Git commit + deploy** — commit Session 38 changes, `scp marketsquare.html` to server, restart BEA
-2. **Test Path A end-to-end** — new seller: photo → category/price → submit → confirm listing goes live + 3 AI sessions credited
-3. **Test Path B end-to-end** — returning seller: account sheet → B1–B8 → publish
-4. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
-5. **n8n email notifications** — buyer emailed on intro accept/decline
-5. **CIPC Beneficial Ownership** — file at cipc.co.za by ~13 May 2026 (David action)
+1. **⚠️ Retest Path B end-to-end** — publish a fresh Property listing with full fields (beds/baths/floor_area/erf_size/prop_type) — confirm trust score, all photos, all chips, and credentials show correctly on the live listing and seller CV
+2. **Fix home page Local Market scroll** — horizontal advert scroller on home page has stopped scrolling; investigate and restore
+3. **Fix "For You" adverts** — cards lack visuals and do not match the style of real listing cards; align layout and imagery
+4. **Test Path A end-to-end** — new seller: photo → category/price → submit → confirm listing goes live
+5. **Test draft save/resume** — save at B7, exit to dashboard, re-enter sell flow, confirm resume banner + state restored
+6. **Paystack live mode** — when approval email arrives: paste `sk_live_...` + webhook secret into `/var/www/marketsquare/.env`
+7. **n8n email notifications** — buyer emailed on intro accept/decline
+
+## Session 38 Hotfixes (deployed 3 May 2026)
+
+- **BEA crash fixed** — `opt_out` function body was duplicated 3× in `bea_main.py` (tail-repair artifact); removed 102 duplicate lines; syntax clean; server restarted ✅
+- **BEA_BASE → BEA_URL** — sell flow publish + AI coach calls were using undefined `BEA_BASE`; all 6 occurrences replaced ✅  
+- **Stale B8 error cleared** — error banner and publish button now reset every time B8 is entered ✅
+- **load_sandbox_ssh.sh** — was hardcoded to old session name `quirky-brave-galileo`; fixed to use `$(dirname "${BASH_SOURCE[0]}")` — now works every session ✅
+- **Edit tool → Python for large files** — all future edits to `marketsquare.html` and `bea_main.py` will use Python open/read/replace/write to prevent truncation-induced duplicates ✅
 
 ---
 

@@ -1153,3 +1153,23 @@ Every Local Market seller now starts at 40 — "Established" tier begins at 40 s
 - `?category=Property` → score 25, Property signals only (no LM bleed) ✓
 
 **Deployed:** bea_main.py + marketsquare.html → trustsquare.co
+
+---
+
+## Session 38 — Part 2 (3 May 2026) — Post-Publish Bug Fixes
+
+### Fix: Missing X-Api-Key on POST /listings (sbDoPublish)
+`sbDoPublish()` was sending `POST /listings` without the required `X-Api-Key: API_KEY` header. Every Path B publish attempt returned "Invalid or missing API key". Added header to raw fetch call. Verified on live server.
+
+### Fix: Trust score not saved on publish
+`sbDoPublish()` POST body did not include `trust_score`. BEA stored 0/default. Now sends `trust_score: sbCalcScore()` so the score built in B7 is persisted correctly.
+
+### Fix: Structured property fields not sent as top-level BEA columns
+`beds`, `baths`, `garages`, `floor_area`, `erf_size`, `prop_type`, `listing_type` were only inside `structured_fields` JSON string. BEA already had dedicated columns for all of them. Now sent as top-level fields in POST body — chips and filters work correctly for new listings.
+
+### Fix: Only first photo uploaded; selfie upload missing X-Api-Key
+Photo upload loop now iterates all `sbState.photos` (not just index 0), with `is_primary=true` on first. Selfie upload to `/users/{email}/photo` was silently failing — missing `X-Api-Key` header added.
+
+### Fix: Seller CV credentials section dead for BEA listings
+`openBEASellerProfile()` showed static placeholder text. Now parses `structured_fields._signals` from the listing and renders each signal the seller claimed or uploaded. Blurred seller photo shown in CV hero if available.
+
