@@ -1997,15 +1997,16 @@ async function saveAsDraft() {
         : '';
 
       const payload = {
-        title:       l.formData.title,
-        price:       l.formData.price || 'POA',
-        category:    selectedCat,
-        city:        sellerData.city,
-        area:        l.formData.area || sellerData.city,
-        suburb:      l.formData.suburb,
-        description: photoPrefix + buildDescription(l.formData),
-        thumb_url:   thumb,
-        medium_url:  medium,
+        title:        l.formData.title,
+        price:        l.formData.price || 'POA',
+        category:     selectedCat,
+        city:         sellerData.city,
+        area:         l.formData.area || sellerData.city,
+        suburb:       l.formData.suburb,
+        description:  photoPrefix + buildDescription(l.formData),
+        thumb_url:    thumb,
+        medium_url:   medium,
+        seller_email: sellerData.email,
       };
 
       const resp = await fetch(BEA_URL + '/listings', {
@@ -3279,7 +3280,7 @@ function openAdmEdit(id) {
     const dhDiv = document.getElementById('adm-edit-dochub');
     if (dhDiv) {
       dhDiv.innerHTML = '<div id="doc-hub-panel" style="display:none;margin-top:4px;"></div>';
-      docHubLoad(l.seller_email);
+      docHubLoad(l.seller_email, l.category || '');
     }
     // AI Guidance
     const agDiv = document.getElementById('adm-edit-aiguidance');
@@ -3497,6 +3498,98 @@ const DOC_TYPE_LABELS = {
   recipe: '🍯 Recipe / Formula', presentation: '📊 Presentation',
   other: '📎 Other Document'
 };
+// Category-specific doc type labels
+const DOC_TYPE_LABELS_TUTORS = {
+  id_doc:         '🪪 ID / Passport',
+  clearance:      '🔍 Police Clearance / DBS Check',
+  certificate:    '🎓 Degree / Diploma / Certificate',
+  specialisation: '📋 Subject Specialisation Certificate',
+  sace:           '📜 SACE Registration',
+  safeguarding:   '🛡 Safeguarding / Child Protection Cert',
+  experience_cv:  '📄 CV with Teaching Experience',
+  membership:     '🏛 Professional Body Membership',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_PROPERTY = {
+  id_doc:         '🪪 ID / Passport',
+  ppra:           '📜 PPRA / EAAB Registration',
+  ffc:            '🏅 Fidelity Fund Certificate (FFC)',
+  mandate:        '📝 Signed Mandate Letter',
+  certificate:    '🎓 NQF Qualification Certificate',
+  membership:     '🏛 Professional Body Membership',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_SERVICES_TECH = {
+  id_doc:         '🪪 ID / Passport',
+  body_reg:       '📜 Professional Body Registration',
+  trade_cert:     '🎓 Trade Certificate',
+  insurance:      '🛡 Public Liability Insurance',
+  cidb:           '🏗 CIDB Grading Certificate',
+  coc:            '⚡ CoC / Industry Licence',
+  tickets:        '🎫 Safety Ticket (First Aid / Heights etc.)',
+  experience_cv:  '📄 CV with Trade Experience',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_SERVICES_CAS = {
+  id_doc:         '🪪 ID / Passport',
+  clearance:      '🔍 Police Clearance / Background Check',
+  reference:      '📄 Reference Letter',
+  certificate:    '🎓 NQF Qualification / Short Course',
+  experience_cv:  '📄 CV with Experience',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_ADVENTURES = {
+  id_doc:         '🪪 ID / Passport',
+  guide_cert:     '🏔 Guide / Activity Certification',
+  permit:         '📋 Operator Permit / Concession Licence',
+  insurance:      '🛡 Liability / Indemnity Insurance',
+  first_aid:      '🚑 First Aid Certificate',
+  tgcsa:          '⭐ TGCSA Star Grading',
+  municipal:      '🏙 Municipal Operating Licence',
+  health_safety:  '✅ Health & Safety Certificate',
+  safety_cert:    '⛑ Additional Safety Certificate',
+  award:          '🏆 Travel Award / Recognition',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_COLLECTORS = {
+  id_doc:         '🪪 ID / Passport',
+  auth_cert:      '🔏 Authentication Certificate',
+  provenance:     '📜 Provenance / Chain of Custody',
+  appraisal:      '💎 Professional Appraisal / Valuation',
+  dealer_reg:     '🏪 Dealer / Reseller Registration',
+  membership:     '🏛 Collector Association Membership',
+  other:          '📎 Other Document'
+};
+const DOC_TYPE_LABELS_CARS = {
+  id_doc:         '🪪 ID / Passport',
+  natis:          '📋 NATIS Registration Papers (Ownership)',
+  dealer_reg:     '🏪 Dealer / Trader Registration (MIRA)',
+  rwc:            '✅ Roadworthy Certificate',
+  inspection:     '🔍 Independent Inspection Report',
+  service_history:'🔧 Service History / Book',
+  finance_clear:  '💳 Finance Clearance Letter',
+  other:          '📎 Other Document'
+};
+function _docTypeLabelsForCategory(cat) {
+  const c = (cat || '').toLowerCase();
+  if (c === 'tutors')     return DOC_TYPE_LABELS_TUTORS;
+  if (c === 'property')   return DOC_TYPE_LABELS_PROPERTY;
+  if (c === 'adventures') return DOC_TYPE_LABELS_ADVENTURES;
+  if (c === 'collectors') return DOC_TYPE_LABELS_COLLECTORS;
+  if (c === 'cars')       return DOC_TYPE_LABELS_CARS;
+  if (c === 'services')   return DOC_TYPE_LABELS_SERVICES_TECH; // default to technical; casuals handled by sub-type
+  return DOC_TYPE_LABELS; // generic fallback (Local Market etc.)
+}
+function _docLabelPlaceholder(cat) {
+  const c = (cat || '').toLowerCase();
+  if (c === 'tutors')     return "Label (e.g. 'SACE Registration' or 'BSc Mathematics')";
+  if (c === 'property')   return "Label (e.g. 'Fidelity Fund Certificate 2026' or 'NQF5 Certificate')";
+  if (c === 'services')   return "Label (e.g. 'Electrical CoC' or 'ECSA Registration 2026')";
+  if (c === 'adventures') return "Label (e.g. 'FGASA Level 1 2025' or 'TGCSA 3-Star 2026')";
+  if (c === 'collectors') return "Label (e.g. 'PSA 9 Auth Cert' or 'Provenance Doc — 1952 Topps')";
+  if (c === 'cars')       return "Label (e.g. 'NATIS RC1' or 'AA Inspection Report')";
+  return "Label (e.g. 'Certificate 2026')";
+}
 const DOC_SIGNAL_MAP = {
   id_doc: 'category.lm.id_uploaded', certificate: 'category.lm.formal_cert',
   training: 'category.lm.training_course', membership: 'category.lm.prof_body',
@@ -3505,8 +3598,10 @@ const DOC_SIGNAL_MAP = {
 };
 
 let _docHubEmail = null;
+let _docHubCategory = '';
 
-async function docHubLoad(email) {
+async function docHubLoad(email, category) {
+  _docHubCategory = category || '';
   _docHubEmail = email;
   const panel = document.getElementById('doc-hub-panel');
   if (!panel) return;
@@ -3550,7 +3645,8 @@ function _docHubRender(docs, idStatus) {
         </div>`;
     }
   }
-  const typeOpts = Object.entries(DOC_TYPE_LABELS)
+  const _typeMap = _docTypeLabelsForCategory(_docHubCategory);
+  const typeOpts = Object.entries(_typeMap)
     .map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
 
   const docRows = docs.length ? docs.map(d => `
@@ -3581,7 +3677,7 @@ function _docHubRender(docs, idStatus) {
           <select id="dh-doc-type" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;color:var(--text);">
             ${typeOpts}
           </select>
-          <input type="text" id="dh-label" placeholder="Label (e.g. 'Beekeeping Certificate 2023')"
+          <input type="text" id="dh-label" placeholder="${_docLabelPlaceholder(_docHubCategory)}"
             style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;color:var(--text);outline:none;">
           <div style="display:flex;align-items:center;gap:10px;">
             <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;">

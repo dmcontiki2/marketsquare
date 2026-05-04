@@ -1957,51 +1957,108 @@ async def aa_coach(req: AACoachRequest):
         "Property": (
             "CATEGORY: Property\n"
             "Available credential signals and their points:\n"
-            "• PPRA/EAAB Registration Certificate (active) → 15 pts — check ppra.org.za\n"
+            "• PPRA/EAAB Registration (active) → 15 pts — ppra.org.za — SA mandatory for professional agents\n"
+            "• Fidelity Fund Certificate (FFC) → 10 pts — annual, separate from PPRA reg; lapses each year\n"
+            "• Signed mandate / instruction letter → 8 pts — proves authorisation to market the property\n"
             "• NQF4 Real Estate qualification → 6 pts\n"
             "• NQF5 Real Estate → cumulative 12 pts\n"
             "• NQF6+ or professional designation → cumulative 20 pts\n"
             "• Professional body membership (IEASA, SAPOA, NAR) → 5 pts\n"
+            "• Private seller declaration → 0 pts but visible label (no PPRA required for private sellers)\n"
             "• Government ID verified by MarketSquare → 15 Universal pts\n"
             "• Verified referrals from buyers → up to 10 Universal pts\n"
-            "Note: A Property seller without PPRA registration earns 0 Category pts."
+            "\n"
+            "COACHING INSTRUCTION FOR PROPERTY:\n"
+            "1. Check whether the seller is a registered estate agent or a private seller — tailor advice accordingly.\n"
+            "2. For agents: lead with FFC (10 pts) if not yet uploaded — it is legally separate from PPRA and lapses annually.\n"
+            "3. For agents: mandate letter (8 pts) prevents fraud flags and builds buyer trust — suggest it for every listing.\n"
+            "4. For private sellers: skip PPRA/FFC, note private_seller declaration, focus on Universal signals.\n"
+            "5. For description improvements: tailor to property type (apartment/house/commercial), mention key features buyers care about (natural light, parking, school proximity, security)."
         ),
         "Tutors": (
             "CATEGORY: Tutors\n"
             "Available credential signals and their points:\n"
             "• SACE registration (South African Council for Educators) → 8 pts — sace.org.za\n"
+            "  NOTE: SACE is mandatory only for school teachers. Private/independent tutors and\n"
+            "  tertiary tutors are NOT required to register. For non-school tutors, skip SACE\n"
+            "  and focus on the qualification chain + subject specialisation instead.\n"
             "• Certificate or Diploma (NQF5–6) → 6 pts\n"
             "• Bachelor's Degree (NQF7) → 10 pts (replaces diploma pts)\n"
             "• Honours or Postgraduate (NQF8+) → 14 pts (replaces degree pts)\n"
+            "  NOTE: Points chain — max 14 pts from qualifications. Honours replaces degree which replaces diploma.\n"
             "• Subject specialisation certificate or transcript → 5 pts\n"
+            "  EXAMPLES BY SUBJECT (always reference the seller's actual subject from the 'subject' field):\n"
+            "  Maths/Science: NSC Maths distinction transcript, IEB Maths cert, Olympiad cert, AMC cert\n"
+            "  Languages (English/Afrikaans): TESOL, CELTA, TEFL, Cambridge DELTA, IELTS Examiner cert\n"
+            "  Languages (Zulu/Xhosa/Sotho): SA Languages Board cert, university language dept transcript\n"
+            "  Music: UNISA music grade exams (Grade 7+), ABRSM, Trinity College, Rockschool\n"
+            "  Art/Drama: UNISA Fine Art transcript, AFDA certificate, drama conservatory diploma\n"
+            "  Coding/IT: AWS cert, Google cert, Microsoft cert, CompTIA, freeCodeCamp, Udemy verified cert\n"
+            "  Accounting: SAIPA, CIMA foundation, ACCA foundation, CTA transcript\n"
+            "  Science (Biology/Chemistry/Physics): BSc transcript, lab technician cert, CSIR affiliation\n"
+            "  Sport coaching: ASA coaching cert, SAFA coaching badge, Tennis SA cert, Swimming SA cert\n"
+            "  Early Childhood: ECD NQF4/5 cert, Montessori diploma, SACE Foundation Phase\n"
+            "  Chess/Logic: FIDE trainer cert, SA Chess Federation membership\n"
+            "• Police clearance / criminal record check → 8 pts (HIGH PRIORITY for any tutor working with minors)\n"
+            "  REQUIRED for: in-person tutors, home tutors, school-visiting tutors\n"
+            "  SA: SAPS clearance certificate (saps.gov.za)\n"
+            "  Global: DBS (UK), CORI (IE), WWC (AU), state background check (US)\n"
+            "• Safeguarding / child protection certificate → 3 pts (important for in-person tutors under 18)\n"
+            "  Examples: NSPCC Safeguarding (UK), Mandatory Reporter training (AU/US), CPT SA\n"
             "• Teaching/tutoring experience 2–5 yrs → 5 pts · 5+ yrs → 11 pts\n"
+            "• Online platform proficiency declaration → 1 pt (online tutors: Zoom, Google Classroom, etc.)\n"
             "• Well-structured CV (verifiable dates, no gaps) → 2 pts\n"
             "• Government ID verified by MarketSquare → 15 Universal pts\n"
-            "• Verified referrals from students or parents → up to 10 Universal pts"
+            "• Verified referrals from students or parents → up to 10 Universal pts\n"
+            "\n"
+            "COACHING INSTRUCTION FOR TUTORS:\n"
+            "1. ALWAYS check the 'subject' field first. Tailor every credential suggestion and example\n"
+            "   to the seller's specific subject — never give generic examples.\n"
+            "2. If the seller teaches minors (school age, early childhood, home tutor), lead with\n"
+            "   police clearance (8 pts) as the top trust_score_action — parents expect this.\n"
+            "3. If the seller is a school teacher, include SACE. If private/tertiary tutor, skip SACE.\n"
+            "4. For the subject field suggestion: expand vague subjects into specific ones\n"
+            "   (e.g. 'Maths' → 'Mathematics (Gr 8–12, IEB & NSC), Statistics (Gr 11–12)').\n"
+            "5. For the description field: include a sentence about the tutor's approach/method\n"
+            "   tailored to the subject (e.g. for Maths: concept-first vs. exam-technique).\n"
+            "6. Never suggest 'Beekeeping Certificate' or any credential unrelated to the subject."
         ),
         "Services": (
             "CATEGORY: Services\n"
             "For TECHNICAL trades — available credential signals:\n"
             "• Professional/statutory body registration (ECSA, PIRB, NHBRC, FSCA, SAICA) → 12 pts\n"
             "• Trade certificate (City & Guilds, TVET, MERSETA, CETA, Red Seal) → 8 pts\n"
-            "• Primary industry ticket/licence (CoC electrical, gas CoC, PIRB licence) → 5 pts\n"
+            "• Public liability insurance → 5 pts — upload policy with expiry date; expected by every homeowner\n"
+            "• CIDB grading (construction contractors) → 6 pts — required above R200k jobs in SA\n"
+            "• Primary industry licence/CoC (electrical CoC, gas CoC, plumbing) → 5 pts\n"
             "• Additional safety tickets (First Aid, working at heights, confined space) → 3 pts each, max 2\n"
             "• Trade experience 3–7 yrs → 4 pts · 7+ yrs → 8 pts\n"
             "• Strong, verifiable CV → 2 pts\n"
             "For CASUALS — available credential signals:\n"
+            "• Police clearance / background check → 10 pts — HIGHEST PRIORITY for in-home workers\n"
+            "  SA: SAPS clearance (saps.gov.za) · UK: DBS · AU: WWC · US: state background check\n"
             "• Reference letter from past employer or client (with contact details) → 8 pts first, +5 second\n"
             "• Any NQF qualification or accredited short course → 8 pts\n"
             "• Years in service 2–4 yrs → 6 pts · 5+ yrs → 14 pts\n"
             "• Strong profile description (specific services, suburb, availability) → 5 pts\n"
-            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts (critical for Casuals)"
+            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts (critical for Casuals)\n"
+            "\n"
+            "COACHING INSTRUCTION FOR SERVICES:\n"
+            "1. Determine first whether the seller is Technical (qualified trade) or Casual (general/domestic services).\n"
+            "2. For Casuals: lead with police clearance (10 pts) — it is the #1 trust signal for in-home workers. Parents, homeowners, and businesses expect it.\n"
+            "3. For Technical: lead with body registration (12 pts) then insurance (5 pts) — liability cover is expected by every client.\n"
+            "4. For CIDB: only suggest if the service_class/service_type mentions construction, contracting, or building work.\n"
+            "5. For description: tailor examples to the specific trade — an electrician's description differs from a plumber's or a nanny's."
         ),
         "Adventures": (
             "CATEGORY: Adventures\n"
             "For EXPERIENCES (guided activities) — available credential signals:\n"
-            "• Guide/activity certification (FGASA, MCSA, PADI Divemaster+, SACAA) → 12 pts\n"
-            "• First Aid / Emergency Response certificate (current, not expired) → 6 pts\n"
-            "• Liability / public indemnity insurance (activity-appropriate) → 5 pts\n"
-            "• Additional safety certification (Wilderness First Responder, swift water rescue) → 4 pts\n"
+            "• Activity guide cert (FGASA wildlife, PADI Divemaster+ diving, MCSA climbing, SACAA aviation, SAMSA maritime) → 12 pts\n"
+            "• Operator permit / concession licence → 6 pts — required for SANParks, Ezemvelo, private reserves\n"
+            "• First Aid / Emergency Response (current, not expired) → 6 pts\n"
+            "• Sector regulator compliance cert → 5 pts — SACAA Part 135, SAMSA, MCSA (separate from guide cert)\n"
+            "• Liability / indemnity insurance (activity-appropriate) → 5 pts\n"
+            "• Additional safety cert (Wilderness First Responder, swift water rescue) → 4 pts\n"
             "• Guided experience 3–7 yrs → 5 pts · 7+ yrs → 10 pts\n"
             "• Secondary qualification or activity endorsement → 3 pts\n"
             "For ACCOMMODATION (B&B / Guesthouse / Hotel) — available credential signals:\n"
@@ -2010,20 +2067,34 @@ async def aa_coach(req: AACoachRequest):
             "• Health & safety compliance certificate → 5 pts\n"
             "• Fire clearance certificate → 4 pts\n"
             "• AA Travel Award, TripAdvisor Travellers Choice, or Booking.com Preferred → 3 pts\n"
-            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts"
+            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts\n"
+            "\n"
+            "COACHING INSTRUCTION FOR ADVENTURES:\n"
+            "1. Determine sub-type first: Experiences (guided activities) or Accommodation (B&B/guesthouse/hotel).\n"
+            "2. For Experiences: lead with guide cert (12 pts) then operator permit (6 pts) — many guides overlook the permit.\n"
+            "3. For Accommodation: TGCSA grading is the single highest-value signal — lead with it always.\n"
+            "4. For description: be specific about the activity or property type — 'bush walk' is weaker than '3-hour guided Big 5 game walk, Pilanesberg, max 6 guests'.\n"
+            "5. Photos matter most for Adventures — always include a photo upload action in trust_score_actions."
         ),
         "Collectors": (
             "CATEGORY: Collectors\n"
             "Available credential signals and their points:\n"
-            "• Collecting domain declaration (specific, detailed description) → 4 pts\n"
+            "• Collecting domain declaration (specific, detailed) → 4 pts\n"
             "• Successful platform transactions: 1–4 → 8 pts · 5–14 → 14 pts · 15+ → 20 pts\n"
-            "• Authentication certificate for listed item (SANA, PCGS, PSA, CGC) → 8 pts\n"
-            "• Professional appraisal or valuation from recognised appraiser → 5 pts\n"
-            "• Collector association membership (SANA, Philatelic Foundation) → 3 pts\n"
+            "• Item provenance documentation → 8 pts — chain of custody doc; required for high-value items (art, coins, wine, firearms); auth cert alone is insufficient\n"
+            "• Authentication certificate (SANA, PCGS, PSA, CGC, NGC) → 8 pts — per listed item\n"
+            "• Dealer / reseller registration → 6 pts — antique dealer, art gallery, coin dealer licence; displays 'Registered Dealer' label to buyers\n"
+            "• Professional appraisal or valuation → 5 pts — from recognised appraiser\n"
+            "• Collector association membership (SANA, Philatelic Foundation etc.) → 3 pts\n"
             "• Government ID verified by MarketSquare → 15 Universal pts\n"
             "• Verified referrals → up to 10 Universal pts\n"
-            "Note: Collectors primarily build score through platform transactions — "
-            "responding promptly to every introduction is the single most important habit."
+            "\n"
+            "COACHING INSTRUCTION FOR COLLECTORS:\n"
+            "1. Read the listing to determine the collecting domain (cards, coins, art, wine, stamps, memorabilia etc.) and tailor all suggestions to that domain.\n"
+            "2. For high-value items: lead with provenance (8 pts) — buyers need chain of custody, not just an auth cert.\n"
+            "3. For dealers: suggest dealer_reg (6 pts) — it distinguishes them from private sellers and builds buyer confidence.\n"
+            "4. Emphasise that responding promptly to every introduction is the single most powerful Trust Score action for Collectors — transactions auto-score.\n"
+            "5. For description: be specific — '1952 Topps Mickey Mantle PSA 7' is far stronger than 'vintage baseball card'."
         ),
     }
 
@@ -4253,7 +4324,10 @@ _TRUST_SIGNALS = {
 # (e.g. NQF7 replaces NQF6) are noted in the 'replaces' field.
 _CATEGORY_SIGNALS = {
     "Property": {
-        "category.property.ppra":          {"name": "Active PPRA / EAAB Registration", "points": 15, "how_to_earn": "Upload PPRA certificate — verified against PPRA register."},
+        "category.property.ppra":          {"name": "Active PPRA / EAAB Registration", "points": 15, "how_to_earn": "Upload PPRA certificate — verified against PPRA register at ppra.org.za. Mandatory for professional agents in SA."},
+        "category.property.ffc":            {"name": "Fidelity Fund Certificate (FFC)", "points": 10, "how_to_earn": "Upload current FFC — issued annually by EAAB, separate from PPRA registration. Lapses each year — upload the current year's certificate."},
+        "category.property.mandate":        {"name": "Signed mandate / instruction letter", "points": 8, "how_to_earn": "Upload signed mandate letter from property owner authorising you to market this property. Prevents fraudulent listings."},
+        "category.property.private_seller": {"name": "Private seller declaration", "points": 0, "how_to_earn": "Declare: I am a private seller, not a registered estate agent. Displayed as a transparency label to buyers — no points but visible on listing card."},
         "category.property.nqf4":          {"name": "NQF4 Real Estate qualification", "points": 6,  "how_to_earn": "Upload certificate."},
         "category.property.nqf5":          {"name": "NQF5 Real Estate qualification", "points": 6,  "how_to_earn": "Upload certificate (additional to NQF4).", "additional_to": "category.property.nqf4"},
         "category.property.nqf6_plus":     {"name": "NQF6+ / Professional designation", "points": 8, "how_to_earn": "Upload certificate.", "additional_to": "category.property.nqf5"},
@@ -4267,31 +4341,41 @@ _CATEGORY_SIGNALS = {
     "Cars_private": {
         # Private car sellers — no dealer registration
         "category.cars.ownership":         {"name": "Vehicle ownership (NATIS)", "points": 10, "how_to_earn": "Upload NATIS registration papers."},
-        "category.cars.finance_clear":     {"name": "Finance clearance", "points": 4, "how_to_earn": "Upload letter confirming no outstanding finance."},
+        "category.cars.dealer_reg":        {"name": "Dealer / trader registration (MIRA)", "points": 8, "how_to_earn": "Upload MIRA dealer licence (SA) or equivalent trade registration. Displays 'Registered Dealer' label to buyers — regulatory protections differ from private sellers."},
+        "category.cars.inspection":        {"name": "Independent vehicle inspection", "points": 5, "how_to_earn": "Upload third-party inspection report (AA South Africa, WeBuyCars, Auto Pedigree). Significantly increases buyer confidence."},
+        "category.cars.service_history":   {"name": "Service history on file", "points": 4, "how_to_earn": "Upload scan of service book or dealer service records (full or partial history)."},
+        "category.cars.finance_clear":     {"name": "Finance clearance", "points": 4, "how_to_earn": "Upload letter from financial institution confirming no outstanding finance on this vehicle."},
+        "category.cars.private_seller":    {"name": "Private seller declaration", "points": 0, "how_to_earn": "Declare: I am a private seller, not a registered dealer. Displayed to buyers as a transparency label — regulatory protections differ. No points but visible on listing."},
         "category.cars.rwc":               {"name": "Roadworthy certificate (RWC)", "points": 6, "how_to_earn": "Upload roadworthy certificate."},
         "category.cars.service_history":   {"name": "Service history", "points": 4, "how_to_earn": "Upload service book."},
     },
     "Tutors": {
-        "category.tutors.sace":            {"name": "SACE registration", "points": 8,  "how_to_earn": "Upload SACE number — verified at sace.org.za."},
+        "category.tutors.clearance":       {"name": "Police clearance / DBS check", "points": 8, "how_to_earn": "Upload SAPS clearance (saps.gov.za) · DBS (UK) · WWC (AU) · state background check (US). Critical for tutors working with minors."},
+        "category.tutors.sace":            {"name": "SACE registration", "points": 8,  "how_to_earn": "Upload SACE registration certificate — verified at sace.org.za. Required for SA school teachers; not required for private/independent or tertiary tutors."},
         "category.tutors.cert_diploma":    {"name": "Certificate or Diploma (NQF5–6)", "points": 6, "how_to_earn": "Upload certificate."},
         "category.tutors.bachelor":        {"name": "Bachelor's Degree (NQF7)", "points": 10, "how_to_earn": "Upload certificate (replaces diploma points).", "replaces": "category.tutors.cert_diploma"},
         "category.tutors.honours":         {"name": "Honours / Postgraduate (NQF8+)", "points": 14, "how_to_earn": "Upload certificate (replaces bachelor's points).", "replaces": "category.tutors.bachelor"},
-        "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload subject-specific cert or transcript."},
-        "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV — reviewed by MarketSquare."},
+        "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload cert or transcript specific to your subject. Examples: Maths/Science → Olympiad cert, IEB transcript; Music → UNISA/ABRSM grade cert; Languages → CELTA/TESOL; Coding → AWS/Google/Microsoft cert; Accounting → SAIPA/CIMA; Sport → ASA/SAFA coaching badge."},
+        "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV with verifiable teaching dates — reviewed by MarketSquare."},
         "category.tutors.exp_5plus":       {"name": "Teaching experience 5+ years", "points": 6, "how_to_earn": "Upload CV.", "additional_to": "category.tutors.exp_2_5"},
-        "category.tutors.strong_cv":       {"name": "Strong structured CV", "points": 2, "how_to_earn": "Upload CV — assessed at onboarding."},
+        "category.tutors.safeguarding":    {"name": "Safeguarding / child protection cert", "points": 3, "how_to_earn": "Upload safeguarding or child protection certificate. Examples: NSPCC (UK), Mandatory Reporter (AU/US), child protection training SA."},
+        "category.tutors.online_ready":    {"name": "Online platform proficiency", "points": 1, "how_to_earn": "Declare platforms used: Zoom, Google Classroom, Microsoft Teams, etc. Applies to online tutors."},
+        "category.tutors.strong_cv":       {"name": "Strong structured CV", "points": 2, "how_to_earn": "Upload CV with clear dates, subjects taught, and institutions — assessed at onboarding."},
     },
     "Services-Technical": {
         "category.services_tech.trade_cert": {"name": "Formal trade certificate", "points": 8, "how_to_earn": "Upload (City & Guilds, TVET, MERSETA, CETA, Red Seal)."},
         "category.services_tech.body_reg":   {"name": "Professional body registration", "points": 12, "how_to_earn": "Upload (ECSA, PIRB, NHBRC, FSCA, SAICA) — verified."},
-        "category.services_tech.coc":        {"name": "Primary industry licence / CoC", "points": 5, "how_to_earn": "Upload with expiry date."},
+        "category.services_tech.insurance":  {"name": "Public liability insurance", "points": 5, "how_to_earn": "Upload policy schedule with expiry date. Expected by any homeowner hiring a trade into their property."},
+        "category.services_tech.cidb":       {"name": "CIDB grading (construction)", "points": 6, "how_to_earn": "Upload CIDB registration certificate (SA). Required for contractors above R200k. Upload grade level document."},
+        "category.services_tech.coc":        {"name": "Primary industry licence / CoC", "points": 5, "how_to_earn": "Upload with expiry date (electrical CoC, gas CoC, plumbing licence etc.)."},
         "category.services_tech.tickets":    {"name": "Additional tickets (max 2 counted)", "points": 6, "how_to_earn": "Upload First Aid, heights, confined space etc. (3 pts each, max 2)."},
         "category.services_tech.exp_3_7":    {"name": "Years in trade 3–7", "points": 4, "how_to_earn": "Upload CV."},
         "category.services_tech.exp_7plus":  {"name": "Years in trade 7+", "points": 4, "how_to_earn": "Upload CV.", "additional_to": "category.services_tech.exp_3_7"},
         "category.services_tech.strong_cv":  {"name": "Strong verifiable CV", "points": 2, "how_to_earn": "Upload CV."},
     },
     "Services-Casuals": {
-        "category.services_cas.nqf":         {"name": "Any NQF qualification or short course", "points": 8, "how_to_earn": "Upload certificate."},
+        "category.services_cas.clearance":   {"name": "Police clearance / background check", "points": 10, "how_to_earn": "Upload SAPS clearance (saps.gov.za) · DBS (UK) · WWC (AU) · state background check (US). Critical for in-home workers — cleaners, nannies, gardeners, domestic workers."},
+        "category.services_cas.nqf":         {"name": "Any NQF qualification or short course", "points": 8, "how_to_earn": "Upload certificate from accredited provider."},
         "category.services_cas.exp_2_4":     {"name": "2–4 years in service", "points": 6, "how_to_earn": "Upload CV or written statement."},
         "category.services_cas.exp_5plus":   {"name": "5+ years in service", "points": 8, "how_to_earn": "Upload CV.", "additional_to": "category.services_cas.exp_2_4"},
         "category.services_cas.ref_1":       {"name": "Reference letter", "points": 8, "how_to_earn": "Upload scanned letter with verifiable contact."},
@@ -4299,7 +4383,9 @@ _CATEGORY_SIGNALS = {
         "category.services_cas.profile":     {"name": "Strong profile description", "points": 5, "how_to_earn": "Complete your profile description in detail."},
     },
     "Adventures-Experiences": {
-        "category.adv_exp.guide_cert":       {"name": "Activity-specific guide cert", "points": 12, "how_to_earn": "FGASA, PADI, MCSA, SACAA — verified."},
+        "category.adv_exp.guide_cert":       {"name": "Activity-specific guide cert", "points": 12, "how_to_earn": "Upload relevant cert — FGASA (wildlife), PADI Divemaster+ (diving), MCSA (climbing), SACAA (aviation), SAMSA (maritime). Verified where register available."},
+        "category.adv_exp.permit":              {"name": "Operator permit / concession licence", "points": 6, "how_to_earn": "Upload permit with expiry. Required for guiding in SANParks, Ezemvelo, private reserves. Site-specific — upload per venue."},
+        "category.adv_exp.regulator_compliance":{"name": "Sector regulator compliance cert", "points": 5, "how_to_earn": "Upload compliance cert beyond the guide licence — SACAA Part 135 (aviation), SAMSA (maritime), MCSA (climbing). Different from the guide cert itself."},
         "category.adv_exp.first_aid":        {"name": "Current First Aid / Emergency Response", "points": 6, "how_to_earn": "Upload with expiry date."},
         "category.adv_exp.exp_3_7":          {"name": "Guided experience 3–7 years", "points": 5, "how_to_earn": "Upload CV."},
         "category.adv_exp.exp_7plus":        {"name": "Guided experience 7+ years", "points": 5, "how_to_earn": "Upload CV.", "additional_to": "category.adv_exp.exp_3_7"},
@@ -4327,7 +4413,9 @@ _CATEGORY_SIGNALS = {
         "category.collectors.tx_15plus":      {"name": "15+ successful transactions", "points": 6, "how_to_earn": "System tracked.", "additional_to": "category.collectors.tx_5_14"},
         "category.collectors.auth_cert":      {"name": "Third-party authentication certificate", "points": 8, "how_to_earn": "Upload per item — counted once per listing."},
         "category.collectors.appraisal":      {"name": "Professional appraisal or valuation", "points": 5, "how_to_earn": "Upload appraisal document."},
-        "category.collectors.assoc":          {"name": "Collector association membership", "points": 3, "how_to_earn": "Upload membership card or certificate."},
+        "category.collectors.assoc":          {"name": "Collector association membership", "points": 3, "how_to_earn": "Upload membership card or certificate (SANA, Philatelic Foundation etc.)."},
+        "category.collectors.provenance":      {"name": "Item provenance documentation", "points": 8, "how_to_earn": "Upload chain of custody or provenance document. Required for high-value collectibles (art, coins, wine, firearms). Authentication cert alone is insufficient for these."},
+        "category.collectors.dealer_reg":      {"name": "Dealer / reseller registration", "points": 6, "how_to_earn": "Upload dealer licence or trade registration (antique dealer, art gallery, coin dealer). Displayed to buyers as 'Registered Dealer' — distinguishes you from private collectors."},
     },
     # Local Market sellers — identity + stacking subject-matter credentials.
     # Stacking pattern: upload cert → lm.formal_cert (6 pts)

@@ -1251,3 +1251,39 @@ Cost model impact: AI Coach cost per session ($0.01 modelled) is ~4× higher tha
 ## Session 42 — Part 3: Real EULA embedded in onboarding Phase 3
 
 Replaced the 7-point placeholder seller terms in `screen-seller-onboard` Phase 3 with the full content of `MarketSquare_EULA_v1_0_Draft.docx` (v1.0, 18 April 2026, SA governing law). The `.sob-eula-box` scrollable panel now renders all 12 substantive sections: Definitions, Platform Scope & Acceptance, Anonymity & Identity Verification, Listings & Content, Tuppence & Introductions (including all introduction models and the ECT Act §44 cooling-off right), Fees & Subscriptions (with confirmed tier spec: Free 2/30d, Standard 20/60d/$5, International 40/90d/$15), Professional Credentials, User-Uploaded Content & IP (including no-photo-stock commitment and IP indemnity), Privacy & POPIA (consent, data retention, POPIA rights, Information Regulator contact), Disputes & Liability (60-day negotiation, SAAF arbitration, liability cap), Trust Score mechanics and penalties, and Governing Law & Termination. The document header notes it is a draft for legal review. Two checkbox consent fields below the scroll box remain unchanged. JS check passed; deployed to trustsquare.co.
+
+## Session 42 — Part 4: Tutors Trust Score signals + subject-aware AI coach
+
+**BEA (`bea_main.py`):**
+Added three missing Tutors credential signals from the TrustScore_Signal_Audit.xlsx spreadsheet: `category.tutors.clearance` (Police clearance / DBS check, 8 pts — highest-value signal for tutors working with minors; SA: SAPS clearance, UK: DBS, AU: WWC, US: state background check), `category.tutors.safeguarding` (Safeguarding / child protection cert, 3 pts — NSPCC, Mandatory Reporter, etc.), and `category.tutors.online_ready` (Online platform proficiency declaration, 1 pt — Zoom, Google Classroom, etc.). Updated `how_to_earn` for `category.tutors.specialisation` to include subject-specific examples by discipline (Maths/Science, Music, Languages, Coding, Accounting, Sport coaching, etc.) rather than generic text. Corrected SACE note to clarify it is mandatory for SA school teachers only — private/independent and tertiary tutors do not need it. Updated the AI coach credential reference for Tutors to be fully subject-aware: coach now reads the `subject` field first, leads with police clearance for minor-facing tutors, tailors subject specialisation examples to the seller's actual subject, and is explicitly prohibited from suggesting unrelated credentials (e.g. "Beekeeping Certificate").
+
+**Admin app (`marketsquare_admin.html`):**
+Document Hub upload dropdown is now category-aware for Tutors: when editing a Tutors listing, the "Upload new document" dropdown switches from the generic Local Market list to a Tutors-specific set (Police Clearance / DBS Check, Degree / Diploma / Certificate, Subject Specialisation Certificate, SACE Registration, Safeguarding / Child Protection Cert, CV with Teaching Experience, Professional Body Membership, Other). Label placeholder also switches to `'Label (e.g. 'SACE Registration' or 'BSc Mathematics')'` for Tutors, replacing the generic "Beekeeping Certificate" example. Category is now passed through from the listing to `docHubLoad()` to enable all category-aware rendering.
+
+## Session 42 — Part 5: All-category Trust Score signals + doc type dropdowns
+
+Applied the full TrustScore_Signal_Audit.xlsx recommendations across all categories, not just Tutors.
+
+**BEA — new credential signals added:**
+- Property: `ffc` (Fidelity Fund Certificate, 10 pts — annual, separate from PPRA), `mandate` (signed instruction letter, 8 pts), `private_seller` (0 pts transparency label)
+- Services-Technical: `insurance` (public liability, 5 pts), `cidb` (CIDB grading for construction, 6 pts)
+- Services-Casuals: `clearance` (police clearance/background check, 10 pts — highest priority for in-home workers)
+- Adventures-Experiences: `permit` (operator permit/concession licence, 6 pts), `regulator_compliance` (sector regulator cert beyond guide cert, 5 pts)
+- Collectors: `provenance` (chain of custody doc, 8 pts — required for high-value items), `dealer_reg` (dealer/reseller registration, 6 pts)
+- Cars: `dealer_reg` (MIRA dealer licence, 8 pts), `inspection` (independent inspection report, 5 pts), `service_history` (4 pts), `private_seller` (0 pts transparency label) — these join the existing ownership/rwc/finance_clear signals
+
+**BEA — AI coach credential references updated for all categories:**
+- Property: added FFC and mandate coaching; distinguishes agent vs private seller flow
+- Services: added insurance and CIDB for technical; leads with police clearance for casuals
+- Adventures: added permit and regulator compliance; TGCSA still leads for accommodation
+- Collectors: added provenance and dealer_reg; instructs AI to tailor by collecting domain
+- All categories now include a COACHING INSTRUCTION block directing the AI to read listing-specific fields before suggesting credentials and to never suggest unrelated documents
+
+**Admin app — Document Hub dropdown now fully category-aware:**
+- Property: PPRA, FFC, Mandate, NQF Certificate, Professional Body, Other
+- Services (Technical): Body Registration, Trade Certificate, Insurance, CIDB, CoC/Licence, Safety Ticket, CV, Other
+- Services (Casuals): Police Clearance, Reference Letter, NQF/Short Course, CV, Other
+- Adventures: Guide Cert, Operator Permit, Insurance, First Aid, TGCSA, Municipal Licence, Health & Safety, Safety Cert, Award, Other
+- Collectors: Auth Certificate, Provenance, Appraisal, Dealer Registration, Association Membership, Other
+- Cars: NATIS Papers, Dealer Registration, Roadworthy Certificate, Inspection Report, Service History, Finance Clearance, Other
+- Label placeholder text also updates per category (e.g. "NATIS RC1" for Cars, "FGASA Level 1 2025" for Adventures)
