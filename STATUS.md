@@ -1,11 +1,13 @@
-# MarketSquare — STATUS.md
-**Updated: Session 40 · 3 May 2026**
+# TrustSquare — STATUS.md
+**Updated: Session 43 · 4 May 2026**
 
 ---
 
 ## Live State
-- BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
-- Launch city: Pretoria, South Africa · 6 live listings (23 / 60 founding sellers target)
+- **Legal entity: Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Director: David Maurice Conradie · Registered 29/04/2026**
+- BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
+- Launch city: Pretoria, South Africa · **0 listings (clean slate — all test data wiped 04/05/2026)**
+- Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---

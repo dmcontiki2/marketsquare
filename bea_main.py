@@ -14,7 +14,7 @@ import io
 import logging
 from datetime import datetime, timezone
 
-app = FastAPI(title="MarketSquare BEA", version="1.3.0")
+app = FastAPI(title="TrustSquare BEA", version="1.3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -825,7 +825,7 @@ class IntroRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "MarketSquare BEA", "version": "1.3.0"}
+    return {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.0"}
 
 # ── LISTINGS (public read, protected write) ──────────────────
 
@@ -1965,7 +1965,7 @@ async def aa_coach(req: AACoachRequest):
             "• NQF6+ or professional designation → cumulative 20 pts\n"
             "• Professional body membership (IEASA, SAPOA, NAR) → 5 pts\n"
             "• Private seller declaration → 0 pts but visible label (no PPRA required for private sellers)\n"
-            "• Government ID verified by MarketSquare → 15 Universal pts\n"
+            "• Government ID verified by TrustSquare → 15 Universal pts\n"
             "• Verified referrals from buyers → up to 10 Universal pts\n"
             "\n"
             "COACHING INSTRUCTION FOR PROPERTY:\n"
@@ -2008,7 +2008,7 @@ async def aa_coach(req: AACoachRequest):
             "• Teaching/tutoring experience 2–5 yrs → 5 pts · 5+ yrs → 11 pts\n"
             "• Online platform proficiency declaration → 1 pt (online tutors: Zoom, Google Classroom, etc.)\n"
             "• Well-structured CV (verifiable dates, no gaps) → 2 pts\n"
-            "• Government ID verified by MarketSquare → 15 Universal pts\n"
+            "• Government ID verified by TrustSquare → 15 Universal pts\n"
             "• Verified referrals from students or parents → up to 10 Universal pts\n"
             "\n"
             "COACHING INSTRUCTION FOR TUTORS:\n"
@@ -2041,7 +2041,7 @@ async def aa_coach(req: AACoachRequest):
             "• Any NQF qualification or accredited short course → 8 pts\n"
             "• Years in service 2–4 yrs → 6 pts · 5+ yrs → 14 pts\n"
             "• Strong profile description (specific services, suburb, availability) → 5 pts\n"
-            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts (critical for Casuals)\n"
+            "For BOTH: Government ID verified by TrustSquare → 15 Universal pts (critical for Casuals)\n"
             "\n"
             "COACHING INSTRUCTION FOR SERVICES:\n"
             "1. Determine first whether the seller is Technical (qualified trade) or Casual (general/domestic services).\n"
@@ -2067,7 +2067,7 @@ async def aa_coach(req: AACoachRequest):
             "• Health & safety compliance certificate → 5 pts\n"
             "• Fire clearance certificate → 4 pts\n"
             "• AA Travel Award, TripAdvisor Travellers Choice, or Booking.com Preferred → 3 pts\n"
-            "For BOTH: Government ID verified by MarketSquare → 15 Universal pts\n"
+            "For BOTH: Government ID verified by TrustSquare → 15 Universal pts\n"
             "\n"
             "COACHING INSTRUCTION FOR ADVENTURES:\n"
             "1. Determine sub-type first: Experiences (guided activities) or Accommodation (B&B/guesthouse/hotel).\n"
@@ -2086,7 +2086,7 @@ async def aa_coach(req: AACoachRequest):
             "• Dealer / reseller registration → 6 pts — antique dealer, art gallery, coin dealer licence; displays 'Registered Dealer' label to buyers\n"
             "• Professional appraisal or valuation → 5 pts — from recognised appraiser\n"
             "• Collector association membership (SANA, Philatelic Foundation etc.) → 3 pts\n"
-            "• Government ID verified by MarketSquare → 15 Universal pts\n"
+            "• Government ID verified by TrustSquare → 15 Universal pts\n"
             "• Verified referrals → up to 10 Universal pts\n"
             "\n"
             "COACHING INSTRUCTION FOR COLLECTORS:\n"
@@ -2102,7 +2102,7 @@ async def aa_coach(req: AACoachRequest):
 
     # System prompt — returns structured JSON for inline field suggestions + Trust Score plan
     system_prompt = (
-        "You are the MarketSquare Advert Agent. "
+        "You are the TrustSquare Advert Agent. "
         "Respond with ONLY a valid JSON object — no markdown fences, no prose, no text outside the JSON.\n\n"
 
         "REQUIRED JSON SCHEMA:\n"
@@ -2367,7 +2367,7 @@ _STOP_WORDS = {
     "near", "around", "good", "great", "nice", "best",
 }
 
-# Common synonyms — symmetric expansion. Tuned to MarketSquare verticals.
+# Common synonyms — symmetric expansion. Tuned to TrustSquare verticals.
 # Keeping this small and conservative on purpose; semantic richness comes
 # from stemming + token overlap, not from a giant manually-curated list.
 _SYNONYMS = {
@@ -4257,7 +4257,7 @@ _TRUST_SIGNALS = {
     "universal.id_verified": {
         "name": "Government-issued ID verified",
         "points": 15, "max": 15,
-        "how_to_earn": "Upload your ID or passport — verified by MarketSquare.",
+        "how_to_earn": "Upload your ID or passport — verified by TrustSquare.",
         "evidence_required": True,
     },
     "universal.profile_complete": {
@@ -4356,7 +4356,7 @@ _CATEGORY_SIGNALS = {
         "category.tutors.bachelor":        {"name": "Bachelor's Degree (NQF7)", "points": 10, "how_to_earn": "Upload certificate (replaces diploma points).", "replaces": "category.tutors.cert_diploma"},
         "category.tutors.honours":         {"name": "Honours / Postgraduate (NQF8+)", "points": 14, "how_to_earn": "Upload certificate (replaces bachelor's points).", "replaces": "category.tutors.bachelor"},
         "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload cert or transcript specific to your subject. Examples: Maths/Science → Olympiad cert, IEB transcript; Music → UNISA/ABRSM grade cert; Languages → CELTA/TESOL; Coding → AWS/Google/Microsoft cert; Accounting → SAIPA/CIMA; Sport → ASA/SAFA coaching badge."},
-        "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV with verifiable teaching dates — reviewed by MarketSquare."},
+        "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV with verifiable teaching dates — reviewed by TrustSquare."},
         "category.tutors.exp_5plus":       {"name": "Teaching experience 5+ years", "points": 6, "how_to_earn": "Upload CV.", "additional_to": "category.tutors.exp_2_5"},
         "category.tutors.safeguarding":    {"name": "Safeguarding / child protection cert", "points": 3, "how_to_earn": "Upload safeguarding or child protection certificate. Examples: NSPCC (UK), Mandatory Reporter (AU/US), child protection training SA."},
         "category.tutors.online_ready":    {"name": "Online platform proficiency", "points": 1, "how_to_earn": "Declare platforms used: Zoom, Google Classroom, Microsoft Teams, etc. Applies to online tutors."},
@@ -4445,7 +4445,7 @@ _CATEGORY_SIGNALS = {
         "category.lm.id_uploaded":         {"name": "Government-issued ID uploaded",        "points": 2,  "how_to_earn": "Upload a clear photo of your SA ID, passport, or drivers licence.", "evidence_required": True},
         "category.lm.id_number_valid":     {"name": "ID / passport number entered & valid", "points": 2,  "how_to_earn": "Enter your SA ID number (13 digits) or passport number — format validated instantly.", "evidence_required": False},
         "category.lm.id_ai_verified":      {"name": "Identity AI-verified",                "points": 5,  "how_to_earn": "AI vision confirms your name and ID number match your uploaded document.", "evidence_required": True},
-        "category.lm.id_admin_verified":   {"name": "Identity manually confirmed",          "points": 5,  "how_to_earn": "MarketSquare has manually confirmed your identity documents.", "evidence_required": True},
+        "category.lm.id_admin_verified":   {"name": "Identity manually confirmed",          "points": 5,  "how_to_earn": "TrustSquare has manually confirmed your identity documents.", "evidence_required": True},
         "category.lm.cert_name_verified":  {"name": "Certificate name matches ID",          "points": 2,  "how_to_earn": "Name on your uploaded certificate matches your verified ID name.", "evidence_required": True},
         # ── Experience (self-declared, modest weight) ─────────────────────
         "category.lm.experience_1yr":      {"name": "1+ year of relevant experience",       "points": 2,  "how_to_earn": "Upload a document describing your experience or a reference letter.", "evidence_required": True},
@@ -5062,7 +5062,7 @@ async def trust_score_guidance(req: AIGuidanceRequest):
     )
 
     system_prompt = (
-        "You are a friendly Trust Score coach for MarketSquare, a South African marketplace. "
+        "You are a friendly Trust Score coach for TrustSquare, a South African marketplace. "
         "Help sellers understand exactly what evidence to upload to reach Trust Score 50 "
         "('Established' tier). Be warm, direct, and specific to their category. "
         'Reply ONLY with a valid JSON object — no markdown, no preamble. '
@@ -5137,7 +5137,7 @@ def _build_local_guidance(category: str, all_missing: list = None) -> list:
         cat_sigs = _CATEGORY_SIGNALS.get(category, {})
         all_missing = [
             {"name": "Government-issued ID verified", "points": 15,
-             "how": "Upload your ID or passport — verified by MarketSquare."},
+             "how": "Upload your ID or passport — verified by TrustSquare."},
             {"name": "Complete profile", "points": 5,
              "how": "Bio, suburb, listing, and category description all set."},
         ] + sorted(
@@ -5205,7 +5205,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest):
     )
 
     system_prompt = (
-        "You are a warm, encouraging Trust Score coach for MarketSquare, a South African marketplace. "
+        "You are a warm, encouraging Trust Score coach for TrustSquare, a South African marketplace. "
         "Write exactly 2 sentences: sentence 1 confirms what was just uploaded and what it will add "
         "to the Trust Score once verified. Sentence 2 gives ONE specific next-step upload suggestion. "
         "Be concrete, warm, under 45 words total. No bullet points. No markdown."

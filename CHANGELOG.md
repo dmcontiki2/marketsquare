@@ -1287,3 +1287,11 @@ Applied the full TrustScore_Signal_Audit.xlsx recommendations across all categor
 - Collectors: Auth Certificate, Provenance, Appraisal, Dealer Registration, Association Membership, Other
 - Cars: NATIS Papers, Dealer Registration, Roadworthy Certificate, Inspection Report, Service History, Finance Clearance, Other
 - Label placeholder text also updates per category (e.g. "NATIS RC1" for Cars, "FGASA Level 1 2025" for Adventures)
+
+---
+
+## Session 43 · 4 May 2026
+
+### Part 1 — Legal Entity Registration & TrustSquare Rebrand
+
+Trustsquare (Pty) Ltd was formally registered with CIPC on 29/04/2026 (Reg 2026/340128/07, Director: David Maurice Conradie). The platform has been fully rebranded from MarketSquare to TrustSquare across all user-facing strings in marketsquare.html (buyer app), marketsquare_admin.html (admin app), and bea_main.py (BEA). Legal entity name "Trustsquare (Pty) Ltd" and registration number "2026/340128/07" added to the embedded EULA header and waterline. BEA health endpoint now returns "TrustSquare BEA v1.3.0". All test listings and users (51 listings, 5 users, all associated records) wiped from marketsquare.db for a clean production start. Geo data (countries, regions, cities, suburbs) preserved. All three files deployed to Hetzner and BEA restarted successfully.

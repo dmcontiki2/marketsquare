@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MarketSquare · Admin</title>
+<title>TrustSquare · Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -739,7 +739,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
           <input type="url" id="photo-url-input" placeholder="https://example.com/photo.jpg">
           <button onclick="importPhotoUrl()">Import</button>
         </div>
-        <div class="hint">⚠️ Only use photos you own or have rights to use. Imported photos are compressed and stored on MarketSquare servers — original URL is not retained.</div>
+        <div class="hint">⚠️ Only use photos you own or have rights to use. Imported photos are compressed and stored on TrustSquare servers — original URL is not retained.</div>
       </div>
 
       <!-- TITLE + PRICE -->
@@ -1077,7 +1077,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 <!-- ══ VIEW: LISTINGS ════════════════════════════════════ -->
 <div id="view-listings" class="view">
   <div class="view-header">My Listings</div>
-  <div class="view-sub">All live listings on MarketSquare · Pretoria</div>
+  <div class="view-sub">All live listings on TrustSquare · Pretoria</div>
   <div class="filter-bar">
     <button class="filter-chip active" id="fc-all" onclick="setListingsFilter('')">All</button>
     <button class="filter-chip" id="fc-Property" onclick="setListingsFilter('Property')">🏡 Property</button>
@@ -2155,11 +2155,11 @@ function renderDeleteSection() {
           🗑 Delete
         </button>
       </div>`).join('')}
-    <div class="hint" style="margin-top:2px;">Deleting a listing removes it from MarketSquare immediately. This cannot be undone.</div>`;
+    <div class="hint" style="margin-top:2px;">Deleting a listing removes it from TrustSquare immediately. This cannot be undone.</div>`;
 }
 
 function confirmDeleteListing(beaId, title) {
-  if (!confirm(`Delete "${title}"?\n\nThis will remove the listing from MarketSquare immediately. This cannot be undone.`)) return;
+  if (!confirm(`Delete "${title}"?\n\nThis will remove the listing from TrustSquare immediately. This cannot be undone.`)) return;
   deleteListing(beaId, title);
 }
 
@@ -2176,7 +2176,7 @@ async function deleteListing(beaId, title) {
     const idx = listingQueue.findIndex(l => l.beaId === beaId);
     if (idx !== -1) listingQueue.splice(idx, 1);
 
-    showToast(`✓ "${title}" deleted from MarketSquare`);
+    showToast(`✓ "${title}" deleted from TrustSquare`);
     renderDeleteSection();
     buildReviewScreen();
   } catch(e) {
@@ -2189,7 +2189,7 @@ async function deleteListingById() {
   const idEl = document.getElementById('del-listing-id');
   const id = parseInt(idEl?.value);
   if (!id || isNaN(id)) { showToast('Please enter a valid listing ID'); return; }
-  if (!confirm(`Delete listing ID ${id} from MarketSquare?\n\nThis cannot be undone.`)) return;
+  if (!confirm(`Delete listing ID ${id} from TrustSquare?\n\nThis cannot be undone.`)) return;
   showToast('Deleting...');
   try {
     const resp = await fetch(BEA_URL + '/listings/' + id, {
@@ -2320,7 +2320,7 @@ function renderListingsManager() {
 }
 
 function confirmDeleteLM(id, title) {
-  if (!confirm('Delete "' + title + '"?\n\nID: ' + id + '\n\nRemoves from MarketSquare immediately. Cannot be undone.')) return;
+  if (!confirm('Delete "' + title + '"?\n\nID: ' + id + '\n\nRemoves from TrustSquare immediately. Cannot be undone.')) return;
   deleteLM(id, title);
 }
 
