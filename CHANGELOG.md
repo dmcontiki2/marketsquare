@@ -1247,3 +1247,7 @@ Cost model impact: AI Coach cost per session ($0.01 modelled) is ~4× higher tha
 
 ---
 *Session 40 closed. All changes deployed to trustsquare.co. Next: Session 41 — category testing across Tutors/Services/Collectors/Cars/Local Market.*
+
+## Session 42 — Part 3: Real EULA embedded in onboarding Phase 3
+
+Replaced the 7-point placeholder seller terms in `screen-seller-onboard` Phase 3 with the full content of `MarketSquare_EULA_v1_0_Draft.docx` (v1.0, 18 April 2026, SA governing law). The `.sob-eula-box` scrollable panel now renders all 12 substantive sections: Definitions, Platform Scope & Acceptance, Anonymity & Identity Verification, Listings & Content, Tuppence & Introductions (including all introduction models and the ECT Act §44 cooling-off right), Fees & Subscriptions (with confirmed tier spec: Free 2/30d, Standard 20/60d/$5, International 40/90d/$15), Professional Credentials, User-Uploaded Content & IP (including no-photo-stock commitment and IP indemnity), Privacy & POPIA (consent, data retention, POPIA rights, Information Regulator contact), Disputes & Liability (60-day negotiation, SAAF arbitration, liability cap), Trust Score mechanics and penalties, and Governing Law & Termination. The document header notes it is a draft for legal review. Two checkbox consent fields below the scroll box remain unchanged. JS check passed; deployed to trustsquare.co.
