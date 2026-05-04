@@ -1,3 +1,11 @@
+## Session 41 (continued) — Seller onboarding funnel: magic link landing flow
+
+**Task: Seller onboarding funnel in marketsquare.html**
+Built the complete magic link landing flow as `screen-seller-onboard` — a four-phase screen that intercepts the magic link URL (`?magic=1`) and routes the seller through onboarding before any listing goes live.
+
+Phase 1 (Draft preview): calls `GET /listings/mine?email=` to find all draft listings for the seller, renders them as private cards with a "Draft — not yet live" badge. No listing IDs in the URL — seller email from the magic link is the only lookup key (Option B). Phase 2 (Tier picker): Free / Standard / International selection with visual feature comparison, Free pre-selected by default, no card required. Phase 3 (EULA): inline seller terms with two acceptance checkboxes — terms and content standards — both required before Go live is enabled. Phase 4 (Success): calls `POST /users` to register the seller (idempotent), then `PUT /listings/{id}/publish` for each draft, stamps `published_at`, transitions listing to live. Stores email in localStorage for returning seller recognition, refreshes buyer feed, navigates to seller dashboard.
+
+End-to-end verified via API: draft listing (ID 77) created, confirmed invisible to public feed, published via the endpoint, confirmed live in public feed, cleaned up. JS syntax checked with node --check before deploy. Deployed to trustsquare.co.
 ## Session 41 — Seller onboarding flow: draft-first publish gate
 
 **Task: Draft-first listing flow — admin app + BEA**

@@ -26,13 +26,14 @@
 
 ## Next Session — Session 42
 
-### Priority: Seller onboarding funnel in marketsquare.html
-Build the magic link landing flow:
-1. **Private listing preview** — seller sees their draft listing exactly as buyers will, with a "Not live yet" banner
-2. **Subscription tier picker** — Free / Starter R59/mo / Premium R149/mo with visual reach comparison
-3. **EULA screen** — inline acceptance, logged to BEA
-4. **Registration screen** — name confirm, ID upload (defer bank details to first intro acceptance)
-5. **Go live** — call `PUT /listings/{id}/publish`, show confirmation + AI Coach offer with free session
+### Priority: Cross-category testing + registration screen
+1. **Registration screen** — after go-live, seller completes profile: ID upload, phone. Bank details deferred to first intro acceptance.
+2. **Tutors** — AI note fires on subject fill, trust score correct, chips show in detail view
+3. **Services** — AI note fires on trade_type fill, trust score correct, chips show
+4. **Collectors** — amber chips in detail view, trust score correct
+5. **Cars** — blue chips, private seller no PPRA tip, trust score correct
+6. **Local Market** — second LM listing with photo → crossfade animates on home tile
+7. **Photo captions** — publish with caption, verify frosted-glass overlay in detail view
 
 ### Backlog
 - Draft save/resume — save at B7, exit, re-enter, confirm resume banner

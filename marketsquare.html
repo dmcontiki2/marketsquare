@@ -34,10 +34,7 @@
      ■ DATA LAYER
        Edit listings, sellers and prospects here only.
        Do not touch anything below the closing </script> tag.
-     ═════════════════════════ -->
-
-</body>
-</html>═══════════════════════════════════ -->
+     ════════════════════════════════════════════════════════════ -->
 <script id="ms-data">
 
 // ── CATEGORY CONFIG ────────────────────────────────────────
@@ -1632,6 +1629,30 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .cv-sticky{position:fixed;bottom:65px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);padding:12px 20px max(env(safe-area-inset-bottom),14px);border-top:1px solid var(--border);}
 .cv-cta{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--t);}
 .cv-cta:active{transform:scale(.98);}
+/* ── Seller onboarding funnel (magic link flow) ── */
+#screen-seller-onboard{background:var(--navy);min-height:100vh;}
+.sob-phase{display:none;flex-direction:column;min-height:100vh;}
+.sob-phase.sob-active{display:flex;}
+.sob-hdr{padding:20px 20px 0;display:flex;align-items:center;gap:12px;}
+.sob-step-pill{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:4px;}
+.sob-hdr h1{font-size:20px;font-weight:800;color:#fff;margin:0;}
+.sob-body{flex:1;padding:20px;}
+.sob-footer{padding:16px 20px 32px;display:flex;gap:10px;}
+.sob-btn-bk{flex:0 0 auto;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px 18px;font-family:"Syne",sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.sob-btn-next{flex:1;background:var(--accent-bright,#2563eb);color:#fff;border:none;border-radius:50px;padding:14px;font-family:"Syne",sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.sob-btn-next:disabled{opacity:.4;cursor:not-allowed;}
+.sob-draft-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.sob-draft-card .sdc-cat{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(200,135,58,.8);margin-bottom:4px;}
+.sob-draft-card .sdc-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;}
+.sob-draft-card .sdc-price{font-size:13px;color:rgba(255,255,255,.55);}
+.sob-draft-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:2px 7px;margin-top:6px;}
+.sob-tier-card{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.sob-tier-card.selected{border-color:#fbbf24;background:rgba(251,191,36,.08);}
+.sob-tier-name{font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;}
+.sob-tier-price{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:10px;}
+.sob-tier-feat{font-size:12px;color:rgba(255,255,255,.65);line-height:1.8;}
+.sob-tier-feat span{display:block;}
+.sob-eula-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;max-height:220px;overflow-y:auto;margin-bottom:16px;}
 #screen-onboard{background:var(--navy);min-height:100vh;}
 .ob-page{min-height:100vh;display:flex;flex-direction:column;}
 .ob-hero{padding:60px 24px 32px;flex:1;}
@@ -2897,12 +2918,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <style>
   .wl-trust-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;}
   .wl-trust-btn.active{background:var(--accent-bright);color:#fff;border-color:var(--accent-bright);}
-  .wf-card{flex:0 0 auto;width:170px;margin-right:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;position:relative;}
+  .wf-card{flex:0 0 auto;width:150px;margin-right:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column;min-height:160px;}
   .wf-card:hover{border-color:var(--accent-bright);}
-  .wf-card-img{width:100%;height:120px;object-fit:cover;background:var(--surface-2);}
-  .wf-card-body{padding:8px 10px 10px;}
-  .wf-card-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-  .wf-card-meta{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;align-items:center;gap:4px;}
+  .wf-card-img{width:100%;height:88px;object-fit:cover;background:var(--surface-2);flex-shrink:0;}
+  .wf-card-body{padding:6px 9px 4px;flex:1;}
+  .wf-card-title{font-size:11.5px;font-weight:700;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .wf-card-meta{font-size:9.5px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .wf-card-feat{position:absolute;top:6px;left:6px;background:rgba(255,193,7,.95);color:#1a1a2e;font-size:10px;font-weight:800;padding:3px 7px;border-radius:50px;letter-spacing:.5px;}
   .wf-card-trust{position:absolute;top:6px;right:6px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px;}
   .wf-trust-blue{background:#3b82f6;color:#fff;}
@@ -3185,6 +3206,152 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 </div>
 
 <!-- SELLER ONBOARDING -->
+<!-- ═══════════════════════════════════════════════════════
+     SELLER ONBOARDING FUNNEL — magic link flow
+     Triggered when magic=1 in URL. Seller previews their draft
+     listing(s), picks a tier, accepts EULA, and goes live.
+     goTo('seller-onboard') → sobInit()
+  ═══════════════════════════════════════════════════════ -->
+<div id="screen-seller-onboard" class="screen">
+
+  <!-- Phase 1: Draft preview -->
+  <div id="sob-p1" class="sob-phase sob-active">
+    <div class="sob-hdr">
+      <div>
+        <div class="sob-step-pill">Step 1 of 3</div>
+        <h1>Your listing preview</h1>
+      </div>
+    </div>
+    <div class="sob-body">
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:18px;font-weight:400;">This is exactly what buyers will see once you go live. Nothing is public yet.</p>
+      <div id="sob-draft-list"><div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.3);font-size:13px;">Loading your listing…</div></div>
+      <div id="sob-p1-err" style="display:none;color:#fca5a5;font-size:13px;margin-top:12px;text-align:center;"></div>
+    </div>
+    <div class="sob-footer">
+      <button class="sob-btn-bk" onclick="goTo('home')">← Exit</button>
+      <button class="sob-btn-next" id="sob-p1-next" onclick="sobGoPhase(2)">Looks good →</button>
+    </div>
+  </div>
+
+  <!-- Phase 2: Subscription tier picker -->
+  <div id="sob-p2" class="sob-phase">
+    <div class="sob-hdr">
+      <div>
+        <div class="sob-step-pill">Step 2 of 3</div>
+        <h1>Choose your plan</h1>
+      </div>
+    </div>
+    <div class="sob-body">
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:18px;font-weight:400;">Start free — no card required. Upgrade any time to reach more buyers.</p>
+
+      <div class="sob-tier-card selected" id="sob-tier-free" onclick="sobSelTier('free')">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="sob-tier-name">Free</div>
+          <div style="font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:2px 8px;">Selected</div>
+        </div>
+        <div class="sob-tier-price">R0 / month · No credit card needed</div>
+        <div class="sob-tier-feat">
+          <span>✓ 1 active listing</span>
+          <span>✓ Local city visibility</span>
+          <span>✓ Anonymous seller CV</span>
+          <span>✓ 3 free AI coaching sessions</span>
+        </div>
+      </div>
+
+      <div class="sob-tier-card" id="sob-tier-starter" onclick="sobSelTier('starter')">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="sob-tier-name">Standard</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">≈ R90 / month</div>
+        </div>
+        <div class="sob-tier-price">$5 / month · Billed monthly</div>
+        <div class="sob-tier-feat">
+          <span>✓ 5 active listings</span>
+          <span>✓ Country-wide visibility</span>
+          <span>✓ Buyer search alerts</span>
+          <span>✓ Priority position in city search</span>
+          <span>✓ 180-day listing duration</span>
+        </div>
+      </div>
+
+      <div class="sob-tier-card" id="sob-tier-premium" onclick="sobSelTier('premium')">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="sob-tier-name">International</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">≈ R270 / month</div>
+        </div>
+        <div class="sob-tier-price">$15 / month · Billed monthly</div>
+        <div class="sob-tier-feat">
+          <span>✓ Unlimited listings</span>
+          <span>✓ International visibility — all cities</span>
+          <span>✓ All Standard features</span>
+          <span>✓ 365-day listing duration</span>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.3);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence intro fees apply on all plans.</div>
+    </div>
+    <div class="sob-footer">
+      <button class="sob-btn-bk" onclick="sobGoPhase(1)">← Back</button>
+      <button class="sob-btn-next" onclick="sobGoPhase(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Phase 3: EULA + go live -->
+  <div id="sob-p3" class="sob-phase">
+    <div class="sob-hdr">
+      <div>
+        <div class="sob-step-pill">Step 3 of 3</div>
+        <h1>Almost live</h1>
+      </div>
+    </div>
+    <div class="sob-body">
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px;font-weight:400;">Review the terms, accept, and your listing goes live. You stay anonymous until both parties accept an introduction.</p>
+
+      <div class="sob-eula-box">
+        <div style="font-weight:700;color:rgba(255,255,255,.8);margin-bottom:8px;">MarketSquare Seller Terms</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">1. Anonymity.</strong> Your name and contact details are never shown to buyers until both parties accept an introduction request.</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">2. No commission.</strong> MarketSquare earns from Tuppence introduction fees only. You keep 100% of your transaction value.</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">3. Introduction response.</strong> You must respond to introduction requests within 48 hours. Ignored requests incur a 1T penalty (Property) or a −3 Trust Score deduction (Tutors / Services).</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">4. Accurate listings.</strong> All listing information must be accurate and current. Misleading listings will be removed and your account may be suspended.</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">5. Content standards.</strong> No inappropriate, offensive, or illegal content. Listings in breach are removed permanently without refund of any fees paid.</div>
+        <div style="margin-bottom:8px;"><strong style="color:rgba(255,255,255,.7);">6. Trust Score.</strong> Your public Trust Score reflects verification, credentials, and platform track record. Scores are updated automatically as you earn credentials and complete introductions.</div>
+        <div><strong style="color:rgba(255,255,255,.7);">7. Updates.</strong> These terms may be updated with 14 days in-app notice. Continued use after the notice period constitutes acceptance.</div>
+      </div>
+
+      <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:12px;">
+        <input type="checkbox" id="sob-eula-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
+        <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I have read and accept the MarketSquare Seller Terms, and confirm all listing information is accurate.</span>
+      </label>
+      <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+        <input type="checkbox" id="sob-content-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
+        <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I understand that listings with inappropriate content will be permanently removed.</span>
+      </label>
+      <div id="sob-p3-err" style="display:none;color:#fca5a5;font-size:12px;margin-top:12px;"></div>
+    </div>
+    <div class="sob-footer">
+      <button class="sob-btn-bk" onclick="sobGoPhase(2)">← Back</button>
+      <button class="sob-btn-next" id="sob-p3-next" onclick="sobGoLive()" disabled>Go live →</button>
+    </div>
+  </div>
+
+  <!-- Phase 4: Success -->
+  <div id="sob-p4" class="sob-phase">
+    <div style="padding:60px 24px 40px;text-align:center;flex:1;">
+      <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+      <h2 id="sob-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;">Your listing is now live on MarketSquare.</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will arrive by email. You have 3 free AI sessions to enhance your listing whenever you're ready.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Introduction requests go to your email</div><div style="font-size:12px;color:rgba(255,255,255,.45);">No commission — buyers connect directly</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">3 free AI sessions credited</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
+      </div>
+      <button onclick="sobDone()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
+      <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
+    </div>
+  </div>
+
+</div>
+
 <div id="screen-onboard" class="screen">
   <div class="ob-page">
     <div class="ob-hero">
@@ -3628,8 +3795,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <!-- B-SUCCESS -->
   <div id="sb-success" class="pub-phase" style="display:none;min-height:100vh;background:var(--navy);">
     <div style="padding:60px 24px 40px;text-align:center;">
-      <div style="font-size:52px;margin-bottom:16px;">🎉</div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:16px;">You're live</div>
       <h2 id="sb-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
       <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your dashboard. Your Trust Score is building.</p>
       <button onclick="goTo('dashboard')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
@@ -4270,13 +4436,18 @@ async function loadLiveListings(retryCount) {
         // Extract multi-photo URLs encoded as [photos:url1|url2|...] prefix
         let desc = l.description || '';
         let photos = [];
+        let photoData = []; // [{url, caption}]
         const photoMatch = desc.match(/^\[photos:([^\]]+)\]\n?/);
         if (photoMatch) {
-          photos = photoMatch[1].split('|').filter(Boolean);
+          photoData = photoMatch[1].split('|').filter(Boolean).map(entry => {
+            const sep = entry.indexOf('::');
+            return sep > -1 ? {url: entry.slice(0, sep), caption: entry.slice(sep+2)} : {url: entry, caption: ''};
+          });
+          photos = photoData.map(p => p.url);
           desc = desc.replace(photoMatch[0], '');
         }
-        if (l.medium_url && !photos.length) photos = [l.medium_url];
-        else if (l.medium_url && photos.length && photos[0] !== l.medium_url) photos.unshift(l.medium_url);
+        if (l.medium_url && !photos.length) { photos = [l.medium_url]; photoData = [{url: l.medium_url, caption: ''}]; }
+        else if (l.medium_url && photos.length && photos[0] !== l.medium_url) { photos.unshift(l.medium_url); photoData.unshift({url: l.medium_url, caption: ''}); }
         // Property-specific fields — prefer dedicated DB columns, fall back to description parsing
         const knownPropTypes = ['Apartment / Flat','Bachelor / Studio','Granny Flat','Land / Plot','Smallholding','Townhouse','Penthouse','Cluster','Simplex','Duplex','Commercial','Industrial','Farm','House','Other'];
         let propType='', beds=0, baths=0, garages=0, listingType='', furnished='', pets='', features=[];
@@ -4310,6 +4481,7 @@ async function loadLiveListings(retryCount) {
           desc: desc,
           photo: l.thumb_url || (photos[0] || null),
           photos: photos,
+          photoData: photoData,
           paused: false,
           queueCount: 0,
           sellerIdx: null,
@@ -4591,8 +4763,9 @@ window.addEventListener('DOMContentLoaded',()=>{
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
-    // Route directly to onboard screen with pre-filled data
-    goTo('onboard');
+    // Route to seller onboarding funnel (draft preview → tier → EULA → live)
+    goTo('seller-onboard');
+    sobInit();
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
@@ -4712,7 +4885,7 @@ function trustTier(s){
   if(s<90)return{label:'Trusted',c:'var(--green)',bg:'var(--green-bg)'};
   return{label:'Highly Trusted',c:'var(--gold)',bg:'var(--gold-bg)'};
 }
-function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="background:${t.bg};color:${t.c};">● ${t.label} · ${s}</span>`;}
+function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="background:${t.bg};color:${t.c};padding:2px 7px;font-size:10px;border-radius:10px;font-weight:700;">★ ${s}</span>`;}
 
 function updateTuppenceUI(){
   const navBadge = document.getElementById('nav-tn-badge'); if(navBadge) navBadge.textContent=tuppence;
@@ -5778,14 +5951,17 @@ function renderFeatured(){
       :(_fCfg.catPhoto
           ?`<img src="${_fCfg.catPhoto}" alt="${l.cat}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;\'>${_fCfg.icon}</div>')">`
           :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${_fCfg.icon}</div>`);
-    return`<div class="hcard" onclick="openDetail('${l.id}')">
-      <div style="height:80px;overflow:hidden;background:${catCfg(l).bg};">${imgHtml}</div>
-      <div class="cbody" style="padding:9px 11px 12px;">
-        <div class="ccat">${l.cat}</div><div class="ctitle">${l.title}</div>
-        <div class="cloc">📍 ${l.area}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-          <div class="cprice">${l.price?(formatZAR(l.price)||l.price):'<span class="neg">Negotiable</span>'}<span class="per"> ${l.per}</span></div>
-          ${l.trust?tbadge(l.trust):''}
+    const featTrust=l.trust?`<span style="position:absolute;top:6px;right:6px;background:${trustTier(l.trust).bg};color:${trustTier(l.trust).c};font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;pointer-events:none;">★ ${l.trust}</span>`:'';
+    return`<div class="hcard" onclick="openDetail('${l.id}')" style="display:flex;flex-direction:column;min-height:160px;">
+      <div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:${catCfg(l).bg};">${imgHtml}${featTrust}</div>
+      <div style="padding:6px 9px 4px;flex:1;">
+        <div class="ccat" style="font-size:9px;margin-bottom:2px;">${l.cat}</div>
+        <div class="ctitle" style="font-size:11.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.title}</div>
+      </div>
+      <div style="padding:0 9px 8px;display:flex;flex-direction:column;gap:2px;">
+        <div class="cloc" style="font-size:9.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${l.area}</div>
+        <div style="display:flex;align-items:center;">
+          <div class="cprice" style="font-size:11px;white-space:nowrap;">${l.price?(formatZAR(l.price)||l.price):'<span class="neg">POA</span>'}<span class="per" style="font-size:9px;"> ${l.per}</span></div>
         </div>
       </div>
     </div>`;
@@ -5970,16 +6146,21 @@ function openDetail(id){
   const _introKey = `${l.sellerIdx==null?0:l.sellerIdx}-${l.id}`;
   const _introAccepted = acceptedIntros.has(_introKey);
 
-  // Build photo strip — supports 1..N photos with dot indicators
+  // Build photo strip — supports 1..N photos with dot indicators; uses photoData for captions
   const photos = (l.photos && l.photos.length) ? l.photos : (l.photo ? [l.photo] : []);
+  const photoData = (l.photoData && l.photoData.length) ? l.photoData : photos.map(u=>({url:u,caption:''}));
   // Store photos globally keyed by listing id so lightbox onclick avoids JSON-in-attribute issues
   _listingPhotosCache[id] = photos;
   const stripSlides = photos.length
-    ? photos.map((url,pi) =>
-        `<div class="photo-strip-slide" style="cursor:zoom-in;" onclick="openLightboxById('${id}',${pi})">
-          <img src="${url}" alt="${l.title}" loading="lazy" style="pointer-events:none;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? photoData.map((pd,pi) => {
+        const cap = pd.caption||'';
+        const capHtml = cap ? `<div style="position:absolute;bottom:8px;right:8px;background:rgba(10,10,20,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;color:#fff;pointer-events:none;line-height:1.45;max-width:72%;text-align:right;letter-spacing:.15px;box-shadow:0 2px 8px rgba(0,0,0,.35);font-family:'Inter',sans-serif;">${cap.replace(/</g,'&lt;')}</div>` : '';
+        return `<div class="photo-strip-slide" style="cursor:zoom-in;position:relative;" onclick="openLightboxById('${id}',${pi})">
+          <img src="${pd.url}" alt="${l.title}" loading="lazy" style="pointer-events:none;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="emoji-fallback" style="display:none;background:${catCfg(l).bg};pointer-events:none;">${catCfg(l).icon}</div>
-        </div>`).join('')
+          ${capHtml}
+        </div>`;
+      }).join('')
     : `<div class="photo-strip-slide"><div class="emoji-fallback" style="background:${catCfg(l).bg}">${catCfg(l).icon}</div></div>`;
   const dotsHtml = photos.length > 1
     ? `<div class="photo-strip-dots">${photos.map((_,i)=>`<div class="psd${i===0?' active':''}" id="psd-${id}-${i}"></div>`).join('')}</div>`
@@ -6082,6 +6263,22 @@ function openDetail(id){
         ${l.garages    ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🚗 ${l.garages} garage${l.garages>1?'s':''}</span>` : ''}
         ${l.floor_area ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📐 ${l.floor_area} m² floor</span>` : ''}
         ${l.erf_size   ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🌳 ${l.erf_size} m² erf</span>` : ''}
+      </div>` : ''}
+      ${l.cat==='LocalMarket' && (l.area||l.suburb) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <span style="background:#faf5ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🛒 Local Market</span>
+        ${(l.suburb||l.area) ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
+      </div>` : ''}
+      ${l.cat==='Collectors' && l.desc ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🏺 Collectors item</span>
+        ${l.area||l.suburb ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
+      </div>` : ''}
+      ${l.cat==='Cars' && (l.prop_type||l.area||l.suburb) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🚗 Vehicle</span>
+        ${l.prop_type ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">${l.prop_type}</span>` : ''}
+        ${l.area||l.suburb ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
       </div>` : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
@@ -6717,6 +6914,175 @@ async function paDoPublish(){
 }
 
 // ══════════════════════════════════════════════════════════
+// SELLER ONBOARDING FUNNEL — magic link flow
+// sobInit() called immediately after goTo('seller-onboard')
+// State: sobState holds email, drafts[], selectedTier
+// ══════════════════════════════════════════════════════════
+
+let sobState = {
+  email: '',
+  name: '',
+  cat: '',
+  city: '',
+  drafts: [],          // [{id, title, price, category}] from GET /listings/mine
+  selectedTier: 'free' // 'free' | 'starter' | 'premium'
+};
+
+function sobGoPhase(n) {
+  document.querySelectorAll('.sob-phase').forEach(el => el.classList.remove('sob-active'));
+  const phase = document.getElementById('sob-p' + n);
+  if (phase) phase.classList.add('sob-active');
+  window.scrollTo(0, 0);
+}
+
+function sobSelTier(tier) {
+  sobState.selectedTier = tier;
+  ['free','starter','premium'].forEach(t => {
+    const card = document.getElementById('sob-tier-' + t);
+    if (!card) return;
+    card.classList.toggle('selected', t === tier);
+    // Update selected badge visibility
+    const badge = card.querySelector('[style*="Selected"]');
+    if (badge) badge.style.display = t === tier ? '' : 'none';
+  });
+}
+
+function sobCheckEula() {
+  const eula = document.getElementById('sob-eula-chk');
+  const content = document.getElementById('sob-content-chk');
+  const btn = document.getElementById('sob-p3-next');
+  if (btn) btn.disabled = !(eula && eula.checked && content && content.checked);
+}
+
+async function sobInit() {
+  // Read magic link state populated by the URL parser
+  sobState.email = magicLink.email || '';
+  sobState.name  = magicLink.name  || '';
+  sobState.cat   = magicLink.cat   || '';
+  sobState.city  = magicLink.area  || activeCity.name || '';
+  sobState.drafts = [];
+  sobState.selectedTier = 'free';
+
+  // Reset to phase 1
+  sobGoPhase(1);
+
+  // Reset tier selection UI
+  sobSelTier('free');
+
+  // Reset EULA checkboxes
+  ['sob-eula-chk','sob-content-chk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  sobCheckEula();
+
+  const listEl = document.getElementById('sob-draft-list');
+  const errEl  = document.getElementById('sob-p1-err');
+  if (errEl) errEl.style.display = 'none';
+
+  if (!sobState.email) {
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#fca5a5;font-size:13px;">No seller email found — please use the link sent to you by MarketSquare.</div>';
+    return;
+  }
+
+  // Fetch this seller's listings (drafts and live)
+  try {
+    const res = await fetch(BEA_URL + '/listings/mine?email=' + encodeURIComponent(sobState.email));
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const all = await res.json();
+    // Show only draft listings (listing_status = 'draft' or null published_at)
+    sobState.drafts = all.filter(l => l.listing_status === 'draft' || !l.published_at);
+  } catch(e) {
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#fca5a5;font-size:13px;">Could not load your listing — please check your connection and try again.</div>';
+    return;
+  }
+
+  if (!sobState.drafts.length) {
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.4);font-size:13px;">No draft listings found for this account.<br>Please contact MarketSquare support.</div>';
+    return;
+  }
+
+  // Render draft cards
+  if (listEl) {
+    listEl.innerHTML = sobState.drafts.map(l => `
+      <div class="sob-draft-card">
+        <div class="sdc-cat">${l.category || ''}</div>
+        <div class="sdc-title">${l.title || 'Untitled listing'}</div>
+        <div class="sdc-price">${l.price ? 'R ' + l.price : 'Price on request'} · ${l.suburb || l.city || sobState.city}</div>
+        <div class="sob-draft-badge">⏳ Draft — not yet live</div>
+      </div>`).join('');
+  }
+}
+
+async function sobGoLive() {
+  const btn = document.getElementById('sob-p3-next');
+  const errEl = document.getElementById('sob-p3-err');
+  if (errEl) errEl.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = 'Going live…'; }
+
+  const email = sobState.email;
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const draft of sobState.drafts) {
+    try {
+      // 1. Register seller account (idempotent — BEA ignores duplicate emails)
+      await fetch(BEA_URL + '/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+        body: JSON.stringify({ email, name: sobState.name, ai_sessions: 3 })
+      }).catch(() => {});
+
+      // 2. Publish the draft listing
+      const res = await fetch(
+        BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email),
+        { method: 'PUT', headers: { 'X-Api-Key': API_KEY } }
+      );
+      if (!res.ok) throw new Error('API error ' + res.status);
+      successCount++;
+    } catch(e) {
+      console.error('sobGoLive: failed for listing', draft.id, e);
+      failCount++;
+    }
+  }
+
+  if (successCount === 0) {
+    if (errEl) { errEl.textContent = 'Could not go live — please check your connection and try again.'; errEl.style.display = 'block'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Go live →'; }
+    return;
+  }
+
+  // Store email so returning seller flows work normally from here
+  localStorage.setItem('ms_aa_email', email);
+  localStorage.setItem('ms_aa_name', sobState.name);
+
+  // Update success title
+  const titleEl = document.getElementById('sob-success-title');
+  if (titleEl) {
+    const count = successCount;
+    const first = sobState.drafts[0];
+    titleEl.textContent = count === 1
+      ? `"${first.title}" is now live on MarketSquare.`
+      : `${count} listings are now live on MarketSquare.`;
+  }
+
+  sobGoPhase(4);
+  showToast("🎉 You're live on MarketSquare!");
+  loadLiveListings(); // refresh buyer feed
+}
+
+function sobDone() {
+  // Navigate to dashboard as a recognised seller
+  const email = sobState.email;
+  if (email) {
+    localStorage.setItem('ms_aa_email', email);
+  }
+  goTo('dashboard');
+  // Trigger dashboard load if the function exists
+  if (typeof loadDashboard === 'function') loadDashboard();
+}
+
+// ══════════════════════════════════════════════════════════
 // PATH B — RETURNING SELLER (Full AI-guided flow, B1–B8)
 // Session 38 · SELL_FLOW.md v3.0
 // ══════════════════════════════════════════════════════════
@@ -7024,10 +7390,8 @@ function sbRenderB3(){
         oninput="sbSaveField('title',this.value)" style="font-size:16px;"></div>`;
 
   sbCheckB3();
-  // Trigger AI market note after a short delay
-  if(sbState.fields['suburb']||sbState.fields['subjects']||sbState.fields['trade_type']){
-    sbTriggerMarketNote();
-  }
+  // Always show AI note on B3 render — show fallback immediately, upgrade to live note if fields filled
+  setTimeout(sbTriggerMarketNote, 300);
 }
 
 function sbSetSubcat(sub){
@@ -7057,19 +7421,28 @@ async function sbTriggerMarketNote(){
   const textDiv=document.getElementById('sb-b3-ai-text');
   if(!noteDiv||!textDiv) return;
   noteDiv.style.display='block';
-  textDiv.textContent='Analysing your market…';
-
   const cat=sbState.cat;
   const f=sbState.fields;
+  // Show fallback immediately (always reflects current fields)
+  textDiv.textContent=sbFallbackMarketNote(cat,f);
+
+  // Cancel any previous in-flight AI request (prevents stale response from old listing)
+  if(window._sbMarketNoteAbort){try{window._sbMarketNoteAbort.abort();}catch(e){}}
+  const ctl=new AbortController();
+  window._sbMarketNoteAbort=ctl;
+
   let prompt='';
   if(cat==='Property'){
-    const beds=f.bedrooms||''; const baths=f.bathrooms||''; const sub=f.suburb||''; const price=f.price||'';
-    prompt=`In 1 sentence, give a market context note for a ${beds}-bed, ${baths}-bath property in ${sub}, Pretoria. Mention approximate comparable asking prices if you know them. Be specific and brief.`;
+    const beds=f.beds||f.bedrooms||''; const baths=f.baths||f.bathrooms||''; const sub=f.suburb||activeCity.name; const price=f.price||'';
+    if(!beds){return;} // wait until beds is filled before sending AI call
+    prompt=`In 1 sentence, give a market context note for a ${beds}-bed, ${baths}-bath property in ${sub}, Pretoria${price?' asking '+price:''}. Mention approximate comparable asking prices if you know them. Be specific and brief.`;
   } else if(cat==='Tutors'){
     const sub=f.subjects||''; const level=f.level||''; const format=f.format||'';
+    if(!sub){return;}
     prompt=`In 1 sentence, give a market context note for a ${format} ${level} ${sub} tutor in Pretoria. Mention typical hourly rates. Be specific and brief.`;
   } else if(cat==='Services'){
     const trade=f.trade_type||'';
+    if(!trade){return;}
     prompt=`In 1 sentence, give a market context note for a ${trade} in Pretoria. Mention typical call-out rates. Be specific and brief.`;
   } else {
     textDiv.textContent='Fill in your details above and I\'ll give you a market context note.';
@@ -7077,22 +7450,25 @@ async function sbTriggerMarketNote(){
   }
 
   try {
-    if(!BEA_ENABLED){ textDiv.textContent=sbFallbackMarketNote(cat,f); return; }
+    if(!BEA_ENABLED){textDiv.textContent=sbFallbackMarketNote(cat,f);return;}
     const res=await fetch(BEA_URL+'/advert-agent/coach',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true})
+      body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true}),
+      signal:ctl.signal
     });
+    if(ctl.signal.aborted) return;
     const data=await res.json();
     textDiv.textContent=data.response||sbFallbackMarketNote(cat,f);
   } catch(e){
+    if(e.name==='AbortError') return;
     textDiv.textContent=sbFallbackMarketNote(cat,f);
   }
 }
 
 function sbFallbackMarketNote(cat,f){
   if(cat==='Property'){
-    const beds=f.bedrooms||''; const sub=f.suburb||activeCity.name;
+    const beds=f.beds||f.bedrooms||''; const sub=f.suburb||activeCity.name;
     return `A ${beds}-bed home in ${sub} — based on recent listings, comparable properties are currently asking R1.8m–R3.2m depending on finish and size.`;
   }
   if(cat==='Tutors'){
@@ -7691,7 +8067,7 @@ async function sbDoPublish(){
           erf_size:   f.erf_size   ? parseInt(f.erf_size)   : null,
           prop_type:  f.prop_type  || null,
           listing_type: f.listing_type || null,
-          structured_fields:JSON.stringify(f)
+          structured_fields:JSON.stringify({...f, _gate:sbState.gate||''})
         })
       });
       if(!rawRes.ok){
@@ -7719,6 +8095,9 @@ async function sbDoPublish(){
         pfd.append('file',pblob,'photo_'+pi+'.jpg');
         pfd.append('listing_id',listingId);
         if(pi===0) pfd.append('is_primary','true');
+        // Pass caption so BEA can encode it into the [photos:url::caption|...] prefix
+        const cap=(sbState.photos[pi].caption||'').replace(/[|\[\]]/g,' ').trim();
+        if(cap) pfd.append('caption',cap);
         await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:pfd}).catch(()=>{});
       }
     }
@@ -7934,6 +8313,14 @@ async function openEditListing(beaId) {
   elCurrentId  = beaId;
   elCurrentCat = dl.cat || dl._raw.category;
   elCurrentRaw = dl._raw;
+  // Derive gate-aware category for trust score panel (Property_private / Property_agent)
+  try {
+    const _sf = JSON.parse(elCurrentRaw.structured_fields || '{}');
+    const _gate = _sf._gate || '';
+    if ((elCurrentCat === 'Property' || elCurrentCat === 'Cars') && _gate) {
+      elCurrentCat = elCurrentCat + '_' + _gate; // e.g. 'Property_private'
+    }
+  } catch(e) {}
   elAISuggestions = {};
 
   // Category badge
@@ -10523,9 +10910,9 @@ function wlCaptureSearch(query, cat) {
 // ── Feed rendering ───────────────────────────────────────────
 function _wlTrustBadge(score) {
   const s = parseInt(score || 0, 10);
-  if (s >= 90) return '<div class="wf-card-trust wf-trust-gold">★★★ ' + s + '</div>';
-  if (s >= 70) return '<div class="wf-card-trust wf-trust-green">'  + s + '</div>';
-  if (s >= 40) return '<div class="wf-card-trust wf-trust-blue">'   + s + '</div>';
+  if (s >= 90) return '<div class="wf-card-trust wf-trust-gold">★ ' + s + '</div>';
+  if (s >= 70) return '<div class="wf-card-trust wf-trust-green">★ ' + s + '</div>';
+  if (s >= 40) return '<div class="wf-card-trust wf-trust-blue">★ ' + s + '</div>';
   return '<div class="wf-card-trust wf-trust-grey">' + s + '</div>';
 }
 
@@ -10539,24 +10926,38 @@ function _wlRenderCards(cards, isShowcase) {
   }
   return cards.map(c => {
     const img = c.thumb_url
-      ? '<img src="' + _wlEsc(c.thumb_url) + '" class="wf-card-img" loading="lazy" onerror="this.style.display=\'none\'">'
-      : '<div class="wf-card-img"></div>';
+      ? '<img src="' + _wlEsc(c.thumb_url) + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display=\'none\'">'
+      : '';
     const featBadge = c.is_featured ? '<div class="wf-card-feat">FEATURED</div>' : '';
-    const trustBadge = _wlTrustBadge(c.trust_score);
+    const trustBadge = c.trust_score ? tbadge(c.trust_score) : '';
     const meta = [];
     if (c.suburb) meta.push(_wlEsc(c.suburb));
     else if (c.city) meta.push(_wlEsc(c.city));
     if (c.age_label) meta.push(_wlEsc(c.age_label));
-    if (typeof c.view_count === 'number' && c.view_count > 0) meta.push((c.view_count) + ' views');
     const onClick = isShowcase
       ? "wfShowcaseTap('" + c.listing_id + "')"
       : "wfFeedTap(" + (c.match_id || 0) + ", '" + c.listing_id + "')";
+    const loc = meta.length ? meta[0] : '';
+    const rawPrice = c.price && c.price !== 'POA' && c.price !== '0' ? c.price : '';
+    const formattedPrice = rawPrice ? (formatZAR(rawPrice) || _wlEsc(rawPrice)) : '';
+    const priceBottom = formattedPrice
+      ? '<div style="font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;">' + formattedPrice + '</div>'
+      : '<div style="font-size:11px;color:var(--text-3);">POA</div>';
+    const wfTrustOverlay = c.trust_score
+      ? '<span style="position:absolute;top:6px;right:6px;background:' + trustTier(c.trust_score).bg + ';color:' + trustTier(c.trust_score).c + ';font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;pointer-events:none;">★ ' + c.trust_score + '</span>'
+      : '';
     return (
       '<div class="wf-card" onclick="' + onClick + '">'
-      + featBadge + trustBadge + img
+      + '<div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:var(--surface-2);">' + img + featBadge + wfTrustOverlay + '</div>'
       + '<div class="wf-card-body">'
+      +   '<div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">' + _wlEsc(c.category || '') + '</div>'
       +   '<div class="wf-card-title">' + _wlEsc(c.title || '') + '</div>'
-      +   '<div class="wf-card-meta">' + meta.join(' · ') + '</div>'
+      + '</div>'
+      + '<div style="padding:0 9px 8px;display:flex;flex-direction:column;gap:2px;">'
+      +   '<div class="wf-card-meta">📍 ' + _wlEsc(loc) + '</div>'
+      +   '<div style="display:flex;align-items:center;">'
+      +     priceBottom
+      +   '</div>'
       + '</div>'
       + '</div>'
     );
@@ -10567,11 +10968,13 @@ function wfFeedTap(matchId, listingId) {
   if (matchId && _wlToken) {
     fetch(BEA_URL + '/wishlist/feed/seen/' + matchId + '?buyer_token=' + encodeURIComponent(_wlToken), { method:'POST' }).catch(()=>{});
   }
-  // Defer to existing detail flow — unifies with the rest of the app
-  if (typeof openDetail === 'function') openDetail(listingId);
+  // BEA feed returns raw numeric ids — normalise to 'bea_N' format for openDetail
+  const detailId = String(listingId).startsWith('bea_') ? listingId : 'bea_' + listingId;
+  if (typeof openDetail === 'function') openDetail(detailId);
 }
 function wfShowcaseTap(listingId) {
-  if (typeof openDetail === 'function') openDetail(listingId);
+  const detailId = String(listingId).startsWith('bea_') ? listingId : 'bea_' + listingId;
+  if (typeof openDetail === 'function') openDetail(detailId);
 }
 
 function wfScroll(dir) {
