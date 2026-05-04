@@ -1041,14 +1041,14 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 <!-- ══ STEP 4: PUBLISH ═════════════════════════════════════ -->
 <div class="step" id="step-4">
   <div class="step-eyebrow">Step 4 of 4</div>
-  <div class="step-title">Review & publish</div>
-  <div class="step-sub">Check everything looks right, then publish all listings to the live database.</div>
+  <div class="step-title">Review & save draft</div>
+  <div class="step-sub">Check everything looks right, then save as draft. The seller completes onboarding via the magic link — choosing a subscription tier, accepting the EULA, and registering before going live.</div>
 
   <div id="review-seller-bar" class="seller-bar" style="margin-bottom:20px;"></div>
   <div id="review-listings"></div>
 
   <div id="publish-result" style="display:none;">
-    <div class="success-icon">🎉</div>
+    <div class="success-icon">📋</div>
     <div class="summary-stats" id="publish-stats"></div>
     <div class="info-box ok" id="publish-summary"></div>
     <!-- Delete published listings -->
@@ -1068,7 +1068,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <div class="ml-url" id="magic-url">—</div>
       <button class="ml-copy" onclick="copyMagicLink()">📋 Copy claim link</button>
     </div>
-    <div class="hint">Seller taps this link → lands on their pre-filled onboarding page → completes their profile → AI Coach reviews their listing.</div>
+    <div class="hint">Seller taps this link → previews their draft listing → chooses a subscription tier → accepts the EULA → registers → listing goes live. Nothing is public until the seller completes all steps.</div>
   </div>
 </div>
 
@@ -1429,7 +1429,7 @@ function updateNextBtn() {
   const btn = document.getElementById('btn-next');
   if (currentStep === 4) {
     const hasPublished = listingQueue.some(l => l.status === 'published');
-    btn.textContent = hasPublished ? 'Done ✓' : 'Publish all →';
+    btn.textContent = hasPublished ? 'Done ✓' : 'Save drafts →';
   } else {
     btn.textContent = 'Continue →';
   }
@@ -1474,7 +1474,7 @@ function goNext() {
   } else if (currentStep === 4) {
     const hasPublished = listingQueue.some(l => l.status === 'published');
     if (hasPublished) { startFresh(); return; }
-    publishAll();
+    saveAsDraft();
   }
 }
 
@@ -1509,7 +1509,7 @@ function renderListingQueue() {
         <div class="lc-title">${l.formData.title || 'Untitled'}</div>
         <div class="lc-price">${formatZAR(l.formData.price) || l.formData.price || 'Negotiable'}${l.formData.per ? ' ' + l.formData.per : ''}</div>
         <div class="lc-status ${l.status === 'published' ? 'saved' : 'pending'}">
-          ${l.status === 'published' ? '✓ Published' : '⏳ In queue'}
+          ${l.status === 'published' ? '✓ Draft saved' : '⏳ In queue'}
         </div>
       </div>
       ${l.status !== 'published' ? `<button class="lc-remove" onclick="removeListing(${i})">×</button>` : ''}
@@ -1971,11 +1971,14 @@ function buildDescription(fd) {
   return hasContent ? JSON.stringify(obj) : '';
 }
 
-// ── PUBLISH ───────────────────────────────────────────────
-async function publishAll() {
+// ── SAVE AS DRAFT ─────────────────────────────────────────
+// Listings are saved with listing_status='draft'. They are NOT live until
+// the seller completes onboarding (tier selection → EULA → registration)
+// via the magic link, which calls PUT /listings/{id}/publish.
+async function saveAsDraft() {
   const btn = document.getElementById('btn-next');
   btn.disabled = true;
-  btn.textContent = 'Publishing...';
+  btn.textContent = 'Saving drafts...';
 
   let successCount = 0;
   let failCount = 0;
@@ -2052,8 +2055,8 @@ function showPublishSuccess(successCount, failCount) {
     <div class="ss-card"><div class="ss-val">${listingQueue.length}</div><div class="ss-label">Total listings</div></div>`;
 
   document.getElementById('publish-summary').textContent =
-    `✓ ${successCount} listing${successCount>1?'s':''} published to ${sellerData.city}.` +
-    (failCount ? ` ${failCount} failed — scroll up to retry.` : ' All listings are now live on MarketSquare.');
+    `✓ ${successCount} draft${successCount>1?'s':''} saved for ${sellerData.city}.` +
+    (failCount ? ` ${failCount} failed — scroll up to retry.` : ' Send the magic link to the seller — nothing is live until they complete onboarding.');
 
   // Build magic link
   const params = new URLSearchParams({
@@ -2076,7 +2079,7 @@ function showPublishSuccess(successCount, failCount) {
   btn.textContent = '+ Add another seller';
   btn.disabled = false;
 
-  showToast(`🎉 ${successCount} listing${successCount>1?'s':''} live on MarketSquare!`);
+  showToast(`📋 ${successCount} draft${successCount>1?'s':''} saved — send the magic link to the seller`);
   window.scrollTo(0,0);
   // Load AI guidance panel after successful publish
   if (successCount > 0 && sellerData && sellerData.email) {

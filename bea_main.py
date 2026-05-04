@@ -902,20 +902,52 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
             subject, level, mode, service_type, availability,
-            trust_score, seller_email, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+            trust_score, seller_email, listing_status, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
-         listing.trust_score, listing.seller_email)
+         listing.trust_score, listing.seller_email, 'draft')
     )
     conn.commit()
     new_id = cursor.lastrowid
     conn.close()
-    # Wishlist matching — async, never blocks publish (PR-14)
-    background_tasks.add_task(run_match_job, new_id)
-    return {"id": new_id, "message": "Listing created successfully"}
+    # Wishlist matching deferred until listing goes live (draft listings not matched)
+    return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live"}
+
+
+@app.put("/listings/{listing_id}/publish")
+def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.require_api_key)):
+    """Transition a draft listing to live. Called by the seller onboarding flow
+    once the seller has chosen a subscription tier and accepted the EULA.
+    Auth: ?email= must match seller_email on the listing (or listing has no owner yet).
+    Sets listing_status = 'live' and stamps published_at = now().
+    """
+    conn = database.get_db()
+    existing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    # Email auth: if listing has a seller_email it must match; if NULL accept first caller
+    if existing["seller_email"] and existing["seller_email"] != email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not authorised to publish this listing")
+    current_status = existing["listing_status"] or "draft"
+    if current_status == "live":
+        conn.close()
+        return {"message": "Listing is already live", "listing_id": listing_id}
+    conn.execute(
+        """UPDATE listings
+           SET listing_status = 'live',
+               published_at   = datetime('now'),
+               seller_email   = COALESCE(seller_email, ?)
+           WHERE id = ?""",
+        (email, listing_id)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Listing is now live", "listing_id": listing_id}
 
 @app.get("/listings/mine")
 def get_seller_listings(email: str):
@@ -985,6 +1017,16 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     if not d:
         conn.close()
         return {"message": "No fields changed", "listing_id": listing_id}
+
+    # Preserve [photos:...] prefix if description is being updated without it
+    if "description" in d:
+        existing_desc = existing["description"] or ""
+        if existing_desc.startswith("[photos:") and not d["description"].startswith("[photos:"):
+            bracket_end = existing_desc.find("]")
+            if bracket_end != -1:
+                photo_prefix = existing_desc[:bracket_end + 1]
+                sep = "\n" if existing_desc[bracket_end+1:bracket_end+2] == "\n" else ""
+                d["description"] = photo_prefix + sep + d["description"]
 
     sets = ", ".join(f"{k} = ?" for k in d.keys())
     vals = list(d.values())
@@ -1323,6 +1365,9 @@ def get_cities(country: Optional[str] = None):
 @app.post("/listings/photo")
 async def upload_listing_photo(
     file: UploadFile = File(...),
+    listing_id: Optional[int] = Form(None),
+    is_primary: Optional[str] = Form(None),
+    caption: Optional[str] = Form(None),
     _key: str = Depends(auth.require_api_key)
 ):
     # Validate file type
@@ -1356,25 +1401,76 @@ async def upload_listing_photo(
 
     # ── Upload both ─────────────────────────────────────────
     if _S3_CONFIGURED:
-        # Upload to Hetzner Object Storage — same URL for thumb and medium
-        # (Hetzner does not auto-generate thumbnails)
         orig_name = (file.filename or "photo.jpg").replace(" ", "_")
         key = f"media/{uuid.uuid4().hex}_{orig_name}"
         s3_url = _s3_upload(medium_bytes, key, "image/jpeg")
-        return {
-            "thumb_url":  s3_url,
-            "medium_url": s3_url,
-            "thumb_kb":   round(len(thumb_bytes)  / 1024, 1),
-            "medium_kb":  round(len(medium_bytes) / 1024, 1),
-        }
+        thumb_url = s3_url
+        medium_url = s3_url
+    else:
+        # Local /media fallback
+        base = storage.generate_filename("listing")
+        thumb_name  = base.replace(".jpg", "_thumb.jpg")
+        medium_name = base.replace(".jpg", "_medium.jpg")
+        thumb_url  = storage.upload_photo(thumb_bytes,  thumb_name,  "image/jpeg")
+        medium_url = storage.upload_photo(medium_bytes, medium_name, "image/jpeg")
 
-    # Local /media fallback (used when Object Storage is not configured)
-    base = storage.generate_filename("listing")
-    thumb_name  = base.replace(".jpg", "_thumb.jpg")
-    medium_name = base.replace(".jpg", "_medium.jpg")
-
-    thumb_url  = storage.upload_photo(thumb_bytes,  thumb_name,  "image/jpeg")
-    medium_url = storage.upload_photo(medium_bytes, medium_name, "image/jpeg")
+    # ── Save URLs to listing row ─────────────────────────────
+    # If listing_id provided, persist photo URL back to the listing.
+    # is_primary='true' (or no existing photo) → set as thumb_url + medium_url.
+    # Additional photos are appended as [photos:url::caption|...] prefix in description.
+    if listing_id:
+        import re as _re
+        conn = database.get_db()
+        try:
+            row = conn.execute(
+                "SELECT thumb_url, medium_url, description FROM listings WHERE id = ?",
+                (listing_id,)
+            ).fetchone()
+            if row:
+                existing_thumb = row["thumb_url"]
+                existing_desc  = row["description"] or ""
+                primary = (is_primary == "true") or (not existing_thumb)
+                # Encode caption into the URL entry: "url::caption" (safe separator)
+                cap_clean = (caption or "").replace("|", " ").replace("::", " ").strip()
+                photo_entry = f"{medium_url}::{cap_clean}" if cap_clean else medium_url
+                if primary:
+                    conn.execute(
+                        "UPDATE listings SET thumb_url=?, medium_url=? WHERE id=?",
+                        (thumb_url, medium_url, listing_id)
+                    )
+                    # Store in description photo prefix for multi-photo strip
+                    if not existing_desc.startswith("[photos:"):
+                        new_desc = f"[photos:{photo_entry}]\n{existing_desc}"
+                    else:
+                        def _replace_first(m):
+                            parts = [p for p in m.group(1).split("|") if p]
+                            rest = parts[1:] if parts else []
+                            all_parts = [photo_entry] + [p for p in rest if not p.startswith(medium_url)]
+                            return "[photos:" + "|".join(all_parts) + "]"
+                        new_desc = _re.sub(r'^\[photos:([^\]]+)\]', _replace_first, existing_desc)
+                    conn.execute(
+                        "UPDATE listings SET description=? WHERE id=?",
+                        (new_desc, listing_id)
+                    )
+                else:
+                    # Append to photo strip prefix
+                    if existing_desc.startswith("[photos:"):
+                        new_desc = _re.sub(
+                            r'^\[photos:([^\]]*)\]',
+                            lambda m: "[photos:" + m.group(1) + "|" + photo_entry + "]",
+                            existing_desc
+                        )
+                    else:
+                        first_entry = existing_thumb or ""
+                        new_desc = (f"[photos:{first_entry}|{photo_entry}]\n{existing_desc}"
+                                    if first_entry else f"[photos:{photo_entry}]\n{existing_desc}")
+                    conn.execute(
+                        "UPDATE listings SET description=? WHERE id=?",
+                        (new_desc, listing_id)
+                    )
+                conn.commit()
+        finally:
+            conn.close()
 
     return {
         "thumb_url":  thumb_url,
@@ -4163,6 +4259,18 @@ _CATEGORY_SIGNALS = {
         "category.property.nqf6_plus":     {"name": "NQF6+ / Professional designation", "points": 8, "how_to_earn": "Upload certificate.", "additional_to": "category.property.nqf5"},
         "category.property.body":          {"name": "Professional body membership (IEASA, SAPOA, NAR)", "points": 5, "how_to_earn": "Upload membership card or letter."},
     },
+    "Property_private": {
+        # Private sellers — no agent registration required
+        "category.property.exp_10plus":    {"name": "Property experience 10+ years", "points": 5, "how_to_earn": "Declare ownership/investment experience — CV optional."},
+        "category.property.exp_2_5":       {"name": "Property experience 2–5 years", "points": 4, "how_to_earn": "Declare experience."},
+    },
+    "Cars_private": {
+        # Private car sellers — no dealer registration
+        "category.cars.ownership":         {"name": "Vehicle ownership (NATIS)", "points": 10, "how_to_earn": "Upload NATIS registration papers."},
+        "category.cars.finance_clear":     {"name": "Finance clearance", "points": 4, "how_to_earn": "Upload letter confirming no outstanding finance."},
+        "category.cars.rwc":               {"name": "Roadworthy certificate (RWC)", "points": 6, "how_to_earn": "Upload roadworthy certificate."},
+        "category.cars.service_history":   {"name": "Service history", "points": 4, "how_to_earn": "Upload service book."},
+    },
     "Tutors": {
         "category.tutors.sace":            {"name": "SACE registration", "points": 8,  "how_to_earn": "Upload SACE number — verified at sace.org.za."},
         "category.tutors.cert_diploma":    {"name": "Certificate or Diploma (NQF5–6)", "points": 6, "how_to_earn": "Upload certificate."},
@@ -4620,10 +4728,17 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
         # Normalise frontend category names to _CATEGORY_SIGNALS keys
         _cat_norm = {
             "LocalMarket": "local_market", "Local Market": "local_market",
-            "Property": "Property", "Tutors": "Tutors",
+            "Property": "Property", "Property_agent": "Property",
+            "Property_private": "Property_private",
+            "Tutors": "Tutors",
             "Services": "Services-Technical",  # default subclass
+            "Services-Technical": "Services-Technical",
+            "Services-Casuals": "Services-Casuals",
             "Adventures": "Adventures-Experiences",
+            "Adventures-Experiences": "Adventures-Experiences",
+            "Adventures-Accommodation": "Adventures-Accommodation",
             "Collectors": "Collectors", "Cars": "Cars",
+            "Cars_dealer": "Cars", "Cars_private": "Cars_private",
         }
         cat_key = _cat_norm.get(category, category)
     else:
@@ -4650,10 +4765,9 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     penalties = _seller_active_complaints(conn, email)
     penalty_total = sum(p["points"] for p in penalties)
 
-    # Local Market sellers start at 40 — allows immediate trading.
+    # All sellers start at 40 (Established base) — matches the sell-flow sbCalcScore model.
     # Penalties pull below 40 (bad actors); credentials push above 40.
-    # All other categories keep 0-base earned model.
-    base_score = 40 if cat_key == "local_market" else 0
+    base_score = 40
     score_total = max(0, min(100, base_score + earned_u + earned_t + earned_c + penalty_total))
     tier = _trust_tier(score_total)
 

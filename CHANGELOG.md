@@ -1,3 +1,13 @@
+## Session 41 — Seller onboarding flow: draft-first publish gate
+
+**Task: Draft-first listing flow — admin app + BEA**
+Identified that the admin tool was publishing listings live immediately, with no subscription gate, no EULA, and no seller registration. Implemented the first stage of a corrected three-stage onboarding flow:
+
+BEA (`bea_main.py`): `POST /listings` now saves all listings with `listing_status = 'draft'` and `published_at = NULL`. Added new endpoint `PUT /listings/{id}/publish?email=` which transitions a draft listing to `live`, stamps `published_at = now()`, and performs email-auth (seller_email must match or is stamped if NULL). The existing `GET /listings?city=X` filter already excludes non-live listings so no buyer-side changes were needed.
+
+Admin app (`marketsquare_admin.html`): Step 4 renamed from "Review & publish" to "Review & save draft". Button label changed from "Publish all →" to "Save drafts →". All success messaging updated to reflect draft-saved state. Magic link hint text now explains the full seller onboarding journey: tier selection → EULA → registration → listing goes live. No listing is publicly visible until the seller completes onboarding via the magic link. Listing 76 (Tutors, created this session before the change) remains live as a legacy record.
+
+Next session (42): Build the magic link landing flow in `marketsquare.html` — private listing preview, subscription tier picker, EULA screen, and registration completion, culminating in calling `PUT /listings/{id}/publish` to go live.
 # MarketSquare · CHANGELOG
 
 ---
@@ -1179,3 +1189,53 @@ BEA had restarted 19,594 times in 7 days due to the opt_out duplicate body bug (
 
 ### Fix: Inline script tag in template literal broke entire app
 The credentials section fix (openBEASellerProfile) injected a `<script>` tag inside a JavaScript template literal. The browser parser sees the closing `</script>` inside the string and terminates the outer script block early, silently breaking all JS on the page. Fixed by rewriting as a pure IIFE expression returning HTML — no script tags involved.
+
+### Fix: JS syntax error — duplicate const cat/f in sbTriggerMarketNote
+My fix to show the AI note immediately added `const cat` and `const f` at the top of sbTriggerMarketNote, but those variables were already declared later in the same function scope. This caused a SyntaxError that silently killed all JavaScript on page load — 0 listings, all sections stuck on Loading. Fixed by removing the duplicate declarations. Added mandatory pre-deploy JS syntax check (node --check) to catch this class of error before it reaches the live server.
+
+### Fix: BEA /listings/photo never saved URLs to listing row
+The photo upload endpoint accepted listing_id as a form field but ignored it — it uploaded to R2 and returned the URLs in the response body without writing them to the listings table. All photo uploads from sbDoPublish() were silently discarded. Fixed: endpoint now accepts listing_id + is_primary form fields, writes thumb_url/medium_url to the listing row, and appends additional photos to the [photos:url1|url2|...] description prefix for the multi-photo strip.
+
+## Session 39 — AI guidance fixes + photo captions
+
+**AI guidance stale data fixed:** `sbTriggerMarketNote` now uses an `AbortController` to cancel any in-flight request from a previous listing session before issuing a new one. A field-presence guard prevents the AI call firing until at least one key field (`beds` for Property, `subjects` for Tutors, `trade_type` for Services) is populated — eliminating the "3-bedroom" stale response on a fresh 1-bedroom listing. The fallback note always reflects the current `sbState.fields` values immediately.
+
+**AI guidance field triggers expanded:** `sbSaveField` now re-fires `sbTriggerMarketNote` when `beds`, `baths`, `price`, or `rate` are updated (in addition to `suburb`, `subjects`, `trade_type`). The note updates live as the seller fills in details.
+
+**Photo captions implemented end-to-end:** Sellers enter captions in B5. On publish, captions are sent as a `caption` form field alongside each photo upload. The BEA encodes them into the `[photos:]` description prefix as `url::caption` pairs. `loadLiveListings` parses these into a `photoData` array `[{url, caption}]`. `openDetail` renders captions as a gradient overlay at the bottom of each photo strip slide.
+
+**BEA restore:** The Edit tool truncated `bea_main.py` to 6062 lines mid-session. Restored from `git show HEAD:bea_main.py` (6023 lines) and re-applied all changes via Python replace. Root-cause note appended to the tail-truncation rule: the Edit tool must never be used on `bea_main.py` — Python replace-only, same as `marketsquare.html`.
+
+## Session 39 continued — Trust Score display fix + private seller signal set
+
+**Trust score mismatch fixed:** BEA `trust_score_breakdown` was using `base_score=0` for Property sellers while the sell-flow `sbCalcScore()` uses base 40. Changed BEA `base_score` to 40 for all sellers — matching the "all sellers start at Established" model. Dashboard and edit-listing Trust Score panel now show the same value as the home page listing card.
+
+**Private seller PPRA tip fixed:** Added `Property_private` and `Cars_private` signal sets to `_CATEGORY_SIGNALS` — private sellers get experience-based signals only, never PPRA/NQF4 agent credentials. The `_cat_norm` map in `trust_score_breakdown` now routes `Property_private` to the correct signal set. Gate is stored in `structured_fields._gate` at publish time and read back by the edit-listing screen to set a gate-aware `elCurrentCat` (`Property_private` / `Property_agent`) before calling `elLoadSidebarPanels`.
+
+## Session 39 continued — For You card: price + trust badge
+
+**For You card improved:** Added price line below the title (bold, accent colour) — shown when price is not POA/0. Trust badge updated to show ★ star prefix at all tiers (Established / Trusted / Highly Trusted) so it reads as a trust indicator rather than a plain number. Trust score on the card now reflects the corrected base-40 value from the BEA.
+
+---
+*Session 39 closed. All changes deployed to trustsquare.co. Next: Session 40 — retest across categories, home page scroll fix, For You score refresh.*
+
+## Session 40 — Card UI polish + cost model review
+
+**Photos lost on PUT /listings fixed:** The `update_listing` endpoint was overwriting the `[photos:...]` description prefix when a seller's AI-generated description was saved. Fixed: if the existing description starts with `[photos:` and the incoming description does not, the endpoint re-prepends the photo prefix before writing. Listing 74's photos were manually restored from `listing_versions` snapshot via direct SQLite UPDATE on the server.
+
+**For You tile tap fixed:** The wishlist feed returns raw numeric listing IDs from the BEA; `openDetail()` expects `'bea_N'` format. Fixed `wfFeedTap()` and `wfShowcaseTap()` to normalise any raw integer ID to `'bea_N'` before calling `openDetail`.
+
+**Photo caption overlay styled:** Caption pill rendered bottom-right of each photo slide — frosted-glass dark background (`rgba(10,10,20,.78)` + `backdrop-filter:blur(6px)`), 11.5px Inter font, rounded corners. Always readable over any photo.
+
+**Category chips added for all missing categories:** `openDetail` now renders profession/detail chips for Local Market (purple), Collectors (amber), and Cars (blue) — matching the existing chip rows for Property, Tutors, Services.
+
+**Featured card layout refactored:** Cards now use flexbox column layout. Photo fixed at 88px top, category label + title (clamped 2 lines at 11.5px) in flex body, location + price + trust badge pinned to fixed bottom footer. Consistent alignment across all cards regardless of title length. Trust badge moved to float top-right over the photo as an absolute overlay.
+
+**For You card aligned to Featured:** Same flexbox column layout, same dimensions (150px wide, 88px photo), same bottom-pinned footer with location + formatted price + trust badge overlay on photo. Price now formatted via `formatZAR()` — renders `R 2 500 000` correctly. Trust badge uses same tier colours as Featured.
+
+**AI cost model review (Session 40):** Confirmed free seller costs ~$0.58/year — consistent with cost model's $0.645/year blended figure. Key finding: `sbTriggerMarketNote` fires for free sellers on every publish/edit (unmodelled). At Year 1 scale (7,312 free sellers × 4 edits) = ~$67/year — trivial but worth a future gate. Haiku 4.5 actual cost is ~$0.0023/session vs $0.01/session in model — model is conservatively priced, which is correct. On-server AI replacement (planned) would reduce this to ~$0/session variable cost. Local Market crossfade not broken — only 1 LM listing with a photo; animation requires 2+.
+
+Cost model impact: AI Coach cost per session ($0.01 modelled) is ~4× higher than actual Haiku 4.5 rate ($0.0023). Conservative buffer is intentional pending on-server AI replacement. No model update required.
+
+---
+*Session 40 closed. All changes deployed to trustsquare.co. Next: Session 41 — category testing across Tutors/Services/Collectors/Cars/Local Market.*
