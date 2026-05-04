@@ -71,1174 +71,325 @@ const PROP_PHOTOS = [
 // One demo placeholder per category — display only, not clickable.
 // Replaced automatically by real BEA listings once sellers onboard.
 const LISTINGS = [
-  {
-    id: 'ph_property', cat: 'Property', feat: false,
-    title: 'PLACEHOLDER — Property listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    propType: '', beds: 0, baths: 0, garages: 0,
-    desc: 'Real property listings will appear here once sellers are onboarded via the admin tool.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 0
-  },
 
-  // ── DEMO LISTINGS: PROPERTY ───────────────────────────────
-  {
-    id: 'demo_prop_1', cat: 'Property', feat: true,
-    title: 'Modern 4-Bed Family Home — Waterkloof Ridge, Pretoria',
-    area: 'Pretoria', suburb: 'Waterkloof Ridge',
-    trust: 91, price: 'R 4 250 000', per: '', priceNum: 4250000,
-    propType: 'House', beds: 4, baths: 3, garages: 2,
-    listingType: 'For Sale', floor_area: '320m²', erf_size: '1 200m²',
-    desc: 'Beautifully maintained north-facing family home in one of Pretoria\'s most sought-after suburbs. Open-plan kitchen and living area flow onto a covered patio overlooking a heated pool and landscaped garden. Master suite with walk-in robe and en-suite. Study, guest suite downstairs. Double automated garage, staff quarters, borehole and solar backup. Highly rated school catchment.',
-    photo: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_2', cat: 'Property', feat: false,
-    title: 'Tuscan-Style Estate — Erasmuskloof, Pretoria',
-    area: 'Pretoria', suburb: 'Erasmuskloof',
-    trust: 87, price: 'R 6 800 000', per: '', priceNum: 6800000,
-    propType: 'House', beds: 5, baths: 4, garages: 3,
-    listingType: 'For Sale', floor_area: '520m²', erf_size: '2 800m²',
-    desc: 'Impressive Tuscan-inspired estate in a security enclave. Five bedrooms, four bathrooms, two full reception rooms, home theatre, wine cellar, and a chef\'s kitchen. Entertainer\'s patio with outdoor kitchen, gas firepit, and a resort-style pool. Three-car garage with staff flat. Full off-grid capability: 22-panel solar array, 20kWh battery, and borehole. Private and immaculate.',
-    photo: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_3', cat: 'Property', feat: false,
-    title: 'Lock-Up-and-Go Cluster — Menlyn, Pretoria',
-    area: 'Pretoria', suburb: 'Menlyn',
-    trust: 74, price: 'R 1 850 000', per: '', priceNum: 1850000,
-    propType: 'Townhouse', beds: 3, baths: 2, garages: 1,
-    listingType: 'For Sale', floor_area: '145m²', erf_size: '0m²',
-    desc: 'Contemporary cluster unit in a secure, well-run complex of 12 units. Open-plan living, granite kitchen with gas hob, three bedrooms with built-in cupboards, master en-suite. Single garage plus extra parking bay. Complex pool. Walking distance from Menlyn Maine and Mall of Africa. Ideal first home or investment — high rental demand in this node.',
-    photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
-      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_4', cat: 'Property', feat: false,
-    title: 'Penthouse Apartment — Brooklyn, Pretoria',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 83, price: 'R 3 100 000', per: '', priceNum: 3100000,
-    propType: 'Apartment', beds: 2, baths: 2, garages: 2,
-    listingType: 'For Sale', floor_area: '185m²', erf_size: '0m²',
-    desc: 'Top-floor penthouse in a boutique 8-storey development in the heart of Brooklyn. Wraparound balcony with Magaliesberg views. Italian-design kitchen, Smeg appliances, underfloor heating in both bathrooms. Two covered parking bays and a storeroom. 24hr concierge, rooftop gym, and residents\' lounge. Walking distance from embassies, Brooklyn Mall, and top restaurants.',
-    photo: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_5', cat: 'Property', feat: false,
-    title: 'Smallholding with Income — Raslouw, Centurion',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 68, price: 'R 5 500 000', per: '', priceNum: 5500000,
-    propType: 'Smallholding', beds: 4, baths: 3, garages: 4,
-    listingType: 'For Sale', floor_area: '380m²', erf_size: '8 500m²',
-    desc: 'Productive smallholding on 8,500m² in sought-after Raslouw. Main house: 4 beds, 3 baths, large farmhouse kitchen and covered stoep. Separate fully self-contained cottage (currently tenanted at R8,500/month). 4-car workshop, borehole with 10,000L tank, 3-phase power, and chicken runs. Highly accessible — 5 minutes from N14 and Centurion amenities. Rates R1,800/month.',
-    photo: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
-      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
-      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_6', cat: 'Property', feat: false,
-    title: 'Secure 3-Bed Townhouse — Irene, Centurion',
-    area: 'Pretoria', suburb: 'Irene',
-    trust: 72, price: 'R 2 450 000', per: '', priceNum: 2450000,
-    propType: 'Townhouse', beds: 3, baths: 2, garages: 2,
-    listingType: 'For Sale', floor_area: '210m²', erf_size: '0m²',
-    desc: 'Spacious townhouse in a sought-after, well-managed complex in Irene. Large open-plan living flowing to a private garden and entertainer\'s patio. Three good bedrooms, master with en-suite and walk-in. Double automated garage. Complex has pool, kiddies play area, and 24hr security. Close to Irene Farm, Centurion Lake, and top schools including Irene Primary and Zwartkop.',
-    photo: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_7', cat: 'Property', feat: false,
-    title: 'Investment Flat — Hatfield, Pretoria (Rental Income)',
-    area: 'Pretoria', suburb: 'Hatfield',
-    trust: 63, price: 'R 950 000', per: '', priceNum: 950000,
-    propType: 'Apartment', beds: 1, baths: 1, garages: 1,
-    listingType: 'For Sale', floor_area: '65m²', erf_size: '0m²',
-    desc: 'Well-maintained one-bedroom apartment in a popular Hatfield complex, currently tenanted at R7,200/month — a solid 9.1% gross yield. Modern kitchen, open plan living, good storage. One covered parking bay. Walking distance from University of Pretoria and Hatfield Square. Ideal buy-to-let — demand from students and young professionals consistently high in this node.',
-    photo: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
-      'https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 0
-  },
-  {
-    id: 'demo_prop_8', cat: 'Property', feat: false,
-    title: 'Vacant Stand — Silver Lakes Golf Estate, Pretoria',
-    area: 'Pretoria', suburb: 'Silver Lakes',
-    trust: 79, price: 'R 1 650 000', per: '', priceNum: 1650000,
-    propType: 'Vacant Land', beds: 0, baths: 0, garages: 0,
-    listingType: 'For Sale', floor_area: '0m²', erf_size: '1 050m²',
-    desc: 'Prime 1,050m² vacant stand on the Silver Lakes Golf Estate — one of Pretoria East\'s most prestigious gated communities. North-facing with fairway views. Building plans available (not approved). Estate offers 24hr security, golf course, tennis courts, clubhouse and walking trails. All bulk services in place. Build your dream home in a world-class secure environment.',
-    photo: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
-      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
-      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 0
-  },
+  // ── PROPERTY (10 listings) ────────────────────────────────
+  { id:'ph_property', cat:'Property', feat:false, title:'Property listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, propType:'', beds:0, baths:0, garages:0, desc:'Real property listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:0 },
 
-  {
-    id: 'ph_tutors', cat: 'Tutors', feat: false,
-    title: 'PLACEHOLDER — Tutors listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    subject: '', level: '', mode: '',
-    desc: 'Real tutor listings will appear here once sellers are onboarded via the admin tool.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 1
-  },
+  { id:'demo_prop_1', cat:'Property', feat:true,
+    title:'Modern 4-Bed Family Home — Waterkloof Ridge',
+    area:'Pretoria', suburb:'Waterkloof Ridge',
+    trust:91, price:'R 4 250 000', per:'', priceNum:4250000,
+    propType:'House', beds:4, baths:3, garages:2, listingType:'For Sale', floor_area:'320m²', erf_size:'1 200m²',
+    desc:'Beautifully maintained north-facing family home in one of Pretoria's most sought-after suburbs. Open-plan kitchen and living area flow onto a covered patio overlooking a heated pool and landscaped garden. Master suite with walk-in robe and en-suite. Study, guest suite downstairs. Double automated garage, staff quarters, borehole and solar backup.',
+    photo:'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:0 },
 
-  // ── DEMO LISTINGS: TUTORS ─────────────────────────────────
-  {
-    id: 'demo_tut_1', cat: 'Tutors', feat: true,
-    title: 'Mathematics & Physical Science — Matric Specialist',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 93, price: 'R 380', per: 'per hour', priceNum: 380,
-    subject: 'Mathematics', level: 'Grade 10–12', mode: 'In-person',
-    desc: 'Experienced matric tutor with 12 years\' teaching at top Pretoria schools. Specialises in Maths and Physical Science for Grades 10–12, with particular focus on exam technique and past-paper drilling. 94% of students improved by at least one symbol grade. Small groups (max 4) or one-on-one. Available weekdays after 15:00 and Saturdays. References from 60+ satisfied families.',
-    photo: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'
-    ],
-    paused: false, queueCount: 6, sellerIdx: 1
-  },
-  {
-    id: 'demo_tut_2', cat: 'Tutors', feat: false,
-    title: 'English Home Language & Literature — All Grades',
-    area: 'Pretoria', suburb: 'Waterkloof',
-    trust: 86, price: 'R 320', per: 'per hour', priceNum: 320,
-    subject: 'English', level: 'Grade 4–12', mode: 'Online',
-    desc: 'Honours-qualified English teacher offering tutoring in English Home Language and Literature for Grades 4–12. Focus on creative writing, essay structure, comprehension and set works. Online sessions via Google Meet — all materials provided. Available Mon–Fri 14:00–19:00 and Saturdays. Particular success with reluctant writers and students with dyslexia. DBS-cleared.',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
-      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 1
-  },
-  {
-    id: 'demo_tut_3', cat: 'Tutors', feat: false,
-    title: 'Piano Lessons — Beginner to Grade 8 ABRSM',
-    area: 'Pretoria', suburb: 'Lynnwood',
-    trust: 78, price: 'R 280', per: 'per 45 min', priceNum: 280,
-    subject: 'Music (Piano)', level: 'Beginner–Grade 8', mode: 'In-person',
-    desc: 'UNISA-qualified pianist with 15 years\' teaching experience. Lessons cover theory, sight-reading, scales and repertoire, with exam preparation for ABRSM and UNISA syllabi. Students from age 5 upward. Own Steinway upright in dedicated studio. 100% of Grade 5–8 exam candidates passed in 2025. Saturdays fully booked — limited weekday slots remaining.',
-    photo: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80',
-      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 1
-  },
-  {
-    id: 'demo_tut_4', cat: 'Tutors', feat: false,
-    title: 'Accounting & Business Studies — IEB & NSC Matric',
-    area: 'Pretoria', suburb: 'Menlyn',
-    trust: 81, price: 'R 350', per: 'per hour', priceNum: 350,
-    subject: 'Accounting', level: 'Grade 10–12', mode: 'Either',
-    desc: 'CA(SA) with 8 years\' tutoring experience in Accounting and Business Studies for both IEB and NSC curricula. Structured approach: concept explanation, worked examples, then timed past papers. In-person (Menlyn area) or online. Trial lesson available. Also offers holiday intensives in June and September. 90% of students achieved a distinction in their final exam.',
-    photo: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
-      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 1
-  },
-  {
-    id: 'demo_tut_5', cat: 'Tutors', feat: false,
-    title: 'Afrikaans Home Language — Grades 4 to 12',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 69, price: 'R 260', per: 'per hour', priceNum: 260,
-    subject: 'Afrikaans', level: 'Grade 4–12', mode: 'In-person',
-    desc: 'Moedertaalspreker met 10 jaar onderwyservaring aan Pretoriase Afrikaanse skole. Bied bylesing in Afrikaans Huistaal vir Grade 4 tot 12, insluitend opstelskryf, begripstoetse en mondeling voorbereiding. Sessies by leerder se huis of by my in Centurion. Groepe van maksimum 3 leerders. Beskikbaar na skoolure en Saterdagoggende.',
-    photo: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 1
-  },
-  {
-    id: 'demo_tut_6', cat: 'Tutors', feat: false,
-    title: 'Life Sciences & Geography — Grade 8 to 12',
-    area: 'Pretoria', suburb: 'Garsfontein',
-    trust: 75, price: 'R 300', per: 'per hour', priceNum: 300,
-    subject: 'Life Sciences', level: 'Grade 8–12', mode: 'Either',
-    desc: 'BSc Biology graduate offering Life Sciences and Geography tutoring for Grades 8–12. Strong focus on understanding concepts rather than rote memorisation. Diagrams, mind maps and colour-coded notes provided. Online or in-person (Garsfontein / Pretoria East). Exam packs available on request. Parents report consistent improvement within 6 weeks.',
-    photo: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
-      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-      'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 1
-  },
+  { id:'demo_prop_2', cat:'Property', feat:false,
+    title:'Tuscan Estate — Erasmuskloof, Pretoria',
+    area:'Pretoria', suburb:'Erasmuskloof',
+    trust:87, price:'R 6 800 000', per:'', priceNum:6800000,
+    propType:'House', beds:5, baths:4, garages:3, listingType:'For Sale', floor_area:'520m²', erf_size:'2 800m²',
+    desc:'Impressive Tuscan-inspired estate in a security enclave. Five bedrooms, four bathrooms, two reception rooms, home theatre, wine cellar and chef's kitchen. Entertainer's patio with outdoor kitchen, gas firepit and resort-style pool. Three-car garage with staff flat. 22-panel solar array, 20kWh battery and borehole. Private and immaculate.',
+    photo:'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80','https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:0 },
 
-  {
-    id: 'ph_services', cat: 'Services', feat: false,
-    title: 'PLACEHOLDER — Services listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    serviceType: '', availability: '',
-    desc: 'Real service listings will appear here once sellers are onboarded via the admin tool.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 2
-  },
+  { id:'demo_prop_3', cat:'Property', feat:false,
+    title:'Lock-Up-and-Go Cluster — Menlyn, Pretoria',
+    area:'Pretoria', suburb:'Menlyn',
+    trust:74, price:'R 1 850 000', per:'', priceNum:1850000,
+    propType:'Townhouse', beds:3, baths:2, garages:1, listingType:'For Sale', floor_area:'145m²', erf_size:'0m²',
+    desc:'Contemporary cluster unit in a secure complex of 12 units. Open-plan living, granite kitchen with gas hob, three bedrooms with built-ins, master en-suite. Single garage plus extra parking. Complex pool. Walking distance from Menlyn Maine. Ideal first home or investment — high rental demand.',
+    photo:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80','https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'],
+    paused:false, queueCount:5, sellerIdx:0 },
 
-  // ── DEMO LISTINGS: SERVICES ───────────────────────────────
-  {
-    id: 'demo_svc_1', cat: 'Services', feat: true,
-    title: 'Registered Electrician — Fault Finding, Compliance Certs',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 89, price: 'R 650', per: 'call-out + R 280/hr', priceNum: 650,
-    service_class: 'Technical', serviceType: 'Electrical', availability: 'Mon–Sat',
-    desc: 'Master electrician with 18 years\' experience and current wireman\'s licence. Residential and light commercial work: fault finding, DB board upgrades, solar and battery installations, Certificate of Compliance (COC) for property sales, gate motor and intercom wiring. Same-day emergency call-outs available. All work guaranteed 12 months. Registered with ECSA. Fully insured.',
-    photo: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_2', cat: 'Services', feat: false,
-    title: 'Landscape Gardener — Design, Installation & Maintenance',
-    area: 'Pretoria', suburb: 'Waterkloof',
-    trust: 82, price: 'R 450', per: 'per hour', priceNum: 450,
-    service_class: 'Casuals', serviceType: 'Garden & Landscaping', availability: 'Mon–Fri',
-    desc: 'Qualified horticulturalist with 14 years\' experience in residential landscaping across Pretoria\'s top suburbs. Services include full garden redesign, irrigation installation, lawn establishment, indigenous planting, and ongoing maintenance contracts. Portfolio of 80+ established gardens available on request. Monthly contracts from R3,500. Fully insured. No job too large or small.',
-    photo: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
-      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_3', cat: 'Services', feat: false,
-    title: 'Plumber — Leak Detection, Geysers, General Plumbing',
-    area: 'Pretoria', suburb: 'Lynnwood',
-    trust: 76, price: 'R 600', per: 'call-out + R 300/hr', priceNum: 600,
-    service_class: 'Technical', serviceType: 'Plumbing', availability: 'Mon–Sat',
-    desc: 'Licensed plumber (PIRB registered) covering all residential and light commercial plumbing. Specialities: non-invasive leak detection, geyser replacement and solar geyser installation, burst pipe repairs, bathroom and kitchen plumbing, and water meter installation. Emergency service 7 days. 1-hour response time for emergency call-outs in Pretoria East, Centurion, and Lynnwood.',
-    photo: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
-      'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_4', cat: 'Services', feat: false,
-    title: 'Web Developer — Small Business Websites & E-Commerce',
-    area: 'Pretoria', suburb: 'Hatfield',
-    trust: 84, price: 'R 12 500', per: 'per project', priceNum: 12500,
-    service_class: 'Technical', serviceType: 'IT & Development', availability: 'Weekdays',
-    desc: 'Freelance web developer with 9 years\' experience building websites and e-commerce stores for South African small businesses. Stack: React, Next.js, WordPress, WooCommerce. Includes hosting setup, SEO basics, Google Analytics, and 3 months\' post-launch support. Typical turnaround 3–4 weeks. Portfolio of 120+ live sites. References from established Pretoria businesses available.',
-    photo: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
-      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
-      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_5', cat: 'Services', feat: false,
-    title: 'Professional House Cleaner — Weekly & Monthly Contracts',
-    area: 'Pretoria', suburb: 'Menlyn',
-    trust: 71, price: 'R 220', per: 'per hour', priceNum: 220,
-    service_class: 'Casuals', serviceType: 'Cleaning', availability: 'Mon–Fri',
-    desc: 'Reliable, vetted house cleaner with 10 years\' experience in Pretoria East households. Weekly and monthly contracts preferred. Brings own quality cleaning products. Services include full house clean, laundry and ironing, oven and fridge cleans, and window washing. Police clearance certificate available. References from 12 current long-term clients on request. Non-smoker.',
-    photo: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
-    ],
-    paused: false, queueCount: 6, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_6', cat: 'Services', feat: false,
-    title: 'Chartered Accountant — Tax Returns & Small Business Accounting',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 88, price: 'R 1 800', per: 'per tax return', priceNum: 1800,
-    service_class: 'Technical', serviceType: 'Accounting & Tax', availability: 'Weekdays',
-    desc: 'CA(SA) offering personal income tax returns, provisional tax, small business accounting, VAT registration and returns, and payroll for businesses up to 20 employees. Registered SARS tax practitioner. Turnaround 48 hours for personal returns. Fixed-fee packages for small businesses from R2,200/month. 15 years\' experience. Fully remote — all documentation handled via secure portal.',
-    photo: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
-      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 2
-  },
-  {
-    id: 'demo_svc_7', cat: 'Services', feat: false,
-    title: 'Painter — Interior & Exterior, All Finishes',
-    area: 'Pretoria', suburb: 'Pretoria East',
-    trust: 67, price: 'R 85', per: 'per m²', priceNum: 85,
-    service_class: 'Casuals', serviceType: 'Painting', availability: 'Mon–Sat',
-    desc: 'Professional painter with 20 years\' experience in residential and commercial painting across Pretoria. Interior and exterior work, all paint systems including Dulux, Plascon, and Prominent Paints. Specialities: feature walls, textured finishes, varnishing, and damp remediation before painting. Full prep and clean-up included. Free quote within 24 hours. Scaffolding available for double-storeys.',
-    photo: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80',
-      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 2
-  },
-  // ── DEMO LISTINGS: ADVENTURES ─────────────────────────────
-  {
-    id: 'demo_adv_1', cat: 'adventures_experiences', feat: true,
-    title: 'Hot Air Balloon Safari over the Magaliesberg',
-    area: 'Pretoria', suburb: 'Hartbeespoort', country: 'ZA',
-    trust: 88, price: '2450', per: 'per person', priceNum: 2450,
-    environment_type: 'mountain_and_highlands', groupSize: '2–8 people', duration: '3 hours',
-    desc: 'Drift silently over the Magaliesberg at dawn in a luxury hot air balloon. One of South Africa\'s most iconic experiences — launch at sunrise, float above the valley for 60 minutes, and land to a champagne breakfast in the bush. SACAA-licensed pilots. Full safety briefing. Minimum age 10. All weather checks done 24hrs in advance.',
-    photo: 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80',
-      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_2', cat: 'adventures_experiences', feat: false,
-    title: 'Big 5 Hunting Safari — Limpopo Concession',
-    area: 'Pretoria', suburb: 'Bela-Bela', country: 'ZA',
-    trust: 79, price: '18500', per: 'per day', priceNum: 18500,
-    environment_type: 'bush_and_wildlife', groupSize: '1–4 hunters', duration: '3–7 days',
-    desc: 'Professional Hunter-led Big 5 safari on a private 12,000ha concession north of Bela-Bela. Full trophy hunting or photographic options. Walk-and-stalk methodology. All-inclusive: accommodation in bush camp, meals, field dressing, and transport from Pretoria. PHs registered with PHASA. Day packages and multi-day packages available.',
-    photo: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80',
-      'https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_3', cat: 'adventures_experiences', feat: false,
-    title: 'Magaliesberg Gorge Abseil & Rock Climb',
-    area: 'Pretoria', suburb: 'Hartbeespoort', country: 'ZA',
-    trust: 72, price: '750', per: 'per person', priceNum: 750,
-    environment_type: 'mountain_and_highlands', groupSize: '2–10 people', duration: 'Full day',
-    desc: 'Abseil two cliff faces (18m and 24m) and learn basic rock climbing techniques in the Magaliesberg gorge. All gear provided. UIAA-certified guide with Wilderness First Aid. No experience needed — suitable from age 14. Includes trail snacks and lunch.',
-    photo: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
-      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_4', cat: 'adventures_experiences', feat: false,
-    title: 'White Water Rafting — Ash River Grade 3–4',
-    area: 'Pretoria', suburb: 'Clarens', country: 'ZA',
-    trust: 65, price: '980', per: 'per person', priceNum: 980,
-    environment_type: 'mountain_and_highlands', groupSize: '4–12 people', duration: 'Full day',
-    desc: 'Grade 3–4 white water rafting on the Ash River, departing from Pretoria. Transport included. 6 hours on the water through spectacular Free State mountain scenery. Safety kayakers on the water at all times. Minimum age 16. Wetsuits and helmets provided.',
-    photo: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
-      'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_5', cat: 'adventures_experiences', feat: false,
-    title: 'Skydiving — 10,000ft Tandem Jump, Pretoria',
-    area: 'Pretoria', suburb: 'Bapsfontein', country: 'ZA',
-    trust: 83, price: '1850', per: 'per person', priceNum: 1850,
-    environment_type: 'mountain_and_highlands', groupSize: '1–6 people', duration: 'Half day',
-    desc: 'Tandem skydive from 10,000ft above Gauteng with a PASA-licensed instructor. 30-second freefall followed by a 5-minute canopy glide over the Highveld. Video and photo packages available. No experience required. Minimum weight 40kg, maximum 110kg. Minimum age 16.',
-    photo: 'https://images.unsplash.com/photo-1622629797619-c100e3e67e2e?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1622629797619-c100e3e67e2e?w=800&q=80',
-      'https://images.unsplash.com/photo-1601024445121-e5b82f020549?w=800&q=80',
-      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800&q=80'
-    ],
-    paused: false, queueCount: 6, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_6', cat: 'adventures_accommodation', feat: false,
-    title: 'Luxury Bush Lodge — Waterberg Biosphere',
-    area: 'Pretoria', suburb: 'Vaalwater', country: 'ZA',
-    trust: 91, price: '3200', per: 'per person per night', priceNum: 3200,
-    environment_type: 'bush_and_wildlife', groupSize: '2–8 guests', duration: 'Per night',
-    desc: 'Malaria-free luxury safari lodge in the heart of the Waterberg. 4 tented chalets on stilts, each with private plunge pool and uninterrupted bushveld views. All-inclusive: game drives, bush walks, all meals and drinks. TGCSA 5-star rated. Transfer from Pretoria available. Book 2 nights minimum.',
-    photo: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80',
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_7', cat: 'adventures_accommodation', feat: false,
-    title: 'Boutique Guesthouse — Waterkloof Ridge',
-    area: 'Pretoria', suburb: 'Waterkloof Ridge', country: 'ZA',
-    trust: 85, price: '1850', per: 'per night', priceNum: 1850,
-    environment_type: 'garden_and_winelands', groupSize: '1–4 guests', duration: 'Per night',
-    desc: 'TGCSA 4-star boutique guesthouse in a tranquil garden estate. 6 en-suite rooms, each with air conditioning, fast WiFi, and private patio. Full breakfast included. Secure parking. Walking distance from several embassies.',
-    photo: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80',
-      'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_8', cat: 'adventures_experiences', feat: false,
-    title: 'Mountain Bike Trail — Groenkloof Nature Reserve',
-    area: 'Pretoria', suburb: 'Groenkloof', country: 'ZA',
-    trust: 61, price: '450', per: 'per person', priceNum: 450,
-    environment_type: 'bush_and_wildlife', groupSize: '2–8 people', duration: 'Half day',
-    desc: 'Guided mountain bike trail through Groenkloof Nature Reserve — Pretoria\'s oldest nature reserve. 18km of single track through indigenous bush with wildlife sightings guaranteed. Bikes, helmets and hydration packs supplied. Suitable for intermediate riders. Departs 6am daily.',
-    photo: 'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-      'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_9', cat: 'adventures_experiences', feat: false,
-    title: 'Quad Biking & Zip Line — Hennops River Valley',
-    area: 'Pretoria', suburb: 'Centurion', country: 'ZA',
-    trust: 67, price: '620', per: 'per person', priceNum: 620,
-    environment_type: 'mountain_and_highlands', groupSize: '2–15 people', duration: '3 hours',
-    desc: 'Quad biking through the Hennops River Valley followed by a 200m zip line over the gorge. Perfect for team builds and groups. Safety helmets and all equipment provided. No experience needed. Minimum age 12. Includes light refreshments.',
-    photo: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80',
-      'https://images.unsplash.com/photo-1504870712357-65ea720d6078?w=800&q=80',
-      'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_adv_10', cat: 'adventures_experiences', feat: false,
-    title: 'Fly Fishing — Trout Dam, Dullstroom',
-    area: 'Pretoria', suburb: 'Dullstroom', country: 'ZA',
-    trust: 74, price: '890', per: 'per person', priceNum: 890,
-    environment_type: 'wetlands_and_lakes', groupSize: '1–4 people', duration: 'Full day',
-    desc: 'Guided fly fishing on a private trout dam near Dullstroom. Transport from Pretoria, all tackle and instruction provided. Suitable for complete beginners. Catch-and-release or table fish options. Includes streamside lunch.',
-    photo: 'https://images.unsplash.com/photo-1542372147193-a7aca54189cd?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1542372147193-a7aca54189cd?w=800&q=80',
-      'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'ph_adventures', cat: 'Adventures', feat: false,
-    title: 'PLACEHOLDER — Adventures listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    groupSize: '', duration: '',
-    desc: 'Real adventure listings will appear here once operators are onboarded.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 3
-  },
+  { id:'demo_prop_4', cat:'Property', feat:false,
+    title:'Penthouse Apartment — Brooklyn, Pretoria',
+    area:'Pretoria', suburb:'Brooklyn',
+    trust:83, price:'R 3 100 000', per:'', priceNum:3100000,
+    propType:'Apartment', beds:2, baths:2, garages:2, listingType:'For Sale', floor_area:'185m²', erf_size:'0m²',
+    desc:'Top-floor penthouse in a boutique 8-storey development in the heart of Brooklyn. Wraparound balcony with Magaliesberg views. Italian-design kitchen, Smeg appliances, underfloor heating in both bathrooms. Two covered parking bays. 24hr concierge, rooftop gym and residents lounge. Walking distance from embassies and top restaurants.',
+    photo:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80','https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:0 },
 
-  // ── DEMO LISTINGS: ADVENTURES · ACCOMMODATION (multi-country) ─
-  {
-    id: 'demo_accom_1', cat: 'adventures_accommodation', feat: true,
-    title: 'Luxury Safari Tented Camp — Waterberg Biosphere, ZA',
-    area: 'Limpopo', suburb: 'Vaalwater', country: 'ZA',
-    trust: 92, price: '3800', per: 'per person per night', priceNum: 3800,
-    environment_type: 'bush_and_wildlife',
-    groupSize: '2–8 guests', duration: 'Per night',
-    desc: 'Malaria-free luxury tented camp in the heart of the Waterberg. Four elevated canvas chalets with private plunge pools and unobstructed bushveld views. All-inclusive: game drives at dawn and dusk, guided bush walks, all meals and premium bar. TGCSA 4-star. Minimum 2-night stay. Transfer from Pretoria available.',
-    photo: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
-      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80',
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_2', cat: 'adventures_accommodation', feat: false,
-    title: 'Winelands Boutique Guesthouse — Franschhoek Valley, ZA',
-    area: 'Western Cape', suburb: 'Franschhoek', country: 'ZA',
-    trust: 87, price: '2200', per: 'per night', priceNum: 2200,
-    environment_type: 'garden_and_winelands',
-    groupSize: '2–4 guests', duration: 'Per night',
-    desc: 'Six-room boutique guesthouse set in a century-old Cape Dutch homestead surrounded by vineyards. Heated pool, mountain views from every room, farm-to-table breakfast with estate wine pairing. Walking distance from Franschhoek village and top Winelands restaurants. Perfect for couples and small groups.',
-    photo: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80',
-      'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_3', cat: 'adventures_accommodation', feat: false,
-    title: 'Rocky Mountain Ski-In/Ski-Out Lodge — Banff, Canada',
-    area: 'Alberta', suburb: 'Banff', country: 'CA',
-    trust: 89, price: '420', per: 'per night (CAD)', priceNum: 420,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '2–6 guests', duration: 'Per night',
-    desc: 'Ski-in/ski-out log cabin on the edge of Banff National Park. Sleeps 6 across 3 bedrooms, private hot tub on the deck with direct mountain views, wood-burning fireplace, full kitchen. 5 minutes by shuttle to Banff village. Snowshoe and cross-country ski trails from the door. Available year-round — stunning in all seasons.',
-    photo: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80',
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_4', cat: 'adventures_accommodation', feat: false,
-    title: 'Luxury Desert Glamping — Sedona Red Rocks, USA',
-    area: 'Arizona', suburb: 'Sedona', country: 'US',
-    trust: 84, price: '385', per: 'per night (USD)', priceNum: 385,
-    environment_type: 'desert_and_karoo',
-    groupSize: '2 guests', duration: 'Per night',
-    desc: 'Architect-designed canvas suite perched above the Sedona desert with floor-to-ceiling views of Cathedral Rock. King bed, outdoor soaking tub, private terrace with fire pit. Stargazing is exceptional — zero light pollution. Sunrise yoga session included. A 15-minute drive to Sedona town and trailheads.',
-    photo: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=800&q=80',
-      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_5', cat: 'adventures_accommodation', feat: false,
-    title: 'Scottish Highland Loch-Side Lodge — Inverness, UK',
-    area: 'Scotland', suburb: 'Inverness', country: 'GB',
-    trust: 81, price: '295', per: 'per night (GBP)', priceNum: 295,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '2–8 guests', duration: 'Per night',
-    desc: 'Traditional stone lodge on the shores of a private loch near Inverness. Four bedrooms, open peat fire, fully equipped kitchen, rowing boat and kayaks included. Red deer graze the meadow at dawn. Whisky tasting hamper on arrival. Superb base for Ben Nevis, the NC500 and Cairngorms National Park.',
-    photo: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_6', cat: 'adventures_accommodation', feat: false,
-    title: 'Dolomites Alpine Chalet — Val Gardena, Italy (EU)',
-    area: 'South Tyrol', suburb: 'Ortisei', country: 'EU',
-    trust: 88, price: '340', per: 'per night (EUR)', priceNum: 340,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '2–6 guests', duration: 'Per night',
-    desc: 'Authentic alpine chalet in the UNESCO World Heritage Dolomites. Three bedrooms with hand-carved timber furnishings, south-facing balcony with panoramic mountain views, wood-fired sauna. Ski lifts 800m away. Via Ferrata routes and hiking trails from the door in summer. Traditional South Tyrolean breakfast hamper delivered daily.',
-    photo: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80',
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_7', cat: 'adventures_accommodation', feat: false,
-    title: 'Overwater Eco-Bungalow — Whitsunday Islands, Australia',
-    area: 'Queensland', suburb: 'Airlie Beach', country: 'AU',
-    trust: 91, price: '580', per: 'per night (AUD)', priceNum: 580,
-    environment_type: 'coastal_and_beach',
-    groupSize: '2 guests', duration: 'Per night',
-    desc: 'Secluded overwater bungalow on a private sand cay in the Whitsundays. Steps directly into the Coral Sea. Glass floor panels, outdoor deck hammock, snorkelling gear and a kayak included. Breakfast provisions delivered by tender daily. The Great Barrier Reef is a 20-minute boat ride. Accessible only by seaplane or private charter.',
-    photo: 'https://images.unsplash.com/photo-1439130490301-25e322d88054?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1439130490301-25e322d88054?w=800&q=80',
-      'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80',
-      'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_8', cat: 'adventures_accommodation', feat: false,
-    title: 'Remote Fiordland Wilderness Lodge — Milford Sound, NZ',
-    area: 'Southland', suburb: 'Te Anau', country: 'NZ',
-    trust: 86, price: '495', per: 'per night (NZD)', priceNum: 495,
-    environment_type: 'forest_and_fynbos',
-    groupSize: '2–4 guests', duration: 'Per night',
-    desc: 'Off-grid wilderness lodge accessible only by helicopter or guided walking track, overlooking Milford Sound. Solar-powered. Two bedrooms, chef-prepared dinners included. Kayaking and guided walks to the fiord edge. Resident naturalist guide. Bioluminescent plankton visible from the jetty on still nights. A once-in-a-lifetime escape.',
-    photo: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=800&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80',
-      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_9', cat: 'adventures_accommodation', feat: false,
-    title: 'Coastal Treehouse Retreat — Big Sur, California, USA',
-    area: 'California', suburb: 'Big Sur', country: 'US',
-    trust: 78, price: '450', per: 'per night (USD)', priceNum: 450,
-    environment_type: 'coastal_and_beach',
-    groupSize: '2 guests', duration: 'Per night',
-    desc: 'Handcrafted treehouse suspended 30ft in a coastal redwood canopy above Big Sur with Pacific Ocean glimpses. Custom platform bed, outdoor copper bath, and a rope bridge to a private meditation deck. Bioluminescent waves on the beach below in summer. No TV, no WiFi — total digital detox. Farm breakfast basket included.',
-    photo: 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800&q=80',
-      'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
-      'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 3
-  },
-  {
-    id: 'demo_accom_10', cat: 'adventures_accommodation', feat: false,
-    title: 'Garden Route Forest Cabin — Knysna, ZA',
-    area: 'Western Cape', suburb: 'Knysna', country: 'ZA',
-    trust: 76, price: '1650', per: 'per night', priceNum: 1650,
-    environment_type: 'forest_and_fynbos',
-    groupSize: '2–4 guests', duration: 'Per night',
-    desc: 'Secluded self-catering cabin nestled in indigenous Knysna Forest, 10 minutes from the Knysna Heads. Two bedrooms, wrap-around deck with forest sounds, fire pit for evening braais. Birdlife is extraordinary — Knysna Loerie sightings daily. Seasonal whale watching from the Heads in September and October. Hiking and mountain biking trails directly accessible.',
-    photo: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80',
-      'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
+  { id:'demo_prop_5', cat:'Property', feat:false,
+    title:'Smallholding with Income — Raslouw, Centurion',
+    area:'Pretoria', suburb:'Centurion',
+    trust:68, price:'R 5 500 000', per:'', priceNum:5500000,
+    propType:'Smallholding', beds:4, baths:3, garages:4, listingType:'For Sale', floor_area:'380m²', erf_size:'8 500m²',
+    desc:'Productive smallholding on 8,500m² in sought-after Raslouw. Main house: 4 beds, 3 baths, farmhouse kitchen and covered stoep. Separate self-contained cottage currently tenanted at R8,500/month. 4-car workshop, borehole, 3-phase power. 5 minutes from N14 and Centurion amenities. Rates R1,800/month.',
+    photo:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80','https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:0 },
 
-  // ── DEMO LISTINGS: ADVENTURES · EXPERIENCES (multi-country) ──
-  {
-    id: 'demo_exp_1', cat: 'adventures_experiences', feat: true,
-    title: 'Hot Air Balloon at Sunrise — Pilanesberg National Park, ZA',
-    area: 'North West', suburb: 'Pilanesberg', country: 'ZA',
-    trust: 90, price: '2950', per: 'per person', priceNum: 2950,
-    environment_type: 'bush_and_wildlife',
-    groupSize: '4–8 people', duration: '3 hours',
-    desc: 'Drift silently over the Pilanesberg at first light in a luxury balloon, spotting Big 5 from the air with a SACAA-licensed pilot. Launch from the park boundary, 60-minute flight over game-rich plains, landing champagne breakfast in the bush. Weather checks 24 hrs in advance. Minimum age 10. Transfers from Sun City included.',
-    photo: 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80',
-      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800&q=80'
-    ],
-    paused: false, queueCount: 6, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_2', cat: 'adventures_experiences', feat: false,
-    title: 'Shark Cage Diving — Gansbaai Great White Alley, ZA',
-    area: 'Western Cape', suburb: 'Gansbaai', country: 'ZA',
-    trust: 85, price: '2100', per: 'per person', priceNum: 2100,
-    environment_type: 'coastal_and_beach',
-    groupSize: '4–12 people', duration: 'Full day',
-    desc: 'Cage dive with wild Great White Sharks in Shark Alley, the most densely populated Great White habitat on earth. Depart from Gansbaai (2 hrs from Cape Town). SAMSA-certified vessel, 5mm wetsuits provided. Approx 4 hours at sea. Cage entry for all participants. Includes full safety briefing, light breakfast, and hot drinks. A genuinely life-changing experience.',
-    photo: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-      'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
-      'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_3', cat: 'adventures_experiences', feat: false,
-    title: 'Heli-Skiing — Selkirk Mountains, British Columbia, Canada',
-    area: 'British Columbia', suburb: 'Revelstoke', country: 'CA',
-    trust: 93, price: '1250', per: 'per person per day (CAD)', priceNum: 1250,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '4–12 people', duration: 'Full day',
-    desc: 'Helicopter drops into untouched powder in the Selkirks — among the deepest snowpack in the world. Certified ACMG mountain guides lead groups of 4–12 through 10,000+ vertical feet of terrain per day. All safety equipment included. Avalanche transceiver training provided. Groups formed by ability. Pre-season booking essential. The gold standard of backcountry skiing.',
-    photo: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80',
-      'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_4', cat: 'adventures_experiences', feat: false,
-    title: 'Canyon Lands White Water Expedition — Colorado River, USA',
-    area: 'Utah', suburb: 'Moab', country: 'US',
-    trust: 82, price: '240', per: 'per person per day (USD)', priceNum: 240,
-    environment_type: 'desert_and_karoo',
-    groupSize: '6–16 people', duration: '3–7 days',
-    desc: 'Multi-day paddle through the heart of Canyonlands National Park on the Colorado River. Class II–IV rapids depending on season and route. All camping gear, dry bags, and meals provided. Certified swift water rescue guides. Daily hikes into canyon side trails. Permit-limited — fewer than 600 people per year complete the full route. Minimum age 14.',
-    photo: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80',
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-      'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_5', cat: 'adventures_experiences', feat: false,
-    title: 'Sea Cliff Coasteering — Pembrokeshire, Wales, UK',
-    area: 'Wales', suburb: 'St Davids', country: 'GB',
-    trust: 77, price: '85', per: 'per person (GBP)', priceNum: 85,
-    environment_type: 'coastal_and_beach',
-    groupSize: '4–12 people', duration: 'Half day',
-    desc: 'Coasteering along the dramatic sea cliffs of Pembrokeshire — scrambling, jumping, swimming through sea caves and natural rock arches. Full wetsuits, helmets, and buoyancy aids provided. BCU-qualified guides with marine first aid. No experience needed. Minimum age 10. Includes hot drinks and a fire-pit debrief on the beach afterwards. The original coasteering location in the world.',
-    photo: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-      'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_6', cat: 'adventures_experiences', feat: false,
-    title: 'Via Ferrata Iron Road — Lago di Garda, Italy (EU)',
-    area: 'Trentino', suburb: 'Riva del Garda', country: 'EU',
-    trust: 80, price: '95', per: 'per person (EUR)', priceNum: 95,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '2–8 people', duration: 'Full day',
-    desc: 'Guided Via Ferrata along the historic WWI iron road routes above Lago di Garda — one of Europe\'s most spectacular mountain experiences. UIAA-certified guides, all harness and helmet equipment included. Routes from beginner (D) to challenging (D/E). Depart from Riva del Garda at 7am. Spectacular lake views from the summit. Includes lunch at mountain rifugio.',
-    photo: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_7', cat: 'adventures_experiences', feat: false,
-    title: 'Great Barrier Reef Liveaboard Dive — Coral Sea, Australia',
-    area: 'Queensland', suburb: 'Cairns', country: 'AU',
-    trust: 89, price: '650', per: 'per person per day (AUD)', priceNum: 650,
-    environment_type: 'coastal_and_beach',
-    groupSize: '8–16 people', duration: '3 days',
-    desc: 'Three-day liveaboard dive expedition to the Outer Great Barrier Reef from Cairns. 10+ dives across pristine outer reef sites rarely visited by day-trip boats. PADI-certified dive guides, nitrox available, 3 meals daily included. Suitable from beginner (Discover Scuba) to experienced divers. Night dives on offer. World Heritage listed marine park — bucket-list diving.',
-    photo: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-      'https://images.unsplash.com/photo-1439130490301-25e322d88054?w=800&q=80',
-      'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_8', cat: 'adventures_experiences', feat: false,
-    title: 'Tongariro Alpine Crossing — Guided Summit Trek, NZ',
-    area: 'Manawatu-Whanganui', suburb: 'National Park Village', country: 'NZ',
-    trust: 83, price: '175', per: 'per person (NZD)', priceNum: 175,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '4–12 people', duration: 'Full day',
-    desc: 'Guided traverse of the Tongariro Alpine Crossing — consistently rated one of the world\'s best one-day hikes. Active volcanic landscape, emerald crater lakes, and views across the Central Plateau to Mt Ruapehu. Certified DOC-approved guide, transport from Taupo, packed lunch, and all safety gear included. 19.4km, 7–8 hrs walking. Minimum fitness required. Mt Doom fans welcome.',
-    photo: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=800&q=80',
-      'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_9', cat: 'adventures_experiences', feat: false,
-    title: 'Bouldering & Sport Climbing — Rocklands, Northern Cape, ZA',
-    area: 'Northern Cape', suburb: 'Cederberg', country: 'ZA',
-    trust: 71, price: '650', per: 'per person', priceNum: 650,
-    environment_type: 'desert_and_karoo',
-    groupSize: '2–8 people', duration: 'Full day',
-    desc: 'A full-day guided bouldering session in the Rocklands — one of the premier bouldering destinations on earth and home to multiple V15 world-class problems. Certified MCSA guide leads groups from beginner to advanced on the orange sandstone. All crash pads supplied. Camping at Rocklands basecamp available. Sunset braai around the fire included.',
-    photo: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80',
-      'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80',
-      'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 3
-  },
-  {
-    id: 'demo_exp_10', cat: 'adventures_experiences', feat: false,
-    title: 'Northern Lights Snowmobile Safari — Lapland, Finland (EU)',
-    area: 'Lapland', suburb: 'Rovaniemi', country: 'EU',
-    trust: 88, price: '180', per: 'per person (EUR)', priceNum: 180,
-    environment_type: 'mountain_and_highlands',
-    groupSize: '2–10 people', duration: '4 hours',
-    desc: 'Evening snowmobile safari deep into the Arctic wilderness, guided to remote Aurora observation points far from light pollution. Professional photography tips from your guide. Warming reindeer stew at a lakeside campfire included. Aurora activity forecasted daily — trips adjusted to maximise sighting probability. Thermal suits, helmets and gloves provided. Departures from Rovaniemi December–March.',
-    photo: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80',
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 3
-  },
+  { id:'demo_prop_6', cat:'Property', feat:false,
+    title:'Secure 3-Bed Townhouse — Irene, Centurion',
+    area:'Pretoria', suburb:'Irene',
+    trust:72, price:'R 2 450 000', per:'', priceNum:2450000,
+    propType:'Townhouse', beds:3, baths:2, garages:2, listingType:'For Sale', floor_area:'210m²', erf_size:'0m²',
+    desc:'Spacious townhouse in a well-managed complex in Irene. Large open-plan living flowing to a private garden. Three bedrooms, master with en-suite and walk-in. Double automated garage. Complex pool, kiddies play area, 24hr security. Close to Irene Farm, Centurion Lake and top schools.',
+    photo:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:0 },
 
-  // ── DEMO LISTINGS: COLLECTORS ─────────────────────────────
-  {
-    id: 'demo_col_1', cat: 'Collectors', feat: true,
-    title: 'Signed Limited Edition Pierneef Print — Certificate of Authenticity',
-    area: 'Pretoria', suburb: 'Arcadia',
-    trust: 91, price: 'R 28 500', per: '', priceNum: 28500,
-    collectibleType: 'Art & Prints', condition: 'Excellent', era: '1940s',
-    desc: 'A hand-signed limited edition lithographic reproduction of J.H. Pierneef\'s iconic Bushveld scene, numbered 14/50. Full certificate of authenticity from a registered SA art appraiser. Original frame. Provenance documented from 1962.',
-    photo: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
-      'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&q=80',
-      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_2', cat: 'Collectors', feat: false,
-    title: 'Rare 1963 Voortrekker Monument Commemorative Silver Set',
-    area: 'Pretoria', suburb: 'Pretoria East',
-    trust: 64, price: 'R 4 200', per: '', priceNum: 4200,
-    collectibleType: 'Coins & Medals', condition: 'Good — minor toning', era: '1960s',
-    desc: 'Complete 4-piece sterling silver commemorative medallion set from the Voortrekker Monument centenary, 1963. Original velvet presentation box. All four medallions intact. SA Numismatic Society member seller. Independently valued at R5,800.',
-    photo: 'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
-      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80',
-      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80'
-    ],
-    paused: false, queueCount: 0, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_3', cat: 'Collectors', feat: false,
-    title: 'Vintage Leica M3 Camera — 1956, Working Condition',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 77, price: 'R 18 900', per: '', priceNum: 18900,
-    collectibleType: 'Cameras & Optical', condition: 'Very Good', era: '1956',
-    desc: '1956 Leica M3 double-stroke rangefinder. Shutter fires at all speeds. Viewfinder bright and clear. Minor brassing consistent with age. Original Summicron 50mm f/2 lens and leather case. Serviced 2023.',
-    photo: 'https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?w=800&q=80',
-      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80',
-      'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_4', cat: 'Collectors', feat: false,
-    title: 'SA Reserve Bank First Issue Banknote Collection — 1922',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 82, price: 'R 12 800', per: '', priceNum: 12800,
-    collectibleType: 'Banknotes', condition: 'Fine — some foxing', era: '1922',
-    desc: 'Set of 4 South African Reserve Bank first-issue banknotes from 1922, denominations 10s, £1, £5 and £10. Housed in archival sleeves. Accompanied by appraisal letter from a registered SA banknote dealer. A rare find — fewer than 20 complete sets known to exist in private hands.',
-    photo: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80',
-      'https://images.unsplash.com/photo-1561414927-6d86591d0c4f?w=800&q=80',
-      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_5', cat: 'Collectors', feat: false,
-    title: 'Antique Victorian Mahogany Writing Desk — 1880s',
-    area: 'Pretoria', suburb: 'Waterkloof',
-    trust: 69, price: 'R 22 000', per: '', priceNum: 22000,
-    collectibleType: 'Antique Furniture', condition: 'Good — light restoration', era: '1880s',
-    desc: 'An English Victorian mahogany pedestal writing desk, circa 1885. Green leather tooled writing surface, 6 drawers, brass fittings. Minor restoration to right pedestal base — otherwise original. Provenance from a Pretoria estate. Delivery available within Pretoria.',
-    photo: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80',
-      'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800&q=80',
-      'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800&q=80'
-    ],
-    paused: false, queueCount: 0, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_6', cat: 'Collectors', feat: false,
-    title: 'Complete Springbok Rugby Card Set — 1995 World Cup Squad',
-    area: 'Pretoria', suburb: 'Pretoria East',
-    trust: 55, price: 'R 3 400', per: '', priceNum: 3400,
-    collectibleType: 'Sports Cards & Memorabilia', condition: 'Near Mint', era: '1995',
-    desc: 'Complete 32-card set of the 1995 Rugby World Cup Springbok squad, including the full management team and squad cards. All cards graded NM or better. Housed in individual protective sleeves in original collector binder. Includes Lomu and Ellis Park final match programme.',
-    photo: 'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?w=800&q=80',
-      'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&q=80',
-      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_7', cat: 'Collectors', feat: false,
-    title: 'Restored 1920s Gramophone — His Master\'s Voice',
-    area: 'Pretoria', suburb: 'Arcadia',
-    trust: 73, price: 'R 8 500', per: '', priceNum: 8500,
-    collectibleType: 'Vintage Audio', condition: 'Excellent — fully restored', era: '1920s',
-    desc: 'A fully restored HMV (His Master\'s Voice) table-top gramophone, circa 1924. Original oak cabinet, brass horn and tonearm. New needle and diaphragm fitted. Plays 78rpm records at correct speed. Comes with 12 original 78rpm records. A stunning display piece that actually works.',
-    photo: 'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&q=80',
-      'https://images.unsplash.com/photo-1518459031867-a89b944bffe4?w=800&q=80',
-      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_8', cat: 'Collectors', feat: false,
-    title: 'Anglo-Boer War Medal Pair — Named to Soldier',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 88, price: 'R 9 200', per: '', priceNum: 9200,
-    collectibleType: 'Coins & Medals', condition: 'Very Good', era: '1900s',
-    desc: 'A named pair of Anglo-Boer War medals — Queen\'s South Africa Medal with 4 clasps and King\'s South Africa Medal, both engraved to Pte. J.H. Smit, Imperial Light Horse. Original ribbons. Full research document included tracing the soldier\'s service record. Verified by the SA Medal Society.',
-    photo: 'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1561486462-89834a03cb72?w=800&q=80',
-      'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&q=80',
-      'https://images.unsplash.com/photo-1621155346337-1d19476ba7d6?w=800&q=80'
-    ],
-    paused: false, queueCount: 0, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_9', cat: 'Collectors', feat: false,
-    title: 'First Edition — Wilbur Smith "When the Lion Feeds" 1964',
-    area: 'Pretoria', suburb: 'Menlyn',
-    trust: 66, price: 'R 6 800', per: '', priceNum: 6800,
-    collectibleType: 'Books & Manuscripts', condition: 'Good — light foxing', era: '1964',
-    desc: 'True first edition, first printing of Wilbur Smith\'s debut novel "When the Lion Feeds", published by William Heinemann, London, 1964. Original cloth boards, dust jacket present with minor edge wear. No ownership inscriptions. A cornerstone of any South African literature collection.',
-    photo: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',
-      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80',
-      'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 4
-  },
-  {
-    id: 'demo_col_10', cat: 'Collectors', feat: false,
-    title: 'Antique Boer War Mauser Rifle — De-activated, With Papers',
-    area: 'Pretoria', suburb: 'Pretoria North',
-    trust: 71, price: 'R 14 500', per: '', priceNum: 14500,
-    collectibleType: 'Militaria', condition: 'Good — original patina', era: '1895',
-    desc: 'A Mauser Model 1895 rifle, serial number consistent with Transvaal Republic issue. Professionally de-activated to SAPS specifications with certificate. All matching numbers. Original stock with minor dings. A significant piece of South African history from the Anglo-Boer War period.',
-    photo: 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=800&q=80',
-      'https://images.unsplash.com/photo-1586771107445-d3ca888129ce?w=800&q=80',
-      'https://images.unsplash.com/photo-1518459031867-a89b944bffe4?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 4
-  },
-  {
-    id: 'ph_collectors', cat: 'Collectors', feat: false,
-    title: 'PLACEHOLDER — Collectors listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    collectibleType: '', condition: '', era: '',
-    desc: 'Real collector listings will appear here once sellers are onboarded.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 4
-  },
-  // ── DEMO LISTINGS: CARS ───────────────────────────────────
-  {
-    id: 'demo_car_1', cat: 'Cars', feat: true,
-    title: '2022 Porsche 911 Carrera S — 8,200km, One Owner',
-    area: 'Pretoria', suburb: 'Waterkloof',
-    trust: 92, price: 'R 2 450 000', per: '', priceNum: 2450000,
-    carMake: 'Porsche', carModel: '911 Carrera S', year: 2022, mileage: '8,200km', transmission: 'PDK',
-    desc: '2022 Porsche 911 Carrera S in GT Silver Metallic. PDK transmission. Sport Chrono Package, PASM, Bose sound system, heated seats, panoramic roof. One owner from new, full Porsche dealer service history. Still under OEM warranty. A remarkable example in near-showroom condition.',
-    photo: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80',
-      'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80',
-      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_2', cat: 'Cars', feat: false,
-    title: '2021 BMW M4 Competition — Sakhir Orange, Manual',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 81, price: 'R 1 180 000', per: '', priceNum: 1180000,
-    carMake: 'BMW', carModel: 'M4 Competition', year: 2021, mileage: '22,400km', transmission: 'Manual',
-    desc: '2021 BMW M4 Competition in rare Sakhir Orange with black Merino leather. 6-speed manual — one of very few M4 Comps in SA with the manual box. M Driver\'s Package, carbon ceramic brakes, M Carbon seats. Full BMW dealer service history. Two keys.',
-    photo: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80',
-      'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800&q=80',
-      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_3', cat: 'Cars', feat: false,
-    title: '2020 Mercedes-AMG GT 63 S 4-Matic — 4-Door Coupé',
-    area: 'Pretoria', suburb: 'Pretoria East',
-    trust: 87, price: 'R 2 100 000', per: '', priceNum: 2100000,
-    carMake: 'Mercedes-AMG', carModel: 'GT 63 S', year: 2020, mileage: '31,000km', transmission: 'AMG Speedshift',
-    desc: 'AMG GT 63 S 4-door in Obsidian Black with Nappa leather and AMG Performance seats. 639hp twin-turbo V8. AMG Ride Control+, ceramic composite brakes, Burmester surround sound. Full AMG dealer history. Recent service completed.',
-    photo: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80',
-      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_4', cat: 'Cars', feat: false,
-    title: '2023 Ford Ranger Raptor — 4,100km, Immaculate',
-    area: 'Pretoria', suburb: 'Pretoria North',
-    trust: 74, price: 'R 895 000', per: '', priceNum: 895000,
-    carMake: 'Ford', carModel: 'Ranger Raptor', year: 2023, mileage: '4,100km', transmission: 'Automatic',
-    desc: '2023 Ford Ranger Raptor in Conquer Grey. 3.0L EcoBoost V6, Fox Racing suspension, Baja mode. Load bed liner, roller shutter, tow bar. Virtually new — 4,100km only. Full Ford dealer service history. Under full warranty.',
-    photo: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
-      'https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=800&q=80',
-      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_5', cat: 'Cars', feat: false,
-    title: '2019 Lamborghini Huracán EVO — 14,000km',
-    area: 'Pretoria', suburb: 'Waterkloof Ridge',
-    trust: 95, price: 'R 5 800 000', per: '', priceNum: 5800000,
-    carMake: 'Lamborghini', carModel: 'Huracán EVO', year: 2019, mileage: '14,000km', transmission: 'LDF Paddle Shift',
-    desc: 'Lamborghini Huracán EVO in Arancio Borealis (orange) with black Alcantara interior. 640hp V10, LDVI vehicle dynamics system, titanium exhaust. Full Lamborghini SA service history. All books, 2 keys, original wheels and caps. A genuine supercar in exceptional condition.',
-    photo: 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&q=80',
-      'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_6', cat: 'Cars', feat: false,
-    title: '2022 Toyota GR86 — Track-Ready, 18,000km',
-    area: 'Pretoria', suburb: 'Menlyn',
-    trust: 68, price: 'R 520 000', per: '', priceNum: 520000,
-    carMake: 'Toyota', carModel: 'GR86', year: 2022, mileage: '18,000km', transmission: 'Manual 6-speed',
-    desc: 'Toyota GR86 in Trueno Blue. Manual 6-speed. Standard car with zero modifications — kept completely stock. One owner, garage kept. Michelin Pilot Sport 4 tyres (80% remaining). Full Toyota service history. Perfect driver\'s car for someone who wants pure, unassisted handling.',
-    photo: 'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80',
-      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80',
-      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80'
-    ],
-    paused: false, queueCount: 3, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_7', cat: 'Cars', feat: false,
-    title: '2021 VW Golf 8 GTI Clubsport — 28,000km',
-    area: 'Pretoria', suburb: 'Brooklyn',
-    trust: 71, price: 'R 620 000', per: '', priceNum: 620000,
-    carMake: 'Volkswagen', carModel: 'Golf 8 GTI Clubsport', year: 2021, mileage: '28,000km', transmission: 'DSG',
-    desc: 'Golf 8 GTI Clubsport in Tornado Red with Nappa leather seats. 300hp, DSG, DCC adaptive suspension, Harman Kardon sound. Full VW service plan still active. Slight tint on all windows. Two keys and books. An exceptional hot hatch.',
-    photo: 'https://images.unsplash.com/photo-1471444928139-48c5bf5173f8?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1471444928139-48c5bf5173f8?w=800&q=80',
-      'https://images.unsplash.com/photo-1617469767053-d3b523a0b982?w=800&q=80',
-      'https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&q=80'
-    ],
-    paused: false, queueCount: 4, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_8', cat: 'Cars', feat: false,
-    title: '1972 Ford Mustang Mach 1 — Fully Restored',
-    area: 'Pretoria', suburb: 'Pretoria East',
-    trust: 84, price: 'R 780 000', per: '', priceNum: 780000,
-    carMake: 'Ford', carModel: 'Mustang Mach 1', year: 1972, mileage: '82,000 miles', transmission: 'Manual 4-speed',
-    desc: 'Numbers-matching 1972 Mustang Mach 1, 351 Cleveland V8. Full nut-and-bolt restoration completed 2021 to original Grabber Blue specification. New interior trim, resprayed in original colour, rebuilt engine and gearbox. SA-registered. Stunning example of classic American muscle.',
-    photo: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80',
-      'https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=800&q=80',
-      'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=800&q=80'
-    ],
-    paused: false, queueCount: 1, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_9', cat: 'Cars', feat: false,
-    title: '2023 Tesla Model 3 Performance — 11,000km',
-    area: 'Pretoria', suburb: 'Centurion',
-    trust: 76, price: 'R 1 080 000', per: '', priceNum: 1080000,
-    carMake: 'Tesla', carModel: 'Model 3 Performance', year: 2023, mileage: '11,000km', transmission: 'Single Speed',
-    desc: 'Tesla Model 3 Performance in Pearl White with black interior. Dual motor AWD, 0–100 in 3.3s. 18" Uberturbine wheels, glass roof, full self-driving hardware. Full OTA update history. Home charging cable included. One owner, no accidents.',
-    photo: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80',
-      'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
-      'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=80'
-    ],
-    paused: false, queueCount: 5, sellerIdx: 5
-  },
-  {
-    id: 'demo_car_10', cat: 'Cars', feat: false,
-    title: '2020 Jeep Wrangler Rubicon — Lifted, Modified',
-    area: 'Pretoria', suburb: 'Pretoria North',
-    trust: 63, price: 'R 960 000', per: '', priceNum: 960000,
-    carMake: 'Jeep', carModel: 'Wrangler Rubicon', year: 2020, mileage: '42,000km', transmission: 'Automatic',
-    desc: '2020 Jeep Wrangler Rubicon 4-door in Firecracker Red. 2" lift kit, 35" BFG all-terrain tyres, ARB bull bar and rock sliders, dual recovery tracks. 3.6L Pentastar V6. Full service history. Hardtop and soft-top included. A serious off-roader that looks the part on the street too.',
-    photo: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80',
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80',
-      'https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=800&q=80'
-    ],
-    paused: false, queueCount: 2, sellerIdx: 5
-  },
-  {
-    id: 'ph_cars', cat: 'Cars', feat: false,
-    title: 'PLACEHOLDER — Cars listing coming soon',
-    area: 'Pretoria', suburb: 'Pretoria',
-    trust: 0, price: null, per: '', priceNum: 0,
-    carMake: '', carModel: '', year: 0, mileage: '', transmission: '',
-    desc: 'Real car listings will appear here once sellers are onboarded.',
-    photo: null, paused: true, queueCount: 0, sellerIdx: 5
-  },
+  { id:'demo_prop_7', cat:'Property', feat:false,
+    title:'Investment Flat — Hatfield, Pretoria (9.1% Yield)',
+    area:'Pretoria', suburb:'Hatfield',
+    trust:63, price:'R 950 000', per:'', priceNum:950000,
+    propType:'Apartment', beds:1, baths:1, garages:1, listingType:'For Sale', floor_area:'65m²', erf_size:'0m²',
+    desc:'Well-maintained one-bedroom apartment in a popular Hatfield complex, currently tenanted at R7,200/month — a solid 9.1% gross yield. Modern kitchen, open plan living. One covered parking bay. Walking distance from University of Pretoria and Hatfield Square. Ideal buy-to-let.',
+    photo:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80','https://images.unsplash.com/photo-1584752242818-b4bd3f3a3ffa?w=800&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:0 },
+
+  { id:'demo_prop_8', cat:'Property', feat:false,
+    title:'Vacant Stand — Silver Lakes Golf Estate',
+    area:'Pretoria', suburb:'Silver Lakes',
+    trust:79, price:'R 1 650 000', per:'', priceNum:1650000,
+    propType:'Vacant Land', beds:0, baths:0, garages:0, listingType:'For Sale', floor_area:'0m²', erf_size:'1 050m²',
+    desc:'Prime 1,050m² north-facing stand on the Silver Lakes Golf Estate with fairway views. Estate offers 24hr security, golf course, tennis courts and clubhouse. All bulk services in place. Building plans available (not yet approved). Build your dream home in a world-class secure environment.',
+    photo:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80','https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80'],
+    paused:false, queueCount:1, sellerIdx:0 },
+
+  { id:'demo_prop_9', cat:'Property', feat:false,
+    title:'Lifestyle Farm For Sale — Roodeplaat, Pretoria North',
+    area:'Pretoria', suburb:'Roodeplaat',
+    trust:77, price:'R 9 800 000', per:'', priceNum:9800000,
+    propType:'Farm', beds:6, baths:4, garages:4, listingType:'For Sale', floor_area:'650m²', erf_size:'12 ha',
+    desc:'Exceptional 12-hectare lifestyle farm on the banks of the Roodeplaat Dam. Main homestead: 6 beds, 4 baths, farmhouse kitchen and wraparound stoep with dam views. Two additional cottages, 3-phase power, borehole with irrigation, stables and paddocks. 30-minute drive to Pretoria CBD. Game fencing. Complete off-grid capability. A rare find.',
+    photo:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80','https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:0 },
+
+  { id:'demo_prop_10', cat:'Property', feat:false,
+    title:'Working Cattle Farm — Bela-Bela Area, Limpopo Border',
+    area:'Pretoria', suburb:'Bela-Bela',
+    trust:71, price:'R 18 500 000', per:'', priceNum:18500000,
+    propType:'Farm', beds:4, baths:2, garages:6, listingType:'For Sale', floor_area:'420m²', erf_size:'485 ha',
+    desc:'485-hectare working cattle farm in the Waterberg foothills, 90km north of Pretoria. Comfortable 4-bedroom farmhouse, 6 staff houses, 3 boreholes, 2 earth dams, cattle handling facilities and extensive game fencing. Currently running 180 head of Bonsmara. Additional 120ha under pivot irrigation. Exceptional investment with both agricultural and game farm potential.',
+    photo:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80','https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80','https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80','https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80'],
+    paused:false, queueCount:1, sellerIdx:0 },
+
+  // ── TUTORS (10 listings) ──────────────────────────────────
+  { id:'ph_tutors', cat:'Tutors', feat:false, title:'Tutor listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, subject:'', level:'', mode:'', desc:'Real tutor listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:1 },
+
+  { id:'demo_tut_1', cat:'Tutors', feat:true,
+    title:'Mathematics & Physical Science — Matric Specialist',
+    area:'Pretoria', suburb:'Brooklyn',
+    trust:93, price:'R 380', per:'per hour', priceNum:380,
+    subject:'Mathematics', level:'Grade 10–12', mode:'In-person',
+    desc:'Experienced matric tutor with 12 years teaching at top Pretoria schools. Specialises in Maths and Physical Science for Grades 10–12, with focus on exam technique and past-paper drilling. 94% of students improved by at least one symbol grade. Small groups (max 4) or one-on-one. Weekdays after 15:00 and Saturdays. References from 60+ satisfied families.',
+    photo:'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80'],
+    paused:false, queueCount:6, sellerIdx:1 },
+
+  { id:'demo_tut_2', cat:'Tutors', feat:false,
+    title:'English Home Language & Literature — All Grades',
+    area:'Pretoria', suburb:'Waterkloof',
+    trust:86, price:'R 320', per:'per hour', priceNum:320,
+    subject:'English', level:'Grade 4–12', mode:'Online',
+    desc:'Honours-qualified English teacher offering tutoring in English Home Language and Literature for Grades 4–12. Focus on creative writing, essay structure, comprehension and set works. Online sessions via Google Meet — all materials provided. Particular success with reluctant writers and students with dyslexia. DBS-cleared.',
+    photo:'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:1 },
+
+  { id:'demo_tut_3', cat:'Tutors', feat:false,
+    title:'Piano Lessons — Beginner to Grade 8 ABRSM',
+    area:'Pretoria', suburb:'Lynnwood',
+    trust:78, price:'R 280', per:'per 45 min', priceNum:280,
+    subject:'Music (Piano)', level:'Beginner–Grade 8', mode:'In-person',
+    desc:'UNISA-qualified pianist with 15 years teaching experience. Lessons cover theory, sight-reading, scales and repertoire, with exam preparation for ABRSM and UNISA syllabi. Students from age 5 upward. Own Steinway upright in dedicated studio. 100% of Grade 5–8 exam candidates passed in 2025.',
+    photo:'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:1 },
+
+  { id:'demo_tut_4', cat:'Tutors', feat:false,
+    title:'Accounting & Business Studies — IEB & NSC Matric',
+    area:'Pretoria', suburb:'Menlyn',
+    trust:81, price:'R 350', per:'per hour', priceNum:350,
+    subject:'Accounting', level:'Grade 10–12', mode:'Either',
+    desc:'CA(SA) with 8 years tutoring experience in Accounting and Business Studies for both IEB and NSC curricula. Structured approach: concept explanation, worked examples, then timed past papers. In-person (Menlyn area) or online. Trial lesson available. 90% of students achieved a distinction in their final exam.',
+    photo:'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80'],
+    paused:false, queueCount:5, sellerIdx:1 },
+
+  { id:'demo_tut_5', cat:'Tutors', feat:false,
+    title:'Afrikaans Huistaal — Grade 4 tot 12',
+    area:'Pretoria', suburb:'Centurion',
+    trust:69, price:'R 260', per:'per hour', priceNum:260,
+    subject:'Afrikaans', level:'Grade 4–12', mode:'In-person',
+    desc:'Moedertaalspreker met 10 jaar onderwyservaring aan Pretoriase Afrikaanse skole. Bied bylesing in Afrikaans Huistaal vir Grade 4 tot 12, insluitend opstelskryf, begripstoetse en mondeling voorbereiding. Sessies by leerder se huis of by my in Centurion. Groepe van maksimum 3 leerders.',
+    photo:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:1 },
+
+  { id:'demo_tut_6', cat:'Tutors', feat:false,
+    title:'Life Sciences & Geography — Grade 8 to 12',
+    area:'Pretoria', suburb:'Garsfontein',
+    trust:75, price:'R 300', per:'per hour', priceNum:300,
+    subject:'Life Sciences', level:'Grade 8–12', mode:'Either',
+    desc:'BSc Biology graduate offering Life Sciences and Geography tutoring for Grades 8–12. Strong focus on understanding concepts rather than rote memorisation. Diagrams, mind maps and colour-coded notes provided. Online or in-person (Garsfontein / Pretoria East). Consistent improvement within 6 weeks.',
+    photo:'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:1 },
+
+  { id:'demo_tut_7', cat:'Tutors', feat:false,
+    title:'French & Spanish — Beginner to Advanced, All Ages',
+    area:'Pretoria', suburb:'Hatfield',
+    trust:84, price:'R 310', per:'per hour', priceNum:310,
+    subject:'French / Spanish', level:'Beginner–Advanced', mode:'Either',
+    desc:'Alliance Française-certified French tutor and native-level Spanish speaker. Conversational and formal lessons for school, travel, business and pleasure. All ages. DELF and DELE exam preparation. Online or in-person in Hatfield. Group lessons (max 4) at a reduced rate. Currently teaching learners from 17 nationalities.',
+    photo:'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:1 },
+
+  { id:'demo_tut_8', cat:'Tutors', feat:false,
+    title:'Chess Coaching — Junior to Club Level',
+    area:'Pretoria', suburb:'Pretoria East',
+    trust:66, price:'R 240', per:'per hour', priceNum:240,
+    subject:'Chess', level:'Junior–Club', mode:'In-person',
+    desc:'FIDE-rated chess coach (Elo 2050) coaching juniors and adult beginners to club level. Focus on opening principles, endgame technique, tactical puzzles and tournament preparation. Saturday group sessions in Pretoria East from R180/session. Individual coaching available weekdays. Students have won regional junior championships in 2024 and 2025.',
+    photo:'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80','https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:1 },
+
+  { id:'demo_tut_9', cat:'Tutors', feat:false,
+    title:'Personal Fitness Trainer — Home Gym & Outdoor Sessions',
+    area:'Pretoria', suburb:'Faerie Glen',
+    trust:79, price:'R 350', per:'per session', priceNum:350,
+    subject:'Fitness & Personal Training', level:'All fitness levels', mode:'In-person',
+    desc:'Biokineticist and REPSSA-registered personal trainer with 9 years experience. Weight loss, muscle building, injury rehabilitation and sports conditioning. Sessions at your home gym or outdoor spaces in Pretoria East. Meal plan support included. Package deals from R2,800/month (8 sessions). Police clearance held. No-contract month-to-month.',
+    photo:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80','https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:1 },
+
+  { id:'demo_tut_10', cat:'Tutors', feat:false,
+    title:'Drawing & Painting — All Ages, All Levels',
+    area:'Pretoria', suburb:'Lyttelton',
+    trust:73, price:'R 270', per:'per 90 min class', priceNum:270,
+    subject:'Art (Drawing & Painting)', level:'All levels', mode:'In-person',
+    desc:'Professional artist and art teacher offering drawing, watercolour, acrylic and oil painting classes for children and adults. Small classes of max 5. Own studio in Lyttelton with all materials supplied. Children from age 7. Holiday workshops available. Portfolio preparation for Fine Art students. Exhibited at ABSA L'Atelier and Sasol New Signatures.',
+    photo:'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80','https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80','https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=800&q=80','https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:1 },
+
+  // ── SERVICES (10 listings) ────────────────────────────────
+  { id:'ph_services', cat:'Services', feat:false, title:'Services listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, serviceType:'', availability:'', desc:'Real service listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:2 },
+
+  { id:'demo_svc_1', cat:'Services', feat:true,
+    title:'Registered Electrician — Fault Finding & Compliance Certs',
+    area:'Pretoria', suburb:'Centurion',
+    trust:89, price:'R 650', per:'call-out + R 280/hr', priceNum:650,
+    service_class:'Technical', serviceType:'Electrical', availability:'Mon–Sat',
+    desc:'Master electrician with 18 years experience and current wireman's licence. Residential and light commercial: fault finding, DB board upgrades, solar and battery installations, Certificate of Compliance (COC) for property sales, gate motor and intercom wiring. Same-day emergency call-outs. All work guaranteed 12 months. Registered with ECSA. Fully insured.',
+    photo:'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:5, sellerIdx:2 },
+
+  { id:'demo_svc_2', cat:'Services', feat:false,
+    title:'Landscape Gardener — Design, Installation & Maintenance',
+    area:'Pretoria', suburb:'Waterkloof',
+    trust:82, price:'R 450', per:'per hour', priceNum:450,
+    service_class:'Casuals', serviceType:'Garden & Landscaping', availability:'Mon–Fri',
+    desc:'Qualified horticulturalist with 14 years experience in residential landscaping across Pretoria's top suburbs. Services include full garden redesign, irrigation installation, lawn establishment, indigenous planting and ongoing maintenance contracts. Monthly contracts from R3,500. Portfolio of 80+ established gardens. Fully insured.',
+    photo:'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80','https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:2 },
+
+  { id:'demo_svc_3', cat:'Services', feat:false,
+    title:'Licensed Plumber — Leaks, Geysers & General Plumbing',
+    area:'Pretoria', suburb:'Lynnwood',
+    trust:76, price:'R 600', per:'call-out + R 300/hr', priceNum:600,
+    service_class:'Technical', serviceType:'Plumbing', availability:'Mon–Sat',
+    desc:'PIRB-registered plumber covering all residential and light commercial plumbing. Specialities: non-invasive leak detection, geyser replacement and solar geyser installation, burst pipe repairs, bathroom and kitchen plumbing. Emergency service 7 days. 1-hour response time for Pretoria East, Centurion and Lynnwood.',
+    photo:'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:2 },
+
+  { id:'demo_svc_4', cat:'Services', feat:false,
+    title:'Web Developer — Small Business Websites & E-Commerce',
+    area:'Pretoria', suburb:'Hatfield',
+    trust:84, price:'R 12 500', per:'per project', priceNum:12500,
+    service_class:'Technical', serviceType:'IT & Development', availability:'Weekdays',
+    desc:'Freelance web developer with 9 years experience building websites and e-commerce stores for South African small businesses. Stack: React, Next.js, WordPress, WooCommerce. Includes hosting setup, SEO basics, Google Analytics and 3 months post-launch support. Typical turnaround 3–4 weeks. Portfolio of 120+ live sites.',
+    photo:'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80','https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:2 },
+
+  { id:'demo_svc_5', cat:'Services', feat:false,
+    title:'Vetted House Cleaner — Weekly & Monthly Contracts',
+    area:'Pretoria', suburb:'Menlyn',
+    trust:71, price:'R 220', per:'per hour', priceNum:220,
+    service_class:'Casuals', serviceType:'Cleaning', availability:'Mon–Fri',
+    desc:'Reliable, vetted house cleaner with 10 years experience in Pretoria East households. Weekly and monthly contracts preferred. Brings own quality cleaning products. Full house clean, laundry and ironing, oven and fridge cleans. Police clearance certificate available on request. References from 12 current long-term clients. Non-smoker.',
+    photo:'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80','https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:6, sellerIdx:2 },
+
+  { id:'demo_svc_6', cat:'Services', feat:false,
+    title:'CA(SA) — Tax Returns & Small Business Accounting',
+    area:'Pretoria', suburb:'Brooklyn',
+    trust:88, price:'R 1 800', per:'per tax return', priceNum:1800,
+    service_class:'Technical', serviceType:'Accounting & Tax', availability:'Weekdays',
+    desc:'CA(SA) offering personal income tax returns, provisional tax, small business accounting, VAT registration and payroll for businesses up to 20 employees. Registered SARS tax practitioner. Turnaround 48 hours for personal returns. Fixed-fee packages from R2,200/month. 15 years experience. Fully remote — all documentation via secure portal.',
+    photo:'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80','https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80','https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:2 },
+
+  { id:'demo_svc_7', cat:'Services', feat:false,
+    title:'Professional Painter — Interior & Exterior, All Finishes',
+    area:'Pretoria', suburb:'Pretoria East',
+    trust:67, price:'R 85', per:'per m²', priceNum:85,
+    service_class:'Casuals', serviceType:'Painting', availability:'Mon–Sat',
+    desc:'Professional painter with 20 years experience in residential and commercial painting. Interior and exterior work, all paint systems including Dulux, Plascon and Prominent Paints. Specialities: feature walls, textured finishes, varnishing and damp remediation. Full prep and clean-up included. Free quote within 24 hours. Scaffolding available.',
+    photo:'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80','https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80'],
+    paused:false, queueCount:2, sellerIdx:2 },
+
+  { id:'demo_svc_8', cat:'Services', feat:false,
+    title:'Freelance Photographer — Events, Portraits & Products',
+    area:'Pretoria', suburb:'Pretoria CBD',
+    trust:80, price:'R 3 500', per:'per half day', priceNum:3500,
+    service_class:'Technical', serviceType:'Photography', availability:'Weekends & eves',
+    desc:'Professional photographer with 11 years experience. Specialising in corporate events, family portraits, matric shoots, and product photography for e-commerce. Full editing included. Online gallery delivered within 5 business days. Studio available in Pretoria CBD or on-location across Gauteng. Packages from R1,800 for portrait sessions.',
+    photo:'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80','https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80','https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80'],
+    paused:false, queueCount:3, sellerIdx:2 },
+
+  { id:'demo_svc_9', cat:'Services', feat:false,
+    title:'IT Support & Networking — Home & Small Business',
+    area:'Pretoria', suburb:'Faerie Glen',
+    trust:77, price:'R 550', per:'per hour', priceNum:550,
+    service_class:'Technical', serviceType:'IT Support', availability:'Mon–Sat',
+    desc:'CompTIA A+ and Network+ certified IT technician with 12 years experience. Services: WiFi setup and troubleshooting, PC repair and upgrades, virus removal, NAS and backup solutions, CCTV installation, small business server setup. Remote support available for software issues. On-site call-out covers Pretoria East, Centurion and Midrand.',
+    photo:'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80','https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80','https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&q=80'],
+    paused:false, queueCount:4, sellerIdx:2 },
+
+  { id:'demo_svc_10', cat:'Services', feat:false,
+    title:'Registered Physiotherapist — Home Visits, Pretoria',
+    area:'Pretoria', suburb:'Groenkloof',
+    trust:91, price:'R 900', per:'per session', priceNum:900,
+    service_class:'Technical', serviceType:'Healthcare', availability:'Mon–Fri',
+    desc:'HPCSA-registered physiotherapist with 14 years clinical experience offering home visit sessions across Pretoria. Treatment areas: sports injuries, post-op rehabilitation, back and neck pain, stroke rehabilitation and falls prevention for elderly patients. Fully equipped mobile kit. Medical aid claims submitted on your behalf. Referred by 3 Pretoria orthopaedic surgeons.',
+    photo:'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80',
+    photos:['https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80','https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80','https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80'],
+    paused:false, queueCount:5, sellerIdx:2 },
+
+  // ── ADVENTURES, COLLECTORS, CARS, LOCAL MARKET ───────────
+  // TODO: to be added in next session
+  { id:'ph_adventures', cat:'adventures_experiences', feat:false, title:'Adventures listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, desc:'Real adventure listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:3 },
+  { id:'ph_collectors', cat:'Collectors', feat:false, title:'Collectors listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, desc:'Real collectors listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:4 },
+  { id:'ph_cars', cat:'Cars', feat:false, title:'Cars listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, desc:'Real car listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:5 },
+  { id:'ph_lm', cat:'local_market', feat:false, title:'Local Market listings coming soon', area:'Pretoria', suburb:'Pretoria', trust:0, price:null, per:'', priceNum:0, desc:'Real local market listings will appear here once sellers onboard.', photo:null, paused:true, queueCount:0, sellerIdx:0 },
+
 ];
 
-// ── PLACEHOLDER SELLERS ────────────────────────────────────
-// Minimal seller entries to match the 3 placeholder listings above.
-// Replaced by real seller CVs once onboarded via the admin tool.
 const SELLERS = [
   {
     idx: 0, cat: 'Property',
@@ -3389,6 +2540,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div style="margin-bottom:10px;">This EULA is governed by the laws of the Republic of South Africa. POPIA, CPA, ECT Act, and FICA are mandatory and cannot be waived. Any conflict between this EULA and those Acts resolves in favour of the Act.</div>
         <div style="margin-bottom:10px;">You may terminate your account at any time by writing to support@trustsquare.co. Unused Tuppence is forfeited on termination. The Platform may terminate your account immediately for breach of this EULA or applicable law.</div>
         <div style="margin-bottom:10px;">The Platform may update these terms with 14 days in-app notice. Continued use after the effective date constitutes acceptance.</div>
+        <div style="margin-bottom:10px;color:rgba(255,255,255,.35);font-size:11px;">Trustsquare (Pty) Ltd · Reg 2026/340128/07 · 6 Villa Christiaan, 98 Manie Road, Elarduspark, Pretoria, 0181 &nbsp;·&nbsp; Tax: 9400407236</div>
         <div style="margin-bottom:10px;color:rgba(255,255,255,.35);font-size:11px;">Contact: support@trustsquare.co (general) &nbsp;·&nbsp; legal@trustsquare.co (legal/privacy/POPIA) &nbsp;·&nbsp; compliance@trustsquare.co (Trust Score)</div>
         <div style="color:rgba(255,255,255,.25);font-size:11px;font-style:italic;">TrustSquare Terms of Use / EULA v1.0 · Trustsquare (Pty) Ltd Reg 2026/340128/07 · Draft for legal review · Not yet published</div>
       </div>
