@@ -1305,3 +1305,13 @@ Trustsquare (Pty) Ltd was formally registered with CIPC on 29/04/2026 (Reg 2026/
 **Property seller credentials corrected.** Demo property seller now shows "Private seller declaration" (transparent to buyers, 0 pts — regulatory honesty) plus compliance docs, matching actual signal structure. Removed misleading "Title deed confirmed" credential (that belongs to the agent, not the private seller).
 
 **All 70 demo listings complete.** Added 40 new listings: Adventures (10), Collectors (10), Cars (10), Local Market (10). Adventures: Big 5 walk, hot air balloon, abseil gorge, horse trail, quad biking, escape room, wine tasting, cooking class, photography walk, waterfall hike. Collectors: Rolleiflex TLR, SA stamps, Krugerrands, antique Transvaal map, Pierneef lithograph, Wilbur Smith first edition, Voortrekker medals, SA railway prints, Leica M3, Boer War campaign group. Cars: Porsche 911 Carrera S, BMW M4, AMG C63 S, Ford Mustang Mach 1, Tesla Model 3, Land Cruiser 79, plus two farm properties (Bela-Bela smallholding and Limpopo game farm), Lamborghini Huracán, vintage Mercedes W108. Local Market: MTG Black Lotus, Pokémon Charizard PSA 8, Rolex Submariner, 1900 Hornby train set, SA jazz vinyl collection, signed Springbok 2019 RWC jersey, ZAR Pond NGC MS63, KWV 30-year brandy, Boer War Mauser (deactivated), Hermanus Steyn oil painting. Local Market seller (idx 6) added to SELLERS array with trustScore 62.
+
+## Session 43 · Part 3 · 2026-05-05
+
+**Local Market home tile fix.** The `initLMHomeTile` function fetches counts and photos exclusively from the BEA `/local-market/listings` endpoint. When BEA returns empty (no live listings yet), the tile showed "0 listings" even though 10 demo listings existed. Added a demo fallback: when BEA returns empty, `initLMHomeTile` now counts and pulls photos from the local LISTINGS array filtered by `normCat === 'LocalMarket'`. Tile now shows "10 listings" with photo slideshow during the demo phase.
+
+**Local Market browse grid fix (lmLoadGrid).** Same BEA-only issue in the browse function — added identical demo fallback so the Local Market screen renders the 10 `demo_lm_` listings when BEA is empty.
+
+**Category chip fix.** The "🛒 Local Market" filter chip was missing from the category bar — only 6 chips were rendered (All through Cars). Added the LocalMarket chip. Also fixed `renderGrid` to use `normCat(l.cat)` for category comparison so `local_market` listings correctly match the `LocalMarket` filter.
+
+**Cost model impact:** None. xlsx unchanged since Session 24.

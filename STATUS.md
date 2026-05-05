@@ -1,49 +1,56 @@
 # TrustSquare — STATUS.md
-**Updated: Session 43 · 4 May 2026**
+**Updated: Session 43 · 5 May 2026**
 
 ---
 
 ## Live State
 - **Legal entity: Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Director: David Maurice Conradie · Registered 29/04/2026**
 - BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
-- Launch city: Pretoria, South Africa · **0 listings (clean slate — all test data wiped 04/05/2026)**
+- Launch city: Pretoria, South Africa · **0 live listings (clean slate) · 70 demo listings active**
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
 
-## Last Completed — Session 41
+## Last Completed — Session 43
 
-### Draft-first listing flow — seller onboarding gate
-1. **BEA `POST /listings`** — now saves all new listings with `listing_status = 'draft'` and `published_at = NULL`. Listings are invisible to buyers until the seller completes onboarding.
-2. **BEA `PUT /listings/{id}/publish`** — new endpoint. Transitions `draft → live`, stamps `published_at = now()`. Email-auth: seller_email must match or is stamped if NULL on first call.
-3. **Admin app Step 4** — renamed "Review & save draft". Button now reads "Save drafts →". All success messaging updated to reflect draft state. Magic link hint explains full seller journey.
+### Rebrand + Legal Entity
+- MarketSquare → TrustSquare across all apps, BEA, and EULA
+- EULA updated with Trustsquare (Pty) Ltd · Reg 2026/340128/07 · registered address · tax number
+- All test data wiped (51 listings, 5 users, all transactional records) · geo data preserved
 
-### Onboarding flow design (3-session build)
-- **Session 41 (done)**: BEA draft gate + admin app draft save
-- **Session 42 (next)**: `marketsquare.html` magic link landing — private preview, tier picker, EULA, registration
-- **Session 43**: End-to-end test all categories + AI Coach offer post-registration
+### 70 Demo Listings — All Categories Complete
+- 10 listings per category: Property, Tutors, Services, Adventures, Collectors, Cars, Local Market
+- 5 Unsplash photos each, realistic SA pricing, fully detailed descriptions
+- All tagged `demo_` prefix — distinguishable from live listings
+- Local Market required 3 fixes: missing chip, cat normalisation in renderGrid, BEA-only lmLoadGrid fallback
+
+### Trust Score Integrity
+- All demo scores recalculated from actual `_TRUST_SIGNALS` / `_CATEGORY_SIGNALS` in bea_main.py
+- Property private sellers: Established tier (~44) · Tutors: Trusted (~81) · Services: Trusted (~88)
+- Seller CV now displays `s.trustScore` (seller-level verified score) — not arbitrary per-listing number
+- Defensible and traceable — legal/trust exposure concern addressed
+
+### Seller CV Fixes
+- Availability "undefined · undefined" fixed — all SELLERS entries use `{day, time}` objects
+- Property seller credentials updated to match private seller signal set
 
 ---
 
-## Next Session — Session 42
+## Next Session — Session 44
 
-### Priority: Cross-category testing + registration screen
-1. **Registration screen** — after go-live, seller completes profile: ID upload, phone. Bank details deferred to first intro acceptance.
-2. **Tutors** — AI note fires on subject fill, trust score correct, chips show in detail view
-3. **Services** — AI note fires on trade_type fill, trust score correct, chips show
-4. **Collectors** — amber chips in detail view, trust score correct
-5. **Cars** — blue chips, private seller no PPRA tip, trust score correct
-6. **Local Market** — second LM listing with photo → crossfade animates on home tile
-7. **Photo captions** — publish with caption, verify frosted-glass overlay in detail view
+### Priority: End-to-end seller onboarding test
+1. Full magic link → draft → preview → tier picker → EULA → publish flow
+2. Verify trust score calculated correctly on first real listing
+3. Verify AI coach fires correctly per category
+4. Paystack test mode — complete a subscription payment flow
+5. Cross-category browse test with real listings alongside demo listings
 
 ### Backlog
-- Draft save/resume — save at B7, exit, re-enter, confirm resume banner
-- For You trust score refresh — existing matched cards show old score (25); needs wishlist re-match or score refresh trigger
-- Paystack live mode — awaiting CIPC approval email
-- Local Market detail view — multi-photo strip for LM listings
-- Admin ops queue — review pending credentials uploaded by sellers
-- Gate `sbTriggerMarketNote` behind subscription tier for free sellers (low priority — ~$67/yr cost)
+- Paystack live mode — awaiting CIPC bank account setup
+- Admin ops queue — review uploaded credentials
+- Gate `sbTriggerMarketNote` behind subscription tier for free sellers
+- For You trust score refresh on wishlist re-match
 
 ---
 
@@ -54,3 +61,4 @@
 - **BEA venv**: always use `/var/www/marketsquare/venv/bin/pip` for server installs
 - **Git commits**: ask David to run from PowerShell — never commit from sandbox (index.lock conflict)
 - **SSH key**: run `bash load_sandbox_ssh.sh` at session start before any SSH/SCP
+- **Cost model**: xlsx unchanged since Session 24 — no cost model impact this session

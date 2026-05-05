@@ -1515,6 +1515,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="chip" onclick="setFilter(this,'Adventures')">🌿 Adventures</div>
     <div class="chip" onclick="setFilter(this,'Collectors')">🏺 Collectors</div>
     <div class="chip" onclick="setFilter(this,'Cars')">🚗 Cars</div>
+    <div class="chip" onclick="setFilter(this,'LocalMarket')">🛒 Local Market</div>
   </div>
 
   <!-- Context-specific filter pills (shown when category selected) -->
@@ -5060,7 +5061,7 @@ function renderCatCounts() {
 
 function renderGrid(){
   const filtered = LISTINGS.filter(l => {
-    if(activeFilter!=='All' && l.cat!==activeFilter) return false;
+    if(activeFilter!=='All' && normCat(l.cat)!==activeFilter) return false;
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');
     if(l.paused && !isPlaceholder) return false;
@@ -5426,6 +5427,7 @@ function catCfg(l){
   const key = l.cat;
   if(CATS[key]) return CATS[key];
   if(key==='adventures_accommodation'||key==='adventures_experiences') return CATS['Adventures'];
+  if(key==='local_market'||key==='local market'||key==='localmarket') return CATS['LocalMarket'];
   return { icon:'📦', bg:'var(--navy)', model:'queue' };
 }
 
@@ -10717,12 +10719,17 @@ async function initLMHomeTile() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     const listings = Array.isArray(data) ? data : (data.listings || []);
-    const n = listings.length;
+    // Fall back to demo listings if BEA returns nothing
+    let resolvedListings = listings;
+    if (!listings.length) {
+      resolvedListings = LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket');
+    }
+    const n = resolvedListings.length;
     // Update count
     const countEl = document.getElementById('lm-home-count');
     if (countEl) countEl.textContent = n + (n === 1 ? ' listing' : ' listings');
     // Collect thumb URLs
-    const photos = listings.map(l => l.thumb_url).filter(Boolean);
+    const photos = resolvedListings.map(l => l.thumb_url || l.photo).filter(Boolean);
     if (!photos.length) return;
     // Preload all images so there is no blank gap during crossfade
     photos.forEach(url => { const img = new Image(); img.referrerPolicy = 'no-referrer'; img.src = url; });
@@ -10839,6 +10846,36 @@ async function lmLoadGrid() {
     if (!r.ok) throw new Error('API ' + r.status);
     const cards = await r.json();
     if (!cards.length) {
+      // Fall back to demo listings from local LISTINGS array
+      const demoLM = LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket');
+      if (demoLM.length) {
+        grid.innerHTML = demoLM.map(l => {
+          const t = tbadge(l.trust || 0);
+          const loc = _lmEsc(l.suburb || activeCity.name || '');
+          const price = l.price ? (formatZAR(l.price) || String(l.price)) : '<span class="neg">Negotiable</span>';
+          const imgHtml = l.photo
+            ? `<img src="${_lmEsc(l.photo)}" alt="${_lmEsc(l.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
+            : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
+          const svLM = wishlist.has(l.id);
+          return (
+            `<div class="lcard" onclick="openDetail('${l.id}')">` +
+            `<div class="ibox" style="background:#1f2937">` +
+              imgHtml +
+              (l.feat ? '<div class="feat-badge">Featured</div>' : '') +
+              `<div class="model-badge queue">🛍️ Queue</div>` +
+              `<button class="wish-btn ${svLM?'saved':''}" onclick="event.stopPropagation();toggleWish(event,'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
+            `</div>` +
+            `<div class="cbody">` +
+              `<div class="ccat">Local Market</div>` +
+              `<div class="ctitle">${_lmEsc(l.title || '')}</div>` +
+              `<div class="cloc">📍 ${loc}</div>` +
+              `<div class="cbot"><div class="cprice">${price}</div>` +
+              `<div class="ctrust" style="color:${t.c};">${l.trust || 0} ${t.label}</div></div>` +
+            `</div></div>`
+          );
+        }).join('');
+        return;
+      }
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet — check back soon.</div>';
       return;
     }

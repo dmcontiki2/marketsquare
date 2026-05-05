@@ -1,31 +1,40 @@
-# MarketSquare · Session 41 — Start Prompt
+# TrustSquare · Session 44 — Start Prompt
 # Paste this into Cowork at the start of the session.
 
 Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.
 
-## Session 41 Goal: Cross-category testing + any fixes found
+## State going into Session 44
+- **Legal entity:** Trustsquare (Pty) Ltd · Reg 2026/340128/07 · live
+- **Platform:** TrustSquare at trustsquare.co · BEA v1.3.0 · clean slate
+- **Listings:** 0 live · 70 demo_ listings across all 7 categories
+- **Trust scores:** Recalculated from actual signal points — defensible
+- **All demo listing bugs fixed:** Local Market chip, cat normalisation, home tile count, seller CV availability
 
-We are testing a fresh listing in every category to verify the full sell flow and listing detail view work correctly end-to-end. For each category below, I will publish a test listing and you will help diagnose and fix anything that looks wrong.
+## Session 44 Goal: End-to-end seller onboarding test
+
+Publish a real listing in each category and verify the full flow works correctly.
+
+### Flow to test per listing
+1. Open admin app → fill in listing details for the category
+2. AI coach note fires after key field filled (subject / trade_type / etc.)
+3. Trust score calculates correctly from entered credentials
+4. Submit → draft preview shows correctly
+5. Tier picker → EULA → Publish
+6. Listing appears in buyer app alongside demo listings
+7. Detail view: chips, trust badge, photos all correct
 
 ### Categories to test (in order)
-1. **Tutors** — AI market note fires after subject filled, trust score ≥ 40, credential chips show in detail view
-2. **Services** — AI note fires after trade_type filled, trust score correct, chips show
-3. **Collectors** — amber chips show in detail view, trust score correct
-4. **Cars** — blue chips show, private seller gets no PPRA/agent tip, trust score correct
-5. **Local Market** — list with a photo → home tile crossfade animates (needs 2+ LM listings with photos)
-6. **Photo captions** — on any new listing, add a caption to at least one photo → verify frosted-glass overlay appears in detail view
-
-### Known state going into this session
-- Property listings working well (tested Session 39/40)
-- Featured row cards: consistent layout, trust badge floats over photo ✓
-- For You cards: same layout as Featured, price formatted with R symbol ✓
-- Photo captions render as bottom-right frosted pill ✓
-- Photos preserved on PUT (AI description save no longer wipes photos) ✓
-- For You tap opens correct listing ✓
+1. **Property** — private seller, verify Established tier (~44), no PPRA tip
+2. **Tutors** — AI note fires on subject fill, SACE + police clearance chips show
+3. **Services** — AI note fires on trade_type, Red Seal + insurance chips show
+4. **Adventures** — FGASA chip shows, TGCSA if accommodation
+5. **Collectors** — authentication cert chip, amber colour
+6. **Cars** — NATIS chip, private seller declaration visible
+7. **Local Market** — photo uploads, home tile slideshow updates
 
 ### Files and deploy
 - marketsquare.html → `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`
-- bea_main.py → `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` + `ssh root@178.104.73.239 "systemctl restart marketsquare"`
+- bea_main.py → `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py` + restart
 - **NEVER use Edit/Write tool on marketsquare.html or bea_main.py** — Python replace only
 - After every HTML change: extract scripts + `node --check` before deploying
 - SSH: run `bash load_sandbox_ssh.sh` first
