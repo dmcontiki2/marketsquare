@@ -42,12 +42,15 @@ explorer "%MS%"
 timeout /t 1 /nobreak >nul
 echo.
 
-:: ── Step 3: Copy session start prompt + launch Claude Cowork ─
-echo  [3/3] Copying session start prompt to clipboard...
-if exist "%MS%\SESSION_START_PROMPT.md" (
-    powershell -NoProfile -Command "Get-Content '%MS%\SESSION_START_PROMPT.md' -Raw -Encoding UTF8 | Set-Clipboard; Write-Host '   SESSION_START_PROMPT.md on clipboard — paste into Cowork when ready.'"
+:: ── Step 3: Launch session dashboard ────────────────────────
+echo  [3/3] Launching session dashboard...
+if exist "%MS%\session_dashboard.py" (
+    python "%MS%\session_dashboard.py"
 ) else (
-    powershell -NoProfile -Command "Set-Clipboard -Value 'Read STATUS.md first, then AGENT_BRIEFING.md.'; Write-Host '   Fallback prompt copied.'"
+    echo   WARNING: session_dashboard.py not found — falling back to clipboard prompt.
+    if exist "%MS%\SESSION_START_PROMPT.md" (
+        powershell -NoProfile -Command "Get-Content '%MS%\SESSION_START_PROMPT.md' -Raw -Encoding UTF8 | Set-Clipboard; Write-Host '   SESSION_START_PROMPT.md on clipboard.'"
+    )
 )
 echo.
 
@@ -59,7 +62,7 @@ echo  Browser tabs:
 echo    trustsquare.co              buyer app
 echo    trustsquare.co/admin.html   admin tool
 echo.
-echo  Clipboard: TrustSquare SESSION_START_PROMPT — paste into Cowork to start
+echo  Dashboard: session_dashboard_live.html — choose direction, copy prompt, paste into Cowork
 echo.
 echo  ── Quick deploy commands ────────────────────────────────────
 echo   scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html
