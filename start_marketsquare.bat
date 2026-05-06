@@ -45,7 +45,9 @@ echo.
 :: ── Step 3: Launch session dashboard ────────────────────────
 echo  [3/3] Launching session dashboard...
 if exist "%MS%\session_dashboard.py" (
-    python "%MS%\session_dashboard.py"
+    pushd "%MS%"
+    python session_dashboard.py
+    popd
 ) else (
     echo   WARNING: session_dashboard.py not found — falling back to clipboard prompt.
     if exist "%MS%\SESSION_START_PROMPT.md" (

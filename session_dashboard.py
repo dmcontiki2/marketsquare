@@ -7,6 +7,7 @@ Run by start_marketsquare.bat at session start.
 
 import os, re, json, subprocess, sys, webbrowser, tempfile
 from datetime import datetime
+import threading, http.server, socketserver
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -164,12 +165,29 @@ with open(template_path, encoding="utf-8") as f:
     html = f.read()
 
 json_data = json.dumps(data, ensure_ascii=False)
-html = html.replace("/*__DATA__*/", json_data)
+html = html.replace("/*__DATA__*/null", json_data)
 
 # Write to temp file and open
 tmp = os.path.join(ROOT, "session_dashboard_live.html")
 with open(tmp, "w", encoding="utf-8") as f:
     f.write(html)
 
-webbrowser.open("file:///" + tmp.replace("\\", "/"))
-print(f"Dashboard opened — Session {next_session} ready")
+# Serve via local HTTP to avoid Chrome blocking file:// JavaScript
+PORT = 7474
+os.chdir(ROOT)
+
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args): pass  # suppress request logs
+
+def start_server():
+    with socketserver.TCPServer(("", PORT), QuietHandler) as httpd:
+        httpd.serve_forever()
+
+thread = threading.Thread(target=start_server, daemon=True)
+thread.start()
+
+import time; time.sleep(0.5)
+url = f"http://localhost:{PORT}/session_dashboard_live.html"
+webbrowser.open(url)
+print(f"Dashboard opened — Session {next_session} ready → {url}")
+time.sleep(2)  # keep process alive long enough for browser to fetch the file
