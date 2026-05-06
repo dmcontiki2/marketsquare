@@ -72,6 +72,13 @@
   .copy-btn { background: var(--accent); color: #fff; border: none; padding: 8px 18px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
   .copy-btn:hover { background: #2563eb; }
   .copy-btn.copied { background: var(--green); }
+  .mobile-btn { background: #1a2232; color: #a78bfa; border: 1.5px solid #4c1d95; padding: 8px 18px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .mobile-btn:hover { background: #2d1b69; border-color: #8b5cf6; }
+  .mobile-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+  .prompt-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .ptab { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
+  .ptab.active { border-color: var(--accent); color: #fff; background: #1a2232; }
+  .ptab.mobile.active { border-color: #8b5cf6; color: #a78bfa; }
   .prompt-text { background: #0a0f1a; border: 1px solid var(--border); border-radius: 7px; padding: 14px; font-family: 'Courier New', monospace; font-size: 12px; color: #93c5fd; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow-y: auto; }
 
   /* ── Status panels ── */
@@ -141,8 +148,14 @@
     <!-- Generated prompt panel -->
     <div class="prompt-panel" id="prompt-panel">
       <div class="prompt-header">
-        <div class="prompt-title" id="prompt-title">Session Prompt</div>
-        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">📋 Copy to clipboard</button>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="prompt-title" id="prompt-title">Session Prompt</div>
+          <div class="prompt-tabs">
+            <button class="ptab active" id="tab-desktop" onclick="switchTab('desktop')">🖥 Desktop / Cowork</button>
+            <button class="ptab mobile" id="tab-mobile" onclick="switchTab('mobile')">📱 iPhone / Claude.ai</button>
+          </div>
+        </div>
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">📋 Copy</button>
       </div>
       <div class="prompt-text" id="prompt-text"></div>
     </div>
@@ -265,41 +278,68 @@ function init() {
   document.getElementById('changelog-text').innerHTML = md(DATA.recentChangelog);
 }
 
-let selectedPrompt = '';
+let selectedDir = null;
+let activeTab = 'desktop';
 
 function selectDirection(dir, cardEl) {
-  // Deselect all
   document.querySelectorAll('.dir-card').forEach(c => c.classList.remove('selected'));
   cardEl.classList.add('selected');
-
-  selectedPrompt = dir.prompt;
+  selectedDir = dir;
 
   const panel = document.getElementById('prompt-panel');
-  const titleEl = document.getElementById('prompt-title');
-  const textEl = document.getElementById('prompt-text');
-  const btn = document.getElementById('copy-btn');
-
-  titleEl.textContent = dir.title + ' — Session Prompt';
-  textEl.textContent = dir.prompt;
+  document.getElementById('prompt-title').textContent = dir.title;
   panel.classList.add('visible');
-  btn.textContent = '📋 Copy to clipboard';
-  btn.classList.remove('copied');
-
-  // Scroll prompt panel into view
+  renderTab();
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-desktop').classList.toggle('active', tab === 'desktop');
+  document.getElementById('tab-mobile').classList.toggle('active', tab === 'mobile');
+  renderTab();
+}
+
+function renderTab() {
+  if (!selectedDir) return;
+  const textEl = document.getElementById('prompt-text');
+  const btn = document.getElementById('copy-btn');
+  if (activeTab === 'mobile') {
+    textEl.textContent = selectedDir.mobile_prompt || '(No mobile prompt for this direction)';
+    textEl.style.color = '#c4b5fd';
+  } else {
+    textEl.textContent = selectedDir.prompt;
+    textEl.style.color = '#93c5fd';
+  }
+  btn.textContent = '📋 Copy';
+  btn.classList.remove('copied');
+}
+
 function copyPrompt() {
-  if (!selectedPrompt) return;
-  navigator.clipboard.writeText(selectedPrompt).then(() => {
-    const btn = document.getElementById('copy-btn');
+  if (!selectedDir) return;
+  const text = activeTab === 'mobile' ? selectedDir.mobile_prompt : selectedDir.prompt;
+  if (!text) return;
+  const btn = document.getElementById('copy-btn');
+  const finish = () => {
     btn.textContent = '✅ Copied!';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 Copy to clipboard';
-      btn.classList.remove('copied');
-    }, 2500);
-  });
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(finish).catch(() => fallbackCopy(text, finish));
+  } else {
+    fallbackCopy(text, finish);
+  }
+}
+
+function fallbackCopy(text, finish) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); finish(); } catch(e) { alert('Copy failed — please select and copy manually.'); }
+  document.body.removeChild(ta);
 }
 
 init();

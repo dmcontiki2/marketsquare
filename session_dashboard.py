@@ -5,9 +5,8 @@ and opens the result in the default browser.
 Run by start_marketsquare.bat at session start.
 """
 
-import os, re, json, subprocess, sys, webbrowser, tempfile
+import os, re, json, subprocess, sys, webbrowser
 from datetime import datetime
-import threading, http.server, socketserver
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -78,6 +77,20 @@ for line in next_goals.splitlines():
 
 directions = []
 
+# ── Helper: plain-text summary of last_done (no markdown) ────
+def plain(text, max_chars=300):
+    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+    t = re.sub(r'`([^`]+)`', r'\1', t)
+    t = re.sub(r'^#+\s+', '', t, flags=re.MULTILINE)
+    t = re.sub(r'\n{2,}', ' ', t)
+    t = t.strip()
+    return t[:max_chars] + ('…' if len(t) > max_chars else '')
+
+last_done_plain   = plain(last_done)
+next_goals_plain  = plain(next_goals, 400)
+cl_last_plain     = plain(cl_last)
+cl_next_plain     = plain(cl_next, 300)
+
 # Direction 1 — from Next Session priorities
 if priority_items:
     directions.append({
@@ -86,7 +99,8 @@ if priority_items:
         "title": f"Session {next_session} — Priority Queue",
         "colour": "#3b82f6",
         "items": priority_items[:5],
-        "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.\n\nState: TrustSquare live at trustsquare.co · BEA v1.3.0 · Session {current_session} complete.\n\nSession {next_session} goal: {priority_items[0] if priority_items else 'Continue from STATUS.md'}\n\n" + "\n".join(f"{i+1}. {item}" for i, item in enumerate(priority_items[:5]))
+        "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.\n\nState: TrustSquare live at trustsquare.co · BEA v1.3.0 · Session {current_session} complete.\n\nSession {next_session} goal: {priority_items[0] if priority_items else 'Continue from STATUS.md'}\n\n" + "\n".join(f"{i+1}. {item}" for i, item in enumerate(priority_items[:5])),
+        "mobile_prompt": f"You are helping with TrustSquare, a mobile-first local marketplace at trustsquare.co. No file access needed — all context is below.\n\nPLATFORM STATE (Session {current_session} complete):\n{plain(live_state)}\n\nLAST SESSION DONE:\n{last_done_plain}\n\nSESSION {next_session} PRIORITIES:\n" + "\n".join(f"{i+1}. {item}" for i, item in enumerate(priority_items[:5])) + f"\n\nTask: Help me think through priority 1 — {priority_items[0] if priority_items else 'next steps'}. Ask me questions to clarify approach, flag risks, and suggest a plan."
     })
 
 # Direction 2 — Launch blockers
@@ -104,7 +118,8 @@ if blocker_clean:
         "title": "Launch Blockers",
         "colour": "#ef4444",
         "items": blocker_clean[:4],
-        "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.\n\nSession {next_session} goal: Clear launch blockers before public launch.\n\n" + "\n".join(f"- {b}" for b in blocker_clean[:4])
+        "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.\n\nSession {next_session} goal: Clear launch blockers before public launch.\n\n" + "\n".join(f"- {b}" for b in blocker_clean[:4]),
+        "mobile_prompt": f"You are helping with TrustSquare, a mobile-first local marketplace at trustsquare.co. No file access needed — all context is below.\n\nPLATFORM STATE:\n{plain(live_state)}\n\nLAUNCH BLOCKERS (must clear before public launch):\n" + "\n".join(f"- {b}" for b in blocker_clean[:4]) + "\n\nTask: Help me think through how to approach these blockers. Which should I tackle first and why?"
     })
 
 # Direction 3 — CityLauncher
@@ -115,7 +130,8 @@ directions.append({
     "title": f"CityLauncher — Session {cl_session}+",
     "colour": "#8b5cf6",
     "items": cl_next_items[:5] if cl_next_items else ["See CityLauncher STATUS.md"],
-    "prompt": f"Read C:\\Users\\David\\Projects\\CityLauncher\\STATUS.md and AGENT_BRIEFING.md first.\n\nCityLauncher session goal: {cl_next_items[0] if cl_next_items else 'Continue from STATUS.md'}\n\n" + "\n".join(f"- {i}" for i in cl_next_items[:5])
+    "prompt": f"Read C:\\Users\\David\\Projects\\CityLauncher\\STATUS.md and AGENT_BRIEFING.md first.\n\nCityLauncher session goal: {cl_next_items[0] if cl_next_items else 'Continue from STATUS.md'}\n\n" + "\n".join(f"- {i}" for i in cl_next_items[:5]),
+    "mobile_prompt": f"You are helping with CityLauncher, an autonomous city-launch pipeline for the TrustSquare marketplace. No file access needed — all context is below.\n\nLAST SESSION:\n{cl_last_plain}\n\nNEXT PRIORITIES:\n{cl_next_plain}\n\nTask: Help me think through the next steps for CityLauncher. Ask me what you need to give good advice."
 })
 
 # Direction 4 — AdvertAgent
@@ -125,7 +141,8 @@ directions.append({
     "title": "AdvertAgent — Kickoff",
     "colour": "#f59e0b",
     "items": ["Read PRINCIPLE_REQUIREMENTS.md Part G", "Define architecture and file map", "Session 1 kickoff — establish agent spec"],
-    "prompt": "Read C:\\Users\\David\\Projects\\AdvertAgent\\STATUS.md, PRINCIPLE_REQUIREMENTS.md, and AGENT_BRIEFING.md first.\n\nAdvertAgent Session 1 goal: Kickoff — define architecture, file map, and agent spec based on PRINCIPLE_REQUIREMENTS.md Part G."
+    "prompt": "Read C:\\Users\\David\\Projects\\AdvertAgent\\STATUS.md, PRINCIPLE_REQUIREMENTS.md, and AGENT_BRIEFING.md first.\n\nAdvertAgent Session 1 goal: Kickoff — define architecture, file map, and agent spec based on PRINCIPLE_REQUIREMENTS.md Part G.",
+    "mobile_prompt": "You are helping design AdvertAgent, a seller-facing AI assistance feature for TrustSquare marketplace. No file access needed — all context is below.\n\nADVERTAGENT PURPOSE:\nHelps sellers create better listings and manage introductions. Must preserve seller anonymity absolutely. Never calls Claude API without confirming active subscription.\n\nPLATFORM CONTEXT:\nTrustSquare is a mobile-first local marketplace using Tuppence introduction currency. Sellers are anonymous. Listings go through draft → tier picker → EULA → publish flow.\n\nTask: Help me design the AdvertAgent architecture — what components are needed, how it integrates with the platform, and what the Session 1 kickoff should deliver."
 })
 
 # Direction 5 — Agentic OS / Infrastructure
@@ -135,7 +152,8 @@ directions.append({
     "title": "Agentic OS — Framework Setup",
     "colour": "#10b981",
     "items": ["Formalise branch structure across all projects", "Automate session end checklist", "Quarterly automation audit baseline", "Prepare GEX44 migration checklist for when volume justifies it"],
-    "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first.\n\nInfrastructure session goal: Formalise the Agentic OS framework — branch structure, automated session end checklist, and automation audit."
+    "prompt": f"Read STATUS.md and AGENT_BRIEFING.md first.\n\nInfrastructure session goal: Formalise the Agentic OS framework — branch structure, automated session end checklist, and automation audit.",
+    "mobile_prompt": f"You are helping with the Agentic OS framework for a multi-project Claude-powered development setup. No file access needed — all context is below.\n\nPROJECTS ACTIVE:\n- TrustSquare (Session {current_session} complete) — marketplace at trustsquare.co\n- CityLauncher (Session {cl_session}) — autonomous city launch pipeline\n- AdvertAgent — pre-kickoff, seller AI assistance\n\nCURRENT STATE:\n{plain(live_state)}\n\nTask: Help me think through how to formalise the Agentic OS framework — branch structure across projects, automated session end checklist, and quarterly automation audit baseline."
 })
 
 # ── Assemble data object ─────────────────────────────────────
@@ -172,22 +190,25 @@ tmp = os.path.join(ROOT, "session_dashboard_live.html")
 with open(tmp, "w", encoding="utf-8") as f:
     f.write(html)
 
-# Serve via local HTTP to avoid Chrome blocking file:// JavaScript
-PORT = 7474
-os.chdir(ROOT)
+# ── Open locally as file:// (data is fully inlined, no server needed) ──
+os.startfile(tmp)
+print(f"Dashboard opened — Session {next_session} ready")
 
-class QuietHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *args): pass  # suppress request logs
+# ── Upload to Hetzner so it's accessible from iPhone anywhere ──
+SERVER = "root@178.104.73.239"
+REMOTE_PATH = "/var/www/marketsquare/dashboard.html"
+SSH_KEY = os.path.join(ROOT, "ssh_hetzner_key")
 
-def start_server():
-    with socketserver.TCPServer(("", PORT), QuietHandler) as httpd:
-        httpd.serve_forever()
-
-thread = threading.Thread(target=start_server, daemon=True)
-thread.start()
-
-import time; time.sleep(0.5)
-url = f"http://localhost:{PORT}/session_dashboard_live.html"
-webbrowser.open(url)
-print(f"Dashboard opened — Session {next_session} ready → {url}")
-time.sleep(2)  # keep process alive long enough for browser to fetch the file
+if os.path.exists(SSH_KEY):
+    print("Uploading dashboard to server...", end=" ", flush=True)
+    result = subprocess.run(
+        ["scp", "-i", SSH_KEY, "-o", "StrictHostKeyChecking=no",
+         tmp, f"{SERVER}:{REMOTE_PATH}"],
+        capture_output=True, text=True, timeout=20
+    )
+    if result.returncode == 0:
+        print("Done → trustsquare.co/dashboard.html")
+    else:
+        print(f"Upload failed: {result.stderr.strip()}")
+else:
+    print("SSH key not found — skipping server upload (run setup_sandbox_ssh.ps1 first)")
