@@ -1,36 +1,23 @@
-# TrustSquare · Session 44 — Start Prompt
+# TrustSquare · Session 45 — Start Prompt
 # Paste this into Cowork at the start of the session.
 
 Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.
 
-## State going into Session 44
+## State going into Session 45
 - **Legal entity:** Trustsquare (Pty) Ltd · Reg 2026/340128/07 · live
 - **Platform:** TrustSquare at trustsquare.co · BEA v1.3.0 · clean slate
 - **Listings:** 0 live · 70 demo_ listings across all 7 categories
-- **Trust scores:** Recalculated from actual signal points — defensible
-- **All demo listing bugs fixed:** Local Market chip, cat normalisation, home tile count, seller CV availability
+- **Onboarding flow:** Verified end-to-end across all 7 categories (Session 44)
+- **BEA fixes (Session 44):** trust_score stamped on publish · ai_sessions credited on registration · POST /users idempotent
+- **NightlyScraper:** Removed from Task Scheduler — scraper design to be revisited
 
-## Session 44 Goal: End-to-end seller onboarding test
+## Session 45 Goal: Paystack subscription + AI coach verification
 
-Publish a real listing in each category and verify the full flow works correctly.
-
-### Flow to test per listing
-1. Open admin app → fill in listing details for the category
-2. AI coach note fires after key field filled (subject / trade_type / etc.)
-3. Trust score calculates correctly from entered credentials
-4. Submit → draft preview shows correctly
-5. Tier picker → EULA → Publish
-6. Listing appears in buyer app alongside demo listings
-7. Detail view: chips, trust badge, photos all correct
-
-### Categories to test (in order)
-1. **Property** — private seller, verify Established tier (~44), no PPRA tip
-2. **Tutors** — AI note fires on subject fill, SACE + police clearance chips show
-3. **Services** — AI note fires on trade_type, Red Seal + insurance chips show
-4. **Adventures** — FGASA chip shows, TGCSA if accommodation
-5. **Collectors** — authentication cert chip, amber colour
-6. **Cars** — NATIS chip, private seller declaration visible
-7. **Local Market** — photo uploads, home tile slideshow updates
+### Priority tasks
+1. **Paystack test mode** — complete a subscription payment flow end-to-end (buyer Tuppence top-up)
+2. **AI coach verification** — verify advert-agent/coach fires correctly per category using real listing data from admin app
+3. **Admin credential upload flow** — test Document Hub with a real listing: upload ID doc, verify trust score updates
+4. **Gate sbTriggerMarketNote** — gate the inline AI market note behind subscription tier for free sellers
 
 ### Files and deploy
 - marketsquare.html → `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`
