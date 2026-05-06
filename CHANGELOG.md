@@ -1,3 +1,15 @@
+## Session 44 · 6 May 2026 · End-to-end seller onboarding test + BEA fixes
+
+**Task: Full magic link → draft → tier picker → EULA → publish flow verified across all 7 categories**
+
+Ran a complete end-to-end onboarding test against the live BEA: created draft listings in all seven categories (Property, Tutors, Services, Adventures, Collectors, Cars, Local Market), verified they were invisible to the public feed, then simulated the `sobGoLive()` flow — `POST /users` registration followed by `PUT /listings/{id}/publish` for each draft. All 7 drafts transitioned to live correctly. Local Market uses the separate `/local-market/listings` endpoint (correct by design). Demo listings (70 client-side entries in `marketsquare.html`) co-exist with live BEA listings in `renderGrid()` without conflict.
+
+**Bug 1 fixed — trust_score NULL on published listings:** `PUT /listings/{id}/publish` was not stamping the seller's `trust_score` onto the listing row. Fixed by querying `users.trust_score` inside `publish_listing()` and writing it to the listing via `COALESCE(trust_score, ?)` at publish time. All 6 non-LM published listings now show `trust_score=40` (Established tier — correct for a new seller). The Local Market endpoint already reads trust live from a users JOIN, so it was unaffected.
+
+**Bug 2 fixed — ai_sessions not credited on POST /users:** The `User` Pydantic model only had `email` and `name` — the `ai_sessions` field sent by `sobGoLive()` was silently dropped. Added `ai_sessions: Optional[int]` to the model, and updated `create_user()` to credit sessions via `UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ?` on new registrations. Also hardened the endpoint to use `INSERT OR IGNORE` instead of a bare INSERT with a try/except, and added an `is_new` rowcount guard so repeat magic link completions cannot stack free session credits.
+
+**Verification:** idempotency test confirmed — two consecutive `POST /users` calls with `ai_sessions=3` result in exactly 3 sessions credited, not 6. Test data cleaned up; DB restored to clean slate (0 listings, 0 users).
+
 ## Session 41 (continued) — Seller onboarding funnel: magic link landing flow
 
 **Task: Seller onboarding funnel in marketsquare.html**

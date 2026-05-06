@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 43 · 5 May 2026**
+**Updated: Session 44 · 6 May 2026**
 
 ---
 
@@ -12,39 +12,28 @@
 
 ---
 
-## Last Completed — Session 43
+## Last Completed — Session 44
 
-### Rebrand + Legal Entity
-- MarketSquare → TrustSquare across all apps, BEA, and EULA
-- EULA updated with Trustsquare (Pty) Ltd · Reg 2026/340128/07 · registered address · tax number
-- All test data wiped (51 listings, 5 users, all transactional records) · geo data preserved
+### End-to-end seller onboarding test — all 7 categories verified
+- Full magic link → draft → tier picker → EULA → publish flow tested live on trustsquare.co
+- All 7 categories published and confirmed live: Property, Tutors, Services, Adventures, Collectors, Cars, Local Market
+- Local Market correctly routes through `/local-market/listings` (separate endpoint by design)
+- Demo listings (70 client-side) co-exist with live BEA listings in renderGrid() without conflict
 
-### 70 Demo Listings — All Categories Complete
-- 10 listings per category: Property, Tutors, Services, Adventures, Collectors, Cars, Local Market
-- 5 Unsplash photos each, realistic SA pricing, fully detailed descriptions
-- All tagged `demo_` prefix — distinguishable from live listings
-- Local Market required 3 fixes: missing chip, cat normalisation in renderGrid, BEA-only lmLoadGrid fallback
-
-### Trust Score Integrity
-- All demo scores recalculated from actual `_TRUST_SIGNALS` / `_CATEGORY_SIGNALS` in bea_main.py
-- Property private sellers: Established tier (~44) · Tutors: Trusted (~81) · Services: Trusted (~88)
-- Seller CV now displays `s.trustScore` (seller-level verified score) — not arbitrary per-listing number
-- Defensible and traceable — legal/trust exposure concern addressed
-
-### Seller CV Fixes
-- Availability "undefined · undefined" fixed — all SELLERS entries use `{day, time}` objects
-- Property seller credentials updated to match private seller signal set
+### BEA Bug Fixes (bea_main.py)
+- **trust_score NULL on publish:** `PUT /listings/{id}/publish` now reads `users.trust_score` and stamps it onto the listing row at publish time via `COALESCE(trust_score, ?)`
+- **ai_sessions not credited:** `User` model extended with `ai_sessions: Optional[int]`; `POST /users` now credits sessions on first registration only
+- **Idempotency guard:** `POST /users` changed from bare INSERT + try/except to `INSERT OR IGNORE` + `rowcount` check — repeat magic link completions cannot stack free session credits
 
 ---
 
-## Next Session — Session 44
+## Next Session — Session 45
 
-### Priority: End-to-end seller onboarding test
-1. Full magic link → draft → preview → tier picker → EULA → publish flow
-2. Verify trust score calculated correctly on first real listing
-3. Verify AI coach fires correctly per category
-4. Paystack test mode — complete a subscription payment flow
-5. Cross-category browse test with real listings alongside demo listings
+### Priority: Paystack subscription + AI coach verification
+1. Complete a Paystack test mode subscription payment flow end-to-end
+2. Verify AI coach (advert-agent/coach) fires correctly per category with real listing data
+3. Admin ops queue — review credential upload flow with a real listing
+4. Gate `sbTriggerMarketNote` behind subscription tier for free sellers
 
 ### Backlog
 - Paystack live mode — awaiting CIPC bank account setup

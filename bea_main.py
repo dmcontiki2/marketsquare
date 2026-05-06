@@ -790,6 +790,7 @@ class Listing(BaseModel):
 class User(BaseModel):
     email: str
     name: Optional[str] = None
+    ai_sessions: Optional[int] = None   # free sessions to credit on registration
 
 class ListingUpdate(BaseModel):
     """Partial update model for seller edits — all fields optional."""
@@ -937,13 +938,21 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
     if current_status == "live":
         conn.close()
         return {"message": "Listing is already live", "listing_id": listing_id}
+    # Pull the seller's current trust_score from the users table so the
+    # listing row reflects their score at publish time.
+    user_row = conn.execute(
+        "SELECT trust_score FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    user_trust = int(user_row["trust_score"] or 0) if user_row else 0
+
     conn.execute(
         """UPDATE listings
            SET listing_status = 'live',
                published_at   = datetime('now'),
-               seller_email   = COALESCE(seller_email, ?)
+               seller_email   = COALESCE(seller_email, ?),
+               trust_score    = COALESCE(trust_score, ?)
            WHERE id = ?""",
-        (email, listing_id)
+        (email, user_trust, listing_id)
     )
     conn.commit()
     conn.close()
@@ -1484,15 +1493,21 @@ async def upload_listing_photo(
 @app.post("/users")
 def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
-    try:
+    # INSERT OR IGNORE so existing sellers don't raise an error.
+    # Track whether the row is new so we only credit ai_sessions once.
+    result = conn.execute(
+        "INSERT OR IGNORE INTO users (email, name) VALUES (?,?)",
+        (user.email, user.name)
+    )
+    is_new = result.rowcount > 0
+    conn.commit()
+    # Credit free AI sessions only on first registration — not on repeat calls.
+    if is_new and user.ai_sessions and user.ai_sessions > 0:
         conn.execute(
-            "INSERT INTO users (email, name) VALUES (?,?)",
-            (user.email, user.name)
+            "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+            (user.ai_sessions, user.email)
         )
         conn.commit()
-    except:
-        conn.close()
-        raise HTTPException(status_code=400, detail="Email already exists")
     conn.close()
     return {"message": "User created successfully"}
 
