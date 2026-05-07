@@ -99,11 +99,29 @@
   .hp-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
   .hp-chip { background: #1a2232; border: 1px solid #1e3a5f; border-radius: 20px; padding: 5px 12px; font-size: 11px; color: #93c5fd; }
 
+  /* ── View toggle ── */
+  .view-toggle { display: flex; gap: 6px; }
+  .vtab { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
+  .vtab.active { border-color: var(--accent); color: #fff; background: #1a2232; }
+
+  /* ── Graph view ── */
+  #graph-view { display: none; width: 100%; height: calc(100vh - 53px); position: relative; }
+  #graph-view.visible { display: block; }
+  #graph-svg { width: 100%; height: 100%; }
+  .node-label { font-size: 11px; fill: #e2e8f0; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .node-sublabel { font-size: 9px; fill: #64748b; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* ── Graph tooltip ── */
+  #graph-tooltip { position: fixed; background: #111827; border: 1px solid #1e2d40; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #e2e8f0; pointer-events: none; opacity: 0; transition: opacity 0.15s; max-width: 280px; z-index: 200; line-height: 1.6; }
+  #graph-tooltip .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  #graph-tooltip .tt-tag { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+
   /* ── scrollbar ── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
 <body>
 
@@ -113,8 +131,13 @@
     <div class="session-badge" id="session-badge">Session —</div>
     <div><span class="live-dot"></span><span class="gen-time" id="gen-time">Loading…</span></div>
   </div>
-  <div style="font-size:11px;color:var(--muted);">Select a direction below → copy prompt → paste into Cowork</div>
+  <div class="view-toggle">
+    <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
+    <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
+  </div>
 </div>
+
+<div id="graph-tooltip"><div class="tt-tag" id="tt-tag"></div><div class="tt-title" id="tt-title"></div><div id="tt-body"></div></div>
 
 <div class="main">
 
@@ -183,6 +206,11 @@
     </div>
 
   </div>
+</div>
+
+<!-- GRAPH VIEW -->
+<div id="graph-view">
+  <svg id="graph-svg"></svg>
 </div>
 
 <script>
@@ -343,6 +371,218 @@ function fallbackCopy(text, finish) {
 }
 
 init();
+
+// ── View switcher ────────────────────────────────────────────
+function switchView(view) {
+  const dash = document.querySelector('.main');
+  const graph = document.getElementById('graph-view');
+  document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
+  document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
+  if (view === 'graph') {
+    dash.style.display = 'none';
+    graph.classList.add('visible');
+    if (!window._graphBuilt) buildGraph();
+  } else {
+    dash.style.display = '';
+    graph.classList.remove('visible');
+  }
+}
+
+// ── Graph builder ─────────────────────────────────────────────
+function buildGraph() {
+  window._graphBuilt = true;
+  if (!DATA) return;
+
+  const colors = {
+    'TrustSquare': '#3b82f6',
+    'CityLauncher': '#8b5cf6',
+    'AdvertAgent': '#f59e0b',
+    'Infrastructure': '#10b981',
+    'Concept': '#64748b',
+    'Blocker': '#ef4444',
+    'Priority': '#06b6d4',
+  };
+
+  // Build nodes from live data
+  const nodes = [
+    // Core projects
+    { id: 'ts', label: 'TrustSquare', sub: `Session ${DATA.nextSession}`, group: 'TrustSquare', size: 28, detail: `Live at trustsquare.co · BEA v1.3.0\nSession ${DATA.currentSession} complete`, url: 'https://trustsquare.co' },
+    { id: 'cl', label: 'CityLauncher', sub: `Session ${DATA.clSession}+`, group: 'CityLauncher', size: 22, detail: `Autonomous city launch pipeline\nPretoria active` },
+    { id: 'aa', label: 'AdvertAgent', sub: 'Pre-kickoff', group: 'AdvertAgent', size: 20, detail: 'Seller-facing AI assistance\nSession 1 kickoff pending' },
+    { id: 'infra', label: 'Agentic OS', sub: 'Framework', group: 'Infrastructure', size: 18, detail: 'Branch structure · Session automation\nAudit baseline' },
+
+    // Shared concepts
+    { id: 'tuppence', label: 'Tuppence', sub: 'Currency', group: 'Concept', size: 14, detail: 'Introduction currency shared across all projects' },
+    { id: 'bea', label: 'BEA v1.3.0', sub: 'FastAPI', group: 'Concept', size: 16, detail: 'Backend · SQLite + Redis · Hetzner CPX22' },
+    { id: 'hetzner', label: 'Hetzner', sub: 'Server', group: 'Concept', size: 13, detail: '178.104.73.239 · Ubuntu 24.04\nNginx + FastAPI + CityLauncher API' },
+    { id: 'paystack', label: 'Paystack', sub: 'Payments', group: 'Concept', size: 14, detail: 'Test mode active · Live mode pending CIPC' },
+    { id: 'trust', label: 'Trust Score', sub: 'Metric', group: 'Concept', size: 13, detail: 'Seller credibility score · Stamped on publish' },
+    { id: 'geo', label: 'Geo Hierarchy', sub: '4-level', group: 'Concept', size: 12, detail: 'Country → Region → City → Suburb\nZA seeded · 9 provinces · 54 cities' },
+    { id: 'codex', label: 'Solar Codex', sub: 'Rules v4.5', group: 'Concept', size: 15, detail: 'Canonical product rules · All agents must check before adding business logic' },
+    { id: 'pretoria', label: 'Pretoria', sub: 'Launch city', group: 'CityLauncher', size: 13, detail: '0 live listings · 70 demo listings\n23/60 founding sellers' },
+    { id: 'github', label: 'GitHub', sub: 'Backup', group: 'Infrastructure', size: 12, detail: 'github.com/dmcontiki2/marketsquare\nGit commits: David runs from PowerShell' },
+  ];
+
+  // Add blocker nodes
+  (DATA.blockers || []).slice(0, 4).forEach((b, i) => {
+    nodes.push({ id: 'blocker_' + i, label: b.length > 22 ? b.slice(0, 22) + '…' : b, sub: 'Blocker', group: 'Blocker', size: 11, detail: b });
+  });
+
+  // Add priority nodes
+  const priorities = DATA.nextGoals.split('\n').filter(l => /^\d+\./.test(l.trim())).slice(0, 4);
+  priorities.forEach((p, i) => {
+    const text = p.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
+    nodes.push({ id: 'pri_' + i, label: text.length > 24 ? text.slice(0, 24) + '…' : text, sub: `Priority ${i+1}`, group: 'Priority', size: 11, detail: text });
+  });
+
+  const edges = [
+    // Project ↔ shared infrastructure
+    { source: 'ts', target: 'bea', strength: 0.8 },
+    { source: 'ts', target: 'hetzner', strength: 0.6 },
+    { source: 'cl', target: 'hetzner', strength: 0.6 },
+    { source: 'ts', target: 'paystack', strength: 0.7 },
+    { source: 'ts', target: 'tuppence', strength: 0.9 },
+    { source: 'cl', target: 'tuppence', strength: 0.5 },
+    { source: 'aa', target: 'tuppence', strength: 0.5 },
+    { source: 'ts', target: 'trust', strength: 0.8 },
+    { source: 'cl', target: 'trust', strength: 0.4 },
+    { source: 'ts', target: 'geo', strength: 0.7 },
+    { source: 'cl', target: 'geo', strength: 0.8 },
+    { source: 'ts', target: 'codex', strength: 0.7 },
+    { source: 'cl', target: 'codex', strength: 0.7 },
+    { source: 'aa', target: 'codex', strength: 0.7 },
+    { source: 'ts', target: 'github', strength: 0.5 },
+    { source: 'cl', target: 'github', strength: 0.5 },
+    { source: 'infra', target: 'github', strength: 0.7 },
+    { source: 'cl', target: 'pretoria', strength: 0.9 },
+    { source: 'ts', target: 'pretoria', strength: 0.6 },
+    { source: 'aa', target: 'ts', strength: 0.7 },
+    { source: 'infra', target: 'ts', strength: 0.5 },
+    { source: 'infra', target: 'cl', strength: 0.5 },
+    { source: 'infra', target: 'aa', strength: 0.5 },
+    { source: 'ts', target: 'bea', strength: 0.9 },
+  ];
+
+  // Connect blockers to TrustSquare
+  (DATA.blockers || []).slice(0, 4).forEach((b, i) => {
+    edges.push({ source: 'ts', target: 'blocker_' + i, strength: 0.6 });
+  });
+
+  // Connect priorities to TrustSquare
+  priorities.forEach((p, i) => {
+    edges.push({ source: 'ts', target: 'pri_' + i, strength: 0.5 });
+  });
+
+  const svg = d3.select('#graph-svg');
+  const W = document.getElementById('graph-view').clientWidth;
+  const H = document.getElementById('graph-view').clientHeight;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+
+  // Starfield background
+  const starCount = 120;
+  for (let i = 0; i < starCount; i++) {
+    svg.append('circle')
+      .attr('cx', Math.random() * W).attr('cy', Math.random() * H)
+      .attr('r', Math.random() * 1.2 + 0.2)
+      .attr('fill', '#fff').attr('opacity', Math.random() * 0.4 + 0.05);
+  }
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(edges).id(d => d.id).distance(d => 100 / d.strength).strength(d => d.strength * 0.3))
+    .force('charge', d3.forceManyBody().strength(d => -d.size * 18))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide(d => d.size + 14));
+
+  // Glow filter
+  const defs = svg.append('defs');
+  Object.entries(colors).forEach(([group, color]) => {
+    const filter = defs.append('filter').attr('id', 'glow-' + group.toLowerCase().replace(/\s/g, ''));
+    filter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'blur');
+    const merge = filter.append('feMerge');
+    merge.append('feMergeNode').attr('in', 'blur');
+    merge.append('feMergeNode').attr('in', 'SourceGraphic');
+  });
+
+  // Draw edges
+  const link = svg.append('g').selectAll('line').data(edges).join('line')
+    .attr('stroke', d => {
+      const src = nodes.find(n => n.id === (d.source.id || d.source));
+      return src ? colors[src.group] || '#334155' : '#334155';
+    })
+    .attr('stroke-opacity', 0.25)
+    .attr('stroke-width', d => d.strength * 1.5);
+
+  // Draw nodes
+  const node = svg.append('g').selectAll('g').data(nodes).join('g')
+    .style('cursor', 'pointer')
+    .call(d3.drag()
+      .on('start', (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+      .on('end', (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  // Outer glow ring
+  node.append('circle')
+    .attr('r', d => d.size + 6)
+    .attr('fill', 'none')
+    .attr('stroke', d => colors[d.group] || '#334155')
+    .attr('stroke-opacity', 0.15)
+    .attr('stroke-width', 6);
+
+  // Main circle
+  node.append('circle')
+    .attr('r', d => d.size)
+    .attr('fill', d => colors[d.group] || '#334155')
+    .attr('fill-opacity', 0.85)
+    .attr('filter', d => `url(#glow-${d.group.toLowerCase().replace(/\s/g, '')})`)
+    .attr('stroke', '#0b0f1a')
+    .attr('stroke-width', 2);
+
+  // Inner highlight
+  node.append('circle')
+    .attr('r', d => d.size * 0.45)
+    .attr('cx', d => -d.size * 0.2)
+    .attr('cy', d => -d.size * 0.2)
+    .attr('fill', '#fff')
+    .attr('fill-opacity', 0.12);
+
+  // Labels
+  node.append('text').attr('class', 'node-label')
+    .attr('text-anchor', 'middle').attr('dy', d => d.size + 14)
+    .text(d => d.label);
+  node.append('text').attr('class', 'node-sublabel')
+    .attr('text-anchor', 'middle').attr('dy', d => d.size + 25)
+    .text(d => d.sub);
+
+  // Tooltip
+  const tt = document.getElementById('graph-tooltip');
+  node.on('mouseenter', (event, d) => {
+    document.getElementById('tt-tag').textContent = d.group;
+    document.getElementById('tt-tag').style.color = colors[d.group] || '#64748b';
+    document.getElementById('tt-title').textContent = d.label;
+    document.getElementById('tt-body').textContent = d.detail || '';
+    tt.style.opacity = 1;
+  }).on('mousemove', event => {
+    tt.style.left = (event.clientX + 16) + 'px';
+    tt.style.top = (event.clientY - 10) + 'px';
+  }).on('mouseleave', () => {
+    tt.style.opacity = 0;
+  }).on('click', (event, d) => {
+    if (d.url) window.open(d.url, '_blank');
+  });
+
+  // Tick
+  sim.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${
+      Math.max(d.size + 5, Math.min(W - d.size - 5, d.x))
+    },${
+      Math.max(d.size + 5, Math.min(H - d.size - 25, d.y))
+    })`);
+  });
+}
 </script>
 </body>
 </html>
