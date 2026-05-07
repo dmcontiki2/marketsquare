@@ -407,13 +407,13 @@ function buildGraph() {
   const nodes = [
     // Core projects
     { id: 'ts', label: 'TrustSquare', sub: `Session ${DATA.nextSession}`, group: 'TrustSquare', size: 28, detail: `Live at trustsquare.co · BEA v1.3.0\nSession ${DATA.currentSession} complete`, url: 'https://trustsquare.co' },
-    { id: 'cl', label: 'CityLauncher', sub: `Session ${DATA.clSession}+`, group: 'CityLauncher', size: 22, detail: `Autonomous city launch pipeline\nPretoria active` },
+    { id: 'cl', label: 'CityLauncher', sub: 'Paused · Session 45', group: 'CityLauncher', size: 22, detail: `City launch pipeline · Methodology redesign pending\nScheduler DISABLED · Dashboard API still running\nTo revisit: scraper design + auto-launch strategy` },
     { id: 'aa', label: 'AdvertAgent', sub: 'Pre-kickoff', group: 'AdvertAgent', size: 20, detail: 'Seller-facing AI assistance\nSession 1 kickoff pending' },
     { id: 'infra', label: 'Agentic OS', sub: 'Framework', group: 'Infrastructure', size: 18, detail: 'Branch structure · Session automation\nAudit baseline' },
 
     // Shared concepts
     { id: 'tuppence', label: 'Tuppence', sub: 'Currency', group: 'Concept', size: 14, detail: 'Introduction currency shared across all projects' },
-    { id: 'bea', label: 'BEA v1.3.0', sub: 'FastAPI', group: 'Concept', size: 16, detail: 'Backend · SQLite + Redis · Hetzner CPX22' },
+    { id: 'bea', label: 'BEA v1.3.0', sub: 'FastAPI', group: 'Concept', size: 16, detail: '✅ Active · 72MB · running 22h+\nSQLite + Redis · Hetzner CPX22\nShared by TrustSquare, CityLauncher, AdvertAgent' },
     { id: 'hetzner', label: 'Hetzner', sub: 'Server', group: 'Concept', size: 13, detail: '178.104.73.239 · Ubuntu 24.04\nNginx + FastAPI + CityLauncher API' },
     { id: 'paystack', label: 'Paystack', sub: 'Payments', group: 'Concept', size: 14, detail: 'Test mode active · Live mode pending CIPC' },
     { id: 'trust', label: 'Trust Score', sub: 'Metric', group: 'Concept', size: 13, detail: 'Seller credibility score · Stamped on publish' },
@@ -437,7 +437,9 @@ function buildGraph() {
 
   const edges = [
     // Project ↔ shared infrastructure
-    { source: 'ts', target: 'bea', strength: 0.8 },
+    { source: 'ts', target: 'bea', strength: 0.9 },
+    { source: 'cl', target: 'bea', strength: 0.7 },
+    { source: 'aa', target: 'bea', strength: 0.6 },
     { source: 'ts', target: 'hetzner', strength: 0.6 },
     { source: 'cl', target: 'hetzner', strength: 0.6 },
     { source: 'ts', target: 'paystack', strength: 0.7 },
@@ -460,7 +462,6 @@ function buildGraph() {
     { source: 'infra', target: 'ts', strength: 0.5 },
     { source: 'infra', target: 'cl', strength: 0.5 },
     { source: 'infra', target: 'aa', strength: 0.5 },
-    { source: 'ts', target: 'bea', strength: 0.9 },
   ];
 
   // Connect blockers to TrustSquare
