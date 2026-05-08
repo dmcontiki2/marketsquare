@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketSquare — Listing State Machine</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f8f8f6; color: #1a1a2e; padding: 32px 28px; font-size: 13px; max-width: 900px; margin: 0 auto; }
+
+.doc-title   { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+.doc-sub     { font-size: 12px; color: #aaa; margin-bottom: 32px; }
+.section-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-bottom: 12px; margin-top: 28px; }
+
+/* STATE CARDS */
+.states { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+@media (max-width: 600px) { .states { grid-template-columns: 1fr; } }
+.state-card { border-radius: 12px; padding: 14px 16px; border: 2px solid transparent; }
+.state-name { font-size: 13px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.state-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.state-sub  { font-size: 11px; line-height: 1.6; opacity: .85; }
+.state-badges { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+.badge { font-size: 9px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+
+.s-draft     { background: #f0f4ff; border-color: #c5d3f5; color: #1a3a6e; }
+.s-live      { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+.s-paused    { background: #fff8e1; border-color: #ffe082; color: #7a5200; }
+.s-fadeout   { background: #fff3e0; border-color: #ffcc80; color: #6d3b00; }
+.s-withdrawn { background: #fce4ec; border-color: #f48fb1; color: #880e2f; }
+.s-blocked   { background: #f3e5f5; border-color: #ce93d8; color: #4a0072; }
+.s-archived  { background: #f5f5f5; border-color: #e0e0e0; color: #555; }
+
+.dot-draft    { background: #3d6ee8; }
+.dot-live     { background: #2e7d32; }
+.dot-paused   { background: #f9a825; }
+.dot-fadeout  { background: #e65100; }
+.dot-withdrawn{ background: #c62828; }
+.dot-blocked  { background: #6a1b9a; }
+.dot-archived { background: #9e9e9e; }
+
+.b-hidden  { background: #ffcdd2; color: #b71c1c; }
+.b-visible { background: #c8e6c9; color: #1b5e20; }
+.b-seller  { background: #e3f2fd; color: #0d47a1; }
+.b-auto    { background: #ede7f6; color: #4527a0; }
+.b-manual  { background: #fff3e0; color: #bf360c; }
+.b-legal   { background: #fce4ec; color: #880e2f; }
+.b-tier    { background: #e8f5e9; color: #1b5e20; }
+.b-perm    { background: #eeeeee; color: #424242; }
+
+/* TABLES */
+table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #999; padding: 7px 10px; text-align: left; border-bottom: 2px solid #e8e8e8; }
+td { font-size: 11px; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; line-height: 1.5; }
+tr:last-child td { border-bottom: none; }
+.who-seller { color: #c8873a; font-weight: 700; }
+.who-system { color: #6b47dc; font-weight: 700; }
+.who-admin  { color: #e63946; font-weight: 700; }
+.who-legal  { color: #6a1b9a; font-weight: 700; }
+.from, .to  { font-weight: 700; white-space: nowrap; }
+.arrow      { color: #ccc; padding: 0 3px; }
+
+/* BLOCKED */
+.blocked-section { background: #f9f0ff; border: 1.5px solid #ce93d8; border-radius: 12px; padding: 16px 18px; margin-bottom: 8px; }
+.blocked-title { font-size: 11px; font-weight: 800; color: #4a0072; margin-bottom: 12px; }
+.cause-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.cause-row:last-child { margin-bottom: 0; }
+.cause-num  { font-size: 10px; font-weight: 800; color: #6a1b9a; width: 20px; flex-shrink: 0; padding-top: 2px; }
+.cause-name { font-size: 11px; font-weight: 700; color: #4a0072; }
+.cause-desc { font-size: 11px; color: #7b1fa2; line-height: 1.5; }
+.cause-reinstate { font-size: 10px; margin-top: 2px; }
+.r-yes { color: #2e7d32; font-weight: 700; }
+.r-no  { color: #c62828; font-weight: 700; }
+
+/* SCHEMA */
+.schema-box { background: #1a1a2e; color: #e8e8e8; border-radius: 12px; padding: 18px 20px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 2; }
+.cm { color: #6b8aad; }
+.kw { color: #c8873a; }
+.vl { color: #7ec88e; }
+
+/* EULA */
+.eula-box { background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 14px 16px; }
+.eula-title { font-size: 11px; font-weight: 700; color: #333; margin-bottom: 6px; }
+.eula-body  { font-size: 11px; color: #666; line-height: 1.8; }
+.eula-section { margin-bottom: 18px; }
+.eula-section:last-child { margin-bottom: 0; }
+.eula-section-heading { font-size: 11px; font-weight: 800; color: #1a1a2e; margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; }
+.eula-section-body { font-size: 11px; color: #555; line-height: 1.8; }
+.eula-gate { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 11px; color: #6d3b00; font-weight: 600; }
+.eula-cause-block { background: #f3e5f5; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
+.eula-cause-code { font-size: 10px; font-weight: 800; color: #6a1b9a; }
+.eula-cause-name { font-size: 11px; font-weight: 700; color: #4a0072; }
+.eula-cause-desc { font-size: 11px; color: #555; line-height: 1.6; margin-top: 2px; }
+.eula-perm-block { background: #fce4ec; border-radius: 8px; padding: 10px 14px; margin: 6px 0; border: 1px solid #f48fb1; }
+.eula-perm-code { font-size: 10px; font-weight: 800; color: #880e2f; }
+.eula-perm-name { font-size: 11px; font-weight: 700; color: #c62828; }
+.eula-perm-desc { font-size: 11px; color: #555; line-height: 1.6; margin-top: 2px; }
+.eula-waiver { background: #1a1a2e; color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 11px; line-height: 1.7; margin-top: 8px; }
+
+.footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e8e8e8; font-size: 10px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<div class="doc-title">MarketSquare · Listing State Machine</div>
+<div class="doc-sub">Version 1.1 · 2 May 2026 · Locked design — Architect agent sign-off required for changes</div>
+
+<!-- STATES -->
+<div class="section-title">The Seven States</div>
+<div class="states">
+
+  <div class="state-card s-draft">
+    <div class="state-name"><div class="state-dot dot-draft"></div>DRAFT</div>
+    <div class="state-sub">Filled in, not yet live. Invisible to buyers. No intro requests. Does not consume a commitment-model slot. Auto-expires after 30 days — nudge at day 20.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-seller">Seller only</span>
+      <span class="badge b-auto">Expires 30d</span>
+    </div>
+  </div>
+
+  <div class="state-card s-live">
+    <div class="state-name"><div class="state-dot dot-live"></div>LIVE</div>
+    <div class="state-sub">Visible in browse and search. Accepting intro requests. The only state buyers interact with. Commitment model auto-pauses on intro received. <strong>Free: 2 · Starter: 25 · Premium: 50.</strong> Extra capacity: +20 listings per 1T batch.</div>
+    <div class="state-badges">
+      <span class="badge b-visible">Visible to buyers</span>
+      <span class="badge b-manual">Seller-initiated</span>
+      <span class="badge b-tier">Duration by tier</span>
+    </div>
+  </div>
+
+  <div class="state-card s-paused">
+    <div class="state-name"><div class="state-dot dot-paused"></div>PAUSED</div>
+    <div class="state-sub">Was live, temporarily off. Auto (commitment model intro) or manual. Hidden from buyers. Existing intros still active. Fade Out clock continues ticking.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-auto">Auto or manual</span>
+    </div>
+  </div>
+
+  <div class="state-card s-fadeout">
+    <div class="state-name"><div class="state-dot dot-fadeout"></div>FADE OUT</div>
+    <div class="state-sub">Stale listing — no intros and no seller login within tier window. Removed from browse. Nudge email sent. 14 days to respond or auto-archived.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-auto">System-triggered</span>
+      <span class="badge b-tier">Window by tier</span>
+    </div>
+  </div>
+
+  <div class="state-card s-withdrawn">
+    <div class="state-name"><div class="state-dot dot-withdrawn"></div>WITHDRAWN</div>
+    <div class="state-sub">Seller-initiated soft delete. Row kept for audit trail. Reactivatable to DRAFT within 90 days. Auto-archives after 90 days.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-manual">Seller-initiated</span>
+      <span class="badge b-auto">→ Archived 90d</span>
+    </div>
+  </div>
+
+  <div class="state-card s-blocked">
+    <div class="state-name"><div class="state-dot dot-blocked"></div>BLOCKED</div>
+    <div class="state-sub">Platform-initiated. Verified EULA breach (B1–B6). Listing and account suspended. Cause logged internally. 30-day appeal window. Reinstatement on legal grounds only.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-legal">EULA-governed</span>
+    </div>
+  </div>
+
+  <div class="state-card s-archived" style="grid-column: 1 / -1;">
+    <div class="state-name"><div class="state-dot dot-archived"></div>ARCHIVED — Terminal state</div>
+    <div class="state-sub">Permanent end state. Reached from Draft (30d), Withdrawn (90d), Fade Out (14d), or Blocked (appeal denied / permanent). Row kept forever for Trust Score history, intro audit trail, and version snapshots. Cannot be reactivated.</div>
+    <div class="state-badges">
+      <span class="badge b-hidden">Hidden from buyers</span>
+      <span class="badge b-perm">Permanent</span>
+      <span class="badge b-auto">System-managed</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- FADE OUT TIERS -->
+<div class="section-title">Tier limits &amp; Fade Out inactivity windows</div>
+<table>
+  <thead><tr><th>Tier</th><th>Max live listings</th><th>Inactivity window</th><th>Nudge sent</th><th>Auto-archived if no action</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Free</strong></td><td>2</td><td>30 days</td><td>Day 23</td><td>Day 44</td></tr>
+    <tr><td><strong>Starter ($5)</strong></td><td>25</td><td>60 days</td><td>Day 53</td><td>Day 74</td></tr>
+    <tr><td><strong>Premium ($15)</strong></td><td>50</td><td>120 days (4 months)</td><td>Day 113</td><td>Day 134</td></tr>
+    <tr><td colspan="5" style="font-size:10px;color:#888;font-style:italic;">Batch expansion: any tier · +20 listings per 1 Tuppence spent · batches stack and persist until used</td></tr>
+  </tbody>
+</table>
+
+<!-- TRANSITIONS -->
+<div class="section-title">All transitions</div>
+<table>
+  <thead><tr><th>From</th><th></th><th>To</th><th>Trigger</th><th>Initiated by</th></tr></thead>
+  <tbody>
+    <tr><td class="from">—</td><td class="arrow">→</td><td class="to">DRAFT</td><td>"Save as draft" on publish screen</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">—</td><td class="arrow">→</td><td class="to">LIVE</td><td>"Publish now" on publish screen</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">DRAFT</td><td class="arrow">→</td><td class="to">LIVE</td><td>"Publish" from seller dashboard — one tap, no re-entry</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">DRAFT</td><td class="arrow">→</td><td class="to">ARCHIVED</td><td>"Discard" by seller, or auto at 30 days</td><td class="who-seller">Seller / System</td></tr>
+    <tr><td class="from">LIVE</td><td class="arrow">→</td><td class="to">PAUSED</td><td>Commitment model intro received (auto) or manual pause</td><td class="who-system">System / Seller</td></tr>
+    <tr><td class="from">LIVE</td><td class="arrow">→</td><td class="to">FADE OUT</td><td>No intros + no seller login within tier inactivity window</td><td class="who-system">System</td></tr>
+    <tr><td class="from">LIVE</td><td class="arrow">→</td><td class="to">WITHDRAWN</td><td>Seller taps "Withdraw listing" (sold / no longer available)</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">LIVE</td><td class="arrow">→</td><td class="to">BLOCKED</td><td>Verified EULA breach — empirical trigger (B1–B6)</td><td class="who-admin">Admin / System</td></tr>
+    <tr><td class="from">PAUSED</td><td class="arrow">→</td><td class="to">LIVE</td><td>Intro resolved (declined / completed) or seller resumes</td><td class="who-system">System / Seller</td></tr>
+    <tr><td class="from">PAUSED</td><td class="arrow">→</td><td class="to">WITHDRAWN</td><td>Seller withdraws while paused (e.g. sold during intro)</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">FADE OUT</td><td class="arrow">→</td><td class="to">LIVE</td><td>Seller taps "Keep live" within 14-day nudge window</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">FADE OUT</td><td class="arrow">→</td><td class="to">ARCHIVED</td><td>No response within 14 days of nudge email</td><td class="who-system">System</td></tr>
+    <tr><td class="from">WITHDRAWN</td><td class="arrow">→</td><td class="to">DRAFT</td><td>Seller reactivates within 90 days — returns as draft for review</td><td class="who-seller">Seller</td></tr>
+    <tr><td class="from">WITHDRAWN</td><td class="arrow">→</td><td class="to">ARCHIVED</td><td>Auto after 90 days, or admin action</td><td class="who-system">System / Admin</td></tr>
+    <tr><td class="from">BLOCKED</td><td class="arrow">→</td><td class="to">LIVE</td><td>Successful appeal on enumerated legal ground</td><td class="who-legal">Legal / Admin</td></tr>
+    <tr><td class="from">BLOCKED</td><td class="arrow">→</td><td class="to">ARCHIVED</td><td>Appeal denied, permanent cause (B5/B6), or no appeal in 30 days</td><td class="who-admin">Admin</td></tr>
+  </tbody>
+</table>
+
+<!-- BLOCKED CAUSES -->
+<div class="section-title">Blocked — enumerated EULA causes and reinstatement eligibility</div>
+<div class="blocked-section">
+  <div class="blocked-title">Six empirical causes — all must be verifiable, not subjective</div>
+
+  <div class="cause-row">
+    <div class="cause-num">B1</div>
+    <div>
+      <div class="cause-name">Fraudulent Trust Score evidence</div>
+      <div class="cause-desc">Forged, altered, or misrepresented credential upload (certificate, registration, ID document).</div>
+      <div class="cause-reinstate"><span class="r-yes">✅ Reinstatement possible</span> — authenticated original + re-verification.</div>
+    </div>
+  </div>
+  <div class="cause-row">
+    <div class="cause-num">B2</div>
+    <div>
+      <div class="cause-name">Fraudulent listing</div>
+      <div class="cause-desc">Property or service the seller does not own, is not authorised to market, or does not exist.</div>
+      <div class="cause-reinstate"><span class="r-yes">✅ Reinstatement possible</span> — proof of authority (mandate letter, ownership deed) within appeal window.</div>
+    </div>
+  </div>
+  <div class="cause-row">
+    <div class="cause-num">B3</div>
+    <div>
+      <div class="cause-name">Systematic intro ignoring</div>
+      <div class="cause-desc">3 or more ignored intro requests within any rolling 30-day window — empirically measured.</div>
+      <div class="cause-reinstate"><span class="r-yes">✅ Reinstatement possible</span> — 60-day cooling period + written acknowledgement of commitment model rules.</div>
+    </div>
+  </div>
+  <div class="cause-row">
+    <div class="cause-num">B4</div>
+    <div>
+      <div class="cause-name">Buyer harassment</div>
+      <div class="cause-desc">Confirmed contact of a buyer outside the platform following a declined or withdrawn introduction.</div>
+      <div class="cause-reinstate"><span class="r-yes">✅ Reinstatement possible</span> — first offence only, buyer's written consent required, 90-day suspension must be served.</div>
+    </div>
+  </div>
+  <div class="cause-row">
+    <div class="cause-num">B5</div>
+    <div>
+      <div class="cause-name">Payment fraud / chargeback abuse</div>
+      <div class="cause-desc">Disputed Tuppence charges, fraudulent Paystack transactions, or deliberate chargeback pattern.</div>
+      <div class="cause-reinstate"><span class="r-no">❌ Permanent — no reinstatement.</span> Referred to Paystack fraud team.</div>
+    </div>
+  </div>
+  <div class="cause-row">
+    <div class="cause-num">B6</div>
+    <div>
+      <div class="cause-name">Identity fraud</div>
+      <div class="cause-desc">ID document belongs to another person, or seller operating under a false identity.</div>
+      <div class="cause-reinstate"><span class="r-no">❌ Permanent — no reinstatement.</span> May be referred to relevant authority.</div>
+    </div>
+  </div>
+</div>
+
+<!-- EULA -->
+<div class="section-title">EULA — required clauses (signed before registration)</div>
+<div class="eula-box">
+
+  <div class="eula-gate">⚠ Acceptance gate — seller must checkbox-accept this EULA before account creation. Acceptance timestamp stored in users.eula_accepted_at.</div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 1 · Listing Lifecycle</div>
+    <div class="eula-section-body">Every listing exists in exactly one of seven states: DRAFT, LIVE, PAUSED, FADE OUT, WITHDRAWN, BLOCKED, or ARCHIVED. The platform may transition listings between states automatically (system-triggered) or manually (admin-initiated) in accordance with the rules in this agreement.</div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 2 · Listing Count Limits</div>
+    <div class="eula-section-body">Simultaneous live listing caps by tier: <strong>Free = 2 · Starter ($5/mo) = 25 · Premium ($15/mo) = 50.</strong> Any seller may purchase additional capacity at <strong>1 Tuppence per batch of 20 extra listings</strong> — batches stack and persist until used. Attempting to publish beyond the cap without a purchased batch will be rejected with an in-app upgrade or batch-purchase prompt.</div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 3 · Fade Out (Inactivity)</div>
+    <div class="eula-section-body">A listing enters FADE OUT when no intro request has been received and no seller login recorded within the inactivity window for the seller's subscription tier (Free: 30 days · Starter: 60 days · Premium: 120 days). A nudge email is sent 7 days before the window closes. The seller then has 14 days to tap "Keep live" — no action results in automatic ARCHIVAL. Free tier sellers may renew at no charge by logging in within the window.</div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 4 · Suspension and Blocking — causes with recourse (B1–B4)</div>
+    <div class="eula-section-body">The platform may only BLOCK a listing and account upon verified evidence of an enumerated cause. All causes are empirical and objectively verifiable. No discretionary or subjective blocking is permitted.</div>
+
+    <div class="eula-cause-block">
+      <div class="eula-cause-code">B1</div>
+      <div class="eula-cause-name">Fraudulent Trust Score evidence</div>
+      <div class="eula-cause-desc">Forged, altered, or misrepresented credential upload. <em>Reinstatement: authenticated original document + re-verification.</em></div>
+    </div>
+    <div class="eula-cause-block">
+      <div class="eula-cause-code">B2</div>
+      <div class="eula-cause-name">Fraudulent listing</div>
+      <div class="eula-cause-desc">Marketing property or services without authority to do so. <em>Reinstatement: proof of authority (mandate, ownership deed) within 30-day appeal window.</em></div>
+    </div>
+    <div class="eula-cause-block">
+      <div class="eula-cause-code">B3</div>
+      <div class="eula-cause-name">Systematic intro ignoring</div>
+      <div class="eula-cause-desc">3+ ignored intro requests in any rolling 30-day window. <em>Reinstatement: 60-day cooling period + written acknowledgement of platform rules.</em></div>
+    </div>
+    <div class="eula-cause-block">
+      <div class="eula-cause-code">B4</div>
+      <div class="eula-cause-name">Buyer harassment</div>
+      <div class="eula-cause-desc">Confirmed contact of a buyer outside the platform after a declined introduction. <em>Reinstatement: first offence only — buyer consent required + 90-day suspension served.</em></div>
+    </div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 5 · Permanent Block — causes without recourse (B5–B6)</div>
+
+    <div class="eula-perm-block">
+      <div class="eula-perm-code">B5</div>
+      <div class="eula-perm-name">Payment fraud / chargeback abuse</div>
+      <div class="eula-perm-desc">Fraudulent Paystack transactions or deliberate chargeback pattern. <strong>Permanent — no reinstatement.</strong> Referred to Paystack fraud team.</div>
+    </div>
+    <div class="eula-perm-block">
+      <div class="eula-perm-code">B6</div>
+      <div class="eula-perm-name">Identity fraud / deliberate deception</div>
+      <div class="eula-perm-desc">False or stolen identity, or deliberate deception to circumvent the trust model. <strong>Permanent — no reinstatement.</strong> May be referred to relevant legal authorities.</div>
+    </div>
+
+    <div class="eula-waiver">By accepting this EULA the seller explicitly acknowledges that causes B5 and B6 result in permanent account termination with no right of appeal, and waives any claim to reinstatement on those grounds. <strong>Requires separate checkbox at onboarding.</strong></div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 6 · Appeals Process (B1–B4)</div>
+    <div class="eula-section-body">The seller has <strong>30 days</strong> from the BLOCK notification email to lodge an appeal via the platform's designated appeals channel. The notification states the cause code, evidence basis, and appeals contact. No appeal within 30 days → automatic ARCHIVAL, right of appeal extinguished. Appeals reviewed by a human administrator within 14 days of receipt.</div>
+  </div>
+
+  <div class="eula-section">
+    <div class="eula-section-heading">§ 7 · Data Retention</div>
+    <div class="eula-section-body">All listing data including ARCHIVED listings is retained indefinitely for: Trust Score integrity (intro counts, tenure, credential history); listing version snapshots (audit trail); legal compliance (blocking and appeal records). Retained data is not visible to buyers and is not used beyond these purposes.</div>
+  </div>
+
+</div>
+
+<!-- SCHEMA -->
+<div class="section-title">Schema migration — four columns added to listings table</div>
+<div class="schema-box">
+<span class="cm">-- All idempotent ALTER TABLE additions</span><br>
+<span class="kw">ALTER TABLE</span> listings <span class="kw">ADD COLUMN</span> listing_status     <span class="kw">TEXT NOT NULL DEFAULT</span> <span class="vl">'live'</span>;<br>
+<span class="kw">ALTER TABLE</span> listings <span class="kw">ADD COLUMN</span> status_changed_at  <span class="kw">TEXT</span>;<br>
+<span class="kw">ALTER TABLE</span> listings <span class="kw">ADD COLUMN</span> block_cause        <span class="kw">TEXT</span>; <span class="cm">-- B1–B6</span><br>
+<span class="kw">ALTER TABLE</span> listings <span class="kw">ADD COLUMN</span> fade_nudge_sent_at <span class="kw">TEXT</span>;<br><br>
+<span class="kw">CREATE INDEX IF NOT EXISTS</span> idx_listings_status <span class="kw">ON</span> listings(listing_status);<br><br>
+<span class="cm">-- Valid values: 'draft' | 'live' | 'paused' | 'faded' | 'withdrawn' | 'blocked' | 'archived'</span><br>
+<span class="cm">-- Existing listings default to 'live' — no backfill needed</span><br>
+<span class="cm">-- Every public buyer endpoint: WHERE listing_status = 'live'</span><br>
+<span class="cm">-- Intro creation: reject HTTP 409 if listing_status != 'live'</span>
+</div>
+
+<div class="footer">
+  MarketSquare · LISTING_STATE_MACHINE_DIAGRAM.html · v1.1 · 2 May 2026<br>
+  Locked design — Architect agent sign-off required for any changes · Canonical reference: LISTING_STATE_MACHINE.md
+</div>
+
+</body>
+</html>

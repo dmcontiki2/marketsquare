@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketSquare — +Sell Flow v3</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f8f8f6; color: #1a1a2e; padding: 28px 24px; font-size: 13px; max-width: 1040px; margin: 0 auto; }
+
+.doc-title { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+.doc-sub   { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+.principle-banner { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 28px; }
+.principle-banner strong { color: #f9a825; font-size: 15px; display: block; margin-bottom: 4px; }
+.principle-banner p { font-size: 11px; line-height: 1.7; color: #ccc; }
+
+.section-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-bottom: 12px; margin-top: 28px; }
+
+/* TWO COL PATHS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 8px; }
+@media(max-width:700px){ .two-col { grid-template-columns: 1fr; } }
+
+.path-header { border-radius: 12px 12px 0 0; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.path-new    { background: #1b5e20; }
+.path-ret    { background: #1565c0; }
+.path-icon   { font-size: 20px; }
+.path-title  { font-size: 14px; font-weight: 800; color: #fff; }
+.path-sub    { font-size: 10px; color: rgba(255,255,255,.7); margin-top: 2px; }
+
+.steps { background: #fff; border: 1.5px solid #e8e8e8; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.step { display: flex; border-bottom: 1px solid #f0f0f0; }
+.step:last-child { border-bottom: none; }
+.step-num-col { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 13px; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.step-line { width: 2px; flex: 1; margin: 4px 0 0; min-height: 12px; }
+.step:last-child .step-line { display: none; }
+.step-body { padding: 12px 14px 12px 4px; flex: 1; }
+.step-label  { font-size: 11px; font-weight: 800; color: #1a1a2e; margin-bottom: 2px; }
+.step-screen { font-family: monospace; font-size: 9px; color: #aaa; margin-bottom: 5px; }
+.step-desc   { font-size: 11px; color: #555; line-height: 1.6; }
+.f-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.f { font-size: 9px; padding: 2px 7px; border-radius: 10px; }
+.f-std  { background: #f0f0f0; color: #444; }
+.f-req  { background: #fff8e1; color: #7a5200; border: 1px solid #ffe082; }
+.f-eula { background: #fce4ec; color: #880e2f; border: 1px solid #f48fb1; }
+.commitment { background: #fff8e1; border-left: 3px solid #f9a825; padding: 5px 9px; margin-top: 5px; border-radius: 0 5px 5px 0; font-size: 10px; color: #7a5200; }
+.ai-note { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 7px; padding: 7px 10px; margin-top: 6px; font-size: 10px; color: #1b5e20; line-height: 1.5; }
+.ai-note b { font-weight: 800; }
+.cta-row { margin-top: 7px; display: flex; gap: 6px; align-items: center; }
+.cta-p { font-size: 10px; font-weight: 700; background: #1a1a2e; color: #fff; border-radius: 20px; padding: 4px 12px; }
+.cta-s { font-size: 10px; color: #aaa; }
+.num-new { background: #2e7d32; } .line-new { background: #c8e6c9; }
+.num-ret { background: #1565c0; } .line-ret { background: #bbdefb; }
+
+/* TRUST SCORE SECTION */
+.ts-intro { background: #1a1a2e; border-radius: 12px; padding: 16px 20px; margin: 8px 0 16px; }
+.ts-intro-title { font-size: 13px; font-weight: 800; color: #f9a825; margin-bottom: 6px; }
+.ts-intro-body  { font-size: 11px; color: #ccc; line-height: 1.7; }
+.ts-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+@media(max-width:600px){ .ts-rules { grid-template-columns: 1fr; } }
+.ts-rule { background: #252540; border-radius: 8px; padding: 10px 12px; }
+.ts-rule-num  { font-size: 10px; font-weight: 800; color: #f9a825; margin-bottom: 3px; }
+.ts-rule-text { font-size: 10px; color: #ccc; line-height: 1.5; }
+.ts-rule-text strong { color: #fff; }
+
+/* CATEGORY TABS */
+.cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.cat-tab { font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 20px; cursor: pointer; border: 1.5px solid #e0e0e0; background: #fff; color: #666; transition: all .15s; }
+.cat-tab.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
+/* SIGNAL TABLE */
+.sig-table-wrap { display: none; }
+.sig-table-wrap.active { display: block; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 11px; }
+th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #999; padding: 6px 10px; text-align: left; border-bottom: 2px solid #e8e8e8; background: #fafafa; }
+td { padding: 9px 10px; border-bottom: 1px solid #f4f4f4; vertical-align: top; line-height: 1.5; }
+tr:last-child td { border-bottom: none; }
+.sig-pts { font-weight: 800; color: #1a1a2e; white-space: nowrap; }
+.sig-ai  { font-size: 10px; color: #2e7d32; font-style: italic; line-height: 1.5; }
+.sig-auto { display: inline-block; font-size: 9px; font-weight: 700; background: #e3f2fd; color: #1565c0; padding: 1px 6px; border-radius: 8px; }
+.sig-upload { display: inline-block; font-size: 9px; font-weight: 700; background: #fff3e0; color: #bf360c; padding: 1px 6px; border-radius: 8px; }
+.sig-declare { display: inline-block; font-size: 9px; font-weight: 700; background: #ede7f6; color: #4527a0; padding: 1px 6px; border-radius: 8px; }
+.sig-agent { display: inline-block; font-size: 9px; font-weight: 700; background: #fce4ec; color: #880e2f; padding: 1px 6px; border-radius: 8px; }
+.sig-private { display: inline-block; font-size: 9px; font-weight: 700; background: #e8f5e9; color: #1b5e20; padding: 1px 6px; border-radius: 8px; }
+.sig-new { display: inline-block; font-size: 9px; font-weight: 700; background: #fff9c4; color: #827717; padding: 1px 6px; border-radius: 8px; }
+.sig-name { font-weight: 700; color: #1a1a2e; }
+.group-header td { background: #f0f4ff; font-size: 10px; font-weight: 800; color: #1a3a6e; padding: 7px 10px; }
+
+/* PHOTO GALLERY SECTION */
+.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0; }
+@media(max-width:600px){ .photo-grid { grid-template-columns: 1fr 1fr; } }
+.photo-card { background: #fff; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px; }
+.photo-cat  { font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: #aaa; margin-bottom: 4px; }
+.photo-room { font-size: 11px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+.photo-ai   { font-size: 10px; color: #2e7d32; font-style: italic; line-height: 1.4; }
+
+/* FOOTER */
+.footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid #e8e8e8; font-size: 10px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<div class="doc-title">MarketSquare · +Sell Flow</div>
+<div class="doc-sub">Version 3.0 · 2 May 2026 · AI-guided flow with full Trust Score signal integration · Canonical reference: SELL_FLOW.md</div>
+
+<div class="principle-banner">
+  <strong>Core principle: 1 · 2 · 3</strong>
+  <p>New sellers go live in three taps — zero friction, no AI, no Trust Score prompts. The full AI-guided experience is the returning seller path. The AI is not optional in that path — it guides every step from room photos to Trust Score evidence, using every signal in the spreadsheet.</p>
+</div>
+
+<!-- ── TWO PATHS ── -->
+<div class="two-col">
+
+  <!-- PATH A -->
+  <div>
+    <div class="path-header path-new"><div class="path-icon">🆕</div><div><div class="path-title">Path A — New Seller</div><div class="path-sub">No email in localStorage · 3 steps only</div></div></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-new">1</div><div class="step-line line-new"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Photo</div>
+          <div class="step-desc">Single photo. Camera or gallery. Skippable with nudge: "Listings with photos get 3× more intros."</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-new">2</div><div class="step-line line-new"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Category + Headline + Price</div>
+          <div class="step-desc">Category tiles. "What are you offering?" Price optional.</div>
+          <div class="f-row"><span class="f f-req">Category *</span><span class="f f-req">Headline *</span><span class="f f-std">Price</span></div>
+          <div class="commitment">💡 Property listings pause when a buyer requests an intro — you respond within 48 hours.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-new">3</div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-onboard (on first submit)</div>
+          <div class="step-label">Identity + EULA → Live</div>
+          <div class="step-desc">Name · Email · City. Two required checkboxes. POST /users → POST /listings → live immediately. 3 free AI sessions credited.</div>
+          <div class="f-row"><span class="f f-eula">☑ EULA *</span><span class="f f-eula">☑ B5/B6 permanent block *</span></div>
+          <div class="cta-row"><span class="cta-p">Go live →</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATH B -->
+  <div>
+    <div class="path-header path-ret"><div class="path-icon">🔁</div><div><div class="path-title">Path B — Returning Seller</div><div class="path-sub">Email in localStorage · full AI-guided flow</div></div></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B1</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">sell-account-sheet</div>
+          <div class="step-label">Account Picker</div>
+          <div class="step-desc">Bottom sheet. "Continue as [name]" → dashboard. "+ Add new listing" → B2. "Use different account" → onboard.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B2</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Category + Agent/Private Gate</div>
+          <div class="step-desc">Category tiles. Property: "Registered agent or private seller?" Cars: "Registered dealer or private sale?" Gates which Trust Score signals appear in B7.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B3</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Structured Fields</div>
+          <div class="step-desc">Category-specific fields. These feed the AI description (B4) and define which room/item photos to request (B5).</div>
+          <div class="ai-note"><b>✦ Inline AI (free):</b> Market context note from structured inputs — e.g. "A 3-bed, 2-bath in Waterkloof — similar listings R2.1m–R2.8m." Informational only.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B4</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">AI Drafts Description</div>
+          <div class="step-desc">AI generates 3–5 sentence description from structured inputs. Editable text box. Free — no session consumed.</div>
+          <div class="cta-row"><span class="cta-p">Looks good →</span><span class="cta-s">Edit more</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B5</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Photo Gallery — AI Guided, Room by Room</div>
+          <div class="step-desc">AI introduces the step and prompts each photo individually with specific shooting advice. Each photo has Upload · Camera · Skip · optional caption field. Room list built dynamically from B3 fields.</div>
+          <div class="ai-note"><b>✦ AI introduces:</b> "Now let's add photos for each part of your listing. Buyers scroll through these before deciding to connect."</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B6</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Profile Photo — Always Last</div>
+          <div class="step-desc">"Add your profile photo — buyers want to see who they're dealing with. You stay anonymous until both of you agree to connect." Always skippable.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B7</div><div class="step-line line-ret"></div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-publish</div>
+          <div class="step-label">Trust Score — AI Guides Every Signal</div>
+          <div class="step-desc">Full category-specific signal checklist. AI explains each signal, guides upload, confirms or flags every document, and summarises skipped signals at the end. Live score updates throughout.</div>
+          <div class="ai-note"><b>✦ AI opens:</b> "Your Trust Score determines how visible you are to buyers. Let's go through what applies to you — everything is skippable."</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num-col"><div class="step-num num-ret">B8</div></div>
+        <div class="step-body">
+          <div class="step-screen">screen-dashboard</div>
+          <div class="step-label">Publish → Live</div>
+          <div class="step-desc">listing_status → 'live'. Dashboard. Toast: "Listing live. [N] buyers browsing [Category] in [City] right now."</div>
+          <div class="cta-row"><span class="cta-p">Publish listing →</span><span class="cta-s">Skip Trust Score</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end two-col -->
+
+<!-- ── AI-GUIDED PHOTO EXAMPLES ── -->
+<div class="section-title">AI-guided photos — example prompts by category</div>
+<div class="photo-grid">
+  <div class="photo-card"><div class="photo-cat">Property</div><div class="photo-room">🛋 Lounge</div><div class="photo-ai">"Shoot from the corner to show the whole room."</div></div>
+  <div class="photo-card"><div class="photo-cat">Property</div><div class="photo-room">🍳 Kitchen</div><div class="photo-ai">"Kitchen photos sell houses. Natural light works best."</div></div>
+  <div class="photo-card"><div class="photo-cat">Property</div><div class="photo-room">🛏 Main Bedroom</div><div class="photo-ai">"Show the bed and window — buyers want to picture themselves here."</div></div>
+  <div class="photo-card"><div class="photo-cat">Property</div><div class="photo-room">🌿 Garden</div><div class="photo-ai">"Step back to get the whole house in frame. Late afternoon light is flattering."</div></div>
+  <div class="photo-card"><div class="photo-cat">Cars</div><div class="photo-room">🚗 Front</div><div class="photo-ai">"All four sides, interior, engine bay, and any damage. Buyers respect honesty."</div></div>
+  <div class="photo-card"><div class="photo-cat">Cars</div><div class="photo-room">💺 Interior</div><div class="photo-ai">"Dashboard, seats, and any wear — buyers notice everything."</div></div>
+  <div class="photo-card"><div class="photo-cat">Tutors</div><div class="photo-room">📚 Workspace</div><div class="photo-ai">"Show yourself at a desk, whiteboard, or with learning materials."</div></div>
+  <div class="photo-card"><div class="photo-cat">Collectors</div><div class="photo-room">🔍 Detail</div><div class="photo-ai">"Include markings, signatures, or wear — buyers respect honesty."</div></div>
+</div>
+<p style="font-size:10px;color:#888;margin-top:4px;font-style:italic;">Every photo prompt has an optional free-text caption field. Room list is built dynamically from B3 structured fields — a 3-bed listing gets 3 bedroom prompts; a studio gets 1.</p>
+
+<!-- ── AI BEHAVIOUR RULES ── -->
+<div class="section-title">AI behaviour rules — Trust Score step</div>
+<div class="ts-intro">
+  <div class="ts-intro-title">✦ Seven locked AI rules for the Trust Score step</div>
+  <div class="ts-rules">
+    <div class="ts-rule"><div class="ts-rule-num">1</div><div class="ts-rule-text"><strong>Speaks directly.</strong> First person, conversational. Not documentation — "Upload your FFC — buyers and the law require it."</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">2</div><div class="ts-rule-text"><strong>Highest value first.</strong> Signals presented in descending point value — seller sees biggest gains upfront.</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">3</div><div class="ts-rule-text"><strong>Conditional display.</strong> food_safety only if product_type=food. clearance prominent if in_home_flag declared. PPRA/FFC only for agents. CIDB only for Technical/ZA.</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">4</div><div class="ts-rule-text"><strong>Confirms every upload.</strong> Never silent. Always within 2 seconds: what it saw + points awarded, or what to try instead.</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">5</div><div class="ts-rule-text"><strong>Summarises skipped signals.</strong> End of step: "You skipped [N] signals worth [X] points. Add them from your profile any time — I'll remind you."</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">6</div><div class="ts-rule-text"><strong>Declaration fallback always offered.</strong> "Don't have it handy? Declare it now for [X] points — upload the document later for the remaining [Y]."</div></div>
+    <div class="ts-rule"><div class="ts-rule-num">7</div><div class="ts-rule-text"><strong>Expiry tracking.</strong> Reads expiry date on every time-limited credential. Warns if within 60 days of expiry.</div></div>
+  </div>
+</div>
+
+<!-- ── TRUST SCORE SIGNALS BY CATEGORY ── -->
+<div class="section-title">Trust Score signals — full list by category (from spreadsheet)</div>
+
+<div class="cat-tabs">
+  <div class="cat-tab active" onclick="showCat('property')">Property</div>
+  <div class="cat-tab" onclick="showCat('tutors')">Tutors</div>
+  <div class="cat-tab" onclick="showCat('services')">Services</div>
+  <div class="cat-tab" onclick="showCat('adventures')">Adventures</div>
+  <div class="cat-tab" onclick="showCat('collectors')">Collectors</div>
+  <div class="cat-tab" onclick="showCat('cars')">Cars</div>
+  <div class="cat-tab" onclick="showCat('lm')">Local Market</div>
+</div>
+
+<!-- PROPERTY -->
+<div class="sig-table-wrap active" id="cat-property">
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th><th>Who sees it</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="5">Universal — max 30 pts (all categories, auto-calculated)</td></tr>
+    <tr><td class="sig-name">Government-issued ID verified</td><td class="sig-pts">15</td><td><span class="sig-upload">Upload</span> AI vision</td><td class="sig-ai">"Upload your passport, ID, or driver's licence — I'll verify it."</td><td>All</td></tr>
+    <tr><td class="sig-name">Complete profile</td><td class="sig-pts">5</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Auto-awarded when bio, suburb, listing, and category are all filled."</td><td>All</td></tr>
+    <tr><td class="sig-name">1st / 3rd / 5th+ verified referral</td><td class="sig-pts">5/3/2</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Awarded automatically when buyers confirm completed introductions."</td><td>All</td></tr>
+    <tr class="group-header"><td colspan="5">Platform Track Record — max 30 pts (all categories, auto)</td></tr>
+    <tr><td class="sig-name">1st / 5+ / 20+ successful intros</td><td class="sig-pts">5/5/5</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Earned automatically as you complete introductions."</td><td>All</td></tr>
+    <tr><td class="sig-name">Zero ignored intros (rolling 90d)</td><td class="sig-pts">10</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Any ignored intro resets this. Stay responsive — 10 points is significant."</td><td>All</td></tr>
+    <tr><td class="sig-name">Account active 6+ months</td><td class="sig-pts">5</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Awarded automatically after 6 months with a live listing."</td><td>All</td></tr>
+    <tr class="group-header"><td colspan="5">Property Credentials — max 40 pts</td></tr>
+    <tr><td class="sig-name">Private seller declaration</td><td class="sig-pts">0</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Tell buyers you're a private seller — one tap. They need to know this upfront."</td><td><span class="sig-private">Private only</span></td></tr>
+    <tr><td class="sig-name">Active PPRA / EAAB Registration</td><td class="sig-pts">15</td><td><span class="sig-upload">Upload</span> + AI verify</td><td class="sig-ai">"Your PPRA certificate is the most important credential you can show. Upload it — I'll confirm the number and expiry."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">Fidelity Fund Certificate (FFC) <span class="sig-new">NEW</span></td><td class="sig-pts">10</td><td><span class="sig-upload">Upload</span> annual</td><td class="sig-ai">"The FFC lapses every year and is separate from your PPRA registration. Upload your current FFC — buyers and the law require it."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">Mandate / instruction letter <span class="sig-new">NEW</span></td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span> per listing</td><td class="sig-ai">"Upload the signed mandate from the property owner. This proves you're authorised to market this specific property."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">NQF6+ / Professional designation</td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"An NQF6 or professional designation puts you in the top tier. Upload your certificate."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">Professional body (IEASA/SAPOA/NAR)</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your membership certificate — it signals you take your profession seriously."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">NQF4 Real Estate qualification</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your NQF4 — the foundation qualification for PPRA registration."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">NQF5 Real Estate qualification</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your NQF5 — it stacks on top of NQF4 for 6 more points."</td><td><span class="sig-agent">Agent only</span></td></tr>
+    <tr><td class="sig-name">Experience 10+ years <span class="sig-new">NEW</span></td><td class="sig-pts">5</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"10+ years is a strong signal buyers trust. Declare now — upload CV for final point."</td><td>Both</td></tr>
+    <tr><td class="sig-name">Experience 2–5 years <span class="sig-new">NEW</span></td><td class="sig-pts">4</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Declare your years of practice — 3 points immediately, 1 more with your CV."</td><td>Both</td></tr>
+    <tr><td class="sig-name">Specialist services declaration <span class="sig-new">NEW</span></td><td class="sig-pts">3</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Do you offer valuations, bond origination, or conveyancing referrals? Buyers filter by this — one tap."</td><td><span class="sig-agent">Agent only</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- TUTORS -->
+<div class="sig-table-wrap" id="cat-tutors">
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="4">Universal + Track Record — same as all categories (see Property tab)</td></tr>
+    <tr class="group-header"><td colspan="4">Tutors Credentials — max 40 pts</td></tr>
+    <tr><td class="sig-name">Police clearance / DBS check <span class="sig-new">NEW</span></td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Parents hiring tutors for children expect a clearance check. Upload your SAPS clearance — it's the single most trust-building thing you can do."</td></tr>
+    <tr><td class="sig-name">SACE registration</td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span> + verify</td><td class="sig-ai">"Required for school teachers in SA. Upload your SACE certificate — I'll verify the number."</td></tr>
+    <tr><td class="sig-name">Honours / Postgraduate (NQF8+)</td><td class="sig-pts">14</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Your highest qualification earns the most points. Upload your honours or postgrad degree — if you have one, don't upload the bachelor's instead."</td></tr>
+    <tr><td class="sig-name">Bachelor's Degree (NQF7)</td><td class="sig-pts">10</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your degree. If you have an honours degree, upload that instead — it earns more."</td></tr>
+    <tr><td class="sig-name">Certificate or Diploma (NQF5–6)</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your diploma. A bachelor's earns more if you have one."</td></tr>
+    <tr><td class="sig-name">Subject specialisation certificate</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"A subject-specific cert shows you specialise, not just generalise. Upload any relevant subject cert or transcript."</td></tr>
+    <tr><td class="sig-name">Teaching experience 5+ years</td><td class="sig-pts">6</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"5+ years of teaching is a strong differentiator. Declare now for 5 points, upload your CV for the last 1."</td></tr>
+    <tr><td class="sig-name">Teaching experience 2–5 years</td><td class="sig-pts">5</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Tell buyers how long you've been teaching. 4 points on declaration, 1 more with CV."</td></tr>
+    <tr><td class="sig-name">Safeguarding / child protection cert <span class="sig-new">NEW</span></td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"For tutors working with learners under 18, safeguarding training reassures parents. Upload your certificate."</td></tr>
+    <tr><td class="sig-name">Strong structured CV</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a well-structured CV — it rounds out your profile."</td></tr>
+    <tr><td class="sig-name">Online platform proficiency <span class="sig-new">NEW</span></td><td class="sig-pts">1</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"If you tutor online, declare which platforms you use — Zoom, Google Classroom, Teams. One tap."</td></tr>
+  </tbody>
+</table>
+<p style="font-size:10px;color:#888;font-style:italic;margin-top:4px;">Qualification chain: honours (14) replaces bachelor (10) replaces diploma (6). Max from qual chain = 14 pts.</p>
+</div>
+
+<!-- SERVICES -->
+<div class="sig-table-wrap" id="cat-services">
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th><th>Sub-type</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="5">Universal + Track Record — same as all categories</td></tr>
+    <tr class="group-header"><td colspan="5">Services — Technical credentials (max 40 pts)</td></tr>
+    <tr><td class="sig-name">Professional body registration</td><td class="sig-pts">12</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"ECSA, PIRB, NHBRC, FSCA, or SAICA — your most powerful credential. Upload your registration certificate."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Public liability insurance <span class="sig-new">NEW</span></td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Clients want to know you're insured before you touch their property. Upload your current liability policy — expiry date included."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">CIDB grading (construction) <span class="sig-new">NEW</span></td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"If you do construction above R200k in SA, CIDB grading is legally required. Upload your certificate."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Formal trade certificate</td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"City & Guilds, TVET, MERSETA, CETA, or Red Seal — the foundation credential. Upload it."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Primary industry licence / CoC</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Your Certificate of Compliance proves you're legally authorised. Upload your CoC — buyers look for this before hiring."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Additional tickets (up to 2)</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"First Aid, working at heights, confined space — 3 pts each, up to 2 counted. Upload yours."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Trade experience 7+ years</td><td class="sig-pts">4</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"7+ years in your trade is significant. Declare now — 3 points, 1 more with your CV."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Trade experience 3–7 years</td><td class="sig-pts">4</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Declare your years in trade. 3 points on declaration, 1 more with CV."</td><td>Technical</td></tr>
+    <tr><td class="sig-name">Strong verifiable CV</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"A CV with references is a strong supporting document."</td><td>Technical</td></tr>
+    <tr class="group-header"><td colspan="5">Services — Casuals credentials (max 40 pts) — clearance shown first if in-home declared</td></tr>
+    <tr><td class="sig-name">Police clearance check <span class="sig-new">NEW</span></td><td class="sig-pts">10</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"You declared you work in clients' homes. A police clearance is the #1 thing clients expect before letting someone into their home. Upload your SAPS clearance — 10 points."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">5+ years in service</td><td class="sig-pts">8</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"5+ years is a strong signal. Declare now — 6 points, 8 with CV."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">NQF qualification or short course</td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Any formal qualification or short course earns 8 points. Upload your certificate."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">Reference letter (1st)</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"A reference letter from a previous client is the most powerful thing you can show. Upload a scanned letter with contact details."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">2–4 years in service</td><td class="sig-pts">6</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Declare your experience. 4 points on declaration, 6 with a CV."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">Reference letter (2nd)</td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"A second reference adds credibility. Upload it if you have one."</td><td>Casuals</td></tr>
+    <tr><td class="sig-name">Strong profile description</td><td class="sig-pts">5</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Auto-assessed. The more detail in your bio, the higher this score."</td><td>Casuals</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ADVENTURES -->
+<div class="sig-table-wrap" id="cat-adventures">
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th><th>Sub-type</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="5">Universal + Track Record — same as all categories</td></tr>
+    <tr class="group-header"><td colspan="5">Experiences credentials (max 40 pts)</td></tr>
+    <tr><td class="sig-name">Activity-specific guide certificate</td><td class="sig-pts">12</td><td><span class="sig-upload">Upload</span> + verify</td><td class="sig-ai">"FGASA, PADI, MCSA, SACAA — upload the most relevant certificate. I'll verify the body and number."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Liability / indemnity insurance</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"For activities involving physical risk, liability insurance is non-negotiable. Upload your current policy — expiry included."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Operator permit / concession licence <span class="sig-new">NEW</span></td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"If you operate in a national park, private reserve, or controlled waterway, upload your permit. It proves you're authorised to operate there."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Current First Aid / Emergency Response</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"First Aid with a current expiry is essential for high-risk activities. Upload yours — I'll check the expiry."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Guided experience 7+ years</td><td class="sig-pts">5</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"7+ years of guiding — declare now for 4 points, 1 more with CV."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Guided experience 3–7 years</td><td class="sig-pts">5</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Declare your guiding experience. 4 points on declaration, 5 with CV."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Regulatory compliance (SACAA/SAMSA) <span class="sig-new">NEW</span></td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Some activities need a separate regulatory certificate beyond your guide cert — SACAA Part 135 for aviation, SAMSA for maritime. Upload if applicable."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Additional safety certificate</td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"WFR, swift water rescue, avalanche cert — each adds credibility. Upload one."</td><td>Experiences</td></tr>
+    <tr><td class="sig-name">Secondary qualification in activity</td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a second qualification related to your activity — up to 3 counted."</td><td>Experiences</td></tr>
+    <tr class="group-header"><td colspan="5">Accommodation credentials (max 40 pts — TGCSA chain: only highest star earns)</td></tr>
+    <tr><td class="sig-name">TGCSA 5-star grading</td><td class="sig-pts">22</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"5-star is the gold standard. Upload your current TGCSA grading certificate — I'll check expiry."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">TGCSA 4/3/2/1-star grading</td><td class="sig-pts">18/14/10/6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your highest TGCSA certificate — only the top star rating earns points."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">Municipal trading licence</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Your local authority trading licence proves you're operating legally. Upload it."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">Health & safety compliance</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your health and safety certificate — guests expect accommodation to meet safety standards."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">Tourism levy registration <span class="sig-new">NEW</span></td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"If your accommodation earns above the SARS threshold, upload your tourism levy registration — it signals a legitimate operation."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">Fire clearance certificate</td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your fire clearance — it's a legal requirement for accommodation."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">Hygiene / Safe Travels cert <span class="sig-new">NEW</span></td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your TGCSA Safe Travels badge or equivalent hygiene certification."</td><td>Accommodation</td></tr>
+    <tr><td class="sig-name">AA Travel / TripAdvisor / Booking award</td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a screenshot or certificate of any travel award — social proof matters."</td><td>Accommodation</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- COLLECTORS -->
+<div class="sig-table-wrap" id="cat-collectors">
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="4">Universal + Track Record — same as all categories</td></tr>
+    <tr class="group-header"><td colspan="4">Collectors credentials (max 40 pts)</td></tr>
+    <tr><td class="sig-name">Item provenance documentation <span class="sig-new">NEW</span></td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Provenance is the chain of custody — where this item came from. Upload an auction receipt, gallery invoice, or inheritance document. For high-value items this matters as much as authentication."</td></tr>
+    <tr><td class="sig-name">Third-party authentication certificate</td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload an authentication certificate from a recognised third party — PSA, PCGS, GIA, Beckett. I'll confirm the authenticator."</td></tr>
+    <tr><td class="sig-name">Dealer / reseller registration <span class="sig-new">NEW</span></td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your dealer registration or gallery licence. Buyers need to know whether they're dealing with a registered dealer — regulatory protections differ."</td></tr>
+    <tr><td class="sig-name">15+ successful transactions</td><td class="sig-pts">6</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Earned automatically from your platform transaction history."</td></tr>
+    <tr><td class="sig-name">5–14 successful transactions</td><td class="sig-pts">6</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Earned automatically from your transaction history."</td></tr>
+    <tr><td class="sig-name">1–4 successful transactions</td><td class="sig-pts">8</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Earned automatically from your first 4 completed transactions."</td></tr>
+    <tr><td class="sig-name">Professional appraisal / valuation</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a professional appraisal — it gives buyers a price anchor and shows you've had the item independently assessed."</td></tr>
+    <tr><td class="sig-name">Insurance / valuation for high-value <span class="sig-new">NEW</span></td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"For items above a certain value, proof of insurance or formal valuation adds significant credibility."</td></tr>
+    <tr><td class="sig-name">Collector association membership</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your association membership — SA Numismatic Society, SA Philatelic, or any collector's guild."</td></tr>
+    <tr><td class="sig-name">Authenticity guarantee declaration <span class="sig-new">NEW</span></td><td class="sig-pts">2</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Declare whether you offer a return if the item proves inauthentic. Buyers buying remotely look for this — it appears prominently on your listing."</td></tr>
+    <tr><td class="sig-name">Category specialisation declared</td><td class="sig-pts">4</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Tell buyers what you specialise in — coins, art, stamps, wine, vintage watches. One tap."</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- CARS -->
+<div class="sig-table-wrap" id="cat-cars">
+<p style="font-size:11px;color:#c62828;font-weight:700;margin-bottom:10px;">⚠ Cars category has NO signals in BEA yet — full signal set is proposed and confirmed. Build order: ownership → finance_clear → dealer_reg → rwc → inspection → service_history → safety_recall.</p>
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th><th>Who sees it</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="5">Universal + Track Record — same as all categories</td></tr>
+    <tr class="group-header"><td colspan="5">Cars credentials — all proposed, none yet in BEA (max 40 pts)</td></tr>
+    <tr><td class="sig-name">Private seller declaration <span class="sig-new">PROPOSED</span></td><td class="sig-pts">0</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Tell buyers you're a private seller. Consumer protection regulations differ from dealer sales — buyers need to know this upfront."</td><td><span class="sig-private">Private only</span></td></tr>
+    <tr><td class="sig-name">Vehicle ownership (NATIS papers) <span class="sig-new">PROPOSED</span></td><td class="sig-pts">10</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your NATIS registration papers — this proves you own the vehicle you're selling. It's the most important thing a car buyer looks for."</td><td>Both</td></tr>
+    <tr><td class="sig-name">Dealer / trader registration <span class="sig-new">PROPOSED</span></td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your MIRA dealer registration. Buyers dealing with a registered dealer have different legal protections."</td><td><span class="sig-agent">Dealer only</span></td></tr>
+    <tr><td class="sig-name">Finance clearance <span class="sig-new">PROPOSED</span></td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a letter from your bank confirming no outstanding balance. Without this, a buyer could unknowingly take on your debt after purchase."</td><td>Both</td></tr>
+    <tr><td class="sig-name">Roadworthy certificate (RWC) <span class="sig-new">PROPOSED</span></td><td class="sig-pts">6</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your roadworthy certificate — mandatory for change of ownership in SA. Buyers expect it before making an offer."</td><td>Both</td></tr>
+    <tr><td class="sig-name">AA / independent inspection <span class="sig-new">PROPOSED</span></td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload an AA or independent inspection report — the single most reassuring thing you can show a serious buyer."</td><td>Both</td></tr>
+    <tr><td class="sig-name">Service history on file <span class="sig-new">PROPOSED</span></td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your service book or dealer records. Full service history significantly increases buyer confidence — and the asking price."</td><td>Both</td></tr>
+    <tr><td class="sig-name">DEKRA / NRCS safety recall clear <span class="sig-new">PROPOSED</span></td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a DEKRA or NRCS safety recall clearance — it takes 5 minutes and shows buyers you've done your homework."</td><td>Both</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- LOCAL MARKET -->
+<div class="sig-table-wrap" id="cat-lm">
+<p style="font-size:11px;color:#1b5e20;font-weight:700;margin-bottom:10px;">✅ Local Market sellers start at 40 pts (Established tier) automatically. Every signal above builds further toward Trusted and Highly Trusted.</p>
+<table>
+  <thead><tr><th>Signal</th><th>Pts</th><th>Evidence</th><th>AI coaching script</th></tr></thead>
+  <tbody>
+    <tr class="group-header"><td colspan="4">Universal + Track Record — same as all categories</td></tr>
+    <tr class="group-header"><td colspan="4">Local Market credentials — max 40 additional pts</td></tr>
+    <tr><td class="sig-name">Product type declaration <span class="sig-new">NEW</span></td><td class="sig-pts">1</td><td><span class="sig-declare">Declare</span></td><td class="sig-ai">"Tell me what you're selling — honey, beadwork, tutoring, repairs. One tap. It helps me give you more relevant advice."</td></tr>
+    <tr><td class="sig-name">Named role in association</td><td class="sig-pts">15</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"A named role — chair, secretary, committee member — is the highest-value credential here. Declare now for 12 points, upload your appointment letter for the final 3."</td></tr>
+    <tr><td class="sig-name">Official government / regulatory appointment</td><td class="sig-pts">10</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"A government or regulatory appointment is a very strong signal. Declare now for 8 points — upload your appointment letter for the final 2."</td></tr>
+    <tr><td class="sig-name">Association / professional body (1st)</td><td class="sig-pts">8</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your membership from SABI, NBA, SATMA, or any recognised guild or industry body."</td></tr>
+    <tr><td class="sig-name">Identity AI-verified</td><td class="sig-pts">5</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Your ID was verified automatically — 5 points awarded."</td></tr>
+    <tr><td class="sig-name">Second association membership</td><td class="sig-pts">6</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"A second professional body membership adds 5 points on declaration and 1 more with your membership card."</td></tr>
+    <tr><td class="sig-name">Formal qualification / diploma (1st)</td><td class="sig-pts">7</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your highest formal qualification from a recognised institution."</td></tr>
+    <tr><td class="sig-name">Food safety / hygiene certificate <span class="sig-new">NEW</span></td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"You're selling food products — upload your Department of Health food handler certificate or home kitchen approval. Buyers of food expect this."</td></tr>
+    <tr><td class="sig-name">Second relevant qualification</td><td class="sig-pts">5</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a second qualification — 5 more points."</td></tr>
+    <tr><td class="sig-name">Business registration <span class="sig-new">NEW</span></td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your CIPC registration or tax clearance. It shows buyers you're a registered business — a different level of accountability from a hobbyist seller."</td></tr>
+    <tr><td class="sig-name">Formal training course (1st)</td><td class="sig-pts">4</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Any formal training course from a recognised provider earns 4 points."</td></tr>
+    <tr><td class="sig-name">Bank account holder name verified</td><td class="sig-pts">3</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Your bank account name matches your verified ID — 3 points."</td></tr>
+    <tr><td class="sig-name">Third relevant qualification</td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a third qualification — up to 3 are counted."</td></tr>
+    <tr><td class="sig-name">5+ years relevant experience</td><td class="sig-pts">3</td><td><span class="sig-declare">Declare</span> + Upload</td><td class="sig-ai">"Declare 5+ years of experience — 2 points immediately, 1 more with a CV upload."</td></tr>
+    <tr><td class="sig-name">Second training course</td><td class="sig-pts">3</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"A second training course adds 3 more points."</td></tr>
+    <tr><td class="sig-name">Certificate name matches ID</td><td class="sig-pts">2</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"AI cross-checks name on your uploaded certificate against your verified ID — 2 points."</td></tr>
+    <tr><td class="sig-name">ID / passport number validated</td><td class="sig-pts">2</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Your ID number format has been validated — 2 points."</td></tr>
+    <tr><td class="sig-name">Phone number verified</td><td class="sig-pts">2</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Your phone is verified via OTP — 2 points."</td></tr>
+    <tr><td class="sig-name">Banking details on file</td><td class="sig-pts">2</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Banking details confirmed — 2 points."</td></tr>
+    <tr><td class="sig-name">1+ year relevant experience</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a document showing 1+ year of experience."</td></tr>
+    <tr><td class="sig-name">Media feature / press coverage</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Been featured in a magazine or article? Upload it — 2 points."</td></tr>
+    <tr><td class="sig-name">Product guide / recipe authored (1st)</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Have you written a guide or recipe for your product? Upload it."</td></tr>
+    <tr><td class="sig-name">Government ID uploaded</td><td class="sig-pts">2</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload your SA ID, passport, or driver's licence."</td></tr>
+    <tr><td class="sig-name">2nd / 3rd product guide</td><td class="sig-pts">1/1</td><td><span class="sig-upload">Upload</span></td><td class="sig-ai">"Upload a second and third guide — up to 3 counted."</td></tr>
+    <tr><td class="sig-name">Active social media presence</td><td class="sig-pts">1</td><td><span class="sig-auto">Auto</span></td><td class="sig-ai">"Link your Instagram, Facebook, or website in your profile — 1 point."</td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+function showCat(cat) {
+  document.querySelectorAll('.sig-table-wrap').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.cat-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('cat-' + cat).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+<div class="footer">
+  MarketSquare · SELL_FLOW.html · v3.0 · 2 May 2026 · AI-guided with full Trust Score signal integration<br>
+  Canonical reference: SELL_FLOW.md · <span style="color:#f9a825;">NEW</span> = proposed additions from TrustScore_Signal_Audit.xlsx · Architect agent sign-off required
+</div>
+
+</body>
+</html>

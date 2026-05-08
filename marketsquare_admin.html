@@ -3736,6 +3736,26 @@ async function docHubUpload() {
       status.textContent = '✅ Uploaded' + (doc.signal_id ? ' — Trust Score signal set to pending' : '');
       await docHubLoad(_docHubEmail);
       if (typeof tshLoad === 'function') tshLoad(_docHubEmail);
+      // Fire AI upload comment (Haiku 4.5) — non-blocking
+      try {
+        const _cr = await fetch(BEA_URL + '/trust-score/upload-comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: _docHubEmail,
+            category: _docHubCategory,
+            doc_type: docType,
+            label: label || fileInput.files[0].name,
+            signal_id: doc.signal_id || ''
+          })
+        });
+        if (_cr.ok) {
+          const _cd = await _cr.json();
+          if (_cd.comment) {
+            status.innerHTML = '✅ Uploaded — <em style="color:var(--text-3);font-style:italic;">' + escapeHtml(_cd.comment) + '</em>';
+          }
+        }
+      } catch(_) {}
     }
   } catch(e) {
     status.textContent = '❌ Upload failed: ' + e.message;

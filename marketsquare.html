@@ -2505,7 +2505,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     </div>
     <div class="sob-footer">
       <button class="sob-btn-bk" onclick="sobGoPhase(1)">← Back</button>
-      <button class="sob-btn-next" onclick="sobGoPhase(3)">Continue →</button>
+      <button class="sob-btn-next" id="sob-p2-next" onclick="sobContinueFromTier()">Continue →</button>
     </div>
   </div>
 
@@ -2953,6 +2953,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <p style="font-size:13px;color:var(--text-3);margin-bottom:12px;font-weight:400;font-style:italic;">We wrote this from your details — edit anything that's not right.</p>
         <textarea id="sb-b4-desc" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface-2);line-height:1.65;resize:vertical;box-sizing:border-box;"></textarea>
         <div style="font-size:12px;color:var(--text-3);margin-top:8px;">Edit freely. This is your listing — make it sound like you.</div>
+        <div id="sb-b4-session-nudge" style="display:none;margin-top:14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:12px 14px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;">
+          <strong style="color:#fbbf24;">Free preview</strong> — this description was generated using your free AI credit. For full AI coaching on Trust Score, field suggestions, and ongoing listing help, add an AI Pack (5T · 40 uses) from your seller dashboard.
+        </div>
       </div>
     </div>
     <div class="pub-footer">
@@ -4098,6 +4101,53 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
   }
   // ── END PAYSTACK RETURN HANDLER ───────────────────────────
+
+  // ── SELLER SUBSCRIPTION RETURN HANDLER ─────────────────────
+  // Paystack redirects back with ?ps_sub_return=1 after seller tier payment.
+  // We verify, set the tier on the BEA, then resume the onboarding at EULA.
+  if (sp.get('ps_sub_return') === '1') {
+    const ref = sp.get('reference') || sp.get('trxref') || '';
+    window.history.replaceState({}, '', window.location.pathname);
+    if (ref) {
+      (async () => {
+        try {
+          const r = await fetch(BEA_URL + '/payment/seller-subscription/verify?reference=' + encodeURIComponent(ref));
+          const d = await r.json();
+          if (d.status === 'ok') {
+            // Restore onboarding state from sessionStorage
+            let resumed = false;
+            try {
+              const saved = sessionStorage.getItem('sob_resume');
+              if (saved) {
+                const s = JSON.parse(saved);
+                Object.assign(sobState, s);
+                sessionStorage.removeItem('sob_resume');
+                resumed = true;
+              }
+            } catch(_) {}
+
+            if (resumed && sobState.email) {
+              // Navigate to seller onboard screen and jump straight to EULA (phase 3)
+              goTo('seller-onboard');
+              sobGoPhase(3);
+              // Re-apply tier selection visuals
+              sobSelTier(sobState.selectedTier);
+              showToast((d.label || sobState.selectedTier) + ' activated — complete your EULA to go live.', 4000);
+            } else {
+              showToast('Subscription activated! Re-open your magic link to finish onboarding.');
+            }
+          } else {
+            showToast('Subscription payment could not be verified — contact support if you were charged.');
+          }
+        } catch(e) {
+          showToast('Could not verify subscription — please check your connection.');
+        }
+      })();
+    } else {
+      showToast('Subscription payment was cancelled.');
+    }
+  }
+  // ── END SELLER SUBSCRIPTION RETURN HANDLER ─────────────────
 
   // ── RESTORE SELLER PROFILE from localStorage ───────────────
   try {
@@ -6228,6 +6278,54 @@ function sobGoPhase(n) {
   window.scrollTo(0, 0);
 }
 
+async function sobContinueFromTier() {
+  const tier = sobState.selectedTier;
+  if (tier === 'free') {
+    // Free tier — no payment needed, go straight to EULA
+    sobGoPhase(3);
+    return;
+  }
+  // Paid tier — redirect to Paystack
+  const email = sobState.email;
+  if (!email) { showToast('Session expired — please re-open your magic link.'); return; }
+
+  const btn = document.getElementById('sob-p2-next');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
+
+  // Persist sobState so we can restore it after Paystack redirect
+  try {
+    sessionStorage.setItem('sob_resume', JSON.stringify({
+      email: sobState.email,
+      name:  sobState.name,
+      cat:   sobState.cat,
+      city:  sobState.city,
+      selectedTier: sobState.selectedTier,
+      drafts: sobState.drafts,
+    }));
+  } catch(_) {}
+
+  try {
+    const callbackUrl = encodeURIComponent(
+      window.location.origin + window.location.pathname + '?ps_sub_return=1'
+    );
+    const url = BEA_URL + '/payment/seller-subscription/initialize'
+      + '?email=' + encodeURIComponent(email)
+      + '&tier='  + encodeURIComponent(tier)
+      + '&callback_url=' + callbackUrl;
+    const res  = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+    if (data.authorization_url) {
+      window.location.href = data.authorization_url;
+    } else {
+      showToast('Payment setup failed — please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Continue →'; }
+    }
+  } catch(e) {
+    showToast('Payment error — please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Continue →'; }
+  }
+}
+
 function sobSelTier(tier) {
   sobState.selectedTier = tier;
   ['free','starter','premium'].forEach(t => {
@@ -6850,10 +6948,10 @@ async function sbTriggerMarketNote(){
 
   try {
     if(!BEA_ENABLED){textDiv.textContent=sbFallbackMarketNote(cat,f);return;}
-    const res=await fetch(BEA_URL+'/advert-agent/coach',{
+    const res=await fetch(BEA_URL+'/advert-agent/market-note',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true}),
+      body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt}),
       signal:ctl.signal
     });
     if(ctl.signal.aborted) return;
@@ -6906,10 +7004,10 @@ async function sbRenderB4(){
   let draft='';
   try {
     if(BEA_ENABLED){
-      const res=await fetch(BEA_URL+'/advert-agent/coach',{
+      const res=await fetch(BEA_URL+'/advert-agent/market-note',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt, mode:'inline_haiku', free:true})
+        body:JSON.stringify({email:localStorage.getItem('ms_aa_email')||'', prompt})
       });
       const data=await res.json();
       draft=data.response||sbFallbackDesc(cat,f);
@@ -6925,6 +7023,16 @@ async function sbRenderB4(){
   if(nextBtn){nextBtn.style.opacity='1';nextBtn.style.pointerEvents='auto';}
   // Save edits to state
   if(descTa) descTa.addEventListener('input',()=>{ sbState.description=descTa.value; });
+  // Show session nudge for free sellers with no remaining paid sessions
+  const _email=localStorage.getItem('ms_aa_email')||'';
+  if(_email && BEA_ENABLED){
+    try{
+      const _sr=await fetch(BEA_URL+'/advert-agent/status?email='+encodeURIComponent(_email));
+      const _sd=await _sr.json();
+      const _nudge=document.getElementById('sb-b4-session-nudge');
+      if(_nudge) _nudge.style.display=(_sd.aa_sessions_remaining===0)?'block':'none';
+    }catch(_){}
+  }
 }
 
 function sbFallbackDesc(cat,f){

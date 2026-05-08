@@ -1,5 +1,5 @@
 # MarketSquare · Feature & Fix Backlog
-*Updated Session 31 · 30 April 2026*
+*Updated Session 45 · 7 May 2026*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 
 ---
@@ -8,10 +8,7 @@
 
 | # | Item | Area |
 |---|---|---|
-| L1 | **Remove `/dev/credit` BEA endpoint** — dev-only Tuppence seeding, must not be live | BEA |
-| L2 | **Remove Dev Tools nav tab from admin app** — bypasses Paystack entirely | Admin |
 | L3 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once approved | Server |
-| L4 | **File Beneficial Ownership with CIPC** — legally required by ~13 May 2026 | David |
 
 ---
 
@@ -73,6 +70,9 @@
 - Sandbox SSH fixed permanently ✅
 - CIPC registration + FNB account ✅
 - Paystack business verification submitted ✅
+- Beneficial Ownership filed with CIPC ✅ · Certificate: "Benificial Ownership Certificate for Trustsquare PTY (LTD).pdf"
+- `/dev/credit` BEA endpoint removed ✅ · Session 30 · commit 3ce6339
+- Dev Tools nav tab removed from admin app ✅ · Session 30 · commit 3ce6339
 
 ---
 *Next session: start with L1+L2 (remove dev tools), then H1 (Local Market listing parity).*

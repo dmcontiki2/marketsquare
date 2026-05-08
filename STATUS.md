@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 44 · 6 May 2026**
+**Updated: Session 45 · 8 May 2026**
 
 ---
 
@@ -9,6 +9,18 @@
 - Launch city: Pretoria, South Africa · **0 live listings (clean slate) · 70 demo listings active**
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
+
+---
+
+## Last Completed — Session 45
+
+### Paystack seller subscription flow + AI coach verification
+- `POST /payment/seller-subscription/initialize` + `GET /payment/seller-subscription/verify` — full Paystack round-trip for Starter (R90/mo) and International (R270/mo) tiers
+- `sobContinueFromTier()` — tier picker Continue now redirects paid tiers to Paystack; `sessionStorage` preserves onboarding state across redirect; `?ps_sub_return=1` resumes at EULA
+- `POST /advert-agent/market-note` — new lightweight endpoint for inline B3/B4 market notes (no session gate, 1-sentence Haiku); fixes 422 error that was silently swallowing all inline AI notes
+- All 7 categories verified against live coach endpoint (Property · Tutors · Services · Adventures · Cars · Collectors · Local Market)
+- B4 free-seller nudge: `aa_sessions_remaining=0` shows "Free preview" banner pointing to AI Pack purchase
+- Admin `docHubUpload()` now calls `/trust-score/upload-comment` after every non-ID upload — Haiku coaching comment displayed inline
 
 ---
 
@@ -27,13 +39,13 @@
 
 ---
 
-## Next Session — Session 45
+## Next Session — Session 46
 
-### Priority: Paystack subscription + AI coach verification
-1. Complete a Paystack test mode subscription payment flow end-to-end
-2. Verify AI coach (advert-agent/coach) fires correctly per category with real listing data
-3. Admin ops queue — review credential upload flow with a real listing
-4. Gate `sbTriggerMarketNote` behind subscription tier for free sellers
+### Priority
+1. Paystack live mode — awaiting CIPC bank account setup (David action)
+2. n8n email notifications — buyer emailed on intro accept/decline
+3. For You trust score refresh on wishlist re-match
+4. Remove `/dev/credit` endpoint and Dev Tools nav tab before public launch
 
 ### Backlog
 - Paystack live mode — awaiting CIPC bank account setup
