@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustSquare · Command Centre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{--bg:#0b0f1a;--surface:#111827;--surface2:#1a2232;--border:#1e2d40;--text:#e2e8f0;--muted:#64748b;--accent:#3b82f6;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--cyan:#06b6d4;--r:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;min-height:100vh;}
+
+/* PIN GATE */
+#pin-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.pin-logo{font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;}
+.pin-logo span{color:var(--accent);}
+.pin-sub{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.pin-dots{display:flex;gap:12px;margin:8px 0;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .2s;}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,64px);gap:10px;}
+.pin-btn{height:64px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;font-size:20px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;}
+.pin-btn:hover{border-color:var(--accent);background:#1e2d40;}
+.pin-btn:active{transform:scale(.95);}
+.pin-err{font-size:12px;color:var(--red);min-height:18px;text-align:center;}
+.pin-chairman{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px;}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:15px;font-weight:900;color:#fff;letter-spacing:-.5px;}
+.logo span{color:var(--accent);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.session-badge{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.gen-time{font-size:11px;color:var(--muted);}
+.reload-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s;}
+.reload-btn:hover{border-color:var(--accent);color:#fff;}
+
+/* VIEW TABS */
+.vtabs{display:flex;gap:4px;background:var(--bg);padding:0 20px;border-bottom:1px solid var(--border);}
+.vtab{padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .15s;background:transparent;border-left:none;border-right:none;border-top:none;}
+.vtab.active{color:#fff;border-bottom-color:var(--accent);}
+.vtab:hover:not(.active){color:var(--text);}
+
+/* MAIN LAYOUT */
+.main{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 90px);}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:20px;}
+.content{padding:20px;overflow-y:auto;}
+
+/* SIDEBAR */
+.sb-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.stat-val{font-size:22px;font-weight:900;color:#fff;line-height:1;}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;}
+.state-item{font-size:11px;color:#94a3b8;padding:5px 0;border-bottom:1px solid var(--border);line-height:1.5;}
+.state-item:last-child{border:none;}
+.blocker-item{background:#1c0f0f;border:1px solid #7f1d1d;border-radius:7px;padding:7px 10px;margin-bottom:5px;font-size:11px;color:#fca5a5;display:flex;gap:6px;align-items:flex-start;}
+.blocker-item::before{content:'⚠';flex-shrink:0;}
+.rule-item{font-size:11px;color:#94a3b8;padding:4px 0;border-bottom:1px solid #1a2232;line-height:1.5;}
+
+/* DIRECTION CARDS */
+.section-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.dirs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:20px;}
+.dir-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:15px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.dir-card:hover{border-color:var(--card-col,var(--accent));transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.dir-card.selected{border-color:var(--card-col,var(--accent));background:#111827;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.dir-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--card-col,var(--accent));}
+.dir-proj{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--card-col,var(--accent));margin-bottom:4px;}
+.dir-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:8px;}
+.dir-items{list-style:none;}
+.dir-items li{font-size:11px;color:#94a3b8;padding:2px 0;display:flex;align-items:flex-start;gap:5px;line-height:1.4;}
+.dir-items li::before{content:'→';color:var(--card-col,var(--accent));flex-shrink:0;font-size:10px;margin-top:2px;}
+
+/* PROMPT PANEL */
+.prompt-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:18px;display:none;}
+.prompt-panel.visible{display:block;}
+.prompt-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.prompt-title{font-size:13px;font-weight:700;color:#fff;}
+.prompt-actions{display:flex;gap:8px;}
+.copy-btn{background:var(--accent);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:#2563eb;}
+.copy-btn.ok{background:var(--green);}
+.prompt-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.ptab{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:transparent;transition:all .15s;}
+.ptab.active{border-color:var(--accent);color:#fff;background:#1a2232;}
+.ptab.mob.active{border-color:var(--purple);color:#c4b5fd;}
+.prompt-text{background:#0a0f1a;border:1px solid var(--border);border-radius:7px;padding:12px;font-family:'Courier New',monospace;font-size:11px;color:#93c5fd;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;}
+
+/* TWO COL + PANELS */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.sp{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.sp-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.sp-body{font-size:11px;color:#94a3b8;line-height:1.7;}
+.sp-body strong{color:var(--text);}
+.sp-body code{background:#0f1a2e;padding:1px 4px;border-radius:3px;font-size:10px;color:#93c5fd;}
+.hp-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.hp-chip{background:#1a2232;border:1px solid #1e3a5f;border-radius:20px;padding:4px 11px;font-size:11px;color:#93c5fd;}
+.cl-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px;}
+.cl-text{font-size:11px;color:#94a3b8;line-height:1.7;max-height:160px;overflow-y:auto;}
+
+/* GALAXY VIEW */
+#graph-view{display:none;height:calc(100vh - 90px);width:100%;position:relative;}
+#graph-view.visible{display:block;}
+#graph-svg{width:100%;height:100%;touch-action:none;}
+.node-label{font-size:11px;fill:#e2e8f0;font-family:-apple-system,sans-serif;font-weight:600;pointer-events:none;}
+.node-sublabel{font-size:9px;fill:#64748b;font-family:-apple-system,sans-serif;pointer-events:none;}
+#graph-tooltip{position:fixed;background:#111827;border:1px solid #1e2d40;border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;pointer-events:none;opacity:0;transition:opacity .15s;max-width:220px;z-index:200;line-height:1.5;}
+#tt-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;}
+#tt-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+#tt-body{font-size:11px;color:#94a3b8;}
+#back-btn{position:absolute;top:16px;left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;display:none;z-index:50;}
+#back-btn.visible{display:block;}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div id="pin-gate">
+  <div class="pin-logo">Trust<span>Square</span></div>
+  <div class="pin-sub">Command Centre</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-err" id="pin-err"></div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinKey(1)">1</button>
+    <button class="pin-btn" onclick="pinKey(2)">2</button>
+    <button class="pin-btn" onclick="pinKey(3)">3</button>
+    <button class="pin-btn" onclick="pinKey(4)">4</button>
+    <button class="pin-btn" onclick="pinKey(5)">5</button>
+    <button class="pin-btn" onclick="pinKey(6)">6</button>
+    <button class="pin-btn" onclick="pinKey(7)">7</button>
+    <button class="pin-btn" onclick="pinKey(8)">8</button>
+    <button class="pin-btn" onclick="pinKey(9)">9</button>
+    <button class="pin-btn" onclick="pinClear()" style="font-size:14px;color:var(--muted);">⌫</button>
+    <button class="pin-btn" onclick="pinKey(0)">0</button>
+    <button class="pin-btn" onclick="pinClear()" style="font-size:12px;color:var(--muted);">CLR</button>
+  </div>
+  <div class="pin-chairman">Solis Council — Chairman Access</div>
+</div>
+
+<!-- LOADING -->
+<div id="loading" style="display:none;">
+  <div class="spin"></div>
+  <p>Loading live data from TrustSquare BEA…</p>
+</div>
+
+<!-- MAIN APP (hidden until unlocked + loaded) -->
+<div id="app" style="display:none;">
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo">Trust<span>Square</span> <span style="font-size:11px;font-weight:400;color:var(--muted);">Command Centre</span></div>
+    <div class="session-badge" id="session-badge">Session —</div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill"><div class="live-dot"></div>Live</div>
+    <div class="gen-time" id="gen-time">—</div>
+    <button class="reload-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- VIEW TABS -->
+<div class="vtabs">
+  <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
+  <button class="vtab" id="vtab-galaxy" onclick="switchView('galaxy')">🌌 Galaxy</button>
+</div>
+
+<!-- DASHBOARD VIEW -->
+<div class="main" id="main-dashboard">
+  <div class="sidebar">
+    <div>
+      <div class="sb-label">Live Stats</div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card"><div class="stat-val" id="st-listings">—</div><div class="stat-lbl">Live Listings</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-sellers">—</div><div class="stat-lbl">Sellers</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-intros">—</div><div class="stat-lbl">Intros Total</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-pending">—</div><div class="stat-lbl">Pending Intros</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sb-label">Live State</div>
+      <div id="live-state-list"></div>
+    </div>
+    <div>
+      <div class="sb-label">Launch Blockers</div>
+      <div id="blockers-list"></div>
+    </div>
+    <div>
+      <div class="sb-label">Session Rules</div>
+      <div id="rules-list"></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- DIRECTION CARDS -->
+    <div class="section-title">Choose next session direction</div>
+    <div class="dirs-grid" id="dirs-grid"></div>
+
+    <!-- PROMPT PANEL -->
+    <div class="prompt-panel" id="prompt-panel">
+      <div class="prompt-hdr">
+        <div class="prompt-title" id="prompt-title">—</div>
+        <div class="prompt-actions">
+          <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">📋 Copy prompt</button>
+        </div>
+      </div>
+      <div class="prompt-tabs">
+        <button class="ptab active" id="ptab-desktop" onclick="switchTab('desktop')">🖥 Cowork</button>
+        <button class="ptab mob" id="ptab-mobile" onclick="switchTab('mobile')">📱 Mobile</button>
+      </div>
+      <div class="prompt-text" id="prompt-text"></div>
+    </div>
+
+    <!-- STATUS PANELS -->
+    <div class="two-col">
+      <div class="sp">
+        <div class="sp-lbl" id="last-label">Last Completed</div>
+        <div class="sp-body" id="last-content"></div>
+      </div>
+      <div class="sp">
+        <div class="sp-lbl" id="next-label">Next Session</div>
+        <div class="sp-body" id="next-content"></div>
+      </div>
+    </div>
+
+    <!-- HIGH PRIORITY -->
+    <div class="section-title">High Priority Backlog</div>
+    <div class="hp-wrap" id="hp-wrap"></div>
+
+    <!-- CHANGELOG -->
+    <div class="section-title">Recent Changelog</div>
+    <div class="cl-box"><div class="cl-text" id="cl-text"></div></div>
+  </div>
+</div>
+
+<!-- GALAXY VIEW -->
+<div id="graph-view">
+  <button id="back-btn" onclick="drawGalaxy()">← All Projects</button>
+  <svg id="graph-svg"></svg>
+  <div id="graph-tooltip"><div id="tt-tag"></div><div id="tt-title"></div><div id="tt-body"></div></div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ── PIN ──────────────────────────────────────────────────────
+const PIN = '2045'; // Solis Council Chairman PIN
+let _pin = '';
+
+function pinKey(d) {
+  if (_pin.length >= 4) return;
+  _pin += d;
+  updateDots();
+  if (_pin.length === 4) setTimeout(checkPin, 120);
+}
+
+function pinClear() { _pin = ''; updateDots(); document.getElementById('pin-err').textContent = ''; }
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('pd' + i);
+    el.classList.toggle('filled', i < _pin.length);
+    el.classList.remove('error');
+  }
+}
+
+function checkPin() {
+  if (_pin === PIN) {
+    document.getElementById('pin-gate').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    loadData();
+  } else {
+    for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
+    document.getElementById('pin-err').textContent = 'Incorrect PIN';
+    setTimeout(() => { _pin = ''; updateDots(); document.getElementById('pin-err').textContent = ''; }, 900);
+  }
+}
+
+// keyboard support
+document.addEventListener('keydown', e => {
+  if (document.getElementById('pin-gate').style.display === 'none') return;
+  if (/^[0-9]$/.test(e.key)) pinKey(parseInt(e.key));
+  if (e.key === 'Backspace') pinClear();
+});
+
+// ── DATA FETCH ───────────────────────────────────────────────
+const BEA = 'https://trustsquare.co';
+let DATA = null;
+
+async function loadData() {
+  try {
+    const r = await fetch(BEA + '/dashboard/summary?_=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    DATA = await r.json();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    render();
+    buildDirections();
+    if (window._galaxyBuilt) { _galaxySim && _galaxySim.stop(); drawGalaxy(); }
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '<p style="color:var(--red)">Failed to load: ' + e.message + '</p><button onclick="loadData()" style="margin-top:12px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;">Retry</button>';
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function md(t) {
+  if (!t) return '';
+  return t
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code style="background:#0f1a2e;padding:1px 4px;border-radius:3px;font-size:10px;color:#93c5fd;">$1</code>')
+    .replace(/^### (.+)$/gm,'<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin:8px 0 4px;">$1</div>')
+    .replace(/^- (.+)$/gm,'<div style="padding:2px 0 2px 10px;border-left:2px solid #1e3a5f;margin-bottom:3px;">$1</div>')
+    .replace(/\n\n/g,'<br>');
+}
+
+function render() {
+  document.getElementById('session-badge').textContent = 'Session ' + DATA.nextSession;
+  document.getElementById('gen-time').textContent = DATA.generatedAt;
+
+  // Stats
+  document.getElementById('st-listings').textContent = DATA.stats.liveListings;
+  document.getElementById('st-sellers').textContent = DATA.stats.sellers;
+  document.getElementById('st-intros').textContent = DATA.stats.intros;
+  document.getElementById('st-pending').textContent = DATA.stats.pendingIntros;
+
+  // Live state
+  const lsEl = document.getElementById('live-state-list');
+  lsEl.innerHTML = '';
+  DATA.liveState.split('\n').filter(l => l.trim().startsWith('-')).forEach(line => {
+    const d = document.createElement('div');
+    d.className = 'state-item';
+    d.innerHTML = md(line.replace(/^-\s*/,'').trim());
+    lsEl.appendChild(d);
+  });
+
+  // Blockers
+  const blEl = document.getElementById('blockers-list');
+  blEl.innerHTML = '';
+  if (DATA.blockers && DATA.blockers.length) {
+    DATA.blockers.forEach(b => { const d = document.createElement('div'); d.className = 'blocker-item'; d.textContent = b; blEl.appendChild(d); });
+  } else {
+    blEl.innerHTML = '<div style="font-size:12px;color:var(--green);padding:6px 0;">✅ No blockers</div>';
+  }
+
+  // Rules
+  const ruEl = document.getElementById('rules-list');
+  ruEl.innerHTML = '';
+  DATA.knownRules.split('\n').filter(l => l.trim().startsWith('-')).slice(0,6).forEach(line => {
+    const d = document.createElement('div'); d.className = 'rule-item';
+    d.innerHTML = md(line.replace(/^-\s*/,'').trim()); ruEl.appendChild(d);
+  });
+
+  // Status panels
+  document.getElementById('last-label').textContent = 'Last Completed — Session ' + DATA.currentSession;
+  document.getElementById('last-content').innerHTML = md(DATA.lastDone.slice(0,700));
+  document.getElementById('next-label').textContent = 'Session ' + DATA.nextSession + ' — Priority';
+  document.getElementById('next-content').innerHTML = md(DATA.nextGoals.slice(0,600));
+
+  // HP chips
+  const hpEl = document.getElementById('hp-wrap');
+  hpEl.innerHTML = '';
+  (DATA.highPriority || []).forEach(i => { const c = document.createElement('div'); c.className = 'hp-chip'; c.textContent = i; hpEl.appendChild(c); });
+
+  // Changelog
+  document.getElementById('cl-text').innerHTML = md(DATA.recentChangelog.slice(0,1000));
+}
+
+// ── DIRECTION CARDS ──────────────────────────────────────────
+const DIRECTIONS = [
+  { id:'next', proj:'TrustSquare', col:'#3b82f6',
+    title: () => 'Session ' + DATA.nextSession + ' — Priority Queue',
+    items: () => DATA.priorityItems.slice(0,5),
+    prompt: () => 'Read STATUS.md and AGENT_BRIEFING.md first — they are the source of truth.\n\nState: TrustSquare live at trustsquare.co · BEA v' + DATA.bea_version + ' · Session ' + DATA.currentSession + ' complete.\nSession ' + DATA.nextSession + ' goals:\n' + DATA.priorityItems.map((p,i)=>(i+1)+'. '+p).join('\n'),
+    mobile: () => 'TrustSquare marketplace at trustsquare.co — no file access needed, context below.\n\nPLATFORM: Session ' + DATA.currentSession + ' complete. ' + DATA.liveState.split('\n').filter(l=>l.startsWith('-')).slice(0,3).join(' | ') + '\n\nNEXT PRIORITIES:\n' + DATA.priorityItems.map((p,i)=>(i+1)+'. '+p).join('\n') + '\n\nTask: Help me plan Session ' + DATA.nextSession + ' — which priority first and why?'
+  },
+  { id:'blockers', proj:'TrustSquare', col:'#ef4444',
+    title: () => 'Launch Blockers — Clear Before Launch',
+    items: () => DATA.blockers.length ? DATA.blockers : ['No blockers logged'],
+    prompt: () => 'Read STATUS.md and AGENT_BRIEFING.md first.\n\nSession ' + DATA.nextSession + ' goal: Clear launch blockers.\n\n' + DATA.blockers.map(b=>'- '+b).join('\n'),
+    mobile: () => 'TrustSquare — no file access needed.\n\nLAUNCH BLOCKERS:\n' + DATA.blockers.map(b=>'- '+b).join('\n') + '\n\nTask: Walk me through clearing these blockers one by one.'
+  },
+  { id:'cl', proj:'CityLauncher', col:'#8b5cf6',
+    title: () => 'CityLauncher — Reactivate',
+    items: () => ['Redesign scraper methodology','Reactivate scheduler service','230+ Pretoria prospects in DB','Resend email outreach halted — review'],
+    prompt: () => 'Read C:\\Users\\David\\Projects\\CityLauncher\\STATUS.md and AGENT_BRIEFING.md first.\n\nCityLauncher goal: Redesign scraper methodology and reactivate scheduler.',
+    mobile: () => 'CityLauncher is an autonomous city-launch pipeline for TrustSquare — no file access needed.\n\nSTATUS: Scheduler DISABLED. 230+ prospects in DB. Gumtree phone-only, no email. Methodology needs redesign.\n\nTask: Help me design a revised scraper and outreach strategy.'
+  },
+  { id:'aa', proj:'AdvertAgent', col:'#f59e0b',
+    title: () => 'AdvertAgent — Session 1 Kickoff',
+    items: () => ['Read PRINCIPLE_REQUIREMENTS.md Part G','Define architecture and file map','Establish agent spec','G1–G4 are founding constraints'],
+    prompt: () => 'Read C:\\Users\\David\\Projects\\AdvertAgent\\STATUS.md, PRINCIPLE_REQUIREMENTS.md Part G, and AGENT_BRIEFING.md first.\n\nAdvertAgent Session 1 goal: Define architecture, file map, and agent spec.',
+    mobile: () => 'AdvertAgent — seller-facing AI for TrustSquare — no file access needed.\n\nPURPOSE: Help sellers create better listings. Preserve anonymity absolutely. Never call Claude API without active subscription.\n\nTask: Help me design the AdvertAgent architecture for Session 1.'
+  },
+  { id:'infra', proj:'Agentic OS', col:'#10b981',
+    title: () => 'Agentic OS — Infrastructure',
+    items: () => ['Formalise branch structure','Automate session end checklist','Convert dashboard to living artifact','Quarterly automation audit'],
+    prompt: () => 'Read STATUS.md and AGENT_BRIEFING.md first.\n\nInfrastructure goal: Formalise Agentic OS — branch structure, session automation, dashboard as living artifact.',
+    mobile: () => 'Agentic OS — multi-project Claude-powered dev setup — no file access needed.\n\nPROJECTS: TrustSquare (S' + DATA.currentSession + ') · CityLauncher (paused) · AdvertAgent (pre-kickoff).\n\nTask: Help formalise the Agentic OS framework and session automation.'
+  },
+];
+
+let _selectedDir = null;
+let _activeTab = 'desktop';
+
+function buildDirections() {
+  const grid = document.getElementById('dirs-grid');
+  grid.innerHTML = '';
+  DIRECTIONS.forEach(dir => {
+    const card = document.createElement('div');
+    card.className = 'dir-card';
+    card.style.setProperty('--card-col', dir.col);
+    card.id = 'dcard-' + dir.id;
+    card.onclick = () => selectDir(dir, card);
+    const items = dir.items().map(i => '<li>' + i + '</li>').join('');
+    card.innerHTML = '<div class="dir-proj">' + dir.proj + '</div>' +
+      '<div class="dir-title">' + dir.title() + '</div>' +
+      '<ul class="dir-items">' + items + '</ul>';
+    grid.appendChild(card);
+  });
+}
+
+function selectDir(dir, card) {
+  document.querySelectorAll('.dir-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  _selectedDir = dir;
+  const panel = document.getElementById('prompt-panel');
+  document.getElementById('prompt-title').textContent = dir.title();
+  panel.classList.add('visible');
+  renderTab();
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function switchTab(tab) {
+  _activeTab = tab;
+  document.getElementById('ptab-desktop').classList.toggle('active', tab === 'desktop');
+  document.getElementById('ptab-mobile').classList.toggle('active', tab === 'mobile');
+  renderTab();
+}
+
+function renderTab() {
+  if (!_selectedDir) return;
+  const txt = document.getElementById('prompt-text');
+  txt.textContent = _activeTab === 'mobile' ? _selectedDir.mobile() : _selectedDir.prompt();
+  txt.style.color = _activeTab === 'mobile' ? '#c4b5fd' : '#93c5fd';
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = '📋 Copy prompt';
+  btn.classList.remove('ok');
+}
+
+function copyPrompt() {
+  if (!_selectedDir) return;
+  const text = _activeTab === 'mobile' ? _selectedDir.mobile() : _selectedDir.prompt();
+  const btn = document.getElementById('copy-btn');
+  const finish = () => { btn.textContent = '✅ Copied!'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent='📋 Copy prompt';btn.classList.remove('ok');}, 2500); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(finish).catch(()=>fbCopy(text,finish));
+  else fbCopy(text, finish);
+}
+function fbCopy(text, cb) {
+  const ta = document.createElement('textarea'); ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px'; document.body.appendChild(ta);
+  ta.select(); try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// ── VIEW SWITCH ───────────────────────────────────────────────
+function switchView(v) {
+  document.getElementById('vtab-dashboard').classList.toggle('active', v==='dashboard');
+  document.getElementById('vtab-galaxy').classList.toggle('active', v==='galaxy');
+  document.getElementById('main-dashboard').style.display = v==='dashboard' ? '' : 'none';
+  const gv = document.getElementById('graph-view');
+  if (v === 'galaxy') {
+    gv.classList.add('visible');
+    if (!window._galaxyBuilt) { window._galaxyBuilt = true; setupGalaxyEvents(); }
+    drawGalaxy();
+  } else {
+    gv.classList.remove('visible');
+  }
+}
+
+// ── GALAXY ────────────────────────────────────────────────────
+const COLORS = {
+  TrustSquare:'#3b82f6',CityLauncher:'#8b5cf6',AdvertAgent:'#f59e0b',
+  Infrastructure:'#10b981',Concept:'#475569',Blocker:'#ef4444',Priority:'#06b6d4',
+  kpi:'#f59e0b',tool:'#3b82f6',risk:'#ef4444',priority:'#06b6d4',metric:'#8b5cf6',
+};
+let _sim = null, _galaxyState = 'galaxy';
+
+function setupGalaxyEvents() {
+  document.addEventListener('keydown', e => { if(e.key==='Escape'&&_galaxyState==='drilldown') drawGalaxy(); });
+  document.getElementById('graph-svg').addEventListener('touchstart', e => {
+    if (e.target.tagName==='svg'||e.target.id==='graph-svg') dismissTT();
+  }, {passive:true});
+}
+
+function dismissTT() { document.getElementById('graph-tooltip').style.opacity = 0; }
+
+function setupSvg() {
+  const svg = d3.select('#graph-svg');
+  svg.selectAll('*').remove();
+  const W = document.getElementById('graph-view').clientWidth;
+  const H = document.getElementById('graph-view').clientHeight;
+  svg.attr('viewBox', '0 0 '+W+' '+H);
+
+  // Stars
+  for (let i=0;i<160;i++) svg.append('circle').attr('cx',Math.random()*W).attr('cy',Math.random()*H).attr('r',Math.random()*1.2+0.2).attr('fill','#fff').attr('opacity',Math.random()*.3+.04);
+
+  // Glow filters
+  const defs = svg.append('defs');
+  [...new Set(Object.values(COLORS)),'#fff'].forEach(col => {
+    const id = 'glow'+col.replace('#','');
+    if (defs.select('#'+id).size()) return;
+    const f = defs.append('filter').attr('id',id);
+    f.append('feGaussianBlur').attr('stdDeviation','4').attr('result','blur');
+    const m = f.append('feMerge'); m.append('feMergeNode').attr('in','blur'); m.append('feMergeNode').attr('in','SourceGraphic');
+  });
+
+  const zoomG = svg.append('g').attr('id','zgw');
+  const zoom = d3.zoom().scaleExtent([.2,4]).on('zoom',e=>zoomG.attr('transform',e.transform));
+  svg.call(zoom).on('dblclick.zoom',null);
+  svg._zoomReset = () => svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity);
+  return {svg,W,H,zoomG};
+}
+
+function drawGalaxy() {
+  _galaxyState = 'galaxy';
+  if (_sim) _sim.stop();
+  document.getElementById('back-btn').classList.remove('visible');
+  if (!DATA) return;
+
+  const {svg,W,H,zoomG} = setupSvg();
+  svg._zoomReset();
+
+  const priorities = (DATA.nextGoals||'').split('\n').filter(l=>/^\d+\./.test(l.trim())).slice(0,4);
+  const nodes = [
+    {id:'ts',    label:'TrustSquare', sub:'Session '+DATA.nextSession, group:'TrustSquare',    size:28, dd:'ts',    detail:'Live at trustsquare.co · BEA v'+DATA.bea_version+'\nSession '+DATA.currentSession+' complete · '+DATA.stats.sellers+' sellers'},
+    {id:'cl',    label:'CityLauncher',sub:'Paused',                    group:'CityLauncher',   size:22, dd:'cl',    detail:'Scheduler DISABLED · methodology redesign needed\n230+ prospects in DB'},
+    {id:'aa',    label:'AdvertAgent', sub:'Pre-kickoff',               group:'AdvertAgent',    size:20, dd:'aa',    detail:'Seller AI assistance · Session 1 kickoff pending\nPart G principles'},
+    {id:'infra', label:'Agentic OS',  sub:'Framework',                 group:'Infrastructure', size:18, dd:'infra', detail:'3 active projects · Session dashboard live\nMemory system · GitHub'},
+    {id:'bea',   label:'BEA v'+DATA.bea_version, sub:'FastAPI', group:'Concept',size:15,detail:'✅ Active · SQLite + Redis · Hetzner CPX22\n'+DATA.stats.liveListings+' live listings · '+DATA.stats.sellers+' sellers'},
+    {id:'paystack',label:'Paystack',  sub:'Payments',group:'Concept',size:13,detail:'Test mode active · live mode pending CIPC\nSeller subscription flow wired Session 45'},
+    {id:'trust', label:'Trust Score', sub:'Metric',  group:'Concept',size:12,detail:'0–100 · Established=40+ · Trusted=70+\nStamped on publish from users table'},
+    {id:'geo',   label:'4-level Geo', sub:'ZA seeded',group:'Concept',size:12,detail:'Country→Region→City→Suburb\nZA: 9 provinces · 54 cities · 11,679 suburbs'},
+    {id:'codex', label:'Solar Codex', sub:'v4.5',    group:'Concept',size:14,detail:'Canonical product rules · All agents check\nbefore adding any business logic'},
+    {id:'tuppence',label:'Tuppence',  sub:'1T=$2',   group:'Concept',size:13,detail:'Introduction currency · buyer pays after accept\nAI Coach Credits separate balance'},
+  ];
+  (DATA.blockers||[]).slice(0,4).forEach((b,i)=>nodes.push({id:'bl'+i,label:b.length>20?b.slice(0,20)+'…':b,sub:'Blocker',group:'Blocker',size:10,detail:b}));
+  priorities.forEach((p,i)=>{const t=p.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'');nodes.push({id:'pr'+i,label:t.length>22?t.slice(0,22)+'…':t,sub:'Next S'+DATA.nextSession,group:'Priority',size:10,detail:t});});
+
+  const edges = [
+    {s:'ts',t:'bea'},{s:'cl',t:'bea'},{s:'aa',t:'bea'},{s:'ts',t:'paystack'},{s:'ts',t:'tuppence'},
+    {s:'cl',t:'tuppence'},{s:'aa',t:'tuppence'},{s:'ts',t:'trust'},{s:'ts',t:'geo'},{s:'cl',t:'geo'},
+    {s:'ts',t:'codex'},{s:'cl',t:'codex'},{s:'aa',t:'codex'},{s:'aa',t:'ts'},{s:'infra',t:'ts'},
+    {s:'infra',t:'cl'},{s:'infra',t:'aa'},
+  ];
+  (DATA.blockers||[]).slice(0,4).forEach((_,i)=>edges.push({s:'ts',t:'bl'+i}));
+  priorities.forEach((_,i)=>edges.push({s:'ts',t:'pr'+i}));
+
+  svg.append('text').attr('x',W/2).attr('y',H-10).attr('text-anchor','middle').attr('fill','#334155').attr('font-size',11)
+    .text('Tap a project star to drill in · Pinch/scroll to zoom · Drag to pan · ESC to exit drilldown');
+
+  const resetG = svg.append('g').attr('transform','translate('+(W-44)+','+(H-44)+')').style('cursor','pointer').on('click',()=>svg._zoomReset());
+  resetG.append('circle').attr('r',20).attr('fill','#1a2232').attr('stroke','#1e2d40').attr('stroke-width',1.5);
+  resetG.append('text').attr('text-anchor','middle').attr('dy',4).attr('fill','#64748b').attr('font-size',14).text('⊙');
+
+  const link = zoomG.append('g').selectAll('line')
+    .data(edges).join('line').attr('stroke','#1e3a5f').attr('stroke-width',1).attr('stroke-opacity',0.5);
+
+  const nodeG = zoomG.append('g').selectAll('g')
+    .data(nodes).join('g').style('cursor',d=>d.dd?'pointer':'default')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)_sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',(e,d)=>{if(!e.active)_sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+  nodeG.append('circle').attr('r',d=>d.size+4).attr('fill','none').attr('stroke',d=>COLORS[d.group]||'#475569').attr('stroke-opacity',.15).attr('stroke-width',6);
+  nodeG.append('circle').attr('r',d=>d.size).attr('fill',d=>COLORS[d.group]||'#475569').attr('fill-opacity',.85).attr('filter',d=>'url(#glow'+(COLORS[d.group]||'#475569').replace('#','')+')').attr('stroke','#0b0f1a').attr('stroke-width',1.5);
+  nodeG.append('circle').attr('r',d=>d.size*.35).attr('cx',d=>-d.size*.18).attr('cy',d=>-d.size*.18).attr('fill','#fff').attr('fill-opacity',.1);
+  nodeG.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',d=>d.size+13).text(d=>d.label);
+  nodeG.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',d=>d.size+24).text(d=>d.sub);
+
+  const tt = document.getElementById('graph-tooltip');
+  nodeG
+    .on('click',(e,d)=>{if(d.dd){drilldown(d.dd);}})
+    .on('mouseenter',(e,d)=>{document.getElementById('tt-tag').textContent=d.sub||d.group;document.getElementById('tt-tag').style.color=COLORS[d.group]||'#64748b';document.getElementById('tt-title').textContent=d.label;document.getElementById('tt-body').textContent=d.detail||'';tt.style.opacity=1;})
+    .on('mousemove',e=>{tt.style.left=(e.clientX+16)+'px';tt.style.top=(e.clientY-10)+'px';})
+    .on('mouseleave',()=>{tt.style.opacity=0;})
+    .on('touchstart',(e,d)=>{e.preventDefault();document.getElementById('tt-tag').textContent=d.sub||d.group;document.getElementById('tt-tag').style.color=COLORS[d.group]||'#64748b';document.getElementById('tt-title').textContent=d.label;document.getElementById('tt-body').textContent=d.detail||'';tt.style.opacity=1;tt.style.left='50%';tt.style.top='80px';tt.style.transform='translateX(-50%)';},{passive:false})
+    .on('touchend',()=>{setTimeout(()=>{tt.style.opacity=0;},2000);});
+
+  _sim = d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(edges.map(e=>({source:e.s,target:e.t}))).id(d=>d.id).distance(100).strength(.4))
+    .force('charge',d3.forceManyBody().strength(-220))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collision',d3.forceCollide(d=>d.size+18))
+    .on('tick',()=>{
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      nodeG.attr('transform',d=>'translate('+d.x+','+d.y+')');
+    });
+}
+
+function drilldown(pid) {
+  const DRILL = {
+    ts:{center:{label:'TrustSquare',color:'#3b82f6'},nodes:[
+      {label:'Session '+DATA.currentSession,sub:'Complete',color:'#10b981',size:15,type:'kpi',detail:'Session '+DATA.currentSession+' complete\n'+DATA.stats.sellers+' sellers · '+DATA.stats.liveListings+' live listings'},
+      {label:DATA.stats.sellers+' Sellers',sub:'Registered',color:'#f59e0b',size:14,type:'kpi',detail:'Registered in DB\n23/60 founding sellers confirmed'},
+      {label:DATA.stats.liveListings+' Live',sub:'Listings',color:'#10b981',size:14,type:'kpi',detail:'Live listings in BEA · 70 demo listings separate'},
+      {label:'BEA v'+DATA.bea_version,sub:'FastAPI',color:'#3b82f6',size:13,type:'tool',detail:'✅ Running · SQLite WAL · Redis · Hetzner CPX22\n9 tables · idempotent migrations'},
+      {label:'Paystack',sub:'Test mode',color:'#3b82f6',size:12,type:'tool',detail:'Test mode · Seller subscription wired (Session 45)\nLive mode pending CIPC bank approval'},
+      {label:'Trust Score',sub:'0–100',color:'#8b5cf6',size:12,type:'metric',detail:'New=0-39 · Established=40-69 · Trusted=70-89\nHighly Trusted=90-100 · Stamped on publish'},
+      {label:'Anonymity',sub:'Core rule',color:'#ef4444',size:13,type:'risk',detail:'⚠ Seller name/email NEVER shown to buyers\nOnly revealed after bilateral intro acceptance'},
+      {label:'37 Sellers Gap',sub:'Launch risk',color:'#ef4444',size:12,type:'risk',detail:'⚠ Need 37 more founding sellers\nbefore public launch in Pretoria'},
+      ...(DATA.blockers||[]).slice(0,3).map(b=>({label:b.length>20?b.slice(0,20)+'…':b,sub:'Blocker',color:'#ef4444',size:11,type:'risk',detail:b})),
+      ...(DATA.priorityItems||[]).slice(0,4).map((p,i)=>({label:p.length>22?p.slice(0,22)+'…':p,sub:'Priority '+(i+1),color:'#06b6d4',size:11,type:'priority',detail:p})),
+    ]},
+    cl:{center:{label:'CityLauncher',color:'#8b5cf6'},nodes:[
+      {label:'230+ Prospects',sub:'Pretoria DB',color:'#f59e0b',size:15,type:'kpi',detail:'Estate agents with email · Property24 scrape\nprospects.db on Hetzner'},
+      {label:'426 Phone-only',sub:'Gumtree',color:'#f59e0b',size:13,type:'kpi',detail:'Gumtree prospects · phone only · no email\ncannot run email outreach'},
+      {label:'Dashboard API',sub:'Port 8001',color:'#8b5cf6',size:13,type:'tool',detail:'✅ Running · citylauncher.service\ntrustсquare.co/launch/'},
+      {label:'Resend Emailer',sub:'Halted',color:'#8b5cf6',size:12,type:'tool',detail:'Email outreach via Resend API\n4 category templates · halted at AWAITING_APPROVAL'},
+      {label:'Scheduler OFF',sub:'DISABLED',color:'#ef4444',size:15,type:'risk',detail:'⚠ citylauncher-scheduler.service DISABLED\nwas scanning ineffectively · needs redesign'},
+      {label:'No Email Scrape',sub:'Blocked',color:'#ef4444',size:12,type:'risk',detail:'⚠ Gumtree emails not in DOM · blocked source\nProperty24 emails available via profile pages'},
+      {label:'Redesign Needed',sub:'Priority 1',color:'#06b6d4',size:14,type:'priority',detail:'Scraper methodology + auto-launch strategy\nfull redesign before reactivating scheduler'},
+    ]},
+    aa:{center:{label:'AdvertAgent',color:'#f59e0b'},nodes:[
+      {label:'Pre-Kickoff',sub:'No sessions',color:'#f59e0b',size:16,type:'kpi',detail:'No sessions run yet\nArchitecture to be defined at Session 1'},
+      {label:'Anonymity Rule',sub:'Core risk',color:'#ef4444',size:13,type:'risk',detail:'⚠ Every feature must preserve seller anonymity\nabsolutely (Codex A2)'},
+      {label:'Subscription Gate',sub:'Core risk',color:'#ef4444',size:12,type:'risk',detail:'⚠ Never call Claude API without\nconfirming active subscription first'},
+      {label:'Part G Principles',sub:'Constraints',color:'#f59e0b',size:13,type:'tool',detail:'PRINCIPLE_REQUIREMENTS.md Part G\nG1–G4 are founding constraints'},
+      {label:'Claude API',sub:'Haiku 4.5',color:'#f59e0b',size:13,type:'tool',detail:'Powers AI coaching · gated behind subscription\nHaiku model for cost control'},
+      {label:'Session 1',sub:'Kickoff',color:'#06b6d4',size:15,type:'priority',detail:'Define architecture · file map · agent spec\nread PRINCIPLE_REQUIREMENTS.md Part G'},
+    ]},
+    infra:{center:{label:'Agentic OS',color:'#10b981'},nodes:[
+      {label:'3 Projects',sub:'Active',color:'#f59e0b',size:15,type:'kpi',detail:'TrustSquare (S'+DATA.currentSession+') · CityLauncher (paused)\nAdvertAgent (pre-kickoff)'},
+      {label:'Command Centre',sub:'Living artifact',color:'#10b981',size:14,type:'tool',detail:'✅ This dashboard · fetches live from BEA\nPIN-gated · D3 galaxy · auto-refresh'},
+      {label:'Memory System',sub:'Persistent',color:'#10b981',size:12,type:'tool',detail:'user/feedback/project/reference types\nPersists across sessions · MEMORY.md index'},
+      {label:'GitHub',sub:'3 repos',color:'#10b981',size:12,type:'tool',detail:'github.com/dmcontiki2/marketsquare\nDavid commits from PowerShell (no sandbox)'},
+      {label:'Cowork Mode',sub:'Skills',color:'#10b981',size:12,type:'tool',detail:'Claude Cowork · Skills · Schedule\nLiving artifacts · MCP connectors'},
+      {label:'Git Lock Risk',sub:'Known issue',color:'#ef4444',size:11,type:'risk',detail:'⚠ Sandbox/Windows share mount\nnever commit from sandbox'},
+      {label:'Branch Structure',sub:'TODO',color:'#06b6d4',size:12,type:'priority',detail:'Formalise branch structure across all 3 projects\ndeferred to infrastructure session'},
+    ]},
+  };
+  const d = DRILL[pid]; if (!d) return;
+  _galaxyState = 'drilldown';
+  if (_sim) _sim.stop();
+  document.getElementById('back-btn').classList.add('visible');
+  dismissTT();
+
+  const {svg,W,H,zoomG} = setupSvg();
+  svg._zoomReset();
+  const cx = W/2, cy = H/2;
+  const color = d.center.color;
+  const maxR = Math.min(W,H)/2 - 40;
+  const orbits = [maxR*.38,maxR*.68,maxR*.98];
+
+  // Center star
+  const cf = zoomG.append('filter').attr('id','cglow');
+  cf.append('feGaussianBlur').attr('stdDeviation',8).attr('result','blur');
+  const cm = cf.append('feMerge'); cm.append('feMergeNode').attr('in','blur'); cm.append('feMergeNode').attr('in','SourceGraphic');
+  const cg = zoomG.append('g').attr('transform','translate('+cx+','+cy+')');
+  cg.append('circle').attr('r',42).attr('fill','none').attr('stroke',color).attr('stroke-opacity',.1).attr('stroke-width',24);
+  cg.append('circle').attr('r',30).attr('fill',color).attr('fill-opacity',.9).attr('filter','url(#cglow)');
+  cg.append('text').attr('text-anchor','middle').attr('dy',4).attr('fill','#fff').attr('font-size',10).attr('font-weight',700).text(d.center.label.slice(0,12));
+
+  // Orbit rings
+  orbits.forEach(r => zoomG.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r).attr('fill','none').attr('stroke','#1e3a5f').attr('stroke-width',1).attr('stroke-dasharray','4,6').attr('opacity',.4));
+
+  // Nodes on orbits
+  const byOrbit = [d.nodes.filter((_,i)=>i%3===0), d.nodes.filter((_,i)=>i%3===1), d.nodes.filter((_,i)=>i%3===2)];
+  const tt = document.getElementById('graph-tooltip');
+  byOrbit.forEach((group,oi) => {
+    group.forEach((node,ni) => {
+      const angle = (2*Math.PI/Math.max(group.length,1))*ni - Math.PI/2;
+      const r = orbits[oi], x = cx+r*Math.cos(angle), y = cy+r*Math.sin(angle);
+      zoomG.append('line').attr('x1',cx).attr('y1',cy).attr('x2',x).attr('y2',y).attr('stroke',node.color||color).attr('stroke-opacity',.1).attr('stroke-width',1);
+      const ng = zoomG.append('g').attr('transform','translate('+x+','+y+')').style('cursor','default');
+      ng.append('circle').attr('r',node.size+4).attr('fill','none').attr('stroke',node.color||color).attr('stroke-opacity',.2).attr('stroke-width',5);
+      ng.append('circle').attr('r',node.size).attr('fill',node.color||color).attr('fill-opacity',.85).attr('filter','url(#glow'+(node.color||color).replace('#','')+')').attr('stroke','#0b0f1a').attr('stroke-width',1.5);
+      ng.append('circle').attr('r',node.size*.35).attr('cx',-node.size*.18).attr('cy',-node.size*.18).attr('fill','#fff').attr('fill-opacity',.12);
+      ng.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',node.size+13).text(node.label);
+      ng.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',node.size+24).text(node.sub);
+      ng.on('mouseenter',()=>{document.getElementById('tt-tag').textContent=node.type||'';document.getElementById('tt-tag').style.color=node.color||color;document.getElementById('tt-title').textContent=node.label;document.getElementById('tt-body').textContent=node.detail||'';tt.style.opacity=1;})
+        .on('mousemove',e=>{tt.style.left=(e.clientX+16)+'px';tt.style.top=(e.clientY-10)+'px';})
+        .on('mouseleave',()=>{tt.style.opacity=0;});
+    });
+  });
+
+  svg.append('text').attr('x',W/2).attr('y',H-10).attr('text-anchor','middle').attr('fill','#334155').attr('font-size',11).text('ESC or ← to return to galaxy · Hover nodes for detail');
+}
+</script>
+</body>
+</html>
