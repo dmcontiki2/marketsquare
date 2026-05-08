@@ -115,6 +115,24 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 #back-btn{position:absolute;top:16px;left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;display:none;z-index:50;}
 #back-btn.visible{display:block;}
 
+
+/* COMMAND CHAT */
+#cmd-bar{position:fixed;bottom:0;left:0;right:0;background:#0d1117;border-top:1px solid #1e2d40;padding:10px 14px;display:none;z-index:300;gap:8px;align-items:flex-end;}
+#cmd-bar.visible{display:flex;}
+#cmd-input{flex:1;background:#1a2232;border:1px solid #1e3a5f;border-radius:20px;padding:9px 16px;font-size:13px;color:#e2e8f0;outline:none;resize:none;max-height:80px;font-family:-apple-system,sans-serif;line-height:1.4;}
+#cmd-input::placeholder{color:#475569;}
+#cmd-send{background:var(--accent);border:none;border-radius:50%;width:36px;height:36px;min-width:36px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;}
+#cmd-send:disabled{opacity:.4;cursor:default;}
+#cmd-chat{position:fixed;bottom:64px;left:0;right:0;max-height:45vh;overflow-y:auto;padding:10px 14px;display:none;flex-direction:column;gap:8px;z-index:299;}
+#cmd-chat.visible{display:flex;}
+.cm-msg{max-width:85%;padding:9px 13px;border-radius:14px;font-size:12px;line-height:1.6;word-break:break-word;white-space:pre-wrap;}
+.cm-user{background:#1e3a5f;color:#bfdbfe;align-self:flex-end;border-bottom-right-radius:4px;}
+.cm-ai{background:#1a2232;border:1px solid #1e2d40;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px;}
+.cm-ai strong{color:#fff;}
+.cm-typing{color:#475569;font-style:italic;font-size:11px;align-self:flex-start;padding:6px 10px;}
+#cmd-toggle{position:fixed;bottom:16px;right:16px;background:var(--accent);border:none;border-radius:50%;width:44px;height:44px;color:#fff;font-size:20px;cursor:pointer;z-index:400;box-shadow:0 2px 12px rgba(59,130,246,.4);display:none;}
+#cmd-toggle.visible{display:flex;align-items:center;justify-content:center;}
+
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
@@ -256,6 +274,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div id="graph-tooltip"><div id="tt-tag"></div><div id="tt-title"></div><div id="tt-body"></div></div>
 </div>
 
+
+<!-- COMMAND CHAT -->
+<div id="cmd-chat"></div>
+<div id="cmd-bar">
+  <textarea id="cmd-input" rows="1" placeholder="Ask about the platform…" onkeydown="cmdKey(event)"></textarea>
+  <button id="cmd-send" onclick="cmdSend()">↑</button>
+</div>
+<button id="cmd-toggle" title="Command Centre AI">💬</button>
+
 </div><!-- #app -->
 
 <script>
@@ -310,6 +337,14 @@ async function loadData() {
     DATA = await r.json();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+    showCmdToggle();
+    // Derive command secret from PIN — never stored in source or localStorage
+    (async () => {
+      const enc = new TextEncoder();
+      const data = enc.encode(_pin + 'ts_solis_salt_2026');
+      const hashBuf = await crypto.subtle.digest('SHA-256', data);
+      CMD_SECRET = Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    })();
     render();
     buildDirections();
     if (window._galaxyBuilt) { _galaxySim && _galaxySim.stop(); drawGalaxy(); }
@@ -756,5 +791,84 @@ function drilldown(pid) {
   svg.append('text').attr('x',W/2).attr('y',H-10).attr('text-anchor','middle').attr('fill','#334155').attr('font-size',11).text('ESC or ← to return to galaxy · Hover nodes for detail');
 }
 </script>
+
+<script>
+// ── COMMAND CHAT ──────────────────────────────────────────────────────────────
+let CMD_SECRET = ''; // Set after PIN unlock — never stored in source
+let _cmdHistory = [];
+let _cmdOpen = false;
+
+function cmdToggle() {
+  _cmdOpen = !_cmdOpen;
+  document.getElementById('cmd-bar').classList.toggle('visible', _cmdOpen);
+  document.getElementById('cmd-chat').classList.toggle('visible', _cmdOpen);
+  document.getElementById('cmd-toggle').textContent = _cmdOpen ? '✕' : '💬';
+  if (_cmdOpen) document.getElementById('cmd-input').focus();
+}
+
+function cmdKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); cmdSend(); }
+  // Auto-resize textarea
+  const el = e.target;
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+async function cmdSend() {
+  const input = document.getElementById('cmd-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('cmd-send').disabled = true;
+
+  // Add user bubble
+  cmdBubble(msg, 'user');
+  // Add typing indicator
+  const typing = cmdBubble('Thinking…', 'typing');
+
+  try {
+    const resp = await fetch('/command', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        message: msg,
+        secret: CMD_SECRET,
+        history: _cmdHistory.slice(-6)
+      })
+    });
+    const data = await resp.json();
+    typing.remove();
+    if (!resp.ok) throw new Error(data.detail || 'Error');
+    const reply = data.reply || '';
+    cmdBubble(reply, 'ai');
+    _cmdHistory.push({role:'user', content:msg});
+    _cmdHistory.push({role:'assistant', content:reply});
+    if (_cmdHistory.length > 20) _cmdHistory = _cmdHistory.slice(-20);
+  } catch(err) {
+    typing.remove();
+    cmdBubble('⚠️ ' + err.message, 'ai');
+  }
+  document.getElementById('cmd-send').disabled = false;
+  document.getElementById('cmd-input').focus();
+}
+
+function cmdBubble(text, type) {
+  const chat = document.getElementById('cmd-chat');
+  const el = document.createElement('div');
+  el.className = type === 'user' ? 'cm-msg cm-user' : type === 'typing' ? 'cm-msg cm-typing' : 'cm-msg cm-ai';
+  el.textContent = text;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+  return el;
+}
+
+// Show toggle button after unlock
+function showCmdToggle() {
+  document.getElementById('cmd-toggle').classList.add('visible');
+}
+</script>
+
 </body>
 </html>
