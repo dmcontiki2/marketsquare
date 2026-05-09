@@ -1,5 +1,54 @@
 # TrustSquare — STATUS.md
-**Updated: Session 45 · 8 May 2026**
+**Updated: Session 46 · 9 May 2026**
+
+---
+
+## ⚙️ CLAUDE INTERACTION PRINCIPLES (Founder Directives)
+
+**Effective**: David sets these rules for all Claude sessions (Chat, Code, Design)
+
+### Rule 1: Independence > Subscriptions
+When advising on tooling, **surface open-source and self-hosted options FIRST**, then paid SaaS as alternatives. Rank by:
+1. Self-hosted (free, sovereign)
+2. Free tier open-source
+3. Low-cost SaaS (<$20/mo)
+4. Premium / consumption-based (flag cost ceiling always)
+
+**Exception**: Tools where there is no reasonable open-source equivalent, or time-to-value is critical.
+
+### Rule 2: Token Transparency
+Before recommending a Claude-powered feature:
+- Estimate token cost (in/out)
+- Flag if consumption-based
+- Suggest alternatives if cost is >10% of budget
+- Never hide token math
+
+**Rule**: "Should we use Claude Code for this, or would a bash script be faster/cheaper?"
+
+### Rule 3: Flag Better Claude Functions
+When you discover a newer Claude function, tool, or capability:
+- **Always mention it as a possibility** (not a requirement)
+- Explain what it enables vs current approach
+- Let David decide
+
+**Example**: "Claude Design would work better here. Should I switch?" (not: "Let me use Claude Design")
+
+### Rule 4: Cost/Sovereignty Matrix
+Every architectural decision gets this framing:
+
+| Option | Cost | Sovereignty | Token Impact | Recommendation |
+|--------|------|-------------|--------------|---|
+| Self-hosted n8n | $0 (hosting only) | 100% | N/A | ✅ Primary |
+| Zapier | $20–200/mo | 0% | N/A | ⚠️ Fallback only |
+| Claude Code + bash | ~300 tokens/session | 100% | Transparent | ✅ Preferred |
+
+### Rule 5: Question Your Own Advice
+If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
+- **Stop and answer directly**
+- Don't assume he's aware of cost principles
+- Reframe the decision
+
+**Bottom line**: David's principles are *your* guardrails, not his responsibility to enforce.
 
 ---
 
@@ -9,6 +58,19 @@
 - Launch city: Pretoria, South Africa · **0 live listings (clean slate) · 70 demo listings active**
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
+
+---
+
+## Last Completed — Session 46
+
+### n8n email notifications — intro accept/decline ✅ FULLY LIVE
+- `intro_accepted.html` + `intro_declined.html` branded TrustSquare templates (dark navy/gold, CSS-inlined for n8n)
+- Both n8n workflows live and tested — emails delivered to inbox from `noreply@trustsquare.co`
+- `trustsquare.co` domain authenticated in Brevo — SPF/DKIM aligned, inbox delivery confirmed
+- BEA decline webhook payload extended with `category` + `city` fields
+- `N8N_WEBHOOK_ACCEPT` + `N8N_WEBHOOK_DECLINE` set on Hetzner, duplicates cleaned from `/etc/environment`
+- `bea_main.py` committed and pushed (Session 46 fix)
+- Key n8n fix: `activeVersionId` in `workflow_entity` must match `workflow_history` — direct DB edits require updating both tables and restarting the container
 
 ---
 
@@ -39,13 +101,12 @@
 
 ---
 
-## Next Session — Session 46
+## Next Session — Session 47
 
 ### Priority
 1. Paystack live mode — awaiting CIPC bank account setup (David action)
-2. n8n email notifications — buyer emailed on intro accept/decline
-3. For You trust score refresh on wishlist re-match
-4. Remove `/dev/credit` endpoint and Dev Tools nav tab before public launch
+2. For You trust score refresh on wishlist re-match
+3. Remove `/dev/credit` endpoint and Dev Tools nav tab before public launch
 
 ### Backlog
 - Paystack live mode — awaiting CIPC bank account setup
