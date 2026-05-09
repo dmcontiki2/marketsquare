@@ -55,9 +55,28 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 ## Live State
 - **Legal entity: Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Director: David Maurice Conradie · Registered 29/04/2026**
 - BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
-- Launch city: Pretoria, South Africa · **0 live listings (clean slate) · 70 demo listings active**
+- Launch city: Pretoria, South Africa · **5 live listings (Maroushka — IDs 93–97) · 70 demo listings active**
+- Maroushka registered in BEA: `miconradie1@gmail.com` · magic link sent via Gmail
+- n8n outreach wave workflow: imported but SendGrid credentials NOT wired — untested ⚠️
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
+
+---
+
+## Last Completed — Session 47
+
+### Maroushka live simulation test ✅
+- 5 Property listings created and published live under `dmcontiki2@gmail.com` (IDs 93–97): 1-bed Waterkloof apartment, 2-bed garden apartment Waterkloof, 3-bed family home Waterkloof Ridge, executive studio Arcadia, 2-bed penthouse Brooklyn
+- All published via `PUT /listings/{id}/publish` — confirmed live in buyer feed at trustsquare.co
+- 70 demo listings confirmed present client-side alongside real listings
+- Maroushka registered in BEA: `miconradie1@gmail.com` · `POST /users` called
+- Magic link personalised and sent to Maroushka via Gmail: `https://trustsquare.co/?magic=1&name=Maroushka&email=miconradie1@gmail.com&cat=Property&city=Pretoria`
+- Maroushka added to CityLauncher `prospects` table (table created this session — was missing)
+
+### n8n outreach wave — NOT tested ⚠️
+- `n8n_outreach_workflow.json` imported into n8n UI successfully
+- SendGrid credentials NOT wired — workflow cannot execute
+- **Session 48 sole goal: wire SendGrid credentials + test single outreach email end-to-end**
 
 ---
 
@@ -101,15 +120,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 47
+## Next Session — Session 48
 
 ### Priority
-1. Paystack live mode — awaiting CIPC bank account setup (David action)
-2. For You trust score refresh on wishlist re-match
-3. Remove `/dev/credit` endpoint and Dev Tools nav tab before public launch
+1. **n8n outreach wave — wire SendGrid credentials and test single email to miconradie1@gmail.com end-to-end** (sole goal)
 
 ### Backlog
-- Paystack live mode — awaiting CIPC bank account setup
+- Paystack live mode — awaiting CIPC bank account setup (David action)
 - Admin ops queue — review uploaded credentials
 - Gate `sbTriggerMarketNote` behind subscription tier for free sellers
 - For You trust score refresh on wishlist re-match

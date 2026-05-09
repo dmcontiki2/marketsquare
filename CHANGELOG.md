@@ -1,3 +1,23 @@
+## Session 47 · 9 May 2026 · Maroushka live simulation test
+
+**Task 1 — Maroushka property listings created and published:** 5 Property listings created via `POST /listings` and published via `PUT /listings/{id}/publish` under `dmcontiki2@gmail.com`. IDs 93–97: 1-bed furnished apartment Waterkloof (R10,990/mo), 2-bed garden apartment Waterkloof (R16,500/mo), 3-bed family home Waterkloof Ridge (R32,000/mo), executive studio Arcadia (R8,500/mo), 2-bed penthouse Brooklyn (R22,000/mo). All confirmed `listing_status = live` in buyer feed at trustsquare.co alongside 70 client-side demo listings.
+
+**Task 2 — Maroushka BEA registration + magic link:** `POST /users` called for `miconradie1@gmail.com` (name: Maroushka, city: Pretoria, country: ZA, primary_category: Property). Magic link generated: `https://trustsquare.co/?magic=1&name=Maroushka&email=miconradie1@gmail.com&cat=Property&city=Pretoria`. Personalised onboarding email drafted and sent via Gmail.
+
+**Task 3 — CityLauncher prospects table created:** `prospects` table did not exist in `/var/www/citylauncher/citylauncher.db`. Created this session per `N8N_EMAIL_SETUP.md` schema. Maroushka added as prospect ID 1 (category: Property, city_id: 1).
+
+**Task 4 — n8n outreach wave — NOT completed ⚠️:** `n8n_outreach_workflow.json` successfully imported into n8n UI. Workflow visible with all nodes (Webhook Trigger → Query CityLauncher → Build Payloads → Render HTML → SendGrid → Mark Emailed → Wave Summary → Notify David). SendGrid credentials not wired — "Problem importing workflow — Required" error on import. Workflow cannot be activated or tested until credentials are linked. **Session 48 sole goal: wire credentials and fire single test email to Maroushka.**
+
+## Session 46 · 9 May 2026 · n8n email notifications — intro accept/decline fully live
+
+**Task 1 — Branded email templates:** Created `n8n/email_templates/intro_accepted.html` and `intro_declined.html` — full TrustSquare-branded templates (dark navy hero, gold accents, TrustSquare logo). CSS inlined via premailer to prevent n8n expression parser from choking on `<style>` block braces. Accept template: 🎉 hero, listing card, Tuppence deduction notice, 3-step next steps, anonymity box, gold CTA. Decline template: 📬 hero, listing card, green no-charge confirmation, empathy paragraph, 3 tips, Browse Listings CTA.
+
+**Task 2 — BEA decline payload fix:** `PUT /intros/{id}/decline` webhook payload was missing `category` and `city` fields. Fixed `_fire_webhook()` call in `decline_intro()` to include both fields from the listing row. Accept payload already had them. Committed and pushed to GitHub.
+
+**Task 3 — n8n workflow wiring (end-to-end):** Both workflows (Intro Accepted + Intro Declined) wired in n8n 2.14.2 running in Docker on Hetzner. Root cause of "No recipients defined" error: n8n uses `activeVersionId` in `workflow_entity` to resolve which `workflow_history` snapshot to execute — direct DB edits to `workflow_entity.nodes` are ignored unless `activeVersionId` is also updated to a new `workflow_history` entry. Fixed by inserting a new history entry and pointing `activeVersionId` to it, then restarting the container. Expression fix: n8n 2.x webhook POST body accessible as `$json.body.X` not `$json.X`. SMTP fix: Hetzner blocks ports 25/465 — must use port 587 with STARTTLS (SSL/TLS toggle OFF). Sender domain fixed from generic Brevo SMTP address to `noreply@trustsquare.co` (domain already authenticated in Brevo). Both emails confirmed delivered to inbox from `noreply@trustsquare.co` with full branded templates (8.5KB accepted, 7.9KB declined).
+
+**Task 4 — Hetzner env vars:** `N8N_WEBHOOK_ACCEPT` and `N8N_WEBHOOK_DECLINE` set in `/etc/environment`, duplicate entries cleaned up. BEA restarted and confirmed picking up both vars with no warnings.
+
 ## Session 45 · 8 May 2026 · Paystack seller subscription flow + AI coach verification
 
 **Task 1 — Paystack seller subscription payment (end-to-end):** Added two new BEA endpoints: `POST /payment/seller-subscription/initialize` creates a Paystack transaction for Starter (R90/mo) or International (R270/mo) tiers, returning an `authorization_url`; `GET /payment/seller-subscription/verify` checks payment status, reads `type=seller_subscription` metadata, and upserts `users.seller_tier` on success. Frontend wired: the tier picker Continue button now calls `sobContinueFromTier()` — free tier goes straight to EULA, paid tiers redirect to Paystack. `sobState` is persisted to `sessionStorage` before redirect. On return (`?ps_sub_return=1`), state is restored and the seller lands directly at the EULA phase. Verified: initialize returns correct Paystack checkout URLs for both tiers; reject path correctly returns 400 for unpaid/abandoned references; upsert path confirmed against live DB.
@@ -1338,3 +1358,11 @@ Trustsquare (Pty) Ltd was formally registered with CIPC on 29/04/2026 (Reg 2026/
 **Category chip fix.** The "🛒 Local Market" filter chip was missing from the category bar — only 6 chips were rendered (All through Cars). Added the LocalMarket chip. Also fixed `renderGrid` to use `normCat(l.cat)` for category comparison so `local_market` listings correctly match the `LocalMarket` filter.
 
 **Cost model impact:** None. xlsx unchanged since Session 24.
+
+---
+
+## Session 46 · 9 May 2026
+
+**n8n email notifications for intro accept/decline.** Two buyer-facing transactional email templates created (`n8n/email_templates/intro_accepted.html` and `intro_declined.html`) in TrustSquare brand (dark navy + gold). Both templates use `{{buyer_name}}`, `{{listing_title}}`, `{{category}}`, and `{{city}}` placeholders wired to n8n expressions. BEA decline webhook payload extended to include `category` and `city` (previously missing, now consistent with accept payload). Setup guide written at `n8n/SETUP.md` — covers n8n workflow configuration, placeholder replacement, Hetzner env var deployment (`N8N_WEBHOOK_ACCEPT`, `N8N_WEBHOOK_DECLINE`), payload reference, and curl test command. No BEA endpoint changes required — webhooks were already firing correctly via `_fire_webhook` background task.
+
+**Cost model impact:** None. Email sending cost depends on n8n SMTP provider choice — Resend free tier (3,000 emails/mo) is sufficient for current Pretoria volume.
