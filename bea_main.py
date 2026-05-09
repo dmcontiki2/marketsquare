@@ -1694,13 +1694,15 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = 
     conn.close()
     if N8N_WEBHOOK_DECLINE:
         payload = {
-            "event": "intro_declined",
-            "intro_id": intro_id,
-            "listing_id": intro["listing_id"],
-            "listing_title": listing["title"] if listing else None,
-            "buyer_email": intro["buyer_email"],
-            "buyer_name": intro["buyer_name"],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event":         "intro_declined",
+            "intro_id":      intro_id,
+            "listing_id":    intro["listing_id"],
+            "listing_title": listing["title"]    if listing else None,
+            "category":      listing["category"] if listing else None,
+            "buyer_email":   intro["buyer_email"],
+            "buyer_name":    intro["buyer_name"],
+            "city":          listing["city"]     if listing else None,
+            "timestamp":     datetime.now(timezone.utc).isoformat(),
         }
         background_tasks.add_task(_fire_webhook, N8N_WEBHOOK_DECLINE, payload)
     return {"message": "Introduction declined"}
@@ -6289,6 +6291,107 @@ def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_
     finally:
         conn.close()
     return {"email": email, "seller_tier": tier}
+
+
+# ── DASHBOARD SUMMARY ────────────────────────────────────────
+# Owner-facing live dashboard data — reads STATUS.md, BACKLOG.md, CHANGELOG.md
+# from the project root and combines with live DB stats.
+
+import pathlib as _pathlib, re as _re2
+
+_PROJECT_ROOT = _pathlib.Path(__file__).parent
+
+def _read_file(name: str) -> str:
+    p = _PROJECT_ROOT / name
+    return p.read_text(encoding="utf-8") if p.exists() else ""
+
+def _section(text: str, heading_re: str) -> str:
+    m = _re2.search(heading_re + r"\n(.*?)(?=\n## |\Z)", text, _re2.DOTALL | _re2.IGNORECASE)
+    return m.group(1).strip() if m else ""
+
+def _bullet_items(text: str) -> list:
+    items = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("- ") or line.startswith("* "):
+            items.append(line[2:].strip())
+        elif _re2.match(r"\d+\.", line):
+            items.append(_re2.sub(r"^\d+\.\s*", "", line))
+    return items
+
+def _table_bold_items(text: str) -> list:
+    items = []
+    for row in text.splitlines():
+        m = _re2.search(r"\*\*([^*]+)\*\*", row)
+        if m and row.strip().startswith("|"):
+            items.append(m.group(1))
+    return items
+
+@app.get("/dashboard/summary")
+def dashboard_summary():
+    """Live dashboard data — STATUS.md + BACKLOG.md + CHANGELOG.md + live DB stats.
+    No auth required (data is not sensitive; security layer is the obscure URL).
+    """
+    status    = _read_file("STATUS.md")
+    backlog   = _read_file("BACKLOG.md")
+    changelog = _read_file("CHANGELOG.md")
+
+    # Parse STATUS.md
+    sm = _re2.search(r"Session (\d+)", status)
+    current_session = int(sm.group(1)) if sm else 0
+
+    live_state  = _section(status, r"## Live State")
+    last_done   = _section(status, r"## Last Completed[^\n]*")
+    next_goals  = _section(status, r"## Next Session[^\n]*")
+    known_rules = _section(status, r"## Known Rules[^\n]*")
+
+    # Parse BACKLOG.md
+    blockers  = _table_bold_items(_section(backlog, r"## 🔴 Launch Blockers[^\n]*"))
+    high_pri  = _table_bold_items(_section(backlog, r"## 🟠 High Priority[^\n]*"))
+    medium    = _table_bold_items(_section(backlog, r"## 🟡 Medium Priority[^\n]*"))
+
+    # Parse next session priorities
+    priority_items = _bullet_items(next_goals)
+
+    # Parse CHANGELOG — last 2 sessions
+    cl_sessions = _re2.split(r"\n(?=## Session)", changelog)
+    recent_cl = cl_sessions[0][:1200] if cl_sessions else ""
+
+    # Live DB stats
+    conn = database.get_db()
+    try:
+        def _n(row): return row["n"] if row else 0
+        live_count     = _n(conn.execute("SELECT COUNT(*) as n FROM listings WHERE listing_status='live'").fetchone())
+        seller_count   = _n(conn.execute("SELECT COUNT(*) as n FROM users").fetchone())
+        intro_count    = _n(conn.execute("SELECT COUNT(*) as n FROM intro_requests").fetchone())
+        pending_intros = _n(conn.execute("SELECT COUNT(*) as n FROM intro_requests WHERE status='pending'").fetchone())
+        tuppence_total = _n(conn.execute("SELECT COALESCE(SUM(amount),0) as n FROM transactions WHERE type='topup'").fetchone())
+    finally:
+        conn.close()
+
+    from datetime import datetime as _dt
+    return {
+        "generatedAt": _dt.utcnow().strftime("%d %b %Y · %H:%M UTC"),
+        "currentSession": current_session,
+        "nextSession": current_session + 1,
+        "liveState": live_state,
+        "lastDone": last_done,
+        "nextGoals": next_goals,
+        "knownRules": known_rules,
+        "recentChangelog": recent_cl,
+        "blockers": blockers,
+        "highPriority": high_pri[:6],
+        "medium": medium[:6],
+        "priorityItems": priority_items[:6],
+        "stats": {
+            "liveListings": live_count,
+            "sellers": seller_count,
+            "intros": intro_count,
+            "pendingIntros": pending_intros,
+            "tuppenceTopup": tuppence_total,
+        },
+        "bea_version": "1.3.0",
+    }
 
 
 # ── EMAIL OPT-OUT ────────────────────────────────────────────
