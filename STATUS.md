@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 49 · 10 May 2026**
+**Updated: Session 50 · 10 May 2026**
 
 ---
 
@@ -60,6 +60,21 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - **n8n outreach wave workflow: FULLY LIVE ✅** — tested end-to-end, first email sent to miconradie1@gmail.com, wave report delivered to dmcontiki2@gmail.com, `emailed_at` stamped in CityLauncher DB
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
+
+---
+
+## Last Completed — Session 50
+
+### My Space personal dashboard ✅
+- New `screen-myspace` screen with 4 tabs: Overview, Intros, Trust, Me
+- Bottom nav "Seller" button renamed "My Space" — now routes to personal dashboard
+- Overview: wallet summary (links to existing Tuppence screen), open intro actions with Accept/Decline, 4-stat summary grid
+- Intros tab: received/sent lists loaded live from BEA + wishlist prospects
+- Trust tab: live score bar, 8 per-signal breakdown rendered from new BEA endpoint, AI coaching CTA
+- Me tab: editable display name (localStorage), email, city, member-since date, roles chips, browse history, seller hub link
+- Browse history: tracked client-side in localStorage via `msTrackView()` hooked into `openDetail()`
+- New `GET /users/{email}/trust` BEA endpoint — score + tier + 8 signal objects
+- Fixed pre-existing BEA truncation bug (line 6530 `tuppence_total =` incomplete since prior session) — restored from git
 
 ---
 
@@ -148,7 +163,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 50
+## Next Session — Session 51
 
 ### Priority
 1. **Wave 1 launch** — load real Pretoria Property prospects into CityLauncher DB, trigger Wave 1 with `batch_size=60`, monitor delivery

@@ -1418,3 +1418,11 @@ Replaced the scrolling environment chip row with a fixed 4-chip category bar per
 **Continent vs country discussion.** Decided to keep per-country filtering for now (buyers think in countries for aspirational travel — "I want to go to Namibia" not "I want to go to Africa"). Planned upgrade: two-level continent → country picker when 8+ countries are onboarded. Cape to Cairo route (7 countries, 2 continents) was the trigger for this discussion.
 
 **Cost model impact:** None.
+
+## Session 50 · 10 May 2026 · My Space personal dashboard
+
+**Task: Build unified personal dashboard ("My Space") for buyers and sellers**
+
+Added `screen-myspace` — a 4-tab personal dashboard replacing the "Seller" bottom nav button. Tabs: Overview (wallet summary, open intro actions, 4-stat grid), Intros (received/sent lists + wishlist prospects), Trust (score bar, per-signal breakdown, AI coaching CTA), Me (editable personal details, browse history, seller hub link). Navigation: bottom nav "Seller" button renamed "My Space" (`nav-myspace`), `goTo('myspace')` triggers `msInit()` which hydrates all tabs from localStorage + live BEA data. Browse history tracked client-side (localStorage `ms_browse_history`, max 30 items) via `msTrackView()` hooked into `openDetail()`. Trust score fetched live from new `GET /users/{email}/trust` BEA endpoint — returns score, tier breakdown, 8 per-signal earned/available objects. Trust signals rendered live via `msRenderLiveSignals()`. Profile photo synced from `users.photo_url` via `GET /users/{email}`. Display name editable inline via prompt with localStorage persist. Member-since date saved at first sign-in. Demo mode guard added. BEA pre-existing truncation bug at line 6530 (`tuppence_total =` incomplete) discovered and restored from git history — file was already broken before Session 50.
+
+BEA: new `GET /users/{email}/trust` endpoint (lines 1543–1663) — trust score + tier + 8 signals (email verified, ID verified, profile photo, intro milestones ×3, zero-ignored 90d, tenure 6mo). sqlite3.Row → dict conversion applied. Syntax-verified and deployed.

@@ -938,11 +938,19 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
     if current_status == "live":
         conn.close()
         return {"message": "Listing is already live", "listing_id": listing_id}
-    # Pull the seller's current trust_score from the users table so the
-    # listing row reflects their score at publish time.
+    # Pull the seller's account to enforce EULA gate + get current trust_score
     user_row = conn.execute(
-        "SELECT trust_score FROM users WHERE email = ?", (email,)
+        "SELECT trust_score, eula_accepted_at, is_superuser FROM users WHERE email = ?",
+        (email,)
     ).fetchone()
+    # Superusers bypass the EULA gate (for admin testing)
+    is_super = bool(user_row["is_superuser"]) if user_row else False
+    if user_row and not user_row["eula_accepted_at"] and not is_super:
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail="EULA not accepted — seller must accept the TrustSquare Terms before publishing."
+        )
     user_trust = int(user_row["trust_score"] or 0) if user_row else 0
 
     conn.execute(
@@ -1009,6 +1017,17 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     elif existing["seller_email"] != email:
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
+
+    # EULA gate — seller must have accepted TrustSquare terms before editing
+    user_row_edit = conn.execute(
+        "SELECT eula_accepted_at, is_superuser FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    if user_row_edit and not user_row_edit["eula_accepted_at"] and not bool(user_row_edit["is_superuser"]):
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail="EULA not accepted — please accept the TrustSquare Terms before editing your listing."
+        )
 
     # Archive current snapshot before updating
     version_num = conn.execute(
@@ -1519,6 +1538,129 @@ def get_user(email: str):
     if not row:
         raise HTTPException(status_code=404, detail="User not found")
     return dict(row)
+
+@app.get("/users/{email}/trust")
+def get_user_trust(email: str):
+    """Return trust score + per-signal breakdown for My Space dashboard.
+    Computes earned/available signals from the users table + intro_requests.
+    No API key required — buyer identifies by email."""
+    conn = database.get_db()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+    user = dict(row)
+
+    score = int(user.get("trust_score") or 0)
+
+    # Count completed intros for this seller
+    intro_count = conn.execute(
+        "SELECT COUNT(*) FROM intro_requests WHERE listing_id IN "
+        "(SELECT id FROM listings WHERE seller_email = ?) AND status = 'accepted'",
+        (email,)
+    ).fetchone()[0]
+
+    # Count ignored intros in last 90 days
+    ignored_count = conn.execute(
+        "SELECT COUNT(*) FROM intro_requests WHERE listing_id IN "
+        "(SELECT id FROM listings WHERE seller_email = ?) "
+        "AND status = 'pending' AND created_at < datetime('now', '-48 hours') "
+        "AND created_at > datetime('now', '-90 days')",
+        (email,)
+    ).fetchone()[0]
+
+    # Tenure: earliest listing
+    first_listing = conn.execute(
+        "SELECT MIN(published_at) FROM listings WHERE seller_email = ? AND listing_status = 'live'",
+        (email,)
+    ).fetchone()[0]
+
+    conn.close()
+
+    has_photo    = bool(user["photo_url"])
+    id_verified  = bool(user.get("id_verified_at"))
+    eula_signed  = bool(user.get("eula_accepted_at"))
+
+    import datetime as _dt
+    tenure_6mo = False
+    if first_listing:
+        try:
+            fp = _dt.datetime.fromisoformat(first_listing.replace("Z",""))
+            tenure_6mo = (_dt.datetime.utcnow() - fp).days >= 180
+        except Exception:
+            pass
+
+    signals = [
+        {
+            "key": "email_verified",
+            "name": "Email verified",
+            "points": 15,
+            "earned": eula_signed,
+            "how_to_earn": "Sign in with your email to verify it.",
+        },
+        {
+            "key": "id_verified",
+            "name": "Government-issued ID verified",
+            "points": 15,
+            "earned": id_verified,
+            "how_to_earn": "Upload your ID or passport in your profile.",
+        },
+        {
+            "key": "profile_photo",
+            "name": "Profile photo added",
+            "points": 10,
+            "earned": has_photo,
+            "how_to_earn": "Upload a clear profile photo in your seller dashboard.",
+        },
+        {
+            "key": "intro_1",
+            "name": "First successful introduction",
+            "points": 5,
+            "earned": intro_count >= 1,
+            "how_to_earn": "Accept and complete your first buyer introduction.",
+        },
+        {
+            "key": "intro_5",
+            "name": "5+ successful introductions",
+            "points": 5,
+            "earned": intro_count >= 5,
+            "how_to_earn": "Complete five buyer introductions.",
+        },
+        {
+            "key": "intro_20",
+            "name": "20+ successful introductions",
+            "points": 5,
+            "earned": intro_count >= 20,
+            "how_to_earn": "Complete twenty buyer introductions.",
+        },
+        {
+            "key": "zero_ignored",
+            "name": "Zero ignored introductions (90 days)",
+            "points": 10,
+            "earned": ignored_count == 0 and intro_count > 0,
+            "how_to_earn": "Respond to every introduction within 48 hours.",
+        },
+        {
+            "key": "tenure_6mo",
+            "name": "Active listing for 6+ months",
+            "points": 5,
+            "earned": tenure_6mo,
+            "how_to_earn": "Keep at least one live listing for six months.",
+        },
+    ]
+
+    tier = _trust_tier(score)
+    earned_pts  = sum(s["points"] for s in signals if s["earned"])
+    available_pts = sum(s["points"] for s in signals if not s["earned"])
+
+    return {
+        "email":         email,
+        "score":         score,
+        "tier":          tier,
+        "earned_pts":    earned_pts,
+        "available_pts": available_pts,
+        "intro_count":   intro_count,
+        "signals":       signals,
+    }
 
 @app.post("/users/{email}/photo")
 async def upload_user_photo(email: str, file: UploadFile = File(...)):
@@ -4359,6 +4501,27 @@ def lm_accept_eula(email: str, _key: str = Depends(auth.require_api_key)):
     return {"message": "EULA accepted"}
 
 
+@app.post("/users/{email}/eula")
+def accept_main_eula(email: str, _key: str = Depends(auth.require_api_key)):
+    """Record that a seller has accepted the main TrustSquare EULA.
+    Called by the FEA sell-b flow when an existing seller publishes for the
+    first time (or whenever eula_accepted_at is NULL on their account).
+    Idempotent — safe to call multiple times."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+    conn.execute(
+        "UPDATE users SET eula_accepted_at = COALESCE(eula_accepted_at, datetime('now')) WHERE email = ?",
+        (email,)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "EULA accepted"}
+
+
 # ── TRUST SCORE HUB (Section 3 · v1.3.0) ─────────────────────
 # Per-credential checklist + Haiko tip + penalties section.
 # All point values mirror TRUST_SCORE_CRITERIA.md v1.0 EXACTLY.
@@ -6395,27 +6558,12 @@ def dashboard_summary():
 
 
 # ── EMAIL OPT-OUT ────────────────────────────────────────────
-# Called when a prospect clicks "Unsubscribe" in an outreach email.
-# Writes the suppression back into the CityLauncher SQLite DB via
-# the CityLauncher API (running on same server at localhost:8001).
-# Falls back to logging only if CityLauncher is unreachable.
-
 CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
 
 @app.get("/opt-out")
 async def opt_out(email: str, city_id: int = 0, category: str = ""):
-    """
-    One-click unsubscribe endpoint for outreach emails.
-    Marks the prospect as opted_out in the CityLauncher database.
-    Returns a friendly HTML confirmation page — no account needed.
-
-    Query params:
-      email      — prospect email address (URL-encoded)
-      city_id    — CityLauncher city ID (0 = all cities for this email)
-      category   — listing category (empty = all categories for this email)
-    """
+    """One-click unsubscribe endpoint for outreach emails."""
     _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
-
     suppressed = False
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -6425,13 +6573,11 @@ async def opt_out(email: str, city_id: int = 0, category: str = ""):
             )
             if resp.status_code in (200, 204):
                 suppressed = True
-                _log.info(f"Opt-out confirmed by CityLauncher for {email}")
             else:
                 _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
     except Exception as exc:
         _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
 
-    # Return a clean HTML confirmation regardless of backend success
     html_response = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6454,7 +6600,7 @@ async def opt_out(email: str, city_id: int = 0, category: str = ""):
   <div class="card">
     <div class="icon">✅</div>
     <h1>You're unsubscribed</h1>
-    <p>We've removed <strong>{email}</strong> from our outreach list.<br>
+    <p>We've removed <strong>{{email}}</strong> from our outreach list.<br>
     You won't receive any further emails from TrustSquare about listing opportunities.</p>
     <p style="margin-top:24px; font-size:13px; color:#aaa;">
       Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.

@@ -1469,6 +1469,78 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .lm-trust-banner{padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12.5px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
 .lm-cta{width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;}
 .lm-cta:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ═══════════════════════════════════════════════════
+   MY SPACE  (screen-myspace)
+   Session 50
+═══════════════════════════════════════════════════ */
+.ms-header{background:var(--navy);padding:52px 20px 0;position:relative;}
+.ms-avatar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ms-avatar{width:46px;height:46px;border-radius:50%;background:#2d7a4f;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#b8e6cc;border:2px solid #5cad7f;flex-shrink:0;overflow:hidden;}
+.ms-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.ms-name{color:#fff;font-size:17px;font-weight:700;font-family:'Syne',sans-serif;}
+.ms-sub{color:#90c9a7;font-size:12px;margin-top:2px;}
+.ms-tn-pill{background:var(--accent);color:#1a1209;font-size:12px;font-weight:700;padding:5px 14px;border-radius:50px;cursor:pointer;}
+.ms-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.12);margin:0 -20px;padding:0 20px;}
+.ms-tab{padding:10px 14px;font-size:13px;color:rgba(255,255,255,.5);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;}
+.ms-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.ms-body{padding:16px 16px 100px;}
+.ms-section-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:0 0 6px 2px;}
+.ms-card{background:#fff;border:0.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+.ms-metric-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+.ms-metric{background:var(--surface);border-radius:10px;padding:10px 12px;}
+.ms-metric-val{font-size:22px;font-weight:700;color:var(--navy);font-family:'Syne',sans-serif;}
+.ms-metric-lbl{font-size:11px;color:var(--text-3);margin-top:2px;}
+.ms-wallet-big{font-size:34px;font-weight:700;color:var(--navy);font-family:'Syne',sans-serif;}
+.ms-wallet-sub{font-size:12px;color:var(--text-3);margin-top:2px;}
+.ms-wallet-btns{display:flex;gap:8px;margin-top:12px;}
+.ms-wallet-btn{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:50px;cursor:pointer;color:var(--navy);background:transparent;font-family:'Inter',sans-serif;}
+.ms-wallet-btn:hover{background:var(--surface);}
+.ms-intro-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);}
+.ms-intro-item:last-child{border-bottom:none;padding-bottom:0;}
+.ms-intro-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.ms-ia-green{background:#e1f5ee;color:#0f6e56;}
+.ms-ia-blue{background:#e6f1fb;color:#185fa5;}
+.ms-ia-amber{background:#faeeda;color:#854f0b;}
+.ms-ia-coral{background:#faece7;color:#993c1d;}
+.ms-intro-name{font-size:13px;font-weight:600;color:var(--navy);}
+.ms-intro-meta{font-size:11px;color:var(--text-3);margin-top:1px;}
+.ms-chip{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap;}
+.ms-chip-new{background:#e6f1fb;color:#185fa5;}
+.ms-chip-pending{background:#faeeda;color:#854f0b;}
+.ms-chip-done{background:#eaf3de;color:#3b6d11;}
+.ms-chip-declined{background:#fcebeb;color:#a32d2d;}
+.ms-action-btns{display:flex;gap:5px;flex-shrink:0;}
+.ms-btn-sm{font-size:11px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--navy);font-family:'Inter',sans-serif;}
+.ms-btn-sm.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+.ms-trust-score{font-size:36px;font-weight:700;color:#1a7a4a;font-family:'Syne',sans-serif;}
+.ms-trust-bar-bg{height:7px;background:var(--surface);border-radius:4px;flex:1;}
+.ms-trust-bar-fill{height:7px;border-radius:4px;background:#2d7a4f;}
+.ms-signal-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.ms-sig-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.ms-sig-done{background:#eaf3de;color:#3b6d11;}
+.ms-sig-miss{background:#fcebeb;color:#a32d2d;}
+.ms-signal-text{font-size:12px;color:var(--text-2);flex:1;}
+.ms-signal-pts{font-size:11px;font-weight:700;}
+.ms-pts-earned{color:#3b6d11;}
+.ms-pts-avail{color:#a32d2d;}
+.ms-ai-btn{width:100%;margin-top:10px;padding:10px;font-size:13px;border:1.5px solid var(--navy);border-radius:50px;background:transparent;cursor:pointer;color:var(--navy);font-family:'Syne',sans-serif;font-weight:600;}
+.ms-ai-btn:hover{background:var(--navy);color:#fff;}
+.ms-detail-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--border);}
+.ms-detail-row:last-child{border-bottom:none;}
+.ms-detail-lbl{font-size:12px;color:var(--text-3);}
+.ms-detail-val{font-size:13px;color:var(--navy);font-weight:500;}
+.ms-edit-link{font-size:12px;color:#185fa5;cursor:pointer;font-weight:600;}
+.ms-hist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;}
+.ms-hist-item:last-child{border-bottom:none;}
+.ms-hist-thumb{width:38px;height:38px;border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.ms-hist-thumb img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.ms-hist-title{font-size:13px;font-weight:600;color:var(--navy);}
+.ms-hist-meta{font-size:11px;color:var(--text-3);margin-top:1px;}
+.ms-seller-link{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.ms-tab-content{display:none;}
+.ms-tab-content.active{display:block;}
+.ms-empty{text-align:center;padding:28px 0;color:var(--text-3);font-size:13px;}
 </style>
 </head>
 <body>
@@ -3396,6 +3468,174 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   </div>
 </div>
 
+
+<!-- MY SPACE SCREEN (Session 50) -->
+<div id="screen-myspace" class="screen">
+  <div class="ms-header">
+    <div class="ms-avatar-row">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="ms-avatar" id="ms-avatar-el"><span id="ms-avatar-initials">?</span></div>
+        <div>
+          <div class="ms-name" id="ms-display-name">My Space</div>
+          <div class="ms-sub" id="ms-display-sub">TrustSquare member</div>
+        </div>
+      </div>
+      <div class="ms-tn-pill" id="ms-tn-pill" onclick="goTo('tuppence')">5 T</div>
+    </div>
+    <div class="ms-tabs" id="ms-tabs">
+      <div class="ms-tab active" onclick="msTab('overview',this)">Overview</div>
+      <div class="ms-tab" onclick="msTab('intros',this)">Intros</div>
+      <div class="ms-tab" onclick="msTab('trust',this)">Trust</div>
+      <div class="ms-tab" onclick="msTab('me',this)">Me</div>
+    </div>
+  </div>
+  <div class="ms-body">
+
+    <!-- ── OVERVIEW TAB ── -->
+    <div id="ms-tab-overview" class="ms-tab-content active">
+      <div class="ms-section-lbl">Wallet</div>
+      <div class="ms-card" style="margin-bottom:12px;">
+        <div class="ms-wallet-big"><span id="ms-wallet-balance">5</span> <span style="font-size:16px;color:var(--text-3);font-weight:400;">Tuppence</span></div>
+        <div class="ms-wallet-sub">Introduction currency · earn by completing deals</div>
+        <div class="ms-wallet-btns">
+          <button class="ms-wallet-btn" onclick="goTo('tuppence')">📥 History</button>
+          <button class="ms-wallet-btn" onclick="goTo('tuppence')">🏪 Buy Pack</button>
+        </div>
+      </div>
+
+      <div class="ms-section-lbl">Open actions</div>
+      <div class="ms-card" id="ms-open-actions">
+        <div class="ms-empty">No pending actions</div>
+      </div>
+
+      <div class="ms-section-lbl">Summary</div>
+      <div class="ms-metric-row">
+        <div class="ms-metric"><div class="ms-metric-val" id="ms-stat-recv">–</div><div class="ms-metric-lbl">Intros received</div></div>
+        <div class="ms-metric"><div class="ms-metric-val" id="ms-stat-sent">–</div><div class="ms-metric-lbl">Intros sent</div></div>
+        <div class="ms-metric"><div class="ms-metric-val" id="ms-stat-trust">–</div><div class="ms-metric-lbl">Trust score</div></div>
+        <div class="ms-metric"><div class="ms-metric-val" id="ms-stat-wish">–</div><div class="ms-metric-lbl">Wishlisted</div></div>
+      </div>
+    </div>
+
+    <!-- ── INTROS TAB ── -->
+    <div id="ms-tab-intros" class="ms-tab-content">
+      <div class="ms-section-lbl">Received</div>
+      <div class="ms-card" id="ms-intros-recv">
+        <div class="ms-empty">No intros received yet</div>
+      </div>
+
+      <div class="ms-section-lbl">Sent</div>
+      <div class="ms-card" id="ms-intros-sent">
+        <div class="ms-empty">No intros sent yet</div>
+      </div>
+
+      <div class="ms-section-lbl">Wishlist</div>
+      <div class="ms-card" id="ms-wishlist-cards">
+        <div class="ms-empty">No saved listings</div>
+      </div>
+    </div>
+
+    <!-- ── TRUST TAB ── -->
+    <div id="ms-tab-trust" class="ms-tab-content">
+      <div class="ms-card" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div class="ms-trust-score" id="ms-trust-score-val">–</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px;">out of 100</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;" id="ms-trust-standing">–</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;" id="ms-trust-pct">–</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="ms-trust-bar-bg"><div class="ms-trust-bar-fill" id="ms-trust-bar" style="width:0%"></div></div>
+          <span style="font-size:12px;color:var(--text-3);" id="ms-trust-bar-pct">0%</span>
+        </div>
+      </div>
+
+      <div class="ms-section-lbl">Trust signals</div>
+      <div class="ms-card" id="ms-trust-signals">
+        <div class="ms-signal-row">
+          <div class="ms-sig-icon ms-sig-done">✓</div>
+          <div class="ms-signal-text">Email verified</div>
+          <span class="ms-signal-pts ms-pts-earned">+15</span>
+        </div>
+        <div class="ms-signal-row">
+          <div class="ms-sig-icon ms-sig-miss">✗</div>
+          <div class="ms-signal-text">Phone number not verified</div>
+          <span class="ms-signal-pts ms-pts-avail">+15 available</span>
+        </div>
+        <div class="ms-signal-row">
+          <div class="ms-sig-icon ms-sig-miss">✗</div>
+          <div class="ms-signal-text">Add a profile photo</div>
+          <span class="ms-signal-pts ms-pts-avail">+10 available</span>
+        </div>
+        <div class="ms-signal-row">
+          <div class="ms-sig-icon ms-sig-miss">✗</div>
+          <div class="ms-signal-text">Complete your first intro</div>
+          <span class="ms-signal-pts ms-pts-avail">+20 available</span>
+        </div>
+        <div class="ms-signal-row">
+          <div class="ms-sig-icon ms-sig-miss">✗</div>
+          <div class="ms-signal-text">ID verification</div>
+          <span class="ms-signal-pts ms-pts-avail">+20 available</span>
+        </div>
+      </div>
+
+      <div class="ms-card">
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:4px;">Improve your trust score with AI guidance</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">Get a personalised action plan to build credibility</div>
+        <button class="ms-ai-btn" onclick="msAskAI()">✨ Ask AI how to improve my score →</button>
+      </div>
+    </div>
+
+    <!-- ── ME TAB ── -->
+    <div id="ms-tab-me" class="ms-tab-content">
+      <div class="ms-section-lbl">Personal details</div>
+      <div class="ms-card" id="ms-personal-details">
+        <div class="ms-detail-row">
+          <div class="ms-detail-lbl">Display name</div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="ms-detail-val" id="ms-pd-name">–</span><span class="ms-edit-link" onclick="msEditField('name')">Edit</span></div>
+        </div>
+        <div class="ms-detail-row">
+          <div class="ms-detail-lbl">Email</div>
+          <div class="ms-detail-val" id="ms-pd-email" style="font-size:12px;">–</div>
+        </div>
+        <div class="ms-detail-row">
+          <div class="ms-detail-lbl">City</div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="ms-detail-val" id="ms-pd-city">–</span><span class="ms-edit-link" onclick="goTo('browse')">Change</span></div>
+        </div>
+        <div class="ms-detail-row">
+          <div class="ms-detail-lbl">Member since</div>
+          <div class="ms-detail-val" id="ms-pd-since">–</div>
+        </div>
+        <div class="ms-detail-row">
+          <div class="ms-detail-lbl">Roles</div>
+          <div style="display:flex;align-items:center;gap:6px;" id="ms-pd-roles">
+            <span class="ms-chip ms-chip-done">Buyer</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ms-section-lbl">Browse history</div>
+      <div class="ms-card" id="ms-history-list">
+        <div class="ms-empty">No browsing history yet</div>
+      </div>
+
+      <div class="ms-section-lbl">Seller hub</div>
+      <div class="ms-card ms-seller-link" onclick="goTo('dashboard')">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy);">My listings &amp; requests</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:3px;">Manage what you sell on TrustSquare</div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bnav">
   <button class="nb active" id="nav-home" onclick="goTo('home')">
@@ -3411,8 +3651,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="tn-badge" id="nav-tn-badge">5</div>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Wallet
   </button>
-  <button class="nb" id="nav-dashboard" onclick="goTo('dashboard')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Seller
+  <button class="nb" id="nav-myspace" onclick="goTo('myspace')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Space
   </button>
   <!-- DEMO MODE: join CTA replaces Sell/Wallet/Seller -->
   <button class="nb" id="nav-demo-join" onclick="demoBannerJoin()" style="display:none;background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:#fff;border-radius:50px;padding:0 18px;font-size:12px;font-weight:700;flex:2;max-width:200px;">
@@ -4376,6 +4616,7 @@ async function signInSeller() {
       const name = user.name || email;
       localStorage.setItem('ms_aa_email', email);
       localStorage.setItem('ms_aa_name',  name);
+      if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString());
       localStorage.setItem('ms_superuser', user.is_superuser ? '1' : '0');
       sessionStorage.setItem('aa_email',   email);
       msg.style.color   = 'var(--green)';
@@ -4442,7 +4683,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans')) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace')) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -4477,6 +4718,7 @@ function goTo(name){
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
   if(name==='tuppence')aaLoadWalletSessions();
+  if(name==='myspace')msInit();
   window.scrollTo(0,0);
 }
 function setPlan(tier, label){
@@ -5688,6 +5930,7 @@ function catCfg(l){
 
 function openDetail(id){
   const l=findListing(id);
+  msTrackView(l);
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
   const t=trustTier(l.trust),m=catCfg(l).model,isCommit=m==='commit';
@@ -11604,6 +11847,351 @@ async function lmSubmitIntro(listingId, name, email, message) {
     showToast('✓ Introduction requested · seller has 48hrs to respond');
   } catch(e) {
     showToast('Could not submit introduction: ' + e.message);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   MY SPACE — Session 50
+   msInit() called by goTo('myspace')
+   browse history tracked via msTrackView(listing)
+══════════════════════════════════════════════════════════ */
+const MS_HISTORY_KEY = 'ms_browse_history';
+const MS_HISTORY_MAX = 30;
+
+function msInit(){
+  const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  const name  = localStorage.getItem('ms_user_name') || '';
+  const city  = (typeof activeCity !== 'undefined' && activeCity.name) ? activeCity.name
+               : localStorage.getItem('ms_user_city') || '–';
+
+  // Avatar / header
+  const initials = name ? name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') : (email ? email[0].toUpperCase() : '?');
+  const av = document.getElementById('ms-avatar-initials');
+  if(av) av.textContent = initials;
+
+  // Profile photo if available
+  const photoUrl = localStorage.getItem('ms_user_photo');
+  if(photoUrl){
+    const avEl = document.getElementById('ms-avatar-el');
+    if(avEl) avEl.innerHTML = '<img src="'+photoUrl+'" alt="avatar">';
+  }
+
+  const dispName = document.getElementById('ms-display-name');
+  if(dispName) dispName.textContent = name || (email ? email.split('@')[0] : 'My Space');
+
+  const dispSub = document.getElementById('ms-display-sub');
+  if(dispSub) dispSub.textContent = email || 'TrustSquare member';
+
+  // Wallet badge
+  const tnBadge = document.getElementById('nav-tn-badge');
+  const walBal  = tnBadge ? (parseInt(tnBadge.textContent)||5) : 5;
+  const msPill  = document.getElementById('ms-tn-pill');
+  if(msPill) msPill.textContent = walBal + ' T';
+  const msWalBal = document.getElementById('ms-wallet-balance');
+  if(msWalBal) msWalBal.textContent = walBal;
+
+  // Personal details tab
+  const pdName = document.getElementById('ms-pd-name');
+  if(pdName) pdName.textContent = name || '–';
+  const pdEmail = document.getElementById('ms-pd-email');
+  if(pdEmail) pdEmail.textContent = email || '–';
+  const pdCity = document.getElementById('ms-pd-city');
+  if(pdCity) pdCity.textContent = city;
+
+  // Member since
+  const joinedRaw = localStorage.getItem('ms_joined_date');
+  const joined = joinedRaw ? new Date(joinedRaw).toLocaleDateString('en-ZA',{month:'long',year:'numeric'})
+                           : new Date().toLocaleDateString('en-ZA',{month:'long',year:'numeric'});
+  const pdSince = document.getElementById('ms-pd-since');
+  if(pdSince) pdSince.textContent = joined;
+
+  // Roles
+  const pdRoles = document.getElementById('ms-pd-roles');
+  if(pdRoles){
+    const hasSeller = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email');
+    pdRoles.innerHTML = '<span class="ms-chip ms-chip-done">Buyer</span>'
+      + (hasSeller ? ' <span class="ms-chip ms-chip-new">Seller</span>' : '');
+  }
+
+  // Trust score (use cached, then fetch live from BEA)
+  const storedTrust = parseInt(localStorage.getItem('ms_trust_score')) || 15;
+  msRenderTrust(storedTrust);
+  if(email && BEA_ENABLED){
+    // Fetch trust breakdown from dedicated endpoint
+    fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/trust')
+      .then(r=>r.ok?r.json():null)
+      .then(td=>{
+        if(!td) return;
+        const live = parseInt(td.score)||storedTrust;
+        localStorage.setItem('ms_trust_score', live);
+        msRenderTrust(live);
+        msUpdateStats(walBal, live);
+        // Render live signals
+        if(td.signals && td.signals.length) msRenderLiveSignals(td.signals);
+      }).catch(()=>{});
+    // Also fetch full user for photo
+    fetch(BEA_URL+'/users/'+encodeURIComponent(email))
+      .then(r=>r.ok?r.json():null)
+      .then(ud=>{
+        if(!ud) return;
+        if(ud.photo_url){
+          localStorage.setItem('ms_user_photo', ud.photo_url);
+          const avEl = document.getElementById('ms-avatar-el');
+          if(avEl) avEl.innerHTML = '<img src="'+ud.photo_url+'" alt="avatar">';
+        }
+      }).catch(()=>{});
+  }
+
+  // Intros
+  msLoadIntros(email);
+
+  // Wishlist
+  msRenderWishlist();
+
+  // Browse history
+  msRenderHistory();
+
+  // Stats
+  msUpdateStats(walBal, storedTrust);
+
+  // Ensure first tab shown
+  msTab('overview', document.querySelector('.ms-tab'));
+}
+
+function msTab(name, el){
+  document.querySelectorAll('.ms-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.ms-tab-content').forEach(t=>t.classList.remove('active'));
+  const tc = document.getElementById('ms-tab-'+name);
+  if(tc) tc.classList.add('active');
+}
+
+function msRenderTrust(score){
+  const sv = document.getElementById('ms-trust-score-val');
+  if(sv) sv.textContent = score;
+  const bar = document.getElementById('ms-trust-bar');
+  if(bar) bar.style.width = score+'%';
+  const barPct = document.getElementById('ms-trust-bar-pct');
+  if(barPct) barPct.textContent = score+'%';
+
+  let standing = 'Getting started', colour = '#854f0b';
+  if(score >= 80){ standing='Excellent'; colour='#0f6e56'; }
+  else if(score >= 60){ standing='Good standing'; colour='#3b6d11'; }
+  else if(score >= 40){ standing='Building trust'; colour='#854f0b'; }
+
+  const st = document.getElementById('ms-trust-standing');
+  if(st){ st.textContent = standing; st.style.color = colour; }
+
+  // Approximate percentile (rough heuristic)
+  const pct = Math.max(5, 100 - score);
+  const tp = document.getElementById('ms-trust-pct');
+  if(tp) tp.textContent = 'Top '+pct+'% of members';
+}
+
+function msRenderLiveSignals(signals){
+  const el = document.getElementById('ms-trust-signals');
+  if(!el) return;
+  el.innerHTML = signals.map(sig => {
+    const earned = sig.earned;
+    const iconClass = earned ? 'ms-sig-done' : 'ms-sig-miss';
+    const icon = earned ? '✓' : '✗';
+    const ptsClass = earned ? 'ms-pts-earned' : 'ms-pts-avail';
+    const ptsLabel = earned ? '+'+sig.points : '+'+sig.points+' available';
+    return '<div class="ms-signal-row">'
+      +'<div class="ms-sig-icon '+iconClass+'">'+icon+'</div>'
+      +'<div class="ms-signal-text" title="'+sig.how_to_earn+'">'+sig.name+'</div>'
+      +'<span class="ms-signal-pts '+ptsClass+'">'+ptsLabel+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+function msUpdateStats(walBal, trust){
+  const recv = document.getElementById('ms-stat-recv');
+  const sent = document.getElementById('ms-stat-sent');
+  const tst  = document.getElementById('ms-stat-trust');
+  const wish = document.getElementById('ms-stat-wish');
+  const saved = JSON.parse(localStorage.getItem('ms_saved') || '[]');
+  if(recv) recv.textContent = parseInt(localStorage.getItem('ms_intros_recv')||'0');
+  if(sent) sent.textContent = parseInt(localStorage.getItem('ms_intros_sent')||'0');
+  if(tst)  tst.textContent  = trust+'%';
+  if(wish) wish.textContent = saved.length;
+}
+
+async function msLoadIntros(email){
+  if(!email || !BEA_ENABLED){ msRenderIntrosFallback(); return; }
+  try {
+    // Fetch intros where this buyer is the buyer (sent by them)
+    const res = await fetch(BEA_URL+'/intros?status=all');
+    if(!res.ok){ msRenderIntrosFallback(); return; }
+    const data = await res.json();
+    const all = Array.isArray(data) ? data : (data.items || []);
+
+    const sent = all.filter(i => (i.buyer_email||'').toLowerCase() === email.toLowerCase());
+    const recv = []; // received = intros on MY listings — we'll leave as placeholder for now
+
+    localStorage.setItem('ms_intros_sent', sent.length);
+    msRenderIntroList('ms-intros-sent', sent, 'sent');
+    msRenderIntroList('ms-intros-recv', recv, 'received');
+    msRenderOpenActions(sent.concat(recv));
+    msUpdateStats(0, parseInt(localStorage.getItem('ms_trust_score')||'15'));
+  } catch(e){ msRenderIntrosFallback(); }
+}
+
+function msRenderIntrosFallback(){
+  // Show empty state gracefully
+  const recvEl = document.getElementById('ms-intros-recv');
+  if(recvEl) recvEl.innerHTML = '<div class="ms-empty">Intros will appear here once you request one</div>';
+  const sentEl = document.getElementById('ms-intros-sent');
+  if(sentEl) sentEl.innerHTML = '<div class="ms-empty">Intros you send will appear here</div>';
+  const oaEl = document.getElementById('ms-open-actions');
+  if(oaEl) oaEl.innerHTML = '<div class="ms-empty">No pending actions</div>';
+}
+
+const MS_COLORS = ['ms-ia-green','ms-ia-blue','ms-ia-amber','ms-ia-coral'];
+function msColorFor(str){ let h=0; for(let i=0;i<(str||'').length;i++) h=(h*31+str.charCodeAt(i))&0xffff; return MS_COLORS[h % MS_COLORS.length]; }
+function msInitials(email){ const n=(email||'').split('@')[0]; return n.slice(0,2).toUpperCase(); }
+
+function msRenderIntroList(elId, items, dir){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!items || !items.length){
+    el.innerHTML = '<div class="ms-empty">'+(dir==='sent'?'No intros sent yet':'No intros received yet')+'</div>';
+    return;
+  }
+  el.innerHTML = items.slice(0,8).map(i => {
+    const statusMap = {pending:'<span class="ms-chip ms-chip-pending">Pending</span>',
+                       accepted:'<span class="ms-chip ms-chip-done">Accepted</span>',
+                       declined:'<span class="ms-chip ms-chip-declined">Declined</span>',
+                       new:'<span class="ms-chip ms-chip-new">New</span>'};
+    const chip = statusMap[i.status||'pending'] || statusMap['pending'];
+    const ident = dir==='sent' ? (i.seller_email||i.listing_id||'Seller') : (i.buyer_email||'Buyer');
+    const initials = msInitials(ident);
+    const colour = msColorFor(ident);
+    const meta = 'Listing #'+(i.listing_id||'–')+' · '+(i.created_at ? new Date(i.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : '–');
+    return '<div class="ms-intro-item">'
+      +'<div class="ms-intro-avatar '+colour+'">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ident+'</div>'
+      +'<div class="ms-intro-meta">'+meta+'</div></div>'
+      +chip+'</div>';
+  }).join('');
+}
+
+function msRenderOpenActions(items){
+  const el = document.getElementById('ms-open-actions');
+  if(!el) return;
+  const pending = (items||[]).filter(i => i.status==='pending');
+  if(!pending.length){ el.innerHTML = '<div class="ms-empty">No pending actions — you're all clear</div>'; return; }
+  el.innerHTML = pending.slice(0,3).map(i => {
+    const ident = i.buyer_email || i.seller_email || 'Member';
+    const colour = msColorFor(ident);
+    const initials = msInitials(ident);
+    return '<div class="ms-intro-item">'
+      +'<div class="ms-intro-avatar '+colour+'">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="ms-intro-name">Intro pending</div>'
+      +'<div class="ms-intro-meta">Listing #'+i.listing_id+'</div></div>'
+      +'<div class="ms-action-btns">'
+      +'<button class="ms-btn-sm" onclick="showToast('Declined')">Decline</button>'
+      +'<button class="ms-btn-sm primary" onclick="showToast('Accepted!')">Accept</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function msRenderWishlist(){
+  const el = document.getElementById('ms-wishlist-cards');
+  if(!el) return;
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem('ms_saved') || '[]'); } catch(e){}
+  if(!saved.length){ el.innerHTML = '<div class="ms-empty">No saved listings — tap ♥ on any card</div>'; return; }
+  // Find listing objects from LISTINGS array
+  const all = (typeof LISTINGS !== 'undefined') ? LISTINGS : [];
+  const items = saved.map(id => all.find(l=>l.id===id||l.id==='bea_'+id)).filter(Boolean);
+  if(!items.length){ el.innerHTML = '<div class="ms-empty">Saved listings will appear here</div>'; return; }
+  el.innerHTML = items.slice(0,5).map(l => {
+    const icon = l.cat==='Adventures'?'🌄':l.cat==='Property'?'🏠':l.cat==='Tutors'?'📚':l.cat==='Services'?'🔧':'🛍';
+    const thumb = l.photo ? '<img src="'+l.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">' : icon;
+    return '<div class="ms-hist-item" onclick="openDetail(''+l.id+'')">'
+      +'<div class="ms-hist-thumb">'+thumb+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="ms-hist-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.title||'–')+'</div>'
+      +'<div class="ms-hist-meta">'+(l.cat||'')+(l.price?' · '+l.price:'')+'</div></div>'
+      +'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>'
+      +'</div>';
+  }).join('');
+}
+
+// Track a listing view in browse history (call from openDetail)
+function msTrackView(listing){
+  if(!listing || !listing.id) return;
+  try {
+    let hist = JSON.parse(localStorage.getItem(MS_HISTORY_KEY)||'[]');
+    hist = hist.filter(h => h.id !== listing.id);
+    hist.unshift({ id:listing.id, title:listing.title, cat:listing.cat, price:listing.price, photo:listing.photo||null, ts: Date.now() });
+    if(hist.length > MS_HISTORY_MAX) hist = hist.slice(0, MS_HISTORY_MAX);
+    localStorage.setItem(MS_HISTORY_KEY, JSON.stringify(hist));
+  } catch(e){}
+}
+
+function msRenderHistory(){
+  const el = document.getElementById('ms-history-list');
+  if(!el) return;
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(MS_HISTORY_KEY)||'[]'); } catch(e){}
+  if(!hist.length){ el.innerHTML = '<div class="ms-empty">Listings you view will appear here</div>'; return; }
+  el.innerHTML = hist.slice(0,8).map(h => {
+    const icon = h.cat==='Adventures'?'🌄':h.cat==='Property'?'🏠':h.cat==='Tutors'?'📚':h.cat==='Services'?'🔧':'🛍';
+    const thumb = h.photo ? '<img src="'+h.photo+'" alt="">' : icon;
+    const ago = msTimeAgo(h.ts);
+    return '<div class="ms-hist-item" onclick="openDetail(''+h.id+'')">'
+      +'<div class="ms-hist-thumb">'+thumb+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="ms-hist-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(h.title||'–')+'</div>'
+      +'<div class="ms-hist-meta">'+(h.cat||'')+' · '+ago+'</div></div>'
+      +'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>'
+      +'</div>';
+  }).join('');
+}
+
+function msTimeAgo(ts){
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff/60000);
+  if(m < 2) return 'just now';
+  if(m < 60) return m+' min ago';
+  const h = Math.floor(m/60);
+  if(h < 24) return h+' hr ago';
+  const d = Math.floor(h/24);
+  if(d < 7) return d+' day'+(d>1?'s':'')+' ago';
+  return new Date(ts).toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+}
+
+function msEditField(field){
+  if(field==='name'){
+    const current = localStorage.getItem('ms_user_name') || '';
+    const val = prompt('Enter your display name:', current);
+    if(val === null) return;
+    const trimmed = val.trim();
+    if(!trimmed){ showToast('Name cannot be empty'); return; }
+    localStorage.setItem('ms_user_name', trimmed);
+    const pdName = document.getElementById('ms-pd-name');
+    if(pdName) pdName.textContent = trimmed;
+    const msName = document.getElementById('ms-display-name');
+    if(msName) msName.textContent = trimmed;
+    // Update initials
+    const initials = trimmed.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+    const av = document.getElementById('ms-avatar-initials');
+    if(av) av.textContent = initials;
+    showToast('Name updated');
+  }
+}
+
+function msAskAI(){
+  const score = parseInt(localStorage.getItem('ms_trust_score')||'15');
+  const email = localStorage.getItem('ms_user_email') || '';
+  const msg = 'My TrustSquare trust score is '+score+'/100. I want to improve it. What are the most impactful steps I can take? My email is '+(email||'not set')+'.';
+  // Open a browser-side prompt for now (AI coaching via AA system if available)
+  if(typeof aaInit === 'function'){
+    showToast('Opening AI Coach...');
+    goTo('aa-home');
+  } else {
+    showToast('AI Coach available in seller mode');
   }
 }
 
