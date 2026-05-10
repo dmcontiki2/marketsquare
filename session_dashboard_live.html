@@ -221,44 +221,7 @@
 
 <script>
 // ── Data injected by session_dashboard.py ──────────────────
-const DATA = {"generatedAt": "10 May 2026 · Session 49", "currentSession": 49, "nextSession": 50, "liveState": "- **Legal entity: Trustsquare (Pty) Ltd · Reg 2026/340128/07**
-- BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
-- Launch city: Pretoria · 5 live listings (Maroushka) · 80 demo listings (10 stays added)
-- **n8n outreach wave FULLY LIVE** · first email sent · emailed_at stamped
-- Adventures page fully redesigned — category chips + bottom sheets
-- GitHub: github.com/dmcontiki2/marketsquare", "lastDone": "### Adventures category system redesign ✅
-- Scrolling env chips replaced with fixed 4-chip bar inside dark hero
-- Chip row hidden on All tab, shown for Stays/Experiences only
-- More ▾ bottom sheet: 7 experience types / 8 accommodation types
-- Gold active = Experiences · Blue active = Stays
-- 10 luxury demo stays added: Private Lodge · Bush Camp · Mountain Retreat · Coastal & Island · Boutique Hotel · Self-Catering · Unique Stays · Glamping Pod · Sossusvlei Lodge NA · Cederberg Cave House
-- Card badges show specific category type with colour coding
-- Environment filter normalisation bug fixed", "nextGoals": "### Priority
-1. Wave 1 — load real Pretoria prospects into CityLauncher DB, fire batch_size=60
-2. Paystack live mode — awaiting CIPC bank account
-3. Adventures detail view upgrade — photo thumbnail row + stat strip in openDetail()", "knownRules": "- NEVER Edit/Write marketsquare.html or bea_main.py — Python replace only
-- BEA venv: /var/www/marketsquare/venv/bin/pip
-- Git: David commits from PowerShell only
-- SSH key: bash load_sandbox_ssh.sh at session start
-- Dashboard update MANDATORY at session end", "recentChangelog": "## Session 49 · 10 May 2026 · Adventures redesign
-
-Full Adventures category system built: fixed 4-chip bar + More bottom sheet. 7 experience types and 8 accommodation types. 10 luxury demo stays added spanning ZA, MZ, NA. Card badges upgraded to show specific category. Environment filter bug fixed. Continent vs country discussion resolved — keep per-country, plan two-level continent→country picker at 8+ countries.", "blockers": ["Paystack live mode — awaiting CIPC bank account"], "highPriority": ["Wave 1 — load real Pretoria prospects", "Paystack live mode", "Adventures detail view upgrade", "Email template visual QA"], "directions": [{"id": "dir_next", "project": "TrustSquare", "title": "Session 50 — Wave 1 + Paystack", "colour": "#3b82f6", "items": ["Load real Pretoria Property prospects into CityLauncher DB", "Trigger Wave 1: batch_size=60, city_id=1, category=Property", "Paystack live mode (pending CIPC bank account)", "Adventures detail view upgrade — photo strip + stat strip in openDetail()"], "prompt": "Read STATUS.md and AGENT_BRIEFING.md first.
-
-State: TrustSquare live at trustsquare.co · BEA v1.3.0 · Session 49 complete.
-
-Session 50 goals:
-1. Wave 1 — load real Pretoria Property prospects into CityLauncher DB and fire batch_size=60
-2. Paystack live mode (pending CIPC)
-3. Adventures detail view upgrade", "mobile_prompt": "TrustSquare Session 50.
-1. Fire Wave 1 to real Pretoria prospects
-2. Adventures detail view upgrade"}, {"id": "dir_blockers", "project": "TrustSquare", "title": "Launch Blockers", "colour": "#ef4444", "items": ["Paystack live mode — awaiting CIPC bank account"], "prompt": "Read STATUS.md and AGENT_BRIEFING.md first.
-
-Launch blockers:
-1. Paystack live mode — awaiting CIPC bank account", "mobile_prompt": "TrustSquare launch blockers: Paystack live mode."}, {"id": "dir_cl", "project": "CityLauncher", "title": "CityLauncher — Session 20+", "colour": "#8b5cf6", "items": ["See CityLauncher STATUS.md"], "prompt": "Read C:\Users\David\Projects\CityLauncher\STATUS.md first.
-
-CityLauncher goal: Continue from STATUS.md", "mobile_prompt": "Help me with CityLauncher next steps."}, {"id": "dir_aa", "project": "AdvertAgent", "title": "AdvertAgent — Kickoff", "colour": "#f59e0b", "items": ["Read PRINCIPLE_REQUIREMENTS.md Part G", "Define architecture and file map"], "prompt": "Read C:\Users\David\Projects\AdvertAgent\STATUS.md and PRINCIPLE_REQUIREMENTS.md first.
-
-AdvertAgent Session 1: Kickoff.", "mobile_prompt": "Help me design the AdvertAgent architecture."}], "clSession": "20", "clLast": ""};
+const DATA = {"generatedAt": "10 May 2026 - Session 49", "currentSession": 49, "nextSession": 50, "liveState": "Legal entity: Trustsquare (Pty) Ltd. BEA v1.3.0 live at trustsquare.co. Launch city: Pretoria - 5 live listings - 80 demo listings. n8n outreach wave FULLY LIVE. Adventures page redesigned.", "lastDone": "Adventures category system redesign. Fixed 4-chip bar inside dark hero (hidden on All tab). More bottom sheet: 7 experience types and 8 accommodation types. Gold active = Experiences, Blue active = Stays. 10 luxury demo stays added across ZA, MZ, NA. Card badges show specific category type. Environment filter normalisation bug fixed.", "nextGoals": "Priority: 1. Wave 1 - load real Pretoria prospects into CityLauncher DB, fire batch_size=60. 2. Paystack live mode - awaiting CIPC bank account. 3. Adventures detail view upgrade - photo thumbnail row and stat strip.", "knownRules": "NEVER Edit/Write marketsquare.html or bea_main.py - Python replace only. BEA venv: /var/www/marketsquare/venv/bin/pip. Git: David commits from PowerShell only. SSH key: bash load_sandbox_ssh.sh at session start. Dashboard update MANDATORY at session end.", "recentChangelog": "Session 49 - 10 May 2026. Adventures category system redesigned: fixed 4-chip bar + More bottom sheet with 7 experience and 8 accommodation types. 10 luxury stays added (ZA, MZ, NA). Card badges upgraded. Environment filter bug fixed.", "blockers": ["Paystack live mode - awaiting CIPC bank account"], "highPriority": ["Wave 1 - load real Pretoria prospects", "Paystack live mode", "Adventures detail view upgrade", "Email template visual QA"], "directions": [{"id": "dir_next", "project": "TrustSquare", "title": "Session 50 - Wave 1 + Paystack", "colour": "#3b82f6", "items": ["Load real Pretoria Property prospects into CityLauncher DB", "Trigger Wave 1: batch_size=60", "Paystack live mode (pending CIPC)", "Adventures detail view upgrade"], "prompt": "Read STATUS.md and AGENT_BRIEFING.md first. State: TrustSquare live at trustsquare.co, BEA v1.3.0, Session 49 complete. Goals: 1. Wave 1 outreach. 2. Paystack live mode. 3. Adventures detail view.", "mobile_prompt": "TrustSquare Session 50. Wave 1 + Adventures detail view."}, {"id": "dir_blockers", "project": "TrustSquare", "title": "Launch Blockers", "colour": "#ef4444", "items": ["Paystack live mode - awaiting CIPC bank account"], "prompt": "Read STATUS.md first. Launch blocker: Paystack live mode - awaiting CIPC bank account.", "mobile_prompt": "TrustSquare launch blockers: Paystack live mode."}, {"id": "dir_cl", "project": "CityLauncher", "title": "CityLauncher - Session 20+", "colour": "#8b5cf6", "items": ["See CityLauncher STATUS.md"], "prompt": "Read C:\\Users\\David\\Projects\\CityLauncher\\STATUS.md first.", "mobile_prompt": "Help me with CityLauncher next steps."}, {"id": "dir_aa", "project": "AdvertAgent", "title": "AdvertAgent - Kickoff", "colour": "#f59e0b", "items": ["Read PRINCIPLE_REQUIREMENTS.md Part G", "Define architecture and file map"], "prompt": "Read C:\\Users\\David\\Projects\\AdvertAgent\\STATUS.md first.", "mobile_prompt": "Help me design the AdvertAgent architecture."}], "clSession": "20", "clLast": ""}
 
 // ── Markdown mini-renderer ──────────────────────────────────
 function md(text) {
