@@ -4331,7 +4331,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // ── DEMO MODE ACTIVATION ─────────────────────────────────
   if (DEMO_MODE) {
     // Hide real seller nav buttons, show demo join CTA
-    ['nav-onboard','nav-tuppence','nav-dashboard'].forEach(id => {
+    ['nav-onboard','nav-tuppence','nav-myspace'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -12081,7 +12081,7 @@ function msRenderOpenActions(items){
   const el = document.getElementById('ms-open-actions');
   if(!el) return;
   const pending = (items||[]).filter(i => i.status==='pending');
-  if(!pending.length){ el.innerHTML = '<div class="ms-empty">No pending actions — you're all clear</div>'; return; }
+  if(!pending.length){ el.innerHTML = '<div class="ms-empty">No pending actions \u2014 all clear!</div>'; return; }
   el.innerHTML = pending.slice(0,3).map(i => {
     const ident = i.buyer_email || i.seller_email || 'Member';
     const colour = msColorFor(ident);
@@ -12091,10 +12091,14 @@ function msRenderOpenActions(items){
       +'<div style="flex:1;min-width:0;"><div class="ms-intro-name">Intro pending</div>'
       +'<div class="ms-intro-meta">Listing #'+i.listing_id+'</div></div>'
       +'<div class="ms-action-btns">'
-      +'<button class="ms-btn-sm" onclick="showToast('Declined')">Decline</button>'
-      +'<button class="ms-btn-sm primary" onclick="showToast('Accepted!')">Accept</button>'
+      +'<button class="ms-btn-sm" onclick="msIntroAction('+i.id+',0)">Decline</button>'
+      +'<button class="ms-btn-sm primary" onclick="msIntroAction('+i.id+',1)">Accept</button>'
       +'</div></div>';
   }).join('');
+}
+
+function msIntroAction(introId, accept){
+  showToast(accept ? 'Accepted!' : 'Declined');
 }
 
 function msRenderWishlist(){
@@ -12110,7 +12114,7 @@ function msRenderWishlist(){
   el.innerHTML = items.slice(0,5).map(l => {
     const icon = l.cat==='Adventures'?'🌄':l.cat==='Property'?'🏠':l.cat==='Tutors'?'📚':l.cat==='Services'?'🔧':'🛍';
     const thumb = l.photo ? '<img src="'+l.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">' : icon;
-    return '<div class="ms-hist-item" onclick="openDetail(''+l.id+'')">'
+    return '<div class="ms-hist-item" onclick="openDetail(this.dataset.lid)" data-lid="'+l.id+'">'
       +'<div class="ms-hist-thumb">'+thumb+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-hist-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.title||'–')+'</div>'
       +'<div class="ms-hist-meta">'+(l.cat||'')+(l.price?' · '+l.price:'')+'</div></div>'
@@ -12141,7 +12145,7 @@ function msRenderHistory(){
     const icon = h.cat==='Adventures'?'🌄':h.cat==='Property'?'🏠':h.cat==='Tutors'?'📚':h.cat==='Services'?'🔧':'🛍';
     const thumb = h.photo ? '<img src="'+h.photo+'" alt="">' : icon;
     const ago = msTimeAgo(h.ts);
-    return '<div class="ms-hist-item" onclick="openDetail(''+h.id+'')">'
+    return '<div class="ms-hist-item" onclick="openDetail(this.dataset.lid)" data-lid="'+h.id+'">'
       +'<div class="ms-hist-thumb">'+thumb+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-hist-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(h.title||'–')+'</div>'
       +'<div class="ms-hist-meta">'+(h.cat||'')+' · '+ago+'</div></div>'
