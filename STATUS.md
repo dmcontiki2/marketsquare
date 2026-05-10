@@ -57,9 +57,24 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX22
 - Launch city: Pretoria, South Africa · **5 live listings (Maroushka — IDs 93–97) · 70 demo listings active**
 - Maroushka registered in BEA: `miconradie1@gmail.com` · magic link sent via Gmail
-- n8n outreach wave workflow: imported but SendGrid credentials NOT wired — untested ⚠️
+- **n8n outreach wave workflow: FULLY LIVE ✅** — tested end-to-end, first email sent to miconradie1@gmail.com, wave report delivered to dmcontiki2@gmail.com, `emailed_at` stamped in CityLauncher DB
 - Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
 - GitHub: github.com/dmcontiki2/marketsquare
+
+---
+
+## Last Completed — Session 48
+
+### n8n founding seller outreach wave — FULLY LIVE ✅
+- Abandoned SendGrid (Twilio trial sandbox — unusable). Switched to already-authenticated Brevo SMTP (same cred used for intro emails since Session 46).
+- Converted `Query CityLauncher Prospects` and `Mark Prospect as Emailed` nodes from SQLite plugin type (rejected by n8n API) → Code nodes using `require('sqlite3')` directly.
+- Fixed CityLauncher DB schema mismatch: original query had `JOIN cities` — table doesn't exist. Removed JOIN, injected `city_name` from trigger params instead.
+- Fixed n8n Code node sandbox restrictions: added `NODE_FUNCTION_ALLOW_EXTERNAL=sqlite3` and `NODE_FUNCTION_ALLOW_BUILTIN=fs,path` to Docker env so Code nodes can require sqlite3 and read template files with fs.
+- Fixed email template file permissions: templates deployed with `-rwx------ root:root` — n8n container (uid 1000) couldn't read them. Fixed with `chmod 644`.
+- Fixed `Mark Prospect as Emailed` JS: `$input.first()` disallowed in `runOnceForEachItem` mode — changed to `$('Build Email Payloads').item.json` to retrieve prospectId from upstream item lineage.
+- Fixed CityLauncher DB readonly error: `chmod 666` on `citylauncher.db`, `citylauncher.db-wal`, `citylauncher.db-shm` and `chmod 777` on `/var/www/citylauncher/` — required for Docker container to write WAL files.
+- Fixed Rate Limiter: `milliseconds` unit not supported in n8n v2.14 — changed to `1 second`.
+- Execution 40: all 13 nodes green. Email delivered to miconradie1@gmail.com, wave report to dmcontiki2@gmail.com, `emailed_at = 2026-05-10 11:50:14` confirmed in CityLauncher DB.
 
 ---
 
@@ -120,16 +135,17 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 48
+## Next Session — Session 49
 
 ### Priority
-1. **n8n outreach wave — wire SendGrid credentials and test single email to miconradie1@gmail.com end-to-end** (sole goal)
+1. **Wave 1 launch** — load real Pretoria Property prospects into CityLauncher DB, trigger Wave 1 with `batch_size=60`, monitor delivery
+2. **Paystack live mode** — awaiting CIPC bank account setup (David action)
 
 ### Backlog
-- Paystack live mode — awaiting CIPC bank account setup (David action)
 - Admin ops queue — review uploaded credentials
 - Gate `sbTriggerMarketNote` behind subscription tier for free sellers
 - For You trust score refresh on wishlist re-match
+- Email template visual QA — review actual delivered email in Gmail, check rendering
 
 ---
 
