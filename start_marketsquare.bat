@@ -27,8 +27,23 @@ echo  %DATE%   %TIME%
 echo  ============================================================
 echo.
 
+:: ── Step 0: Git pull — sync all projects from GitHub ─────────
+echo  [0/3] Pulling latest from GitHub (source of truth)...
+cd /d "%MS%"
+git pull origin main
+echo.
+cd /d "%PROJECTS%\CityLauncher"
+git pull origin main
+echo.
+cd /d "%PROJECTS%\AdvertAgent"
+git pull origin main
+echo.
+cd /d "%MS%"
+echo   All projects synced from GitHub.
+echo.
+
 :: ── Step 1: Open live sites in browser ───────────────────────
-echo  [1/3] Opening live sites and admin app in browser...
+echo  [1/4] Opening live sites and admin app in browser...
 start "" "https://trustsquare.co?v=%random%"
 timeout /t 1 /nobreak >nul
 start "" "https://trustsquare.co/admin.html?v=%random%"
@@ -37,13 +52,13 @@ echo   Done.
 echo.
 
 :: ── Step 2: Open Projects folder in Explorer ─────────────────
-echo  [2/3] Opening MarketSquare project folder...
+echo  [2/4] Opening MarketSquare project folder...
 explorer "%MS%"
 timeout /t 1 /nobreak >nul
 echo.
 
 :: ── Step 3: Launch session dashboard ────────────────────────
-echo  [3/3] Launching session dashboard...
+echo  [3/4] Launching session dashboard...
 if exist "%MS%\session_dashboard.py" (
     cd /d "%MS%"
     start "" /B python "%MS%\session_dashboard.py"
