@@ -45,7 +45,7 @@ const CATS = {
                 catPhoto: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80' },
   Services:   { icon: '⚙️', bg: 'linear-gradient(140deg,#7c2d12,#b45309)', model: 'queue',
                 catPhoto: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80' },
-  Adventures: { icon: '🌿', bg: 'linear-gradient(140deg,#064e3b,#065f46)', model: 'queue',
+  Adventures: { icon: '🧭', bg: 'linear-gradient(140deg,#7c3d0a,#b45309)', model: 'queue',
                 catPhoto: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=800&q=80' },
   Collectors: { icon: '🏺', bg: 'linear-gradient(140deg,#44403c,#78716c)', model: 'queue',
                 catPhoto: 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800&q=80' },
@@ -383,16 +383,28 @@ const LISTINGS = [
 
   // ── ADVENTURES, COLLECTORS, CARS, LOCAL MARKET ───────────
     // ── ADVENTURES ───────────────────────────────────────────────────────
-  { id:'demo_adv_1', cat:'adventures_experiences', feat:true, title:'Big 5 Game Walk · Pilanesberg', area:'Pretoria', suburb:'Pretoria North', trust:76, price:1850, per:'/person', priceNum:1850, desc:'3-hour guided Big 5 game walk through Pilanesberg National Park. Max 6 guests per group. FGASA Level 2 guide with Wilderness First Aid certification. All safety equipment supplied. Includes light refreshments and park entry fees. Departs Pretoria North at 05:30. Suitable for fit adults and teens 14+.', photo:'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80','https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=800&q=80','https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800&q=80'] },
-  { id:'demo_adv_2', cat:'adventures_experiences', feat:false, title:'Hot Air Balloon Safari · Hartbeespoort', area:'Pretoria', suburb:'Centurion', trust:74, price:3200, per:'/person', priceNum:3200, desc:'Sunrise hot air balloon flight over the Magaliesberg valley with champagne breakfast landing. Fully licensed operator with CAA certification. Flight duration 1 hour. Shuttle from Centurion collection point included. Small groups of max 8 passengers. Certificate of flight provided. Fully insured. Operates Wed, Sat, Sun — weather permitting.', photo:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80','https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&q=80','https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80','https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80','https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=800&q=80'] },
-  { id:'demo_adv_3', cat:'adventures_experiences', feat:false, title:'Abseil Magaliesberg Gorge', area:'Pretoria', suburb:'Pretoria West', trust:72, price:680, per:'/person', priceNum:680, desc:'Full-day abseil and gorge walk in the Magaliesberg. Three abseils (highest 50m) with technical rock scrambling between. Expert guides with Mountain Club of SA certification. All harness and safety equipment provided. Suitable for beginners — full briefing included. Group size 4–10. Shuttle from Pretoria West at 06:30.', photo:'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80','https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=800&q=80','https://images.unsplash.com/photo-1439853949212-36089c8d8a91?w=800&q=80','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80','https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=800&q=80'] },
-  { id:'demo_adv_4', cat:'adventures_experiences', feat:false, title:'Horse Riding · Crocodile River Trail', area:'Pretoria', suburb:'Pretoria East', trust:71, price:850, per:'/person', priceNum:850, desc:'3-hour guided horse trail along the Crocodile River. Suitable for beginners and experienced riders. Maximum 8 riders per group. All horses are well-schooled and calm. Hard hats and boots provided. Morning departures at 07:00 and 09:30. Farm-style breakfast included. 45 minutes from Pretoria East.', photo:'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80','https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80','https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80','https://images.unsplash.com/photo-1510771463146-e89e6e86560e?w=800&q=80','https://images.unsplash.com/photo-1449148979699-c69bdb873a1a?w=800&q=80'] },
-  { id:'demo_adv_5', cat:'adventures_experiences', feat:false, title:'Quad Biking Dinokeng · Full Day', area:'Pretoria', suburb:'Pretoria North', trust:70, price:1250, per:'/person', priceNum:1250, desc:'Full-day quad biking adventure through the Dinokeng Game Reserve trails. Two rides (90 min each) with game spotting including giraffe, zebra, and wildebeest. Helmets, goggles and gloves provided. Braai lunch included. No prior experience required. Groups of 6–14. Departs Pretoria North at 07:00. Suitable for ages 16+.', photo:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80','https://images.unsplash.com/photo-1543053773-3bea3c8d7d07?w=800&q=80','https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80','https://images.unsplash.com/photo-1475666675596-cca2035b3d79?w=800&q=80','https://images.unsplash.com/photo-1508669232496-137b159c1cdb?w=800&q=80'] },
-  { id:'demo_adv_6', cat:'adventures_experiences', feat:false, title:'Escape Room · Menlyn · Premium Experience', area:'Pretoria', suburb:'Menlyn', trust:68, price:280, per:'/person', priceNum:280, desc:'Award-winning escape room experience in Menlyn. Three themed rooms: The Vault, The Asylum, and The Bunker. 60 minutes per room. Groups of 2–8. Fully immersive with professional set design and live game-master support. Suitable for corporate team building and private groups. Minimum age 12. Book weekdays for 10% discount.', photo:'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=800&q=80','https://images.unsplash.com/photo-1579762593175-20226054cad0?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=800&q=80','https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80'] },
-  { id:'demo_adv_7', cat:'adventures_experiences', feat:false, title:'SA Wine Tasting Evening · Pretoria CBD', area:'Pretoria', suburb:'Brooklyn', trust:72, price:420, per:'/person', priceNum:420, desc:'Curated SA wine tasting hosted by a Cape Wine Academy graduate. 8 wines across 4 regions: Stellenbosch, Franschhoek, Swartland, and Elgin. Artisan cheese and charcuterie pairing included. 2.5 hours. Groups of 8–16. Hosted at a private cellar in Brooklyn. Private bookings available for corporate events. BYOB table wine after tasting.', photo:'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80','https://images.unsplash.com/photo-1474722883778-792e7fb1ebb3?w=800&q=80','https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=800&q=80','https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80','https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?w=800&q=80'] },
-  { id:'demo_adv_8', cat:'adventures_experiences', feat:false, title:'Cape Malay Cooking Class · Pretoria', area:'Pretoria', suburb:'Hatfield', trust:70, price:650, per:'/person', priceNum:650, desc:'Hands-on Cape Malay cooking class hosted by a professional chef with 15 years restaurant experience. Learn to make bobotie, koeksisters, and pickled fish from scratch. All ingredients supplied. Groups of 4–10. 3 hours including a shared meal. Private bookings welcome. Vegetarian version available. Aprons to keep. Located in Hatfield.', photo:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80','https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80','https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?w=800&q=80','https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80','https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80'] },
-  { id:'demo_adv_9', cat:'adventures_experiences', feat:false, title:'Street Photography Walk · Pretoria CBD', area:'Pretoria', suburb:'Pretoria Central', trust:69, price:380, per:'/person', priceNum:380, desc:'3-hour guided street photography walk through Pretoria CBD with a professional photographer. Visit Paul Kruger Street, Church Square, and the historic West End quarter. Camera settings coaching included. Max 6 participants for personal instruction. Any camera accepted — even smartphones. Post-processing tips session included (online, 1 hour, within 48hrs).', photo:'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80','https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80','https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80','https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=800&q=80','https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'] },
-  { id:'demo_adv_10', cat:'adventures_experiences', feat:false, title:'Waterfall Gorge Hike · Magaliesberg', area:'Pretoria', suburb:'Pretoria West', trust:74, price:490, per:'/person', priceNum:490, desc:'Full-day waterfall gorge hike through the Magaliesberg range. 18km circular trail with two waterfall swim stops. Guide with Mountain Club SA certification. Group size 4–12. Packed lunch provided. Departs Pretoria West at 06:00. Moderate fitness required. Suitable for ages 14+. Permits included. Rated one of Gauteng\'s top 5 day hikes.', photo:'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80','https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80','https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80'] },
+  { id:'demo_adv_1', cat:'adventures_experiences', environment_type:'Bush & Wildlife', experience_type:'luxury_safari', feat:true, title:'Big 5 Game Walk · Pilanesberg', area:'Pretoria', suburb:'Pretoria North', trust:76, price:1850, per:'/person', priceNum:1850, desc:'3-hour guided Big 5 game walk through Pilanesberg National Park. Max 6 guests per group. FGASA Level 2 guide with Wilderness First Aid certification. All safety equipment supplied. Includes light refreshments and park entry fees. Departs Pretoria North at 05:30. Suitable for fit adults and teens 14+.', photo:'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80','https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=800&q=80','https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800&q=80'] },
+  { id:'demo_adv_2', cat:'adventures_experiences', environment_type:'Mountain & Highlands', experience_type:'sky_aerial', feat:false, title:'Hot Air Balloon Safari · Hartbeespoort', area:'Pretoria', suburb:'Centurion', trust:74, price:3200, per:'/person', priceNum:3200, desc:'Sunrise hot air balloon flight over the Magaliesberg valley with champagne breakfast landing. Fully licensed operator with CAA certification. Flight duration 1 hour. Shuttle from Centurion collection point included. Small groups of max 8 passengers. Certificate of flight provided. Fully insured. Operates Wed, Sat, Sun — weather permitting.', photo:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80','https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&q=80','https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80','https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80','https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=800&q=80'] },
+  { id:'demo_adv_3', cat:'adventures_experiences', environment_type:'Mountain & Highlands', experience_type:'sky_aerial', feat:false, title:'Abseil Magaliesberg Gorge', area:'Pretoria', suburb:'Pretoria West', trust:72, price:680, per:'/person', priceNum:680, desc:'Full-day abseil and gorge walk in the Magaliesberg. Three abseils (highest 50m) with technical rock scrambling between. Expert guides with Mountain Club of SA certification. All harness and safety equipment provided. Suitable for beginners — full briefing included. Group size 4–10. Shuttle from Pretoria West at 06:30.', photo:'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80','https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=800&q=80','https://images.unsplash.com/photo-1439853949212-36089c8d8a91?w=800&q=80','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80','https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=800&q=80'] },
+  { id:'demo_adv_4', cat:'adventures_experiences', environment_type:'Farm & Rural', experience_type:'guided_tours', feat:false, title:'Horse Riding · Crocodile River Trail', area:'Pretoria', suburb:'Pretoria East', trust:71, price:850, per:'/person', priceNum:850, desc:'3-hour guided horse trail along the Crocodile River. Suitable for beginners and experienced riders. Maximum 8 riders per group. All horses are well-schooled and calm. Hard hats and boots provided. Morning departures at 07:00 and 09:30. Farm-style breakfast included. 45 minutes from Pretoria East.', photo:'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800&q=80','https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=800&q=80','https://images.unsplash.com/photo-1534307671554-9a6d81f4d629?w=800&q=80','https://images.unsplash.com/photo-1510771463146-e89e6e86560e?w=800&q=80','https://images.unsplash.com/photo-1449148979699-c69bdb873a1a?w=800&q=80'] },
+  { id:'demo_adv_5', cat:'adventures_experiences', environment_type:'Bush & Wildlife', experience_type:'guided_tours', feat:false, title:'Quad Biking Dinokeng · Full Day', area:'Pretoria', suburb:'Pretoria North', trust:70, price:1250, per:'/person', priceNum:1250, desc:'Full-day quad biking adventure through the Dinokeng Game Reserve trails. Two rides (90 min each) with game spotting including giraffe, zebra, and wildebeest. Helmets, goggles and gloves provided. Braai lunch included. No prior experience required. Groups of 6–14. Departs Pretoria North at 07:00. Suitable for ages 16+.', photo:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80','https://images.unsplash.com/photo-1543053773-3bea3c8d7d07?w=800&q=80','https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80','https://images.unsplash.com/photo-1475666675596-cca2035b3d79?w=800&q=80','https://images.unsplash.com/photo-1508669232496-137b159c1cdb?w=800&q=80'] },
+  { id:'demo_adv_6', cat:'adventures_experiences', environment_type:'Urban & Township', experience_type:'arts_culture', feat:false, title:'Escape Room · Menlyn · Premium Experience', area:'Pretoria', suburb:'Menlyn', trust:68, price:280, per:'/person', priceNum:280, desc:'Award-winning escape room experience in Menlyn. Three themed rooms: The Vault, The Asylum, and The Bunker. 60 minutes per room. Groups of 2–8. Fully immersive with professional set design and live game-master support. Suitable for corporate team building and private groups. Minimum age 12. Book weekdays for 10% discount.', photo:'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=800&q=80','https://images.unsplash.com/photo-1579762593175-20226054cad0?w=800&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80','https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=800&q=80','https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80'] },
+  { id:'demo_adv_7', cat:'adventures_experiences', environment_type:'Garden & Winelands', experience_type:'arts_culture', feat:false, title:'SA Wine Tasting Evening · Pretoria CBD', area:'Pretoria', suburb:'Brooklyn', trust:72, price:420, per:'/person', priceNum:420, desc:'Curated SA wine tasting hosted by a Cape Wine Academy graduate. 8 wines across 4 regions: Stellenbosch, Franschhoek, Swartland, and Elgin. Artisan cheese and charcuterie pairing included. 2.5 hours. Groups of 8–16. Hosted at a private cellar in Brooklyn. Private bookings available for corporate events. BYOB table wine after tasting.', photo:'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80','https://images.unsplash.com/photo-1474722883778-792e7fb1ebb3?w=800&q=80','https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=800&q=80','https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80','https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?w=800&q=80'] },
+  { id:'demo_adv_8', cat:'adventures_experiences', environment_type:'Urban & Township', experience_type:'arts_culture', feat:false, title:'Cape Malay Cooking Class · Pretoria', area:'Pretoria', suburb:'Hatfield', trust:70, price:650, per:'/person', priceNum:650, desc:'Hands-on Cape Malay cooking class hosted by a professional chef with 15 years restaurant experience. Learn to make bobotie, koeksisters, and pickled fish from scratch. All ingredients supplied. Groups of 4–10. 3 hours including a shared meal. Private bookings welcome. Vegetarian version available. Aprons to keep. Located in Hatfield.', photo:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80','https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80','https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?w=800&q=80','https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80','https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80'] },
+  { id:'demo_adv_9', cat:'adventures_experiences', environment_type:'Urban & Township', experience_type:'arts_culture', feat:false, title:'Street Photography Walk · Pretoria CBD', area:'Pretoria', suburb:'Pretoria Central', trust:69, price:380, per:'/person', priceNum:380, desc:'3-hour guided street photography walk through Pretoria CBD with a professional photographer. Visit Paul Kruger Street, Church Square, and the historic West End quarter. Camera settings coaching included. Max 6 participants for personal instruction. Any camera accepted — even smartphones. Post-processing tips session included (online, 1 hour, within 48hrs).', photo:'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80','https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80','https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80','https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=800&q=80','https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'] },
+  { id:'demo_adv_10', cat:'adventures_experiences', environment_type:'Mountain & Highlands', experience_type:'guided_tours', feat:false, title:'Waterfall Gorge Hike · Magaliesberg', area:'Pretoria', suburb:'Pretoria West', trust:74, price:490, per:'/person', priceNum:490, desc:'Full-day waterfall gorge hike through the Magaliesberg range. 18km circular trail with two waterfall swim stops. Guide with Mountain Club SA certification. Group size 4–12. Packed lunch provided. Departs Pretoria West at 06:00. Moderate fitness required. Suitable for ages 14+. Permits included. Rated one of Gauteng\'s top 5 day hikes.', photo:'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80','https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80','https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80'] },
+
+  // ── ADVENTURES: ACCOMMODATION (demo stays) ──────────────────────────
+  { id:'demo_stay_1', cat:'adventures_accommodation', environment_type:'Bush & Wildlife', accommodation_type:'private_lodge', feat:true, country:'ZA', city_country:'ZA', title:'Waterberg Private Lodge · Exclusive Use · 6 Guests', area:'Limpopo', suburb:'Waterberg', trust:94, price:24000, per:'/night', priceNum:24000, desc:'Exclusive-use five-suite lodge on a 4,000-hectare private game reserve in the Waterberg. Daily Big 5 game drives, bush walks with a resident tracker, and sundowner cruises on the private dam. Full-board with a private chef. Helicopter transfers from Johannesburg available. Star beds on request. Conservation levy included. Minimum 2-night stay.', photo:'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80','https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80','https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80','https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80','https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80'] },
+  { id:'demo_stay_2', cat:'adventures_accommodation', environment_type:'Bush & Wildlife', accommodation_type:'bush_camp', feat:false, country:'ZA', city_country:'ZA', title:'Okavango-Style Fly Camp · Kruger Concession · 3 Nights', area:'Mpumalanga', suburb:'Kruger Park', trust:88, price:8500, per:'/person/night', priceNum:8500, desc:'Remote fly camp on an exclusive Kruger concession. Sleep in a luxury mess tent 10 metres from a waterhole. No fences — just a campfire and the sound of the bush at night. All meals prepared over an open fire by a camp cook. Private game drive vehicle, guided walks at dawn. Maximum 6 guests. Fly in from Hoedspruit or Skukuza included in rate.', photo:'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80','https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&q=80','https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80'] },
+  { id:'demo_stay_3', cat:'adventures_accommodation', environment_type:'Mountain & Highlands', accommodation_type:'mountain_retreat', feat:false, country:'ZA', city_country:'ZA', title:'Drakensberg Mountain Chalet · Private · Amphitheatre Views', area:'KwaZulu-Natal', suburb:'Drakensberg', trust:86, price:4200, per:'/night', priceNum:4200, desc:'Private 4-bedroom chalet perched at 1,800m with unobstructed views of the Amphitheatre escarpment. Fully equipped kitchen, fireplace, and wraparound deck. Trout fishing on the farm dam, hiking trails from the door. 10 minutes from the Tugela Falls trailhead. DSTV, WiFi, and a full braai facility. Linen and towels provided. Sleeps 8. No pets.', photo:'https://images.unsplash.com/photo-1499696010180-025ef6e1a8f9?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1499696010180-025ef6e1a8f9?w=800&q=80','https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80','https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80','https://images.unsplash.com/photo-1439853949212-36089c8d8a91?w=800&q=80'] },
+  { id:'demo_stay_4', cat:'adventures_accommodation', environment_type:'Coastal & Beach', accommodation_type:'coastal_island', feat:true, country:'MZ', city_country:'MZ', title:'Bazaruto Island Villa · Private Beach · Mozambique', area:'Mozambique', suburb:'Bazaruto Archipelago', trust:92, price:18500, per:'/night', priceNum:18500, desc:'Four-bedroom private villa on a protected island in the Bazaruto Archipelago. Direct access to a 2km private beach. Daily dhow sailing, snorkelling with dugongs, and deep-sea fishing included. Private chef serves fresh seafood caught that morning. Fly in from Vilanculos — 15 minutes. Coral reef just 200m offshore. Maximum 8 guests. Available Apr–Nov.', photo:'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&q=80','https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=800&q=80','https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80','https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=800&q=80','https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80'] },
+  { id:'demo_stay_5', cat:'adventures_accommodation', environment_type:'Urban & Township', accommodation_type:'boutique_hotel', feat:false, country:'ZA', city_country:'ZA', title:'Boutique Hotel · Cape Town · V&A Waterfront · Heritage Building', area:'Cape Town', suburb:'V&A Waterfront', trust:89, price:6800, per:'/night', priceNum:6800, desc:'12-room boutique hotel in a restored 1920s harbour warehouse. Each room individually designed by a local artist. Rooftop terrace with Table Mountain views, curated wine cellar with 200 South African labels, and a resident sommelier. 5-minute walk to the V&A Waterfront. Complimentary airport transfer. Private dining available. Member of Small Luxury Hotels of the World.', photo:'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80','https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80','https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80','https://images.unsplash.com/photo-1506059612708-99d6c258160e?w=800&q=80','https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80'] },
+  { id:'demo_stay_6', cat:'adventures_accommodation', environment_type:'Desert & Karoo', accommodation_type:'self_catering', feat:false, country:'ZA', city_country:'ZA', title:'Karoo Farmhouse · Private · Dark Sky Reserve · 3 Bedrooms', area:'Northern Cape', suburb:'Sutherland', trust:82, price:2800, per:'/night', priceNum:2800, desc:'Restored 1890s Karoo farmhouse on a 6,000-hectare sheep farm, 12km from Sutherland. Fully self-catering with a wood-fired Aga stove. The farm is within the SALTI Dark Sky Reserve — some of the best stargazing in the southern hemisphere. Braai area, vegetable garden, and a donkey cart for exploring the farm. Mountain bikes supplied. WiFi available in the main cottage. Sleeps 6.', photo:'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80','https://images.unsplash.com/photo-1475688621402-4257c812d6db?w=800&q=80','https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80'] },
+  { id:'demo_stay_7', cat:'adventures_accommodation', environment_type:'Forest & Fynbos', accommodation_type:'unique_stays', feat:false, country:'ZA', city_country:'ZA', title:'Tsitsikamma Treehouse · Forest Canopy · Private · Garden Route', area:'Eastern Cape', suburb:'Tsitsikamma', trust:91, price:3600, per:'/night', priceNum:3600, desc:'Architect-designed treehouse suspended 12m in the yellowwood canopy of the Tsitsikamma forest. Glass floor panel, wraparound deck, and outdoor shower. Accessed by a suspension bridge — suitable for agile guests. Solar power, composting toilet, and rainwater shower. Breakfast basket delivered each morning by flying fox. Sleeps 2. Bookings through the week only — no weekend availability. 30-minute walk to the Storms River mouth.', photo:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80','https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80','https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80','https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80','https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80'] },
+  { id:'demo_stay_8', cat:'adventures_accommodation', environment_type:'Coastal & Beach', accommodation_type:'caravan_camping', feat:false, country:'ZA', city_country:'ZA', title:'Glamping Pod · Paternoster · West Coast · Private Beach Access', area:'Western Cape', suburb:'Paternoster', trust:79, price:1650, per:'/night', priceNum:1650, desc:'Luxury glamping pod on a fynbos reserve 400m from the Paternoster beach. King-size bed, en-suite bathroom with outdoor rain shower, and a private braai deck. The pod is fully insulated — comfortable year-round. Whale watching from October to December. Fresh bread and coffee delivered each morning. On-site yoga deck. No children under 12. Reserve borders the Columbine Nature Reserve.', photo:'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1533105079780-92b9be482077?w=800&q=80','https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=800&q=80','https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&q=80','https://images.unsplash.com/photo-1475688621402-4257c812d6db?w=800&q=80','https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80'] },
+  { id:'demo_stay_9', cat:'adventures_accommodation', environment_type:'Bush & Wildlife', accommodation_type:'private_lodge', feat:false, country:'NA', city_country:'NA', title:'Sossusvlei Desert Lodge · Private Plunge Pool · Namibia', area:'Namibia', suburb:'Sossusvlei', trust:95, price:32000, per:'/night', priceNum:32000, desc:'Ten free-standing villas on a 45,000-hectare private concession bordering the Namib-Naukluft National Park. Each villa has a private plunge pool, floor-to-ceiling desert views, and a retractable roof for star-bed sleeping. Private access to Dune 45 before park opening. Guided fossil walks, oryx tracking, and hot air balloon over the vlei at sunrise. All-inclusive. Fly-in from Windhoek Eros included.', photo:'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80','https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80','https://images.unsplash.com/photo-1475688621402-4257c812d6db?w=800&q=80','https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80','https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80'] },
+  { id:'demo_stay_10', cat:'adventures_accommodation', environment_type:'Mountain & Highlands', accommodation_type:'mountain_retreat', feat:false, country:'ZA', city_country:'ZA', title:'Cederberg Cave House · Ancient Rock Art · Self-Catering', area:'Western Cape', suburb:'Cederberg', trust:84, price:3100, per:'/night', priceNum:3100, desc:'Unique self-catering cottage built into a rock overhang in the Cederberg Wilderness. San rock art panels visible from the kitchen window. 360-degree mountain views, private rock pool fed by a mountain stream, and a wood-fired hot tub. No electricity — solar lighting and gas cooking only. Mountain bike trails from the door. Reserve has 50+ rock art sites. Access via 4x4 only. Sleeps 4.', photo:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', paused:false, queueCount:0, sellerIdx:3, photos:['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80','https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80','https://images.unsplash.com/photo-1439853949212-36089c8d8a91?w=800&q=80','https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80','https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80'] },
   // ── COLLECTORS ──────────────────────────────────────────────────────
   { id:'demo_col_1', cat:'Collectors', feat:true, title:'Vintage Rolleiflex 2.8F TLR Camera · 1962', area:'Pretoria', suburb:'Waterkloof', trust:57, price:18500, per:'', priceNum:18500, desc:'Pristine Rolleiflex 2.8F twin-lens reflex camera from 1962 with Zeiss Planar 80mm f/2.8 lens. CLA serviced by a specialist in 2024. All speeds accurate, bellows light-tight, glass perfect. Original leather case and strap included. Film tested (Kodak Portra 400) — results available on request. Provenance from a Cape Town estate collection. Authentication cert available.', photo:'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80', paused:false, queueCount:0, sellerIdx:4, photos:['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80','https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80','https://images.unsplash.com/photo-1500634245200-e5245c7574ef?w=800&q=80','https://images.unsplash.com/photo-1559070169-a3077159ee16?w=800&q=80','https://images.unsplash.com/photo-1452780212461-a9b39444bde1?w=800&q=80'] },
   { id:'demo_col_2', cat:'Collectors', feat:false, title:'SA Postage Stamps Collection · 1910–1960', area:'Pretoria', suburb:'Hatfield', trust:52, price:8500, per:'', priceNum:8500, desc:'Exceptional South African postage stamp collection spanning Union period 1910 to 1960. 340 stamps in a quality Stanley Gibbons stockbook. Includes George V series, WWII issues, and early Republic definitives. Several high-value stamps with full original gum. Appraised by SAPA-registered philatelist at R9,200 in 2023. Collection catalogue and appraisal included with sale.', photo:'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80', paused:false, queueCount:0, sellerIdx:4, photos:['https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80','https://images.unsplash.com/photo-1455849318743-b2233052fcff?w=800&q=80','https://images.unsplash.com/photo-1586769852044-692d6e3703f0?w=800&q=80','https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&q=80','https://images.unsplash.com/photo-1612535316932-b7f1cc8d3dc8?w=800&q=80'] },
@@ -450,7 +462,7 @@ const SELLERS = [
     tagline: 'Results-focused tutoring. Identity protected until you\'re ready.',
     about: 'Demo tutor profile. Real tutors will have their full academic background, subjects, teaching methodology, availability, and past student results listed here. All identities protected until introduction accepted.',
     stats: [{ label: 'Students tutored', val: '120+' }, { label: 'Pass rate', val: '96%' }, { label: 'Years teaching', val: '12' }],
-    creds: ['🎓 B.Sc Honours (NQF8)', '💻 SACE registered', '✅ SAPS police clearance', '📋 Subject specialisation cert', '⭐ 5+ years’ teaching experience'],
+    creds: ['🎓 B.Sc Honours (NQF8)', '💻 SACE registered', '✅ SAPS police clearance', '📋 Subject specialisation cert', '⭐ 5+ years\' teaching experience'],
     tags: ['Mathematics', 'Physical Science', 'Accounting', 'English', 'Afrikaans', 'Life Sciences'],
     avail: [{ day: 'Weekdays', time: '14:00–19:00' }, { day: 'Saturdays', time: '08:00–13:00' }],
     portfolio: [],
@@ -945,6 +957,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .plan-btn.secondary{background:transparent;border:1.5px solid var(--navy);color:var(--navy);}
 .plan-btn.accent{background:var(--accent);color:#fff;}
 .pub-phase{min-height:100vh;padding-bottom:80px;}
+.hk-strip{display:flex;align-items:flex-start;gap:10px;padding:10px 16px 11px;background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(59,130,246,.05));border-bottom:1px solid rgba(139,92,246,.15);font-size:13px;color:var(--text-2);line-height:1.5;}
+.hk-strip-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.hk-strip-msg{flex:1;}
+.hk-strip-msg strong{color:var(--text);font-weight:700;}
+.hk-strip.hk-warn{background:rgba(251,191,36,.07);border-bottom-color:rgba(251,191,36,.2);}
+.hk-strip.hk-ok{background:rgba(34,197,94,.06);border-bottom-color:rgba(34,197,94,.15);}
 .cat-big-tile{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all var(--t);}
 .cat-big-tile.selected{border-color:var(--accent);background:var(--accent-light);}
 .cat-big-tile:active{transform:scale(.98);}
@@ -1143,10 +1161,25 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .adv-subcat-row{display:flex;gap:8px;margin-top:4px;}
 .adv-subcat-btn{flex:1;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:20px;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;font-family:'Syne',sans-serif;padding:8px 0;cursor:pointer;transition:all .2s;}
 .adv-subcat-btn.active{background:#fff;border-color:#fff;color:#064e3b;}
-.adv-env-row{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 4px;scrollbar-width:none;}
-.adv-env-row::-webkit-scrollbar{display:none;}
-.adv-env-chip{flex-shrink:0;background:var(--surface-2);border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;white-space:nowrap;}
-.adv-env-chip.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.adv-cat-row{display:flex;gap:6px;padding:8px 16px 10px;background:#064e3b;}
+.adv-cat-chip{flex:1;min-width:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 0;font-size:12px;font-weight:600;font-family:'Syne',sans-serif;color:rgba(255,255,255,.75);cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adv-cat-chip.active-exp{background:#e8c97b;border-color:#e8c97b;color:#1a1209;}
+.adv-cat-chip.active-accom{background:#bfdbfe;border-color:#bfdbfe;color:#1e3a5f;}
+.adv-cat-more{flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;font-family:'Syne',sans-serif;color:rgba(255,255,255,.75);cursor:pointer;white-space:nowrap;}
+/* Category bottom sheet */
+.adv-cat-sheet-bg{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:500;align-items:flex-end;justify-content:center;}
+.adv-cat-sheet-bg.open{display:flex;}
+.adv-cat-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:10px 0 max(env(safe-area-inset-bottom),20px);width:100%;max-width:430px;}
+.adv-cat-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px;}
+.adv-cat-sheet-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);padding:0 20px;margin-bottom:8px;}
+.adv-cat-option{display:flex;align-items:center;gap:14px;padding:11px 20px;cursor:pointer;}
+.adv-cat-option:active{background:var(--surface-2);}
+.adv-cat-option.active{background:var(--surface-2);}
+.adv-cat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.adv-cat-opt-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.2;}
+.adv-cat-opt-desc{font-size:11px;color:var(--text-2);margin-top:2px;}
+.adv-cat-check{margin-left:auto;color:var(--accent);font-size:16px;opacity:0;}
+.adv-cat-option.active .adv-cat-check{opacity:1;}
 .adv-grid{padding:12px 16px 100px;display:flex;flex-direction:column;gap:12px;}
 .adv-card{background:#ffffff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s;display:block;}
 .adv-card:active{transform:scale(.98);}
@@ -1515,7 +1548,6 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="chip" onclick="setFilter(this,'Adventures')">🌿 Adventures</div>
     <div class="chip" onclick="setFilter(this,'Collectors')">🏺 Collectors</div>
     <div class="chip" onclick="setFilter(this,'Cars')">🚗 Cars</div>
-    <div class="chip" onclick="setFilter(this,'LocalMarket')">🛒 Local Market</div>
   </div>
 
   <!-- Context-specific filter pills (shown when category selected) -->
@@ -2359,22 +2391,26 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     </div>
     <div class="adv-subcat-row">
       <button class="adv-subcat-btn active" id="adv-btn-all" onclick="setAdvSubcat('all',this)">All</button>
-      <button class="adv-subcat-btn" id="adv-btn-accommodation" onclick="setAdvSubcat('adventures_accommodation',this)">🏕 Accommodation</button>
+      <button class="adv-subcat-btn" id="adv-btn-accommodation" onclick="setAdvSubcat('adventures_accommodation',this)">🏕 Stays</button>
       <button class="adv-subcat-btn" id="adv-btn-experiences" onclick="setAdvSubcat('adventures_experiences',this)">🌄 Experiences</button>
+    </div>
+    <!-- Category filter chips (4 fixed + More) — inside dark hero -->
+    <div class="adv-cat-row" id="adv-cat-row" style="display:none;">
+      <div class="adv-cat-chip active-exp" id="adv-cat-all" onclick="setAdvCat('all',this)">All</div>
+      <div class="adv-cat-chip" id="adv-cat-pin1">🦁 Safari</div>
+      <div class="adv-cat-chip" id="adv-cat-pin2">🚂 Train</div>
+      <div class="adv-cat-chip" id="adv-cat-pin3">🗺 Tours</div>
+      <div class="adv-cat-more" id="adv-cat-more-btn" onclick="openAdvCatSheet()">More ▾</div>
     </div>
   </div>
 
-  <!-- Environment filter chips -->
-  <div class="adv-env-row" id="adv-env-row">
-    <div class="adv-env-chip active" onclick="setAdvEnv('all',this)">All environments</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('bush_and_wildlife',this)">🦁 Bush & Wildlife</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('mountain_and_highlands',this)">⛰ Mountain</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('coastal_and_beach',this)">🏖 Coastal</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('garden_and_winelands',this)">🍷 Winelands</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('wetlands_and_lakes',this)">🌊 Wetlands</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('desert_and_karoo',this)">🏜 Karoo</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('forest_and_fynbos',this)">🌿 Forest</div>
-    <div class="adv-env-chip" onclick="setAdvEnv('farm_and_rural',this)">🌾 Farm & Rural</div>
+  <!-- Category bottom sheet -->
+  <div class="adv-cat-sheet-bg" id="adv-cat-sheet" onclick="closeAdvCatSheet(event)">
+    <div class="adv-cat-sheet">
+      <div class="adv-cat-handle"></div>
+      <div class="adv-cat-sheet-title" id="adv-cat-sheet-title">Experience type</div>
+      <div id="adv-cat-options"><!-- options injected by openAdvCatSheet() --></div>
+    </div>
   </div>
 
   <div id="adv-results-count" style="font-size:12px;color:#6b7280;padding:6px 16px 4px;"></div>
@@ -2520,6 +2556,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="sob-body">
       <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:16px;font-weight:400;">Review the terms, accept, and your listing goes live. You stay anonymous until both parties accept an introduction.</p>
 
+      <div id="sob-returning-eula-note" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;">
+        <strong style="color:#fbbf24;">One quick step before you go live.</strong> You have an existing account but haven't yet accepted the TrustSquare EULA. Please read and accept the terms below — your listing will go live immediately after.
+      </div>
+
       <div class="sob-eula-box">
         <div style="font-weight:800;font-size:13px;color:rgba(255,255,255,.85);margin-bottom:4px;letter-spacing:.3px;">TrustSquare Terms of Use / EULA</div>
         <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:14px;">Trustsquare (Pty) Ltd · Reg 2026/340128/07 &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; Governing Law: Republic of South Africa &nbsp;·&nbsp; For legal review — not yet finalised</div>
@@ -2631,6 +2671,14 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Introduction requests go to your email</div><div style="font-size:12px;color:rgba(255,255,255,.45);">No commission — buyers connect directly</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">3 free AI sessions credited</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
+        <div id="sob-banking-nudge" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px;display:none;gap:12px;align-items:flex-start;">
+          <div style="font-size:20px;flex-shrink:0;">🏦</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales. Takes 30 seconds.</div>
+            <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
+          </div>
+        </div>
       </div>
       <button onclick="sobDone()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
       <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
@@ -2844,6 +2892,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="pub-step-pill">New listing</div>
         <h1>Add a listing</h1>
       </div>
+    </div>
+    <div id="sb-haiko-strip" class="hk-strip">
+      <span class="hk-strip-icon">&#10024;</span>
+      <span class="hk-strip-msg" id="sb-haiko-msg">Hi! I'm <strong>Haiko</strong> &#8212; I'll guide you through each step. Tap <strong>Let's go</strong> when you're ready.</span>
     </div>
     <div style="padding:20px;">
       <div style="background:var(--surface-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:24px;">
@@ -3088,6 +3140,16 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:16px;">You're live</div>
       <h2 id="sb-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
       <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your dashboard. Your Trust Score is building.</p>
+      <div id="sb-banking-nudge" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left;gap:12px;align-items:flex-start;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="font-size:20px;flex-shrink:0;">🏦</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales.</div>
+            <button onclick="goTo('dashboard')" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add in dashboard →</button>
+          </div>
+        </div>
+      </div>
       <button onclick="goTo('dashboard')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
       <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
     </div>
@@ -3518,6 +3580,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <button onclick="feaLmCloseCreate()" style="background:transparent;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
     </div>
     <h2 style="font-size:20px;font-weight:800;color:var(--text);margin:0 0 6px;">Create listing</h2>
+    <div class="hk-strip" id="lm-haiko-strip" style="border-radius:8px;margin-bottom:10px;border:1px solid rgba(139,92,246,.2);">
+      <span class="hk-strip-icon">&#10024;</span>
+      <span class="hk-strip-msg" id="lm-haiko-msg"><strong>Keep it simple</strong> &#8212; a clear title, honest description, and a fair price are all you need. I'll remind you if anything's missing.</span>
+    </div>
     <!-- Session email — display only, never editable -->
     <div id="fea-lm-seller-bar" style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;color:var(--text-2);margin-bottom:14px;">
       Listing as: <strong id="fea-lm-seller-email" style="color:var(--text);"></strong>
@@ -4423,7 +4489,7 @@ function setPlan(tier, label){
 
 function filterBrowse(cat){
   // Adventures gets its own dedicated screen
-  if(cat==='Adventures'){ goTo('adventures'); renderAdvGrid(); return; }
+  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); renderAdvGrid(); return; }
   activeFilter=cat; goTo('browse');
   document.querySelectorAll('#chip-row .chip').forEach(c=>{
     c.classList.toggle('active', c.textContent.includes(cat)||(cat==='All'&&c.textContent==='All'));
@@ -4445,7 +4511,7 @@ const filterState = {
 };
 
 function setFilter(el, cat){
-  if(cat==='Adventures'){ goTo('adventures'); renderAdvGrid(); return; }
+  if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); renderAdvGrid(); return; }
   activeFilter = cat;
   document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
@@ -4636,34 +4702,170 @@ let advCountry = 'ZA';
 let advCountryName = 'South Africa';
 let advCountryFlag = '🇿🇦';
 let advSubcat = 'all';
-let advEnv = 'all';
+let advCat = 'all';
 
 const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
 const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', EU:'€', AU:'A$', NZ:'NZ$' };
-const ADV_ENV_LABELS = {
-  bush_and_wildlife:'🦁 Bush & Wildlife', mountain_and_highlands:'⛰ Mountain',
-  coastal_and_beach:'🏖 Coastal', garden_and_winelands:'🍷 Winelands',
-  wetlands_and_lakes:'🌊 Wetlands', desert_and_karoo:'🏜 Karoo',
-  forest_and_fynbos:'🌿 Forest', urban_and_township:'🏙 Urban',
-  farm_and_rural:'🌾 Farm & Rural',
+
+// Experience categories (adventures_experiences)
+const ADV_EXP_CATS = [
+  {key:'luxury_safari',   icon:'🦁', name:'Luxury safari',       desc:'Big 5, fly-in camps, private concessions'},
+  {key:'luxury_train',    icon:'🚂', name:'Luxury train',        desc:'Rovos Rail, Blue Train, Shongololo'},
+  {key:'guided_tours',    icon:'🗺', name:'Guided tours',        desc:'Cultural, heritage, food & wine, walking'},
+  {key:'once_in_lifetime',icon:'✨', name:'Once in a lifetime',  desc:'Dark sky, gorilla trek, private island'},
+  {key:'water_coastal',   icon:'🌊', name:'Water & coastal',     desc:'Sailing, dive, mokoro, island hops'},
+  {key:'sky_aerial',      icon:'🪂', name:'Sky & aerial',        desc:'Balloon, helicopter, paraglide, skydive'},
+  {key:'arts_culture',    icon:'🎭', name:'Arts & culture',      desc:'Township, cooking class, rock art, craft'},
+];
+
+// Accommodation categories (adventures_accommodation)
+const ADV_ACCOM_CATS = [
+  {key:'private_lodge',   icon:'🏡', name:'Private lodge',       desc:'Exclusive use, game reserve, luxury'},
+  {key:'bush_camp',       icon:'⛺', name:'Bush camp',           desc:'Tented camps, fly camps, wild stays'},
+  {key:'mountain_retreat',icon:'🏔', name:'Mountain retreat',    desc:'Chalets, huts, highland hideaways'},
+  {key:'coastal_island',  icon:'🏖', name:'Coastal & island',    desc:'Beach houses, island villas, surf stays'},
+  {key:'boutique_hotel',  icon:'🛎', name:'Boutique hotel',      desc:'Guest house, B&B, design hotel'},
+  {key:'self_catering',   icon:'🍳', name:'Self-catering',       desc:'Farm cottages, karoo retreats, villas'},
+  {key:'unique_stays',    icon:'🌿', name:'Unique stays',        desc:'Treehouses, caves, star beds, domes'},
+  {key:'caravan_camping', icon:'🚐', name:'Caravan & camping',   desc:'Sites, glamping, rooftop tents'},
+];
+
+// Pin-3 chips per subcat (shown in header without opening sheet)
+const ADV_PINS = {
+  adventures_experiences:   ['luxury_safari','luxury_train','guided_tours'],
+  adventures_accommodation: ['private_lodge','bush_camp','mountain_retreat'],
+  all:                      ['luxury_safari','luxury_train','private_lodge'],
 };
+
+// Label lookup for cards
+function advCatLabel(l){
+  const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
+  const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
+  const match = cats.find(c=>c.key===(l.experience_type||l.accommodation_type||''));
+  return match ? match.icon+' '+match.name : (isAccom ? '🏕 Accommodation' : '🌄 Experiences');
+}
+
 const ADV_SUBCAT_LABELS = {
-  adventures_accommodation:'🏕 Accommodation',
+  adventures_accommodation:'🏕 Stays',
   adventures_experiences:'🌄 Experiences',
 };
 
 function setAdvSubcat(sc, btn){
   advSubcat = sc;
+  advCat = 'all';
   document.querySelectorAll('.adv-subcat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  // Only show category chip row when a specific subcat is selected
+  const catRow = document.getElementById('adv-cat-row');
+  if(catRow) catRow.style.display = (sc==='all') ? 'none' : 'flex';
+  refreshAdvCatChips();
   renderAdvGrid();
 }
 
-function setAdvEnv(env, chip){
-  advEnv = env;
-  document.querySelectorAll('.adv-env-chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
+// Determine active category list based on current subcat
+function advActiveCats(){
+  if(advSubcat==='adventures_experiences') return ADV_EXP_CATS;
+  if(advSubcat==='adventures_accommodation') return ADV_ACCOM_CATS;
+  return [...ADV_EXP_CATS, ...ADV_ACCOM_CATS];
+}
+
+// Update the 3 pinned chips labels to match current subcat
+// Short display labels for the 3 pinned chips
+const ADV_PIN_LABELS = {
+  luxury_safari:'🦁 Safari', luxury_train:'🚂 Train', guided_tours:'🗺 Tours',
+  once_in_lifetime:'✨ Unique', water_coastal:'🌊 Water', sky_aerial:'🪂 Sky',
+  arts_culture:'🎭 Culture', private_lodge:'🏡 Lodge', bush_camp:'⛺ Bush',
+  mountain_retreat:'🏔 Mountain', coastal_island:'🏖 Coastal', boutique_hotel:'🛎 Boutique',
+  self_catering:'🍳 Self-cat', unique_stays:'🌿 Unique', caravan_camping:'🚐 Caravan',
+};
+
+// Which 3 keys to pin per subcat
+const ADV_PIN_KEYS = {
+  adventures_experiences:   ['luxury_safari','luxury_train','guided_tours'],
+  adventures_accommodation: ['private_lodge','bush_camp','mountain_retreat'],
+  all:                      ['luxury_safari','guided_tours','private_lodge'],
+};
+
+function refreshAdvCatChips(){
+  const isAccom = advSubcat==='adventures_accommodation';
+  const activeClass = isAccom ? 'active-accom' : 'active-exp';
+  const pinKeys = ADV_PIN_KEYS[advSubcat] || ADV_PIN_KEYS['all'];
+
+  // Update pin chip labels and handlers
+  ['pin1','pin2','pin3'].forEach((pid,i)=>{
+    const chip = document.getElementById('adv-cat-'+pid);
+    if(!chip) return;
+    const key = pinKeys[i];
+    chip.textContent = ADV_PIN_LABELS[key] || key;
+    chip.dataset.catKey = key;
+    chip.onclick = ()=>setAdvCat(key, chip);
+  });
+
+  // Reapply active highlight
+  document.querySelectorAll('.adv-cat-chip').forEach(ch=>{
+    ch.classList.remove('active-exp','active-accom');
+  });
+  const allChip = document.getElementById('adv-cat-all');
+  if(allChip && advCat==='all') allChip.classList.add(activeClass);
+  ['pin1','pin2','pin3'].forEach(pid=>{
+    const chip = document.getElementById('adv-cat-'+pid);
+    if(chip && chip.dataset.catKey===advCat) chip.classList.add(activeClass);
+  });
+  // If active cat is from sheet (not a pin), highlight More button slightly
+  const moreBtn = document.getElementById('adv-cat-more-btn');
+  if(moreBtn){
+    const pinned = pinKeys.includes(advCat) || advCat==='all';
+    moreBtn.style.borderColor = pinned ? 'rgba(255,255,255,.2)' : '#e8c97b';
+    moreBtn.style.color       = pinned ? 'rgba(255,255,255,.75)' : '#e8c97b';
+  }
+}
+
+function setAdvCat(key, chip){
+  advCat = key;
+  const isAccom = advSubcat==='adventures_accommodation';
+  const activeClass = isAccom ? 'active-accom' : 'active-exp';
+  document.querySelectorAll('.adv-cat-chip').forEach(ch=>ch.classList.remove('active-exp','active-accom'));
+  if(chip) chip.classList.add(activeClass);
+  // close sheet
+  const sheet = document.getElementById('adv-cat-sheet');
+  if(sheet) sheet.classList.remove('open');
+  refreshAdvCatChips();
   renderAdvGrid();
+}
+
+function openAdvCatSheet(){
+  const isAccom = advSubcat==='adventures_accommodation';
+  const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
+  const title = isAccom ? 'Accommodation type' : 'Experience type';
+  const iconBgMap = {
+    luxury_safari:'#fef3c7', luxury_train:'#ede9fe', guided_tours:'#dbeafe',
+    once_in_lifetime:'#fce7f3', water_coastal:'#e0f2fe', sky_aerial:'#fef9c3',
+    arts_culture:'#f3e8ff', private_lodge:'#d1fae5', bush_camp:'#fef3c7',
+    mountain_retreat:'#e0e7ff', coastal_island:'#e0f2fe', boutique_hotel:'#fce7f3',
+    self_catering:'#f0fdf4', unique_stays:'#fef9c3', caravan_camping:'#fff7ed',
+  };
+
+  // Rebuild options div only — keep sheet-inner wrapper intact for click-outside
+  const optionsDiv = document.getElementById('adv-cat-options');
+  if(!optionsDiv) return;
+  document.getElementById('adv-cat-sheet-title').textContent = title;
+
+  optionsDiv.innerHTML = cats.map(cat=>{
+    const isActive = advCat===cat.key;
+    const bg = iconBgMap[cat.key]||'#f3f4f6';
+    return `<div class="adv-cat-option${isActive?' active':''}" onclick="setAdvCat('${cat.key}',null)">
+      <div class="adv-cat-icon" style="background:${bg};">${cat.icon}</div>
+      <div><div class="adv-cat-opt-name">${cat.name}</div><div class="adv-cat-opt-desc">${cat.desc}</div></div>
+      <span class="adv-cat-check">✓</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('adv-cat-sheet').classList.add('open');
+}
+
+function closeAdvCatSheet(e){
+  if(e.target===document.getElementById('adv-cat-sheet'))
+    document.getElementById('adv-cat-sheet').classList.remove('open');
 }
 
 function openAdvCountrySheet(){
@@ -4707,10 +4909,11 @@ function renderAdvGrid(){
       if(lc && lc !== advCountry) return false;
     }
 
-    // Environment filter
-    if(advEnv !== 'all'){
-      const env = (l.environment_type||l.suburb||'').toLowerCase().replace(/\s+/g,'_');
-      if(env && env !== advEnv) return false;
+    // Category filter (experience_type or accommodation_type)
+    if(advCat !== 'all'){
+      const isAccom = cat.includes('accommodation');
+      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+      if(!typeVal || typeVal !== advCat) return false;
     }
     return true;
   });
@@ -4730,8 +4933,10 @@ function renderAdvGrid(){
 
   grid.innerHTML = items.map(l => {
     const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
-    const subcatLabel = isAccom ? '🏕 Accommodation' : '🌄 Experiences';
-    const envLabel = ADV_ENV_LABELS[(l.environment_type||l.suburb||'').toLowerCase().replace(/\s+/g,'_')] || '';
+    const catLabel = advCatLabel(l);
+    const badgeBg  = isAccom ? '#dbeafe' : '#d1fae5';
+    const badgeCol = isAccom ? '#1e3a5f' : '#065f46';
+    const envLabel = l.environment_type || '';
     const cur = ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()] || 'R';
     const priceLabel = isAccom
       ? (l.price ? `From ${cur}${Number(l.price).toLocaleString()}/night` : '')
@@ -4746,11 +4951,11 @@ function renderAdvGrid(){
       ${imgHtml}
       <div style="padding:12px 14px 14px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#065f46;background:#d1fae5;padding:2px 8px;border-radius:10px;">${subcatLabel}</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${badgeCol};background:${badgeBg};padding:2px 8px;border-radius:10px;">${catLabel}</span>
+          ${envLabel ? `<span style="font-size:10px;color:#6b7280;">${envLabel}</span>` : ''}
           <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag} ${countryCode}</span>
         </div>
         <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;line-height:1.3;">${esc(l.title||l.name||'Untitled')}</div>
-        ${envLabel ? `<div style="font-size:12px;color:#374151;margin-bottom:8px;">${envLabel}</div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
           <div>
             <span style="font-size:14px;font-weight:700;color:#111827;">${priceLabel}</span>
@@ -6394,6 +6599,28 @@ async function sobInit() {
     return;
   }
 
+  // ── Returning-seller gate: check EULA + banking status ──────────────────
+  // If this seller already has an account, check if they've signed the EULA
+  // and if they have banking details on file.
+  if (BEA_ENABLED && sobState.email) {
+    try {
+      const uRes = await fetch(BEA_URL + '/users/' + encodeURIComponent(sobState.email));
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        sobState._eulaSigned    = !!uData.eula_accepted_at;
+        sobState._hasBanking    = !!uData.banking_added_at;
+        // If EULA not yet signed, jump straight to phase 3 (EULA)
+        // and add a note explaining why
+        if (!sobState._eulaSigned) {
+          const noteEl = document.getElementById('sob-returning-eula-note');
+          if (noteEl) noteEl.style.display = 'block';
+          sobGoPhase(3);
+          return; // skip rendering draft cards — user must sign EULA first
+        }
+      }
+    } catch(e) {}
+  }
+
   // Render draft cards
   if (listEl) {
     listEl.innerHTML = sobState.drafts.map(l => {
@@ -6521,6 +6748,14 @@ async function sobGoLive() {
   let successCount = 0;
   let failCount = 0;
 
+  // Stamp EULA acceptance once before processing drafts
+  // (seller has just ticked both checkboxes and clicked "Go live")
+  if (BEA_ENABLED) {
+    await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/eula', {
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }
+    }).catch(() => {});
+  }
+
   for (const draft of sobState.drafts) {
     try {
       // 1. Register seller account (idempotent — BEA ignores duplicate emails)
@@ -6566,6 +6801,18 @@ async function sobGoLive() {
   sobGoPhase(4);
   showToast("🎉 You're live on TrustSquare!");
   loadLiveListings(); // refresh buyer feed
+
+  // Show banking nudge if seller has no banking details yet
+  if (!sobState._hasBanking) {
+    const nudge = document.getElementById('sob-banking-nudge');
+    if (nudge) nudge.style.display = 'flex';
+  }
+}
+
+function sobAddBanking() {
+  // Navigate to dashboard banking section after going live
+  goTo('dashboard');
+  showToast('Add your banking details in your dashboard settings.');
 }
 
 function sobDone() {
@@ -6685,6 +6932,41 @@ function sbClosePath(){
   goTo('browse');
 }
 
+// Haiko guidance strip (zero API cost)
+var _hkMsgs = {
+  b1:       "Hi! I'm <strong>Haiko</strong> &#8212; tap <strong>Let's go</strong> and I'll walk you through every step. Takes about 5 minutes.",
+  b2:       "<strong>Pick your category</strong> &#8212; this sets the fields and intro model for your listing. Tap the tile that fits best.",
+  b2_gate:  "<strong>One quick question</strong> &#8212; are you a registered agent/dealer or a private seller? This determines your compliance badge.",
+  b3:       "<strong>Fill in your listing details</strong> &#8212; the more you add, the better the description I'll write for you on the next step.",
+  b3_ready: "<strong>Looking good!</strong> I'll draft your description from these details. Tap <strong>Continue</strong> when ready.",
+  b4:       "<strong>I drafted this from your details</strong> &#8212; read it through and edit anything that doesn't sound like you. Tap <strong>Looks good</strong> to continue.",
+  b5:       "<strong>Add photos for each section</strong> &#8212; tap any slot to add a photo. Listings with 3+ photos get significantly more intro requests.",
+  b5_some:  "<strong>Great start on photos!</strong> Add more if you can &#8212; every extra photo boosts your intro requests.",
+  b6:       "<strong>Add a profile photo</strong> &#8212; your name stays hidden until both parties accept an intro. Tap <strong>Skip</strong> to come back later.",
+  b7:       "<strong>Earn Trust Score signals</strong> &#8212; tick anything that applies now. Add more from your dashboard any time. Tap <strong>Skip</strong> to continue.",
+  b7_some:  "<strong>Nice &#8212; every signal helps!</strong> Add as many as apply, then tap <strong>Continue</strong>.",
+  b8:       "<strong>Almost there!</strong> Review your listing below &#8212; if it looks right, tap <strong>Publish listing</strong>. You can edit any time from your dashboard.",
+  success:  ""
+};
+function hkSet(key, warn, ok) {
+  var strip = document.getElementById('sb-haiko-strip');
+  var msg   = document.getElementById('sb-haiko-msg');
+  if (!strip || !msg) return;
+  var text = _hkMsgs[key] || '';
+  if (!text) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.className = 'hk-strip' + (warn ? ' hk-warn' : (ok ? ' hk-ok' : ''));
+  msg.innerHTML = text;
+}
+function hkMove(stepId) {
+  var strip = document.getElementById('sb-haiko-strip');
+  if (!strip) return;
+  var step = document.getElementById('sb-' + stepId);
+  if (!step) return;
+  var hdr = step.querySelector('.pub-hdr');
+  if (hdr && hdr.nextSibling !== strip) hdr.parentNode.insertBefore(strip, hdr.nextSibling);
+  strip.style.display = 'flex';
+}
 function sbGoStep(step){
   ['b1','b2','b3','b4','b5','b6','b7','b8','success'].forEach(s=>{
     const el=document.getElementById('sb-'+s); if(el)el.style.display='none';
@@ -6709,11 +6991,13 @@ function sbGoStep(step){
   if(step==='b5') sbRenderB5();
   if(step==='b7') sbRenderB7();
   if(step==='b8') sbRenderB8Preview();
+  hkMove(step); hkSet(step, false, false);
 }
 
 // ── B2: category + agent/private gate ─────────────────────
 function sbSelCat(cat){
-  sbState.cat=cat; sbState.gate=''; sbState.subcat='';
+  sbState.cat=cat;
+  setTimeout(function(){var g=document.getElementById('sb-b2-gate');if(g&&g.style.display!=='none')hkSet('b2_gate',false,false);},60); sbState.gate=''; sbState.subcat='';
   ['Property','Tutors','Services','Adventures','Collectors','Cars','LocalMarket'].forEach(c=>{
     const el=document.getElementById('sb-cbt-'+c); if(el)el.classList.toggle('selected',c===cat);
   });
@@ -6911,6 +7195,7 @@ function sbCheckB3(){
   const ok=title.trim().length>0;
   const btn=document.getElementById('sb-b3-next');
   if(btn){btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';}
+  hkSet(ok?'b3_ready':'b3', false, ok);
 }
 
 async function sbTriggerMarketNote(){
@@ -7204,6 +7489,7 @@ function sbHandlePhotoCapture(e){
       sbState.photos=sbState.photos.filter(p=>p.slot!==sbCurrentPhotoSlot);
       sbState.photos.push({slot:sbCurrentPhotoSlot,dataUrl,caption:''});
       sbRenderB5();
+      hkSet(sbState.photos.length>=2?'b5_some':'b5', false, sbState.photos.length>=2);
     };
     img.src=ev.target.result;
   };
@@ -7537,7 +7823,7 @@ function sbRenderB8Preview(){
 }
 
 async function sbDoPublish(){
-  if(isOffline()){ showToast('You\'re offline — publishing needs a connection'); return; }
+  if(isOffline()){ showToast("You're offline — publishing needs a connection"); return; }
   const btn=document.getElementById('sb-b8-publish-btn');
   const errEl=document.getElementById('sb-b8-err');
   const email=localStorage.getItem('ms_aa_email')||'';
@@ -7545,6 +7831,33 @@ async function sbDoPublish(){
   const title=f.title||'';
   if(!title.trim()||!email){
     if(errEl){errEl.textContent='Missing title or account — please go back and check your details.';errEl.style.display='block';} return;
+  }
+
+  // ── EULA gate for in-app publish flow ─────────────────────────────────────
+  // Check if this seller has accepted the EULA. If not, show the standard
+  // EULA modal (fea-lm-eula-modal) — on acceptance we record it and retry.
+  if(BEA_ENABLED){
+    try{
+      const _ur=await fetch(BEA_URL+'/users/'+encodeURIComponent(email));
+      if(_ur.ok){
+        const _ud=await _ur.json();
+        if(!_ud.eula_accepted_at){
+          // Hijack the LM EULA modal for the standard seller EULA check
+          // Set the title to reflect this is the seller EULA, not just LM
+          const _eulaHdr=document.querySelector('#fea-lm-eula-modal h2');
+          if(_eulaHdr) _eulaHdr.textContent='Accept TrustSquare Terms before publishing';
+          _feaLmEulaPending=async()=>{
+            // Record EULA acceptance via the standard endpoint
+            await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/eula',{method:'POST',headers:{'X-Api-Key':API_KEY}}).catch(()=>{});
+            await sbDoPublish();
+          };
+          document.getElementById('fea-lm-eula-modal').style.display='flex';
+          return;
+        }
+        // Banking nudge: remember for post-publish display
+        sbState._hasBanking=!!_ud.banking_added_at;
+      }
+    }catch(_){}
   }
   if(btn){btn.textContent='Publishing…';btn.style.opacity='.7';btn.style.pointerEvents='none';}
   if(errEl) errEl.style.display='none';
@@ -7614,6 +7927,12 @@ async function sbDoPublish(){
     sbGoStep('success');
     showToast('✓ Listing published!');
     loadLiveListings();
+
+    // Banking nudge — show if seller has no banking details
+    if(!sbState._hasBanking){
+      const _sbBankNudge=document.getElementById('sb-banking-nudge');
+      if(_sbBankNudge) _sbBankNudge.style.display='flex';
+    }
   } catch(err){
     const msg=err&&err.message?err.message:'Unknown error';
     if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${msg}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your connection and try again.</span>`;errEl.style.display='block';}
@@ -8478,6 +8797,33 @@ async function saveEditedListing() {
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
   if (!sellerEmail) { showToast('Cannot save — seller email not set'); return; }
 
+  // ── EULA gate — must accept before editing a live listing ─────────────────
+  if (BEA_ENABLED) {
+    try {
+      const _ur = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail));
+      if (_ur.ok) {
+        const _ud = await _ur.json();
+        if (!_ud.eula_accepted_at) {
+          // Show EULA modal — on acceptance, stamp and retry save
+          const _eulaHdr = document.querySelector('#fea-lm-eula-modal h2');
+          if (_eulaHdr) _eulaHdr.textContent = 'Accept TrustSquare Terms before editing your listing';
+          _feaLmEulaPending = async () => {
+            await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail) + '/eula',
+              { method: 'POST', headers: { 'X-Api-Key': API_KEY } }).catch(() => {});
+            await saveEditedListing();
+          };
+          document.getElementById('fea-lm-eula-modal').style.display = 'flex';
+          return;
+        }
+        // Banking nudge — non-blocking, just show toast once per session
+        if (!_ud.banking_added_at && !sessionStorage.getItem('_bankNudgeSeen')) {
+          sessionStorage.setItem('_bankNudgeSeen', '1');
+          showToast('💡 Tip: add your banking details in dashboard settings for Tuppence payouts.', 5000);
+        }
+      }
+    } catch(_) {}
+  }
+
   const btn = document.getElementById('el-save-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
@@ -8730,6 +9076,15 @@ async function feaLmSubmit() {
   if (!email) { status.textContent = 'Please sign in first.'; return; }
   if (!title || !suburb || !city) {
     status.textContent = 'Please fill in title, suburb, and city.';
+    var _lmMsg = document.getElementById('lm-haiko-msg');
+    var _lmEl  = document.getElementById('lm-haiko-strip');
+    if (_lmMsg && _lmEl) {
+      _lmEl.className = 'hk-strip hk-warn';
+      _lmMsg.innerHTML = '<strong>Almost there</strong> — ' +
+        (!title  ? 'add a <strong>title</strong> for your item. ' : '') +
+        (!suburb ? 'add your <strong>suburb</strong>. ' : '') +
+        (!city   ? 'add your <strong>city</strong>. ' : '');
+    }
     return;
   }
 
@@ -9086,7 +9441,7 @@ const AA_CATEGORIES = {
     fields: [
       {id:'title', label:'Product / service title', type:'text',     placeholder:'e.g. Organic honey — 500ml jar'},
       {id:'price', label:'Price',                   type:'text',     placeholder:'e.g. R120 per jar'},
-      {id:'desc',  label:'Description',             type:'textarea', placeholder:'What you’re offering, quantity, freshness, delivery options…'},
+      {id:'desc',  label:'Description',             type:'textarea', placeholder:"What you're offering, quantity, freshness, delivery options…"},
       {id:'area',  label:'Area / suburb',           type:'text',     placeholder:'e.g. Pretoria East'},
     ],
     photos: [
@@ -10514,7 +10869,7 @@ async function wlLoadFeed() {
       const sc = r.ok ? await r.json() : [];
       wrap.innerHTML = _wlRenderCards(sc, true);
     } catch(e) {
-      wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn’t load feed.</div>';
+      wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn\'t load feed.</div>';
     }
     return;
   }
@@ -10539,7 +10894,7 @@ async function wlLoadFeed() {
       upBox.style.display = 'none';
     }
   } catch(e) {
-    wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn’t load feed.</div>';
+    wrap.innerHTML = '<div style="padding:30px 16px;color:var(--text-3);font-size:13px;text-align:center;width:100%;">Couldn\'t load feed.</div>';
   }
 }
 

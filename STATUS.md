@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 46 · 9 May 2026**
+**Updated: Session 49 · 10 May 2026**
 
 ---
 
@@ -62,6 +62,19 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 49
+
+### Adventures page category system redesign ✅
+- Scrolling environment chips replaced with fixed 4-chip category bar inside dark hero header
+- Chip row hidden on "All" tab, shown only for Stays/Experiences with correct pinned categories
+- "More ▾" bottom sheet slides up with all 7 (Experiences) or 8 (Accommodation) typed categories
+- Gold active state for Experiences, blue for Stays — consistent visual identity
+- 7 experience types: Luxury safari · Luxury train · Guided tours · Once in a lifetime · Water & coastal · Sky & aerial · Arts & culture
+- 8 accommodation types: Private lodge · Bush camp · Mountain retreat · Coastal & island · Boutique hotel · Self-catering · Unique stays · Caravan & camping
+- 10 luxury accommodation demo listings added (ZA × 8, MZ × 1, NA × 1) spanning all 8 types
+- Card badges now show specific category type labels with colour coding
+- Environment chip filter bug fixed (& → _and_ normalisation)
 
 ## Last Completed — Session 48
 
@@ -135,11 +148,12 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 49
+## Next Session — Session 50
 
 ### Priority
 1. **Wave 1 launch** — load real Pretoria Property prospects into CityLauncher DB, trigger Wave 1 with `batch_size=60`, monitor delivery
 2. **Paystack live mode** — awaiting CIPC bank account setup (David action)
+3. **Adventures detail view upgrade** — wire new card design (photo thumbnail row, stat strip, trust bar) into openDetail() for adventures listings
 
 ### Backlog
 - Admin ops queue — review uploaded credentials

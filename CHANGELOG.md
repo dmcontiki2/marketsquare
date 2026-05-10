@@ -1396,3 +1396,25 @@ Trustsquare (Pty) Ltd was formally registered with CIPC on 29/04/2026 (Reg 2026/
 **EULA gate extended to edit flow.** The initial fix only covered the publish path. `saveEditedListing` (FEA) and `PUT /listings/{id}` (BEA) were both unguarded — a seller who had never accepted the EULA could freely edit any live listing. Fixed: `saveEditedListing` now fetches the user record before proceeding; if `eula_accepted_at` is NULL it intercepts with the EULA modal (same pattern as publish), stamps acceptance on confirm, then retries the save. A non-blocking banking nudge toast fires once per session if `banking_added_at` is also NULL. BEA `update_listing` now enforces the same EULA gate server-side — returns 403 if `eula_accepted_at` is NULL (superusers bypass). Both publish and edit paths are now consistently gated end-to-end.
 
 **Haiko sticky guidance strip across all listing flows.** Sellers consistently reported not knowing what was expected at each step. Added a persistent Haiko coach strip (zero API cost — all local JS, no external calls) that appears immediately below the step header on every sell-b step (B1–B8) and inside the Local Market create modal. The strip shows a single contextual sentence per step and updates reactively: B2 switches message when the agent/private gate appears; B3 upgrades from "fill in details" to "looking good — tap Continue" once a title is entered (with green colouring); B5 upgrades from "add photos" to "great start" once 2+ photos are added; B7 upgrades when any signal is ticked. The LM modal strip shows a calm opening message and switches to an amber warning with field-specific guidance if the user tries to submit without title/suburb/city. Strip element is a single DOM node physically moved into each active step by `hkMove()` on every `sbGoStep()` call — no duplicates, no layout shift.
+
+---
+
+## Session 49 · 10 May 2026
+
+**Adventures page — full category system redesign (buyer-facing FEA).**
+
+Replaced the scrolling environment chip row with a fixed 4-chip category bar permanently inside the dark green hero header. The chip row is hidden when the "All" tab is active and only appears when Stays or Experiences is selected. Three pinned chips show the most relevant categories per tab (Experiences: Safari · Train · Tours; Stays: Lodge · Bush · Mountain) plus a "More ▾" button that slides up a bottom sheet with all 7 or 8 category options. Active state is gold for Experiences and blue for Stays. The bottom sheet uses a stable DOM structure so the click-outside handler never breaks across repeated opens.
+
+**New experience categories.** Replaced the single `adventures_experiences` subcat label with 7 typed categories: Luxury safari · Luxury train · Guided tours · Once in a lifetime · Water & coastal · Sky & aerial · Arts & culture. New `experience_type` field added to all 10 demo experience listings with correct assignments. `ADV_EXP_CATS`, `ADV_ACCOM_CATS`, `ADV_PIN_KEYS`, and `ADV_PIN_LABELS` constants drive the entire system — adding a new category requires only one array entry.
+
+**New accommodation categories.** 8 typed accommodation categories: Private lodge · Bush camp · Mountain retreat · Coastal & island · Boutique hotel · Self-catering · Unique stays · Caravan & camping. New `accommodation_type` field ready on all accommodation listings.
+
+**10 luxury accommodation demo listings added.** Full spread across all 8 accommodation types and multiple countries (ZA × 8, MZ × 1, NA × 1): Waterberg Private Lodge (private_lodge), Kruger Fly Camp (bush_camp), Drakensberg Chalet (mountain_retreat), Bazaruto Island Villa MZ (coastal_island), Cape Town Boutique Hotel (boutique_hotel), Karoo Farmhouse Sutherland (self_catering), Tsitsikamma Treehouse (unique_stays), Paternoster Glamping Pod (caravan_camping), Sossusvlei Desert Lodge NA (private_lodge), Cederberg Cave House (mountain_retreat). All listings include 5 photos, trust scores 79–95, and per-night pricing.
+
+**Environment filter bug fixed.** The previous environment chip row had a normalisation bug where `"Bush & Wildlife"` was converted to `"bush_wildlife"` instead of `"bush_and_wildlife"`, causing all category chip filters to return zero results. Fixed `&` → `_and_` normalisation. Demo listings had no `environment_type` field at all — added correct values to all 10 experience listings.
+
+**Card badge upgraded.** Adventure card badges now show the specific experience or accommodation type label (e.g. "🦁 Luxury Safari") in category-appropriate colour (green for experiences, blue for accommodation) rather than the generic "Accommodation / Experiences" label. Environment shown as secondary supporting text.
+
+**Continent vs country discussion.** Decided to keep per-country filtering for now (buyers think in countries for aspirational travel — "I want to go to Namibia" not "I want to go to Africa"). Planned upgrade: two-level continent → country picker when 8+ countries are onboarded. Cape to Cairo route (7 countries, 2 continents) was the trigger for this discussion.
+
+**Cost model impact:** None.
