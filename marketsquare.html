@@ -873,7 +873,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .sob-tier-price{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:10px;}
 .sob-tier-feat{font-size:12px;color:rgba(255,255,255,.65);line-height:1.8;}
 .sob-tier-feat span{display:block;}
-.sob-eula-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;max-height:220px;overflow-y:auto;margin-bottom:16px;}
+.sob-eula-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;max-height:340px;overflow-y:auto;margin-bottom:0;transition:border-color .3s;}.sob-eula-box.eula-read{border-color:rgba(200,135,58,.5);}
 #screen-onboard{background:var(--navy);min-height:100vh;}
 .ob-page{min-height:100vh;display:flex;flex-direction:column;}
 .ob-hero{padding:60px 24px 32px;flex:1;}
@@ -898,8 +898,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ob-form .osub{font-size:13px;color:var(--text-2);margin-bottom:20px;font-weight:400;}
 .ob-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
 /* ── Guided onboarding screen (3-step photo-first flow) ── */
-#screen-guided-onboard{background:var(--navy);min-height:100vh;overflow-x:hidden;}
-.go-screen{display:none;flex-direction:column;min-height:100vh;}
+#screen-guided-onboard{background:var(--navy);min-height:100vh;overflow-x:hidden;overflow-y:auto;padding-bottom:0;}
+.go-screen{display:none;flex-direction:column;min-height:100vh;overflow-y:auto;padding-bottom:100px;}
 .go-screen.go-active{display:flex;}
 .go-hdr{padding:52px 20px 14px;display:flex;align-items:flex-start;gap:0;flex-direction:column;}
 .go-step-pill{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:6px;}
@@ -933,7 +933,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .go-field-input::placeholder{color:rgba(255,255,255,.25);}
 .go-field-row{display:flex;gap:10px;}
 .go-field-row .go-field-group{flex:1;}
-.go-footer{padding:16px 16px max(calc(env(safe-area-inset-bottom)+16px),32px);display:flex;gap:10px;}
+.go-footer{padding:12px 16px max(calc(env(safe-area-inset-bottom)+16px),24px);display:flex;gap:10px;position:sticky;bottom:0;background:linear-gradient(to bottom,transparent,var(--navy) 30%);z-index:10;margin-top:auto;}
 .go-btn-bk{flex:0 0 auto;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
 .go-btn-next{flex:1;background:var(--accent-bright,#2563eb);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;}
 .go-btn-next:disabled{opacity:.35;cursor:not-allowed;}
@@ -2847,9 +2847,13 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
       <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.3);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence intro fees apply on all plans.<br>All listings fade gracefully after their duration — renew free at any time.</div>
     </div>
-    <div class="sob-footer">
-      <button class="sob-btn-bk" onclick="sobGoPhase(1)">← Back</button>
+    <div class="sob-footer" style="flex-direction:column;gap:8px;">
       <button class="sob-btn-next" id="sob-p2-next" onclick="sobContinueFromTier()">Continue →</button>
+      <div id="sob-p2-back-wrap" style="text-align:center;">
+        <!-- Shown as plain back button for normal flow; start-over link for guided arrivals -->
+        <button id="sob-p2-bk-normal" class="sob-btn-bk" onclick="sobGoPhase(1)" style="display:none;">← Back</button>
+        <span id="sob-p2-bk-guided" style="display:none;font-size:12px;color:rgba(255,255,255,.35);cursor:pointer;text-decoration:underline;" onclick="sobStartOver()">Start over</span>
+      </div>
     </div>
   </div>
 
@@ -2868,98 +2872,657 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <strong style="color:#fbbf24;">One quick step before you go live.</strong> You have an existing account but haven't yet accepted the TrustSquare EULA. Please read and accept the terms below — your listing will go live immediately after.
       </div>
 
-      <div class="sob-eula-box">
-        <div style="font-weight:800;font-size:13px;color:rgba(255,255,255,.85);margin-bottom:4px;letter-spacing:.3px;">TrustSquare Terms of Use / EULA</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:14px;">Trustsquare (Pty) Ltd · Reg 2026/340128/07 &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; Governing Law: Republic of South Africa &nbsp;·&nbsp; For legal review — not yet finalised</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">1. Definitions &amp; Interpretation</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Platform / TrustSquare</strong> — The online marketplace operated at trustsquare.co, including all web, mobile, and API services.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Tuppence (T)</strong> — The Platform's internal transaction unit. 1T = USD $2.00 fixed. Non-transferable, non-redeemable for cash in current state, Platform-exclusive.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Introduction</strong> — A buyer-initiated connection request charged at 1T. If accepted, both parties' contact details are revealed. No further platform fee applies thereafter.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Trust Score</strong> — A numeric score (0–100) reflecting reliability, response rate, and compliance history. Governs listing visibility and badge tier.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Magic Link</strong> — A personalised, single-use onboarding URL that pre-populates the onboarding wizard with the seller's details.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">EULA / Agreement</strong> — This End User Licence Agreement, including all documents incorporated by reference.</div>
-        <div style="margin-bottom:14px;"><strong style="color:rgba(255,255,255,.7);">Applicable law</strong> — POPIA (Act 4 of 2013) &nbsp;·&nbsp; ECT Act (Act 25 of 2002) &nbsp;·&nbsp; CPA (Act 68 of 2008) &nbsp;·&nbsp; FICA (Act 38 of 1998).</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">2. Platform Scope &amp; Acceptance</div>
-        <div style="margin-bottom:10px;">By accepting this EULA you confirm you are at least 18 years of age, have legal capacity to enter binding agreements under South African law, and that all information you provide is accurate and not misleading.</div>
-        <div style="margin-bottom:10px;">Clicking "Go live" constitutes your electronic signature on this Agreement per Section 4 of the ECT Act. The Platform records your acceptance timestamp and EULA version number.</div>
-        <div style="margin-bottom:10px;">The Platform is not a party to any transaction between buyer and seller. It does not guarantee the outcome, quality, safety, or legality of any transaction.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">3. Anonymity &amp; Identity Verification</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Anonymity principle.</strong> Your name, email, business name, contact details, and exact location are never shown to buyers. Your public profile shows only: emoji avatar, category, Trust Score, and suburb/city — until both parties complete bilateral Introduction acceptance.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Bilateral reveal.</strong> Your identity is revealed to a buyer only when (i) the buyer sends an Introduction and (ii) you accept it. At that moment both parties see each other's full contact details simultaneously.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Prohibited circumvention.</strong> You may not include your name, phone number, or contact details in listing text, or link to profiles that identify you by name, before bilateral acceptance.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Identity verification (FICA).</strong> Full identity verification (SA ID, proof of address, liveness check) is required within 5 business days of accepting your first Introduction. Failure to complete verification results in cancellation of that Introduction and refund of the buyer's Tuppence.</div>
-        <div style="margin-bottom:14px;"><strong style="color:rgba(255,255,255,.7);">Regulatory disclosure.</strong> The Platform may disclose your identity to SAPS, NPA, FIC, SARS, or FSCA upon receipt of a lawful order.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">4. Listings &amp; Content</div>
-        <div style="margin-bottom:10px;">You are solely responsible for the accuracy, legality, and currency of your listing content. The Platform does not verify listing content.</div>
-        <div style="margin-bottom:10px;">You may not list content that is false, misleading, or fraudulent; infringes third-party IP rights; promotes illegal goods or activities; contains personal contact details; or claims credentials you do not hold.</div>
-        <div style="margin-bottom:14px;">The Platform may remove, hide, or edit any listing that violates this EULA, and may suspend or terminate your account for repeated or serious violations.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">5. Tuppence &amp; Introductions</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">How it works.</strong> Buyers pay 1T to send an Introduction. If you accept, 1T is credited to your Tuppence Wallet and contact details are exchanged. If you decline or don't respond within 48 hours, the 1T is refunded to the buyer.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Introduction models by category:</strong><br>
-          <span style="color:rgba(255,255,255,.5);">Property:</span> Commitment model — listing pauses; one buyer at a time; 48hr window. Ignoring costs you a Trust Score penalty.<br>
-          <span style="color:rgba(255,255,255,.5);">Tutors &amp; Services:</span> Soft Queue — listing stays live; multiple buyers can queue; 48hr window. −3 Trust Score for ignoring.<br>
-          <span style="color:rgba(255,255,255,.5);">Casuals:</span> Soft Queue — no Trust Score penalty for non-response.
-        </div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Tuppence restrictions.</strong> Non-transferable between users; non-redeemable for cash (current state); Platform-exclusive; no expiry while account is active.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">7-day cooling-off right (ECT Act §44).</strong> Buyers may cancel an Introduction within 7 calendar days before seller acceptance for a full refund. This right does not apply after both parties have accepted.</div>
-        <div style="margin-bottom:14px;"><strong style="color:rgba(255,255,255,.7);">AI Feature Tuppence.</strong> Separate from Introduction Tuppence. Optional, seller-only, subscription-gated. Charges cost-recovery for an external AI API. Pricing TBD — no charges apply until pricing is published and you accept updated terms.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">6. Fees, Subscriptions &amp; Payment</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Seller subscription tiers (preliminary):</strong><br>
-          <span style="color:rgba(255,255,255,.5);">Free</span> — 2 listings, 30 days, then fade<br>
-          <span style="color:rgba(255,255,255,.5);">Standard</span> — 20 listings, 60 days — $5/mo<br>
-          <span style="color:rgba(255,255,255,.5);">International</span> — 40 listings, 90 days — $15/mo
-        </div>
-        <div style="margin-bottom:10px;">Payments are processed by Paystack. You are solely responsible for all taxes arising from your Platform use. There are no hidden fees, listing commissions, or booking percentages.</div>
-        <div style="margin-bottom:14px;">Refunds of Tuppence apply only where: seller didn't respond within 48hrs; seller declined; buyer cancelled within 7 days; Platform technical fault prevented delivery.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">7. Professional Credentials</div>
-        <div style="margin-bottom:10px;">If your category requires professional registration (e.g. EAAB for Property, trade licence for Services), you must hold and maintain the required licence throughout your use of the Platform. False attestation is grounds for immediate termination and may give rise to civil or criminal liability.</div>
-        <div style="margin-bottom:14px;">Certification badges are visible on your listing card before Introduction acceptance — this is a deliberate anonymity-neutral signal of verified quality that does not reveal personal identity.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">8. User-Uploaded Content &amp; IP</div>
-        <div style="margin-bottom:10px;">You retain copyright ownership of all content you upload. By uploading, you grant the Platform a non-exclusive, royalty-free, worldwide, irrevocable licence to store, display, and technically process your content within the Platform ecosystem (all current and future TrustSquare apps).</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">The Platform will never:</strong> sell your photos to third parties; use them in external advertising; or license them to stock photography agencies.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Your warranty.</strong> By uploading any photo you warrant you are the copyright owner or have written permission to use it commercially. If a third party sues the Platform over your uploaded content, you are liable for the Platform's defence costs and damages. Upload only photos you own or have written permission to use commercially.</div>
-        <div style="margin-bottom:14px;">If you delete your listing, associated photos are removed from public display within 48 hours. Data required for legal compliance is retained for up to 7 years per FICA.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">9. Privacy &amp; POPIA</div>
-        <div style="margin-bottom:10px;">By accepting this EULA you give informed, specific, opt-in POPIA consent to processing of your identity data (FICA compliance), location data (listing display), transaction data (wallet management), and device/usage data (fraud prevention and platform improvement).</div>
-        <div style="margin-bottom:10px;">Platform servers are hosted on Hetzner CPX22 in Germany (EU/GDPR). Photo storage uses Cloudflare R2 (EU). Personal data is never sold to third parties.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Your POPIA rights:</strong> access, correction, deletion (right to be forgotten), and objection — email legal@trustsquare.co. Complaints may be lodged with the South African Information Regulator at inforegulator.org.za.</div>
-        <div style="margin-bottom:14px;">Data breach notification to you and the Information Regulator will occur within 30 days of the Platform becoming aware of any breach.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">10. Disputes &amp; Liability</div>
-        <div style="margin-bottom:10px;">Before initiating arbitration, either party must send a written claim and allow 60 days for good-faith negotiation. Unresolved disputes are referred to binding arbitration under the South African Arbitration Foundation (SAAF), Cape Town.</div>
-        <div style="margin-bottom:10px;"><strong style="color:rgba(255,255,255,.7);">Liability cap.</strong> The Platform's total liability to you in any 12-month period does not exceed: for Sellers — total Tuppence earned (at 1T = $2); for Buyers — ZAR 500. The Platform is not liable for indirect, consequential, or punitive damages, or for actions of any buyer, seller, or third party.</div>
-        <div style="margin-bottom:14px;">Nothing limits rights you have under the Consumer Protection Act, including the right to approach the NCC or a Magistrate's Court for claims under ZAR 10,000.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">11. Trust Score</div>
-        <div style="margin-bottom:10px;">Your Trust Score (0–100) is calculated from: time active, accepted Introductions, response rate, buyer ratings, complaint count, and policy violations. Score and badge are visible to all users on your listing card.</div>
-        <div style="margin-bottom:10px;">Penalties: −3 Trust Score for ignoring an Introduction within 48hrs (Tutors/Services Soft Queue). Property Commitment model: seller penalty for ignoring is −3 Trust Score. Penalties decay 50% every 90 days. If your score falls below 0, your account is automatically suspended.</div>
-
-        <div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.85);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">12. Governing Law &amp; Termination</div>
-        <div style="margin-bottom:10px;">This EULA is governed by the laws of the Republic of South Africa. POPIA, CPA, ECT Act, and FICA are mandatory and cannot be waived. Any conflict between this EULA and those Acts resolves in favour of the Act.</div>
-        <div style="margin-bottom:10px;">You may terminate your account at any time by writing to support@trustsquare.co. Unused Tuppence is forfeited on termination. The Platform may terminate your account immediately for breach of this EULA or applicable law.</div>
-        <div style="margin-bottom:10px;">The Platform may update these terms with 14 days in-app notice. Continued use after the effective date constitutes acceptance.</div>
-        <div style="margin-bottom:10px;color:rgba(255,255,255,.35);font-size:11px;">Trustsquare (Pty) Ltd · Reg 2026/340128/07 · 6 Villa Christiaan, 98 Manie Road, Elarduspark, Pretoria, 0181 &nbsp;·&nbsp; Tax: 9400407236</div>
-        <div style="margin-bottom:10px;color:rgba(255,255,255,.35);font-size:11px;">Contact: support@trustsquare.co (general) &nbsp;·&nbsp; legal@trustsquare.co (legal/privacy/POPIA) &nbsp;·&nbsp; compliance@trustsquare.co (Trust Score)</div>
-        <div style="color:rgba(255,255,255,.25);font-size:11px;font-style:italic;">TrustSquare Terms of Use / EULA v1.0 · Trustsquare (Pty) Ltd Reg 2026/340128/07 · Draft for legal review · Not yet published</div>
+      <div class="sob-eula-box" id="sob-eula-scroll" onscroll="sobEulaScroll()">
+        <div style="font-weight:700;font-size:12px;color:rgba(252,165,165,.7);text-align:center;margin-bottom:12px;padding:6px;background:rgba(252,165,165,.08);border-radius:6px;">⚠ Draft for legal review — not yet finalised</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">MarketSquare</strong></div>
+<div style="margin:5px 0;font-size:11px;">trustsquare.co</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Terms of Use /</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">End User License Agreement (EULA)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Version</strong></div>
+<div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.75);margin:12px 0 5px;letter-spacing:.4px;">1.0 — Draft</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Status</strong></div>
+<div style="margin:5px 0;font-size:11px;">For legal review — not yet published</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Prepared</strong></div>
+<div style="margin:5px 0;font-size:11px;">18 April 2026</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Governing Law</strong></div>
+<div style="margin:5px 0;font-size:11px;">Republic of South Africa</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">⚠  Legal Review Required Before Publication</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">This draft has been prepared using comparative analysis of Airbnb, Booking.com, Viator, GetYourGuide, Gumtree SA, and Property24 terms, combined with South African statutory requirements (POPIA, ECT Act, CPA, NCA, FICA, FSCA). It must be reviewed by a South African admitted attorney before deployment. Sections marked [COUNSEL REQUIRED] need jurisdiction-specific legal input. Recommended firms: Michalsons (legal tech), Werksmans (commercial law), Hogan Lovells (technology law).</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">Reviewer Notes &amp; Gap Summary</strong></div>
+<div style="margin:5px 0;font-size:11px;">This document incorporates MarketSquare's original draft EULA and closes 18 critical gaps identified through comparative analysis of comparable platforms and South African statutory requirements. The following table summarises all gaps and their treatment in this draft.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Gap</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Severity</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Status in this Draft</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No Privacy Policy referenced or linked</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">CRITICAL</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 8 — POPIA clause added; Privacy Policy page must be published at trustsquare.co/privacy before launch</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Anonymity vs. FICA KYC conflict</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">CRITICAL</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 3 — Deferred KYC model documented; FICA justification included</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No POPIA consent mechanism at account creation</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">CRITICAL</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 3.10 &amp; 8.3 — Explicit consent clause added with legal basis</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tuppence regulatory status (FSCA virtual asset risk)</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">CRITICAL</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 11 — Virtual asset classification clause; non-transferability as key defence</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No media/photo upload rights licence</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 8 — Full in-platform use licence (all current and future MarketSquare apps); explicit no-sale-to-third-parties commitment; IP indemnity placing full liability on uploading User; Adventures-specific photo standards; notice-and-takedown process</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No limitation of liability cap</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 10 — Cap at earned Tuppence (seller) / ZAR 500 (buyer); ECT Act safe harbour</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No dispute resolution clause</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 4 — South African Arbitration Foundation, Cape Town, 60-day pre-negotiation</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No ECT Act §44 cooling-off right</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 5.4 — 7-day cooling-off with cancellation mechanism</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No professional licensing / credential clause</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 7 — EAAB, certification uplift for Adventures, verification process</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No Trust Score explanation (algorithm black box)</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 12 — Algorithmic factors, penalty schedule, decay rules</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">CPA 2026 direct marketing opt-out registry</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 6.6 — NCC registration, opt-out registry pre-check, unsubscribe mechanism</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No EULA gate at onboarding (photo rights exposure)</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 1.4 — EULA acceptance gate before registration; Adventures photo rights explicitly included</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No governing law clause</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">HIGH</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 13 — Republic of South Africa; mandatory SA law supremacy list</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No termination rights clause</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 14 — User + platform termination; Tuppence forfeiture; survival clause</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures: no certification / Trust uplift clause</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 7.3–7.5 — Certification upload, pending review, bonus points on approval</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No data breach notification procedure</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 8.9 — 30-day notification; Information Regulator reporting</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">International data transfer (Hetzner/Cloudflare EU hosting)</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">MEDIUM</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Section 8.7 — GDPR adequacy; Data Processing Agreement reference</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Sections Requiring Counsel Input</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The following sections are marked [COUNSEL REQUIRED] throughout the document and must be completed by a South African admitted attorney before publication: jurisdiction choice confirmation; FICA/KYC deferred verification legal justification; NCA applicability if Tuppence purchase is enabled; FSCA virtual asset classification letter; NCC direct marketer registration number; arbitration clause enforceability review; privacy policy drafting; company/operator legal name and registration number insertion.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">1. Definitions &amp; Interpretation</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">1.1 Definitions</strong></div>
+<div style="margin:5px 0;font-size:11px;">In this Agreement, the following terms have the meanings assigned to them below:</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Term</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Meaning</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Platform / MarketSquare</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The online marketplace operated by [Company Name] (registration number [REG NO]) at trustsquare.co, including all mobile applications, web services, APIs, and related features.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Operator / We / Us / Our</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;"><strong style="color:rgba(255,255,255,.75);">[Company Name], the registered operator of the Platform. [COUNSEL REQUIRED: insert full legal entity name, registration number, and registered address]</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">User / You / Your</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Any person or entity who accesses, registers on, or uses the Platform in any capacity.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Seller</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A User who creates a listing to offer goods, services, accommodation, experiences, or other categories on the Platform.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Buyer</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A User who browses listings and initiates introductions with Sellers.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Listing</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A Seller's profile-linked offering displayed on the Platform, described by category, title, price, suburb, and optional photos.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Introduction</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A buyer-initiated connection request to a Seller, charged at 1 Tuppence, which — if accepted — reveals both parties' contact details to each other.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tuppence / T</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the mandatory fee paid by Buyers per Introduction; (ii) AI Feature Tuppence — an optional, subscription-gated fee paid by Sellers for AI-assisted features, representing cost-recovery for an external AI API. See Section 5.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AdvertAgent / AI Feature</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's optional AI-assisted Seller support feature, powered by an external AI API. Seller-facing only. Accessed via paid subscription. Charged in AI Feature Tuppence. Not part of the core marketplace flow. Pricing TBD.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trust Score</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A numeric score (0–100) assigned to each Seller that reflects reliability, response rate, and compliance history. Governs listing visibility and priority.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Anonymity Gate / Mode B</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's default state in which a Seller's identity is hidden from Buyers until both parties accept an Introduction.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Magic Link</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A personalised, single-use onboarding URL sent to prospective Sellers that pre-populates the onboarding wizard with the Seller's details.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Certification / Credential</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A verifiable professional qualification, licence, or registration uploaded by a Seller to the Platform for Trust Score bonus consideration.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A Platform category comprising two subcategories: Adventures Accommodation (accommodation listings) and Adventures Experiences (activity and experience listings).</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Collectors</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A planned Platform category for physical and digital collectibles, including trading cards, memorabilia, art, and similar items. Launch subject to Solar Council confirmation of introduction model and category rules.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">EULA / Agreement</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">This End User License Agreement, including all schedules, annexures, and documents incorporated by reference.</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">POPIA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Protection of Personal Information Act No. 4 of 2013 (South Africa) and its regulations, as amended.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">ECT Act</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Electronic Communications and Transactions Act No. 25 of 2002 (South Africa).</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">CPA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Consumer Protection Act No. 68 of 2008 (South Africa).</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">FICA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Financial Intelligence Centre Act No. 38 of 1998 (South Africa), as amended.</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">NCA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The National Credit Act No. 34 of 2005 (South Africa).</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">FSCA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Financial Sector Conduct Authority of South Africa.</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">1.2 Interpretation</strong></div>
+<div style="margin:5px 0;font-size:11px;">References to statutes include amendments and subordinate legislation made under them.</div>
+<div style="margin:5px 0;font-size:11px;">The singular includes the plural and vice versa.</div>
+<div style="margin:5px 0;font-size:11px;">Headings are for convenience only and do not affect interpretation.</div>
+<div style="margin:5px 0;font-size:11px;">"Including" and similar expressions are not words of limitation.</div>
+<div style="margin:5px 0;font-size:11px;">References to days mean calendar days unless stated as "business days" (Monday to Friday, excluding South African public holidays).</div>
+<div style="margin:5px 0;font-size:11px;">References to USD are to United States Dollars; references to ZAR or Rand are to South African Rand.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2. Platform Identity, Scope &amp; Acceptance</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2.1 Platform Identity</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The Platform is operated by [Company Name / Operator] (registration number [REG NO], [COUNSEL REQUIRED: insert registered address]) and provides an anonymity-first marketplace connecting Buyers and Sellers across multiple categories including real estate, tutoring, services, casual work, Adventures (accommodation and experiences), and Collectors (physical and digital collectibles).</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2.2 Scope of These Terms</strong></div>
+<div style="margin:5px 0;font-size:11px;">This EULA governs your access to and use of the Platform via mobile applications, web services, APIs, and all related functionality. It must be read together with the Platform's Privacy Policy at trustsquare.co/privacy.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2.3 Role of the Platform</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform facilitates connections between Buyers and Sellers. It is not a party to any transaction and does not:</div>
+<div style="margin:5px 0;font-size:11px;">Own, control, or take title to any listing, property, service, or experience offered by Sellers</div>
+<div style="margin:5px 0;font-size:11px;">Represent, employ, or create an agency relationship with Buyers or Sellers</div>
+<div style="margin:5px 0;font-size:11px;">Guarantee the outcome, quality, safety, legality, or suitability of any transaction</div>
+<div style="margin:5px 0;font-size:11px;">Act as a financial intermediary between Users for non-Tuppence transactions</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2.4 EULA Acceptance Gate — Mandatory Before Registration</strong></div>
+<div style="margin:5px 0;font-size:11px;">You must read and accept this EULA before your registration is created on the Platform. The acceptance process is as follows:</div>
+<div style="margin:5px 0;font-size:11px;">You receive a Magic Link via email or click a sign-up link on the Platform.</div>
+<div style="margin:5px 0;font-size:11px;">On clicking the link, an EULA acceptance screen is presented as the first step before any registration or listing data is created.</div>
+<div style="margin:5px 0;font-size:11px;">You must tick "I have read and agree to the Terms of Use / EULA and Privacy Policy" and click "Accept and Continue".</div>
+<div style="margin:5px 0;font-size:11px;">The Platform records your acceptance timestamp and EULA version number. This record is stored in the Platform's database and constitutes your binding agreement.</div>
+<div style="margin:5px 0;font-size:11px;">Clicking "Accept and Continue" constitutes your electronic signature on this Agreement per Section 4 of the ECT Act.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Why Acceptance Happens Here</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Adventures category involves photo uploads of properties and experiences. The Platform's licence to store, display, and present those photos must be explicitly consented to at the point of intent — not assumed from an email click. Acceptance here also satisfies POPIA's requirement for informed, specific, opt-in consent before personal data is processed.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">2.5 Eligibility</strong></div>
+<div style="margin:5px 0;font-size:11px;">By accepting this EULA you represent and warrant that:</div>
+<div style="margin:5px 0;font-size:11px;">You are at least 18 years of age;</div>
+<div style="margin:5px 0;font-size:11px;">You have the legal capacity to enter binding agreements under South African law;</div>
+<div style="margin:5px 0;font-size:11px;">You are not subject to sanctions, a court order barring Platform use, or a prohibition on your profession;</div>
+<div style="margin:5px 0;font-size:11px;">If registering on behalf of a legal entity, you have authority to bind that entity;</div>
+<div style="margin:5px 0;font-size:11px;">All information you provide is accurate, complete, and not misleading.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3. User Accounts, Anonymity &amp; Identity Verification</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.1 Anonymity Principle — Mode B</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform is built on an anonymity-first model. When you create a Seller account, your identity — name, email, business name, contact details, and exact location — is not revealed to Buyers. Your public profile shows only:</div>
+<div style="margin:5px 0;font-size:11px;">An emoji avatar (randomly assigned)</div>
+<div style="margin:5px 0;font-size:11px;">Your category (e.g. Property, Adventures Accommodation)</div>
+<div style="margin:5px 0;font-size:11px;">Your Trust Score (0–100)</div>
+<div style="margin:5px 0;font-size:11px;">Your suburb or city (general location only)</div>
+<div style="margin:5px 0;font-size:11px;">A certification badge if verified credentials have been approved (see Section 7.3)</div>
+<div style="margin:5px 0;font-size:11px;">No photo. No name. No contact details. No personal identifiers — until both parties complete the bilateral acceptance described in Section 3.2.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.2 Bilateral Identity Reveal — The Acceptance Gate</strong></div>
+<div style="margin:5px 0;font-size:11px;">A Seller's identity is revealed to a Buyer only when both of the following occur simultaneously:</div>
+<div style="margin:5px 0;font-size:11px;">The Buyer sends the Seller an Introduction request, and</div>
+<div style="margin:5px 0;font-size:11px;">The Seller accepts that Introduction (within the applicable response window).</div>
+<div style="margin:5px 0;font-size:11px;">At the moment of bilateral acceptance, each party is shown the other's full name, email address, phone number, suburb/city, and — for Sellers — any verified professional credentials. Until both parties accept, full anonymity is maintained.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.3 Prohibited Circumvention of Anonymity</strong></div>
+<div style="margin:5px 0;font-size:11px;">You may not attempt to reveal your identity to the other party before bilateral acceptance. Prohibited actions include:</div>
+<div style="margin:5px 0;font-size:11px;">Including your name, phone number, business name, or contact email in listing text or titles</div>
+<div style="margin:5px 0;font-size:11px;">Linking to external social media profiles that identify you by name</div>
+<div style="margin:5px 0;font-size:11px;">Communicating via off-platform channels before Introduction acceptance</div>
+<div style="margin:5px 0;font-size:11px;">Exception: Professional licence numbers and certification badges may be displayed as part of the credential system (Section 7.4). These are anonymity-neutral: they signal verified quality without revealing personal identity.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.4 Deferred KYC — FICA Compliance Model [COUNSEL REQUIRED]</strong></div>
+<div style="margin:5px 0;font-size:11px;">South Africa's FICA requires customer identification before a business relationship commences. The Platform interprets "business relationship" as the first Introduction acceptance (i.e. the first transaction), not account creation. This interpretation must be confirmed by legal counsel before publication.</div>
+<div style="margin:5px 0;font-size:11px;">Under this model, full identity verification is deferred as follows:</div>
+<div style="margin:5px 0;font-size:11px;">Before first Introduction acceptance: account requires verified email only. Full identity is not yet required.</div>
+<div style="margin:5px 0;font-size:11px;">After first Introduction acceptance: FICA-compliant identity verification is initiated within 24 hours. This must be completed within 5 business days. If verification fails or is not completed, the Introduction is cancelled and any Tuppence charged is refunded.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.5 Identity Verification Process</strong></div>
+<div style="margin:5px 0;font-size:11px;">After accepting your first Introduction, you will be asked to provide:</div>
+<div style="margin:5px 0;font-size:11px;">A government-issued identity document (South African Smart Card ID, passport, or driver's licence);</div>
+<div style="margin:5px 0;font-size:11px;">Proof of address dated within 3 months (utility bill, bank statement, or lease agreement);</div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">A liveness check (selfie with ID via the Platform's third-party verification partner: [COUNSEL REQUIRED: insert provider]).</div>
+<div style="margin:5px 0;font-size:11px;">Verification is normally completed within 3 business days. Your identity documents are encrypted in transit (TLS 1.3), stored on the Platform's server (Hetzner CPX22, Germany), and accessible only to the Platform's compliance team. Documents are retained for 7 years per FICA requirements and then securely deleted.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.6 Regulatory Disclosure</strong></div>
+<div style="margin:5px 0;font-size:11px;">Notwithstanding the anonymity principle, the Platform may disclose your identity and account data to the South African Police Service, National Prosecuting Authority, Financial Intelligence Centre, courts, SARS, or FSCA, upon receipt of a lawful court order, administrative demand, or equivalent legal process. You will be notified of any such disclosure within 30 days unless the order prohibits notification.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">3.7 User Responsibilities</strong></div>
+<div style="margin:5px 0;font-size:11px;">You are responsible for all activity conducted under your account. You must not share your account credentials with any other person. You must notify the Platform immediately at support@trustsquare.co if you suspect unauthorised access to your account.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4. Listings, Content Accuracy &amp; Categories</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4.1 Seller Responsibility</strong></div>
+<div style="margin:5px 0;font-size:11px;">You are solely responsible for the accuracy, completeness, legality, and currency of your listing content, including all descriptions, prices, photos, availability, and credential claims. The Platform does not verify listing content and makes no representations as to its accuracy.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4.2 Platform Moderation Rights</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform reserves the right to:</div>
+<div style="margin:5px 0;font-size:11px;">Remove, hide, or edit any listing that violates this EULA, applicable law, or Platform policies;</div>
+<div style="margin:5px 0;font-size:11px;">Suspend or terminate a Seller's account for repeated or serious violations;</div>
+<div style="margin:5px 0;font-size:11px;">Reorder or prioritise listings in search results based on Trust Score and other ranking factors (see Section 12);</div>
+<div style="margin:5px 0;font-size:11px;">At its discretion, refuse to onboard any prospective Seller.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4.3 Prohibited Listing Content</strong></div>
+<div style="margin:5px 0;font-size:11px;">You may not list content that:</div>
+<div style="margin:5px 0;font-size:11px;">Is false, misleading, deceptive, or fraudulent;</div>
+<div style="margin:5px 0;font-size:11px;">Infringes the intellectual property rights of any third party;</div>
+<div style="margin:5px 0;font-size:11px;">Promotes illegal goods, services, or activities;</div>
+<div style="margin:5px 0;font-size:11px;">Contains obscene, defamatory, hateful, or discriminatory material;</div>
+<div style="margin:5px 0;font-size:11px;">Includes personal contact details in violation of Section 3.3;</div>
+<div style="margin:5px 0;font-size:11px;">Claims professional credentials you do not hold.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4.4 Categories — Open-Ended Strings</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform's category system is open-ended. Current and planned categories include Property (Estate Agents), Tutors, Services, Casuals, Adventures Accommodation, Adventures Experiences, and Collectors. New categories may be added at any time with notice to Users. Category strings are read dynamically from the Platform's data and are never hardcoded. Each category may have specific rules, introduction models, and Trust Score mechanics as described in Section 12.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">4.5 Adventures Category — Photo Standards</strong></div>
+<div style="margin:5px 0;font-size:11px;">Listings in the Adventures category (Accommodation and Experiences) are strongly encouraged to include high-quality photos. By uploading photos to an Adventures listing you confirm that:</div>
+<div style="margin:5px 0;font-size:11px;">You are the copyright owner of the photos, or have explicit written permission from the copyright holder to use them commercially;</div>
+<div style="margin:5px 0;font-size:11px;">The photos accurately represent the property or experience as of the listing date;</div>
+<div style="margin:5px 0;font-size:11px;">The photos do not contain personally identifiable information that would breach Section 3.3.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5. Transactions &amp; Tuppence — The Introduction Currency</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.1 How Tuppence Works</strong></div>
+<div style="margin:5px 0;font-size:11px;">All Platform transactions are denominated in Tuppence. 1 Tuppence (1T) = USD $2.00 (fixed). This rate does not change and does not fluctuate with currency markets.</div>
+<div style="margin:5px 0;font-size:11px;">The Tuppence model works as follows:</div>
+<div style="margin:5px 0;font-size:11px;">A Buyer pays 1T when sending an Introduction to a Seller.</div>
+<div style="margin:5px 0;font-size:11px;">If the Seller accepts the Introduction, 1T is credited to the Seller's Tuppence Wallet and both parties' contact details are revealed to each other.</div>
+<div style="margin:5px 0;font-size:11px;">If the Seller declines or does not respond within the applicable window, the 1T is refunded to the Buyer's account.</div>
+<div style="margin:5px 0;font-size:11px;">No further Platform fee applies to any subsequent transaction between Buyer and Seller. All post-Introduction transactions occur independently of the Platform.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.2 Tuppence Restrictions</strong></div>
+<div style="margin:5px 0;font-size:11px;">Tuppence is subject to the following restrictions:</div>
+<div style="margin:5px 0;font-size:11px;">Non-transferable: Tuppence cannot be transferred between User accounts;</div>
+<div style="margin:5px 0;font-size:11px;">Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency. [Note: Cash-out functionality may be introduced in future, subject to FSCA compliance and updated terms];</div>
+<div style="margin:5px 0;font-size:11px;">Platform-exclusive: Tuppence has no monetary value outside the Platform and cannot be used on any other platform;</div>
+<div style="margin:5px 0;font-size:11px;">Non-inheritable and non-assignable: Tuppence cannot be inherited or transferred on account closure;</div>
+<div style="margin:5px 0;font-size:11px;">No expiry (current state): Tuppence balances do not expire unless the Platform closes or your account is terminated for breach.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.3 Introduction Model by Category</strong></div>
+<div style="margin:5px 0;font-size:11px;">The introduction model differs by category. The Platform reserves the right to update these models with notice:</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Category</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Model</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trust Score Penalty for Ignoring</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Property (Estate Agents)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: 1T fee to re-list.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">−3 points for ignoring (re-list fee applies)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tutors</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">−3 points for ignoring; no penalty for declining</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Services</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">−3 points for ignoring; no penalty for declining</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Casuals</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Soft Queue: proximity and referral-based discovery.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No Trust Score penalty</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures Accommodation</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No Trust Score penalty — seasonal and capacity constraints acknowledged</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures Experiences</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No Trust Score penalty — seasonal and capacity constraints acknowledged</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Collectors</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;"><strong style="color:rgba(255,255,255,.75);">Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: 1T fee to re-list. [COUNSEL REQUIRED: confirm model with council before Collectors category launch — see note below]</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">−3 points for ignoring (re-list fee applies) [subject to council confirmation]</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures — No Trust Score Penalty</strong></div>
+<div style="margin:5px 0;font-size:11px;">Adventures Sellers (both Accommodation and Experiences) are exempt from Trust Score penalties for non-response to Introductions. This reflects the legitimate seasonal, capacity, and availability constraints specific to accommodation and experiences operators, and is a deliberate departure from the Tutors/Services Soft Queue model.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Collectors — Introduction Model Pending Council Confirmation</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Collectors category (physical and digital collectibles, trading cards, memorabilia, art) is planned but not yet live. The introduction model shown above (Commitment, same as Property) is the recommended model — a rare or unique item should only be offered to one serious Buyer at a time. However, this must be confirmed by the Solar Council before the Collectors category is activated. This EULA entry is a placeholder and will be updated at that time.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.4 7-Day Cooling-Off Right (ECT Act §44)</strong></div>
+<div style="margin:5px 0;font-size:11px;">You have the right to cancel an Introduction request within 7 calendar days of the request being sent, without reason and without penalty, provided the Seller has not yet accepted the Introduction. To cancel:</div>
+<div style="margin:5px 0;font-size:11px;">Click the "Cancel" link in the Introduction confirmation email, or</div>
+<div style="margin:5px 0;font-size:11px;">Email support@trustsquare.co with the subject line "CANCEL: [Introduction ID]" within 7 days.</div>
+<div style="margin:5px 0;font-size:11px;">Upon cancellation within 7 days, the 1T charged is refunded to your account within 3 business days. The cooling-off right does not apply once both parties have accepted the Introduction and are in active communication.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.5 AI Feature Tuppence — Optional, Subscription-Based, Separate from Introductions</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform offers an optional AI-assisted feature ("AdvertAgent" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks. AI Feature usage is charged in Tuppence and is governed by the following rules, which are distinct from and independent of the Introduction Tuppence model:</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Characteristic</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Who it applies to</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Sellers only. Not available to Buyers. Not part of the core marketplace flow.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Nature of use</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Entirely optional. A Seller chooses to invoke an AI feature. No AI feature is triggered automatically or as a condition of listing or receiving Introductions.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Why Tuppence is charged</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI features are powered by an external AI API (currently Anthropic Claude). The Platform incurs a real per-use cost from this third-party provider. Tuppence charged for AI use is cost-recovery for that external API cost — it is not platform revenue in the same sense as Introduction Tuppence.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Access model</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI features are accessed via a paid Seller subscription tier. The subscription fee covers a quota of AI interactions per billing period. Usage beyond the quota may incur additional Tuppence charges, disclosed at the point of use.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Pricing</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence pricing and subscription tiers are not yet finalised. They will be published and notified to Users before the AI feature is activated. No AI Feature charges will be applied without prior disclosure and your acceptance of updated terms.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Refunds</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence is non-refundable once an AI interaction is completed and a response is delivered, except where a material technical fault prevented delivery of the response.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Relationship to Introductions</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence and Introduction Tuppence are separate balances and flows. Using AI features does not affect your Introduction Tuppence balance, Trust Score, or listing status.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Important — AI Feature Tuppence is Different in Nature</strong></div>
+<div style="margin:5px 0;font-size:11px;">Introduction Tuppence is the Platform's core marketplace fee — it is how the Platform earns revenue. AI Feature Tuppence is different: it is a pass-through cost-recovery mechanism for a real external API expense. The Platform does not profit from AI Feature Tuppence beyond recovering its cost of providing the feature. This distinction matters for how you budget your Platform use and for regulatory classification purposes.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.6 Tuppence and the Platform — Not a Financial Intermediary</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.7 Tuppence Holds and Reversals</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may temporarily hold or reverse Tuppence transactions to prevent fraud, address system errors, or correct processing anomalies. The Platform will notify affected Users within 48 hours of any hold or reversal and will resolve the matter within 5 business days.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6. Fees, Refunds, Subscriptions &amp; Payment</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.1 Fee Disclosure</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform charges only for the following, which are presented to you before the transaction is confirmed:</div>
+<div style="margin:5px 0;font-size:11px;">Introduction Tuppence: 1T (USD $2) per Introduction request, charged to the Buyer (Section 5.1–5.4);</div>
+<div style="margin:5px 0;font-size:11px;">AI Feature Tuppence: variable Tuppence per AI interaction, charged to Sellers who opt into AI-assisted features via a paid subscription (Section 5.5). Pricing TBD — no charges apply until pricing is published and accepted;</div>
+<div style="margin:5px 0;font-size:11px;">Buyer subscription fees for premium access tiers (see Section 6.2);</div>
+<div style="margin:5px 0;font-size:11px;">Seller AI feature subscription fees, if elected (see Section 5.5);</div>
+<div style="margin:5px 0;font-size:11px;">Any future Tuppence top-up or purchase fees (subject to updated terms and FSCA compliance).</div>
+<div style="margin:5px 0;font-size:11px;">There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees and subscriptions only. AI Feature Tuppence is cost-recovery for an external API, not an additional profit margin (see Section 5.5).</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.2 Buyer Subscription Tiers [Preliminary — subject to change]</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tier</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Details</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Free — $0/month</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">3 Introduction sessions per day; local city only</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Starter — $5/month</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">20 Introduction sessions per day; country scope</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Premium — $15/month</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">50 Introduction sessions per day; global scope</strong></div>
+<div style="margin:5px 0;font-size:11px;">Subscription tiers and pricing are preliminary as of April 2026 and will be confirmed before payment processing is activated. Updated terms will be provided.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.3 Refunds</strong></div>
+<div style="margin:5px 0;font-size:11px;">Refunds of Tuppence are available in the following circumstances only:</div>
+<div style="margin:5px 0;font-size:11px;">Seller did not respond to the Introduction within the 48-hour window (auto-refund);</div>
+<div style="margin:5px 0;font-size:11px;">Seller declined the Introduction (auto-refund within 3 business days);</div>
+<div style="margin:5px 0;font-size:11px;">Buyer cancels within 7 days of the request before Seller acceptance (per Section 5.4);</div>
+<div style="margin:5px 0;font-size:11px;">The Platform experiences a verified technical fault preventing Introduction delivery (refund within 5 business days of confirmed fault);</div>
+<div style="margin:5px 0;font-size:11px;">The Platform terminates your account for convenience (see Section 14.3).</div>
+<div style="margin:5px 0;font-size:11px;">Tuppence already credited to a Seller's Wallet upon acceptance is not refundable, except as required by South African law.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.4 Payment Processor</strong></div>
+<div style="margin:5px 0;font-size:11px;">Tuppence purchases (when enabled) and subscription payments are processed by Paystack (a registered payment service provider in South Africa). By making a payment on the Platform, you agree to Paystack's terms and privacy policy. The Platform is not responsible for payment processing errors, delays, or security incidents attributable to Paystack.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.5 Taxes</strong></div>
+<div style="margin:5px 0;font-size:11px;">You are solely responsible for determining and remitting all taxes arising from your use of the Platform, including income tax, VAT, and any withholding obligations. The Platform does not withhold or remit taxes on your behalf. You may request a Tuppence transaction history statement for tax purposes by emailing support@trustsquare.co.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.6 Direct Marketing Compliance (CPA 2026 Amendment)</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The Platform is registered as a direct marketer with the National Consumer Commission (NCC) (Registration No. [COUNSEL REQUIRED: insert NCC registration number]). Before sending Introduction emails or promotional communications, the Platform checks the NCC opt-out registry. Every Platform email contains an Unsubscribe link. Opt-out requests take effect within 5 business days.</div>
+<div style="margin:5px 0;font-size:11px;">By creating an account you opt in to Introduction notification emails and Platform marketing. You may opt out at any time via your account settings or by emailing support@trustsquare.co with the subject "OPT-OUT".</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7. Professional Credentials, Certification &amp; AI Features</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.1 Professional Licensing Obligations</strong></div>
+<div style="margin:5px 0;font-size:11px;">If your category requires professional registration or licensing under South African law, you agree to hold the required licence at the time of listing and keep it valid throughout your use of the Platform. Known licensing requirements include:</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Category</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Licensing Requirement</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Property (Estate Agents)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Registration with the Estate Agency Affairs Board (EAAB)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Services (Electricians, Plumbers)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trade licence or professional registration as applicable under sector legislation</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tutors</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Teaching credential or institutional affiliation preferred; not mandatory</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Casuals</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">No licence required</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures Accommodation</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Compliance with applicable municipal accommodation bylaws and tourism permits</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Adventures Experiences</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Registered tourism guide (CATHSSETA) where required by law; sector-specific qualifications (e.g. PADI for diving, SAMSA for marine activities)</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.2 Licence Attestation</strong></div>
+<div style="margin:5px 0;font-size:11px;">At account creation, you attest that you hold all required professional licences and that you are not barred by law from practising your profession. False attestation is grounds for immediate account termination and may give rise to civil or criminal liability. The Platform reserves the right to verify your licence through official registers (e.g. EAAB database).</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.3 Adventures Certification Uplift — Trust Score Bonus</strong></div>
+<div style="margin:5px 0;font-size:11px;">Sellers in the Adventures category (Accommodation and Experiences) may upload verifiable credentials to earn a Trust Score bonus that increases listing visibility. This mechanism is specific to Adventures and does not apply to other categories without a separate platform decision.</div>
+<div style="margin:5px 0;font-size:11px;">Bonus certification types and indicative Trust Score awards:</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Certification</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Indicative Bonus</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">TGCSA grading — 1 star</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+5 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">TGCSA grading — 2 star</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+10 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">TGCSA grading — 3 star</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+15 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">TGCSA grading — 4 star</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+20 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">TGCSA grading — 5 star</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+25 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">SATSA membership</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+10 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">FEDHASA membership</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+8 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">CATHSSETA registered tourism guide</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+10 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">SA Mountain Club / UIAA guide certification</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+12 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">PADI / NAUI / SAMSA diving/marine certification</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+12 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Liquor licence (WSET or national)</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+6 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Wilderness first aid / first aid certification</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+5 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">PDP / SABOA transport operator licence</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">+8 points</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Bonus Values Are Indicative</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Trust Score bonus values above are indicative and subject to confirmation in the Solar Council Codex. Final values will be published in the Platform's Trust Score policy document before the Adventures category goes live.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.4 Certification Upload &amp; Review Process</strong></div>
+<div style="margin:5px 0;font-size:11px;">To claim a certification bonus:</div>
+<div style="margin:5px 0;font-size:11px;">Upload a photo or PDF of your certificate during Adventures onboarding or from your Seller profile.</div>
+<div style="margin:5px 0;font-size:11px;">The certification is marked Pending Review. The Trust Score bonus is not applied until an administrator has reviewed and approved the certification.</div>
+<div style="margin:5px 0;font-size:11px;">Review is normally completed within 5 business days.</div>
+<div style="margin:5px 0;font-size:11px;">On approval, the bonus is applied to your Trust Score and your listing re-ranks accordingly.</div>
+<div style="margin:5px 0;font-size:11px;">If a certificate expires or is revoked, you must notify the Platform within 5 business days. The Platform may withdraw the bonus and adjust your Trust Score.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.5 Anonymity and Credentials</strong></div>
+<div style="margin:5px 0;font-size:11px;">Certification badges (e.g. a shield icon with star count or certification abbreviation) are visible on your listing card to Buyers before Introduction acceptance. This is a deliberate exception to the anonymity principle: the badge signals verified quality without revealing your personal identity. Your underlying certificate and personal details are stored by the Platform but are never disclosed to Buyers until bilateral acceptance.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">7.6 AI-Assisted Features</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may use artificial intelligence and machine learning to assess listing quality, detect duplicate listings or potential fraud, provide category recommendations, and surface relevant listings to Buyers. AI features do not make final decisions: the Platform retains override authority, and no AI-generated output is used to permanently penalise a User without human review. You may not use automated tools, bots, or scripts to interact with the Platform.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8. User-Uploaded Content, Photo Rights &amp; IP Indemnity</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.1 Your Copyright Ownership</strong></div>
+<div style="margin:5px 0;font-size:11px;">You retain full copyright ownership of all content you upload to the Platform, including listing photos, videos, descriptions, and other media ("Your Content"). Nothing in this EULA transfers copyright ownership from you to the Platform.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.2 Licence Granted to the Platform — Full In-Platform Use</strong></div>
+<div style="margin:5px 0;font-size:11px;">By uploading Your Content to the Platform, you grant the Platform and its affiliates, sub-contractors, and technical service providers a non-exclusive, worldwide, royalty-free, perpetual, irrevocable licence to use Your Content in the following ways across all current and future MarketSquare applications and platform features:</div>
+<div style="margin:5px 0;font-size:11px;">Store, host, cache, and back up Your Content on Platform servers and content delivery networks;</div>
+<div style="margin:5px 0;font-size:11px;">Display and present Your Content on all Platform screens, listing cards, search results, category browsers, Buyer-facing views, and Seller dashboards — across web, mobile, and any future application in the MarketSquare product family;</div>
+<div style="margin:5px 0;font-size:11px;">Technically process Your Content as needed for Platform operation: resizing, cropping, compression, format conversion, thumbnail generation, and watermarking for display optimisation — without material alteration of the substantive content;</div>
+<div style="margin:5px 0;font-size:11px;">Use Your Content within Platform-internal promotional and discovery features, including featured listings, category highlights, onboarding screens, and in-app recommendations shown to Platform Users;</div>
+<div style="margin:5px 0;font-size:11px;">Reproduce and distribute Your Content solely within the Platform ecosystem to facilitate the connection between Buyers and Sellers;</div>
+<div style="margin:5px 0;font-size:11px;">Retain a cached or archived copy of Your Content for legal, compliance, audit, or dispute resolution purposes for up to 7 years after your account is closed, as required by applicable law.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">What This Licence Covers</strong></div>
+<div style="margin:5px 0;font-size:11px;">This licence covers everything needed to run, operate, and develop MarketSquare and its apps. It is intentionally broad within the Platform ecosystem. It does not give the Platform any right to use your photos outside that ecosystem — see Section 8.3 for the hard limits.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.3 What the Platform Will Never Do With Your Content</strong></div>
+<div style="margin:5px 0;font-size:11px;">Notwithstanding the broad licence in Section 8.2, the Platform gives you the following unconditional commitments:</div>
+<div style="margin:5px 0;font-size:11px;">The Platform will never sell, license, or transfer Your Content to any third party as photo stock, stock imagery, or for any independent commercial purpose outside the Platform;</div>
+<div style="margin:5px 0;font-size:11px;">The Platform will never provide Your Content to stock photography agencies, image libraries, data brokers, advertising networks, or any external commercial entity;</div>
+<div style="margin:5px 0;font-size:11px;">The Platform will never use Your Content in external advertising or marketing campaigns — print, digital, social media, or otherwise — without your express prior written consent given separately from this EULA;</div>
+<div style="margin:5px 0;font-size:11px;">The Platform will never create derivative works from Your Content for sale or distribution outside the Platform.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Platform Commitment — No Photo Stock Sales</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform operates on a marketplace model. Selling or licensing user-uploaded photos to third parties is not part of that model and will never be. If this policy changes in the future, users will be individually notified and fresh consent will be required before any such use.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.4 User Warranty — Ownership and Right to Upload</strong></div>
+<div style="margin:5px 0;font-size:11px;">By uploading any photo, image, video, or other media to the Platform, you make the following legally binding warranties to the Platform on each occasion of upload:</div>
+<div style="margin:5px 0;font-size:11px;">You are the sole and original copyright owner of the uploaded content, OR you hold a valid, written, transferable licence from the copyright owner that expressly authorises you to grant the licence in Section 8.2;</div>
+<div style="margin:5px 0;font-size:11px;">The content does not infringe any copyright, moral right, trade mark, design right, personality right, right of privacy, right of publicity, or any other intellectual property or personal right of any third party anywhere in the world;</div>
+<div style="margin:5px 0;font-size:11px;">You have obtained all necessary consents from any identifiable persons appearing in photos (including model releases where required) and from any property owners whose property is depicted, where such consent is required by applicable law;</div>
+<div style="margin:5px 0;font-size:11px;">The content is not defamatory, obscene, unlawful, threatening, harassing, or otherwise in violation of any applicable law;</div>
+<div style="margin:5px 0;font-size:11px;">Your upload does not violate any confidentiality obligation, court order, or contractual restriction binding on you;</div>
+<div style="margin:5px 0;font-size:11px;">You have the full legal capacity and authority to grant this licence and to make these warranties.</div>
+<div style="margin:5px 0;font-size:11px;">These warranties are given by you each time you upload content. They are ongoing and must remain true for as long as Your Content remains on the Platform. If any warranty becomes false after upload (for example, because a third party asserts copyright), you must notify the Platform immediately at legal@trustsquare.co and request removal of the affected content.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.5 IP Indemnity — User's Full Liability for Infringing Uploads</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform accepts no liability for any intellectual property infringement arising from content uploaded by Users. You agree to fully indemnify, defend, and hold harmless the Platform, its directors, officers, employees, agents, and technical service providers from and against all claims, demands, proceedings, losses, damages, costs, and expenses (including reasonable legal fees) arising from or in connection with:</div>
+<div style="margin:5px 0;font-size:11px;">Any claim by a third party that Your Content infringes that party's copyright, trade mark, design right, patent, moral right, right of privacy, right of publicity, or any other intellectual property or proprietary right;</div>
+<div style="margin:5px 0;font-size:11px;">Any claim arising from your failure to obtain required model releases, property releases, or other consents for content depicted in your photos;</div>
+<div style="margin:5px 0;font-size:11px;">Any breach of the warranties in Section 8.4;</div>
+<div style="margin:5px 0;font-size:11px;">Any use by the Platform of Your Content in accordance with the licence granted in Section 8.2 that is subsequently alleged to infringe a third-party right because of your failure to hold the necessary rights at the time of upload;</div>
+<div style="margin:5px 0;font-size:11px;">Any takedown notice, DMCA claim, or equivalent IP enforcement action filed against the Platform as a result of Your Content.</div>
+<div style="margin:5px 0;font-size:11px;">This indemnity obligation survives the termination of your account and this EULA. The Platform reserves the right to assume exclusive control of the defence of any indemnified claim at your cost, in which case you agree to cooperate fully with the Platform's defence.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Plain Language Summary of Section 8.5</strong></div>
+<div style="margin:5px 0;font-size:11px;">If you upload a photo that belongs to someone else and that person sues us, you pay — not us. This is the same standard applied by Airbnb, Booking.com, Viator, and every major platform that accepts user-uploaded images. It is fair, standard, and non-negotiable. Upload only photos you own or have written permission to use commercially.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.6 Platform's IP Enforcement Response (Notice and Takedown)</strong></div>
+<div style="margin:5px 0;font-size:11px;">If a third party believes that content on the Platform infringes their intellectual property rights, they may submit a written notice to legal@trustsquare.co including: a description of the allegedly infringing content and its location on the Platform; evidence of the claimant's ownership of the right allegedly infringed; and a statement that the claimant has a good-faith belief that the use is not authorised. The Platform will:</div>
+<div style="margin:5px 0;font-size:11px;">Acknowledge receipt within 1 business day;</div>
+<div style="margin:5px 0;font-size:11px;">Investigate within 5 business days;</div>
+<div style="margin:5px 0;font-size:11px;">Disable access to content that, on reasonable assessment, appears to infringe a third-party right;</div>
+<div style="margin:5px 0;font-size:11px;">Notify the User who uploaded the content of the takedown and the reason;</div>
+<div style="margin:5px 0;font-size:11px;">Provide the User with an opportunity to submit a counter-notice if they dispute the claim.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform's response to a takedown notice does not constitute an admission of liability. The Platform acts as an intermediary in good faith and its actions are taken in compliance with the ECT Act Section 79 safe harbour provisions.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.7 Adventures Category — Photo Standards</strong></div>
+<div style="margin:5px 0;font-size:11px;">Adventures listings (Accommodation and Experiences) are photo-intensive by nature. In addition to the warranties in Section 8.4, Sellers listing Adventures content additionally confirm by each upload that:</div>
+<div style="margin:5px 0;font-size:11px;">Photos accurately and honestly represent the accommodation, property, or experience as at the date of upload and have not been digitally manipulated in a way that materially misrepresents what a guest would encounter;</div>
+<div style="margin:5px 0;font-size:11px;">No photo depicts a property or experience that the Seller does not have the right to offer on the Platform;</div>
+<div style="margin:5px 0;font-size:11px;">For accommodation photos: the Seller has the right to permit guests to access and stay in the depicted property;</div>
+<div style="margin:5px 0;font-size:11px;">For experience photos: the photos depict activities that the Seller is qualified and authorised to offer.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.8 Content Removal</strong></div>
+<div style="margin:5px 0;font-size:11px;">If you delete a listing, the associated photos and media are removed from public display within 48 hours. If you delete your account, all publicly visible links to Your Content are removed. Cached content on third-party CDN networks may persist for up to 30 days before expiry.</div>
+<div style="margin:5px 0;font-size:11px;">Content required for legal, compliance, or dispute purposes is retained for up to 7 years after account closure per Section 8.2 and applicable law. This retained content is not accessible to the public or to other Users.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">8.9 Platform's Own Intellectual Property</strong></div>
+<div style="margin:5px 0;font-size:11px;">All Platform software, source code, design systems, trade marks, trade names, logos, and proprietary content are the property of the Operator or its licensors and are protected by South African and international intellectual property law. Nothing in this EULA grants you any right to use the Platform's intellectual property other than as strictly necessary to use the Platform in accordance with this EULA. Unauthorised reproduction, reverse-engineering, or commercial use of the Platform's intellectual property is strictly prohibited and may give rise to civil and criminal liability.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9. Privacy, Data Protection &amp; POPIA Compliance</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.1 Privacy Policy</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The Platform's full Privacy Policy is available at trustsquare.co/privacy [COUNSEL REQUIRED: Privacy Policy must be drafted and published before launch] and is incorporated into this EULA by reference. In the event of any conflict between this EULA and the Privacy Policy regarding personal data matters, the Privacy Policy prevails.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.2 Data We Collect and Why</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Data Type</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Purpose &amp; Legal Basis</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Identity: name, email, phone, SA ID number</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">FICA KYC compliance; account management; Introduction acceptance. Legal basis: contractual necessity; legal obligation (FICA).</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Location: suburb, city, region</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Listing display; proximity-based search. Legal basis: contractual necessity.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Photos and listing media</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Listing display; all Platform app features; cached CDN distribution. Legal basis: contractual necessity (per Section 8.2 licence grant). Not sold to third parties per Section 8.3.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Transaction data: Tuppence earned/spent, Introduction history</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Device and usage data: IP address, browser, analytics</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Fraud prevention; platform improvement. Legal basis: legitimate interest. Retained 30 days, anonymised.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Certification documents: certificate photos/PDFs</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trust Score bonus processing; credential verification. Legal basis: consent (given on upload).</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.3 POPIA Consent</strong></div>
+<div style="margin:5px 0;font-size:11px;">By accepting this EULA, you give informed, specific, opt-in consent (as required by POPIA) to the processing described in Section 9.2. You specifically consent to deferred identity verification as described in Section 3.4. You may withdraw any consent by deleting your account (Section 14.1), subject to legally mandated retention periods.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.4 Data Retention</strong></div>
+<div style="margin:5px 0;font-size:11px;">Active accounts: identity and transaction data retained for account lifetime plus 7 years (FICA requirement);</div>
+<div style="margin:5px 0;font-size:11px;">Deleted accounts: personal data anonymised or deleted within 30 days, except where a legal hold applies;</div>
+<div style="margin:5px 0;font-size:11px;">Certification documents: retained while account is active; deleted on account closure unless a regulatory hold applies;</div>
+<div style="margin:5px 0;font-size:11px;">Usage analytics: 30 days (anonymised at collection);</div>
+<div style="margin:5px 0;font-size:11px;">All data: permanently deleted after applicable retention period expires.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.5 Third-Party Disclosure</strong></div>
+<div style="margin:5px 0;font-size:11px;">Personal data is disclosed only to:</div>
+<div style="margin:5px 0;font-size:11px;">South African regulatory and law enforcement bodies on lawful demand (SAPS, NPA, FIC, SARS, FSCA, Information Regulator);</div>
+<div style="margin:5px 0;font-size:11px;">Other Users, only after bilateral Introduction acceptance (Section 3.2);</div>
+<div style="margin:5px 0;font-size:11px;">Payment processors (Paystack) for transaction processing, under data processing agreement;</div>
+<div style="margin:5px 0;font-size:11px;">Service providers (Cloudflare R2 for photo storage; email delivery provider) under data processing agreements and POPIA-compliant terms;</div>
+<div style="margin:5px 0;font-size:11px;">The Platform's identity verification partner (Section 3.5) for KYC processing.</div>
+<div style="margin:5px 0;font-size:11px;">Personal data is never sold to third parties.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.6 International Data Transfers</strong></div>
+<div style="margin:5px 0;font-size:11px;">Platform servers are hosted on Hetzner CPX22, located in Germany (EU). Photo storage uses Cloudflare R2, also EU-based. Both are governed by GDPR, which provides an adequate level of protection recognised under POPIA. Data Processing Agreements are in place with both providers.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.7 Your POPIA Rights</strong></div>
+<div style="margin:5px 0;font-size:11px;">You have the following rights under POPIA, exercisable by emailing legal@trustsquare.co:</div>
+<div style="margin:5px 0;font-size:11px;">Access: request a copy of your personal data in machine-readable format (CSV or JSON);</div>
+<div style="margin:5px 0;font-size:11px;">Correction: update inaccurate data via your profile settings or by contacting support;</div>
+<div style="margin:5px 0;font-size:11px;">Deletion (Right to be Forgotten): request deletion of your account and data within 30 days, subject to legal holds;</div>
+<div style="margin:5px 0;font-size:11px;">Object: opt out of marketing communications, analytics, or specific processing activities;</div>
+<div style="margin:5px 0;font-size:11px;">Lodge a complaint with the South African Information Regulator at inforegulator.org.za.</div>
+<div style="margin:5px 0;font-size:11px;">Requests are processed within 20 business days.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.8 Data Security</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The Platform employs TLS 1.3 encryption in transit, server-side encryption at rest, role-based access controls, and daily encrypted backups to Cloudflare R2 with 14-day retention. Security is audited periodically by [COUNSEL REQUIRED: insert audit provider or frequency].</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.9 Data Breach Notification</strong></div>
+<div style="margin:5px 0;font-size:11px;">In the event of a data breach that compromises the confidentiality, integrity, or availability of your personal data, the Platform will notify you by email and notify the South African Information Regulator within 30 days of becoming aware of the breach, as required by POPIA. The notification will describe the nature of the breach, the data affected, and the steps taken or planned.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10. Disputes, Enforcement &amp; Liability</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.1 User Disputes</strong></div>
+<div style="margin:5px 0;font-size:11px;">Disputes about listing content, transaction outcomes, service quality, or post-Introduction conduct are between the relevant Users. The Platform may, at its discretion, assist in facilitating communication but does not adjudicate, arbitrate, or guarantee any outcome in User-to-User disputes.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.2 Platform Enforcement</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may take the following enforcement steps in response to violations of this EULA or applicable law, in escalating order:</div>
+<div style="margin:5px 0;font-size:11px;">Warning notice by email;</div>
+<div style="margin:5px 0;font-size:11px;">Temporary listing suspension;</div>
+<div style="margin:5px 0;font-size:11px;">Trust Score reduction;</div>
+<div style="margin:5px 0;font-size:11px;">Account suspension;</div>
+<div style="margin:5px 0;font-size:11px;">Permanent account ban and data deletion;</div>
+<div style="margin:5px 0;font-size:11px;">Referral to law enforcement or regulatory authorities.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.3 Pre-Dispute Negotiation (60 Days)</strong></div>
+<div style="margin:5px 0;font-size:11px;">Before either party initiates arbitration or litigation in connection with any dispute arising out of or relating to this EULA, the disputing party must send a written claim to the other party (or to support@trustsquare.co for disputes involving the Platform) describing the dispute in reasonable detail. The parties have 60 days from the date the claim is received to resolve the dispute by negotiation in good faith. This requirement does not apply to applications for urgent injunctive relief, IP infringement claims, or fraud.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.4 Binding Arbitration [COUNSEL REQUIRED]</strong></div>
+<div style="margin:5px 0;font-size:11px;">If the 60-day negotiation period expires without resolution, disputes between a User and the Platform shall be resolved by binding arbitration conducted in English under the rules of the South African Arbitration Foundation (SAAF), with the seat of arbitration in Cape Town, South Africa. The arbitrator shall be a practising South African attorney or advocate with at least 5 years' experience in commercial or technology law. Arbitration proceedings are confidential. Each party bears its own legal costs; the SAAF's arbitrator fees are split equally unless the arbitrator finds that one party acted in bad faith.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.5 Consumer Protection Act Override</strong></div>
+<div style="margin:5px 0;font-size:11px;">Nothing in this Section limits any rights you have under the Consumer Protection Act No. 68 of 2008 (CPA), including the right to approach the National Consumer Commission, the right to a 7-day cooling-off period (Section 5.4), or the right to bring a claim in a Magistrate's Court for claims under ZAR 10,000.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.6 Limitation of Liability</strong></div>
+<div style="margin:5px 0;font-size:11px;">To the fullest extent permitted by South African law, the Platform's total aggregate liability to you in any 12-month period shall not exceed:</div>
+<div style="margin:5px 0;font-size:11px;">For Sellers: the total Tuppence earned and credited to your Wallet during that period, valued at USD $2 per Tuppence; or</div>
+<div style="margin:5px 0;font-size:11px;">For Buyers or other Users: ZAR 500.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform is not liable for any of the following, whether arising in contract, delict, statute, or otherwise:</div>
+<div style="margin:5px 0;font-size:11px;">Indirect, incidental, consequential, special, or punitive damages;</div>
+<div style="margin:5px 0;font-size:11px;">Loss of profit, revenue, data, business opportunity, goodwill, or anticipated savings;</div>
+<div style="margin:5px 0;font-size:11px;">Actions, omissions, or conduct of any Seller, Buyer, or third party;</div>
+<div style="margin:5px 0;font-size:11px;">Platform unavailability, bugs, errors, or interruptions except where caused by the Platform's gross negligence;</div>
+<div style="margin:5px 0;font-size:11px;">Regulatory fines or compliance costs arising from your own violations.</div>
+<div style="margin:5px 0;font-size:11px;">Nothing in this section limits the Platform's liability for death or personal injury caused by its own gross negligence or wilful misconduct, or for fraud.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.7 ECT Act Safe Harbour (§79)</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform provides an intermediary service as defined in the ECT Act. The Platform does not initiate, select, or modify User-generated content (listings, photos, contact details). Subject to compliance with Section 10.8, the Platform is not liable for such User content.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">10.8 Notice and Takedown</strong></div>
+<div style="margin:5px 0;font-size:11px;">If you believe Platform content is illegal, infringes your rights, or violates this EULA, notify the Platform by email at legal@trustsquare.co with a description of the content, its location on the Platform, and evidence supporting your claim. The Platform will: (i) confirm receipt within 24 hours; (ii) investigate within 48 hours; (iii) disable access to content found to be illegal; and (iv) notify you of the outcome.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11. Trust Score, Ranking &amp; Enforcement Criteria</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11.1 Trust Score System</strong></div>
+<div style="margin:5px 0;font-size:11px;">Every Seller has a Trust Score (0–100) that reflects their reliability and compliance on the Platform. The score determines listing display position and the badge displayed on listing cards.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Score Range</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Badge &amp; Visibility</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">0–39</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">New — no badge; listed last in search results</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">40–69</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Established — blue badge; standard listing position</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">70–89</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trusted — green badge; higher visibility</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">90–100</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Highly Trusted — gold badge + featured position</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11.2 Score Factors</strong></div>
+<div style="margin:5px 0;font-size:11px;">Trust Score is calculated algorithmically based on: time active on the Platform; number of accepted Introductions; response rate (percentage of Introductions responded to within 48 hours); average Buyer rating; formal complaint count; policy violations; and — for Adventures Sellers — approved certification bonuses (Section 7.3).</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11.3 Trust Score Penalties</strong></div>
+<div style="margin:5px 0;font-size:11px;">Penalties are applied automatically and in accordance with the introduction model for your category (see Section 5.3). Penalties decay over time: each penalty reduces by 50% every 90 days. Full recovery typically occurs within 180 days. The Platform does not manually waive penalties on User request. If you believe a penalty was applied in error, contact compliance@trustsquare.co.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11.4 Account Suspension for Low Score</strong></div>
+<div style="margin:5px 0;font-size:11px;">If your Trust Score falls below 0, your account is automatically suspended. To request reactivation, contact compliance@trustsquare.co after 30 days. You may alternatively delete your account and re-register after a 90-day waiting period.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">11.5 Public Display</strong></div>
+<div style="margin:5px 0;font-size:11px;">Your Trust Score and badge tier are visible to all Platform Users on your profile and listing card, before and after Introduction acceptance. This is an inherent part of the Platform's transparency model.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12. Tuppence — Regulatory Classification &amp; Virtual Asset Status</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12.1 Current Classification</strong></div>
+<div style="margin:5px 0;font-size:11px;">MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional cost-recovery for an external AI API). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</div>
+<div style="margin:5px 0;font-size:11px;">Tuppence is non-transferable between Users (a key criterion for FSCA virtual asset classification is fungibility and transferability);</div>
+<div style="margin:5px 0;font-size:11px;">Tuppence cannot be converted to cash or any other currency;</div>
+<div style="margin:5px 0;font-size:11px;">Tuppence cannot be traded on any exchange;</div>
+<div style="margin:5px 0;font-size:11px;">1T = USD $2 is a fixed platform rate, not a market price.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12.2 If Reclassified</strong></div>
+<div style="margin:5px 0;font-size:11px;">If the FSCA reclassifies Tuppence as a virtual asset or determines that the Platform requires a Crypto Asset Service Provider (CASP) licence, the Platform will:</div>
+<div style="margin:5px 0;font-size:11px;">Apply for the required FSCA licence within 180 days of the reclassification notice;</div>
+<div style="margin:5px 0;font-size:11px;">Update this EULA and the Privacy Policy to reflect new compliance obligations;</div>
+<div style="margin:5px 0;font-size:11px;">Notify all active Users of the regulatory status change by email;</div>
+<div style="margin:5px 0;font-size:11px;">Implement FICA-compliant KYC/AML screening as required.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12.3 NCA — Current Non-Applicability</strong></div>
+<div style="margin:5px 0;font-size:11px;">Tuppence is currently earned through Introduction acceptance and is not purchased by Users via credit or installment. The National Credit Act (NCA) therefore does not apply to Tuppence in its current form. If a Tuppence purchase mechanism is introduced in future, the NCA's affordability assessment and disclosure obligations will apply, and fresh consent will be obtained from Users at that time.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12.4 No Financial Advice</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform does not provide financial, investment, or tax advice regarding Tuppence. You are responsible for understanding the legal and tax implications of Tuppence in your own jurisdiction. South African Users should consult SARS guidance on virtual assets and barter transactions.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">13. Governing Law, Jurisdiction &amp; Mandatory SA Law</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">13.1 Governing Law</strong></div>
+<div style="margin:5px 0;font-size:11px;">This EULA is governed by and construed in accordance with the laws of the Republic of South Africa, without regard to its conflicts of law principles.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">13.2 Mandatory SA Law Supremacy</strong></div>
+<div style="margin:5px 0;font-size:11px;">The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:</div>
+<div style="margin:5px 0;font-size:11px;">Protection of Personal Information Act No. 4 of 2013 (POPIA)</div>
+<div style="margin:5px 0;font-size:11px;">Consumer Protection Act No. 68 of 2008 (CPA)</div>
+<div style="margin:5px 0;font-size:11px;">Electronic Communications and Transactions Act No. 25 of 2002 (ECT Act)</div>
+<div style="margin:5px 0;font-size:11px;">Financial Intelligence Centre Act No. 38 of 1998 (FICA), as amended</div>
+<div style="margin:5px 0;font-size:11px;">National Credit Act No. 34 of 2005 (NCA) — if and when applicable</div>
+<div style="margin:5px 0;font-size:11px;">Financial Sector Regulation Act No. 9 of 2017 and subordinate FSCA regulations</div>
+<div style="margin:5px 0;font-size:11px;">Constitution of the Republic of South Africa, Act 108 of 1996</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">13.3 Jurisdiction</strong></div>
+<div style="margin:5px 0;font-size:11px;">You irrevocably and unconditionally consent to the non-exclusive jurisdiction of the High Court of South Africa and relevant Magistrate's Courts for the resolution of disputes not subject to arbitration under Section 10.4. For arbitrated disputes, the seat of arbitration is Cape Town, South Africa.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">13.4 Contact</strong></div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">For legal notices and EULA-related communications: legal@trustsquare.co or [COUNSEL REQUIRED: insert postal address of registered office].</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14. Termination &amp; Suspension</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.1 User Termination</strong></div>
+<div style="margin:5px 0;font-size:11px;">You may terminate your account at any time by submitting a written request to support@trustsquare.co. Termination takes effect immediately. Upon termination:</div>
+<div style="margin:5px 0;font-size:11px;">All unused Tuppence is forfeited (non-refundable);</div>
+<div style="margin:5px 0;font-size:11px;">Your active listings are removed from public display within 48 hours;</div>
+<div style="margin:5px 0;font-size:11px;">Your account data is deleted or anonymised within 30 days, subject to FICA and other legal retention obligations;</div>
+<div style="margin:5px 0;font-size:11px;">Buyers with open Introduction requests are notified that the Seller is no longer available and Tuppence is refunded.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.2 Immediate Termination for Breach</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may terminate your account immediately, without notice, if you:</div>
+<div style="margin:5px 0;font-size:11px;">Violate this EULA, POPIA, CPA, ECT Act, FICA, or any applicable South African law;</div>
+<div style="margin:5px 0;font-size:11px;">Post fraudulent, illegal, defamatory, or harmful content;</div>
+<div style="margin:5px 0;font-size:11px;">Fail to complete identity verification (Section 3.5) after acceptance of a first Introduction;</div>
+<div style="margin:5px 0;font-size:11px;">Attempt to circumvent the Anonymity Gate (Section 3.3);</div>
+<div style="margin:5px 0;font-size:11px;">Engage in money laundering, terrorism financing, or sanctions evasion (FICA);</div>
+<div style="margin:5px 0;font-size:11px;">Claim false professional credentials;</div>
+<div style="margin:5px 0;font-size:11px;">Harass, abuse, or threaten other Users or Platform staff.</div>
+<div style="margin:5px 0;font-size:11px;">Upon termination for breach, all unused Tuppence is forfeited. The Platform reserves the right to recover damages arising from the breach.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.3 Termination for Convenience</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may terminate your account on 30 days' written notice to your registered email address for any reason, provided you have no active Introduction disputes or pending arbitrations. If such termination occurs, unused Tuppence will be converted to a cash credit in ZAR (if a payout mechanism is available) or forfeited if no such mechanism yet exists. You will be notified of the applicable outcome.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.4 Survival</strong></div>
+<div style="margin:5px 0;font-size:11px;">The following sections survive account termination and continue in full force: Section 1 (Definitions), Section 3.6 (Regulatory Disclosure), Section 8 (User-Uploaded Content), Section 9 (Privacy and POPIA), Section 10.3–10.8 (Disputes and Liability), Section 13 (Governing Law), and any accrued Tuppence obligations.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15. Changes, Miscellaneous &amp; Contact</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.1 Changes to These Terms</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform may update this EULA at any time. When material changes are made, you will be notified by email to your registered address and by an in-app notification at least 14 days before the changes take effect. The updated version number and effective date are displayed on this page at trustsquare.co/terms.</div>
+<div style="margin:5px 0;font-size:11px;">Continued use of the Platform after the effective date constitutes acceptance of the updated EULA. If you do not accept the updated terms, you must close your account before the effective date.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.2 Entire Agreement</strong></div>
+<div style="margin:5px 0;font-size:11px;">This EULA, together with the Privacy Policy at trustsquare.co/privacy and any Platform policies or guidelines published at trustsquare.co/legal, constitutes the entire agreement between you and the Platform regarding your use of the Platform, and supersedes all prior agreements, representations, or understandings relating to the same subject matter.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.3 Severability</strong></div>
+<div style="margin:5px 0;font-size:11px;">If any provision of this EULA is found to be unlawful, void, or unenforceable, that provision shall be severed from the EULA. The remaining provisions shall continue in full force and effect.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.4 Waiver</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform's failure to enforce any provision of this EULA at any time does not constitute a waiver of that provision or of the right to enforce it in the future.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.5 No Agency</strong></div>
+<div style="margin:5px 0;font-size:11px;">Nothing in this EULA creates a partnership, joint venture, agency, franchise, or employment relationship between you and the Platform.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.6 Assignment</strong></div>
+<div style="margin:5px 0;font-size:11px;">You may not assign or transfer your rights or obligations under this EULA without the Platform's prior written consent. The Platform may assign its rights and obligations to a successor entity upon written notice to you.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.7 Force Majeure</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform is not liable for any failure or delay in performance caused by circumstances beyond its reasonable control, including natural disasters, load-shedding, telecommunications failures, cyberattacks, or government action, provided the Platform notifies you as soon as reasonably practicable and takes reasonable steps to resume performance.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.8 Plain Language</strong></div>
+<div style="margin:5px 0;font-size:11px;">This EULA is written in plain English. If you do not understand any provision, please contact support@trustsquare.co and we will provide a plain-language explanation within 5 business days. You may request a copy of this EULA and your transaction history at any time.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.9 Contact</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Purpose</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Contact</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">General support</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">support@trustsquare.co</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Legal notices / EULA</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">legal@trustsquare.co</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Compliance / Trust Score queries</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">compliance@trustsquare.co</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Privacy / POPIA / data requests</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">legal@trustsquare.co</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">South African Information Regulator</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">inforegulator.org.za</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">National Consumer Commission</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">thencc.org.za</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">— End of MarketSquare Terms of Use / EULA v1.0 —</strong></div>
+<div style="margin:5px 0;font-size:11px;">Draft for legal review — not for publication</div>
       </div>
-
-      <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:12px;">
-        <input type="checkbox" id="sob-eula-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
-        <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I have read and accept the TrustSquare Seller Terms, and confirm all listing information is accurate.</span>
-      </label>
-      <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
-        <input type="checkbox" id="sob-content-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
-        <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I understand that listings with inappropriate content will be permanently removed.</span>
-      </label>
+            <div id="sob-eula-gate" style="margin-top:0;">
+        <div id="sob-eula-scroll-cue" style="text-align:center;font-size:11px;color:rgba(200,135,58,.7);padding:8px 0 12px;letter-spacing:.5px;">↓ Scroll to the end to confirm</div>
+        <div id="sob-eula-confirm" style="display:none;">
+          <div style="text-align:center;font-size:11px;color:rgba(200,135,58,.85);padding:8px 0 12px;letter-spacing:.5px;">✓ You've reached the end — please confirm below</div>
+          <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:12px;">
+            <input type="checkbox" id="sob-eula-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
+            <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I have read and accept the TrustSquare Seller Terms, and confirm all listing information is accurate.</span>
+          </label>
+          <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+            <input type="checkbox" id="sob-content-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
+            <span style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;">I understand that listings with inappropriate content will be permanently removed.</span>
+          </label>
+        </div>
+      </div>
       <div id="sob-p3-err" style="display:none;color:#fca5a5;font-size:12px;margin-top:12px;"></div>
     </div>
     <div class="sob-footer">
@@ -2989,6 +3552,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         </div>
       </div>
       <button onclick="sobDone()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Go to my dashboard →</button>
+      <button id="sob-view-listing-btn" onclick="sobViewMyListing()" style="width:100%;background:rgba(200,135,58,.15);border:1.5px solid rgba(200,135,58,.4);color:#fbbf24;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;display:none;">👁 View my listing →</button>
       <button onclick="goTo('browse')" style="width:100%;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Browse listings</button>
     </div>
   </div>
@@ -7011,6 +7575,32 @@ function sobGoPhase(n) {
   document.querySelectorAll('.sob-phase').forEach(el => el.classList.remove('sob-active'));
   const phase = document.getElementById('sob-p' + n);
   if (phase) phase.classList.add('sob-active');
+  // Re-label step pills for guided-screen arrivals so numbering is continuous (4 of 5, 5 of 5)
+  if (sobState._cameFromGuided) {
+    const p2pill = document.querySelector('#sob-p2 .sob-step-pill');
+    const p3pill = document.querySelector('#sob-p3 .sob-step-pill');
+    if (p2pill) p2pill.textContent = 'Step 4 of 5';
+    if (p3pill) p3pill.textContent = 'Step 5 of 5';
+  } else {
+    const p2pill = document.querySelector('#sob-p2 .sob-step-pill');
+    const p3pill = document.querySelector('#sob-p3 .sob-step-pill');
+    if (p2pill) p2pill.textContent = 'Step 2 of 3';
+    if (p3pill) p3pill.textContent = 'Step 3 of 3';
+  }
+  // Reset EULA scroll gate whenever entering Phase 3
+  if (n === 3) sobResetEulaGate();
+  // Phase 2 back button: seal backward navigation for guided arrivals
+  if (n === 2) {
+    const bkNormal  = document.getElementById('sob-p2-bk-normal');
+    const bkGuided  = document.getElementById('sob-p2-bk-guided');
+    if (sobState._cameFromGuided) {
+      if (bkNormal) bkNormal.style.display = 'none';
+      if (bkGuided) bkGuided.style.display = 'inline';
+    } else {
+      if (bkNormal) bkNormal.style.display = '';
+      if (bkGuided) bkGuided.style.display = 'none';
+    }
+  }
   window.scrollTo(0, 0);
 }
 
@@ -7081,10 +7671,41 @@ function sobCheckEula() {
   if (btn) btn.disabled = !(eula && eula.checked && content && content.checked);
 }
 
+function sobEulaScroll() {
+  const box = document.getElementById('sob-eula-scroll');
+  if (!box) return;
+  // Unlock when within 40px of bottom
+  const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+  if (atBottom) {
+    box.classList.add('eula-read');
+    const cue     = document.getElementById('sob-eula-scroll-cue');
+    const confirm = document.getElementById('sob-eula-confirm');
+    if (cue)     cue.style.display     = 'none';
+    if (confirm) confirm.style.display = 'block';
+  }
+}
+
+function sobResetEulaGate() {
+  // Reset scroll gate when entering Phase 3
+  const box     = document.getElementById('sob-eula-scroll');
+  const cue     = document.getElementById('sob-eula-scroll-cue');
+  const confirm = document.getElementById('sob-eula-confirm');
+  if (box)     { box.scrollTop = 0; box.classList.remove('eula-read'); }
+  if (cue)     cue.style.display     = 'block';
+  if (confirm) confirm.style.display = 'none';
+  // Uncheck boxes
+  ['sob-eula-chk','sob-content-chk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  sobCheckEula();
+}
+
 async function sobInit() {
   // Read magic link state populated by the URL parser
   // If _skipPreview is set (coming from guided-onboard), go straight to phase 2
   const skipPreview = !!sobState._skipPreview;
+  const cameFromGuided = !!sobState._cameFromGuided; // preserve across init
   sobState.email = sobState.email || magicLink.email || '';
   sobState.name  = sobState.name  || magicLink.name  || '';
   sobState.cat   = sobState.cat   || magicLink.cat   || '';
@@ -7092,6 +7713,7 @@ async function sobInit() {
   sobState.drafts = [];
   sobState.selectedTier = 'free';
   sobState._skipPreview = false;
+  sobState._cameFromGuided = cameFromGuided; // restore flag after reset
 
   // Reset to phase 1 (or 2 if coming from guided screen)
   sobGoPhase(skipPreview ? 2 : 1);
@@ -7099,12 +7721,7 @@ async function sobInit() {
   // Reset tier selection UI
   sobSelTier('free');
 
-  // Reset EULA checkboxes
-  ['sob-eula-chk','sob-content-chk'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.checked = false;
-  });
-  sobCheckEula();
+  // EULA checkboxes + scroll gate are reset by sobResetEulaGate() when Phase 3 is entered
 
   const listEl = document.getElementById('sob-draft-list');
   const errEl  = document.getElementById('sob-p1-err');
@@ -7334,12 +7951,39 @@ async function sobGoLive() {
 
   sobGoPhase(4);
   showToast("🎉 You're live on TrustSquare!");
+  // Show "View my listing" button if we have a listing id to open
+  const viewBtn = document.getElementById('sob-view-listing-btn');
+  if (viewBtn && sobState.drafts && sobState.drafts.length) viewBtn.style.display = 'block';
   loadLiveListings(); // refresh buyer feed
 
   // Show banking nudge if seller has no banking details yet
   if (!sobState._hasBanking) {
     const nudge = document.getElementById('sob-banking-nudge');
     if (nudge) nudge.style.display = 'flex';
+  }
+}
+
+function sobP2Back() {
+  // Only used for normal (non-guided) flow now
+  sobGoPhase(1);
+}
+
+function sobStartOver() {
+  // Guided arrivals: clear flags and go back to Step 1 cleanly
+  sobState._cameFromGuided = false;
+  sobState._skipPreview = false;
+  goTo('guided-onboard');
+}
+
+function sobViewMyListing() {
+  // Open the first published listing in the detail view
+  const first = sobState.drafts && sobState.drafts[0];
+  if (first && first.id) {
+    goTo('browse');
+    setTimeout(() => openDetail(first.id), 300);
+  } else {
+    goTo('browse');
+    showToast('Your listing is live — find it in the marketplace.');
   }
 }
 
@@ -7483,6 +8127,9 @@ function goShowStep(n) {
   document.querySelectorAll('.go-screen').forEach(el => el.classList.remove('go-active'));
   const el = document.getElementById('go-s' + n);
   if (el) el.classList.add('go-active');
+  // Relabel pills to x of 5 — guided screen is always followed by 2 more SOB steps
+  const pill = el ? el.querySelector('.go-step-pill') : null;
+  if (pill) pill.textContent = 'Step ' + n + ' of 5';
   window.scrollTo(0, 0);
 }
 
@@ -7522,7 +8169,7 @@ function goPaintCards() {
 
   const titleText = f.title || name;
   const areaText  = f.suburb ? '📍 ' + f.suburb + (city ? ', ' + city : '') : (city ? '📍 ' + city : '');
-  const priceText = f.price  ? 'R ' + f.price.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
+  const rawPriceGo = (f.price || '').replace(/^R\s*/i, ''); const priceText = rawPriceGo ? 'R ' + rawPriceGo.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
 
   [1, 2].forEach(step => {
     // emoji / photo
@@ -7785,7 +8432,7 @@ function goPopulateReview() {
   if (catEl)   catEl.textContent   = icon + ' ' + cat;
   if (titleEl) titleEl.textContent = f.title || goState.name || 'Your listing';
   if (areaEl)  areaEl.textContent  = f.suburb ? '📍 ' + f.suburb + (city?', '+city:'') : (city?'📍 '+city:'');
-  if (priceEl) priceEl.textContent = f.price ? 'R ' + f.price.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : 'Negotiable';
+  if (priceEl) { const rawPrice = (f.price || '').replace(/^R\s*/i, ''); priceEl.textContent = rawPrice ? 'R ' + rawPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : 'Negotiable'; }
 }
 
 // ── Step 3 AI coach note ───────────────────────────────────────────────────
@@ -7809,14 +8456,15 @@ async function goStep3Coach() {
 
 // ── Handoff to seller-onboard funnel ──────────────────────────────────────
 function goHandoff() {
-  // Seed sobState from goState so the existing funnel doesn't need to re-fetch
+  // Set flags BEFORE goTo() — goTo() calls sobInit() synchronously
+  sobState._skipPreview    = true;
+  sobState._cameFromGuided = true;
+  // Seed sobState from goState so sobInit() skips straight to Phase 2 (tier picker)
   sobState.email = goState.email;
   sobState.name  = goState.name;
   sobState.cat   = goState.cat;
   sobState.city  = goState.city;
   goTo('seller-onboard');
-  // sobInit will be called by initScreen — pass skipPreview flag via sobState
-  sobState._skipPreview = true;
 }
 
 // ══════════════════════════════════════════════════════════

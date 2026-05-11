@@ -1490,3 +1490,36 @@ BEA: new `GET /users/{email}/trust` endpoint (lines 1543–1663) — trust score
 - Upload zone + Next button hidden until category is selected — then revealed with category-specific coach prompt
 - goSelectCat() seeds card, coach text, and Step 2 fields immediately on tap
 - Magic link arrivals (Route 1) bypass the picker entirely — category pre-filled from URL
+
+
+## Session 55 · 11 May 2026
+
+### Step numbering — full 1-of-5 journey ✅
+- Guided screen pills relabelled to "1 of 5", "2 of 5", "3 of 5" in `goShowStep()` — honest from first screen
+- SOB Phase 2/3 pills relabelled "4 of 5" / "5 of 5" for guided arrivals via `sobGoPhase()` — continuous numbering across both screens
+- `_cameFromGuided` flag preserved across `sobInit()` resets — flag can no longer be silently cleared
+
+### Back-navigation sealed ✅
+- Phase 2 back button replaced with subtle "Start over" link for guided arrivals (`_cameFromGuided` true)
+- `sobStartOver()` clears both flags and routes cleanly to guided Step 1
+- Prevents half-return with blank photo and broken step counter
+
+### Double-R price bug fixed ✅
+- `goPopulateReview()` and `goSaveAndNext()` now strip leading "R" from price field before prepending "R " — "R R19,800/month" → "R 19,800/month"
+
+### EULA scroll gate ✅
+- EULA box max-height increased to 340px; scroll listener added
+- Checkboxes hidden behind "↓ Scroll to the end to confirm" cue
+- Checkboxes and gold border unlock only when seller scrolls within 40px of bottom
+- Gate resets every time Phase 3 is entered (`sobResetEulaGate()`)
+
+### Full EULA synced to app ✅
+- Condensed 12-section app EULA replaced with full 14-section docx content (634 paragraphs)
+- `[COUNSEL REQUIRED]` markers shown in red — visible to seller, honest about draft status
+- Draft watermark at top: "⚠ Draft for legal review — not yet finalised"
+- App and project docx are now identical in substance
+
+### Launch blockers added to BACKLOG.md + dashboard ✅
+- 6 new legal/counsel blockers added (L1–L6): EULA counsel review, company reg number, NCC reg, privacy policy page, FSCA Tuppence guidance, POPIA consent timing
+- Paystack renumbered L7
+- Dashboard auto-pulls blockers from BACKLOG.md — no separate dashboard update needed

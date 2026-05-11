@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 54 · 11 May 2026**
+**Updated: Session 55 · 11 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -67,6 +67,16 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 55
+
+### UX polish + EULA + legal blockers ✅
+- Step numbering: full 1-of-5 journey across guided screen + SOB (1→2→3→4→5)
+- Back-navigation sealed: Phase 2 "Start over" link for guided arrivals, no broken half-returns
+- Double-R price bug fixed in review card
+- EULA forced-scroll gate: checkboxes hidden until seller scrolls to bottom
+- Full 14-section EULA synced from docx into app — counsel markers visible
+- 6 legal launch blockers added to BACKLOG.md and dashboard (L1–L6)
 
 ## Last Completed — Session 54
 
@@ -212,13 +222,14 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 55
+## Next Session — Session 56
 
 ### Priority
 1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
 2. **Patent filing** — David to confirm readiness; do NOT proceed with any outreach until patent is filed
-3. **Whitepaper** — draft and review before launch
-4. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
+3. **Counsel EULA review** — send EULA docx to SA attorney to fill [COUNSEL REQUIRED] gaps and confirm POPIA consent timing
+4. **Privacy Policy page** — draft trustsquare.co/privacy
+5. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
 
 ### Session 55 Feature — End-to-end test + remaining work
 > ⚠️ Build and test only after patent filed. No outreach until David confirms.
