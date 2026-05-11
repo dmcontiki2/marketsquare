@@ -175,7 +175,7 @@
     <div class="directions-grid" id="directions-grid"></div>
 
     <!-- Generated prompt panel -->
-    <div class="prompt-panel" id="prompt-panel">
+    <div class="prompt-panel" id="prompt-panel" style="display:none;">
       <div class="prompt-header">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="prompt-title" id="prompt-title">Session Prompt</div>
@@ -220,8 +220,26 @@
 </div>
 
 <script>
-// ── Data injected by session_dashboard.py ──────────────────
-const DATA = {"generatedAt": "10 May 2026 - Session 50", "currentSession": 50, "nextSession": 51, "liveState": "Legal entity: Trustsquare (Pty) Ltd. BEA v1.3.0 live at trustsquare.co. Launch city: Pretoria - 5 live listings - 80 demo listings. n8n outreach wave FULLY LIVE. My Space personal dashboard live.", "lastDone": "My Space personal dashboard (screen-myspace): 4 tabs - Overview (wallet, open actions, stats), Intros (received/sent + wishlist), Trust (live score bar + signal breakdown), Me (editable details, browse history, seller hub link). New BEA GET /users/email/trust endpoint. Browse history tracked client-side. Fixed pre-existing BEA truncation bug (tuppence_total line).", "nextGoals": "Priority: 1. Wave 1 - load real Pretoria prospects into CityLauncher DB, fire batch_size=60. 2. Paystack live mode - awaiting CIPC bank account. 3. Adventures detail view upgrade - photo thumbnail row and stat strip.", "knownRules": "NEVER Edit/Write marketsquare.html or bea_main.py - Python replace only. BEA venv: /var/www/marketsquare/venv/bin/pip. Git: David commits from PowerShell only. SSH key: bash load_sandbox_ssh.sh at session start. Dashboard update MANDATORY at session end.", "recentChangelog": "Session 50 - 10 May 2026. My Space personal dashboard added: 4-tab screen (Overview, Intros, Trust, Me). New GET /users/email/trust BEA endpoint. Browse history tracking. BEA truncation bug fixed. Session 49 - Adventures category redesign: fixed 4-chip bar + More bottom sheet. 10 luxury stays added.", "blockers": ["Paystack live mode - awaiting CIPC bank account"], "highPriority": ["Wave 1 - load real Pretoria prospects", "Paystack live mode", "Adventures detail view upgrade", "My Space - wire real intro accept/decline actions", "Email template visual QA"], "directions": [{"id": "dir_next", "project": "TrustSquare", "title": "Session 51 - Wave 1 + Paystack", "colour": "#3b82f6", "items": ["Load real Pretoria Property prospects into CityLauncher DB", "Trigger Wave 1: batch_size=60", "Paystack live mode (pending CIPC)", "Adventures detail view upgrade"], "prompt": "Read STATUS.md and AGENT_BRIEFING.md first. State: TrustSquare live at trustsquare.co, BEA v1.3.0, Session 50 complete. My Space personal dashboard live. Goals: 1. Wave 1 outreach. 2. Paystack live mode. 3. Adventures detail view.", "mobile_prompt": "TrustSquare Session 51. Wave 1 + Adventures detail view."}, {"id": "dir_blockers", "project": "TrustSquare", "title": "Launch Blockers", "colour": "#ef4444", "items": ["Paystack live mode - awaiting CIPC bank account"], "prompt": "Read STATUS.md first. Launch blocker: Paystack live mode - awaiting CIPC bank account.", "mobile_prompt": "TrustSquare launch blockers: Paystack live mode."}, {"id": "dir_cl", "project": "CityLauncher", "title": "CityLauncher - Session 20+", "colour": "#8b5cf6", "items": ["See CityLauncher STATUS.md"], "prompt": "Read C:\\Users\\David\\Projects\\CityLauncher\\STATUS.md first.", "mobile_prompt": "Help me with CityLauncher next steps."}, {"id": "dir_aa", "project": "AdvertAgent", "title": "AdvertAgent - Kickoff", "colour": "#f59e0b", "items": ["Read PRINCIPLE_REQUIREMENTS.md Part G", "Define architecture and file map"], "prompt": "Read C:\\Users\\David\\Projects\\AdvertAgent\\STATUS.md first.", "mobile_prompt": "Help me design the AdvertAgent architecture."}], "clSession": "20", "clLast": ""}
+// ── Live data: fetched from BEA on every load ────────────────────────────
+let DATA = {};
+
+async function loadDashboard() {
+  // Show loading state in header
+  const genTimeEl = document.getElementById('gen-time');
+  if (genTimeEl) genTimeEl.textContent = 'Loading…';
+
+  try {
+    const res = await fetch('/dashboard/summary');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    DATA = await res.json();
+    populate();
+  } catch (err) {
+    if (genTimeEl) genTimeEl.textContent = 'Error loading data — ' + err.message;
+    console.error('Dashboard fetch failed:', err);
+    // Retry after 5s
+    setTimeout(loadDashboard, 5000);
+  }
+}
 
 // ── View switcher ────────────────────────────────────────────
 function switchView(view) {
@@ -634,6 +652,101 @@ function drawDrilldown(projectId, projectLabel) {
     });
   });
 }
+
+// ── Dashboard populate — renders DATA into DOM ─────────────────────────────
+function el(id){ return document.getElementById(id); }
+
+function populate() {
+  // Header
+  el('session-badge').textContent = 'Session ' + DATA.currentSession;
+  el('gen-time').textContent = DATA.generatedAt;
+
+  // Sidebar — Live State
+  const liveLines = (DATA.liveState || '').split('.').map(s=>s.trim()).filter(Boolean);
+  el('live-state-list').innerHTML = liveLines.map(l =>
+    '<div style="font-size:12px;color:#94a3b8;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);">'+l+'</div>'
+  ).join('');
+
+  // Sidebar — Launch Blockers
+  const blockers = DATA.blockers || [];
+  el('blockers-list').innerHTML = blockers.length
+    ? blockers.map(b => '<div style="font-size:12px;color:#f87171;padding:3px 0;">⛔ '+b+'</div>').join('')
+    : '<div style="font-size:12px;color:#4ade80;">✅ No blockers</div>';
+
+  // Sidebar — Session Rules
+  const rules = (DATA.knownRules || '').split('.').map(s=>s.trim()).filter(Boolean);
+  el('rules-list').innerHTML = rules.map(r =>
+    '<div style="font-size:11px;color:#64748b;padding:2px 0;">• '+r+'</div>'
+  ).join('');
+
+  // Direction cards
+  const dirs = DATA.directions || [];
+  const grid = el('directions-grid');
+  grid.innerHTML = '';
+  (dirs).forEach(function(d, idx) {
+    const div = document.createElement('div');
+    div.className = 'direction-card';
+    div.style.cssText = 'background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;cursor:pointer;transition:border .2s;';
+    div.addEventListener('mouseenter', function(){ div.style.borderColor = d.colour; });
+    div.addEventListener('mouseleave', function(){ div.style.borderColor = 'rgba(255,255,255,.08)'; });
+    div.addEventListener('click', function(){ selectDir(div, d); });
+    const items = (d.items||[]).map(function(i){ return '<div style="font-size:12px;color:#94a3b8;padding:2px 0;">• '+i+'</div>'; }).join('');
+    div.innerHTML = '<div style="font-size:11px;font-weight:700;color:'+d.colour+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">'+d.project+'</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:10px;">'+d.title+'</div>'
+      + items;
+    grid.appendChild(div);
+  });
+
+  // Last completed / Next session
+  el('last-label').textContent = 'Last Completed — Session ' + DATA.currentSession;
+  el('last-content').innerHTML = '<div style="font-size:13px;color:#94a3b8;line-height:1.7;">' + (DATA.lastDone||'').replace(/\. /g,'.<br>') + '</div>';
+  el('next-label').textContent = 'Next Session — Session ' + DATA.nextSession;
+  el('next-content').innerHTML = '<div style="font-size:13px;color:#94a3b8;line-height:1.7;">' + (DATA.nextGoals||'').replace(/\n/g,'<br>') + '</div>';
+
+  // High priority backlog
+  const hp = DATA.highPriority || [];
+  el('hp-grid').innerHTML = hp.map(item =>
+    '<div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 14px;font-size:13px;color:#cbd5e1;">'+item+'</div>'
+  ).join('');
+
+  // Changelog
+  el('changelog-text').innerHTML = '<div style="font-size:13px;color:#94a3b8;line-height:1.8;white-space:pre-wrap;">'+(DATA.recentChangelog||'')+'</div>';
+}
+
+function selectDir(cardEl, d) {
+  document.querySelectorAll('.direction-card').forEach(c => c.style.background = '#0f172a');
+  cardEl.style.background = '#1e293b';
+  el('prompt-panel').style.display = 'block';
+  el('prompt-title').textContent = d.title;
+  el('prompt-text').textContent = d.prompt || d.mobile_prompt || '';
+  _activeDir = d;
+  switchTab('desktop');
+}
+
+let _activeDir = null;
+function switchTab(tab) {
+  el('tab-desktop').classList.toggle('active', tab==='desktop');
+  el('tab-mobile').classList.toggle('active', tab==='mobile');
+  if(_activeDir) {
+    el('prompt-text').textContent = tab==='mobile'
+      ? (_activeDir.mobile_prompt || _activeDir.prompt || '')
+      : (_activeDir.prompt || _activeDir.mobile_prompt || '');
+  }
+}
+
+function copyPrompt() {
+  const txt = el('prompt-text').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn = el('copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>{ btn.textContent = '📋 Copy'; }, 2000);
+  });
+}
+
+// Run on load
+// Kick off the live data load
+loadDashboard();
+
 </script>
 </body>
 </html>

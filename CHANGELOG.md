@@ -1,5 +1,16 @@
 ## Session 48 (continued) · 10 May 2026 · n8n founding seller outreach wave — fully live
 
+## Session 51 — 11 May 2026
+
+### Live dashboard — permanent fix
+- Removed static `const DATA = {...}` block from `session_dashboard_live.html`
+- `loadDashboard()` async function fetches `/dashboard/summary` on every page load
+- Loading state displayed while fetch in-progress; auto-retry after 5s on error
+- `GET /dashboard/summary` extended with `directions` field — 4 auto-generated direction cards
+- Directions derived from STATUS.md priorities + BACKLOG.md blockers — no manual update needed each session
+- Both deployed and verified: `currentSession=51`, 4 direction cards live at trustsquare.co/dashboard.html
+
+
 **Task: Wire outreach wave workflow end-to-end and send first test email to miconradie1@gmail.com**
 
 Abandoned SendGrid (Twilio trial sandbox — only works with 5 pre-registered numbers, cannot send to arbitrary recipients). Switched to Brevo SMTP (`PQu4MKXLGFjoUeAS`) already authenticated and live from Session 46. Converted `Query CityLauncher Prospects` and `Mark Prospect as Emailed` from n8n-nodes-base.sqlite (type rejected by n8n 2.14 API) to Code nodes using `require('sqlite3')`. Removed `JOIN cities` from the query — CityLauncher DB has no cities table; `city_name` injected from trigger params instead. Added `NODE_FUNCTION_ALLOW_EXTERNAL=sqlite3` and `NODE_FUNCTION_ALLOW_BUILTIN=fs,path` to Docker env vars so Code nodes can import sqlite3 and read HTML templates via `fs.readFileSync`. Fixed email template permissions from `-rwx------ root:root` to `644` so n8n container (uid 1000) can read them. Fixed `Mark Prospect as Emailed` JS: `$input.first()` is disallowed in `runOnceForEachItem` mode — changed to `$('Build Email Payloads').item.json` to retrieve prospectId via n8n's per-item lineage tracking. Fixed CityLauncher DB readonly: `chmod 666` on all three SQLite files and `chmod 777` on `/var/www/citylauncher/` so the container can create WAL journal files. Fixed Rate Limiter unit from `milliseconds` (unsupported in v2.14) to `1 second`. Execution 40: all 13 nodes green — email delivered to miconradie1@gmail.com, wave report to dmcontiki2@gmail.com, `emailed_at = 2026-05-10 11:50:14` confirmed in CityLauncher DB.

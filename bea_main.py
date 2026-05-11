@@ -6533,10 +6533,89 @@ def dashboard_summary():
         conn.close()
 
     from datetime import datetime as _dt
+
+    # Build directions cards from parsed STATUS data
+    next_session = current_session + 1
+
+    # Next session priorities → direction card
+    next_dir_items = priority_items[:4]
+    next_dir_prompt = (
+        "Read STATUS.md first. Session " + str(current_session) + " is complete. "
+        "Pick up from Session " + str(next_session) + " priorities. "
+        "Do not summarise what was done — go straight into execution."
+    )
+
+    # Blockers → direction card
+    blockers_prompt = (
+        "Read STATUS.md and BACKLOG.md. Focus on resolving launch blockers. "
+        "List each blocker with the specific unblocking action needed."
+    )
+
+    # CityLauncher direction card
+    cl_items = ["Load Pretoria Property prospects into CityLauncher DB",
+                "Trigger Wave 1 (batch_size=60)", "Monitor delivery + open rates",
+                "Check opt-out suppression working"]
+    cl_prompt = (
+        "Session goal: execute Wave 1 outreach. "
+        "SSH into Hetzner, check CityLauncher DB has prospects loaded, "
+        "then trigger the n8n wave workflow with batch_size=60."
+    )
+
+    # AdvertAgent direction card
+    aa_items = ["Review AI coach session usage", "Gate sbTriggerMarketNote behind tier",
+                "Test free-seller nudge banner", "Verify token cost per coach call"]
+    aa_prompt = (
+        "Review AdvertAgent AI coach usage. Gate inline market notes behind seller tier. "
+        "Ensure free sellers see the upgrade nudge when ai_sessions=0."
+    )
+
+    directions = [
+        {
+            "id": "dir_next",
+            "project": "TrustSquare",
+            "title": "Session " + str(next_session) + " — Next up",
+            "colour": "#3b82f6",
+            "items": next_dir_items,
+            "prompt": next_dir_prompt,
+            "desktop": next_dir_prompt,
+            "mobile": "Session " + str(next_session) + " priorities. " + (next_dir_items[0] if next_dir_items else "See STATUS.md"),
+        },
+        {
+            "id": "dir_blockers",
+            "project": "TrustSquare",
+            "title": "Launch Blockers",
+            "colour": "#ef4444",
+            "items": (blockers or ["No blockers recorded"])[:4],
+            "prompt": blockers_prompt,
+            "desktop": blockers_prompt,
+            "mobile": "Resolve launch blockers. Check BACKLOG.md for current list.",
+        },
+        {
+            "id": "dir_cl",
+            "project": "CityLauncher",
+            "title": "Wave 1 — Pretoria Launch",
+            "colour": "#8b5cf6",
+            "items": cl_items,
+            "prompt": cl_prompt,
+            "desktop": cl_prompt,
+            "mobile": "Trigger Wave 1 outreach: load prospects, run n8n workflow, monitor delivery.",
+        },
+        {
+            "id": "dir_aa",
+            "project": "AdvertAgent",
+            "title": "AI Coach — Tier Gating",
+            "colour": "#f59e0b",
+            "items": aa_items,
+            "prompt": aa_prompt,
+            "desktop": aa_prompt,
+            "mobile": "Gate AI coach behind seller tier. Show upgrade nudge for free sellers.",
+        },
+    ]
+
     return {
         "generatedAt": _dt.utcnow().strftime("%d %b %Y · %H:%M UTC"),
         "currentSession": current_session,
-        "nextSession": current_session + 1,
+        "nextSession": next_session,
         "liveState": live_state,
         "lastDone": last_done,
         "nextGoals": next_goals,
@@ -6546,6 +6625,7 @@ def dashboard_summary():
         "highPriority": high_pri[:6],
         "medium": medium[:6],
         "priorityItems": priority_items[:6],
+        "directions": directions,
         "stats": {
             "liveListings": live_count,
             "sellers": seller_count,

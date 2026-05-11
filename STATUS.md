@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 50 · 10 May 2026**
+**Updated: Session 51 · 11 May 2026**
 
 ---
 
@@ -62,6 +62,16 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 51
+
+### Live dashboard — permanent fix ✅
+- `session_dashboard_live.html` no longer contains a static `const DATA = {...}` block
+- On every load, `loadDashboard()` calls `GET /dashboard/summary` and populates the UI from live BEA data
+- Loading state shown while fetch is in progress; auto-retries after 5s on error
+- `GET /dashboard/summary` extended: new `directions` field — 4 auto-generated direction cards (Session next, Launch Blockers, CityLauncher Wave 1, AdvertAgent tier gating)
+- Directions built from parsed STATUS.md next-session priorities + blockers — update STATUS.md only, dashboard refreshes automatically next load
+- Both BEA and dashboard deployed to server and verified live
 
 ## Last Completed — Session 50
 
@@ -163,7 +173,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 51
+## Next Session — Session 52
 
 ### Priority
 1. **Wave 1 launch** — load real Pretoria Property prospects into CityLauncher DB, trigger Wave 1 with `batch_size=60`, monitor delivery
