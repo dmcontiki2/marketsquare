@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 53 · 11 May 2026**
+**Updated: Session 54 · 11 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -67,6 +67,14 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 54
+
+### POPIA notice bar + Route 2 in-app entry ✅
+- POPIA transparency bar added to guided-onboard Step 1 — shown only on magic link arrivals, passive (not a gate)
+- Route 2: bottom nav "Sell" for new sellers now routes to guided-onboard instead of old Path A form
+- Category picker shown for Route 2 arrivals — 7 buttons, reveals upload zone + Next on selection
+- Both FEA deployed and verified live
 
 ## Last Completed — Session 53
 
@@ -204,7 +212,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 54
+## Next Session — Session 55
 
 ### Priority
 1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
@@ -212,7 +220,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 3. **Whitepaper** — draft and review before launch
 4. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
 
-### Session 54 Feature — Invite Email + Guided Onboarding Integration
+### Session 55 Feature — End-to-end test + remaining work
 > ⚠️ Build and test only after patent filed. No outreach until David confirms.
 
 **Agreed architecture (Session 53):**

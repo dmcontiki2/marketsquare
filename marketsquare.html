@@ -937,6 +937,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .go-btn-bk{flex:0 0 auto;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
 .go-btn-next{flex:1;background:var(--accent-bright,#2563eb);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;}
 .go-btn-next:disabled{opacity:.35;cursor:not-allowed;}
+.go-popia-bar{margin:0 16px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;}
+.go-popia-bar svg{flex-shrink:0;margin-top:1px;opacity:.5;}
+.go-popia-bar p{font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.55;font-weight:400;}
+.go-popia-bar p strong{color:rgba(255,255,255,.65);font-weight:600;}
+.go-cat-btn{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);border-radius:10px;padding:11px 10px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .15s,background .15s;text-align:center;}
+.go-cat-btn:active,.go-cat-btn.selected{border-color:#c8873a;background:rgba(200,135,58,.12);color:#fbbf24;}
 .go-review-full{margin:0 16px;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#1e2d4a,#22304d 60%,#1e2a3a);box-shadow:0 8px 40px rgba(0,0,0,.4);}
 .go-review-photo{height:220px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a2744,#2a3f6a);display:flex;align-items:center;justify-content:center;}
 .go-review-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
@@ -2602,6 +2608,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <h2>Add your first photo</h2>
     </div>
 
+    <!-- POPIA transparency notice — shown only on magic link arrivals -->
+    <div id="go-popia-bar" class="go-popia-bar" style="display:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p><strong>Pre-filled from your invite.</strong> You're not registered yet — nothing is public until you accept our terms at the end.</p>
+    </div>
+
     <!-- Live draft card -->
     <div class="go-card-wrap">
       <div class="go-card-photo" id="go-card-photo-1">
@@ -2627,6 +2639,20 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
     <!-- Upload zone -->
     <div class="go-body">
+      <!-- Category picker — shown for Route 2 (in-app, no magic link) -->
+      <div id="go-cat-picker" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:8px;">What are you listing?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="go-cat-btn" onclick="goSelectCat('Property')">🏡 Property</button>
+          <button class="go-cat-btn" onclick="goSelectCat('Tutors')">🎓 Tutors</button>
+          <button class="go-cat-btn" onclick="goSelectCat('Services')">⚙️ Services</button>
+          <button class="go-cat-btn" onclick="goSelectCat('Cars')">🚗 Cars</button>
+          <button class="go-cat-btn" onclick="goSelectCat('Collectors')">🏺 Collectors</button>
+          <button class="go-cat-btn" onclick="goSelectCat('Adventures')">🧭 Adventures</button>
+          <button class="go-cat-btn" onclick="goSelectCat('local_market')" style="grid-column:1/-1;">🛍️ Local Market</button>
+        </div>
+      </div>
+
       <input type="file" id="go-file-input" accept="image/*" capture="environment" style="display:none;" onchange="goHandlePhoto(this)">
       <div class="go-upload-zone" id="go-upload-zone" onclick="document.getElementById('go-file-input').click()">
         <div class="go-upload-icon">📷</div>
@@ -4890,7 +4916,7 @@ function openSellNav() {
     if (emailEl) emailEl.textContent = email;
     document.getElementById('sell-account-sheet').classList.add('open');
   } else {
-    goTo('publish');   // Path A — new seller, no stored email
+    goTo('guided-onboard');   // Route 2 — new seller, guided screen
   }
 }
 function closeSellSheet(e) {
@@ -7425,6 +7451,26 @@ async function goInit() {
     } catch(e) {}
   }
 
+  // Route 2 — no magic link: show category picker, hide upload zone until cat selected
+  const catPicker = document.getElementById('go-cat-picker');
+  const uploadZone = document.getElementById('go-upload-zone');
+  const s1Next    = document.getElementById('go-s1-next');
+  if (!magicLink.active) {
+    if (catPicker)  catPicker.style.display  = 'block';
+    if (uploadZone) uploadZone.style.display = 'none';
+    if (s1Next)     s1Next.style.display     = 'none';
+    // Reset any previously selected cat button
+    document.querySelectorAll('.go-cat-btn').forEach(b => b.classList.remove('selected'));
+  } else {
+    if (catPicker)  catPicker.style.display  = 'none';
+    if (uploadZone) uploadZone.style.display = 'block';
+    if (s1Next)     s1Next.style.display     = '';
+  }
+
+  // Show POPIA notice bar if arriving via magic link
+  const popiaBar = document.getElementById('go-popia-bar');
+  if (popiaBar) popiaBar.style.display = magicLink.active ? 'flex' : 'none';
+
   // Personalise Step 1 coach bubble
   const c1 = document.getElementById('go-coach-text-1');
   if (c1 && goState.name) {
@@ -7443,6 +7489,27 @@ function goShowStep(n) {
 function goNextStep(n) {
   goShowStep(n);
   if (n === 3) goPopulateReview();
+}
+
+// ── Category selection (Route 2 — in-app, no magic link) ─────────────────
+function goSelectCat(cat) {
+  goState.cat = cat;
+  // Highlight selected button
+  document.querySelectorAll('.go-cat-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  // Show upload zone + Next button now that cat is chosen
+  const uploadZone = document.getElementById('go-upload-zone');
+  const s1Next     = document.getElementById('go-s1-next');
+  if (uploadZone) uploadZone.style.display = 'block';
+  if (s1Next)     s1Next.style.display     = '';
+  // Seed coach text with category-specific prompt
+  const c1 = document.getElementById('go-coach-text-1');
+  const icons = {Property:'🏡',Tutors:'🎓',Services:'⚙️',Cars:'🚗',Collectors:'🏺',Adventures:'🧭',local_market:'🛍️'};
+  if (c1) c1.innerHTML = '<strong>' + (icons[cat]||'') + ' ' + cat + ' selected!</strong> Now add a photo — buyers are 3× more likely to contact sellers with a clear photo.';
+  // Repaint card with chosen category
+  goPaintCards();
+  // Render Step 2 fields for this category
+  goRenderFields();
 }
 
 // ── Card painter — keeps both Step 1 and Step 2 cards in sync ─────────────

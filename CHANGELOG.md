@@ -1475,3 +1475,18 @@ BEA: new `GET /users/{email}/trust` endpoint (lines 1543–1663) — trust score
 - `sobInit()` extended with `_skipPreview` flag — SOB funnel starts at Phase 2 when coming from guided screen
 - Fixed pre-existing `health_resources()` truncation bug — function was missing its return statement causing BEA startup crash; restored full JSON return
 - URL router: magic links now route to guided-onboard via goTo() instead of directly to seller-onboard
+
+## Session 54 · 11 May 2026 · Guided Onboarding — POPIA notice + Route 2 in-app entry
+
+### POPIA transparency notice bar
+- Passive one-line notice shown at top of Step 1 when arriving via magic link (invite email)
+- Text: "Pre-filled from your invite. You're not registered yet — nothing is public until you accept our terms at the end."
+- Hidden for Route 2 (in-app) arrivals — only shown when magicLink.active is true
+- Not a gate — no click required, purely informational (POPIA transparency requirement)
+
+### Route 2 — in-app entry point
+- Bottom nav "Sell" button for new sellers (no stored email) now routes to guided-onboard instead of old Path A publish screen
+- Category picker shown at Step 1 for Route 2 arrivals (7 buttons: Property, Tutors, Services, Cars, Collectors, Adventures, Local Market)
+- Upload zone + Next button hidden until category is selected — then revealed with category-specific coach prompt
+- goSelectCat() seeds card, coach text, and Step 2 fields immediately on tap
+- Magic link arrivals (Route 1) bypass the picker entirely — category pre-filled from URL
