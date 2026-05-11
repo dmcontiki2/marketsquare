@@ -1251,6 +1251,22 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .strip-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.85);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.18);font-size:20px;color:var(--navy);line-height:1;padding:0;}
 .strip-arrow-left{left:10px;}
 .strip-arrow-right{right:10px;}
+
+/* ── Adventures detail — photo thumbnail row ── */
+.adv-thumbs{display:flex;gap:5px;padding:6px 10px;background:rgba(0,0,0,.55);overflow-x:auto;scrollbar-width:none;position:absolute;bottom:0;left:0;right:0;z-index:4;}
+.adv-thumbs::-webkit-scrollbar{display:none;}
+.adv-thumb{flex:0 0 48px;height:36px;border-radius:5px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s,opacity .2s;opacity:.6;}
+.adv-thumb.active{border-color:#fff;opacity:1;}
+.adv-thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+/* ── Adventures detail — type badge + stat strip ── */
+.adv-type-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.58);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;font-size:11.5px;font-weight:700;color:#fff;letter-spacing:.2px;margin-bottom:10px;}
+.adv-stat-strip{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.adv-stat{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;line-height:1.3;}
+.adv-stat.price-stat{background:linear-gradient(135deg,#064e3b,#065f46);color:#6ee7b7;border:1px solid #10b981;}
+.adv-stat.env-stat{background:#0f172a;color:#94a3b8;border:1px solid #1e293b;}
+.adv-stat.group-stat{background:#0f2a0f;color:#86efac;border:1px solid #16a34a;}
+.adv-stat.duration-stat{background:#1a0f2a;color:#c4b5fd;border:1px solid #7c3aed;}
+.adv-stat.country-stat{background:#1a0f0a;color:#fde68a;border:1px solid #d97706;}
 /* ── FEATURED CAROUSEL desktop scroll arrows ── */
 .featured-wrap{position:relative;}
 .feat-scroll-btn{display:none;position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);cursor:pointer;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:20px;color:var(--navy);align-items:center;justify-content:center;padding:0;transition:all var(--t);}
@@ -4525,6 +4541,26 @@ window.addEventListener('DOMContentLoaded',()=>{
   }, 30000);
 });
 
+
+// ── Adventures thumbnail strip sync ─────────────────────────────────────────
+function advThumbClick(id, idx) {
+  const strip = document.getElementById('pstrip-' + id);
+  if (!strip) return;
+  strip.scrollTo({ left: idx * strip.offsetWidth, behavior: 'smooth' });
+  setTimeout(() => syncAdvThumbs(id, idx), 80);
+}
+
+function syncAdvThumbs(id, idx) {
+  const container = document.getElementById('adv-thumbs-' + id);
+  if (!container) return;
+  container.querySelectorAll('.adv-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  // scroll the thumb row to keep active thumb visible
+  const activeThumb = document.getElementById('adv-thumb-' + id + '-' + idx);
+  if (activeThumb) activeThumb.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
 function trustTier(s){
   if(s<40)return{label:'New',c:'#6b7280',bg:'#f3f4f6'};
   if(s<70)return{label:'Established',c:'var(--blue)',bg:'var(--blue-bg)'};
@@ -4946,6 +4982,25 @@ let advCountryFlag = '🇿🇦';
 let advSubcat = 'all';
 let advCat = 'all';
 
+const ADV_ENV_LABELS = {
+  bush_wildlife:'🌿 Bush & Wildlife', mountain_highlands:'⛰ Mountain & Highlands',
+  coastal_beach:'🏖 Coastal & Beach', garden_winelands:'🍇 Garden & Winelands',
+  wetlands_lakes:'🦆 Wetlands & Lakes', desert_karoo:'🏜 Desert & Karoo',
+  forest_fynbos:'🌲 Forest & Fynbos', urban_township:'🏙 Urban & Township',
+  farm_rural:'🌾 Farm & Rural',
+};
+const ADV_EXP_TYPE_LABELS = {
+  luxury_safari:'🦁 Luxury Safari', luxury_train:'🚂 Luxury Train',
+  guided_tours:'🗺 Guided Tours', once_in_a_lifetime:'✨ Once in a Lifetime',
+  water_coastal:'🌊 Water & Coastal', sky_aerial:'🪂 Sky & Aerial',
+  arts_culture:'🎭 Arts & Culture',
+};
+const ADV_ACC_TYPE_LABELS = {
+  private_lodge:'🏕 Private Lodge', bush_camp:'⛺ Bush Camp',
+  mountain_retreat:'⛰ Mountain Retreat', coastal_island:'🏝 Coastal & Island',
+  boutique_hotel:'🏨 Boutique Hotel', self_catering:'🍳 Self-Catering',
+  unique_stays:'🌳 Unique Stays', caravan_camping:'🚐 Caravan & Camping',
+};
 const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
 const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', EU:'€', AU:'A$', NZ:'NZ$' };
 
@@ -5958,11 +6013,12 @@ function openDetail(id){
     : '';
   const heroHtml = `
     <div class="photo-strip-wrap" id="pstrip-wrap-${id}">
-      <div class="photo-strip" id="pstrip-${id}" onscroll="updateStripDots('${id}',${photos.length})">
+      <div class="photo-strip" id="pstrip-${id}" onscroll="updateStripDots('${id}',${photos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${id}', Math.round(this.scrollLeft/this.offsetWidth))">
         ${stripSlides}
       </div>
       ${dotsHtml}
       ${photos.length>1?`<button class="strip-arrow strip-arrow-left" onclick="stripNav('${id}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" onclick="stripNav('${id}',1)">&#8250;</button>`:''}
+      ${isAdv && photos.length > 1 ? `<div class="adv-thumbs" id="adv-thumbs-${id}">${photos.map((u,ti) => `<div class="adv-thumb${ti===0?' active':''}" id="adv-thumb-${id}-${ti}" onclick="advThumbClick('${id}',${ti})"><img src="${u}" loading="lazy"></div>`).join('')}</div>` : ''}
       <div class="dnav">
         <button class="dib" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <button class="dib" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
@@ -6027,12 +6083,22 @@ function openDetail(id){
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
-      ${isAdv && (l.groupSize||l.duration) ? `
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-        ${l.groupSize ? `<span style="background:#f0fdf4;color:#065f46;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">👥 ${l.groupSize}</span>` : ''}
-        ${l.duration  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">⏱ ${l.duration}</span>` : ''}
-        ${advEnvLabel ? `<span style="background:#ecfdf5;color:#064e3b;border:1px solid #a7f3d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">${advEnvLabel}</span>` : ''}
-      </div>` : ''}
+      ${isAdv ? '<div class="adv-stat-strip">' + (function(){
+          var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
+          var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
+          var typeLabel = expLabel || accLabel;
+          var envKey = (l.environment_type||'').toLowerCase().replace(/\s+/g,'_');
+          var envL = ADV_ENV_LABELS[envKey] || ADV_ENV_LABELS[(l.environment_type||'').toLowerCase()] || '';
+          var countryCode = (l.country||'ZA').toUpperCase();
+          var flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
+          var parts = [];
+          if(typeLabel) parts.push('<span class="adv-stat price-stat">'+typeLabel+'</span>');
+          if(envL) parts.push('<span class="adv-stat env-stat">'+envL+'</span>');
+          if(l.groupSize) parts.push('<span class="adv-stat group-stat">👥 '+l.groupSize+'</span>');
+          if(l.duration) parts.push('<span class="adv-stat duration-stat">⏱ '+l.duration+'</span>');
+          if(countryCode && countryCode !== 'ZA') parts.push('<span class="adv-stat country-stat">'+flag+' '+countryCode+'</span>');
+          return parts.join('');
+        })() + '</div>' : ''}
       ${l.cat==='Tutors' && (l.subject||l.level||l.mode) ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         ${l.subject ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📚 ${l.subject}</span>` : ''}

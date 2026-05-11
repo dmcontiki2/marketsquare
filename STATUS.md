@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 51 · 11 May 2026**
+**Updated: Session 52 · 11 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -67,6 +67,15 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 52
+
+### Adventures detail view upgrade ✅
+- `ADV_ENV_LABELS`, `ADV_EXP_TYPE_LABELS`, `ADV_ACC_TYPE_LABELS` constants added (were referenced but never defined)
+- Photo thumbnail row: 5 small thumbnails appear at bottom of hero strip for adventure listings — active thumb highlights white, clicking scrolls main strip, swiping syncs thumbs
+- Enhanced stat strip: type badge (🦁 Luxury Safari, ⛺ Bush Camp etc.), environment pill, group size, duration, country badge — all styled with dedicated CSS classes (`.adv-stat`, `.adv-stat-strip`)
+- `advThumbClick()` and `syncAdvThumbs()` JS functions added; strip `onscroll` wired to keep thumbs in sync
+- JS syntax verified clean; deployed to trustsquare.co
 
 ## Last Completed — Session 51
 
@@ -185,13 +194,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 52
+## Next Session — Session 53
 
 ### Priority
 1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
 2. **Patent filing** — David to confirm readiness; do NOT proceed with any outreach until patent is filed
 3. **Whitepaper** — draft and review before launch
-4. **Adventures detail view upgrade** — wire new card design (photo thumbnail row, stat strip, trust bar) into openDetail() for adventures listings
+4. **AI-Guided Listing Onboarding** — build 3-step card-preview onboarding screen (concept fully designed in Session 52; Maroushka is approved first tester after patent filed)
 
 ### Pre-Launch Gate (in order — ALL must be done before Wave 1)
 > ⛔ Wave 1 is intentionally removed from all session priorities until David explicitly re-adds it.
@@ -213,7 +222,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - For You trust score refresh on wishlist re-match
 - Email template visual QA — review actual delivered email in Gmail
 
-### 🌟 Session 52 Feature Discussion — AI-Guided Listing Onboarding
+### 🌟 Session 53 Feature — AI-Guided Listing Onboarding
 > ⚠️ Build before Wave 1. Test only after patent filed. Maroushka (miconradie1@gmail.com) is approved first tester.
 
 **Concept:** Replace magic link → form → publish with a guided 3-step card-preview experience.
