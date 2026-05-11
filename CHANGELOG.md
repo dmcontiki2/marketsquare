@@ -1,5 +1,16 @@
 ## Session 48 (continued) · 10 May 2026 · n8n founding seller outreach wave — fully live
 
+## Session 51 (continued) — 11 May 2026
+
+### Graph 3-level navigation
+- Level 2 solar system: hover over any satellite → detail panel slides in from right with type badge, breadcrumb, full context text
+- Level 2 → Level 3: click any satellite → centred detail card with colour-accented border, full detail, breadcrumb (Galaxy › Project › Node)
+- Breadcrumb navigation: click Galaxy → Level 1, click Project → Level 2, Escape also steps back one level
+- Fixed D3 v7 event bubbling: replaced D3 bgRect click handler with native SVG addEventListener that checks event.target tag — only fires drawGalaxy() on empty background clicks
+- Fixed mouseleave flicker: all visual child elements (circles, text) set to pointer-events:none; single transparent hit-circle per satellite is the sole event target
+- Fixed missing openLevel3/closeLevel3: functions were skipped by guard check in prior patch — inserted cleanly before populate()
+
+
 ## Session 51 — 11 May 2026
 
 ### Live dashboard — permanent fix

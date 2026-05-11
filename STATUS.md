@@ -1,6 +1,11 @@
 # TrustSquare — STATUS.md
 **Updated: Session 51 · 11 May 2026**
 
+> ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
+> Pre-launch sequence must be fully complete before any email is sent.
+> Sending even one email exposes prior art and voids patent defence.
+> Sequence: Financial integration ✅ test → Patent filed → Whitepaper → Cities DB refreshed → David confirms launch → THEN Wave 1.
+
 ---
 
 ## ⚙️ CLAUDE INTERACTION PRINCIPLES (Founder Directives)
@@ -64,6 +69,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 ---
 
 ## Last Completed — Session 51
+
+### Graph 3-level navigation ✅
+- Level 2 hover: detail panel slides in from right with type badge, breadcrumb, full context
+- Level 3 click: centred detail card with colour-accented border and breadcrumb navigation
+- Fixed D3 v7 event bubbling — native SVG listener replaces D3 bgRect handler
+- Fixed mouseleave flicker — all visual children set pointer-events:none, single hit-circle per satellite
+- Fixed missing openLevel3/closeLevel3 functions — inserted cleanly
 
 ### Live dashboard — permanent fix ✅
 - `session_dashboard_live.html` no longer contains a static `const DATA = {...}` block
@@ -176,23 +188,22 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 ## Next Session — Session 52
 
 ### Priority
-1. **Wave 1 launch** — load real Pretoria Property prospects into CityLauncher DB, trigger Wave 1 with `batch_size=60`, monitor delivery
-2. **Paystack live mode** — awaiting CIPC bank account setup (David action)
-3. **Adventures detail view upgrade** — wire new card design (photo thumbnail row, stat strip, trust bar) into openDetail() for adventures listings
+1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
+2. **Patent filing** — David to confirm readiness; do NOT proceed with any outreach until patent is filed
+3. **Whitepaper** — draft and review before launch
+4. **Adventures detail view upgrade** — wire new card design (photo thumbnail row, stat strip, trust bar) into openDetail() for adventures listings
+
+### Pre-Launch Gate (in order — ALL must be done before Wave 1)
+> ⛔ Wave 1 is intentionally removed from all session priorities until David explicitly re-adds it.
+> Reason: prior art defence — a single outreach email sent before patent filing voids the defence.
+
+1. ✅ Financial integration complete + tested end-to-end
+2. ✅ All applications completed and tested
+3. ✅ Patent filed
+4. ✅ Whitepaper published
+5. ✅ Cities DB refreshed with current prospects
+6. ✅ David confirms: "ready to launch"
+→ Only then: load prospects, trigger Wave 1
 
 ### Backlog
-- Admin ops queue — review uploaded credentials
-- Gate `sbTriggerMarketNote` behind subscription tier for free sellers
-- For You trust score refresh on wishlist re-match
-- Email template visual QA — review actual delivered email in Gmail, check rendering
-
----
-
-## Known Rules (session reminders)
-- **NEVER use Edit or Write tool on `marketsquare.html` or `bea_main.py`** — Python `open/read/replace/write` only. Always verify tail ends with `</html>` or final function respectively.
-- **Mandatory pre-deploy JS check**: extract inline scripts, run `node --check`
-- **Python command**: use `python` not `python3` on Windows; use `python3` in sandbox
-- **BEA venv**: always use `/var/www/marketsquare/venv/bin/pip` for server installs
-- **Git commits**: ask David to run from PowerShell — never commit from sandbox (index.lock conflict)
-- **SSH key**: run `bash load_sandbox_ssh.sh` at session start before any SSH/SCP
-- **Cost model**: xlsx unchanged since Session 24 — no cost model impact this session
+- Admin ops queue — review uploade

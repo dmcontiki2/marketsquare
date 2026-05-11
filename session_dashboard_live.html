@@ -120,6 +120,69 @@
   #tt-dismiss { display: none; position: absolute; top: 6px; right: 8px; background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; line-height: 1; padding: 2px 4px; }
   @media (hover: none) { #tt-dismiss { display: block; } }
 
+
+  /* ── Detail panel (Level 2 hover) ── */
+  #detail-panel {
+    position: fixed; top: 70px; right: 0; width: 300px;
+    background: #0d1424; border-left: 1px solid #1e2d40;
+    border-top: 1px solid #1e2d40; border-bottom: 1px solid #1e2d40;
+    border-radius: 12px 0 0 12px;
+    padding: 20px 18px; font-size: 12px; color: #e2e8f0;
+    transform: translateX(100%); transition: transform 0.2s ease;
+    pointer-events: none; z-index: 200; max-height: calc(100vh - 90px);
+    overflow-y: auto;
+  }
+  #detail-panel.visible { transform: translateX(0); }
+  #detail-panel .dp-breadcrumb { font-size: 10px; color: #334155; margin-bottom: 12px; letter-spacing: .3px; }
+  #detail-panel .dp-tag { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
+  #detail-panel .dp-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.3; }
+  #detail-panel .dp-body { font-size: 12px; color: #94a3b8; line-height: 1.7; white-space: pre-line; }
+  #detail-panel .dp-hint { font-size: 10px; color: #334155; margin-top: 14px; border-top: 1px solid #1e2d40; padding-top: 10px; }
+
+  /* ── Level 3 overlay ── */
+  #level3-overlay {
+    position: fixed; inset: 0; background: rgba(11,15,26,0.92);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  #level3-overlay.visible { opacity: 1; pointer-events: auto; }
+  #level3-card {
+    background: #111827; border: 1.5px solid #1e2d40;
+    border-radius: 16px; padding: 32px 36px; max-width: 520px; width: 90%;
+    position: relative;
+  }
+  #level3-card .l3-breadcrumb {
+    font-size: 10px; color: #334155; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #level3-card .l3-breadcrumb span { cursor: pointer; transition: color .15s; }
+  #level3-card .l3-breadcrumb span:hover { color: #94a3b8; }
+  #level3-card .l3-breadcrumb .sep { color: #1e2d40; cursor: default; }
+  #level3-card .l3-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  #level3-card .l3-title {
+    font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.25;
+  }
+  #level3-card .l3-divider {
+    height: 1px; background: #1e2d40; margin-bottom: 16px;
+  }
+  #level3-card .l3-body {
+    font-size: 13px; color: #94a3b8; line-height: 1.8; white-space: pre-line;
+  }
+  #level3-card .l3-close {
+    position: absolute; top: 16px; right: 18px;
+    background: none; border: none; color: #334155; font-size: 20px;
+    cursor: pointer; line-height: 1; padding: 4px 6px; transition: color .15s;
+  }
+  #level3-card .l3-close:hover { color: #94a3b8; }
+  #level3-card .l3-back {
+    margin-top: 20px; font-size: 11px; color: #334155; cursor: pointer;
+    transition: color .15s; display: inline-flex; align-items: center; gap: 5px;
+  }
+  #level3-card .l3-back:hover { color: #94a3b8; }
   /* ── scrollbar ── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -144,6 +207,28 @@
 </div>
 
 <div id="graph-tooltip"><button id="tt-dismiss" onclick="dismissTooltip()">✕</button><div class="tt-tag" id="tt-tag"></div><div class="tt-title" id="tt-title"></div><div id="tt-body"></div></div>
+
+<!-- Detail panel — Level 2 hover -->
+<div id="detail-panel">
+  <div class="dp-breadcrumb" id="dp-breadcrumb"></div>
+  <div class="dp-tag" id="dp-tag"></div>
+  <div class="dp-title" id="dp-title"></div>
+  <div class="dp-body" id="dp-body"></div>
+  <div class="dp-hint">Click to open full detail →</div>
+</div>
+
+<!-- Level 3 overlay -->
+<div id="level3-overlay" onclick="closeLevel3(event)">
+  <div id="level3-card">
+    <button class="l3-close" onclick="closeLevel3()">✕</button>
+    <div class="l3-breadcrumb" id="l3-breadcrumb"></div>
+    <div class="l3-tag" id="l3-tag"></div>
+    <div class="l3-title" id="l3-title"></div>
+    <div class="l3-divider"></div>
+    <div class="l3-body" id="l3-body"></div>
+    <div class="l3-back" onclick="closeLevel3()">← Back to solar system</div>
+  </div>
+</div>
 
 <div class="main">
 
@@ -377,7 +462,16 @@ function buildGraph() {
   window._graphBuilt = true;
   if (!DATA) return;
   drawGalaxy();
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && _galaxyState==='drilldown') drawGalaxy(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('level3-overlay');
+      if (overlay.classList.contains('visible')) {
+        closeLevel3();  // Escape from Level 3 → back to Level 2
+      } else if (_galaxyState === 'drilldown') {
+        drawGalaxy();   // Escape from Level 2 → back to Level 1
+      }
+    }
+  });
   // Touch: tap SVG background to dismiss tooltip
   document.getElementById('graph-svg').addEventListener('touchstart', e => {
     if (e.target.tagName === 'svg' || e.target.id === 'graph-svg') dismissTooltip();
@@ -493,6 +587,13 @@ function attachTooltip(selection, colorFn) {
 
 function drawGalaxy() {
   _galaxyState = 'galaxy';
+  _currentDrilldownLabel = '';
+  document.getElementById('detail-panel').classList.remove('visible');
+  document.getElementById('level3-overlay').classList.remove('visible');
+  // Remove any drilldown background click listener (safe even if not present)
+  if (typeof _drilldownBgClick === 'function') {
+    document.getElementById('graph-svg').removeEventListener('click', _drilldownBgClick);
+  }
   if (_galaxySim) _galaxySim.stop();
   const { svg, W, H, zoomG } = setupSvg();
   const { nodes, edges } = getGalaxyData();
@@ -550,6 +651,8 @@ function drawGalaxy() {
 
 function drawDrilldown(projectId, projectLabel) {
   _galaxyState = 'drilldown';
+  _currentDrilldownLabel = projectLabel;
+  _currentDrilldownId = projectId;
   if (_galaxySim) _galaxySim.stop();
   const dd = getDrilldownData(projectId);
   if (!dd) return;
@@ -557,14 +660,29 @@ function drawDrilldown(projectId, projectLabel) {
   const { svg, W, H, zoomG } = setupSvg();
   const cx = W/2, cy = H/2;
   const color = dd.center.color;
+  dismissTooltip(); // Clear any floating tooltip from Level 1
 
   // Scale orbit radii to fit smallest screen dimension with padding
   const maxR = Math.min(W, H) * 0.44;
   const orbits = [maxR*0.40, maxR*0.70, maxR*1.00];
 
   // Background tap-to-return (outside zoomG, fixed)
-  svg.append('rect').attr('width',W).attr('height',H).attr('fill','transparent')
-    .style('cursor','pointer').on('click',()=>drawGalaxy());
+  // IMPORTANT: only fire when clicking the rect itself, not when a satellite click bubbles up
+  // No bgRect needed — use native SVG click listener instead.
+  // D3 v7 stopPropagation() only stops D3 dispatch; native events still bubble.
+  // Native listener checks event.target directly: only fire drawGalaxy if
+  // the user clicked the SVG background or the bgRect, not a satellite.
+  const svgEl = document.getElementById('graph-svg');
+  function _drilldownBgClick(e) {
+    const tag = e.target.tagName.toLowerCase();
+    console.log('[GRAPH CLICK] tag=' + tag + ' id=' + e.target.id + ' class=' + e.target.className.baseVal);
+    if (tag === 'circle' || tag === 'g' || tag === 'text' || tag === 'line') return;
+    if (tag === 'rect' || tag === 'svg') {
+      svgEl.removeEventListener('click', _drilldownBgClick);
+      drawGalaxy();
+    }
+  }
+  svgEl.addEventListener('click', _drilldownBgClick);
 
   // Hints (fixed, outside zoom)
   svg.append('text').attr('x',W/2).attr('y',H-10)
@@ -627,30 +745,107 @@ function drawDrilldown(projectId, projectLabel) {
       zoomG.append('line').attr('x1',cx).attr('y1',cy).attr('x2',x).attr('y2',y)
         .attr('stroke',node.color||color).attr('stroke-opacity',0.12).attr('stroke-width',1);
 
-      const g = zoomG.append('g').attr('transform',`translate(${x},${y})`).style('cursor','default');
+      const g = zoomG.append('g').attr('transform',`translate(${x},${y})`);
+
+      // Visual layers — pointer-events:none so only the hit circle receives events
       g.append('circle').attr('r',node.size+5).attr('fill','none')
-        .attr('stroke',node.color||color).attr('stroke-opacity',0.2).attr('stroke-width',5);
+        .attr('stroke',node.color||color).attr('stroke-opacity',0.2).attr('stroke-width',5)
+        .style('pointer-events','none');
       g.append('circle').attr('r',node.size)
         .attr('fill',node.color||color).attr('fill-opacity',0.85)
         .attr('filter',`url(#glow${(node.color||color).replace('#','')})`)
-        .attr('stroke','#0b0f1a').attr('stroke-width',1.5);
+        .attr('stroke','#0b0f1a').attr('stroke-width',1.5)
+        .style('pointer-events','none');
       g.append('circle').attr('r',node.size*0.4).attr('cx',-node.size*0.2).attr('cy',-node.size*0.2)
-        .attr('fill','#fff').attr('fill-opacity',0.12);
-      g.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',node.size+13).text(node.label);
-      g.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',node.size+24).text(node.sub);
+        .attr('fill','#fff').attr('fill-opacity',0.12)
+        .style('pointer-events','none');
+      g.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',node.size+13).text(node.label)
+        .style('pointer-events','none');
+      g.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',node.size+24).text(node.sub)
+        .style('pointer-events','none');
 
-      const tt = document.getElementById('graph-tooltip');
-      g.on('mouseenter',(event)=>{
-        document.getElementById('tt-tag').textContent = node.type||'';
-        document.getElementById('tt-tag').style.color = node.color||color;
-        document.getElementById('tt-title').textContent = node.label;
-        document.getElementById('tt-body').textContent = node.detail||'';
-        tt.style.opacity=1;
-      }).on('mousemove',event=>{
-        tt.style.left=(event.clientX+16)+'px';tt.style.top=(event.clientY-10)+'px';
-      }).on('mouseleave',()=>{tt.style.opacity=0;});
+      // Single transparent hit circle on top — sole event target
+      const dp = document.getElementById('detail-panel');
+      const hitR = node.size + 14;
+      g.append('circle')
+        .attr('r', hitR)
+        .attr('fill', 'transparent')
+        .style('cursor', 'pointer')
+        .on('mouseenter', function(event) {
+          event.stopPropagation();
+          document.getElementById('dp-breadcrumb').textContent = 'Galaxy › ' + _currentDrilldownLabel + ' › ' + node.label;
+          document.getElementById('dp-tag').textContent = (node.type || '').toUpperCase();
+          document.getElementById('dp-tag').style.color = node.color || color;
+          document.getElementById('dp-title').textContent = node.label;
+          document.getElementById('dp-body').textContent = node.detail || '';
+          dp.classList.add('visible');
+        })
+        .on('mouseleave', function(event) {
+          event.stopPropagation();
+          dp.classList.remove('visible');
+        })
+        .on('click', function(event) {
+          event.stopPropagation();
+          dp.classList.remove('visible');
+          openLevel3(node, color);
+        })
+        .on('touchstart', function(event) {
+          event.stopPropagation();
+          document.getElementById('dp-breadcrumb').textContent = 'Galaxy › ' + _currentDrilldownLabel + ' › ' + node.label;
+          document.getElementById('dp-tag').textContent = (node.type || '').toUpperCase();
+          document.getElementById('dp-tag').style.color = node.color || color;
+          document.getElementById('dp-title').textContent = node.label;
+          document.getElementById('dp-body').textContent = node.detail || '';
+          dp.classList.add('visible');
+        }, { passive: true });
     });
   });
+}
+
+// ── Level 3 state + functions ────────────────────────────────
+let _currentDrilldownLabel = '';
+let _currentDrilldownId = '';
+
+function openLevel3(node, fallbackColor) {
+  const overlay = document.getElementById('level3-overlay');
+  const card    = document.getElementById('level3-card');
+  const color   = node.color || fallbackColor || '#3b82f6';
+
+  // Breadcrumb
+  const bc = document.getElementById('l3-breadcrumb');
+  bc.innerHTML = '';
+  const gal = document.createElement('span');
+  gal.textContent = 'Galaxy';
+  gal.onclick = function() { closeLevel3(); drawGalaxy(); };
+  const sep1 = document.createElement('span');
+  sep1.className = 'sep'; sep1.textContent = ' › ';
+  const proj = document.createElement('span');
+  proj.textContent = _currentDrilldownLabel;
+  proj.onclick = function() { closeLevel3(); };
+  const sep2 = document.createElement('span');
+  sep2.className = 'sep'; sep2.textContent = ' › ';
+  const curr = document.createElement('span');
+  curr.textContent = node.label;
+  curr.style.color = '#e2e8f0';
+  [gal, sep1, proj, sep2, curr].forEach(function(el) { bc.appendChild(el); });
+
+  // Tag + colour
+  var tagEl = document.getElementById('l3-tag');
+  tagEl.textContent = (node.type || node.sub || '').toUpperCase();
+  tagEl.style.color = color;
+  card.style.borderColor = color;
+  card.style.borderTopWidth = '3px';
+
+  document.getElementById('l3-title').textContent = node.label;
+  document.getElementById('l3-body').textContent  = node.detail || 'No additional detail recorded.';
+
+  overlay.classList.add('visible');
+}
+
+function closeLevel3(event) {
+  if (event && event.target !== document.getElementById('level3-overlay')) return;
+  document.getElementById('level3-overlay').classList.remove('visible');
+  document.getElementById('detail-panel').classList.remove('visible');
 }
 
 // ── Dashboard populate — renders DATA into DOM ─────────────────────────────
