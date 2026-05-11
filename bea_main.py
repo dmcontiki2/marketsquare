@@ -6817,11 +6817,20 @@ def health_resources():
         if pct >= 70: return "warning"
         return "ok"
 
+    bw_total = round(rx_gb + tx_gb, 2)
+    bw_pct   = round(bw_total / 20480 * 100, 3)
+
     return {
         "ram":  {"total_mb": round(mem_total_mb,1), "used_mb": round(mem_used_mb,1), "pct": mem_pct, "status": _status(mem_pct)},
         "disk": {"total_gb": disk_total_gb, "used_gb": disk_used_gb, "pct": disk_pct, "status": _status(disk_pct)},
         "cpu":  {"load1": load1, "pct": cpu_pct, "status": _status(cpu_pct)},
-        "bandwidth": {"rx_gb": rx_gb, "tx_gb": tx_gb},
+        "bandwidth": {
+            "rx_gb": rx_gb, "tx_gb": tx_gb,
+            "total_gb": bw_total, "limit_gb": 20480,
+            "pct": bw_pct, "status": _status(bw_pct),
+        },
         "db_sizes": db_sizes,
         "response_ms": response_ms,
+        "plan": "CPX22 · 2vCPU · 4GB RAM · 80GB SSD · 20TB/mo · €7.49/mo",
+        "checkedAt": __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
     }

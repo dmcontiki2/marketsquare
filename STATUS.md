@@ -247,12 +247,19 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 → Only then: load prospects, trigger Wave 1
 
 ### Backlog
-- Admin ops queue — review uploade
+- Admin ops queue — review uploaded docs queue
 - **Post-launch auto-scale** — n8n polls /health/resources, alerts at 70%, auto-upgrades Hetzner at 85%
 - **UX degradation KPIs** — response time, 5xx rate, DB size thresholds
 - Gate `sbTriggerMarketNote` behind subscription tier for free sellers
 - For You trust score refresh on wishlist re-match
 - Email template visual QA — review actual delivered email in Gmail
+
+### 🔐 Security & Compliance Backlog (pre-Wave 1)
+- **Nginx security headers** — add CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy to Hetzner Nginx config
+- **Rate limiting** — add cooldown/throttle on magic link endpoint and intro request submission (prevent OTP spam and intro flooding)
+- **EULA hard gate** — verify EULA acceptance blocks BEA API calls, not just UI display; unauthenticated users must not be able to submit data
+- **Account deletion audit** — when user accounts are fully live, verify all PII tables are purged on delete (listings, intros, trust signals, photos, tuppence records)
+- **POPIA transparency notice** — add one-line notice to guided onboarding screen confirming pre-filled data scope and when data is first stored
 
 ### 🌟 Session 53 Feature — AI-Guided Listing Onboarding
 > ⚠️ Build before Wave 1. Test only after patent filed. Maroushka (miconradie1@gmail.com) is approved first tester.

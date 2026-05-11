@@ -390,6 +390,7 @@ function getGalaxyData() {
     { id: 'codex',    label: 'Solar Codex', sub: 'Rules v4.5',   group: 'Concept', size: 15, detail: 'Canonical product rules · All agents check before business logic' },
     { id: 'pretoria', label: 'Pretoria',    sub: 'Launch city',  group: 'CityLauncher', size: 13, detail: '0 live · 70 demo listings\n23/60 founding sellers' },
     { id: 'github',   label: 'GitHub',      sub: 'Backup',       group: 'Infrastructure', size: 12, detail: 'github.com/dmcontiki2/marketsquare' },
+    { id: 'risks',    label: 'Risk Register', sub: 'Live risks',  group: 'RiskRegister',   size: 20, drilldown: 'risks', detail: 'Live risk register — security, legal, operational & technical risks' },
   ];
 
   (DATA.blockers || []).slice(0, 4).forEach((b, i) =>
@@ -399,9 +400,37 @@ function getGalaxyData() {
     const text = p.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
     nodes.push({ id:'pri_'+i, label:text.length>24?text.slice(0,24)+'…':text, sub:`Priority ${i+1}`, group:'Priority', size:11, detail:text });
   });
+  // ── Risk Register satellites ──────────────────────────────────────────────
+  const RISK_ITEMS = [
+    { id:'r1',  label:'Prior art — patent',     detail:'No outreach until patent filed. A single email sent before filing voids the prior art defence entirely.', status:'open' },
+    { id:'r2',  label:'Nginx security headers', detail:'CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy not yet set. Required before public launch.', status:'open' },
+    { id:'r3',  label:'Rate limiting',           detail:'Magic link + intro endpoints have no cooldown or throttle. Vulnerable to OTP spam and intro flooding.', status:'open' },
+    { id:'r4',  label:'EULA hard gate',          detail:'EULA must block BEA API calls, not just UI. Unauthenticated users must not be able to submit data.', status:'open' },
+    { id:'r5',  label:'Account data deletion',   detail:'When full user accounts go live, all PII tables must be verifiably purged on delete (POPIA compliance).', status:'open' },
+    { id:'r6',  label:'POPIA transparency',      detail:'Onboarding screen must show one-line notice confirming scope of pre-filled data and when it is first stored.', status:'open' },
+    { id:'r7',  label:'BEA single point fail',   detail:'No failover — single Hetzner CPX22 instance. Post-launch: health endpoint + n8n auto-scale to CPX32 at 85%.', status:'monitor' },
+    { id:'r8',  label:'SQLite under load',       detail:'SQLite suitable for current load. If concurrent writes exceed ~50/s post-launch, migrate to PostgreSQL.', status:'monitor' },
+    { id:'r9',  label:'Paystack test mode',      detail:'Payments are in test mode — no real money flows. Live mode blocked until CIPC bank account confirmed.', status:'open' },
+    { id:'r10', label:'Memory drift (Claude)',   detail:'Session context resets each chat. STATUS.md + MEMORY.md + CLAUDE.md are the drift mitigation. Keep them current.', status:'monitor' },
+    { id:'r11', label:'FEA file size',           detail:'marketsquare.html is large. IP must stay in BEA. FEA is a display layer only — do not add business logic.', status:'monitor' },
+    { id:'r12', label:'Wave 1 prior to baseline',detail:'Wave 1 outreach before baseline freeze risks exposing a moving codebase to real users. Baseline before scale.', status:'open' },
+  ];
+  const statusColor = { open:'#f43f5e', monitor:'#f59e0b', closed:'#10b981' };
+  RISK_ITEMS.forEach((r, i) => {
+    nodes.push({
+      id: r.id,
+      label: r.label.length > 22 ? r.label.slice(0,22)+'…' : r.label,
+      sub: r.status === 'open' ? '🔴 Open' : r.status === 'monitor' ? '🟡 Monitor' : '✅ Closed',
+      group: 'RiskRegister',
+      size: 11,
+      detail: '[' + (r.status === 'open' ? '🔴 OPEN' : r.status === 'monitor' ? '🟡 MONITOR' : '✅ CLOSED') + '] ' + r.detail,
+      color: statusColor[r.status],
+      type: r.status,
+    });
+  });
 
   const edges = [
-    {source:'ts',target:'bea',strength:0.9},{source:'cl',target:'bea',strength:0.7},{source:'aa',target:'bea',strength:0.6},
+    {source:'ts',target:'risks',strength:0.5},{source:'ts',target:'bea',strength:0.9},{source:'cl',target:'bea',strength:0.7},{source:'aa',target:'bea',strength:0.6},
     {source:'ts',target:'hetzner',strength:0.6},{source:'cl',target:'hetzner',strength:0.6},
     {source:'ts',target:'paystack',strength:0.7},{source:'ts',target:'tuppence',strength:0.9},
     {source:'cl',target:'tuppence',strength:0.5},{source:'aa',target:'tuppence',strength:0.5},
@@ -479,6 +508,17 @@ function getDrilldownData(projectId) {
         { label: 'Branch Structure', sub: 'Priority',color: '#06b6d4', size: 13, type:'priority', detail: 'Formalise branch structure across all 3 projects · deferred' },
         { label: 'Cowork + Skills',  sub: 'Tool',    color: '#10b981', size: 12, type:'tool',    detail: 'Claude Cowork mode · Skills · Schedule · session bat file startup' },
       ]
+    },
+    risks: {
+      center: { label: 'Risk Register', color: '#f43f5e' },
+      nodes: RISK_ITEMS.map(r => ({
+        label: r.label,
+        sub: r.status === 'open' ? '🔴 Open' : r.status === 'monitor' ? '🟡 Monitor' : '✅ Closed',
+        color: r.status === 'open' ? '#f43f5e' : r.status === 'monitor' ? '#f59e0b' : '#10b981',
+        size: 13,
+        type: r.status,
+        detail: (r.status === 'open' ? '🔴 OPEN' : r.status === 'monitor' ? '🟡 MONITOR' : '✅ CLOSED') + ' — ' + r.detail,
+      }))
     }
   };
   return map[projectId] || null;
@@ -511,6 +551,7 @@ function buildGraph() {
 const COLORS = {
   'TrustSquare':'#3b82f6','CityLauncher':'#8b5cf6','AdvertAgent':'#f59e0b',
   'Infrastructure':'#10b981','Concept':'#64748b','Blocker':'#ef4444','Priority':'#06b6d4',
+  'RiskRegister':'#f43f5e',
   'kpi':'#f59e0b','tool':'#3b82f6','risk':'#ef4444','priority':'#06b6d4','metric':'#8b5cf6',
 };
 
