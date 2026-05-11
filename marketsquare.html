@@ -897,6 +897,51 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ob-form h2{font-size:19px;font-weight:800;margin-bottom:4px;}
 .ob-form .osub{font-size:13px;color:var(--text-2);margin-bottom:20px;font-weight:400;}
 .ob-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+/* ── Guided onboarding screen (3-step photo-first flow) ── */
+#screen-guided-onboard{background:var(--navy);min-height:100vh;overflow-x:hidden;}
+.go-screen{display:none;flex-direction:column;min-height:100vh;}
+.go-screen.go-active{display:flex;}
+.go-hdr{padding:52px 20px 14px;display:flex;align-items:flex-start;gap:0;flex-direction:column;}
+.go-step-pill{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:6px;}
+.go-hdr h2{font-size:20px;font-weight:800;color:#fff;margin:0;line-height:1.2;}
+.go-card-wrap{margin:0 16px 0;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#1e2d4a 0%,#22304d 60%,#1e2a3a 100%);box-shadow:0 8px 32px rgba(0,0,0,.35);flex-shrink:0;}
+.go-card-photo{height:190px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a2744,#2a3f6a);display:flex;align-items:center;justify-content:center;}
+.go-card-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.go-card-photo .go-emoji{font-size:64px;z-index:1;}
+.go-draft-pill{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:.5px;text-transform:uppercase;z-index:2;}
+.go-card-sheet{padding:14px 14px 16px;}
+.go-card-cat{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:5px;}
+.go-card-title{font-size:18px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px;min-height:22px;}
+.go-card-area{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px;}
+.go-card-price{font-size:20px;font-weight:800;color:#fff;min-height:28px;}
+.go-card-price.empty{font-size:13px;color:rgba(255,255,255,.2);font-style:italic;font-weight:400;padding-top:6px;}
+.go-coach{margin:14px 16px 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;}
+.go-coach-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c8873a,#e6a84a);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:1px;}
+.go-coach-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.55;font-weight:400;}
+.go-coach-text strong{color:#fff;}
+.go-body{flex:1;padding:16px 16px 0;}
+.go-upload-zone{border:2px dashed rgba(200,135,58,.5);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(200,135,58,.04);}
+.go-upload-zone:active,.go-upload-zone.dragging{border-color:#c8873a;background:rgba(200,135,58,.1);}
+.go-upload-icon{font-size:36px;margin-bottom:8px;}
+.go-upload-label{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.go-upload-sub{font-size:12px;color:rgba(255,255,255,.4);}
+.go-upload-retake{margin-top:12px;font-size:12px;color:rgba(200,135,58,.8);text-decoration:underline;cursor:pointer;}
+.go-field-group{margin-bottom:14px;}
+.go-field-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px;}
+.go-field-input{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;font-family:'Inter',sans-serif;box-sizing:border-box;outline:none;transition:border-color .15s;}
+.go-field-input:focus{border-color:rgba(200,135,58,.7);}
+.go-field-input::placeholder{color:rgba(255,255,255,.25);}
+.go-field-row{display:flex;gap:10px;}
+.go-field-row .go-field-group{flex:1;}
+.go-footer{padding:16px 16px max(calc(env(safe-area-inset-bottom)+16px),32px);display:flex;gap:10px;}
+.go-btn-bk{flex:0 0 auto;background:none;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:50px;padding:13px 18px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.go-btn-next{flex:1;background:var(--accent-bright,#2563eb);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.go-btn-next:disabled{opacity:.35;cursor:not-allowed;}
+.go-review-full{margin:0 16px;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#1e2d4a,#22304d 60%,#1e2a3a);box-shadow:0 8px 40px rgba(0,0,0,.4);}
+.go-review-photo{height:220px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a2744,#2a3f6a);display:flex;align-items:center;justify-content:center;}
+.go-review-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.go-review-photo .go-emoji-lg{font-size:72px;}
+.go-review-sheet{padding:18px 16px 20px;}
 .magic-banner{background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--r);padding:14px 16px;margin:16px 20px 0;display:flex;gap:12px;align-items:center;}
 .magic-banner svg{color:var(--accent);flex-shrink:0;width:20px;height:20px;}
 .magic-banner h4{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
@@ -2540,6 +2585,155 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <span>🌍</span><span>All countries</span><span class="adv-co-check">✓</span>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     GUIDED ONBOARDING — 3-step photo-first screen
+     Triggered by magic=1 URL before seller-onboard funnel.
+     Step 1: Photo · Step 2: Details · Step 3: Review
+     goTo('guided-onboard') → goInit()
+  ═══════════════════════════════════════════════════════ -->
+<div id="screen-guided-onboard" class="screen">
+
+  <!-- Step 1: Photo -->
+  <div id="go-s1" class="go-screen go-active">
+    <div class="go-hdr">
+      <div class="go-step-pill">Step 1 of 3</div>
+      <h2>Add your first photo</h2>
+    </div>
+
+    <!-- Live draft card -->
+    <div class="go-card-wrap">
+      <div class="go-card-photo" id="go-card-photo-1">
+        <div class="go-draft-pill">⏳ Draft — not visible yet</div>
+        <div class="go-emoji" id="go-card-emoji-1">🏡</div>
+        <img id="go-card-img-1" src="" alt="" style="display:none;">
+      </div>
+      <div class="go-card-sheet">
+        <div class="go-card-cat" id="go-card-cat-1"></div>
+        <div class="go-card-title" id="go-card-title-1">Your listing</div>
+        <div class="go-card-area" id="go-card-area-1"></div>
+        <div class="go-card-price empty" id="go-card-price-1">Price to be added</div>
+      </div>
+    </div>
+
+    <!-- AI coach bubble -->
+    <div class="go-coach">
+      <div class="go-coach-avatar">🤖</div>
+      <div class="go-coach-text" id="go-coach-text-1">
+        <strong>Hi there!</strong> Buyers are 3× more likely to contact sellers with a clear photo. Tap below to add one — you can retake it as many times as you like.
+      </div>
+    </div>
+
+    <!-- Upload zone -->
+    <div class="go-body">
+      <input type="file" id="go-file-input" accept="image/*" capture="environment" style="display:none;" onchange="goHandlePhoto(this)">
+      <div class="go-upload-zone" id="go-upload-zone" onclick="document.getElementById('go-file-input').click()">
+        <div class="go-upload-icon">📷</div>
+        <div class="go-upload-label">Tap to take or choose a photo</div>
+        <div class="go-upload-sub">JPEG, PNG or WebP · max 20MB</div>
+      </div>
+      <div id="go-upload-retake" class="go-upload-retake" style="display:none;text-align:center;" onclick="document.getElementById('go-file-input').click()">
+        Retake / choose different photo
+      </div>
+      <div id="go-upload-status" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:10px;min-height:18px;"></div>
+    </div>
+
+    <div class="go-footer">
+      <button class="go-btn-bk" onclick="goTo('home')">← Exit</button>
+      <button class="go-btn-next" id="go-s1-next" onclick="goNextStep(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Details -->
+  <div id="go-s2" class="go-screen">
+    <div class="go-hdr">
+      <div class="go-step-pill">Step 2 of 3</div>
+      <h2>Fill in your details</h2>
+    </div>
+
+    <!-- Live draft card -->
+    <div class="go-card-wrap">
+      <div class="go-card-photo" id="go-card-photo-2">
+        <div class="go-draft-pill">⏳ Draft — not visible yet</div>
+        <div class="go-emoji" id="go-card-emoji-2">🏡</div>
+        <img id="go-card-img-2" src="" alt="" style="display:none;">
+      </div>
+      <div class="go-card-sheet">
+        <div class="go-card-cat" id="go-card-cat-2"></div>
+        <div class="go-card-title" id="go-card-title-2">Your listing</div>
+        <div class="go-card-area" id="go-card-area-2"></div>
+        <div class="go-card-price empty" id="go-card-price-2">Price to be added</div>
+      </div>
+    </div>
+
+    <!-- AI coach bubble -->
+    <div class="go-coach">
+      <div class="go-coach-avatar">🤖</div>
+      <div class="go-coach-text" id="go-coach-text-2">
+        Fill in your listing details below — the card above updates as you type.
+      </div>
+    </div>
+
+    <!-- Dynamic fields (rendered by goRenderFields) -->
+    <div class="go-body" id="go-fields-body">
+    </div>
+
+    <div class="go-footer">
+      <button class="go-btn-bk" onclick="goNextStep(1)">← Back</button>
+      <button class="go-btn-next" id="go-s2-next" disabled onclick="goSaveAndNext()">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Review -->
+  <div id="go-s3" class="go-screen">
+    <div class="go-hdr">
+      <div class="go-step-pill">Step 3 of 3</div>
+      <h2>This is your listing</h2>
+    </div>
+
+    <!-- Full review card -->
+    <div class="go-review-full">
+      <div class="go-review-photo" id="go-review-photo">
+        <div class="go-draft-pill">⏳ Draft — not visible yet</div>
+        <div class="go-emoji-lg" id="go-review-emoji">🏡</div>
+        <img id="go-review-img" src="" alt="" style="display:none;">
+      </div>
+      <div class="go-review-sheet">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span class="go-card-cat" id="go-review-cat" style="margin:0;"></span>
+          <span style="font-size:10px;font-weight:700;background:rgba(139,92,246,.2);color:#a78bfa;border-radius:4px;padding:2px 7px;">👥 Soft Queue</span>
+        </div>
+        <div style="font-size:21px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px;" id="go-review-title">Your listing</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:14px;" id="go-review-area"></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+          <div style="font-size:22px;font-weight:800;color:#fff;min-height:28px;" id="go-review-price"></div>
+        </div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Trust Score</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#64748b;">0</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.4;">New seller · builds automatically<br>through verified credentials &amp; responses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI coach bubble -->
+    <div class="go-coach" style="margin-bottom:16px;">
+      <div class="go-coach-avatar">🤖</div>
+      <div class="go-coach-text" id="go-coach-text-3">
+        <strong>Looking great!</strong> This is exactly what buyers will see. Tap below to choose your plan and go live — takes about 2 minutes.
+      </div>
+    </div>
+
+    <div class="go-footer" style="padding-top:0;">
+      <button class="go-btn-bk" onclick="goNextStep(2)">← Back</button>
+      <button class="go-btn-next" onclick="goHandoff()">Take me to the app →</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- SELLER ONBOARDING -->
@@ -4378,9 +4572,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
-    // Route to seller onboarding funnel (draft preview → tier → EULA → live)
-    goTo('seller-onboard');
-    sobInit();
+    // Route to guided onboarding (3-step photo-first screen → seller-onboard funnel)
+    goTo('guided-onboard');
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
@@ -4755,6 +4948,8 @@ function goTo(name){
   if(name==='aa-publish')aaRenderPublishScreen();
   if(name==='tuppence')aaLoadWalletSessions();
   if(name==='myspace')msInit();
+  if(name==='guided-onboard') goInit();
+  if(name==='seller-onboard') sobInit();
   window.scrollTo(0,0);
 }
 function setPlan(tier, label){
@@ -6862,15 +7057,18 @@ function sobCheckEula() {
 
 async function sobInit() {
   // Read magic link state populated by the URL parser
-  sobState.email = magicLink.email || '';
-  sobState.name  = magicLink.name  || '';
-  sobState.cat   = magicLink.cat   || '';
-  sobState.city  = magicLink.area  || activeCity.name || '';
+  // If _skipPreview is set (coming from guided-onboard), go straight to phase 2
+  const skipPreview = !!sobState._skipPreview;
+  sobState.email = sobState.email || magicLink.email || '';
+  sobState.name  = sobState.name  || magicLink.name  || '';
+  sobState.cat   = sobState.cat   || magicLink.cat   || '';
+  sobState.city  = sobState.city  || magicLink.area  || activeCity.name || '';
   sobState.drafts = [];
   sobState.selectedTier = 'free';
+  sobState._skipPreview = false;
 
-  // Reset to phase 1
-  sobGoPhase(1);
+  // Reset to phase 1 (or 2 if coming from guided screen)
+  sobGoPhase(skipPreview ? 2 : 1);
 
   // Reset tier selection UI
   sobSelTier('free');
@@ -7134,6 +7332,424 @@ function sobDone() {
   goTo('dashboard');
   // Trigger dashboard load if the function exists
   if (typeof loadDashboard === 'function') loadDashboard();
+}
+
+// ══════════════════════════════════════════════════════════
+// GUIDED ONBOARDING — 3-step photo-first flow
+// goInit() called by goTo('guided-onboard') via initScreen()
+// goState holds listing id, photo dataURL, fields, cat
+// ══════════════════════════════════════════════════════════
+
+const GO_CAT_ICONS = {
+  Property:'🏡', Tutors:'🎓', Services:'⚙️',
+  Adventures:'🧭', Collectors:'🏺', Cars:'🚗', local_market:'🛍️'
+};
+
+const GO_CAT_FIELDS = {
+  Property:   [{id:'go-title',label:'Listing title',ph:'e.g. 3-bed family home, Waterkloof'},
+               {id:'go-price',label:'Asking price (ZAR)',ph:'e.g. 2 500 000',type:'tel'},
+               {id:'go-suburb',label:'Suburb',ph:'e.g. Waterkloof Ridge'},
+               {id:'go-beds',label:'Bedrooms',ph:'e.g. 3',type:'number',pair:'go-baths'},
+               {id:'go-baths',label:'Bathrooms',ph:'e.g. 2',type:'number',paired:true}],
+  Tutors:     [{id:'go-title',label:'Listing title',ph:'e.g. Maths & Science tutor, Gr 10–12'},
+               {id:'go-price',label:'Hourly rate (ZAR)',ph:'e.g. 350',type:'tel'},
+               {id:'go-subject',label:'Subject(s)',ph:'e.g. Mathematics, Physics'},
+               {id:'go-level',label:'Grade / level',ph:'e.g. Grade 10–12'}],
+  Services:   [{id:'go-title',label:'Listing title',ph:'e.g. Qualified electrician — Pretoria'},
+               {id:'go-price',label:'Call-out rate (ZAR)',ph:'e.g. 850',type:'tel'},
+               {id:'go-svctype',label:'Service type',ph:'e.g. Electrical, Plumbing, HVAC'}],
+  Adventures: [{id:'go-title',label:'Listing title',ph:'e.g. Luxury Bush Lodge, Limpopo'},
+               {id:'go-price',label:'Price (ZAR)',ph:'e.g. 4 500',type:'tel'},
+               {id:'go-envtype',label:'Environment',ph:'e.g. Bushveld, Coastal, Mountain'}],
+  Cars:       [{id:'go-title',label:'Listing title',ph:'e.g. 2019 Toyota Fortuner 2.4 GD-6'},
+               {id:'go-price',label:'Asking price (ZAR)',ph:'e.g. 480 000',type:'tel'},
+               {id:'go-suburb',label:'Suburb / area',ph:'e.g. Centurion'}],
+  Collectors: [{id:'go-title',label:'Listing title',ph:'e.g. 1960s Hornby O-gauge train set'},
+               {id:'go-price',label:'Asking price (ZAR)',ph:'e.g. 38 000',type:'tel'}],
+  local_market:[{id:'go-title',label:'Listing title',ph:'e.g. Handmade leather bags'},
+                {id:'go-price',label:'Price (ZAR)',ph:'e.g. 450',type:'tel'}]
+};
+
+let goState = {
+  listingId: null,
+  email: '',
+  name: '',
+  cat: '',
+  city: '',
+  photoDataUrl: null,   // client-side preview (set in Step 1)
+  photoFile: null,      // File object for upload
+  photoUploaded: false, // true once successfully sent to BEA
+  fields: {}            // {title, price, suburb, beds, baths, ...}
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function goInit() {
+  goState = {
+    listingId: null,
+    email: magicLink.email || '',
+    name:  magicLink.name  || '',
+    cat:   magicLink.cat   || '',
+    city:  magicLink.area  || activeCity.name || '',
+    photoDataUrl: null,
+    photoFile: null,
+    photoUploaded: false,
+    fields: {}
+  };
+
+  // Normalise category key
+  const rawCat = goState.cat;
+  if (!GO_CAT_FIELDS[rawCat]) {
+    // Try title-case match
+    const match = Object.keys(GO_CAT_FIELDS).find(k => k.toLowerCase() === rawCat.toLowerCase());
+    if (match) goState.cat = match;
+  }
+
+  // Show Step 1
+  goShowStep(1);
+
+  // Seed card UI with magic link data
+  goPaintCards();
+
+  // Render Step 2 fields
+  goRenderFields();
+
+  // Fetch this seller's first draft listing id
+  if (goState.email && BEA_ENABLED) {
+    try {
+      const res = await fetch(BEA_URL + '/listings/mine?email=' + encodeURIComponent(goState.email));
+      if (res.ok) {
+        const all = await res.json();
+        const drafts = all.filter(l => l.listing_status === 'draft' || (!l.published_at && !l.listing_status));
+        if (drafts.length) goState.listingId = drafts[0].id;
+      }
+    } catch(e) {}
+  }
+
+  // Personalise Step 1 coach bubble
+  const c1 = document.getElementById('go-coach-text-1');
+  if (c1 && goState.name) {
+    c1.innerHTML = '<strong>Hi ' + goState.name.split(' ')[0] + '!</strong> Buyers are 3× more likely to contact sellers with a clear photo. Tap below to add one — you can retake it as many times as you like.';
+  }
+}
+
+// ── Step navigation ────────────────────────────────────────────────────────
+function goShowStep(n) {
+  document.querySelectorAll('.go-screen').forEach(el => el.classList.remove('go-active'));
+  const el = document.getElementById('go-s' + n);
+  if (el) el.classList.add('go-active');
+  window.scrollTo(0, 0);
+}
+
+function goNextStep(n) {
+  goShowStep(n);
+  if (n === 3) goPopulateReview();
+}
+
+// ── Card painter — keeps both Step 1 and Step 2 cards in sync ─────────────
+function goPaintCards() {
+  const cat  = goState.cat;
+  const icon = GO_CAT_ICONS[cat] || '📋';
+  const f    = goState.fields;
+  const name = goState.name || 'Your listing';
+  const city = goState.city || '';
+
+  const titleText = f.title || name;
+  const areaText  = f.suburb ? '📍 ' + f.suburb + (city ? ', ' + city : '') : (city ? '📍 ' + city : '');
+  const priceText = f.price  ? 'R ' + f.price.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
+
+  [1, 2].forEach(step => {
+    // emoji / photo
+    const imgEl   = document.getElementById('go-card-img-' + step);
+    const emojiEl = document.getElementById('go-card-emoji-' + step);
+    if (imgEl && emojiEl) {
+      if (goState.photoDataUrl) {
+        imgEl.src = goState.photoDataUrl;
+        imgEl.style.display = 'block';
+        emojiEl.style.display = 'none';
+      } else {
+        imgEl.style.display = 'none';
+        emojiEl.style.display = 'block';
+        emojiEl.textContent = icon;
+      }
+    }
+    // text fields
+    const catEl   = document.getElementById('go-card-cat-'   + step);
+    const titleEl = document.getElementById('go-card-title-' + step);
+    const areaEl  = document.getElementById('go-card-area-'  + step);
+    const priceEl = document.getElementById('go-card-price-' + step);
+    if (catEl)   catEl.textContent   = icon + ' ' + cat;
+    if (titleEl) titleEl.textContent = titleText;
+    if (areaEl)  areaEl.textContent  = areaText;
+    if (priceEl) {
+      if (priceText) {
+        priceEl.textContent = priceText;
+        priceEl.classList.remove('empty');
+      } else {
+        priceEl.textContent = 'Price to be added';
+        priceEl.classList.add('empty');
+      }
+    }
+  });
+}
+
+// ── Photo handling ─────────────────────────────────────────────────────────
+function goHandlePhoto(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  goState.photoFile = file;
+  goState.photoUploaded = false;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    goState.photoDataUrl = e.target.result;
+    goPaintCards();
+
+    // Update upload zone to show success state
+    const zone = document.getElementById('go-upload-zone');
+    if (zone) {
+      zone.innerHTML = '<div style="font-size:28px;margin-bottom:6px;">✅</div><div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">Photo added!</div><div style="font-size:12px;color:rgba(255,255,255,.4);">Looking great on the card above</div>';
+    }
+    const retake = document.getElementById('go-upload-retake');
+    if (retake) retake.style.display = 'block';
+
+    const status = document.getElementById('go-upload-status');
+
+    // Upload to BEA in background if we have a listing id
+    if (goState.listingId && goState.email && BEA_ENABLED) {
+      if (status) status.textContent = 'Saving photo…';
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch(
+          BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
+          { method: 'POST', body: fd }
+        );
+        if (res.ok) {
+          goState.photoUploaded = true;
+          if (status) status.textContent = '📸 Saved to your listing';
+        } else {
+          if (status) status.textContent = 'Photo saved locally — will sync when you go live';
+        }
+      } catch(e) {
+        if (status) status.textContent = 'Photo saved locally — will sync when you go live';
+      }
+    } else {
+      if (status) status.textContent = '📸 Photo ready';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Field rendering (Step 2) ───────────────────────────────────────────────
+function goRenderFields() {
+  const body = document.getElementById('go-fields-body');
+  if (!body) return;
+  const cat = goState.cat;
+  const fieldDefs = GO_CAT_FIELDS[cat] || GO_CAT_FIELDS['Services'];
+
+  let html = '';
+  let skipNext = false;
+  fieldDefs.forEach((fd, idx) => {
+    if (skipNext) { skipNext = false; return; }
+    // Check if this field and the next form a pair (beds/baths)
+    const nextFd = fieldDefs[idx + 1];
+    const isPair = fd.pair && nextFd && nextFd.paired;
+    if (isPair) {
+      skipNext = true;
+      html += `<div class="go-field-row">
+        <div class="go-field-group">
+          <div class="go-field-label">${fd.label}</div>
+          <input class="go-field-input" id="${fd.id}" type="${fd.type||'text'}" placeholder="${fd.ph}" oninput="goFieldUpdate('${fd.id}',this.value)">
+        </div>
+        <div class="go-field-group">
+          <div class="go-field-label">${nextFd.label}</div>
+          <input class="go-field-input" id="${nextFd.id}" type="${nextFd.type||'text'}" placeholder="${nextFd.ph}" oninput="goFieldUpdate('${nextFd.id}',this.value)">
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="go-field-group">
+        <div class="go-field-label">${fd.label}</div>
+        <input class="go-field-input" id="${fd.id}" type="${fd.type||'text'}" inputmode="${fd.type==='tel'||fd.type==='number'?'numeric':'text'}" placeholder="${fd.ph}" oninput="goFieldUpdate('${fd.id}',this.value)">
+      </div>`;
+    }
+  });
+
+  // Market note area
+  html += `<div id="go-market-note" style="display:none;background:rgba(200,135,58,.08);border:1px solid rgba(200,135,58,.25);border-radius:10px;padding:11px 13px;margin-top:4px;margin-bottom:4px;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(200,135,58,.7);margin-bottom:4px;">📊 Market note</div>
+    <div id="go-market-note-text" style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.55;"></div>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+// ── Field update → live card repaint + market note trigger ─────────────────
+function goFieldUpdate(fieldId, value) {
+  // Map input id to state key
+  const keyMap = {
+    'go-title':'title','go-price':'price','go-suburb':'suburb',
+    'go-beds':'beds','go-baths':'baths','go-subject':'subject',
+    'go-level':'level','go-svctype':'service_type','go-envtype':'environment_type'
+  };
+  const key = keyMap[fieldId] || fieldId.replace('go-','');
+  goState.fields[key] = value;
+  goPaintCards();
+
+  // Enable Next once title is filled
+  const nextBtn = document.getElementById('go-s2-next');
+  if (nextBtn) nextBtn.disabled = !(goState.fields.title && goState.fields.title.trim().length > 1);
+
+  // Update Step 2 coach text live
+  const c2 = document.getElementById('go-coach-text-2');
+  if (c2 && goState.fields.title) {
+    c2.innerHTML = 'Looking good! Keep filling in the details — the card above updates as you type.';
+  }
+
+  // Debounce market note
+  clearTimeout(window._goMarketNoteTimer);
+  window._goMarketNoteTimer = setTimeout(goFetchMarketNote, 900);
+}
+
+// ── Market note (AI coach inline) ─────────────────────────────────────────
+async function goFetchMarketNote() {
+  const cat = goState.cat;
+  const f   = goState.fields;
+  let prompt = '';
+
+  if (cat === 'Property') {
+    if (!f.beds) return;
+    prompt = 'In 1 sentence, give a market context note for a ' + (f.beds||'') + '-bed' + (f.baths?', '+f.baths+'-bath':'') + ' property in ' + (f.suburb||goState.city) + ', Pretoria' + (f.price?', asking R'+f.price:'') + '. Mention approximate comparable asking prices. Be specific and brief.';
+  } else if (cat === 'Tutors') {
+    if (!f.subject) return;
+    prompt = 'In 1 sentence, give a market context note for a ' + (f.level||'') + ' ' + f.subject + ' tutor in Pretoria. Mention typical hourly rates. Be specific and brief.';
+  } else if (cat === 'Services') {
+    if (!f.service_type) return;
+    prompt = 'In 1 sentence, give a market context note for a ' + f.service_type + ' in Pretoria. Mention typical call-out rates. Be specific and brief.';
+  } else if (cat === 'Cars') {
+    if (!f.title) return;
+    prompt = 'In 1 sentence, give a market context note for a ' + f.title + (f.price?', asking R'+f.price:'') + ' in Pretoria. Mention typical market value range. Be specific and brief.';
+  } else {
+    if (!f.title) return;
+    prompt = 'In 1 sentence, give a market context note for: ' + f.title + ' in ' + goState.city + '. Mention typical price range. Be specific and brief.';
+  }
+
+  const noteDiv  = document.getElementById('go-market-note');
+  const noteText = document.getElementById('go-market-note-text');
+  if (!noteDiv || !noteText) return;
+  noteDiv.style.display = 'block';
+  noteText.textContent = 'Getting market data…';
+
+  try {
+    if (!BEA_ENABLED) { noteText.textContent = 'Market data unavailable in demo mode.'; return; }
+    const res = await fetch(BEA_URL + '/advert-agent/market-note', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email: goState.email || '', prompt})
+    });
+    const data = await res.json();
+    noteText.textContent = data.response || '';
+    // Bubble update
+    const c2 = document.getElementById('go-coach-text-2');
+    if (c2 && data.response) {
+      c2.innerHTML = '<strong>Market insight:</strong> ' + data.response;
+    }
+  } catch(e) {
+    noteDiv.style.display = 'none';
+  }
+}
+
+// ── Save fields to BEA then go to Step 3 ──────────────────────────────────
+async function goSaveAndNext() {
+  const btn = document.getElementById('go-s2-next');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  const f = goState.fields;
+  if (goState.listingId && goState.email && BEA_ENABLED && f.title) {
+    try {
+      const body = {};
+      if (f.title)        body.title       = f.title;
+      if (f.price)        body.price       = f.price;
+      if (f.suburb)       body.suburb      = f.suburb;
+      if (f.beds)         body.beds        = parseInt(f.beds) || null;
+      if (f.baths)        body.baths       = parseInt(f.baths) || null;
+      if (f.subject)      body.subject     = f.subject;
+      if (f.level)        body.level       = f.level;
+      if (f.service_type) body.service_type = f.service_type;
+      await fetch(
+        BEA_URL + '/listings/' + goState.listingId + '?email=' + encodeURIComponent(goState.email),
+        { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }
+      );
+    } catch(e) {}
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Next →'; }
+  goNextStep(3);
+
+  // Fire Step 3 coach AI note
+  setTimeout(goStep3Coach, 400);
+}
+
+// ── Populate review card (Step 3) ─────────────────────────────────────────
+function goPopulateReview() {
+  const cat  = goState.cat;
+  const icon = GO_CAT_ICONS[cat] || '📋';
+  const f    = goState.fields;
+  const city = goState.city || '';
+
+  // Photo or emoji
+  const revImg   = document.getElementById('go-review-img');
+  const revEmoji = document.getElementById('go-review-emoji');
+  if (revImg && revEmoji) {
+    if (goState.photoDataUrl) {
+      revImg.src = goState.photoDataUrl;
+      revImg.style.display = 'block';
+      revEmoji.style.display = 'none';
+    } else {
+      revImg.style.display = 'none';
+      revEmoji.style.display = 'block';
+      revEmoji.textContent = icon;
+    }
+  }
+
+  const catEl   = document.getElementById('go-review-cat');
+  const titleEl = document.getElementById('go-review-title');
+  const areaEl  = document.getElementById('go-review-area');
+  const priceEl = document.getElementById('go-review-price');
+  if (catEl)   catEl.textContent   = icon + ' ' + cat;
+  if (titleEl) titleEl.textContent = f.title || goState.name || 'Your listing';
+  if (areaEl)  areaEl.textContent  = f.suburb ? '📍 ' + f.suburb + (city?', '+city:'') : (city?'📍 '+city:'');
+  if (priceEl) priceEl.textContent = f.price ? 'R ' + f.price.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : 'Negotiable';
+}
+
+// ── Step 3 AI coach note ───────────────────────────────────────────────────
+async function goStep3Coach() {
+  const c3 = document.getElementById('go-coach-text-3');
+  if (!c3 || !BEA_ENABLED) return;
+  const name = goState.name ? goState.name.split(' ')[0] : '';
+  const cat  = goState.cat;
+  const f    = goState.fields;
+  const prompt = 'In 1 sentence, congratulate ' + (name||'the seller') + ' on completing their ' + cat + ' listing draft' + (f.title?' titled "'+f.title+'"':'') + ' and encourage them to go live. Be warm, specific, and brief.';
+  try {
+    const res = await fetch(BEA_URL + '/advert-agent/market-note', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email: goState.email||'', prompt})
+    });
+    const data = await res.json();
+    if (data.response) c3.innerHTML = data.response + '<br><br><span style="color:rgba(255,255,255,.5);font-size:12px;">Tap below to choose your plan and go live — takes about 2 minutes.</span>';
+  } catch(e) {}
+}
+
+// ── Handoff to seller-onboard funnel ──────────────────────────────────────
+function goHandoff() {
+  // Seed sobState from goState so the existing funnel doesn't need to re-fetch
+  sobState.email = goState.email;
+  sobState.name  = goState.name;
+  sobState.cat   = goState.cat;
+  sobState.city  = goState.city;
+  goTo('seller-onboard');
+  // sobInit will be called by initScreen — pass skipPreview flag via sobState
+  sobState._skipPreview = true;
 }
 
 // ══════════════════════════════════════════════════════════

@@ -1463,3 +1463,15 @@ BEA: new `GET /users/{email}/trust` endpoint (lines 1543–1663) — trust score
 - Photo thumbnail row: all 5 adventure photos appear as a horizontal strip of thumbnails at the bottom of the hero image. Active thumb highlights in white. Clicking any thumb scrolls the main strip to that photo. Scrolling the main strip syncs the thumbnails. Adventures with only 1 photo skip the thumbnail row.
 - Enhanced stat strip: replaces the basic chip row with styled stat pills — type badge (e.g. 🦁 Luxury Safari, ⛺ Bush Camp) in green-gradient, environment chip in slate, group size in forest green, duration in purple, country badge (only shown for non-ZA listings) in amber. Each chip uses CSS classes, not inline styles, for consistency.
 - `advThumbClick()` and `syncAdvThumbs()` JS functions added. Strip onscroll also calls syncAdvThumbs so thumbs stay in sync when the user swipes through the main photo strip.
+
+## Session 53 · 11 May 2026 · AI-Guided Listing Onboarding — 3-step photo-first screen
+
+### AI-Guided Onboarding Screen
+- New `screen-guided-onboard` — 3-step photo-first onboarding screen inserted before the existing seller-onboard funnel
+- Step 1 (Photo): Live draft card with category emoji + DRAFT watermark; seller picks photo; card updates instantly; photo uploaded to R2 via new email-auth endpoint
+- Step 2 (Details): Category-specific fields for all 7 categories; each keystroke repaints the live card; AI market note fires after key fields filled; fields saved to BEA via PUT on Next
+- Step 3 (Review): Full card preview; AI coach fires personalised congratulations; "Take me to the app" hands off to tier-picker + EULA (Phase 2 onwards)
+- New `POST /listings/{id}/photo/draft?email=` BEA endpoint — email-auth only, draft-only guard, same R2 compression pipeline as /listings/photo
+- `sobInit()` extended with `_skipPreview` flag — SOB funnel starts at Phase 2 when coming from guided screen
+- Fixed pre-existing `health_resources()` truncation bug — function was missing its return statement causing BEA startup crash; restored full JSON return
+- URL router: magic links now route to guided-onboard via goTo() instead of directly to seller-onboard

@@ -1507,6 +1507,105 @@ async def upload_listing_photo(
         "medium_kb":  round(len(medium_bytes) / 1024, 1),
     }
 
+@app.post("/listings/{listing_id}/photo/draft")
+async def upload_draft_listing_photo(
+    listing_id: int,
+    email: str,
+    file: UploadFile = File(...)
+):
+    """Upload a photo to a DRAFT listing. Email-auth only — no API key required.
+    Reuses the same compression pipeline as /listings/photo.
+    Rejected if listing_status != 'draft' or email doesn't match seller_email.
+    Sets thumb_url + medium_url on the listing row and prepends to photo strip.
+    """
+    import re as _re
+
+    # Validate file type
+    allowed = {"image/jpeg", "image/png", "image/webp"}
+    content_type = file.content_type or "image/jpeg"
+    if content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP photos accepted")
+
+    raw = await file.read()
+    if len(raw) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Photo too large — max 20MB")
+
+    try:
+        img = Image.open(io.BytesIO(raw)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read image file")
+
+    # Auth + draft guard
+    conn = database.get_db()
+    row = conn.execute(
+        "SELECT seller_email, listing_status, thumb_url, description FROM listings WHERE id = ?",
+        (listing_id,)
+    ).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if (row["listing_status"] or "draft") != "draft":
+        conn.close()
+        raise HTTPException(status_code=409, detail="Only draft listings can use this endpoint")
+    if row["seller_email"] and row["seller_email"] != email:
+        conn.close()
+        raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
+
+    # Compress to thumb + medium (same pipeline as /listings/photo)
+    thumb = img.copy()
+    thumb.thumbnail(THUMB_SIZE, Image.LANCZOS)
+    thumb_buf = io.BytesIO()
+    thumb.save(thumb_buf, format="JPEG", quality=JPEG_QUALITY_THUMB, optimize=True)
+    thumb_bytes = thumb_buf.getvalue()
+
+    medium = img.copy()
+    medium.thumbnail(MEDIUM_SIZE, Image.LANCZOS)
+    medium_buf = io.BytesIO()
+    medium.save(medium_buf, format="JPEG", quality=JPEG_QUALITY_MEDIUM, optimize=True)
+    medium_bytes = medium_buf.getvalue()
+
+    # Upload to R2 or local fallback
+    if _S3_CONFIGURED:
+        orig_name = (file.filename or "photo.jpg").replace(" ", "_")
+        key = f"media/draft_{uuid.uuid4().hex}_{orig_name}"
+        medium_url = _s3_upload(medium_bytes, key, "image/jpeg")
+        thumb_url = medium_url
+    else:
+        base = storage.generate_filename("draft_listing")
+        thumb_name  = base.replace(".jpg", "_thumb.jpg")
+        medium_name = base.replace(".jpg", "_medium.jpg")
+        thumb_url  = storage.upload_photo(thumb_bytes,  thumb_name,  "image/jpeg")
+        medium_url = storage.upload_photo(medium_bytes, medium_name, "image/jpeg")
+
+    # Persist to listing row — always treated as primary photo
+    existing_desc = row["description"] or ""
+    photo_entry = medium_url
+    if existing_desc.startswith("[photos:"):
+        new_desc = _re.sub(
+            r'^\[photos:([^\]]*)\]',
+            lambda m: "[photos:" + photo_entry + ("|" + m.group(1) if m.group(1) else "") + "]",
+            existing_desc
+        )
+    else:
+        new_desc = f"[photos:{photo_entry}]\n{existing_desc}"
+
+    try:
+        conn.execute(
+            "UPDATE listings SET thumb_url=?, medium_url=?, seller_email=COALESCE(seller_email,?), description=? WHERE id=?",
+            (thumb_url, medium_url, email, new_desc, listing_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "thumb_url":  thumb_url,
+        "medium_url": medium_url,
+        "thumb_kb":   round(len(thumb_bytes)  / 1024, 1),
+        "medium_kb":  round(len(medium_bytes) / 1024, 1),
+    }
+
+
 # ── USERS (protected write) ──────────────────────────────────
 
 @app.post("/users")
@@ -6719,88 +6818,10 @@ def health_resources():
         return "ok"
 
     return {
-        "ram": {
-            "used_mb":   round(mem_used_mb),
-            "total_mb":  round(mem_total_mb),
-            "pct":       mem_pct,
-            "status":    _status(mem_pct),
-        },
-        "disk": {
-            "used_gb":   disk_used_gb,
-            "total_gb":  disk_total_gb,
-            "pct":       disk_pct,
-            "status":    _status(disk_pct),
-        },
-        "cpu": {
-            "load1":     load1,
-            "pct":       cpu_pct,
-            "status":    _status(cpu_pct),
-        },
-        "bandwidth": {
-            "rx_gb":     rx_gb,
-            "tx_gb":     tx_gb,
-            "total_gb":  round(rx_gb + tx_gb, 2),
-            "limit_gb":  20480,
-            "pct":       round((rx_gb + tx_gb) / 20480 * 100, 3),
-            "status":    _status((rx_gb + tx_gb) / 20480 * 100),
-        },
+        "ram":  {"total_mb": round(mem_total_mb,1), "used_mb": round(mem_used_mb,1), "pct": mem_pct, "status": _status(mem_pct)},
+        "disk": {"total_gb": disk_total_gb, "used_gb": disk_used_gb, "pct": disk_pct, "status": _status(disk_pct)},
+        "cpu":  {"load1": load1, "pct": cpu_pct, "status": _status(cpu_pct)},
+        "bandwidth": {"rx_gb": rx_gb, "tx_gb": tx_gb},
+        "db_sizes": db_sizes,
         "response_ms": response_ms,
-        "db_sizes":    db_sizes,
-        "plan":        "CPX22 · 2vCPU · 4GB RAM · 80GB SSD · 20TB/mo · €7.49/mo",
-        "checkedAt":   __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
     }
-
-# ── EMAIL OPT-OUT ────────────────────────────────────────────
-CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
-
-@app.get("/opt-out")
-async def opt_out(email: str, city_id: int = 0, category: str = ""):
-    """One-click unsubscribe endpoint for outreach emails."""
-    _log.info(f"Opt-out request: email={email} city_id={city_id} category={category}")
-    suppressed = False
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(
-                f"{CITYLAUNCHER_API}/prospects/opt-out",
-                json={"email": email, "city_id": city_id, "category": category}
-            )
-            if resp.status_code in (200, 204):
-                suppressed = True
-            else:
-                _log.warning(f"CityLauncher opt-out returned {resp.status_code} for {email}")
-    except Exception as exc:
-        _log.error(f"Could not reach CityLauncher for opt-out: {exc}")
-
-    html_response = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unsubscribed - TrustSquare</title>
-  <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #f5f5f0; display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; }}
-    .card {{ background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 440px;
-             text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }}
-    .icon {{ font-size: 48px; margin-bottom: 16px; }}
-    h1 {{ font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }}
-    p {{ font-size: 15px; color: #666; line-height: 1.6; }}
-    a {{ color: #1a1a2e; font-weight: 600; }}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">✅</div>
-    <h1>You're unsubscribed</h1>
-    <p>We've removed <strong>{{email}}</strong> from our outreach list.<br>
-    You won't receive any further emails from TrustSquare about listing opportunities.</p>
-    <p style="margin-top:24px; font-size:13px; color:#aaa;">
-      Changed your mind? Visit <a href="https://trustsquare.co">trustsquare.co</a> to list directly.
-    </p>
-  </div>
-</body>
-</html>"""
-
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=html_response, status_code=200)

@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 52 · 11 May 2026**
+**Updated: Session 53 · 11 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -67,6 +67,16 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 53
+
+### AI-Guided Listing Onboarding ✅
+- New `screen-guided-onboard` — 3-step photo-first onboarding screen (Photo / Details / Review)
+- Step 1: live draft card with real-time photo preview; photo uploaded to R2 via new `POST /listings/{id}/photo/draft?email=` endpoint (email-auth, draft-only guard)
+- Step 2: category-specific fields for all 7 categories; card repaints on every keystroke; AI market note via `/advert-agent/market-note`; fields saved via PUT on Next
+- Step 3: full card review; AI coach congratulations; "Take me to the app" hands off to tier-picker (Phase 2) skipping redundant Phase 1 via `_skipPreview` flag
+- Fixed pre-existing `health_resources()` truncation bug — BEA was crash-looping on startup before this session; return statement restored
+- Both FEA and BEA deployed and verified live at trustsquare.co
 
 ## Last Completed — Session 52
 
@@ -194,13 +204,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 53
+## Next Session — Session 54
 
 ### Priority
 1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
 2. **Patent filing** — David to confirm readiness; do NOT proceed with any outreach until patent is filed
 3. **Whitepaper** — draft and review before launch
-4. **AI-Guided Listing Onboarding** — build 3-step card-preview onboarding screen (concept fully designed in Session 52; Maroushka is approved first tester after patent filed)
+4. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
 
 ### Pre-Launch Gate (in order — ALL must be done before Wave 1)
 > ⛔ Wave 1 is intentionally removed from all session priorities until David explicitly re-adds it.
