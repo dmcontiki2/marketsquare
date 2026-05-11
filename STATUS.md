@@ -212,6 +212,28 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 3. **Whitepaper** — draft and review before launch
 4. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
 
+### Session 54 Feature — Invite Email + Guided Onboarding Integration
+> ⚠️ Build and test only after patent filed. No outreach until David confirms.
+
+**Agreed architecture (Session 53):**
+
+**Route 1 — Invite email CTA (Option A):**
+- Email CTA button links directly to `trustsquare.co?magic=1&name=...&email=...&cat=...&city=...`
+- Single click from inbox to guided screen — no intermediate step
+- Social proof cards in the email are **static per category**, baked into the n8n template (3 best listings per category chosen by David) — no live BEA call at send time
+- POPIA compliance: one-line transparency notice at top of guided screen — *"We've pre-filled your name and category from your invite. You're not registered yet — nothing is public until you accept our terms at the end."*
+
+**Route 2 — In-app listing flow:**
+- Same 3-step guided screen reachable from within the app for sellers who arrive directly (not via email)
+- Entry point: existing "Sell" / listing path routes to `guided-onboard` instead of the old form
+
+**Session 54 build tasks:**
+1. Add POPIA transparency notice bar to top of `screen-guided-onboard` (Step 1) — shown only when `magicLink.active` is true
+2. Update n8n outreach email template (`property_outreach.html` and equivalents for other categories) — wire "List My Property in {{city_name}}" button to magic link URL format
+3. Add static social proof card section to email template per category (3 cards, baked-in Unsplash photos, realistic prices)
+4. Add in-app entry point to guided-onboard from the sell/listing path (Route 2)
+5. End-to-end test: send test magic link → guided screen → Step 1–3 → tier picker → EULA → go live
+
 ### Pre-Launch Gate (in order — ALL must be done before Wave 1)
 > ⛔ Wave 1 is intentionally removed from all session priorities until David explicitly re-adds it.
 > Reason: prior art defence — a single outreach email sent before patent filing voids the defence.
