@@ -6637,6 +6637,119 @@ def dashboard_summary():
     }
 
 
+
+# ── SERVER HEALTH ────────────────────────────────────────────────────────────
+@app.get("/health/resources")
+def health_resources():
+    """Live server resource metrics — used by dashboard health panel.
+    Returns RAM, disk, CPU load, response time, DB sizes.
+    No auth required (non-sensitive operational data).
+    """
+    import time as _time
+    import shutil as _shutil
+
+    t0 = _time.time()
+
+    # RAM
+    try:
+        with open("/proc/meminfo") as f:
+            mem = {}
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2:
+                    mem[parts[0].rstrip(":")] = int(parts[1])
+        mem_total_mb  = mem.get("MemTotal", 0) / 1024
+        mem_avail_mb  = mem.get("MemAvailable", 0) / 1024
+        mem_used_mb   = mem_total_mb - mem_avail_mb
+        mem_pct       = round(mem_used_mb / mem_total_mb * 100, 1) if mem_total_mb else 0
+    except Exception:
+        mem_total_mb = mem_used_mb = mem_pct = 0
+
+    # Disk
+    try:
+        disk = _shutil.disk_usage("/")
+        disk_total_gb = round(disk.total / (1024**3), 1)
+        disk_used_gb  = round(disk.used  / (1024**3), 1)
+        disk_pct      = round(disk.used / disk.total * 100, 1)
+    except Exception:
+        disk_total_gb = disk_used_gb = disk_pct = 0
+
+    # CPU load (1-min average, normalised to % of available cores)
+    try:
+        with open("/proc/loadavg") as f:
+            load1 = float(f.read().split()[0])
+        import os as _os
+        ncpus   = _os.cpu_count() or 1
+        cpu_pct = round(load1 / ncpus * 100, 1)
+    except Exception:
+        load1 = cpu_pct = 0
+
+    # DB sizes
+    import os as _os
+    def _mb(path):
+        try:    return round(_os.path.getsize(path) / (1024**2), 2)
+        except: return 0
+
+    db_sizes = {
+        "marketsquare_mb":  _mb("/var/www/marketsquare/marketsquare.db"),
+        "citylauncher_mb":  _mb("/var/www/citylauncher/citylauncher.db"),
+    }
+
+    # Bandwidth since boot (RX + TX on eth0)
+    try:
+        with open("/proc/net/dev") as f:
+            for line in f:
+                if "eth0" in line:
+                    parts = line.split()
+                    rx_gb = round(int(parts[1]) / (1024**3), 2)
+                    tx_gb = round(int(parts[9]) / (1024**3), 2)
+                    break
+            else:
+                rx_gb = tx_gb = 0
+    except Exception:
+        rx_gb = tx_gb = 0
+
+    # BEA self-response time
+    response_ms = round((_time.time() - t0) * 1000, 1)
+
+    # Status flags
+    def _status(pct):
+        if pct >= 85: return "critical"
+        if pct >= 70: return "warning"
+        return "ok"
+
+    return {
+        "ram": {
+            "used_mb":   round(mem_used_mb),
+            "total_mb":  round(mem_total_mb),
+            "pct":       mem_pct,
+            "status":    _status(mem_pct),
+        },
+        "disk": {
+            "used_gb":   disk_used_gb,
+            "total_gb":  disk_total_gb,
+            "pct":       disk_pct,
+            "status":    _status(disk_pct),
+        },
+        "cpu": {
+            "load1":     load1,
+            "pct":       cpu_pct,
+            "status":    _status(cpu_pct),
+        },
+        "bandwidth": {
+            "rx_gb":     rx_gb,
+            "tx_gb":     tx_gb,
+            "total_gb":  round(rx_gb + tx_gb, 2),
+            "limit_gb":  20480,
+            "pct":       round((rx_gb + tx_gb) / 20480 * 100, 3),
+            "status":    _status((rx_gb + tx_gb) / 20480 * 100),
+        },
+        "response_ms": response_ms,
+        "db_sizes":    db_sizes,
+        "plan":        "CPX22 · 2vCPU · 4GB RAM · 80GB SSD · 20TB/mo · €7.49/mo",
+        "checkedAt":   __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
+    }
+
 # ── EMAIL OPT-OUT ────────────────────────────────────────────
 CITYLAUNCHER_API = os.getenv("CITYLAUNCHER_API_URL", "http://localhost:8001")
 

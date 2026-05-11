@@ -183,6 +183,24 @@
     transition: color .15s; display: inline-flex; align-items: center; gap: 5px;
   }
   #level3-card .l3-back:hover { color: #94a3b8; }
+
+  /* ── Server Health Panel ── */
+  .health-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 20px; }
+  .health-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .health-updated { font-size: 10px; color: #334155; font-weight: 400; letter-spacing: 0; }
+  .health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .health-metric { background: var(--surface2); border-radius: 8px; padding: 12px 14px; }
+  .hm-label { font-size: 10px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .hm-value { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .hm-bar-bg { height: 5px; background: #1a2232; border-radius: 3px; overflow: hidden; }
+  .hm-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease, background 0.3s ease; }
+  .hm-bar-fill.ok       { background: var(--green); }
+  .hm-bar-fill.warning  { background: var(--amber); }
+  .hm-bar-fill.critical { background: var(--red); }
+  .health-alert { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 11px; display: none; }
+  .health-alert.warning  { background: #1c1400; border: 1px solid #92400e; color: #fbbf24; display: block; }
+  .health-alert.critical { background: #1c0000; border: 1px solid #991b1b; color: #f87171; display: block; }
+  .health-plan { font-size: 10px; color: #334155; margin-top: 10px; }
   /* ── scrollbar ── */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -318,6 +336,7 @@ async function loadDashboard() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     DATA = await res.json();
     populate();
+    loadHealth(); // Start health polling
   } catch (err) {
     if (genTimeEl) genTimeEl.textContent = 'Error loading data — ' + err.message;
     console.error('Dashboard fetch failed:', err);
@@ -846,6 +865,75 @@ function closeLevel3(event) {
   if (event && event.target !== document.getElementById('level3-overlay')) return;
   document.getElementById('level3-overlay').classList.remove('visible');
   document.getElementById('detail-panel').classList.remove('visible');
+}
+
+
+// ── Server Health ────────────────────────────────────────────
+let _healthTimer = null;
+
+function loadHealth() {
+  fetch('/health/resources')
+    .then(r => r.json())
+    .then(h => renderHealth(h))
+    .catch(() => {
+      const grid = document.getElementById('health-grid');
+      if (grid) grid.innerHTML = '<div style="font-size:12px;color:#ef4444;">Health check failed — server may be restarting</div>';
+    });
+}
+
+function renderHealth(h) {
+  const metrics = [
+    { label: 'RAM',       pct: h.ram.pct,       value: Math.round(h.ram.used_mb) + ' MB / ' + Math.round(h.ram.total_mb) + ' MB',  status: h.ram.status },
+    { label: 'Disk',      pct: h.disk.pct,      value: h.disk.used_gb + ' GB / ' + h.disk.total_gb + ' GB',                         status: h.disk.status },
+    { label: 'CPU Load',  pct: h.cpu.pct,       value: h.cpu.load1 + ' avg  (' + h.cpu.pct + '%)',                                   status: h.cpu.status },
+    { label: 'Bandwidth', pct: h.bandwidth.pct, value: h.bandwidth.total_gb + ' GB / 20,480 GB',                                    status: h.bandwidth.status },
+    { label: 'Response',  pct: Math.min(h.response_ms / 5, 100), value: h.response_ms + ' ms',                                      status: h.response_ms < 200 ? 'ok' : h.response_ms < 500 ? 'warning' : 'critical' },
+    { label: 'BEA DB',    pct: Math.min(h.db_sizes.marketsquare_mb / 500 * 100, 100), value: h.db_sizes.marketsquare_mb + ' MB',    status: 'ok' },
+  ];
+
+  const grid = document.getElementById('health-grid');
+  grid.innerHTML = metrics.map(m => {
+    const barPct = Math.min(m.pct, 100).toFixed(1);
+    return '<div class="health-metric">' +
+      '<div class="hm-label"><span>' + m.label + '</span><span style="color:' + statusColor(m.status) + ';">' + m.status.toUpperCase() + '</span></div>' +
+      '<div class="hm-value">' + m.value + '</div>' +
+      '<div class="hm-bar-bg"><div class="hm-bar-fill ' + m.status + '" style="width:' + barPct + '%"></div></div>' +
+      '</div>';
+  }).join('');
+
+  // Overall status dot
+  const allStatuses = metrics.map(m => m.status);
+  const overallStatus = allStatuses.includes('critical') ? 'critical' : allStatuses.includes('warning') ? 'warning' : 'ok';
+  const dot = document.getElementById('health-status-dot');
+  if (dot) { dot.style.color = statusColor(overallStatus); }
+
+  // Alert banner
+  const alert = document.getElementById('health-alert');
+  if (alert) {
+    if (overallStatus === 'critical') {
+      alert.className = 'health-alert critical';
+      alert.textContent = '🔴 Critical: one or more resources above 85% — action required';
+    } else if (overallStatus === 'warning') {
+      alert.className = 'health-alert warning';
+      alert.textContent = '⚠️ Warning: one or more resources above 70% — monitor closely';
+    } else {
+      alert.className = 'health-alert';
+    }
+  }
+
+  // Updated time + plan
+  const upd = document.getElementById('health-updated');
+  if (upd) upd.textContent = 'Updated ' + h.checkedAt;
+  const plan = document.getElementById('health-plan');
+  if (plan) plan.textContent = h.plan;
+
+  // Schedule next poll in 60s
+  if (_healthTimer) clearTimeout(_healthTimer);
+  _healthTimer = setTimeout(loadHealth, 60000);
+}
+
+function statusColor(s) {
+  return s === 'critical' ? '#ef4444' : s === 'warning' ? '#f59e0b' : '#10b981';
 }
 
 // ── Dashboard populate — renders DATA into DOM ─────────────────────────────
