@@ -6011,6 +6011,16 @@ function openDetail(id){
   const dotsHtml = photos.length > 1
     ? `<div class="photo-strip-dots">${photos.map((_,i)=>`<div class="psd${i===0?' active':''}" id="psd-${id}-${i}"></div>`).join('')}</div>`
     : '';
+  // Adventures category display label + price formatting
+  const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences';
+  const catDisplayLabel = l.cat==='adventures_accommodation' ? '🏕 Accommodation'
+    : l.cat==='adventures_experiences' ? '🌄 Experiences'
+    : l.cat;
+  const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
+  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
+  const advPriceDisplay = isAdv && l.price
+    ? `${advCur}${Number(l.price).toLocaleString()}`
+    : null;
   const heroHtml = `
     <div class="photo-strip-wrap" id="pstrip-wrap-${id}">
       <div class="photo-strip" id="pstrip-${id}" onscroll="updateStripDots('${id}',${photos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${id}', Math.round(this.scrollLeft/this.offsetWidth))">
@@ -6018,7 +6028,7 @@ function openDetail(id){
       </div>
       ${dotsHtml}
       ${photos.length>1?`<button class="strip-arrow strip-arrow-left" onclick="stripNav('${id}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" onclick="stripNav('${id}',1)">&#8250;</button>`:''}
-      ${isAdv && photos.length > 1 ? `<div class="adv-thumbs" id="adv-thumbs-${id}">${photos.map((u,ti) => `<div class="adv-thumb${ti===0?' active':''}" id="adv-thumb-${id}-${ti}" onclick="advThumbClick('${id}',${ti})"><img src="${u}" loading="lazy"></div>`).join('')}</div>` : ''}
+      ${isAdv && photos.length > 1 ? '<div class="adv-thumbs" id="adv-thumbs-'+id+'">' + photos.map(function(u,ti){ return '<div class="adv-thumb'+(ti===0?' active':'')+'" id="adv-thumb-'+id+'-'+ti+'" onclick="advThumbClick(\'' + id + '\',' + ti + ')"><img src="' + u + '" loading="lazy"></div>'; }).join('') + '</div>' : ''}
       <div class="dnav">
         <button class="dib" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <button class="dib" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
@@ -6048,16 +6058,7 @@ function openDetail(id){
       </div>
     </div>
     ${l.queueCount>0?`<div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px;border:1.5px solid #c4b5fd;"><div style="font-size:24px;font-weight:700;color:var(--purple);font-family:'Inter',sans-serif;">${l.queueCount}</div><div><div style="font-size:13px;font-weight:600;color:var(--navy);">${l.queueCount} buyer${l.queueCount>1?'s':''} currently in queue</div><div style="font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px;">Seller responds to all requests within 48hrs</div></div></div>`:''}`;
-  // Adventures category display label + price formatting
-  const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences';
-  const catDisplayLabel = l.cat==='adventures_accommodation' ? '🏕 Accommodation'
-    : l.cat==='adventures_experiences' ? '🌄 Experiences'
-    : l.cat;
-  const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
-  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
-  const advPriceDisplay = isAdv && l.price
-    ? `${advCur}${Number(l.price).toLocaleString()}`
-    : null;
+  // Adventures vars declared above heroHtml
 
   document.getElementById('screen-detail').innerHTML=`
     ${heroHtml}
