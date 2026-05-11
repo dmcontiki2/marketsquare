@@ -207,3 +207,43 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ### Backlog
 - Admin ops queue — review uploade
+- **Post-launch auto-scale** — n8n polls /health/resources, alerts at 70%, auto-upgrades Hetzner at 85%
+- **UX degradation KPIs** — response time, 5xx rate, DB size thresholds
+- Gate `sbTriggerMarketNote` behind subscription tier for free sellers
+- For You trust score refresh on wishlist re-match
+- Email template visual QA — review actual delivered email in Gmail
+
+### 🌟 Session 52 Feature Discussion — AI-Guided Listing Onboarding
+> ⚠️ Build before Wave 1. Test only after patent filed. Maroushka (miconradie1@gmail.com) is approved first tester.
+
+**Concept:** Replace magic link → form → publish with a guided 3-step card-preview experience.
+
+**The email:** Prospect receives invite showing their item as a pre-populated DRAFT listing card. Category-specific placeholder if no real data yet (e.g. Pretoria estate agent sees "3-bed home, Pretoria" with generic photo + DRAFT watermark). They see exactly what they'll get before clicking anything.
+
+**Step 1 — Photo:** Opens with the draft card (empty). AI coach points to photo block. Seller uploads → card updates live showing exactly how it looks. Redo until happy. Press Step 2.
+
+**Step 2 — Details:** AI points to item/service fields. Seller fills in → card reflects changes in real time. Input → view → update → view loop. AI confirms progress. Press Step 3.
+
+**Step 3 — Review:** Full card preview. AI confirms completion. Seller clicks "Take me to the app →".
+
+**In-app handoff:** Draft transfers into marketplace app. Same card-preview + AI guidance continues: EULA → registration → bank details → GO LIVE.
+
+**Why this works:**
+- Eliminates imagination gap — seller sees their listing from click 1
+- Progressive disclosure — one job per step, no cognitive overload
+- Card updates in real time — feels like polish not form-filling
+- AI guidance is contextual, not instructional
+- Existing infrastructure reused: BEA drafts + AI coach + magic link all exist
+
+**Technical approach:** New front-end screen wired to existing BEA endpoints. Category-specific placeholder cards for cold prospects. DRAFT watermark overlay on existing listing card component.
+
+---
+
+## Known Rules (session reminders)
+- **NEVER use Edit or Write tool on `marketsquare.html` or `bea_main.py`** — Python `open/read/replace/write` only. Always verify tail ends with `</html>` or final function respectively.
+- **Mandatory pre-deploy JS check**: extract inline scripts, run `node --check`
+- **Python command**: use `python` not `python3` on Windows; use `python3` in sandbox
+- **BEA venv**: always use `/var/www/marketsquare/venv/bin/pip` for server installs
+- **Git commits**: ask David to run from PowerShell — never commit from sandbox (index.lock conflict)
+- **SSH key**: run `bash load_sandbox_ssh.sh` at session start before any SSH/SCP
+- **Cost model**: xlsx unchanged since Session 24 — no cost model impact this session

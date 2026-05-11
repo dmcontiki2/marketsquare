@@ -2,6 +2,13 @@
 
 ## Session 51 (continued) — 11 May 2026
 
+### Server health monitoring
+- New `GET /health/resources` BEA endpoint — returns RAM, disk, CPU, bandwidth, response time, DB sizes with ok/warning/critical status flags
+- Live ⚡ Server Health panel on dashboard — 6 gauge bars, colour-coded green/amber/red, auto-polls every 60s
+- Alert banner appears automatically at 70% (amber warning) and 85% (red critical)
+- Post-launch auto-scale workflow design saved to STATUS.md backlog — n8n polls health endpoint, alerts at 70%, auto-upgrades Hetzner CPX22→CPX32 at 85% via Hetzner API
+
+
 ### Graph 3-level navigation
 - Level 2 solar system: hover over any satellite → detail panel slides in from right with type badge, breadcrumb, full context text
 - Level 2 → Level 3: click any satellite → centred detail card with colour-accented border, full detail, breadcrumb (Galaxy › Project › Node)
