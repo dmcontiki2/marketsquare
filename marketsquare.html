@@ -724,6 +724,29 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .dib{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .dib svg{width:17px;height:17px;stroke:var(--text);}
 .dsheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px 20px 0;position:relative;z-index:2;}
+.wonders-strip-hdr{font-size:12px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.6px;text-transform:uppercase;margin:20px 0 10px;}
+.wonders-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
+.wonders-strip::-webkit-scrollbar{display:none;}
+.wonder-card{flex-shrink:0;width:200px;border-radius:12px;overflow:hidden;cursor:pointer;background:#0d1424;border:1px solid rgba(255,255,255,.08);}
+.wonder-card-img{width:100%;height:110px;object-fit:cover;display:block;}
+.wonder-card-body{padding:10px 12px 12px;}
+.wonder-card-type{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.wonder-card-name{font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:2px;}
+.wonder-card-country{font-size:10px;color:rgba(255,255,255,.4);}
+#screen-wonder-detail{background:var(--navy);}
+.wd-hero{width:100%;height:240px;object-fit:cover;display:block;}
+.wd-sheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px;position:relative;z-index:2;}
+.wd-type-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
+.wd-type-np{background:rgba(16,185,129,.15);color:#10b981;}
+.wd-type-un{background:rgba(99,102,241,.15);color:#818cf8;}
+.wd-type-ar{background:rgba(245,158,11,.15);color:#fbbf24;}
+.wd-title{font-size:20px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:4px;}
+.wd-country{font-size:13px;color:var(--text-3);margin-bottom:16px;}
+.wd-desc{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px;}
+.wd-history-hdr{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;}
+.wd-history{font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:20px;}
+.wd-wiki-btn{display:block;width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;text-align:center;cursor:pointer;text-decoration:none;margin-bottom:16px;}
+.wd-back-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
 .dcat-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
 .dcat{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);padding:3px 8px;background:var(--accent-light);border-radius:4px;font-family:'Inter',sans-serif;}
 .dtitle{font-size:22px;font-weight:800;line-height:1.2;margin-bottom:10px;letter-spacing:-.3px;}
@@ -1468,6 +1491,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .aa-session-sub{font-size:11px;color:var(--text-3);line-height:1.4;}
 /* ── EDIT LISTING SCREEN ──────────────────────────────────── */
 #screen-edit-listing{padding-bottom:120px;}
+.wp-section{margin-top:20px;}.wp-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}.wp-search{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;box-sizing:border-box;}.wp-search::placeholder{color:rgba(255,255,255,.3);}.wp-results{max-height:220px;overflow-y:auto;margin-top:6px;border-radius:10px;border:1px solid rgba(255,255,255,.08);display:none;}.wp-result-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);}.wp-result-item:last-child{border-bottom:none;}.wp-result-item:hover{background:rgba(255,255,255,.06);}.wp-result-img{width:38px;height:28px;object-fit:cover;border-radius:5px;flex-shrink:0;background:#1a2232;}.wp-result-info{flex:1;min-width:0;}.wp-result-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.wp-result-meta{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;}.wp-result-type{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;flex-shrink:0;}.wp-type-np{background:rgba(16,185,129,.2);color:#10b981;}.wp-type-un{background:rgba(99,102,241,.2);color:#818cf8;}.wp-type-ar{background:rgba(245,158,11,.2);color:#fbbf24;}.wp-linked{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:10px;}.wp-linked-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 10px;font-size:11px;color:#fff;font-weight:600;}.wp-linked-chip img{width:22px;height:16px;object-fit:cover;border-radius:3px;}.wp-linked-chip button{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:13px;padding:0;line-height:1;}.wp-hint{font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;}
 .el-hdr{background:var(--navy);color:#fff;padding:16px 16px 20px;display:flex;align-items:center;gap:12px;}
 .el-hdr h1{font-size:18px;font-weight:700;flex:1;margin:0;}
 .el-body{padding:16px;}
@@ -1642,6 +1666,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <button class="feat-scroll-btn feat-scroll-btn-left" onclick="featScroll(-1)" aria-label="Scroll left">&#8249;</button>
     <div class="hscroll" id="home-featured"></div>
     <button class="feat-scroll-btn feat-scroll-btn-right" onclick="featScroll(1)" aria-label="Scroll right">&#8250;</button>
+  </div>
+
+  <!-- ══ WORLD WONDERS STRIP ═══════════════════════════════════ -->
+  <div id="home-wonders-section" style="display:none;margin-top:14px;">
+    <div class="sec-head" style="margin-bottom:2px;"><h2>🌍 World Heritage</h2></div>
+    <div style="font-size:11px;color:var(--text-3);padding:0 16px 8px;">Tap a listing to see nearby wonders linked by sellers</div>
+    <div style="position:relative;">
+      <div class="wonders-strip" id="home-wonders-list" style="padding:0 16px 8px;"></div>
+    </div>
   </div>
 
   <!-- ══ WISHLIST FEED · bottom-half scroll (PR-26) ═══════════ -->
@@ -2176,6 +2209,26 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
 <!-- DETAIL -->
 <div id="screen-detail" class="screen"></div>
+
+<!-- WONDER DETAIL SCREEN -->
+<div id="screen-wonder-detail" class="screen">
+  <div style="position:relative;">
+    <button class="back-btn" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.3);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <img class="wd-hero" id="wd-hero-img" src="" alt="" referrerpolicy="no-referrer">
+  </div>
+  <div class="wd-sheet">
+    <div class="wd-type-badge" id="wd-type-badge"></div>
+    <div class="wd-title" id="wd-title"></div>
+    <div class="wd-country" id="wd-country"></div>
+    <div class="wd-desc" id="wd-desc"></div>
+    <div class="wd-history-hdr">History</div>
+    <div class="wd-history" id="wd-history"></div>
+    <a class="wd-wiki-btn" id="wd-wiki-btn" href="#" target="_blank">📖 Read more on Wikipedia →</a>
+    <button class="wd-back-btn" onclick="closeWonderDetail()">← Back to listing</button>
+  </div>
+</div>
 
 <!-- SELLER CV -->
 <div id="screen-seller-cv" class="screen"></div>
@@ -4095,6 +4148,15 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div id="el-aiguidance-section" style="margin-top:12px;display:none;"></div>
     <!-- Document Hub -->
     <div id="el-dochub-section" style="margin-top:12px;display:none;"></div>
+    <!-- World Wonders Picker -->
+    <div class="wp-section" id="el-wonder-section" style="background:#0d1424;border-radius:14px;padding:14px 14px 12px;border:1px solid rgba(255,255,255,.1);">
+      <div class="wp-label">🌍 Nearby World Wonders</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;margin-top:-4px;">Link up to 5 UNESCO sites or National Parks near your listing</div>
+      <input class="wp-search" id="wp-search" type="text" placeholder="Search e.g. South Africa, Kruger, UNESCO…" oninput="wpSearch(this.value)" onfocus="wpShowResults()">
+      <div class="wp-results" id="wp-results"></div>
+      <div class="wp-linked" id="wp-linked"></div>
+      <div class="wp-hint" id="wp-hint"></div>
+    </div>
   </div>
   <div class="el-footer">
     <button class="el-cancel-btn" onclick="goTo('dashboard')">Cancel</button>
@@ -4423,8 +4485,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="ms-empty">No browsing history yet</div>
       </div>
 
-      <div class="ms-section-lbl">Seller hub</div>
-      <div class="ms-card ms-seller-link" onclick="goTo('dashboard')">
+      <div class="ms-section-lbl" id="ms-seller-hub-lbl" style="display:none;">Seller hub</div>
+      <div class="ms-card ms-seller-link" id="ms-seller-hub-card" onclick="goTo('dashboard')" style="display:none;">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--navy);">My listings &amp; requests</div>
           <div style="font-size:12px;color:var(--text-3);margin-top:3px;">Manage what you sell on TrustSquare</div>
@@ -4451,7 +4513,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="tn-badge" id="nav-tn-badge">5</div>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Wallet
   </button>
-  <button class="nb" id="nav-myspace" onclick="goTo('myspace')">
+  <button class="nb" id="nav-myspace" onclick="(SELLERS&&SELLERS[0]&&SELLERS[0]._email)?goTo('dashboard'):goTo('myspace')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Space
   </button>
   <!-- DEMO MODE: join CTA replaces Sell/Wallet/Seller -->
@@ -5311,7 +5373,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // Badge: Free tier no longer fully locked — opens suburb selector
   updateBadgeLabel();
 
-  renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
+  renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit(); loadHomeWonders();
   renderHomeStats();
   initLMHomeTile();
   // Load available cities + suburbs, then live listings from BEA on startup
@@ -5513,6 +5575,7 @@ function goTo(name){
   // Hide bottom nav on AA screens (they have their own navigation)
   const bnav = document.querySelector('.bnav');
   if(bnav) bnav.style.display = name.startsWith('aa-') ? 'none' : '';
+  if(name==='home'){ loadHomeWonders(); }
   if(name==='browse'){ renderFilterBar(); renderGrid(); }
   if(name==='local-market') lmLoadGrid();
   if(name==='saved')renderSaved();
@@ -6932,6 +6995,10 @@ function openDetail(id){
         </button>
       </div>
       ${flowHtml}
+      <div id="detail-wonders-strip" style="display:none;">
+        <div class="wonders-strip-hdr">🌍 Nearby World Wonders</div>
+        <div class="wonders-strip" id="detail-wonders-list"></div>
+      </div>
       <div class="anon-block">
         <div class="lock-icon">🔒</div>
         <h4>Identity protected until introduction</h4>
@@ -6945,6 +7012,7 @@ function openDetail(id){
       </button>
     </div>`;
   goTo('detail');
+  loadDetailWonders(l);
   if (photos.length > 1) {
     const stripEl = document.getElementById('pstrip-' + id);
     if (stripEl) {
@@ -9778,7 +9846,7 @@ async function openEditListing(beaId) {
   }
 
   elCurrentId  = beaId;
-  elCurrentCat = dl.cat || dl._raw.category;
+  elCurrentCat = normCat(dl.cat || dl._raw.category || '');
   elCurrentRaw = dl._raw;
   // Derive gate-aware category for trust score panel (Property_private / Property_agent)
   try {
@@ -9802,9 +9870,11 @@ async function openEditListing(beaId) {
   // Render form and navigate
   renderEditForm(elCurrentRaw);
   elRenderPhotos(elCurrentRaw, '');
+  window._currentEditBeaId = beaId;
   goTo('edit-listing');
 
   // Load Trust Score + Document Hub + AI Guidance after navigation
+  wpInit(beaId);
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
   if (sellerEmail) {
     setTimeout(() => elLoadSidebarPanels(sellerEmail, elCurrentCat), 200);
@@ -10031,17 +10101,20 @@ function elRenderPhotos(raw, photoWarning) {
   const photoRow = document.getElementById('el-photo-row');
   if (!section || !photoRow) return;
 
-  // Build photo list — prefer photo_urls array, fall back to single medium/thumb
-  _elPhotoUrls = [];
-  try {
-    if (raw.photo_urls) {
-      const parsed = typeof raw.photo_urls === 'string' ? JSON.parse(raw.photo_urls) : raw.photo_urls;
-      if (Array.isArray(parsed) && parsed.length) _elPhotoUrls = parsed;
-    }
-  } catch(e) {}
+  // Only re-read from raw on initial load (when _elPhotoUrls is empty).
+  // After that, callers maintain _elPhotoUrls directly so we never
+  // overwrite an in-progress local array with a stale BEA snapshot.
   if (!_elPhotoUrls.length) {
-    if (raw.medium_url) _elPhotoUrls = [raw.medium_url];
-    else if (raw.thumb_url) _elPhotoUrls = [raw.thumb_url];
+    try {
+      if (raw.photo_urls) {
+        const parsed = typeof raw.photo_urls === 'string' ? JSON.parse(raw.photo_urls) : raw.photo_urls;
+        if (Array.isArray(parsed) && parsed.length) _elPhotoUrls = parsed;
+      }
+    } catch(e) {}
+    if (!_elPhotoUrls.length) {
+      if (raw.medium_url) _elPhotoUrls = [raw.medium_url];
+      else if (raw.thumb_url) _elPhotoUrls = [raw.thumb_url];
+    }
   }
 
   section.style.display = 'block';
@@ -10053,6 +10126,7 @@ function elRenderPhotos(raw, photoWarning) {
   photoRow.innerHTML = _elPhotoUrls.map((url, i) => `
     <div class="el-photo-card" id="el-pcard-${i}">
       <img src="${url}" alt="Photo ${i+1}" referrerpolicy="no-referrer">
+      ${i === 0 ? '<div style="font-size:9px;font-weight:700;color:var(--accent-bright);text-align:center;margin-top:3px;letter-spacing:.3px;">CARD VIEW</div>' : ''}
       ${hasPhotoIssue && i===0 ? '<div class="el-photo-warn">!</div>' : ''}
       <div style="display:flex;gap:4px;margin-top:5px;">
         <button class="el-photo-replace" onclick="elTriggerPhotoReplace(${i})" style="flex:1;">🔄</button>
@@ -10075,7 +10149,14 @@ function elRenderPhotos(raw, photoWarning) {
 
 function elRemovePhoto(idx) {
   _elPhotoUrls.splice(idx, 1);
-  if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+  if (elCurrentRaw) {
+    elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+    // Keep thumb/medium in sync with position 0
+    if (_elPhotoUrls.length) {
+      elCurrentRaw.thumb_url  = _elPhotoUrls[0];
+      elCurrentRaw.medium_url = _elPhotoUrls[0];
+    }
+  }
   elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
   showToast('Photo removed — tap Save Changes to apply');
 }
@@ -10101,8 +10182,9 @@ async function elAddPhoto(event) {
     if (sellerEmail && elCurrentId) {
       const photoPayload = { photo_urls: JSON.stringify(_elPhotoUrls) };
       if (_elPhotoUrls.length >= 1) {
-        photoPayload.thumb_url  = data.thumb_url  || _elPhotoUrls[0];
-        photoPayload.medium_url = data.medium_url || _elPhotoUrls[0];
+        // Always use position-0 as the card thumbnail, not the newly uploaded photo
+        photoPayload.thumb_url  = _elPhotoUrls[0];
+        photoPayload.medium_url = _elPhotoUrls[0];
       }
       await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
         { method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -10494,9 +10576,11 @@ async function saveEditedListing() {
   if (fd.service_class) payload.service_class = fd.service_class;
   if (fd.service_type)  payload.service_type  = fd.service_type;
   if (fd.availability)  payload.availability  = fd.availability;
-  // Include updated photo_urls if photos were changed
+  // Include updated photo_urls and always sync thumb/medium to position 0
   if (_elPhotoUrls && _elPhotoUrls.length) {
-    payload.photo_urls = JSON.stringify(_elPhotoUrls);
+    payload.photo_urls  = JSON.stringify(_elPhotoUrls);
+    payload.thumb_url   = _elPhotoUrls[0];
+    payload.medium_url  = _elPhotoUrls[0];
   }
 
   try {
@@ -10509,6 +10593,8 @@ async function saveEditedListing() {
       throw new Error(err.detail || 'Save failed (' + res.status + ')');
     }
     showToast('✓ Listing updated — changes are live');
+    const _wpSellEmail=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
+    if(window._currentEditBeaId&&_wpSellEmail)wpSave(window._currentEditBeaId,_wpSellEmail);
     // Refresh both dashboard and buyer-side listing cache
     await Promise.all([loadLiveDash(), loadLiveListings()]);
     renderDash();
@@ -10520,6 +10606,44 @@ async function saveEditedListing() {
   }
 }
 
+// ── WORLD WONDERS PICKER ─────────────────────────────────────────────────────
+let _wpAllWonders=[];let _wpLinked=[];
+async function wpInit(beaId){
+  if(_wpAllWonders.length===0){try{const r=await fetch(BEA_URL+'/wonders');const d=await r.json();_wpAllWonders=d.wonders||[];}catch(e){}}
+  _wpLinked=[];
+  try{const r2=await fetch(BEA_URL+'/listings/'+beaId+'/wonders');const d2=await r2.json();_wpLinked=d2.wonders||[];}catch(e){}
+  wpRenderLinked();
+}
+function wpSearch(q){
+  const box=document.getElementById('wp-results');
+  if(!q||q.length<2){box.style.display='none';return;}
+  const ql=q.toLowerCase();
+  const matches=_wpAllWonders.filter(w=>w.name.toLowerCase().includes(ql)||(w.country||'').toLowerCase().includes(ql)||(w.region||'').toLowerCase().includes(ql)).slice(0,8);
+  if(!matches.length){box.style.display='none';return;}
+  const tc=t=>t==='National Park'?'wp-type-np':t==='UNESCO Site'?'wp-type-un':'wp-type-ar';
+  const tl=t=>t==='National Park'?'PARK':t==='UNESCO Site'?'UNESCO':'ARCH';
+  box.innerHTML=matches.map(w=>`<div class="wp-result-item" onclick="wpLink('${w.id}')"><img class="wp-result-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"><div class="wp-result-info"><div class="wp-result-name">${w.name}</div><div class="wp-result-meta">${w.country}</div></div><span class="wp-result-type ${tc(w.type)}">${tl(w.type)}</span></div>`).join('');
+  box.style.display='block';
+}
+function wpShowResults(){const q=(document.getElementById('wp-search')||{}).value||'';if(q.length>=2)wpSearch(q);}
+function wpLink(wonderId){
+  if(_wpLinked.length>=5){showToast('Maximum 5 wonders per listing');return;}
+  if(_wpLinked.find(w=>w.id===wonderId)){showToast('Already linked');return;}
+  const wonder=_wpAllWonders.find(w=>w.id===wonderId);if(!wonder)return;
+  _wpLinked.push(wonder);wpRenderLinked();
+  document.getElementById('wp-search').value='';document.getElementById('wp-results').style.display='none';
+}
+function wpUnlink(wonderId){_wpLinked=_wpLinked.filter(w=>w.id!==wonderId);wpRenderLinked();}
+function wpRenderLinked(){
+  const el=document.getElementById('wp-linked');const hint=document.getElementById('wp-hint');if(!el)return;
+  if(!_wpLinked.length){el.innerHTML='';if(hint)hint.textContent='Link up to 5 nearby heritage sites to enrich your listing';return;}
+  el.innerHTML=_wpLinked.map(w=>`<div class="wp-linked-chip"><img src="${w.photo}" referrerpolicy="no-referrer" onerror="this.style.display='none'"><span>${w.name}</span><button onclick="wpUnlink('${w.id}')" title="Remove">×</button></div>`).join('');
+  if(hint)hint.textContent=`${_wpLinked.length}/5 linked · saved with your listing`;
+}
+async function wpSave(beaId,sellerEmail){
+  if(!beaId||!sellerEmail)return;
+  try{await fetch(BEA_URL+'/listings/'+beaId+'/wonders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:sellerEmail,wonder_ids:_wpLinked.map(w=>w.id)})});}catch(e){console.warn('wpSave failed',e);}
+}
 async function elConfirmDeleteListing() {
   if (!elCurrentId) return;
   const title = elCurrentRaw && elCurrentRaw.title ? '"' + elCurrentRaw.title + '"' : 'this listing';
@@ -13312,6 +13436,13 @@ function msInit(){
       + (hasSeller ? ' <span class="ms-chip ms-chip-new">Seller</span>' : '');
   }
 
+  // Seller hub card — only visible to sellers
+  const isSeller = !!(localStorage.getItem('ms_aa_email') || (SELLERS && SELLERS[0] && SELLERS[0]._email));
+  const sellerHubLbl  = document.getElementById('ms-seller-hub-lbl');
+  const sellerHubCard = document.getElementById('ms-seller-hub-card');
+  if(sellerHubLbl)  sellerHubLbl.style.display  = isSeller ? '' : 'none';
+  if(sellerHubCard) sellerHubCard.style.display = isSeller ? '' : 'none';
+
   // Trust score (use cached, then fetch live from BEA)
   const storedTrust = parseInt(localStorage.getItem('ms_trust_score')) || 15;
   msRenderTrust(storedTrust);
@@ -13522,6 +13653,88 @@ function msRenderWishlist(){
 }
 
 // Track a listing view in browse history (call from openDetail)
+// ── HOME WONDERS STRIP ───────────────────────────────────────────────────────
+async function loadHomeWonders() {
+  if(_wpAllWonders.length === 0) {
+    try {
+      const r = await fetch(BEA_URL+'/wonders');
+      const d = await r.json();
+      _wpAllWonders = d.wonders||[];
+    } catch(e){ return; }
+  }
+  if(!_wpAllWonders.length) return;
+  const section = document.getElementById('home-wonders-section');
+  const list    = document.getElementById('home-wonders-list');
+  if(!section||!list) return;
+  // Show a curated sample: 2 from Africa, then rotate through others
+  const africa  = _wpAllWonders.filter(w=>['South Africa','Zimbabwe','Zimbabwe/Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
+  const others  = _wpAllWonders.filter(w=>!africa.find(a=>a.id===w.id));
+  const sample  = [...africa.slice(0,3), ...others.slice(0,7)];
+  const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+  list.innerHTML = sample.map(w=>`
+    <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
+      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=''">
+      <div class="wonder-card-body">
+        <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
+        <div class="wonder-card-name">${w.name}</div>
+        <div class="wonder-card-country">${w.country}</div>
+      </div>
+    </div>`).join('');
+  section.style.display = 'block';
+}
+
+// ── WONDER DETAIL (BUYER) ─────────────────────────────────────────────────────
+let _wdReturnListingId = null;
+
+async function loadDetailWonders(listing) {
+  const strip = document.getElementById('detail-wonders-strip');
+  const list  = document.getElementById('detail-wonders-list');
+  if(!strip||!list) return;
+  strip.style.display = 'none';
+  list.innerHTML = '';
+  const beaId = listing.beaListingId || (typeof listing.id==='string' && listing.id.startsWith('bea_') ? listing.id.replace('bea_','') : null);
+  if(!beaId) return;
+  try {
+    const r = await fetch(BEA_URL+'/listings/'+beaId+'/wonders');
+    const d = await r.json();
+    const wonders = d.wonders||[];
+    if(!wonders.length) return;
+    const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+    list.innerHTML = wonders.map(w=>`
+      <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
+        <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=''">
+        <div class="wonder-card-body">
+          <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
+          <div class="wonder-card-name">${w.name}</div>
+          <div class="wonder-card-country">${w.country}</div>
+        </div>
+      </div>`).join('');
+    strip.style.display = 'block';
+  } catch(e) { console.warn('loadDetailWonders failed', e); }
+}
+
+async function openWonderDetail(wonderId, returnListingId) {
+  _wdReturnListingId = returnListingId || null;
+  let wonder = (_wpAllWonders||[]).find(w=>w.id===wonderId);
+  if(!wonder) {
+    try { const r = await fetch(BEA_URL+'/wonders/'+wonderId); wonder = await r.json(); } catch(e){ return; }
+  }
+  const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+  const hero = document.getElementById('wd-hero-img'); if(hero) hero.src = wonder.photo||'';
+  const badge = document.getElementById('wd-type-badge'); if(badge){badge.textContent=wonder.type||'';badge.className='wd-type-badge '+tc(wonder.type||'');}
+  const title = document.getElementById('wd-title'); if(title) title.textContent = wonder.name||'';
+  const country = document.getElementById('wd-country'); if(country) country.textContent = (wonder.country||'')+(wonder.region?` · ${wonder.region}`:'');
+  const desc = document.getElementById('wd-desc'); if(desc) desc.textContent = wonder.description||'';
+  const hist = document.getElementById('wd-history'); if(hist) hist.textContent = wonder.short_history||'';
+  const wiki = document.getElementById('wd-wiki-btn'); if(wiki) wiki.href = wonder.wikipedia||'#';
+  goTo('wonder-detail');
+}
+
+function closeWonderDetail() {
+  if(_wdReturnListingId) { openDetail(_wdReturnListingId); }
+  else { goTo('home'); }
+}
+
 function msTrackView(listing){
   if(!listing || !listing.id) return;
   try {
