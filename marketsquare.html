@@ -743,6 +743,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wf-chip:hover:not(.wf-chip-active){background:var(--surface-2);}
 .wd-type-un{background:rgba(99,102,241,.15);color:#818cf8;}
 .wd-type-ar{background:rgba(245,158,11,.15);color:#fbbf24;}
+.wd-type-nm{background:rgba(236,72,153,.15);color:#f472b6;}
 .wd-title{font-size:20px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:4px;}
 .wd-country{font-size:13px;color:var(--text-3);margin-bottom:16px;}
 .wd-desc{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px;}
@@ -1678,16 +1679,59 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
         <select id="wf-country-select" onchange="setWonderFilter('country',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">
           <option value="all">🌍 All</option>
-          <option value="ZA">🇿🇦 SA</option>
+          <optgroup label="Africa">
+          <option value="ZA">🇿🇦 S.Africa</option>
           <option value="KE">🇰🇪 Kenya</option>
           <option value="TZ">🇹🇿 Tanzania</option>
           <option value="NA">🇳🇦 Namibia</option>
           <option value="ZW">🇿🇼 Zimbabwe</option>
+          <option value="BW">🇧🇼 Botswana</option>
+          <option value="UG">🇺🇬 Uganda</option>
+          <option value="RW">🇷🇼 Rwanda</option>
+          <option value="ET">🇪🇹 Ethiopia</option>
+          <option value="EG">🇪🇬 Egypt</option>
+          <option value="ML">🇲🇱 Mali</option>
+          </optgroup>
+          <optgroup label="Europe">
+          <option value="GB">🇬🇧 UK</option>
+          <option value="FR">🇫🇷 France</option>
+          <option value="DE">🇩🇪 Germany</option>
+          <option value="IT">🇮🇹 Italy</option>
+          <option value="ES">🇪🇸 Spain</option>
+          <option value="GR">🇬🇷 Greece</option>
+          <option value="HR">🇭🇷 Croatia</option>
+          <option value="NL">🇳🇱 Netherlands</option>
+          <option value="RU">🇷🇺 Russia</option>
+          </optgroup>
+          <optgroup label="Americas">
+          <option value="US">🇺🇸 USA</option>
+          <option value="MX">🇲🇽 Mexico</option>
+          <option value="PE">🇵🇪 Peru</option>
+          <option value="AR">🇦🇷 Argentina</option>
+          <option value="CR">🇨🇷 Costa Rica</option>
+          <option value="CL">🇨🇱 Chile</option>
+          <option value="BR">🇧🇷 Brazil</option>
+          </optgroup>
+          <optgroup label="Asia &amp; Oceania">
+          <option value="CN">🇨🇳 China</option>
+          <option value="JP">🇯🇵 Japan</option>
+          <option value="IN">🇮🇳 India</option>
+          <option value="TR">🇹🇷 Turkey</option>
+          <option value="KH">🇰🇭 Cambodia</option>
+          <option value="NP">🇳🇵 Nepal</option>
+          <option value="VN">🇻🇳 Vietnam</option>
+          <option value="PK">🇵🇰 Pakistan</option>
+          <option value="JO">🇯🇴 Jordan</option>
+          <option value="AU">🇦🇺 Australia</option>
+          <option value="NZ">🇳🇿 New Zealand</option>
+          </optgroup>
         </select>
         <select id="wf-type-select" onchange="setWonderFilter('type',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">
           <option value="all">All types</option>
           <option value="National Park">🌿 Parks</option>
           <option value="UNESCO Site">🏛️ UNESCO</option>
+          <option value="National Museum">🏺 Museums</option>
+          <option value="Archaeological Site">⛏️ Archaeology</option>
         </select>
       </div>
     </div>
@@ -11022,11 +11066,55 @@ let _wfType    = 'all';
 
 // Country → name fragments used in wonder.country field
 const _wfCountryMap = {
+  // Africa
   'ZA': ['South Africa'],
   'KE': ['Kenya'],
   'TZ': ['Tanzania'],
   'NA': ['Namibia'],
   'ZW': ['Zimbabwe'],
+  'BW': ['Botswana'],
+  'UG': ['Uganda'],
+  'RW': ['Rwanda'],
+  'CD': ['Congo','DRC'],
+  'ET': ['Ethiopia'],
+  'ML': ['Mali'],
+  'EG': ['Egypt'],
+  // Europe
+  'GB': ['United Kingdom'],
+  'FR': ['France'],
+  'DE': ['Germany'],
+  'IT': ['Italy'],
+  'ES': ['Spain'],
+  'HR': ['Croatia'],
+  'GR': ['Greece'],
+  'NL': ['Netherlands'],
+  'PT': ['Portugal'],
+  'RU': ['Russia'],
+  // Americas
+  'US': ['United States'],
+  'MX': ['Mexico'],
+  'PE': ['Peru'],
+  'AR': ['Argentina'],
+  'CR': ['Costa Rica'],
+  'BR': ['Brazil'],
+  'CL': ['Chile'],
+  'BO': ['Bolivia'],
+  // Asia
+  'IN': ['India'],
+  'CN': ['China'],
+  'JP': ['Japan'],
+  'TR': ['Turkey'],
+  'KH': ['Cambodia'],
+  'NP': ['Nepal'],
+  'VN': ['Vietnam'],
+  'IR': ['Iran'],
+  'LY': ['Libya'],
+  'PK': ['Pakistan'],
+  // Middle East & Central Asia
+  'JO': ['Jordan'],
+  // Oceania
+  'AU': ['Australia'],
+  'NZ': ['New Zealand'],
 };
 
 function setWonderFilter(dim, val) {
@@ -11050,7 +11138,7 @@ function renderWondersStrip() {
   const africa = filtered.filter(w=>['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
   const others = filtered.filter(w=>!africa.find(a=>a.id===w.id));
   const sorted = [...africa,...others];
-  const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+  const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
   list.innerHTML = sorted.length ? sorted.map(w=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
       <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.background='#1e3a5f'">
@@ -13803,7 +13891,7 @@ async function loadDetailWonders(listing) {
     const d = await r.json();
     const wonders = d.wonders||[];
     if(!wonders.length) return;
-    const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+    const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     list.innerHTML = wonders.map(w=>`
       <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
         <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=''">
@@ -13823,7 +13911,7 @@ async function openWonderDetail(wonderId, returnListingId) {
   if(!wonder) {
     try { const r = await fetch(BEA_URL+'/wonders/'+wonderId); wonder = await r.json(); } catch(e){ return; }
   }
-  const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+  const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
   const hero = document.getElementById('wd-hero-img'); if(hero) hero.src = wonder.photo||'';
   const badge = document.getElementById('wd-type-badge'); if(badge){badge.textContent=wonder.type||'';badge.className='wd-type-badge '+tc(wonder.type||'');}
   const title = document.getElementById('wd-title'); if(title) title.textContent = wonder.name||'';
