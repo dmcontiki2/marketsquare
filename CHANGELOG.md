@@ -1523,3 +1523,36 @@ BEA: new `GET /users/{email}/trust` endpoint (lines 1543–1663) — trust score
 - 6 new legal/counsel blockers added (L1–L6): EULA counsel review, company reg number, NCC reg, privacy policy page, FSCA Tuppence guidance, POPIA consent timing
 - Paystack renumbered L7
 - Dashboard auto-pulls blockers from BACKLOG.md — no separate dashboard update needed
+
+## Session 56 · 13 May 2026
+
+### Strategic planning session + Local Market bug fixes ✅
+
+**Strategic decisions documented** (`Strategic_Decisions_Summary.md`):
+- PWA selected over App Store — no Apple 30% cut, global reach day one, 1–2 weeks work
+- Paystack confirmed as sole African processor — Stripe ZA not available for SA-registered entities (corrected earlier assumption)
+- Global processor decision deferred — Paddle, Lemon Squeezy, or UK Ltd + Stripe to be evaluated next session
+- Offshore restructure path: Mauritius GBC, trigger at $10K–$20K/month international revenue
+- IP (patent + trademark) to be registered in David Conradie's personal name — not TRUSTSQUARE PTY LTD — to keep offshore assignment path clean
+- TRUSTSQUARE PTY LTD (reg 2026/340128/07) + FNB Business Account (63208160117) confirmed ready for payment processor applications
+- Stripe fee analysis complete: single $2 Tuppence = 18.6% effective rate; Bulk 3 ($50) = 4.2%; internal wallet ledger architecture confirmed as goal state (zero per-transaction fees on individual Tuppence spends)
+
+**Admin app — 7 categories fully wired (marketsquare_admin.html)**:
+- Step 2 category picker: 4 missing tiles added (Adventures, Collectors, Cars, Local Market)
+- `showCatFields()` updated to show/hide correct HTML field sections for all 7 categories with correct placeholders
+- `ADM_FIELD_DEFS` extended: Adventures, Collectors, Cars, LocalMarket field sets added
+- `CAT_ICONS` expanded to all 7 categories
+- JS syntax error fixed (unescaped apostrophes in placeholder strings) — was silently killing entire script, blocking province loading on Step 1
+- LM listings normalised: `category: 'local_market'` → `'LocalMarket'` so `ADM_FIELD_DEFS` resolves correctly
+- `saveAdmEdit()` + `admEditSavePhotos()` now fetch `seller_email` on demand from BEA when missing (LM listings omit it from list endpoint)
+- `openAdmEdit()` now fetches fresh listing data from BEA before opening modal — prevents stale photo_urls overwriting live photos
+- LocalMarket filter chip ID updated to `fc-LocalMarket` for consistency
+- `admEditSavePhotos()` now syncs `thumb_url`/`medium_url` to `_admEditPhotoUrls[0]` — card thumbnail always reflects first photo
+
+**Buyer app — photo and edit fixes (marketsquare.html)**:
+- `elCurrentCat` now passed through `normCat()` — LocalMarket edit form no longer renders blank (BEA returns `local_market`, AA_CATEGORIES key is `LocalMarket`)
+- `elRenderPhotos()` no longer resets `_elPhotoUrls` from `raw` on re-render — second photo upload was overwriting first due to stale BEA snapshot read
+- `elAddPhoto()` thumb/medium_url now always set to `_elPhotoUrls[0]`, not the newly uploaded photo
+- `saveEditedListing()` now includes `thumb_url` + `medium_url` = `_elPhotoUrls[0]` in PUT payload
+- `elRemovePhoto()` syncs thumb/medium_url to new `_elPhotoUrls[0]` after removal
+- CARD VIEW label added to first photo in edit screen so position-0 is always clear

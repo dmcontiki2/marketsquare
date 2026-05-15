@@ -266,6 +266,7 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 → Only then: load prospects, trigger Wave 1
 
 ### Backlog
+- **🔴 PRE-FILING / PRE-LAUNCH: Purge Tuppence refund language** — full action plan in `NEXT_SESSION_TUPPENCE_NO_REFUND.md`. Touches EULA v1.0, Whitepaper v3 (L31), `marketsquare.html` (6 lines), and amended Claim 2 in the Pre-Filing Patent Consultation memo (drop clause (e) restitution logic). `bea_main.py` is already clean (no refund code). Canonical policy is in `LOCAL_MARKET_REQUIREMENTS.md` §11.1 — propagate to all other artefacts. **Must complete before patent filing.**
 - Admin ops queue — review uploaded docs queue
 - **Post-launch auto-scale** — n8n polls /health/resources, alerts at 70%, auto-upgrades Hetzner at 85%
 - **UX degradation KPIs** — response time, 5xx rate, DB size thresholds

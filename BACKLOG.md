@@ -15,6 +15,7 @@
 | L5 | **FSCA guidance on Tuppence** — confirm Tuppence classification as non-virtual-asset with FSCA or comply if reclassified (EULA Section 12) | Legal |
 | L6 | **POPIA consent timing** — counsel must confirm whether magic link email collection constitutes prior consent or whether EULA gate must move earlier in the flow | Legal |
 | L7 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once CIPC registration approved | Server |
+| L8 | **Tuppence refund language removal** — purge all refund / restitution clauses from EULA v1.0, Whitepaper v3 (L31), and `marketsquare.html` (six edits). Action plan: `NEXT_SESSION_TUPPENCE_NO_REFUND.md`. Formal record: `Tuppence_Refund_Finding_and_Remediation_2026-05-12.docx`. Backend (`bea_main.py`) confirmed clean. Patent provisional Claim 2 uses corrected wording per Erratum. Must complete before patent filing and before EULA publication. | Legal · Product · IP |
 
 ---
 
