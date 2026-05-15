@@ -1347,7 +1347,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .feat-scroll-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
 .feat-scroll-btn-left{left:-18px;}
 .feat-scroll-btn-right{right:-18px;}
-@media(pointer:fine){.feat-scroll-btn{display:flex;}}
+@media(pointer:fine){.feat-scroll-btn{display:flex;}}@media(min-width:768px){.feat-scroll-btn{display:flex;}}
 /* ── PHOTO LIGHTBOX ── */
 #photo-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:1000;align-items:center;justify-content:center;flex-direction:column;}
 #photo-lightbox.open{display:flex;}
@@ -1673,7 +1673,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <div class="sec-head" style="margin-bottom:2px;"><h2>🌍 World Heritage</h2></div>
     <div style="font-size:11px;color:var(--text-3);padding:0 16px 8px;">Tap a listing to see nearby wonders linked by sellers</div>
     <div style="position:relative;">
+      <button class="feat-scroll-btn feat-scroll-btn-left" onclick="wondersStripScroll(-1)" aria-label="Scroll left">&#8249;</button>
       <div class="wonders-strip" id="home-wonders-list" style="padding:0 16px 8px;"></div>
+      <button class="feat-scroll-btn feat-scroll-btn-right" onclick="wondersStripScroll(1)" aria-label="Scroll right">&#8250;</button>
     </div>
   </div>
 
@@ -10949,6 +10951,13 @@ function featScroll(dir){
   const step=card?(card.offsetWidth+8)*2:240;
   el.scrollBy({left:dir*step,behavior:'smooth'});
 }
+function wondersStripScroll(dir){
+  const el=document.getElementById('home-wonders-list');
+  if(!el)return;
+  const card=el.querySelector('.wonder-card');
+  const step=card?(card.offsetWidth+10)*2:320;
+  el.scrollBy({left:dir*step,behavior:'smooth'});
+}
 
 // ── PHOTO LIGHTBOX ────────────────────────────────────────────
 let _lbPhotos=[], _lbIdx=0, _listingPhotosCache={};
@@ -13666,10 +13675,10 @@ async function loadHomeWonders() {
   const section = document.getElementById('home-wonders-section');
   const list    = document.getElementById('home-wonders-list');
   if(!section||!list) return;
-  // Show a curated sample: 2 from Africa, then rotate through others
-  const africa  = _wpAllWonders.filter(w=>['South Africa','Zimbabwe','Zimbabwe/Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
+  // Show all wonders: Africa-first, then the rest
+  const africa  = _wpAllWonders.filter(w=>['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
   const others  = _wpAllWonders.filter(w=>!africa.find(a=>a.id===w.id));
-  const sample  = [...africa.slice(0,3), ...others.slice(0,7)];
+  const sample  = [...africa, ...others];
   const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
   list.innerHTML = sample.map(w=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
@@ -13725,7 +13734,7 @@ async function openWonderDetail(wonderId, returnListingId) {
   const title = document.getElementById('wd-title'); if(title) title.textContent = wonder.name||'';
   const country = document.getElementById('wd-country'); if(country) country.textContent = (wonder.country||'')+(wonder.region?` · ${wonder.region}`:'');
   const desc = document.getElementById('wd-desc'); if(desc) desc.textContent = wonder.description||'';
-  const hist = document.getElementById('wd-history'); if(hist) hist.textContent = wonder.short_history||'';
+  const hist = document.getElementById('wd-history'); if(hist) hist.textContent = wonder.history||'';
   const wiki = document.getElementById('wd-wiki-btn'); if(wiki) wiki.href = wonder.wikipedia||'#';
   goTo('wonder-detail');
 }
