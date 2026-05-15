@@ -738,13 +738,16 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wd-sheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px;position:relative;z-index:2;}
 .wd-type-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
 .wd-type-np{background:rgba(16,185,129,.15);color:#10b981;}
+.wf-chip{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .15s;}
+.wf-chip-active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.wf-chip:hover:not(.wf-chip-active){background:var(--surface-2);}
 .wd-type-un{background:rgba(99,102,241,.15);color:#818cf8;}
 .wd-type-ar{background:rgba(245,158,11,.15);color:#fbbf24;}
 .wd-title{font-size:20px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:4px;}
 .wd-country{font-size:13px;color:var(--text-3);margin-bottom:16px;}
 .wd-desc{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px;}
 .wd-history-hdr{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;}
-.wd-history{font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:20px;}
+.wd-history{font-size:13px;color:#111827;line-height:1.7;margin-bottom:20px;}
 .wd-wiki-btn{display:block;width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;text-align:center;cursor:pointer;text-decoration:none;margin-bottom:16px;}
 .wd-back-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
 .dcat-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
@@ -1670,8 +1673,24 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 
   <!-- ══ WORLD WONDERS STRIP ═══════════════════════════════════ -->
   <div id="home-wonders-section" style="display:none;margin-top:14px;">
-    <div class="sec-head" style="margin-bottom:2px;"><h2>🌍 World Heritage</h2></div>
-    <div style="font-size:11px;color:var(--text-3);padding:0 16px 8px;">Tap a listing to see nearby wonders linked by sellers</div>
+    <div class="sec-head" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+      <h2>🌍 World Heritage</h2>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        <select id="wf-country-select" onchange="setWonderFilter('country',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">
+          <option value="all">🌍 All</option>
+          <option value="ZA">🇿🇦 SA</option>
+          <option value="KE">🇰🇪 Kenya</option>
+          <option value="TZ">🇹🇿 Tanzania</option>
+          <option value="NA">🇳🇦 Namibia</option>
+          <option value="ZW">🇿🇼 Zimbabwe</option>
+        </select>
+        <select id="wf-type-select" onchange="setWonderFilter('type',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">
+          <option value="all">All types</option>
+          <option value="National Park">🌿 Parks</option>
+          <option value="UNESCO Site">🏛️ UNESCO</option>
+        </select>
+      </div>
+    </div>
     <div style="position:relative;">
       <button class="feat-scroll-btn feat-scroll-btn-left" onclick="wondersStripScroll(-1)" aria-label="Scroll left">&#8249;</button>
       <div class="wonders-strip" id="home-wonders-list" style="padding:0 16px 8px;"></div>
@@ -2934,7 +2953,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Terms of Use /</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">End User License Agreement (EULA)</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Version</strong></div>
-<div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.75);margin:12px 0 5px;letter-spacing:.4px;">1.0 — Draft</div>
+<div style="font-weight:700;font-size:12px;color:rgba(200,135,58,.75);margin:12px 0 5px;letter-spacing:.4px;">1.1 — Draft (15 May 2026)</div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Status</strong></div>
 <div style="margin:5px 0;font-size:11px;">For legal review — not yet published</div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Prepared</strong></div>
@@ -3417,6 +3436,44 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <div style="margin:5px 0;font-size:11px;">Object: opt out of marketing communications, analytics, or specific processing activities;</div>
 <div style="margin:5px 0;font-size:11px;">Lodge a complaint with the South African Information Regulator at inforegulator.org.za.</div>
 <div style="margin:5px 0;font-size:11px;">Requests are processed within 20 business days.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16. World Heritage Content Layer</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.1 Nature of World Heritage Content</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform displays a curated non-commercial content layer ("World Heritage Content") featuring UNESCO World Heritage Sites, National Parks, and similar internationally recognised heritage locations ("Heritage Sites"). This content is informational and educational in nature. It does not constitute advertising, endorsement, affiliation with, or representation by the Platform of any Heritage Site, its management authority, or any associated tour operator, government body, or commercial enterprise.</div>
+<div style="margin:5px 0;font-size:11px;">Heritage Sites are displayed to enrich the context of seller listings and to promote awareness of globally significant locations. The Platform makes no warranty regarding the accuracy, completeness, or currency of Heritage Site information, descriptions, or photographs.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.2 Third-Party Photographs — Licensing and Attribution</strong></div>
+<div style="margin:5px 0;font-size:11px;">Photographs displayed in the World Heritage Content layer are sourced exclusively from Wikimedia Commons and are used under Creative Commons licences (CC BY, CC BY-SA) or are in the Public Domain (PDM / CC0). The Platform does not claim ownership of any such photographs. Each photograph remains the intellectual property of its original author as identified on Wikimedia Commons.</div>
+<div style="margin:5px 0;font-size:11px;">Attribution: Where a Creative Commons licence requires attribution, the author credit is recorded in the Platform's internal wonders dataset and is available on request from legal@trustsquare.co. The Platform commits to displaying photo credits in the user interface in a future release.</div>
+<div style="margin:5px 0;font-size:11px;">Takedown policy: If you are the copyright owner of a photograph displayed in the World Heritage Content layer and you believe your photograph has been used without authorisation or in breach of its licence, you may submit a takedown request to legal@trustsquare.co with (a) your full name and contact details; (b) a description of the photograph and its location on the Platform; (c) proof of ownership or rights; and (d) a statement that you have a good-faith belief the use is unauthorised. The Platform will investigate and, if ownership is confirmed, remove the photograph within 7 business days of receipt of a complete and valid takedown notice.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform's use of Wikimedia Commons photographs constitutes good-faith reliance on the licences declared on Wikimedia Commons. The Platform is not liable for licence misclassification by third-party contributors to Wikimedia Commons.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.3 Seller-Linked Heritage Sites</strong></div>
+<div style="margin:5px 0;font-size:11px;">Sellers may voluntarily link up to five Heritage Sites to their listing ("Linked Wonders"). This association is made by the seller and represents their own representation that their listing is in proximity to or related to the selected Heritage Site. The Platform does not verify proximity claims. Buyers must conduct their own due diligence regarding the actual location of any listing relative to any Heritage Site.</div>
+<div style="margin:5px 0;font-size:11px;">Seller accountability: By linking a Heritage Site to a listing, the seller warrants that the association is honest, not misleading, and does not misrepresent the listing's location or amenities. False proximity claims constitute a material breach of this EULA and may result in immediate account termination under Section 14.2.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform is not responsible for any buyer decision, travel plan, booking, or expenditure made in reliance on seller-linked Heritage Site associations.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.4 No Travel Advice or Booking Service</strong></div>
+<div style="margin:5px 0;font-size:11px;">Nothing in the World Heritage Content layer constitutes travel advice, a booking service, a tour operation, or a financial intermediary service. The Platform does not sell tickets, accommodation, or access to any Heritage Site. All decisions regarding travel to, or engagement with, any Heritage Site remain entirely the User's own responsibility.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">17. Regulatory Scope, Compliance Responsibility, and User Accountability</strong></div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">17.1 Platform Regulatory Position — South Africa</strong></div>
+<div style="margin:5px 0;font-size:11px;">TrustSquare operates as an <strong style="color:rgba(255,255,255,.75);">introduction platform only</strong>. The Platform facilitates connections between buyers and sellers. It does not conclude transactions, hold client funds (other than Tuppence as defined in Section 11), provide financial advice, act as a property practitioner, manage investments, provide credit, or render any financial service as defined in the Financial Advisory and Intermediary Services Act 37 of 2002 ("FAIS").</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">FICA (Financial Intelligence Centre Act 38 of 2001):</strong> The Platform is not an Accountable Institution as defined in Schedule 1 of the FIC Act. The Platform does not conduct the business of a bank, insurer, estate agent, money service provider, or financial services provider. Accordingly, the Platform does not carry obligations under the FIC Act to perform Customer Due Diligence, file Suspicious Transaction Reports, or register with the Financial Intelligence Centre in respect of its introduction function. Tuppence is a non-cashable, non-transferable platform credit that does not constitute a virtual asset, electronic money, or financial instrument under applicable South African law. This position is supported by the non-refundability and non-exchangeability of Tuppence outside the Platform. This legal position has been prepared for review by counsel and is subject to confirmation [COUNSEL REQUIRED].</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">POPIA (Protection of Personal Information Act 4 of 2013):</strong> The Platform is a Responsible Party under POPIA. The Platform collects and processes personal information (names, email addresses, location data, listing content) on the lawful basis of contractual necessity and legitimate interest. Your rights as a data subject — including access, correction, deletion, and objection — are described in Section 9 of this EULA. The Platform is registered with (or in the process of registering with) the Information Regulator of South Africa. POPIA compliance is the Platform's responsibility. However, you, as a User, are also an independent Responsible Party in respect of any personal information you collect from other Users through introductions facilitated by the Platform. Your independent compliance with POPIA in that regard is your own responsibility.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Property Practitioners Act 22 of 2019:</strong> The Platform is not a property practitioner. It does not earn commission on property transactions. Sellers who are estate agents or property practitioners remain independently responsible for their registration with the Property Practitioners Regulatory Authority ("PPRA") and compliance with all obligations under the Property Practitioners Act. The Platform's introduction function does not constitute a service rendered as a property practitioner.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Consumer Protection Act 68 of 2008 ("CPA"):</strong> To the extent applicable, the Platform's consumer-facing obligations under the CPA are addressed in this EULA. Sellers who sell goods or services in the ordinary course of their business are independently subject to the CPA in their dealings with buyers. The Platform is not a supplier in the transaction between buyer and seller — it is an introducer only.</div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Electronic Communications and Transactions Act 25 of 2002 ("ECT Act"):</strong> The Platform complies with applicable provisions of the ECT Act including cooling-off rights (Section 5.4), disclosure obligations (Section 15), and data message rules. Your use of the Platform constitutes acceptance of data messages as legally valid under the ECT Act.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">17.2 International Users — Equivalent Regulatory Obligations</strong></div>
+<div style="margin:5px 0;font-size:11px;">The Platform is governed by the laws of the Republic of South Africa. Users who access the Platform from jurisdictions outside South Africa do so at their own initiative and are responsible for compliance with all local laws applicable to them, including but not limited to:</div>
+<div style="margin:5px 0;font-size:11px;">European Union / EEA: General Data Protection Regulation (GDPR) — to the extent you are a data controller in respect of personal data of EU residents, your compliance obligations under GDPR are your own responsibility. The Platform's POPIA compliance framework is substantially aligned with GDPR principles.</div>
+<div style="margin:5px 0;font-size:11px;">United Kingdom: UK GDPR and Data Protection Act 2018 — same principle applies as for EU users.</div>
+<div style="margin:5px 0;font-size:11px;">United States: State privacy laws (CCPA/CPRA — California; VCDPA — Virginia; and equivalents) — US-based users are responsible for their own compliance as applicable.</div>
+<div style="margin:5px 0;font-size:11px;">Australia: Privacy Act 1988 and the Australian Privacy Principles — Australian users are responsible for their own compliance.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform makes no representation that its services are appropriate, lawful, or available for use in any jurisdiction outside South Africa. Users in other jurisdictions use the Platform at their own risk and legal responsibility.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">17.3 User Compliance Responsibility and Acknowledgement</strong></div>
+<div style="margin:5px 0;font-size:11px;">By accepting this EULA, you expressly acknowledge and agree that:</div>
+<div style="margin:5px 0;font-size:11px;">(a) You are solely responsible for ensuring your use of the Platform, and all transactions or interactions arising from introductions facilitated by the Platform, comply with all laws, regulations, and professional licensing requirements applicable to you in your jurisdiction.</div>
+<div style="margin:5px 0;font-size:11px;">(b) The Platform is an introducer and is not a party to any transaction, agreement, or arrangement made between you and another User following an introduction. The Platform assumes no liability for such transactions.</div>
+<div style="margin:5px 0;font-size:11px;">(c) If you are a seller offering regulated services (including but not limited to estate agency, financial advisory, legal, medical, or educational services), you warrant that you hold all licences, registrations, and permissions required by law to offer such services, and that your listing accurately reflects your qualifications and regulatory status.</div>
+<div style="margin:5px 0;font-size:11px;">(d) You will not use the Platform to facilitate money laundering, tax evasion, sanctions evasion, or any other unlawful financial activity. You acknowledge that the Platform may report suspicious activity to the Financial Intelligence Centre if it reasonably suspects such activity.</div>
+<div style="margin:5px 0;font-size:11px;">(e) Your acceptance of this EULA constitutes your acknowledgement that you have read, understood, and accepted full personal legal accountability for your conduct on the Platform, including your compliance with FICA, POPIA, CPA, FAIS, the Property Practitioners Act, and all other applicable legislation.</div>
+<div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">[COUNSEL REQUIRED] This section requires review by a South African admitted attorney to confirm the FICA non-applicability position, the Tuppence virtual asset characterisation, and the enforceability of the user accountability acknowledgement under South African law.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.8 Data Security</strong></div>
 <div style="margin:6px 0;font-size:11px;color:rgba(252,165,165,.8);background:rgba(252,165,165,.08);border-left:2px solid rgba(252,165,165,.4);padding:4px 8px;">The Platform employs TLS 1.3 encryption in transit, server-side encryption at rest, role-based access controls, and daily encrypted backups to Cloudflare R2 with 14-day retention. Security is audited periodically by [COUNSEL REQUIRED: insert audit provider or frequency].</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">9.9 Data Breach Notification</strong></div>
@@ -3527,7 +3584,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.3 Termination for Convenience</strong></div>
 <div style="margin:5px 0;font-size:11px;">The Platform may terminate your account on 30 days' written notice to your registered email address for any reason, provided you have no active Introduction disputes or pending arbitrations. If such termination occurs, unused Tuppence will be converted to a cash credit in ZAR (if a payout mechanism is available) or forfeited if no such mechanism yet exists. You will be notified of the applicable outcome.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">14.4 Survival</strong></div>
-<div style="margin:5px 0;font-size:11px;">The following sections survive account termination and continue in full force: Section 1 (Definitions), Section 3.6 (Regulatory Disclosure), Section 8 (User-Uploaded Content), Section 9 (Privacy and POPIA), Section 10.3–10.8 (Disputes and Liability), Section 13 (Governing Law), and any accrued Tuppence obligations.</div>
+<div style="margin:5px 0;font-size:11px;">The following sections survive account termination and continue in full force: Section 1 (Definitions), Section 3.6 (Regulatory Disclosure), Section 8 (User-Uploaded Content), Section 9 (Privacy and POPIA), Section 10.3–10.8 (Disputes and Liability), Section 13 (Governing Law), Section 16 (World Heritage Content), Section 17.3 (User Compliance Responsibility and Acknowledgement), and any accrued Tuppence obligations.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15. Changes, Miscellaneous &amp; Contact</strong></div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">15.1 Changes to These Terms</strong></div>
 <div style="margin:5px 0;font-size:11px;">The Platform may update this EULA at any time. When material changes are made, you will be notified by email to your registered address and by an in-app notification at least 14 days before the changes take effect. The updated version number and effective date are displayed on this page at trustsquare.co/terms.</div>
@@ -10959,6 +11016,53 @@ function wondersStripScroll(dir){
   el.scrollBy({left:dir*step,behavior:'smooth'});
 }
 
+// Wonder filter state
+let _wfCountry = 'all';
+let _wfType    = 'all';
+
+// Country → name fragments used in wonder.country field
+const _wfCountryMap = {
+  'ZA': ['South Africa'],
+  'KE': ['Kenya'],
+  'TZ': ['Tanzania'],
+  'NA': ['Namibia'],
+  'ZW': ['Zimbabwe'],
+};
+
+function setWonderFilter(dim, val) {
+  if(dim==='country') _wfCountry = val;
+  if(dim==='type')    _wfType    = val;
+  renderWondersStrip();
+}
+
+function renderWondersStrip() {
+  const list = document.getElementById('home-wonders-list');
+  if(!list || !_wpAllWonders.length) return;
+  let filtered = _wpAllWonders;
+  if(_wfCountry !== 'all') {
+    const frags = _wfCountryMap[_wfCountry]||[];
+    filtered = filtered.filter(w=>frags.some(f=>w.country.includes(f)));
+  }
+  if(_wfType !== 'all') {
+    filtered = filtered.filter(w=>w.type===_wfType);
+  }
+  // Africa first within result
+  const africa = filtered.filter(w=>['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
+  const others = filtered.filter(w=>!africa.find(a=>a.id===w.id));
+  const sorted = [...africa,...others];
+  const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
+  list.innerHTML = sorted.length ? sorted.map(w=>`
+    <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
+      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.background='#1e3a5f'">
+      <div class="wonder-card-body">
+        <div class="wonder-card-type ${tc2(w.type)}">${w.type}</div>
+        <div class="wonder-card-name">${w.name}</div>
+        <div class="wonder-card-country">${w.country}</div>
+      </div>
+    </div>`).join('')
+  : '<div style="padding:20px 16px;color:var(--text-3);font-size:13px;">No wonders match this filter.</div>';
+}
+
 // ── PHOTO LIGHTBOX ────────────────────────────────────────────
 let _lbPhotos=[], _lbIdx=0, _listingPhotosCache={};
 function openLightboxById(listingId, idx){
@@ -13679,17 +13783,8 @@ async function loadHomeWonders() {
   const africa  = _wpAllWonders.filter(w=>['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'].some(c=>w.country.includes(c)));
   const others  = _wpAllWonders.filter(w=>!africa.find(a=>a.id===w.id));
   const sample  = [...africa, ...others];
-  const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':'wd-type-ar';
-  list.innerHTML = sample.map(w=>`
-    <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
-      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=''">
-      <div class="wonder-card-body">
-        <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
-        <div class="wonder-card-name">${w.name}</div>
-        <div class="wonder-card-country">${w.country}</div>
-      </div>
-    </div>`).join('');
   section.style.display = 'block';
+  renderWondersStrip();
 }
 
 // ── WONDER DETAIL (BUYER) ─────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 # MarketSquare · Master Agent Briefing
-**Version 1.6 · 17 April 2026**
+**Version 1.7 · 15 May 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
@@ -154,6 +154,10 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | GET | `/geo/cities?region_id=N` | None | Cities for region |
 | GET | `/geo/cities?country=ZA` | None | All cities for country (includes region_name) |
 | GET | `/geo/suburbs?city_id=N` | None | Suburbs for city (includes lat/lng) |
+| GET | `/wonders` | None | All Heritage Sites (filterable: ?type=&country=&q=) |
+| GET | `/wonders/{id}` | None | Single Heritage Site by id |
+| POST | `/listings/{id}/wonders` | Email match | Link up to 5 Heritage Sites to a listing (JSON array of ids) |
+| GET | `/listings/{id}/wonders` | None | Full wonder objects linked to a listing |
 | GET | `/geo/nearby?lat=X&lng=Y&radius=10` | None | Suburbs within radius (Haversine) |
 | POST | `/geo/countries` | API key | Add country + trigger GeoNames seed |
 | GET | `/listings/mine?email=` | None | Seller's own listings by email |
@@ -196,6 +200,37 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 5. **Conflict resolution** — Architect agent arbitrates via Codex. Escalate to David only if Codex cannot resolve.
 6. **No large rewrites** — Never rewrite large sections unless explicitly instructed.
 7. **Codex first** — Check Codex (`Solar_Council_Codex_v4_5.docx`) before adding any business logic.
+
+---
+
+## 8 · World Heritage Content Layer (Sessions 57–58, 15 May 2026)
+
+### Architecture
+- **wonders.json** — `/var/www/marketsquare/wonders.json` — 35 Heritage Sites (15 National Parks + 20 UNESCO sites). Fields: id, name, type, country, region, photo (Wikimedia Commons CC/PD URL at 1280px), description (600+ chars), history (600+ chars), wikipedia (URL), lat, lon.
+- **BEA endpoints** — `GET /wonders`, `GET /wonders/{id}`, `POST /listings/{id}/wonders` (email-auth, max 5, validates ids), `GET /listings/{id}/wonders`.
+- **listings table** — `linked_wonders TEXT` column added via startup migration. Stores JSON array of wonder ids.
+
+### FEA (marketsquare.html) components
+- **Wonder picker (seller)** — in `screen-edit-listing`, dark-background section `#el-wonder-section`. Search by name/country, link up to 5 wonders, chips show linked wonders. Saved on listing Save via `POST /listings/{id}/wonders`.
+- **Detail strip (buyer)** — in listing detail view, `#detail-wonders-strip` — appears when seller has linked wonders. Each card opens the wonder detail screen.
+- **Wonder detail screen** — `#screen-wonder-detail` — hero photo (1280px), type badge, name, country/region, description paragraph, "History" heading + history paragraph, Wikipedia link button, back button.
+- **Home strip** — `#home-wonders-section` between Featured and For You. All 35 wonders, Africa-first. Country + type filter dropdowns inline with heading. ‹ › scroll arrows (`wondersStripScroll()`).
+- **`_wpAllWonders`** — global JS array, populated once by `loadHomeWonders()` from `GET /wonders`.
+- **`openWonderDetail(wonderId, returnListingId)`** — async function. Reads from `_wpAllWonders` first; falls back to `GET /wonders/{id}`. Back button returns to listing or home.
+
+### Photo policy (LEGAL — do not change without counsel review)
+- All photos sourced from Wikimedia Commons via Wikipedia REST API thumbnail. CC BY, CC BY-SA, or Public Domain only.
+- Unsplash or other sources **prohibited** — Unsplash does not permit hotlinking in commercial contexts without API.
+- URL format: `https://upload.wikimedia.org/wikipedia/commons/thumb/{hash}/{filename}/1280px-{filename}`.
+- Valid Wikimedia thumbnail sizes: 1280px (confirmed working). Do not use 800px, 1200px — these return 400.
+- `referrerpolicy="no-referrer"` is required on all wonder `<img>` tags.
+- Photo credits must be added to the UI in a future session (counsel requirement — see Patent Amendment doc).
+
+### Regulatory position
+- WHCL is non-commercial, non-transactional, informational only.
+- Does not trigger FICA, FAIS, Property Practitioners Act, or any additional POPIA obligations.
+- EULA v1.1 (15 May 2026) adds Sections 16 (photo licensing + seller accountability) and 17 (regulatory scope + user accountability acknowledgement).
+- Patent: Claim 8 (dependent on Claim 1) drafted in `TrustSquare_Patent_Amendment_WorldHeritage_2026-05-15.docx` — awaiting counsel review.
 8. **Context management** — Run `/compact` when context starts filling up.
 9. **Cost model flag** — Any change affecting infrastructure, pricing, city launch mechanics, subscription tiers, payment processing, or server scaling: append "Cost model impact:" to CHANGELOG.md entry.
 
