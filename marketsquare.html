@@ -2281,7 +2281,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
     <button class="back-btn" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.3);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <img class="wd-hero" id="wd-hero-img" src="" alt="" referrerpolicy="no-referrer">
+    <img class="wd-hero" id="wd-hero-img" src="" alt="" referrerpolicy="origin-when-cross-origin">
   </div>
   <div class="wd-sheet">
     <div class="wd-type-badge" id="wd-type-badge"></div>
@@ -10725,7 +10725,7 @@ function wpSearch(q){
   if(!matches.length){box.style.display='none';return;}
   const tc=t=>t==='National Park'?'wp-type-np':t==='UNESCO Site'?'wp-type-un':'wp-type-ar';
   const tl=t=>t==='National Park'?'PARK':t==='UNESCO Site'?'UNESCO':'ARCH';
-  box.innerHTML=matches.map(w=>`<div class="wp-result-item" onclick="wpLink('${w.id}')"><img class="wp-result-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"><div class="wp-result-info"><div class="wp-result-name">${w.name}</div><div class="wp-result-meta">${w.country}</div></div><span class="wp-result-type ${tc(w.type)}">${tl(w.type)}</span></div>`).join('');
+  box.innerHTML=matches.map(w=>`<div class="wp-result-item" onclick="wpLink('${w.id}')"><img class="wp-result-img" src="${w.photo}" loading="lazy" referrerpolicy="origin-when-cross-origin" onerror="this.style.display='none'"><div class="wp-result-info"><div class="wp-result-name">${w.name}</div><div class="wp-result-meta">${w.country}</div></div><span class="wp-result-type ${tc(w.type)}">${tl(w.type)}</span></div>`).join('');
   box.style.display='block';
 }
 function wpShowResults(){const q=(document.getElementById('wp-search')||{}).value||'';if(q.length>=2)wpSearch(q);}
@@ -10740,7 +10740,7 @@ function wpUnlink(wonderId){_wpLinked=_wpLinked.filter(w=>w.id!==wonderId);wpRen
 function wpRenderLinked(){
   const el=document.getElementById('wp-linked');const hint=document.getElementById('wp-hint');if(!el)return;
   if(!_wpLinked.length){el.innerHTML='';if(hint)hint.textContent='Link up to 5 nearby heritage sites to enrich your listing';return;}
-  el.innerHTML=_wpLinked.map(w=>`<div class="wp-linked-chip"><img src="${w.photo}" referrerpolicy="no-referrer" onerror="this.style.display='none'"><span>${w.name}</span><button onclick="wpUnlink('${w.id}')" title="Remove">×</button></div>`).join('');
+  el.innerHTML=_wpLinked.map(w=>`<div class="wp-linked-chip"><img src="${w.photo}" referrerpolicy="origin-when-cross-origin" onerror="this.style.display='none'"><span>${w.name}</span><button onclick="wpUnlink('${w.id}')" title="Remove">×</button></div>`).join('');
   if(hint)hint.textContent=`${_wpLinked.length}/5 linked · saved with your listing`;
 }
 async function wpSave(beaId,sellerEmail){
@@ -11141,7 +11141,7 @@ function renderWondersStrip() {
   const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
   list.innerHTML = sorted.length ? sorted.map(w=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
-      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.background='#1e3a5f'">
+      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="origin-when-cross-origin" onerror="this.style.background='#1e3a5f'">
       <div class="wonder-card-body">
         <div class="wonder-card-type ${tc2(w.type)}">${w.type}</div>
         <div class="wonder-card-name">${w.name}</div>
@@ -13894,7 +13894,7 @@ async function loadDetailWonders(listing) {
     const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     list.innerHTML = wonders.map(w=>`
       <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=''">
+        <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="origin-when-cross-origin" onerror="this.src=''">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
