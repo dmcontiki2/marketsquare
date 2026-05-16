@@ -406,6 +406,13 @@ def run_migrations(conn):
 
     # Seller complaints — diminishing-scale penalties per TRUST_SCORE_CRITERIA §5a.
     # Distinct from lm_complaints which targets BUYERS for no-shows.
+    # World Wonders — add linked_wonders column to listings if not present
+    try:
+        conn.execute("ALTER TABLE listings ADD COLUMN linked_wonders TEXT DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass  # column already exists
+
     conn.execute("""CREATE TABLE IF NOT EXISTS seller_complaints (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         seller_email    TEXT NOT NULL,
@@ -918,6 +925,260 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     return {"id": new_id, "message": "Listing saved as draft — seller must complete onboarding to go live"}
 
 
+
+# ── World Heritage auto-link helper ─────────────────────────────────────────
+import math as _math
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    """Distance in km between two lat/lon points."""
+    R = 6371
+    dlat = _math.radians(lat2 - lat1)
+    dlon = _math.radians(lon2 - lon1)
+    a = (_math.sin(dlat/2)**2 +
+         _math.cos(_math.radians(lat1)) * _math.cos(_math.radians(lat2)) * _math.sin(dlon/2)**2)
+    return R * 2 * _math.asin(_math.sqrt(a))
+
+# Category affinity scores for wonder types
+_WONDER_AFFINITY = {
+    # (category_normalised, wonder_type_normalised) -> score 0-3
+    # 3=High, 2=Medium, 1=Low
+}
+_CAT_AFFINITY = {
+    "property":     {},  # Property listings do not get World Heritage auto-links — not contextually relevant
+    "accommodation":{"national park": 3, "world heritage": 3, "national museum": 2, "archaeological": 1},
+    "tours":        {"national park": 3, "world heritage": 3, "national museum": 3, "archaeological": 3},
+    "adventures":   {"national park": 3, "world heritage": 3, "national museum": 2, "archaeological": 2},
+    "experiences":  {"national park": 3, "world heritage": 3, "national museum": 3, "archaeological": 3},
+    "crafts":       {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 3},
+    "artisan":      {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 3},
+    "food":         {"national park": 2, "world heritage": 2, "national museum": 1, "archaeological": 1},
+    "produce":      {"national park": 2, "world heritage": 2, "national museum": 1, "archaeological": 1},
+    "local market": {"national park": 1, "world heritage": 1, "national museum": 2, "archaeological": 1},
+    "collectors":   {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 3},
+    "cars":         {"national park": 1, "world heritage": 1, "national museum": 2, "archaeological": 1},
+    "tutors":       {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 2},
+    "services":     {"national park": 1, "world heritage": 1, "national museum": 1, "archaeological": 1},
+}
+
+def _wonder_type_key(wtype):
+    """Normalise wonder type string to affinity key."""
+    t = (wtype or "").lower()
+    if "park" in t or "nature reserve" in t or "canyon" in t:
+        return "national park"
+    if "heritage" in t or "monument" in t or "temple" in t or "castle" in t or "ruins" in t:
+        return "world heritage"
+    if "museum" in t:
+        return "national museum"
+    if "archaeolog" in t or "site" in t:
+        return "archaeological"
+    return "world heritage"  # default
+
+_WONDERS_CACHE = None
+
+def _load_wonders():
+    global _WONDERS_CACHE
+    if _WONDERS_CACHE is None:
+        import json as _json, os as _os
+        wpath = _os.path.join(_os.path.dirname(__file__), "wonders.json")
+        try:
+            with open(wpath) as f:
+                _WONDERS_CACHE = _json.load(f)
+        except Exception:
+            _WONDERS_CACHE = []
+    return _WONDERS_CACHE
+
+def _derived_radius_km(city_lat: float, city_lon: float, country_iso2: str) -> float:
+    """Derive match radius from the bounding box of all cities in the same country.
+    Formula: diagonal of bounding box / 3, clamped to [150, 800] km.
+    Falls back to 300km if the country has fewer than 2 cities in geo_cities.
+    This means radius auto-calibrates as new countries are seeded — no manual tuning.
+    """
+    try:
+        db = database.get_db()
+        rows = db.execute(
+            'SELECT lat, lng FROM geo_cities WHERE country_iso2=? AND lat IS NOT NULL AND lng IS NOT NULL',
+            (country_iso2,)
+        ).fetchall()
+        db.close()
+        if len(rows) < 2:
+            return 300.0  # default for unseeded countries
+        lats = [float(r['lat']) for r in rows]
+        lons = [float(r['lng']) for r in rows]
+        diag = _haversine_km(min(lats), min(lons), max(lats), max(lons))
+        return float(max(150, min(800, round(diag / 3, -1))))
+    except Exception:
+        return 300.0
+
+# ── Property POI Auto-Link ─────────────────────────────────────────────────────
+
+_POI_CATEGORIES = {
+    "schools":      [("amenity", "school"), ("amenity", "college")],
+    "universities": [("amenity", "university")],
+    "shopping":     [("shop", "mall"), ("amenity", "marketplace")],
+    "hospitals":    [("amenity", "hospital")],
+    "police":       [("amenity", "police")],
+}
+
+_POI_RADIUS_M = 15000  # 15km radius for POI search
+
+def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) -> dict:
+    """Query OSM Overpass API for property-relevant POIs near a location.
+    Returns dict keyed by category with list of {name, lat, lon, dist_km} sorted by distance.
+    Capped at 3 results per category. $0 cost, no API key required.
+    """
+    import urllib.request as _req
+    import urllib.parse as _parse
+    import json as _json
+    import math as _math
+
+    def _hav(lat1, lon1, lat2, lon2):
+        R = 6371
+        dlat = _math.radians(lat2 - lat1)
+        dlon = _math.radians(lon2 - lon1)
+        a = _math.sin(dlat/2)**2 + _math.cos(_math.radians(lat1)) * _math.cos(_math.radians(lat2)) * _math.sin(dlon/2)**2
+        return round(R * 2 * _math.asin(_math.sqrt(a)), 2)
+
+    # Build one combined Overpass query for all POI types
+    union_parts = []
+    for cat, tags in _POI_CATEGORIES.items():
+        for key, val in tags:
+            union_parts.append(f'node["{key}"="{val}"](around:{radius_m},{lat},{lon});')
+            union_parts.append(f'way["{key}"="{val}"](around:{radius_m},{lat},{lon});')
+
+    query = '[out:json][timeout:15];(\n' + '\n'.join(union_parts) + '\n);out center 50;'
+
+    try:
+        url = 'https://overpass-api.de/api/interpreter'
+        data = _parse.urlencode({'data': query}).encode()
+        req = _req.Request(url, data=data, headers={'User-Agent': 'TrustSquare/1.0'})
+        with _req.urlopen(req, timeout=20) as resp:
+            result = _json.loads(resp.read())
+    except Exception as e:
+        return {}
+
+    # Categorise results
+    cat_results = {k: [] for k in _POI_CATEGORIES}
+    for elem in result.get('elements', []):
+        tags = elem.get('tags', {})
+        name = tags.get('name') or tags.get('name:en')
+        if not name:
+            continue
+        # Get coordinates
+        if elem.get('type') == 'node':
+            elat, elon = elem.get('lat'), elem.get('lon')
+        else:
+            center = elem.get('center', {})
+            elat, elon = center.get('lat'), center.get('lon')
+        if not elat or not elon:
+            continue
+        dist = _hav(lat, lon, elat, elon)
+
+        # Assign to category
+        amenity = tags.get('amenity', '')
+        shop = tags.get('shop', '')
+        if amenity in ('school', 'college'):
+            cat_results['schools'].append({'name': name, 'dist_km': dist})
+        elif amenity == 'university':
+            cat_results['universities'].append({'name': name, 'dist_km': dist})
+        elif shop == 'mall' or amenity == 'marketplace':
+            cat_results['shopping'].append({'name': name, 'dist_km': dist})
+        elif amenity == 'hospital':
+            cat_results['hospitals'].append({'name': name, 'dist_km': dist})
+        elif amenity == 'police':
+            cat_results['police'].append({'name': name, 'dist_km': dist})
+
+    # Sort each category by distance, cap at 3
+    for cat in cat_results:
+        cat_results[cat].sort(key=lambda x: x['dist_km'])
+        cat_results[cat] = cat_results[cat][:3]
+
+    # Remove empty categories
+    return {k: v for k, v in cat_results.items() if v}
+
+
+def auto_link_pois(listing_id: int, city_lat: float, city_lon: float):
+    """Fetch nearby POIs from OSM and store in listings.nearby_pois.
+    Only runs for Property category listings. Skips if already populated.
+    Wrapped in try/except so failure never blocks listing publish.
+    """
+    import json as _json
+    try:
+        conn = database.get_db()
+        existing = conn.execute(
+            'SELECT nearby_pois FROM listings WHERE id=?', (listing_id,)
+        ).fetchone()
+        if existing and existing['nearby_pois'] and existing['nearby_pois'] not in ('{}', '[]', ''):
+            conn.close()
+            return  # already populated
+        conn.close()
+
+        pois = _overpass_query_pois(city_lat, city_lon)
+        if not pois:
+            return
+
+        conn = database.get_db()
+        conn.execute(
+            'UPDATE listings SET nearby_pois=? WHERE id=?',
+            (_json.dumps(pois), listing_id)
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        pass  # never block publish
+
+
+def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
+                       category: str, radius_km: float = None, max_links: int = 3):
+    """Match nearby World Heritage wonders to a listing and store in linked_wonders.
+    Radius is derived from the country bounding box (diagonal/3, clamped 150-800km)
+    so it auto-calibrates per country as geo_cities data is seeded.
+    Falls back to 300km for countries not yet in geo_cities.
+    Returns list of wonder IDs that were auto-linked (empty if none matched).
+    Only runs if linked_wonders is currently NULL or empty.
+    """
+    import json as _json
+    wonders = _load_wonders()
+    if not wonders or not city_lat or not city_lon:
+        return []
+
+    cat_key = (category or "").lower().strip()
+    affinity_map = _CAT_AFFINITY.get(cat_key, {})
+
+    # Score each wonder by distance + affinity
+    scored = []
+    for w in wonders:
+        wlat = w.get("lat")
+        wlon = w.get("lon")
+        if not wlat or not wlon:
+            continue
+        dist = _haversine_km(city_lat, city_lon, wlat, wlon)
+        if dist > (radius_km or 300.0):
+            continue
+        wtype_key = _wonder_type_key(w.get("type", ""))
+        affinity = affinity_map.get(wtype_key, 1)
+        if affinity == 0:
+            continue
+        # Score: affinity (1-3) weighted heavily, distance tiebreak (closer = better)
+        score = affinity * 1000 - dist
+        scored.append((score, w["id"], w["name"]))
+
+    if not scored:
+        return []
+
+    scored.sort(reverse=True)
+    top = scored[:max_links]
+    linked = [{"id": wid, "auto_linked": True} for _, wid, _ in top]
+
+    import sqlite3 as _sqlite3
+    conn = database.get_db()
+    conn.execute(
+        "UPDATE listings SET linked_wonders = ? WHERE id = ? AND (linked_wonders IS NULL OR linked_wonders = '[]' OR linked_wonders = '')",
+        (_json.dumps(linked), listing_id)
+    )
+    conn.commit()
+    conn.close()
+    return [wid for _, wid, _ in top]
+
 @app.put("/listings/{listing_id}/publish")
 def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.require_api_key)):
     """Transition a draft listing to live. Called by the seller onboarding flow
@@ -964,6 +1225,44 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
     )
     conn.commit()
     conn.close()
+
+    # Auto-link nearby World Heritage wonders (only if none already linked)
+    try:
+        city_row = database.get_db().execute(
+            "SELECT lat, lng FROM geo_cities WHERE id = (SELECT geo_city_id FROM listings WHERE id = ?)",
+            (listing_id,)
+        ).fetchone()
+        cat_row = database.get_db().execute(
+            "SELECT category FROM listings WHERE id = ?", (listing_id,)
+        ).fetchone()
+        if city_row and city_row["lat"] and city_row["lng"]:
+            # Derive country iso2 for radius calculation
+            country_row = database.get_db().execute(
+                """SELECT g.country_iso2 FROM geo_cities g
+                   JOIN listings l ON l.geo_city_id = g.id
+                   WHERE l.id = ?""", (listing_id,)
+            ).fetchone()
+            country_iso2 = country_row["country_iso2"] if country_row else "ZA"
+            derived_radius = _derived_radius_km(
+                float(city_row["lat"]), float(city_row["lng"]), country_iso2
+            )
+            auto_link_wonders(
+                listing_id,
+                float(city_row["lat"]),
+                float(city_row["lng"]),
+                cat_row["category"] if cat_row else "",
+                radius_km=derived_radius
+            )
+            # Property listings: auto-fetch nearby POIs (schools, hospitals, etc.)
+            if cat_row and (cat_row["category"] or "").lower() == "property":
+                auto_link_pois(
+                    listing_id,
+                    float(city_row["lat"]),
+                    float(city_row["lng"])
+                )
+    except Exception as _e:
+        pass  # auto-link failure must never block publish
+
     return {"message": "Listing is now live", "listing_id": listing_id}
 
 @app.get("/listings/mine")
@@ -6709,6 +7008,29 @@ def dashboard_summary():
             "desktop": aa_prompt,
             "mobile": "Gate AI coach behind seller tier. Show upgrade nudge for free sellers.",
         },
+        {
+            "id": "dir_infra",
+            "project": "Agentic OS",
+            "title": "Agentic OS — Framework",
+            "colour": "#10b981",
+            "items": [
+                "Review Claude Code plugin structure",
+                "Audit skill definitions and triggers",
+                "Document session automation bat files",
+                "Define agent lane boundaries",
+            ],
+            "prompt": (
+                "Read STATUS.md and AGENT_BRIEFING.md. Review the Agentic OS framework: "
+                "session startup bat files, skill definitions, plugin structure, and agent lane boundaries. "
+                "Identify gaps and propose improvements."
+            ),
+            "desktop": (
+                "Read STATUS.md and AGENT_BRIEFING.md. Review the Agentic OS framework: "
+                "session startup bat files, skill definitions, plugin structure, and agent lane boundaries. "
+                "Identify gaps and propose improvements."
+            ),
+            "mobile": "Review Agentic OS framework: plugins, skills, session bat files, agent lanes.",
+        },
     ]
 
     return {
@@ -6737,7 +7059,157 @@ def dashboard_summary():
 
 
 
+# ── WORLD WONDERS ────────────────────────────────────────────────────────────
+
+import json as _json_mod
+import os as _os_mod
+
+def _load_wonders():
+    """Load wonders.json from same directory as main.py."""
+    path = _os_mod.path.join(_os_mod.path.dirname(_os_mod.path.abspath(__file__)), "wonders.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return _json_mod.load(f)
+    except Exception:
+        return []
+
+@app.get("/wonders")
+def list_wonders(type: str = None, country: str = None, q: str = None):
+    """Return all wonders, optionally filtered by type, country, or search query."""
+    wonders = _load_wonders()
+    if type:
+        wonders = [w for w in wonders if w.get("type","").lower() == type.lower()]
+    if country:
+        wonders = [w for w in wonders if country.lower() in w.get("country","").lower()]
+    if q:
+        q_lower = q.lower()
+        wonders = [w for w in wonders if q_lower in w.get("name","").lower()
+                   or q_lower in w.get("country","").lower()
+                   or q_lower in w.get("region","").lower()]
+    return {"wonders": wonders, "count": len(wonders)}
+
+@app.get("/wonders/{wonder_id}")
+def get_wonder(wonder_id: str):
+    """Return a single wonder by ID."""
+    wonders = _load_wonders()
+    for w in wonders:
+        if w.get("id") == wonder_id:
+            return w
+    raise HTTPException(status_code=404, detail="Wonder not found")
+
+@app.put("/listings/{listing_id}/wonders")
+def update_listing_wonders(listing_id: int, request: Request):
+    """Set linked_wonders for a listing (up to 5 wonder IDs). Email-auth required."""
+    import asyncio
+    body = asyncio.run(request.json()) if hasattr(request, '_body') else {}
+    # Sync read
+    import json as _j
+    body_bytes = b""
+    # Use the standard approach
+    return _update_listing_wonders_sync(listing_id, request)
+
+def _update_listing_wonders_sync(listing_id: int, request: Request):
+    raise HTTPException(status_code=500, detail="Use POST form — see below")
+
+# Replace above with proper sync endpoint
+@app.post("/listings/{listing_id}/wonders")
+async def set_listing_wonders(listing_id: int, request: Request):
+    """Set linked_wonders for a listing. Body: {email, wonder_ids: [...up to 5...]}"""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    email = body.get("email","").strip()
+    wonder_ids = body.get("wonder_ids", [])
+    if not email:
+        raise HTTPException(status_code=401, detail="email required")
+    if not isinstance(wonder_ids, list) or len(wonder_ids) > 5:
+        raise HTTPException(status_code=400, detail="wonder_ids must be a list of up to 5 IDs")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT seller_email FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if row["seller_email"] and row["seller_email"].lower() != email.lower():
+            raise HTTPException(status_code=403, detail="Email does not match listing owner")
+        # Validate wonder IDs
+        all_wonders = _load_wonders()
+        valid_ids = {w["id"] for w in all_wonders}
+        bad = [wid for wid in wonder_ids if wid not in valid_ids]
+        if bad:
+            raise HTTPException(status_code=400, detail=f"Unknown wonder IDs: {bad}")
+        conn.execute("UPDATE listings SET linked_wonders=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                     (_json_mod.dumps(wonder_ids), listing_id))
+        conn.commit()
+        return {"ok": True, "listing_id": listing_id, "linked_wonders": wonder_ids}
+    finally:
+        conn.close()
+
+@app.get("/listings/{listing_id}/wonders")
+def get_listing_wonders(listing_id: int):
+    """Return the linked wonders for a listing, with full wonder objects."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT linked_wonders FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        raw = row["linked_wonders"]
+        if not raw:
+            return {"listing_id": listing_id, "wonders": []}
+        parsed = _json_mod.loads(raw)
+        all_wonders = _load_wonders()
+        wonders_map = {w["id"]: w for w in all_wonders}
+        # Handle both formats: plain ID strings and {"id":..., "auto_linked":...} objects
+        result = []
+        for item in parsed:
+            if isinstance(item, dict):
+                wid = item.get("id")
+                if wid and wid in wonders_map:
+                    w = dict(wonders_map[wid])
+                    w["auto_linked"] = item.get("auto_linked", False)
+                    result.append(w)
+            else:
+                if item in wonders_map:
+                    result.append(wonders_map[item])
+        return {"listing_id": listing_id, "wonders": result}
+    finally:
+        conn.close()
+
 # ── SERVER HEALTH ────────────────────────────────────────────────────────────
+@app.delete("/listings/{listing_id}/wonders/{wonder_id}")
+async def remove_listing_wonder(listing_id: int, wonder_id: str, email: str):
+    """Remove a single wonder from a listing's linked_wonders. Email-auth required.
+    Handles both plain ID list format and auto_linked object format.
+    """
+    import json as _jd
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT seller_email, linked_wonders FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if row["seller_email"] and row["seller_email"].lower() != email.lower():
+            raise HTTPException(status_code=403, detail="Email does not match listing owner")
+        raw = row["linked_wonders"] or "[]"
+        try:
+            linked = _jd.loads(raw)
+        except Exception:
+            linked = []
+        # Handle both formats: plain strings and {"id":..., "auto_linked":...} objects
+        new_linked = []
+        for item in linked:
+            if isinstance(item, dict):
+                if item.get("id") != wonder_id:
+                    new_linked.append(item)
+            else:
+                if item != wonder_id:
+                    new_linked.append(item)
+        conn.execute("UPDATE listings SET linked_wonders=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                     (_jd.dumps(new_linked), listing_id))
+        conn.commit()
+        return {"ok": True, "listing_id": listing_id, "removed": wonder_id, "remaining": len(new_linked)}
+    finally:
+        conn.close()
+
 @app.get("/health/resources")
 def health_resources():
     """Live server resource metrics — used by dashboard health panel.

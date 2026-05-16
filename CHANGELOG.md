@@ -1617,3 +1617,17 @@ Replaced all 120 wonder photo URLs from fragile upload.wikimedia.org/thumb/HASH/
 - Pretoria listings (Property + Experiences): Blyde River Canyon (292km) + Kruger National Park (392km).
 - Stay listings: Limpopo/Mpumalanga → Kruger + Blyde; Cape Town stays → Robben Island + Table Mountain + Iziko SA Museum; Namibia → Namib-Naukluft (42km); KZN/Mozambique/E+W Cape mapped appropriately.
 - `loadDetailWonders()` extended with demo fallback path: when no `beaId`, reads `listing.linked_wonders` array directly and resolves wonder data from `_wpAllWonders` cache. Wonder cards render identically to BEA-backed listings.
+
+### World Heritage — Property category excluded
+- `linked_wonders` removed from all 10 Property demo listings — not contextually relevant for property buyers.
+- BEA `_CAT_AFFINITY["property"]` set to empty dict — real Property listings will never be auto-linked at publish time.
+- World Heritage strip now shows only on Adventures (Experiences + Accommodation) demo listings. BEA confirmed: zero Property listings had wonders in DB.
+
+### Property POI strip — Schools, Universities, Shopping, Hospitals, Police
+- New `nearby_pois` TEXT column added to listings table.
+- BEA: `_overpass_query_pois()` fetches 5 POI categories from OSM Overpass API (free, no key) within 15km of listing city. `auto_link_pois()` stores results at publish time, skips if already populated.
+- Auto-link wired into publish endpoint for Property category only.
+- FEA: `loadDetailPois()` renders tabbed 📍 Nearby Amenities strip on property detail screen. 5 tabs (Schools · Universities · Shopping · Hospitals · Police), each showing closest 3 with name + distance. Reads from listing.nearby_pois directly (demo) or fetches from BEA (live listings).
+- All 5 real Property listings (IDs 93–97) seeded with Pretoria POI data.
+- All 10 demo Property listings seeded with Pretoria POI data inline.
+- World Heritage strip confirmed excluded from Property (BEA affinity empty, demo data cleaned).
