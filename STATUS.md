@@ -252,13 +252,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - EULA attribution placeholder updated to reference live implementation.
 - BEA restarted; attribution fields confirmed live on all `/wonders` responses.
 
-## Next Session — Session 61
+## Next Session — Session 62
 
 ### Priority
-1. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
-2. **Patent filing** — David to confirm readiness; no outreach until filed
-3. **Email template redesign** — revisit all email templates using Claude Design
-4. **AGENT_BRIEFING.md** — update Codex version reference to v4.6
+1. **Demo listings expansion** — New York, London, Sydney · 60 demos per city + 20 Adventures each · city-accurate wonders + POIs
+2. **Geo selector** — Country/City picker for all 4 cities (Pretoria, New York, London, Sydney) · seed USA/UK/AU in geo_cities
+3. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
+4. **Patent filing** — David to confirm readiness; no outreach until filed
 
 ---
 
