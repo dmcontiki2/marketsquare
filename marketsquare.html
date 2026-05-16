@@ -727,6 +727,13 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wonders-strip-hdr{font-size:12px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.6px;text-transform:uppercase;margin:20px 0 10px;}
 .wonders-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
 .wonders-strip::-webkit-scrollbar{display:none;}
+.wonder-autolink-banner{background:#1a2a1a;border:1px solid #2d5a2d;border-radius:8px;padding:10px 12px;margin:6px 0;display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#a8d5a8;line-height:1.4;}
+.wonder-autolink-banner .wab-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.wonder-autolink-banner .wab-body{flex:1;}
+.wonder-autolink-banner .wab-title{font-weight:700;color:#c8e6c8;margin-bottom:2px;}
+.wonder-autolink-banner .wab-btns{display:flex;gap:6px;margin-top:6px;}
+.wab-btn-keep{background:transparent;border:1px solid #2d5a2d;color:#a8d5a8;border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;}
+.wab-btn-remove{background:transparent;border:1px solid #5a2d2d;color:#d5a8a8;border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;}
 .wonder-card{flex-shrink:0;width:200px;border-radius:12px;overflow:hidden;cursor:pointer;background:#0d1424;border:1px solid rgba(255,255,255,.08);}
 .wonder-card-img{width:100%;height:110px;object-fit:cover;display:block;}
 .wonder-card-body{padding:10px 12px 12px;}
@@ -9846,16 +9853,77 @@ function renderDashCard(dl){
       </div>
     </div>`).join('');
 
+  // ── World Heritage auto-link banners ──────────────────────
+  let wonderBanners = '';
+  if (dl.beaListingId && dl._raw && dl._raw.linked_wonders) {
+    let linked = [];
+    try { linked = JSON.parse(dl._raw.linked_wonders); } catch(e) {}
+    const autoLinked = linked.filter(w => w.auto_linked);
+    autoLinked.forEach(w => {
+      const bannerKey = 'wab_dismissed_' + dl.beaListingId + '_' + w.id;
+      const dismissed = localStorage.getItem(bannerKey);
+      if (dismissed && Date.now() < parseInt(dismissed)) return; // still dismissed
+      // Find wonder name from cache
+      const wInfo = (_wpAllWonders || []).find(x => x.id === w.id);
+      const wName = wInfo ? wInfo.name : w.id;
+      wonderBanners += `<div class="wonder-autolink-banner" id="wab-${dl.beaListingId}-${w.id}">
+        <div class="wab-icon">🌍</div>
+        <div class="wab-body">
+          <div class="wab-title">Linked to ${wName}</div>
+          <div>Your listing is highlighted near this World Heritage site. Buyers exploring this wonder may discover your listing.</div>
+          <div class="wab-btns">
+            <button class="wab-btn-keep" onclick="wabDismiss(${dl.beaListingId},'${w.id}')">Keep it ✓</button>
+            <button class="wab-btn-remove" onclick="wabRemove(${dl.beaListingId},'${w.id}','${wName.replace(/'/g,"\\'")}')">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
   return `<div class="mlcard ${dl.status==='paused'?'paused-card':pendingIntros.length>0?'queue-card':''}" id="dcard-${dl.id}">
     <div class="mlthumb" style="background:${CATS[dl.cat].bg}">${thumbHtml}</div>
     <div class="mlinfo" style="width:100%;">
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
+      ${wonderBanners}
       ${introsHtml}
       ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions"><button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
     </div>
   </div>`;
+}
+
+// ── Wonder auto-link banner actions ────────────────────────────────────────
+function wabDismiss(listingId, wonderId) {
+  const key = 'wab_dismissed_' + listingId + '_' + wonderId;
+  localStorage.setItem(key, Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const el = document.getElementById('wab-' + listingId + '-' + wonderId);
+  if (el) el.remove();
+}
+
+async function wabRemove(listingId, wonderId, wonderName) {
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!sellerEmail) { showToast('Sign in to manage wonders'); return; }
+  try {
+    const resp = await fetch(BEA_URL + '/listings/' + listingId + '/wonders/' + wonderId + '?email=' + encodeURIComponent(sellerEmail), {
+      method: 'DELETE'
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    // Remove from _raw so it doesn't reappear
+    const dl = dashState.listings.find(d => d.beaListingId === listingId);
+    if (dl && dl._raw && dl._raw.linked_wonders) {
+      try {
+        let linked = JSON.parse(dl._raw.linked_wonders);
+        linked = linked.filter(w => w.id !== wonderId);
+        dl._raw.linked_wonders = JSON.stringify(linked);
+      } catch(e) {}
+    }
+    const el = document.getElementById('wab-' + listingId + '-' + wonderId);
+    if (el) el.remove();
+    showToast(wonderName + ' removed from your listing');
+  } catch(e) {
+    showToast('Could not remove — try again');
+  }
 }
 
 async function handleIntro(dlId, introId, action){

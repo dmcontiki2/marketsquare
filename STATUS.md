@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 59 · 16 May 2026**
+**Updated: Session 60 · 16 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -68,14 +68,21 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
+## Last Completed — Session 60
+
+### World Heritage auto-link with opt-out ✅
+- `auto_link_wonders()` fires at publish — haversine distance + category affinity, up to 3 wonders, 500km radius, skips if already linked.
+- `DELETE /listings/{id}/wonders/{wonder_id}?email=` endpoint added — email-auth opt-out.
+- Opt-out banner in seller dashboard — green dismissible card, Keep/Remove, 7-day localStorage expiry.
+- Dashboard fetch fixed permanently — detects file: protocol, uses absolute URL to trustsquare.co.
+- Verified end-to-end: Pretoria → Blyde River Canyon + Kruger auto-linked correctly.
+
 ## Last Completed — Session 59
 
 ### World Heritage Content Layer — photo fix, 400-site expansion, cost analysis ✅
 - All 120 original wonder photos migrated to Special:FilePath format — Wikimedia's official hotlink endpoint. Photos display correctly across all 4 type filters.
 - World Heritage expanded from 120 to 400 sites: Natural Wonders, World Heritage Sites, National Museums, Global Archaeological Sites — 40+ countries covered.
-- `build_wonders400.py` updated with `wp()` helper enforcing Special:FilePath format for all future additions.
 - Cost impact analysis document produced: `WorldHeritage_CostImpact_2026-05-16.docx` — direct cost $0/month, cost model unchanged.
-- Auto-link-with-opt-out architecture designed: server-side matching at listing creation, dismissible banner, zero onboarding friction. ~2 hours to implement.
 
 ## Last Completed — Session 55
 
@@ -231,13 +238,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 60
+## Next Session — Session 61
 
 ### Priority
-1. **World Heritage auto-link** — implement auto-match-with-opt-out at POST /listings (~2 hours)
-2. **Photo credits** — Wikimedia attribution on wonder detail UI
-3. **Codex update** — World Heritage as formal content type
-4. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
+1. **Photo credits** — Wikimedia attribution on wonder detail UI (counsel requirement)
+2. **Codex update** — World Heritage as formal content type with photo policy
+3. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
+4. **Patent filing** — David to confirm readiness; no outreach until filed
 
 ---
 

@@ -1,3 +1,32 @@
+## Session 60 · 16 May 2026 · World Heritage auto-link + dashboard fixes
+
+### World Heritage auto-link with opt-out — live
+- `auto_link_wonders()` helper added to BEA — fires at publish time, matches wonders within 500km using haversine distance + category affinity scoring (Property/Tours/Adventures = high affinity for natural/heritage sites; Crafts/Museums = high for archaeological). Stores up to 3 matches as `[{"id":"...", "auto_linked":true}]` in `linked_wonders`. Only runs if listing has no wonders already linked — never overwrites manual picks.
+- `DELETE /listings/{id}/wonders/{wonder_id}?email=` endpoint added — email-auth, handles both plain ID and object formats, returns remaining count.
+- `GET /listings/{id}/wonders` updated to return `auto_linked` flag on each wonder object.
+- Opt-out banner added to seller dashboard cards in FEA (`renderDashCard`) — green dismissible card per auto-linked wonder, "Keep it ✓" dismisses for 7 days (localStorage), "Remove" calls DELETE endpoint and removes from UI immediately. Zero friction at onboarding — banner appears post-publish only.
+- Verified end-to-end: Pretoria listing correctly auto-links Blyde River Canyon (292km) and Kruger (391km). DELETE removes cleanly.
+
+### Dashboard fetch fix — permanent root cause fix
+- Both `/dashboard/summary` and `/health/resources` fetch calls now detect `file:` protocol and prepend `https://trustsquare.co` automatically. Dashboard works correctly whether opened from browser bookmark or local file.
+
+### Next Session priorities cleaned
+- STATUS.md Next Session section stripped of 3-session-old architecture notes. Now shows only the 4 active priorities.
+
+## Session 59 · 16 May 2026 · World Heritage Content Layer — photo fix, 400-site expansion, cost analysis
+
+### World Heritage photo fix — Special:FilePath format
+All 120 original wonder URLs migrated from guessed Wikimedia CDN thumb paths to the official `Special:FilePath` embed endpoint (`https://commons.wikimedia.org/wiki/Special:FilePath/FILENAME?width=1280`). This is Wikimedia's authorised hotlink mechanism — no rate limiting, no CDN hash guessing, no R2 storage required. All 120 photos now display correctly. `build_wonders400.py` updated with `wp()` helper function that enforces Special:FilePath format for all future additions.
+
+### World Heritage expanded to 400 sites across 4 types
+Added 3 new site types — National Museums, Global Archaeological Sites — alongside the existing Natural Wonders and World Heritage Sites. Total expanded from 120 to 400 sites across 40+ countries. Type filter updated to 4 options. Country filter updated to cover all represented nations. `wonders.json` deployed to server.
+
+### World Heritage cost impact analysis — Task #2 complete
+Cost impact: $0/month. All photography served via Wikimedia hotlinks — zero R2 storage, zero CDN, zero API fees. Cost model spreadsheet unchanged. Full analysis document written covering: direct cost, integration design, ease of use, onboarding friction (zero), and the auto-link-with-opt-out architecture proposal. Document saved as `WorldHeritage_CostImpact_2026-05-16.docx`.
+
+### Auto-link design proposal
+At listing creation the BEA auto-matches nearby wonders by city + category affinity, pre-populates up to 3 linked wonders, and shows a dismissible post-onboard banner with a one-tap opt-out. Zero friction added to the magic-link onboarding flow. Implementation estimate: ~2 hours (1 session).
+
 ## Session 48 (continued) · 10 May 2026 · n8n founding seller outreach wave — fully live
 
 ## Session 51 (continued) — 11 May 2026
