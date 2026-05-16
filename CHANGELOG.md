@@ -1604,3 +1604,10 @@ Replaced all 120 wonder photo URLs from fragile upload.wikimedia.org/thumb/HASH/
 - EULA attribution placeholder updated to reference live implementation.
 - BEA restarted; `_WONDERS_CACHE` confirmed loading new fields. Attribution verified live: Yellowstone returns `Grastel · CC BY-SA 4.0`.
 - `marketsquare.html` local copy synced from server.
+
+### Codex updated to v4.6 — §10a World Heritage Content Layer
+- `Solar_Council_Codex_v4_6.docx` created. New section §10a inserted before §10 Version History.
+- Five locked sub-sections: W1 Content Definition · W2 Auto-Link Matching Rules · W3 Photo Policy · W4 BEA Endpoints · W5 Dataset Expansion Policy.
+- W3 Photo Policy explicitly locks: Wikimedia hotlink-only (no R2 re-hosting), attribution required on detail view, not required on cards, CSS overlay confirmed legal, EULA reference Section 6.3.
+- W2 Auto-Link rules locked: haversine + country-adaptive radius + category affinity + 3-wonder cap + opt-out mechanics.
+- Version history row v4.6 added. Document validated (817 paragraphs, all checks passed).

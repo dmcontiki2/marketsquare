@@ -255,10 +255,10 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 ## Next Session — Session 61
 
 ### Priority
-1. **Codex update** — World Heritage as formal content type with photo policy
-2. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
-3. **Patent filing** — David to confirm readiness; no outreach until filed
-4. **Email template redesign** — revisit all email templates using Claude Design
+1. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
+2. **Patent filing** — David to confirm readiness; no outreach until filed
+3. **Email template redesign** — revisit all email templates using Claude Design
+4. **AGENT_BRIEFING.md** — update Codex version reference to v4.6
 
 ---
 
