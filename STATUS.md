@@ -1,5 +1,5 @@
 # TrustSquare — STATUS.md
-**Updated: Session 55 · 11 May 2026**
+**Updated: Session 59 · 16 May 2026**
 
 > ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
 > Pre-launch sequence must be fully complete before any email is sent.
@@ -67,6 +67,15 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - GitHub: github.com/dmcontiki2/marketsquare
 
 ---
+
+## Last Completed — Session 59
+
+### World Heritage Content Layer — photo fix, 400-site expansion, cost analysis ✅
+- All 120 original wonder photos migrated to Special:FilePath format — Wikimedia's official hotlink endpoint. Photos display correctly across all 4 type filters.
+- World Heritage expanded from 120 to 400 sites: Natural Wonders, World Heritage Sites, National Museums, Global Archaeological Sites — 40+ countries covered.
+- `build_wonders400.py` updated with `wp()` helper enforcing Special:FilePath format for all future additions.
+- Cost impact analysis document produced: `WorldHeritage_CostImpact_2026-05-16.docx` — direct cost $0/month, cost model unchanged.
+- Auto-link-with-opt-out architecture designed: server-side matching at listing creation, dismissible banner, zero onboarding friction. ~2 hours to implement.
 
 ## Last Completed — Session 55
 
@@ -222,88 +231,13 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
-## Next Session — Session 56
+## Next Session — Session 60
 
 ### Priority
-1. **Paystack live mode** — complete financial integration end-to-end test (awaiting CIPC bank account — David action)
-2. **Patent filing** — David to confirm readiness; do NOT proceed with any outreach until patent is filed
-3. **Counsel EULA review** — send EULA docx to SA attorney to fill [COUNSEL REQUIRED] gaps and confirm POPIA consent timing
-4. **Privacy Policy page** — draft trustsquare.co/privacy
-5. **Test guided onboarding** — send Maroushka a magic link to test the 3-step flow end-to-end (only after patent filed)
-
-### Session 55 Feature — End-to-end test + remaining work
-> ⚠️ Build and test only after patent filed. No outreach until David confirms.
-
-**Agreed architecture (Session 53):**
-
-**Route 1 — Invite email CTA (Option A):**
-- Email CTA button links directly to `trustsquare.co?magic=1&name=...&email=...&cat=...&city=...`
-- Single click from inbox to guided screen — no intermediate step
-- Social proof cards in the email are **static per category**, baked into the n8n template (3 best listings per category chosen by David) — no live BEA call at send time
-- POPIA compliance: one-line transparency notice at top of guided screen — *"We've pre-filled your name and category from your invite. You're not registered yet — nothing is public until you accept our terms at the end."*
-
-**Route 2 — In-app listing flow:**
-- Same 3-step guided screen reachable from within the app for sellers who arrive directly (not via email)
-- Entry point: existing "Sell" / listing path routes to `guided-onboard` instead of the old form
-
-**Session 54 build tasks:**
-1. Add POPIA transparency notice bar to top of `screen-guided-onboard` (Step 1) — shown only when `magicLink.active` is true
-2. Update n8n outreach email template (`property_outreach.html` and equivalents for other categories) — wire "List My Property in {{city_name}}" button to magic link URL format
-3. Add static social proof card section to email template per category (3 cards, baked-in Unsplash photos, realistic prices)
-4. Add in-app entry point to guided-onboard from the sell/listing path (Route 2)
-5. End-to-end test: send test magic link → guided screen → Step 1–3 → tier picker → EULA → go live
-
-### Pre-Launch Gate (in order — ALL must be done before Wave 1)
-> ⛔ Wave 1 is intentionally removed from all session priorities until David explicitly re-adds it.
-> Reason: prior art defence — a single outreach email sent before patent filing voids the defence.
-
-1. ✅ Financial integration complete + tested end-to-end
-2. ✅ All applications completed and tested
-3. ✅ Patent filed
-4. ✅ Whitepaper published
-5. ✅ Cities DB refreshed with current prospects
-6. ✅ David confirms: "ready to launch"
-→ Only then: load prospects, trigger Wave 1
-
-### Backlog
-- **🔴 PRE-FILING / PRE-LAUNCH: Purge Tuppence refund language** — full action plan in `NEXT_SESSION_TUPPENCE_NO_REFUND.md`. Touches EULA v1.0, Whitepaper v3 (L31), `marketsquare.html` (6 lines), and amended Claim 2 in the Pre-Filing Patent Consultation memo (drop clause (e) restitution logic). `bea_main.py` is already clean (no refund code). Canonical policy is in `LOCAL_MARKET_REQUIREMENTS.md` §11.1 — propagate to all other artefacts. **Must complete before patent filing.**
-- Admin ops queue — review uploaded docs queue
-- **Post-launch auto-scale** — n8n polls /health/resources, alerts at 70%, auto-upgrades Hetzner at 85%
-- **UX degradation KPIs** — response time, 5xx rate, DB size thresholds
-- Gate `sbTriggerMarketNote` behind subscription tier for free sellers
-- For You trust score refresh on wishlist re-match
-- Email template visual QA — review actual delivered email in Gmail
-
-### 🔐 Security & Compliance Backlog (pre-Wave 1)
-- **Nginx security headers** — add CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy to Hetzner Nginx config
-- **Rate limiting** — add cooldown/throttle on magic link endpoint and intro request submission (prevent OTP spam and intro flooding)
-- **EULA hard gate** — verify EULA acceptance blocks BEA API calls, not just UI display; unauthenticated users must not be able to submit data
-- **Account deletion audit** — when user accounts are fully live, verify all PII tables are purged on delete (listings, intros, trust signals, photos, tuppence records)
-- **POPIA transparency notice** — add one-line notice to guided onboarding screen confirming pre-filled data scope and when data is first stored
-
-### 🌟 Session 53 Feature — AI-Guided Listing Onboarding
-> ⚠️ Build before Wave 1. Test only after patent filed. Maroushka (miconradie1@gmail.com) is approved first tester.
-
-**Concept:** Replace magic link → form → publish with a guided 3-step card-preview experience.
-
-**The email:** Prospect receives invite showing their item as a pre-populated DRAFT listing card. Category-specific placeholder if no real data yet (e.g. Pretoria estate agent sees "3-bed home, Pretoria" with generic photo + DRAFT watermark). They see exactly what they'll get before clicking anything.
-
-**Step 1 — Photo:** Opens with the draft card (empty). AI coach points to photo block. Seller uploads → card updates live showing exactly how it looks. Redo until happy. Press Step 2.
-
-**Step 2 — Details:** AI points to item/service fields. Seller fills in → card reflects changes in real time. Input → view → update → view loop. AI confirms progress. Press Step 3.
-
-**Step 3 — Review:** Full card preview. AI confirms completion. Seller clicks "Take me to the app →".
-
-**In-app handoff:** Draft transfers into marketplace app. Same card-preview + AI guidance continues: EULA → registration → bank details → GO LIVE.
-
-**Why this works:**
-- Eliminates imagination gap — seller sees their listing from click 1
-- Progressive disclosure — one job per step, no cognitive overload
-- Card updates in real time — feels like polish not form-filling
-- AI guidance is contextual, not instructional
-- Existing infrastructure reused: BEA drafts + AI coach + magic link all exist
-
-**Technical approach:** New front-end screen wired to existing BEA endpoints. Category-specific placeholder cards for cold prospects. DRAFT watermark overlay on existing listing card component.
+1. **World Heritage auto-link** — implement auto-match-with-opt-out at POST /listings (~2 hours)
+2. **Photo credits** — Wikimedia attribution on wonder detail UI
+3. **Codex update** — World Heritage as formal content type
+4. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
 
 ---
 
