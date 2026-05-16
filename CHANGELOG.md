@@ -1594,3 +1594,13 @@ Ran a full Wikimedia Commons API audit of all 120 wonder photo URLs. Found two c
 
 ## Session 59 — Fix: Switch all wonder photos to Wikimedia Special:FilePath format
 Replaced all 120 wonder photo URLs from fragile upload.wikimedia.org/thumb/HASH/FILE/1280px-FILE paths to the official Wikimedia embed format: commons.wikimedia.org/wiki/Special:FilePath/FILENAME?width=1280. This format is Wikimedia's designated embedding mechanism — it redirects to the correct CDN URL without requiring knowledge of the internal hash directory structure, and is not subject to hotlink protection issues. All 120 photos confirmed displaying in browser. Updated build_wonders400.py with a wp() helper function and documentation so all future additions automatically use this format.
+
+## Session 60 (continued) · 16 May 2026 · Photo credits — Wikimedia attribution overlay
+
+### Photo credits — Task #13 complete
+- Batch-fetched Wikimedia Commons `extmetadata` API for all 120 wonders in `wonders.json`. Added three new fields per entry: `photo_author` (photographer name), `photo_licence` (e.g. CC BY-SA 4.0), `photo_source` (Wikimedia file description page URL). Five wonders with no Artist field default to "Wikimedia Commons".
+- BEA `/wonders` endpoint now returns all three attribution fields as part of each wonder object.
+- FEA wonder detail screen: semi-transparent credit pill injected bottom-right of hero image — camera icon, author name, licence hyperlink to Wikimedia source page. CSS overlay approach confirmed legal under CC BY-SA (UI layer, not derivative work — same pattern used by Wikimedia itself).
+- EULA attribution placeholder updated to reference live implementation.
+- BEA restarted; `_WONDERS_CACHE` confirmed loading new fields. Attribution verified live: Yellowstone returns `Grastel · CC BY-SA 4.0`.
+- `marketsquare.html` local copy synced from server.

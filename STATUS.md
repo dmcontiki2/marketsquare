@@ -70,6 +70,12 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ## Last Completed — Session 60
 
+### Photo credits — Wikimedia attribution overlay ✅
+- All 120 wonders in `wonders.json` updated with `photo_author`, `photo_licence`, `photo_source` (batch-fetched via Wikimedia Commons extmetadata API).
+- Semi-transparent credit pill added bottom-right of wonder detail hero image — camera icon, author name, licence hyperlink to Wikimedia source. Legally confirmed as UI layer, not derivative work.
+- EULA attribution placeholder updated to reference live implementation.
+- BEA restarted; attribution confirmed live on all `/wonders` responses.
+
 ### World Heritage auto-link with opt-out ✅
 - `auto_link_wonders()` fires at publish — haversine distance + category affinity, up to 3 wonders, 500km radius, skips if already linked.
 - `DELETE /listings/{id}/wonders/{wonder_id}?email=` endpoint added — email-auth opt-out.
@@ -238,13 +244,21 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
+## Last Completed — Session 60 (continued)
+
+### Photo credits — Wikimedia attribution overlay ✅
+- All 120 wonders in `wonders.json` updated with `photo_author`, `photo_licence`, `photo_source` (batch-fetched via Wikimedia Commons extmetadata API).
+- Semi-transparent credit pill added bottom-right of wonder detail hero image — camera icon, author name, licence hyperlink to Wikimedia source. Legally confirmed as UI layer, not derivative work.
+- EULA attribution placeholder updated to reference live implementation.
+- BEA restarted; attribution fields confirmed live on all `/wonders` responses.
+
 ## Next Session — Session 61
 
 ### Priority
-1. **Photo credits** — Wikimedia attribution on wonder detail UI (counsel requirement)
-2. **Codex update** — World Heritage as formal content type with photo policy
-3. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
-4. **Patent filing** — David to confirm readiness; no outreach until filed
+1. **Codex update** — World Heritage as formal content type with photo policy
+2. **Paystack live mode** — awaiting CIPC bank account confirmation (David action)
+3. **Patent filing** — David to confirm readiness; no outreach until filed
+4. **Email template redesign** — revisit all email templates using Claude Design
 
 ---
 
@@ -256,3 +270,14 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 - **Git commits**: ask David to run from PowerShell — never commit from sandbox (index.lock conflict)
 - **SSH key**: run `bash load_sandbox_ssh.sh` at session start before any SSH/SCP
 - **Cost model**: xlsx unchanged since Session 24 — no cost model impact this session
+
+---
+
+## World Heritage Content Layer — Agreed Direction (Session 60)
+
+- **Dataset cap: 200 sites per category** (National Parks, UNESCO Sites, National Museums, Archaeological Sites) = 800 total
+- **Data source: Wikipedia only** — every entry must have a verifiable Wikipedia article. No unverified local data.
+- **Current state: 120 sites (30 per category)** — expand to 200 per category as time permits, prioritising countries at launch
+- **Coverage strategy: global first, local depth later** — add sites per country at launch time, not upfront
+- **Architecture: no changes needed** — wonders.json loads once at startup, ~1.2MB at 800 sites, zero DB impact
+- **Future option (deferred):** two-tier dataset with lightweight local entries (lat/lon only) for deeper in-country coverage — revisit after first 6 months of live usage

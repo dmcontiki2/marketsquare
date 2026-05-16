@@ -741,6 +741,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wonder-card-name{font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:2px;}
 .wonder-card-country{font-size:10px;color:rgba(255,255,255,.4);}
 #screen-wonder-detail{background:var(--navy);}
+.wd-photo-credit{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.52);color:rgba(255,255,255,0.85);font-size:10px;padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:4px;z-index:5;pointer-events:auto;}
+.wd-photo-credit a{color:rgba(255,255,255,0.72);text-decoration:none;border-bottom:0.5px solid rgba(255,255,255,0.35);}
+.wd-photo-credit a:hover{color:#fff;}
 .wd-hero{width:100%;height:240px;object-fit:cover;display:block;}
 .wd-sheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px;position:relative;z-index:2;}
 .wd-type-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
@@ -2289,6 +2292,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <img class="wd-hero" id="wd-hero-img" src="" alt="" referrerpolicy="origin-when-cross-origin">
+    <div class="wd-photo-credit" id="wd-photo-credit" style="display:none;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M5 7H3a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2l-2-2H9L7 7z"/></svg>
+      <span id="wd-credit-author"></span>&nbsp;·&nbsp;<a id="wd-credit-link" href="#" target="_blank" rel="noopener"><span id="wd-credit-licence"></span></a>
+    </div>
   </div>
   <div class="wd-sheet">
     <div class="wd-type-badge" id="wd-type-badge"></div>
@@ -3493,7 +3500,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 <div style="margin:5px 0;font-size:11px;">Heritage Sites are displayed to enrich the context of seller listings and to promote awareness of globally significant locations. The Platform makes no warranty regarding the accuracy, completeness, or currency of Heritage Site information, descriptions, or photographs.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.2 Third-Party Photographs — Licensing and Attribution</strong></div>
 <div style="margin:5px 0;font-size:11px;">Photographs displayed in the World Heritage Content layer are sourced exclusively from Wikimedia Commons and are used under Creative Commons licences (CC BY, CC BY-SA) or are in the Public Domain (PDM / CC0). The Platform does not claim ownership of any such photographs. Each photograph remains the intellectual property of its original author as identified on Wikimedia Commons.</div>
-<div style="margin:5px 0;font-size:11px;">Attribution: Where a Creative Commons licence requires attribution, the author credit is recorded in the Platform's internal wonders dataset and is available on request from legal@trustsquare.co. The Platform commits to displaying photo credits in the user interface in a future release.</div>
+<div style="margin:5px 0;font-size:11px;">Attribution: Where a Creative Commons licence requires attribution, the photographer name and licence are displayed directly on the World Heritage photo in the TrustSquare app. Each photo links to its Wikimedia Commons source page. Attribution data is sourced from Wikimedia Commons metadata.</div>
 <div style="margin:5px 0;font-size:11px;">Takedown policy: If you are the copyright owner of a photograph displayed in the World Heritage Content layer and you believe your photograph has been used without authorisation or in breach of its licence, you may submit a takedown request to legal@trustsquare.co with (a) your full name and contact details; (b) a description of the photograph and its location on the Platform; (c) proof of ownership or rights; and (d) a statement that you have a good-faith belief the use is unauthorised. The Platform will investigate and, if ownership is confirmed, remove the photograph within 7 business days of receipt of a complete and valid takedown notice.</div>
 <div style="margin:5px 0;font-size:11px;">The Platform's use of Wikimedia Commons photographs constitutes good-faith reliance on the licences declared on Wikimedia Commons. The Platform is not liable for licence misclassification by third-party contributors to Wikimedia Commons.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">16.3 Seller-Linked Heritage Sites</strong></div>
@@ -13987,6 +13994,21 @@ async function openWonderDetail(wonderId, returnListingId) {
   const desc = document.getElementById('wd-desc'); if(desc) desc.textContent = wonder.description||'';
   const hist = document.getElementById('wd-history'); if(hist) hist.textContent = wonder.history||'';
   const wiki = document.getElementById('wd-wiki-btn'); if(wiki) wiki.href = wonder.wikipedia||'#';
+  // Photo credit overlay
+  const creditEl = document.getElementById('wd-photo-credit');
+  if(creditEl) {
+    const author = wonder.photo_author || '';
+    const licence = wonder.photo_licence || '';
+    const source = wonder.photo_source || '';
+    if(author || licence) {
+      document.getElementById('wd-credit-author').textContent = author || 'Wikimedia Commons';
+      document.getElementById('wd-credit-licence').textContent = licence || 'View source';
+      document.getElementById('wd-credit-link').href = source || 'https://commons.wikimedia.org';
+      creditEl.style.display = 'flex';
+    } else {
+      creditEl.style.display = 'none';
+    }
+  }
   goTo('wonder-detail');
 }
 
