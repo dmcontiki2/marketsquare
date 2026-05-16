@@ -1611,3 +1611,9 @@ Replaced all 120 wonder photo URLs from fragile upload.wikimedia.org/thumb/HASH/
 - W3 Photo Policy explicitly locks: Wikimedia hotlink-only (no R2 re-hosting), attribution required on detail view, not required on cards, CSS overlay confirmed legal, EULA reference Section 6.3.
 - W2 Auto-Link rules locked: haversine + country-adaptive radius + category affinity + 3-wonder cap + opt-out mechanics.
 - Version history row v4.6 added. Document validated (817 paragraphs, all checks passed).
+
+### Demo listings — World Heritage links added
+- 30 demo listings (10 Property + 10 Adventures Experiences + 10 Adventures Accommodation) updated with `linked_wonders` using real haversine matching against wonders.json.
+- Pretoria listings (Property + Experiences): Blyde River Canyon (292km) + Kruger National Park (392km).
+- Stay listings: Limpopo/Mpumalanga → Kruger + Blyde; Cape Town stays → Robben Island + Table Mountain + Iziko SA Museum; Namibia → Namib-Naukluft (42km); KZN/Mozambique/E+W Cape mapped appropriately.
+- `loadDetailWonders()` extended with demo fallback path: when no `beaId`, reads `listing.linked_wonders` array directly and resolves wonder data from `_wpAllWonders` cache. Wonder cards render identically to BEA-backed listings.
