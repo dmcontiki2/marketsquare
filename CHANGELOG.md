@@ -1836,3 +1836,13 @@ Root cause: SELLERS array only had 7 Pretoria entries (idx 0–6). All NY/London
 
 ## Session 62 continued·7 — Heritage strip instant render
 **World Heritage strip: bundled 120 sites as hardcoded `WONDERS_BUNDLED` JS array in marketsquare.html.** Previously the strip fetched from `BEA_URL/wonders` on every page load, causing a visible delay before any Heritage cards appeared. The 120-site dataset (168KB) is now embedded directly in the app and `_wpAllWonders` is initialised from it at parse time — Heritage cards render at the same instant as listings, with zero network wait. A silent background `setTimeout(3000)` fetch still runs after the initial render; if the BEA returns a different count of wonders it silently updates `_wpAllWonders` and re-renders the strip — keeping the data fresh without ever blocking the user. The "Loading World Heritage sites…" shimmer placeholder has been removed entirely. File size increased from ~1.23MB to ~1.40MB.
+
+## Session 62 continued·8 — Critical JS fix + live/demo data integrity (2026-05-18)
+
+**Fix: Broken site (0 listings everywhere, empty Featured, missing Heritage strip)**
+Root cause: The previous "View seller profile" button guard in the detail view used nested backtick template literals inside an outer backtick template literal. JS does not allow nested backticks in template literals — the entire ms-logic script block failed to parse, leaving the app completely non-functional. Fix: replaced the nested-backtick ternary with an IIFE (immediately-invoked function expression) inside `${}` that builds the button HTML using single-quoted strings and concatenation — no backticks inside the outer template literal. The browse-grid seller badge on line 7831 was already using the safe `?`` : ''` pattern correctly and did not need changing.
+
+**Fix: Local Market tile showing 10 demo listings on live site**
+`initLMHomeTile()` fetches real LM listings from BEA, but falls back to demo LISTINGS when BEA returns nothing (no live LM listings yet). The fallback was unconditional — it fired on the live site too, making the LM tile show "10 listings" from demo data. Fixed the fallback to return `[]` when `DEMO_MODE` is false, so the tile correctly shows "0 listings" on the live site.
+
+**Net result:** Live site (trustsquare.co) now shows exactly what real data exists: Property 5 listings, all other categories 0, Local Market 0, Heritage 120 — no demo bleed-through of any kind.
