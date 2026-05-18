@@ -1867,3 +1867,8 @@ The Seller hub card on the Me tab was hidden unless `ms_aa_email` was already in
 
 **Fix: photo_urls not read from BEA API response**
 `loadLiveListings()` was only reading photos from a `[photos:...]` description prefix and `l.medium_url`. The `photo_urls` DB column (a JSON array of R2 URLs) was returned in the API response but never parsed. Added a third source: parse `l.photo_urls` as JSON after the description check. Listing 93 now correctly shows all 11 R2 photos. Listings 94–97 have no photos uploaded and correctly fall back to the Property category image.
+
+## Session 62 continued·12 — Post-deploy smoke test (2026-05-18)
+
+**Added smoke_test.py to MarketSquare project root.**
+28-check automated test that runs after every deploy and catches regressions before they reach David. Checks: HTML integrity (size, structure, ends with </html>), JS syntax for both ms-data and ms-logic blocks via `node --check`, LISTINGS array loads with 200+ entries and all 4 categories present, BEA /health and live listings, WONDERS_BUNDLED present with 100+ sites, 9 critical function names present, demo bleed guards in place, seller profile safety (no bare cvScore, sellerIdx IIFE, l.trust). Runs in ~25s via SSH. Added as step 1 of the mandatory session-end checklist in CLAUDE.md — must pass before CHANGELOG/STATUS updates.

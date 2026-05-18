@@ -49,10 +49,11 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
 
-**Session end checklist (mandatory — all three required):**
-1. Append to `CHANGELOG.md`
-2. Update `STATUS.md` (Live State, Last Completed, Next Session)
-3. Update and deploy `dashboard.html` to the server — fetch current version first (`strings /var/www/marketsquare/dashboard.html | grep currentSession`), update DATA object (currentSession, nextSession, liveState, lastDone, nextGoals, blockers, highPriority, directions, recentChangelog), deploy via scp. Never skip this step.
+**Session end checklist (mandatory — all four required):**
+1. Run smoke test: `python3 smoke_test.py` — ALL checks must pass before closing. Fix any failures before proceeding to steps 2–4.
+2. Append to `CHANGELOG.md`
+3. Update `STATUS.md` (Live State, Last Completed, Next Session)
+4. Update and deploy `dashboard.html` to the server — fetch current version first (`strings /var/www/marketsquare/dashboard.html | grep currentSession`), update DATA object (currentSession, nextSession, liveState, lastDone, nextGoals, blockers, highPriority, directions, recentChangelog), deploy via scp. Never skip this step.
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 
