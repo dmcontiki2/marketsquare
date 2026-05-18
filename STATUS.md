@@ -79,7 +79,12 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 5. **AI audit of the TrustSquare app** — Full AI-assisted audit of marketsquare.html: dead code, DEMO_MODE guards on all BEA calls, TODO:REMOVE BEFORE LAUNCH items, accessibility, mobile UX, and any remaining data integrity issues.
 
 ## Last Completed
-**Session 62 (continued·6) — 18 May 2026**
+**Session 62 (continued·7) — 18 May 2026**
+- World Heritage strip: bundled 120 sites as hardcoded WONDERS_BUNDLED array in marketsquare.html.
+- Heritage cards now render instantly (same time as listings) — zero network wait. 3s background refresh still updates from BEA silently.
+- File size: 1,399,379 bytes (was 1,231,215). HTML integrity OK.
+
+**Previous: Session 62 (continued·6) — 18 May 2026**
 - Full 290-listing audit: all 4 cities × 7 categories verified — 0 issues after fixes.
 - 70 Pretoria listings missing sellerIdx — all added (Property=0, Tutors=1, Services=2, Adventures=3, Collectors=4, Cars=5, LM=6).
 - 30 Pretoria Collectors/Cars/LM trust scores below 70 — all corrected to 72–94 range.
