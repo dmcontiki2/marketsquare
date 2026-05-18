@@ -5979,6 +5979,16 @@ async function loadLiveListings(retryCount) {
           photos = photoData.map(p => p.url);
           desc = desc.replace(photoMatch[0], '');
         }
+        // photo_urls: JSON array stored in DB — highest fidelity source, use when present
+        if (l.photo_urls && !photos.length) {
+          try {
+            const pu = typeof l.photo_urls === 'string' ? JSON.parse(l.photo_urls) : l.photo_urls;
+            if (Array.isArray(pu) && pu.length) {
+              photos = pu.filter(Boolean);
+              photoData = photos.map(u => ({url: u, caption: ''}));
+            }
+          } catch(e) {}
+        }
         if (l.medium_url && !photos.length) { photos = [l.medium_url]; photoData = [{url: l.medium_url, caption: ''}]; }
         else if (l.medium_url && photos.length && photos[0] !== l.medium_url) { photos.unshift(l.medium_url); photoData.unshift({url: l.medium_url, caption: ''}); }
         // Property-specific fields — prefer dedicated DB columns, fall back to description parsing

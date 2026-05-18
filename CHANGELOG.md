@@ -1854,3 +1854,8 @@ The previous IIFE fix correctly eliminated the nested-backtick JS error, but inc
 
 **Fix: `cvScore is not defined` crash in `openBEASellerProfile`**
 Pre-existing bug: `openBEASellerProfile()` referenced `cvScore` in two places (trust score number display and trust bar width) but never defined it. Should have been `l.trust`. Replaced both occurrences. Seller profile screen for live listings now opens fully without a ReferenceError.
+
+## Session 62 continued·10 — Live listing photos restored (2026-05-18)
+
+**Fix: Photos missing on live property listings**
+Root cause: `loadLiveListings()` read photos from two sources — a `[photos:url1|url2]` prefix in the description field, and `l.medium_url`. Listing 93 had its photos stored in the `photo_urls` DB column (a JSON array of 10 R2 URLs) which the FEA never read. Added a third photo source: after the description-prefix check, parse `l.photo_urls` as a JSON array if present and no photos were found yet. Listing 93 now resolves 11 photos from R2. Listings 94–97 have no photos uploaded at all (no photo_urls, no medium_url, no description prefix) — they correctly show the Property category fallback (Unsplash house image) until those sellers upload photos via the admin app.
