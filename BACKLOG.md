@@ -10,12 +10,13 @@
 |---|---|---|
 | L1 | **Counsel EULA review** — South African attorney must review and fill all `[COUNSEL REQUIRED]` sections before app goes public | Legal |
 | L2 | **Company registration number** — insert Trustsquare (Pty) Ltd reg number into EULA Section 2 and app footer | Legal |
-| L3 | **NCC registration number** — insert NCC direct marketer reg number into EULA Section 6.6 | Legal |
+| L3 | **NCC direct marketer registration — counsel to confirm first** — counsel must advise whether TrustSquare (Pty) Ltd is required to register as a direct marketer with the NCC under the CPA. Transactional intro emails to opted-in users are likely exempt; CityLauncher cold outreach may not be. Section 6.6 EULA updated to remove false "is registered" claim and replaced with a compliant placeholder pending counsel confirmation. If registration is required, obtain reg number and insert into Section 6.6. | Legal |
+| L3a | **support@trustsquare.co mailbox** — confirm mailbox exists and is monitored before EULA published to production. Used in Sections 5.4, 6.5, 6.6, 7.x, 13, 14 and 15. Operational item, not legal — but EULA is undeliverable without it. | Ops |
 | L4 | **Privacy Policy page** — draft and publish trustsquare.co/privacy (required by EULA Section 9.1 and POPIA) | Legal |
 | L5 | **FSCA guidance on Tuppence** — confirm Tuppence classification as non-virtual-asset with FSCA or comply if reclassified (EULA Section 12) | Legal |
 | L6 | **POPIA consent timing** — counsel must confirm whether magic link email collection constitutes prior consent or whether EULA gate must move earlier in the flow | Legal |
 | L7 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once CIPC registration approved | Server |
-| L8 | **Tuppence refund language removal** — purge all refund / restitution clauses from EULA v1.0, Whitepaper v3 (L31), and `marketsquare.html` (six edits). Action plan: `NEXT_SESSION_TUPPENCE_NO_REFUND.md`. Formal record: `Tuppence_Refund_Finding_and_Remediation_2026-05-12.docx`. Backend (`bea_main.py`) confirmed clean. Patent provisional Claim 2 uses corrected wording per Erratum. Must complete before patent filing and before EULA publication. | Legal · Product · IP |
+| L8 | **Tuppence refund language — EULA RESOLVED in v1.3 (17 May 2026)** — EULA Sections 5.1, 5.3, 5.4, 6.3, 6.5, 13, 14.3 fully corrected: charge-on-acceptance-only, Banks Act discretionary-reissuance framing, fraud-aversion clause, Casuals role terminology, ECT Act §44 scope, no ZAR cash conversion. Remaining open: purge from Whitepaper v3 and `marketsquare.html` (six edits flagged in `NEXT_SESSION_TUPPENCE_NO_REFUND.md`). Backend (`bea_main.py`) confirmed clean. | Legal · Product · IP |
 
 ---
 

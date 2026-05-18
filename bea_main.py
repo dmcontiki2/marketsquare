@@ -730,20 +730,46 @@ AA_MODEL = "claude-haiku-4-5-20251001"
 
 # ── HELPERS ───────────────────────────────────────────────────
 
-def _s3_upload(data: bytes, key: str, content_type: str) -> str:
-    """Upload bytes to R2; return browser-fetchable public URL.
+# Local media mirror — absolute path on server
+_LOCAL_MEDIA_DIR = "/var/www/marketsquare/media"
 
-    Writes go through the authenticated S3 API endpoint (signed by boto3 with
-    the secret key). Reads must use the public dev URL (or a configured custom
-    domain) because the S3 API rejects anonymous GETs with InvalidArgument."""
-    _s3.put_object(
-        Bucket=HETZNER_S3_BUCKET,
-        Key=key,
-        Body=data,
-        ContentType=content_type,
-        ACL="public-read",
-    )
-    return f"{R2_PUBLIC_URL}/{key}"
+def _s3_upload(data: bytes, key: str, content_type: str) -> str:
+    """Upload bytes to R2 (primary) AND mirror to local Hetzner disk (redundant fallback).
+
+    Dual-write strategy:
+      1. Write to R2 — fast global CDN, $0 egress.
+      2. Mirror identical bytes to /var/www/marketsquare/media/<key> — served via nginx /media/.
+    If R2 is unreachable the buyer app JS falls back to /media/<key> via onerror handler.
+    Storage decision: 17 May 2026 — write-to-both approved by David Conradie.
+    CPX32 upgrade planned 25 May 2026 (160GB disk); Hetzner Volume (€0.052/GB) on standby.
+    At 50,000 listings + photos ≈ 30GB — well within CPX32 capacity for years.
+    """
+    import os as _os
+
+    # ── Primary: R2 ───────────────────────────────────────────────────────
+    r2_url = f"{R2_PUBLIC_URL}/{key}"
+    try:
+        _s3.put_object(
+            Bucket=HETZNER_S3_BUCKET,
+            Key=key,
+            Body=data,
+            ContentType=content_type,
+            ACL="public-read",
+        )
+    except Exception as _e:
+        _log.warning("R2 upload failed for %s: %s — local mirror still written", key, _e)
+
+    # ── Mirror: local Hetzner disk ────────────────────────────────────────
+    try:
+        local_path = _os.path.join(_LOCAL_MEDIA_DIR, key)
+        _os.makedirs(_os.path.dirname(local_path), exist_ok=True)
+        with open(local_path, "wb") as _f:
+            _f.write(data)
+    except Exception as _e:
+        _log.warning("Local mirror write failed for %s: %s", key, _e)
+
+    # Always return R2 URL as primary — buyer app falls back to /media/<key> via onerror
+    return r2_url
 
 
 async def _fire_webhook(url: str, payload: dict):
@@ -790,6 +816,10 @@ class Listing(BaseModel):
     service_class: Optional[str] = None   # 'Technical' | 'Casuals'
     service_type: Optional[str] = None
     availability: Optional[str] = None
+    # Property location (private — never returned to buyers)
+    street_address: Optional[str] = None   # e.g. "12 Oak Ave, Waterkloof Ridge" — used for geocoding only
+    listing_lat: Optional[float] = None    # geocoded from street_address
+    listing_lng: Optional[float] = None
     # Trust
     trust_score: Optional[int] = None
     seller_email: Optional[str] = None
@@ -822,6 +852,9 @@ class ListingUpdate(BaseModel):
     photo_urls: Optional[str] = None    # JSON-encoded array of photo URLs
     thumb_url: Optional[str] = None     # primary thumbnail
     medium_url: Optional[str] = None    # primary medium photo
+    street_address: Optional[str] = None   # private — geocoded for POI accuracy, never shown to buyers
+    listing_lat: Optional[float] = None
+    listing_lng: Optional[float] = None
 
 class IntroRequest(BaseModel):
     listing_id: int
@@ -910,13 +943,15 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
             subject, level, mode, service_type, availability,
-            trust_score, seller_email, listing_status, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL)""",
+            trust_score, seller_email, listing_status, published_at,
+            street_address, listing_lat, listing_lng)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
-         listing.trust_score, listing.seller_email, 'draft')
+         listing.trust_score, listing.seller_email, 'draft',
+         listing.street_address, listing.listing_lat, listing.listing_lng)
     )
     conn.commit()
     new_id = cursor.lastrowid
@@ -1048,11 +1083,22 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
     query = '[out:json][timeout:15];(\n' + '\n'.join(union_parts) + '\n);out center 50;'
 
     try:
-        url = 'https://overpass-api.de/api/interpreter'
-        data = _parse.urlencode({'data': query}).encode()
-        req = _req.Request(url, data=data, headers={'User-Agent': 'TrustSquare/1.0'})
-        with _req.urlopen(req, timeout=20) as resp:
-            result = _json.loads(resp.read())
+        import socket as _socket
+        # overpass-api.de is blocked on this host; use kumi.systems mirror.
+        # Force IPv4 to avoid IPv6 connection hang on Hetzner.
+        _orig_getaddrinfo = _socket.getaddrinfo
+        def _ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
+            return _orig_getaddrinfo(host, port, _socket.AF_INET, type, proto, flags)
+        _socket.getaddrinfo = _ipv4_only
+        try:
+            url = 'https://overpass.kumi.systems/api/interpreter'
+            data = _parse.urlencode({'data': query}).encode()
+            req = _req.Request(url, data=data, headers={'User-Agent': 'TrustSquare/1.0',
+                                                         'Content-Type': 'application/x-www-form-urlencoded'})
+            with _req.urlopen(req, timeout=25) as resp:
+                result = _json.loads(resp.read())
+        finally:
+            _socket.getaddrinfo = _orig_getaddrinfo
     except Exception as e:
         return {}
 
@@ -1094,6 +1140,36 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
 
     # Remove empty categories
     return {k: v for k, v in cat_results.items() if v}
+
+
+def _geocode_address(address: str, city: str, country_iso2: str = "ZA") -> tuple:
+    """Geocode a street address using Nominatim (OSM). Returns (lat, lon) or (None, None).
+    Free, no API key. Respects 1 req/sec rate limit — call only at publish time.
+    Privacy: address is sent to Nominatim but never stored in logs or returned to buyers.
+    """
+    import urllib.request as _req, urllib.parse as _parse, json as _json, socket as _socket
+    if not address:
+        return None, None
+    query = f"{address}, {city}, {country_iso2}"
+    params = _parse.urlencode({"q": query, "format": "json", "limit": "1"})
+    url = f"https://nominatim.openstreetmap.org/search?{params}"
+    try:
+        # Force IPv4 to avoid IPv6 hang on Hetzner
+        _orig = _socket.getaddrinfo
+        def _ipv4(h, p, family=0, type=0, proto=0, flags=0):
+            return _orig(h, p, _socket.AF_INET, type, proto, flags)
+        _socket.getaddrinfo = _ipv4
+        try:
+            req = _req.Request(url, headers={"User-Agent": "TrustSquare/1.0 (trustsquare.co)"})
+            with _req.urlopen(req, timeout=10) as resp:
+                results = _json.loads(resp.read())
+        finally:
+            _socket.getaddrinfo = _orig
+        if results:
+            return float(results[0]["lat"]), float(results[0]["lon"])
+    except Exception:
+        pass
+    return None, None
 
 
 def auto_link_pois(listing_id: int, city_lat: float, city_lon: float):
@@ -1228,6 +1304,24 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
 
     # Auto-link nearby World Heritage wonders (only if none already linked)
     try:
+        # Geocode street address → listing_lat/lng if not already set
+        listing_row = database.get_db().execute(
+            "SELECT street_address, listing_lat, listing_lng, suburb, geo_city_id, category FROM listings WHERE id = ?",
+            (listing_id,)
+        ).fetchone()
+        if listing_row and listing_row["street_address"] and not listing_row["listing_lat"]:
+            city_name = database.get_db().execute(
+                "SELECT name FROM geo_cities WHERE id = ?", (listing_row["geo_city_id"],)
+            ).fetchone()
+            city_name_str = city_name["name"] if city_name else ""
+            glat, glng = _geocode_address(listing_row["street_address"], city_name_str)
+            if glat and glng:
+                database.get_db().execute(
+                    "UPDATE listings SET listing_lat=?, listing_lng=? WHERE id=?",
+                    (glat, glng, listing_id)
+                )
+                database.get_db().commit()
+
         city_row = database.get_db().execute(
             "SELECT lat, lng FROM geo_cities WHERE id = (SELECT geo_city_id FROM listings WHERE id = ?)",
             (listing_id,)
@@ -1255,11 +1349,23 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
             )
             # Property listings: auto-fetch nearby POIs (schools, hospitals, etc.)
             if cat_row and (cat_row["category"] or "").lower() == "property":
-                auto_link_pois(
-                    listing_id,
-                    float(city_row["lat"]),
-                    float(city_row["lng"])
-                )
+                # Coordinate priority: listing_lat/lng (geocoded street addr) > suburb > city
+                addr_row = database.get_db().execute(
+                    "SELECT listing_lat, listing_lng FROM listings WHERE id = ?", (listing_id,)
+                ).fetchone()
+                if addr_row and addr_row["listing_lat"] and addr_row["listing_lng"]:
+                    poi_lat = float(addr_row["listing_lat"])
+                    poi_lng = float(addr_row["listing_lng"])
+                else:
+                    suburb_row = database.get_db().execute(
+                        """SELECT gs.lat, gs.lng FROM geo_suburbs gs
+                           JOIN listings l ON l.suburb = gs.name AND l.geo_city_id = gs.city_id
+                           WHERE l.id = ? AND gs.lat IS NOT NULL LIMIT 1""",
+                        (listing_id,)
+                    ).fetchone()
+                    poi_lat = float(suburb_row["lat"]) if suburb_row and suburb_row["lat"] else float(city_row["lat"])
+                    poi_lng = float(suburb_row["lng"]) if suburb_row and suburb_row["lng"] else float(city_row["lng"])
+                auto_link_pois(listing_id, poi_lat, poi_lng)
     except Exception as _e:
         pass  # auto-link failure must never block publish
 

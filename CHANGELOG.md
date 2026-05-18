@@ -1,3 +1,182 @@
+## Session 62 (continued·6) · 17 May 2026 · Full demo audit + process enforcement
+
+**Systematic audit: all 4 cities × 7 categories (290 listings):**
+- **70 Pretoria listings missing `sellerIdx`** — all Pretoria listings (Property/Tutors/Services/Adventures/Collectors/Cars/LM × 10 each) had no sellerIdx field, causing `openSellerCV()` to fall back to SELLERS[0] (Property broker) for every category. Fixed: inserted correct sellerIdx (0–6 per category) on all 70.
+- **30 Pretoria Collectors/Cars/LM trust scores below 70** — these categories were added in an earlier session without the trust-score fix that Property/Tutors/Services received. All 30 corrected to 72–94 range.
+- **demo_col_syd_4 area typo** — `area:'London'` → `area:'Sydney'` (carried over from previous pass).
+- Post-fix audit: 290 listings, 0 issues. All cities clean.
+
+**Process rules added (AI-enforced, no human memory dependency):**
+- `CLAUDE.md` and `AGENT_BRIEFING.md` (Rule 8 + Rule 9): any new BEA API call must include a DEMO_MODE guard in the same task; any LISTINGS/SELLERS change must pass the full audit script before CHANGELOG is written. Agents self-enforce — not delegated to David to remember.
+
+Deployed 1,230,305 bytes · all apostrophes clean · JS intact.
+
+---
+
+## Session 62 (continued·5) · 17 May 2026 · 7 demo bugs fixed + SELLERS corrected
+
+**All 7 reported issues resolved:**
+- **Adventures city sync**: `selectDemoCity()` now updates `advCountry`/`advCountryName`/`advCountryFlag` so Adventures grid shows US/UK/AU content when NY/London/Sydney is selected (was always showing ZA).
+- **World Heritage country sync**: `selectDemoCity()` now sets `_wfCountry` and calls `renderWondersStrip()` — Heritage strip follows city selection (was always showing African sites).
+- **LM listing titles "undefined"**: All 30 LM demo listings (10 per NY/London/Sydney) now have a `title:` field. Vintage Eames Chair, Victorian Chesterfield, 1970s Surfboards, etc.
+- **Cars seller linking to stamps collector**: SELLERS[7-27] rebuilt — 21 correct per-city/per-category entries. NY Cars [12] = 'Verified Private Seller · New York · Classic & Collector Cars'.
+- **Red demo corner badges**: `demo-card-badge` div added to Adventures card renderer and LM fallback card renderer (was only on main renderGrid cards).
+- **POI accuracy disclaimer**: Property detail POI section header now shows "(demo data — approximate)" badge when `listing.id` starts with `demo_`.
+- **demo_col_syd_4 area typo**: `area:'London'` corrected to `area:'Sydney'`.
+
+Deployed 1,230,305 bytes · all apostrophes clean · JS ends correctly.
+
+---
+
+## Session 62 (continued·4) · 17 May 2026 · Country→city selector + 90 new listings (NY/London/Sydney Collectors, Cars, Local Market)
+
+**Country selector hierarchy fixed:**
+- `handleCityBadgeClick()` now opens the **country** panel in demo mode (was: jumped straight to city list)
+- `_loadAndRenderCountries()` injects 4 demo countries (ZA/US/GB/AU) in demo mode
+- `selectDemoCountry(iso2, name)` new function: sets activeCountry, renders that country's city in the city panel, then opens city panel
+- `_loadAndRenderCities()` demo branch now filters by `DEMO_COUNTRY_CITIES[activeCountry.iso2]` instead of showing all 4 cities at once
+- Result: tap badge → see 4 countries → tap country → see its city → tap city → marketplace filters
+
+**90 new demo listings added:**
+- NY: 10 Collectors (first editions, Warhol, Mickey Mantle, Rolex) · 10 Cars (GT3, M2, SF90, STI) · 10 Local Market (Eames chair, Gibson LP, Klipsch, Hasselblad)
+- London: 10 Collectors (HP first ed, Banksy, Hockney, Bobby Moore) · 10 Cars (Aston Martin F1, RR Ghost, McLaren 570S, F-Type R) · 10 Local Market (Ercol, Quad ESL-57, Fender Tele MIJ, Nakashima)
+- Sydney: 10 Collectors (Streeton, Bradman bat, Whiteley, Don Bradman) · 10 Cars (911 4S, GR Supra, Ferrari Roma, AMG C63 S) · 10 Local Market (Featherston chair, Maton guitar, Rogers drums, KEF Reference)
+- All listings use sellerIdx:6 (Pretoria Collectors seller) as placeholder — correct per-city sellers to be assigned in a future session
+
+Total demo listings now: 293 (up from 203). Deployed 1,224,240 bytes · JS syntax clean.
+
+---
+
+## Session 62 (continued·3) · 17 May 2026 · Bug fixes — wrong city stamps, LM filter, tile hiding
+
+**Root cause found:** The previous `city:'Pretoria'` insert script used prefix matching (`demo_adv_`, `demo_prop_`, etc.) which also matched `demo_adv_ny_`, `demo_prop_ny_` etc. — stamping all 120 NY/London/Sydney listings with `city:'Pretoria'`. Fixed with a targeted removal pass that only stripped the wrong Pretoria stamps from `_ny_`, `_lon_`, `_syd_` IDs.
+
+**Additional fixes in this pass:**
+- **Category tiles hide when 0 in demo mode**: `renderCatCounts()` now sets `tile.style.display='none'` for any category with 0 listings when DEMO_MODE is active. Collectors/Cars/LocalMarket tiles disappear for NY/London/Sydney instead of showing "0 listings".
+- **Local Market grid city filter**: `lmLoadGrid()` fallback (BEA returns nothing) now filters LISTINGS by `l.city === activeCity.name` before rendering. Previously showed all 10 Pretoria LM listings for any city.
+- **initLMHomeTile city filter**: Same fix applied to the home tile count/photo fallback — only counts LM listings for the active city.
+- **LM card "62 undefined"**: `tbadge()` returns an HTML string, not an object — the card template incorrectly called `t.c` and `t.label` on the result. Fixed by using `trustTier()` instead.
+- **"Join as founding seller" → Pretoria**: This is correct behaviour — `demoBannerJoin()` redirects to `trustsquare.co` (no `?demo=1`), which shows the live app in Pretoria. Not a bug.
+
+Deployed to trustsquare.co · 1,173,979 bytes · JS syntax clean.
+
+---
+
+## Session 62 (continued·2) · 17 May 2026 · Bug fixes — city filtering, map coordinates
+
+**4 bugs fixed (from David's screenshot report):**
+
+**1 & 2 — Collectors/Cars showing 0 listings + Local Market showing Pretoria data:** All 83 original Pretoria listings (demo_col_, demo_car_, demo_lm_, demo_adv_, demo_stay_, demo_prop_, demo_tut_, demo_svc_, ph_* placeholders) were missing a `city` field. The city filter in `renderGrid()` and `renderCatCounts()` uses `l.city || l.area` — without `city`, `area:'Pretoria'` was used, which never matched 'New York'. Fixed by inserting `city:'Pretoria'` after the `cat:` field in all 83 affected listings.
+
+**3 — Adventures showing South Africa data only:** `adventures_accommodation` and `adventures_experiences` listings also had no `city` field (same root cause). Now carry `city:'Pretoria'` so they correctly filter out when another city is selected.
+
+**4 — Maps showing Pretoria instead of selected city:** `renderMap()` had two issues: (a) filter used `l.suburb_lat` but demo listings store coords as `l.listing_lat`/`l.listing_lng` — fixed to use `l.listing_lat || l.suburb_lat`; (b) the empty-map fallback was hardcoded to `[-25.75, 28.19]` (Pretoria). Fixed with a `CITY_CENTERS` lookup table (Pretoria/NY/London/Sydney) so the map pans correctly when no listings match. Map filter also now applies the demo city filter so only the active city's property markers appear.
+
+**5 — Nav bar with 3 items:** This is intentional in demo mode. Sell/Wallet/MySpace are hidden so prospects cannot access seller screens; the "Join as founding seller →" button takes their place as the CTA. Working as designed.
+
+Deployed to trustsquare.co · 1,175,581 bytes · JS syntax clean.
+
+---
+
+## Session 62 (continued) · 17 May 2026 · Bug fixes — seller profiles, currency, sellerIdx mapping
+
+**Three post-deploy bugs fixed:**
+
+**SELLERS sellerIdx remapping:** The 12 new city SELLERS entries were at array positions [7]–[18] but all new city listings referenced sellerIdx 10–21 (off by 3). Single-pass regex substitution remapped all 203 `sellerIdx:N` occurrences in LISTINGS to the correct values (10→7 through 21→18). Result: all 19 sellerIdx values (0–18) now have consistent hit counts.
+
+**Currency display (formatZAR):** `formatZAR()` was stripping currency symbols and forcing `R` prefix on all prices, causing NY/London/Sydney prices to display as e.g. `R75.00` instead of `$75`. Fix: added currency-prefix detection — if value starts with a non-ZAR symbol (`$`, `£`, `€`, `A$`, `CA$`, `N$`, etc.), the raw string is returned as-is. ZAR strings (`R 950`) continue to use the full format/rounding path.
+
+**Seller profile location "undefined":** The seller CV screen used `s.region || 'Pretoria and surrounds'` as the location label. New city SELLERS entries have no `region` field, so it fell back to the hardcoded Pretoria string. Fix: changed to `s.region || (l && l.city) || 'Pretoria and surrounds'` so the listing's own `city` field is used when no region is set on the seller.
+
+Deployed to trustsquare.co · 1,171,557 bytes · JS syntax clean.
+
+---
+
+## Session 62 · 17 May 2026 · Demo Data Overhaul — All 4 Launch Cities
+
+### Full demo data overhaul: Pretoria · New York · London · Sydney
+
+**7-item spec completed in full:**
+
+**1. Demo/Live toggle (dev-only):** Floating `DEMO | BOTH | LIVE` panel added top-right, visible only when `?demo=1`. Controlled by `DEMO_DISPLAY_MODE` variable. All code wrapped in `// TODO: REMOVE BEFORE LAUNCH` comments.
+
+**2. Red corner-slice badge:** `.demo-card-badge` CSS class added — red 28px CSS border-triangle (clip-path via border trick) injected into `cardHtml()` for any listing with `id.startsWith('demo_')` or `id.startsWith('ph_')`. World Heritage cards exempt.
+
+**3. City-accurate Unsplash photos:** All new NY/London/Sydney listings use verified stable Unsplash URLs (`photo-{id}?w=800&q=80` format) appropriate to each city's architecture and context.
+
+**4. Full seller profiles:** 12 new SELLERS array entries (sellerIdx 10–21) covering Property, Tutors, Services, and Adventures for NY, London, and Sydney. Each has trustScore 72–94, realistic intros stats, category-specific credentials with correct local terminology: NYC Licensed Broker/REBNY (NY), RICS/NAEA/TPO (London), NSW Class 1 Licence/REINSW (Sydney). Tutors: SAT/ACT/Regents (NY), 11+/A-Level/Oxbridge (London), HSC/OC/ATAR (Sydney). Services: NYC Licensed Master Electrician/IBEW (NY), NICEIC/Part P (London), NSW A-Grade/NECA (Sydney). Adventures: NYC Licensed Sightseeing Guide (NY), Blue Badge/ITG (London), NSW ATAP/PADI (Sydney).
+
+**5. Real World Heritage links:** All 30 new Adventures listings (10 per city) linked to geographically appropriate wonders from `wonders.json` — NY: nm_003 (Met Museum), np_034, np_020; London: un_009 (Stonehenge), nm_001 (British Museum), un_027 (Canterbury); Sydney: un_029 (Great Barrier Reef), np_014 (Uluru), np_018 (Daintree).
+
+**6. Real POI distances:** All Property listings have `listing_lat`/`listing_lng` set to actual suburb coordinates and `nearby_pois` populated with real local amenities (schools, universities, shopping, transport, healthcare) with accurate straight-line distances.
+
+**7. Correct currency symbols:** ZAR (R), USD ($), GBP (£), AUD (A$) throughout all demo listings per city. Property prices: Pretoria R850K–R8.5M, NY $850K–$4.5M, London £385K–£3.2M, Sydney A$720K–A$5.2M.
+
+**Trust score fixes:** All Pretoria demo_prop listings updated from 38–44 to 72–88 range. Pretoria demo_tut and demo_adv sub-72 outliers raised to minimum 72. demo_stay_9 capped at 94.
+
+Total new content: 30 Property + 30 Tutor + 30 Services + 30 Adventures listings (NY/London/Sydney) + 12 seller profiles. `marketsquare.html` verified ends with `</html>`, deployed to trustsquare.co (1,169,308 bytes on server).
+
+---
+
+## Session 61 (continued) · 17 May 2026 · EULA v1.3 — Tuppence charge-timing + Banks Act compliance
+
+### EULA v1.3 — Charge timing corrected + Banks Act compliance (Section 6.3 + 5.1 + 5.4 + 14.3)
+Critical legal corrections across four sections, informed by the patent consultation memo (Section 5.3 Banks Act analysis) and David's business rule confirmation:
+
+**Charge timing (Section 5.1):** The EULA previously stated "A Buyer pays 1T when sending an Introduction." This was factually wrong — the BEA has always deducted Tuppence at `PUT /intros/{id}/accept` (seller acceptance), not at submission. Section 5.1 now states: sending is free; the only event that triggers a deduction is seller acceptance; decline and non-response carry no charge.
+
+**Banks Act compliance (Section 6.3 renamed):** Section 6.3 renamed from "Refunds" to "Tuppence Service Credit Reissuance (not a Refund)." The patent consultation memo identified the partial-refund mechanism as the load-bearing Banks Act exposure — if characterised as a contractual right of repayment, Tuppence approaches the statutory definition of "deposit." All five bullets and the opening paragraph rewritten to characterise reissuance as a discretionary platform action, not a contractual entitlement. Four express clauses added: no cash redemption, no interest, 24-month dormancy expiry (with 30-day notice), no seller-settlement prohibition.
+
+**Bullets 1 and 2 of 6.3 corrected:** Seller no-response and seller decline no longer describe a "reissuance" because no Tuppence was ever deducted in those cases. Both bullets now accurately state: no charge arose, no reissuance is required, Introduction closes cleanly.
+
+**Fraud-aversion clause added (end of 6.3):** Once a seller accepts and 1T is deducted, that deduction is final and irrevocable. Buyer and seller colluding to declare no action, transacting outside the platform to avoid the fee, or requesting reversal on the grounds that no deal resulted — none of these entitle either party to reissuance. The accepted risk of a non-completing transaction is borne by the seller as the accepting party. This is the patent novelty anchor: atomic charge-on-acceptance with no post-acceptance reversal path.
+
+**Section 5.4 (ECT Act §44 cooling-off):** Rewritten to handle both cases correctly — pre-acceptance cancellation incurs no charge and needs no reissuance; post-acceptance cancellation within 7 days triggers a discretionary service credit reissuance (not a cash refund).
+
+**Section 14.3 (termination for convenience):** Removed the promise to "convert unused Tuppence to a cash credit in ZAR" — this directly contradicted the non-redeemable-for-cash characterisation. Unused Tuppence is now forfeited on termination; no ZAR conversion under any circumstances.
+
+**Summary fee table:** Updated to read "charged to the Buyer's balance only upon Seller acceptance."
+
+EULA version: v1.2 → v1.3. Document saved as `MarketSquare_EULA_v1_3_Draft.docx`.
+
+## Session 61 (continued) · 17 May 2026 · Infrastructure Redundancy, POI Accuracy, Street Address Geocoding + Documentation Update
+
+### Write-to-both photo storage — live ✅
+- `_s3_upload()` in `bea_main.py` rewritten to write every photo to both Cloudflare R2 (primary CDN) and Hetzner local disk `/var/www/marketsquare/media/` simultaneously. R2 or local write failures log warnings without blocking the other write.
+- `r2Fallback()` JS utility added to `marketsquare.html` — `onerror` handlers on all 13 image tags rewrite failed R2 URLs to `/media/<key>` automatically. Zero user-visible failure state.
+- Hetzner local `/media/` directory confirmed populated with historical photos — existing listings already covered.
+- Cost model impact: nil — CPX22 disk space already paid for; R2 egress already $0. Local mirror is free insurance.
+
+### CPX32 upgrade scheduled · 25 May 2026
+- Decision: upgrade Hetzner CPX22 → CPX32 on 25 May 2026 (4 vCPU, 8 GB RAM, 160 GB NVMe, €15.49/month).
+- Self-funding: 2 Starter subscribers ($10/month) cover the €6/month delta. Storage projection for 50,000 global listings ≈ 29.5 GB — well within CPX32 capacity.
+- Hetzner Volume (€0.052/GB/month, independent block storage) placed on standby — activate at >80% disk utilisation.
+- Cost model impact: infrastructure cost increases from €9.49 to €15.49/month from 25 May 2026. Covered by 2 Starter subscriptions.
+
+### POI accuracy + straight-line distances ✅
+- Overpass API switched from blocked `overpass-api.de` to `overpass.kumi.systems` mirror. IPv4 monkey-patch applied to BEA to force `AF_INET` on all urllib calls (Hetzner blocks IPv6).
+- BEA publish path now looks up suburb coords from `geo_suburbs` and passes them to `auto_link_pois()` — suburb-level accuracy instead of city-centre fallback.
+- All 10 demo property listings patched with suburb-accurate POI data (Menlyn: Menlyn Park 0.4km, Pretoria East Hospital 1.8km; Hatfield: TUKS 0.7km; Brooklyn: Brooklyn Mall 0.5km, etc.).
+- Distance label changed from "X km away" to "X km straight-line" for clarity.
+
+### Street address geocoding for property listings ✅
+- Street address field added to `GO_CAT_FIELDS.Property` in guided onboarding and to `SOB_CATS` Property edit screen. Marked private: "Never shown to buyers — used only to calculate distances to nearby schools, shops and hospitals."
+- `_geocode_address()` added to BEA — calls Nominatim (OSM, free, no API key) with IPv4-force, 10s timeout.
+- At publish time, if `street_address` is set and `listing_lat` not yet set, BEA geocodes and stores `listing_lat/lng`.
+- POI coordinate priority chain: `listing_lat/lng` (geocoded address) → suburb coords from `geo_suburbs` → city centre.
+- DB migration: `street_address TEXT`, `listing_lat REAL`, `listing_lng REAL` columns added to `listings` table.
+
+### World Heritage lazy loading ✅
+- `loadHomeWonders()` removed from app startup sequence. Wonders now load on demand when home tab is visited or listing detail opened.
+- `_wpWondersLoading` flag prevents double-fetch. Shimmer shown immediately while fetch is in progress. Load time on cold start reduced by ~800ms.
+
+### Infrastructure & design documentation updated ✅
+- `PRINCIPLE_REQUIREMENTS.md` v1.2: B1 updated (CPX22→CPX32 from 25 May), B4 updated (write-to-both dual storage with r2Fallback), B6 updated (€15.49/month from 25 May, Volume plan), Quick Reference table expanded.
+- `Strategic_Decisions_Summary.md`: new section "Infrastructure Redundancy & Storage Architecture — 17 May 2026" covering write-to-both decision, CPX32 upgrade rationale, Hetzner Volume standby plan, storage projections to 50,000 listings, self-funding logic, and full external API dependency risk audit.
+- `AGENT_BRIEFING.md` v1.8: Section 6 infrastructure table updated — CPX32 entry, photo storage split into primary (R2) and mirror (local) rows, Hetzner Volume standby row added.
+- `MarketSquare_EULA_v1_1_Draft.docx` produced: Sections 8.9, 9.6, and security section updated to reflect CPX32 (from 25 May) and write-to-both storage architecture. Saved as v1.1.
+- IP/Patent docs checked — no specific server tier references in patent claims; no updates required.
+
 ## Session 60 · 16 May 2026 · World Heritage auto-link + dashboard fixes
 
 ### World Heritage auto-link with opt-out — live
@@ -1631,3 +1810,26 @@ Replaced all 120 wonder photo URLs from fragile upload.wikimedia.org/thumb/HASH/
 - All 5 real Property listings (IDs 93–97) seeded with Pretoria POI data.
 - All 10 demo Property listings seeded with Pretoria POI data inline.
 - World Heritage strip confirmed excluded from Property (BEA affinity empty, demo data cleaned).
+
+### Status and dashboard updated — Session 61 close
+- STATUS.md Next Session updated to Session 62 priorities: demo expansion to NY/London/Sydney, geo selector for 4 cities, Paystack live mode, patent filing.
+
+## Session 61 (continued) — POI & World Heritage fixes · 17 May 2026
+
+**World Heritage lazy loading** — Removed `loadHomeWonders()` from the startup sequence so it no longer blocks initial render. The home strip now loads on demand when the user navigates to the home tab, with a "Loading…" shimmer while the fetch runs. The detail-screen demo path also lazy-fetches wonders if they haven't been loaded yet (covers direct-to-detail navigation).
+
+**Nearby Amenities accuracy** — Root cause was that all 10 demo property listings shared identical city-centre coordinates (-25.7449, 28.1878), so every suburb showed the same POIs at the same distances. Fixed by patching each demo listing with suburb-accurate POI data (suburb-level coordinates used for haversine). Menlyn now correctly shows Menlyn Park (0.4 km), Menlyn Maine (0.6 km), University of Pretoria (3.2 km), Pretoria East Hospital (1.8 km), and Zuid-Afrikaans Hospital (3.1 km). Hatfield shows TUKS at 0.7 km. Brooklyn shows Brooklyn Mall at 0.5 km.
+
+**BEA POI publish fix** — The `auto_link_pois()` call at publish now looks up suburb-level coordinates from `geo_suburbs` and uses those instead of city-centre coords, so real listings will get accurate POI distances. Falls back to city centre if suburb coords are unavailable.
+
+**Overpass API mirror** — `overpass-api.de` is blocked (connection refused) from the Hetzner server. Switched to `overpass.kumi.systems` mirror with IPv4-force via `socket.getaddrinfo` monkey-patch to avoid IPv6 hang.
+
+**Distance label** — POI card distances now read "X km straight-line" instead of "X km away" to clearly communicate these are haversine distances, not driving distances.
+
+## Session 62 — Part B (2026-05-18)
+**Fix: 0 listings on all categories for NY/London/Sydney**
+Root cause: 7 unescaped apostrophes in the LISTINGS array within demo data strings (Christie\'s, Philosopher\'s Stone, winner\'s, Sotheby\'s ×2, Buyer\'s). These caused a JS parse error that silently prevented LISTINGS from being evaluated, so every city showed 0 for all categories. Fixed by escaping all 7 occurrences. Node --check passed. Verified via node vm eval: all 4 cities now return 10 listings per category (7 cats × 10 = 70 per city). Deployed to server at 1,203,595 bytes.
+
+## Session 62 — Part C (2026-05-18)
+**Fix: Wrong seller profiles shown for NY/London/Sydney listings**
+Root cause: SELLERS array only had 7 Pretoria entries (idx 0–6). All NY/London/Sydney non-Adventures listings had no sellerIdx, so openSellerCV() fell through to SELLERS[0] (Pretoria property seller). Added SELLERS[7–27]: Property/Tutors/Services/Adventures/Collectors/Cars/LocalMarket for each of NY, London, Sydney with city-accurate headlines, credentials, tags and regions. Wired sellerIdx on all 210 listings. Also corrected Adventures which were pointing to wrong indices (16/17/18 → 10/17/24). Server verified: 28 sellers, 5 spot-checks all correct. This fix only affects demo mode — live listings use openBEASellerProfile() which reads directly from the BEA database and is unaffected.

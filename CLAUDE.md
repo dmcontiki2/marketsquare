@@ -25,6 +25,20 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 - After every change: what changed, why, and what to watch
 - Use /compact when context starts filling up
 
+## Demo-mode wiring rule (AI-enforced)
+Any new FEA feature that calls the BEA API **must** include a `DEMO_MODE` guard:
+```javascript
+if (DEMO_MODE) {
+  // serve from LISTINGS / SELLERS arrays
+} else {
+  // call BEA API
+}
+```
+The agent must verify **both branches** work before marking the task done. This is not optional and must not be delegated to the human to remember. When adding any new API call, immediately ask: *"Does this need a demo fallback?"* If yes, implement it in the same task. Run a post-change audit confirming demo listings still show correctly across all 4 cities.
+
+## Demo data integrity rule (AI-enforced)
+After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_audit.py` on the server before closing the session. It checks: sellerIdx range, sellerIdx category match, currency prefix, trust score range (70–96), LM title presence. Zero issues required before CHANGELOG is written.
+
 ## Operating principles
 
 **Uncertainty:** Make the best guess, implement it, then add a one-line flag at the end of the response. Never stop mid-task to ask.
@@ -34,6 +48,11 @@ Read `AGENT_BRIEFING.md` at the start of every session — it is the single sour
 **Git commits:** Always ask David to run git add/commit/push from PowerShell — never commit from the sandbox. The sandbox and Windows share the same folder mount under different OS users; sandbox-created index.lock files block Windows git and vice versa, and neither side can remove the other's lock.
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
+
+**Session end checklist (mandatory — all three required):**
+1. Append to `CHANGELOG.md`
+2. Update `STATUS.md` (Live State, Last Completed, Next Session)
+3. Update and deploy `dashboard.html` to the server — fetch current version first (`strings /var/www/marketsquare/dashboard.html | grep currentSession`), update DATA object (currentSession, nextSession, liveState, lastDone, nextGoals, blockers, highPriority, directions, recentChangelog), deploy via scp. Never skip this step.
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 

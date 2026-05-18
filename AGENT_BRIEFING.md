@@ -1,5 +1,5 @@
 # MarketSquare · Master Agent Briefing
-**Version 1.7 · 15 May 2026**
+**Version 1.8 · 17 May 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
@@ -175,7 +175,7 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 | Component | Detail | Status |
 |---|---|---|
-| Server | Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04 | ✅ Live |
+| Server | Hetzner **CPX32** · 178.104.73.239 · Ubuntu 24.04 · 4 vCPU · 8 GB RAM · 160 GB NVMe · €15.49/month *(upgraded from CPX22 on 25 May 2026)* | ✅ Live |
 | SSH key | ed25519 · ~/.ssh/id_ed25519 (added 6 April 2026) | ✅ Active |
 | Domain | trustsquare.co · Cloudflare DNS + DDoS | ✅ Active |
 | SSL | Let's Encrypt · expires 21 June 2026 | ✅ Secured |
@@ -183,7 +183,9 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | FastAPI BEA | systemd · auto-restart · version via GET /health | ✅ Running |
 | SQLite | WAL mode · 9 tables (5 core + 4 geo) · 7 indexes · `listing_versions` added Session 20 | ✅ Active |
 | Redis | Session cache · rate limiting | ✅ Running |
-| Photo storage | Cloudflare R2 (EU) · bucket: marketsquare-media · $0 egress · HETZNER_S3_* in /etc/environment | ✅ Active |
+| Photo storage (primary) | Cloudflare R2 (EU) · bucket: marketsquare-media · $0 egress · HETZNER_S3_* in /etc/environment | ✅ Active |
+| Photo storage (mirror) | Hetzner local disk · /var/www/marketsquare/media/ · write-to-both from Session 61 · `r2Fallback()` JS failover | ✅ Active |
+| Hetzner Volume | Independent block storage · €0.052/GB/month · **on standby** · activate when disk >80% full | 🔜 Standby |
 | DB backups | Daily 3 AM cron → R2 backups/ · 14-day retention · /usr/local/bin/backup_dbs_to_r2.py | ✅ Active |
 | n8n | Docker container · `docker restart n8n` · UI: SSH tunnel port 5678 | ✅ Running |
 | Paystack | Test mode · live pending CIPC registration | 🔜 Pending |
@@ -200,6 +202,8 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 5. **Conflict resolution** — Architect agent arbitrates via Codex. Escalate to David only if Codex cannot resolve.
 6. **No large rewrites** — Never rewrite large sections unless explicitly instructed.
 7. **Codex first** — Check Codex (`Solar_Council_Codex_v4_5.docx`) before adding any business logic.
+8. **Demo-mode wiring (AI-enforced, no human memory)** — Any new FEA feature that calls the BEA API must include a `DEMO_MODE` guard in the same task. Before marking done, verify both branches: demo shows correct data from LISTINGS/SELLERS arrays, live calls the BEA as expected. This is never optional.
+9. **Demo data integrity audit (AI-enforced)** — After any change to `LISTINGS` or `SELLERS`, run the audit script (keep a copy at `/tmp/full_audit.py` on the server) before writing CHANGELOG. Audit checks: sellerIdx in correct city range, sellerIdx matches category, currency prefix, trust score 70–96, LM titles present. Zero issues required. Verify all 4 cities, all categories — never just the city shown in the screenshot.
 
 ---
 

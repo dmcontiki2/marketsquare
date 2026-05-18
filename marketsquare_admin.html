@@ -252,20 +252,23 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 .photo-preview-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .photo-thumb {
   flex: 0 0 110px;
-  height: 82px;
+  min-height: 82px;
   border-radius: var(--r-sm);
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   background: var(--surface-2);
   border: 1px solid var(--border);
   scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: 6px;
 }
-.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb img { width: 100%; height: 82px; object-fit: cover; display: block; flex-shrink: 0; }
 .photo-thumb .ph-status {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: rgba(0,0,0,.7); font-size: 9px; font-weight: 700;
-  text-align: center; padding: 3px 4px; color: #fff;
-  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 700;
+  text-align: center; padding: 3px 6px; color: var(--text-2);
+  font-family: 'Inter', sans-serif; flex-shrink: 0;
 }
 .photo-thumb .ph-remove {
   position: absolute; top: 3px; right: 3px;
@@ -687,6 +690,26 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
       <div class="ct-name">Services</div>
       <div class="ct-model">👥 Soft queue · Technical &amp; Casuals</div>
     </div>
+    <div class="cat-tile" id="cat-Adventures" onclick="selectCat('Adventures')">
+      <div class="ct-icon">🧭</div>
+      <div class="ct-name">Adventures</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Collectors" onclick="selectCat('Collectors')">
+      <div class="ct-icon">🏆</div>
+      <div class="ct-name">Collectors</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-Cars" onclick="selectCat('Cars')">
+      <div class="ct-icon">🚗</div>
+      <div class="ct-name">Cars</div>
+      <div class="ct-model">👥 Soft queue · listing stays live</div>
+    </div>
+    <div class="cat-tile" id="cat-LocalMarket" onclick="selectCat('LocalMarket')">
+      <div class="ct-icon">🛒</div>
+      <div class="ct-name">Local Market</div>
+      <div class="ct-model">🏷️ Peer-to-peer · buyer pays intro on connection</div>
+    </div>
   </div>
 </div>
 
@@ -1008,6 +1031,136 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
         </div>
       </div>
 
+      <!-- Adventures fields -->
+      <div id="cat-fields-adventures" style="display:none;">
+        <div class="field">
+          <label>Adventure type</label>
+          <select id="f-adv-type">
+            <option value="">Select type</option>
+            <option value="adventures_accommodation">🏕 Accommodation</option>
+            <option value="adventures_experiences">🌄 Experiences</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Destination / location</label>
+          <input type="text" id="f-adv-destination" placeholder="e.g. Waterberg, Limpopo" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Duration / sleeps</label>
+          <input type="text" id="f-adv-duration" placeholder="e.g. Full day · or Sleeps 6" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Collectors fields -->
+      <div id="cat-fields-collectors" style="display:none;">
+        <div class="field">
+          <label>Collection type</label>
+          <select id="f-item-type">
+            <option value="">Select type</option>
+            <option>Stamps</option>
+            <option>Trading Cards (MTG / Pokémon / Baseball)</option>
+            <option>Coins</option>
+            <option>Memorabilia</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Condition</label>
+          <input type="text" id="f-condition" placeholder="e.g. PSA 9, Mint, VF, Fine…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Catalogue reference <span class="opt">(optional)</span></label>
+          <input type="text" id="f-catalogue-ref" placeholder="e.g. SG 1, Scott 1, PSA label…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Edition / year of issue <span class="opt">(optional)</span></label>
+          <input type="text" id="f-edition-year" placeholder="e.g. 1853, Alpha set, 1st edition…" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Cars fields -->
+      <div id="cat-fields-cars" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label>Make</label>
+            <input type="text" id="f-car-make" placeholder="e.g. Toyota" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Model</label>
+            <input type="text" id="f-car-model" placeholder="e.g. Hilux 2.8 GD-6" autocomplete="off">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Year</label>
+            <input type="number" id="f-car-year" placeholder="e.g. 2019" min="1980" max="2030">
+          </div>
+          <div class="field">
+            <label>Mileage (km)</label>
+            <input type="number" id="f-car-mileage" placeholder="e.g. 85000" min="0">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Colour</label>
+            <input type="text" id="f-car-colour" placeholder="e.g. White" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Transmission</label>
+            <select id="f-car-transmission">
+              <option value="">Select</option>
+              <option>Manual</option>
+              <option>Automatic</option>
+              <option>Semi-automatic</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fuel type</label>
+            <select id="f-car-fuel">
+              <option value="">Select</option>
+              <option>Petrol</option>
+              <option>Diesel</option>
+              <option>Hybrid</option>
+              <option>Electric</option>
+              <option>LPG</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Body type</label>
+            <select id="f-car-body">
+              <option value="">Select</option>
+              <option>Sedan</option>
+              <option>Hatchback</option>
+              <option>SUV / 4x4</option>
+              <option>Bakkie / Truck</option>
+              <option>Coupe</option>
+              <option>Convertible</option>
+              <option>Minivan / MPV</option>
+              <option>Station Wagon</option>
+              <option>Crossover</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Listing type</label>
+          <select id="f-car-listing-type">
+            <option value="">Select</option>
+            <option value="For Sale">For Sale</option>
+            <option value="For Hire / Rental">For Hire / Rental</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Local Market fields -->
+      <div id="cat-fields-localmarket" style="display:none;">
+        <div class="info-box ok" style="margin-bottom:8px;">
+          🛒 Local Market — peer-to-peer item or service listing. Keep it simple: what it is, condition, and price.
+        </div>
+      </div>
+
       <!-- DESCRIPTION (structured editor) -->
       <div class="field">
         <label>Description <span class="opt">(optional)</span></label>
@@ -1083,7 +1236,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     <button class="filter-chip" id="fc-Property" onclick="setListingsFilter('Property')">🏡 Property</button>
     <button class="filter-chip" id="fc-Tutors" onclick="setListingsFilter('Tutors')">🎓 Tutors</button>
     <button class="filter-chip" id="fc-Services" onclick="setListingsFilter('Services')">⚙️ Services</button>
-    <button class="filter-chip" id="fc-local_market" onclick="setListingsFilter('local_market')">🛍️ Local Market</button>
+    <button class="filter-chip" id="fc-LocalMarket" onclick="setListingsFilter('LocalMarket')">🛍️ Local Market</button>
   </div>
   <!-- Quick action when Local Market filter is active -->
   <div id="lm-listing-actions" style="display:none;padding:0 20px 12px;">
@@ -1412,7 +1565,7 @@ let listingQueue = [];   // { formData, photos: [{thumbUrl, mediumUrl, localPrev
 let publishedIds = [];
 let editingIdx = null;
 
-const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '🔧' };
+const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '🔧', Adventures: '🧭', Collectors: '🏆', Cars: '🚗', LocalMarket: '🛒' };
 
 // ── NAVIGATION ────────────────────────────────────────────
 function goStep(n) {
@@ -1589,12 +1742,21 @@ function cancelListingForm() {
 }
 
 function showCatFields() {
-  ['property','tutors','services'].forEach(c => {
-    document.getElementById('cat-fields-' + c).style.display = 'none';
+  ['property','tutors','services','adventures','collectors','cars','localmarket'].forEach(c => {
+    const el = document.getElementById('cat-fields-' + c);
+    if (el) el.style.display = 'none';
   });
-  const map = { Property: 'property', Tutors: 'tutors', Services: 'services' };
+  const map = {
+    Property:    'property',
+    Tutors:      'tutors',
+    Services:    'services',
+    Adventures:  'adventures',
+    Collectors:  'collectors',
+    Cars:        'cars',
+    LocalMarket: 'localmarket',
+  };
   const key = map[selectedCat];
-  if (key) document.getElementById('cat-fields-' + key).style.display = 'block';
+  if (key) { const el = document.getElementById('cat-fields-' + key); if (el) el.style.display = 'block'; }
 
   // Update placeholders to match the selected category
   const ph = {
@@ -1622,6 +1784,38 @@ function showCatFields() {
       tagline:  'e.g. Fast response · guaranteed work · 20 years experience',
       summary:  'One or two sentences describing your service…',
     },
+    Adventures: {
+      title:    'e.g. Bushveld chalet · Waterberg',
+      price:    'e.g. R1,200',
+      area:     'e.g. Waterberg, Limpopo',
+      headline: 'e.g. Secluded bush escape for 6 · full catering optional',
+      tagline:  'e.g. Wildlife · stargazing · off-grid',
+      summary:  'One or two sentences about the experience or accommodation…',
+    },
+    Collectors: {
+      title:    'e.g. Handré Pollard Rugby Card · PSA 9',
+      price:    'e.g. R850',
+      area:     'e.g. Pretoria East',
+      headline: 'e.g. Rare PSA 9 Pollard — 1 of 12 graded this high',
+      tagline:  'e.g. Mint condition · full provenance · collectors item',
+      summary:  'Describe the item, its condition, grading and any certificates…',
+    },
+    Cars: {
+      title:    'e.g. 2019 Toyota Hilux 2.8 GD-6 4x4 · low km',
+      price:    'e.g. R380,000',
+      area:     'e.g. Centurion',
+      headline: 'e.g. One owner · full service history · no accidents',
+      tagline:  'e.g. Immaculate condition · motivated seller',
+      summary:  'Describe condition, service history, extras, reason for selling…',
+    },
+    LocalMarket: {
+      title:    'e.g. Organic honey — 500ml jar',
+      price:    'e.g. R120',
+      area:     'e.g. Pretoria East',
+      headline: 'e.g. Fresh local honey — harvested weekly',
+      tagline:  'e.g. Raw · unfiltered · delivery available',
+      summary:  'What you\'re offering, quantity, condition, delivery options…',
+    },
   };
   const p = ph[selectedCat] || ph.Property;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.placeholder = val; };
@@ -1644,7 +1838,7 @@ function clearListingForm() {
     if (el) el.value = '';
   });
   ['f-per','f-prop-type','f-furnished','f-pets','f-internet','f-listing-type',
-   'f-subject','f-level','f-mode','f-service-class','f-service-type','f-availability',
+   'f-subject','f-level','f-mode','f-service-class','f-service-type','f-availability','f-adv-type','f-adv-destination','f-adv-duration','f-condition','f-catalogue-ref','f-edition-year','f-car-make','f-car-model','f-car-colour','f-car-transmission','f-car-fuel','f-car-body','f-car-listing-type','f-item-type',
    'f-suburb'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.selectedIndex = 0;
@@ -1742,15 +1936,30 @@ async function uploadPhoto(file, idx) {
 
 function renderPhotoPreview() {
   const grid = document.getElementById('photo-preview');
-  if (!currentPhotos.length) { grid.innerHTML = ''; return; }
+  // Update zone text to reflect count
+  const pzTitle = document.querySelector('.pz-title');
+  const pzSub   = document.querySelector('.pz-sub');
+  if (currentPhotos.length === 0) {
+    grid.innerHTML = '';
+    if (pzTitle) pzTitle.textContent = 'Tap to add photos';
+    if (pzSub)   pzSub.textContent   = 'JPEG or PNG · up to 10 photos · compressed automatically';
+    return;
+  }
+  if (pzTitle) pzTitle.textContent = `${currentPhotos.length} photo${currentPhotos.length>1?'s':''} added — tap to add more`;
+  if (pzSub)   pzSub.textContent   = `${currentPhotos.length}/10 · tap any photo to add a caption`;
   grid.innerHTML = currentPhotos.map((p, i) => `
     <div class="photo-thumb ${p.status}">
       <img src="${p.localPreview}">
       <div class="ph-status">
-        ${p.status === 'uploading' ? `⏳ ${p.originalMb}MB` :
-          p.status === 'done'      ? `✓ ${p.thumbKb}KB` :
-                                     '✕ Failed'}
+        ${p.status === 'uploading' ? `<span style="color:var(--accent);">⏳ Uploading…</span>` :
+          p.status === 'done'      ? `<span style="color:#10b981;">✓ ${p.thumbKb}KB</span>` :
+                                     `<span style="color:#ef4444;">✕ Failed</span>`}
       </div>
+      <input type="text"
+        placeholder="Caption (optional)"
+        value="${(p.caption||'').replace(/"/g,'&quot;')}"
+        oninput="currentPhotos[${i}].caption=this.value"
+        style="width:calc(100% - 12px);margin:4px 6px 0;border:1px solid var(--border);border-radius:6px;padding:4px 7px;font-size:11px;background:var(--surface-2);color:var(--text);font-family:'Inter',sans-serif;box-sizing:border-box;">
       <button class="ph-remove" onclick="removePhoto(${i})">×</button>
     </div>`).join('');
 }
@@ -1819,6 +2028,25 @@ function saveListingToQueue() {
     service_class: document.getElementById('f-service-class')?.value || '',
     serviceType:   document.getElementById('f-service-type')?.value || '',
     availability:  document.getElementById('f-availability')?.value || '',
+    // Adventures
+    advType:        document.getElementById('f-adv-type')?.value || '',
+    advDestination: document.getElementById('f-adv-destination')?.value.trim() || '',
+    advDuration:    document.getElementById('f-adv-duration')?.value.trim() || '',
+    // Collectors
+    itemType:      document.getElementById('f-item-type')?.value || '',
+    condition:     document.getElementById('f-condition')?.value.trim() || '',
+    catalogueRef:  document.getElementById('f-catalogue-ref')?.value.trim() || '',
+    editionYear:   document.getElementById('f-edition-year')?.value.trim() || '',
+    // Cars
+    carMake:         document.getElementById('f-car-make')?.value.trim() || '',
+    carModel:        document.getElementById('f-car-model')?.value.trim() || '',
+    carYear:         document.getElementById('f-car-year')?.value || '',
+    carMileage:      document.getElementById('f-car-mileage')?.value || '',
+    carColour:       document.getElementById('f-car-colour')?.value.trim() || '',
+    carTransmission: document.getElementById('f-car-transmission')?.value || '',
+    carFuel:         document.getElementById('f-car-fuel')?.value || '',
+    carBody:         document.getElementById('f-car-body')?.value || '',
+    carListingType:  document.getElementById('f-car-listing-type')?.value || '',
   };
 
   listingQueue.push({
@@ -1930,6 +2158,32 @@ function buildDescription(fd) {
   // Build auto-generated property specs as a section
   const autoSections = [];
 
+  // Map new category fields into structured_fields for BEA
+  const sf = JSON.parse(body.structured_fields || '{}');
+  if (selectedCat === 'Adventures') {
+    sf.service_class = fd.advType;
+    sf.destination   = fd.advDestination;
+    sf.duration      = fd.advDuration;
+    body.structured_fields = JSON.stringify(sf);
+  } else if (selectedCat === 'Collectors') {
+    sf.item_type     = fd.itemType;
+    sf.condition     = fd.condition;
+    sf.catalogue_ref = fd.catalogueRef;
+    sf.edition_year  = fd.editionYear;
+    body.structured_fields = JSON.stringify(sf);
+  } else if (selectedCat === 'Cars') {
+    sf.make          = fd.carMake;
+    sf.model         = fd.carModel;
+    sf.year          = fd.carYear;
+    sf.mileage       = fd.carMileage;
+    sf.colour        = fd.carColour;
+    sf.transmission  = fd.carTransmission;
+    sf.fuel_type     = fd.carFuel;
+    sf.body_type     = fd.carBody;
+    sf.listing_type  = fd.carListingType;
+    body.structured_fields = JSON.stringify(sf);
+  }
+
   if (selectedCat === 'Property') {
     const specBullets = [];
     if (fd.listingType) specBullets.push(fd.listingType === 'rent' ? 'For rent' : 'For sale');
@@ -1988,12 +2242,13 @@ async function saveAsDraft() {
     if (l.status === 'published') continue;
 
     try {
-      const thumb  = l.photos.find(p => p.thumbUrl)?.thumbUrl  || null;
-      const medium = l.photos.find(p => p.mediumUrl)?.mediumUrl || null;
-      // Encode all medium URLs for multi-photo display on frontend
-      const allMediumUrls = l.photos.filter(p => p.mediumUrl).map(p => p.mediumUrl);
-      const photoPrefix = allMediumUrls.length > 1
-        ? `[photos:${allMediumUrls.join('|')}]\n`
+      const thumb  = (l.photos.find(p => p.thumbUrl)  || {}).thumbUrl  || null;
+      const medium = (l.photos.find(p => p.mediumUrl) || {}).mediumUrl || null;
+      // Encode all medium URLs + captions for multi-photo display on frontend
+      const readyPhotos = l.photos.filter(p => p.mediumUrl);
+      const allMediumUrls = readyPhotos.map(p => p.mediumUrl);
+      const photoPrefix = allMediumUrls.length >= 1
+        ? `[photos:${readyPhotos.map(p => p.caption ? `${p.mediumUrl}::${p.caption}` : p.mediumUrl).join('|')}]\n`
         : '';
 
       const payload = {
@@ -2269,7 +2524,7 @@ async function loadAllListings() {
     const regData = await regResp.json();
     const lmData  = lmResp.ok ? await lmResp.json() : [];
     // Normalise LM listings to same shape as regular listings
-    const lmNorm = lmData.map(l => Object.assign({}, l, { category: 'local_market' }));
+    const lmNorm = lmData.map(l => Object.assign({}, l, { category: 'LocalMarket', seller_email: l.seller_email || l.email || '' }));
     allListings = [...(Array.isArray(regData) ? regData : []), ...lmNorm];
     renderListingsManager();
     showToast('✓ ' + allListings.length + ' listing' + (allListings.length !== 1 ? 's' : '') + ' loaded');
@@ -2285,7 +2540,7 @@ function setListingsFilter(cat) {
   if (el) el.classList.add('active');
   // LM-27 — surface the "+ Create Local Market listing" action only on the LM tab
   const actions = document.getElementById('lm-listing-actions');
-  if (actions) actions.style.display = (cat === 'local_market') ? 'block' : 'none';
+  if (actions) actions.style.display = (cat === 'LocalMarket') ? 'block' : 'none';
   renderListingsManager();
 }
 
@@ -3151,6 +3406,38 @@ const ADM_FIELD_DEFS = {
     {id:'suburb',       label:'Suburb (exact)',     type:'text'},
     {id:'description',  label:'Description',       type:'textarea'},
   ],
+  'Adventures': [
+    {id:'title',       label:'Listing headline',  type:'text'},
+    {id:'price',       label:'Price / Rate',      type:'text'},
+    {id:'destination', label:'Destination / area',type:'text'},
+    {id:'suburb',      label:'Suburb (exact)',    type:'text'},
+    {id:'description', label:'Description',       type:'textarea'},
+  ],
+  'Collectors': [
+    {id:'title',       label:'Item name / headline', type:'text'},
+    {id:'item_type',   label:'Collection type',      type:'text'},
+    {id:'condition',   label:'Condition',            type:'text'},
+    {id:'price',       label:'Asking price',         type:'text'},
+    {id:'suburb',      label:'Suburb (exact)',        type:'text'},
+    {id:'description', label:'Description',          type:'textarea'},
+  ],
+  'Cars': [
+    {id:'title',        label:'Listing headline', type:'text'},
+    {id:'make',         label:'Make',             type:'text'},
+    {id:'model',        label:'Model',            type:'text'},
+    {id:'year',         label:'Year',             type:'number'},
+    {id:'mileage',      label:'Mileage (km)',      type:'number'},
+    {id:'price',        label:'Asking price',     type:'text'},
+    {id:'suburb',       label:'Suburb (exact)',   type:'text'},
+    {id:'description',  label:'Description',      type:'textarea'},
+  ],
+  'LocalMarket': [
+    {id:'title',       label:'Product / service title', type:'text'},
+    {id:'price',       label:'Price',                   type:'text'},
+    {id:'area',        label:'Area / suburb',           type:'text'},
+    {id:'suburb',      label:'Suburb (exact)',           type:'text'},
+    {id:'description', label:'Description',             type:'textarea'},
+  ],
 };
 const ADM_DEFAULT_FIELDS = [
   {id:'title',       label:'Listing headline',  type:'text'},
@@ -3241,13 +3528,28 @@ function admEditRemovePhoto(idx) {
 }
 
 async function admEditSavePhotos(silent) {
-  if (!admEditId || !admEditListing || !admEditListing.seller_email) return;
+  if (!admEditId || !admEditListing) return;
+  // Fetch seller_email on demand for LM listings where it may be missing
+  if (!admEditListing.seller_email) {
+    try {
+      const dr = await fetch(BEA_URL + '/listings/' + admEditId);
+      if (dr.ok) {
+        const dd = await dr.json();
+        admEditListing.seller_email = dd.seller_email || dd.email || '';
+      }
+    } catch(_) {}
+  }
+  if (!admEditListing.seller_email) return;
   const status = document.getElementById('adm-edit-photo-status');
   try {
     const r = await fetch(
       BEA_URL + '/listings/' + admEditId + '?email=' + encodeURIComponent(admEditListing.seller_email),
       { method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photo_urls: JSON.stringify(_admEditPhotoUrls) }) }
+        body: JSON.stringify({
+          photo_urls:  JSON.stringify(_admEditPhotoUrls),
+          thumb_url:   _admEditPhotoUrls[0] || '',
+          medium_url:  _admEditPhotoUrls[0] || ''
+        }) }
     );
     if (!r.ok) throw new Error('HTTP ' + r.status);
     admEditListing.photo_urls = JSON.stringify(_admEditPhotoUrls);
@@ -3259,16 +3561,32 @@ async function admEditSavePhotos(silent) {
   }
 }
 
-function openAdmEdit(id) {
+async function openAdmEdit(id) {
   const l = allListings.find(x => x.id === id);
   if (!l) { showToast('Listing not found in loaded data'); return; }
   admEditId      = id;
-  admEditListing = l;
   admEditSugs    = {};
-  renderAdmEditModal(l);
+  // Always fetch fresh listing data from BEA so photo_urls reflects
+  // any changes made since allListings was last loaded
+  let fresh = l;
+  try {
+    const dr = await fetch(BEA_URL + '/listings/' + id);
+    if (dr.ok) {
+      const dd = await dr.json();
+      // Merge fresh data — preserve seller_email and category from cached object if BEA omits them
+      fresh = Object.assign({}, l, dd);
+      if (!fresh.seller_email) fresh.seller_email = l.seller_email || dd.seller_email || '';
+      if (!fresh.category)     fresh.category     = l.category || dd.category || '';
+      // Update the cache too
+      const idx = allListings.findIndex(x => x.id === id);
+      if (idx !== -1) allListings[idx] = fresh;
+    }
+  } catch(_) {}
+  admEditListing = fresh;
+  renderAdmEditModal(fresh);
   document.getElementById('adm-edit-modal-bg').classList.add('open');
   // Load supplementary panels
-  admEditLoadPhotos(l);
+  admEditLoadPhotos(fresh);
   if (l.seller_email) {
     // Trust Score Hub
     const tshDiv = document.getElementById('adm-edit-tsh');
@@ -3351,10 +3669,22 @@ async function saveAdmEdit() {
     }
   });
 
-  // Admin uses seller_email as the edit auth — fall back to listing's seller_email
-  const sellerEmail = admEditListing.seller_email;
+  // Admin uses seller_email as the edit auth
+  // For LocalMarket listings the /local-market/listings endpoint omits seller_email —
+  // fetch it from GET /listings/{id} if missing
+  let sellerEmail = admEditListing.seller_email;
   if (!sellerEmail) {
-    showToast('⚠️ No seller_email on listing — cannot authenticate edit');
+    try {
+      const detailResp = await fetch(BEA_URL + '/listings/' + admEditId);
+      if (detailResp.ok) {
+        const detail = await detailResp.json();
+        sellerEmail = detail.seller_email || detail.email || '';
+        if (sellerEmail) admEditListing.seller_email = sellerEmail; // cache it
+      }
+    } catch(_) {}
+  }
+  if (!sellerEmail) {
+    showToast('⚠️ No seller email found — cannot authenticate edit');
     if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
     return;
   }
@@ -4083,6 +4413,104 @@ tshLoad = async function(email) {
   await _origTshLoad(email);
   docHubLoad(email).catch(() => {});
 };
+
+// ── Admin Listing Wizard — Haiko AI market note ───────────────────────────
+// Fires when the title field has content (debounced 900ms).
+// Uses /advert-agent/market-note with the current seller email + category.
+
+let _adminHaikoTimer = null;
+let _adminHaikoAbort = null;
+
+function adminHaikoDebounce() {
+  clearTimeout(_adminHaikoTimer);
+  _adminHaikoTimer = setTimeout(adminHaikoFetch, 900);
+}
+
+async function adminHaikoFetch() {
+  const title   = (document.getElementById('f-title').value || '').trim();
+  if (!title) return;
+
+  const panel   = document.getElementById('admin-haiko-panel');
+  const textEl  = document.getElementById('admin-haiko-text');
+  const spinner = document.getElementById('admin-haiko-spinner');
+  const draftBtn = document.getElementById('admin-haiko-draft-btn');
+  if (!panel) return;
+
+  panel.style.display = 'block';
+  if (spinner)  spinner.style.display = 'inline';
+  if (draftBtn) draftBtn.style.display = 'none';
+  if (textEl)   textEl.textContent = 'Analysing…';
+
+  if (_adminHaikoAbort) { try { _adminHaikoAbort.abort(); } catch(e) {} }
+  const ctl = new AbortController();
+  _adminHaikoAbort = ctl;
+
+  const cat   = selectedCat || 'General';
+  const email = (sellerData && sellerData.email) ? sellerData.email : 'admin@trustsquare.co';
+  const price = (document.getElementById('f-price') || {}).value || '';
+  const area  = (document.getElementById('f-area')  || {}).value || '';
+
+  const prompt = `In 1-2 sentences, give a market context note for a ${cat} listing titled "${title}"${area ? ' in ' + area : ''}${price ? ' priced at ' + price : ''}. Mention comparable asking prices or typical rates if relevant. Be specific and brief.`;
+
+  try {
+    const res  = await fetch(BEA_URL + '/advert-agent/market-note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, prompt }),
+      signal: ctl.signal
+    });
+    if (ctl.signal.aborted) return;
+    const data = await res.json();
+    if (textEl)   textEl.textContent = data.response || 'No market data available for this category right now.';
+    if (draftBtn) draftBtn.style.display = 'inline-block';
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+    if (textEl)  textEl.textContent = 'Could not reach Haiko — check your connection.';
+  } finally {
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+async function adminHaikoDraftDesc() {
+  const title    = (document.getElementById('f-title').value || '').trim();
+  const cat      = selectedCat || 'General';
+  const email    = (sellerData && sellerData.email) ? sellerData.email : 'admin@trustsquare.co';
+  const price    = (document.getElementById('f-price') || {}).value || '';
+  const area     = (document.getElementById('f-area')  || {}).value || '';
+  const draftBtn = document.getElementById('admin-haiko-draft-btn');
+  const textEl   = document.getElementById('admin-haiko-text');
+  const spinner  = document.getElementById('admin-haiko-spinner');
+
+  if (!title) return;
+  if (draftBtn) { draftBtn.disabled = true; draftBtn.textContent = 'Drafting…'; }
+  if (spinner)  spinner.style.display = 'inline';
+
+  const prompt = `Write a 3-4 sentence listing description for a ${cat} listing titled "${title}"${area ? ' in ' + area : ''}${price ? ', priced at ' + price : ''}. Write in first person from the seller perspective — warm, professional, no fluff. Never include personal contact details or the seller name.`;
+
+  try {
+    const res  = await fetch(BEA_URL + '/advert-agent/market-note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, prompt })
+    });
+    const data = await res.json();
+    const draft = data.response || '';
+    if (draft) {
+      const summaryEl = document.getElementById('f-desc-summary');
+      if (summaryEl) {
+        summaryEl.value = draft;
+        summaryEl.focus();
+        summaryEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (textEl) textEl.textContent = '✓ Description drafted below — edit as needed.';
+    }
+  } catch(e) {
+    if (textEl) textEl.textContent = 'Draft failed — please try again.';
+  } finally {
+    if (draftBtn) { draftBtn.disabled = false; draftBtn.textContent = '✨ Draft description for me'; }
+    if (spinner)  spinner.style.display = 'none';
+  }
+}
 </script>
 
 <!-- ── EDIT LISTING MODAL ── -->

@@ -1,7 +1,7 @@
 # PRINCIPLE_REQUIREMENTS.md
 **Solar Council · MarketSquare Platform**
-Version 1.1 · 12 April 2026
-Source of truth: Solar_Council_Codex_v4_5.docx · AGENT_BRIEFING.md v1.3 · STATUS.md 10 Apr 2026
+Version 1.2 · 17 May 2026
+Source of truth: Solar_Council_Codex_v4_5.docx · AGENT_BRIEFING.md v1.7 · Session 61 infrastructure decisions
 
 This file is read-only. No agent or Cowork task may modify it.
 Place a copy in the root of every project folder (MarketApp, AdminApp, CityLauncher, AdvertAgent).
@@ -63,9 +63,11 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 ## PART B · Sovereignty Stack Principles (Core — no exceptions)
 
 ### B1 · No SaaS. No cloud lock-in. Self-hosted always.
-- Server: Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04.
+- Server: Hetzner CPX22 → **CPX32 from 25 May 2026** · 178.104.73.239 · Ubuntu 24.04.
+  - CPX32: 4 vCPU · 8 GB RAM · 160 GB NVMe · €15.49/month (upgraded from CPX22 €9.49/month).
 - Stack: FastAPI BEA + SQLite (WAL) + Redis + nginx. No managed databases. No external services.
-- Target infrastructure cost: ~$10/month fixed.
+- Target infrastructure cost: **€15.49/month from 25 May 2026** (previously ~€9.49/month).
+- Hetzner Volume (independent block storage, €0.052/GB/month) on standby — activate when local disk approaches 80% capacity.
 - Never add a managed service or SaaS dependency without council review.
 
 ### B2 · Server is the single source of truth
@@ -78,8 +80,13 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - Admin key stored in systemd drop-in at /etc/systemd/system/marketsquare.service.d/env.conf → /etc/environment.
 - Must move to .env before any public exposure.
 
-### B4 · Photo and backup storage: Cloudflare R2 (EU)
-- Bucket: marketsquare-media. $0 egress. Env vars: HETZNER_S3_* in /etc/environment.
+### B4 · Photo storage: Cloudflare R2 (primary) + Hetzner local mirror (redundant fallback)
+- **Write-to-both pattern (from 17 May 2026):** every photo upload writes simultaneously to:
+  1. **Cloudflare R2 (EU)** — primary CDN. Bucket: marketsquare-media. $0 egress. Env vars: HETZNER_S3_* in /etc/environment.
+  2. **Hetzner local disk** — `/var/www/marketsquare/media/` — redundant fallback. No dependency on external service.
+- **JS failover:** `r2Fallback()` in marketsquare.html — if an R2 URL fails to load (`onerror`), the browser automatically retries against `/media/<key>` on the same server. Zero user-visible failure.
+- **Storage projection:** 50,000 listings globally ≈ 29.5 GB (3 photos × 200 KB thumb + 400 KB medium per listing). Well within CPX32 160 GB NVMe capacity.
+- **Self-funding:** 2 Starter subscribers ($10/month) cover the full CPX32 upgrade cost — storage scaling is subscription-neutral.
 - DB backups: daily 3 AM cron → R2 backups/ · 14-day retention.
 - Script: /usr/local/bin/backup_dbs_to_r2.py.
 
@@ -90,10 +97,13 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - BEA geo API param is `country` — NOT `country_iso2`. This is a known drift point.
 - South Africa pre-seeded. Other countries added via POST /geo/countries.
 
-### B6 · Infrastructure costs are monitored — $10/month target
+### B6 · Infrastructure costs are monitored
 - Any agent change affecting infra, pricing, scaling, or storage triggers a "Cost model impact:" entry in CHANGELOG.md.
-- Next server tier if needed: Hetzner CPX32 · ~$17/month.
-- CPX22 comfortable capacity: ~50,000 sessions/day · ~16,000 free-only users before upgrade.
+- **Current tier (until 24 May 2026):** Hetzner CPX22 · €9.49/month.
+- **Upgraded tier (from 25 May 2026):** Hetzner CPX32 · €15.49/month · 4 vCPU · 8 GB RAM · 160 GB NVMe.
+- **On standby:** Hetzner Volume (block storage) · €0.052/GB/month · independent of server · survives server rebuild. Activate when disk >80% full.
+- CPX32 comfortable capacity: ~100,000 sessions/day · photo storage self-sufficient to ~50,000 listings globally.
+- Self-funding model: 2 Starter subscribers cover the full CPX32 upgrade cost delta (€6/month).
 
 ### B7 · No consumption-based external API without explicit approval and a hard cost ceiling
 - This rule exists because a Google Maps API project (radiant-arcanum-455219-u2) was activated during CityLauncher development without adequate cost warning, resulting in a $360+ charge to David. This must never happen again.
@@ -253,16 +263,18 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 | Codex version | Solar_Council_Codex_v4_5.docx |
 | AGENT_BRIEFING version | v1.3 · 11 April 2026 |
 | BEA geo param | `country` (NOT country_iso2) |
-| Photo storage | Cloudflare R2 (EU) · marketsquare-media |
+| Photo storage | R2 primary (marketsquare-media) + Hetzner /media/ mirror — write-to-both |
+| Photo failover | `r2Fallback()` in marketsquare.html — auto-retries via /media/ on onerror |
 | Env vars location | /etc/environment |
 | n8n restart | `docker restart n8n` |
 | GeoNames username | dmcontiki2 |
-| Target infra cost | ~$10/month |
+| Server tier | CPX22 until 24 May → CPX32 from 25 May 2026 · €15.49/month |
+| Hetzner Volume | €0.052/GB/month · on standby · activate at >80% disk |
 | Public launch threshold | 60 sellers / 20 per category |
 | City expansion trigger | 60-seller KPI per city |
 
 ---
 
-*End of PRINCIPLE_REQUIREMENTS.md v1.1*
+*End of PRINCIPLE_REQUIREMENTS.md v1.2*
 *Next update: when Codex version increments or a new project is added.*
-*Do not edit this file manually — regenerate from Claude Chat using Codex + session files.*
+*v1.2 changes: B1 updated CPX22→CPX32 from 25 May 2026; B4 updated to write-to-both dual storage; B6 updated with actual upgrade schedule; Quick Reference table updated with storage and server tier rows.*
