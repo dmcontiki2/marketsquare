@@ -6455,6 +6455,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   renderFeatured(); renderGrid(); updateTuppenceUI(); renderDash(); renderRecruit();
   renderHomeStats(); renderCatCounts();
   initLMHomeTile();
+  loadHomeWonders();
   // Load available cities + suburbs, then live listings from BEA on startup
   _resolveActiveCity().then(() => loadLiveListings());
   // Detect buyer location for distance badges + map centering
@@ -7167,8 +7168,8 @@ function renderAdvGrid(){
       : (l.price ? `${cur}${Number(l.price).toLocaleString()}/person` : '');
     const countryCode = (l.country||'ZA').toUpperCase();
     const flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
-    const imgHtml = l.photo
-      ? `<img class="adv-card-img" src="${esc(l.photo)}" alt="${esc(l.title||'')}" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">`
+    const imgHtml = (l.photo||(l.photos&&l.photos[0]))
+      ? `<img class="adv-card-img" src="${esc(l.photo||(l.photos&&l.photos[0]))}" alt="${esc(l.title||'')}" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">`
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
     return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
@@ -12010,6 +12011,14 @@ const WONDERS_BUNDLED = [
   {id:"ar_020",name:"Aksum",type:"Archaeological Site",country:"Ethiopia",region:"Africa",photo:"https://commons.wikimedia.org/wiki/Special:FilePath/Obelisk_of_Axum.jpg?width=1280",description:"Aksum in northern Ethiopia was the capital of the Aksumite Empire, one of the ancient world's great powers, dominating trade between the Mediterranean and Indian Ocean from the 1st to 7th centuries AD. Its monumental stelae \u2014 granite obelisks up to 33 metres tall, some standing after 2,000 years \u2014 are among the most impressive monuments of ancient Africa. Aksum is also believed by Ethiopian tradition to house the Ark of the Covenant in the Church of Our Lady Mary of Zion, making it one of Christianity's most sacred and mysterious pilgrimage destinations.",history:"The Aksumite Empire controlled the strategic Red Sea trade route, minting its own gold coins \u2014 one of only three empires worldwide to do so in antiquity alongside Rome and Persia. Inscribed as a UNESCO World Heritage Site in 1980. One of Aksum's greatest obelisks was looted by Italian colonial forces in 1937 and erected in Rome. After decades of diplomatic effort, it was returned to Ethiopia and re-erected in Aksum in 2008 \u2014 one of Africa's most significant and hard-won cultural repatriation successes.",wikipedia:"Aksum",lat:14.13,lon:38.72},
 ];
 let _wpAllWonders=WONDERS_BUNDLED.slice();let _wpLinked=[];
+// Preload first 8 wonder images immediately (Africa-first order matches renderWondersStrip)
+(function(){
+  const africa=['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'];
+  const af=WONDERS_BUNDLED.filter(w=>africa.some(c=>w.country.includes(c)));
+  const oth=WONDERS_BUNDLED.filter(w=>!af.find(a=>a.id===w.id));
+  const top8=[...af,...oth].slice(0,8);
+  top8.forEach(w=>{ const img=new Image(); img.src=w.photo; });
+})();
 async function wpInit(beaId){
   if(_wpAllWonders.length===0){try{const r=await fetch(BEA_URL+'/wonders');const d=await r.json();_wpAllWonders=d.wonders||[];}catch(e){}}
   _wpLinked=[];
@@ -12438,9 +12447,9 @@ function renderWondersStrip() {
   const others = filtered.filter(w=>!africa.find(a=>a.id===w.id));
   const sorted = [...africa,...others];
   const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
-  list.innerHTML = sorted.length ? sorted.map(w=>`
+  list.innerHTML = sorted.length ? sorted.map((w,i)=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
-      <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="origin-when-cross-origin" onerror="this.style.background='#1e3a5f'">
+      <img class="wonder-card-img" src="${w.photo}" loading="${i<8?'eager':'lazy'}" referrerpolicy="origin-when-cross-origin" onerror="this.style.background='#1e3a5f'">
       <div class="wonder-card-body">
         <div class="wonder-card-type ${tc2(w.type)}">${w.type}</div>
         <div class="wonder-card-name">${w.name}</div>
