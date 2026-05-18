@@ -1846,3 +1846,11 @@ Root cause: The previous "View seller profile" button guard in the detail view u
 `initLMHomeTile()` fetches real LM listings from BEA, but falls back to demo LISTINGS when BEA returns nothing (no live LM listings yet). The fallback was unconditional — it fired on the live site too, making the LM tile show "10 listings" from demo data. Fixed the fallback to return `[]` when `DEMO_MODE` is false, so the tile correctly shows "0 listings" on the live site.
 
 **Net result:** Live site (trustsquare.co) now shows exactly what real data exists: Property 5 listings, all other categories 0, Local Market 0, Heritage 120 — no demo bleed-through of any kind.
+
+## Session 62 continued·9 — Seller profile button restored for live listings (2026-05-18)
+
+**Fix: "View seller profile" button missing on live BEA listings**
+The previous IIFE fix correctly eliminated the nested-backtick JS error, but included an early-return guard `if(l.sellerIdx==null)return ''` that prevented the button rendering for live listings (which have no sellerIdx). Fixed the IIFE to always render the button: `var sidStr = l.sellerIdx!=null ? l.sellerIdx : 'null'` produces either the numeric sellerIdx or the JS literal `null`, so the onclick becomes either `openSellerCV(0,'bea_93')` (demo) or `openSellerCV(null,'bea_93')` (live). The existing `openSellerCV` routing already handles null → `openBEASellerProfile()`.
+
+**Fix: `cvScore is not defined` crash in `openBEASellerProfile`**
+Pre-existing bug: `openBEASellerProfile()` referenced `cvScore` in two places (trust score number display and trust bar width) but never defined it. Should have been `l.trust`. Replaced both occurrences. Seller profile screen for live listings now opens fully without a ReferenceError.

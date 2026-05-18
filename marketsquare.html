@@ -7937,8 +7937,8 @@ function openBEASellerProfile(l) {
       <div class="cv-headline">${l.title}</div>
       <div class="cv-cat">${scBadge}${l.cat} · ${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div style="color:${t.c};"><div class="cv-trust-num">${cvScore}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
-        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${cvScore}%;background:${t.c};"></div></div>
+        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
+        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
     </div>
@@ -8194,7 +8194,7 @@ function openDetail(id){
       </div>` : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
-        ${(function(){if(l.sellerIdx==null)return '';var sid=l.sellerIdx;var ci=catCfg(l);return '<button onclick="openSellerCV('+sid+',\''+(id)+'\')" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">'+ '<div style="width:40px;height:40px;border-radius:50%;background:'+ci.bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ci.icon+'</div>'+ '<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>'+ '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';})()}
+        ${(function(){var sidStr=l.sellerIdx!=null?l.sellerIdx:'null';var ci=catCfg(l);var onclk='openSellerCV('+sidStr+','+'\''+(id)+'\''+')';return '<button onclick="'+onclk+'" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">'+'<div style="width:40px;height:40px;border-radius:50%;background:'+ci.bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ci.icon+'</div>'+'<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>'+'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';})()}
       </div>
       ${flowHtml}
       <div id="detail-poi-strip" style="display:none;">
