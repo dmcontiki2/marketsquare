@@ -69,6 +69,15 @@ If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
 
 ---
 
+## Next Session — Session 63
+
+### Legal & Operational launch blockers (tackle in order)
+1. **Company registration number** — Trustsquare (Pty) Ltd reg 2026/340128/07 already exists. Insert into EULA Section 2 and app footer. Quick win — no counsel needed.
+2. **support@trustsquare.co mailbox** — Confirm mailbox exists and is monitored. Required by EULA Sections 5.4, 6.5, 6.6, 7.x, 13, 14, 15. Operational item — check with domain/hosting provider.
+3. **Privacy Policy page** — Draft and publish trustsquare.co/privacy. Required by EULA Section 9.1 and POPIA. Can use a standard SA POPIA-compliant template as starting point.
+4. **Counsel EULA review** — Brief SA attorney on outstanding `[COUNSEL REQUIRED]` sections. Prepare a short brief document listing each open section and the specific question for counsel.
+5. **AI audit of the TrustSquare app** — Full AI-assisted audit of marketsquare.html: dead code, DEMO_MODE guards on all BEA calls, TODO:REMOVE BEFORE LAUNCH items, accessibility, mobile UX, and any remaining data integrity issues.
+
 ## Last Completed
 **Session 62 (continued·6) — 18 May 2026**
 - Full 290-listing audit: all 4 cities × 7 categories verified — 0 issues after fixes.
