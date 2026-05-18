@@ -5530,7 +5530,20 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
         <div class="ms-empty">No browsing history yet</div>
       </div>
 
-      <div class="ms-section-lbl" id="ms-seller-hub-lbl" style="display:none;">Seller hub</div>
+      <div class="ms-section-lbl">Seller hub</div>
+      <!-- Inline seller sign-in — visible when ms_aa_email not set; collapses once signed in -->
+      <div class="ms-card" id="ms-seller-signin-card" style="display:none;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Already selling on TrustSquare?</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">Enter your registered email to access your listings.</div>
+        <div style="display:flex;gap:8px;">
+          <input type="email" id="ms-seller-email-inp" placeholder="your@email.com"
+            style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;background:var(--surface-2);color:var(--text);"
+            onkeydown="if(event.key==='Enter')msSellerSignIn()">
+          <button onclick="msSellerSignIn()"
+            style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Sign in →</button>
+        </div>
+        <div id="ms-seller-signin-msg" style="font-size:12px;margin-top:6px;display:none;"></div>
+      </div>
       <div class="ms-card ms-seller-link" id="ms-seller-hub-card" onclick="goTo('dashboard')" style="display:none;">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--navy);">My listings &amp; requests</div>
@@ -14897,6 +14910,37 @@ async function lmSubmitIntro(listingId, name, email, message) {
 const MS_HISTORY_KEY = 'ms_browse_history';
 const MS_HISTORY_MAX = 30;
 
+async function msSellerSignIn() {
+  const inp = document.getElementById('ms-seller-email-inp');
+  const msg = document.getElementById('ms-seller-signin-msg');
+  if (!inp || !msg) return;
+  const email = (inp.value || '').trim().toLowerCase();
+  if (!email) { msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent='Please enter your email.'; return; }
+  msg.style.display='block'; msg.style.color='var(--text-3)'; msg.textContent='Checking…';
+  try {
+    const user = await apiGet('/users/' + encodeURIComponent(email));
+    if (user && user.email) {
+      const name = user.name || email;
+      localStorage.setItem('ms_aa_email', email);
+      localStorage.setItem('ms_aa_name',  name);
+      if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString());
+      localStorage.setItem('ms_superuser', user.is_superuser ? '1' : '0');
+      msg.style.color='var(--green)'; msg.textContent='✓ Signed in as ' + name;
+      // Show hub, hide sign-in form
+      const hubCard = document.getElementById('ms-seller-hub-card');
+      const signinCard = document.getElementById('ms-seller-signin-card');
+      if(hubCard) hubCard.style.display='';
+      if(signinCard) signinCard.style.display='none';
+      // Load dashboard data in background
+      setTimeout(async () => { await loadLiveDash(); renderDash(); }, 400);
+    } else {
+      msg.style.color='#dc2626'; msg.textContent='No seller account found for that email.';
+    }
+  } catch(e) {
+    msg.style.color='#dc2626'; msg.textContent='Could not connect — please try again.';
+  }
+}
+
 function msInit(){
   const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
   const name  = localStorage.getItem('ms_user_name') || '';
@@ -14952,12 +14996,15 @@ function msInit(){
       + (hasSeller ? ' <span class="ms-chip ms-chip-new">Seller</span>' : '');
   }
 
-  // Seller hub card — only visible to sellers
+  // Seller hub card — visible to sellers; sign-in form shown to non-sellers
   const isSeller = !!(localStorage.getItem('ms_aa_email') || (SELLERS && SELLERS[0] && SELLERS[0]._email));
-  const sellerHubLbl  = document.getElementById('ms-seller-hub-lbl');
-  const sellerHubCard = document.getElementById('ms-seller-hub-card');
-  if(sellerHubLbl)  sellerHubLbl.style.display  = isSeller ? '' : 'none';
-  if(sellerHubCard) sellerHubCard.style.display = isSeller ? '' : 'none';
+  const sellerHubCard   = document.getElementById('ms-seller-hub-card');
+  const sellerSigninCard = document.getElementById('ms-seller-signin-card');
+  if(sellerHubCard)    sellerHubCard.style.display    = isSeller ? '' : 'none';
+  if(sellerSigninCard) sellerSigninCard.style.display = isSeller ? 'none' : '';
+  // Remove the old label element ref (now always visible via static HTML)
+  const sellerHubLbl = document.getElementById('ms-seller-hub-lbl');
+  if(sellerHubLbl) sellerHubLbl.style.display = '';
 
   // Trust score (use cached, then fetch live from BEA)
   const storedTrust = parseInt(localStorage.getItem('ms_trust_score')) || 15;

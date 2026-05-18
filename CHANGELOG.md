@@ -1859,3 +1859,11 @@ Pre-existing bug: `openBEASellerProfile()` referenced `cvScore` in two places (t
 
 **Fix: Photos missing on live property listings**
 Root cause: `loadLiveListings()` read photos from two sources — a `[photos:url1|url2]` prefix in the description field, and `l.medium_url`. Listing 93 had its photos stored in the `photo_urls` DB column (a JSON array of 10 R2 URLs) which the FEA never read. Added a third photo source: after the description-prefix check, parse `l.photo_urls` as a JSON array if present and no photos were found yet. Listing 93 now resolves 11 photos from R2. Listings 94–97 have no photos uploaded at all (no photo_urls, no medium_url, no description prefix) — they correctly show the Property category fallback (Unsplash house image) until those sellers upload photos via the admin app.
+
+## Session 62 continued·11 — Seller sign-in on My Space + photo_urls fix (2026-05-18)
+
+**Fix: Sellers had no path to their dashboard without a magic link**
+The Seller hub card on the Me tab was hidden unless `ms_aa_email` was already in localStorage (set only by magic link or onboarding). Sellers who registered via the admin app or on a new device had no way to reach Edit/Delete for their own listings. Added an inline "Already selling on TrustSquare?" sign-in panel directly on the Me tab — email input + Sign in button, always visible to non-sellers. On successful sign-in via `msSellerSignIn()`: sets `ms_aa_email`, hides the sign-in form, reveals the Seller hub card, and loads the dashboard in the background. Existing sellers with `ms_aa_email` already set still see only the hub card, unchanged.
+
+**Fix: photo_urls not read from BEA API response**
+`loadLiveListings()` was only reading photos from a `[photos:...]` description prefix and `l.medium_url`. The `photo_urls` DB column (a JSON array of R2 URLs) was returned in the API response but never parsed. Added a third source: parse `l.photo_urls` as JSON after the description check. Listing 93 now correctly shows all 11 R2 photos. Listings 94–97 have no photos uploaded and correctly fall back to the Property category image.
