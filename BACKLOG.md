@@ -1,5 +1,5 @@
 # MarketSquare · Feature & Fix Backlog
-*Updated Session 45 · 7 May 2026*
+*Updated Session 62 · 18 May 2026*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 
 ---
@@ -16,7 +16,7 @@
 | L5 | **FSCA guidance on Tuppence** — confirm Tuppence classification as non-virtual-asset with FSCA or comply if reclassified (EULA Section 12) | Legal |
 | L6 | **POPIA consent timing** — counsel must confirm whether magic link email collection constitutes prior consent or whether EULA gate must move earlier in the flow | Legal |
 | L7 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once CIPC registration approved | Server |
-| L8 | **Tuppence refund language — EULA RESOLVED in v1.3 (17 May 2026)** — EULA Sections 5.1, 5.3, 5.4, 6.3, 6.5, 13, 14.3 fully corrected: charge-on-acceptance-only, Banks Act discretionary-reissuance framing, fraud-aversion clause, Casuals role terminology, ECT Act §44 scope, no ZAR cash conversion. Remaining open: purge from Whitepaper v3 and `marketsquare.html` (six edits flagged in `NEXT_SESSION_TUPPENCE_NO_REFUND.md`). Backend (`bea_main.py`) confirmed clean. | Legal · Product · IP |
+
 
 ---
 
@@ -71,16 +71,4 @@
 - Trust Score Hub (BEA endpoint + admin UI) ✅
 - Wishlist Feed with Web Push ✅
 - Edit-after-publish with version control ✅
-- 4-level geo hierarchy (Country → Region → City → Suburb) ✅
-- Photo storage migrated to Cloudflare R2 ✅
-- `payments.py` + Paystack webhook endpoint ✅
-- Full payment callback flow in buyer app ✅
-- Sandbox SSH fixed permanently ✅
-- CIPC registration + FNB account ✅
-- Paystack business verification submitted ✅
-- Beneficial Ownership filed with CIPC ✅ · Certificate: "Benificial Ownership Certificate for Trustsquare PTY (LTD).pdf"
-- `/dev/credit` BEA endpoint removed ✅ · Session 30 · commit 3ce6339
-- Dev Tools nav tab removed from admin app ✅ · Session 30 · commit 3ce6339
-
----
-*Next session: start with L1+L2 (remove dev tools), then H1 (Local Market listing parity).*
+- 4-level ge

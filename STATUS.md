@@ -1,22 +1,294 @@
-# MarketSquare — Live Status
+# TrustSquare — STATUS.md
+**Updated: Session 62 · 17 May 2026**
+
+> ⚠️ **LAUNCH FREEZE — DO NOT TRIGGER WAVE 1 OR ANY OUTREACH**
+> Pre-launch sequence must be fully complete before any email is sent.
+> Sending even one email exposes prior art and voids patent defence.
+> Sequence: Financial integration ✅ test → Patent filed → Whitepaper → Cities DB refreshed → David confirms launch → THEN Wave 1.
+
+---
+
+## ⚙️ CLAUDE INTERACTION PRINCIPLES (Founder Directives)
+
+**Effective**: David sets these rules for all Claude sessions (Chat, Code, Design)
+
+### Rule 1: Independence > Subscriptions
+When advising on tooling, **surface open-source and self-hosted options FIRST**, then paid SaaS as alternatives. Rank by:
+1. Self-hosted (free, sovereign)
+2. Free tier open-source
+3. Low-cost SaaS (<$20/mo)
+4. Premium / consumption-based (flag cost ceiling always)
+
+**Exception**: Tools where there is no reasonable open-source equivalent, or time-to-value is critical.
+
+### Rule 2: Token Transparency
+Before recommending a Claude-powered feature:
+- Estimate token cost (in/out)
+- Flag if consumption-based
+- Suggest alternatives if cost is >10% of budget
+- Never hide token math
+
+**Rule**: "Should we use Claude Code for this, or would a bash script be faster/cheaper?"
+
+### Rule 3: Flag Better Claude Functions
+When you discover a newer Claude function, tool, or capability:
+- **Always mention it as a possibility** (not a requirement)
+- Explain what it enables vs current approach
+- Let David decide
+
+**Example**: "Claude Design would work better here. Should I switch?" (not: "Let me use Claude Design")
+
+### Rule 4: Cost/Sovereignty Matrix
+Every architectural decision gets this framing:
+
+| Option | Cost | Sovereignty | Token Impact | Recommendation |
+|--------|------|-------------|--------------|---|
+| Self-hosted n8n | $0 (hosting only) | 100% | N/A | ✅ Primary |
+| Zapier | $20–200/mo | 0% | N/A | ⚠️ Fallback only |
+| Claude Code + bash | ~300 tokens/session | 100% | Transparent | ✅ Preferred |
+
+### Rule 5: Question Your Own Advice
+If David asks "Why didn't you suggest X?" or "What's the self-hosted version?":
+- **Stop and answer directly**
+- Don't assume he's aware of cost principles
+- Reframe the decision
+
+**Bottom line**: David's principles are *your* guardrails, not his responsibility to enforce.
+
+---
 
 ## Live State
-Session 62 complete. Demo mode (?demo=1) fully audited and clean across all 4 cities × 7 categories (290 listings, 0 issues). All seller profiles correctly wired. Trust scores in range. Process rules now AI-enforced in CLAUDE.md and AGENT_BRIEFING.md.
+- **Legal entity: Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Director: David Maurice Conradie · Registered 29/04/2026**
+- BEA v1.3.0 live at trustsquare.co · FastAPI + SQLite + Redis on Hetzner CPX32 (upgraded 25 May 2026)
+- Launch city: Pretoria, South Africa · **5 live listings (Maroushka — IDs 93–97) · 290 demo listings active (4 cities × 7 categories, fully audited)**
+- Demo mode: trustsquare.co?demo=1 · investor-ready · all seller profiles, trust scores, currencies correct
+- Maroushka registered in BEA: `miconradie1@gmail.com` · magic link sent via Gmail
+- **n8n outreach wave workflow: FULLY LIVE ✅** — tested end-to-end, first email sent to miconradie1@gmail.com, wave report delivered to dmcontiki2@gmail.com, `emailed_at` stamped in CityLauncher DB
+- Platform rebranded: MarketSquare → **TrustSquare** (all apps, BEA, EULA)
+- GitHub: github.com/dmcontiki2/marketsquare
 
-## Last Completed (Session 62 — continued·6)
-- **Full 290-listing audit**: all 4 cities × 7 categories systematically verified — 0 issues after fixes
-- **70 Pretoria sellerIdx fields added**: all Pretoria listings were missing sellerIdx, showing wrong seller profiles
-- **30 trust scores fixed**: Pretoria Collectors/Cars/LM had scores 44–64, all corrected to 72–94
-- **Process rules added**: CLAUDE.md Rule + AGENT_BRIEFING.md Rules 8–9 now AI-enforce demo-mode wiring and data integrity audit every session — no human memory dependency
-- **Adventures city sync, World Heritage country sync, LM titles, SELLERS, demo badges, POI disclaimer** (continued·5)
+---
 
-## Architecture note (important)
-The SELLERS array and sellerIdx are demo-only constructs. Live BEA listings use openBEASellerProfile() which fetches seller data from the database — the SELLERS array is never used for live listings. Demo misalignment cannot occur in production.
+## Last Completed
+**Session 62 (continued·6) — 18 May 2026**
+- Full 290-listing audit: all 4 cities × 7 categories verified — 0 issues after fixes.
+- 70 Pretoria listings missing sellerIdx — all added (Property=0, Tutors=1, Services=2, Adventures=3, Collectors=4, Cars=5, LM=6).
+- 30 Pretoria Collectors/Cars/LM trust scores below 70 — all corrected to 72–94 range.
+- AI-enforced process rules added to CLAUDE.md and AGENT_BRIEFING.md (Rules 8+9): demo-mode wiring guard + post-change audit required every session.
+- Deployed 1,230,305 bytes · all apostrophes clean · JS intact.
 
-## Next Session
-- Remove all `TODO:REMOVE BEFORE LAUNCH` blocks when going live
-- Paystack live mode (pending CIPC registration)
-- n8n email notification flows
+**Previous: Session 62 (continued·5) — 17 May 2026**
+- 7 reported bugs fixed: Adventures city sync, World Heritage country sync, LM titles, SELLERS[7-27], demo badges, POI disclaimer, Sydney area typo.
+- All seller profiles now show correct city-specific seller for each category.
 
-## Blockers
-None.
+**Previous: Session 62 (continued·4) — 17 May 2026**
+- Country→city selector rebuilt: badge tap → 4 countries → country tap → its city. Correct hierarchy.
+- Added 90 new listings: NY/London/Sydney Collectors (10 each), Cars (10 each), Local Market (10 each).
+- Total demo listings: 290 across 4 cities × 7 categories (fully audited).
+
+**Previous: Session 62 (continued·3) — 17 May 2026**
+- Root cause fixed: previous insert script had stamped city:'Pretoria' onto all 120 NY/London/Sydney listings — removed wrong stamps from all _ny_/_lon_/_syd_ IDs.
+- Category tiles now hidden (not "0 listings") in demo mode when no local data exists.
+- Local Market grid and home tile now filter by activeCity — no longer shows Pretoria data in NY.
+- Fixed "62 undefined" in LM cards: tbadge() → trustTier().
+- Deployed to trustsquare.co · 1,173,979 bytes.
+
+**Previous: Session 62 (continued·2) — 17 May 2026**
+- Fixed Collectors/Cars/LocalMarket/Adventures showing 0 or Pretoria data when NY/London/Sydney selected: 83 Pretoria listings were missing `city` field; added `city:'Pretoria'` to all.
+- Fixed map showing Pretoria when another city selected: `renderMap()` now uses `listing_lat/lng`, applies demo city filter, and uses `CITY_CENTERS` table for correct empty-state pan.
+- Nav bar 3 items in demo mode is intentional: Sell/Wallet/MySpace hidden, Join CTA shown instead.
+- Deployed to trustsquare.co · 1,175,581 bytes.
+
+**Previous: Session 62 (continued) — 17 May 2026**
+- Fixed sellerIdx mapping: new city listings referenced sellerIdx 10–21 but SELLERS array had them at [7]–[18]. Single-pass regex remapped all 203 occurrences. All 19 seller profiles (0–18) now resolve correctly.
+- Fixed currency display: `formatZAR()` was forcing `R` on all prices including `$75`, `£400`, `A$1200`. Now detects non-ZAR prefix and returns raw string. NY/London/Sydney prices display correctly.
+- Fixed "undefined" location on seller profile: `s.region` fallback now uses listing's `l.city` before defaulting to 'Pretoria and surrounds'. New city seller CVs now show correct city name.
+- Deployed to trustsquare.co · 1,171,557 bytes · JS syntax clean.
+
+**Previous: Session 62 — 17 May 2026**
+- Full demo data overhaul for all 4 launch cities: Pretoria · New York · London · Sydney
+- 30 new Property + 30 Tutor + 30 Services + 30 Adventures listings (10 per city for NY/London/Sydney)
+- 12 new SELLERS array entries with realistic trust scores 72–94, local professional terminology, category credentials
+- Demo/Live/Both toggle panel (dev-only, `?demo=1`), red corner-slice badge on all demo cards
+- Real World Heritage linked_wonders; POI data and lat/lng on all Property listings
+- Correct currency symbols throughout: ZAR (R), USD ($), GBP (£), AUD (A$)
+
+**Session 61 (continued) — 17 May 2026**
+- World Heritage lazy loading fixed; POI accuracy fixed (suburb-level coords); straight-line distance label added
+- Street address geocoding via Nominatim — private field for sellers, used for precise POI distances
+- Write-to-both photo storage live: R2 primary + Hetzner `/media/` mirror, `r2Fallback()` JS failover
+- CPX32 upgrade scheduled 25 May 2026 (4 vCPU, 8 GB, 160 GB, €15.49/month)
+- Hetzner Volume (€0.052/GB/month) on standby
+- All design docs updated: PRINCIPLE_REQUIREMENTS.md v1.2, Strategic_Decisions_Summary.md, AGENT_BRIEFING.md v1.8, EULA v1.1
+
+## Last Completed — Session 60
+
+### Photo credits — Wikimedia attribution overlay ✅
+- All 120 wonders in `wonders.json` updated with `photo_author`, `photo_licence`, `photo_source` (batch-fetched via Wikimedia Commons extmetadata API).
+- Semi-transparent credit pill added bottom-right of wonder detail hero image — camera icon, author name, licence hyperlink to Wikimedia source. Legally confirmed as UI layer, not derivative work.
+- EULA attribution placeholder updated to reference live implementation.
+- BEA restarted; attribution confirmed live on all `/wonders` responses.
+
+### World Heritage auto-link with opt-out ✅
+- `auto_link_wonders()` fires at publish — haversine distance + category affinity, up to 3 wonders, 500km radius, skips if already linked.
+- `DELETE /listings/{id}/wonders/{wonder_id}?email=` endpoint added — email-auth opt-out.
+- Opt-out banner in seller dashboard — green dismissible card, Keep/Remove, 7-day localStorage expiry.
+- Dashboard fetch fixed permanently — detects file: protocol, uses absolute URL to trustsquare.co.
+- Verified end-to-end: Pretoria → Blyde River Canyon + Kruger auto-linked correctly.
+
+## Last Completed — Session 59
+
+### World Heritage Content Layer — photo fix, 400-site expansion, cost analysis ✅
+- All 120 original wonder photos migrated to Special:FilePath format — Wikimedia's official hotlink endpoint. Photos display correctly across all 4 type filters.
+- World Heritage expanded from 120 to 400 sites: Natural Wonders, World Heritage Sites, National Museums, Global Archaeological Sites — 40+ countries covered.
+- Cost impact analysis document produced: `WorldHeritage_CostImpact_2026-05-16.docx` — direct cost $0/month, cost model unchanged.
+
+## Last Completed — Session 55
+
+### UX polish + EULA + legal blockers ✅
+- Step numbering: full 1-of-5 journey across guided screen + SOB (1→2→3→4→5)
+- Back-navigation sealed: Phase 2 "Start over" link for guided arrivals, no broken half-returns
+- Double-R price bug fixed in review card
+- EULA forced-scroll gate: checkboxes hidden until seller scrolls to bottom
+- Full 14-section EULA synced from docx into app — counsel markers visible
+- 6 legal launch blockers added to BACKLOG.md and dashboard (L1–L6)
+
+## Last Completed — Session 54
+
+### POPIA notice bar + Route 2 in-app entry ✅
+- POPIA transparency bar added to guided-onboard Step 1 — shown only on magic link arrivals, passive (not a gate)
+- Route 2: bottom nav "Sell" for new sellers now routes to guided-onboard instead of old Path A form
+- Category picker shown for Route 2 arrivals — 7 buttons, reveals upload zone + Next on selection
+- Both FEA deployed and verified live
+
+## Last Completed — Session 53
+
+### AI-Guided Listing Onboarding ✅
+- New `screen-guided-onboard` — 3-step photo-first onboarding screen (Photo / Details / Review)
+- Step 1: live draft card with real-time photo preview; photo uploaded to R2 via new `POST /listings/{id}/photo/draft?email=` endpoint (email-auth, draft-only guard)
+- Step 2: category-specific fields for all 7 categories; card repaints on every keystroke; AI market note via `/advert-agent/market-note`; fields saved via PUT on Next
+- Step 3: full card review; AI coach congratulations; "Take me to the app" hands off to tier-picker (Phase 2) skipping redundant Phase 1 via `_skipPreview` flag
+- Fixed pre-existing `health_resources()` truncation bug — BEA was crash-looping on startup before this session; return statement restored
+- Both FEA and BEA deployed and verified live at trustsquare.co
+
+## Last Completed — Session 52
+
+### Adventures detail view upgrade ✅
+- `ADV_ENV_LABELS`, `ADV_EXP_TYPE_LABELS`, `ADV_ACC_TYPE_LABELS` constants added (were referenced but never defined)
+- Photo thumbnail row: 5 small thumbnails appear at bottom of hero strip for adventure listings — active thumb highlights white, clicking scrolls main strip, swiping syncs thumbs
+- Enhanced stat strip: type badge (🦁 Luxury Safari, ⛺ Bush Camp etc.), environment pill, group size, duration, country badge — all styled with dedicated CSS classes (`.adv-stat`, `.adv-stat-strip`)
+- `advThumbClick()` and `syncAdvThumbs()` JS functions added; strip `onscroll` wired to keep thumbs in sync
+- JS syntax verified clean; deployed to trustsquare.co
+
+## Last Completed — Session 51
+
+### Graph 3-level navigation ✅
+- Level 2 hover: detail panel slides in from right with type badge, breadcrumb, full context
+- Level 3 click: centred detail card with colour-accented border and breadcrumb navigation
+- Fixed D3 v7 event bubbling — native SVG listener replaces D3 bgRect handler
+- Fixed mouseleave flicker — all visual children set pointer-events:none, single hit-circle per satellite
+- Fixed missing openLevel3/closeLevel3 functions — inserted cleanly
+
+### Live dashboard — permanent fix ✅
+- `session_dashboard_live.html` no longer contains a static `const DATA = {...}` block
+- On every load, `loadDashboard()` calls `GET /dashboard/summary` and populates the UI from live BEA data
+- Loading state shown while fetch is in progress; auto-retries after 5s on error
+- `GET /dashboard/summary` extended: new `directions` field — 4 auto-generated direction cards (Session next, Launch Blockers, CityLauncher Wave 1, AdvertAgent tier gating)
+- Directions built from parsed STATUS.md next-session priorities + blockers — update STATUS.md only, dashboard refreshes automatically next load
+- Both BEA and dashboard deployed to server and verified live
+
+## Last Completed — Session 50
+
+### My Space personal dashboard ✅
+- New `screen-myspace` screen with 4 tabs: Overview, Intros, Trust, Me
+- Bottom nav "Seller" button renamed "My Space" — now routes to personal dashboard
+- Overview: wallet summary (links to existing Tuppence screen), open intro actions with Accept/Decline, 4-stat summary grid
+- Intros tab: received/sent lists loaded live from BEA + wishlist prospects
+- Trust tab: live score bar, 8 per-signal breakdown rendered from new BEA endpoint, AI coaching CTA
+- Me tab: editable display name (localStorage), email, city, member-since date, roles chips, browse history, seller hub link
+- Browse history: tracked client-side in localStorage via `msTrackView()` hooked into `openDetail()`
+- New `GET /users/{email}/trust` BEA endpoint — score + tier + 8 signal objects
+- Fixed pre-existing BEA truncation bug (line 6530 `tuppence_total =` incomplete since prior session) — restored from git
+
+---
+
+## Last Completed — Session 49
+
+### Adventures page category system redesign ✅
+- Scrolling environment chips replaced with fixed 4-chip category bar inside dark hero header
+- Chip row hidden on "All" tab, shown only for Stays/Experiences with correct pinned categories
+- "More ▾" bottom sheet slides up with all 7 (Experiences) or 8 (Accommodation) typed categories
+- Gold active state for Experiences, blue for Stays — consistent visual identity
+- 7 experience types: Luxury safari · Luxury train · Guided tours · Once in a lifetime · Water & coastal · Sky & aerial · Arts & culture
+- 8 accommodation types: Private lodge · Bush camp · Mountain retreat · Coastal & island · Boutique hotel · Self-catering · Unique stays · Caravan & camping
+- 10 luxury accommodation demo listings added (ZA × 8, MZ × 1, NA × 1) spanning all 8 types
+- Card badges now show specific category type labels with colour coding
+- Environment chip filter bug fixed (& → _and_ normalisation)
+
+## Last Completed — Session 48
+
+### n8n founding seller outreach wave — FULLY LIVE ✅
+- Abandoned SendGrid (Twilio trial sandbox — unusable). Switched to already-authenticated Brevo SMTP (same cred used for intro emails since Session 46).
+- Converted `Query CityLauncher Prospects` and `Mark Prospect as Emailed` nodes from SQLite plugin type (rejected by n8n API) → Code nodes using `require('sqlite3')` directly.
+- Fixed CityLauncher DB schema mismatch: original query had `JOIN cities` — table doesn't exist. Removed JOIN, injected `city_name` from trigger params instead.
+- Fixed n8n Code node sandbox restrictions: added `NODE_FUNCTION_ALLOW_EXTERNAL=sqlite3` and `NODE_FUNCTION_ALLOW_BUILTIN=fs,path` to Docker env so Code nodes can require sqlite3 and read template files with fs.
+- Fixed email template file permissions: templates deployed with `-rwx------ root:root` — n8n container (uid 1000) couldn't read them. Fixed with `chmod 644`.
+- Fixed `Mark Prospect as Emailed` JS: `$input.first()` disallowed in `runOnceForEachItem` mode — changed to `$('Build Email Payloads').item.json` to retrieve prospectId from upstream item lineage.
+- Fixed CityLauncher DB readonly error: `chmod 666` on `citylauncher.db`, `citylauncher.db-wal`, `citylauncher.db-shm` and `chmod 777` on `/var/www/citylauncher/` — required for Docker container to write WAL files.
+- Fixed Rate Limiter: `milliseconds` unit not supported in n8n v2.14 — changed to `1 second`.
+- Execution 40: all 13 nodes green. Email delivered to miconradie1@gmail.com, wave report to dmcontiki2@gmail.com, `emailed_at = 2026-05-10 11:50:14` confirmed in CityLauncher DB.
+
+---
+
+## Last Completed — Session 47
+
+### Maroushka live simulation test ✅
+- 5 Property listings created and published live under `dmcontiki2@gmail.com` (IDs 93–97): 1-bed Waterkloof apartment, 2-bed garden apartment Waterkloof, 3-bed family home Waterkloof Ridge, executive studio Arcadia, 2-bed penthouse Brooklyn
+- All published via `PUT /listings/{id}/publish` — confirmed live in buyer feed at trustsquare.co
+- 70 demo listings confirmed present client-side alongside real listings
+- Maroushka registered in BEA: `miconradie1@gmail.com` · `POST /users` called
+- Magic link personalised and sent to Maroushka via Gmail: `https://trustsquare.co/?magic=1&name=Maroushka&email=miconradie1@gmail.com&cat=Property&city=Pretoria`
+- Maroushka added to CityLauncher `prospects` table (table created this session — was missing)
+
+### n8n outreach wave — NOT tested ⚠️
+- `n8n_outreach_workflow.json` imported into n8n UI successfully
+- SendGrid credentials NOT wired — workflow cannot execute
+- **Session 48 sole goal: wire SendGrid credentials + test single outreach email end-to-end**
+
+---
+
+## Last Completed — Session 46
+
+### n8n email notifications — intro accept/decline ✅ FULLY LIVE
+- `intro_accepted.html` + `intro_declined.html` branded TrustSquare templates (dark navy/gold, CSS-inlined for n8n)
+- Both n8n workflows live and tested — emails delivered to inbox from `noreply@trustsquare.co`
+- `trustsquare.co` domain authenticated in Brevo — SPF/DKIM aligned, inbox delivery confirmed
+- BEA decline webhook payload extended with `category` + `city` fields
+- `N8N_WEBHOOK_ACCEPT` + `N8N_WEBHOOK_DECLINE` set on Hetzner, duplicates cleaned from `/etc/environment`
+- `bea_main.py` committed and pushed (Session 46 fix)
+- Key n8n fix: `activeVersionId` in `workflow_entity` must match `workflow_history` — direct DB edits require updating both tables and restarting the container
+
+---
+
+## Last Completed — Session 45
+
+### Paystack seller subscription flow + AI coach verification
+- `POST /payment/seller-subscription/initialize` + `GET /payment/seller-subscription/verify` — full Paystack round-trip for Starter (R90/mo) and International (R270/mo) tiers
+- `sobContinueFromTier()` — tier picker Continue now redirects paid tiers to Paystack; `sessionStorage` preserves onboarding state across redirect; `?ps_sub_return=1` resumes at EULA
+- `POST /advert-agent/market-note` — new lightweight endpoint for inline B3/B4 market notes (no session gate, 1-sentence Haiku); fixes 422 error that was silently swallowing all inline AI notes
+- All 7 categories verified against live coach endpoint (Property · Tutors · Services · Adventures · Cars · Collectors · Local Market)
+- B4 free-seller nudge: `aa_sessions_remaining=0` shows "Free preview" banner pointing to AI Pack purchase
+- Admin `docHubUpload()` now calls `/trust-score/upload-comment` after every non-ID upload — Haiku coaching comment displayed inline
+
+---
+
+## Last Completed — Session 44
+
+### End-to-end seller onboarding test — all 7 categories verified
+- Full magic link → draft → tier picker → EULA → publish flow tested live on trustsquare.co
+- All 7 categories published and confirmed live: Property, Tutors, Services, Adventures, Collectors, Cars, Local Market
+- Local Market correctly routes through `/local-market/listings` (separate endpoint by design)
+- Demo listings (70 client-side) co-exist with live BEA listings in renderGrid() without conflict
+
+### BEA Bug Fixes (bea_main.py)
+- **trust_score NULL on publish:** `PUT /listings/{id}/publish` now reads `users.trust_score` and stamps it onto th
