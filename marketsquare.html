@@ -2585,6 +2585,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   <div class="home-hero">
     <div class="hero-top">
       <div class="hero-logo">TrustSquare</div>
+      <!-- TODO: REMOVE BEFORE LAUNCH — dev-only DEMO/LIVE toggle -->
+      <div id="dev-mode-toggle" style="display:flex;align-items:center;background:rgba(0,0,0,.35);border-radius:20px;padding:2px;gap:1px;border:1px solid rgba(255,255,255,.12);">
+        <button id="dmt-demo" onclick="devSetMode(true)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:#e63946;color:#fff;">DEMO</button>
+        <button id="dmt-live" onclick="devSetMode(false)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:rgba(255,255,255,.45);">LIVE</button>
+      </div>
+      <!-- END TODO -->
       <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div>
     </div>
     <div class="hero-body"></div>
@@ -5826,7 +5832,7 @@ const API_KEY = 'ms_mk_2026_pretoria_admin';
 // Set by ?demo=1 URL param (or served via /demo nginx route).
 // Hides Sell/Wallet/Seller nav, disables auth flows, shows
 // polished placeholder grid. No real seller flows in demo mode.
-const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
+let DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1'; // TODO: REMOVE BEFORE LAUNCH — runtime-mutable for dev toggle
 // TODO: REMOVE BEFORE LAUNCH — dev-only display mode for toggling demo vs live listings
 let DEMO_DISPLAY_MODE = 'demo'; // 'demo' | 'live' | 'both'
 function setDemoDisplay(mode) {
@@ -5842,7 +5848,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const tp = document.getElementById('demo-toggle-panel');
   if (tp && DEMO_MODE) tp.style.display = 'flex';
   else if (tp) tp.style.display = 'none';
+  // Init dev toggle pill state
+  var dBtn = document.getElementById('dmt-demo');
+  var lBtn = document.getElementById('dmt-live');
+  if (dBtn) { dBtn.style.background = DEMO_MODE ? '#e63946' : 'transparent'; dBtn.style.color = DEMO_MODE ? '#fff' : 'rgba(255,255,255,.45)'; }
+  if (lBtn) { lBtn.style.background = DEMO_MODE ? 'transparent' : '#22c55e'; lBtn.style.color = DEMO_MODE ? 'rgba(255,255,255,.45)' : '#fff'; }
 });
+// END TODO
+
+// TODO: REMOVE BEFORE LAUNCH — dev toggle function
+function devSetMode(isDemo) {
+  DEMO_MODE = isDemo;
+  // Update pill appearance
+  var dBtn = document.getElementById("dmt-demo");
+  var lBtn = document.getElementById("dmt-live");
+  if (dBtn) { dBtn.style.background = isDemo ? "#e63946" : "transparent"; dBtn.style.color = isDemo ? "#fff" : "rgba(255,255,255,.45)"; }
+  if (lBtn) { lBtn.style.background = isDemo ? "transparent" : "#22c55e"; lBtn.style.color = isDemo ? "rgba(255,255,255,.45)" : "#fff"; }
+  // Reset to South Africa / Pretoria when switching to live
+  if (!isDemo) {
+    activeCountry = { iso2: "ZA", name: "South Africa" };
+    activeRegion  = null;
+    activeCity    = { id: 47, name: "Pretoria" };
+    activeSuburb  = null;
+  }
+  // Re-render everything
+  updateLocBadge();
+  renderGrid();
+  renderCatCounts();
+  initLMHomeTile();
+  loadLiveListings();
+  // Show/hide existing demo-toggle-panel if present
+  var tp = document.getElementById("demo-toggle-panel");
+  if (tp) tp.style.display = isDemo ? "flex" : "none";
+}
 // END TODO
 
 // ── END DEMO MODE ────────────────────────────────────────────
