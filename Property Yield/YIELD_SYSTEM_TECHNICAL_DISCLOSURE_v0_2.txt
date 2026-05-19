@@ -1,0 +1,395 @@
+# Technical Disclosure Document
+
+## Computer-Implemented Automated Investment Signal Generation and Compliance Architecture for Marketplace Listings
+
+**Document version:** 0.2 (Solar Council review incorporated)
+**Date:** 19 May 2026
+**Inventor:** David Conradie
+**Status:** Pre-filing technical disclosure. Solar Council review complete (v0.1 → v0.2). Not yet reviewed by patent counsel.
+**Confidentiality:** This document contains pre-publication technical disclosure material intended for patent attorney review. Public disclosure prior to patent application filing may compromise patentability in jurisdictions requiring absolute novelty.
+
+**Change summary v0.1 → v0.2:**
+- Section 1: Field of invention reframed to compliance-evidentiary architecture per Solar Council review
+- Section 2: Fourth prior art category added (marketplace-native investor analytics tools)
+- Section 3: Combination claim framing made explicit; five strong claim candidates added
+- Section 4.3: Tax rate methodology changed from top marginal rate to standardised reference investor profile with range output — removes implied personalisation risk
+- Section 4.5: Pipeline output extended with confidence-tiered range banding; point estimate stored internally, range displayed to user
+- New Section 4.7: Scraping data governance — five technical mitigations added as architectural design decisions
+- Section 5.1: Schema updated to reflect reference_profile_tier field replacing single top_marginal_tax_rate
+- Section 5.3: Schema updated to include yield_range_low and yield_range_high output fields
+- Section 7: Claim candidates revised per Solar Council analysis — strong/weak distinction added
+- Section 8: Prior art section expanded with four named closest-prior-art systems
+- Section 9: Self-funding filter UI language change flagged; US state-by-state risk noted
+
+---
+
+## Section 1 — Field of Invention
+
+The invention relates to computer-implemented automated investment signal generation and compliance architecture for marketplace listings. More specifically, the invention concerns a system that orchestrates the fully automated derivation of all inputs required for net leveraged yield calculation from geographic, jurisdictional, and listing data already present on a peer-to-peer property marketplace, with zero buyer or seller financial input at any stage, combined with cross-jurisdictional financial normalisation, confidence propagation tied to underlying data quality, immutable evidentiary snapshots linking calculation state to reference data versions and disclaimer versions, and a compliance-oriented three-layer presentation architecture designed for safe surfacing of financially significant computed outputs in a regulated-adjacent context.
+
+The novelty asserted is not in the yield calculation formulas, which are well established, nor in any individual component, but in the specific integrated operational architecture combining all components into a single marketplace-native workflow. This framing is material: the system is a compliance architecture for automated investment signal generation, not a yield calculator.
+
+---
+
+## Section 2 — Background and Problem Statement
+
+Existing approaches to property yield calculation fall into four broad categories, each with limitations that the present invention addresses.
+
+The first category comprises manual calculation tools and spreadsheets. These require the user to supply numerous inputs including rental income, loan terms, interest rates, operating expenses, tax rates, closing costs, and inflation assumptions. The burden of accurate input collection falls entirely on the user. In peer-to-peer marketplace contexts where buyers browse many listings rapidly, manual calculation is impractical at scale and is therefore rarely performed, leaving buyers without standardised investment-quality signals.
+
+The second category comprises automated valuation models (AVMs) such as Zillow's Zestimate, Rightmove's instant valuation, and similar tools offered by major property portals. These systems focus on capital value estimation (what a property is worth) rather than yield estimation (what return the property would produce as an investment). Where yield estimates are offered, they typically rely on user-supplied parameters or simplified gross-yield ratios that omit the financing, taxation, and inflation factors required for true investment analysis.
+
+The third category comprises professional investment analysis services provided by real estate advisors and financial planners. These provide comprehensive analysis but require human-mediated engagement, cannot scale to listing-level estimates across an entire marketplace, and are typically engaged only after a buyer has already shortlisted properties through other means.
+
+The fourth category — and the most directly relevant prior art — comprises marketplace-native and investor-tool platforms that automatically overlay investment analytics on property listings. Known systems in this category include Polpi, Roperti, DwellIQ, and Rentometer Yield Tracker. These systems differ materially from the present invention in the following respects: they rely on user-editable or user-supplied financial assumptions rather than fully automated derivation; they do not implement cross-jurisdictional financial normalisation architecture; they do not provide confidence propagation tied to the statistical properties of underlying data; they do not implement immutable calculation snapshots with versioned reference data and disclaimer coupling; they do not implement an integrated three-layer user protection architecture designed for regulated-adjacent surfacing; and they operate as investor-tool or browser-extension products rather than as marketplace-native features embedded within a peer-to-peer transaction platform. No known system in this category implements the combination of zero-input derivation, jurisdictional normalisation, confidence propagation, immutable evidentiary snapshots, and compliance-oriented presentation as a single integrated marketplace workflow.
+
+In all four categories, a further gap exists: none of these tools provide an integrated architecture that combines automated investment signal generation with the user-protection mechanisms required to safely surface financially significant calculated outputs in a regulated-adjacent context. Property yield estimates straddle the boundary between factual information and financial advice, and existing tools handle this through static disclaimers in terms of service that users rarely read. The present invention addresses this gap by making the compliance architecture a first-class architectural component rather than a legal afterthought.
+
+---
+
+## Section 3 — Summary of the Invention
+
+The invention is a computer-implemented system that calculates and surfaces estimated investment yield for property listings on a peer-to-peer marketplace platform. The system operates without requiring sellers to provide rental, financing, or tax information, deriving all required inputs from a combination of listing geographic data, jurisdiction-specific reference tables, automatically scraped rental benchmark data from public sources, and central bank financial data accessed via public APIs.
+
+The system computes net leveraged yield adjusted for inflation, produces a confidence indicator based on the statistical sample size and recency of underlying reference data, stores each calculation as an immutable snapshot for historical validation, and surfaces the result to platform users through a three-layer protection architecture.
+
+The novelty of the invention resides in the specific integrated combination of: (a) automated zero-input derivation orchestration, (b) cross-jurisdictional financial normalisation, (c) confidence propagation tied to underlying data quality state, (d) immutable evidentiary snapshots coupling calculation state to versioned reference data and versioned disclaimer text, (e) a compliance acknowledgement system with permanent per-user disclaimer snapshot storage, and (f) an admin-gated live-production validation pattern — all operating as a unified marketplace workflow. No element individually constitutes the novelty; the combination of all elements into one operational system for a peer-to-peer marketplace is the asserted inventive step.
+
+The system is designed for staged deployment, in which the calculation pipeline operates in production from initial deployment but visibility is restricted to administrative users until historical validation demonstrates sufficient accuracy to justify public release.
+
+**Strongest claim candidates for patent counsel (per Solar Council review):**
+
+**Claim Candidate A — Zero-input derivation orchestration.** A marketplace system that derives all investment parameters automatically from listing geographic hierarchy, public economic APIs, public rental benchmarks, and jurisdictional reference tables, without any buyer or seller financial input. This is the primary technical anchor.
+
+**Claim Candidate B — Confidence propagation architecture.** A confidence assessment mechanism computationally tied to benchmark sample size, recency, reference data completeness, and data quality state propagation — not arbitrary UI. The confidence indicator is an architectural output of the data quality state, not a manual label.
+
+**Claim Candidate C — Immutable snapshot and disclaimer version coupling.** The linkage between calculation state, reference data version, disclaimer version, and acknowledgement snapshot into a compliance-evidentiary chain. This is the most unusual and patentable element — no known prior art implements this specific coupling.
+
+**Claim Candidate D — Admin-gated live-production validation pattern.** Live production computational accumulation with delayed public surfacing tied to validation evidence, operating as a single deployment artefact without prototype-to-production transition. Framed operationally, not merely as feature flags.
+
+**Claim Candidate E — Integrated combination claim.** The combination of automated derivation, jurisdiction resolution, confidence propagation, immutable snapshots, and compliance acknowledgement system into one marketplace workflow. Likely the strongest independent claim in final form.
+
+**Areas to avoid centring claims around:** yield badge, real yield formula, cash flow calculation, mortgage affordability, investment property analysis — these are individually saturated fields.
+
+---
+
+## Section 4 — Detailed Description
+
+### 4.1 System Architecture Overview
+
+The system comprises the following principal components:
+
+A **reference data layer** containing jurisdiction-specific financial profiles (tax bracket reference profiles, closing cost formulas, standard loan terms, central bank rate source endpoints) and suburb-level rental benchmarks aggregated from public sources.
+
+An **input derivation engine** that, given a property listing identifier, resolves the listing's geographic jurisdiction, retrieves applicable reference data, fetches current financial indicators from external public APIs, and constructs the complete set of inputs required by the yield calculation pipeline.
+
+A **yield calculation pipeline** that executes the net leveraged yield computation including total equity invested, net annual cash flow, post-tax cash flow, nominal leveraged yield, and inflation-adjusted real yield, and produces a confidence-tiered output range rather than a single point estimate.
+
+A **confidence assessment module** that evaluates the statistical reliability of the calculation based on sample size of underlying rental benchmark data, recency of reference data, and presence or absence of complete jurisdiction profile, and propagates the resulting confidence state through to the output range and user-facing indicators.
+
+A **snapshot storage layer** that records each calculation as an immutable record including all inputs, intermediate values, outputs, confidence indicators, data source references, the point-estimate yield values, the output range band, and a reference to the disclaimer text version applicable at the time of calculation.
+
+A **historical validation module** that compares stored yield snapshots against subsequent market data and reported outcomes to assess estimate accuracy over time, providing the evidentiary basis for the launch decision.
+
+A **user-facing surface layer** implementing the three-layer protection architecture, with administrative gating during the pre-launch validation period.
+
+### 4.2 Geographic-Jurisdictional Data Resolution
+
+The system relies on the platform's four-level geographic hierarchy (country, region, city, suburb) to resolve the applicable jurisdictional context for each listing. The country component determines which financial profile applies, including taxation rules, standard loan terms, closing cost formulas, and applicable central bank for interest rate data. The suburb component determines which rental benchmark dataset applies for rental income estimation.
+
+This jurisdictional resolution is performed at calculation time rather than at listing creation time, ensuring that calculations always reflect current jurisdictional data even if the listing pre-dates the most recent reference data update.
+
+### 4.3 Automated Input Derivation
+
+The system derives the following inputs without requiring any seller-provided financial information. The only listing-specific inputs are the property asking price (already provided by sellers as part of standard listing creation) and the property's geographic location (already present in the listing's suburb assignment).
+
+**Loan amount and deposit** are derived using country-specific standard loan-to-value ratios stored in the country financial profile. These ratios reflect typical investment property financing terms in each jurisdiction.
+
+**Interest rate** is computed as the current prime rate or central bank reference rate plus a country-specific investment loan margin. The prime or reference rate is fetched from public central bank APIs (for example, the South African Reserve Bank, Bank of England, US Federal Reserve, European Central Bank) using endpoints specified in the country financial profile.
+
+**Closing costs** are computed using deterministic country-specific formulas. For South African properties, this includes transfer duty calculated on the statutory sliding scale, bond registration fees, and conveyancing attorney fees. For United Kingdom properties, this includes Stamp Duty Land Tax and legal fees. For United States properties, this includes typical title, escrow, and recording fees. Each formula is encoded as a function of the property price and country.
+
+**Annual gross rental income** is estimated by multiplying the property price by a suburb-level gross yield benchmark, where the benchmark is derived from aggregated rental listing data scraped from public sources for the same suburb. The aggregation methodology is described in Section 4.4.
+
+**Operating expenses** are estimated as a country-specific percentage of gross rental income, refined by property type where the listing data supports such refinement. The country financial profile contains the applicable operating expense ratio.
+
+**Tax treatment** is applied using a standardised reference investor profile for each jurisdiction rather than a specific individual tax rate. The reference profile represents a typical investment property buyer profile in that jurisdiction (for example, a salaried individual in an upper income bracket, before property-specific deductions). The system applies the applicable tax treatment to this standardised profile and produces a yield range banded across the plausible tax outcomes for buyers in that profile tier, rather than a single implied post-tax figure. This approach eliminates the false precision risk and implied personalisation risk associated with applying a single marginal tax rate, and is disclosed explicitly in the methodology reveal as a standardised reference profile, not an individualised tax calculation. The output range band width increases with the spread of plausible tax outcomes in the jurisdiction.
+
+**Inflation rate** is fetched from public inflation data sources for the relevant country, typically using IMF or World Bank data APIs.
+
+### 4.4 Rental Benchmark Scraping and Aggregation
+
+The rental benchmark data underlying gross rent estimation is produced by a periodic scraping job that retrieves rental listing data from public property portals for each suburb where the platform operates. The scraping methodology uses browser automation with DOM-level extraction, avoiding paid third-party API dependencies.
+
+For each suburb, the system aggregates rental listings retrieved during the scrape window, computes median monthly rent and median rent-to-price ratio, records the sample size, and stores the aggregated values in the suburb rental benchmarks table along with a timestamp. Sample sizes below a configured threshold result in the benchmark being marked as insufficient, which propagates through to the confidence indicator on any yield calculation depending on that benchmark.
+
+The scraping job runs on a periodic schedule, typically weekly per suburb, with the schedule tunable per suburb based on listing volume and rental market velocity.
+
+### 4.5 Yield Calculation Pipeline
+
+The pipeline executes the following sequence:
+
+**Total equity invested** equals the property price minus the derived loan amount, plus closing costs.
+
+**Annual loan repayment** is computed using the standard amortisation formula with the derived interest rate, loan amount, and country-standard loan term.
+
+**Annual loan interest** is computed as the interest portion of the first-year amortisation, used for taxable income calculation.
+
+**Net annual cash flow** equals annual gross rental income minus operating expenses minus annual loan repayment.
+
+**Taxable income** equals annual gross rental income minus operating expenses minus annual loan interest.
+
+**Tax applied** is computed using the standardised reference investor profile (see Section 4.3), producing a tax range across the applicable profile bracket band, with a floor at zero for cases where taxable income is negative.
+
+**Post-tax cash flow range** equals net annual cash flow minus the tax range, producing a low and high post-tax cash flow value.
+
+**Nominal leveraged yield range** equals the post-tax cash flow range divided by total equity invested, expressed as a percentage band (low to high).
+
+**Real yield range** is computed by applying the Fisher equation to both bounds of the nominal yield range: real yield equals (one plus nominal yield) divided by (one plus inflation rate), minus one.
+
+**Output format:** The pipeline stores the full point-estimate calculation internally for snapshot and validation purposes. The user-facing output is the real yield range band, tiered by confidence level. A High confidence calculation with a narrow profile spread might display as "Estimated real yield: 6.8% – 7.4%". A Medium confidence calculation with a wider profile spread might display as "Estimated real yield: 5.5% – 8.5%". A Low confidence calculation displays a wider band with an explicit data quality warning. An Insufficient Data state suppresses the range entirely and displays only the confidence state.
+
+### 4.6 Confidence Flagging Mechanism
+
+Each calculation produces a confidence indicator with discrete levels (for example: high, medium, low, insufficient data). The confidence level is determined by evaluating:
+
+- Sample size of the underlying suburb rental benchmark relative to a configured threshold
+- Recency of the rental benchmark data
+- Recency of fetched central bank and inflation reference data
+- Completeness of the applicable country financial profile
+
+The confidence state propagates mechanically from the input data quality through the calculation. Where any input data source falls below its respective threshold, confidence is reduced according to the propagation rules. Where critical inputs are unavailable, the calculation produces an insufficient data flag rather than a yield value. The confidence indicator is therefore a computational output of the system's data state, not an editorial label applied after the fact — this distinction is architecturally significant and forms part of Claim Candidate B.
+
+### 4.7 Scraping Data Governance
+
+The following data governance measures are implemented as core architectural design decisions, not post-hoc mitigations. They are relevant both to legal defensibility and to patent disclosure integrity.
+
+**Benchmark abstraction.** The system never stores or renders original listing text, original listing images, or seller identities from scraped sources. Only normalised aggregate statistics are stored: median monthly rent, median gross yield ratio, sample size, timestamp, and data quality flag per suburb. Raw HTML and raw listing records are discarded after aggregation processing. The stored output is a statistical summary, not a copy of source content.
+
+**Data minimisation.** The minimum fields required for benchmark computation are extracted: suburb identifier, property type, monthly rent amount, and listing timestamp. No fields beyond these are retained after the aggregation step.
+
+**Rate limiting and scrape cadence.** Scrape jobs execute at human-like cadence with per-domain rate limiting. No portal is requested at a frequency that would constitute denial-of-service or automated bulk harvesting. Scrape schedules are tunable per suburb and per source domain.
+
+**Source diversification.** Rental benchmark data is aggregated across multiple public listing sources per suburb where available, reducing dependence on any single portal and improving statistical robustness.
+
+**Provenance logging.** Each benchmark record retains a provenance log including source domain identifier, scrape timestamp, parser version used, and the aggregation run identifier. This enables evidentiary reconstruction of any benchmark value and supports audit defense.
+
+### 4.8 Historical Validation Feedback Loop
+
+Each yield snapshot is preserved with its complete input set, intermediate values, and confidence indicator. Over time, the system accumulates a longitudinal dataset of estimates that can be compared against subsequent market data — for example, comparing initial yield estimates for listings that later transacted against post-sale rental performance where such data becomes available.
+
+This feedback loop provides the evidentiary basis for the launch decision, allowing the platform operator to assess estimate accuracy across jurisdictions, property types, and confidence levels before exposing the feature to non-administrative users. It also supports ongoing calibration of input derivation parameters such as country-specific operating expense ratios.
+
+**Important:** The historical validation module should not be marketed or described as "proven accuracy", "validated returns", or "predictive reliability". The validation data is an internal operational tool supporting the launch decision and ongoing calibration. Public claims about accuracy require legal counsel review before use.
+
+### 4.9 Snapshot Storage and Disclaimer Versioning
+
+Each yield calculation is stored as a complete snapshot record containing all inputs, all intermediate calculation values, all output values (including both point-estimate internals and the range band output), the confidence indicator, references to the specific reference data versions used, the timestamp of calculation, and a reference to the disclaimer text version applicable at the time of calculation.
+
+Disclaimer text is stored in a versioned table, with each version identified by a unique version identifier, country applicability, effective date, and superseded date. When the platform displays a yield estimate, the disclaimer version active at the time the calculation was produced is the version displayed. This ensures consistency between what the user sees and what was calculated, and provides an audit trail for compliance review.
+
+### 4.10 Admin-Gated Production Deployment Pattern
+
+The system is deployed in production from the initial release, with the calculation pipeline, scraping jobs, snapshot storage, and historical validation all operating against live data. Visibility of yield indicators to non-administrative users is controlled by a feature flag, with the default state being non-visible.
+
+The user-facing surface components are present in the production client application but conditionally rendered based on the user's role and the state of the feature flag. Administrative users see the full surface against live listings, in the same client application that non-administrative users access. Non-administrative users see no indication that the feature exists.
+
+This deployment pattern provides three significant benefits. First, it eliminates the prototype-to-production transition risk that would otherwise apply if the feature were developed in a separate environment. Second, it allows historical validation to accumulate in production conditions from day one, providing a much larger and more representative dataset than a closed beta would generate. Third, public launch is achieved by a single feature flag change rather than a deployment, minimising launch-time risk.
+
+The architecture is distinguished from a generic feature flag pattern by the coupling of the flag state to the validation evidence requirement: the flag is not set to enabled until the historical validation module's accuracy statistics meet the operator-defined launch threshold. This coupling between computational evidence and feature visibility is an architectural decision, not an operational convenience.
+
+### 4.11 Three-Layer User Protection Architecture
+
+The system surfaces yield estimates to users through a three-layer protection architecture designed to provide informed consent appropriate to the financially significant nature of the output.
+
+**Layer 1 — Visual flag:** Each listing displays a yield indicator badge with discrete categorical states reflecting the calculated real yield range (for example: strong yield, moderate yield, capital growth play, insufficient data). The badge includes a visual confidence indicator. Tapping or clicking the badge opens the methodology reveal. The badge displays the yield as a range (e.g., "Est. yield 6–8%"), not a single point figure, and includes visible labelling that the figure is an estimate based on automated inputs.
+
+**Layer 2 — Methodology reveal:** A detail panel displays the complete calculation including each input value used, each intermediate result, the final yield range figures, the data sources for each input, the confidence indicator with explanation, the standardised reference investor profile applied, the timestamp of last calculation, and the applicable disclaimer text. The display of the reference investor profile description is mandatory — the user must be able to see that the calculation used a standardised profile, not their personal financial data.
+
+**Layer 3 — Acknowledgement:** The first time a user invokes the methodology reveal, an explicit acknowledgement modal is displayed before the panel content is shown. The modal sets out: that the estimate is computed from automated inputs using a standardised reference investor profile and is not financial advice; that the platform does not have access to the user's individual financial circumstances; that the reference investor profile applied may differ materially from the user's actual financial position; that actual investment returns depend on factors the platform cannot derive; and that the user should obtain professional financial advice before making investment decisions based on the estimate. The user must explicitly acknowledge the modal to proceed.
+
+The acknowledgement event is recorded permanently. The record includes the user identifier, the timestamp, the disclaimer text version acknowledged, and the listing context in which acknowledgement was first obtained. The acknowledged disclaimer text version is stored as a snapshot in the acknowledgement record, ensuring that the precise text the user agreed to is permanently preserved regardless of subsequent disclaimer revisions.
+
+After the initial acknowledgement, the modal does not reappear for the same user, but the disclaimer text remains visible within every methodology reveal.
+
+---
+
+## Section 5 — Data Structures
+
+The following schema definitions describe the principal data structures of the system. Field types are described in implementation-neutral terms.
+
+### 5.1 country_financial_profiles
+
+- country_id (foreign key to geographic country)
+- standard_ltv_ratio (decimal)
+- standard_loan_term_years (integer)
+- investment_loan_margin_bps (integer, basis points above prime/reference rate)
+- reference_profile_tier_low_tax_rate (decimal) — lower bound of reference investor profile tax bracket
+- reference_profile_tier_high_tax_rate (decimal) — upper bound of reference investor profile tax bracket
+- reference_profile_description (text) — human-readable description of the standardised investor profile applied, displayed in methodology reveal
+- operating_expense_ratio (decimal, as proportion of gross rent)
+- closing_cost_formula_identifier (reference to formula function)
+- central_bank_rate_endpoint (URL)
+- inflation_data_endpoint (URL)
+- last_updated (timestamp)
+- effective_from (date)
+- superseded_at (date, nullable)
+
+**Note:** top_marginal_tax_rate (v0.1) replaced by reference_profile_tier_low_tax_rate, reference_profile_tier_high_tax_rate, and reference_profile_description. This change eliminates implied personalisation risk identified in Solar Council review.
+
+### 5.2 suburb_rental_benchmarks
+
+- suburb_id (foreign key to geographic suburb)
+- median_monthly_rent (decimal)
+- median_gross_yield_ratio (decimal)
+- sample_size (integer)
+- last_scraped (timestamp)
+- source_provenance_log (JSON — array of {source_domain, scrape_timestamp, parser_version, run_id})
+- data_quality_flag (enum: sufficient, marginal, insufficient)
+
+### 5.3 listing_yield_snapshots
+
+- snapshot_id (primary key)
+- listing_id (foreign key)
+- calculation_timestamp (timestamp)
+- inputs_json (structured record of all derived inputs, including reference_profile_description applied)
+- intermediate_values_json (structured record of all pipeline intermediate values)
+- nominal_yield_point (decimal — internal point estimate, not surfaced to user)
+- real_yield_point (decimal — internal point estimate, not surfaced to user)
+- yield_range_low (decimal — lower bound of confidence-tiered output range, surfaced to user)
+- yield_range_high (decimal — upper bound of confidence-tiered output range, surfaced to user)
+- confidence_level (enum)
+- country_profile_version_id (foreign key)
+- suburb_benchmark_version_id (foreign key)
+- disclaimer_version_id (foreign key)
+
+### 5.4 disclaimer_versions
+
+- version_id (primary key)
+- country_id (foreign key, nullable for global default)
+- disclaimer_text (text)
+- effective_from (date)
+- superseded_at (date, nullable)
+- created_by (administrative user)
+
+### 5.5 user_acknowledgement_records
+
+- record_id (primary key)
+- user_id (foreign key)
+- acknowledged_at (timestamp)
+- disclaimer_version_id (foreign key)
+- disclaimer_text_snapshot (text, full text at moment of acknowledgement)
+- triggering_listing_id (foreign key, nullable)
+
+### 5.6 feature_flags
+
+- flag_id (primary key)
+- flag_name (string, unique)
+- flag_state (boolean)
+- launch_threshold_met (boolean) — records whether the historical validation accuracy threshold was met at the time the flag was enabled
+- last_modified (timestamp)
+- modified_by (administrative user)
+
+---
+
+## Section 6 — Process Flows
+
+### 6.1 Yield Calculation Flow
+
+When a listing is created or its price is modified, the system enqueues a yield calculation task. The task resolves the listing's jurisdiction, fetches applicable reference data, executes the calculation pipeline, computes the confidence indicator, produces the output range band, stores the result as a snapshot, and updates the listing's current yield indicator reference. Calculations are also re-executed on a periodic schedule to reflect changes in reference data such as updated interest rates or rental benchmarks.
+
+### 6.2 Reference Data Refresh Flow
+
+Reference data refresh runs on independent schedules per data category. Country financial profile data such as tax bracket reference profiles is updated annually or upon legislative change, with a new versioned record created rather than overwriting prior records. Central bank rates are refreshed daily. Inflation data is refreshed monthly. Suburb rental benchmarks are refreshed on a per-suburb schedule based on listing volume. Each refresh produces a new versioned reference data record, preserving the full history of reference data states for snapshot replayability.
+
+### 6.3 Administrative Review Flow
+
+Administrative users authenticated to the platform see the yield indicator surface in the same client application used by non-administrative users. They can inspect calculations against live listings, compare estimates across listings within a suburb, and access an administrative reporting view that surfaces aggregated accuracy statistics from the historical validation module.
+
+### 6.4 Public Launch Flow
+
+The launch decision is taken on the basis of accumulated historical validation evidence. When the platform operator determines that estimate accuracy is sufficient for public exposure, the feature flag controlling visibility is set to enabled, and the launch_threshold_met field is recorded as true. The user-facing surface immediately becomes visible to all users. The acknowledgement modal becomes operative from this moment, with the modal displayed on first invocation of the methodology reveal for any user.
+
+---
+
+## Section 7 — Foundation for Claims
+
+The following list identifies the technical elements of the system that may form the basis of patent claims. The listing is provided as raw material for patent counsel and is not itself a claim set. Final claim language and selection is a matter for the attorney based on prior art analysis and jurisdiction-specific patentability requirements.
+
+**Element A — Zero-input derivation orchestration.** A marketplace system that produces a complete investment yield calculation requiring only the property price and geographic location as listing-specific inputs, with all other required parameters derived automatically from jurisdiction-specific reference data, public financial APIs, and aggregated public rental data. This is the primary technical anchor of the invention.
+
+**Element B — Confidence propagation architecture.** A confidence assessment mechanism that derives the reliability indicator of an investment estimate from the statistical properties and recency of the underlying reference data — sample size, data recency, and profile completeness — propagating data quality state mechanically through to the user-facing indicator. The confidence indicator is a computational output of the data state, not an editorial assignment.
+
+**Element C — Immutable snapshot and disclaimer version coupling.** The linkage between: (i) calculation state including all inputs and intermediate values, (ii) the specific version of reference data used, (iii) the specific version of disclaimer text applicable at calculation time, and (iv) per-user acknowledgement records storing a permanent snapshot of the exact disclaimer text acknowledged — creating a compliance-evidentiary chain that enables full reconstruction of what the user saw, what was calculated, and what assumptions underpinned the calculation at any point in the system's history. This is the most distinctive and legally significant component.
+
+**Element D — Admin-gated live-production validation pattern.** A deployment architecture in which the full computational pipeline operates against production data from initial deployment while user-facing visibility is controlled by a feature flag that is enabled only upon demonstration of sufficient historical validation accuracy — enabling pre-launch evidentiary accumulation in production conditions without separate prototype infrastructure, and coupling the launch decision to computational validation evidence.
+
+**Element E — Integrated combination claim.** The combination of Elements A through D as a complete system for automated investment signal generation and compliance-oriented surfacing in peer-to-peer marketplace contexts. The combination provides functionality not available in any individual element or in known prior art combinations, and is the asserted inventive step.
+
+**Elements to avoid centring independent claims around:** yield badge format, Fisher equation, cash flow calculation, amortisation formula, mortgage affordability calculation, investment property analysis — these are individually saturated. The compliance-evidentiary architecture is the differentiated position.
+
+---
+
+## Section 8 — Prior Art Acknowledgement
+
+The following prior art is acknowledged. This section will be expanded as part of patent attorney engagement and may require formal prior art search.
+
+**Standard yield calculation formulas.** The mathematical formulas underlying net leveraged yield, including the Fisher equation for inflation adjustment, are well established in real estate investment analysis and are not claimed as novel.
+
+**Automated valuation models.** Capital value estimation systems such as Zillow's Zestimate and Rightmove's instant valuation are acknowledged. These differ from the present invention in focusing on capital value rather than yield, and in requiring user input for any yield-related calculation.
+
+**Rental estimation tools (e.g., Rentometer Yield Tracker).** Tools that estimate likely rental income for a property based on local comparables are acknowledged. These differ from the present invention in producing only a rental estimate or gross yield rather than a complete net leveraged yield calculation, and in generally not exposing methodology or confidence indicators, and in not implementing immutable snapshots or compliance acknowledgement architecture.
+
+**Marketplace-native investment analytics tools (closest prior art).** The following systems are the most directly relevant prior art identified in Solar Council review and require formal prior art search confirmation by patent counsel:
+
+- *Polpi*: overlays investment analytics on listings automatically, no manual entry, automated extraction, inline investment metrics. Distinguished from the present invention by: user-editable financial assumptions; browser-extension model rather than marketplace-native; no cross-jurisdiction financial normalisation; no compliance architecture; no immutable calculation snapshots.
+- *Roperti*: automatically analyses listings, computes yield and cash-on-cash, integrates rent and financing assumptions, ranks opportunities. Distinguished from the present invention by: investor-tool orientation rather than marketplace-native embedding; no layered compliance architecture; no immutable disclaimer snapshotting; no cross-jurisdiction normalisation; assumption-driven rather than fully autonomous.
+- *DwellIQ*: scrapes listing URLs automatically, computes yield and risk automatically, provides recommendation outputs. Distinguished from the present invention by: AI-analysis framing; no jurisdictional tax normalisation; no immutable calculation snapshots; no layered acknowledgement architecture; output framed as recommendation rather than informational analytics.
+- *Zilculator*: automatic listing ingestion, automated analysis, investor reporting. Distinguished from the present invention by: heavily user-configurable inputs; no compliance architecture.
+
+**Feature flag deployment patterns.** The use of feature flags to control feature visibility is a well-established software deployment pattern and is not claimed as novel in isolation.
+
+**Versioned disclaimer practices.** The practice of versioning legal text is established in regulated industries and is not claimed as novel in isolation.
+
+The novelty of the present invention is asserted on the basis of the integrated combination described in Section 7, particularly the coupling of zero-input derivation, confidence propagation, immutable evidentiary snapshots, and the compliance acknowledgement system as a unified marketplace-native workflow (Element E). No known prior art system implements this specific combination.
+
+---
+
+## Section 9 — Legal and Regulatory Framework
+
+This section identifies the principal regulatory regimes potentially applicable to the system in various jurisdictions. It is included to evidence that the system was designed with regulatory awareness. **It is not legal advice. Per-jurisdiction legal review is required before public launch in any jurisdiction.**
+
+**South Africa — Financial Advisory and Intermediary Services Act (FAIS).** Regulates the provision of financial advice and intermediary services. The system is designed to surface factual computational outputs based on a standardised reference investor profile rather than personalised advice, and the three-layer protection architecture is intended to support this characterisation. The absence of individualised recommendation, portfolio advice, suitability determination, solicitation to transact, user financial profiling, and "should buy" language materially reduces FAIS exposure. The primary SA legal risk is not FAIS but consumer protection, negligent misstatement, and false precision claims — the confidence range architecture and methodology transparency address these. Legal review required before SA public launch.
+
+**South Africa — self-funding filter UI language.** The "self-funding property filter" label is potentially problematic in a UK context (see below) and should be reviewed for SA as well. The safer UI label is "Estimated Repayment Coverage Filter" — describing the mechanism without implying investment suitability. This change must be implemented before public launch in any jurisdiction.
+
+**United Kingdom — FCA financial promotions regime.** Regulates financial promotions including communications that could be construed as investment guidance. The UK is more aggressive than SA regarding implied investment communications. The self-funding filter carries the highest UK risk if labelled in suitability-implying terms — rename to "Estimated Repayment Coverage Filter" before UK launch. The safer framing for all yield outputs is "estimated rental coverage" and "illustrative repayment offset" rather than investment-grade language. Legal review required before UK public launch.
+
+**United States — Investment Advisers Act 1940 and state-level laws.** Pure analytics are generally safer if impersonal, algorithmic, non-customised, and informational. Danger rises with individualised recommendations, optimisation, ranking, and investor profiling. A state-by-state launch memo is required before US rollout, with particular attention to California, New York, and Texas, which have more aggressive state-level real estate and investment regulation than federal securities law alone would imply. Legal review required per US state before public launch.
+
+**European Union — MiFID II and country-specific consumer protection regimes.** Investment-related communications within the EU are subject to MiFID II framework requirements where applicable, plus country-specific consumer protection laws. Legal review required per EU member state before public launch.
+
+**General data protection.** User acknowledgement records constitute personal data and are subject to applicable data protection regimes (POPIA in South Africa, UK GDPR, EU GDPR, US state privacy laws). Storage, retention, and access controls for acknowledgement records require legal review.
+
+**Cross-jurisdictional considerations.** Where the platform operates across multiple jurisdictions simultaneously, the system must surface jurisdiction-appropriate disclaimers and acknowledgements based on the listing's location and the user's location. The versioned disclaimer architecture is designed to support per-jurisdiction text variants.
+
+**EULA implications.** The platform End User Licence Agreement requires revision to cover automated estimation features. Final EULA language is subject to legal counsel review. This document assumes the EULA will be updated appropriately prior to public launch.
+
+---
+
+## Section 10 — Implementation Status
+
+This section is updated after each completed build step.
+
+**Current status (Document version 0.2):** Design complete. Solar Council review incorporated. No implementation work commenced. Pending completion of Orchestrator Phase 1 before yield system build sequence execution begins. Patent attorney selection in progress.
+
+**Anticipated next implementation entries:** Schema migration completion, reference data table population, first scraper execution, first yield calculation snapshot, first admin surface render.
+
+---
+
+## Document Change Log
+
+| Version | Date | Author | Change Summary |
+|---------|------|--------|---------------|
+| 0.1 | 2026-05-19 | David Conradie | Initial draft — full system design |
+| 0.2 | 2026-05-19 | Claude (Cowork) + Solar Council review | Reframed field of invention; added fourth prior art category with named systems; explicit combination claim framing; tax methodology changed to reference profile + range output; pipeline output changed to range band; scraping data governance section added; schema updated; claim candidates formalised with strong/weak distinction; prior art section expanded with named systems; self-funding filter UI language change flagged; US state-by-state risk added |
