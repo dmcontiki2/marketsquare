@@ -1966,3 +1966,21 @@ Fixed `inputmode="numeric"` on the main login field in admin.html and dashboard.
 
 ---
 
+
+## Session 68 — Demo mode fix + cache-bust v=68
+
+**Root cause identified and fixed:** After Session 67's static extraction, Cloudflare automatically injects its email-decode script (`/cdn-cgi/scripts/.../email-decode.min.js`) immediately before `<script src="/static/ms.js">` on the same line. This external script loads synchronously and can delay ms.js execution past the `DOMContentLoaded` event, causing the `window.addEventListener('DOMContentLoaded', async () => {...})` handler in ms.js to never fire. Result: demo data fetch never ran, LISTINGS stayed empty, grid showed nothing.
+
+**Fix applied:** Refactored the main init block in `/static/ms.js` from an anonymous DOMContentLoaded listener into a named `async function _msInit(){}` with a readyState guard:
+```javascript
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', _msInit);
+} else {
+  _msInit();   // DOMContentLoaded already fired — run immediately
+}
+```
+This is the same pattern already used by the wonders preload IIFE. If ms.js loads after DOMContentLoaded (due to the Cloudflare script delay), `_msInit()` now fires immediately instead of silently missing the event.
+
+**Cache bust:** Bumped `?v=67` → `?v=68` in `marketsquare.html` for both ms.css and ms.js to force all browsers and Cloudflare to fetch the updated ms.js.
+
+**Smoke test:** 30/30 checks passing. smoke_test.py updated to check `?v=68` assets.
