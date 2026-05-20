@@ -1872,3 +1872,28 @@ The Seller hub card on the Me tab was hidden unless `ms_aa_email` was already in
 
 **Added smoke_test.py to MarketSquare project root.**
 28-check automated test that runs after every deploy and catches regressions before they reach David. Checks: HTML integrity (size, structure, ends with </html>), JS syntax for both ms-data and ms-logic blocks via `node --check`, LISTINGS array loads with 200+ entries and all 4 categories present, BEA /health and live listings, WONDERS_BUNDLED present with 100+ sites, 9 critical function names present, demo bleed guards in place, seller profile safety (no bare cvScore, sellerIdx IIFE, l.trust). Runs in ~25s via SSH. Added as step 1 of the mandatory session-end checklist in CLAUDE.md — must pass before CHANGELOG/STATUS updates.
+
+## Session 63 · 18 May 2026 · Regression fixes + smoke test
+
+Five regressions fixed (all introduced in Session 62) and one new capability added:
+
+- **JS syntax crash (site broken):** Nested backtick template literal in the detail view "View seller profile" button caused a parse error that silently broke the entire ms-logic block. Fixed using an IIFE with single-quoted string concatenation. Lesson encoded into CLAUDE.md: never use backtick template literals inside another backtick literal.
+- **Demo bleed-through:** `initLMHomeTile()` was showing 10 demo Local Market listings on the live site because the BEA fallback path had no `DEMO_MODE` guard. Added guard: fallback only populates in DEMO_MODE.
+- **Live listing photos missing:** BEA returns `photo_urls` as a JSON array but FEA only checked `medium_url` and description prefix. Added third photo source: parse `l.photo_urls` JSON array in `loadLiveListings()`.
+- **Seller profile crash on live listings:** `openBEASellerProfile()` referenced `${cvScore}` (undefined) in two places. Fixed to `${l.trust}`.
+- **No seller sign-in path:** Sellers with no magic link had no way to reach Edit/Delete. Added inline email sign-in card to My Space tab; `msSellerSignIn()` calls `/users/{email}`, sets `ms_aa_email`, and swaps sign-in card for seller hub.
+- **smoke_test.py added:** 28-check post-deploy safety net covering HTML structure, JS syntax, LISTINGS array, BEA API, Heritage bundle, critical functions, demo bleed guards, and seller profile safety. All checks pass. CLAUDE.md session-end checklist updated to require smoke test before closing.
+
+## Session 64 · 18 May 2026 · DEMO/LIVE runtime toggle
+
+Added a runtime DEMO/LIVE toggle pill to the home screen top bar (between the TrustSquare wordmark and the location badge). Previously switching to demo mode required appending `?demo=1` to the URL — unusable on mobile during investor demos.
+
+- `DEMO_MODE` changed from `const` to `let` (runtime-mutable; TODO: REMOVE BEFORE LAUNCH).
+- Toggle pill: red DEMO button / green LIVE button, always visible in the top bar.
+- DEMO mode: all 4 demo countries available in location picker (ZA, USA, UK, AU); full demo listings render.
+- LIVE mode: resets to South Africa / Pretoria, re-fetches live BEA listings, hides demo content.
+- `devSetMode(isDemo)` function added; calls `updateLocBadge()`, `renderGrid()`, `renderCatCounts()`, `initLMHomeTile()`, `loadLiveListings()` on switch.
+- All 28 smoke test checks passing after change. 1,430,585 bytes deployed.
+
+## Session 65 — Admin Login Gate (20 May 2026)
+Added BEA-backed JWT password gate to both admin.html and marketsquare_admin.html. New endpoints /admin/login (POST, returns 8h JWT) and /admin/verify (GET, validates token) added to bea_main.py. Password stored as MS_ADMIN_PASSWORD env var in systemd service — never in any file or HTML. JWT secret auto-generated and stored as MS_JWT_SECRET env var. Both apps show a full-screen dark overlay on load; correct password hides it and stores the token in sessionStorage (auto-expires on tab close; token expires after 8h). Wrong password and expired tokens show appropriate error messages. PyJWT installed in BEA venv. Header and Query added to FastAPI imports. All 28 smoke test checks passing.
