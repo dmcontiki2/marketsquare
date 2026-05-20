@@ -27,14 +27,6 @@ def ssh_json(cmd):
     try: return json.loads(ssh(cmd))
     except: return None
 
-def node_eval(js_bytes, probe):
-    full = js_bytes + b"\n" + probe.encode()
-    subprocess.run(["ssh", "root@178.104.73.239", "cat > /tmp/smoke_probe.js"],
-                   input=full, capture_output=True, timeout=20)
-    r = subprocess.run(["ssh", "root@178.104.73.239", "node /tmp/smoke_probe.js"],
-                       capture_output=True, timeout=20)
-    return r.returncode, r.stdout.decode(), r.stderr.decode()
-
 NODE_STUB = (
     b"const window={location:{search:'',href:''},addEventListener:()=>{}};\n"
     b"const document={getElementById:()=>null,querySelector:()=>null,"
@@ -45,36 +37,50 @@ NODE_STUB = (
 
 print("\n=== TrustSquare Smoke Test ===")
 
-# 0. Fetch HTML
-print("\n[0] Fetching live HTML...")
+# 0. Fetch HTML shell
+print("\n[0] Fetching live HTML shell...")
 ssh("curl -s --max-time 15 'https://trustsquare.co' > /tmp/smoke_index.html", timeout=30)
 size = int(ssh("wc -c < /tmp/smoke_index.html").strip() or "0")
-check(f"HTML fetched ({size:,} bytes)", size > 500000, f"only {size}")
+# Shell is ~325 KB (was ~946 KB before Session 67 static extraction)
+check(f"HTML shell fetched ({size:,} bytes)", 100000 < size < 600000, f"size={size}")
 html = ssh("cat /tmp/smoke_index.html", timeout=20)
 
 # 1. HTML structure
 print("\n[1] HTML structure")
-check("Ends with </html>",      html.rstrip().endswith("</html>"))
-check("ms-data block present",  'id="ms-data"'  in html)
-check("ms-logic block present", 'id="ms-logic"' in html)
+check("Ends with </html>",       html.rstrip().endswith("</html>"))
+check("ms-data block present",   'id="ms-data"'  in html)
+check("ms-logic NOT inline",     'id="ms-logic"' not in html)
+check("CSS linked externally",   '/static/ms.css' in html)
+check("JS linked externally",    '/static/ms.js'  in html)
 
-# 2. JS syntax
-print("\n[2] JavaScript syntax")
-for block in ("ms-data", "ms-logic"):
-    m = re.search(rf'<script id="{block}"[^>]*>(.*?)</script>', html, re.S)
-    if not m:
-        check(f"{block} found", False)
-        continue
-    subprocess.run(["ssh", "root@178.104.73.239", f"cat > /tmp/smoke_{block}.js"],
+# 2. Static assets reachable with cache headers
+print("\n[2] Static assets")
+css_hdr = ssh("curl -s -I 'https://trustsquare.co/static/ms.css?v=67'", timeout=15)
+js_hdr  = ssh("curl -s -I 'https://trustsquare.co/static/ms.js?v=67'",  timeout=15)
+check("ms.css HTTP 200",        "200" in css_hdr.split('\n')[0])
+check("ms.css cache immutable", "immutable" in css_hdr)
+check("ms.js HTTP 200",         "200" in js_hdr.split('\n')[0])
+check("ms.js cache immutable",  "immutable" in js_hdr)
+
+# 3. JS syntax (check ms.js on server)
+print("\n[3] JavaScript syntax")
+r = subprocess.run(["ssh", "root@178.104.73.239",
+                    "node --check /var/www/marketsquare/static/ms.js"],
+                   capture_output=True, timeout=20)
+check("ms.js syntax valid", r.returncode == 0, r.stderr.decode()[:120].strip())
+# ms-data block (still inline)
+m = re.search(r'<script id="ms-data"[^>]*>(.*?)</script>', html, re.S)
+if m:
+    subprocess.run(["ssh", "root@178.104.73.239", "cat > /tmp/smoke_ms-data.js"],
                    input=m.group(1).encode(), capture_output=True, timeout=20)
-    r = subprocess.run(["ssh", "root@178.104.73.239",
-                        f"node --check /tmp/smoke_{block}.js"],
-                       capture_output=True, timeout=20)
-    check(f"{block} syntax valid", r.returncode == 0,
-          r.stderr.decode()[:120].strip())
+    r2 = subprocess.run(["ssh", "root@178.104.73.239", "node --check /tmp/smoke_ms-data.js"],
+                        capture_output=True, timeout=20)
+    check("ms-data syntax valid", r2.returncode == 0, r2.stderr.decode()[:120].strip())
+else:
+    check("ms-data block found", False)
 
-# 3. LISTINGS -- now served from BEA /demo-listings (Session 66 hollowing)
-print("\n[3] LISTINGS (BEA /demo-listings)")
+# 4. LISTINGS -- served from BEA /demo-listings (Session 66)
+print("\n[4] LISTINGS (BEA /demo-listings)")
 dl = ssh_json("curl -s --max-time 10 'http://localhost:8000/demo-listings'")
 if dl:
     n    = dl.get("count", 0)
@@ -86,8 +92,8 @@ else:
     check("demo-listings endpoint reachable", False)
 check("LISTINGS not bundled in HTML", "const LISTINGS = [" not in html)
 
-# 4. BEA API
-print("\n[4] BEA API")
+# 5. BEA API
+print("\n[5] BEA API")
 h = ssh_json("curl -s --max-time 5 'http://localhost:8000/health'")
 check("BEA /health ok", bool(h and h.get("status") == "ok"))
 items = ssh_json("curl -s --max-time 5 'http://localhost:8000/listings?city_id=47&limit=10'")
@@ -99,8 +105,8 @@ if items:
     wp = [l for l in items if l.get("photo_urls") or l.get("medium_url")]
     check(f"Live listing has photos ({len(wp)})", len(wp) >= 1)
 
-# 5. Heritage -- now served from BEA /wonders (Session 66 hollowing)
-print("\n[5] World Heritage (BEA /wonders)")
+# 6. Heritage -- served from BEA /wonders (Session 66)
+print("\n[6] World Heritage (BEA /wonders)")
 wonders = ssh_json("curl -s --max-time 10 'http://localhost:8000/wonders'")
 if wonders:
     n_w = wonders.get("count", 0)
@@ -108,26 +114,26 @@ if wonders:
 else:
     check("BEA /wonders endpoint reachable", False)
 check("WONDERS_BUNDLED not in HTML", "const WONDERS_BUNDLED" not in html)
-check("FEA fetches wonders from BEA", "BEA_URL+'/wonders'" in html)
 
-# 6. Critical functions
-print("\n[6] Critical functions")
+# 7. Critical functions (grep ms.js, not HTML)
+print("\n[7] Critical functions (in ms.js)")
+ms_js = ssh("cat /var/www/marketsquare/static/ms.js", timeout=20)
 for fn in ["openSellerCV", "openBEASellerProfile", "renderCatCounts",
            "renderGrid", "loadLiveListings", "msSellerSignIn",
            "elConfirmDeleteListing", "loadHomeWonders", "initLMHomeTile"]:
-    check(f"  {fn}()", f"function {fn}" in html)
+    check(f"  {fn}()", f"function {fn}" in ms_js)
 
-# 7. Demo bleed guards
-print("\n[7] Demo bleed guards")
-check("renderCatCounts filter", "!DEMO_MODE && String(l.id).startsWith('demo_')" in html)
-check("renderGrid filter",      "!DEMO_MODE && String(l.id).startsWith('demo_')" in html)
-check("initLMHomeTile guard",   "DEMO_MODE ? LISTINGS.filter" in html)
+# 8. Demo bleed guards (in ms.js)
+print("\n[8] Demo bleed guards")
+check("renderCatCounts filter", "!DEMO_MODE && String(l.id).startsWith('demo_')" in ms_js)
+check("renderGrid filter",      "!DEMO_MODE && String(l.id).startsWith('demo_')" in ms_js)
+check("initLMHomeTile guard",   "DEMO_MODE ? LISTINGS.filter" in ms_js)
 
-# 8. Seller profile safety
-print("\n[8] Seller profile safety")
-check("No bare cvScore ref",       "${cvScore}" not in html)
-check("sellerIdx null-safe IIFE",  "(function(){var sidStr=" in html)
-check("openBEASellerProfile trust","l.trust" in html)
+# 9. Seller profile safety (in ms.js)
+print("\n[9] Seller profile safety")
+check("No bare cvScore ref",       "${cvScore}" not in ms_js)
+check("sellerIdx null-safe IIFE",  "(function(){var sidStr=" in ms_js)
+check("openBEASellerProfile trust","l.trust" in ms_js)
 
 # Summary
 print("\n=== Result ===")

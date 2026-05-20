@@ -1939,3 +1939,30 @@ Fixed `inputmode="numeric"` on the main login field in admin.html and dashboard.
 
 ---
 
+## Session 67 · 20 May 2026 · Static asset extraction -- HTML shell achieved
+
+**Goal: reduce marketsquare.html to a thin HTML shell by extracting CSS and JS to separately-cached static files.**
+
+**CSS extracted (103 KB saved from HTML):**
+- Both inline `<style>` blocks combined into `/var/www/marketsquare/static/ms.css`
+- Replaced with `<link rel="stylesheet" href="/static/ms.css?v=67">`
+
+**JS extracted (483 KB saved from HTML):**
+- `ms-logic` script block (483 KB) extracted to `/var/www/marketsquare/static/ms.js`
+- Replaced with `<script src="/static/ms.js?v=67" defer></script>`
+- Gate script (JWT auth, 3.4 KB) kept inline -- must fire before content renders
+- `ms-data` block (5 KB category config) kept inline -- needed synchronously before ms-logic
+
+**nginx /static/ location added:**
+- Serves `/var/www/marketsquare/static/` directly from disk (bypasses FastAPI)
+- `Cache-Control: public, max-age=31536000, immutable` -- 1 year browser cache
+- Cloudflare also caches the assets at edge
+
+**Result:**
+- marketsquare.html: 1,380 KB (Session 65) → 905 KB (Session 66) → 325 KB (Session 67)
+- On repeat visits (assets cached): browser only fetches 325 KB HTML
+- ms.css: 103 KB (cached 1 year), ms.js: 494 KB (cached 1 year)
+- smoke_test.py expanded to 30 checks -- static asset reachability and cache headers verified
+
+---
+
