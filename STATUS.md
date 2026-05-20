@@ -8,17 +8,17 @@ BEA v1.2.1 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - World Heritage: 120 sites bundled in app, instant render + 3s background refresh
 - All categories show correct live counts (no demo bleed-through)
 - smoke_test.py: 28-check post-deploy safety net in place
-- Admin gate: BEA-backed JWT password protection on admin.html and dashboard.html
-- Team login: Maroushka and Maurice seeded with numeric PINs
+- Admin gate: BEA-backed JWT on admin.html and dashboard.html
+- Team logins: Maurice, Maroushka, David Jnr - temp PIN 123456 - forced change on first use
 
 ## Last Completed (Session 65)
-- Added BEA-backed JWT login gate to admin.html and dashboard.html
-- Master password (alphanumeric) for David via MS_ADMIN_PASSWORD env var
-- Team PIN system: numeric PINs (4-8 digits) stored bcrypt-hashed in admin_users table
-- /admin/login checks master first, then team PIN fallback
-- /admin/users POST/GET/DELETE for team management - API-key protected
-- Token sub field: master or team:{name} for audit trail
-- Maroushka (PIN 123456) and Maurice (PIN 654321) seeded as initial team members
+- BEA-backed JWT login gate on admin.html and dashboard.html
+- Master alphanumeric password for David (MS_ADMIN_PASSWORD env var)
+- Team numeric PIN system with bcrypt storage in admin_users table
+- Forced PIN change on first login - temp PIN 123456 blocks access until personal PIN set
+- PIN change screen built into gate overlay - 6 digits, must differ from temp
+- /admin/change-pin endpoint: verifies current PIN, sets new hash, clears flag, returns token
+- Maurice, Maroushka, David Jnr seeded - all must set their own PIN on first login
 - All 28 smoke test checks passing
 
 ## Open Actions (carry forward)
@@ -28,7 +28,6 @@ BEA v1.2.1 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Counsel brief for EULA review
 - AI audit of marketsquare.html for pre-launch issues
 - Featured strip: mark real BEA listings as featured (strip empty on live site)
-- Change Maroushka and Maurice PINs from seeded values to their own chosen PINs
 
 ## Next Session (Session 66)
 Goal: Begin FEA hollowing - move data arrays out of marketsquare.html into BEA. Target ~150KB FEA shell.

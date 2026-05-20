@@ -7413,11 +7413,11 @@ def health_resources():
         "checkedAt": __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
     }
 
-# ── ADMIN AUTH v2 ──────────────────────────────────────────────────────────
-# Master password (alphanumeric) + team PIN (numeric) login system.
+# ── ADMIN AUTH v3 ──────────────────────────────────────────────────────────
+# Master password (alphanumeric) + team PIN (numeric, 6 digits) login system.
+# First-login forced PIN change: must_change_pin=1 blocks token until PIN set.
 # Master password: MS_ADMIN_PASSWORD env var — never in code.
-# Team PINs: stored bcrypt-hashed in admin_users table.
-# Both use the same gate overlay; same JWT token format.
+# Team PINs: bcrypt-hashed in admin_users table.
 # Token sub: "master" for David, "team:{name}" for team members.
 
 import bcrypt as _bcrypt
@@ -7441,7 +7441,11 @@ class _AdminLoginRequest(_BaseModel):
 
 class _AdminUserCreate(_BaseModel):
     name: str
-    pin: str  # numeric PIN supplied in plain text — hashed before storage
+    pin: str
+
+class _AdminChangePinRequest(_BaseModel):
+    current_pin: str
+    new_pin: str
 
 def _make_token(sub: str) -> str:
     payload = {
@@ -7453,25 +7457,32 @@ def _make_token(sub: str) -> str:
 
 @app.post("/admin/login")
 def admin_login(req: _AdminLoginRequest):
-    """Check master password OR team PIN. Returns signed JWT on success."""
+    """Check master password OR team PIN. Returns JWT or must_change_pin signal."""
     if not _ADMIN_PASSWORD:
         raise HTTPException(status_code=503, detail="Admin password not configured on server.")
 
-    # 1. Try master password first
+    # 1. Master password — immediate token, no PIN change required
     if req.password == _ADMIN_PASSWORD:
         return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master"}
 
-    # 2. Try team PIN — numeric only, must be 4-8 digits
+    # 2. Team PIN — numeric only, 4-8 digits
     candidate = req.password.strip()
     if candidate.isdigit() and 4 <= len(candidate) <= 8:
         conn = _admin_db()
         try:
             rows = conn.execute(
-                "SELECT id, name, pin_hash FROM admin_users WHERE active = 1"
+                "SELECT id, name, pin_hash, must_change_pin FROM admin_users WHERE active = 1"
             ).fetchall()
             for row in rows:
                 stored_hash = row["pin_hash"].encode() if isinstance(row["pin_hash"], str) else row["pin_hash"]
                 if _bcrypt.checkpw(candidate.encode(), stored_hash):
+                    # Correct PIN — check if forced change required
+                    if row["must_change_pin"]:
+                        return {
+                            "must_change_pin": True,
+                            "user_id": row["id"],
+                            "name": row["name"],
+                        }
                     return {
                         "token": _make_token(f"team:{row['name']}"),
                         "expires_hours": _TOKEN_HOURS,
@@ -7482,6 +7493,46 @@ def admin_login(req: _AdminLoginRequest):
             conn.close()
 
     raise HTTPException(status_code=401, detail="Incorrect password or PIN.")
+
+@app.post("/admin/change-pin")
+def admin_change_pin(req: _AdminChangePinRequest):
+    """
+    Forced PIN change on first login.
+    Verifies current PIN, sets new PIN, clears must_change_pin flag, returns token.
+    """
+    current = req.current_pin.strip()
+    new_pin  = req.new_pin.strip()
+
+    if not new_pin.isdigit() or len(new_pin) != 6:
+        raise HTTPException(status_code=400, detail="New PIN must be exactly 6 digits.")
+    if new_pin == current:
+        raise HTTPException(status_code=400, detail="New PIN must be different from current PIN.")
+
+    conn = _admin_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, name, pin_hash FROM admin_users WHERE active = 1 AND must_change_pin = 1"
+        ).fetchall()
+        for row in rows:
+            stored_hash = row["pin_hash"].encode() if isinstance(row["pin_hash"], str) else row["pin_hash"]
+            if _bcrypt.checkpw(current.encode(), stored_hash):
+                new_hash = _bcrypt.hashpw(new_pin.encode(), _bcrypt.gensalt()).decode()
+                conn.execute(
+                    "UPDATE admin_users SET pin_hash = ?, must_change_pin = 0 WHERE id = ?",
+                    (new_hash, row["id"])
+                )
+                conn.commit()
+                return {
+                    "token": _make_token(f"team:{row['name']}"),
+                    "expires_hours": _TOKEN_HOURS,
+                    "role": "team",
+                    "name": row["name"],
+                    "pin_changed": True,
+                }
+    finally:
+        conn.close()
+
+    raise HTTPException(status_code=401, detail="Current PIN incorrect.")
 
 @app.get("/admin/verify")
 def admin_verify(x_admin_token: str = Header(default=None)):
@@ -7498,7 +7549,7 @@ def admin_verify(x_admin_token: str = Header(default=None)):
 
 @app.post("/admin/users")
 def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_key)):
-    """Add a team member with a numeric PIN. API-key protected."""
+    """Add a team member with a numeric PIN. Starts with must_change_pin=1."""
     pin = user.pin.strip()
     if not pin.isdigit() or not (4 <= len(pin) <= 8):
         raise HTTPException(status_code=400, detail="PIN must be 4-8 digits.")
@@ -7514,23 +7565,28 @@ def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_
         if existing:
             raise HTTPException(status_code=409, detail=f"Active user '{name}' already exists.")
         conn.execute(
-            "INSERT INTO admin_users (name, pin_hash, active) VALUES (?, ?, 1)",
+            "INSERT INTO admin_users (name, pin_hash, active, must_change_pin) VALUES (?, ?, 1, 1)",
             (name, pin_hash)
         )
         conn.commit()
     finally:
         conn.close()
-    return {"created": True, "name": name}
+    return {"created": True, "name": name, "must_change_pin": True}
 
 @app.get("/admin/users")
 def admin_list_users(_key: str = Depends(auth.require_api_key)):
-    """List all active admin team members (names only, no hashes). API-key protected."""
+    """List all active admin team members. API-key protected."""
     conn = _admin_db()
     try:
         rows = conn.execute(
-            "SELECT id, name, created_at FROM admin_users WHERE active = 1 ORDER BY id"
+            "SELECT id, name, must_change_pin, created_at FROM admin_users WHERE active = 1 ORDER BY id"
         ).fetchall()
-        return {"users": [{"id": r["id"], "name": r["name"], "created_at": r["created_at"]} for r in rows]}
+        return {"users": [
+            {"id": r["id"], "name": r["name"],
+             "must_change_pin": bool(r["must_change_pin"]),
+             "created_at": r["created_at"]}
+            for r in rows
+        ]}
     finally:
         conn.close()
 
@@ -7539,7 +7595,9 @@ def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key
     """Deactivate a team member (soft delete). API-key protected."""
     conn = _admin_db()
     try:
-        row = conn.execute("SELECT name FROM admin_users WHERE id = ? AND active = 1", (user_id,)).fetchone()
+        row = conn.execute(
+            "SELECT name FROM admin_users WHERE id = ? AND active = 1", (user_id,)
+        ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="User not found or already inactive.")
         conn.execute("UPDATE admin_users SET active = 0 WHERE id = ?", (user_id,))
@@ -7548,4 +7606,4 @@ def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key
     finally:
         conn.close()
 
-# ── END ADMIN AUTH v2 ───────────────────────────────────────────────────────
+# ── END ADMIN AUTH v3 ───────────────────────────────────────────────────────
