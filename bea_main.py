@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -7412,3 +7412,140 @@ def health_resources():
         "plan": "CPX22 · 2vCPU · 4GB RAM · 80GB SSD · 20TB/mo · €7.49/mo",
         "checkedAt": __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
     }
+
+# ── ADMIN AUTH v2 ──────────────────────────────────────────────────────────
+# Master password (alphanumeric) + team PIN (numeric) login system.
+# Master password: MS_ADMIN_PASSWORD env var — never in code.
+# Team PINs: stored bcrypt-hashed in admin_users table.
+# Both use the same gate overlay; same JWT token format.
+# Token sub: "master" for David, "team:{name}" for team members.
+
+import bcrypt as _bcrypt
+import jwt as _pyjwt
+from datetime import timedelta
+from pydantic import BaseModel as _BaseModel
+
+_ADMIN_PASSWORD = os.environ.get("MS_ADMIN_PASSWORD", "")
+_JWT_SECRET     = os.environ.get("MS_JWT_SECRET", "ms_jwt_secret_change_me")
+_JWT_ALGO       = "HS256"
+_TOKEN_HOURS    = 8
+
+def _admin_db():
+    import sqlite3 as _sq
+    c = _sq.connect("/var/www/marketsquare/marketsquare.db")
+    c.row_factory = _sq.Row
+    return c
+
+class _AdminLoginRequest(_BaseModel):
+    password: str
+
+class _AdminUserCreate(_BaseModel):
+    name: str
+    pin: str  # numeric PIN supplied in plain text — hashed before storage
+
+def _make_token(sub: str) -> str:
+    payload = {
+        "sub": sub,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=_TOKEN_HOURS),
+        "iat": datetime.now(timezone.utc),
+    }
+    return _pyjwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGO)
+
+@app.post("/admin/login")
+def admin_login(req: _AdminLoginRequest):
+    """Check master password OR team PIN. Returns signed JWT on success."""
+    if not _ADMIN_PASSWORD:
+        raise HTTPException(status_code=503, detail="Admin password not configured on server.")
+
+    # 1. Try master password first
+    if req.password == _ADMIN_PASSWORD:
+        return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master"}
+
+    # 2. Try team PIN — numeric only, must be 4-8 digits
+    candidate = req.password.strip()
+    if candidate.isdigit() and 4 <= len(candidate) <= 8:
+        conn = _admin_db()
+        try:
+            rows = conn.execute(
+                "SELECT id, name, pin_hash FROM admin_users WHERE active = 1"
+            ).fetchall()
+            for row in rows:
+                stored_hash = row["pin_hash"].encode() if isinstance(row["pin_hash"], str) else row["pin_hash"]
+                if _bcrypt.checkpw(candidate.encode(), stored_hash):
+                    return {
+                        "token": _make_token(f"team:{row['name']}"),
+                        "expires_hours": _TOKEN_HOURS,
+                        "role": "team",
+                        "name": row["name"],
+                    }
+        finally:
+            conn.close()
+
+    raise HTTPException(status_code=401, detail="Incorrect password or PIN.")
+
+@app.get("/admin/verify")
+def admin_verify(x_admin_token: str = Header(default=None)):
+    """Verify a JWT token. Returns 200 + role info if valid, 401 if not."""
+    if not x_admin_token:
+        raise HTTPException(status_code=401, detail="No token provided.")
+    try:
+        payload = _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except _pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired.")
+    except _pyjwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token.")
+    return {"valid": True, "sub": payload.get("sub", "unknown")}
+
+@app.post("/admin/users")
+def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_key)):
+    """Add a team member with a numeric PIN. API-key protected."""
+    pin = user.pin.strip()
+    if not pin.isdigit() or not (4 <= len(pin) <= 8):
+        raise HTTPException(status_code=400, detail="PIN must be 4-8 digits.")
+    name = user.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required.")
+    pin_hash = _bcrypt.hashpw(pin.encode(), _bcrypt.gensalt()).decode()
+    conn = _admin_db()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM admin_users WHERE name = ? AND active = 1", (name,)
+        ).fetchone()
+        if existing:
+            raise HTTPException(status_code=409, detail=f"Active user '{name}' already exists.")
+        conn.execute(
+            "INSERT INTO admin_users (name, pin_hash, active) VALUES (?, ?, 1)",
+            (name, pin_hash)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"created": True, "name": name}
+
+@app.get("/admin/users")
+def admin_list_users(_key: str = Depends(auth.require_api_key)):
+    """List all active admin team members (names only, no hashes). API-key protected."""
+    conn = _admin_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, name, created_at FROM admin_users WHERE active = 1 ORDER BY id"
+        ).fetchall()
+        return {"users": [{"id": r["id"], "name": r["name"], "created_at": r["created_at"]} for r in rows]}
+    finally:
+        conn.close()
+
+@app.delete("/admin/users/{user_id}")
+def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key)):
+    """Deactivate a team member (soft delete). API-key protected."""
+    conn = _admin_db()
+    try:
+        row = conn.execute("SELECT name FROM admin_users WHERE id = ? AND active = 1", (user_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found or already inactive.")
+        conn.execute("UPDATE admin_users SET active = 0 WHERE id = ?", (user_id,))
+        conn.commit()
+        return {"deactivated": True, "name": row["name"]}
+    finally:
+        conn.close()
+
+# ── END ADMIN AUTH v2 ───────────────────────────────────────────────────────
