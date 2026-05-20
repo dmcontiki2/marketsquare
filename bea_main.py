@@ -7606,4 +7606,48 @@ def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key
     finally:
         conn.close()
 
+
+# ── DEMO DATA ENDPOINTS (Session 66 FEA hollowing) ──────────────────────────
+# Serves the demo LISTINGS and SELLERS arrays that were previously bundled
+# in marketsquare.html. The FEA fetches these lazily instead of inlining them.
+
+_DEMO_LISTINGS_CACHE = None
+_DEMO_SELLERS_CACHE  = None
+
+def _load_demo_listings():
+    global _DEMO_LISTINGS_CACHE
+    if _DEMO_LISTINGS_CACHE is None:
+        import json as _j, os as _o
+        path = _o.path.join(_o.path.dirname(__file__), "demo_listings.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                _DEMO_LISTINGS_CACHE = _j.load(f).get("listings", [])
+        except Exception:
+            _DEMO_LISTINGS_CACHE = []
+    return _DEMO_LISTINGS_CACHE
+
+def _load_demo_sellers():
+    global _DEMO_SELLERS_CACHE
+    if _DEMO_SELLERS_CACHE is None:
+        import json as _j, os as _o
+        path = _o.path.join(_o.path.dirname(__file__), "demo_sellers.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                _DEMO_SELLERS_CACHE = _j.load(f).get("sellers", [])
+        except Exception:
+            _DEMO_SELLERS_CACHE = []
+    return _DEMO_SELLERS_CACHE
+
+@app.get("/demo-listings")
+def get_demo_listings():
+    """Return demo LISTINGS array for FEA demo mode. Replaces bundled inline data."""
+    listings = _load_demo_listings()
+    return {"listings": listings, "count": len(listings)}
+
+@app.get("/demo-sellers")
+def get_demo_sellers():
+    """Return demo SELLERS array for FEA demo mode. Replaces bundled inline data."""
+    sellers = _load_demo_sellers()
+    return {"sellers": sellers, "count": len(sellers)}
+
 # ── END ADMIN AUTH v3 ───────────────────────────────────────────────────────

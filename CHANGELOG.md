@@ -1909,3 +1909,33 @@ Gate v2 (JWT login overlay with forced PIN change support) extended to the remai
 
 ## Session 65 (addendum 4) — Gate inputmode fix (20 May 2026)
 Fixed `inputmode="numeric"` on the main login field in admin.html and dashboard.html. This attribute was causing mobile browsers to show a numeric-only keyboard, blocking the alphanumeric master password. The fix removes `inputmode` from the main login field only — the PIN change fields (new PIN + confirm) correctly retain `inputmode="numeric"`. marketplace (index.html) and CityLauncher were already correct. All 28 smoke test checks passing.
+## Session 66 · 20 May 2026 · FEA hollowing — 475 KB removed from marketsquare.html
+
+**Goal: move all hardcoded data arrays out of the FEA into BEA endpoints.**
+
+**WONDERS_BUNDLED removed (164 KB):**
+- `const WONDERS_BUNDLED` (120 sites, 164 KB) removed from marketsquare.html.
+- BEA `GET /wonders` already existed and serves from `wonders.json` on disk.
+- FEA now fetches wonders lazily on page load via async `_preloadWonders()`.
+- Image preload for top-8 Africa-first sites preserved — runs after BEA fetch resolves.
+
+**LISTINGS array removed (275 KB):**
+- 293 demo listings (275 KB) extracted to `demo_listings.json` deployed to server.
+- New BEA endpoint: `GET /demo-listings` → `{ listings: [...], count: 293 }`.
+- FEA init block made `async`; awaits `Promise.all([/demo-listings, /demo-sellers])` before first `renderGrid()` call when `DEMO_MODE` is true.
+- `devSetMode()` also made async — fetches demo data if switching to demo with empty LISTINGS.
+
+**SELLERS array removed (38 KB):**
+- 40 demo sellers (38 KB) extracted to `demo_sellers.json` deployed to server.
+- New BEA endpoint: `GET /demo-sellers` → `{ sellers: [...], count: 40 }`.
+- `SELLERS[0]` localStorage restore guarded with null-check.
+
+**smoke_test.py updated:**
+- Section 3 (LISTINGS): now hits `GET /demo-listings` instead of grepping the HTML bundle.
+- Section 5 (Heritage): now hits `GET /wonders` instead of grepping for `WONDERS_BUNDLED`.
+- New assertions: confirms neither array is bundled in HTML anymore.
+
+**Result:** marketsquare.html reduced from 1,380 KB → 905 KB (−475 KB, −34%). All 28 smoke checks passing.
+
+---
+

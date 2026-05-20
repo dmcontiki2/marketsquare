@@ -73,25 +73,18 @@ for block in ("ms-data", "ms-logic"):
     check(f"{block} syntax valid", r.returncode == 0,
           r.stderr.decode()[:120].strip())
 
-# 3. LISTINGS
-print("\n[3] LISTINGS array")
-m = re.search(r'<script id="ms-data"[^>]*>(.*?)</script>', html, re.S)
-if m:
-    rc, out, err = node_eval(
-        m.group(1).encode(),
-        "console.log(JSON.stringify({n:LISTINGS.length,cats:[...new Set(LISTINGS.map(l=>l.cat))]}))"
-    )
-    if rc == 0:
-        try:
-            info = json.loads(out.strip().split("\n")[-1])
-            n, cats = info["n"], info["cats"]
-            check(f"LISTINGS loaded ({n} entries)", n >= 200)
-            for cat in ["Property", "Adventures", "Collectors", "Cars"]:
-                check(f"  cat:{cat}", cat in cats)
-        except Exception as e:
-            check("LISTINGS parse", False, str(e))
-    else:
-        check("LISTINGS node eval", False, err[:120])
+# 3. LISTINGS -- now served from BEA /demo-listings (Session 66 hollowing)
+print("\n[3] LISTINGS (BEA /demo-listings)")
+dl = ssh_json("curl -s --max-time 10 'http://localhost:8000/demo-listings'")
+if dl:
+    n    = dl.get("count", 0)
+    cats = list({l["cat"] for l in dl.get("listings", [])})
+    check(f"demo-listings endpoint ({n} entries)", n >= 200)
+    for cat in ["Property", "Adventures", "Collectors", "Cars"]:
+        check(f"  cat:{cat}", cat in cats)
+else:
+    check("demo-listings endpoint reachable", False)
+check("LISTINGS not bundled in HTML", "const LISTINGS = [" not in html)
 
 # 4. BEA API
 print("\n[4] BEA API")
@@ -106,12 +99,16 @@ if items:
     wp = [l for l in items if l.get("photo_urls") or l.get("medium_url")]
     check(f"Live listing has photos ({len(wp)})", len(wp) >= 1)
 
-# 5. Heritage bundle — grep directly, no need to eval the full ms-logic block
-print("\n[5] World Heritage bundle")
-wonders_matches = re.findall(r'\{id:[\'"](?:un|np|nm)_\d+[\'"]', html)
-n_wonders = len(wonders_matches)
-check(f"WONDERS_BUNDLED present ({n_wonders} site entries)", n_wonders >= 100)
-check("WONDERS_BUNDLED const declared", "const WONDERS_BUNDLED" in html)
+# 5. Heritage -- now served from BEA /wonders (Session 66 hollowing)
+print("\n[5] World Heritage (BEA /wonders)")
+wonders = ssh_json("curl -s --max-time 10 'http://localhost:8000/wonders'")
+if wonders:
+    n_w = wonders.get("count", 0)
+    check(f"BEA /wonders endpoint ({n_w} sites)", n_w >= 100)
+else:
+    check("BEA /wonders endpoint reachable", False)
+check("WONDERS_BUNDLED not in HTML", "const WONDERS_BUNDLED" not in html)
+check("FEA fetches wonders from BEA", "BEA_URL+'/wonders'" in html)
 
 # 6. Critical functions
 print("\n[6] Critical functions")
@@ -141,5 +138,5 @@ if failures:
     print()
     sys.exit(1)
 else:
-    print(f"  {OK} All checks passed -- safe to close session.\n")
+    print(f"  {OK} All checks passed -- safe to close session.")
     sys.exit(0)
