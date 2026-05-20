@@ -44,8 +44,9 @@ Current version: ?v=68
 - Yield System: Solar Council review of YIELD_SYSTEM_TECHNICAL_DISCLOSURE v0.2 (Step 0.2)
 
 ## Next Session (Session 69)
-Goal: Pre-launch audit and featured listings fix.
+Goal: Confirm demo mode fix is live, then pre-launch audit and featured listings fix.
 Priority order:
+0. VERIFY DEMO FIX: Open trustsquare.co?demo=1 in a fresh incognito window (no cached assets). Categories strip must show 7 tiles with counts. If still empty: read ms.js lines 533-755 on server, check that _msInit function exists and readyState guard is present, add console.log at top of _msInit to confirm it fires, then diagnose further.
 1. Featured strip: at least one real BEA listing marked featured=true so strip is not empty
 2. AI audit of marketsquare.html for pre-launch issues (EULA, company reg, privacy policy refs)
 3. Insert company registration number (2026/340128/07) into EULA and footer
