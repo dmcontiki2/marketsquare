@@ -7813,6 +7813,23 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "Hatchback R60,000–R200,000 · Sedan R80,000–R350,000 · "
             "SUV R150,000–R600,000 · Bakkie/Pickup R120,000–R500,000."
         ),
+        "collectors": (
+            f"Typical collectible prices in {city}, South Africa: "
+            "Vintage coins R200–R5,000 · Sports memorabilia R500–R20,000 · "
+            "Antique furniture R2,000–R50,000 · Rare stamps R100–R10,000 · "
+            "Art prints R1,000–R30,000 · Signed jerseys R1,500–R15,000."
+        ),
+        "local_market": (
+            f"Typical local market prices in {city}, South Africa: "
+            "Handmade crafts R100–R800 · Baked goods R50–R300 · "
+            "Second-hand clothing R50–R500 · Homegrown produce R30–R200 · "
+            "Upcycled furniture R500–R5,000."
+        ),
+        "tutors": (
+            f"Typical tutoring rates in {city}, South Africa: "
+            "Primary school R100–R200/hr · High school R150–R350/hr · "
+            "University R200–R500/hr · Music/arts R150–R300/hr."
+        ),
     }.get(category_hint, f"Use realistic local prices for {city}, {country_iso2}.")
 
     category_instruction = {
@@ -7840,8 +7857,30 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "Estimate mileage range if odometer is visible. "
             "suggested_price is the asking price for the vehicle."
         ),
+        "collectors": (
+            "This is a COLLECTORS listing — a collectable item being sold or sought. "
+            "Identify the item type (coins, stamps, art, memorabilia, antiques, wine, books, etc.). "
+            "Note any visible condition details, markings, signatures, or authentication features. "
+            "suggested_price is the asking price for the item. "
+            "Set condition to 'Excellent', 'Good', or 'Fair' based on visible state. "
+            "Set category to 'collectors' in the response."
+        ),
+        "local_market": (
+            "This is a LOCAL MARKET listing — handmade, homegrown, or artisanal goods. "
+            "Identify the product type, quantity/size if visible, and any unique features. "
+            "suggested_price is the per-item or per-unit price. "
+            "Set category to 'local_market' in the response."
+        ),
+        "tutors": (
+            "This is a TUTORS listing — educational or skills-based teaching service. "
+            "Identify the subject(s), education level, and mode (online/in-person/both). "
+            "suggested_price is the per-hour rate. "
+            "Set level to the education level (Primary, High School, University, Adult). "
+            "Set subject to the main subject or skill being taught. "
+            "Set category to 'services' in the response (tutors maps to services category)."
+        ),
     }.get(category_hint, (
-        "Determine the most likely category from: property, services, adventures, cars. "
+        "Determine the most likely category from: property, services, adventures, cars, collectors. "
         "Apply the appropriate pricing and field logic for the detected category."
     ))
 
@@ -7855,7 +7894,7 @@ Currency prefix to use: {currency}
 TASK: Return a single JSON object with exactly these fields:
 
 {{
-  "category": "property|services|adventures|cars",
+  "category": "property|services|adventures|cars|collectors|local_market",
   "title": "4–8 word title in Title Case, specific not generic",
   "description_draft": "2–4 honest sentences describing what is visible. Be specific. No hype.",
   "suggested_price": <number — monthly rent, per-session rate, per-person price, or sale price>,
@@ -7959,7 +7998,7 @@ async def vision_draft(
 
     # ── 2. Build Anthropic messages ──────────────────────────────────────────
     cat_hint = (category_hint or "").lower().strip()
-    if cat_hint not in ("property", "services", "adventures", "cars"):
+    if cat_hint not in ("property", "services", "adventures", "cars", "collectors", "local_market", "tutors"):
         cat_hint = "property"  # safe default
 
     user_content = image_blocks + [

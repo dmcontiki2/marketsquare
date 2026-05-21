@@ -3291,9 +3291,10 @@ async function sobInit() {
   sobState.name  = sobState.name  || magicLink.name  || '';
   sobState.cat   = sobState.cat   || magicLink.cat   || '';
   sobState.city  = sobState.city  || magicLink.area  || activeCity.name || '';
-  sobState.drafts = [];
+  const _seededDrafts = sobState.drafts && sobState.drafts.length ? sobState.drafts : [];
   sobState.selectedTier = 'free';
   sobState._skipPreview = false;
+  sobState.drafts = _seededDrafts; // restore seeded drafts — must survive init reset
   sobState._cameFromGuided = cameFromGuided; // restore flag after reset
 
   // Reset to phase 1 (or 2 if coming from guided screen)
@@ -4129,15 +4130,10 @@ function goApplyVisionToStep2() {
   if (d.level)        goState.fields.level        = d.level;
   if (d.availability) goState.fields.availability = d.availability;
 
-  // Override category if vision is confident enough
-  if (d.category && d.category_confidence >= 0.80) {
-    const catMap = { property:'Property', services:'Services', adventures:'Adventures', cars:'Cars' };
-    const mapped = catMap[d.category];
-    if (mapped && GO_CAT_FIELDS[mapped]) {
-      goState.cat = mapped;
-      goRenderFields();  // re-render Step 2 fields for new category
-    }
-  }
+  // NOTE: Never override goState.cat from vision response.
+  // The seller's category comes from their magic link invite — they know what they're selling.
+  // Vision is used only to fill in title/description/price/fields, not to decide category.
+  // (Fixed Session 71 bug: vision was overriding Collectors → Property)
 }
 
 // ── goImproveDescription — inline AI wording improvement ───────────────────
