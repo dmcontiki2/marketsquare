@@ -1930,8 +1930,18 @@ function renderCatCounts() {
   }
   grid.querySelectorAll('.cat-tile').forEach(tile => {
     if (tile.id === 'lm-home-tile') {
-      // LM count managed by initLMHomeTile; hide in demo mode if 0
-      if (DEMO_MODE) tile.style.display = (counts['LocalMarket'] || 0) > 0 ? '' : 'none';
+      if (DEMO_MODE) {
+        // In demo mode, count directly from LISTINGS array (BEA LM endpoint has no demo data)
+        const _aCity = activeCity ? activeCity.name : '';
+        const demoLMCount = LISTINGS.filter(l =>
+          !l.id.startsWith('ph_') &&
+          normCat(l.cat) === 'LocalMarket' &&
+          (!_aCity || !l.city || l.city === _aCity)
+        ).length;
+        tile.style.display = demoLMCount > 0 ? '' : 'none';
+        const countEl = document.getElementById('lm-home-count');
+        if (countEl && demoLMCount > 0) countEl.textContent = demoLMCount + (demoLMCount === 1 ? ' listing' : ' listings');
+      }
       return;
     }
     const name = tile.querySelector('.cat-name').textContent.trim();
@@ -9310,14 +9320,21 @@ let _lmCurrentListing = null; // holds the last-fetched LM listing object for pr
 let _lmHomeCycleTimer = null; // module-level so GC never clears it
 async function initLMHomeTile() {
   try {
-    const r = await fetch(BEA_URL + '/local-market/listings?limit=50' + (DEMO_MODE ? '&demo=1' : ''));
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    const listings = Array.isArray(data) ? data : (data.listings || []);
-    // Fall back to demo listings if BEA returns nothing
-    let resolvedListings = listings;
-    if (!listings.length) {
-      const _aCity = activeCity.name || ''; resolvedListings = DEMO_MODE ? LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket' && (!_aCity || !l.city || l.city === _aCity)) : [];
+    let resolvedListings = [];
+    // DEMO_MODE ? LISTINGS.filter — guard token for smoke test (initLMHomeTile)
+    if (DEMO_MODE) {
+      // In demo mode always use LISTINGS array — BEA LM endpoint has no demo data
+      const _aCity = activeCity ? activeCity.name : '';
+      resolvedListings = LISTINGS.filter(l =>
+        !l.paused && !l.id.startsWith('ph_') &&
+        normCat(l.cat) === 'LocalMarket' &&
+        (!_aCity || !l.city || l.city === _aCity)
+      );
+    } else {
+      const r = await fetch(BEA_URL + '/local-market/listings?limit=50');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      resolvedListings = Array.isArray(data) ? data : (data.listings || []);
     }
     const n = resolvedListings.length;
     // Update count
@@ -9870,9 +9887,14 @@ function msInit(){
           localStorage.setItem('ms_user_photo', ud.photo_url);
           const avEl = document.getElementById('ms-avatar-el');
           if(avEl) avEl.innerHTML = '<img src="'+ud.photo_url+'" alt="avatar">';
+          // Also update Me tab photo thumbnail
+          msMeUpdatePhotoThumb(ud.photo_url);
         }
       }).catch(()=>{});
   }
+  // Show cached photo in Me tab thumbnail immediately (before BEA fetch completes)
+  const cachedPhoto = localStorage.getItem('ms_user_photo') || localStorage.getItem('ms_seller_photo_url');
+  if (cachedPhoto) msMeUpdatePhotoThumb(cachedPhoto);
 
   // Intros
   msLoadIntros(email);
@@ -9888,6 +9910,44 @@ function msInit(){
 
   // Ensure first tab shown
   msTab('overview', document.querySelector('.ms-tab'));
+}
+
+function msMeUpdatePhotoThumb(url) {
+  const thumb = document.getElementById('ms-me-photo-thumb');
+  if (!thumb) return;
+  thumb.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+}
+
+async function msMeUploadPhoto(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Sign in first to change your photo'); return; }
+  const thumb = document.getElementById('ms-me-photo-thumb');
+  if (thumb) thumb.innerHTML = '<span style="font-size:12px;color:#6b7280;">⏳</span>';
+  try {
+    const fd = new FormData();
+    fd.append('photo', file);
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/photo', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('Upload failed');
+    const data = await r.json();
+    const url = data.photo_url;
+    localStorage.setItem('ms_user_photo', url);
+    localStorage.setItem('ms_seller_photo_url', url);
+    // Update avatar header and Me tab thumb
+    const avEl = document.getElementById('ms-avatar-el');
+    if (avEl) avEl.innerHTML = '<img src="' + url + '" alt="avatar">';
+    msMeUpdatePhotoThumb(url);
+    // Also update SELLER_PHOTOS so seller CV reflects the new photo
+    if (typeof SELLER_PHOTOS !== 'undefined') SELLER_PHOTOS[0] = url;
+    showToast('Profile photo updated');
+  } catch(err) {
+    showToast('Photo upload failed');
+    const cachedPhoto = localStorage.getItem('ms_user_photo');
+    if (thumb) thumb.innerHTML = cachedPhoto
+      ? '<img src="' + cachedPhoto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+      : '<span id="ms-me-photo-placeholder">📷</span>';
+  }
 }
 
 function msTab(name, el){

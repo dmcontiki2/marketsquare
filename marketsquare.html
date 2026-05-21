@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=77">
+<link rel="stylesheet" href="/static/ms.css?v=78">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1225,6 +1225,50 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
       <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">8 uses/T standard · bulk packs include bonus uses</div>
+    </div>
+
+    <!-- AI TUPPENCE SERVICES -->
+    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
+      <h2>⚡ Use your Tuppence — AI Services</h2>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each service costs 1T and is non-refundable. Charged from your Introductions balance.</p>
+      <!-- Seller AI services -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers · in your listing edit screen</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">✨</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Listing Rewrite <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude rewrites your title and description using current SA market language and buyer psychology. Pre-fills your edit form — review and save.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → Edit → "✨ Rewrite Listing"</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#d97706;background:#fef3c7;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">🔍</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Intros? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude reviews your listing — title, description, price, and trust score — then gives you 3 specific things to fix right now to attract more buyers.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → Edit → "🔍 Why No Intros?"</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#059669;background:#d1fae5;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
+        </div>
+      </div>
+      <!-- Buyer AI services -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For buyers · on any listing</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">💡</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Is This a Fair Price? <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude compares the asking price to current SA market rates and gives you a verdict: fair, above market, or below market — plus a suggested fair range.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → "💡 Is this a fair price?"</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:8px;">
+        <strong>Non-refundable policy:</strong> AI services are charged on use. If the AI call fails due to a server error, no Tuppence is deducted. Results are provided as-is for guidance only.
+      </div>
     </div>
 
     <!-- TRANSACTION HISTORY -->
@@ -3299,6 +3343,16 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="ms-tab-me" class="ms-tab-content">
       <div class="ms-section-lbl">Personal details</div>
       <div class="ms-card" id="ms-personal-details">
+        <div class="ms-detail-row" style="align-items:center;">
+          <div class="ms-detail-lbl">Profile photo</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="ms-me-photo-thumb" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+              <span id="ms-me-photo-placeholder">📷</span>
+            </div>
+            <label for="ms-me-photo-inp" class="ms-edit-link" style="cursor:pointer;">Change</label>
+            <input type="file" id="ms-me-photo-inp" accept="image/*" style="display:none;" onchange="msMeUploadPhoto(event)">
+          </div>
+        </div>
         <div class="ms-detail-row">
           <div class="ms-detail-lbl">Display name</div>
           <div style="display:flex;align-items:center;gap:8px;"><span class="ms-detail-val" id="ms-pd-name">–</span><span class="ms-edit-link" onclick="msEditField('name')">Edit</span></div>
@@ -3600,7 +3654,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=77"></script>
+<script src="/static/ms.js?v=78"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

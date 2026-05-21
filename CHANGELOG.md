@@ -2144,3 +2144,18 @@ AI vision cost per seller onboarding: ~$0.023 (claude-sonnet-4-6, avg 3 photos).
 
 ### Cost model note
 AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.002 net margin), AI2 Haiku audit ~$0.001/call (~$0.002 margin), AI3 Sonnet price-check ~$0.025/call (~$0 margin at 1T). AI3 margin is near-zero at current pricing — monitor usage; consider raising to 2T in Session 75 if volume warrants.
+
+
+---
+
+## Session 73 (continued) — 3 UI fixes + AI Tuppence wallet menu
+
+### Bug fixes
+
+1. **Local Market tile showing 0 listings in demo mode** — `initLMHomeTile` was calling `GET /local-market/listings?demo=1` which returns live DB rows only (no demo data seeded). In DEMO_MODE the function now skips the BEA call entirely and reads directly from the LISTINGS array (same source all other categories use). `renderCatCounts` LM tile visibility also updated to count from LISTINGS in demo mode, so the tile shows the correct city-filtered count immediately on load without waiting for an async BEA call.
+
+2. **Profile photo change in Me tab** — the avatar shown in the Me screen header was being pulled from the seller onboarding photo (SELLER_PHOTOS[0] / ms_seller_photo_url in localStorage) with no visible change affordance in the Me tab. Added a "Profile photo" row to the Personal Details card with a thumbnail and a "Change" link (file picker). New functions: `msMeUpdatePhotoThumb(url)` and `msMeUploadPhoto(event)` — uploads via `POST /users/{email}/photo`, updates localStorage, avatar header, SELLER_PHOTOS[0], and Me tab thumbnail simultaneously.
+
+3. **AI Tuppence services menu in Wallet screen** — buyers and sellers had no central reference for what AI services cost Tuppence or how to access them. Added a new "⚡ Use your Tuppence — AI Services" section to the Tuppence/Wallet screen listing all three current AI services: ✨ AI Listing Rewrite (1T, sellers), 🔍 Why No Intros? Audit (1T, sellers), 💡 Is This a Fair Price? (1T, buyers) — each with description, cost badge, and exact navigation path. Non-refundable policy note included.
+
+4. **Cache-bust**: `?v=77` → `?v=78`. Deployed `marketsquare.html` (index.html) and `ms.js`. All 35 smoke checks passing.
