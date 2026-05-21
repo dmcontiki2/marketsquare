@@ -2008,3 +2008,35 @@ Root cause: `renderFeatured()` filtered only on `l.feat && !l.paused` with no ci
 Fix: Added city filter inside `renderFeatured()` — when `DEMO_MODE` is true and listing id starts with `demo_`, only listings whose `l.city` matches `activeCity.name` are included in the featured strip.
 
 Cache-bust: ?v=70. smoke_test.py updated. All 30 checks passing.
+
+## Session 69 — 2026-05-21
+
+### Company registration number inserted into EULA and footer
+Replaced all `[REG NO]` and `[Company Name]` / `[Company Name / Operator]` placeholders in the EULA inline text with the official CIPC details: **TrustSquare (Pty) Ltd**, Reg: **2026/340128/07**, registered address: 6 Villa Christiaan, 98 Manie Road, Elarduspark, Pretoria, Gauteng, 0181. Also replaced three `[COUNSEL REQUIRED: insert … address]` placeholders with the registered address. Six substitutions in total; no remaining `[REG NO]` or `[Company Name]` placeholders. Deployed to server. All 30 smoke test checks pass. No JS or asset changes — version remains ?v=70.
+
+### Session 69 — Edge brain icon suppression + Photo-First Onboarding design
+Added meta tags to marketsquare.html to suppress Edge browser sidebar overlay (edge-sidebar, edge-copilot, ms-edge-skia-disable). Designed Photo-First AI Onboarding concept: replaces current form-first SOB flow with camera-upload → Claude Vision → auto-populated draft listing → inline AI description improver → EULA → go live. This becomes the standard onboarding path for all magic-link invites; text fallback retained for service listings. Full 3-session build arc documented in STATUS.md Session 70 brief.
+
+## Session 70 · 21 May 2026 · Photo-First AI Onboarding — BEA Vision Endpoint
+
+**Goal:** Design and implement the Photo-First AI Onboarding flow — BEA side only (Session 70 of a 3-session arc).
+
+**Delivered:**
+
+1. **Complete flow design** — documented as a structured comment block in `bea_main.py` (lines 7654–7774). Covers all 6 screens (S0 magic-link landing → S1 photo capture → S2 upload+vision → S3 draft card reveal → S4 inline AI improve → S5 EULA+publish + S_FALLBACK), all state transitions, full request/response data contract, error states, and fallback path. This is the canonical design doc for Sessions 71 and 72.
+
+2. **`POST /listings/vision-draft` endpoint** — stateless, no DB writes. Accepts 1–12 photos as `multipart/form-data` plus `category_hint`, `seller_email`, `city`, `country_iso2`. Compresses each photo to max 1568px longest side (JPEG 85%) before sending to Vision API to minimise token cost. Returns structured `{draft, warnings, model_used}` JSON.
+
+3. **Claude Vision prompt template** — `_build_vision_prompt()` covers all 4 categories with tailored instructions and SA price anchors per category (Property: rent/sale ranges; Services: per-session rates; Adventures: per-person prices; Cars: SA vehicle market). System prompt enforces JSON-only output. Claude wraps markdown fences if it slips — endpoint strips them before JSON parse.
+
+4. **Live tests — 4/4 passed** across all categories:
+   - Property (Pretoria): category=property 95%, title correct, price R1,850,000, prop_type=House, beds=3, listing_type=For Sale ✓
+   - Services/Tutor (Pretoria): category=services 98%, price R250/hr, level=Grade 10–12 + University, service_type=ongoing ✓
+   - Cars/Toyota (Cape Town): category=cars 85%, make=Toyota, model=Corolla 1.8, year=2019, mileage=85000 ✓
+   - Adventures/Wine Tour (Cape Town): category=adventures 97%, price=R850/person, availability=Daily departures ✓
+
+5. **All 30 smoke test checks passing** — no regressions.
+
+**Model used:** claude-sonnet-4-6 (vision capable, cost/quality balance for listing analysis)
+
+**Session 71 picks up:** Build `sob-photo-first` screen in `marketsquare.html` — photo upload UI → animated "Building your listing…" overlay → draft card reveal with inline edits.

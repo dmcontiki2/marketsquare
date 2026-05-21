@@ -7651,3 +7651,430 @@ def get_demo_sellers():
     return {"sellers": sellers, "count": len(sellers)}
 
 # ── END ADMIN AUTH v3 ───────────────────────────────────────────────────────
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHOTO-FIRST AI ONBOARDING — Session 70
+# POST /listings/vision-draft
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# COMPLETE FLOW DESIGN (Session 70 working notes)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# SCREENS & STATE MACHINE
+# ────────────────────────
+# S0: Magic-link landing
+#     URL: ?magic=1&name=X&email=X&cat=X&city=X&suburb=X
+#     State: sob_state = "photo_first"
+#     Action: show demo listing card in seller's scraped category
+#             then immediately open photo-first screen
+#
+# S1: Photo capture screen
+#     UI: large camera icon + "Take 1–12 photos of what you're selling"
+#         multi-file input (accept="image/*", multiple, max 12)
+#         small "Skip photos — describe it instead" link below (→ S_FALLBACK)
+#     State: photos selected, upload button active
+#     Trigger: user taps "Analyse my photos →"
+#
+# S2: Upload + Vision call (animated)
+#     UI: spinning "Building your listing…" overlay with 3 rotating messages:
+#         "Reading your photos…" → "Identifying category…" → "Writing your listing…"
+#     Action: POST /listings/vision-draft
+#             FormData: photos[] (1–12 files) + category_hint (from ?cat=) + seller_email
+#     State: awaiting BEA response (15s timeout shown as progress bar)
+#     Error: if timeout/error → toast "Couldn't analyse — let's try the quick form" → S_FALLBACK
+#
+# S3: Draft card reveal
+#     UI: animated slide-up of a pre-populated listing card showing:
+#         - First photo as hero image (carousel if multiple)
+#         - Detected category badge
+#         - AI-generated title (editable inline)
+#         - AI-generated description (editable textarea)
+#         - Suggested price with currency prefix (ZAR R / USD $ etc.)
+#         - Tags (chips, removable)
+#         - Confidence bar (shown only if confidence < 0.75)
+#     Bottom bar: "Does this look right?" with two actions:
+#         [Improve description] → S4_IMPROVE
+#         [Looks good — publish it →] → S5_EULA
+#
+# S4: Inline AI improvement (optional)
+#     UI: Claude rewrites description on request
+#         Shows old vs new in a diff-style highlight
+#     Action: POST /advert-agent/market-note with {prompt: "Improve this listing description: ..."}
+#     Returns: improved text → seller accepts or reverts
+#
+# S5: EULA accept → go live
+#     Existing SOB phase 3 (unchanged)
+#     Pre-populate: title, description, price, category from draft JSON
+#     Post-publish: redirect to seller dashboard
+#
+# S_FALLBACK: "Describe it instead"
+#     Opens existing SOB form (B1/B2/B3 path) with category pre-filled
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA CONTRACT — POST /listings/vision-draft
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# REQUEST (multipart/form-data):
+#   photos[]        File[]   1–12 image files (JPEG, PNG, HEIC, WEBP)
+#   category_hint   str      Scraped category from magic link: property|services|adventures|cars
+#   seller_email    str      Seller's email (for audit log — not required for guest draft)
+#   city            str      City name (used for price calibration in prompt)
+#   country_iso2    str      Country ISO2 (default "ZA")
+#
+# RESPONSE 200:
+#   {
+#     "draft": {
+#       "category":           str,   // "property"|"services"|"adventures"|"cars"
+#       "title":              str,   // 4–8 words, title case
+#       "description_draft":  str,   // 2–4 sentences, honest, no fluff
+#       "suggested_price":    float, // numeric, in local currency
+#       "currency_prefix":    str,   // "R" for ZA, "$" for US, etc.
+#       "tags":               list,  // 3–6 keyword strings
+#       "category_confidence":float, // 0.0–1.0 — how certain Claude is of category
+#       "price_confidence":   float, // 0.0–1.0 — how certain Claude is of price
+#       "photo_count":        int,   // number of photos analysed
+#       "primary_photo_index":int,   // which photo is the best hero (0-indexed)
+#       // Category-specific fields (null if not applicable):
+#       "prop_type":          str|null,  // "House"|"Flat"|"Room"|"Plot"|"Commercial"
+#       "beds":               int|null,
+#       "baths":              int|null,
+#       "listing_type":       str|null,  // "For Sale"|"To Rent"
+#       "subject":            str|null,  // For Services: subject/skill being offered
+#       "service_type":       str|null,  // "once-off"|"ongoing"|"retainer"
+#       "level":              str|null,  // For tutoring: "Primary"|"High School"|"University"
+#       "availability":       str|null,  // e.g. "Weekdays" or "Flexible"
+#       "make":               str|null,  // For Cars
+#       "model":              str|null,
+#       "year":               int|null,
+#       "mileage":            int|null,
+#       "condition":          str|null   // "Excellent"|"Good"|"Fair"
+#     },
+#     "warnings": [],    // e.g. ["Low light in photo 3", "Price unusually high for category"]
+#     "model_used": str  // e.g. "claude-opus-4-6"
+#   }
+#
+# RESPONSE 400: { "detail": "No photos provided" }
+# RESPONSE 413: { "detail": "Too many photos (max 12)" }
+# RESPONSE 503: { "detail": "AI not configured" }
+# RESPONSE 422: { "detail": "Vision analysis failed — try describing instead" }
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# VISION PROMPT TEMPLATE
+# ─────────────────────────────────────────────────────────────────────────────
+# Model: claude-opus-4-6 (vision capable, best for listing quality)
+# Max output tokens: 800
+# Max photos: 12 (all sent as base64 image blocks)
+# Category hint: always included in prompt to improve accuracy
+# City + country: used for price calibration
+# ─────────────────────────────────────────────────────────────────────────────
+
+import base64 as _b64
+
+# Vision model — use Sonnet for cost/quality balance on photo analysis
+VISION_MODEL = "claude-sonnet-4-6"
+
+# Currency prefix by country ISO2
+_CURRENCY_MAP = {
+    "ZA": "R", "US": "$", "GB": "£", "EU": "€", "NG": "₦",
+    "KE": "KSh", "GH": "₵", "AU": "A$", "CA": "C$", "IN": "₹",
+}
+
+# ── VISION PROMPT TEMPLATE ──────────────────────────────────────────────────
+_VISION_SYSTEM = """You are a skilled marketplace listing writer for TrustSquare, a South African peer-to-peer local marketplace. Your job is to analyse seller photos and produce a ready-to-publish listing draft.
+
+You write honest, specific, buyer-friendly listings. You never exaggerate or invent details not visible in the photos. You prefer concrete facts (size, colour, condition, year) over adjectives.
+
+You always respond with a single valid JSON object. No markdown. No explanation. Just the JSON."""
+
+def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo_count: int) -> str:
+    """Build the user-turn vision prompt. Photos are attached as separate image blocks."""
+    currency = _CURRENCY_MAP.get(country_iso2.upper(), "R")
+
+    # Category-specific price anchors for South African market (ZA default)
+    price_context = {
+        "property": (
+            f"Typical price ranges in {city}, South Africa: "
+            "Room to rent R2,000–R6,000/mo · Flat R5,000–R15,000/mo · "
+            "House rental R8,000–R25,000/mo · House for sale R500,000–R3,000,000."
+        ),
+        "services": (
+            f"Typical service rates in {city}, South Africa: "
+            "Tutor R150–R350/hr · Cleaner R150–R250/visit · Plumber R500–R1,500 call-out · "
+            "Graphic designer R500–R2,000 project · Personal trainer R200–R400/session."
+        ),
+        "adventures": (
+            f"Typical experience prices in {city}, South Africa: "
+            "Day tour R300–R1,500/person · Workshop R200–R800/person · "
+            "Cooking class R450–R900/person · Photography tour R500–R1,200/person."
+        ),
+        "cars": (
+            f"Typical car prices in {city}, South Africa: "
+            "Hatchback R60,000–R200,000 · Sedan R80,000–R350,000 · "
+            "SUV R150,000–R600,000 · Bakkie/Pickup R120,000–R500,000."
+        ),
+    }.get(category_hint, f"Use realistic local prices for {city}, {country_iso2}.")
+
+    category_instruction = {
+        "property": (
+            "This is likely a PROPERTY listing. Identify if it is for sale or to rent. "
+            "Count bedrooms, bathrooms, garages if visible. Identify property type "
+            "(House, Flat, Room, Plot, Commercial). "
+            "Set listing_type to 'For Sale' or 'To Rent'. "
+            "suggested_price should be the monthly rent OR sale price."
+        ),
+        "services": (
+            "This is likely a SERVICES listing (skill, profession, or recurring service). "
+            "Identify the service type and whether it is once-off, ongoing, or retainer. "
+            "If it appears to be a tutoring/teaching service, set level to the education level. "
+            "suggested_price is the per-session or per-visit rate in local currency."
+        ),
+        "adventures": (
+            "This is likely an ADVENTURES/EXPERIENCES listing (tour, workshop, activity, event). "
+            "Identify what the experience involves and its approximate duration. "
+            "suggested_price is per-person for the experience."
+        ),
+        "cars": (
+            "This is likely a CARS/VEHICLES listing. "
+            "Identify the make, model, approximate year, visible condition, and any notable features. "
+            "Estimate mileage range if odometer is visible. "
+            "suggested_price is the asking price for the vehicle."
+        ),
+    }.get(category_hint, (
+        "Determine the most likely category from: property, services, adventures, cars. "
+        "Apply the appropriate pricing and field logic for the detected category."
+    ))
+
+    return f"""You are analysing {photo_count} seller photo(s) to create a marketplace listing.
+
+CATEGORY HINT: The seller was invited as a '{category_hint}' seller. {category_instruction}
+
+PRICE CONTEXT: {price_context}
+Currency prefix to use: {currency}
+
+TASK: Return a single JSON object with exactly these fields:
+
+{{
+  "category": "property|services|adventures|cars",
+  "title": "4–8 word title in Title Case, specific not generic",
+  "description_draft": "2–4 honest sentences describing what is visible. Be specific. No hype.",
+  "suggested_price": <number — monthly rent, per-session rate, per-person price, or sale price>,
+  "currency_prefix": "{currency}",
+  "tags": ["3 to 6 relevant keyword strings"],
+  "category_confidence": <0.0 to 1.0>,
+  "price_confidence": <0.0 to 1.0>,
+  "primary_photo_index": <0-indexed integer — which photo is the best hero image>,
+  "prop_type": null,
+  "beds": null,
+  "baths": null,
+  "listing_type": null,
+  "subject": null,
+  "service_type": null,
+  "level": null,
+  "availability": null,
+  "make": null,
+  "model": null,
+  "year": null,
+  "mileage": null,
+  "condition": null,
+  "warnings": []
+}}
+
+Fill in ONLY the fields relevant to the detected category. Leave others as null.
+For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low.
+Return ONLY the JSON. No markdown. No explanation."""
+
+
+@app.post("/listings/vision-draft")
+async def vision_draft(
+    photos: list[UploadFile] = File(...),
+    category_hint: str = Form(default=""),
+    seller_email: str = Form(default=""),
+    city: str = Form(default="Pretoria"),
+    country_iso2: str = Form(default="ZA"),
+):
+    """
+    Photo-First AI Onboarding — Session 70.
+
+    Accepts 1–12 seller photos, calls Claude Vision, returns a complete
+    listing draft JSON ready for the FEA to render as a pre-populated card.
+
+    No database writes — this is a stateless analysis endpoint.
+    The FEA collects seller edits and calls POST /listings (existing flow) to publish.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    if not photos or len(photos) == 0:
+        raise HTTPException(status_code=400, detail="No photos provided")
+
+    if len(photos) > 12:
+        raise HTTPException(status_code=413, detail="Too many photos — maximum 12")
+
+    # ── 1. Read and validate photos ──────────────────────────────────────────
+    image_blocks = []
+    warnings = []
+    MAX_SIDE = 1568   # Anthropic vision max dimension for efficient processing
+    MAX_BYTES_PER_PHOTO = 5 * 1024 * 1024  # 5 MB per photo hard cap
+
+    for idx, photo in enumerate(photos):
+        raw = await photo.read()
+        if len(raw) == 0:
+            warnings.append(f"Photo {idx+1} was empty and skipped")
+            continue
+        if len(raw) > MAX_BYTES_PER_PHOTO:
+            warnings.append(f"Photo {idx+1} exceeded 5 MB and was skipped")
+            continue
+
+        # Resize to fit within MAX_SIDE on longest dimension (saves API tokens)
+        try:
+            img = Image.open(io.BytesIO(raw))
+            img = img.convert("RGB")  # normalise — handles PNG/HEIC alpha channels
+            w, h = img.size
+            if max(w, h) > MAX_SIDE:
+                ratio = MAX_SIDE / max(w, h)
+                img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=85, optimize=True)
+            compressed = buf.getvalue()
+        except Exception as img_err:
+            _log.warning("vision-draft: failed to process photo %d: %s", idx, img_err)
+            warnings.append(f"Photo {idx+1} could not be read")
+            continue
+
+        b64 = _b64.b64encode(compressed).decode("ascii")
+        image_blocks.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": b64,
+            }
+        })
+
+    if not image_blocks:
+        raise HTTPException(status_code=400, detail="No valid photos could be processed")
+
+    photo_count = len(image_blocks)
+
+    # ── 2. Build Anthropic messages ──────────────────────────────────────────
+    cat_hint = (category_hint or "").lower().strip()
+    if cat_hint not in ("property", "services", "adventures", "cars"):
+        cat_hint = "property"  # safe default
+
+    user_content = image_blocks + [
+        {
+            "type": "text",
+            "text": _build_vision_prompt(cat_hint, city or "Pretoria", country_iso2 or "ZA", photo_count)
+        }
+    ]
+
+    # ── 3. Call Claude Vision ────────────────────────────────────────────────
+    try:
+        async with httpx.AsyncClient(timeout=45) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": VISION_MODEL,
+                    "max_tokens": 900,
+                    "system": _VISION_SYSTEM,
+                    "messages": [{"role": "user", "content": user_content}],
+                },
+            )
+    except httpx.TimeoutException:
+        _log.error("vision-draft: Claude API timeout after 45s")
+        raise HTTPException(
+            status_code=504,
+            detail="Vision analysis timed out — try describing your listing instead"
+        )
+    except Exception as exc:
+        _log.error("vision-draft: Claude API call failed: %s", exc)
+        raise HTTPException(status_code=503, detail="Vision analysis unavailable")
+
+    # ── 4. Parse Claude response ─────────────────────────────────────────────
+    raw_text = ""
+    try:
+        body = resp.json()
+        if resp.status_code != 200:
+            err_msg = body.get("error", {}).get("message", "Unknown error")
+            _log.error("vision-draft: Claude returned %d: %s", resp.status_code, err_msg)
+            raise HTTPException(status_code=502, detail=f"AI error: {err_msg}")
+
+        raw_text = body["content"][0]["text"].strip()
+
+        # Strip markdown code fences if Claude wraps the JSON anyway
+        if raw_text.startswith("```"):
+            raw_text = raw_text.split("```")[1]
+            if raw_text.startswith("json"):
+                raw_text = raw_text[4:]
+            raw_text = raw_text.strip()
+
+        draft = json.loads(raw_text)
+
+    except json.JSONDecodeError as jde:
+        _log.error("vision-draft: JSON parse failed. Raw: %s… Error: %s", raw_text[:200], jde)
+        raise HTTPException(
+            status_code=422,
+            detail="Vision analysis returned unexpected format — try describing instead"
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _log.error("vision-draft: unexpected parse error: %s", exc)
+        raise HTTPException(status_code=500, detail="Vision analysis failed")
+
+    # ── 5. Sanitise + enrich the draft ──────────────────────────────────────
+    # Merge any warnings Claude produced with our upload warnings
+    claude_warnings = draft.pop("warnings", []) or []
+    all_warnings = warnings + (claude_warnings if isinstance(claude_warnings, list) else [])
+
+    # Clamp confidence scores to [0, 1]
+    draft["category_confidence"] = min(1.0, max(0.0, float(draft.get("category_confidence") or 0.7)))
+    draft["price_confidence"]    = min(1.0, max(0.0, float(draft.get("price_confidence")    or 0.6)))
+
+    # Ensure primary_photo_index is valid
+    pi = draft.get("primary_photo_index")
+    if not isinstance(pi, int) or pi < 0 or pi >= photo_count:
+        draft["primary_photo_index"] = 0
+
+    # Validate category
+    if draft.get("category") not in ("property", "services", "adventures", "cars"):
+        draft["category"] = cat_hint
+
+    # Ensure tags is a list of strings
+    tags = draft.get("tags") or []
+    if not isinstance(tags, list):
+        tags = [str(tags)]
+    draft["tags"] = [str(t) for t in tags[:6]]
+
+    # Add photo count for FEA
+    draft["photo_count"] = photo_count
+
+    # Ensure currency_prefix
+    if not draft.get("currency_prefix"):
+        draft["currency_prefix"] = _CURRENCY_MAP.get((country_iso2 or "ZA").upper(), "R")
+
+    # Log for monitoring (no PII beyond email which is already in our DB)
+    _log.info(
+        "vision-draft: %d photos → category=%s confidence=%.2f price=%s%s seller=%s",
+        photo_count,
+        draft.get("category"),
+        draft.get("category_confidence"),
+        draft.get("currency_prefix"),
+        draft.get("suggested_price"),
+        seller_email or "guest",
+    )
+
+    return {
+        "draft": draft,
+        "warnings": all_warnings,
+        "model_used": VISION_MODEL,
+    }
+
+
+# ── END PHOTO-FIRST AI ONBOARDING (Session 70) ─────────────────────────────
