@@ -9808,11 +9808,17 @@ function msInit(){
   const av = document.getElementById('ms-avatar-initials');
   if(av) av.textContent = initials;
 
-  // Profile photo if available
-  const photoUrl = localStorage.getItem('ms_user_photo');
+  // Profile photo — check all three keys in priority order
+  const photoUrl = localStorage.getItem('ms_user_photo')
+    || localStorage.getItem('ms_seller_photo_url')
+    || localStorage.getItem('ms_seller_photo');
   if(photoUrl){
     const avEl = document.getElementById('ms-avatar-el');
     if(avEl) avEl.innerHTML = '<img src="'+photoUrl+'" alt="avatar">';
+    // Normalise — ensure ms_user_photo is always the canonical key
+    if (!localStorage.getItem('ms_user_photo')) {
+      try { localStorage.setItem('ms_user_photo', photoUrl); } catch(_){}
+    }
   }
 
   const dispName = document.getElementById('ms-display-name');
@@ -9927,18 +9933,19 @@ async function msMeUploadPhoto(e) {
   if (thumb) thumb.innerHTML = '<span style="font-size:12px;color:#6b7280;">⏳</span>';
   try {
     const fd = new FormData();
-    fd.append('photo', file);
+    fd.append('file', file);
     const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/photo', { method: 'POST', body: fd });
     if (!r.ok) throw new Error('Upload failed');
     const data = await r.json();
     const url = data.photo_url;
     localStorage.setItem('ms_user_photo', url);
     localStorage.setItem('ms_seller_photo_url', url);
+    localStorage.setItem('ms_seller_photo', url);  // keeps SELLER_PHOTOS[0] in sync on next load
     // Update avatar header and Me tab thumb
     const avEl = document.getElementById('ms-avatar-el');
     if (avEl) avEl.innerHTML = '<img src="' + url + '" alt="avatar">';
     msMeUpdatePhotoThumb(url);
-    // Also update SELLER_PHOTOS so seller CV reflects the new photo
+    // Also update SELLER_PHOTOS live so seller CV reflects the new photo immediately
     if (typeof SELLER_PHOTOS !== 'undefined') SELLER_PHOTOS[0] = url;
     showToast('Profile photo updated');
   } catch(err) {

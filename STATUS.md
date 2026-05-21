@@ -6,7 +6,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - 23 / 60 founding sellers registered
 - Demo mode accessible via ?demo=1 OR via in-app DEMO/LIVE toggle (top bar)
 - marketsquare.html: 340 KB HTML shell
-- Static assets: /static/ms.css?v=77 (103 KB) + /static/ms.js?v=78 (~510 KB), cached 1 year
+- Static assets: /static/ms.css?v=77 (103 KB) + /static/ms.js?v=79 (~510 KB), cached 1 year
 - World Heritage: 120 sites from BEA /wonders
 - Demo data: 293 listings + 40 sellers from BEA /demo-listings and /demo-sellers
 - smoke_test.py: 35-check post-deploy safety net (scans html + ms.js combined corpus)
@@ -30,7 +30,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Admin dashboard: gold AI Tuppence strip with Rewrite + Why No Intros buttons on every edit modal
 - Buyer app: "💡 Is this a fair price?" button on listing detail card with colour-coded verdict card
 - missing_shots Phase 2: displayed confidence reduced 12.5%/missing shot; amber guidance message added
-- Cache-busted ?v=76 → ?v=78; all 35 smoke checks passing
+- Cache-busted ?v=76 → ?v=79; all 35 smoke checks passing
 
 ## Last Completed (Session 72)
 - Fixed Route 2 (in-app Sell+) go-live: added email+name fields to Step 2 for non-magic-link sellers
@@ -45,7 +45,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=78
+Current version: ?v=79
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active

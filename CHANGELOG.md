@@ -2159,3 +2159,14 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 3. **AI Tuppence services menu in Wallet screen** — buyers and sellers had no central reference for what AI services cost Tuppence or how to access them. Added a new "⚡ Use your Tuppence — AI Services" section to the Tuppence/Wallet screen listing all three current AI services: ✨ AI Listing Rewrite (1T, sellers), 🔍 Why No Intros? Audit (1T, sellers), 💡 Is This a Fair Price? (1T, buyers) — each with description, cost badge, and exact navigation path. Non-refundable policy note included.
 
 4. **Cache-bust**: `?v=77` → `?v=78`. Deployed `marketsquare.html` (index.html) and `ms.js`. All 35 smoke checks passing.
+
+
+---
+
+## Session 73 (continued 2) — Profile photo upload fix
+
+1. **Me tab photo upload field name fix** — `msMeUploadPhoto()` was sending the file as `photo` but `POST /users/{email}/photo` expects `file` (same as `handleCVPhoto`). Fixed field name: `fd.append('file', file)`. 422 Unprocessable Entity on upload resolved.
+
+2. **Photo localStorage sync fix** — upload handler now writes to all three localStorage keys (`ms_user_photo`, `ms_seller_photo_url`, `ms_seller_photo`) so the avatar stays correct across page reloads without having to re-upload. Avatar load on myspace screen also updated to fall back through all three keys and normalise to `ms_user_photo`.
+
+3. **Cache-bust**: `?v=78` → `?v=79`. Deployed `marketsquare.html` + `ms.js`.
