@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=70">
+<link rel="stylesheet" href="/static/ms.css?v=71">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1415,7 +1415,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="go-coach">
       <div class="go-coach-avatar">🤖</div>
       <div class="go-coach-text" id="go-coach-text-1">
-        <strong>Hi there!</strong> Buyers are 3× more likely to contact sellers with a clear photo. Tap below to add one — you can retake it as many times as you like.
+        <strong>Hi there!</strong> Add 1–12 photos and our AI will write your listing for you — title, description, and a price suggestion. Takes about 15 seconds. ✨
       </div>
     </div>
 
@@ -1435,21 +1435,93 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
-      <input type="file" id="go-file-input" accept="image/*" capture="environment" style="display:none;" onchange="goHandlePhoto(this)">
-      <div class="go-upload-zone" id="go-upload-zone" onclick="document.getElementById('go-file-input').click()">
-        <div class="go-upload-icon">📷</div>
-        <div class="go-upload-label">Tap to take or choose a photo</div>
-        <div class="go-upload-sub">JPEG, PNG or WebP · max 20MB</div>
+      <!-- ── Photo-First AI Upload (Session 71) ── -->
+      <!-- Multi-photo input: up to 12 photos, no capture= so user can pick from gallery too -->
+      <input type="file" id="go-file-input" accept="image/*" multiple style="display:none;" onchange="goHandlePhotos(this)">
+
+      <!-- Zone A: Upload zone (default) -->
+      <div id="go-upload-zone" class="go-upload-zone" onclick="document.getElementById('go-file-input').click()">
+        <div class="go-upload-icon">📸</div>
+        <div class="go-upload-label">Tap to add 1–12 photos</div>
+        <div class="go-upload-sub">JPEG · PNG · WebP · max 20MB each</div>
       </div>
-      <div id="go-upload-retake" class="go-upload-retake" style="display:none;text-align:center;" onclick="document.getElementById('go-file-input').click()">
-        Retake / choose different photo
+
+      <!-- Zone B: Photo strip — shown after photos selected, before AI call -->
+      <div id="go-photo-strip" style="display:none;">
+        <div id="go-photo-thumbs" style="display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+          <span id="go-photo-count-label" style="font-size:12px;color:rgba(255,255,255,.45);"></span>
+          <span style="font-size:12px;color:rgba(139,92,246,.8);cursor:pointer;text-decoration:underline;" onclick="document.getElementById('go-file-input').click()">Add more</span>
+        </div>
       </div>
-      <div id="go-upload-status" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:10px;min-height:18px;"></div>
+
+      <!-- Zone C: Vision analysis overlay — shown while calling BEA -->
+      <div id="go-vision-overlay" style="display:none;text-align:center;padding:24px 16px 16px;">
+        <div style="width:48px;height:48px;border:3px solid rgba(139,92,246,.3);border-top-color:#8b5cf6;border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 16px;"></div>
+        <div id="go-vision-msg" style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Reading your photos…</div>
+        <!-- Progress bar: 40s client timeout -->
+        <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;width:100%;max-width:260px;margin:0 auto;">
+          <div id="go-vision-bar" style="height:100%;background:#8b5cf6;border-radius:2px;width:0%;transition:width 0.5s linear;"></div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:10px;">AI is analysing your listing — usually takes 10–20 seconds</div>
+      </div>
+
+      <!-- Zone D: Draft reveal — shown after successful vision response -->
+      <div id="go-draft-reveal" style="display:none;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(139,92,246,.8);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <span>✨</span> AI draft — edit anything below
+        </div>
+
+        <!-- Title -->
+        <div class="go-field-group" style="margin-bottom:10px;">
+          <div class="go-field-label">Title</div>
+          <input class="go-field-input" id="go-vision-title" type="text" placeholder="Listing title" oninput="goVisionFieldUpdate('title',this.value)">
+        </div>
+
+        <!-- Description -->
+        <div class="go-field-group" style="margin-bottom:10px;">
+          <div class="go-field-label">Description</div>
+          <textarea class="go-field-input" id="go-vision-desc" rows="4" placeholder="Describe your listing…" oninput="goVisionFieldUpdate('description',this.value)" style="resize:vertical;font-family:inherit;font-size:14px;line-height:1.5;"></textarea>
+          <!-- Improve description button -->
+          <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
+            <button id="go-improve-btn" class="go-improve-btn" onclick="goImproveDescription()" style="font-size:12px;padding:5px 12px;border-radius:8px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.35);color:#a78bfa;cursor:pointer;">✨ Improve wording</button>
+            <span id="go-improve-status" style="font-size:11px;color:rgba(255,255,255,.3);"></span>
+          </div>
+        </div>
+
+        <!-- Price -->
+        <div class="go-field-group" style="margin-bottom:10px;">
+          <div class="go-field-label">Suggested price (<span id="go-vision-currency">R</span>)</div>
+          <input class="go-field-input" id="go-vision-price" type="tel" inputmode="numeric" placeholder="0" oninput="goVisionFieldUpdate('price',this.value)">
+        </div>
+
+        <!-- Tags -->
+        <div class="go-field-group" style="margin-bottom:6px;">
+          <div class="go-field-label">Tags</div>
+          <div id="go-vision-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;"></div>
+        </div>
+
+        <!-- AI warnings (low confidence, dark photos, etc.) -->
+        <div id="go-vision-warnings" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:rgba(245,158,11,.85);line-height:1.5;"></div>
+
+        <!-- Confidence bar — shown if category_confidence < 0.80 -->
+        <div id="go-confidence-bar" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;font-size:11px;color:rgba(255,255,255,.35);">
+          Category detected: <span id="go-confidence-cat" style="color:rgba(255,255,255,.7);font-weight:600;"></span>
+          — <span id="go-confidence-pct" style="color:#a78bfa;"></span> confident
+        </div>
+      </div>
+
+      <!-- Zone E: Skip link — always visible below upload/strip -->
+      <div id="go-skip-link" style="text-align:center;margin-top:12px;">
+        <span style="font-size:12px;color:rgba(255,255,255,.3);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip photos — describe it instead</span>
+      </div>
+
+      <div id="go-upload-status" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:4px;min-height:16px;"></div>
     </div>
 
     <div class="go-footer">
       <button class="go-btn-bk" onclick="goTo('home')">← Exit</button>
-      <button class="go-btn-next" id="go-s1-next" onclick="goNextStep(2)">Next →</button>
+      <button class="go-btn-next" id="go-s1-next" onclick="goVisionNext()" disabled>Analyse photos →</button>
     </div>
   </div>
 
@@ -3524,7 +3596,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=70"></script>
+<script src="/static/ms.js?v=71"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

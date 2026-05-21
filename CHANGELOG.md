@@ -2040,3 +2040,41 @@ Added meta tags to marketsquare.html to suppress Edge browser sidebar overlay (e
 **Model used:** claude-sonnet-4-6 (vision capable, cost/quality balance for listing analysis)
 
 **Session 71 picks up:** Build `sob-photo-first` screen in `marketsquare.html` — photo upload UI → animated "Building your listing…" overlay → draft card reveal with inline edits.
+
+## Session 71 · 21 May 2026 · Photo-First AI Onboarding — FEA Onboarding Screen
+
+**Goal:** Build the FEA side of Photo-First AI Onboarding (Session 2 of 3-session arc).
+
+**Delivered:**
+
+1. **marketsquare.html — Step 1 of guided-onboard rebuilt** (Zone A–E pattern):
+   - Zone A: Multi-photo upload zone (1–12 photos, `multiple`, no forced `capture=` so users can pick from gallery)
+   - Zone B: Photo thumbnail strip — shows selected photos with primary badge and per-photo delete buttons
+   - Zone C: Vision analysis overlay — spinner + cycling messages ("Reading your photos…" → "Identifying category…" → "Writing your listing…") + 40s progress bar
+   - Zone D: Draft reveal — editable title, description textarea, price field, tag chips (removable), AI warnings panel, confidence bar (shown if <80%)
+   - Zone E: "Skip photos — describe it instead" link always visible below; relabels to "Skip AI — fill in details manually" once photos selected
+   - Next button: "Analyse photos →" (disabled until photos selected) → "Looks good — next →" once draft revealed
+
+2. **ms.js — 13 new functions added:**
+   - `goHandlePhotos` — multi-file input handler, accumulates up to 12 files, reads first as dataURL for card preview
+   - `goRenderPhotoStrip` — renders thumbnail strip with delete affordance and primary badge
+   - `goRemovePhoto` — removes a photo from the array, resets UI if all photos removed
+   - `goResetStep1UI` — idempotent reset called on init and after skip
+   - `goVisionNext` — orchestrates the full vision flow: FormData build → BEA call → overlay → reveal; handles timeout and errors
+   - `goRevealDraft` — populates Zone D from API response, paints live card, updates coach bubble, scrolls to reveal
+   - `goVisionFieldUpdate` — keeps visionDraft + goState.fields + live card in sync as seller edits Zone D
+   - `goApplyVisionToStep2` — copies visionDraft fields into goState.fields (with active-tags collection and category override if ≥80% confident) before Step 2 renders
+   - `goPreFillStep2Inputs` — sets visible Step 2 input values from goState.fields, enables Next, triggers market note
+   - `goImproveDescription` — calls `/advert-agent/market-note` to rewrite description; shows undo affordance
+   - `goUndoImprove` — restores previous description text
+   - `goSkipPhotos` — sets visionSkipped=true and advances directly to Step 2
+   - `goVisionFallback` — handles API errors/timeouts gracefully; offers manual fill-in path
+
+3. **goNextStep patched** — calls `goApplyVisionToStep2` + `goPreFillStep2Inputs` when advancing to Step 2 from a completed vision draft
+4. **goSaveAndNext patched** — now includes `description`, `availability`, `listing_type` in BEA PUT body
+5. **goInit patched** — resets new state fields (`photoFiles`, `visionDraft`, `visionSkipped`), calls `goResetStep1UI`, updated coach text
+6. **ms.css** — added `@keyframes spin`, `@keyframes visionReveal`, photo thumb styles, tag chip styles, improve-btn styles (23 lines)
+7. **Cache-bust**: `?v=70` → `?v=71` in marketsquare.html
+8. **All 30 smoke test checks passing** — no regressions
+
+**Session 72 picks up:** Wire photo-first flow into SOB phase 3 (EULA + go live), upload all selected photos to BEA (not just primary), add "Skip photos" fallback into SOB directly, smoke test all paths end-to-end.
