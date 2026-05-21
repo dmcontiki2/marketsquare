@@ -3314,21 +3314,24 @@ async function sobInit() {
   }
 
   // Fetch this seller\'s listings (drafts and live)
-  try {
-    const res = await fetch(BEA_URL + '/listings/mine?email=' + encodeURIComponent(sobState.email));
-    if (!res.ok) throw new Error('API error ' + res.status);
-    const all = await res.json();
-    // Show only draft listings (listing_status = 'draft' or null published_at)
-    // Include any draft (by status or missing published_at) for this seller
-    sobState.drafts = all.filter(l => l.listing_status === 'draft' || (!l.published_at && !l.listing_status));
-  } catch(e) {
-    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#fca5a5;font-size:13px;">Could not load your listing — please check your connection and try again.</div>';
-    return;
+  // Skip BEA fetch if drafts were already seeded by goHandoff() (guided-onboard path)
+  if (!sobState.drafts || !sobState.drafts.length) {
+    try {
+      const res = await fetch(BEA_URL + '/listings/mine?email=' + encodeURIComponent(sobState.email));
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const all = await res.json();
+      // Show only draft listings (listing_status = 'draft' or null published_at)
+      sobState.drafts = all.filter(l => l.listing_status === 'draft' || (!l.published_at && !l.listing_status));
+    } catch(e) {
+      if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#fca5a5;font-size:13px;">Could not load your listing — please check your connection and try again.</div>';
+      return;
+    }
   }
 
   if (!sobState.drafts.length) {
     if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.4);font-size:13px;">No draft listings found for this account.<br>Please contact TrustSquare support.</div>';
     return;
+
   }
 
   // ── Returning-seller gate: check EULA + banking status ──────────────────
@@ -4427,15 +4430,102 @@ async function goStep3Coach() {
 }
 
 // ── Handoff to seller-onboard funnel ──────────────────────────────────────
-function goHandoff() {
+async function goHandoff() {
+  // Disable the button immediately to prevent double-taps
+  const btn = document.querySelector('#go-s3 .go-btn-next');
+  if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+
   // Set flags BEFORE goTo() — goTo() calls sobInit() synchronously
   sobState._skipPreview    = true;
   sobState._cameFromGuided = true;
-  // Seed sobState from goState so sobInit() skips straight to Phase 2 (tier picker)
   sobState.email = goState.email;
   sobState.name  = goState.name;
   sobState.cat   = goState.cat;
   sobState.city  = goState.city;
+
+  // ── Ensure a BEA draft listing exists before handing off ────────────────
+  // sobInit() fetches /listings/mine and needs at least one draft to publish.
+  // If goState.listingId is null (new seller, no prior draft), create it now.
+  // If it already exists (from goInit() fetch or earlier photo upload), reuse it.
+  if (BEA_ENABLED && goState.email) {
+    try {
+      if (!goState.listingId) {
+        // Create draft listing — listing_status='draft' so it won't appear live yet
+        const f = goState.fields;
+        const body = {
+          title:          f.title       || goState.name || 'My listing',
+          price:          f.price       || 'POA',
+          category:       goState.cat   || 'Services',
+          city:           goState.city  || activeCity.name || 'Pretoria',
+          area:           f.suburb      || goState.city || activeCity.name || 'Pretoria',
+          suburb:         f.suburb      || goState.city || activeCity.name || 'Pretoria',
+          geo_city_id:    activeCity.id || null,
+          description:    f.description || '',
+          seller_email:   goState.email,
+          listing_status: 'draft',
+        };
+        const res = await fetch(BEA_URL + '/listings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          goState.listingId = data.id;
+        }
+      } else {
+        // Draft already exists — patch with latest fields from vision/manual edit
+        const f = goState.fields;
+        const body = {};
+        if (f.title)       body.title       = f.title;
+        if (f.price)       body.price       = f.price;
+        if (f.description) body.description = f.description;
+        if (f.suburb)      body.suburb      = f.suburb;
+        if (f.beds)        body.beds        = parseInt(f.beds) || null;
+        if (f.baths)       body.baths       = parseInt(f.baths) || null;
+        if (f.subject)     body.subject     = f.subject;
+        if (f.level)       body.level       = f.level;
+        if (f.service_type)body.service_type= f.service_type;
+        if (f.listing_type)body.listing_type= f.listing_type;
+        if (f.availability)body.availability= f.availability;
+        if (Object.keys(body).length) {
+          await fetch(
+            BEA_URL + '/listings/' + goState.listingId + '?email=' + encodeURIComponent(goState.email),
+            { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+          ).catch(() => {});
+        }
+      }
+
+      // Upload primary photo now if it hasn't been uploaded yet
+      if (goState.listingId && goState.photoFile && !goState.photoUploaded) {
+        const fd = new FormData();
+        fd.append('file', goState.photoFile);
+        await fetch(
+          BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
+          { method: 'POST', body: fd }
+        ).catch(() => {});
+        goState.photoUploaded = true;
+      }
+
+      // Seed sobState.drafts directly so sobInit() doesn't need to re-fetch
+      if (goState.listingId) {
+        const f = goState.fields;
+        sobState.drafts = [{
+          id:             goState.listingId,
+          title:          f.title       || goState.name || 'My listing',
+          price:          f.price       || 'POA',
+          category:       goState.cat,
+          city:           goState.city,
+          listing_status: 'draft',
+        }];
+      }
+    } catch(e) {
+      // Non-fatal — sobInit() will attempt its own fetch as fallback
+      console.warn('goHandoff: draft creation failed', e);
+    }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Take me to the app →'; }
   goTo('seller-onboard');
 }
 
