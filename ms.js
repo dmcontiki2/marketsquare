@@ -2237,8 +2237,8 @@ function openBEASellerProfile(l) {
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${l.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);filter:blur(6px);" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
-      <div class="cv-headline">${l.title}</div>
-      <div class="cv-cat">${scBadge}${l.cat} · ${l.area} · 🔒 Anonymous until introduction</div>
+      <div class="cv-headline">${l.cat} Seller</div>
+      <div class="cv-cat">${scBadge}${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
         <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
@@ -3485,7 +3485,6 @@ async function sobGoLive() {
   let failCount = 0;
 
   // Stamp EULA acceptance once before processing drafts
-  // (seller has just ticked both checkboxes and clicked "Go live")
   if (BEA_ENABLED) {
     await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/eula', {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }
@@ -3494,7 +3493,7 @@ async function sobGoLive() {
 
   for (const draft of sobState.drafts) {
     try {
-      // 1. Register seller account (idempotent — BEA ignores duplicate emails)
+      // 1. Register seller account (idempotent)
       await fetch(BEA_URL + '/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY },
@@ -3506,16 +3505,32 @@ async function sobGoLive() {
         BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email),
         { method: 'PUT', headers: { 'X-Api-Key': API_KEY } }
       );
-      if (!res.ok) throw new Error('API error ' + res.status);
+      const resText = await res.text();
+      console.warn('sobGoLive publish', draft.id, res.status, resText.slice(0,200));
+      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + resText.slice(0,100));
       successCount++;
     } catch(e) {
-      console.error('sobGoLive: failed for listing', draft.id, e);
+      console.error('sobGoLive: failed for listing', draft.id, e.message);
       failCount++;
+      // Show the actual error on screen
+      if (errEl) {
+        errEl.style.display = 'block';
+        errEl.style.color = '#fca5a5';
+        errEl.textContent = 'Error (draft ' + draft.id + '): ' + e.message;
+      }
     }
   }
 
   if (successCount === 0) {
-    if (errEl) { errEl.textContent = 'Could not go live — please check your connection and try again.'; errEl.style.display = 'block'; }
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.style.color = '#fca5a5';
+      // Show actual state instead of generic message
+      const reason = (sobState.drafts||[]).length === 0
+        ? 'No draft found (drafts=0, email=' + (email||'none') + ')'
+        : 'Publish failed — see error above';
+      errEl.textContent = reason;
+    }
     if (btn) { btn.disabled = false; btn.textContent = 'Go live →'; }
     return;
   }
@@ -3655,7 +3670,8 @@ async function goInit() {
     photoUploaded: false,
     visionDraft: null,
     visionSkipped: false,
-    fields: {}
+    fields: {},
+    _missingShotsLabels: []
   };
 
   // Normalise category key
@@ -4076,6 +4092,31 @@ function goRevealDraft(draft, warnings) {
     confBar.style.display = 'none';
   }
 
+  // Missing shots suggestion strip
+  const shotsEl = document.getElementById('go-missing-shots');
+  const shots = draft.missing_shots || [];
+  if (shotsEl) {
+    if (shots.length) {
+      shotsEl.style.display = 'block';
+      shotsEl.innerHTML = `
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.5);margin-bottom:8px;">📸 Suggested shots to add</div>
+        ${shots.map((s, i) => `
+          <div class="go-shot-suggestion" onclick="goAddSuggestedShot(${i})" style="display:flex;align-items:flex-start;gap:10px;padding:9px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;margin-bottom:6px;cursor:pointer;">
+            <div style="font-size:18px;flex-shrink:0;margin-top:1px;">📷</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">${s.label}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;line-height:1.4;">${s.reason}</div>
+            </div>
+            <div style="font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0;align-self:center;">Add +</div>
+          </div>`).join('')}
+        <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;text-align:center;">Tap a shot to add it · More photos = more buyer trust</div>`;
+      // Store shots on state for the add handler
+      goState._missingShotsLabels = shots.map(s => s.label);
+    } else {
+      shotsEl.style.display = 'none';
+    }
+  }
+
   // Update live card preview with vision data
   goState.fields.title = draft.title || '';
   goState.fields.price = draft.suggested_price ? String(draft.suggested_price) : '';
@@ -4096,6 +4137,27 @@ function goRevealDraft(draft, warnings) {
 
   // Scroll to reveal
   if (reveal) reveal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── goAddSuggestedShot — open file picker pre-labelled for a suggested shot ─
+function goAddSuggestedShot(idx) {
+  const label = (goState._missingShotsLabels || [])[idx] || 'Photo';
+  // Update coach text to guide the specific shot
+  const c1 = document.getElementById('go-coach-text-1');
+  if (c1) c1.innerHTML = '<strong>📷 ' + label + '</strong> — add this photo using the button below, then tap Analyse again.';
+  // Scroll to upload zone and trigger file picker
+  const fileInput = document.getElementById('go-file-input');
+  if (fileInput) {
+    fileInput.click();
+    // Mark the shot as acknowledged (dim the card)
+    const cards = document.querySelectorAll('.go-shot-suggestion');
+    if (cards[idx]) {
+      cards[idx].style.opacity = '0.45';
+      cards[idx].style.pointerEvents = 'none';
+      const addBtn = cards[idx].querySelector('div[style*="accent"]');
+      if (addBtn) addBtn.textContent = '✓ Adding';
+    }
+  }
 }
 
 // ── goVisionFieldUpdate — live card repaint from Zone D edits ──────────────
@@ -4253,6 +4315,19 @@ function goRenderFields() {
     }
   });
 
+  // If no magic link, append name + email fields (Route 2 — in-app Sell+)
+  if (!magicLink.active) {
+    html += `<div class="go-field-group">
+      <div class="go-field-label">Your name <span style="color:#fca5a5">*</span></div>
+      <input class="go-field-input" id="go-seller-name" type="text" placeholder="e.g. Jesse Kriel" oninput="goState.name=this.value;goPaintCards();">
+    </div>
+    <div class="go-field-group">
+      <div class="go-field-label">Your email address <span style="color:#fca5a5">*</span></div>
+      <input class="go-field-input" id="go-seller-email" type="email" inputmode="email" placeholder="e.g. jesse@example.com" oninput="goState.email=this.value.trim();const _nb=document.getElementById('go-s2-next');if(_nb){const _ok=goState.email.includes('@')&&goState.fields.title&&goState.fields.title.trim().length>1;_nb.disabled=!_ok;}">
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;">🔒 Only used to create your listing — never shared.</div>
+    </div>`;
+  }
+
   // Market note area
   html += `<div id="go-market-note" style="display:none;background:rgba(200,135,58,.08);border:1px solid rgba(200,135,58,.25);border-radius:10px;padding:11px 13px;margin-top:4px;margin-bottom:4px;">
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(200,135,58,.7);margin-bottom:4px;">📊 Market note</div>
@@ -4275,9 +4350,10 @@ function goFieldUpdate(fieldId, value) {
   goState.fields[key] = value;
   goPaintCards();
 
-  // Enable Next once title is filled
+  // Enable Next once title (+ email for Route 2) is filled
   const nextBtn = document.getElementById('go-s2-next');
-  if (nextBtn) nextBtn.disabled = !(goState.fields.title && goState.fields.title.trim().length > 1);
+  const _emailOk = magicLink.active || (goState.email && goState.email.includes('@'));
+  if (nextBtn) nextBtn.disabled = !(goState.fields.title && goState.fields.title.trim().length > 1 && _emailOk);
 
   // Update Step 2 coach text live
   const c2 = document.getElementById('go-coach-text-2');
@@ -4342,6 +4418,19 @@ async function goFetchMarketNote() {
 async function goSaveAndNext() {
   const btn = document.getElementById('go-s2-next');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  // Route 2 guard: ensure email captured
+  if (!magicLink.active && (!goState.email || !goState.email.includes('@'))) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Next →'; }
+    const emailEl = document.getElementById('go-seller-email');
+    if (emailEl) { emailEl.focus(); emailEl.style.borderColor = '#fca5a5'; }
+    return;
+  }
+  // Route 2: also capture name if filled
+  if (!magicLink.active) {
+    const nameEl = document.getElementById('go-seller-name');
+    if (nameEl && nameEl.value.trim()) goState.name = nameEl.value.trim();
+  }
 
   const f = goState.fields;
   if (goState.listingId && goState.email && BEA_ENABLED && f.title) {

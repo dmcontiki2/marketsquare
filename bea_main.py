@@ -9,7 +9,7 @@ import storage
 import os
 import json
 import httpx
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 import logging
 from datetime import datetime, timezone
@@ -1814,7 +1814,7 @@ async def upload_listing_photo(
         raise HTTPException(status_code=400, detail="Photo too large — max 20MB")
 
     try:
-        img = Image.open(io.BytesIO(raw)).convert("RGB")
+        img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read image file")
 
@@ -1936,7 +1936,7 @@ async def upload_draft_listing_photo(
         raise HTTPException(status_code=400, detail="Photo too large — max 20MB")
 
     try:
-        img = Image.open(io.BytesIO(raw)).convert("RGB")
+        img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read image file")
 
@@ -2180,7 +2180,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Photo too large — max 10MB")
 
     try:
-        img = Image.open(io.BytesIO(raw)).convert("RGB")
+        img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read image file")
 
@@ -7748,7 +7748,8 @@ def get_demo_sellers():
 #       "model":              str|null,
 #       "year":               int|null,
 #       "mileage":            int|null,
-#       "condition":          str|null   // "Excellent"|"Good"|"Fair"
+#       "condition":          str|null,  // "Excellent"|"Good"|"Fair"
+#       "missing_shots":      list       // [{label, reason}] — item-specific photo suggestions
 #     },
 #     "warnings": [],    // e.g. ["Low light in photo 3", "Price unusually high for category"]
 #     "model_used": str  // e.g. "claude-opus-4-6"
@@ -7784,6 +7785,8 @@ _CURRENCY_MAP = {
 _VISION_SYSTEM = """You are a skilled marketplace listing writer for TrustSquare, a South African peer-to-peer local marketplace. Your job is to analyse seller photos and produce a ready-to-publish listing draft.
 
 You write honest, specific, buyer-friendly listings. You never exaggerate or invent details not visible in the photos. You prefer concrete facts (size, colour, condition, year) over adjectives.
+
+You are also a photo coaching expert. Once you identify what the item is, you know exactly which additional photos would help buyers trust the listing and help sellers avoid disputes. You always suggest the most important missing shots specific to the identified item type.
 
 You always respond with a single valid JSON object. No markdown. No explanation. Just the JSON."""
 
@@ -7916,11 +7919,23 @@ TASK: Return a single JSON object with exactly these fields:
   "year": null,
   "mileage": null,
   "condition": null,
+  "missing_shots": [],
   "warnings": []
 }}
 
 Fill in ONLY the fields relevant to the detected category. Leave others as null.
 For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low.
+
+For "missing_shots": Based on the exact item you identified, list the most important additional photos the seller should add. Be item-specific and practical. Each entry: {{"label": "<short name>", "reason": "<one line why>"}}. Examples:
+- Magic: the Gathering card → [{{"label": "Card back", "reason": "Shows set symbol and condition"}}, {{"label": "Edge close-up", "reason": "Reveals wear grade"}}, {{"label": "Three red dots (magnified)", "reason": "Distinguishes original print from reprint — critical for authenticity"}}]
+- Graded slab → [{{"label": "Grade label close-up", "reason": "Grade number must be legible"}}, {{"label": "Slab edges", "reason": "Shows cracks or tampering"}}]
+- Coin → [{{"label": "Reverse (tails)", "reason": "Buyers always want both sides"}}, {{"label": "Edge close-up", "reason": "Shows minting quality and wear"}}, {{"label": "Certificate of authenticity", "reason": "Essential for valuable coins"}}]
+- Signed memorabilia → [{{"label": "Signature close-up", "reason": "Must be legible and authentic-looking"}}, {{"label": "Authentication certificate", "reason": "Protects seller from disputes"}}]
+- Watch → [{{"label": "Caseback", "reason": "Serial number and movement details"}}, {{"label": "Dial straight-on", "reason": "Shows dial condition clearly"}}]
+- Vehicle → [{{"label": "Odometer", "reason": "Mileage is a key buyer decision factor"}}, {{"label": "Engine bay", "reason": "Shows mechanical condition"}}, {{"label": "Service book", "reason": "Full history adds significant value"}}]
+- Property → [{{"label": "Kitchen", "reason": "Most important room for most buyers"}}, {{"label": "Main bedroom", "reason": "Size and condition matter"}}, {{"label": "Bathroom", "reason": "Buyers always inspect bathrooms"}}]
+- Artwork → [{{"label": "Artist signature", "reason": "Authentication requirement"}}, {{"label": "Certificate of authenticity", "reason": "Protects both parties"}}]
+Only suggest shots genuinely missing from the uploaded photos. If all key shots are present, return []. Maximum 4 suggestions.
 Return ONLY the JSON. No markdown. No explanation."""
 
 
@@ -7967,7 +7982,7 @@ async def vision_draft(
 
         # Resize to fit within MAX_SIDE on longest dimension (saves API tokens)
         try:
-            img = Image.open(io.BytesIO(raw))
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw)))
             img = img.convert("RGB")  # normalise — handles PNG/HEIC alpha channels
             w, h = img.size
             if max(w, h) > MAX_SIDE:
@@ -8090,6 +8105,19 @@ async def vision_draft(
     if not isinstance(tags, list):
         tags = [str(tags)]
     draft["tags"] = [str(t) for t in tags[:6]]
+
+    # Sanitise missing_shots — list of {label, reason} dicts, max 4
+    raw_shots = draft.get("missing_shots") or []
+    if not isinstance(raw_shots, list):
+        raw_shots = []
+    clean_shots = []
+    for shot in raw_shots[:4]:
+        if isinstance(shot, dict) and shot.get("label"):
+            clean_shots.append({
+                "label":  str(shot.get("label",  ""))[:60],
+                "reason": str(shot.get("reason", ""))[:120],
+            })
+    draft["missing_shots"] = clean_shots
 
     # Add photo count for FEA
     draft["photo_count"] = photo_count

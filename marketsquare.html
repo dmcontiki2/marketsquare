@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=71">
+<link rel="stylesheet" href="/static/ms.css?v=76">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1509,6 +1509,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           Category detected: <span id="go-confidence-cat" style="color:rgba(255,255,255,.7);font-weight:600;"></span>
           — <span id="go-confidence-pct" style="color:#a78bfa;"></span> confident
         </div>
+
+        <!-- Missing shots suggestion strip — populated by goRevealDraft from vision response -->
+        <div id="go-missing-shots" style="display:none;margin-top:14px;"></div>
       </div>
 
       <!-- Zone E: Skip link — always visible below upload/strip -->
@@ -3596,7 +3599,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=71"></script>
+<script src="/static/ms.js?v=76"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

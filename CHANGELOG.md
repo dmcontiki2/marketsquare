@@ -2078,3 +2078,33 @@ Added meta tags to marketsquare.html to suppress Edge browser sidebar overlay (e
 8. **All 30 smoke test checks passing** — no regressions
 
 **Session 72 picks up:** Wire photo-first flow into SOB phase 3 (EULA + go live), upload all selected photos to BEA (not just primary), add "Skip photos" fallback into SOB directly, smoke test all paths end-to-end.
+
+---
+
+## Session 72 — Photo-First AI Onboarding Polish + Missing Shots Feature
+**Date:** 2026-05-21 · **Version:** ms.js ?v=76 · BEA v1.3.0
+
+### Bug Fixes
+
+1. **Route 2 (in-app Sell+) email capture** — sellers arriving via the app's Sell+ button (not a magic link) had no email in `goState`, so `goHandoff()` created a draft under an empty email and sobGoLive found `drafts=0, email=none`. Fixed by adding **Your name** and **Your email** input fields to Step 2 of the guided-onboard form when `!magicLink.active`. Fields only appear on Route 2 — magic link sellers are unaffected. Next button now requires email (with `@`) before enabling on Route 2.
+
+2. **EXIF photo rotation** — photos taken in portrait mode on mobile were stored and displayed sideways. Fixed by applying `ImageOps.exif_transpose()` to all four PIL image-open calls in BEA (`/listings/photo`, `/listings/{id}/photo/draft`, `/users/{email}/photo`, `/listings/vision-draft`). All new photo uploads will now respect device orientation automatically.
+
+3. **Seller CV headline showing listing title** — `openBEASellerProfile()` used `l.title` as the seller headline, which meant the listing title ("Handré Pollard First Edition Springbok Collector Card") appeared as the seller's name. Fixed: headline now shows `"${l.cat} Seller"` (e.g. "Collectors Seller") with suburb/area on the sub-line, consistent with the anonymous-until-introduction design principle.
+
+4. **Debug logging removed from sobGoLive** — the on-screen "Debug: drafts=N email=..." diagnostic added during Session 71/72 debugging has been removed. All three debug artifacts (console.warn, on-screen errEl text, _dbg object) stripped.
+
+5. **Smoke test updated** — `smoke_test.py` now scans `html_and_js` (index.html + ms.js combined) for function/constant checks, fixing false failures caused by JS living in the external ms.js file rather than inline.
+
+### New Feature — AI Photo Guidance (missing_shots)
+
+6. **`missing_shots` field in vision-draft response** — `POST /listings/vision-draft` now returns a `missing_shots` array alongside the draft. Claude identifies the exact item type from the photos and suggests the most important additional shots specific to that item: MtG cards get "Card back / Edge close-up / Three red dots (magnified)", coins get "Reverse side / Edge close-up / Certificate of authenticity", vehicles get "Odometer / Engine bay / Service book", etc. Maximum 4 suggestions; empty array if all key shots are present.
+
+7. **"Suggested shots" strip in FEA** — after the AI draft reveals in Zone D, a `go-missing-shots` strip appears below the confidence bar showing each suggested shot as a tappable card with label + reason. Tapping a suggestion opens the file picker, dims the card to show it's been actioned, and updates the coach bubble with shot-specific instructions. New function: `goAddSuggestedShot(idx)`.
+
+8. **Cache-bust**: `?v=71` → `?v=76` across this session (v=71 start, v=72–76 incremental bumps for each deploy).
+
+9. **All 35 smoke test checks passing** — no regressions.
+
+### Cost model note
+AI vision cost per seller onboarding: ~$0.023 (claude-sonnet-4-6, avg 3 photos). Total AI cost per seller including Haiku coach calls: ~$0.026. At 1,000 new sellers/month: $25.60/mo — less than 1% of projected revenue. No cost model update required.
