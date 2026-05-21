@@ -2108,3 +2108,39 @@ Added meta tags to marketsquare.html to suppress Edge browser sidebar overlay (e
 
 ### Cost model note
 AI vision cost per seller onboarding: ~$0.023 (claude-sonnet-4-6, avg 3 photos). Total AI cost per seller including Haiku coach calls: ~$0.026. At 1,000 new sellers/month: $25.60/mo — less than 1% of projected revenue. No cost model update required.
+
+
+---
+
+## Session 73 — AI Tuppence Services + missing_shots Phase 2
+
+### 3 New BEA Endpoints (AI Tuppence Services)
+
+1. **AI1 — Listing Rewrite** (`POST /listings/{id}/ai-rewrite?email=`) — Seller pays 1T. Claude Haiku rewrites title + description using current SA market language and buyer psychology. Returns `{new_title, new_description, tuppence_remaining}`. Deducts via `transactions` table (`type='ai_service'`); HTTP 402 if balance insufficient. Non-refundable per platform policy.
+
+2. **AI2 — Seller Audit** (`POST /listings/{id}/ai-audit?email=`) — Seller pays 1T. Claude Haiku reviews listing quality in context of intro request count + trust score, returns 3 specific coach actions: `{actions: [{step, reason}]}`. Reads `intro_requests` count and `users.trust_score` to give contextual advice. Returns `{actions, tuppence_remaining}`.
+
+3. **AI3 — Buyer Price Check** (`POST /listings/{id}/price-check?email=`) — Buyer pays 1T. Claude Sonnet (`claude-sonnet-4-6`) gives a market price comparison: verdict (`fair` / `above_market` / `below_market` / `cannot_assess`), 2–3 sentences of SA market context, and a suggested fair range. Returns `{verdict, context, suggested_range, tuppence_remaining}`.
+
+   Shared helper: `_deduct_tuppence(conn, email, amount, description)` — raises HTTP 402 if balance < amount, otherwise inserts negative ledger entry. All three endpoints use this. New constant: `PRICE_CHECK_MODEL = "claude-sonnet-4-6"`.
+
+### FEA — Admin Dashboard (AI1 + AI2)
+
+4. **AI Tuppence services strip in edit modal** — a gold-bordered strip appears at the bottom of every listing edit modal with two buttons: "✨ Rewrite Listing (1T)" and "🔍 Why No Intros? (1T)". Each button checks Tuppence balance before confirming, calls the respective BEA endpoint, and shows results inline. Rewrite pre-fills the title/desc form fields; audit shows a numbered coach card. New functions: `admAIRewrite()`, `admAIAudit()`, `fetchTuppenceBalance()`.
+
+### FEA — Buyer App (AI3)
+
+5. **Price check button on listing detail** — a "💡 Is this a fair price?" button with "1T · AI price check" badge appears in the price block of every live listing detail card. Checks buyer Tuppence balance, calls BEA AI3, renders verdict with colour-coded card (green = fair, blue = below market, amber = above market, grey = cannot assess) showing context and suggested range. Demo listings gracefully decline (numeric ID required). New function: `buyerPriceCheck(id)`.
+
+### missing_shots Phase 2 — Confidence Gating
+
+6. **Confidence score gated by missing shots** — `goRevealDraft()` now reduces the displayed confidence percentage by 12.5% per missing shot (max −37.5% for 3+ missing shots). New message element `go-confidence-msg` appears in amber when shots are missing: "Complete your photo set to increase buyer confidence (+X% available)". Raw confidence from Claude is preserved; only the displayed value is adjusted. Added `<div id="go-confidence-msg">` to `marketsquare.html`.
+
+### Cache + Deploy
+
+7. **Cache-bust**: `?v=76` → `?v=77`. All three files deployed: `marketsquare.html` (index.html), `marketsquare_admin.html` (admin.html), `ms.js` (/static/ms.js). BEA restarted cleanly.
+
+8. **All 35 smoke test checks passing** — no regressions.
+
+### Cost model note
+AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.002 net margin), AI2 Haiku audit ~$0.001/call (~$0.002 margin), AI3 Sonnet price-check ~$0.025/call (~$0 margin at 1T). AI3 margin is near-zero at current pricing — monitor usage; consider raising to 2T in Session 75 if volume warrants.

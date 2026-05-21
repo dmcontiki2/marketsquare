@@ -2441,6 +2441,14 @@ function openDetail(id){
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
+      <div id="detail-price-check-${id}" style="margin-bottom:14px;">
+        <button onclick="buyerPriceCheck('${id}')" id="detail-pc-btn-${id}"
+          style="width:100%;background:var(--surface-2);border:1.5px solid #fde68a;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
+          <span style="font-size:13px;font-weight:700;color:#92400e;">💡 Is this a fair price?</span>
+          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">1T · AI price check</span>
+        </button>
+        <div id="detail-pc-result-${id}" style="display:none;margin-top:8px;"></div>
+      </div>
       ${isAdv ? '<div class="adv-stat-strip">' + (function(){
           var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
           var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
@@ -2548,6 +2556,90 @@ function openDetail(id){
     }
   }
 }
+
+// ── AI3: Buyer Price Check (Session 73) ──────────────────────────────────────
+async function buyerPriceCheck(id) {
+  const l = findListing(id);
+  if (!l) return;
+  const btn = document.getElementById('detail-pc-btn-' + id);
+  const res = document.getElementById('detail-pc-result-' + id);
+  if (!btn || !res) return;
+
+  // Get buyer email — from current user session
+  const buyerEmail = (typeof userEmail !== 'undefined' && userEmail) || '';
+  if (!buyerEmail) {
+    showToast('Sign in to use AI price check');
+    return;
+  }
+
+  // Check balance
+  let bal = 0;
+  try {
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+    if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
+  } catch(_) {}
+  if (bal < 1) {
+    showToast('Insufficient Tuppence — top up to use AI price check');
+    return;
+  }
+
+  if (!confirm('This will use 1T to get an AI market price comparison for this listing. Proceed?')) return;
+
+  btn.disabled = true;
+  btn.querySelector('span:first-child').textContent = '⏳ Checking market…';
+  res.style.display = 'none';
+
+  // For BEA listings use numeric id, for demo listings gracefully decline
+  const numId = parseInt(String(id).replace('bea_', ''));
+  if (isNaN(numId)) {
+    showToast('Price check only available on live listings');
+    btn.disabled = false;
+    btn.querySelector('span:first-child').textContent = '💡 Is this a fair price?';
+    return;
+  }
+
+  try {
+    const r = await fetch(
+      BEA_URL + '/listings/' + numId + '/price-check?email=' + encodeURIComponent(buyerEmail),
+      { method: 'POST' }
+    );
+    if (r.status === 402) { showToast('Insufficient Tuppence'); return; }
+    if (!r.ok) { showToast('Price check failed'); return; }
+    const data = await r.json();
+
+    const verdictConfig = {
+      fair:          { icon: '✅', label: 'Fair price',       color: '#065f46', bg: '#d1fae5', border: '#6ee7b7' },
+      below_market:  { icon: '🔥', label: 'Below market',    color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
+      above_market:  { icon: '⚠️', label: 'Above market',    color: '#92400e', bg: '#fef3c7', border: '#fcd34d' },
+      cannot_assess: { icon: 'ℹ️', label: 'Insufficient data',color: '#374151', bg: '#f3f4f6', border: '#d1d5db' },
+    };
+    const vc = verdictConfig[data.verdict] || verdictConfig.cannot_assess;
+
+    res.style.display = 'block';
+    res.innerHTML = `
+      <div style="background:${vc.bg};border:1.5px solid ${vc.border};border-radius:10px;padding:13px 15px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:18px;">${vc.icon}</span>
+          <span style="font-size:14px;font-weight:700;color:${vc.color};">${vc.label}</span>
+        </div>
+        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.context}</div>
+        ${data.suggested_range && data.suggested_range !== 'N/A'
+          ? `<div style="font-size:11px;font-weight:700;color:${vc.color};margin-top:6px;">Suggested range: ${data.suggested_range}</div>`
+          : ''}
+        <div style="font-size:10px;color:#9ca3af;margin-top:8px;">AI market analysis · ${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    // Hide the trigger button — result is now shown
+    btn.style.display = 'none';
+  } catch(e) { showToast('Price check error'); }
+  finally {
+    if (btn) {
+      btn.disabled = false;
+      const lbl = btn.querySelector('span:first-child');
+      if (lbl) lbl.textContent = '💡 Is this a fair price?';
+    }
+  }
+}
+// ── END AI3 ───────────────────────────────────────────────────────────────────
 
 function openModal(id){
   pendingIntroId=id;
@@ -4080,16 +4172,32 @@ function goRevealDraft(draft, warnings) {
     }
   }
 
-  // Confidence bar (show if < 80%)
+  // Confidence bar — Phase 2: gated by missing_shots count (Session 73)
+  // Each missing shot reduces displayed confidence by 12.5% (max −37.5% for 3+ shots).
+  // Always show bar if confidence would display below 80% after gating.
   const confBar = document.getElementById('go-confidence-bar');
   const confCat = document.getElementById('go-confidence-cat');
   const confPct = document.getElementById('go-confidence-pct');
-  if (confBar && draft.category_confidence < 0.80) {
+  const confMsg = document.getElementById('go-confidence-msg');
+  const rawConf = draft.category_confidence || 0;
+  const missingShotsPreview = (draft.missing_shots || []).length;
+  const shotPenalty = Math.min(missingShotsPreview, 3) * 0.125;  // 12.5% per shot, max 3
+  const displayConf = Math.max(0, rawConf - shotPenalty);
+  if (confBar && displayConf < 0.80) {
     confBar.style.display = 'block';
     if (confCat) confCat.textContent = draft.category || '';
-    if (confPct) confPct.textContent = Math.round((draft.category_confidence || 0) * 100) + '%';
+    if (confPct) confPct.textContent = Math.round(displayConf * 100) + '%';
+    if (confMsg) {
+      if (missingShotsPreview > 0) {
+        confMsg.style.display = 'block';
+        confMsg.textContent = `Complete your photo set to increase buyer confidence (+${Math.round(shotPenalty * 100)}% available)`;
+      } else {
+        confMsg.style.display = 'none';
+      }
+    }
   } else if (confBar) {
     confBar.style.display = 'none';
+    if (confMsg) confMsg.style.display = 'none';
   }
 
   // Missing shots suggestion strip

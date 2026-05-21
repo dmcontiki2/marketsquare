@@ -8145,3 +8145,315 @@ async def vision_draft(
 
 
 # ── END PHOTO-FIRST AI ONBOARDING (Session 70) ─────────────────────────────
+
+
+# ── AI TUPPENCE SERVICES (Session 73) ────────────────────────────────────────
+# Three paid AI endpoints — each deducts 1 Tuppence from the caller.
+# HTTP 402 is returned if the caller has insufficient balance.
+# All three endpoints are non-refundable per platform policy.
+#
+#   AI1  POST /listings/{id}/ai-rewrite?email=   Haiku   seller rewrites title+desc
+#   AI2  POST /listings/{id}/ai-audit?email=     Haiku   seller gets 3 coach actions
+#   AI3  POST /listings/{id}/price-check?email=  Sonnet  buyer gets market comparison
+
+
+PRICE_CHECK_MODEL = "claude-sonnet-4-6"  # AI3 — needs market reasoning depth
+
+
+def _deduct_tuppence(conn, email: str, amount: int, description: str) -> int:
+    """Deduct `amount` Tuppence from `email`. Returns new balance.
+    Raises HTTPException 402 if balance insufficient. Does NOT commit."""
+    row = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?",
+        (email,)
+    ).fetchone()
+    balance = int(row["bal"])
+    if balance < amount:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Insufficient Tuppence — you have {balance}T, need {amount}T"
+        )
+    conn.execute(
+        "INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'ai_service', ?, ?)",
+        (email, -amount, description)
+    )
+    return balance - amount
+
+
+# ── AI1 — Listing Rewrite ─────────────────────────────────────────────────────
+
+@app.post("/listings/{listing_id}/ai-rewrite")
+async def ai_listing_rewrite(listing_id: int, email: str):
+    """AI1: Seller pays 1T — Claude Haiku rewrites title + description.
+    Uses current market language and buyer psychology for the listing category.
+    Returns {new_title, new_description, tuppence_remaining}.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if listing["seller_email"] and listing["seller_email"].lower() != email.lower():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Email does not match listing owner")
+
+    remaining = _deduct_tuppence(
+        conn, email, 1,
+        f"AI Listing Rewrite · #{listing_id} · {listing['title'][:40]}"
+    )
+    conn.commit()
+    conn.close()
+
+    category = listing["category"] or "General"
+    city     = listing["city"] or "South Africa"
+    title    = listing["title"] or ""
+    desc     = listing["description"] or ""
+    price    = listing["price"] or ""
+
+    system_prompt = (
+        "You are an expert marketplace copywriter for TrustSquare, a South African peer-to-peer local marketplace. "
+        "You write short, honest, buyer-friendly listings using current South African market language. "
+        "You never invent details. You prefer concrete facts over adjectives. "
+        "Always respond with a single valid JSON object — no markdown, no explanation."
+    )
+
+    user_prompt = (
+        f"Rewrite this {category} listing for a buyer in {city}, South Africa.\n\n"
+        f"CURRENT TITLE: {title}\n"
+        f"CURRENT DESCRIPTION: {desc}\n"
+        f"PRICE: {price}\n\n"
+        "Return JSON with exactly two keys:\n"
+        '{"new_title": "<15 words max, specific and punchy>", '
+        '"new_description": "<60-120 words, 2-3 short paragraphs, buyer psychology, honest, no clichés>"}'
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 350,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        # Strip markdown fences if model adds them
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        new_title = str(result.get("new_title", "")).strip()[:120]
+        new_desc  = str(result.get("new_description", "")).strip()[:1000]
+    except Exception as exc:
+        _log.error("ai-rewrite: %s", exc)
+        raise HTTPException(status_code=500, detail="AI rewrite failed — Tuppence charged")
+
+    _log.info("ai-rewrite: listing #%d email=%s", listing_id, email)
+    return {
+        "new_title": new_title,
+        "new_description": new_desc,
+        "tuppence_remaining": remaining,
+    }
+
+
+# ── AI2 — Seller Audit ────────────────────────────────────────────────────────
+
+@app.post("/listings/{listing_id}/ai-audit")
+async def ai_seller_audit(listing_id: int, email: str):
+    """AI2: Seller pays 1T — Claude Haiku reviews listing quality and returns
+    3 specific, actionable improvement steps.
+    Returns {actions: [{step, reason}], tuppence_remaining}.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if listing["seller_email"] and listing["seller_email"].lower() != email.lower():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Email does not match listing owner")
+
+    # Read intro request count for context
+    intro_row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM intro_requests WHERE listing_id = ?", (listing_id,)
+    ).fetchone()
+    intro_count = intro_row["cnt"] if intro_row else 0
+
+    # Read trust score
+    user_row = conn.execute(
+        "SELECT trust_score FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    trust_score = user_row["trust_score"] if user_row and user_row["trust_score"] else "unknown"
+
+    remaining = _deduct_tuppence(
+        conn, email, 1,
+        f"AI Seller Audit · #{listing_id} · {listing['title'][:40]}"
+    )
+    conn.commit()
+    conn.close()
+
+    category = listing["category"] or "General"
+    city     = listing["city"] or "South Africa"
+    title    = listing["title"] or "(no title)"
+    desc     = listing["description"] or "(no description)"
+    price    = listing["price"] or "(no price)"
+
+    system_prompt = (
+        "You are a marketplace performance coach for TrustSquare, a South African peer-to-peer marketplace. "
+        "You give direct, specific, actionable advice — no filler, no encouragement padding. "
+        "Think like a top-performing seller in the same category who has seen hundreds of listings. "
+        "Always respond with a single valid JSON object — no markdown, no explanation."
+    )
+
+    user_prompt = (
+        f"This {category} listing in {city} has received {intro_count} intro request(s) and "
+        f"the seller has a trust score of {trust_score}.\n\n"
+        f"TITLE: {title}\n"
+        f"DESCRIPTION: {desc}\n"
+        f"PRICE: {price}\n\n"
+        "Identify the 3 most important reasons a buyer might scroll past this listing without requesting an intro. "
+        "For each reason give a specific fix the seller can do right now.\n\n"
+        "Return JSON: "
+        '{"actions": [{"step": "<imperative fix, 8 words max>", "reason": "<why this matters, 1 sentence>"}, ...]}'
+        " — exactly 3 items in the array."
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 400,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        actions = result.get("actions", [])
+        # Sanitise — max 3, enforce fields
+        clean_actions = []
+        for a in actions[:3]:
+            if isinstance(a, dict) and a.get("step"):
+                clean_actions.append({
+                    "step":   str(a.get("step",   ""))[:80],
+                    "reason": str(a.get("reason", ""))[:200],
+                })
+    except Exception as exc:
+        _log.error("ai-audit: %s", exc)
+        raise HTTPException(status_code=500, detail="AI audit failed — Tuppence charged")
+
+    _log.info("ai-audit: listing #%d email=%s intros=%d", listing_id, email, intro_count)
+    return {
+        "actions": clean_actions,
+        "tuppence_remaining": remaining,
+    }
+
+
+# ── AI3 — Buyer Price Check ───────────────────────────────────────────────────
+
+@app.post("/listings/{listing_id}/price-check")
+async def ai_price_check(listing_id: int, email: str):
+    """AI3: Buyer pays 1T — Claude Sonnet gives a market price comparison
+    for the specific listing. Helps buyer decide before requesting intro.
+    Returns {verdict, context, suggested_range, tuppence_remaining}.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    remaining = _deduct_tuppence(
+        conn, email, 1,
+        f"AI Price Check · #{listing_id} · {listing['title'][:40]}"
+    )
+    conn.commit()
+    conn.close()
+
+    category = listing["category"] or "General"
+    city     = listing["city"] or "South Africa"
+    title    = listing["title"] or "(no title)"
+    desc     = listing["description"] or "(no description)"
+    price    = listing["price"] or "(no price)"
+
+    system_prompt = (
+        "You are a South African market pricing expert for TrustSquare marketplace. "
+        "You give buyers honest, specific price comparisons based on real South African market data. "
+        "You know current second-hand and rental market rates well. Be direct — no filler. "
+        "Always respond with a single valid JSON object — no markdown, no explanation."
+    )
+
+    user_prompt = (
+        f"A buyer is considering this {category} listing in {city}, South Africa:\n\n"
+        f"TITLE: {title}\n"
+        f"DESCRIPTION: {desc}\n"
+        f"ASKING PRICE: {price}\n\n"
+        "Compare this price to the current South African market for this type of item or service. "
+        "Give a clear verdict, relevant price context, and a suggested fair range.\n\n"
+        "Return JSON with exactly these keys:\n"
+        '{"verdict": "fair" | "above_market" | "below_market" | "cannot_assess", '
+        '"context": "<2-3 sentences of honest market context with specific SA price ranges>", '
+        '"suggested_range": "<e.g. R800–R1,200 for this condition in Pretoria, or N/A>"}'
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=25) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": PRICE_CHECK_MODEL,
+                    "max_tokens": 350,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        verdict        = str(result.get("verdict", "cannot_assess"))[:20]
+        context        = str(result.get("context", ""))[:600]
+        suggested_range = str(result.get("suggested_range", "N/A"))[:100]
+    except Exception as exc:
+        _log.error("ai-price-check: %s", exc)
+        raise HTTPException(status_code=500, detail="AI price check failed — Tuppence charged")
+
+    _log.info("ai-price-check: listing #%d buyer=%s verdict=%s", listing_id, email, verdict)
+    return {
+        "verdict": verdict,
+        "context": context,
+        "suggested_range": suggested_range,
+        "tuppence_remaining": remaining,
+    }
+
+
+# ── END AI TUPPENCE SERVICES (Session 73) ────────────────────────────────────
