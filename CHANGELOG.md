@@ -1996,3 +1996,15 @@ Root cause: `devSetMode` called `loadLiveListings()` unconditionally after switc
 Fix: `devSetMode` now strips all `isLive` listings from LISTINGS before re-rendering when switching to demo, and does not call `loadLiveListings()` when `isDemo` is true. Live listings only load when in live mode.
 
 Cache-bust: ?v=68 → ?v=69. smoke_test.py updated.
+
+## Session 68 (continued·2) — Fix stale cat counts lag + Featured strip city filter
+
+**Bug: Category counts show previous city's numbers for a moment when toggling DEMO**
+Root cause: `devSetMode` called `renderGrid()` / `renderCatCounts()` synchronously before the `await Promise.all([demo-listings, demo-sellers])` resolved. The render ran with an empty or stale LISTINGS, showing old counts until the background fetch completed and some other event triggered a re-render.
+Fix: Added `renderGrid(); renderCatCounts(); renderFeatured();` immediately inside the `try` block after `LISTINGS` and `SELLERS` are populated from the fetch. Counts and grid now update atomically the moment data arrives.
+
+**Bug: Featured strip shows listings from all 4 cities mixed together**
+Root cause: `renderFeatured()` filtered only on `l.feat && !l.paused` with no city filter. All 293 demo listings share the same LISTINGS array, and featured ones from NY, London, Sydney, Pretoria all appeared together.
+Fix: Added city filter inside `renderFeatured()` — when `DEMO_MODE` is true and listing id starts with `demo_`, only listings whose `l.city` matches `activeCity.name` are included in the featured strip.
+
+Cache-bust: ?v=70. smoke_test.py updated. All 30 checks passing.

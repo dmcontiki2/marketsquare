@@ -55,8 +55,8 @@ check("JS linked externally",    '/static/ms.js'  in html)
 
 # 2. Static assets reachable with cache headers
 print("\n[2] Static assets")
-css_hdr = ssh("curl -s -I 'https://trustsquare.co/static/ms.css?v=69'", timeout=15)
-js_hdr  = ssh("curl -s -I 'https://trustsquare.co/static/ms.js?v=69'",  timeout=15)
+css_hdr = ssh("curl -s -I 'https://trustsquare.co/static/ms.css?v=70'", timeout=15)
+js_hdr  = ssh("curl -s -I 'https://trustsquare.co/static/ms.js?v=70'",  timeout=15)
 check("ms.css HTTP 200",        "200" in css_hdr.split('\n')[0])
 check("ms.css cache immutable", "immutable" in css_hdr)
 check("ms.js HTTP 200",         "200" in js_hdr.split('\n')[0])
