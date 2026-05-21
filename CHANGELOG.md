@@ -1984,3 +1984,15 @@ This is the same pattern already used by the wonders preload IIFE. If ms.js load
 **Cache bust:** Bumped `?v=67` → `?v=68` in `marketsquare.html` for both ms.css and ms.js to force all browsers and Cloudflare to fetch the updated ms.js.
 
 **Smoke test:** 30/30 checks passing. smoke_test.py updated to check `?v=68` assets.
+
+## Session 68 (continued) — Fix devSetMode demo fetch guard + live listing city bleed
+
+**Bug 1 — Demo categories empty when toggling via DEMO button:**
+Root cause: `devSetMode(true)` had `if (isDemo && LISTINGS.length === 0)` as the demo-fetch guard. When the page loads in live mode, `loadLiveListings()` populates LISTINGS with the 1 real Pretoria listing (length=1). When the user then clicks DEMO, the guard sees `LISTINGS.length === 1` (not 0) and skips the demo fetch entirely. Categories show empty.
+Fix: Changed guard to `!LISTINGS.some(l => String(l.id).startsWith('demo_'))` — fetches demo data whenever no demo_ listings are present, regardless of whether live listings exist. Same fix applied to the `_msInit` path for `?demo=1` URL loading.
+
+**Bug 2 — Live Pretoria listing appearing in NY/London/Sydney demo:**
+Root cause: `devSetMode` called `loadLiveListings()` unconditionally after switching to demo mode. `loadLiveListings` fetched the real Pretoria listing and added it to LISTINGS. In demo mode `renderGrid` only hides live listings when `DEMO_DISPLAY_MODE === 'demo'` — but the default is already 'demo', so this should have worked. However the city filter for live listings in demo mode was `lCity !== aCity` which applies only to `demo_`-prefixed IDs, not `isLive` entries. The live listing has `city: 'Pretoria'` and `area: 'Pretoria'` but no city-match filter was applied to it when activeCity was NY.
+Fix: `devSetMode` now strips all `isLive` listings from LISTINGS before re-rendering when switching to demo, and does not call `loadLiveListings()` when `isDemo` is true. Live listings only load when in live mode.
+
+Cache-bust: ?v=68 → ?v=69. smoke_test.py updated.

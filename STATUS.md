@@ -14,11 +14,11 @@ BEA v1.2.1 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Team logins: Maurice, Maroushka, David Jnr - temp PIN 123456 - forced change on first use
 
 ## Last Completed (Session 68)
-- Fixed critical demo mode bug: Cloudflare email-decode script injected before ms.js was delaying load past DOMContentLoaded
-- Refactored ms.js init from anonymous DOMContentLoaded listener to named _msInit() with readyState guard
-- Demo mode now works: 293 listings across all 4 cities (Pretoria, NY, London, Sydney), all 7 categories
-- Cache-bust: bumped ?v=67 → ?v=68 in marketsquare.html for both ms.css and ms.js
-- smoke_test.py updated to check ?v=68 assets
+- Fixed DOMContentLoaded race: refactored ms.js init to named _msInit() with readyState guard (Cloudflare script injection delay)
+- Fixed demo fetch guard: changed LISTINGS.length===0 to !LISTINGS.some(demo_) so demo data always fetches even when live listings present
+- Fixed live listing city bleed: devSetMode now strips isLive listings and skips loadLiveListings() when switching to demo
+- Cache-bust: ?v=67 → ?v=69 across two fix iterations in this session
+- smoke_test.py updated to check ?v=69 assets
 - All 30 checks passing
 
 ## File anatomy (325 KB HTML shell after Session 67)
@@ -31,7 +31,7 @@ BEA v1.2.1 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=68
+Current version: ?v=69
 
 ## Open Actions (carry forward)
 - Company registration number (2026/340128/07) - insert into EULA + footer
@@ -44,13 +44,12 @@ Current version: ?v=68
 - Yield System: Solar Council review of YIELD_SYSTEM_TECHNICAL_DISCLOSURE v0.2 (Step 0.2)
 
 ## Next Session (Session 69)
-Goal: Confirm demo mode fix is live, then pre-launch audit and featured listings fix.
+Goal: Pre-launch audit and featured listings fix.
 Priority order:
-0. VERIFY DEMO FIX: Open trustsquare.co?demo=1 in a fresh incognito window (no cached assets). Categories strip must show 7 tiles with counts. If still empty: read ms.js lines 533-755 on server, check that _msInit function exists and readyState guard is present, add console.log at top of _msInit to confirm it fires, then diagnose further.
-1. Featured strip: at least one real BEA listing marked featured=true so strip is not empty
+1. Featured strip: mark at least one real BEA listing as featured=true so strip is not empty
 2. AI audit of marketsquare.html for pre-launch issues (EULA, company reg, privacy policy refs)
 3. Insert company registration number (2026/340128/07) into EULA and footer
-4. Cache-busting: if assets changed, bump ?v=69 in marketsquare.html
+4. Cache-busting: if assets changed, bump ?v=70 in marketsquare.html
 
 ## Blockers
 - CIPC registration pending - Paystack live mode blocked
