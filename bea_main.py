@@ -8457,3 +8457,267 @@ async def ai_price_check(listing_id: int, email: str):
 
 
 # ── END AI TUPPENCE SERVICES (Session 73) ────────────────────────────────────
+
+
+# ── AI TUPPENCE SERVICES — TIER 2 (Session 74) ───────────────────────────────
+#
+#   AI4  POST /listings/{id}/yield-calc?email=     Haiku   Property yield calculator (1T)
+#   AI5  POST /listings/batch-cards?email=         Sonnet  Batch card listing via vision (2T)
+#
+# AI4: Property listings only. Calculates gross yield, net estimate, SA comparison.
+# AI5: Collectors category. Accepts up to 10 base64 images, returns array of draft JSONs.
+
+
+# ── AI4 — Property Yield Calculator ──────────────────────────────────────────
+
+@app.post("/listings/{listing_id}/yield-calc")
+async def ai_yield_calc(listing_id: int, email: str):
+    """AI4: Seller/buyer pays 1T — Claude Haiku calculates gross yield, net yield estimate,
+    and SA market comparison for a Property listing.
+    Returns {gross_yield_pct, net_yield_estimate_pct, monthly_rent_estimate, market_context,
+             sa_yield_benchmark, tuppence_remaining}.
+    Only available for Property category listings.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not listing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    category = listing["category"] or ""
+    if "property" not in category.lower() and category.lower() not in ("property", "estate agents", "accommodation"):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Yield calculator is only available for Property listings")
+
+    remaining = _deduct_tuppence(
+        conn, email, 1,
+        f"AI Yield Calc · #{listing_id} · {listing['title'][:40]}"
+    )
+    conn.commit()
+    conn.close()
+
+    city    = listing["city"] or "South Africa"
+    suburb  = listing["suburb"] or ""
+    title   = listing["title"] or "(no title)"
+    desc    = listing["description"] or ""
+    price   = listing["price"] or "(no price)"
+
+    location_str = f"{suburb}, {city}" if suburb else city
+
+    system_prompt = (
+        "You are a South African property investment analyst. You provide concise, honest yield "
+        "calculations and market benchmarks for residential and commercial property. "
+        "You know current SA rental yield ranges by city tier. "
+        "Always respond with a single valid JSON object — no markdown, no explanation."
+    )
+
+    # SA yield benchmarks embedded in prompt (updated 2026)
+    sa_benchmarks = (
+        "SA GROSS YIELD BENCHMARKS (2026): "
+        "Pretoria residential 7–10%, Cape Town residential 5–7%, Johannesburg residential 6–9%, "
+        "Durban residential 7–10%, secondary cities 8–12%, "
+        "commercial/office 9–12%, student accommodation 10–14%. "
+        "Net yield = gross yield minus estimated costs (rates, levies, maintenance, vacancy): "
+        "typically subtract 2–3.5% from gross for residential, 2–4% for commercial."
+    )
+
+    user_prompt = (
+        f"Property listing in {location_str}, South Africa.\n\n"
+        f"TITLE: {title}\n"
+        f"DESCRIPTION: {desc[:500]}\n"
+        f"ASKING PRICE / RENT: {price}\n\n"
+        f"{sa_benchmarks}\n\n"
+        "Tasks:\n"
+        "1. If this is a rental listing (monthly price), calculate gross yield assuming the asking price "
+        "   implies a purchase price in line with the area's yield benchmark. "
+        "   If this is a sale listing, estimate the likely rental income to calculate gross yield.\n"
+        "2. Estimate net yield after costs.\n"
+        "3. Assess whether the implied yield is above, at, or below the SA benchmark for this area.\n\n"
+        "Return JSON with exactly these keys:\n"
+        '{"gross_yield_pct": "<e.g. 8.2%>", '
+        '"net_yield_estimate_pct": "<e.g. 5.8%>", '
+        '"monthly_rent_estimate": "<e.g. R14,500/month or Already rental listing>", '
+        '"market_context": "<2-3 sentences honest assessment vs SA benchmarks>", '
+        '"sa_yield_benchmark": "<e.g. Pretoria residential: 7–10% gross>"}'
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 400,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        gross_yield         = str(result.get("gross_yield_pct", "N/A"))[:20]
+        net_yield           = str(result.get("net_yield_estimate_pct", "N/A"))[:20]
+        monthly_rent        = str(result.get("monthly_rent_estimate", "N/A"))[:80]
+        market_context      = str(result.get("market_context", ""))[:600]
+        sa_yield_benchmark  = str(result.get("sa_yield_benchmark", ""))[:120]
+    except Exception as exc:
+        _log.error("ai-yield-calc: %s", exc)
+        raise HTTPException(status_code=500, detail="AI yield calculation failed — Tuppence charged")
+
+    _log.info("ai-yield-calc: listing #%d email=%s gross=%s", listing_id, email, gross_yield)
+    return {
+        "gross_yield_pct":       gross_yield,
+        "net_yield_estimate_pct": net_yield,
+        "monthly_rent_estimate": monthly_rent,
+        "market_context":        market_context,
+        "sa_yield_benchmark":    sa_yield_benchmark,
+        "tuppence_remaining":    remaining,
+    }
+
+
+# ── AI5 — Batch Card Listings ────────────────────────────────────────────────
+
+class BatchCardRequest(BaseModel):
+    images: list[str]          # base64-encoded JPEG/PNG, max 10
+    city: str
+    suburb: Optional[str] = None
+    seller_email: str
+
+
+@app.post("/listings/batch-cards")
+async def ai_batch_card_listings(req: BatchCardRequest):
+    """AI5: Seller pays 2T — Claude Sonnet Vision analyses up to 10 card photos and
+    returns an array of draft listing JSONs ready for review and publish.
+    Each draft contains title, description, price_suggestion, condition, category.
+    Capped at 10 images per call. 2T flat cost regardless of card count.
+    Returns {drafts: [...], cards_processed, tuppence_remaining}.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=503, detail="AI not configured")
+
+    if not req.images:
+        raise HTTPException(status_code=400, detail="At least one image is required")
+
+    # Cap at 10 cards
+    images = req.images[:10]
+    card_count = len(images)
+
+    conn = database.get_db()
+    remaining = _deduct_tuppence(
+        conn, req.seller_email, 2,
+        f"AI Batch Cards · {card_count} card(s) · {req.city}"
+    )
+    conn.commit()
+    conn.close()
+
+    suburb_str = req.suburb or req.city
+    location_str = f"{suburb_str}, {req.city}"
+
+    system_prompt = (
+        "You are an expert trading card and collectables appraiser and marketplace copywriter "
+        "for TrustSquare, a South African peer-to-peer local marketplace. "
+        "You identify cards/collectables from photos, assess condition, and write concise buyer-friendly listings. "
+        "You know SA collectables market values. "
+        "Always respond with a single valid JSON object — no markdown, no explanation."
+    )
+
+    # Build the message content: one text block + one image block per card
+    content_blocks = [
+        {
+            "type": "text",
+            "text": (
+                f"Analyse these {card_count} trading card / collectable image(s) for a seller in {location_str}, "
+                "South Africa. For each image, generate a complete listing draft.\n\n"
+                "For each card/item return:\n"
+                '{"title": "<specific card/item name, set, year if visible, max 12 words>", '
+                '"description": "<40-80 words: card details, set/series, condition notes, notable features>", '
+                '"price_suggestion": "<e.g. R150 or R200–R350 depending on condition>", '
+                '"condition": "mint" | "near_mint" | "excellent" | "good" | "fair" | "poor", '
+                '"category": "Collectors"}\n\n'
+                f'Return JSON: {{"drafts": [<one object per image in order>]}}'
+            )
+        }
+    ]
+
+    for idx, img_b64 in enumerate(images):
+        # Detect media type from base64 header or default to jpeg
+        media_type = "image/jpeg"
+        if img_b64.startswith("data:"):
+            header, data = img_b64.split(",", 1)
+            if "png" in header:
+                media_type = "image/png"
+            elif "gif" in header:
+                media_type = "image/gif"
+            elif "webp" in header:
+                media_type = "image/webp"
+            img_b64 = data
+
+        content_blocks.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": media_type,
+                "data": img_b64,
+            }
+        })
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-6",   # Vision-capable; Haiku lacks vision depth for cards
+                    "max_tokens": 2000,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": content_blocks}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        drafts = result.get("drafts", [])
+
+        # Sanitise each draft
+        clean_drafts = []
+        valid_conditions = {"mint", "near_mint", "excellent", "good", "fair", "poor"}
+        for d in drafts[:card_count]:
+            if isinstance(d, dict):
+                clean_drafts.append({
+                    "title":            str(d.get("title", ""))[:120],
+                    "description":      str(d.get("description", ""))[:800],
+                    "price_suggestion": str(d.get("price_suggestion", ""))[:60],
+                    "condition":        d.get("condition", "good") if d.get("condition") in valid_conditions else "good",
+                    "category":         "Collectors",
+                    "city":             req.city,
+                    "suburb":           req.suburb or "",
+                })
+
+    except Exception as exc:
+        _log.error("ai-batch-cards: %s", exc)
+        raise HTTPException(status_code=500, detail="AI batch card listing failed — Tuppence charged")
+
+    _log.info("ai-batch-cards: seller=%s city=%s cards=%d drafts=%d",
+              req.seller_email, req.city, card_count, len(clean_drafts))
+    return {
+        "drafts":           clean_drafts,
+        "cards_processed":  card_count,
+        "tuppence_remaining": remaining,
+    }
+
+
+# ── END AI TUPPENCE SERVICES — TIER 2 (Session 74) ───────────────────────────

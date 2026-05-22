@@ -2,10 +2,10 @@
 
 ## Live State
 BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetzner CPX22
-- 6 real listings live (IDs 93-97 Property + ID 103 Collectors, Pretoria)
+- 3 real listings live (#93, #102 Property + #104 Collectors, Pretoria) — all featured (boost_until 2030)
 - 23 / 60 founding sellers registered
 - Demo mode accessible via ?demo=1 OR via in-app DEMO/LIVE toggle (top bar)
-- marketsquare.html: 340 KB HTML shell
+- marketsquare.html: 345 KB HTML shell
 - Static assets: /static/ms.css?v=77 (103 KB) + /static/ms.js?v=79 (~510 KB), cached 1 year
 - World Heritage: 120 sites from BEA /wonders
 - Demo data: 293 listings + 40 sellers from BEA /demo-listings and /demo-sellers
@@ -15,22 +15,20 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - POST /listings/vision-draft live — photo-first AI onboarding BEA endpoint
 - guided-onboard Step 1 live — multi-photo upload + AI vision + missing_shots guidance
 - Route 2 (in-app Sell+) — email/name capture works; EXIF rotation fixed; seller CV anonymous
-- AI Tuppence Services live: AI1 rewrite + AI2 audit (admin) + AI3 price-check (buyer app)
+- AI Tuppence Services live: AI1 rewrite + AI2 audit + AI3 price-check + AI4 yield-calc + AI5 batch-cards
 - Local Market tile count fixed in demo mode (reads LISTINGS array, not BEA)
 - Me tab: Profile photo row with Change link added to Personal Details
 - Wallet screen: AI Tuppence services menu with costs + navigation paths
 - missing_shots Phase 2: confidence bar gated by missing shots count (−12.5% per shot)
+- Tuppence refund purge COMPLETE — marketsquare.html + EULA v1.4_Final + Whitepaper v3.1 all clean
 
-## Last Completed (Session 73)
-- Built 3 AI Tuppence service BEA endpoints: POST /listings/{id}/ai-rewrite, /ai-audit, /price-check
-- Shared helper `_deduct_tuppence()` — HTTP 402 if insufficient balance, ledger entry on success
-- AI1 (Listing Rewrite): Haiku rewrites title + desc; pre-fills admin edit form fields on success
-- AI2 (Seller Audit): Haiku returns 3 coach actions in context of intro count + trust score
-- AI3 (Buyer Price Check): Sonnet returns verdict + market context + suggested SA price range
-- Admin dashboard: gold AI Tuppence strip with Rewrite + Why No Intros buttons on every edit modal
-- Buyer app: "💡 Is this a fair price?" button on listing detail card with colour-coded verdict card
-- missing_shots Phase 2: displayed confidence reduced 12.5%/missing shot; amber guidance message added
-- Cache-busted ?v=76 → ?v=79; all 35 smoke checks passing
+## Last Completed (Session 74)
+- CityLauncher emailer.py: fixed template map, expanded render() placeholders, AI Haiku title generation, magic link draft_id param
+- BEA AI4: POST /listings/{id}/yield-calc (1T, Haiku) — Property yield calculator with SA 2026 benchmarks
+- BEA AI5: POST /listings/batch-cards (2T, Sonnet Vision) — bulk trading card listing from photos, max 10 cards
+- Featured strip: set boost_until=2030 on listings #93, #102, #104 — strip non-empty on live site
+- Tuppence refund purge: 6 edits to marketsquare.html, EULA v1.4_Final.docx, Whitepaper v3.1.docx — zero refund language remains
+- All 35 smoke checks passing
 
 ## Last Completed (Session 72)
 - Fixed Route 2 (in-app Sell+) go-live: added email+name fields to Step 2 for non-magic-link sellers
@@ -58,28 +56,15 @@ Current version: ?v=79
 - Yield System: Solar Council review of YIELD_SYSTEM_TECHNICAL_DISCLOSURE v0.2 (Step 0.2)
 - AI3 pricing review — Sonnet price-check margin near-zero at 1T; consider raising to 2T (Session 75)
 
-## Next Session (Session 74)
-Goal: CityLauncher email template polish + magic link pre-fill + Tier 2 AI Tuppence services
+## Next Session (Session 75)
+Goal: AI3 price-check pricing review + admin UI for AI4/AI5 + buyer app yield-calc button + n8n email trigger wiring
 
-### Session 74 Build Plan
-
-**Part A — CityLauncher email templates**
-1. Update Property, Services, Tutors, Casuals email templates to include AI-generated listing preview pulled from BEA at send time — show seller's actual title, price, suburb, AI snippet rather than generic category copy
-2. Magic link pre-fill: ensure email links carry category, city, and any BEA draft ID so guided-onboard Step 1 is pre-seeded on arrival
-
-**Part B — Tier 2 AI Tuppence services (BACKLOG.md)**
-3. **AI4 — Property Yield Calculator** (1T, Haiku) — `POST /listings/{id}/yield-calc?email=`; for Property listings, calculates gross yield, net estimate, and SA market comparison
-4. **AI5 — Batch Card Listings** (2T, Sonnet Vision) — semi-automated bulk listing for trading card sellers; accepts multi-photo set, returns array of draft listings
-
-**Part C — Ongoing polish**
-5. Featured strip: mark real BEA listings as featured so the strip is non-empty on live site
-6. Tuppence refund purge — complete NEXT_SESSION_TUPPENCE_NO_REFUND.md task before EULA goes external
-
-### Key implementation notes for Session 74
-- Email template update: pull from `/listings/mine?email=` at send time in n8n flow (CityLauncher project)
-- Yield calc: Haiku, ~$0.001/call, data from listing fields (price, listingType, suburb) + SA yield tables
-- Batch cards: Sonnet Vision, ~$0.023/card; cap at 10 cards per 2T call; return array of draft JSONs
-- Magic link: ?magic=1&name=...&email=...&cat=...&city=... already wired; just need draft_id param added
+### Session 75 Build Plan
+1. AI3 price-check: review Sonnet margin (1T may be near-zero at cost) — consider raising to 2T
+2. Admin dashboard: AI4 Yield Calculator button on Property listing edit modals (mirrors AI1/AI2 strip)
+3. Buyer app: "📈 Yield Calculator" button on Property listing detail card (mirrors AI3 price-check button)
+4. Admin dashboard: AI5 Batch Cards entry point in seller onboarding flow (Collectors category)
+5. n8n: wire emailer.py execution to CityLauncher pipeline EMAILING state trigger
 
 ## Blockers
 - CIPC registration confirmed (2026/340128/07) - Paystack live mode still pending activation

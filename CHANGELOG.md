@@ -1,3 +1,29 @@
+## Session 74 · 22 May 2026 · CityLauncher email polish + Tier 2 AI Tuppence + Tuppence refund purge
+
+**Part A — CityLauncher emailer overhaul (`emailer.py`):**
+- Fixed TEMPLATES map: now points to correct `*_outreach.html` files for all 7 categories (Property, Estate Agents, Tutors, Services/Technical, Casual Services, Collectors, Adventures, Accommodation)
+- Expanded `render()` to fill all template placeholders: `{{first_name}}`, `{{city_name}}`, `{{prospect_suburb}}`, `{{prospect_listing_title}}`, `{{unsubscribe_link}}`
+- Added AI-powered personalised listing title generation via Claude Haiku (`generate_ai_listing_title()`): ~$0.001/call; graceful fallback if no API key or on error; `--no-ai` flag to skip
+- Magic link builder now encodes suburb + optional `draft_id` param to pre-seed guided-onboard Step 1 on arrival
+- `--dry-run` now prints generated title and magic link per prospect
+
+**Part B — Tier 2 AI Tuppence BEA endpoints:**
+- **AI4 `POST /listings/{id}/yield-calc?email=`** (1T, Haiku): Property listings only — returns gross yield %, net yield estimate, monthly rent estimate, SA market context, and SA benchmark for the city tier. SA yield tables (2026) embedded in system prompt.
+- **AI5 `POST /listings/batch-cards?email=`** (2T, Sonnet Vision): Collectors/trading card sellers — accepts up to 10 base64 images, returns array of draft listing JSONs (title, description, price suggestion, condition, category) ready for review and publish. Cap enforced at 10 cards per 2T call.
+
+**Part C — Featured strip fix:**
+- Set `boost_until = 2030-12-31` on all 3 live BEA listings (#93, #102, #104) via direct DB update on Hetzner. `is_featured=true` in API responses; featured strip now non-empty on live site.
+
+**Part D — Tuppence refund purge (pre-patent, pre-EULA-publish gate):**
+- `marketsquare.html`: 6 targeted Python `open/replace/write` edits — FICA-failure refund → "Tuppence already spent remains spent"; seller-decline refund → spam-prevention non-refund language; 7-day cooling-off refund → CPA s16 defence; AI feature technical-fault carve-out removed; §6.3 renamed "No Refunds" with full no-refund paragraph; seller-closure refund removed. File ends `</html>`. All 35 smoke checks passing.
+- `MarketSquare_EULA_v1_4_Final.docx`: 5 XML edits — same 5 targets patched in EULA v1.3; validated and packed. Zero residual "refunded" language.
+- `TrustSquare_WhitePaper_v3_1.docx`: L31 rewritten — "non-refundable unless seller declines — partial refund policy" → "non-refundable under any circumstance. Buyer commitment signal is the price of contact."
+- Cost model impact: none. BEA already implements no refund path; `tuppence_ledger` has no positive deltas on intro decline. Revenue recognition simplifies.
+
+Deployed: BEA main.py + marketsquare.html (index.html). All 35 smoke checks pass.
+
+---
+
 ## Session 62 (continued·6) · 17 May 2026 · Full demo audit + process enforcement
 
 **Systematic audit: all 4 cities × 7 categories (290 listings):**
