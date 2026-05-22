@@ -2575,8 +2575,8 @@ async function buyerPriceCheck(id) {
   const res = document.getElementById('detail-pc-result-' + id);
   if (!btn || !res) return;
 
-  // Get buyer email — from current user session
-  const buyerEmail = (typeof userEmail !== 'undefined' && userEmail) || '';
+  // Get buyer email — from localStorage (set by gate login or seller sign-in)
+  const buyerEmail = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
   if (!buyerEmail) {
     showToast('Sign in to use AI price check');
     return;
