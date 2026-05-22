@@ -6,7 +6,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - 23 / 60 founding sellers registered
 - Demo mode accessible via ?demo=1 OR via in-app DEMO/LIVE toggle (top bar)
 - marketsquare.html: 345 KB HTML shell
-- Static assets: /static/ms.css?v=77 (103 KB) + /static/ms.js?v=79 (~510 KB), cached 1 year
+- Static assets: /static/ms.css?v=83 + /static/ms.js?v=83, cached 1 year
 - World Heritage: 120 sites from BEA /wonders
 - Demo data: 293 listings + 40 sellers from BEA /demo-listings and /demo-sellers
 - smoke_test.py: 35-check post-deploy safety net (scans html + ms.js combined corpus)
@@ -21,6 +21,15 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Wallet screen: AI Tuppence services menu with costs + navigation paths
 - missing_shots Phase 2: confidence bar gated by missing shots count (−12.5% per shot)
 - Tuppence refund purge COMPLETE — marketsquare.html + EULA v1.4_Final + Whitepaper v3.1 all clean
+- Back buttons on dark backgrounds fixed (ms.css grouped rule for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr)
+- Tuppence test values: both Introductions + AI Guidance set to 50 (marked 🧪 TEST — grep to rollback before launch)
+- ms.js restored from git (was truncated) — all 35 smoke checks passing on v=83
+
+## Last Completed (Session 74 continued)
+- Back button visibility: ms.css grouped rule fixes dark arrow on navy for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr
+- Tuppence test values: Introductions + AI Guidance both set to 50 (🧪 TEST — rollback before launch)
+- ms.js restored from git (truncated pre-existing issue) + edits reapplied — syntax clean
+- Cache bumped to v=83; all 35 smoke checks passing
 
 ## Last Completed (Session 74)
 - CityLauncher emailer.py: fixed template map, expanded render() placeholders, AI Haiku title generation, magic link draft_id param
@@ -43,7 +52,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=79
+Current version: ?v=83
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active

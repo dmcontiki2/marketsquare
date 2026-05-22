@@ -506,7 +506,7 @@ function formatIntroTime(ts) {
 }
 
 let activeFilter='All', wishlist=new Set(), prevScreen='browse';
-let tuppence=5, pendingIntroId=null, pendingLMIntroId=null;
+let tuppence=50, pendingIntroId=null, pendingLMIntroId=null; // 🧪 TEST: 50 — reset to 5 before launch
 let magicLink={active:false,name:'',email:'',cat:'',area:''};
 
 // ── OFFLINE STATE ─────────────────────────────────────────
@@ -8804,7 +8804,7 @@ async function aaLoadWalletSessions() {
   const drafts = await aaDB.getAll();
   const email  = drafts.find(d => d.email)?.email || '';
   if (!email) {
-    el.textContent = '—';
+    el.textContent = '50'; // 🧪 TEST: show 50 when no email — reset to '—' before launch
     return;
   }
   try {

@@ -1,3 +1,25 @@
+## Session 74 (continued) · 22 May 2026 · Back button contrast fix + Tuppence test values + ms.js restore
+
+**Back button visibility (ms.css):**
+- Root cause found: `.back-btn svg{stroke:var(--text);}` CSS rule was overriding all inline `stroke="#fff"` HTML attributes on dark-background screens
+- Added grouped CSS rule covering all navy-header containers: `.tn-header`, `.el-hdr`, `.cv-edit-hdr`, `.aa-hdr`, `.aa-hdr-row` — sets `stroke:#fff` and `border-color:rgba(255,255,255,.25)` so back buttons are visible on dark backgrounds
+- All other back buttons on white backgrounds (`.pub-hdr`, `.page-hdr`) unaffected — `stroke:var(--text)` gives dark arrow on white, correct
+
+**Tuppence test values (marketsquare.html + ms.js):**
+- `tuppence` JS variable init: 5 → 50 (marked with 🧪 TEST comment for launch rollback)
+- `tn-balance-display` HTML hardcode: 5 → 50
+- `tn-coach-sessions` HTML hardcode: `—` → 50
+- `ms-wallet-balance` HTML hardcode: 5 → 50
+- `aaLoadWalletSessions()` no-email fallback: `—` → `50` so wallet shows 50 even without a logged-in session
+- All values marked `// 🧪 TEST` — grep `🧪 TEST` to find all rollback points before launch
+
+**ms.js truncation fix:**
+- Local `ms.js` was truncated at line 10418 (missing closing braces on `msAskAI()`), matching the server copy — pre-existing issue from a prior session's write operation
+- Restored from last clean git commit (`15fc299`) and reapplied both session edits on top
+- `node --check` confirms syntax clean; all 35 smoke checks passing
+
+**Cache:** bumped to `?v=83`
+
 ## Session 74 · 22 May 2026 · CityLauncher email polish + Tier 2 AI Tuppence + Tuppence refund purge
 
 **Part A — CityLauncher emailer overhaul (`emailer.py`):**

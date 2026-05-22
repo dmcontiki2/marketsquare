@@ -796,6 +796,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .rec-hdr{display:flex;flex-direction:column;position:relative;}
 .rec-hdr .back-btn{position:absolute;top:16px;left:20px;border-color:rgba(255,255,255,.25);}
 .rec-hdr .back-btn svg{stroke:#fff;}
+/* Dark-header back buttons — override base stroke:var(--text) so arrow is visible on navy */
+.tn-header .back-btn svg,.el-hdr .back-btn svg,.cv-edit-hdr .back-btn svg,.aa-hdr .back-btn svg,.aa-hdr-row .back-btn svg{stroke:#fff;}
+.tn-header .back-btn,.el-hdr .back-btn,.cv-edit-hdr .back-btn,.aa-hdr .back-btn{border-color:rgba(255,255,255,.25);}
 
 /* ── RESPONSIVE: TABLET / LAPTOP ───────────────────────────── */
 @media (min-width: 768px) {
