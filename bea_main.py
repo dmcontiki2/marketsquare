@@ -7991,13 +7991,14 @@ TASK: Return a single JSON object with exactly these fields:
   "condition": null,
   "missing_shots": [],
   "warnings": [],
-  "anonymity_scrubbed": false
+  "anonymity_scrubbed": false,
+  "violating_photo_indices": []
 }}
 
 Fill in ONLY the fields relevant to the detected category. Leave others as null.
 For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low, OR if a photo contains identifying information (business signage, contact details, documents) that you had to suppress.
 
-ANONYMITY ENFORCEMENT (mandatory): Before writing any text, scan all photos for visible identifying information: street addresses, complex/building names, business names, phone numbers, email addresses, agent names, QR codes, URLs, social media handles. Do NOT include any of these in title, description_draft, tags, or any other field. Describe only physical, observable features of the item or property. Set "anonymity_scrubbed": true if you suppressed any identifying information, false if photos contained none.
+ANONYMITY ENFORCEMENT (mandatory): Before writing any text, scan all photos for visible identifying information: street addresses, complex/building names, business names, phone numbers, email addresses, agent names, QR codes, URLs, social media handles. Do NOT include any of these in title, description_draft, tags, or any other field. Describe only physical, observable features of the item or property. Set "anonymity_scrubbed": true if any photo contains identifying information. In "violating_photo_indices", list the 0-based index of EVERY photo that contains identifying information (e.g. [0, 2] if photos 0 and 2 are violations). Photos without violations must NOT be listed. Set to [] if no violations found.
 
 For "missing_shots": Based on the exact item you identified, list the most important additional photos the seller should add. Be item-specific and practical. Each entry: {{"label": "<short name>", "reason": "<one line why>"}}. Examples:
 - Magic: the Gathering card → [{{"label": "Card back", "reason": "Shows set symbol and condition"}}, {{"label": "Edge close-up", "reason": "Reveals wear grade"}}, {{"label": "Three red dots (magnified)", "reason": "Distinguishes original print from reprint — critical for authenticity"}}]
@@ -8212,14 +8213,27 @@ async def vision_draft(
 
     # Ensure anonymity_scrubbed is present and boolean
     draft["anonymity_scrubbed"] = bool(draft.get("anonymity_scrubbed", False))
+    # Ensure violating_photo_indices is a valid list of ints
+    vpi = draft.get("violating_photo_indices", [])
+    if not isinstance(vpi, list):
+        vpi = []
+    vpi = [int(x) for x in vpi if isinstance(x, (int, float)) and 0 <= int(x) < 50]
+    draft["violating_photo_indices"] = vpi
     if draft["anonymity_scrubbed"]:
-        all_warnings.append("Identifying information (address, business name, or contact details) was detected in photos and removed from this listing to protect seller anonymity.")
+        n_violating = len(vpi)
+        all_warnings.append(
+            f"Identifying information (address, business name, or contact details) was detected in "
+            f"{n_violating} photo(s) and removed from this listing to protect seller anonymity."
+            if n_violating else
+            "Identifying information was detected in photos and removed from this listing to protect seller anonymity."
+        )
 
     return {
         "draft": draft,
         "warnings": all_warnings,
         "model_used": VISION_MODEL,
         "anonymity_scrubbed": draft["anonymity_scrubbed"],
+        "violating_photo_indices": vpi,
     }
 
 
@@ -8330,8 +8344,8 @@ async def ai_listing_rewrite(listing_id: int, email: str):
             )
         raw = resp.json()["content"][0]["text"].strip()
         # Strip markdown fences if model adds them
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
+        raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
         new_title = str(result.get("new_title", "")).strip()[:120]
         new_desc  = str(result.get("new_description", "")).strip()[:1000]
@@ -8432,8 +8446,8 @@ async def ai_seller_audit(listing_id: int, email: str):
                 },
             )
         raw = resp.json()["content"][0]["text"].strip()
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
+        raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
         actions = result.get("actions", [])
         # Sanitise — max 3, enforce fields
@@ -8522,8 +8536,8 @@ async def ai_price_check(listing_id: int, email: str):
                 },
             )
         raw = resp.json()["content"][0]["text"].strip()
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
+        raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
         verdict        = str(result.get("verdict", "cannot_assess"))[:20]
         context        = str(result.get("context", ""))[:600]
@@ -8646,8 +8660,8 @@ async def ai_yield_calc(listing_id: int, email: str):
                 },
             )
         raw = resp.json()["content"][0]["text"].strip()
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
+        raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
         gross_yield         = str(result.get("gross_yield_pct", "N/A"))[:20]
         net_yield           = str(result.get("net_yield_estimate_pct", "N/A"))[:20]
@@ -8772,8 +8786,8 @@ async def ai_batch_card_listings(req: BatchCardRequest):
                 },
             )
         raw = resp.json()["content"][0]["text"].strip()
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
+        raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
         drafts = result.get("drafts", [])
 

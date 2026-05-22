@@ -4137,7 +4137,7 @@ async function goVisionNext() {
     if (barEl) barEl.style.width = '100%';
     if (overlay) overlay.style.display = 'none';
 
-    goRevealDraft(data.draft, data.warnings || [], data.anonymity_scrubbed || false);
+    goRevealDraft(data.draft, data.warnings || [], data.anonymity_scrubbed || false, data.violating_photo_indices || []);
 
   } catch(e) {
     clearTimeout(timeoutId);
@@ -4148,7 +4148,7 @@ async function goVisionNext() {
 }
 
 // ── goRevealDraft — populate Zone D from vision response ───────────────────
-function goRevealDraft(draft, warnings, anonymityScrubbed) {
+function goRevealDraft(draft, warnings, anonymityScrubbed, violatingIndices) {
   const reveal = document.getElementById('go-draft-reveal');
   const strip  = document.getElementById('go-photo-strip');
   const skip   = document.getElementById('go-skip-link');
@@ -4189,19 +4189,34 @@ function goRevealDraft(draft, warnings, anonymityScrubbed) {
     }
   }
 
-  // Anonymity notice — shown when AI detected identifying info in photos
-  // Violating photos are removed automatically; seller can add new ones or proceed without
+  // Anonymity notice — shown when AI detected identifying info in specific photos
+  // Only the violating photos are removed; clean photos are kept
   const anonEl = document.getElementById('go-anonymity-notice');
   if (anonEl) anonEl.style.display = anonymityScrubbed ? 'block' : 'none';
-  if (anonymityScrubbed) {
-    // Silently remove violating photos — seller proceeds without them
+  if (anonymityScrubbed && violatingIndices && violatingIndices.length) {
+    // Remove only the photos at violating indices — keep all others
+    const indices = new Set(violatingIndices.map(Number));
+    goState.photoFiles = (goState.photoFiles || []).filter((_, i) => !indices.has(i));
+    goState.photoFile  = goState.photoFiles[0] || null;
+    // Rebuild photoDataUrl from first remaining photo
+    if (goState.photoFiles.length) {
+      const reader = new FileReader();
+      reader.onload = e => { goState.photoDataUrl = e.target.result; goPaintCards(); };
+      reader.readAsDataURL(goState.photoFiles[0]);
+    } else {
+      goState.photoDataUrl = null;
+    }
+    // Re-render the strip without violating photos
+    goRenderPhotoStrip();
+    const stripEl = document.getElementById('go-photo-strip');
+    if (stripEl) stripEl.style.display = goState.photoFiles.length ? 'block' : 'none';
+  } else if (anonymityScrubbed) {
+    // No specific indices provided — remove all as fallback
     goState.photoFiles   = [];
     goState.photoFile    = null;
     goState.photoDataUrl = null;
     const stripEl = document.getElementById('go-photo-strip');
     if (stripEl) { stripEl.style.display = 'none'; stripEl.innerHTML = ''; }
-    const fileInputEl = document.getElementById('go-file-input');
-    if (fileInputEl) fileInputEl.value = '';
   }
 
   // Confidence bar — Phase 2: gated by missing_shots count (Session 73)

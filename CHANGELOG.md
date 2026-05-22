@@ -2334,3 +2334,22 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 - David to re-upload direct apartment photos via edit screen; smoke test will tighten again pre-launch
 
 All 35 smoke checks passing
+
+## Session 74 (continued 11) · 22 May 2026 · AI price check re.sub fix
+
+**AI3 price-check 500 error fixed (bea_main.py):**
+- `re.sub()` used in price-check function but `re` not in scope — module is imported as `_re_match` at line 3200
+- Fixed: replaced `re.sub` with `_re_match.sub` in both markdown-strip lines
+- Verified: POST /listings/109/price-check returns verdict=fair, SA price range, tuppence_remaining=47
+- BEA restarted; all 35 smoke checks passing
+
+## Session 74 (continued 12) · 22 May 2026 · Selective photo removal on anonymity violation
+
+**Anonymity: only violating photos removed, clean photos kept (bea_main.py + ms.js):**
+- Previously ALL photos were wiped when any single photo violated anonymity
+- BEA now returns violating_photo_indices (array of 0-based indices) alongside anonymity_scrubbed
+- Vision prompt updated: Claude identifies which specific photo positions contain violations
+- goRevealDraft() now accepts violatingIndices param; filters goState.photoFiles by index
+- Clean photos remain in strip and are uploaded; only brochure/advert photos are removed
+- Fallback: if BEA returns no indices, all photos removed (safe default)
+- Cache bumped to v=93; all 35 smoke checks passing
