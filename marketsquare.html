@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=86">
+<link rel="stylesheet" href="/static/ms.css?v=88">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1551,8 +1551,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <!-- Anonymity notice — shown when AI suppressed identifiers from photos -->
         <div id="go-anonymity-notice" style="display:none;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:10px;padding:11px 13px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.6;">
           <div style="font-weight:700;color:#fca5a5;margin-bottom:6px;">⚠️ Photo contains identifying information</div>
-          One or more of your photos shows an address, business name, phone number, or contact details. <strong style="color:#fca5a5;">TrustSquare requires seller anonymity</strong> — your identity is only revealed after a paid Introduction is accepted.<br><br>
-          <strong style="color:#fff;">Action required:</strong> Please replace any brochure, flyer, or advertisement photos with direct photos of the actual property or item. The AI has removed all identifying text from your listing description.
+          One or more of your photos shows an address, business name, phone number, or contact details. <strong style="color:#fca5a5;">TrustSquare requires seller anonymity</strong> — your identity is only revealed after a paid Introduction is accepted. The AI has removed all identifying text from your listing description.<br><br>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button onclick="goAnonReplace()" style="flex:1;padding:9px 6px;background:rgba(239,68,68,.25);border:1.5px solid rgba(239,68,68,.5);border-radius:8px;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer;">📷 Replace photos</button>
+            <button onclick="goAnonKeep()" style="flex:1;padding:9px 6px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:8px;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;cursor:pointer;">✅ Keep &amp; continue</button>
+          </div>
         </div>
 
         <!-- Confidence bar — shown if category_confidence < 0.80 -->
@@ -3678,7 +3681,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=86"></script>
+<script src="/static/ms.js?v=88"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

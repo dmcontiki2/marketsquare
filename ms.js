@@ -4189,15 +4189,10 @@ function goRevealDraft(draft, warnings, anonymityScrubbed) {
     }
   }
 
-  // Anonymity notice — shown when AI suppressed identifying info from photos
+  // Anonymity notice — shown when AI detected identifying info in photos
+  // Seller chooses: replace photos (goAnonReplace) or keep & continue (goAnonKeep)
   const anonEl = document.getElementById('go-anonymity-notice');
-  if (anonEl) {
-    if (anonymityScrubbed) {
-      anonEl.style.display = 'block';
-    } else {
-      anonEl.style.display = 'none';
-    }
-  }
+  if (anonEl) anonEl.style.display = anonymityScrubbed ? 'block' : 'none';
 
   // Confidence bar — Phase 2: gated by missing_shots count (Session 73)
   // Each missing shot reduces displayed confidence by 12.5% (max −37.5% for 3+ shots).
@@ -4258,6 +4253,7 @@ function goRevealDraft(draft, warnings, anonymityScrubbed) {
   goPaintCards();
 
   // Show strip (photo preview) + reveal + adjust footer
+  // If anonymity was scrubbed, photos have already been cleared above — keep strip hidden
   if (strip)  strip.style.display  = 'block';
   if (reveal) { reveal.style.display = 'block'; }
   if (skip)   skip.style.display   = 'block';
@@ -4647,6 +4643,27 @@ async function goStep3Coach() {
     const data = await res.json();
     if (data.response) c3.innerHTML = data.response + '<br><br><span style="color:rgba(255,255,255,.5);font-size:12px;">Tap below to choose your plan and go live — takes about 2 minutes.</span>';
   } catch(e) {}
+}
+
+// ── Anonymity choice handlers ─────────────────────────────────────────────
+function goAnonReplace() {
+  // Seller chose to replace photos — clear state, hide notice, reset to upload zone
+  goState.photoFiles   = [];
+  goState.photoFile    = null;
+  goState.photoDataUrl = null;
+  const fileInput = document.getElementById('go-file-input');
+  if (fileInput) fileInput.value = '';
+  // Hide the anonymity notice
+  const anonEl = document.getElementById('go-anonymity-notice');
+  if (anonEl) anonEl.style.display = 'none';
+  // Trigger file picker
+  if (fileInput) fileInput.click();
+}
+
+function goAnonKeep() {
+  // Seller chose to keep existing photos — just dismiss the notice and let them proceed
+  const anonEl = document.getElementById('go-anonymity-notice');
+  if (anonEl) anonEl.style.display = 'none';
 }
 
 // ── Handoff to seller-onboard funnel ──────────────────────────────────────

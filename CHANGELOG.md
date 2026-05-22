@@ -2274,3 +2274,20 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 - Fixed `goHandlePhotos()`: added `input.value = ''` at the end of the handler so the input is always reset after each pick
 - Fixed `goResetStep1UI()`: added file input reset so returning to Step 1 (e.g. after a cancelled draft) also clears the cached selection
 - Cache bumped to v=86; ms.js + marketsquare.html deployed; all 35 smoke checks passing
+
+## Session 74 (continued 5) · 22 May 2026 · Anonymity photo suppression
+
+**Violating photos now fully suppressed on anonymity flag (ms.js):**
+- Previously, `anonymity_scrubbed=true` only showed a warning banner — the brochure/advert photo was still visible in the strip and card preview
+- Fixed `goRevealDraft()`: when `anonymityScrubbed` is true, immediately clears `goState.photoFiles`, `goState.photoFile`, and `goState.photoDataUrl`, hides + clears the photo strip, and resets the file input
+- The card preview now shows the emoji fallback (no photo) and the Next button is disabled with label "⚠️ Replace photos to continue →" — seller must re-shoot before proceeding
+- Cache bumped to v=87; all 35 smoke checks passing
+
+## Session 74 (continued 6) · 22 May 2026 · Anonymity choice — replace or keep
+
+**Anonymity warning now gives seller two choices (ms.js + marketsquare.html):**
+- Previous behaviour blocked the seller completely — replaced with two action buttons in the warning banner
+- "📷 Replace photos" — clears all photos from state, resets file input, opens the file picker immediately
+- "✅ Keep & continue" — dismisses the notice and lets the seller proceed with their existing photos
+- Next button always enabled after AI analysis; seller is never forcibly blocked
+- Cache bumped to v=88; all 35 smoke checks passing
