@@ -2246,13 +2246,13 @@ function openBEASellerProfile(l) {
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${l.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);filter:blur(6px);" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
+      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${l.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);filter:blur(6px);" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
         <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
     </div>
     <div class="cv-body">
@@ -2305,7 +2305,7 @@ function openSellerCV(sellerIdx,listingId){
       <div class="cv-trust-row">
         <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
       <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:8px;line-height:1.5;font-weight:400;">Score is built from: verified credentials · completed introductions · response rate · buyer ratings · years active. Verified by TrustSquare — not self-reported.</div>
     </div>
@@ -3432,7 +3432,7 @@ async function sobInit() {
   }
 
   if (!sobState.drafts.length) {
-    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.4);font-size:13px;">No draft listings found for this account.<br>Please contact TrustSquare support.</div>';
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.65);font-size:13px;">No draft listings found for this account.<br>Please contact TrustSquare support.</div>';
     return;
 
   }
@@ -3473,7 +3473,7 @@ async function sobInit() {
       const hasDesc = rawDesc.trim().length > 0;
       // Placeholder shimmer style
       const ph = 'background:rgba(255,255,255,.08);border-radius:6px;color:transparent;user-select:none;';
-      const phLabel = 'font-size:11px;color:rgba(255,255,255,.3);font-style:italic;';
+      const phLabel = 'font-size:11px;color:rgba(255,255,255,.6);font-style:italic;';
       return `
         <div style="border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#1e2d4a 0%,#22304d 60%,#1e2a3a 100%);box-shadow:0 8px 32px rgba(0,0,0,.3);margin-bottom:8px;">
 
@@ -3496,27 +3496,27 @@ async function sobInit() {
             <div style="font-size:20px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px;">${l.title || 'Your listing title'}</div>
 
             <!-- Suburb -->
-            <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:14px;">📍 ${suburb}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.65);margin-bottom:14px;">📍 ${suburb}</div>
 
             <!-- Trust Score block — coloured tier showcase + personal score note -->
             <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:14px;margin-bottom:14px;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:10px;">Trust Score tiers</div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:10px;">Trust Score tiers</div>
               <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#64748b;flex-shrink:0;">0</div>
-                  <div><div style="font-size:12px;font-weight:700;color:#94a3b8;">New</div><div style="font-size:11px;color:rgba(255,255,255,.3);">Visible to all buyers · no badge</div></div>
+                  <div><div style="font-size:12px;font-weight:700;color:#c8d0da;">New</div><div style="font-size:11px;color:rgba(255,255,255,.6);">Visible to all buyers · no badge</div></div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div style="width:36px;height:36px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#1d4ed8;flex-shrink:0;">40</div>
-                  <div><div style="font-size:12px;font-weight:700;color:#60a5fa;">Established</div><div style="font-size:11px;color:rgba(255,255,255,.3);">Blue badge · higher buyer confidence</div></div>
+                  <div><div style="font-size:12px;font-weight:700;color:#60a5fa;">Established</div><div style="font-size:11px;color:rgba(255,255,255,.6);">Blue badge · higher buyer confidence</div></div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div style="width:36px;height:36px;border-radius:8px;background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#065f46;flex-shrink:0;">70</div>
-                  <div><div style="font-size:12px;font-weight:700;color:#34d399;">Trusted</div><div style="font-size:11px;color:rgba(255,255,255,.3);">Green badge · priority in search</div></div>
+                  <div><div style="font-size:12px;font-weight:700;color:#34d399;">Trusted</div><div style="font-size:11px;color:rgba(255,255,255,.6);">Green badge · priority in search</div></div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#92400e;flex-shrink:0;">90</div>
-                  <div><div style="font-size:12px;font-weight:700;color:#fbbf24;">Highly Trusted</div><div style="font-size:11px;color:rgba(255,255,255,.3);">Gold badge · featured placement</div></div>
+                  <div><div style="font-size:12px;font-weight:700;color:#fbbf24;">Highly Trusted</div><div style="font-size:11px;color:rgba(255,255,255,.6);">Gold badge · featured placement</div></div>
                 </div>
               </div>
               <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:9px 12px;font-size:11px;color:rgba(255,255,255,.45);line-height:1.5;">
@@ -3526,7 +3526,7 @@ async function sobInit() {
 
             <!-- Price block -->
             <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-              <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+              <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Price</div>
               ${price
                 ? `<div style="font-size:24px;font-weight:800;color:#fff;">${price}</div>`
                 : `<div style="font-size:14px;color:rgba(255,255,255,.25);font-style:italic;">Add a price to your listing</div>`}
@@ -3551,7 +3551,7 @@ async function sobInit() {
             <div style="background:rgba(255,255,255,.04);border:1.5px dashed rgba(255,255,255,.12);border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px;">
               <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🔒</div>
               <div style="flex:1;">
-                <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.3);">Your seller profile</div>
+                <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6);">Your seller profile</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:2px;">Credentials · Track record · Identity masked</div>
               </div>
             </div>
@@ -3559,7 +3559,7 @@ async function sobInit() {
             <!-- Anonymity note -->
             <div style="text-align:center;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:8px;">
               <div style="font-size:16px;margin-bottom:4px;">🔒</div>
-              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:2px;">Identity protected until introduction</div>
+              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.65);margin-bottom:2px;">Identity protected until introduction</div>
               <div style="font-size:11px;color:rgba(255,255,255,.25);line-height:1.5;">Your name and contact are only revealed after both parties accept</div>
             </div>
 
@@ -3995,7 +3995,7 @@ function goHandlePhotos(input) {
 
   // Update skip link label
   const skip = document.getElementById('go-skip-link');
-  if (skip) skip.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,.3);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip AI — fill in details manually</span>';
+  if (skip) skip.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip AI — fill in details manually</span>';
 }
 
 // Render thumbnail strip with delete buttons
@@ -4227,7 +4227,7 @@ function goRevealDraft(draft, warnings) {
             </div>
             <div style="font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0;align-self:center;">Add +</div>
           </div>`).join('')}
-        <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;text-align:center;">Tap a shot to add it · More photos = more buyer trust</div>`;
+        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px;text-align:center;">Tap a shot to add it · More photos = more buyer trust</div>`;
       // Store shots on state for the add handler
       goState._missingShotsLabels = shots.map(s => s.label);
     } else {
@@ -4424,7 +4424,7 @@ function goRenderFields() {
         </div>
       </div>`;
     } else {
-      const hintHtml = fd.hint ? `<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;line-height:1.4;">🔒 ${fd.hint}</div>` : '';
+      const hintHtml = fd.hint ? `<div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:4px;line-height:1.4;">🔒 ${fd.hint}</div>` : '';
       html += `<div class="go-field-group">
         <div class="go-field-label">${fd.label}</div>
         <input class="go-field-input" id="${fd.id}" type="${fd.type||'text'}" inputmode="${fd.type==='tel'||fd.type==='number'?'numeric':'text'}" placeholder="${fd.ph||''}" oninput="goFieldUpdate('${fd.id}',this.value)">
@@ -4442,7 +4442,7 @@ function goRenderFields() {
     <div class="go-field-group">
       <div class="go-field-label">Your email address <span style="color:#fca5a5">*</span></div>
       <input class="go-field-input" id="go-seller-email" type="email" inputmode="email" placeholder="e.g. jesse@example.com" oninput="goState.email=this.value.trim();const _nb=document.getElementById('go-s2-next');if(_nb){const _ok=goState.email.includes('@')&&goState.fields.title&&goState.fields.title.trim().length>1;_nb.disabled=!_ok;}">
-      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;">🔒 Only used to create your listing — never shared.</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:4px;">🔒 Only used to create your listing — never shared.</div>
     </div>`;
   }
 
@@ -9687,7 +9687,7 @@ async function openLMSellerProfile() {
         `<div style="color:${t.c};"><div class="cv-trust-num">${trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>` +
 
         `<div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${trust}%;background:${t.c};"></div></div>` +
-        `<div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right;font-weight:400;">Trust<br>Score</div>` +
+        `<div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>` +
       `</div>` +
     `</div>` +
     `<div class="cv-body">` +

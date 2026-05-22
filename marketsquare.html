@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=80">
+<link rel="stylesheet" href="/static/ms.css?v=81">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -184,7 +184,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">TrustSquare</div>
         <div style="font-size:13px;color:#f59e0b;margin-top:6px;letter-spacing:1px;text-transform:uppercase;">Choose Your PIN</div>
-        <div id="gate-change-name" style="font-size:14px;color:#94a3b8;margin-top:8px;"></div>
+        <div id="gate-change-name" style="font-size:14px;color:#555f6e;margin-top:8px;"></div>
       </div>
       <div style="font-size:13px;color:#64748b;margin-bottom:16px;text-align:center;">
         Choose a personal 6-digit PIN. You will use this every time you log in.
@@ -955,7 +955,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- WONDER DETAIL SCREEN -->
 <div id="screen-wonder-detail" class="screen">
   <div style="position:relative;">
-    <button class="back-btn" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.3);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
+    <button class="back-btn" id="wd-back-btn" onclick="closeWonderDetail()" style="position:absolute;top:12px;left:12px;z-index:10;border-color:rgba(255,255,255,.6);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div style="position:relative;line-height:0;">
@@ -1507,7 +1507,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;width:100%;max-width:260px;margin:0 auto;">
           <div id="go-vision-bar" style="height:100%;background:#8b5cf6;border-radius:2px;width:0%;transition:width 0.5s linear;"></div>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:10px;">AI is analysing your listing — usually takes 10–20 seconds</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:10px;">AI is analysing your listing — usually takes 10–20 seconds</div>
       </div>
 
       <!-- Zone D: Draft reveal — shown after successful vision response -->
@@ -1529,7 +1529,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <!-- Improve description button -->
           <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
             <button id="go-improve-btn" class="go-improve-btn" onclick="goImproveDescription()" style="font-size:12px;padding:5px 12px;border-radius:8px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.35);color:#a78bfa;cursor:pointer;">✨ Improve wording</button>
-            <span id="go-improve-status" style="font-size:11px;color:rgba(255,255,255,.3);"></span>
+            <span id="go-improve-status" style="font-size:11px;color:rgba(255,255,255,.6);"></span>
           </div>
         </div>
 
@@ -1561,10 +1561,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
       <!-- Zone E: Skip link — always visible below upload/strip -->
       <div id="go-skip-link" style="text-align:center;margin-top:12px;">
-        <span style="font-size:12px;color:rgba(255,255,255,.3);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip photos — describe it instead</span>
+        <span style="font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip photos — describe it instead</span>
       </div>
 
-      <div id="go-upload-status" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:4px;min-height:16px;"></div>
+      <div id="go-upload-status" style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;margin-top:4px;min-height:16px;"></div>
     </div>
 
     <div class="go-footer">
@@ -1633,13 +1633,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <span style="font-size:10px;font-weight:700;background:rgba(139,92,246,.2);color:#a78bfa;border-radius:4px;padding:2px 7px;">👥 Soft Queue</span>
         </div>
         <div style="font-size:21px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px;" id="go-review-title">Your listing</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:14px;" id="go-review-area"></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.65);margin-bottom:14px;" id="go-review-area"></div>
         <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Price</div>
           <div style="font-size:22px;font-weight:800;color:#fff;min-height:28px;" id="go-review-price"></div>
         </div>
         <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Trust Score</div>
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Trust Score</div>
           <div style="display:flex;gap:6px;align-items:center;">
             <div style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#64748b;">0</div>
             <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.4;">New seller · builds automatically<br>through verified credentials &amp; responses</div>
@@ -1683,7 +1683,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
     <div class="sob-body">
       <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:18px;font-weight:400;">This is exactly what buyers will see once you go live. Nothing is public yet.</p>
-      <div id="sob-draft-list"><div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.3);font-size:13px;">Loading your listing…</div></div>
+      <div id="sob-draft-list"><div style="text-align:center;padding:40px 0;color:rgba(255,255,255,.6);font-size:13px;">Loading your listing…</div></div>
       <div id="sob-p1-err" style="display:none;color:#fca5a5;font-size:13px;margin-top:12px;text-align:center;"></div>
     </div>
     <div class="sob-footer">
@@ -1721,7 +1721,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="sob-tier-card" id="sob-tier-starter" onclick="sobSelTier('starter')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="sob-tier-name">Standard</div>
-          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">≈ R90 / month</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);">≈ R90 / month</div>
         </div>
         <div class="sob-tier-price">$5 / month · Billed monthly</div>
         <div class="sob-tier-feat">
@@ -1736,7 +1736,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="sob-tier-card" id="sob-tier-premium" onclick="sobSelTier('premium')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="sob-tier-name">International</div>
-          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">≈ R270 / month</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);">≈ R270 / month</div>
         </div>
         <div class="sob-tier-price">$15 / month · Billed monthly</div>
         <div class="sob-tier-feat">
@@ -1747,7 +1747,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
-      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.3);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence intro fees apply on all plans.<br>All listings fade gracefully after their duration — renew free at any time.</div>
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.6;">All prices exclude VAT. No commission ever. Tuppence intro fees apply on all plans.<br>All listings fade gracefully after their duration — renew free at any time.</div>
     </div>
     <div class="sob-footer" style="flex-direction:column;gap:8px;">
       <button class="sob-btn-next" id="sob-p2-next" onclick="sobContinueFromTier()">Continue →</button>
@@ -2496,7 +2496,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-onboard" class="screen">
   <div class="ob-page">
     <div class="ob-hero">
-      <button style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.4);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:24px;" onclick="goTo('home')">
+      <button style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.65);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:24px;" onclick="goTo('home')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> Back
       </button>
       <div class="ob-logo">MARKETSQUARE</div>
@@ -2508,7 +2508,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div class="ob-card"><div class="ob-card-icon">💰</div><div><h4>No commission — ever</h4><p>TrustSquare earns only from introductions, not from your sale. You keep 100% of your transaction value.</p></div></div>
         <div class="ob-card"><div class="ob-card-icon">⭐</div><div><h4>Build your Trust Score</h4><p>Every successful introduction improves your Trust Score — a visible credential that attracts higher quality buyers over time.</p></div></div>
       </div>
-      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Your introduction model</div>
+      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.65);margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Your introduction model</div>
       <div class="ob-model-pills">
         <div class="ob-model-pill commit" id="omp-commit" onclick="obSelectModel('commit')" style="cursor:pointer;"><div class="omp-icon">🏡</div><div class="omp-cat">Property</div><div class="omp-desc">Listing pauses per request. One serious buyer at a time.</div></div>
         <div class="ob-model-pill queue" id="omp-queue" onclick="obSelectModel('queue')" style="cursor:pointer;"><div class="omp-icon">🎓⚙️🧭🏺🚗</div><div class="omp-cat">Tutors, Services, Adventures, Collectors &amp; Cars</div><div class="omp-desc">Listing stays live. Multiple buyers queue simultaneously.</div></div>
@@ -3669,7 +3669,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=80"></script>
+<script src="/static/ms.js?v=81"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->
