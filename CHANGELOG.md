@@ -2266,3 +2266,11 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 2. **Photo localStorage sync fix** — upload handler now writes to all three localStorage keys (`ms_user_photo`, `ms_seller_photo_url`, `ms_seller_photo`) so the avatar stays correct across page reloads without having to re-upload. Avatar load on myspace screen also updated to fall back through all three keys and normalise to `ms_user_photo`.
 
 3. **Cache-bust**: `?v=78` → `?v=79`. Deployed `marketsquare.html` + `ms.js`.
+
+## Session 74 (continued 4) · 22 May 2026 · Photo re-selection fix
+
+**Photo re-selection bug fixed (ms.js):**
+- After deleting a listing and re-listing with the same photos, the file picker's `onchange` did not fire — browsers skip `onchange` when the same file selection is re-chosen
+- Fixed `goHandlePhotos()`: added `input.value = ''` at the end of the handler so the input is always reset after each pick
+- Fixed `goResetStep1UI()`: added file input reset so returning to Step 1 (e.g. after a cancelled draft) also clears the cached selection
+- Cache bumped to v=86; ms.js + marketsquare.html deployed; all 35 smoke checks passing

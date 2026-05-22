@@ -5,8 +5,8 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - 3 real listings live (#93, #102 Property + #104 Collectors, Pretoria) — all featured (boost_until 2030)
 - 23 / 60 founding sellers registered
 - Demo mode accessible via ?demo=1 OR via in-app DEMO/LIVE toggle (top bar)
-- marketsquare.html: 345 KB HTML shell
-- Static assets: /static/ms.css?v=83 + /static/ms.js?v=83, cached 1 year
+- marketsquare.html: 348 KB HTML shell
+- Static assets: /static/ms.css?v=86 + /static/ms.js?v=86, cached 1 year
 - World Heritage: 120 sites from BEA /wonders
 - Demo data: 293 listings + 40 sellers from BEA /demo-listings and /demo-sellers
 - smoke_test.py: 35-check post-deploy safety net (scans html + ms.js combined corpus)
@@ -27,8 +27,13 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Anonymity enforcement: vision-draft + AI1 + AI2 system prompts now strip addresses/names/contacts; #go-anonymity-notice banner shown to seller when scrubbed
 - Smoke test: live listings check now queries DB directly (category-agnostic) — survives listing deletions
 - Multi-photo upload fixed: goHandoff now uploads all goState.photoFiles; photo/draft endpoint maintains photo_urls JSON array
+- Photo re-selection fixed: goHandlePhotos + goResetStep1UI now reset input.value so re-picking same files fires onchange
 - Intros My Space fixed: GET /intros?status=all now works; buyer_email filter added; self-intro guard added (409)
 - AI price-check: David credited 50T on server for testing (dmcontiki2@gmail.com)
+
+## Last Completed (Session 74 continued 4)
+- Photo re-selection bug fixed: goHandlePhotos() + goResetStep1UI() now reset input.value='' so same files re-trigger onchange
+- Cache bumped to v=86; all 35 smoke checks passing
 
 ## Last Completed (Session 74 continued)
 - Back button visibility: ms.css grouped rule fixes dark arrow on navy for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr
@@ -57,7 +62,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=85
+Current version: ?v=86
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active
@@ -65,23 +70,4 @@ Current version: ?v=85
 - Counsel brief for EULA review (remaining [COUNSEL REQUIRED] items: NCC reg no, FICA/KYC justification, NCA applicability, FSCA classification, arbitration clause)
 - Tuppence refund purge — NEXT_SESSION_TUPPENCE_NO_REFUND.md — must complete before patent filing
 - AI audit of marketsquare.html for pre-launch issues
-- Featured strip: mark real BEA listings as featured (strip empty on live site)
-- Yield System: select SA patent attorney (required before provisional application)
-- Yield System: Solar Council review of YIELD_SYSTEM_TECHNICAL_DISCLOSURE v0.2 (Step 0.2)
-- AI3 pricing review — Sonnet price-check margin near-zero at 1T; consider raising to 2T (Session 75)
-
-## Next Session (Session 75)
-Goal: AI3 price-check pricing review + admin UI for AI4/AI5 + buyer app yield-calc button + n8n email trigger wiring
-
-### Session 75 Build Plan
-1. AI3 price-check: review Sonnet margin (1T may be near-zero at cost) — consider raising to 2T
-2. Admin dashboard: AI4 Yield Calculator button on Property listing edit modals (mirrors AI1/AI2 strip)
-3. Buyer app: "📈 Yield Calculator" button on Property listing detail card (mirrors AI3 price-check button)
-4. Admin dashboard: AI5 Batch Cards entry point in seller onboarding flow (Collectors category)
-5. n8n: wire emailer.py execution to CityLauncher pipeline EMAILING state trigger
-
-## Blockers
-- CIPC registration confirmed (2026/340128/07) - Paystack live mode still pending activation
-- Git commits must be run by David from PowerShell (sandbox index.lock conflict)
-- Patent registration pending - apps gated until SA provisional filed
-- Tuppence refund purge must complete before EULA published externally
+- Featured strip: mark real BEA listings as featured (strip e

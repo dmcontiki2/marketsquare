@@ -3845,6 +3845,9 @@ function goResetStep1UI() {
   if (s1Next) { s1Next.disabled = true; s1Next.textContent = 'Analyse photos →'; }
   const status = document.getElementById('go-upload-status');
   if (status) status.textContent = '';
+  // Always reset file input so re-selecting the same photos fires onchange
+  const fileInput = document.getElementById('go-file-input');
+  if (fileInput) fileInput.value = '';
 }
 // ── Step navigation ────────────────────────────────────────────────────────
 function goShowStep(n) {
@@ -3996,6 +3999,10 @@ function goHandlePhotos(input) {
   // Update skip link label
   const skip = document.getElementById('go-skip-link');
   if (skip) skip.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:underline;" onclick="goSkipPhotos()">Skip AI — fill in details manually</span>';
+
+  // Reset input value so re-selecting the same files fires onchange again
+  // (browsers skip onchange if selection hasn't changed)
+  input.value = '';
 }
 
 // Render thumbnail strip with delete buttons
