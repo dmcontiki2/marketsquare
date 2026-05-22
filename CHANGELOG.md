@@ -1,3 +1,42 @@
+## Session 75 · 22 May 2026 · AI3 price up · AI4 yield calc · AI5 batch cards · n8n EMAILING trigger · pricing model
+
+**AI3 price-check raised 1T → 2T (bea_main.py + ms.js):**
+- `_deduct_tuppence` amount in `/listings/{id}/price-check` changed from 1 to 2
+- ms.js badge updated: `2T · AI price check`, balance guard `bal < 2`, confirm text updated to reflect 2T cost
+
+**AI4 Yield Calculator — admin Property edit modal (marketsquare_admin.html):**
+- `adm-ai-yield-btn` button added to AI services strip (hidden by default)
+- `openAdmEdit()` shows/hides yield btn based on category (Property / Estate Agents / Accommodation)
+- `admAIYield()` function added: calls `/listings/{id}/yield-calc`, renders result in admin edit modal
+
+**AI4 Yield Calculator — buyer app Property detail cards (ms.js + marketsquare.html):**
+- `buyerYieldCalc(id)` function added after END AI3 comment: calls `/listings/{id}/yield-calc`, renders purple yield result card, hides button on success
+- Yield button HTML injected into detail card template: conditionally rendered for Property/Estate Agents/Accommodation categories (1T cost label)
+- DEMO_MODE guard included
+
+**AI5 Batch Cards — Collectors onboarding in buyer app (ms.js + marketsquare.html):**
+- `sb-b2-batch-wrap` div added to PATH B step B2 footer — shown by `sbSelCat('Collectors')` only
+- `sb-batch` and `sb-batch-success` phases added to PATH B step machine
+- Functions added to ms.js: `sbStartBatchCards()`, `sbHandleBatchPhotos()`, `_sbRenderBatchPreviews()`, `sbRunBatchAnalysis()`, `_sbRenderBatchDrafts()`, `_sbUpdatePublishBtn()`, `sbPublishBatchListings()`
+- Canvas compression to 800px / 0.82 quality; DEMO_MODE guard included
+- Duplicate `aaBuyPackFromWallet` stub removed; two apostrophe-in-string syntax errors fixed
+- ⚠️ Known issue: `sbPublishBatchListings()` returns "Publishing failed" — likely BEA FormData field mismatch. Deferred to Session 76.
+
+**n8n EMAILING trigger (adventures_run.py + .env + n8n workflow):**
+- `_notify_n8n_emailing(country, total_sent)` helper added to `adventures_run.py`; fires at EMAILING state entry and MONITORING transition
+- `/var/www/citylauncher/.env`: `N8N_EMAILING_WEBHOOK=http://localhost:5678/webhook/citylauncher-emailing` added
+- `05_emailing_trigger.json` n8n workflow deployed and activated: Webhook → Code → Email David (SMTP) + Log
+- Tested live: webhook returns `{"message":"Workflow was started"}` ✓
+- ⚠️ Open action: verify `fromEmail` in workflow matches SMTP authorised sender (currently noreply@trustsquare.co)
+
+**Tuppence + subscription pricing model locked (design, no code changes):**
+- **1 Tuppence = $2 (fixed exchange rate)**; Intro = 1T ($2)
+- Subscription tiers: Free (suburb reach), Starter $5/mo (city reach), Premium $15/mo (global + AI analytics)
+- Tuppence is pay-per-use on top of subscription; free-tier sellers can still list and receive intros
+- Pack tiers: 20T ($40) / 50T ($100) / 100T ($200) / 250T ($500)
+- AI function T-prices to be set after Anthropic cost audit in Session 76
+- Cache bumped to v=100
+
 ## Session 74 (continued 3) · 22 May 2026 · Multi-photo fix + intros fix + self-intro guard + price-check credit
 
 **Multi-photo upload fix (ms.js + bea_main.py):**
@@ -2374,3 +2413,57 @@ All 35 smoke checks passing
 - If ms_aa_email not yet in localStorage (pre gate-login-fix session), prompt() asks for email rather than silently failing
 - Permanent fix: gate login now stores email; prompt is just a safety net for stale sessions
 - Cache bumped to v=97; all 35 smoke checks passing
+
+## Session 74 — cont 15 — Heritage & Amenities Auto-Link Audit (2026-05-22)
+
+Audited the `auto_link_wonders()` and `auto_link_pois()` pipeline end-to-end. Findings: (1) `auto_link_wonders()` runs at publish for **all** categories via `_CAT_AFFINITY` affinity scoring — Accommodation, Tours, Adventures, Experiences, Collectors, Services, Tutors, Cars, and Local Market all get wonders if any are within the country-derived radius; Property is intentionally excluded (affinity `{}`). (2) `auto_link_pois()` (Nearby Amenities) runs at publish for **Property only** — correct by design. (3) Bug found: `_CAT_AFFINITY` had `"local market"` (space) but FEA submits `"local_market"` (underscore), so Local Market listings never matched — added `"local_market"` key with identical weights. (4) Backfilled listing 104 (Local Market, Pretoria) with Blyde River Canyon Nature Reserve (292 km) — the only World Heritage site within the 300 km ZA radius. (5) Both `loadDetailWonders()` and `loadDetailPois()` are called unconditionally from `openDetail()` — no category guard at the call site; POI section returns early if category ≠ Property. BEA deployed and restarted. `GET /listings/104/wonders` confirmed live. Smoke test: all checks pass.
+
+## Session 75
+
+### AI3 Price-Check: 1T → 2T
+- Raised AI3 buyer price-check cost from 1T to 2T in BEA `_deduct_tuppence` call, docstring, ms.js badge label, balance gate, and confirm dialog.
+
+### AI4 Yield Calculator — Admin edit modal (Property)
+- Added `📈 Yield Calculator (1T)` button to the AI Tuppence Services strip in the admin listing edit modal.
+- Button is hidden by default; shown dynamically in `openAdmEdit()` when `listing.category` is Property, Estate Agents, or Accommodation.
+- `admAIYield()` calls `/listings/{id}/yield-calc`, renders gross yield, net yield, rent estimate, market context, and SA benchmark in a purple card.
+
+### AI4 Yield Calculator — Buyer app Property detail
+- Added `📈 What's the yield on this?` button (1T) to Property listing detail cards in ms.js.
+- Conditionally rendered only when `l.cat` is Property, Estate Agents, or Accommodation.
+- `buyerYieldCalc()` function mirrors the pattern of `buyerPriceCheck()` — balance gate, confirm, BEA call, result card, hide button on success.
+
+### AI5 Batch Cards — Collectors onboarding (Admin step 3)
+- Added `📸 AI Batch Cards (2T · up to 10 cards)` button to step 3 of seller onboarding, visible only when `selectedCat === 'Collectors'`.
+- Inline panel with photo-zone (up to 10 card photos), per-image canvas compression, preview strip with individual remove buttons.
+- `runAI5BatchCards()` calls `POST /listings/batch-cards`, renders AI-generated draft cards with title, description, price suggestion, and condition.
+- `addBatchDraftToQueue()` pushes each approved draft into `listingQueue` for review in step 4 — same flow as manual entry.
+
+### n8n Email Trigger — CityLauncher EMAILING state
+- Added `_notify_n8n_emailing(country, total_sent)` helper to `adventures_run.py`.
+- Fires `POST` to `N8N_EMAILING_WEBHOOK` (from `.env`) with `{event, country, total_sent, fired_at}` when pipeline enters EMAILING and again when it completes (MONITORING).
+- Added `N8N_EMAILING_WEBHOOK=` placeholder to `/var/www/citylauncher/.env`.
+- Deployed `orchestration/n8n_workflows/05_emailing_trigger.json` — importable workflow that emails David on both EMAILING_STARTED and EMAILING_COMPLETE events.
+- Non-fatal: missing webhook URL logs a DEBUG message and continues.
+
+### Cache
+- Cache bumped to v=98 (ms.js changed).
+
+## Session 75 (continued)
+
+### Batch Cards in seller Sell+ flow
+- Added "List multiple cards instead" option to B2 category step — appears when Collectors selected.
+- Purple panel opens with photo zone (up to 10 photos, canvas-compressed), analyse button, per-card draft review with inline title/price editing, tick/untick per card, and Publish button.
+- `sbStartBatchCards()`, `sbHandleBatchPhotos()`, `sbRunBatchAnalysis()`, `sbPublishBatchListings()` added to ms.js.
+- `sb-batch` and `sb-batch-success` phases added to marketsquare.html.
+- AI analysis confirmed working in live test (6 Springbok Pick n Pay cards identified correctly with stats, condition, price).
+- Publish step fails — deferred to Session 76 (BEA field mismatch suspected).
+- Cache bumped to v=100.
+
+### Pricing model decisions (recorded, not yet coded)
+- Intro fixed at 2T (absorbs into any meaningful transaction; spam-signals buyer intent).
+- Subscription tiers confirmed: Free (suburb, 15%), Starter $5/mo (city, 80%), Premium $15/mo (global + AI analytics, collectors/investors).
+- Tuppence sits on top of subscription as pay-per-use AI layer — not a substitute.
+- AI function T-prices to be set after Anthropic cost audit in Session 76.
+- Pack tiers: 20T / 50T / 100T / 250T.
+- Tuppence balance to remain portable across subscription tier changes.

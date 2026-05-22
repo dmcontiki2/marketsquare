@@ -1,101 +1,21 @@
 # TrustSquare - STATUS.md
 
 ## Live State
-BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetzner CPX22
-- 3 real listings live (#93, #102 Property + #104 Collectors, Pretoria) — all featured (boost_until 2030)
-- 23 / 60 founding sellers registered
-- Demo mode accessible via ?demo=1 OR via in-app DEMO/LIVE toggle (top bar)
-- marketsquare.html: 348 KB HTML shell
-- Static assets: /static/ms.css?v=86 + /static/ms.js?v=86, cached 1 year
-- World Heritage: 120 sites from BEA /wonders
-- Demo data: 293 listings + 40 sellers from BEA /demo-listings and /demo-sellers
-- smoke_test.py: 35-check post-deploy safety net (scans html + ms.js combined corpus)
-- ALL FOUR APPS GATED: JWT login required on trustsquare.co/, admin.html, dashboard.html, /launch/
-- Team logins: Maurice, Maroushka, David Jnr - temp PIN 123456 - forced change on first use
-- POST /listings/vision-draft live — photo-first AI onboarding BEA endpoint
-- guided-onboard Step 1 live — multi-photo upload + AI vision + missing_shots guidance
-- Route 2 (in-app Sell+) — email/name capture works; EXIF rotation fixed; seller CV anonymous
-- AI Tuppence Services live: AI1 rewrite + AI2 audit + AI3 price-check + AI4 yield-calc + AI5 batch-cards
-- Local Market tile count fixed in demo mode (reads LISTINGS array, not BEA)
-- Me tab: Profile photo row with Change link added to Personal Details
-- Wallet screen: AI Tuppence services menu with costs + navigation paths
-- missing_shots Phase 2: confidence bar gated by missing shots count (−12.5% per shot)
-- Tuppence refund purge COMPLETE — marketsquare.html + EULA v1.4_Final + Whitepaper v3.1 all clean
-- Back buttons on dark backgrounds fixed (ms.css grouped rule for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr)
-- Tuppence test values: both Introductions + AI Guidance set to 50 (marked 🧪 TEST — grep to rollback before launch)
-- ms.js restored from git (was truncated) — all 35 smoke checks passing on v=84
-- Anonymity enforcement: vision-draft + AI1 + AI2 system prompts now strip addresses/names/contacts; #go-anonymity-notice banner shown to seller when scrubbed
-- Smoke test: live listings check now queries DB directly (category-agnostic) — survives listing deletions
-- Multi-photo upload fixed: goHandoff now uploads all goState.photoFiles; photo/draft endpoint maintains photo_urls JSON array
-- Photo re-selection fixed: goHandlePhotos + goResetStep1UI now reset input.value so re-picking same files fires onchange
-- Anonymity photo suppression: when anonymity_scrubbed=true, violating photos cleared from state + strip; Next button blocked until seller re-shoots
-- Intros My Space fixed: GET /intros?status=all now works; buyer_email filter added; self-intro guard added (409)
-- AI price-check: David credited 50T on server for testing (dmcontiki2@gmail.com)
+BEA v1.2.0 · cache v=100 · Session 75 complete · AI3=2T · AI4 yield calc live · AI5 batch cards live · n8n EMAILING trigger wired · 1 Tuppence = $2 · Intro = 1T
 
-## Last Completed (Session 74 continued 14)
-- Back button z-index:9999 — sits above Chrome extension overlays consistently app-wide; delete email fallback prompt; cache v=97
+## Last Completed (Session 75)
+- AI3 price-check raised 1T → 2T (BEA + ms.js)
+- AI4 Yield Calculator added to admin Property edit modal + buyer app Property detail cards
+- AI5 Batch Cards entry added to Collectors onboarding (step 3) with photo upload, AI analysis, and queue integration
+- n8n EMAILING trigger: `_notify_n8n_emailing()` in adventures_run.py; `05_emailing_trigger.json` n8n workflow deployed; `.env` placeholder added
 
-## Last Completed (Session 74 continued 13)
-- Trust tab AI coach fixed: msAskAI() now calls /trust-score/guidance directly; result renders inline; cache v=94
-
-## Last Completed (Session 74 continued 12)
-- Selective photo removal: BEA returns violating_photo_indices; only those photos removed; clean photos kept; cache v=93
-
-## Last Completed (Session 74 continued 11)
-- AI3 price-check fixed: re.sub → _re_match.sub; was crashing silently with 500; now returns verdict + SA price range
-
-## Last Completed (Session 74 continued 10)
-- Price check sign-in error fixed: buyerEmail now reads from localStorage not undefined userEmail var; cache v=92; 35/35 passing
-
-## Last Completed (Session 74 continued 9)
-- Delete listing fix: gate login now stores email in localStorage; admin_users.email column added; BEA returns email on login; cache v=91
-
-## Last Completed (Session 74 continued 8)
-- Anonymity: violating photos silently cleared; seller proceeds normally; optional Add better photos button; cache v=90; 35/35 passing
-
-## Last Completed (Session 74 continued 7)
-- Anonymity hard block: removed Keep option; single Replace button + Next disabled until new photos analysed; cache v=89; 35/35 checks passing
-
-## Last Completed (Session 74 continued 6)
-- Anonymity warning: replaced hard block with two buttons — 📷 Replace photos (clears + reopens picker) or ✅ Keep & continue (dismisses notice)
-- Cache bumped to v=88; all 35 smoke checks passing
-
-## Last Completed (Session 74 continued 5)
-- Anonymity photo suppression: goRevealDraft() now clears photoFiles/photoDataUrl + hides strip when anonymity_scrubbed=true; Next button disabled until seller re-shoots
-- Cache bumped to v=87; all 35 smoke checks passing
-
-## Last Completed (Session 74 continued 4)
-- Photo re-selection bug fixed: goHandlePhotos() + goResetStep1UI() now reset input.value='' so same files re-trigger onchange
-- Cache bumped to v=86; all 35 smoke checks passing
-
-## Last Completed (Session 74 continued)
-- Back button visibility: ms.css grouped rule fixes dark arrow on navy for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr
-- Tuppence test values: Introductions + AI Guidance both set to 50 (🧪 TEST — rollback before launch)
-- ms.js restored from git (truncated pre-existing issue) + edits reapplied — syntax clean
-- Cache bumped to v=83; all 35 smoke checks passing
-
-## Last Completed (Session 74)
-- CityLauncher emailer.py: fixed template map, expanded render() placeholders, AI Haiku title generation, magic link draft_id param
-- BEA AI4: POST /listings/{id}/yield-calc (1T, Haiku) — Property yield calculator with SA 2026 benchmarks
-- BEA AI5: POST /listings/batch-cards (2T, Sonnet Vision) — bulk trading card listing from photos, max 10 cards
-- Featured strip: set boost_until=2030 on listings #93, #102, #104 — strip non-empty on live site
-- Tuppence refund purge: 6 edits to marketsquare.html, EULA v1.4_Final.docx, Whitepaper v3.1.docx — zero refund language remains
-- All 35 smoke checks passing
-
-## Last Completed (Session 72)
-- Fixed Route 2 (in-app Sell+) go-live: added email+name fields to Step 2 for non-magic-link sellers
-- Fixed EXIF photo rotation: `ImageOps.exif_transpose()` applied to all 4 PIL image-open calls in BEA
-- Fixed seller CV headline: was showing listing title; now shows "{category} Seller" (anonymous)
-- Added `missing_shots` to vision-draft response: Claude identifies item type and suggests specific missing photos
-- Added "Suggested shots" strip to FEA Zone D: tappable cards per missing shot, opens camera pre-labelled
-- Removed debug logging (sobGoLive STATE / Debug: drafts=N) — was left from Session 71 debugging
-- Updated smoke_test.py to scan html_and_js combined corpus — fixes false FAILs from external ms.js
-- All 35 smoke checks passing; cache-busted to ?v=76
+## Last Completed (Session 74 continued 15)
+Heritage & amenities auto-link audit — found + fixed local_market key mismatch in _CAT_AFFINITY, backfilled listing 104 wonders, confirmed POI logic correct for Property, smoke test all green
 
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=97
+Current version: ?v=100
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active
@@ -103,20 +23,22 @@ Current version: ?v=97
 - Counsel brief for EULA review (remaining [COUNSEL REQUIRED] items: NCC reg no, FICA/KYC justification, NCA applicability, FSCA classification, arbitration clause)
 - Tuppence refund purge — NEXT_SESSION_TUPPENCE_NO_REFUND.md — must complete before patent filing
 - AI audit of marketsquare.html for pre-launch issues
-- Featured strip: mark real BEA listings as featured (strip e
-## Next Session (Session 75)
-Goal: AI3 price-check pricing review + admin UI for AI4/AI5 + buyer app yield-calc button + n8n email trigger wiring
+- Featured strip: mark real BEA listings as featured
+- ~~**n8n EMAILING trigger**~~ DONE — webhook live at localhost:5678, .env set, tested 200 OK
+- **n8n Email David node**: verify `fromEmail` in the 05_emailing_trigger workflow matches the SMTP credential's authorised sender address (currently set to noreply@trustsquare.co)
+- **Batch Cards publish fix (Session 76 — HIGH PRIORITY)**: `sbPublishBatchListings()` returns "Publishing failed" despite good connection. Likely cause: `POST /listings` FormData field mismatch or missing required field (seller_email not sent, or BEA rejects price_suggestion string vs numeric price). Debug by checking BEA logs after a publish attempt. Test with a single card first.
+- **Subscription + Tuppence dual model (Session 76 — design before code)**: Three subscription tiers: Free (bottom 15% — suburb reach only), Starter ~$5/mo (80% — city reach), Premium ~$15/mo (collectors/investors — global reach + vision/analytics). Tuppence sits on top of subscription as a pay-per-use layer for AI functions — it is NOT a substitute for subscription. Intro fixed at 2T regardless of tier. AI function T-prices to be set after Anthropic cost audit. Pack tiers 20T/50T/100T/250T. The combination means: free-tier sellers can still list and receive intros but only see suburb buyers; $5 sellers get city exposure; $15 sellers get global reach, enhanced AI analytics, and future bank-hold/escrow functions. Tuppence spend is a separate "in the moment" layer that any tier can access.
+- **Tuppence pricing strategy (Session 76 — design before code)**: **1 Tuppence = $2 (fixed).** Intro = 1T ($2). Rationale: $2 absorbs invisibly into any meaningful transaction (property, cars, collectibles, vacations). For local market low-value items, cost sits with the buyer who chooses to make contact. Sellers list free always. Casual buyers pay 1T ($2) intro only when they want contact — still affordable as the 80% floor. AI functions to be re-priced after proper Anthropic cost audit — target "subconscious commitment" spend where high-engagement collectors/investors use AI on a roll without friction. Pack tiers 20T ($40) / 50T ($100) / 100T ($200) / 250T ($500). Session 76 task: (1) audit actual API cost per AI function, (2) set T prices with healthy margin, (3) update BEA pack endpoint + Paystack amounts + wallet UI + all in-app cost labels.
 
-### Session 75 Build Plan
-1. AI3 price-check: review Sonnet margin (1T may be near-zero at cost) — consider raising to 2T
-2. Admin dashboard: AI4 Yield Calculator button on Property listing edit modals (mirrors AI1/AI2 strip)
-3. Buyer app: "📈 Yield Calculator" button on Property listing detail card (mirrors AI3 price-check button)
-4. Admin dashboard: AI5 Batch Cards entry point in seller onboarding flow (Collectors category)
-5. n8n: wire emailer.py execution to CityLauncher pipeline EMAILING state trigger
+## Next Session (Session 76)
+Goals:
+1. **Batch Cards publish fix** — debug `sbPublishBatchListings()` against BEA logs; fix field mismatch
+2. **Tuppence + subscription pricing** — audit Anthropic API costs per function, set T prices with margin, update pack tiers (20/50/100/250T), update Paystack amounts + wallet UI
+3. **Yield Calc + AI tools in seller My Space** — add Yield Calc (Property), Rewrite, Why No Intros to seller's own listing edit screen
+4. **n8n Email David node** — verify fromEmail matches SMTP authorised sender
 
-### Pre-launch Rollback Checklist (grep 🧪 TEST in ms.js before launch)
-- tuppence=50 → 5
-- aaLoadWalletSessions fallback '50' → '—'
-- HTML hardcoded balance values → restore originals
-- Remove 🧪 Skip for testing buttons (2 instances in marketsquare.html)
-- Remove POST /dev/credit endpoint + Dev Tools nav from admin app
+Pre-launch rollback checklist (do before go-live):
+- grep 🧪 TEST in ms.js → tuppence=50 → 5, fallback '50' → '—', HTML balance values
+- Remove Skip buttons in onboarding
+- Remove /dev/credit endpoint from BEA
+- Switch Paystack to live mode keys
