@@ -4190,9 +4190,19 @@ function goRevealDraft(draft, warnings, anonymityScrubbed) {
   }
 
   // Anonymity notice — shown when AI detected identifying info in photos
-  // Seller chooses: replace photos (goAnonReplace) or keep & continue (goAnonKeep)
+  // Violating photos are removed automatically; seller can add new ones or proceed without
   const anonEl = document.getElementById('go-anonymity-notice');
   if (anonEl) anonEl.style.display = anonymityScrubbed ? 'block' : 'none';
+  if (anonymityScrubbed) {
+    // Silently remove violating photos — seller proceeds without them
+    goState.photoFiles   = [];
+    goState.photoFile    = null;
+    goState.photoDataUrl = null;
+    const stripEl = document.getElementById('go-photo-strip');
+    if (stripEl) { stripEl.style.display = 'none'; stripEl.innerHTML = ''; }
+    const fileInputEl = document.getElementById('go-file-input');
+    if (fileInputEl) fileInputEl.value = '';
+  }
 
   // Confidence bar — Phase 2: gated by missing_shots count (Session 73)
   // Each missing shot reduces displayed confidence by 12.5% (max −37.5% for 3+ shots).
@@ -4647,23 +4657,25 @@ async function goStep3Coach() {
 
 // ── Anonymity choice handlers ─────────────────────────────────────────────
 function goAnonReplace() {
-  // Seller chose to replace photos — clear state, hide notice, reset to upload zone
+  // Clear violating photos, hide notice, open file picker for replacement
   goState.photoFiles   = [];
   goState.photoFile    = null;
   goState.photoDataUrl = null;
-  const fileInput = document.getElementById('go-file-input');
-  if (fileInput) fileInput.value = '';
+  // Hide the photo strip
+  const stripEl = document.getElementById('go-photo-strip');
+  if (stripEl) { stripEl.style.display = 'none'; stripEl.innerHTML = ''; }
   // Hide the anonymity notice
   const anonEl = document.getElementById('go-anonymity-notice');
   if (anonEl) anonEl.style.display = 'none';
-  // Trigger file picker
-  if (fileInput) fileInput.click();
-}
-
-function goAnonKeep() {
-  // Seller chose to keep existing photos — just dismiss the notice and let them proceed
-  const anonEl = document.getElementById('go-anonymity-notice');
-  if (anonEl) anonEl.style.display = 'none';
+  // Keep Next disabled until new photos are analysed
+  const s1Next = document.getElementById('go-s1-next');
+  if (s1Next) { s1Next.disabled = true; s1Next.textContent = 'Analyse photos →'; }
+  // Reset file input and open picker
+  const fileInput = document.getElementById('go-file-input');
+  if (fileInput) { fileInput.value = ''; fileInput.click(); }
+  // Show the upload zone again
+  const zone = document.getElementById('go-upload-zone');
+  if (zone) zone.style.display = 'block';
 }
 
 // ── Handoff to seller-onboard funnel ──────────────────────────────────────

@@ -2291,3 +2291,22 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 - "✅ Keep & continue" — dismisses the notice and lets the seller proceed with their existing photos
 - Next button always enabled after AI analysis; seller is never forcibly blocked
 - Cache bumped to v=88; all 35 smoke checks passing
+
+## Session 74 (continued 7) · 22 May 2026 · Anonymity hard block — replace only
+
+**Anonymity violation is now a hard block (ms.js + marketsquare.html):**
+- Removed "Keep & continue" option — violating photos (brochures with names/addresses/phones) cannot be kept
+- Warning banner shows a single full-width "📷 Replace photos to continue" button
+- Next button disabled with label "⚠️ Replace photos to continue →" until new photos are picked and analysed
+- goAnonReplace() clears photos, hides strip, shows upload zone, opens file picker — seller must re-analyse
+- goAnonKeep() removed
+- Cache bumped to v=89; all 35 smoke checks passing
+
+## Session 74 (continued 8) · 22 May 2026 · Anonymity — silent removal, seller proceeds
+
+**Anonymity: violating photos silently removed, seller not blocked (ms.js + marketsquare.html):**
+- When anonymity_scrubbed=true, brochure photos are automatically cleared from state and strip hidden
+- Seller sees the warning notice with an optional "📷 Add better photos now" button (opens picker)
+- Next button always enabled — seller can proceed without photos and add them later via edit
+- goAnonKeep() removed; goAnonReplace() retained as optional action only
+- Cache bumped to v=90; all 35 smoke checks passing
