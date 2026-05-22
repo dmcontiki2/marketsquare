@@ -2310,3 +2310,13 @@ AI Tuppence services cost vs revenue: AI1 Haiku rewrite ~$0.001/call (1T = ~$0.0
 - Next button always enabled — seller can proceed without photos and add them later via edit
 - goAnonKeep() removed; goAnonReplace() retained as optional action only
 - Cache bumped to v=90; all 35 smoke checks passing
+
+## Session 74 (continued 9) · 22 May 2026 · Delete listing fix + gate login email
+
+**Delete listing stuck on "Deleting..." fixed:**
+- Root cause: gate login stored ms_admin_token but never set ms_user_email or ms_aa_email in localStorage
+- elConfirmDeleteListing() got empty email → DELETE /listings/{id}/seller returned 403 → button stuck
+- Fix 1: Added email column to admin_users table; populated for all 5 team accounts
+- Fix 2: BEA /admin/login now returns email in team PIN success response
+- Fix 3: Gate login script now stores email as ms_user_email + ms_aa_email on successful login
+- Cache bumped to v=91; BEA restarted; all 35 smoke checks passing

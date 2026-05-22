@@ -7547,6 +7547,7 @@ def admin_login(req: _AdminLoginRequest):
                         "expires_hours": _TOKEN_HOURS,
                         "role": "team",
                         "name": row["name"],
+                        "email": row["email"] if "email" in row.keys() else "",
                     }
         finally:
             conn.close()

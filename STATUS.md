@@ -32,6 +32,9 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Intros My Space fixed: GET /intros?status=all now works; buyer_email filter added; self-intro guard added (409)
 - AI price-check: David credited 50T on server for testing (dmcontiki2@gmail.com)
 
+## Last Completed (Session 74 continued 9)
+- Delete listing fix: gate login now stores email in localStorage; admin_users.email column added; BEA returns email on login; cache v=91
+
 ## Last Completed (Session 74 continued 8)
 - Anonymity: violating photos silently cleared; seller proceeds normally; optional Add better photos button; cache v=90; 35/35 passing
 
@@ -77,7 +80,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=90
+Current version: ?v=91
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active

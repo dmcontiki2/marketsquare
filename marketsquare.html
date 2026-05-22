@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=90">
+<link rel="stylesheet" href="/static/ms.css?v=91">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -262,7 +262,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.token){ sessionStorage.setItem('ms_admin_token', d.token); hideGate(); }
+      if(d.token){
+        sessionStorage.setItem('ms_admin_token', d.token);
+        if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
+        hideGate();
+      }
       else if(d.must_change_pin){ showChangePINScreen(d.name, pw); }
       else { showLoginError(d.detail || 'Incorrect password or PIN.'); }
     })
@@ -289,7 +293,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.token){ sessionStorage.setItem('ms_admin_token', d.token); hideGate(); }
+      if(d.token){
+        sessionStorage.setItem('ms_admin_token', d.token);
+        if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
+        hideGate();
+      }
       else { changeErr.textContent=d.detail||'PIN change failed.'; changeErr.style.display='block'; }
     })
     .catch(function(){ changeErr.textContent='Connection error.'; changeErr.style.display='block'; });
@@ -3680,7 +3688,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=90"></script>
+<script src="/static/ms.js?v=91"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->
