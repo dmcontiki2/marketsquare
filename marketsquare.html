@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=81">
+<link rel="stylesheet" href="/static/ms.css?v=82">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -2482,6 +2482,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
             <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales. Takes 30 seconds.</div>
             <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
+            <button onclick="document.getElementById('sob-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.5);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">🧪 Skip for testing</button>
           </div>
         </div>
       </div>
@@ -2974,6 +2975,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
             <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
             <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Required so Tuppence payouts can be processed when introductions convert to sales.</div>
             <button onclick="goTo('dashboard')" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add in dashboard →</button>
+            <button onclick="document.getElementById('sb-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.5);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">🧪 Skip for testing</button>
           </div>
         </div>
       </div>
@@ -3669,7 +3671,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=81"></script>
+<script src="/static/ms.js?v=82"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->
