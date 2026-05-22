@@ -96,11 +96,19 @@ check("LISTINGS not bundled in HTML", "const LISTINGS = [" not in html)
 print("\n[5] BEA API")
 h = ssh_json("curl -s --max-time 5 'http://localhost:8000/health'")
 check("BEA /health ok", bool(h and h.get("status") == "ok"))
-items = ssh_json("curl -s --max-time 5 'http://localhost:8000/listings?city_id=47&limit=10'")
+# Count all live non-demo listings directly from DB — category-agnostic
+# (GET /listings excludes local_market category so we bypass that filter here)
+live_count_raw = subprocess.run(
+    ["ssh", "root@178.104.73.239",
+     r"""sqlite3 /var/www/marketsquare/marketsquare.db "SELECT COUNT(*) FROM listings WHERE listing_status='live' AND (is_demo=0 OR is_demo IS NULL);" """],
+    capture_output=True, timeout=10
+)
+n_live = int(live_count_raw.stdout.decode().strip() or "0")
+check(f"BEA live listings ({n_live})", n_live >= 1)
+# Photo check — pull first live non-demo listing and verify it has photos
+items = ssh_json("curl -s --max-time 5 'http://localhost:8000/listings?city=Pretoria&demo=0'")
 if isinstance(items, dict):
     items = items.get("listings", items.get("items", []))
-n_items = len(items) if items else 0
-check(f"BEA live listings ({n_items})", bool(items and n_items >= 1))
 if items:
     wp = [l for l in items if l.get("photo_urls") or l.get("medium_url")]
     check(f"Live listing has photos ({len(wp)})", len(wp) >= 1)

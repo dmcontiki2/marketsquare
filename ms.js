@@ -4130,7 +4130,7 @@ async function goVisionNext() {
     if (barEl) barEl.style.width = '100%';
     if (overlay) overlay.style.display = 'none';
 
-    goRevealDraft(data.draft, data.warnings || []);
+    goRevealDraft(data.draft, data.warnings || [], data.anonymity_scrubbed || false);
 
   } catch(e) {
     clearTimeout(timeoutId);
@@ -4141,7 +4141,7 @@ async function goVisionNext() {
 }
 
 // ── goRevealDraft — populate Zone D from vision response ───────────────────
-function goRevealDraft(draft, warnings) {
+function goRevealDraft(draft, warnings, anonymityScrubbed) {
   const reveal = document.getElementById('go-draft-reveal');
   const strip  = document.getElementById('go-photo-strip');
   const skip   = document.getElementById('go-skip-link');
@@ -4179,6 +4179,16 @@ function goRevealDraft(draft, warnings) {
       warnEl.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
     } else {
       warnEl.style.display = 'none';
+    }
+  }
+
+  // Anonymity notice — shown when AI suppressed identifying info from photos
+  const anonEl = document.getElementById('go-anonymity-notice');
+  if (anonEl) {
+    if (anonymityScrubbed) {
+      anonEl.style.display = 'block';
+    } else {
+      anonEl.style.display = 'none';
     }
   }
 

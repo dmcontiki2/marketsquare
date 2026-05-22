@@ -7788,6 +7788,16 @@ You write honest, specific, buyer-friendly listings. You never exaggerate or inv
 
 You are also a photo coaching expert. Once you identify what the item is, you know exactly which additional photos would help buyers trust the listing and help sellers avoid disputes. You always suggest the most important missing shots specific to the identified item type.
 
+ANONYMITY RULE — MANDATORY: TrustSquare is an anonymous marketplace. Seller identities are NEVER revealed until a paid Introduction is accepted. You must NEVER include in any generated field (title, description_draft, tags, or any other field):
+- Street addresses or unit numbers (e.g. "252 Olivier Street", "Apartment 403", "Unit 4B")
+- Business names, complex names, or brand names visible in photos (e.g. "Kronborg Luxury Apartments")
+- Seller names, agent names, or owner names visible in photos or documents
+- Phone numbers, email addresses, WhatsApp numbers, QR codes, or any contact details
+- Social media handles, websites, or URLs
+- Estate agent company names or franchise names
+If any of the above appear in a photo (on signage, documents, watermarks, or as visible text), you MUST silently omit them from all generated text. Describe the item/property using only physical, observable features. Set anonymity_scrubbed to true if you removed or withheld any identifying information.
+If a photo is PREDOMINANTLY an identifying document, contact sheet, or business advertisement (rather than the item itself), add a warning: "Photo N appears to be an advertisement or contact sheet — anonymity requires omitting all business and contact details. Describe only the physical item/property."
+
 You always respond with a single valid JSON object. No markdown. No explanation. Just the JSON."""
 
 def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo_count: int) -> str:
@@ -7920,11 +7930,14 @@ TASK: Return a single JSON object with exactly these fields:
   "mileage": null,
   "condition": null,
   "missing_shots": [],
-  "warnings": []
+  "warnings": [],
+  "anonymity_scrubbed": false
 }}
 
 Fill in ONLY the fields relevant to the detected category. Leave others as null.
-For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low.
+For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low, OR if a photo contains identifying information (business signage, contact details, documents) that you had to suppress.
+
+ANONYMITY ENFORCEMENT (mandatory): Before writing any text, scan all photos for visible identifying information: street addresses, complex/building names, business names, phone numbers, email addresses, agent names, QR codes, URLs, social media handles. Do NOT include any of these in title, description_draft, tags, or any other field. Describe only physical, observable features of the item or property. Set "anonymity_scrubbed": true if you suppressed any identifying information, false if photos contained none.
 
 For "missing_shots": Based on the exact item you identified, list the most important additional photos the seller should add. Be item-specific and practical. Each entry: {{"label": "<short name>", "reason": "<one line why>"}}. Examples:
 - Magic: the Gathering card → [{{"label": "Card back", "reason": "Shows set symbol and condition"}}, {{"label": "Edge close-up", "reason": "Reveals wear grade"}}, {{"label": "Three red dots (magnified)", "reason": "Distinguishes original print from reprint — critical for authenticity"}}]
@@ -8137,10 +8150,16 @@ async def vision_draft(
         seller_email or "guest",
     )
 
+    # Ensure anonymity_scrubbed is present and boolean
+    draft["anonymity_scrubbed"] = bool(draft.get("anonymity_scrubbed", False))
+    if draft["anonymity_scrubbed"]:
+        all_warnings.append("Identifying information (address, business name, or contact details) was detected in photos and removed from this listing to protect seller anonymity.")
+
     return {
         "draft": draft,
         "warnings": all_warnings,
         "model_used": VISION_MODEL,
+        "anonymity_scrubbed": draft["anonymity_scrubbed"],
     }
 
 
@@ -8217,6 +8236,9 @@ async def ai_listing_rewrite(listing_id: int, email: str):
         "You are an expert marketplace copywriter for TrustSquare, a South African peer-to-peer local marketplace. "
         "You write short, honest, buyer-friendly listings using current South African market language. "
         "You never invent details. You prefer concrete facts over adjectives. "
+        "ANONYMITY RULE: TrustSquare is an anonymous marketplace. Never include street addresses, "
+        "business names, complex names, seller names, agent names, phone numbers, email addresses, "
+        "or any other identifying information in any generated text. "
         "Always respond with a single valid JSON object — no markdown, no explanation."
     )
 
@@ -8314,6 +8336,9 @@ async def ai_seller_audit(listing_id: int, email: str):
         "You are a marketplace performance coach for TrustSquare, a South African peer-to-peer marketplace. "
         "You give direct, specific, actionable advice — no filler, no encouragement padding. "
         "Think like a top-performing seller in the same category who has seen hundreds of listings. "
+        "ANONYMITY RULE: TrustSquare is an anonymous marketplace. Never include or suggest including "
+        "street addresses, business names, seller names, agent names, phone numbers, or contact details "
+        "in any generated text or improvement suggestions. "
         "Always respond with a single valid JSON object — no markdown, no explanation."
     )
 

@@ -1,3 +1,22 @@
+## Session 74 (continued 2) · 22 May 2026 · Anonymity enforcement + smoke test fix
+
+**Anonymity enforcement in AI endpoints (bea_main.py):**
+- Root cause: vision-draft AI prompt had no anonymity rule — photos with business signage (addresses, complex names, phone numbers, QR codes) were passed through verbatim into listing title/description
+- Fixed `_VISION_SYSTEM` prompt: added mandatory ANONYMITY RULE — AI must never include street addresses, business/complex names, seller names, agent names, phone numbers, emails, QR codes, URLs, or social handles in any generated field
+- Fixed `_build_vision_prompt()` user turn: added explicit ANONYMITY ENFORCEMENT scan instruction before generating any text; added `"anonymity_scrubbed": false` field to JSON template
+- Response handler: `anonymity_scrubbed` boolean promoted to top-level response field; if true, adds plain-English warning to the warnings array
+- AI1 (rewrite) system prompt: ANONYMITY RULE added
+- AI2 (audit) system prompt: ANONYMITY RULE added — also blocks audit from *suggesting* the seller add identifying details
+- FEA (`marketsquare.html`): added `#go-anonymity-notice` banner (indigo, 🔒 icon) shown when `anonymity_scrubbed=true` — explains to seller why details were removed and confirms anonymity is enforced
+- FEA (`ms.js`): `goRevealDraft()` updated to accept `anonymityScrubbed` param and show/hide the notice banner accordingly
+- Cache bumped to v=84
+
+**Smoke test fix (smoke_test.py):**
+- `GET /listings` excludes `local_market` category by design — live listing #104 (Bunnykins mug) is local_market so check was returning 0 after #93/#102 deleted
+- Replaced `GET /listings?city_id=47` check with direct SQLite DB query via SSH: `SELECT COUNT(*) FROM listings WHERE listing_status='live' AND (is_demo=0 OR is_demo IS NULL)` — category-agnostic, correct count regardless of what listings are live
+- Restored full smoke_test.py from git (edit had truncated sections 9 + summary) and reapplied fix
+- All 35 checks passing
+
 ## Session 74 (continued) · 22 May 2026 · Back button contrast fix + Tuppence test values + ms.js restore
 
 **Back button visibility (ms.css):**

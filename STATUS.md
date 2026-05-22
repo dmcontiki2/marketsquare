@@ -23,7 +23,9 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Tuppence refund purge COMPLETE — marketsquare.html + EULA v1.4_Final + Whitepaper v3.1 all clean
 - Back buttons on dark backgrounds fixed (ms.css grouped rule for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr)
 - Tuppence test values: both Introductions + AI Guidance set to 50 (marked 🧪 TEST — grep to rollback before launch)
-- ms.js restored from git (was truncated) — all 35 smoke checks passing on v=83
+- ms.js restored from git (was truncated) — all 35 smoke checks passing on v=84
+- Anonymity enforcement: vision-draft + AI1 + AI2 system prompts now strip addresses/names/contacts; #go-anonymity-notice banner shown to seller when scrubbed
+- Smoke test: live listings check now queries DB directly (category-agnostic) — survives listing deletions
 
 ## Last Completed (Session 74 continued)
 - Back button visibility: ms.css grouped rule fixes dark arrow on navy for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr
@@ -52,7 +54,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=83
+Current version: ?v=84
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active
