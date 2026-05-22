@@ -4838,9 +4838,30 @@ function sbClosePath(){
   goTo('browse');
 }
 
+// ── sbStartPhotoFirst() ───────────────────────────────────────────────────────
+// Called from B1 "Start with a photo" card.
+// Seeds magicLink with the stored seller identity (if any) so goInit() has
+// email/name available even for returning sellers who arrived via Sell+ button.
+// Then routes to guided-onboard (the 3-step photo-first flow).
+function sbStartPhotoFirst() {
+  const email = localStorage.getItem('ms_aa_email') || '';
+  const name  = localStorage.getItem('ms_aa_name')  || '';
+  // Seed magicLink so goInit() behaves like Route 2 (no magic link) but with
+  // identity pre-filled — category picker will show, upload zone will appear
+  // after category selection, same as a new seller.
+  magicLink = {
+    active: false,   // no magic link — show category picker in guided-onboard
+    name:   name,
+    email:  email,
+    cat:    '',
+    area:   activeCity.name || ''
+  };
+  goTo('guided-onboard');
+}
+
 // Haiko guidance strip (zero API cost)
 var _hkMsgs = {
-  b1:       "Hi! I'm <strong>Haiko</strong> &#8212; tap <strong>Let's go</strong> and I\'ll walk you through every step. Takes about 5 minutes.",
+  b1:       "Hi! I\'m <strong>Haiko</strong> &#8212; pick how you\'d like to list. The photo option is the fastest way to go live.",
   b2:       "<strong>Pick your category</strong> &#8212; this sets the fields and intro model for your listing. Tap the tile that fits best.",
   b2_gate:  "<strong>One quick question</strong> &#8212; are you a registered agent/dealer or a private seller? This determines your compliance badge.",
   b3:       "<strong>Fill in your listing details</strong> &#8212; the more you add, the better the description I\'ll write for you on the next step.",
