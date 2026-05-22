@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=93">
+<link rel="stylesheet" href="/static/ms.css?v=95">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -3369,7 +3369,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="ms-card">
         <div style="font-size:13px;color:var(--text-2);margin-bottom:4px;">Improve your trust score with AI guidance</div>
         <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">Get a personalised action plan to build credibility</div>
-        <button class="ms-ai-btn" onclick="msAskAI()">✨ Ask AI how to improve my score →</button>
+        <button id="tn-trust-coach-btn" class="ms-ai-btn" onclick="msAskAI()">✨ Ask AI how to improve my score →</button>
+        <div id="tn-trust-coach-result" style="display:none;"></div>
       </div>
     </div>
 
@@ -3688,7 +3689,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=93"></script>
+<script src="/static/ms.js?v=95"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

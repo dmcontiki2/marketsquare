@@ -2353,3 +2353,12 @@ All 35 smoke checks passing
 - Clean photos remain in strip and are uploaded; only brochure/advert photos are removed
 - Fallback: if BEA returns no indices, all photos removed (safe default)
 - Cache bumped to v=93; all 35 smoke checks passing
+
+## Session 74 (continued 13) · 22 May 2026 · Trust tab AI coach fixed
+
+**Trust tab "Ask AI how to improve my score" fixed (ms.js + marketsquare.html):**
+- Was routing through aaInit (AdvertAgent) which isn't available in buyer profile context — showed "AI Coach available in seller mode"
+- Fixed: msAskAI() now calls POST /trust-score/guidance directly (same endpoint as seller edit screen)
+- Result renders inline below the button — intro sentence + steps with point values + closing
+- Added id="tn-trust-coach-btn" + result div "tn-trust-coach-result" to HTML
+- Made msAskAI() async; cache bumped to v=94; all 35 smoke checks passing

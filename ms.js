@@ -7014,8 +7014,15 @@ async function elConfirmDeleteListing() {
   const title = elCurrentRaw && elCurrentRaw.title ? '"' + elCurrentRaw.title + '"' : 'this listing';
   if (!confirm('Delete ' + title + '? This cannot be undone.')) return;
   if (!confirm('Are you sure? All listing data, photos and evidence links will be permanently deleted and cannot be recovered.')) return;
-  const email = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
-  if (!email) { showToast('Seller email not set'); return; }
+  let email = (SELLERS[0] && SELLERS[0]._email)
+    || localStorage.getItem('ms_aa_email')
+    || localStorage.getItem('ms_user_email')
+    || '';
+  // Fallback: ask for email if not in localStorage (e.g. session before gate-login fix)
+  if (!email) {
+    email = (prompt('Enter your seller email to confirm deletion:') || '').trim().toLowerCase();
+    if (!email) { showToast('Email required to delete listing'); return; }
+  }
   const btn = document.getElementById('el-delete-btn');
   if (btn) { btn.textContent = 'Deleting...'; btn.style.pointerEvents = 'none'; }
   try {
@@ -10476,16 +10483,51 @@ function msEditField(field){
   }
 }
 
-function msAskAI(){
-  const score = parseInt(localStorage.getItem('ms_trust_score')||'15');
-  const email = localStorage.getItem('ms_user_email') || '';
-  const msg = 'My TrustSquare trust score is '+score+'/100. I want to improve it. What are the most impactful steps I can take? My email is '+(email||'not set')+'.';
-  // Open a browser-side prompt for now (AI coaching via AA system if available)
-  if(typeof aaInit === 'function'){
-    showToast('Opening AI Coach...');
-    goTo('aa-home');
-  } else {
-    showToast('AI Coach available in seller mode');
+async function msAskAI(){
+  const email = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
+  if (!email) { showToast('Sign in first to use AI coach'); return; }
+
+  const btn = document.getElementById('tn-trust-coach-btn');
+  const resultEl = document.getElementById('tn-trust-coach-result');
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Thinking…'; }
+  if (resultEl) resultEl.style.display = 'none';
+
+  // Derive category from first live listing if available
+  const catForCoach = (function(){
+    const live = (typeof LISTINGS !== 'undefined' ? LISTINGS : []).filter(l => l.isLive);
+    return live.length ? (live[0].cat || 'General') : 'General';
+  })();
+
+  try {
+    const res = await fetch(BEA_URL + '/trust-score/guidance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, category: catForCoach })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    const stepsHtml = (data.steps || []).map(s =>
+      `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);">
+        <div style="flex-shrink:0;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;border-radius:20px;padding:3px 8px;align-self:flex-start;white-space:nowrap;">+${s.points} pts</div>
+        <div><div style="font-size:13px;font-weight:600;">${s.action}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">${s.why||''}</div></div>
+      </div>`
+    ).join('');
+
+    if (resultEl) {
+      resultEl.innerHTML = `
+        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:12px;">
+          <div style="font-size:13px;color:#15803d;margin-bottom:10px;">${data.intro||''}</div>
+          ${stepsHtml}
+          <div style="font-size:12px;color:#16a34a;font-weight:600;margin-top:10px;">${data.closing||''}</div>
+        </div>`;
+      resultEl.style.display = 'block';
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Ask AI how to improve my score →'; }
+  } catch(e) {
+    showToast('AI coach unavailable — try again');
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Ask AI how to improve my score →'; }
   }
 }
 
