@@ -104,3 +104,19 @@ Current version: ?v=97
 - Tuppence refund purge — NEXT_SESSION_TUPPENCE_NO_REFUND.md — must complete before patent filing
 - AI audit of marketsquare.html for pre-launch issues
 - Featured strip: mark real BEA listings as featured (strip e
+## Next Session (Session 75)
+Goal: AI3 price-check pricing review + admin UI for AI4/AI5 + buyer app yield-calc button + n8n email trigger wiring
+
+### Session 75 Build Plan
+1. AI3 price-check: review Sonnet margin (1T may be near-zero at cost) — consider raising to 2T
+2. Admin dashboard: AI4 Yield Calculator button on Property listing edit modals (mirrors AI1/AI2 strip)
+3. Buyer app: "📈 Yield Calculator" button on Property listing detail card (mirrors AI3 price-check button)
+4. Admin dashboard: AI5 Batch Cards entry point in seller onboarding flow (Collectors category)
+5. n8n: wire emailer.py execution to CityLauncher pipeline EMAILING state trigger
+
+### Pre-launch Rollback Checklist (grep 🧪 TEST in ms.js before launch)
+- tuppence=50 → 5
+- aaLoadWalletSessions fallback '50' → '—'
+- HTML hardcoded balance values → restore originals
+- Remove 🧪 Skip for testing buttons (2 instances in marketsquare.html)
+- Remove POST /dev/credit endpoint + Dev Tools nav from admin app
