@@ -26,6 +26,9 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - ms.js restored from git (was truncated) — all 35 smoke checks passing on v=84
 - Anonymity enforcement: vision-draft + AI1 + AI2 system prompts now strip addresses/names/contacts; #go-anonymity-notice banner shown to seller when scrubbed
 - Smoke test: live listings check now queries DB directly (category-agnostic) — survives listing deletions
+- Multi-photo upload fixed: goHandoff now uploads all goState.photoFiles; photo/draft endpoint maintains photo_urls JSON array
+- Intros My Space fixed: GET /intros?status=all now works; buyer_email filter added; self-intro guard added (409)
+- AI price-check: David credited 50T on server for testing (dmcontiki2@gmail.com)
 
 ## Last Completed (Session 74 continued)
 - Back button visibility: ms.css grouped rule fixes dark arrow on navy for .tn-header/.el-hdr/.cv-edit-hdr/.aa-hdr
@@ -54,7 +57,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=84
+Current version: ?v=85
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active

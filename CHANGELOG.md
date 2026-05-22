@@ -1,3 +1,32 @@
+## Session 74 (continued 3) · 22 May 2026 · Multi-photo fix + intros fix + self-intro guard + price-check credit
+
+**Multi-photo upload fix (ms.js + bea_main.py):**
+- `goHandoff()` was only uploading `goState.photoFile` (first photo) — all subsequent photos were silently discarded
+- Fixed to iterate `goState.photoFiles` array and upload each photo sequentially via `POST /listings/{id}/photo/draft`
+- `photo/draft` BEA endpoint fixed to maintain `photo_urls` JSON array — previously each upload overwrote `medium_url` and never populated `photo_urls`, so only the last uploaded photo showed
+- All photos now stored in `photo_urls` JSON array + `[photos:url1|url2|...]` description prefix; `thumb_url`/`medium_url` always reflect position-0 (primary)
+
+**Anonymity notice upgraded to red warning (marketsquare.html):**
+- Notice now red (not purple) with `⚠️` icon and explicit "Action required" instruction
+- Tells seller to replace brochure/flyer photos with direct photos of the actual property/item
+- Clarifies AI removed identifying text from description but cannot modify photo pixels
+
+**Intros: My Space now shows sent intros (bea_main.py + ms.js):**
+- `GET /intros?status=all` was returning `[]` — BEA was literally running `WHERE status='all'` which matches nothing
+- Fixed BEA: `status=all` now skips the status filter entirely; added `buyer_email` query param to filter by buyer
+- FEA now passes `buyer_email=` in the fetch so My Space only loads that user's intros (not everyone's)
+- Client-side email filter removed (BEA handles it server-side now)
+
+**Self-intro guard (bea_main.py):**
+- `POST /intros` had no guard against buyer == seller; any user could intro their own listing and waste Tuppence
+- Added check: if `buyer_email == listing.seller_email` → HTTP 409 "You cannot request an introduction to your own listing"
+- Note: existing intro #7 (David on listing #105) was created before this guard — that's expected test behaviour
+
+**AI price-check test credit:**
+- David's BEA account had 0T — price check was blocked even with `tuppence=50` frontend display
+- Directly credited 50T via SQL to `dmcontiki2@gmail.com` so AI price-check (AI3) is testable immediately
+- Cache bumped to v=85; all 35 smoke checks passing
+
 ## Session 74 (continued 2) · 22 May 2026 · Anonymity enforcement + smoke test fix
 
 **Anonymity enforcement in AI endpoints (bea_main.py):**

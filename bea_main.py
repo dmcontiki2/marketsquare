@@ -1982,22 +1982,48 @@ async def upload_draft_listing_photo(
         thumb_url  = storage.upload_photo(thumb_bytes,  thumb_name,  "image/jpeg")
         medium_url = storage.upload_photo(medium_bytes, medium_name, "image/jpeg")
 
-    # Persist to listing row — always treated as primary photo
+    # Persist to listing row
+    # Build [photos:url1|url2|...] prefix in description (legacy) AND maintain photo_urls JSON array
     existing_desc = row["description"] or ""
     photo_entry = medium_url
+
+    # Extract existing photo_urls JSON array from DB row
+    existing_photo_urls_raw = conn.execute(
+        "SELECT photo_urls FROM listings WHERE id=?", (listing_id,)
+    ).fetchone()
+    existing_photo_urls = []
+    if existing_photo_urls_raw and existing_photo_urls_raw["photo_urls"]:
+        import json as _json
+        try:
+            existing_photo_urls = _json.loads(existing_photo_urls_raw["photo_urls"])
+            if not isinstance(existing_photo_urls, list):
+                existing_photo_urls = []
+        except Exception:
+            existing_photo_urls = []
+    # Append new photo (avoid duplicates)
+    if medium_url not in existing_photo_urls:
+        existing_photo_urls.append(medium_url)
+    import json as _json
+    new_photo_urls = _json.dumps(existing_photo_urls)
+
+    # thumb_url / medium_url always reflect first photo (position 0)
+    primary_url = existing_photo_urls[0] if existing_photo_urls else medium_url
+
+    # Update [photos:...] prefix in description
+    all_urls = "|".join(existing_photo_urls)
     if existing_desc.startswith("[photos:"):
         new_desc = _re.sub(
-            r'^\[photos:([^\]]*)\]',
-            lambda m: "[photos:" + photo_entry + ("|" + m.group(1) if m.group(1) else "") + "]",
+            r'^\[photos:[^\]]*\]',
+            f"[photos:{all_urls}]",
             existing_desc
         )
     else:
-        new_desc = f"[photos:{photo_entry}]\n{existing_desc}"
+        new_desc = f"[photos:{all_urls}]\n{existing_desc}"
 
     try:
         conn.execute(
-            "UPDATE listings SET thumb_url=?, medium_url=?, seller_email=COALESCE(seller_email,?), description=? WHERE id=?",
-            (thumb_url, medium_url, email, new_desc, listing_id)
+            "UPDATE listings SET thumb_url=?, medium_url=?, photo_urls=?, seller_email=COALESCE(seller_email,?), description=? WHERE id=?",
+            (primary_url, primary_url, new_photo_urls, email, new_desc, listing_id)
         )
         conn.commit()
     finally:
@@ -2244,6 +2270,10 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     if listing_status != "live":
         conn.close()
         raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {listing_status})")
+    # Self-intro guard — buyer cannot intro their own listing
+    if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
+        conn.close()
+        raise HTTPException(status_code=409, detail="You cannot request an introduction to your own listing")
     conn.execute(
         "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
         (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
@@ -2266,16 +2296,45 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     return {"message": "Introduction request submitted"}
 
 @app.get("/intros")
-def get_all_intros(status: str = "pending"):
+def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None):
     conn = database.get_db()
-    rows = conn.execute(
-        """SELECT i.*, l.title as listing_title, l.category, l.city
-           FROM intro_requests i
-           JOIN listings l ON i.listing_id = l.id
-           WHERE i.status = ?
-           ORDER BY i.created_at DESC""",
-        (status,)
-    ).fetchall()
+    # status="all" means no status filter — return all regardless of status
+    if status == "all":
+        if buyer_email:
+            rows = conn.execute(
+                """SELECT i.*, l.title as listing_title, l.category, l.city
+                   FROM intro_requests i
+                   JOIN listings l ON i.listing_id = l.id
+                   WHERE LOWER(i.buyer_email) = LOWER(?)
+                   ORDER BY i.created_at DESC""",
+                (buyer_email,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT i.*, l.title as listing_title, l.category, l.city
+                   FROM intro_requests i
+                   JOIN listings l ON i.listing_id = l.id
+                   ORDER BY i.created_at DESC"""
+            ).fetchall()
+    else:
+        if buyer_email:
+            rows = conn.execute(
+                """SELECT i.*, l.title as listing_title, l.category, l.city
+                   FROM intro_requests i
+                   JOIN listings l ON i.listing_id = l.id
+                   WHERE i.status = ? AND LOWER(i.buyer_email) = LOWER(?)
+                   ORDER BY i.created_at DESC""",
+                (status, buyer_email)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT i.*, l.title as listing_title, l.category, l.city
+                   FROM intro_requests i
+                   JOIN listings l ON i.listing_id = l.id
+                   WHERE i.status = ?
+                   ORDER BY i.created_at DESC""",
+                (status,)
+            ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 

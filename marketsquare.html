@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=84">
+<link rel="stylesheet" href="/static/ms.css?v=85">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1549,9 +1549,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div id="go-vision-warnings" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:rgba(245,158,11,.85);line-height:1.5;"></div>
 
         <!-- Anonymity notice — shown when AI suppressed identifiers from photos -->
-        <div id="go-anonymity-notice" style="display:none;background:rgba(99,102,241,.1);border:1.5px solid rgba(99,102,241,.35);border-radius:10px;padding:11px 13px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.5;">
-          <div style="font-weight:700;color:#a5b4fc;margin-bottom:4px;">🔒 Anonymity enforced</div>
-          Your photos contained identifying information (address, business name, or contact details). TrustSquare has removed this from your listing — seller identities are only revealed after a paid Introduction is accepted. Please review the listing below and confirm the description is accurate.
+        <div id="go-anonymity-notice" style="display:none;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:10px;padding:11px 13px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85);line-height:1.6;">
+          <div style="font-weight:700;color:#fca5a5;margin-bottom:6px;">⚠️ Photo contains identifying information</div>
+          One or more of your photos shows an address, business name, phone number, or contact details. <strong style="color:#fca5a5;">TrustSquare requires seller anonymity</strong> — your identity is only revealed after a paid Introduction is accepted.<br><br>
+          <strong style="color:#fff;">Action required:</strong> Please replace any brochure, flyer, or advertisement photos with direct photos of the actual property or item. The AI has removed all identifying text from your listing description.
         </div>
 
         <!-- Confidence bar — shown if category_confidence < 0.80 -->
@@ -3677,7 +3678,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=84"></script>
+<script src="/static/ms.js?v=85"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

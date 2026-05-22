@@ -4709,15 +4709,20 @@ async function goHandoff() {
         }
       }
 
-      // Upload primary photo now if it hasn't been uploaded yet
-      if (goState.listingId && goState.photoFile && !goState.photoUploaded) {
-        const fd = new FormData();
-        fd.append('file', goState.photoFile);
-        await fetch(
-          BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
-          { method: 'POST', body: fd }
-        ).catch(() => {});
-        goState.photoUploaded = true;
+      // Upload ALL photos (not just primary) — goState.photoFiles has the full array
+      if (goState.listingId && !goState.photoUploaded) {
+        const filesToUpload = goState.photoFiles && goState.photoFiles.length
+          ? goState.photoFiles
+          : (goState.photoFile ? [goState.photoFile] : []);
+        for (let pi = 0; pi < filesToUpload.length; pi++) {
+          const fd = new FormData();
+          fd.append('file', filesToUpload[pi]);
+          await fetch(
+            BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
+            { method: 'POST', body: fd }
+          ).catch(() => {});
+        }
+        if (filesToUpload.length) goState.photoUploaded = true;
       }
 
       // Seed sobState.drafts directly so sobInit() doesn't need to re-fetch
@@ -10051,12 +10056,12 @@ async function msLoadIntros(email){
   if(!email || !BEA_ENABLED){ msRenderIntrosFallback(); return; }
   try {
     // Fetch intros where this buyer is the buyer (sent by them)
-    const res = await fetch(BEA_URL+'/intros?status=all');
+    const res = await fetch(BEA_URL+'/intros?status=all&buyer_email='+encodeURIComponent(email));
     if(!res.ok){ msRenderIntrosFallback(); return; }
     const data = await res.json();
     const all = Array.isArray(data) ? data : (data.items || []);
 
-    const sent = all.filter(i => (i.buyer_email||'').toLowerCase() === email.toLowerCase());
+    const sent = all; // BEA already filtered by buyer_email
     const recv = []; // received = intros on MY listings — we\'ll leave as placeholder for now
 
     localStorage.setItem('ms_intros_sent', sent.length);
