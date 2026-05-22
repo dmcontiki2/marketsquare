@@ -32,6 +32,9 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 - Intros My Space fixed: GET /intros?status=all now works; buyer_email filter added; self-intro guard added (409)
 - AI price-check: David credited 50T on server for testing (dmcontiki2@gmail.com)
 
+## Last Completed (Session 74 continued 14)
+- Back button z-index:9999 — sits above Chrome extension overlays consistently app-wide; delete email fallback prompt; cache v=97
+
 ## Last Completed (Session 74 continued 13)
 - Trust tab AI coach fixed: msAskAI() now calls /trust-score/guidance directly; result renders inline; cache v=94
 
@@ -92,7 +95,7 @@ BEA v1.3.0 live at trustsquare.co - FastAPI + SQLite (10 tables) + Redis on Hetz
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=94
+Current version: ?v=97
 
 ## Open Actions (carry forward)
 - support@trustsquare.co mailbox - confirm active

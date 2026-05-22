@@ -480,7 +480,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .cat-big-tile.selected .cbt-check{opacity:1;}
 
 .pub-hdr{display:flex;align-items:center;gap:12px;padding:52px 20px 14px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
-.back-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.back-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:9999;}
 .back-btn svg{width:16px;height:16px;stroke:var(--text);}
 .pub-hdr h1{font-size:19px;font-weight:800;}
 .steps{display:flex;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);}

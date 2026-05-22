@@ -2362,3 +2362,15 @@ All 35 smoke checks passing
 - Result renders inline below the button — intro sentence + steps with point values + closing
 - Added id="tn-trust-coach-btn" + result div "tn-trust-coach-result" to HTML
 - Made msAskAI() async; cache bumped to v=94; all 35 smoke checks passing
+
+## Session 74 (continued 14) · 22 May 2026 · Back button z-index + delete email fallback
+
+**Back button z-index fix (ms.css):**
+- Chrome extension (Wisebase AI Tools) was injecting an overlay at the left edge, obscuring the back button
+- Added position:relative + z-index:9999 to .back-btn — button now sits above extension overlays consistently across all screens
+- Layout unchanged — no padding shifts, consistent throughout the app
+
+**Delete listing email fallback (ms.js):**
+- If ms_aa_email not yet in localStorage (pre gate-login-fix session), prompt() asks for email rather than silently failing
+- Permanent fix: gate login now stores email; prompt is just a safety net for stale sessions
+- Cache bumped to v=97; all 35 smoke checks passing
