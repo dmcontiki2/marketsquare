@@ -16,6 +16,7 @@
 | L5 | **FSCA guidance on Tuppence** — confirm Tuppence classification as non-virtual-asset with FSCA or comply if reclassified (EULA Section 12) | Legal |
 | L6 | **POPIA consent timing** — counsel must confirm whether magic link email collection constitutes prior consent or whether EULA gate must move earlier in the flow | Legal |
 | L7 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once CIPC registration approved | Server |
+| L8 | **IP Brief v3 + Patent Strategy v2 — Session 80 (Opus)** — Update `TrustSquare_IP_Brief_v2_May2026.docx` and `TrustSquare_IP_Patent_Strategy_v1.docx` to reflect: (1) A8 no-punitive-Tuppence principle; (2) corrected commitment-signal argument (buyer's irreversible 1T spend, not seller penalty); (3) new features (AI5 Batch Cards, AI4 Yield Calc, World Heritage linking); (4) updated pack tiers. Produce lawyer-ready handoff summary. Full briefing in `SESSION_80_OPUS_IP_BRIEF.md`. **Must be done before submitting to patent attorney.** | Legal / IP |
 
 
 ---

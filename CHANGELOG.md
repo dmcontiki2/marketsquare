@@ -1,3 +1,38 @@
+## Session 76 · 23 May 2026 · Batch Cards publish fix · A8 Tuppence principles · Pack tiers · Photo media fix
+
+**Batch Cards admin fix (marketsquare_admin.html):**
+- Added `batch-suburb-wrap` suburb selector to AI5 panel; `toggleBatchCardsPanel()` populates it from `f-suburb` or `/geo/suburbs`; `runAI5BatchCards()` validates suburb before proceeding; `addBatchDraftToQueue()` picks up the suburb value — fixes BEA 400 "suburb required" rejection.
+
+**Batch Cards buyer app fix (ms.js):**
+- `sbPublishBatchListings()` was POSTing FormData to `POST /listings` (JSON-only endpoint → 422). Redirected to `POST /advert-agent/publish` with correct `fields` JSON including title, desc, price, suburb, condition, item_type. Photo blob now correctly appended.
+- Commitment flow step label corrected: "Seller pays 1T · you connect directly" → "Identities revealed · you connect directly".
+- Cache bumped v=100 → v=101 in marketsquare.html.
+
+**BEA fix — aa_publish city param (bea_main.py):**
+- `aa_publish` endpoint was hardcoding city="Pretoria" in the DB INSERT. Added `city: str = Form("Pretoria")` parameter and used it in INSERT.
+
+**AI3 price correction (bea_main.py):**
+- `_deduct_tuppence` for price-check corrected 2T → 1T (frontend had already shown 1T; BEA was deducting 2T — mismatch fixed).
+
+**Pack tiers updated (marketsquare.html):**
+- Intro packs replaced: 5T/$10 · 10T/$20 · 25T/$50 → 20T/$40 · 50T/$100 · 100T/$200 · 250T/$500 (R36/T).
+- "Top up AI Guidance" separate pack section removed — AI spend unified into main wallet.
+
+**A8 Tuppence non-punitive principle — all documents:**
+- PRINCIPLE_REQUIREMENTS.md (both MarketSquare + AdvertAgent copies): A3 corrected (no Tuppence deduct on ignore/decline), new A8 added (Tuppence purchase-only, never punitive).
+- AGENT_BRIEFING.md: line 51 corrected to reflect A8.
+- marketsquare.html EULA text + tooltip corrected: "1T fee to re-list" → "Trust Score −5; listing unpauses automatically".
+- MarketSquare_EULA_v1_5_Draft.docx: created with 4 tracked changes (author: Claude) correcting all ignore/decline penalty references.
+- Solar_Council_Codex_v4_7.docx: created with 3 tracked changes correcting ignore/decline/dashboard penalty cells.
+
+**Photo media fix (nginx):**
+- BEA `aa_publish` was saving photos to `/var/www/marketsquare/media/` (local fallback, S3 not configured) but nginx had no `/media/` location block — photos existed on disk but returned 404.
+- Added `/media/` location block to nginx config; reloaded nginx. Verified HTTP 200 from trustsquare.co/media/*.jpg.
+- Test listing 112 (Springbok Rugby Cards, no photo) deleted — David to re-publish via fixed batch flow.
+
+**Session 80 scheduled (STATUS.md + BACKLOG.md):**
+- SESSION_80_OPUS_IP_BRIEF.md created: cold-start briefing for Opus to update IP Brief v3, Patent Strategy v2, and produce lawyer handoff summary reflecting A8 and all new features before patent filing.
+
 ## Session 75 · 22 May 2026 · AI3 price up · AI4 yield calc · AI5 batch cards · n8n EMAILING trigger · pricing model
 
 **AI3 price-check raised 1T → 2T (bea_main.py + ms.js):**
@@ -2467,3 +2502,30 @@ Audited the `auto_link_wonders()` and `auto_link_pois()` pipeline end-to-end. Fi
 - AI function T-prices to be set after Anthropic cost audit in Session 76.
 - Pack tiers: 20T / 50T / 100T / 250T.
 - Tuppence balance to remain portable across subscription tier changes.
+
+## Session 76
+
+### Batch Cards publish fix — admin app (AI5)
+- Root cause: `sellerData.suburb` never populated (step 1 only captures name/email/city/geo_city_id), so BEA rejected `POST /listings` with 400 "suburb required".
+- Fix: added suburb selector inside the AI5 batch cards panel (`batch-suburb-wrap`). When the panel opens, `toggleBatchCardsPanel()` copies options from `f-suburb` (already loaded) or fetches fresh from `/geo/suburbs` if needed. Added validation guard in `runAI5BatchCards()` — shows toast and aborts if no suburb selected.
+- Both `runAI5BatchCards` (for the AI call) and `addBatchDraftToQueue` (for the queue entry) now read `batch-suburb` value. admin.html deployed.
+
+### Batch Cards publish fix — buyer app Seller Space (sbPublishBatchListings)
+- Root cause: `sbPublishBatchListings` was posting FormData to `POST /listings` (a JSON-only endpoint), always getting 422. Also hardcoded city "Pretoria" was missing in the BEA `/advert-agent/publish` handler.
+- Fix: redirected `sbPublishBatchListings` to `POST /advert-agent/publish`, restructuring fields as JSON string in `fields` form field (matching what `aa_publish` expects). Added error logging on failure.
+- BEA `aa_publish` updated: added `city: str = Form("Pretoria")` parameter and passes it to the INSERT (previously hardcoded). ms.js and BEA deployed.
+
+### Tuppence pricing audit + pack tier update
+- Audited actual Anthropic API cost per AI function: Haiku 4.5 calls cost ~$0.002 each; Sonnet 4.6 calls (Price Check, Batch Cards) cost $0.007–$0.051. All functions have >98% gross margin at 1T ($2).
+- AI3 Price Check: corrected BEA charge from 2T → 1T (frontend already showed 1T — BEA was overcharging by 1T).
+- All AI functions now uniformly 1T each, except AI5 Batch Cards (2T — vision + multi-image justified).
+- Intro pack tiers updated: 5T/10T/25T → 20T/50T/100T/250T ($40/$100/$200/$500 · R720/R1800/R3600/R9000).
+- "Top up AI Guidance" separate pack section removed from wallet UI — AI spend draws from the same Tuppence wallet as intros. One wallet, one top-up flow.
+- marketsquare.html, ms.js, bea_main.py all deployed. Smoke test all green.
+
+### Tuppence penalty purge (Session 76 — principle correction)
+- Removed all references to 1T resubmit fees for seller ignore/decline across every file.
+- Files cleaned: PRINCIPLE_REQUIREMENTS.md (MarketSquare + AdvertAgent copy), AGENT_BRIEFING.md, marketsquare.html (EULA ×2 + tooltip), ms.js (commitment flow step).
+- A3 now reads: Commitment ignore → Trust Score −5, listing unpauses. Queue ignore → Trust Score −3. All declines → no penalty.
+- New **A8 · Tuppence deductions are purchase-only — never punitive** added to both PRINCIPLE_REQUIREMENTS.md files. Core rule: Tuppence is only deducted for (i) Introduction purchase, (ii) AI service purchase, (iii) Boost purchase. Punitive behaviour is handled exclusively via Trust Score reduction and Banishment. Non-negotiable; applies to all agents, features, and legal documentation.
+- BEA confirmed: the penalty was never enforced in code — documentation-only residue, now fully excised.

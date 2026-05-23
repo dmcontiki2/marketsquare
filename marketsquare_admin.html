@@ -916,6 +916,37 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 
   <!-- Add listing button -->
   <button class="btn-add-listing" onclick="openListingForm()">+ Add listing</button>
+  <button id="btn-batch-cards" onclick="toggleBatchCardsPanel()" style="display:none;width:100%;margin-top:10px;padding:13px 20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;">
+    📸 AI Batch Cards <span style="font-size:11px;opacity:.8;font-weight:500;">(2T · up to 10 cards)</span>
+  </button>
+
+  <!-- ── AI5 BATCH CARDS PANEL (Collectors only) ── -->
+  <div id="batch-cards-panel" style="display:none;margin-top:14px;background:var(--surface-2);border:1.5px solid #c4b5fd;border-radius:12px;padding:16px;">
+    <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:4px;">📸 AI Batch Card Listings</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.5;">Take or upload photos of up to 10 cards. Claude identifies each one and drafts a listing — you review and add them to your queue.</div>
+    <div class="photo-zone" id="batch-photo-zone" onclick="document.getElementById('batch-photo-input').click()" style="cursor:pointer;">
+      <input type="file" id="batch-photo-input" accept="image/*" multiple style="display:none;" onchange="handleBatchPhotos(event)">
+      <div class="pz-icon">🃏</div>
+      <div class="pz-title">Tap to add card photos</div>
+      <div class="pz-sub">Up to 10 photos · one card per photo · JPEG or PNG</div>
+    </div>
+    <div id="batch-photo-preview" class="photo-preview-strip" style="margin-top:10px;"></div>
+    <div id="batch-suburb-wrap" style="margin-top:12px;display:none;">
+      <label style="font-size:12px;font-weight:700;color:#5b21b6;display:block;margin-bottom:4px;">Suburb *</label>
+      <select id="batch-suburb" style="width:100%;padding:10px 12px;border:1.5px solid #c4b5fd;border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);">
+        <option value="">Select suburb…</option>
+      </select>
+    </div>
+    <div id="batch-cards-result" style="margin-top:12px;"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button id="batch-analyse-btn" onclick="runAI5BatchCards()" style="display:none;flex:1;padding:12px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+        ✨ Analyse Cards (2T)
+      </button>
+      <button onclick="closeBatchCardsPanel()" style="padding:12px 20px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-2);">
+        Cancel
+      </button>
+    </div>
+  </div>
 
   <!-- ── LISTING FORM (inline, shown/hidden) ── -->
   <div id="listing-form" style="display:none;">
@@ -1826,6 +1857,9 @@ function updateStep3UI() {
   document.getElementById('sb-name').textContent   = sellerData.name;
   document.getElementById('sb-email').textContent  = sellerData.email;
   document.getElementById('sb-cat').textContent    = selectedCat + ' · ' + sellerData.city;
+  // Show Batch Cards button only for Collectors
+  const batchBtn = document.getElementById('btn-batch-cards');
+  if (batchBtn) batchBtn.style.display = selectedCat === 'Collectors' ? '' : 'none';
   renderListingQueue();
 }
 
@@ -3765,6 +3799,12 @@ async function openAdmEdit(id) {
   } catch(_) {}
   admEditListing = fresh;
   renderAdmEditModal(fresh);
+  // Show Yield Calculator only for Property-category listings
+  const yieldBtn = document.getElementById('adm-ai-yield-btn');
+  if (yieldBtn) {
+    const cat = (fresh.category || '').toLowerCase();
+    yieldBtn.style.display = (cat === 'property' || cat === 'estate agents' || cat === 'accommodation') ? '' : 'none';
+  }
   document.getElementById('adm-edit-modal-bg').classList.add('open');
   // Load supplementary panels
   admEditLoadPhotos(fresh);
@@ -3881,6 +3921,267 @@ async function fetchTuppenceBalance(email) {
   } catch(_) {}
   return 0;
 }
+
+async function admAIYield() {
+  const btn = document.getElementById('adm-ai-yield-btn');
+  const res = document.getElementById('adm-ai-services-result');
+  if (!admEditId || !admEditListing) { showToast('No listing open'); return; }
+  const email = admEditListing.seller_email || sellerData && sellerData.email || '';
+  if (!email) { showToast('Seller email unknown — cannot charge Tuppence'); return; }
+  const tBal = await fetchTuppenceBalance(email);
+  if (tBal < 1) {
+    showToast('Insufficient Tuppence — top up your balance first');
+    return;
+  }
+  if (!confirm('This will deduct 1T to run an AI property yield analysis for this listing. Proceed?')) return;
+  btn.disabled = true; btn.textContent = '⏳ Calculating…';
+  res.style.display = 'none';
+  try {
+    const r = await fetch(BEA_URL + '/listings/' + admEditId + '/yield-calc?email=' + encodeURIComponent(email), { method: 'POST' });
+    if (r.status === 402) { showToast('Insufficient Tuppence'); return; }
+    if (r.status === 400) { showToast('Yield calc only available for Property listings'); return; }
+    if (!r.ok) { showToast('Yield calculation failed'); return; }
+    const data = await r.json();
+    res.style.display = 'block';
+    res.innerHTML = `
+      <div style="background:#faf5ff;border-radius:10px;padding:14px 16px;border:1.5px solid #c4b5fd;">
+        <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:10px;">📈 AI Yield Analysis</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #e9d5ff;text-align:center;">
+            <div style="font-size:10px;color:#7c3aed;font-weight:600;margin-bottom:2px;">GROSS YIELD</div>
+            <div style="font-size:20px;font-weight:800;color:#5b21b6;">${data.gross_yield_pct}</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #e9d5ff;text-align:center;">
+            <div style="font-size:10px;color:#7c3aed;font-weight:600;margin-bottom:2px;">NET YIELD EST.</div>
+            <div style="font-size:20px;font-weight:800;color:#5b21b6;">${data.net_yield_estimate_pct}</div>
+          </div>
+        </div>
+        ${data.monthly_rent_estimate && data.monthly_rent_estimate !== 'N/A' ? `<div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:6px;">Rent estimate: ${data.monthly_rent_estimate}</div>` : ''}
+        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
+        <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
+        <div style="font-size:10px;color:#9ca3af;">AI yield analysis · ${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    showToast('Yield analysis complete');
+  } catch(e) { showToast('Yield calculation error'); }
+  finally { btn.disabled = false; btn.textContent = '📈 Yield Calculator (1T)'; }
+}
+
+// ── AI5: Batch Cards (Session 75) ────────────────────────────────────────────
+let _batchPhotos = [];   // {file, dataUrl}
+
+function toggleBatchCardsPanel() {
+  const panel = document.getElementById('batch-cards-panel');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) {
+    closeBatchCardsPanel();
+  } else {
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Populate batch suburb from the main suburb selector
+    const batchSuburbWrap = document.getElementById('batch-suburb-wrap');
+    const batchSuburb = document.getElementById('batch-suburb');
+    const mainSuburb = document.getElementById('f-suburb');
+    if (batchSuburb && mainSuburb && mainSuburb.options.length > 1) {
+      // Copy options from f-suburb
+      batchSuburb.innerHTML = mainSuburb.innerHTML;
+      if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
+    } else if (batchSuburb && sellerData.geo_city_id) {
+      // Fetch suburbs directly if not loaded yet
+      fetch(BEA_URL + '/geo/suburbs?city_id=' + encodeURIComponent(sellerData.geo_city_id))
+        .then(r => r.json())
+        .then(suburbs => {
+          batchSuburb.innerHTML = '<option value="">Select suburb…</option>' +
+            suburbs.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+          if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
+        }).catch(() => {});
+    }
+  }
+}
+
+function closeBatchCardsPanel() {
+  const panel = document.getElementById('batch-cards-panel');
+  if (panel) panel.style.display = 'none';
+  _batchPhotos = [];
+  const prev = document.getElementById('batch-photo-preview');
+  if (prev) prev.innerHTML = '';
+  const res = document.getElementById('batch-cards-result');
+  if (res) res.innerHTML = '';
+  const btn = document.getElementById('batch-analyse-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+function handleBatchPhotos(e) {
+  const files = Array.from(e.target.files || []).slice(0, 10);
+  if (!files.length) return;
+  _batchPhotos = [];
+  const prev = document.getElementById('batch-photo-preview');
+  prev.innerHTML = '<div style="font-size:11px;color:#7c3aed;margin-bottom:6px;">Processing ' + files.length + ' photo(s)…</div>';
+
+  let done = 0;
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      // Compress via canvas
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+        _batchPhotos[idx] = { file, dataUrl };
+        done++;
+        if (done === files.length) {
+          _batchPhotos = _batchPhotos.filter(Boolean);
+          renderBatchPreviews();
+          const btn = document.getElementById('batch-analyse-btn');
+          if (btn) btn.style.display = _batchPhotos.length ? 'flex' : 'none';
+        }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  // Reset input so same files can be re-selected
+  e.target.value = '';
+}
+
+function renderBatchPreviews() {
+  const prev = document.getElementById('batch-photo-preview');
+  if (!prev) return;
+  prev.innerHTML = _batchPhotos.map((p, i) =>
+    `<div style="position:relative;display:inline-block;margin:4px;">
+      <img src="${p.dataUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1.5px solid #c4b5fd;">
+      <button onclick="_batchPhotos.splice(${i},1);renderBatchPreviews();document.getElementById('batch-analyse-btn').style.display=_batchPhotos.length?'flex':'none';"
+        style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>`
+  ).join('') + `<div style="font-size:11px;color:#7c3aed;margin-top:4px;">${_batchPhotos.length} photo(s) ready</div>`;
+}
+
+async function runAI5BatchCards() {
+  const btn = document.getElementById('batch-analyse-btn');
+  const res = document.getElementById('batch-cards-result');
+  if (!_batchPhotos.length) { showToast('Add at least one card photo'); return; }
+  if (!sellerData || !sellerData.email) { showToast('Seller not loaded — go back to step 1'); return; }
+
+  const tBal = await fetchTuppenceBalance(sellerData.email);
+  if (tBal < 2) {
+    showToast('Need at least 2T — top up first');
+    return;
+  }
+  if (!confirm('This will deduct 2T to analyse ' + _batchPhotos.length + ' card photo(s) with AI. Proceed?')) return;
+
+  btn.disabled = true; btn.textContent = '⏳ Analysing cards…';
+  res.innerHTML = '<div style="font-size:12px;color:#7c3aed;padding:8px 0;">⏳ Claude is identifying your cards…</div>';
+
+  const batchSuburb = (document.getElementById('batch-suburb') || {}).value || '';
+  if (!batchSuburb) { showToast('Please select a suburb first'); btn.disabled = false; btn.textContent = '✨ Analyse Cards (2T)'; return; }
+  const images = _batchPhotos.map(p => p.dataUrl);
+
+  try {
+    const r = await fetch(BEA_URL + '/listings/batch-cards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        images,
+        city:         sellerData.city,
+        suburb:       batchSuburb,
+        seller_email: sellerData.email,
+      })
+    });
+    if (r.status === 402) { showToast('Insufficient Tuppence'); res.innerHTML = ''; return; }
+    if (!r.ok) { showToast('Batch analysis failed'); res.innerHTML = ''; return; }
+    const data = await r.json();
+    const drafts = data.drafts || [];
+
+    if (!drafts.length) {
+      res.innerHTML = '<div style="font-size:12px;color:#ef4444;padding:8px 0;">No listings could be generated — try clearer photos.</div>';
+      return;
+    }
+
+    const conditionLabels = {
+      mint: 'Mint', near_mint: 'Near Mint', excellent: 'Excellent',
+      good: 'Good', fair: 'Fair', poor: 'Poor'
+    };
+    const conditionColors = {
+      mint: '#065f46', near_mint: '#1e40af', excellent: '#1e40af',
+      good: '#374151', fair: '#92400e', poor: '#991b1b'
+    };
+
+    res.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:10px;">
+        ✨ ${drafts.length} listing draft(s) ready · ${data.tuppence_remaining}T remaining
+      </div>
+      ${drafts.map((d, i) => `
+        <div id="bc-draft-${i}" style="background:#fff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <img src="${_batchPhotos[i] ? _batchPhotos[i].dataUrl : ''}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid #e9d5ff;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:3px;">${d.title}</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:5px;">${d.description}</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:700;color:#5b21b6;">${d.price_suggestion}</span>
+                <span style="font-size:10px;font-weight:600;color:${conditionColors[d.condition]||'#374151'};background:#f5f3ff;padding:2px 8px;border-radius:20px;">${conditionLabels[d.condition]||d.condition}</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="addBatchDraftToQueue(${i})" id="bc-add-btn-${i}"
+            style="width:100%;margin-top:10px;padding:9px;background:#7c3aed;color:#fff;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+            + Add to Listing Queue
+          </button>
+        </div>`).join('')}`;
+
+    // Store drafts for addBatchDraftToQueue
+    window._ai5Drafts = drafts;
+    window._ai5Photos = _batchPhotos.map(p => p.dataUrl);
+
+  } catch(e) { showToast('Batch analysis error'); res.innerHTML = ''; }
+  finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Analyse Cards (2T)';
+  }
+}
+
+function addBatchDraftToQueue(i) {
+  const d = (window._ai5Drafts || [])[i];
+  const photoDataUrl = (window._ai5Photos || [])[i];
+  if (!d) return;
+
+  // Build a queue entry matching the format that renderListingQueue expects
+  const entry = {
+    photos:   photoDataUrl ? [{ localPreview: photoDataUrl, file: null, dataUrl: photoDataUrl }] : [],
+    formData: {
+      title:       d.title,
+      description: d.description,
+      price:       d.price_suggestion.replace(/[^0-9,.\-–R]/g, '').replace(/^R/, '').trim() || d.price_suggestion,
+      per:         '',
+      suburb:      (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || '',
+      condition:   d.condition,
+      itemType:    'Trading Card',
+      catalogueRef: '',
+      editionYear:  '',
+    },
+    structuredFields: { condition: d.condition, item_type: 'Trading Card' },
+    photoFiles:  [],
+    status: 'pending',
+  };
+  listingQueue.push(entry);
+  renderListingQueue();
+
+  // Mark the card as added
+  const btn = document.getElementById('bc-add-btn-' + i);
+  if (btn) {
+    btn.textContent = '✓ Added to queue';
+    btn.disabled = true;
+    btn.style.background = '#059669';
+  }
+  showToast('Draft added to queue');
+}
+// ── END AI5 Batch Cards ────────────────────────────────────────────────────────
 
 // ── END AI TUPPENCE SERVICES — Admin ──────────────────────────────────────
 
@@ -4815,6 +5116,10 @@ async function adminHaikoDraftDesc() {
           <button id="adm-ai-audit-btn" onclick="admAIAudit()"
             style="flex:1;min-width:120px;padding:10px 14px;border:none;border-radius:8px;background:#059669;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
             🔍 Why No Intros? <span style="font-size:11px;opacity:.8;">(1T)</span>
+          </button>
+          <button id="adm-ai-yield-btn" onclick="admAIYield()" style="display:none;
+            flex:1;min-width:120px;padding:10px 14px;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+            📈 Yield Calculator <span style="font-size:11px;opacity:.8;">(1T)</span>
           </button>
         </div>
         <div id="adm-ai-services-result" style="margin-top:12px;display:none;"></div>

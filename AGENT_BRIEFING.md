@@ -48,7 +48,7 @@ Score is earned across three groups: Universal (ID verification, profile, referr
 
 **Declaration system (Session 36):** Declarable signals have `declaration_points` (80%) and `evidence_points` (20%). Seller submits free-text declaration via `POST /users/{email}/declare` → awarded declaration_points immediately, credential set to `declared` status. Uploading evidence later upgrades `declared` → `earned` and awards evidence_points. Audit trail stored in `user_declarations` table. Four LM signals currently declarable: `assoc_role` (12/3), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1).
 
-Introduction penalties (A3): seller ignores intro → 1T fee to resubmit (Commitment) or −3 Trust (Queue). Seller declines → 1T to resubmit (Commitment only).
+Introduction penalties (A3/A8): seller ignores intro → Trust Score −5 (Commitment) or −3 (Queue). Listing unpauses automatically. Seller declines → no penalty. Tuppence is NEVER deducted as punishment — see A8.
 Complaint penalties: −8/−5/−3/−2/−1 per complaint (diminishing), capped at −22 total. Bad referral confirmed: −10 pts + reversal of referral pts.
 
 ### Anonymity Rule

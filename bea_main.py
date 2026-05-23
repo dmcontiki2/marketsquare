@@ -989,6 +989,7 @@ _CAT_AFFINITY = {
     "food":         {"national park": 2, "world heritage": 2, "national museum": 1, "archaeological": 1},
     "produce":      {"national park": 2, "world heritage": 2, "national museum": 1, "archaeological": 1},
     "local market": {"national park": 1, "world heritage": 1, "national museum": 2, "archaeological": 1},
+    "local_market": {"national park": 1, "world heritage": 1, "national museum": 2, "archaeological": 1},
     "collectors":   {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 3},
     "cars":         {"national park": 1, "world heritage": 1, "national museum": 2, "archaeological": 1},
     "tutors":       {"national park": 1, "world heritage": 2, "national museum": 3, "archaeological": 2},
@@ -3084,6 +3085,7 @@ async def aa_publish(
     category: str = Form(...),
     fields: str = Form(...),        # JSON string
     coach_output: str = Form(""),
+    city: str = Form("Pretoria"),
     photos: list[UploadFile] = File(default=[]),
 ):
     """Receive draft + photos, upload to R2, create pending listing, return listing id."""
@@ -3158,7 +3160,7 @@ async def aa_publish(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, published_at)
            VALUES (?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
-        (title, price, category, "Pretoria", suburb, suburb, desc, thumb_url, medium_url, service_class, email),
+        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email),
     )
     listing_id = cursor.lastrowid
     # Upsert user record so seller can use AA coach going forward
@@ -8473,7 +8475,7 @@ async def ai_seller_audit(listing_id: int, email: str):
 
 @app.post("/listings/{listing_id}/price-check")
 async def ai_price_check(listing_id: int, email: str):
-    """AI3: Buyer pays 1T — Claude Sonnet gives a market price comparison
+    """AI3: Buyer pays 2T — Claude Sonnet gives a market price comparison
     for the specific listing. Helps buyer decide before requesting intro.
     Returns {verdict, context, suggested_range, tuppence_remaining}.
     """

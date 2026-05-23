@@ -25,7 +25,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 
 ### A3 · Introduction models are locked by category
 - Property → Commitment model: listing pauses on request, one buyer at a time, 48hr window.
-  - Seller ignores: 1T fee to resubmit. Seller declines: 1T fee to resubmit.
+  - Seller ignores: Trust Score −5. Listing unpauses automatically. Seller declines: no penalty.
 - Tutors / Services → Soft Queue: listing stays live, multiple buyers can queue, 48hr window.
   - Seller ignores: Trust Score −3. Seller declines: no penalty.
 - Help Wanted → Soft Queue (helper owns the listing).
@@ -61,6 +61,15 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 ---
 
 ## PART B · Sovereignty Stack Principles (Core — no exceptions)
+
+### A8 · Tuppence deductions are purchase-only — never punitive (CORE PRINCIPLE)
+- Tuppence is NEVER deducted from any wallet as a punishment, penalty, or deterrent.
+- The only valid reasons to deduct Tuppence are: (i) buyer pays an Introduction fee; (ii) seller or buyer purchases an AI service; (iii) seller purchases a Boost.
+- Negative behaviour (ignoring intros, declining without reason, no-shows, bad referrals) is penalised exclusively via Trust Score reduction and, in severe or repeat cases, Banishment (account suspension or permanent ban).
+- This principle is non-negotiable. No agent, architect, or future feature may introduce a Tuppence-deduction penalty under any framing (fee, bond, deposit, resubmission cost, etc.).
+- Rationale: punitive deductions create fear, erode trust, and undermine the platform's commitment-signal model. Trust Score is the correct instrument — it is visible, recoverable, and proportionate.
+- Applies to: BEA all endpoints · FEA all flows · admin tool · future agent features · EULA · any legal documentation.
+
 
 ### B1 · No SaaS. No cloud lock-in. Self-hosted always.
 - Server: Hetzner CPX22 → **CPX32 from 25 May 2026** · 178.104.73.239 · Ubuntu 24.04.

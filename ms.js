@@ -2455,10 +2455,19 @@ function openDetail(id){
         <button onclick="buyerPriceCheck('${id}')" id="detail-pc-btn-${id}"
           style="width:100%;background:var(--surface-2);border:1.5px solid #fde68a;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
           <span style="font-size:13px;font-weight:700;color:#92400e;">💡 Is this a fair price?</span>
-          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">1T · AI price check</span>
+          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">2T · AI price check</span>
         </button>
         <div id="detail-pc-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>
+      ${(l.cat==='Property'||l.cat==='Estate Agents'||l.cat==='Accommodation') ? `
+      <div id="detail-yield-${id}" style="margin-bottom:14px;">
+        <button onclick="buyerYieldCalc('${id}')" id="detail-yield-btn-${id}"
+          style="width:100%;background:var(--surface-2);border:1.5px solid #c4b5fd;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
+          <span style="font-size:13px;font-weight:700;color:#5b21b6;">📈 What's the yield on this?</span>
+          <span style="font-size:11px;color:#7c3aed;font-weight:600;background:#f5f3ff;padding:3px 9px;border-radius:20px;">1T · AI yield calc</span>
+        </button>
+        <div id="detail-yield-result-${id}" style="display:none;margin-top:8px;"></div>
+      </div>` : ''}
       ${isAdv ? '<div class="adv-stat-strip">' + (function(){
           var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
           var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
@@ -2588,12 +2597,12 @@ async function buyerPriceCheck(id) {
     const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
-  if (bal < 1) {
+  if (bal < 2) {
     showToast('Insufficient Tuppence — top up to use AI price check');
     return;
   }
 
-  if (!confirm('This will use 1T to get an AI market price comparison for this listing. Proceed?')) return;
+  if (!confirm('This will use 2T to get an AI market price comparison for this listing. Proceed?')) return;
 
   btn.disabled = true;
   btn.querySelector('span:first-child').textContent = '⏳ Checking market…';
@@ -2650,6 +2659,346 @@ async function buyerPriceCheck(id) {
   }
 }
 // ── END AI3 ───────────────────────────────────────────────────────────────────
+
+// ── AI4: Buyer Yield Calculator (Session 75) ──────────────────────────────
+async function buyerYieldCalc(id) {
+  const l = findListing(id);
+  if (!l) return;
+  const btn = document.getElementById('detail-yield-btn-' + id);
+  const res = document.getElementById('detail-yield-result-' + id);
+  if (!btn || !res) return;
+
+  const buyerEmail = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
+  if (!buyerEmail) {
+    showToast('Sign in to use AI yield calculator');
+    return;
+  }
+
+  let bal = 0;
+  try {
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+    if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
+  } catch(_) {}
+  if (bal < 1) {
+    showToast('Insufficient Tuppence — top up to use AI yield calculator');
+    return;
+  }
+
+  if (!confirm('This will use 1T to get an AI property yield analysis for this listing. Proceed?')) return;
+
+  btn.disabled = true;
+  btn.querySelector('span:first-child').textContent = '⏳ Calculating yield…';
+  res.style.display = 'none';
+
+  const numId = parseInt(String(id).replace('bea_', ''));
+  if (isNaN(numId)) {
+    showToast('Yield calc only available on live listings');
+    btn.disabled = false;
+    btn.querySelector('span:first-child').textContent = "📈 What's the yield on this?";
+    return;
+  }
+
+  try {
+    const r = await fetch(
+      BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(buyerEmail),
+      { method: 'POST' }
+    );
+    if (r.status === 402) { showToast('Insufficient Tuppence'); return; }
+    if (r.status === 400) { showToast('Yield calc only available for Property listings'); return; }
+    if (!r.ok) { showToast('Yield calculation failed'); return; }
+    const data = await r.json();
+
+    res.style.display = 'block';
+    res.innerHTML = `
+      <div style="background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:13px 15px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:#fff;border-radius:8px;padding:9px;border:1px solid #e9d5ff;text-align:center;">
+            <div style="font-size:10px;color:#7c3aed;font-weight:600;letter-spacing:.3px;margin-bottom:2px;">GROSS YIELD</div>
+            <div style="font-size:22px;font-weight:800;color:#5b21b6;">${data.gross_yield_pct}</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:9px;border:1px solid #e9d5ff;text-align:center;">
+            <div style="font-size:10px;color:#7c3aed;font-weight:600;letter-spacing:.3px;margin-bottom:2px;">NET YIELD EST.</div>
+            <div style="font-size:22px;font-weight:800;color:#5b21b6;">${data.net_yield_estimate_pct}</div>
+          </div>
+        </div>
+        ${data.monthly_rent_estimate && data.monthly_rent_estimate !== 'N/A'
+          ? `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Rent estimate: ${data.monthly_rent_estimate}</div>` : ''}
+        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
+        <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
+        <div style="font-size:10px;color:#9ca3af;">AI yield analysis · ${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    btn.style.display = 'none';
+  } catch(e) { showToast('Yield calculation error'); }
+  finally {
+    if (btn) {
+      btn.disabled = false;
+      const lbl = btn.querySelector('span:first-child');
+      if (lbl) lbl.textContent = "📈 What’s the yield on this?";
+    }
+  }
+}
+// ── END AI4 ───────────────────────────────────────────────────────────────────
+
+// ── AI5: Seller Batch Cards flow (Session 75) ─────────────────────────────
+let _sbBatchPhotos  = [];   // [{dataUrl}]
+let _sbBatchDrafts  = [];   // sanitised draft objects from BEA
+let _sbBatchChecked = [];   // bool array — which drafts to publish
+
+function sbStartBatchCards() {
+  // Reset state
+  _sbBatchPhotos  = [];
+  _sbBatchDrafts  = [];
+  _sbBatchChecked = [];
+  const prev = document.getElementById('sb-batch-preview');
+  if (prev) prev.innerHTML = '';
+  const res = document.getElementById('sb-batch-results');
+  if (res) res.innerHTML = '';
+  const pw = document.getElementById('sb-batch-publish-wrap');
+  if (pw) pw.style.display = 'none';
+  const btn = document.getElementById('sb-batch-analyse-btn');
+  if (btn) btn.style.display = 'none';
+  // Make sure Collectors is set
+  if (!sbState.cat) sbState.cat = 'Collectors';
+  sbGoStep('batch');
+}
+
+function sbHandleBatchPhotos(e) {
+  const files = Array.from(e.target.files || []).slice(0, 10);
+  if (!files.length) return;
+  _sbBatchPhotos = [];
+  const prev = document.getElementById('sb-batch-preview');
+  prev.innerHTML = '<div style="font-size:11px;color:#7c3aed;width:100%;margin-bottom:4px;">Processing ' + files.length + ' photo(s)…</div>';
+  let done = 0;
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        _sbBatchPhotos[idx] = { dataUrl: canvas.toDataURL('image/jpeg', 0.82) };
+        done++;
+        if (done === files.length) {
+          _sbBatchPhotos = _sbBatchPhotos.filter(Boolean);
+          _sbRenderBatchPreviews();
+          const btn = document.getElementById('sb-batch-analyse-btn');
+          if (btn) btn.style.display = _sbBatchPhotos.length ? 'block' : 'none';
+        }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function _sbRenderBatchPreviews() {
+  const prev = document.getElementById('sb-batch-preview');
+  if (!prev) return;
+  prev.innerHTML = _sbBatchPhotos.map((p, i) => `
+    <div style="position:relative;display:inline-block;">
+      <img src="${p.dataUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid #c4b5fd;display:block;">
+      <button onclick="_sbBatchPhotos.splice(${i},1);_sbRenderBatchPreviews();document.getElementById('sb-batch-analyse-btn').style.display=_sbBatchPhotos.length?'block':'none';"
+        style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+    </div>`).join('') + (_sbBatchPhotos.length ? `<div style="font-size:11px;color:#7c3aed;width:100%;margin-top:4px;">${_sbBatchPhotos.length} card(s) ready</div>` : '');
+}
+
+async function sbRunBatchAnalysis() {
+  const btn = document.getElementById('sb-batch-analyse-btn');
+  const res = document.getElementById('sb-batch-results');
+  if (!_sbBatchPhotos.length) { showToast('Add at least one card photo'); return; }
+
+  const sellerEmail = localStorage.getItem('ms_aa_email') || '';
+  if (!sellerEmail) { showToast('Sign in to use AI batch listing'); return; }
+
+  // Balance check
+  let bal = 0;
+  try {
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(sellerEmail));
+    if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
+  } catch(_) {}
+  if (bal < 2) {
+    showToast('Need at least 2T — top up in your Wallet');
+    return;
+  }
+  if (!confirm('This will use 2T to analyse ' + _sbBatchPhotos.length + ' card photo(s) with AI. Proceed?')) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Identifying cards…';
+  res.innerHTML = '<div style="text-align:center;padding:20px;font-size:13px;color:#7c3aed;">⏳ Claude is reading your cards…</div>';
+
+  const city   = (activeCity && activeCity.name) || localStorage.getItem('ms_city') || 'Pretoria';
+  const suburb = (activeSuburb && activeSuburb.name) || '';
+
+  try {
+    const r = await fetch(BEA_URL + '/listings/batch-cards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        images:       _sbBatchPhotos.map(p => p.dataUrl),
+        city,
+        suburb:       suburb || null,
+        seller_email: sellerEmail,
+      })
+    });
+    if (r.status === 402) { showToast('Insufficient Tuppence'); res.innerHTML = ''; return; }
+    if (!r.ok) { showToast('Analysis failed — try again'); res.innerHTML = ''; return; }
+    const data = await r.json();
+    _sbBatchDrafts  = data.drafts || [];
+    _sbBatchChecked = _sbBatchDrafts.map(() => true);
+
+    if (!_sbBatchDrafts.length) {
+      res.innerHTML = '<div style="text-align:center;padding:20px;font-size:13px;color:#ef4444;">No listings could be generated — try clearer photos.</div>';
+      return;
+    }
+
+    _sbRenderBatchDrafts(data.tuppence_remaining);
+
+    const pw = document.getElementById('sb-batch-publish-wrap');
+    const rl = document.getElementById('sb-batch-ready-label');
+    if (pw) pw.style.display = 'block';
+    if (rl) rl.textContent = '✓ ' + _sbBatchDrafts.length + ' listing draft(s) ready';
+
+    btn.style.display = 'none';   // hide analyse btn now results are shown
+
+  } catch(e) { showToast('Batch analysis error'); res.innerHTML = ''; }
+  finally { btn.disabled = false; btn.textContent = '✨ Analyse Cards (2T)'; }
+}
+
+const _sbConditionLabels = { mint:'Mint', near_mint:'Near Mint', excellent:'Excellent', good:'Good', fair:'Fair', poor:'Poor' };
+const _sbConditionColors = { mint:'#065f46', near_mint:'#1e40af', excellent:'#1e40af', good:'#374151', fair:'#92400e', poor:'#991b1b' };
+
+function _sbRenderBatchDrafts(tuppenceRemaining) {
+  const res = document.getElementById('sb-batch-results');
+  if (!res) return;
+  res.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:12px;">
+      ✨ ${_sbBatchDrafts.length} card(s) identified · ${tuppenceRemaining}T remaining
+    </div>` +
+    _sbBatchDrafts.map((d, i) => {
+      const cLabel = _sbConditionLabels[d.condition] || d.condition;
+      const cColor = _sbConditionColors[d.condition] || '#374151';
+      return `
+      <div id="sb-bc-card-${i}" style="background:var(--surface-2);border:1.5px solid #c4b5fd;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <img src="${_sbBatchPhotos[i] ? _sbBatchPhotos[i].dataUrl : ''}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid #e9d5ff;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">${d.title}</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:700;color:#5b21b6;">${d.price_suggestion}</span>
+              <span style="font-size:10px;font-weight:600;color:${cColor};background:#f5f3ff;padding:2px 7px;border-radius:20px;">${cLabel}</span>
+            </div>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:0;flex-shrink:0;cursor:pointer;">
+            <input type="checkbox" id="sb-bc-chk-${i}" checked onchange="_sbBatchChecked[${i}]=this.checked;_sbUpdatePublishBtn();"
+              style="width:20px;height:20px;accent-color:#7c3aed;cursor:pointer;margin-top:2px;">
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--text-2);line-height:1.5;margin-bottom:10px;">${d.description}</div>
+        <!-- Editable fields -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#7c3aed;margin-bottom:3px;letter-spacing:.3px;">TITLE</div>
+            <input type="text" value="${d.title.replace(/"/g,'&quot;')}" oninput="_sbBatchDrafts[${i}].title=this.value"
+              style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid #c4b5fd;background:var(--surface);font-size:12px;color:var(--text);font-family:'Inter',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#7c3aed;margin-bottom:3px;letter-spacing:.3px;">PRICE</div>
+            <input type="text" value="${d.price_suggestion.replace(/"/g,'&quot;')}" oninput="_sbBatchDrafts[${i}].price_suggestion=this.value"
+              style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid #c4b5fd;background:var(--surface);font-size:12px;color:var(--text);font-family:'Inter',sans-serif;box-sizing:border-box;">
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  _sbUpdatePublishBtn();
+}
+
+function _sbUpdatePublishBtn() {
+  const btn = document.getElementById('sb-batch-publish-btn');
+  const rl  = document.getElementById('sb-batch-ready-label');
+  const count = _sbBatchChecked.filter(Boolean).length;
+  if (btn) {
+    btn.textContent = count ? 'Publish ' + count + ' listing' + (count > 1 ? 's' : '') + ' →' : 'Select at least one listing';
+    btn.style.opacity = count ? '1' : '.4';
+    btn.style.pointerEvents = count ? 'auto' : 'none';
+  }
+  if (rl) rl.textContent = '✓ ' + count + ' listing(s) selected';
+}
+
+async function sbPublishBatchListings() {
+  const btn = document.getElementById('sb-batch-publish-btn');
+  const sellerEmail = localStorage.getItem('ms_aa_email') || '';
+  const sellerName  = localStorage.getItem('ms_aa_name')  || '';
+  if (!sellerEmail) { showToast('Sign in to publish'); return; }
+
+  const toPublish = _sbBatchDrafts.filter((_, i) => _sbBatchChecked[i]);
+  if (!toPublish.length) { showToast('Select at least one listing'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Publishing…';
+
+  const city    = (activeCity && activeCity.name) || localStorage.getItem('ms_city') || 'Pretoria';
+  const suburb  = (activeSuburb && activeSuburb.name) || '';
+  let published = 0, failed = 0;
+
+  for (let i = 0; i < _sbBatchDrafts.length; i++) {
+    if (!_sbBatchChecked[i]) continue;
+    const d = _sbBatchDrafts[i];
+    const photo = _sbBatchPhotos[i];
+
+    // Build FormData matching the standard vision-draft submit path
+    // Build FormData for /advert-agent/publish (accepts city + photos)
+    const fd = new FormData();
+    fd.append('email',    sellerEmail);
+    fd.append('category', 'Collectors');
+    fd.append('city',     city);
+    fd.append('fields',   JSON.stringify({
+      title:       d.title,
+      desc:        d.description,
+      price:       d.price_suggestion.replace(/[^0-9.,]/g,''),
+      suburb:      suburb,
+      condition:   d.condition,
+      item_type:   'Trading Card',
+    }));
+    fd.append('coach_output', '');
+
+    // Attach photo if available
+    if (photo && photo.dataUrl) {
+      try {
+        const res = await fetch(photo.dataUrl);
+        const blob = await res.blob();
+        fd.append('photos', blob, 'card_' + i + '.jpg');
+      } catch(_) {}
+    }
+
+    try {
+      const r = await fetch(BEA_URL + '/advert-agent/publish', { method: 'POST', body: fd });
+      if (r.ok) published++;
+      else { console.error('Batch publish failed', r.status, await r.text().catch(()=>'')); failed++; }
+    } catch(_) { failed++; }
+
+    btn.textContent = '⏳ Publishing ' + (published + failed) + '/' + toPublish.length + '…';
+  }
+
+  btn.disabled = false;
+
+  if (published > 0) {
+    const title = document.getElementById('sb-batch-success-title');
+    const sub   = document.getElementById('sb-batch-success-sub');
+    if (title) title.textContent = published + ' listing' + (published > 1 ? 's' : '') + ' published!';
+    if (sub) sub.textContent = published + ' collector card' + (published > 1 ? 's' : '') + ' ' + (published > 1 ? 'are' : 'is') + ' now live on TrustSquare.' + (failed > 0 ? ' (' + failed + ' failed — try again.)' : '');
+    sbGoStep('batch-success');
+  } else {
+    showToast('Publishing failed — check your connection and try again');
+    btn.textContent = 'Publish listings →';
+  }
+}
+// ── END AI5 Seller Batch Cards ────────────────────────────────────────────────
 
 function openModal(id){
   pendingIntroId=id;
@@ -4961,7 +5310,7 @@ function hkMove(stepId) {
   strip.style.display = 'flex';
 }
 function sbGoStep(step){
-  ['b1','b2','b3','b4','b5','b6','b7','b8','success'].forEach(s=>{
+  ['b1','b2','b3','b4','b5','b6','b7','b8','success','batch','batch-success'].forEach(s=>{
     const el=document.getElementById('sb-'+s); if(el)el.style.display='none';
   });
   const t=document.getElementById('sb-'+step);
@@ -5018,6 +5367,9 @@ function sbSelCat(cat){
       sbCheckB2();
     }
   }
+  // Show "List multiple cards" batch option for Collectors (B2)
+  const batchWrap = document.getElementById('sb-b2-batch-wrap');
+  if (batchWrap) batchWrap.style.display = cat === 'Collectors' ? 'block' : 'none';
   // Handle LocalMarket separately
   if(cat==='LocalMarket'){ openLMCreateFromWizard(); return; }
 }
@@ -8897,9 +9249,7 @@ async function aaLoadWalletSessions() {
   }
 }
 
-function aaBuyPackFromWallet() {
-  showToast('Tuppence pack purchase — coming soon');
-}
+// aaBuyPackFromWallet defined at line 824
 
 async function aaSavePhotosAndNext() {
   const draft = await aaDB.get(aaDraftId);
@@ -9701,7 +10051,7 @@ async function lmOpenDetail(listingId) {
             `<div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You submit introduction request</div><div class="cs-sub">No Tuppence deducted · listing stays visible</div></div></div>` +
             `<div class="cs"><div class="cs-dot system q">🛍️</div><div><div class="cs-label">Added to seller\'s queue — listing stays live</div><div class="cs-sub">Other buyers can still request simultaneously</div></div></div>` +
             `<div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Seller notified · has 48hrs to respond</div><div class="cs-sub">Seller reviews all queued requests</div></div></div>` +
-            `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted · identities revealed</div><div class="cs-sub">Seller pays 1T · you connect directly</div></div></div>` +
+            `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted · identities revealed</div><div class="cs-sub">Identities revealed · you connect directly</div></div></div>` +
             `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Respond within 24hrs → Trust Score +3</div><div class="cs-sub">No response within 48hrs → Trust Score −5</div></div></div>` +
           `</div>` +
         `</div>` +
@@ -10530,4 +10880,3 @@ async function msAskAI(){
     if (btn) { btn.disabled = false; btn.textContent = '✨ Ask AI how to improve my score →'; }
   }
 }
-
