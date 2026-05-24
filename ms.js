@@ -575,8 +575,13 @@ async function _msInit(){
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
-    // Route to guided onboarding (3-step photo-first screen → seller-onboard funnel)
-    goTo('guided-onboard');
+    // drafted=1 means admin already saved listings — skip photo upload, go to tier+EULA
+    if(sp.get('drafted')==='1'){
+      goTo('seller-onboard');
+    } else {
+      // Route to guided onboarding (3-step photo-first screen → seller-onboard funnel)
+      goTo('guided-onboard');
+    }
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
@@ -10804,6 +10809,7 @@ async function loadDetailPois(listing) {
         <div class="poi-icon ${meta.cls}">${meta.icon}</div>
         <div class="poi-info">
           <div class="poi-name">${p.name}</div>
+          ${p.type ? `<div class="poi-type">${p.type}</div>` : ''}
           <div class="poi-dist">${p.dist_km} km straight-line</div>
         </div>
       </div>`).join('');

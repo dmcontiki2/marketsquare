@@ -2533,11 +2533,12 @@ function showPublishSuccess(successCount, failCount) {
 
   // Build magic link
   const params = new URLSearchParams({
-    magic: '1',
-    name:  sellerData.name,
-    email: sellerData.email,
-    cat:   selectedCat,
-    city:  sellerData.city
+    magic:   '1',
+    drafted: '1',
+    name:    sellerData.name,
+    email:   sellerData.email,
+    cat:     selectedCat,
+    city:    sellerData.city
   });
   const magicUrl = MS_URL + '?' + params.toString();
   document.getElementById('magic-url').textContent = magicUrl;
