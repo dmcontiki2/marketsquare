@@ -2596,3 +2596,56 @@ Cache bumped to v=104. All four files deployed.
 - ms.js deploy path corrected: /var/www/marketsquare/static/ms.js (not root) — CLAUDE.md updated
 - Cloudflare Cache Purge token created (Trustsquare Cache Purge) — wired into BEA as CF_ZONE_ID + CF_CACHE_TOKEN env vars + _cf_purge_all() helper + /admin/purge-cache endpoint
 - Cache bumped v=106 → v=107; auto-purge via CF API after every deploy going forward
+
+## Session 77 — 2026-05-24
+
+### AI3 Three-Panel Market Intelligence Card
+Replaced single-panel price verdict with three-panel market intelligence card: Panel 1 (green) = SA second-hand market context and range, Panel 2 (verdict-coloured) = assessment vs asking price, Panel 3 (blue, conditional) = official/global price context with local-vs-global comparison. AI3 endpoint completely rewritten in BEA to return `sa_context`, `sa_range`, `official_context`, `official_range`, `local_vs_global` fields alongside existing verdict/assessment. Cost corrected from 2T to 1T (badge, balance gate, and confirm dialog all updated).
+
+### Cloudflare Cache Fix — Static Asset Deploy Path
+Root cause of persistent stale-cache issues identified: ms.js and ms.css were being deployed to /var/www/marketsquare/ (root) but nginx serves static assets from /var/www/marketsquare/static/. Corrected all deploy commands in CLAUDE.md. CF Cache Purge API token wired into BEA as `_cf_purge_all()` helper and `/admin/purge-cache` endpoint. Auto-purge runs after listing publish events.
+
+### BEA v1.3.1 — F-string Fix + CF Purge + AI Suggested Price Column
+Fixed SyntaxError from bare literal newlines inside f-strings in AI3 user_prompt. Added `ai_suggested_price` column migration. BEA health version bumped to 1.3.1.
+
+### Test Account Tuppence Top-Up
+Added 500T to all three approved test accounts (dmcontiki2@gmail.com, davidconradie1234@gmail.com, miconradie1@gmail.com) via direct SQLite INSERT for development testing continuity.
+
+### Nearby Amenities — School Type Labels + 5-Item Cap
+Updated ms.js `renderCards()` to display school type label (e.g. "Private · Primary", "Public · Secondary") between poi-name and poi-dist. Added `.poi-type` CSS rule to ms.css. Updated all 40 property listings in demo_listings.json to include school `type` field and padded SA listings (demo_prop_1–demo_prop_10) to 5 entries per category. Cache bumped to v=108.
+
+### LOOM Partnership Letter v4
+Drafted IP-safe partnership approach letter to LOOM Property Insights requesting API access. Letter frames TrustSquare as "free property advertising platform with subscription tiers" — no mention of Tuppence, introduction model, or anonymity mechanism. Saved as LOOM_Partnership_Enquiry_v4_TrustSquare.docx.
+
+## Session 77/78 — Batch Cards (AI5) End-to-End Fix · 2026-05-24
+
+**Bugs fixed in `marketsquare_admin.html`:**
+
+1. **JS SyntaxError (critical)** — Stray `{` brace introduced in the photo upload fix caused `SyntaxError: Unexpected token 'catch'` at line 4311, breaking all JavaScript execution on the page. Removed stray brace; Node.js syntax check confirmed clean.
+
+2. **Batch publish fail — `body` ReferenceError** — `buildDescription()` referenced an undefined variable `body` (from the regular listing form scope). In the batch flow this threw a `ReferenceError` silently caught by `saveAsDraft`, reporting "Publish failed — check connection". Fixed: `saveAsDraft` now uses `l.formData.description` directly for batch entries (AI description already set); `buildDescription` had its `body.structured_fields` references replaced with safe alternatives.
+
+3. **Suburb missing on publish** — Batch draft entries could have empty `suburb` if dropdown not yet resolved, causing BEA HTTP 400 ("suburb is required"). Fixed with explicit fallback: `batchSuburbEl.value || sellerData.city || 'Pretoria'` in `addBatchDraftToQueue`, and `l.formData.suburb || sellerData.city || 'Pretoria'` in `saveAsDraft` payload.
+
+4. **Magic link routing** — Magic link from admin now routes seller to `seller-onboard` (tier+EULA) instead of `guided-onboard` (photo upload funnel) via `drafted=1` URL param + routing branch in `ms.js`.
+
+5. **EXIF canvas dimensions** — Portrait cards were rendering on landscape canvas. Fixed: `cw = swapped ? ih : iw` for orientations 5–8.
+
+6. **Price regex** — Range prices like "R200–R350" were mangled. Fixed: extract first number only, fallback 'POA'.
+
+7. **Mobile viewport** — Added `maximum-scale=1.0` and `overflow-x: hidden` to prevent horizontal scroll.
+
+8. **nginx no-cache headers** — Added `no-store, no-cache, must-revalidate` to `/admin.html` location block to prevent mobile browser caching stale JS.
+
+**Verified:** 8-card batch flow tested end-to-end on phone — AI analysis, photo upload to R2, draft save, magic link generation all 200 OK.
+
+## Session 77/78 — Addendum: Magic link routing fix · 2026-05-24
+
+**Bug fixed in `marketsquare_admin.html`:**
+- Review screen magic link (shown on step 4 before publish) was missing `drafted=1`, routing sellers to photo upload funnel instead of listing preview. Added `drafted: '1'` to both magic link builders (review screen + post-publish success screen). Sellers now always land on "Your listing preview" with their saved drafts.
+
+**End-to-end batch cards flow confirmed working on phone:**
+- 8 cards → AI analysis → photos uploaded to R2 → drafts saved → magic link → listing preview → tier → EULA → listed ✓
+
+**Known remaining issue:**
+- Photo orientation (EXIF rotation) still incorrect in some cases — cards not always displaying upright. Deferred to Session 79.

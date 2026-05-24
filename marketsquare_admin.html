@@ -703,8 +703,11 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   function hideGate(){
     gate.style.display = 'none';
     _tempPin = null;
-    // Reload provinces in case DOMContentLoaded fired before gate dismissed
-    if (typeof loadRegionsForStep1 === 'function') loadRegionsForStep1();
+    // Use setTimeout so loadRegionsForStep1 is defined by the time this runs
+    // (async function expressions are not hoisted — must wait for full parse)
+    setTimeout(function(){
+      if (typeof loadRegionsForStep1 === 'function') loadRegionsForStep1();
+    }, 50);
   }
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';
@@ -1914,23 +1917,37 @@ async function loadSuburbsForForm() {
   }
 }
 
+// Hardcoded ZA provinces as fallback (ids from BEA geo_regions table)
+const ZA_PROVINCES_FALLBACK = [
+  {id:12,name:'Eastern Cape'},{id:10,name:'Free State'},{id:13,name:'Gauteng'},
+  {id:11,name:'KwaZulu-Natal'},{id:16,name:'Limpopo'},{id:14,name:'Mpumalanga'},
+  {id:17,name:'North West'},{id:15,name:'Northern Cape'},{id:18,name:'Western Cape'}
+];
+
 async function loadRegionsForStep1() {
   const sel    = document.getElementById('s-region');
   const newSel = document.getElementById('new-city-region');
-  try {
-    const resp = await fetch(BEA_URL + '/geo/regions?country=ZA');
-    const regions = await resp.json();
+  const citySel = document.getElementById('s-city');
+
+  function applyProvinces(regions) {
     const opts = '<option value="">Select province *</option>' +
       regions.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    if (sel)    sel.innerHTML    = opts;
+    if (sel)    sel.innerHTML = opts;
     if (newSel) newSel.innerHTML = opts;
-  } catch(e) {
-    if (sel)    sel.innerHTML    = '<option value="">Could not load provinces</option>';
-    if (newSel) newSel.innerHTML = '<option value="">Could not load provinces</option>';
+    if (citySel) citySel.innerHTML = '<option value="">Select province first</option>';
   }
-  // Reset onboarding city select
-  const citySel = document.getElementById('s-city');
-  if (citySel) citySel.innerHTML = '<option value="">Select province first</option>';
+
+  try {
+    const resp = await fetch(BEA_URL + '/geo/regions?country=ZA', {cache:'no-store'});
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const regions = await resp.json();
+    if (!regions || !regions.length) throw new Error('Empty response');
+    applyProvinces(regions);
+  } catch(e) {
+    // Fall back to hardcoded list so the form always works
+    applyProvinces(ZA_PROVINCES_FALLBACK);
+    console.warn('Province fetch failed — using fallback:', e.message);
+  }
 }
 
 async function loadCitiesForRegion() {
@@ -2296,7 +2313,7 @@ function buildReviewScreen() {
 
   // Always generate and show the magic link on step 4
   const params = new URLSearchParams({
-    magic: '1', name: sellerData.name, email: sellerData.email,
+    magic: '1', drafted: '1', name: sellerData.name, email: sellerData.email,
     cat: selectedCat, city: sellerData.city
   });
   document.getElementById('magic-url').textContent = MS_URL + '?' + params.toString();
@@ -2377,18 +2394,18 @@ function buildDescription(fd) {
   const autoSections = [];
 
   // Map new category fields into structured_fields for BEA
-  const sf = JSON.parse(body.structured_fields || '{}');
+  const sf = {}; // structured_fields built from fd directly
   if (selectedCat === 'Adventures') {
     sf.service_class = fd.advType;
     sf.destination   = fd.advDestination;
     sf.duration      = fd.advDuration;
-    body.structured_fields = JSON.stringify(sf);
+    fd._structured_fields = JSON.stringify(sf); // stored but not sent in batch flow
   } else if (selectedCat === 'Collectors') {
     sf.item_type     = fd.itemType;
     sf.condition     = fd.condition;
     sf.catalogue_ref = fd.catalogueRef;
     sf.edition_year  = fd.editionYear;
-    body.structured_fields = JSON.stringify(sf);
+    fd._structured_fields = JSON.stringify(sf); // stored but not sent in batch flow
   } else if (selectedCat === 'Cars') {
     sf.make          = fd.carMake;
     sf.model         = fd.carModel;
@@ -2399,7 +2416,7 @@ function buildDescription(fd) {
     sf.fuel_type     = fd.carFuel;
     sf.body_type     = fd.carBody;
     sf.listing_type  = fd.carListingType;
-    body.structured_fields = JSON.stringify(sf);
+    fd._structured_fields = JSON.stringify(sf); // stored but not sent in batch flow
   }
 
   if (selectedCat === 'Property') {
@@ -2475,8 +2492,8 @@ async function saveAsDraft() {
         category:     selectedCat,
         city:         sellerData.city,
         area:         l.formData.area || sellerData.city,
-        suburb:       l.formData.suburb,
-        description:  photoPrefix + buildDescription(l.formData),
+        suburb:       l.formData.suburb || sellerData.city || 'Pretoria',
+        description:  photoPrefix + (l.formData.description || buildDescription(l.formData) || ''),
         thumb_url:    thumb,
         medium_url:   medium,
         seller_email: sellerData.email,
@@ -2491,7 +2508,12 @@ async function saveAsDraft() {
         body: JSON.stringify(payload)
       });
 
-      if (!resp.ok) throw new Error('API error ' + resp.status);
+      if (!resp.ok) {
+        let errBody = '';
+        try { errBody = await resp.text(); } catch(_) {}
+        console.error('Publish API error', resp.status, errBody);
+        throw new Error('API error ' + resp.status + ': ' + errBody);
+      }
       const data = await resp.json();
 
       // Register seller as user
@@ -4245,7 +4267,10 @@ async function addBatchDraftToQueue(i) {
   const btn = document.getElementById('bc-add-btn-' + i);
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Uploading photo…'; }
 
-  const suburb = (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || sellerData.city || '';
+  const batchSuburbEl = document.getElementById('batch-suburb');
+  const suburb = (batchSuburbEl && batchSuburbEl.value && batchSuburbEl.value !== 'Select suburb…')
+    ? batchSuburbEl.value
+    : (sellerData.city || 'Pretoria');
   const price  = (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || 'POA';
 
   // Build queue entry
@@ -4276,7 +4301,6 @@ async function addBatchDraftToQueue(i) {
       const res = await fetch(photoDataUrl);
       blob = await res.blob();
       if (!blob || blob.size < 100) throw new Error('Empty blob');
-      {
       const fd = new FormData();
       fd.append('file', blob, 'card.jpg');
       const up = await fetch(BEA_URL + '/listings/photo', {
