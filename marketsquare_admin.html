@@ -4246,7 +4246,8 @@ function addBatchDraftToQueue(i) {
       title:       d.title,
       description: d.description,
       // price_suggestion may be "R150" or "R200–R350" — take the first number only
-      price:       (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || d.price_suggestion,
+      // If no number found (e.g. "Unable to determine"), store as POA
+      price:       (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || 'POA',
       per:         '',
       suburb:      (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || '',
       condition:   d.condition,
