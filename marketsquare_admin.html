@@ -4234,42 +4234,74 @@ async function runAI5BatchCards() {
   }
 }
 
-function addBatchDraftToQueue(i) {
+async function addBatchDraftToQueue(i) {
   const d = (window._ai5Drafts || [])[i];
   const photoDataUrl = (window._ai5Photos || [])[i];
+  const photoFile    = (_batchPhotos[i] || {}).file || null;
   if (!d) return;
 
-  // Build a queue entry matching the format that renderListingQueue expects
+  const btn = document.getElementById('bc-add-btn-' + i);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Uploading photo…'; }
+
+  const suburb = (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || sellerData.city || '';
+  const price  = (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || 'POA';
+
+  // Build queue entry
   const entry = {
-    photos:   photoDataUrl ? [{ localPreview: photoDataUrl, file: null, dataUrl: photoDataUrl }] : [],
+    photos: photoDataUrl ? [{ localPreview: photoDataUrl, thumbUrl: null, mediumUrl: null }] : [],
     formData: {
-      title:       d.title,
-      description: d.description,
-      // price_suggestion may be "R150" or "R200–R350" — take the first number only
-      // If no number found (e.g. "Unable to determine"), store as POA
-      price:       (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || 'POA',
-      per:         '',
-      suburb:      (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || '',
-      condition:   d.condition,
-      itemType:    'Trading Card',
+      title:        d.title,
+      description:  d.description,
+      price,
+      per:          '',
+      suburb,
+      condition:    d.condition,
+      itemType:     'Trading Card',
       catalogueRef: '',
       editionYear:  '',
     },
     structuredFields: { condition: d.condition, item_type: 'Trading Card' },
-    photoFiles:  [],
-    status: 'pending',
+    photoFiles: [],
+    status: 'queued',
   };
+
+  // Upload photo to R2 immediately so saveAsDraft has a real URL
+  if (photoFile || photoDataUrl) {
+    try {
+      let blob;
+      if (photoFile) {
+        blob = photoFile;
+      } else {
+        // Convert dataUrl to blob
+        const res = await fetch(photoDataUrl);
+        blob = await res.blob();
+      }
+      const fd = new FormData();
+      fd.append('file', blob, 'card.jpg');
+      const up = await fetch(BEA_URL + '/listings/photo', {
+        method: 'POST',
+        headers: { 'X-Api-Key': API_KEY },
+        body: fd
+      });
+      if (up.ok) {
+        const upData = await up.json();
+        entry.photos[0].thumbUrl  = upData.thumb_url  || null;
+        entry.photos[0].mediumUrl = upData.medium_url || null;
+        if (btn) { btn.textContent = '✓ Added · photo uploaded'; btn.style.background = '#059669'; }
+      } else {
+        if (btn) { btn.textContent = '✓ Added (photo pending)'; btn.style.background = '#d97706'; }
+      }
+    } catch(e) {
+      if (btn) { btn.textContent = '✓ Added (photo pending)'; btn.style.background = '#d97706'; }
+    }
+  } else {
+    if (btn) { btn.textContent = '✓ Added to queue'; btn.style.background = '#059669'; }
+  }
+
+  if (btn) btn.disabled = true;
   listingQueue.push(entry);
   renderListingQueue();
-
-  // Mark the card as added
-  const btn = document.getElementById('bc-add-btn-' + i);
-  if (btn) {
-    btn.textContent = '✓ Added to queue';
-    btn.disabled = true;
-    btn.style.background = '#059669';
-  }
-  showToast('Draft added to queue');
+  showToast('Draft added — photo uploaded');
 }
 // ── END AI5 Batch Cards ────────────────────────────────────────────────────────
 
