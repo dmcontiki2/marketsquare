@@ -728,6 +728,23 @@ else:
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AA_MODEL = "claude-haiku-4-5-20251001"
 
+CF_ZONE_ID    = os.getenv("CF_ZONE_ID")
+CF_CACHE_TOKEN = os.getenv("CF_CACHE_TOKEN")
+
+async def _cf_purge_all():
+    """Purge entire Cloudflare cache for trustsquare.co. Fire-and-forget — never raises."""
+    if not CF_ZONE_ID or not CF_CACHE_TOKEN:
+        return
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            await client.post(
+                f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/purge_cache",
+                headers={"Authorization": f"Bearer {CF_CACHE_TOKEN}", "Content-Type": "application/json"},
+                json={"purge_everything": True},
+            )
+    except Exception:
+        pass
+
 # GeoNames username — used in seed_geo_za (ZA dump) and _seed_country_from_geonames (API)
 # Default: dmcontiki2. Override via GEONAMES_USERNAME in /etc/environment.
 
@@ -869,7 +886,16 @@ class IntroRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.0"}
+    return {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.1"}
+
+@app.post("/admin/purge-cache")
+async def purge_cache(x_admin_key: str = Header(None)):
+    """Purge Cloudflare cache. Called automatically after deploys."""
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "")
+    if ADMIN_KEY and x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    await _cf_purge_all()
+    return {"purged": True}
 
 # ── LISTINGS (public read, protected write) ──────────────────
 

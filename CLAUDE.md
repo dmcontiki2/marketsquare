@@ -76,7 +76,10 @@ If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from P
 - Deploy buyer app: `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`
 - Deploy admin tool: `scp marketsquare_admin.html root@178.104.73.239:/var/www/marketsquare/admin.html`
 - Deploy BEA: `scp bea_main.py root@178.104.73.239:/var/www/marketsquare/main.py`
+- Deploy ms.js: `scp ms.js root@178.104.73.239:/var/www/marketsquare/static/ms.js` ⚠️ nginx serves from /static/ not root
+- Deploy ms.css: `scp ms.css root@178.104.73.239:/var/www/marketsquare/static/ms.css` ⚠️ nginx serves from /static/ not root
 - Restart BEA: `ssh root@178.104.73.239 "systemctl restart marketsquare"`
+- Purge Cloudflare cache after deploy: `curl -s -X POST "https://api.cloudflare.com/client/v4/zones/92f52b142cf2d920e14c3ba097d5985e/purge_cache" -H "Authorization: Bearer cfat_t3z9GIpy2yvB1Ad4H6HSjYOqY3JnnN8R9vLMm0Zk4d7915da" -H "Content-Type: application/json" --data '{"purge_everything":true}'`
 - Reload nginx after config changes: `nginx -s reload`
 - CityLauncher: /var/www/citylauncher/ · port 8001 · citylauncher.service · nginx /launch/ + /launch-api/
 

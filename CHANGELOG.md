@@ -2590,3 +2590,9 @@ Cache bumped to v=104. All four files deployed.
 - Cache bumped v=104 → v=105
 - All four files deployed: `marketsquare.html`, `ms.css`, `ms.js`, `bea_main.py`
 - BEA restarted; smoke test all-green
+
+### Post-deploy fixes (Session 77 cont.)
+- AI3 price-check cost badge corrected: 2T → 1T in ms.js button label + balance gate (bal < 2 → bal < 1)
+- ms.js deploy path corrected: /var/www/marketsquare/static/ms.js (not root) — CLAUDE.md updated
+- Cloudflare Cache Purge token created (Trustsquare Cache Purge) — wired into BEA as CF_ZONE_ID + CF_CACHE_TOKEN env vars + _cf_purge_all() helper + /admin/purge-cache endpoint
+- Cache bumped v=106 → v=107; auto-purge via CF API after every deploy going forward

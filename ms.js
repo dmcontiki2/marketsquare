@@ -2457,7 +2457,7 @@ function openDetail(id){
         <button onclick="buyerPriceCheck('${id}')" id="detail-pc-btn-${id}"
           style="width:100%;background:var(--surface-2);border:1.5px solid #fde68a;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
           <span style="font-size:13px;font-weight:700;color:#92400e;">💡 Is this a fair price?</span>
-          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">2T · AI price check</span>
+          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">1T · AI price check</span>
         </button>
         <div id="detail-pc-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>
@@ -2599,12 +2599,12 @@ async function buyerPriceCheck(id) {
     const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
-  if (bal < 2) {
+  if (bal < 1) {
     showToast('Insufficient Tuppence — top up to use AI price check');
     return;
   }
 
-  if (!confirm('This will use 2T to get an AI market price comparison for this listing. Proceed?')) return;
+  if (!confirm('This will use 1T to get an AI market price comparison for this listing. Proceed?')) return;
 
   btn.disabled = true;
   btn.querySelector('span:first-child').textContent = '⏳ Checking market…';
@@ -2854,7 +2854,7 @@ async function sbRunBatchAnalysis() {
     const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(sellerEmail));
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
-  if (bal < 2) {
+  if (bal < 1) {
     showToast('Need at least 2T — top up in your Wallet');
     return;
   }
