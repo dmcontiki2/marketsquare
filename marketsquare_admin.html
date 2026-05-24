@@ -4266,16 +4266,15 @@ async function addBatchDraftToQueue(i) {
   };
 
   // Upload photo to R2 immediately so saveAsDraft has a real URL
-  if (photoFile || photoDataUrl) {
+  // Always use photoDataUrl (EXIF-corrected canvas output), never the raw file
+  if (photoDataUrl) {
     try {
       let blob;
-      if (photoFile) {
-        blob = photoFile;
-      } else {
-        // Convert dataUrl to blob
-        const res = await fetch(photoDataUrl);
-        blob = await res.blob();
-      }
+      // Convert EXIF-corrected dataUrl to blob
+      const res = await fetch(photoDataUrl);
+      blob = await res.blob();
+      if (!blob || blob.size < 100) throw new Error('Empty blob');
+      {
       const fd = new FormData();
       fd.append('file', blob, 'card.jpg');
       const up = await fetch(BEA_URL + '/listings/photo', {
