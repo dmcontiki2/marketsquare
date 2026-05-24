@@ -703,6 +703,8 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   function hideGate(){
     gate.style.display = 'none';
     _tempPin = null;
+    // Reload provinces in case DOMContentLoaded fired before gate dismissed
+    if (typeof loadRegionsForStep1 === 'function') loadRegionsForStep1();
   }
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';
@@ -821,7 +823,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   <div class="field">
     <label>Province <span class="req">*</span></label>
     <select id="s-region" onchange="loadCitiesForRegion()">
-      <option value="">Loading provinces…</option>
+      <option value="">Select province *</option>
     </select>
   </div>
   <div class="field">
