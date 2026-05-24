@@ -4103,14 +4103,20 @@ function handleBatchPhotos(e) {
         try {
           const MAX = 800;
           const swapped = orientation >= 5;
-          let w = swapped ? img.height : img.width;
-          let h = swapped ? img.width  : img.height;
-          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-          if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+          // Raw image dimensions
+          let iw = img.width, ih = img.height;
+          // Scale the long edge to MAX
+          if (iw > MAX || ih > MAX) {
+            if (iw >= ih) { ih = Math.round(ih * MAX / iw); iw = MAX; }
+            else           { iw = Math.round(iw * MAX / ih); ih = MAX; }
+          }
+          // Display dimensions: swap if EXIF rotates 90/270
+          const cw = swapped ? ih : iw;
+          const ch = swapped ? iw : ih;
           const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
+          canvas.width = cw; canvas.height = ch;
           const ctx = canvas.getContext('2d');
-          _drawOrientedImage(ctx, img, orientation, w, h);
+          _drawOrientedImage(ctx, img, orientation, cw, ch);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
           _batchPhotos[idx] = { file, dataUrl };
         } catch(ex) { /* skip */ }
@@ -4237,7 +4243,8 @@ function addBatchDraftToQueue(i) {
     formData: {
       title:       d.title,
       description: d.description,
-      price:       d.price_suggestion.replace(/[^0-9,.\-–R]/g, '').replace(/^R/, '').trim() || d.price_suggestion,
+      // price_suggestion may be "R150" or "R200–R350" — take the first number only
+      price:       (d.price_suggestion.match(/R?\s*(\d[\d,.]*)/) || [])[1]?.replace(/,/g,'') || d.price_suggestion,
       per:         '',
       suburb:      (document.getElementById('batch-suburb') || {}).value || sellerData.suburb || '',
       condition:   d.condition,
