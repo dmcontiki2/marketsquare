@@ -2514,7 +2514,8 @@ async function saveAsDraft() {
     showPublishSuccess(successCount, failCount);
   } else {
     showToast('Publish failed — check connection and try again');
-    btn.textContent = 'Retry publish →';
+    btn.textContent = '⟳ Retry publish →';
+    btn.style.background = '#dc2626';
   }
 }
 
@@ -4068,14 +4069,20 @@ async function runAI5BatchCards() {
   if (!_batchPhotos.length) { showToast('Add at least one card photo'); return; }
   if (!sellerData || !sellerData.email) { showToast('Seller not loaded — go back to step 1'); return; }
 
+  // Disable immediately to prevent double-tap on mobile
+  btn.disabled = true; btn.textContent = '⏳ Checking balance…';
+
   const tBal = await fetchTuppenceBalance(sellerData.email);
   if (tBal < 2) {
     showToast('Need at least 2T — top up first');
+    btn.disabled = false; btn.textContent = '✨ Analyse Cards (2T)';
     return;
   }
-  if (!confirm('This will deduct 2T to analyse ' + _batchPhotos.length + ' card photo(s) with AI. Proceed?')) return;
-
-  btn.disabled = true; btn.textContent = '⏳ Analysing cards…';
+  if (!confirm('This will deduct 2T to analyse ' + _batchPhotos.length + ' card photo(s) with AI. Proceed?')) {
+    btn.disabled = false; btn.textContent = '✨ Analyse Cards (2T)';
+    return;
+  }
+  btn.textContent = '⏳ Analysing cards…';
   res.innerHTML = '<div style="font-size:12px;color:#7c3aed;padding:8px 0;">⏳ Claude is identifying your cards…</div>';
 
   const batchSuburb = (document.getElementById('batch-suburb') || {}).value || '';
