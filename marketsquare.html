@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=99">
+<link rel="stylesheet" href="/static/ms.css?v=105">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1419,7 +1419,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div id="go-s1" class="go-screen go-active">
     <div class="go-hdr">
       <div class="go-step-pill">Step 1 of 3</div>
-      <h2>Add your first photo</h2>
+      <h2>Add your photos</h2>
     </div>
 
     <!-- POPIA transparency notice — shown only on magic link arrivals -->
@@ -1447,7 +1447,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="go-coach">
       <div class="go-coach-avatar">🤖</div>
       <div class="go-coach-text" id="go-coach-text-1">
-        <strong>Hi there!</strong> Add 1–12 photos and our AI will write your listing for you — title, description, and a price suggestion. Takes about 15 seconds. ✨
+        <strong>Hi there!</strong> Add 1–12 photos of <strong>the same item</strong> and our AI will write your listing — title, description, and price suggestion. Takes about 15 seconds. ✨
+        <span id="go-coach-batch-nudge" style="display:none;margin-top:6px;font-size:11px;color:rgba(139,92,246,.9);display:block;">📦 Listing multiple items? Use <strong>Batch Cards</strong> to create many listings at once from the Sell menu.</span>
       </div>
     </div>
 
@@ -1523,7 +1524,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
         <!-- Price -->
         <div class="go-field-group" style="margin-bottom:10px;">
-          <div class="go-field-label">Suggested price (<span id="go-vision-currency">R</span>)</div>
+          <div class="go-field-label">Suggested price (<span id="go-vision-currency">R</span>) <span style="font-weight:400;font-size:10px;opacity:.6;">· AI estimate · edit freely</span></div>
           <input class="go-field-input" id="go-vision-price" type="tel" inputmode="numeric" placeholder="0" oninput="goVisionFieldUpdate('price',this.value)">
         </div>
 
@@ -3102,8 +3103,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div class="el-body">
     <div id="el-cat-badge" class="el-cat-badge"></div>
     <div class="el-ai-strip">
-      <p>✨ <strong>AI optional</strong> — edit freely below. Tap Ask AI to get suggestions (costs 1 session).</p>
-      <button class="el-ai-btn" id="el-ai-btn" onclick="editAISuggest()">Ask AI</button>
+      <p>✨ <strong>AI tools</strong> — each costs 1T · results appear below</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+        <button class="el-ai-btn" id="el-ai-btn" onclick="editAISuggest()" style="font-size:11px;padding:7px 11px;">💬 Ask AI Coach</button>
+        <button class="el-ai-btn" id="el-rewrite-btn" onclick="elRunRewrite()" style="font-size:11px;padding:7px 11px;background:#5b21b6;">✨ Rewrite</button>
+        <button class="el-ai-btn" id="el-audit-btn" onclick="elRunAudit()" style="font-size:11px;padding:7px 11px;background:#0e7490;">🔍 Why No Intros?</button>
+        <button class="el-ai-btn" id="el-yield-btn" onclick="elRunYield()" style="display:none;font-size:11px;padding:7px 11px;background:#065f46;">📈 Yield Calc</button>
+      </div>
     </div>
     <div id="el-ai-output"></div>
     <div id="el-photos-section" class="el-photos-section" style="display:none;">
@@ -3272,8 +3278,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- Flow card — populated by aaRenderFlow() -->
     <div id="aa-flow-card-wrap"></div>
 
-    <!-- Session usage — same for all categories -->
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:10px;">Coaching Sessions</div>
+    <!-- AI pricing — updated Session 77: unified Tuppence wallet -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:10px;">AI Coaching Cost</div>
     <div class="aa-session-section">
       <div class="aa-session-row">
         <div class="aa-session-dot free">★</div>
@@ -3283,17 +3289,17 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
       <div class="aa-session-row">
-        <div class="aa-session-dot paid">8</div>
+        <div class="aa-session-dot paid">1T</div>
         <div>
-          <div class="aa-session-title">Buy AI Pack · 8 sessions · 1T</div>
-          <div class="aa-session-sub">1 Tuppence = 8 coaching sessions · R36 / $2 · never expire · use across all categories</div>
+          <div class="aa-session-title">1T per AI Coach call after the free session</div>
+          <div class="aa-session-sub">Drawn from your Tuppence wallet · same wallet as introductions · top up anytime</div>
         </div>
       </div>
       <div class="aa-session-row">
         <div class="aa-session-dot zero">0</div>
         <div>
-          <div class="aa-session-title">Sessions at zero? Buy a new pack</div>
-          <div class="aa-session-sub">You can always skip Stage 3 and publish without coaching · AI Coach is optional</div>
+          <div class="aa-session-title">No Tuppence? Skip coaching and publish</div>
+          <div class="aa-session-sub">AI Coach is optional · you can always publish without it and coach later</div>
         </div>
       </div>
     </div>
@@ -3739,7 +3745,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=101"></script>
+<script src="/static/ms.js?v=105"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

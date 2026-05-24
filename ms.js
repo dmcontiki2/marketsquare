@@ -2114,8 +2114,9 @@ function cardHtml(l){
     :(_fallbackPhoto
         ?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`
         :_fallbackDiv);
+  const _isCollectors = (l.cat||'').toLowerCase()==='collectors';
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
-    <div class="ibox" style="background:${catCfg(l).bg}">
+    <div class="ibox${_isCollectors?' collectors-thumb':''}" style="background:${catCfg(l).bg}">
       ${imgHtml}
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
@@ -2388,8 +2389,9 @@ function openDetail(id){
   const advPriceDisplay = isAdv && l.price
     ? `${advCur}${Number(l.price).toLocaleString()}`
     : null;
+  const _isCollectorsCat = (l.cat||'').toLowerCase()==='collectors';
   const heroHtml = `
-    <div class="photo-strip-wrap" id="pstrip-wrap-${id}">
+    <div class="photo-strip-wrap${_isCollectorsCat?' collectors-strip':''}" id="pstrip-wrap-${id}">
       <div class="photo-strip" id="pstrip-${id}" onscroll="updateStripDots('${id}',${photos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${id}', Math.round(this.scrollLeft/this.offsetWidth))">
         ${stripSlides}
       </div>
@@ -2626,26 +2628,55 @@ async function buyerPriceCheck(id) {
     if (!r.ok) { showToast('Price check failed'); return; }
     const data = await r.json();
 
+    // ── Three-panel market intelligence card ────────────────────────────────
     const verdictConfig = {
-      fair:          { icon: '✅', label: 'Fair price',       color: '#065f46', bg: '#d1fae5', border: '#6ee7b7' },
-      below_market:  { icon: '🔥', label: 'Below market',    color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
-      above_market:  { icon: '⚠️', label: 'Above market',    color: '#92400e', bg: '#fef3c7', border: '#fcd34d' },
-      cannot_assess: { icon: 'ℹ️', label: 'Insufficient data',color: '#374151', bg: '#f3f4f6', border: '#d1d5db' },
+      fair:          { icon: '✅', label: 'Fair price',        color: '#065f46', bg: '#d1fae5', border: '#6ee7b7' },
+      below_market:  { icon: '🔥', label: 'Below market',     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
+      above_market:  { icon: '⚠️',  label: 'Above market',    color: '#92400e', bg: '#fef3c7', border: '#fcd34d' },
+      cannot_assess: { icon: 'ℹ️',  label: 'Insufficient data',color: '#374151', bg: '#f3f4f6', border: '#d1d5db' },
     };
     const vc = verdictConfig[data.verdict] || verdictConfig.cannot_assess;
 
+    const lgIcon = data.local_vs_global === 'cheaper_locally'  ? '🇿🇦 Buy locally — cheaper here'
+                 : data.local_vs_global === 'cheaper_globally' ? '🌍 Better price globally'
+                 : data.local_vs_global === 'similar'          ? '≈ Similar local & global'
+                 : '';
+
     res.style.display = 'block';
     res.innerHTML = `
-      <div style="background:${vc.bg};border:1.5px solid ${vc.border};border-radius:10px;padding:13px 15px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-size:18px;">${vc.icon}</span>
-          <span style="font-size:14px;font-weight:700;color:${vc.color};">${vc.label}</span>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+
+        <!-- Panel 1: SA Market -->
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:700;color:#15803d;letter-spacing:.04em;margin-bottom:5px;">🇿🇦 SA SECOND-HAND MARKET</div>
+          <div style="font-size:12px;color:#166534;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.sa_context || data.context}</div>
+          ${data.sa_range && data.sa_range !== 'N/A' && data.sa_range !== 'Cannot determine'
+            ? `<div style="font-size:12px;font-weight:700;color:#15803d;margin-top:6px;">Range: ${data.sa_range}</div>`
+            : ''}
         </div>
-        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.context}</div>
-        ${data.suggested_range && data.suggested_range !== 'N/A'
-          ? `<div style="font-size:11px;font-weight:700;color:${vc.color};margin-top:6px;">Suggested range: ${data.suggested_range}</div>`
+
+        <!-- Panel 2: Assessment -->
+        <div style="background:${vc.bg};border:1.5px solid ${vc.border};border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+            <span style="font-size:16px;">${vc.icon}</span>
+            <span style="font-size:11px;font-weight:700;color:${vc.color};letter-spacing:.04em;">ASSESSMENT${data.asking_price ? ' · Asking ' + data.asking_price : ''}</span>
+          </div>
+          <div style="font-size:12px;color:#374151;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.assessment || data.context}</div>
+        </div>
+
+        <!-- Panel 3: Official / Global -->
+        ${data.official_context && data.official_context !== 'N/A'
+          ? `<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:.04em;margin-bottom:5px;">🌍 OFFICIAL &amp; GLOBAL PRICES</div>
+          <div style="font-size:12px;color:#1e3a5f;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.official_context}</div>
+          ${data.official_range && data.official_range !== 'N/A' && data.official_range !== 'Cannot determine'
+            ? `<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-top:6px;">Range: ${data.official_range}</div>`
+            : ''}
+          ${lgIcon ? `<div style="font-size:11px;color:#1d4ed8;margin-top:6px;font-weight:600;">${lgIcon}</div>` : ''}
+        </div>`
           : ''}
-        <div style="font-size:10px;color:#9ca3af;margin-top:8px;">AI market analysis · ${data.tuppence_remaining}T remaining</div>
+
+        <div style="font-size:10px;color:#9ca3af;padding:0 2px;">AI market analysis · ${data.tuppence_remaining}T remaining · Based on AI training data · actual prices may vary</div>
       </div>`;
     // Hide the trigger button — result is now shown
     btn.style.display = 'none';
@@ -2726,6 +2757,7 @@ async function buyerYieldCalc(id) {
         <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
         <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
         <div style="font-size:10px;color:#9ca3af;">AI yield analysis · ${data.tuppence_remaining}T remaining</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">Based on AI training data · SA second-hand market · may differ from international retail or official list prices</div>
       </div>`;
     btn.style.display = 'none';
   } catch(e) { showToast('Yield calculation error'); }
@@ -2960,7 +2992,7 @@ async function sbPublishBatchListings() {
     fd.append('fields',   JSON.stringify({
       title:       d.title,
       desc:        d.description,
-      price:       d.price_suggestion.replace(/[^0-9.,]/g,''),
+      price:       (d.price_suggestion.match(/[0-9]+/)||[''])[0],  // take first number from range e.g. 'R25-R45' → '25'
       suburb:      suburb,
       condition:   d.condition,
       item_type:   'Trading Card',
@@ -4257,7 +4289,10 @@ function goSelectCat(cat) {
   // Seed coach text with category-specific prompt
   const c1 = document.getElementById('go-coach-text-1');
   const icons = {Property:'🏡',Tutors:'🎓',Services:'⚙️',Cars:'🚗',Collectors:'🏺',Adventures:'🧭',local_market:'🛍️'};
-  if (c1) c1.innerHTML = '<strong>' + (icons[cat]||'') + ' ' + cat + ' selected!</strong> Now add a photo — buyers are 3× more likely to contact sellers with a clear photo.';
+  if (c1) c1.innerHTML = '<strong>' + (icons[cat]||'') + ' ' + cat + ' selected!</strong> Add 1–12 photos of the <strong>same item</strong> and AI writes your listing. Buyers are 3× more likely to contact sellers with clear photos.';
+  // Show batch nudge for Collectors
+  const _batchNudge = document.getElementById('go-coach-batch-nudge');
+  if (_batchNudge) _batchNudge.style.display = (cat === 'Collectors') ? 'block' : 'none';
   // Repaint card with chosen category
   goPaintCards();
   // Render Step 2 fields for this category
@@ -5660,7 +5695,7 @@ async function sbRenderB4(){
       const _sr=await fetch(BEA_URL+'/advert-agent/status?email='+encodeURIComponent(_email));
       const _sd=await _sr.json();
       const _nudge=document.getElementById('sb-b4-session-nudge');
-      if(_nudge) _nudge.style.display=(_sd.aa_sessions_remaining===0)?'block':'none';
+      if(_nudge) _nudge.style.display=(!_sd.aa_free_used && ((_sd.tuppence_balance??tuppence)<1))?'block':'none';
     }catch(_){}
   }
 }
@@ -6564,6 +6599,13 @@ async function openEditListing(beaId) {
   const aiOut = document.getElementById('el-ai-output');
   if (aiOut) { aiOut.innerHTML = ''; }
 
+  // Show Yield button only for Property category
+  const yieldBtn = document.getElementById('el-yield-btn');
+  if (yieldBtn) {
+    const isProperty = elCurrentCat.toLowerCase().startsWith('property');
+    yieldBtn.style.display = isProperty ? '' : 'none';
+  }
+
   // Render form and navigate
   renderEditForm(elCurrentRaw);
   elRenderPhotos(elCurrentRaw, '');
@@ -7433,8 +7475,8 @@ async function editAISuggest() {
     if (cj.anonymity_warning) {
       html += `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:10px;">⚠️ ${cj.anonymity_warning}</div>`;
     }
-    if (data.sessions_remaining !== undefined) {
-      html += `<div style="font-size:11px;color:var(--text-3);text-align:right;margin-bottom:8px;">Sessions remaining: <strong>${data.sessions_remaining}</strong></div>`;
+    if (data.tuppence_remaining !== undefined) {
+      html += `<div style="font-size:11px;color:var(--text-3);text-align:right;margin-bottom:8px;">Tuppence remaining: <strong>${data.tuppence_remaining}T</strong></div>`;
     }
     if (aiOut) aiOut.innerHTML = html;
 
@@ -7447,6 +7489,141 @@ async function editAISuggest() {
     showToast('AI: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Ask AI'; }
+  }
+}
+
+// ── AI1: Seller Listing Rewrite (Session 77) ──────────────────────────────
+async function elRunRewrite() {
+  if (!elCurrentId) return;
+  const email = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Sign in to use AI Rewrite'); return; }
+  const btn = document.getElementById('el-rewrite-btn');
+  const out = document.getElementById('el-ai-output');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Rewriting…'; }
+  if (out) out.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">✨ Claude is rewriting your listing…</div>';
+  try {
+    if (!confirm('This will use 1T to rewrite your listing title and description using AI. The new text will pre-fill the form below for you to review and save. Proceed?')) {
+      if (btn) { btn.disabled = false; btn.textContent = '✨ Rewrite'; }
+      if (out) out.innerHTML = '';
+      return;
+    }
+    const numId = typeof elCurrentId === 'string' ? elCurrentId.replace('bea_', '') : elCurrentId;
+    const r = await fetch(BEA_URL + '/listings/' + numId + '/ai-rewrite?email=' + encodeURIComponent(email), { method: 'POST' });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || 'Rewrite failed');
+    }
+    const data = await r.json();
+    // Pre-fill title and description fields
+    const titleEl = document.getElementById('elf-title');
+    const descEl  = document.getElementById('elf-description');
+    if (titleEl && data.new_title) titleEl.value = data.new_title;
+    if (descEl  && data.new_description) descEl.value = data.new_description;
+    if (out) out.innerHTML = `
+      <div style="background:#f5f3ff;border:1.5px solid #a78bfa;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:6px;">✨ AI Rewrite complete — fields pre-filled below</div>
+        <div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>New title:</strong> ${data.new_title}</div>
+        <div style="font-size:12px;color:#374151;line-height:1.5;"><strong>New description:</strong> ${data.new_description}</div>
+        <div style="font-size:10px;color:#7c3aed;margin-top:8px;">Review the fields below and tap Save Changes when happy · ${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    showToast('✨ Rewrite ready — review fields and save');
+  } catch(e) {
+    if (out) out.innerHTML = '';
+    showToast('Rewrite: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Rewrite'; }
+  }
+}
+
+// ── AI2: Why No Intros? Seller Audit (Session 77) ────────────────────────────
+async function elRunAudit() {
+  if (!elCurrentId) return;
+  const email = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Sign in to use Why No Intros?'); return; }
+  const btn = document.getElementById('el-audit-btn');
+  const out = document.getElementById('el-ai-output');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Analysing…'; }
+  if (out) out.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">🔍 Analysing your listing…</div>';
+  try {
+    if (!confirm('This will use 1T to get an AI audit of why buyers might be skipping your listing. Proceed?')) {
+      if (btn) { btn.disabled = false; btn.textContent = '🔍 Why No Intros?'; }
+      if (out) out.innerHTML = '';
+      return;
+    }
+    const numId = typeof elCurrentId === 'string' ? elCurrentId.replace('bea_', '') : elCurrentId;
+    const r = await fetch(BEA_URL + '/listings/' + numId + '/ai-audit?email=' + encodeURIComponent(email), { method: 'POST' });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || 'Audit failed');
+    }
+    const data = await r.json();
+    const actionHtml = (data.actions || []).map((a, i) =>
+      `<div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#0e7490;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#164e63;">${a.step}</div>
+          <div style="font-size:11px;color:#374151;margin-top:2px;line-height:1.4;">${a.reason}</div>
+        </div>
+      </div>`
+    ).join('');
+    if (out) out.innerHTML = `
+      <div style="background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#0e7490;margin-bottom:10px;">🔍 Why No Intros? — 3 fixes to try</div>
+        ${actionHtml}
+        <div style="font-size:10px;color:#0e7490;margin-top:4px;">${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    showToast('🔍 Audit complete — 3 actions ready');
+  } catch(e) {
+    if (out) out.innerHTML = '';
+    showToast('Audit: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 Why No Intros?'; }
+  }
+}
+
+// ── AI4: Seller Yield Calculator (Session 77) ─────────────────────────────
+async function elRunYield() {
+  if (!elCurrentId) return;
+  const email = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Sign in to use Yield Calculator'); return; }
+  const btn = document.getElementById('el-yield-btn');
+  const out = document.getElementById('el-ai-output');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Calculating…'; }
+  if (out) out.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">📈 Calculating yield…</div>';
+  try {
+    if (!confirm('This will use 1T to get an AI property yield analysis for this listing. Proceed?')) {
+      if (btn) { btn.disabled = false; btn.textContent = '📈 Yield Calc'; }
+      if (out) out.innerHTML = '';
+      return;
+    }
+    const numId = typeof elCurrentId === 'string' ? elCurrentId.replace('bea_', '') : elCurrentId;
+    const r = await fetch(BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(email), { method: 'POST' });
+    if (r.status === 400) { showToast('Yield calc only available for Property listings'); return; }
+    if (!r.ok) { showToast('Yield calculation failed'); return; }
+    const data = await r.json();
+    if (out) out.innerHTML = `
+      <div style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:10px;">📈 AI Property Yield Analysis</div>
+        <div style="display:flex;gap:16px;margin-bottom:10px;">
+          <div style="flex:1;text-align:center;">
+            <div style="font-size:10px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.5px;">Gross Yield</div>
+            <div style="font-size:22px;font-weight:800;color:#065f46;">${data.gross_yield_pct}</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="font-size:10px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.5px;">Net Estimate</div>
+            <div style="font-size:22px;font-weight:800;color:#065f46;">${data.net_yield_estimate_pct}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#065f46;margin-bottom:4px;">Benchmark: ${data.sa_yield_benchmark}</div>
+        ${data.commentary ? `<div style="font-size:11px;color:#374151;line-height:1.5;margin-top:6px;">${data.commentary}</div>` : ''}
+        <div style="font-size:10px;color:#6ee7b7;margin-top:8px;">${data.tuppence_remaining}T remaining</div>
+      </div>`;
+    showToast('📈 Yield analysis complete');
+  } catch(e) {
+    if (out) out.innerHTML = '';
+    showToast('Yield: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📈 Yield Calc'; }
   }
 }
 
@@ -8684,31 +8861,22 @@ async function aaFetchDetailSessionBadge(email) {
   try {
     const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
     const data = await res.json();
-    const free     = !data.aa_free_used;
-    const sessions = data.aa_sessions_remaining || 0;
+    const free = !data.aa_free_used;
+    const bal  = data.tuppence_balance ?? tuppence;
     if (free) {
       badge.innerHTML = `<span style="color:#16a34a;font-weight:700;">✓ 1 free coaching session included</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    } else if (sessions > 0) {
-      badge.innerHTML = `<span style="font-weight:700;">${sessions} session${sessions !== 1 ? 's' : ''} remaining</span>`;
+    } else if (bal >= 1) {
+      badge.innerHTML = `<span style="font-weight:700;">${bal}T available · costs 1T per coach call</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     } else {
-      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:8px;">No coaching sessions remaining</div>
-        <div style="display:flex;gap:7px;margin-top:4px;">
-          <div class="topup-btn" onclick="aaBuyAIPack(5,40)" style="flex:1;padding:9px 6px;">
-            <div class="tb-val" style="font-size:14px;">40 uses</div><div class="tb-price">5T · R180</div>
-          </div>
-          <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="flex:1;padding:9px 6px;border-color:var(--accent);">
-            <div class="tb-val" style="font-size:14px;">100 uses</div><div class="tb-price">10T · R360 ★</div>
-          </div>
-          <div class="topup-btn" onclick="aaBuyAIPack(25,320)" style="flex:1;padding:9px 6px;">
-            <div class="tb-val" style="font-size:14px;">320 uses</div><div class="tb-price">25T · R900</div>
-          </div>
-        </div>`;
+      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:6px;">Insufficient Tuppence — AI Coach costs 1T per call</div>
+        <div style="font-size:12px;color:var(--text-3);">Top up your Tuppence wallet to continue using AI Coach.</div>
+        <button onclick="openTopup()" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Top Up Tuppence</button>`;
       if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
     }
   } catch (e) {
-    if (badge) badge.innerHTML = `<span style="color:var(--text-3);font-size:12px;">Could not check sessions</span>`;
+    if (badge) badge.innerHTML = `<span style="color:var(--text-3);font-size:12px;">Could not check balance</span>`;
     if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
   }
 }
@@ -8812,32 +8980,21 @@ async function aaFetchSessionBadge(email) {
   try {
     const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
     const data = await res.json();
-    const free    = !data.aa_free_used;
-    const sessions = data.aa_sessions_remaining || 0;
-
+    const free = !data.aa_free_used;
+    const bal  = data.tuppence_balance ?? tuppence;
     if (free) {
       badge.innerHTML = `<span style="color:#16a34a;font-weight:700;">✓ 1 free coaching session included</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
-    } else if (sessions > 0) {
-      badge.innerHTML = `<span style="font-weight:700;">${sessions} coaching session${sessions!==1?'s':''} remaining</span>`;
+    } else if (bal >= 1) {
+      badge.innerHTML = `<span style="font-weight:700;">${bal}T available · costs 1T per coach call</span>`;
       if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Run AI Coach'; }
     } else {
-      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:8px;">No coaching sessions remaining</div>
-        <div style="display:flex;gap:7px;margin-top:4px;">
-          <div class="topup-btn" onclick="aaBuyAIPack(5,40)" style="flex:1;padding:9px 6px;">
-            <div class="tb-val" style="font-size:14px;">40 uses</div><div class="tb-price">5T · R180</div>
-          </div>
-          <div class="topup-btn" onclick="aaBuyAIPack(10,100)" style="flex:1;padding:9px 6px;border-color:var(--accent);">
-            <div class="tb-val" style="font-size:14px;">100 uses</div><div class="tb-price">10T · R360 ★</div>
-          </div>
-          <div class="topup-btn" onclick="aaBuyAIPack(25,320)" style="flex:1;padding:9px 6px;">
-            <div class="tb-val" style="font-size:14px;">320 uses</div><div class="tb-price">25T · R900</div>
-          </div>
-        </div>`;
-      if (btn) { btn.disabled = true; btn.style.opacity = '.4'; }
+      badge.innerHTML = `<div style="font-weight:700;color:#dc2626;margin-bottom:6px;">Insufficient Tuppence — AI Coach costs 1T per call</div>
+        <button onclick="openTopup()" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Top Up Tuppence</button>`;
+      if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.textContent = 'Run AI Coach'; }
     }
   } catch (e) {
-    badge.innerHTML = `<span style="color:var(--text-3);font-size:13px;">Could not check sessions — you can still run the coach</span>`;
+    badge.innerHTML = `<span style="color:var(--text-3);font-size:13px;">Could not check balance — you can still run the coach</span>`;
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
   }
 }
@@ -8909,7 +9066,7 @@ async function aaRunCoach() {
     });
     if (res.status === 402) {
       const data = await res.json();
-      showToast(data.detail || 'No sessions remaining');
+      showToast(data.detail || 'Insufficient Tuppence — top up to continue');
       if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
       aaFetchDetailSessionBadge(email);
       return;
@@ -9235,14 +9392,16 @@ async function aaLoadWalletSessions() {
   try {
     const res  = await fetch(`${BEA_URL}/advert-agent/status?email=${encodeURIComponent(email)}`);
     const data = await res.json();
-    const free    = !data.aa_free_used;
-    const sessions = data.aa_sessions_remaining || 0;
+    const free = !data.aa_free_used;
+    const bal  = data.tuppence_balance ?? tuppence;
     if (free) {
-      el.textContent = '1';
-      el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
-        '1 free coaching session included · packs do not expire';
+      el.textContent = '1★';
+      try { el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
+        '1 free AI coach call included · then 1T per call'; } catch(e) {}
     } else {
-      el.textContent = sessions;
+      el.textContent = bal + 'T';
+      try { el.closest('div').querySelector('div[style*="font-size:11px"]').textContent =
+        'Tuppence balance · 1T per AI Coach call'; } catch(e) {}
     }
   } catch (e) {
     el.textContent = '—';

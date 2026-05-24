@@ -302,6 +302,9 @@ def run_migrations(conn):
         # Idempotency flag — set to 1 the first time a buyer requests an intro
         # on this listing, so subsequent intros don't double-charge the seller.
         conn.execute("ALTER TABLE listings ADD COLUMN lm_intro_charged INTEGER NOT NULL DEFAULT 0")
+    if "ai_suggested_price" not in listing_cols2:
+        # Stores the AI vision-draft price so AI3 price-check can anchor to it
+        conn.execute("ALTER TABLE listings ADD COLUMN ai_suggested_price REAL")
 
     # intro_requests gets an intro_type column to distinguish standard vs LM
     intro_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
@@ -2743,17 +2746,21 @@ async def aa_market_note(req: dict):
 
 @app.get("/advert-agent/status")
 def aa_status(email: str):
-    """Return the seller's free-use flag and coaching sessions remaining."""
+    """Return the seller's free-use flag and current Tuppence balance."""
     conn = database.get_db()
     row = conn.execute(
-        "SELECT aa_free_used, aa_sessions_remaining FROM users WHERE email = ?", (email,)
+        "SELECT aa_free_used FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    tuppence_row = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (email,)
     ).fetchone()
     conn.close()
+    tuppence_bal = tuppence_row["bal"] if tuppence_row else 0
     if not row:
-        return {"aa_free_used": 0, "aa_sessions_remaining": 0, "registered": False}
+        return {"aa_free_used": 0, "tuppence_balance": tuppence_bal, "registered": False}
     return {
         "aa_free_used": row["aa_free_used"] or 0,
-        "aa_sessions_remaining": row["aa_sessions_remaining"] or 0,
+        "tuppence_balance": tuppence_bal,
         "registered": True,
     }
 
@@ -2783,15 +2790,20 @@ async def aa_coach(req: AACoachRequest):
         ).fetchone()
 
     free_used     = row["aa_free_used"] or 0
-    sessions      = row["aa_sessions_remaining"] or 0
     current_score = row["trust_score"] or 0
 
-    if free_used and sessions == 0:
-        conn.close()
-        raise HTTPException(
-            status_code=402,
-            detail="No coaching sessions remaining. Purchase an AI Pack (8 sessions · 1T) to continue."
-        )
+    # After free use, check Tuppence balance (1T per coach call)
+    if free_used:
+        tuppence_row = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (req.email,)
+        ).fetchone()
+        tuppence_bal = tuppence_row["bal"] if tuppence_row else 0
+        if tuppence_bal < 1:
+            conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail="Insufficient Tuppence. Top up your wallet (1T per AI Coach call)."
+            )
 
     def _tier_label(s):
         if s < 40: return "New — no badge yet"
@@ -3044,18 +3056,22 @@ async def aa_coach(req: AACoachRequest):
     coaching_json.setdefault("trust_score_actions", [])
     coaching_json.setdefault("anonymity_warning", None)
 
-    # Deduct session: free first use or paid pack
+    # Deduct: mark free use on first call; charge 1T on subsequent calls
     if not free_used:
         conn.execute("UPDATE users SET aa_free_used = 1 WHERE email = ?", (req.email,))
+        conn.commit()
+        tuppence_remaining = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?", (req.email,)
+        ).fetchone()["bal"]
     else:
-        conn.execute(
-            "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining - 1 WHERE email = ?",
-            (req.email,)
+        tuppence_remaining = _deduct_tuppence(
+            conn, req.email, 1,
+            f"AI Coach · {req.category or 'General'}"
         )
-    conn.commit()
+        conn.commit()
     conn.close()
 
-    return {"coaching_json": coaching_json, "sessions_remaining": max(0, sessions - (0 if not free_used else 1))}
+    return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
 
 
 @app.post("/advert-agent/buy-pack")
@@ -3134,14 +3150,26 @@ async def aa_publish(
     if coach_output:
         desc = f"{desc}\n\n---\nAI coaching notes:\n{coach_output}".strip()
 
-    # Upload photos to R2 (or local fallback)
+    # Upload photos to R2 (or local fallback) — EXIF-rotate before storage
     thumb_url  = None
     medium_url = None
     for idx, photo in enumerate(photos):
-        data = await photo.read()
+        raw_data = await photo.read()
+        # Apply EXIF orientation fix and compress to JPEG
+        try:
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw_data))).convert("RGB")
+            medium = img.copy()
+            medium.thumbnail(MEDIUM_SIZE, Image.LANCZOS)
+            buf = io.BytesIO()
+            medium.save(buf, format="JPEG", quality=JPEG_QUALITY_MEDIUM, optimize=True)
+            data = buf.getvalue()
+            content_type_out = "image/jpeg"
+        except Exception:
+            data = raw_data
+            content_type_out = photo.content_type or "image/jpeg"
         if _S3_CONFIGURED:
-            key = f"aa/{uuid.uuid4().hex}_{photo.filename or f'photo_{idx}.jpg'}"
-            url = _s3_upload(data, key, photo.content_type or "image/jpeg")
+            key = f"aa/{uuid.uuid4().hex}_{uuid.uuid4().hex[:8]}.jpg"
+            url = _s3_upload(data, key, content_type_out)
         else:
             fname = f"aa_{uuid.uuid4().hex}.jpg"
             local_path = f"/var/www/marketsquare/media/{fname}"
@@ -3156,11 +3184,19 @@ async def aa_publish(
             medium_url = url
 
     conn = database.get_db()
+    # Inherit seller trust_score from users table (default 40 if not found)
+    ts_row = conn.execute("SELECT trust_score FROM users WHERE email = ?", (email,)).fetchone()
+    seller_trust = int(ts_row["trust_score"] or 40) if ts_row else 40
+    # Store AI-suggested price as anchor for AI3 price-check
+    try:
+        ai_price_anchor = float(price.replace("R","").replace(",","").strip()) if price else None
+    except Exception:
+        ai_price_anchor = None
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
-        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email),
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor),
     )
     listing_id = cursor.lastrowid
     # Upsert user record so seller can use AA coach going forward
@@ -8471,13 +8507,15 @@ async def ai_seller_audit(listing_id: int, email: str):
     }
 
 
-# ── AI3 — Buyer Price Check ───────────────────────────────────────────────────
+# ── AI3 — Buyer Price Check (upgraded Session 77: three-panel intelligence) ──
 
 @app.post("/listings/{listing_id}/price-check")
 async def ai_price_check(listing_id: int, email: str):
-    """AI3: Buyer pays 2T — Claude Sonnet gives a market price comparison
-    for the specific listing. Helps buyer decide before requesting intro.
-    Returns {verdict, context, suggested_range, tuppence_remaining}.
+    """AI3: Buyer pays 1T — Claude Sonnet gives three-panel market intelligence:
+    1. SA second-hand market range  2. Assessment of asking price  3. Official/global prices
+    Anchors to ai_suggested_price stored at listing creation.
+    Returns {verdict, sa_context, sa_range, assessment, official_context, official_range,
+             asking_price, tuppence_remaining}.
     """
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI not configured")
@@ -8495,16 +8533,27 @@ async def ai_price_check(listing_id: int, email: str):
     conn.commit()
     conn.close()
 
-    category = listing["category"] or "General"
-    city     = listing["city"] or "South Africa"
-    title    = listing["title"] or "(no title)"
-    desc     = listing["description"] or "(no description)"
-    price    = listing["price"] or "(no price)"
+    category          = listing["category"] or "General"
+    city              = listing["city"] or "South Africa"
+    title             = listing["title"] or "(no title)"
+    desc              = listing["description"] or "(no description)"
+    price             = listing["price"] or "(no price)"
+    ai_anchor         = listing["ai_suggested_price"]  # stored at vision-draft time; may be None
+
+    anchor_note = (
+        f"The AI originally suggested R{ai_anchor:,.0f} when this listing was created. "
+        "Use this as the anchor for your assessment — do not invent a new price from scratch."
+    ) if ai_anchor else (
+        "No AI-suggested price was stored for this listing. Assess the asking price independently."
+    )
 
     system_prompt = (
-        "You are a South African market pricing expert for TrustSquare marketplace. "
-        "You give buyers honest, specific price comparisons based on real South African market data. "
-        "You know current second-hand and rental market rates well. Be direct — no filler. "
+        "You are a market pricing expert for TrustSquare, a South African peer-to-peer marketplace. "
+        "You give buyers honest, specific three-panel price intelligence. Be direct — no filler. "
+        "Panel 1: South African second-hand market (local reality). "
+        "Panel 2: Assessment of the asking price vs the SA market. "
+        "Panel 3: Official/international/collector market prices (e.g. TCGPlayer, Card Kingdom, "
+        "Bid or Buy, AutoTrader, Property24, or other category-appropriate sources). "
         "Always respond with a single valid JSON object — no markdown, no explanation."
     )
 
@@ -8513,16 +8562,21 @@ async def ai_price_check(listing_id: int, email: str):
         f"TITLE: {title}\n"
         f"DESCRIPTION: {desc}\n"
         f"ASKING PRICE: {price}\n\n"
-        "Compare this price to the current South African market for this type of item or service. "
-        "Give a clear verdict, relevant price context, and a suggested fair range.\n\n"
-        "Return JSON with exactly these keys:\n"
-        '{"verdict": "fair" | "above_market" | "below_market" | "cannot_assess", '
-        '"context": "<2-3 sentences of honest market context with specific SA price ranges>", '
-        '"suggested_range": "<e.g. R800–R1,200 for this condition in Pretoria, or N/A>"}'
+        f"{anchor_note}\n\n"
+        "Return JSON with exactly these keys (all strings, 60 words max per field):\n"
+        "{\n"
+        '  "verdict": "fair" | "above_market" | "below_market" | "cannot_assess",\n'
+        '  "sa_context": "<SA second-hand market reality for this item/category in this city — specific prices>",\n'
+        '  "sa_range": "<e.g. R800–R1,200 or N/A>",\n'
+        '  "assessment": "<direct verdict on whether the asking price is fair vs SA market — 1-2 sentences>",\n'
+        '  "official_context": "<what official sources, collector platforms, or international markets list for this — name the source if known>",\n'
+        '  "official_range": "<e.g. USD $45–$80 on TCGPlayer / R1,500–R2,000 on Bid or Buy, or N/A if no official market exists>",\n'
+        '  "local_vs_global": "cheaper_locally" | "cheaper_globally" | "similar" | "cannot_compare"\n'
+        "}"
     )
 
     try:
-        async with httpx.AsyncClient(timeout=25) as client:
+        async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={
@@ -8532,7 +8586,7 @@ async def ai_price_check(listing_id: int, email: str):
                 },
                 json={
                     "model": PRICE_CHECK_MODEL,
-                    "max_tokens": 350,
+                    "max_tokens": 700,
                     "system": system_prompt,
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
@@ -8541,21 +8595,33 @@ async def ai_price_check(listing_id: int, email: str):
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
-        verdict        = str(result.get("verdict", "cannot_assess"))[:20]
-        context        = str(result.get("context", ""))[:600]
-        suggested_range = str(result.get("suggested_range", "N/A"))[:100]
+        verdict          = str(result.get("verdict", "cannot_assess"))[:20]
+        sa_context       = str(result.get("sa_context", ""))[:600]
+        sa_range         = str(result.get("sa_range", "N/A"))[:100]
+        assessment       = str(result.get("assessment", ""))[:400]
+        official_context = str(result.get("official_context", ""))[:600]
+        official_range   = str(result.get("official_range", "N/A"))[:150]
+        local_vs_global  = str(result.get("local_vs_global", "cannot_compare"))[:20]
     except Exception as exc:
         _log.error("ai-price-check: %s", exc)
         raise HTTPException(status_code=500, detail="AI price check failed — Tuppence charged")
 
-    _log.info("ai-price-check: listing #%d buyer=%s verdict=%s", listing_id, email, verdict)
+    _log.info("ai-price-check: listing #%d buyer=%s verdict=%s local_vs_global=%s",
+              listing_id, email, verdict, local_vs_global)
     return {
-        "verdict": verdict,
-        "context": context,
-        "suggested_range": suggested_range,
+        "verdict":          verdict,
+        "sa_context":       sa_context,
+        "sa_range":         sa_range,
+        "assessment":       assessment,
+        "official_context": official_context,
+        "official_range":   official_range,
+        "local_vs_global":  local_vs_global,
+        "asking_price":     price,
         "tuppence_remaining": remaining,
+        # Legacy fields — kept for backward compat
+        "context":          assessment,
+        "suggested_range":  sa_range,
     }
-
 
 # ── END AI TUPPENCE SERVICES (Session 73) ────────────────────────────────────
 

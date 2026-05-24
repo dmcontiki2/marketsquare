@@ -2529,3 +2529,64 @@ Audited the `auto_link_wonders()` and `auto_link_pois()` pipeline end-to-end. Fi
 - A3 now reads: Commitment ignore → Trust Score −5, listing unpauses. Queue ignore → Trust Score −3. All declines → no penalty.
 - New **A8 · Tuppence deductions are purchase-only — never punitive** added to both PRINCIPLE_REQUIREMENTS.md files. Core rule: Tuppence is only deducted for (i) Introduction purchase, (ii) AI service purchase, (iii) Boost purchase. Punitive behaviour is handled exclusively via Trust Score reduction and Banishment. Non-negotiable; applies to all agents, features, and legal documentation.
 - BEA confirmed: the penalty was never enforced in code — documentation-only residue, now fully excised.
+
+## Session 77 — AI Tools in Seller Edit Screen
+
+**AI1 Rewrite, AI2 Why No Intros, AI4 Yield Calc added to seller edit screen in buyer app.**
+
+The `screen-edit-listing` AI strip now has three seller-facing AI tools alongside the existing Ask AI Coach button. "✨ Rewrite" (AI1, 1T) calls `POST /listings/{id}/ai-rewrite` and pre-fills the title and description fields in the edit form with Claude's rewrite for the seller to review before saving. "🔍 Why No Intros?" (AI2, 1T) calls `POST /listings/{id}/ai-audit` and displays 3 numbered, actionable fixes with reasoning. "📈 Yield Calc" (AI4, 1T) calls `POST /listings/{id}/yield-calc` and shows gross yield, net estimate, and SA benchmark — visible only when the listing is Property category. All three buttons confirm before charging Tuppence, display results in the `#el-ai-output` panel, and reset cleanly on cancel or error. Cache bumped to v=102. Both `marketsquare.html` and `ms.js` deployed.
+
+## Session 77b — Retire AI Session Counter · Unified Tuppence Wallet
+
+**AI coaching session counter retired — all AI calls now draw from the main Tuppence wallet.**
+
+The `aa_sessions_remaining` counter and session pack purchase UI (5T/10T/25T packs) have been fully removed from both the BEA and the buyer app, completing the Session 76 unification decision. BEA `/advert-agent/coach` now deducts 1T via `_deduct_tuppence` after the seller's one free call, returning `tuppence_remaining` instead of `sessions_remaining`. `/advert-agent/status` now returns `tuppence_balance` (sum of transactions) instead of session count. Both `aaFetchDetailSessionBadge` and `aaFetchSessionBadge` in ms.js updated to read `tuppence_balance` and show a Tuppence top-up nudge (linking to `openTopup()`) when balance < 1T. The AI Coach flow info sheet updated to "1T per call · drawn from your Tuppence wallet". Fixed SQLite column name bug (`email` → `user_email` in transactions queries). Cache bumped to v=103. All three files deployed and verified.
+
+## Session 77c — Collectors UX Fixes (Issues 1, 5, 6, 7, 9)
+
+Five issues identified in the Collectors / vision-draft review fixed and deployed.
+
+**Issue 7 — Truncated AI price text:** Raised `max_tokens` for AI3 price-check from 350 → 600. Added 80-word brevity instruction to the prompt. Raised context field slice from 600 → 800 chars. Added `word-wrap:break-word` to the result panel in ms.js.
+
+**Issue 5 — Photo rotation in R2 upload:** `aa_publish` was storing raw phone photos without EXIF correction. Now applies `ImageOps.exif_transpose` + JPEG recompression (using `MEDIUM_SIZE` + `JPEG_QUALITY_MEDIUM`) before uploading to R2. All other upload paths (`/listings/photo`, `/listings/{id}/photo/draft`) already had this fix.
+
+**Issue 6 — Full card in Collectors thumbnail:** Added `.collectors-thumb` CSS class to `.lcard .ibox` and `.collectors-strip` to `.photo-strip-wrap` for Collectors listings. Both use `object-fit:contain` with `background:#111827` so the full card is always visible without cropping, in both the home/browse grid and the detail photo strip.
+
+**Issue 1 — "Add your first photo" heading:** Changed to "Add your photos". Coach bubble updated to say "same item" clearly. When Collectors is selected, a batch nudge appears directing sellers to Batch Cards for multiple distinct items.
+
+**Issue 9 — AI price disclosure:** Added a disclosure line under AI3 price-check and AI4 yield calc results: "Based on AI training data · SA second-hand market · may differ from international retail or official list prices." Added "· AI estimate · edit freely" note next to the vision-draft suggested price field. EULA clause drafted in PRINCIPLE_REQUIREMENTS.md flagged [COUNSEL REQUIRED].
+
+Cache bumped to v=104. All four files deployed.
+
+## Session 77 — AI Tools in Edit Screen + Collectors UX Fixes + Three-Panel Price Intelligence
+
+### AI Tools in Seller Edit Screen (buyer app)
+- Added Rewrite (✨), Why No Intros? (🔍), and Yield Calc (📈) buttons to the `screen-edit-listing` AI strip in `marketsquare.html`
+- `elRunRewrite()`, `elRunAudit()`, `elRunYield()` functions added to `ms.js`
+- Yield Calc button only shown for Property category; all tools cost 1T from wallet
+
+### Tuppence Session Counter Retired
+- `aa_sessions_remaining` counter fully removed from seller status badge and detail badge
+- `aaFetchSessionBadge()` and `aaFetchDetailSessionBadge()` now show Tuppence balance + Top Up button
+- All AI calls (coach, rewrite, audit, yield, batch) draw from single Tuppence wallet
+- `/advert-agent/status` now returns `tuppence_balance` instead of session data
+
+### Collectors UX Fixes
+- Issue 1: "Add your first photo" → "Add your photos"; coach bubble updated with same-item copy and batch nudge for Collectors
+- Issue 5: EXIF rotation applied before R2 upload in `aa_publish` (was only applied for Anthropic calls)
+- Issue 6: Collectors cards use `object-fit:contain` + `background:#111827` in grid, detail strip, and card hero
+- Issue 7: AI3 price-check `max_tokens` 350→600, explicit 60-word prompt constraint, `word-wrap:break-word` on result div
+
+### Three-Panel AI3 Market Intelligence Card (Issues 3+8)
+- `ai_suggested_price` column added to `listings` table via migration; stored on `aa_publish`
+- AI3 price-check endpoint completely rewritten: anchors assessment to stored AI-suggested price
+- Three-panel result card in `ms.js`:
+  - Panel 1 — 🇿🇦 SA Second-Hand Market: local range + context
+  - Panel 2 — Assessment: verdict against stored anchor price (fair/above/below/cannot_assess)
+  - Panel 3 — 🌍 Official & Global Prices: TCGPlayer, Card Kingdom, Bid or Buy etc + local vs global indicator
+- Issue 9: AI price disclosure text added under result; EULA clause drafted
+
+### Deployment
+- Cache bumped v=104 → v=105
+- All four files deployed: `marketsquare.html`, `ms.css`, `ms.js`, `bea_main.py`
+- BEA restarted; smoke test all-green

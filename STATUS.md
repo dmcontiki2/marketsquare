@@ -1,7 +1,23 @@
 # TrustSquare - STATUS.md
 
 ## Live State
-BEA v1.2.0 · cache v=101 · Session 76 complete · AI3=1T · Pack tiers 20/50/100/250T · Batch Cards publish fixed (both apps) · /media/ nginx live · A8 principle locked
+BEA v1.3.1 · cache v=105 · Session 77 complete · Three-panel AI3 price intelligence + all Collectors UX fixes deployed
+
+## Last Completed (Session 77)
+- AI1 Rewrite button in seller edit screen: rewrites title+description, pre-fills form (1T)
+- AI2 Why No Intros? button: 3 actionable fixes with reasoning (1T)
+- AI4 Yield Calc button: gross/net yield + SA benchmark, Property only (1T)
+- AI session counter retired: /advert-agent/coach now charges 1T from wallet (not session counter)
+- /advert-agent/status now returns tuppence_balance; pack purchase UI removed
+- Issue 7: AI3 price-check max_tokens 350→600, word-wrap fix, 60-word brevity prompt
+- Issue 5: aa_publish EXIF rotation applied before R2 upload
+- Issue 6: Collectors cards use object-fit:contain (full card visible, no crop)
+- Issue 1: "Add your photos" heading, same-item coach copy, Collectors batch nudge
+- Issue 9: AI price disclosure under all price results, EULA clause drafted
+- Issue 3+8: Three-panel market intelligence card — SA Market / Assessment (price-anchored) / Official+Global prices
+  - ai_suggested_price stored on publish; AI3 anchors verdict to this price
+  - Local vs global indicator (🇿🇦 cheaper locally / 🌍 better globally / ≈ similar)
+- Cache bumped v=105, all four files deployed, BEA restarted
 
 ## Last Completed (Session 76)
 - Batch Cards publish fix (admin app): added suburb selector to AI5 panel — BEA was rejecting 400 suburb required
@@ -21,7 +37,7 @@ BEA v1.2.0 · cache v=101 · Session 76 complete · AI3=1T · Pack tiers 20/50/1
 ## Cache-busting rule (AI-enforced)
 When ms.css or ms.js change, bump the ?v= version in marketsquare.html to match
 the current session number. This forces browsers and Cloudflare to fetch the new file.
-Current version: ?v=101 (Session 76)
+Current version: ?v=105 (Session 77)
 
 ## Scheduled Future Sessions
 
@@ -40,12 +56,12 @@ Current version: ?v=101 (Session 76)
 - **Yield Calc + AI tools in seller My Space (Session 77)**: add Yield Calc (Property), Rewrite, Why No Intros to seller's own listing edit screen in the buyer app
 - **Subscription tiers (design before code)**: Free (suburb, 15%), Starter ~$5/mo (city, 80%), Premium ~$15/mo (global + analytics). Design tier-gate logic before coding.
 
-## Next Session (Session 77)
+## Next Session (Session 78)
 Goals:
-1. **Yield Calc + AI tools in seller My Space** — add Yield Calc (Property), Rewrite, Why No Intros to seller listing edit screen in buyer app
+1. **Property batch listing — design + build** — estate agents need to list multiple properties at once; design the flow (CSV upload or multi-step wizard with address, bedrooms, bathrooms, price, suburb, photos per property), then build it
 2. **n8n Email David node** — verify fromEmail matches SMTP authorised sender
 3. **Subscription tier design** — sketch gating logic before any code
-4. **Batch Cards re-test** — David to re-publish Springbok Rugby Cards via buyer app batch flow; confirm photo appears on listing card (nginx /media/ now live)
+4. **Seller My Space AI tools** — add Yield Calc (Property), Rewrite, Why No Intros to seller's own listing edit screen in the buyer app (open action from Session 77)
 
 Pre-launch rollback checklist (do before go-live):
 - grep 🧪 TEST in ms.js → tuppence=50 → 5, fallback '50' → '—', HTML balance values

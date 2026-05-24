@@ -92,6 +92,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .lcard:active{border-color:#9ca3af;box-shadow:var(--sh);}
 .lcard .ibox{height:118px;position:relative;overflow:hidden;}
 .lcard .ibox img{width:100%;height:100%;object-fit:cover;display:block;}
+.lcard .ibox.collectors-thumb img{object-fit:contain;background:#111827;}
+.dhero .ibox.collectors-thumb img{object-fit:contain;background:#111827;}
 .lcard .ibox .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;}
 .feat-badge{position:absolute;top:7px;left:7px;background:rgba(17,24,39,.72);color:rgba(255,255,255,.9);font-size:8px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 7px;border-radius:3px;font-family:'Inter',sans-serif;backdrop-filter:blur(4px);}
 .paused-badge{position:absolute;top:7px;left:7px;background:var(--gold);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;font-family:'Inter',sans-serif;}
@@ -749,6 +751,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .dnav button{pointer-events:auto;}
 .photo-strip-slide{flex:0 0 100%;scroll-snap-align:start;position:relative;overflow:hidden;}
 .photo-strip-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.collectors-strip .photo-strip-slide img{object-fit:contain;background:#111827;}
 .photo-strip-slide .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
 .photo-strip-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:3;}
 .psd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s;}
