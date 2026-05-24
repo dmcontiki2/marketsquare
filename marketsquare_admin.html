@@ -3989,13 +3989,22 @@ function toggleBatchCardsPanel() {
       if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
     } else if (batchSuburb && sellerData.geo_city_id) {
       // Fetch suburbs directly if not loaded yet
+      batchSuburb.innerHTML = '<option value="">Loading suburbs…</option>';
+      if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
       fetch(BEA_URL + '/geo/suburbs?city_id=' + encodeURIComponent(sellerData.geo_city_id))
         .then(r => r.json())
         .then(suburbs => {
           batchSuburb.innerHTML = '<option value="">Select suburb…</option>' +
             suburbs.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-          if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
-        }).catch(() => {});
+          // Auto-select first suburb so user can proceed immediately
+          if (batchSuburb.options.length > 1) batchSuburb.selectedIndex = 1;
+        }).catch(() => {
+          batchSuburb.innerHTML = '<option value="' + sellerData.city + '">' + sellerData.city + '</option>';
+        });
+    } else if (batchSuburb) {
+      // No geo_city_id — use city name as fallback suburb
+      batchSuburb.innerHTML = '<option value="' + sellerData.city + '">' + sellerData.city + '</option>';
+      if (batchSuburbWrap) batchSuburbWrap.style.display = 'block';
     }
   }
 }
@@ -4057,17 +4066,42 @@ function handleBatchPhotos(e) {
   prev.innerHTML = '<div style="font-size:11px;color:#7c3aed;margin-bottom:6px;">Processing ' + files.length + ' photo(s)…</div>';
 
   let done = 0;
+  const total = files.length;
+
+  function onPhotoDone() {
+    done++;
+    if (done === total) {
+      _batchPhotos = _batchPhotos.filter(Boolean);
+      renderBatchPreviews();
+      const btn = document.getElementById('batch-analyse-btn');
+      if (btn) btn.style.display = _batchPhotos.length ? 'flex' : 'none';
+    }
+  }
+
   files.forEach((file, idx) => {
-    // Read as ArrayBuffer first to get EXIF orientation
+    // Read as ArrayBuffer first to get EXIF orientation, fall back to orientation=1 on any error
     const abReader = new FileReader();
+    abReader.onerror = () => {
+      // ArrayBuffer read failed — process without EXIF correction
+      processWithOrientation(file, idx, 1);
+    };
     abReader.onload = abEv => {
-      const orientation = _readExifOrientation(abEv.target.result);
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
+      let orientation = 1;
+      try { orientation = _readExifOrientation(abEv.target.result); } catch(ex) {}
+      processWithOrientation(file, idx, orientation);
+    };
+    abReader.readAsArrayBuffer(file);
+  });
+
+  function processWithOrientation(file, idx, orientation) {
+    const reader = new FileReader();
+    reader.onerror = () => { onPhotoDone(); }; // skip broken file, don't hang
+    reader.onload = ev => {
+      const img = new Image();
+      img.onerror = () => { onPhotoDone(); };
+      img.onload = () => {
+        try {
           const MAX = 800;
-          // For orientations 5-8 width/height are swapped
           const swapped = orientation >= 5;
           let w = swapped ? img.height : img.width;
           let h = swapped ? img.width  : img.height;
@@ -4079,20 +4113,13 @@ function handleBatchPhotos(e) {
           _drawOrientedImage(ctx, img, orientation, w, h);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
           _batchPhotos[idx] = { file, dataUrl };
-          done++;
-          if (done === files.length) {
-            _batchPhotos = _batchPhotos.filter(Boolean);
-            renderBatchPreviews();
-            const btn = document.getElementById('batch-analyse-btn');
-            if (btn) btn.style.display = _batchPhotos.length ? 'flex' : 'none';
-          }
-        };
-        img.src = ev.target.result;
+        } catch(ex) { /* skip */ }
+        onPhotoDone();
       };
-      reader.readAsDataURL(file);
+      img.src = ev.target.result;
     };
-    abReader.readAsArrayBuffer(file);
-  });
+    reader.readAsDataURL(file);
+  }
   // Reset input so same files can be re-selected
   e.target.value = '';
 }
