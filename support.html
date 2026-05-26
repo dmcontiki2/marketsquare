@@ -1,6 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+(function(){
+  var k = sessionStorage.getItem('ts_support_auth');
+  if (k !== '96315') {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.innerHTML = '';
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:#0b0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Inter,sans-serif;z-index:9999;';
+      overlay.innerHTML = '<div style="text-align:center;padding:32px;max-width:360px;width:90%;">'
+        + '<div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800;color:#e2e8f0;margin-bottom:4px;">TrustSquare</div>'
+        + '<div style="font-size:13px;color:#64748b;margin-bottom:32px;">Support Centre</div>'
+        + '<div style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Enter access code to continue</div>'
+        + '<input id="ts-pw" type="password" placeholder="Access code" autofocus style="width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:#111827;color:#e2e8f0;font-size:16px;outline:none;text-align:center;letter-spacing:4px;font-family:Inter,sans-serif;margin-bottom:12px;">'
+        + '<button onclick="tsAuth()" style="width:100%;padding:14px;border-radius:12px;background:#d4a853;border:none;color:#0b0f1a;font-size:15px;font-weight:700;font-family:Syne,sans-serif;cursor:pointer;">Enter →</button>'
+        + '<div id="ts-err" style="margin-top:10px;font-size:12px;color:#f87171;display:none;">Incorrect code. Please try again.</div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+      document.getElementById('ts-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') tsAuth(); });
+    });
+  }
+  window.tsAuth = function() {
+    var val = document.getElementById('ts-pw').value;
+    if (val === '96315') {
+      sessionStorage.setItem('ts_support_auth', '96315');
+      location.reload();
+    } else {
+      document.getElementById('ts-err').style.display = 'block';
+      document.getElementById('ts-pw').value = '';
+      document.getElementById('ts-pw').focus();
+    }
+  };
+})();
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Support · TrustSquare</title>
