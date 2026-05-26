@@ -2780,3 +2780,20 @@ Smoke test: all 30 checks passed.
 - Data fetched live from `/dashboard/summary` and `/health/resources`; light-theme card layout
 
 **Smoke test: 30/30 ✅**
+
+## Session 85 (cont.) · 2026-05-26 · Support page, Paystack response, app links
+
+**Support Centre (support.html):**
+- Built and deployed full dark-navy branded Support Centre at trustsquare.co/support
+- Sticky nav, hero with status badge, 3 contact cards, tabbed FAQ (15 questions across Buyers/Sellers/Payments), contact form with mailto fallback
+- Password gate added (client-side sessionStorage) — code 96315 required to access; protects pre-launch IP
+- nginx route added: `location = /support` serves support.html directly
+- Support link added to FEA Me tab (Help & Support section with card + mailto link)
+- Help link added to admin app header (❓ Help → /support in new tab)
+
+**Paystack activation response (Paystack_Response_TrustSquare.docx):**
+- Word document built with 8 embedded screenshots (5 platform + 3 support page)
+- Sections: Platform Overview, Pricing Structure, Disputes/Refunds/Cancellation, Customer Support Infrastructure, Request for Live Payment Activation
+- Pre-launch payment activation section added — professional case for live credential activation before public launch
+- IP-safe: no Tuppence/introduction pairing, no anonymous references, no wallet screenshots
+- Covering email drafted; letter sent from support@trustsquare.co to Oluwaseun at Paystack
