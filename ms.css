@@ -158,7 +158,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .poi-icon-police{background:rgba(16,185,129,.15);}
 .poi-info{flex:1;min-width:0;}
 .poi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.poi-dist{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.poi-dist{font-size:11px;color:var(--text-dim);margin-top:2px;}.poi-type{font-size:11px;color:var(--text-dim);opacity:.8;margin-top:1px;}
 
 .wd-photo-credit{position:absolute;bottom:26px;right:8px;background:rgba(0,0,0,0.52);color:rgba(255,255,255,0.85);font-size:10px;padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:4px;z-index:5;pointer-events:auto;}
 .wd-photo-credit a{color:rgba(255,255,255,0.72);text-decoration:none;border-bottom:0.5px solid rgba(255,255,255,0.35);}

@@ -105,12 +105,39 @@
   .vtab.active { border-color: var(--accent); color: #fff; background: #1a2232; }
 
   /* ── Graph view ── */
-  #graph-view { display: none; width: 100%; height: calc(100vh - 53px); position: relative; }
+  #graph-view { display: none; width: 100%; height: calc(100vh - 53px); min-height: 400px; position: fixed; top: 53px; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--navy, #0b0f1a); }
   #graph-view.visible { display: block; }
   #graph-svg { width: 100%; height: 100%; touch-action: none; }
   #graph-zoom-wrap { will-change: transform; }
   .node-label { font-size: 11px; fill: #e2e8f0; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   .node-sublabel { font-size: 9px; fill: #64748b; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* ── Ops view ── SESSION85_OPS_TAB ── */
+  #ops-view { display: none; width: 100%; min-height: calc(100vh - 53px); padding: 24px 20px 40px; box-sizing: border-box; }
+  #ops-view.visible { display: block; }
+  .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 960px; margin: 0 auto; }
+  @media(max-width:640px){ .ops-grid { grid-template-columns: 1fr; } }
+  .ops-card { background: #0f172a; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 20px; }
+  .ops-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 14px; }
+  .ops-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 12px; }
+  .ops-row:last-child { border-bottom: none; }
+  .ops-row-label { color: #94a3b8; }
+  .ops-row-val { color: #e2e8f0; font-weight: 600; }
+  .ops-bar-wrap { height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .ops-bar { height: 4px; border-radius: 2px; transition: width .5s; }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 12px; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+  .pri-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .pri-item:last-child { border-bottom: none; }
+  .pri-num { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: #1e293b; color: #94a3b8; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pri-text { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .blocker-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 12px; color: #f87171; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .blocker-item:last-child { border-bottom: none; }
+  .ops-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid rgba(255,255,255,.12); background: transparent; color: #94a3b8; transition: all .15s; margin: 4px 4px 0 0; }
+  .ops-action-btn:hover { border-color: #6366f1; color: #e2e8f0; background: rgba(99,102,241,.08); }
+  .ops-stat-big { font-size: 28px; font-weight: 800; color: #e2e8f0; line-height: 1; }
+  .ops-stat-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
 
   /* ── Graph tooltip ── */
   #graph-tooltip { position: fixed; background: #111827; border: 1px solid #1e2d40; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #e2e8f0; pointer-events: none; opacity: 0; transition: opacity 0.15s; max-width: 280px; z-index: 200; line-height: 1.6; }
@@ -211,6 +238,187 @@
 </script>
 </head>
 <body>
+<!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── KEEP ── -->
+<div id="admin-gate" style="
+  display:none;position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(135deg,#0b0f1a 0%,#111827 100%);
+  align-items:center;justify-content:center;flex-direction:column;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="width:100%;max-width:360px;padding:0 24px;box-sizing:border-box;">
+
+    <!-- LOGIN SCREEN -->
+    <div id="gate-login-screen">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">TrustSquare</div>
+        <div id="gate-subtitle" style="font-size:13px;color:#64748b;margin-top:6px;letter-spacing:1px;text-transform:uppercase;">Session Dashboard</div>
+      </div>
+      <div id="admin-gate-error" style="
+        display:none;background:#7f1d1d;color:#fca5a5;
+        border-radius:8px;padding:10px 14px;font-size:13px;
+        margin-bottom:16px;text-align:center;"></div>
+      <input id="admin-gate-input" type="password" placeholder="Enter password or PIN"
+        autocomplete="current-password"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:16px;
+          border-radius:10px;border:1.5px solid #1e293b;background:#0f172a;
+          color:#f1f5f9;outline:none;margin-bottom:12px;"
+        onkeydown="if(event.key==='Enter')adminGateSubmit()"/>
+      <button onclick="adminGateSubmit()" style="
+        width:100%;padding:14px;font-size:15px;font-weight:700;
+        background:#e63946;color:#fff;border:none;border-radius:10px;cursor:pointer;">
+        Unlock
+      </button>
+      <div style="text-align:center;margin-top:20px;font-size:11px;color:#334155;">
+        TrustSquare admin access only
+      </div>
+    </div>
+
+    <!-- FORCE PIN CHANGE SCREEN -->
+    <div id="gate-change-screen" style="display:none;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">TrustSquare</div>
+        <div style="font-size:13px;color:#f59e0b;margin-top:6px;letter-spacing:1px;text-transform:uppercase;">Choose Your PIN</div>
+        <div id="gate-change-name" style="font-size:14px;color:#94a3b8;margin-top:8px;"></div>
+      </div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px;text-align:center;">
+        Choose a personal 6-digit PIN. You will use this every time you log in.
+      </div>
+      <div id="gate-change-error" style="
+        display:none;background:#7f1d1d;color:#fca5a5;
+        border-radius:8px;padding:10px 14px;font-size:13px;
+        margin-bottom:16px;text-align:center;"></div>
+      <input id="gate-new-pin" type="password" inputmode="numeric"
+        placeholder="New 6-digit PIN" maxlength="6"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:20px;
+          letter-spacing:6px;border-radius:10px;border:1.5px solid #1e293b;
+          background:#0f172a;color:#f1f5f9;outline:none;margin-bottom:10px;text-align:center;"
+        onkeydown="if(event.key==='Enter')document.getElementById('gate-confirm-pin').focus()"/>
+      <input id="gate-confirm-pin" type="password" inputmode="numeric"
+        placeholder="Confirm PIN" maxlength="6"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:20px;
+          letter-spacing:6px;border-radius:10px;border:1.5px solid #1e293b;
+          background:#0f172a;color:#f1f5f9;outline:none;margin-bottom:12px;text-align:center;"
+        onkeydown="if(event.key==='Enter')adminGateChangePIN()"/>
+      <button onclick="adminGateChangePIN()" style="
+        width:100%;padding:14px;font-size:15px;font-weight:700;
+        background:#22c55e;color:#fff;border:none;border-radius:10px;cursor:pointer;">
+        Set My PIN
+      </button>
+    </div>
+
+  </div>
+</div>
+<script>
+(function(){
+  var BEA = 'https://trustsquare.co';
+  var gate        = document.getElementById('admin-gate');
+  var loginScreen = document.getElementById('gate-login-screen');
+  var changeScreen= document.getElementById('gate-change-screen');
+  var inp         = document.getElementById('admin-gate-input');
+  var err         = document.getElementById('admin-gate-error');
+  var changeErr   = document.getElementById('gate-change-error');
+  var _tempPin    = null;  // holds current PIN during forced change flow
+
+  function showGate(){
+    gate.style.display = 'flex';
+    loginScreen.style.display = 'block';
+    changeScreen.style.display = 'none';
+    setTimeout(function(){ if(inp) inp.focus(); }, 100);
+  }
+  function hideGate(){
+    gate.style.display = 'none';
+    _tempPin = null;
+  }
+  function showLoginError(msg){
+    err.textContent = msg; err.style.display = 'block';
+    inp.value = ''; inp.focus();
+  }
+  function showChangePINScreen(name, currentPin){
+    _tempPin = currentPin;
+    document.getElementById('gate-change-name').textContent = 'Welcome, ' + name;
+    loginScreen.style.display = 'none';
+    changeScreen.style.display = 'block';
+    setTimeout(function(){ document.getElementById('gate-new-pin').focus(); }, 100);
+  }
+
+  // Check existing token on load
+  var stored = sessionStorage.getItem('ms_admin_token');
+  if(stored){
+    fetch(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); showGate(); }
+      })
+      .catch(function(){ showGate(); });
+  } else {
+    showGate();
+  }
+
+  window.adminGateSubmit = function(){
+    var pw = inp.value.trim();
+    if(!pw) return;
+    err.style.display = 'none';
+    fetch(BEA + '/admin/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({password: pw})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.token){
+        sessionStorage.setItem('ms_admin_token', d.token);
+        hideGate();
+      } else if(d.must_change_pin){
+        showChangePINScreen(d.name, pw);
+      } else {
+        showLoginError(d.detail || 'Incorrect password or PIN.');
+      }
+    })
+    .catch(function(){ showLoginError('Connection error. Please try again.'); });
+  };
+
+  window.adminGateChangePIN = function(){
+    var newPin  = document.getElementById('gate-new-pin').value.trim();
+    var confirm = document.getElementById('gate-confirm-pin').value.trim();
+    changeErr.style.display = 'none';
+    if(!/^[0-9]{6}$/.test(newPin)){
+      changeErr.textContent = 'PIN must be exactly 6 digits.';
+      changeErr.style.display = 'block'; return;
+    }
+    if(newPin !== confirm){
+      changeErr.textContent = 'PINs do not match. Please try again.';
+      changeErr.style.display = 'block';
+      document.getElementById('gate-confirm-pin').value = ''; return;
+    }
+    if(newPin === _tempPin){
+      changeErr.textContent = 'New PIN must be different from your current PIN.';
+      changeErr.style.display = 'block'; return;
+    }
+    fetch(BEA + '/admin/change-pin', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({current_pin: _tempPin, new_pin: newPin})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.token){
+        sessionStorage.setItem('ms_admin_token', d.token);
+        hideGate();
+      } else {
+        changeErr.textContent = d.detail || 'PIN change failed. Please try again.';
+        changeErr.style.display = 'block';
+      }
+    })
+    .catch(function(){
+      changeErr.textContent = 'Connection error. Please try again.';
+      changeErr.style.display = 'block';
+    });
+  };
+})();
+</script>
+<!-- ── END ADMIN LOGIN GATE v2 ── -->
+
+
+
 
 <div class="header">
   <div class="header-left">
@@ -221,6 +429,7 @@
   <div class="view-toggle">
     <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
     <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
+    <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
   </div>
 </div>
 
@@ -333,6 +542,81 @@
   <svg id="graph-svg"></svg>
 </div>
 
+<div id="ops-view">
+  <div class="ops-grid">
+
+    <!-- ── Server Health ── -->
+    <div class="ops-card" id="ops-health-card">
+      <div class="ops-card-title">🖥 Server Health</div>
+      <div id="ops-health-rows"><div style="font-size:12px;color:#64748b;">Loading…</div></div>
+    </div>
+
+    <!-- ── Blueprint v1.1 Checklist ── -->
+    <div class="ops-card">
+      <div class="ops-card-title">📋 Blueprint v1.1 — Complete</div>
+      <div id="ops-blueprint-list">
+        <div class="check-item"><span class="check-icon">✅</span><span>listing_photos table · r2_key UNIQUE · ON DELETE CASCADE</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>listing_tier_config · single source of truth for tier timing</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>seller_extra_slots audit ledger</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>expires_at + warning_sent_at · all 17 live listings backfilled</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>Photo API: presign → PUT → confirm + delete + reorder + list</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>GET /listings/{id} returns photos[] array</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>Expiry worker · hourly · live → expired at expires_at</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>Warning worker · 6-hourly · n8n webhook 7 days before expiry</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>Admin UI · presign → confirm upload · structured photo strip</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>Auto-seed at publish + create · pipeline fully self-maintaining</span></div>
+      </div>
+    </div>
+
+    <!-- ── Session 85 Priorities ── -->
+    <div class="ops-card">
+      <div class="ops-card-title">🎯 Session 85 Priorities</div>
+      <div id="ops-priorities">
+        <div class="pri-item"><div class="pri-num">1</div><div class="pri-text"><strong style="color:#e2e8f0;">n8n Expiry Warning Workflow</strong><br>Set N8N_WEBHOOK_LISTING_EXPIRY_WARNING in /etc/environment + build n8n workflow to send seller email</div></div>
+        <div class="pri-item"><div class="pri-num">2</div><div class="pri-text"><strong style="color:#e2e8f0;">Paystack Live Mode</strong><br>Activate once Paystack approval arrives — CIPC registration complete</div></div>
+        <div class="pri-item"><div class="pri-num">3</div><div class="pri-text"><strong style="color:#e2e8f0;">Seller Tier Enforcement</strong><br>Gate listing count against listing_tier_config.max_listings at create + publish</div></div>
+        <div class="pri-item"><div class="pri-num">4</div><div class="pri-text"><strong style="color:#e2e8f0;">Wave 1 Outreach</strong><br>⛔ Held — pending patent filing + pre-launch gate</div></div>
+      </div>
+    </div>
+
+    <!-- ── Launch Blockers + Quick Stats ── -->
+    <div class="ops-card">
+      <div class="ops-card-title">⛔ Launch Blockers</div>
+      <div id="ops-blockers"><div style="font-size:12px;color:#64748b;">Loading…</div></div>
+      <div style="margin-top:18px;">
+        <div class="ops-card-title" style="margin-bottom:10px;">📊 Quick Stats</div>
+        <div class="ops-row">
+          <span class="ops-row-label">BEA Version</span>
+          <span class="ops-row-val" id="ops-bea-ver">—</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row-label">Live Listings</span>
+          <span class="ops-row-val" id="ops-live-listings">—</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row-label">Current Session</span>
+          <span class="ops-row-val" id="ops-session">—</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row-label">Server</span>
+          <span class="ops-row-val">Hetzner CPX32 · 178.104.73.239</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row-label">Stack</span>
+          <span class="ops-row-val">FastAPI + SQLite + Redis</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="ops-card-title" style="margin-bottom:8px;">🔧 Quick Links</div>
+        <button class="ops-action-btn" onclick="window.open('https://trustsquare.co','_blank')">🌐 Live Site</button>
+        <button class="ops-action-btn" onclick="window.open('https://trustsquare.co/admin.html','_blank')">🛠 Admin</button>
+        <button class="ops-action-btn" onclick="window.open('https://trustsquare.co/docs','_blank')">📖 API Docs</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
 // ── Live data: fetched from BEA on every load ────────────────────────────
 let DATA = {};
@@ -343,7 +627,8 @@ async function loadDashboard() {
   if (genTimeEl) genTimeEl.textContent = 'Loading…';
 
   try {
-    const res = await fetch('/dashboard/summary');
+    const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
+    const res = await fetch(base + '/dashboard/summary');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     DATA = await res.json();
     populate();
@@ -358,18 +643,86 @@ async function loadDashboard() {
 
 // ── View switcher ────────────────────────────────────────────
 function switchView(view) {
+  // SESSION85_OPS_TAB — three-way switcher
   const dash = document.querySelector('.main');
   const graph = document.getElementById('graph-view');
+  const ops   = document.getElementById('ops-view');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
   document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
+  document.getElementById('vtab-ops').classList.toggle('active', view === 'ops');
   if (view === 'graph') {
     dash.style.display = 'none';
     graph.classList.add('visible');
-    if (!window._graphBuilt) buildGraph();
+    ops.classList.remove('visible');
+    requestAnimationFrame(() => buildGraph());
+  } else if (view === 'ops') {
+    dash.style.display = 'none';
+    graph.classList.remove('visible');
+    ops.classList.add('visible');
+    renderOpsPanel();
   } else {
     dash.style.display = '';
     graph.classList.remove('visible');
+    ops.classList.remove('visible');
   }
+}
+
+// ── Ops panel renderer ─────────────────────────────────────── SESSION85_OPS_TAB
+function renderOpsPanel() {
+  // Quick stats from DATA
+  const opsSession = document.getElementById('ops-session');
+  const opsBea     = document.getElementById('ops-bea-ver');
+  const opsListings = document.getElementById('ops-live-listings');
+  if (opsSession) opsSession.textContent = 'Session ' + (DATA.currentSession || '—');
+  if (opsBea) opsBea.textContent = DATA.liveState ? (DATA.liveState.match(/BEA v[\d.]+/) || ['—'])[0] : '—';
+  if (opsListings) {
+    const m = (DATA.liveState || '').match(/(\d+) live listing/);
+    opsListings.textContent = m ? m[1] : '—';
+  }
+
+  // Blockers
+  const blockerEl = document.getElementById('ops-blockers');
+  if (blockerEl) {
+    const blockers = DATA.blockers || [];
+    blockerEl.innerHTML = blockers.length
+      ? blockers.map(b => '<div class="blocker-item"><span>⛔</span><span>' + b + '</span></div>').join('')
+      : '<div style="font-size:12px;color:#4ade80;padding:4px 0;">✅ No active blockers</div>';
+  }
+
+  // Server health — reuse the live health data if already loaded
+  fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/health/resources')
+    .then(r => r.json())
+    .then(h => {
+      const rows = document.getElementById('ops-health-rows');
+      if (!rows) return;
+      const statusColor = s => s === 'ok' ? '#4ade80' : s === 'warning' ? '#fbbf24' : '#f87171';
+      const barColor    = s => s === 'ok' ? '#4ade80' : s === 'warning' ? '#fbbf24' : '#ef4444';
+      const metrics = [
+        { label: 'RAM',       pct: h.ram.pct,       value: Math.round(h.ram.used_mb) + ' MB / ' + Math.round(h.ram.total_mb) + ' MB',   status: h.ram.status },
+        { label: 'Disk',      pct: h.disk.pct,      value: h.disk.used_gb + ' GB / ' + h.disk.total_gb + ' GB',                           status: h.disk.status },
+        { label: 'CPU Load',  pct: h.cpu.pct,       value: h.cpu.load1 + ' avg (' + h.cpu.pct + '%)',                                      status: h.cpu.status },
+        { label: 'Bandwidth', pct: h.bandwidth.pct, value: h.bandwidth.total_gb + ' GB / 20,480 GB',                                      status: h.bandwidth.status },
+        { label: 'Response',  pct: Math.min(h.response_ms / 5, 100), value: h.response_ms + ' ms',
+          status: h.response_ms < 200 ? 'ok' : h.response_ms < 500 ? 'warning' : 'critical' },
+        { label: 'BEA DB',    pct: Math.min(h.db_sizes.marketsquare_mb / 500 * 100, 100),
+          value: h.db_sizes.marketsquare_mb + ' MB', status: 'ok' },
+      ];
+      rows.innerHTML = metrics.map(m =>
+        '<div class="ops-row" style="flex-direction:column;align-items:flex-start;">' +
+          '<div style="display:flex;justify-content:space-between;width:100%;margin-bottom:4px;">' +
+            '<span class="ops-row-label">' + m.label + '</span>' +
+            '<span style="font-size:12px;font-weight:600;color:' + statusColor(m.status) + ';">' + m.value + '</span>' +
+          '</div>' +
+          '<div class="ops-bar-wrap" style="width:100%;">' +
+            '<div class="ops-bar" style="width:' + Math.min(m.pct, 100) + '%;background:' + barColor(m.status) + ';"></div>' +
+          '</div>' +
+        '</div>'
+      ).join('');
+    })
+    .catch(() => {
+      const rows = document.getElementById('ops-health-rows');
+      if (rows) rows.innerHTML = '<div style="font-size:12px;color:#ef4444;">Health fetch failed</div>';
+    });
 }
 
 // ── Graph data ────────────────────────────────────────────────
@@ -529,9 +882,10 @@ let _galaxySim = null;
 let _galaxyState = 'galaxy'; // 'galaxy' | 'drilldown'
 
 function buildGraph() {
-  window._graphBuilt = true;
   if (!DATA) return;
   drawGalaxy();
+  if (window._graphBuilt) return;
+  window._graphBuilt = true;
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       const overlay = document.getElementById('level3-overlay');
@@ -924,7 +1278,7 @@ function closeLevel3(event) {
 let _healthTimer = null;
 
 function loadHealth() {
-  fetch('/health/resources')
+  fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/health/resources')
     .then(r => r.json())
     .then(h => renderHealth(h))
     .catch(() => {

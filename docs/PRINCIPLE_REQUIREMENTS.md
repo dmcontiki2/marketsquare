@@ -287,3 +287,18 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 *End of PRINCIPLE_REQUIREMENTS.md v1.2*
 *Next update: when Codex version increments or a new project is added.*
 *v1.2 changes: B1 updated CPX22→CPX32 from 25 May 2026; B4 updated to write-to-both dual storage; B6 updated with actual upgrade schedule; Quick Reference table updated with storage and server tier rows.*
+
+---
+## [COUNSEL REQUIRED] AI Price Estimate Disclaimer — EULA Addition (Session 77)
+
+The following clause needs to be added to the EULA (after Section 11 — Tuppence):
+
+**Section X — AI Price Estimates**
+AI-generated price suggestions (including vision-draft suggested prices, AI market analysis, yield calculator estimates, and "Is this a fair price?" results) are informational estimates only. They are not financial advice, valuations, or offers. They are generated from AI training data reflecting general South African second-hand market conditions and may differ materially from:
+(a) international retail or official list prices;
+(b) live market prices at time of listing;
+(c) import duties, scarcity premiums, or local supply/demand conditions.
+
+TrustSquare makes no warranty as to the accuracy of AI price estimates. Users rely on them at their own discretion. Each AI price call costs Tuppence and is non-refundable regardless of the estimate provided.
+
+[COUNSEL REQUIRED: confirm this covers FAIS AI-advice exclusion and NCA pricing disclosure requirements]

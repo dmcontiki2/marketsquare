@@ -1,5 +1,5 @@
 # MarketSquare — Listing State Machine
-**Version 1.1 · 2 May 2026 · Locked design — do not change without Architect agent sign-off**
+**Version 1.2 · 25 May 2026 · Locked design — do not change without Architect agent sign-off**
 
 ---
 
@@ -28,7 +28,7 @@ Buyers only ever interact with listings in the **LIVE** state.
 - Commitment model listings auto-pause when an intro request arrives
 - Duration before Fade Out is gated by seller subscription tier (see Fade Out section)
 - **Listing count limits by tier:** Free = 2 simultaneous live listings · Starter ($5/mo) = 25 listings · Premium ($15/mo) = 50 listings
-- **Batch expansion:** any seller may purchase additional listing capacity at 1T per batch of 20 extra listings (no tier change required)
+- **Batch expansion:** Starter and Premium sellers may purchase additional listing capacity at 2T per batch of 20 extra listings. Free tier sellers must upgrade to Starter before purchasing extra slots.
 
 ### 3. PAUSED
 - Was LIVE, now temporarily off
@@ -182,7 +182,7 @@ The number of simultaneously active (LIVE or PAUSED) listings is governed by the
 - **Free tier:** maximum 2 live listings at any time
 - **Starter tier ($5/month):** maximum 25 live listings
 - **Premium tier ($15/month):** maximum 50 live listings
-- **Batch expansion:** any seller on any tier may purchase additional listing capacity at 1 Tuppence per batch of 20 extra listings. Batches stack and persist until used.
+- **Batch expansion:** Starter and Premium sellers may purchase additional listing capacity at 2 Tuppence per batch of 20 extra listings. Batches stack and are permanent. Free tier sellers must upgrade to Starter first — extra slots are not available on the free tier.
 
 Attempting to publish beyond the tier cap (without a batch) will be rejected with an in-app message showing the upgrade or batch-purchase option.
 
