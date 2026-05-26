@@ -2758,3 +2758,25 @@ Closed the last gap in the photo pipeline: new listings now get `listing_photos`
 - Session 84: Auto-seed at publish + create — pipeline self-maintaining from this point
 
 Smoke test: all 30 checks passed.
+
+## Session 85 · 26 May 2026 · n8n expiry warning · Seller tier enforcement · Ops dashboard tab
+
+**n8n Listing Expiry Warning Workflow**
+- Created n8n workflow "TrustSquare - Listing Expiry Warning" (ID: expiry-warning-s85) — webhook trigger → branded HTML email to seller
+- Email: subject "Your listing expires in 7 days", full TrustSquare branded template with renewal steps and CTA to admin.html
+- Webhook path: `listing-expiry-warning` · activated and verified: execution #43 status=success
+- Set `N8N_WEBHOOK_LISTING_EXPIRY_WARNING=http://localhost:5678/webhook/listing-expiry-warning` in both `/etc/environment` and `.env`
+- BEA `_warning_worker` now has a live target — will fire 7 days before any listing's `expires_at`
+
+**Seller Tier Enforcement**
+- `publish_listing`: hard gate — counts seller's live listings vs `listing_tier_config.max_listings + seller_extra_slots`; returns HTTP 403 with clear upgrade message if at cap
+- `create_listing`: advisory check — saves draft but adds `cap_warning` field to response if seller is already at cap
+- Superusers (`is_superuser=1`) bypass both gates — existing admin listings unaffected
+- Column fix: `seller_extra_slots.email` (not `seller_email`) — corrected in both query sites
+
+**Ops Dashboard Tab**
+- Added ⚙️ Ops as third nav tab on dashboard.html alongside Dashboard and Graph
+- Panel mirrors the ops widget: Live Stats row, Infrastructure + Blueprint v1.1 checklist, Launch Blockers + Session 85 Priorities, DB Schema row
+- Data fetched live from `/dashboard/summary` and `/health/resources`; light-theme card layout
+
+**Smoke test: 30/30 ✅**

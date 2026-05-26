@@ -1,15 +1,15 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.2 · FastAPI + SQLite + Redis · Hetzner CPX32 · trustsquare.co · 17 live listings · Session 84 complete
-Blueprint v1.1 (Sessions 80–84) fully delivered. listing_photos self-maintaining. Expiry workers running.
+BEA v1.3.2 · FastAPI + SQLite + Redis · Hetzner CPX32 · trustsquare.co · 17 live listings · Session 85 complete
 
-## Last Completed (Session 84 — 2026-05-25)
-- Added _seed_listing_photos(conn, listing_id) helper — idempotent, derives r2_key from URL, inserts listing_photos rows
-- Hooked into publish_listing: every newly published listing auto-gets listing_photos rows (try/except, never blocks publish)
-- Hooked into create_listing: draft listings with photos already attached get seeded at creation time
-- BEA syntax-checked, restarted, active
-- Smoke test: all 30 checks passed
+## Last Completed (Session 85 — 2026-05-26)
+- n8n expiry warning workflow live (ID: expiry-warning-s85) — webhook fires branded email to seller 7 days before listing expires; execution #43 confirmed success
+- N8N_WEBHOOK_LISTING_EXPIRY_WARNING set in /etc/environment + .env; BEA _warning_worker now has live target
+- Seller tier enforcement: publish_listing hard-gates at listing_tier_config.max_listings (superusers bypass); create_listing adds advisory cap_warning
+- Fixed seller_extra_slots column name (email not seller_email) in both query sites
+- Ops tab added to dashboard.html as third nav button — full ops widget layout with live data
+- Smoke test: 30/30 ✅
 
 ## Blueprint v1.1 Complete (Sessions 80–84)
 All five sessions of the photo pipeline + listing lifecycle build plan are done:
@@ -20,14 +20,15 @@ All five sessions of the photo pipeline + listing lifecycle build plan are done:
 - BEA Photo API: presign, confirm, delete, reorder, list
 - GET /listings/{id} returns photos[] array
 - Expiry worker (live→expired at expires_at, hourly)
-- Warning worker (n8n webhook 7 days before expiry, 6-hourly)
+- Warning worker (n8n webhook 7 days before expiry, 6-hourly) — NOW WIRED TO LIVE n8n
 - Admin UI: presign→PUT→confirm upload, structured photo strip, per-operation delete
 - Auto-seed at publish + create — pipeline fully self-maintaining
 
-## Next Session (85) — Next Milestone TBD
-- Read STATUS.md first. Session 84 is complete. Go straight into execution.
+## Next Session (86) — Next Milestone TBD
+- Read STATUS.md first. Session 85 is complete. Go straight into execution.
 - Recommended priorities (check BACKLOG.md for current blockers):
-  1. Paystack live mode activation (CIPC registration complete?)
-  2. n8n email notification for listing expiry warning (set N8N_WEBHOOK_LISTING_EXPIRY_WARNING env var + build n8n workflow)
-  3. Wave 1 outreach — load Pretoria prospects into CityLauncher, trigger batch
-  4. Seller tier enforcement — gate listing count against listing_tier_config.max_listings
+  1. Paystack live mode — activate when approval arrives (paste sk_live_ + webhook secret into .env)
+  2. Server OS restart — 32 pending updates (schedule a maintenance window)
+  3. Seller intro notification — seller emailed when new intro request arrives (H3 in BACKLOG)
+  4. Local Market listing parity — cards + detail screen matching standard listings (H1 in BACKLOG)
+  5. Maroushka + Dave phone test — lightbox, back buttons, My Requests tab (H4 in BACKLOG)
