@@ -3690,16 +3690,27 @@ const ADM_DEFAULT_FIELDS = [
 ];
 
 // ── EDIT MODAL: PHOTO MANAGEMENT ─────────────────────────────────────────────
-let _admEditPhotoUrls = [];   // current photo_urls array for the listing being edited
+// SESSION83_PHOTO_PIPELINE
+// Edit-listing photo state — structured [{id, url}] from listing_photos table
+let _admEditPhotos = [];   // [{id: photoRowId, url: string}]
 
 function admEditLoadPhotos(l) {
-  _admEditPhotoUrls = [];
-  try {
-    const raw = l.photo_urls;
-    if (raw) _admEditPhotoUrls = (typeof raw === 'string') ? JSON.parse(raw) : raw;
-  } catch(e) {
-    if (l.medium_url) _admEditPhotoUrls = [l.medium_url];
-    else if (l.thumb_url) _admEditPhotoUrls = [l.thumb_url];
+  // Prefer structured photos[] array from GET /listings/{id} (Session 81+)
+  // Fall back to photo_urls TEXT for legacy cached data
+  _admEditPhotos = [];
+  if (Array.isArray(l.photos) && l.photos.length) {
+    _admEditPhotos = l.photos.map(p => ({ id: p.id, url: p.url }));
+  } else {
+    // Legacy fallback: parse photo_urls TEXT into synthetic objects (no real id)
+    let urls = [];
+    try {
+      const raw = l.photo_urls;
+      if (raw) urls = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+    } catch(e) {
+      if (l.medium_url) urls = [l.medium_url];
+      else if (l.thumb_url) urls = [l.thumb_url];
+    }
+    _admEditPhotos = urls.map(u => ({ id: null, url: u }));
   }
   admEditRenderPhotos();
 }
@@ -3707,101 +3718,146 @@ function admEditLoadPhotos(l) {
 function admEditRenderPhotos() {
   const container = document.getElementById('adm-edit-photos');
   if (!container) return;
+  const count = _admEditPhotos.length;
+  const atCap = count >= 10;
 
-  const thumbs = _admEditPhotoUrls.map((url, i) => `
+  const thumbs = _admEditPhotos.map((p, i) => `
     <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
-      <img src="${escapeHtml(url)}" referrerpolicy="no-referrer"
+      <img src="${p.url}" referrerpolicy="no-referrer"
         style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);">
       <button onclick="admEditRemovePhoto(${i})"
-        style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0;">✕</button>
+        style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0;" title="Remove photo">✕</button>
     </div>`).join('');
 
   container.innerHTML = `
     <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
       <div style="background:var(--surface-2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">📸 Photos (${_admEditPhotoUrls.length}/10)</div>
-        <div style="font-size:11px;color:var(--text-3);">Tap ✕ to remove · Add up to 10</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📸 Photos <span style="color:${atCap?'#ef4444':'var(--text-3)'};">(${count}/10)</span></div>
+        <div style="font-size:11px;color:var(--text-3);">Tap ✕ to remove · ${atCap ? '<span style=\"color:#ef4444;font-weight:700;\">Limit reached</span>' : 'Add up to 10'}</div>
       </div>
       <div style="padding:12px 14px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
-          ${thumbs || '<div style="font-size:12px;color:var(--text-3);">No photos yet.</div>'}
+          ${thumbs || '<div style="font-size:12px;color:var(--text-3);">No photos yet — add one below.</div>'}
         </div>
         <div id="adm-edit-photo-status" style="font-size:12px;color:var(--text-3);min-height:14px;margin-bottom:8px;"></div>
-        <label style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border-radius:50px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;">
+        ${atCap ? '' : `<label style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border-radius:50px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;">
           + Add Photo
           <input type="file" accept="image/*" style="display:none;"
             onchange="admEditUploadPhoto(this.files[0]); this.value='';">
-        </label>
-        ${_admEditPhotoUrls.length !== (admEditListing && admEditListing.photo_urls ? (()=>{try{return JSON.parse(admEditListing.photo_urls).length}catch{return 0}})() : 0)
-          ? '<button onclick="admEditSavePhotos()" style="margin-left:10px;background:#059669;color:#fff;border:none;border-radius:50px;padding:9px 16px;font-size:13px;font-weight:700;font-family:\'Syne\',sans-serif;cursor:pointer;">💾 Save Photos</button>'
-          : ''}
+        </label>`}
       </div>
     </div>`;
 }
 
 async function admEditUploadPhoto(file) {
+  // Presign → PUT to R2 → Confirm flow (Session 83)
   if (!file) return;
-  if (_admEditPhotoUrls.length >= 10) { showToast('Maximum 10 photos'); return; }
-  const status = document.getElementById('adm-edit-photo-status');
-  if (status) status.textContent = '⏳ Uploading…';
-  const fd = new FormData();
-  fd.append('file', file);
-  try {
-    const r = await fetch(BEA_URL + '/listings/photo', {
-      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    _admEditPhotoUrls.push(data.medium_url || data.thumb_url);
-    admEditRenderPhotos();
-    if (status) status.textContent = '✅ Photo added — tap Save Photos to update the listing.';
-    // Auto-save
-    await admEditSavePhotos(true);
-  } catch(e) {
-    if (status) status.textContent = '❌ Upload failed: ' + e.message;
-  }
-}
+  if (_admEditPhotos.length >= 10) { showToast('Maximum 10 photos per listing'); return; }
+  if (!admEditId) { showToast('No listing selected'); return; }
 
-function admEditRemovePhoto(idx) {
-  _admEditPhotoUrls.splice(idx, 1);
-  admEditRenderPhotos();
-  // Auto-save after removal
-  admEditSavePhotos(true);
-}
-
-async function admEditSavePhotos(silent) {
-  if (!admEditId || !admEditListing) return;
-  // Fetch seller_email on demand for LM listings where it may be missing
-  if (!admEditListing.seller_email) {
+  // Resolve seller email
+  let email = admEditListing && admEditListing.seller_email;
+  if (!email) {
     try {
       const dr = await fetch(BEA_URL + '/listings/' + admEditId);
-      if (dr.ok) {
-        const dd = await dr.json();
-        admEditListing.seller_email = dd.seller_email || dd.email || '';
-      }
+      if (dr.ok) { const dd = await dr.json(); email = dd.seller_email || ''; }
     } catch(_) {}
   }
-  if (!admEditListing.seller_email) return;
+  if (!email) { showToast('Cannot upload — seller email unknown'); return; }
+
   const status = document.getElementById('adm-edit-photo-status');
+  const setStatus = (msg) => { if (status) status.textContent = msg; };
+
   try {
-    const r = await fetch(
-      BEA_URL + '/listings/' + admEditId + '?email=' + encodeURIComponent(admEditListing.seller_email),
-      { method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          photo_urls:  JSON.stringify(_admEditPhotoUrls),
-          thumb_url:   _admEditPhotoUrls[0] || '',
-          medium_url:  _admEditPhotoUrls[0] || ''
-        }) }
+    // Step 1: Get pre-signed URL from BEA
+    setStatus('⏳ Preparing upload…');
+    const presignRes = await fetch(
+      BEA_URL + '/listings/' + admEditId + '/photos/presign'
+        + '?email=' + encodeURIComponent(email)
+        + '&filename=' + encodeURIComponent(file.name || 'photo.jpg'),
+      { method: 'POST' }
     );
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    admEditListing.photo_urls = JSON.stringify(_admEditPhotoUrls);
-    if (!silent) showToast('✅ Photos saved');
-    if (status) status.textContent = '✅ Photos updated live.';
+    if (!presignRes.ok) {
+      const err = await presignRes.json().catch(() => ({}));
+      throw new Error(err.detail || 'Presign failed ' + presignRes.status);
+    }
+    const { upload_url, r2_key, public_url } = await presignRes.json();
+
+    // Step 2: PUT the file directly to R2
+    setStatus('⏳ Uploading photo…');
+    const putRes = await fetch(upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'image/jpeg' },
+      body: file,
+    });
+    if (!putRes.ok) throw new Error('R2 upload failed — HTTP ' + putRes.status);
+
+    // Step 3: Confirm with BEA — registers in listing_photos
+    setStatus('⏳ Saving…');
+    const confirmRes = await fetch(
+      BEA_URL + '/listings/' + admEditId + '/photos/confirm',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, r2_key, size_bytes: file.size }),
+      }
+    );
+    if (!confirmRes.ok) {
+      const err = await confirmRes.json().catch(() => ({}));
+      throw new Error(err.detail || 'Confirm failed ' + confirmRes.status);
+    }
+    const confirmed = await confirmRes.json();
+
+    // Update local state
+    _admEditPhotos.push({ id: confirmed.id, url: public_url });
     admEditRenderPhotos();
+    setStatus('✅ Photo added and saved.');
+    showToast('✅ Photo uploaded');
   } catch(e) {
-    if (status) status.textContent = '❌ Save failed: ' + e.message;
+    setStatus('❌ Upload failed: ' + e.message);
+    showToast('⚠️ Photo upload failed — ' + e.message);
   }
 }
+
+async function admEditRemovePhoto(idx) {
+  const photo = _admEditPhotos[idx];
+  if (!photo) return;
+
+  // If we have a real listing_photos row id, call the DELETE endpoint
+  if (photo.id && admEditId && admEditListing) {
+    let email = admEditListing.seller_email;
+    if (!email) {
+      try {
+        const dr = await fetch(BEA_URL + '/listings/' + admEditId);
+        if (dr.ok) { const dd = await dr.json(); email = dd.seller_email || ''; }
+      } catch(_) {}
+    }
+    if (email) {
+      const status = document.getElementById('adm-edit-photo-status');
+      if (status) status.textContent = '⏳ Removing…';
+      try {
+        const r = await fetch(
+          BEA_URL + '/listings/' + admEditId + '/photos/' + photo.id
+            + '?email=' + encodeURIComponent(email),
+          { method: 'DELETE' }
+        );
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (status) status.textContent = '✅ Photo removed.';
+      } catch(e) {
+        if (status) status.textContent = '❌ Remove failed: ' + e.message;
+        showToast('⚠️ Could not remove photo — ' + e.message);
+        return; // Don't remove from local state if server call failed
+      }
+    }
+  }
+  // Remove from local state and re-render
+  _admEditPhotos.splice(idx, 1);
+  admEditRenderPhotos();
+}
+
+// admEditSavePhotos is no longer needed — each upload/remove auto-saves via API.
+// Kept as a no-op for any legacy callers still in scope.
+async function admEditSavePhotos(silent) { /* no-op — Session 83: per-operation API calls */ }
 
 async function openAdmEdit(id) {
   const l = allListings.find(x => x.id === id);
@@ -4105,12 +4161,11 @@ function handleBatchPhotos(e) {
   }
 
   files.forEach((file, idx) => {
-    // Read as ArrayBuffer first to get EXIF orientation, fall back to orientation=1 on any error
+    // Read EXIF orientation from ArrayBuffer, then use createImageBitmap with
+    // imageOrientation:'none' to get raw unrotated pixels — avoids browser
+    // auto-orientation interfering with our manual canvas rotation.
     const abReader = new FileReader();
-    abReader.onerror = () => {
-      // ArrayBuffer read failed — process without EXIF correction
-      processWithOrientation(file, idx, 1);
-    };
+    abReader.onerror = () => { processWithOrientation(file, idx, 1); };
     abReader.onload = abEv => {
       let orientation = 1;
       try { orientation = _readExifOrientation(abEv.target.result); } catch(ex) {}
@@ -4120,37 +4175,43 @@ function handleBatchPhotos(e) {
   });
 
   function processWithOrientation(file, idx, orientation) {
-    const reader = new FileReader();
-    reader.onerror = () => { onPhotoDone(); }; // skip broken file, don't hang
-    reader.onload = ev => {
-      const img = new Image();
-      img.onerror = () => { onPhotoDone(); };
-      img.onload = () => {
+    // createImageBitmap with imageOrientation:'none' suppresses browser auto-rotation,
+    // so img dimensions are always the raw sensor dimensions. Our _drawOrientedImage
+    // then applies exactly one correct rotation — no double-rotation on portrait shots.
+    const bitmapOptions = (typeof createImageBitmap !== 'undefined')
+      ? { imageOrientation: 'none' }
+      : {};
+    Promise.resolve()
+      .then(() => createImageBitmap(file, bitmapOptions))
+      .then(bitmap => {
         try {
           const MAX = 800;
           const swapped = orientation >= 5;
-          // Raw image dimensions
-          let iw = img.width, ih = img.height;
+          // Raw (unrotated) sensor dimensions from the bitmap
+          let iw = bitmap.width, ih = bitmap.height;
           // Scale the long edge to MAX
           if (iw > MAX || ih > MAX) {
             if (iw >= ih) { ih = Math.round(ih * MAX / iw); iw = MAX; }
             else           { iw = Math.round(iw * MAX / ih); ih = MAX; }
           }
-          // Display dimensions: swap if EXIF rotates 90/270
+          // Canvas output dimensions: swap for 90°/270° rotations
           const cw = swapped ? ih : iw;
           const ch = swapped ? iw : ih;
           const canvas = document.createElement('canvas');
           canvas.width = cw; canvas.height = ch;
           const ctx = canvas.getContext('2d');
-          _drawOrientedImage(ctx, img, orientation, cw, ch);
+          // Scale bitmap to target size before passing to orient helper
+          const tmp = document.createElement('canvas');
+          tmp.width = iw; tmp.height = ih;
+          tmp.getContext('2d').drawImage(bitmap, 0, 0, iw, ih);
+          bitmap.close && bitmap.close();
+          _drawOrientedImage(ctx, tmp, orientation, cw, ch);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
           _batchPhotos[idx] = { file, dataUrl };
-        } catch(ex) { /* skip */ }
+        } catch(ex) { /* skip broken file */ }
         onPhotoDone();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+      })
+      .catch(() => { onPhotoDone(); });
   }
   // Reset input so same files can be re-selected
   e.target.value = '';

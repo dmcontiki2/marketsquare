@@ -2649,3 +2649,112 @@ Drafted IP-safe partnership approach letter to LOOM Property Insights requesting
 
 **Known remaining issue:**
 - Photo orientation (EXIF rotation) still incorrect in some cases — cards not always displaying upright. Deferred to Session 79.
+
+## Session 79 — 2026-05-25
+
+### Fix: Photo orientation double-rotation in batch card flow
+**Root cause:** Modern browsers (Chrome 81+, all mobile) auto-apply EXIF orientation when loading a JPEG into `img.src` via a dataUrl. The batch photo pipeline was reading EXIF orientation manually, then loading the file via `FileReader.readAsDataURL` → `img.src`, at which point the browser had already auto-corrected the rotation. `_drawOrientedImage` then applied the EXIF rotation a second time, producing upside-down or sideways output for portrait photos.
+
+**Fix:** Replaced `FileReader.readAsDataURL` + `new Image()` path with `createImageBitmap(file, { imageOrientation: 'none' })`. This loads raw unrotated pixels from the file, bypassing browser auto-correction entirely, so our single manual EXIF rotation in `_drawOrientedImage` produces the correct output. The standard (non-batch) photo upload path was unaffected — it sends the raw file to the BEA where `Pillow.ImageOps.exif_transpose` handles orientation server-side.
+
+**Files changed:** `marketsquare_admin.html`
+
+## Session 79 — 2026-05-25
+
+### Photo Orientation Fix (Batch Card Flow)
+Fixed double-rotation bug in `marketsquare_admin.html` batch card (AI5) photo processing. Root cause: modern browsers auto-apply EXIF orientation when loading a JPEG into an `<img>` element; our manual canvas rotation (`_drawOrientedImage`) then applied a second rotation, producing upside-down or sideways results. Fix: replaced `FileReader.readAsDataURL` + `new Image()` with `createImageBitmap(file, { imageOrientation: 'none' })`, which loads raw unrotated pixel data so the single manual rotation is now correct and final. Standard (non-batch) uploads are unaffected — BEA already corrects orientation server-side via Pillow `ImageOps.exif_transpose`. All 18 existing R2 photos corrected to portrait (600×800) via targeted server-side Pillow rotation. Deployed to admin.html on server. Smoke test: all checks pass.
+
+### Architecture Blueprint — Photo Integrity & Listing Lifecycle
+Designed and documented a scalable architecture to eliminate photo confusion, wrong-photo-on-listing bugs, and listing lifecycle gaps. Key decisions: (1) `listing_photos` table with `r2_key UNIQUE` constraint makes it structurally impossible for two listings to share a photo file; (2) `listing_tier_config` table is single source of truth for all tier timing — one DB row update, no code deploy; (3) pre-signed R2 upload flow — phone uploads directly to Cloudflare R2, BEA never proxies photo bytes; (4) three background workers (Photo/Fade/Notification) handle all heavy processing async; (5) text-density orientation heuristic handles square cards from any card game. Blueprint saved to `TrustSquare_Architecture_Blueprint_v1.docx`. Build plan: Sessions 80–84 with hard pre-launch gate at Session 84.
+
+### Spec Reconciliation (Session 79 continued — 2026-05-25)
+Cross-checked the Architecture Blueprint against all four source documents (Codex v4.7, EULA v1.5, LISTING_STATE_MACHINE.md v1.1, NEXT_SESSION_TUPPENCE_NO_REFUND.md). Found and resolved 5 conflicts: (1) listing limits locked at Free=2/Starter=20/Premium=50 — State Machine had Free=2/Starter=25, Codex had Free=3/Starter=20, now all documents agree; (2) extra slot price confirmed 2T per 20 slots, Starter/Premium only — State Machine had 1T/any tier, now updated to v1.2; (3) refund policy TBD note removed from Blueprint — already locked as non-refundable in EULA §6.3; (4) 10 photos per listing added to Codex v4.7 as new §11 (was undocumented); (5) listing_status vocabulary aligned to State Machine 7-state model throughout Blueprint. All three documents (Blueprint, State Machine v1.2, Codex v4.7 §11) now state identical values.
+
+## Session 80 — 2026-05-25
+
+### DB Schema Migration — Listing Lifecycle & Photo Architecture Foundation
+Executed all five schema migrations required to support the Blueprint v1.1 build plan (Sessions 80–84). All changes are idempotent and non-destructive — no existing data was lost or altered.
+
+**Tables created:**
+- `listing_photos` — per-photo records with `r2_key UNIQUE` constraint (structurally prevents photo-sharing bugs) and `ON DELETE CASCADE` to listings. Columns: id, listing_id (FK), r2_key (UNIQUE), url, width, height, size_bytes, sort_order, uploaded_at.
+- `listing_tier_config` — single source of truth for tier timing. Seeded: free=2 listings/30d, starter=20/60d, premium=50/120d, all with 10 photos/listing and 2T extra-slot cost. One row update = live tier change, no code deploy needed.
+- `seller_extra_slots` — audit ledger for extra slot purchases: email, slots_purchased, tuppence_spent, purchased_at.
+
+**Columns added to listings:**
+- `expires_at TEXT` — absolute expiry timestamp per listing
+- `warning_sent_at TEXT` — timestamp when 7-day-warning notification was dispatched (prevents duplicate sends)
+
+**Backfill:** All 17 live (non-demo) listings had `expires_at` set to `published_at + 60 days` (starter tier default). Zero listings left without an expiry timestamp.
+
+Smoke test: all checks pass.
+
+## Session 81 — 2026-05-25
+
+### BEA Photo API Routes — listing_photos table now live
+Added five new endpoints to the BEA to power the structured photo pipeline from the Blueprint v1.1 build plan. All endpoints use email-auth (same `?email=` pattern as edit-after-publish). The `listing_photos` table is now the source of truth for listing photos.
+
+**New endpoints:**
+- `POST /listings/{id}/photos/presign` — generates a pre-signed R2 PUT URL (15-min TTL) so the client uploads directly to R2. Enforces 10-photo cap before issuing the URL.
+- `POST /listings/{id}/photos/confirm` — after the client has PUT the file to R2, registers the photo in `listing_photos` (r2_key validated against `^media/[...]+\.(jpg|jpeg|png|webp)$`, uniqueness enforced by DB constraint). Auto-sets `listings.thumb_url` if this is the first photo on the listing.
+- `DELETE /listings/{id}/photos/{photo_id}` — removes the row from `listing_photos`, promotes the next photo to `thumb_url`, and deletes the object from R2 (best-effort, never fails the request on R2 error).
+- `PATCH /listings/{id}/photos/order` — batch sort_order update; accepts `{email, photos:[{id,sort_order}]}`. Also promotes the new sort_order=0 photo to `thumb_url`.
+- `GET /listings/{id}/photos` — returns photos array for a listing ordered by sort_order.
+
+**Updated:** `GET /listings/{id}` now enriches its response with a `photos` array from `listing_photos` (ordered by sort_order), plus the `expires_at` and `warning_sent_at` columns added in Session 80.
+
+Smoke test: all 30 checks passed.
+
+## Session 82 — 2026-05-25
+
+### Listing Expiry & Warning Workers + Photo Migration
+Completed the three remaining Blueprint v1.1 foundation items.
+
+**Listing Expiry Worker** (`_expiry_worker`): asyncio background task started via FastAPI lifespan handler. Runs every 60 minutes. Queries all live listings where `expires_at <= now()` and transitions them to `listing_status='expired'`, stamping `status_changed_at`. Logs every transition. No external dependencies — fully self-contained.
+
+**Listing Expiry Warning Worker** (`_warning_worker`): runs every 6 hours. Queries live listings expiring within 7 days where `warning_sent_at IS NULL`. Stamps `warning_sent_at` on each match (prevents duplicate sends). Fires an n8n webhook payload `{listing_id, title, seller_email, expires_at}` to `N8N_WEBHOOK_LISTING_EXPIRY_WARNING` if the env var is set — gracefully skipped if not configured yet. Webhook is fire-and-forget via `asyncio.ensure_future`.
+
+**FastAPI version bumped** to `1.3.2`. App constructor replaced with `lifespan=_lifespan` context manager that starts both workers on startup and cancels them cleanly on shutdown.
+
+**Photo migration** (`POST /admin/migrate-photos`): replaced the old local→R2 migration stub with a new `listing_photos` seeder. Reads `thumb_url` and `photo_urls` JSON array from each live listing, derives the `r2_key` from the R2 public URL prefix, and inserts rows into `listing_photos` (idempotent — skips listings already seeded). Run immediately: 17 listings migrated, 0 errors. All 17 live listings now have structured `listing_photos` rows.
+
+**State after Session 82:** `listing_photos` is fully populated for all live listings. Workers are running. The photo pipeline foundation (Sessions 80–82) is complete and ready for the admin UI to use the presign→confirm flow in Session 83.
+
+Smoke test: all 30 checks passed.
+
+## Session 83 — 2026-05-25
+
+### Admin UI — Photo Upload Wired to Presign→Confirm Pipeline
+Replaced the old server-proxy photo upload in the edit-listing admin panel with the direct-to-R2 presign→confirm flow built in Session 81.
+
+**What changed in `marketsquare_admin.html`:**
+
+- `_admEditPhotoUrls []` (array of URL strings) replaced with `_admEditPhotos []` (`[{id, url}]` — structured objects carrying the `listing_photos` row id alongside the URL).
+- `admEditLoadPhotos(l)` now reads from `l.photos[]` (the structured array returned by `GET /listings/{id}` since Session 81). Falls back gracefully to parsing `photo_urls` TEXT for any listing loaded from cache before a fresh fetch.
+- `admEditUploadPhoto(file)` is now a three-step async flow: (1) `POST /listings/{id}/photos/presign` → get `{upload_url, r2_key, public_url}`; (2) `PUT file → upload_url` (direct browser-to-R2, BEA never sees the bytes); (3) `POST /listings/{id}/photos/confirm` → register row in `listing_photos`. Each step shows inline status text. On success, the new photo row id is stored in `_admEditPhotos` so the next delete call uses the real DB id.
+- `admEditRemovePhoto(idx)` now calls `DELETE /listings/{id}/photos/{photo_id}` before removing from local state. If the API call fails the UI stays unchanged (no silent ghost deletions). Falls back cleanly for legacy photos with no row id.
+- `admEditRenderPhotos()` shows `(N/10)` count in red when the cap is reached and hides the Add Photo button at cap — prevents even attempting an upload when the server will reject it.
+- `admEditSavePhotos()` is now a no-op stub. Each upload/remove is saved immediately via its own API call — there is no longer a separate "Save Photos" step or button.
+
+Smoke test: all 30 checks passed.
+
+## Session 84 — 2026-05-25
+
+### Auto-seed listing_photos at publish and create time — Blueprint v1.1 Complete
+Closed the last gap in the photo pipeline: new listings now get `listing_photos` rows automatically, without requiring a manual migration call.
+
+**`_seed_listing_photos(conn, listing_id)` helper** — idempotent function that reads `thumb_url` and `photo_urls` TEXT from a listing, derives the `r2_key` from the R2 public URL prefix (or a legacy hash key for non-R2 URLs), and inserts `listing_photos` rows in sort_order. Exits immediately if rows already exist — safe to call repeatedly.
+
+**Hooked into `publish_listing`** (`PUT /listings/{id}/publish`): after setting `listing_status='live'`, the helper is called in a try/except that never blocks the publish. Every newly published listing automatically gets structured `listing_photos` rows.
+
+**Hooked into `create_listing`** (`POST /listings`): same try/except call after the listing is created. Handles the batch-card flow where photos are uploaded during draft creation before publish.
+
+**Net result:** from Session 84 onward, `listing_photos` is self-maintaining — no manual seeding or migration calls needed for any new listing. The entire photo pipeline (Sessions 80–84) is now complete.
+
+**Blueprint v1.1 Sessions 80–84 — all deliverables complete:**
+- Session 80: DB schema (listing_photos, listing_tier_config, seller_extra_slots, expires_at, warning_sent_at)
+- Session 81: BEA Photo API (presign, confirm, delete, reorder, list; GET /listings/{id} enriched with photos[])
+- Session 82: Expiry + warning workers; photo migration for 17 live listings
+- Session 83: Admin UI wired to presign→confirm pipeline; photo strip from photos[] array
+- Session 84: Auto-seed at publish + create — pipeline self-maintaining from this point
+
+Smoke test: all 30 checks passed.
