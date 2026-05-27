@@ -967,20 +967,25 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
     conn = database.get_db()
+    # Resolve geo_city_id from city name at creation time
+    _gcity_row = conn.execute(
+        "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (listing.city,)
+    ).fetchone()
+    _geo_city_id = _gcity_row["id"] if _gcity_row else None
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
             subject, level, mode, service_type, availability,
             trust_score, seller_email, listing_status, published_at,
-            street_address, listing_lat, listing_lng)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?)""",
+            street_address, listing_lat, listing_lng, geo_city_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
          listing.trust_score, listing.seller_email, 'draft',
-         listing.street_address, listing.listing_lat, listing.listing_lng)
+         listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id)
     )
     conn.commit()
     new_id = cursor.lastrowid
@@ -1149,24 +1154,43 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
             continue
         dist = _hav(lat, lon, elat, elon)
 
+        # Skip generic/unnamed OSM entries
+        _GENERIC_NAMES = {'school', 'school ground', 'college', 'university', 'hospital',
+                          'police', 'police station', 'bus stop', 'park', 'shopping mall'}
+        if name.lower().strip() in _GENERIC_NAMES:
+            continue
+
         # Assign to category
         amenity = tags.get('amenity', '')
         shop = tags.get('shop', '')
         if amenity in ('school', 'college'):
-            cat_results['schools'].append({'name': name, 'dist_km': dist})
+            cat_results['schools'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'university':
-            cat_results['universities'].append({'name': name, 'dist_km': dist})
+            cat_results['universities'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif shop == 'mall' or amenity == 'marketplace':
-            cat_results['shopping'].append({'name': name, 'dist_km': dist})
+            cat_results['shopping'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'hospital':
-            cat_results['hospitals'].append({'name': name, 'dist_km': dist})
+            cat_results['hospitals'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'police':
-            cat_results['police'].append({'name': name, 'dist_km': dist})
+            cat_results['police'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
 
-    # Sort each category by distance, cap at 3
+    # Sort each category by distance, deduplicate within 200m, cap at 3
+    def _dedup(items):
+        seen = []
+        for item in items:
+            too_close = any(
+                _hav(item['lat'], item['lon'], s['lat'], s['lon']) < 0.2
+                for s in seen
+            )
+            if not too_close:
+                seen.append(item)
+        return seen
+
     for cat in cat_results:
         cat_results[cat].sort(key=lambda x: x['dist_km'])
-        cat_results[cat] = cat_results[cat][:3]
+        cat_results[cat] = _dedup(cat_results[cat])[:3]
+        # Strip lat/lon from final output (not needed by FEA)
+        cat_results[cat] = [{'name': p['name'], 'dist_km': p['dist_km']} for p in cat_results[cat]]
 
     # Remove empty categories
     return {k: v for k, v in cat_results.items() if v}
@@ -2276,6 +2300,87 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
     conn.commit()
     conn.close()
     return {"photo_url": photo_url}
+
+
+@app.post("/users/{email}/upload-id")
+async def upload_user_id(email: str, file: UploadFile = File(...)):
+    """Self-serve ID upload for buyers. No API key required.
+    Accepts photo of SA ID / passport / drivers licence.
+    Test mode: auto-approves immediately (sets id_verified_at).
+    Production: same auto-approve — manual admin review is a future layer.
+    Stores image to R2/local, bumps trust_score +15, returns new score."""
+    allowed = {"image/jpeg", "image/png", "image/webp"}
+    content_type = file.content_type or "image/jpeg"
+    if content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
+
+    raw = await file.read()
+    if len(raw) > 15 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large — max 15MB")
+    if len(raw) < 5000:
+        raise HTTPException(status_code=400, detail="File too small — please upload a clear photo")
+
+    email = email.lower().strip()
+
+    # Upload to R2 or local
+    fname = f"id_{uuid.uuid4().hex}.jpg"
+    if _S3_CONFIGURED:
+        key = f"ids/{fname}"
+        id_url = _s3_upload(raw, key, content_type)
+    else:
+        local_path = f"/var/www/marketsquare/media/{fname}"
+        try:
+            with open(local_path, "wb") as fh:
+                fh.write(raw)
+            id_url = f"/media/{fname}"
+        except Exception as exc:
+            _log.error("ID photo local save failed: %s", exc)
+            raise HTTPException(status_code=500, detail="Storage unavailable")
+
+    conn = database.get_db()
+    try:
+        # Upsert user row if needed
+        conn.execute(
+            "INSERT OR IGNORE INTO users (email, trust_score) VALUES (?, 15)",
+            (email,)
+        )
+        # Check if already verified — don't double-award points
+        row = conn.execute(
+            "SELECT trust_score, id_verified_at FROM users WHERE email=?", (email,)
+        ).fetchone()
+        already_verified = bool(row and row["id_verified_at"])
+        current_score    = int(row["trust_score"] or 0) if row else 15
+
+        if not already_verified:
+            new_score = min(100, current_score + 15)
+            conn.execute(
+                """UPDATE users
+                   SET id_verified_at = strftime('%Y-%m-%dT%H:%M:%SZ','now'),
+                       id_doc_type    = 'uploaded',
+                       trust_score    = ?
+                   WHERE email = ?""",
+                (new_score, email)
+            )
+            # Record in seller_documents table for admin visibility
+            conn.execute(
+                """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
+                   VALUES (?, 'id_doc', 'Government-issued ID', ?, 'private', 'category.lm.id_uploaded')""",
+                (email, id_url)
+            )
+            # Propagate new trust_score to all live listings owned by this seller
+            conn.execute(
+                "UPDATE listings SET trust_score = ? WHERE seller_email = ? AND (listing_status IS NULL OR listing_status = 'live')",
+                (new_score, email)
+            )
+            # Mark id_verified signal as earned in user_credentials so AI coach sees it
+            _upsert_credential(conn, email, "universal.id_verified", "earned")
+            conn.commit()
+            return {"verified": True, "trust_score": new_score, "points_awarded": 15, "already_verified": False}
+        else:
+            conn.commit()
+            return {"verified": True, "trust_score": current_score, "points_awarded": 0, "already_verified": True}
+    finally:
+        conn.close()
 
 @app.delete("/users/{email}")
 def delete_user(email: str, _key: str = Depends(auth.require_api_key)):
@@ -5943,12 +6048,26 @@ async def trust_score_guidance(req: AIGuidanceRequest):
             "SELECT signal_id, status FROM user_credentials WHERE email = ?",
             (req.email,)
         ).fetchall()
+        user_row = conn.execute(
+            "SELECT id_verified_at, eula_accepted_at, photo_url, trust_score FROM users WHERE email = ?",
+            (req.email,)
+        ).fetchone()
     except Exception:
         earned_rows = []
+        user_row = None
     finally:
         conn.close()
 
     earned_map = {r["signal_id"]: r["status"] for r in earned_rows} if earned_rows else {}
+    # Supplement earned_map with direct user-table flags so guidance is accurate
+    # even if user_credentials rows were not written (e.g. older upload-id calls)
+    if user_row:
+        if user_row["id_verified_at"]:
+            earned_map.setdefault("universal.id_verified", "earned")
+        if user_row["eula_accepted_at"]:
+            earned_map.setdefault("universal.email_verified", "earned")
+        if user_row["photo_url"]:
+            earned_map.setdefault("universal.profile_photo", "earned")
 
     universal_earned_pts = 0
     universal_missing = []
@@ -5957,7 +6076,7 @@ async def trust_score_guidance(req: AIGuidanceRequest):
             universal_earned_pts += sig["points"]
         else:
             universal_missing.append({
-                "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]
+                "id": sig_id, "name": sig["name"], "points": sig["points"], "how": sig["how_to_earn"]
             })
 
     cat_earned_pts = 0
@@ -5967,49 +6086,67 @@ async def trust_score_guidance(req: AIGuidanceRequest):
             cat_earned_pts += sig.get("points", 0)
         else:
             cat_missing.append({
+                "id": sig_id,
                 "name": sig["name"],
                 "points": sig.get("points", 0),
                 "how": sig.get("how_to_earn", ""),
             })
 
-    current_score = universal_earned_pts + cat_earned_pts
-    points_needed = max(0, 50 - current_score)
+    # Use users.trust_score as the authoritative score — it's the ground truth.
+    # Fall back to computed sum only if the user row doesn't exist yet.
+    db_score = int(user_row["trust_score"] or 0) if user_row else 0
+    current_score = db_score if db_score > 0 else (universal_earned_pts + cat_earned_pts)
+
+    # Dynamically target the next tier above the seller's current score
+    _next = _trust_tier(current_score).get("next_tier")
+    score_target  = _next["threshold"] if _next else 100
+    target_label  = (_next["name"] + " tier (score " + str(score_target) + ")") if _next else "maximum Trust Score (100)"
+    points_needed = max(0, score_target - current_score)
     all_missing   = sorted(universal_missing + cat_missing, key=lambda x: x["points"], reverse=True)
 
     if not ANTHROPIC_API_KEY:
         return {
             "ai_available":  False,
             "current_score": current_score,
-            "score_target":  50,
+            "score_target":  score_target,
             "points_needed": points_needed,
-            "intro":   "To reach Established tier (score 50), focus on the steps below.",
+            "intro":   "To reach " + target_label + ", focus on the steps below.",
             "steps":   _build_local_guidance(req.category, all_missing),
             "closing": "Every step builds buyer confidence.",
         }
 
     missing_lines = "\n".join(
-        "- " + m["name"] + " (+" + str(m["points"]) + " pts): " + m["how"]
+        "- " + m["name"] + " (+" + str(m["points"]) + " pts): " + _signal_howto(m["id"], m["how"])[1]
         for m in all_missing[:8]
     )
 
     system_prompt = (
         "You are a friendly Trust Score coach for TrustSquare, a South African marketplace. "
-        "Help sellers understand exactly what evidence to upload to reach Trust Score 50 "
-        "('Established' tier). Be warm, direct, and specific to their category. "
+        "Help sellers understand exactly what they need to do to reach " + target_label + ". "
+        "Be warm, direct, and specific. "
+        "IMPORTANT: Only recommend actions the seller has NOT already completed. "
+        "Never suggest uploading an ID if id_verified is already earned. "
+        "For each step, give a specific WHERE and HOW (e.g. which tab, which button). "
         'Reply ONLY with a valid JSON object — no markdown, no preamble. '
         'Format: {"intro": "one encouraging sentence", '
-        '"steps": [{"action": "...", "points": N, "why": "..."}], '
+        '"steps": [{"action": "specific instruction with where/how", "points": N, "why": "one sentence explaining the benefit"}], '
         '"closing": "one motivating sentence"} '
         "Order steps by impact (most points first). Maximum 5 steps. "
-        "Keep each action and why under 20 words."
+        "Keep each action under 25 words. Keep each why under 15 words."
     )
+
+    earned_lines = "\n".join(
+        "- " + k.replace("universal.", "").replace("_", " ") + " (already earned)"
+        for k, v in earned_map.items() if v == "earned"
+    ) or "None yet"
 
     user_message = (
         "Seller category: " + req.category + "\n"
         "Current Trust Score: " + str(current_score) + " / 100\n"
-        "Points needed to reach Established (50): " + str(points_needed) + "\n\n"
-        "Evidence not yet submitted:\n" + (missing_lines or "None — all signals earned!") + "\n\n"
-        "Generate a personalised action plan to reach score 50."
+        "Target: " + target_label + " (need " + str(points_needed) + " more points)\n\n"
+        "Already completed (DO NOT recommend these):\n" + earned_lines + "\n\n"
+        "Not yet completed:\n" + (missing_lines or "None — all signals earned!") + "\n\n"
+        "Generate a personalised action plan for the remaining steps only."
     )
 
     try:
@@ -6035,9 +6172,9 @@ async def trust_score_guidance(req: AIGuidanceRequest):
         return {
             "ai_available":  False,
             "current_score": current_score,
-            "score_target":  50,
+            "score_target":  score_target,
             "points_needed": points_needed,
-            "intro":   "To reach Established tier (score 50), focus on the steps below.",
+            "intro":   "To reach " + target_label + ", focus on the steps below.",
             "steps":   _build_local_guidance(req.category, all_missing),
             "closing": "Every step builds buyer confidence.",
         }
@@ -6053,34 +6190,96 @@ async def trust_score_guidance(req: AIGuidanceRequest):
         except Exception:
             guidance = {}
 
-    guidance.setdefault("intro",   "Here is your personalised path to Trust Score 50.")
+    # Always override intro — AI tends to hallucinate the target score
+    guidance["intro"]         = "Here is your personalised path to " + target_label + "."
     guidance.setdefault("steps",   _build_local_guidance(req.category, all_missing))
     guidance.setdefault("closing", "Every step you complete builds buyer confidence.")
     guidance["ai_available"]  = True
     guidance["current_score"] = current_score
-    guidance["score_target"]  = 50
+    guidance["score_target"]  = score_target
     guidance["points_needed"] = points_needed
     return guidance
 
+
+# Human-readable how-to instructions for each signal key
+_SIGNAL_HOWTO = {
+    # Universal — identity & profile
+    "universal.id_verified":          ("Upload your ID or passport",
+                                       "My Space → Trust tab → tap 'Upload ID →' next to Government-issued ID"),
+    "universal.profile_photo":        ("Add a clear profile photo",
+                                       "My Space → Me tab → tap your avatar to upload a photo"),
+    "universal.email_verified":       ("Verify your email address",
+                                       "Automatically earned when you accept the TrustSquare Terms of Service"),
+    "universal.profile_complete":     ("Complete your seller profile",
+                                       "My Dashboard → fill in bio, suburb, and category description"),
+    # Track record — all auto-tracked, no uploads needed
+    "track_record.intro_1":           ("Complete your first introduction",
+                                       "My Dashboard → Intros tab — accept a buyer's request and follow through. Tracked automatically."),
+    "track_record.intro_5":           ("Complete 5 introductions",
+                                       "My Dashboard → Intros tab — keep accepting and completing intro requests. Every accepted intro counts."),
+    "track_record.intro_20":          ("Complete 20 introductions",
+                                       "My Dashboard → Intros tab — continue accepting intros. The system counts every completion automatically."),
+    "track_record.zero_ignored_90d":  ("Respond to every intro within 48 hours",
+                                       "My Dashboard → Intros tab — when a buyer requests an intro, accept or decline within 48 hours. Ignored intros reduce your score."),
+    "track_record.tenure_6mo":        ("Keep an active listing for 6+ months",
+                                       "Automatically awarded once your first listing has been live for 6 consecutive months — no action needed."),
+    # Collectors category — transaction milestones (all auto-tracked)
+    "category.collectors.tx_1_4":    ("Complete your first introductions on your Collectors listings",
+                                       "My Dashboard → Intros tab — accept buyer requests on your card/collectible listings. Every completed intro is tracked automatically."),
+    "category.collectors.tx_5_14":   ("Complete 5–14 introductions on your Collectors listings",
+                                       "My Dashboard → Intros tab — keep accepting and completing intro requests. The system tracks every completion automatically."),
+    "category.collectors.tx_15plus": ("Complete 15+ introductions on your Collectors listings",
+                                       "My Dashboard → Intros tab — continue accepting intros. System counts every completion — no uploads or actions needed."),
+    # Property category — transaction milestones
+    "category.property.tx_1_4":      ("Complete your first introductions on your Property listings",
+                                       "My Dashboard → Intros tab — accept buyer requests on your property listings. Tracked automatically."),
+    "category.property.tx_5_14":     ("Complete 5–14 introductions on your Property listings",
+                                       "My Dashboard → Intros tab — keep accepting property intro requests. Every completion is counted automatically."),
+    "category.property.tx_15plus":   ("Complete 15+ introductions on your Property listings",
+                                       "My Dashboard → Intros tab — continue accepting property intros. System tracks every completion."),
+    # Adventures category — transaction milestones
+    "category.adventures.tx_1_4":    ("Complete your first introductions on your Adventures listings",
+                                       "My Dashboard → Intros tab — accept buyer requests on your experience/accommodation listings. Tracked automatically."),
+    "category.adventures.tx_5_14":   ("Complete 5–14 introductions on your Adventures listings",
+                                       "My Dashboard → Intros tab — keep accepting Adventures intro requests. Every completion counts automatically."),
+    "category.adventures.tx_15plus": ("Complete 15+ introductions on your Adventures listings",
+                                       "My Dashboard → Intros tab — continue accepting intros. System tracks every completion."),
+    # Cars category — transaction milestones
+    "category.cars.tx_1_4":          ("Complete your first introductions on your Cars listings",
+                                       "My Dashboard → Intros tab — accept buyer requests on your car listings. Tracked automatically."),
+    "category.cars.tx_5_14":         ("Complete 5–14 introductions on your Cars listings",
+                                       "My Dashboard → Intros tab — keep accepting Cars intro requests. Every completion counts."),
+    "category.cars.tx_15plus":       ("Complete 15+ introductions on your Cars listings",
+                                       "My Dashboard → Intros tab — continue accepting intros. System tracks every completion."),
+}
+
+def _signal_howto(sig_id: str, default_how: str) -> tuple:
+    """Return (action, why) for a signal, falling back to default_how."""
+    if sig_id in _SIGNAL_HOWTO:
+        return _SIGNAL_HOWTO[sig_id]
+    if default_how:
+        return (default_how, "Complete this step to earn the points — tracked automatically by TrustSquare")
+    return ("Complete this trust step", "Tracked automatically by TrustSquare once completed")
 
 def _build_local_guidance(category: str, all_missing: list = None) -> list:
     if all_missing is None:
         cat_sigs = _CATEGORY_SIGNALS.get(category, {})
         all_missing = [
-            {"name": "Government-issued ID verified", "points": 15,
-             "how": "Upload your ID or passport — verified by TrustSquare."},
-            {"name": "Complete profile", "points": 5,
-             "how": "Bio, suburb, listing, and category description all set."},
+            {"id": "universal.id_verified", "name": "Government-issued ID verified", "points": 15,
+             "how": "Upload your ID or passport."},
+            {"id": "universal.profile_photo", "name": "Profile photo added", "points": 10,
+             "how": "Upload a clear profile photo."},
         ] + sorted(
-            [{"name": s["name"], "points": s.get("points", 0), "how": s.get("how_to_earn", "")}
-             for s in cat_sigs.values()],
+            [{"id": sid, "name": s["name"], "points": s.get("points", 0), "how": s.get("how_to_earn", "")}
+             for sid, s in cat_sigs.items()],
             key=lambda x: x["points"], reverse=True
         )
-    return [
-        {"action": m["how"] or m["name"], "points": m["points"],
-         "why": "Adds " + str(m["points"]) + " points to your Trust Score."}
-        for m in all_missing[:5]
-    ]
+    steps = []
+    for m in all_missing[:5]:
+        sig_id = m.get("id", "")
+        action, why = _signal_howto(sig_id, m.get("how", m.get("name", "")))
+        steps.append({"action": action, "points": m["points"], "why": why})
+    return steps
 
 
 class UploadCommentRequest(BaseModel):
@@ -8913,4 +9112,4 @@ async def ai_batch_card_listings(req: BatchCardRequest):
     }
 
 
-# ── END AI TUPPENCE SERVICES — TIER 2 (Session 74) ───────────────────────────
+# ── END AI TUPPENCE SERVICES — TIER 2 (Session 74) ──────────────────────────────────────────

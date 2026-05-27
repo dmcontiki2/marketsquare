@@ -972,7 +972,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .lm-trust-chip.active{background:var(--accent-bright);color:#fff;border-color:var(--accent-bright);}
 .lm-search{margin:0 16px 12px;}
 .lm-search input{width:100%;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:11px 16px;font-size:14px;color:var(--text);outline:none;}
-.lm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px 100px;}
+.lm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 14px 100px;}
 .lm-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;position:relative;}
 .lm-card:hover{border-color:var(--accent-bright);}
 .lm-card-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--surface-2);display:block;}
@@ -1128,3 +1128,34 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 /* Draft reveal animation */
 #go-draft-reveal{animation:visionReveal .35s ease both;}
 /* ── END Photo-First AI Onboarding ────────────────────────────────────────── */
+
+/* ── Category Home Mode — Session 87 ─────────────────────────────────────── */
+#screen-cat-home{padding:0;}
+.cat-home-wrap{display:flex;flex-direction:column;min-height:100vh;}
+.cat-home-hero{position:relative;height:55vh;min-height:260px;overflow:hidden;flex-shrink:0;}
+.cat-home-hero img{width:100%;height:100%;object-fit:cover;object-position:center;}
+.cat-home-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.55) 60%,rgba(0,0,0,.82) 100%);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:20px 20px 24px;}
+.cat-home-icon{font-size:36px;line-height:1;margin-bottom:6px;}
+.cat-home-title{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.1;}
+.cat-home-city{font-size:13px;color:rgba(255,255,255,.72);margin-top:4px;}
+.cat-home-stats{font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;font-weight:600;}
+.cat-home-back{position:absolute;top:14px;left:14px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.cat-home-back svg{width:18px;height:18px;}
+.cat-home-clear{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.45);border:none;color:rgba(255,255,255,.75);font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;cursor:pointer;backdrop-filter:blur(4px);}
+.cat-home-clear:hover{color:#fff;}
+.cat-home-body{flex:1;padding:20px 16px 100px;display:flex;flex-direction:column;gap:14px;}
+.cat-home-desc{font-size:14px;color:var(--text-2);line-height:1.6;margin:0;}
+.cat-home-cta{display:block;width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.2px;}
+.cat-home-cta:active{opacity:.85;}
+/* Long-press hint tooltip */
+.cat-home-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,30,50,.92);color:#fff;font-size:13px;padding:10px 16px;border-radius:12px;z-index:9999;text-align:center;max-width:280px;backdrop-filter:blur(8px);pointer-events:none;animation:hintFadeIn .3s ease;}
+@keyframes hintFadeIn{from{opacity:0;transform:translateX(-50%) translateY(8px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+/* Star indicator on cat tile when that cat is home */
+.cat-tile .cat-home-star{position:absolute;top:5px;right:7px;font-size:14px;opacity:.9;pointer-events:none;}
+/* ── END Category Home Mode ────────────────────────────────────────────────── */
+
+/* ── Trust signal action buttons — Session 87b ───────────────────────────── */
+.ms-sig-action{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.2px;}
+.ms-sig-action:hover{opacity:.88;}
+.ms-sig-action:disabled{opacity:.5;cursor:not-allowed;}
+/* ── END Trust signal action buttons ─────────────────────────────────────── */

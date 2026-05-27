@@ -1,3 +1,92 @@
+## Session 87e · 27 May 2026 · Price check labels, contrast fixes, amenities repair
+
+**Price check panel headers — category-aware (ms.js v118):**
+- "SA SECOND-HAND MARKET" → context-appropriate: Property="🏠 LOCAL PROPERTY MARKET", Cars="🚗 SA USED CAR MARKET", Adventures="🌍 LOCAL EXPERIENCE MARKET", Tutors="📚 SA TUTORING MARKET", Services="🛠️ SA SERVICES MARKET".
+- "OFFICIAL & GLOBAL PRICES" → Property="📊 REGIONAL & NATIONAL MARKET", Cars="📋 BOOK VALUE & NATIONAL", Adventures="🌐 COMPARABLE EXPERIENCES", default unchanged.
+- Footer disclaimer simplified to "Based on AI training data · prices may vary · not financial advice".
+
+**Contrast / readability (marketsquare.html):**
+- Bumped all `rgba(255,255,255,.6)` → `.85` (12 instances) and `rgba(255,255,255,.5)` → `.8` (4 instances) across the sell flow, wallet, and vision overlay. Dimmed sub-labels are now clearly readable on dark backgrounds.
+
+**Nearby amenities — listing 169 + hardened publish path (BEA):**
+- Manually fetched and stored nearby POIs for listing 169 (Brooklyn studio) using OSM Overpass: schools, hospitals, transport, shopping, recreation all populated.
+- Root cause: `create_listing` INSERT didn't set `geo_city_id` — publish-time POI auto-fetch requires it. Fixed: `geo_city_id` now resolved from city name at INSERT time in `create_listing`. All future listings will have it set from creation.
+- Also set `geo_city_id=47` on listing 169 directly.
+
+**Smoke test: 30/30 ✅ · Live listings: 17**
+
+## Session 87d · 27 May 2026 · AI Trust Coach — dynamic tier target
+
+**AI trust coach — dynamic score target (BEA):**
+- `score_target` now points to the seller's *next* tier threshold, not a hardcoded 50. At score 65 (Established), the target is now 70 (Trusted tier). At 70+, it targets 90 (Highly Trusted). At 90+, it targets 100.
+- `intro` text is now always overridden server-side to "Here is your personalised path to Trusted tier (score 70)." — prevents the AI from hallucinating the old "Trust Score 50" text regardless of what it generates.
+- System prompt and user message both updated to use `target_label` variable.
+- All three fallback return paths (no API key, AI call failure, AI JSON parse failure) now use `score_target` and `target_label` consistently.
+- Repaired a second truncation of `bea_main.py` (the `_log.info` + `return` at the end of `ai-batch-cards` was cut again during the append). File verified clean with `ast.parse` before deploy.
+
+**Smoke test: 30/30 ✅**
+
+## Session 87c · 27 May 2026 · AI Trust Coach guidance fixes + BEA file repair
+
+**AI trust coach — score accuracy + actionable howto (BEA):**
+- Fixed `current_score` in `/trust-score/guidance` to use `users.trust_score` as the authoritative value (was recomputing from credentials table, returning 15 instead of 65).
+- Added `trust_score` column to the users query in the guidance endpoint so the DB score is always available.
+- Added `_SIGNAL_HOWTO` entries for all category-specific transaction signals: `category.collectors.tx_1_4/tx_5_14/tx_15plus`, `category.property.tx_*`, `category.adventures.tx_*`, `category.cars.tx_*` — each now shows "My Dashboard → Intros tab — accept buyer requests…" instead of "System tracked."
+- `missing_lines` sent to the AI now uses `_signal_howto()` for the how-text so the AI receives specific WHERE/HOW instructions rather than raw signal definitions.
+- Result: guidance now shows score 65, points_needed 0, no "Upload ID" recommendation, and all steps have actionable instructions.
+
+**BEA file repair:**
+- Repaired `bea_main.py` which had been silently truncated mid-string at line 9002 (the AI batch-cards endpoint's prompt literal was cut). Restored the missing ~85 lines from git history and stripped the stray partial line left after append. File verified clean with `ast.parse` before redeploy.
+
+**Smoke test: 30/30 ✅**
+
+## Session 87b · 27 May 2026 · Trust ID Upload flow
+
+**Trust tab — ID upload action button (BEA + ms.js v114 + ms.css v113):**
+- Added `POST /users/{email}/upload-id` BEA endpoint — no API key, accepts JPEG/PNG/WebP up to 15MB, rejects files under 5KB. Stores to R2 (or local /media fallback), sets `id_verified_at`, awards +15 trust score, returns `{verified, trust_score, points_awarded, already_verified}`.
+- `msRenderLiveSignals()` now renders an "Upload ID →" action button on the Government-issued ID row when unearned. Hidden `<input type=file>` injected once into `<body>`; click triggered via `data-action` event delegation (no inline onclick quote conflicts).
+- `msUploadIdDoc()` handler: shows ⏳ spinner on button, POSTs multipart to BEA, on success updates localStorage trust score, calls `msRenderTrust()` for instant score update, then re-fetches `/trust` after 800ms so signal row flips to ✓ without page reload.
+- Already-verified users get a friendly toast instead of a double-award.
+- ms.js v113→v114, ms.css v112→v113. End-to-end verified: upload → +15 pts → signal flips to ✓.
+
+## Session 87 · 26 May 2026 · Category Home Mode
+
+**Category Home Mode (ms.js v113 + ms.css v112 + index.html):**
+- Long-press any category tile (500ms on mobile / desktop) to set that category as the user's personalised home screen, persisted in `localStorage` (`ms_cat_home_pref`).
+- On app load, if a preference is stored, `catHomeInit()` routes directly to `screen-cat-home` instead of the default home screen.
+- New screen `screen-cat-home`: full-bleed hero image (from `CATS[cat].catPhoto`), category icon + name overlay, city name, live listing count + price range stats, plain-English category description, CTA button (Browse → or Local Market →).
+- Back button (top-left) returns to home; "✕ Reset home" button (top-right) clears the preference and returns to default home.
+- ⭐ star badge appears on the active preferred category tile on the home screen.
+- One-time tooltip ("💡 Long-press any category to set it as your home screen") shown 2 seconds after first load, only if no preference is set yet — stored in `ms_cathome_hint_shown` to never repeat.
+- Long-press suppresses normal `onclick` click via `stopImmediatePropagation` — no accidental browse navigation.
+- Covers all 7 categories: Property, Tutors, Services, Adventures, Collectors, Cars, LocalMarket.
+- ms.js v112→v113, ms.css v111→v112. Smoke test: 30/30 ✅
+
+## Session 86 · 26 May 2026 · Seller intro notification · Local Market listing parity · Demo city-switch fix
+
+**Demo city-switch bug fix (ms.js v112):**
+- `selectDemoCity()` was not calling `loadLiveListings()` — switching to New York in demo mode left Pretoria's live BEA listings (bea_* entries) in the LISTINGS array. Counts were stale until a manual page reload; Pretoria listings showed in the NY grid with GPS distances of < 300m.
+- Fix 1: `selectDemoCity()` now flushes `isLive` entries from LISTINGS immediately on city switch (instant clean grid), then calls `loadLiveListings(0)` to fetch the correct city's live data.
+- Fix 2: `renderCatCounts()` now applies an activeCity filter to `isLive` listings (same guard that already existed for `demo_*` listings) — counts can never include another city's live listings even if a race condition delays the flush.
+- ms.js bumped v111 → v112, index.html redeployed. Smoke test: 30/30 ✅
+
+## Session 86 · 26 May 2026 · Seller intro notification · Local Market listing parity
+
+**Seller intro notification — H3 (n8n + BEA):**
+- Created n8n workflow "TrustSquare - New Intro Notification" (ID: new-intro-notification-s86) — fires branded email to seller whenever a buyer submits an intro request (both standard `/intros` and Local Market `/local-market/intro` endpoints).
+- Email matches expiry warning style: dark hero, TrustSquare branding, 48-hour respond-or-decline reminder, anonymity note, CTA → admin.html.
+- `N8N_WEBHOOK_NEW_INTRO=http://localhost:5678/webhook/new-intro-notification` added to `/etc/environment` and BEA systemd process env — confirmed live in `/proc/<pid>/environ`.
+- End-to-end verified: `POST /intros` → BEA fires webhook → n8n execution status=success (execution ID 45).
+- Fixed n8n DB ownership issue (root-owned WAL/SHM files from direct Python writes blocked n8n startup) — resolved via WAL checkpoint + `chown 1000:1000`; also patched `activeVersionId=versionId` which n8n requires to serve webhook routes.
+
+**Local Market listing parity — H1 (BEA + ms.js + ms.css):**
+- `GET /local-market/listings/{id}` now fetches `listing_photos` table and returns `photos[]` array — same pattern as `GET /listings/{id}`. Promotes first photo to `thumb_url`/`medium_url` when legacy column is empty.
+- `GET /local-market/listings` (list) now LEFT JOINs `listing_photos` to use the stored photo URL as `thumb_url` — ensures cards always show uploaded photos.
+- `lmOpenDetail()` in ms.js updated to prefer `photos[]` array over legacy `photo_urls` JSON string — LM detail photo carousel now uses the same multi-photo pipeline as standard listings.
+- `lm-grid` CSS updated from `repeat(3,1fr)` to `1fr 1fr` (2-column) matching `lgrid` — LM cards now same size as Property/Tutors/Services cards.
+- ms.js bumped v110→v111, ms.css bumped v110→v111, index.html redeployed.
+- Smoke test: 30/30 ✅
+
 ## Session 76 · 23 May 2026 · Batch Cards publish fix · A8 Tuppence principles · Pack tiers · Photo media fix
 
 **Batch Cards admin fix (marketsquare_admin.html):**
@@ -2797,3 +2886,28 @@ Smoke test: all 30 checks passed.
 - Pre-launch payment activation section added — professional case for live credential activation before public launch
 - IP-safe: no Tuppence/introduction pairing, no anonymous references, no wallet screenshots
 - Covering email drafted; letter sent from support@trustsquare.co to Oluwaseun at Paystack
+
+## Session 87f — 2026-05-27
+
+### Map pin fix — listing_lat/lng mapped into live listing object
+
+Added `listing_lat` and `listing_lng` to the `loadLiveListings()` mapping in ms.js. Previously only `suburb_lat`/`suburb_lng` were mapped; the map renderer (`buildMapView`) uses `l.listing_lat || l.suburb_lat` — meaning listing-specific coordinates were silently dropped. Listing 169 (Brooklyn property) had `listing_lat=-25.7745, listing_lng=28.2314` set in the DB but the pin never appeared on the map because the FEA object never received those values. With the mapping added, the pin now shows at the correct coordinates. ms.js v122, marketsquare.html v122 deployed.
+
+Smoke test: 30/30 ✅
+
+## Session 87g — 2026-05-27
+
+### POI categories fixed — universities + police restored, stale data cleared
+
+**Root cause:** listing 169's `nearby_pois` was written by an old version of the BEA fetch code that stored categories `transport` and `recreation` instead of the current `universities` and `police`. The FEA was displaying UP - Groenkloof Campus under Transport and there was no Universities or Police tab.
+
+**BEA fixes (`bea_main.py`):**
+- Added generic-name filter: entries named `"school ground"`, `"school"`, `"college"`, `"university"`, `"bus stop"` etc. are now skipped (OSM data quality — many campuses have unnamed nodes)
+- Added 200m deduplication: if two POI nodes of the same category are within 200m of each other, only the closer one is kept (eliminates "school ground × 2" pairs from split campus polygons)
+- All category appends now carry `lat`/`lon` for the dedup pass; stripped from final output
+
+**Data fix:** cleared `nearby_pois` for listing 169 and re-fetched with the corrected code. New result: Schools (3), Universities (1 — STADIO Higher Education), Shopping (3), Hospitals (3), Police (3). UP - Groenkloof Campus does not appear in OSM as `amenity=university` — it's an OSM tagging gap, not a code issue.
+
+**FEA (`ms.js`):** `POI_META` already had `universities` and `police` entries — no change needed.
+
+BEA deployed and restarted. Smoke test: 30/30 ✅

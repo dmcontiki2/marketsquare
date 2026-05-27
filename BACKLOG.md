@@ -50,6 +50,7 @@
 | M5 | **Founding seller count** — currently 23/60, need 37 more before public launch | Content |
 | M6 | **Maroushka re-listings** — real founding seller content via admin tool | Admin |
 | M7 | **City selector bug audit** — verify geo selectors work on mobile Safari and Chrome Android | QA |
+| M8 | **Content / photo pass** — (1) Replace Unsplash category shopfront photos with royalty-free alternatives (Wikimedia Commons or Pexels API) — current hotlinking is outside Unsplash commercial terms and images are being quality-degraded. (2) Add `max-height` cap on `wd-hero` for desktop so Heritage hero images don't over-stretch on wide screens. (3) Review all `w=800&q=80` Unsplash params across the codebase. Do as a dedicated session before public launch. | Buyer app |
 
 ---
 

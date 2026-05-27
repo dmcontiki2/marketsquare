@@ -277,6 +277,7 @@ async function loadLiveListings(retryCount) {
           cat: normCat(l.category),
           feat: false,
           title: l.title,
+          city:   l.city || activeCity.name,
           area:   l.area || l.suburb || activeCity.name,
           suburb: l.suburb || l.area || activeCity.name,
           trust: l.trust_score || 40,
@@ -301,7 +302,12 @@ async function loadLiveListings(retryCount) {
           level:        l.level        || null,
           mode:         l.mode         || null,
           service_type: l.service_type || null,
-          availability: l.availability || null
+          availability: l.availability || null,
+          nearby_pois:  l.nearby_pois  || null,
+          linked_wonders: l.linked_wonders || null,
+          listing_lat:  l.listing_lat  || null,
+          listing_lng:  l.listing_lng  || null,
+          beaListingId: l.id
         };
       });
       // Add live listings to front of LISTINGS array
@@ -749,6 +755,7 @@ async function _msInit(){
   renderHomeStats(); renderCatCounts();
   initLMHomeTile();
   loadHomeWonders();
+  catHomeInit();
   // Load available cities + suburbs, then live listings from BEA on startup
   _resolveActiveCity().then(() => loadLiveListings());
   // Detect buyer location for distance badges + map centering
@@ -1714,12 +1721,19 @@ function selectDemoCity(name) {
   if (cityCountry[name]) activeCountry = cityCountry[name];
   // Sync Adventures country filter and World Heritage filter with selected city
   const cityAdvMap = { 'Pretoria': {code:'ZA', name:'South Africa', flag:'🇿🇦'}, 'New York': {code:'US', name:'United States', flag:'🇺🇸'}, 'London': {code:'GB', name:'United Kingdom', flag:'🇬🇧'}, 'Sydney': {code:'AU', name:'Australia', flag:'🇦🇺'} };
-  if (cityAdvMap[name]) { const a=cityAdvMap[name]; advCountry=a.code; advCountryName=a.name; advCountryFlag=a.flag; _wfCountry=a.code; }
+  if (cityAdvMap[name]) { const a=cityAdvMap[name]; advCountry=a.code; advCountryName=a.name; advCountryFlag=a.flag; _wfCountry=a.code; const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=a.flag; const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=a.name; }
   closeCitySelector();
   updateBadgeLabel();
+  // Clear stale BEA live listings from previous city immediately so renderGrid
+  // doesn't show Pretoria listings while NY is loading (city-switch flush)
+  for (let i = LISTINGS.length - 1; i >= 0; i--) {
+    if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
+  }
   renderGrid();
   renderCatCounts();
   if (typeof renderWondersStrip === 'function') renderWondersStrip();
+  // Reload live BEA listings for the new city (fixes stale counts + wrong distances)
+  loadLiveListings(0);
 }
 // END TODO
 
@@ -1913,6 +1927,13 @@ function renderCatCounts() {
     }
     // Filter demo listings to active city only
     if (DEMO_MODE && String(l.id).startsWith('demo_')) {
+      const lCity = l.city || l.area || '';
+      const aCity = activeCity.name || '';
+      if (lCity && aCity && lCity !== aCity) return false;
+    }
+    // Filter live BEA listings (isLive=true) to active city — prevents Pretoria
+    // live listings appearing in counts when NY / London / Sydney is selected
+    if (l.isLive) {
       const lCity = l.city || l.area || '';
       const aCity = activeCity.name || '';
       if (lCity && aCity && lCity !== aCity) return false;
@@ -2385,7 +2406,7 @@ function openDetail(id){
     ? `<div class="photo-strip-dots">${photos.map((_,i)=>`<div class="psd${i===0?' active':''}" id="psd-${id}-${i}"></div>`).join('')}</div>`
     : '';
   // Adventures category display label + price formatting
-  const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences';
+  const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences'||l.cat==='Adventures';
   const catDisplayLabel = l.cat==='adventures_accommodation' ? '🏕 Accommodation'
     : l.cat==='adventures_experiences' ? '🌄 Experiences'
     : l.cat;
@@ -2634,6 +2655,19 @@ async function buyerPriceCheck(id) {
     const data = await r.json();
 
     // ── Three-panel market intelligence card ────────────────────────────────
+    // Category-aware panel labels
+    const _cat = (l.cat || '').toLowerCase();
+    const _panelLocal = _cat === 'property'   ? '🏠 LOCAL PROPERTY MARKET'
+                      : _cat === 'cars'        ? '🚗 SA USED CAR MARKET'
+                      : _cat === 'adventures'  ? '🌍 LOCAL EXPERIENCE MARKET'
+                      : _cat === 'tutors'      ? '📚 SA TUTORING MARKET'
+                      : _cat === 'services'    ? '🛠️ SA SERVICES MARKET'
+                      :                          '🇿🇦 SA SECOND-HAND MARKET';
+    const _panelGlobal = _cat === 'property'  ? '📊 REGIONAL & NATIONAL MARKET'
+                       : _cat === 'cars'       ? '📋 BOOK VALUE & NATIONAL'
+                       : _cat === 'adventures' ? '🌐 COMPARABLE EXPERIENCES'
+                       :                         '🌍 OFFICIAL & GLOBAL PRICES';
+
     const verdictConfig = {
       fair:          { icon: '✅', label: 'Fair price',        color: '#065f46', bg: '#d1fae5', border: '#6ee7b7' },
       below_market:  { icon: '🔥', label: 'Below market',     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
@@ -2653,7 +2687,7 @@ async function buyerPriceCheck(id) {
 
         <!-- Panel 1: SA Market -->
         <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;">
-          <div style="font-size:11px;font-weight:700;color:#15803d;letter-spacing:.04em;margin-bottom:5px;">🇿🇦 SA SECOND-HAND MARKET</div>
+          <div style="font-size:11px;font-weight:700;color:#15803d;letter-spacing:.04em;margin-bottom:5px;">${_panelLocal}</div>
           <div style="font-size:12px;color:#166534;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.sa_context || data.context}</div>
           ${data.sa_range && data.sa_range !== 'N/A' && data.sa_range !== 'Cannot determine'
             ? `<div style="font-size:12px;font-weight:700;color:#15803d;margin-top:6px;">Range: ${data.sa_range}</div>`
@@ -2672,7 +2706,7 @@ async function buyerPriceCheck(id) {
         <!-- Panel 3: Official / Global -->
         ${data.official_context && data.official_context !== 'N/A'
           ? `<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:12px 14px;">
-          <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:.04em;margin-bottom:5px;">🌍 OFFICIAL &amp; GLOBAL PRICES</div>
+          <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:.04em;margin-bottom:5px;">${_panelGlobal}</div>
           <div style="font-size:12px;color:#1e3a5f;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.official_context}</div>
           ${data.official_range && data.official_range !== 'N/A' && data.official_range !== 'Cannot determine'
             ? `<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-top:6px;">Range: ${data.official_range}</div>`
@@ -2762,7 +2796,7 @@ async function buyerYieldCalc(id) {
         <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
         <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
         <div style="font-size:10px;color:#9ca3af;">AI yield analysis · ${data.tuppence_remaining}T remaining</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">Based on AI training data · SA second-hand market · may differ from international retail or official list prices</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">Based on AI training data · prices may vary · not financial advice</div>
       </div>`;
     btn.style.display = 'none';
   } catch(e) { showToast('Yield calculation error'); }
@@ -10153,9 +10187,13 @@ async function lmOpenDetail(listingId) {
     const tLabel = trust >= 90 ? 'Highly Trusted' : trust >= 70 ? 'Trusted' : trust >= 40 ? 'Established' : 'New';
     const tColor = trust >= 90 ? 'var(--gold)' : trust >= 70 ? 'var(--green)' : trust >= 40 ? 'var(--blue)' : '#6b7280';
     const tBg    = trust >= 90 ? 'var(--gold-bg)' : trust >= 70 ? 'var(--green-bg)' : trust >= 40 ? 'var(--blue-bg)' : '#f3f4f6';
-    // Build multi-photo strip (uses photo_urls JSON array from BEA; falls back to medium_url/thumb_url)
+    // Build multi-photo strip — prefer photos[] (listing_photos table, same as standard detail)
+    // then fall back to photo_urls JSON string, then medium_url / thumb_url
     let lmPhotos = [];
-    if (c.photo_urls) {
+    if (Array.isArray(c.photos) && c.photos.length) {
+      lmPhotos = c.photos.map(p => p.url).filter(Boolean);
+    }
+    if (!lmPhotos.length && c.photo_urls) {
       try { lmPhotos = JSON.parse(c.photo_urls); } catch(e) { lmPhotos = []; }
     }
     if (!lmPhotos.length && c.medium_url) lmPhotos = [c.medium_url];
@@ -10598,18 +10636,98 @@ function msRenderTrust(score){
 function msRenderLiveSignals(signals){
   const el = document.getElementById('ms-trust-signals');
   if(!el) return;
+
+  // Inject hidden file input for ID upload (once)
+  if(!document.getElementById('ms-id-upload-input')){
+    const inp = document.createElement('input');
+    inp.type='file'; inp.id='ms-id-upload-input';
+    inp.accept='image/jpeg,image/png,image/webp';
+    inp.style.display='none';
+    inp.addEventListener('change', msUploadIdDoc);
+    document.body.appendChild(inp);
+  }
+
   el.innerHTML = signals.map(sig => {
     const earned = sig.earned;
     const iconClass = earned ? 'ms-sig-done' : 'ms-sig-miss';
     const icon = earned ? '✓' : '✗';
     const ptsClass = earned ? 'ms-pts-earned' : 'ms-pts-avail';
     const ptsLabel = earned ? '+'+sig.points : '+'+sig.points+' available';
+
+    // Action button for actionable unearned signals
+    let actionBtn = '';
+    if(!earned){
+      if(sig.key === 'id_verified'){
+        actionBtn = '<button class="ms-sig-action" data-action="upload-id">Upload ID →</button>';
+      }
+    }
+
     return '<div class="ms-signal-row">'
       +'<div class="ms-sig-icon '+iconClass+'">'+icon+'</div>'
       +'<div class="ms-signal-text" title="'+sig.how_to_earn+'">'+sig.name+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+      +actionBtn
       +'<span class="ms-signal-pts '+ptsClass+'">'+ptsLabel+'</span>'
+      +'</div>'
       +'</div>';
   }).join('');
+
+  // Event delegation — one listener per render (replaces any previous)
+  el.onclick = function(e){
+    const btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    if(btn.dataset.action === 'upload-id'){
+      document.getElementById('ms-id-upload-input').click();
+    }
+  };
+}
+
+async function msUploadIdDoc(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
+  if(!email){ showToast('Sign in first to upload your ID'); return; }
+
+  // Show uploading state on the button
+  const btn = document.querySelector('.ms-sig-action');
+  if(btn){ btn.textContent = '⏳ Uploading…'; btn.disabled = true; }
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/upload-id', {
+      method: 'POST', body: fd
+    });
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.detail || 'Upload failed');
+
+    if(data.already_verified){
+      showToast('Your ID is already verified ✓');
+    } else {
+      // Update cached trust score and re-render
+      localStorage.setItem('ms_trust_score', data.trust_score);
+      msRenderTrust(data.trust_score);
+      showToast('ID uploaded — Trust Score +'+ data.points_awarded +' pts 🎉');
+      // Refresh full trust breakdown from BEA so signals list updates
+      setTimeout(()=>{
+        fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/trust')
+          .then(r=>r.ok?r.json():null)
+          .then(td=>{
+            if(!td) return;
+            localStorage.setItem('ms_trust_score', td.score||data.trust_score);
+            msRenderTrust(parseInt(td.score)||data.trust_score);
+            if(td.signals && td.signals.length) msRenderLiveSignals(td.signals);
+          }).catch(()=>{});
+        // Refresh live listings so trust score on listing detail cards is current
+        if(typeof loadLiveListings === 'function') loadLiveListings(0);
+      }, 800);
+    }
+  } catch(err){
+    showToast('Upload failed — ' + (err.message || 'please try again'));
+    if(btn){ btn.textContent = 'Upload ID →'; btn.disabled = false; }
+  }
+  // Reset input so same file can be re-selected if needed
+  e.target.value = '';
 }
 
 function msUpdateStats(walBal, trust){
@@ -10795,6 +10913,8 @@ async function loadDetailPois(listing) {
     hospitals:    { label: 'Hospitals',    icon: '🏥', cls: 'poi-icon-hospitals' },
     police:       { label: 'Police',       icon: '👮', cls: 'poi-icon-police' },
     transit:      { label: 'Transit',      icon: '🚇', cls: 'poi-icon-transit' },
+    transport:    { label: 'Transport',    icon: '🚌', cls: 'poi-icon-transit' },
+    recreation:   { label: 'Recreation',   icon: '🌳', cls: 'poi-icon-recreation' },
   };
 
   const cats = Object.keys(pois).filter(k => pois[k] && pois[k].length);
@@ -10866,7 +10986,9 @@ async function loadDetailWonders(listing) {
     if(!linked.length) return;
     const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     const cards = linked.map(lw=>{
-      const w = _wpAllWonders.find(x=>x.id===lw.id);
+      // linked_wonders entries may be plain ID strings or objects with .id
+      const wId = typeof lw === 'string' ? lw : lw.id;
+      const w = _wpAllWonders.find(x=>x.id===wId);
       if(!w) return '';
       return `<div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
         <img class="wonder-card-img" src="${w.photo}" alt="${w.name}" loading="lazy" referrerpolicy="origin-when-cross-origin">
@@ -11045,3 +11167,188 @@ async function msAskAI(){
     if (btn) { btn.disabled = false; btn.textContent = '✨ Ask AI how to improve my score →'; }
   }
 }
+
+// ── Category Home Mode — Session 87 ─────────────────────────────────────────
+// Long-press a category tile (500ms) → that category becomes the user's
+// personalised home screen (persisted in localStorage).
+// On startup, if a preference is set, goTo('cat-home') instead of 'home'.
+
+const CAT_HOME_KEY  = 'ms_cat_home_pref';   // stored cat name e.g. 'Property'
+const CAT_HOME_HINT = 'ms_cathome_hint_shown'; // '1' once shown
+
+const CAT_DESCS = {
+  Property:    'Browse houses, apartments, land and commercial property. Connect anonymously with serious sellers in your area.',
+  Tutors:      'Find qualified tutors for any subject or age group. All trust-verified, intro-only connections.',
+  Services:    'Plumbers, electricers, cleaners and more. Trusted local service providers available right now.',
+  Adventures:  'Experiences and accommodation for the explorer in you. Local adventures, curated and trusted.',
+  Collectors:  'Rare finds, vintage items, trading cards and collectibles. Trusted sellers, verified stock.',
+  Cars:        'Buy or sell vehicles with confidence. Verified sellers, transparent listings, no spam.',
+  LocalMarket: 'Your neighbourhood marketplace. Fresh produce, handmade goods and local deals delivered with trust.',
+};
+
+function catHomeInit() {
+  // Attach long-press listeners to all .cat-tile elements
+  document.querySelectorAll('.cat-tile').forEach(tile => {
+    let pressTimer = null;
+
+    let longPressFired = false;
+
+    const start = (e) => {
+      longPressFired = false;
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        longPressFired = true;
+        // Determine category from onclick attribute
+        const cat = _catFromTile(tile);
+        if (!cat) return;
+        setCatHome(cat);
+      }, 500);
+    };
+
+    const cancel = () => {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    };
+
+    // Prevent normal click firing after a successful long-press
+    tile.addEventListener('click', (e) => {
+      if (longPressFired) { e.stopImmediatePropagation(); e.preventDefault(); longPressFired = false; }
+    }, true);
+
+    tile.addEventListener('touchstart', start, { passive: true });
+    tile.addEventListener('touchend', cancel);
+    tile.addEventListener('touchmove', cancel);
+    tile.addEventListener('mousedown', start);
+    tile.addEventListener('mouseup', cancel);
+    tile.addEventListener('mouseleave', cancel);
+  });
+
+  // On startup: redirect to cat-home if preference set
+  const pref = localStorage.getItem(CAT_HOME_KEY);
+  if (pref) {
+    // Delay slightly so app finishes initialising
+    setTimeout(() => openCatHome(pref, true), 120);
+  }
+
+  // Show one-time hint if never seen and user has no preference yet
+  if (!localStorage.getItem(CAT_HOME_HINT) && !localStorage.getItem(CAT_HOME_KEY)) {
+    setTimeout(showCatHomeHint, 2000);
+  }
+
+  // Mark star on cat tile if preference already set
+  _updateCatStars();
+}
+
+function _catFromTile(tile) {
+  // Check onclick attr first
+  const oc = tile.getAttribute('onclick') || '';
+  const m = oc.match(/filterBrowse\('([^']+)'\)/);
+  if (m) return m[1];
+  // LM tile
+  if (tile.id === 'lm-home-tile') return 'LocalMarket';
+  return null;
+}
+
+function setCatHome(cat) {
+  try { localStorage.setItem(CAT_HOME_KEY, cat); } catch(_) {}
+  showToast(`${CATS[cat]?.icon || ''} ${cat === 'LocalMarket' ? 'Local Market' : cat} set as your home screen`);
+  _updateCatStars();
+  openCatHome(cat, false);
+}
+
+function clearCatHome() {
+  try { localStorage.removeItem(CAT_HOME_KEY); } catch(_) {}
+  _updateCatStars();
+  showToast('Home screen reset to default');
+  goTo('home');
+}
+
+function openCatHome(cat, isAuto) {
+  const cfg = CATS[cat];
+  if (!cfg) return;
+
+  // Populate hero image
+  const img = document.getElementById('cat-home-img');
+  if (img) { img.src = cfg.catPhoto || ''; img.alt = cat; }
+
+  // Hero overlay content
+  const iconEl = document.getElementById('cat-home-icon');
+  const titleEl = document.getElementById('cat-home-title');
+  const cityEl  = document.getElementById('cat-home-city');
+  const statsEl = document.getElementById('cat-home-stats');
+  const descEl  = document.getElementById('cat-home-desc');
+  const ctaEl   = document.getElementById('cat-home-cta');
+
+  if (iconEl)  iconEl.textContent  = cfg.icon;
+  if (titleEl) titleEl.textContent = cat === 'LocalMarket' ? 'Local Market' : cat;
+  if (cityEl)  cityEl.textContent  = '📍 ' + (activeCity?.name || 'Your city');
+
+  // Stats: count live/demo listings in this category
+  const catKey = cat === 'LocalMarket' ? 'LocalMarket' : cat;
+  const count = LISTINGS.filter(l => {
+    if (l.placeholder) return false;
+    const lcat = l.cat || '';
+    if (catKey === 'LocalMarket') return lcat === 'LocalMarket' || lcat === 'local_market' || lcat === 'LocalMarket';
+    return lcat === catKey;
+  }).length;
+
+  const priceArr = LISTINGS.filter(l => {
+    if (l.placeholder) return false;
+    const lcat = l.cat || '';
+    if (catKey === 'LocalMarket') return lcat === 'LocalMarket' || lcat === 'local_market';
+    return lcat === catKey;
+  }).map(l => l.price).filter(p => p > 0);
+
+  let statsText = count > 0 ? `${count} listing${count!==1?'s':''} available` : 'Be the first to list';
+  if (priceArr.length > 0) {
+    const minP = Math.min(...priceArr);
+    const maxP = Math.max(...priceArr);
+    const fmt = v => v >= 1000 ? 'R' + (v/1000).toFixed(0) + 'k' : 'R' + v;
+    statsText += minP === maxP ? ` · from ${fmt(minP)}` : ` · ${fmt(minP)}–${fmt(maxP)}`;
+  }
+  if (statsEl) statsEl.textContent = statsText;
+  if (descEl)  descEl.textContent  = CAT_DESCS[cat] || '';
+
+  // CTA button
+  if (ctaEl) {
+    const label = cat === 'LocalMarket' ? 'Browse Local Market →' : `Browse ${cat} →`;
+    ctaEl.textContent = label;
+    ctaEl.onclick = () => {
+      if (cat === 'LocalMarket') goTo('local-market');
+      else filterBrowse(cat);
+    };
+  }
+
+  // Set hero bg tint for the fallback state (image loading)
+  const heroEl = document.getElementById('cat-home-hero');
+  if (heroEl) heroEl.style.background = cfg.bg;
+
+  goTo('cat-home');
+}
+
+function showCatHomeHint() {
+  if (localStorage.getItem(CAT_HOME_HINT)) return;
+  try { localStorage.setItem(CAT_HOME_HINT, '1'); } catch(_) {}
+  const hint = document.createElement('div');
+  hint.className = 'cat-home-hint';
+  hint.textContent = '💡 Long-press any category to set it as your home screen';
+  document.body.appendChild(hint);
+  setTimeout(() => hint.remove(), 3800);
+}
+
+function _updateCatStars() {
+  const pref = localStorage.getItem(CAT_HOME_KEY);
+  // Remove all existing stars
+  document.querySelectorAll('.cat-tile .cat-home-star').forEach(s => s.remove());
+  if (!pref) return;
+  // Find the matching tile and add star
+  document.querySelectorAll('.cat-tile').forEach(tile => {
+    const cat = _catFromTile(tile);
+    if (cat === pref) {
+      const star = document.createElement('span');
+      star.className = 'cat-home-star';
+      star.textContent = '⭐';
+      tile.appendChild(star);
+    }
+  });
+}
+// ── END Category Home Mode ───────────────────────────────────────────────────
