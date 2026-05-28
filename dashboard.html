@@ -402,6 +402,7 @@
   <div class="view-toggle">
     <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
     <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
+    <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
   </div>
 </div>
 
@@ -542,15 +543,23 @@ async function loadDashboard() {
 function switchView(view) {
   const dash = document.querySelector('.main');
   const graph = document.getElementById('graph-view');
+  const ops = document.getElementById('ops-view');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
   document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
+  document.getElementById('vtab-ops').classList.toggle('active', view === 'ops');
   if (view === 'graph') {
     dash.style.display = 'none';
+    if(ops) ops.style.display = 'none';
     graph.classList.add('visible');
     requestAnimationFrame(() => buildGraph());
+  } else if (view === 'ops') {
+    dash.style.display = 'none';
+    graph.classList.remove('visible');
+    if(ops) { ops.style.display = 'block'; loadOpsMetrics(); }
   } else {
     dash.style.display = '';
     graph.classList.remove('visible');
+    if(ops) ops.style.display = 'none';
   }
 }
 
@@ -559,12 +568,12 @@ function getGalaxyData() {
   const priorities = DATA.nextGoals.split('\n').filter(l => /^\d+\./.test(l.trim())).slice(0, 4);
 
   const nodes = [
-    { id: 'ts',     label: 'TrustSquare',  sub: `Session ${DATA.nextSession}`, group: 'TrustSquare',    size: 28, drilldown: 'ts',    detail: `Live at trustsquare.co · BEA v1.3.0\nSession ${DATA.currentSession} complete` },
+    { id: 'ts',     label: 'TrustSquare',  sub: `Session ${DATA.nextSession}`, group: 'TrustSquare',    size: 28, drilldown: 'ts',    detail: `Live at trustsquare.co · BEA v1.3.4\nSession ${DATA.currentSession} complete` },
     { id: 'cl',     label: 'CityLauncher', sub: 'Paused',                      group: 'CityLauncher',   size: 22, drilldown: 'cl',    detail: `Scheduler DISABLED · Dashboard API running\nMethodology redesign pending` },
     { id: 'aa',     label: 'AdvertAgent',  sub: 'Pre-kickoff',                 group: 'AdvertAgent',    size: 20, drilldown: 'aa',    detail: 'Seller-facing AI assistance\nSession 1 kickoff pending' },
     { id: 'infra',  label: 'Agentic OS',   sub: 'Framework',                   group: 'Infrastructure', size: 18, drilldown: 'infra', detail: 'Branch structure · Session automation\nAudit baseline' },
     { id: 'tuppence', label: 'Tuppence',     sub: 'Currency',    group: 'Concept', size: 14, detail: 'Introduction currency shared across all projects' },
-    { id: 'bea',      label: 'BEA v1.3.0',  sub: 'FastAPI',     group: 'Concept', size: 16, detail: '✅ Active · 72MB · running 22h+\nSQLite + Redis · Hetzner CPX22' },
+    { id: 'bea',      label: 'BEA v1.3.4',  sub: 'FastAPI',     group: 'Concept', size: 16, detail: '✅ Active · 72MB · running 22h+\nSQLite + Redis · Hetzner CPX32' },
     { id: 'hetzner',  label: 'Hetzner',     sub: 'Server',      group: 'Concept', size: 13, detail: '178.104.73.239 · Ubuntu 24.04\nNginx + FastAPI + CityLauncher API' },
     { id: 'paystack', label: 'Paystack',    sub: 'Payments',     group: 'Concept', size: 14, detail: 'Test mode active · Live mode pending CIPC' },
     { id: 'trust',    label: 'Trust Score', sub: 'Metric',       group: 'Concept', size: 13, detail: 'Seller credibility score · Stamped on publish' },
@@ -590,7 +599,7 @@ function getGalaxyData() {
     { id:'r4',  label:'EULA hard gate',          detail:'EULA must block BEA API calls, not just UI. Unauthenticated users must not be able to submit data.', status:'open' },
     { id:'r5',  label:'Account data deletion',   detail:'When full user accounts go live, all PII tables must be verifiably purged on delete (POPIA compliance).', status:'open' },
     { id:'r6',  label:'POPIA transparency',      detail:'Onboarding screen must show one-line notice confirming scope of pre-filled data and when it is first stored.', status:'open' },
-    { id:'r7',  label:'BEA single point fail',   detail:'No failover — single Hetzner CPX22 instance. Post-launch: health endpoint + n8n auto-scale to CPX32 at 85%.', status:'monitor' },
+    { id:'r7',  label:'BEA single point fail',   detail:'No failover — single Hetzner CPX32 instance. Post-launch: health endpoint + n8n auto-scale to CPX32 at 85%.', status:'monitor' },
     { id:'r8',  label:'SQLite under load',       detail:'SQLite suitable for current load. If concurrent writes exceed ~50/s post-launch, migrate to PostgreSQL.', status:'monitor' },
     { id:'r9',  label:'Paystack test mode',      detail:'Payments are in test mode — no real money flows. Live mode blocked until CIPC bank account confirmed.', status:'open' },
     { id:'r10', label:'Memory drift (Claude)',   detail:'Session context resets each chat. STATUS.md + MEMORY.md + CLAUDE.md are the drift mitigation. Keep them current.', status:'monitor' },
@@ -638,7 +647,7 @@ function getDrilldownData(projectId) {
         // KPIs
         { label: '23/60 Sellers',    sub: 'KPI',     color: '#f59e0b', size: 16, type:'kpi',     detail: '23 founding sellers confirmed · 37 more needed before public launch' },
         { label: '0 Live Listings',  sub: 'KPI',     color: '#10b981', size: 14, type:'kpi',     detail: '70 demo listings active · 0 real live listings · clean slate' },
-        { label: 'BEA v1.3.0',       sub: 'Tool',    color: '#3b82f6', size: 15, type:'tool',    detail: '✅ Running · FastAPI · SQLite + Redis · 9 tables · Hetzner CPX22' },
+        { label: 'BEA v1.3.4',       sub: 'Tool',    color: '#3b82f6', size: 15, type:'tool',    detail: '✅ Running · FastAPI · SQLite + Redis · 9 tables · Hetzner CPX32' },
         { label: 'Paystack',         sub: 'Tool',    color: '#3b82f6', size: 14, type:'tool',    detail: 'Test mode · sk_test_ active · live mode pending Paystack approval' },
         { label: 'Cloudflare R2',    sub: 'Tool',    color: '#3b82f6', size: 12, type:'tool',    detail: 'Photo storage · public dev URL · seller profile photos' },
         { label: 'Paystack Pending', sub: 'Risk',    color: '#ef4444', size: 15, type:'risk',    detail: '⚠ Paystack live mode approval pending · submitted · 7-day response window' },
@@ -1266,5 +1275,63 @@ function copyPrompt() {
 loadDashboard();
 
 </script>
+
+<div id="ops-view" style="display:none;padding:24px 20px;max-width:900px;margin:0 auto;">
+  <div class="health-panel">
+    <div class="health-title">⚙️ SERVER SPECS <span class="health-updated" id="ops-updated">loading…</span></div>
+    <div class="health-grid" id="ops-specs-grid">
+      <div class="health-metric"><div class="hm-label">Plan</div><div class="hm-value" id="ops-plan">—</div></div>
+      <div class="health-metric"><div class="hm-label">vCPU</div><div class="hm-value">4 cores</div></div>
+      <div class="health-metric"><div class="hm-label">RAM</div><div class="hm-value">8 GB</div></div>
+      <div class="health-metric"><div class="hm-label">Root Disk</div><div class="hm-value">76 GB SSD</div></div>
+      <div class="health-metric"><div class="hm-label">Volume (Overpass DB)</div><div class="hm-value">100 GB SSD · /mnt/HC_Volume_105840760</div></div>
+      <div class="health-metric"><div class="hm-label">Bandwidth</div><div class="hm-value">20 TB/mo</div></div>
+      <div class="health-metric"><div class="hm-label">Location</div><div class="hm-value">Hetzner NBG1 · Germany</div></div>
+      <div class="health-metric"><div class="hm-label">Cost</div><div class="hm-value">CPX32 €17.99 + Volume €6.58 = €24.57/mo</div></div>
+    </div>
+  </div>
+  <div class="health-panel">
+    <div class="health-title">📊 LIVE METRICS <span class="health-updated" id="ops-checked">loading…</span></div>
+    <div class="health-grid">
+      <div class="health-metric"><div class="hm-label">RAM Used</div><div class="hm-value" id="ops-ram">—</div></div>
+      <div class="health-metric"><div class="hm-label">Root Disk Used</div><div class="hm-value" id="ops-disk">—</div></div>
+      <div class="health-metric"><div class="hm-label">CPU Load</div><div class="hm-value" id="ops-cpu">—</div></div>
+      <div class="health-metric"><div class="hm-label">Bandwidth Used</div><div class="hm-value" id="ops-bw">—</div></div>
+      <div class="health-metric"><div class="hm-label">BEA Response</div><div class="hm-value" id="ops-resp">—</div></div>
+      <div class="health-metric"><div class="hm-label">DB Size</div><div class="hm-value" id="ops-db">—</div></div>
+    </div>
+  </div>
+  <div class="health-panel">
+    <div class="health-title">🚀 SERVICES</div>
+    <div class="health-grid">
+      <div class="health-metric"><div class="hm-label">BEA (FastAPI)</div><div class="hm-value" style="color:#4ade80">✅ Active · port 8000</div></div>
+      <div class="health-metric"><div class="hm-label">Nginx</div><div class="hm-value" style="color:#4ade80">✅ Active · ports 80/443</div></div>
+      <div class="health-metric"><div class="hm-label">n8n Workflows</div><div class="hm-value" style="color:#4ade80">✅ Active · port 5678</div></div>
+      <div class="health-metric"><div class="hm-label">Overpass (self-hosted)</div><div class="hm-value" style="color:#f59e0b">⚠️ Pending re-import · port 12345</div></div>
+      <div class="health-metric"><div class="hm-label">Cloudflare CDN</div><div class="hm-value" style="color:#4ade80">✅ Active · Zone cached</div></div>
+      <div class="health-metric"><div class="hm-label">R2 Storage</div><div class="hm-value" style="color:#4ade80">✅ Active · Photos + media</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function loadOpsMetrics() {
+  fetch('/health/resources').then(r=>r.json()).then(d=>{
+    document.getElementById('ops-plan').textContent = d.plan || 'CPX32 · 4vCPU · 8GB RAM · 76GB SSD · 20TB/mo';
+    document.getElementById('ops-ram').textContent = d.ram.used_mb + ' MB / ' + d.ram.total_mb + ' MB (' + d.ram.pct + '%)';
+    document.getElementById('ops-disk').textContent = d.disk.used_gb + ' GB / ' + d.disk.total_gb + ' GB (' + d.disk.pct + '%)';
+    document.getElementById('ops-cpu').textContent = 'Load ' + d.cpu.load1 + ' (' + d.cpu.pct + '%)';
+    document.getElementById('ops-bw').textContent = d.bandwidth.total_gb + ' GB / ' + d.bandwidth.limit_gb + ' GB';
+    document.getElementById('ops-resp').textContent = d.response_ms + ' ms';
+    const db = d.db_sizes || {};
+    document.getElementById('ops-db').textContent = 'marketplace: ' + (db.marketsquare_mb||0) + ' MB';
+    document.getElementById('ops-checked').textContent = d.checkedAt || '';
+    document.getElementById('ops-updated').textContent = d.checkedAt || '';
+  }).catch(()=>{
+    document.getElementById('ops-checked').textContent = 'fetch failed';
+  });
+}
+</script>
+
 </body>
 </html>
