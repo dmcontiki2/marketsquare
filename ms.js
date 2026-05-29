@@ -11039,6 +11039,7 @@ function openEulaModal() {
   overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }
+
 function msRenderTrust(score){
   const sv = document.getElementById('ms-trust-score-val');
   if(sv) sv.textContent = score;
