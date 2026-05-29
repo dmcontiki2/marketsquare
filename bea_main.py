@@ -9663,4 +9663,66 @@ async def ai_batch_card_listings(req: BatchCardRequest):
     }
 
 
+
+@app.get("/tuppence/history")
+def get_tuppence_history(email: str, limit: int = 50, offset: int = 0):
+    """Return paginated tuppence transaction history with running balance."""
+    conn = database.get_db()
+    try:
+        # Verify user exists
+        user = conn.execute("SELECT email FROM users WHERE email=?", (email,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        total = conn.execute(
+            "SELECT COUNT(*) FROM transactions WHERE user_email=?", (email,)
+        ).fetchone()[0]
+
+        # Get all rows ascending to compute running balances
+        all_rows = conn.execute(
+            "SELECT id, type, amount, description, created_at "
+            "FROM transactions WHERE user_email=? ORDER BY id ASC",
+            (email,)
+        ).fetchall()
+
+        # Compute running balance_after for each row (cumulative sum)
+        running = 0
+        balance_after = []
+        for row in all_rows:
+            running += row["amount"]
+            balance_after.append(running)
+
+        # Reverse for newest-first, then slice for pagination
+        all_rows_rev = list(reversed(all_rows))
+        balance_after_rev = list(reversed(balance_after))
+
+        page_rows = all_rows_rev[offset: offset + limit]
+        page_bal  = balance_after_rev[offset: offset + limit]
+
+        transactions = []
+        for row, bal in zip(page_rows, page_bal):
+            transactions.append({
+                "id": row["id"],
+                "type": row["type"],
+                "amount": row["amount"],
+                "description": row["description"] or "",
+                "created_at": row["created_at"],
+                "balance_after": bal,
+            })
+
+        balance_row = conn.execute(
+            "SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_email=?", (email,)
+        ).fetchone()
+        balance = balance_row[0]
+    finally:
+        conn.close()
+    return {
+        "email": email,
+        "balance": balance,
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "transactions": transactions,
+    }
+
 # ── END AI TUPPENCE SERVICES — TIER 2 (Session 74) ──────────────────────────────────────────

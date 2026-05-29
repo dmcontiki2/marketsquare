@@ -3,6 +3,11 @@
 ## Live State
 BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · Session 91 complete
 
+## Last Completed (Session 91 — 2026-05-29)
+- **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.
+- **Real transaction history**: `GET /tuppence/history` endpoint (paginated, running balance). Tuppence screen wired with live data + load-more. My Space Billing tab transaction section. Monthly grouping, type icons, coloured amounts.
+- Smoke test: 30/30 ✅.
+
 ## Last Completed (Session 90 — 2026-05-28)
 - **AI guardrails**: Existence gate on 5 open AI endpoints (market-note, coach, guidance, upload-comment, vision-draft). Unknown email → HTTP 401 before any Anthropic call.
 - **Spend register**: `ai_spend_log` table + async `_log_ai_spend()` background task logging every AI call (non-blocking). `ai_spend_config` singleton with income/threshold/alert config.
@@ -63,9 +68,22 @@ All five sessions of the photo pipeline + listing lifecycle build plan are done:
 - Auto-seed at publish + create — pipeline fully self-maintaining
 
 ## Last Completed (Session 91 — 2026-05-29)
+- **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.
+- **Real transaction history**: `GET /tuppence/history` endpoint (paginated, running balance). Tuppence screen wired with live data + load-more. My Space Billing tab transaction section. Monthly grouping, type icons, coloured amounts.
+- Smoke test: 30/30 ✅.
 - **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit. Smoke test: 30/30 ✅.
 
 ## Next Session (92)
+- Read STATUS.md first. Session 91 complete. Go straight into execution.
+- **Set AI spend config**: call `PUT /admin/ai-spend/config` with `monthly_income_usd` once first paid subs arrive.
+- **Update cost model**: update Cost_Breakdown_GlobalLaunch.xlsx with new tier prices ($12/$20/$40/$100).
+- Recommended priorities:
+  1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
+  2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
+  3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
+  4. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
+  5. **Paystack live mode** — paste sk_live_ + webhook secret into .env once CIPC approved.
+  6. **Maroushka + Dave phone test** — H4: lightbox, back buttons, My Requests tab on real devices.
 - Read STATUS.md first. Session 91 complete. Go straight into execution.
 - **Set AI spend config**: call `PUT /admin/ai-spend/config` with `monthly_income_usd` once first paid subs arrive.
 - **Update cost model**: update Cost_Breakdown_GlobalLaunch.xlsx with new tier prices ($12/$20/$40/$100).

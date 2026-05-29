@@ -1,3 +1,23 @@
+## Session 91 · 29 May 2026 · Subscription tiers + transaction history
+
+**5-tier subscription redesign:**
+- Tiers: Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500.
+- DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` columns on `users`.
+- Slot enforcement at publish — HTTP 402 with upgrade prompt on both publish paths.
+- Pending downgrade worker: downgrades applied at BEA restart to avoid orphaning active listings.
+- Superusers always get slot_limit=500.
+- New endpoints: `GET /subscription/tiers`, `GET /users/{email}/subscription`, `POST /users/{email}/seller-tier/downgrade-free`.
+- Admin billing panel rebuilt with plan card, slot bar, tier cards.
+
+**Real transaction history:**
+- New `GET /tuppence/history` endpoint — paginated, newest-first, with running `balance_after` per row.
+- Tuppence screen: live transaction list replacing static placeholder, with load-more pagination.
+- My Space Billing tab: transaction history section wired to same endpoint.
+- Monthly grouping, type icons (topup/ai_service/intro/refund), coloured amounts.
+
+Cost model impact: tier prices changed — update Cost_Breakdown_GlobalLaunch.xlsx with $12/$20/$40/$100.
+Smoke test: 30/30 ✅
+
 ## Session 90 · 28 May 2026 · AI guardrails — existence gate + spend register
 
 **Existence gate on 5 previously open AI endpoints:**

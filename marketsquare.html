@@ -1282,11 +1282,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
       <h2>Transaction history</h2>
       <div class="tn-table" id="tn-history">
-        <div class="tn-row">
-          <div><div class="tn-row-label">Welcome bonus</div><div class="tn-row-sub">Account created · Introductions</div></div>
-          <div style="text-align:right"><div class="tn-row-val" style="color:var(--green);">+5T</div></div>
-        </div>
-
+        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
       </div>
     </div>
 
@@ -3522,6 +3518,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="ms-section-lbl">Plans</div>
       <div id="billing-plans-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
         <div style="color:var(--text-3);font-size:13px;padding:8px 0;">Loading…</div>
+      </div>
+
+      <!-- Transaction history -->
+      <div class="ms-section-lbl" style="margin-top:4px;">Transaction history</div>
+      <div id="billing-tx-list" style="margin-bottom:8px;">
+        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
+      </div>
+      <div id="billing-tx-more" style="display:none;text-align:center;padding:4px 0 16px;">
+        <button onclick="loadBillingTxMore()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:'Syne',sans-serif;">Load more</button>
       </div>
 
       <!-- Divider -->

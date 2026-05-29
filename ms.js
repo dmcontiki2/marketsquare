@@ -992,7 +992,7 @@ function goTo(name){
   if(name==='aa-home')aaRenderHome();
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
-  if(name==='tuppence')aaLoadWalletSessions();
+  if(name==='tuppence'){aaLoadWalletSessions();loadTransactionHistory('tn-history','tn-load-more');}
   if(name==='myspace')msInit();
   if(name==='guided-onboard') goInit();
   if(name==='seller-onboard') sobInit();
@@ -10825,6 +10825,132 @@ async function loadBillingTab() {
     } catch(_) {}
   }
   _renderBillingTab(d, email);
+  loadTransactionHistory('billing-tx-list', 'billing-tx-more', true);
+}
+
+
+// ── TRANSACTION HISTORY ──────────────────────────────────────
+// Shared by Billing tab + Tuppence screen.
+// _txState tracks pagination per container id.
+const _txState = {};
+
+const _TX_ICON = {
+  topup:        { icon: '💰', label: 'Top-up',          color: '#16a34a' },
+  ai_service:   { icon: '🤖', label: 'AI service',      color: '#7c3aed' },
+  intro:        { icon: '🤝', label: 'Introduction',    color: '#2563eb' },
+  refund:       { icon: '↩️',  label: 'Refund',          color: '#0891b2' },
+  subscription: { icon: '📋', label: 'Subscription',    color: '#d97706' },
+};
+
+function _txMeta(type) {
+  return _TX_ICON[type] || { icon: '•', label: type, color: '#64748b' };
+}
+
+function _fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso.replace(' ','T')+'Z');
+  return d.toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function _fmtAmount(amount) {
+  if (amount > 0) return '+' + amount + ' T';
+  if (amount < 0) return amount + ' T';
+  return '0 T';
+}
+
+async function loadTransactionHistory(listId, moreId, reset) {
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (!email || !BEA_ENABLED) {
+    const el = document.getElementById(listId);
+    if (el) el.innerHTML = _txEmptyState('Sign in to view your transaction history');
+    return;
+  }
+  if (!_txState[listId] || reset) _txState[listId] = { offset: 0, total: 0, items: [] };
+  const st = _txState[listId];
+  const PAGE = 20;
+
+  const el = document.getElementById(listId);
+  if (el && st.offset === 0) el.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>';
+
+  try {
+    const r = await fetch(BEA_URL + '/tuppence/history?email=' + encodeURIComponent(email) +
+      '&limit=' + PAGE + '&offset=' + st.offset);
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    st.total = d.total;
+    st.items = st.items.concat(d.transactions);
+    st.offset += d.transactions.length;
+
+    _renderTxList(listId, st.items, d.balance);
+
+    const moreEl = document.getElementById(moreId);
+    if (moreEl) {
+      moreEl.style.display = st.offset < st.total ? 'block' : 'none';
+      moreEl._listId = listId;
+      moreEl._moreId = moreId;
+    }
+  } catch(e) {
+    const el2 = document.getElementById(listId);
+    if (el2) el2.innerHTML = _txEmptyState('Could not load transactions — check your connection');
+  }
+}
+
+function _renderTxList(listId, items, balance) {
+  const el = document.getElementById(listId);
+  if (!el) return;
+  if (!items.length) { el.innerHTML = _txEmptyState('No transactions yet'); return; }
+
+  // Group by calendar month
+  const groups = {};
+  const groupOrder = [];
+  items.forEach(tx => {
+    const d = new Date((tx.created_at||'').replace(' ','T')+'Z');
+    const key = d.toLocaleDateString('en-ZA',{month:'long',year:'numeric'});
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push(tx);
+  });
+
+  let html = '';
+  groupOrder.forEach(month => {
+    html += `<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);padding:12px 0 6px;">${month}</div>`;
+    groups[month].forEach(tx => {
+      const m = _txMeta(tx.type);
+      const amt = tx.amount;
+      const amtStr = _fmtAmount(amt);
+      const amtColor = amt > 0 ? '#16a34a' : amt < 0 ? '#dc2626' : '#64748b';
+      const desc = tx.description || m.label;
+      // Truncate long descriptions
+      const shortDesc = desc.length > 52 ? desc.substring(0,52)+'…' : desc;
+      html += `
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:50%;background:${m.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${m.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortDesc}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${m.label} · ${_fmtDate(tx.created_at)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:14px;font-weight:700;color:${amtColor};">${amtStr}</div>
+            <div style="font-size:11px;color:var(--text-3);">${tx.balance_after} T bal</div>
+          </div>
+        </div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
+function _txEmptyState(msg) {
+  return `<div style="text-align:center;padding:24px 0;color:var(--text-3);">
+    <div style="font-size:28px;margin-bottom:8px;">📭</div>
+    <div style="font-size:13px;">${msg}</div>
+  </div>`;
+}
+
+function loadMoreTransactions() {
+  loadTransactionHistory('tn-history', 'tn-load-more');
+}
+
+function loadBillingTxMore() {
+  loadTransactionHistory('billing-tx-list', 'billing-tx-more');
 }
 
 function _renderBillingTab(d, email) {
