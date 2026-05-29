@@ -2491,8 +2491,11 @@ function openDetail(id){
       <div id="detail-yield-${id}" style="margin-bottom:14px;">
         <button onclick="buyerYieldCalc('${id}')" id="detail-yield-btn-${id}"
           style="width:100%;background:var(--surface-2);border:1.5px solid #c4b5fd;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
-          <span style="font-size:13px;font-weight:700;color:#5b21b6;">📈 What's the yield on this?</span>
-          <span style="font-size:11px;color:#7c3aed;font-weight:600;background:#f5f3ff;padding:3px 9px;border-radius:20px;">1T · AI yield calc</span>
+          <div style="text-align:left;">
+            <span style="font-size:13px;font-weight:700;color:#5b21b6;">📈 Investor Yield Calculator</span>
+            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">For investors — calculates gross rental yield on this property</div>
+          </div>
+          <span style="font-size:11px;color:#7c3aed;font-weight:600;background:#f5f3ff;padding:3px 9px;border-radius:20px;">1T · AI</span>
         </button>
         <div id="detail-yield-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>` : ''}
@@ -3049,7 +3052,11 @@ async function sbPublishBatchListings() {
 
     try {
       const r = await fetch(BEA_URL + '/advert-agent/publish', { method: 'POST', body: fd });
-      if (r.ok) published++;
+      if (r.ok) { published++; }
+      else if (r.status === 402) {
+        showToast('Slot limit reached — upgrade your subscription to publish more listings.');
+        btn.disabled = false; btn.textContent = '⏳ Publish'; break;
+      }
       else { console.error('Batch publish failed', r.status, await r.text().catch(()=>'')); failed++; }
     } catch(_) { failed++; }
 
@@ -6312,7 +6319,11 @@ async function sbDoPublish(){
       if(!rawRes.ok){
         let detail='Server error '+rawRes.status;
         try{ const j=await rawRes.json(); detail=j.detail||j.message||detail; }catch(_){}
-        if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${detail}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your details and try again, or go back to edit.</span>`;errEl.style.display='block';}
+        if(rawRes.status===402){
+          if(errEl){errEl.innerHTML=`<strong>Listing slot limit reached.</strong><br>${detail}<br><a href="#" onclick="event.preventDefault();localStorage.setItem('ms_goto_billing','1');goTo('dashboard')" style="font-size:12px;color:#7c3aed;font-weight:700;margin-top:6px;display:inline-block;">Upgrade your subscription →</a>`;errEl.style.display='block';}
+        } else {
+          if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${detail}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your details and try again, or go back to edit.</span>`;errEl.style.display='block';}
+        }
         if(btn){btn.textContent='Publish listing →';btn.style.opacity='1';btn.style.pointerEvents='auto';}
         return;
       }
@@ -9251,7 +9262,17 @@ async function aaDoPublish() {
 
   try {
     const res = await fetch(`${BEA_URL}/advert-agent/publish`, { method: 'POST', body: fd });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      let detail = 'Publish failed — please try again';
+      try { const j = JSON.parse(await res.text()); detail = j.detail || detail; } catch(_) {}
+      if (res.status === 402) {
+        showToast('Slot limit reached — upgrade your subscription to publish more listings.');
+      } else {
+        showToast(detail);
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish Listing'; }
+      return;
+    }
     const data = await res.json();
     // Mark draft complete
     await aaDB.put({ ...draft, email, stage: 3, listing_id: data.listing_id, updated_at: Date.now() });
