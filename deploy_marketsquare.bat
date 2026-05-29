@@ -86,6 +86,17 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3b: Deploy World Heritage data (wonders.json) ────
+echo  [3b] Deploying Wonders data (wonders.json -^> wonders.json)...
+scp "%PROJECT%\wonders.json" %SERVER%:%REMOTE%/wonders.json
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for wonders.json. Check SSH connection.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
 :: ── Step 4: Deploy BEA + restart ──────────────────────────
 echo  [4/6] Deploying BEA backend (bea_main.py -^> main.py)...
 scp "%PROJECT%\bea_main.py" %SERVER%:%REMOTE%/main.py

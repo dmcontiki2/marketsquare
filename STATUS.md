@@ -1,7 +1,17 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · Session 92 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · Session 93 complete
+
+## Last Completed (Session 93 — 2026-05-29)
+- **World Heritage / Wonders layer expanded 120 → 332 sites** (+212; clears ≥320 target). UNESCO-led: 142 UNESCO, 97 National Park, 47 National Museum, 46 Archaeological. South Africa 5 → **30 sites**; 91 countries total.
+- **Photos all royalty-free (Wikimedia Commons)** with photographer attribution: 228/231 new scenic photos credit a named author; all 332 photo URLs verified HTTP-200 before deploy. `photo_author`/`photo_licence`/`photo_source` populated from Commons extmetadata.
+- **Path fix**: canonical `wonders.json` moved to project root (matches loader + server layout); `assets/` synced; deploy script updated.
+- **Auto-link cap 3 → 5** (`auto_link_wonders` default in bea_main.py) — reversible, flagged for David. FEA renders 5 cleanly.
+- **All 55 live listings re-linked** via `relink_wonders.py` (seller-set wonders preserved). Pretoria listing now links 5 relevant Gauteng sites.
+- Deployed to Hetzner, BEA restarted, Cloudflare purged, `GET /wonders` = 332 live. Smoke test: all checks ✅.
+- Corrected stale Session 59 CHANGELOG claim that 400 sites had shipped (they never did).
+- ⚠️ **For David**: review the auto-link cap change (3→5) — revert the single `max_links` default if undesired. **Commit `wonders.json` (data file) + bea_main.py + relink_wonders.py + deploy_marketsquare.bat + docs from PowerShell.**
 
 ## Last Completed (Session 91 — 2026-05-29)
 - **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.

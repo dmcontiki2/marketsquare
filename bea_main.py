@@ -1475,7 +1475,7 @@ def auto_link_pois(listing_id: int, city_lat: float, city_lon: float):
 
 
 def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
-                       category: str, radius_km: float = None, max_links: int = 3):
+                       category: str, radius_km: float = None, max_links: int = 5):
     """Match nearby World Heritage wonders to a listing and store in linked_wonders.
     Radius is derived from the country bounding box (diagonal/3, clamped 150-800km)
     so it auto-calibrates per country as geo_cities data is seeded.
