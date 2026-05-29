@@ -2769,6 +2769,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           </div>
         </div>
       </button>
+      <div style="text-align:center;margin-bottom:10px;">
+        <button onclick="openSubscriptionScreen('publish')" style="background:none;border:none;font-size:12px;color:var(--text-3);cursor:pointer;font-family:'Inter',sans-serif;text-decoration:underline;">View subscription &amp; plans</button>
+      </div>
       <button onclick="sbGoStep('b2')" style="width:100%;text-align:left;background:var(--surface-2);border:1.5px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;display:block;">
         <div style="display:flex;align-items:flex-start;gap:14px;">
           <div style="font-size:32px;flex-shrink:0;margin-top:2px;">&#127959;</div>
@@ -3395,6 +3398,14 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
+      <div class="ms-card" onclick="openSubscriptionScreen('myspace')" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 16px;border:1.5px solid rgba(99,102,241,.2);background:rgba(99,102,241,.04);">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#4f46e5;" id="overview-plan-label">Free plan</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:1px;" id="overview-slot-label">2 listing slots · tap to manage</div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#6366f1" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
       <div class="ms-section-lbl">Open actions</div>
       <div class="ms-card" id="ms-open-actions">
         <div class="ms-empty">No pending actions</div>
@@ -3548,6 +3559,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
 
+      <div class="ms-section-lbl">Subscription &amp; Billing</div>
+      <div class="ms-card ms-seller-link" onclick="openSubscriptionScreen('myspace')" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:14px 16px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy);">My plan &amp; listing slots</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:3px;" id="me-tab-plan-line">Free · 2 slots</div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style="color:var(--text-3);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
       <div class="ms-section-lbl">Help &amp; Support</div>
       <div class="ms-card" onclick="window.open('/support','_blank')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px;">
         <div>
@@ -3560,6 +3580,83 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <a href="mailto:support@trustsquare.co" style="font-size:12px;color:var(--navy);text-decoration:none;font-weight:600;">✉ support@trustsquare.co</a>
       </div>
 
+    </div>
+
+  </div>
+</div>
+
+
+<!-- SUBSCRIPTION SCREEN -->
+<div id="screen-subscription" class="screen">
+  <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);padding:20px 20px 24px;position:relative;">
+    <button class="back-btn" onclick="goTo(window._subReturnTo||'myspace')" style="border-color:rgba(255,255,255,.2);margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Subscription</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.65);">Manage your plan, slots and billing</div>
+    <!-- Current plan pill -->
+    <div id="sub-screen-current" style="margin-top:14px;background:rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Current plan</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;" id="sub-screen-tier-label">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:13px;color:rgba(255,255,255,.8);" id="sub-screen-slots-used">— / — slots</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);" id="sub-screen-billing">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px 16px 100px;">
+
+    <!-- Slot bar -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;">
+        <span>Active listing slots</span><span id="sub-screen-slot-text">—</span>
+      </div>
+      <div style="background:var(--surface-2);border-radius:50px;height:8px;overflow:hidden;">
+        <div id="sub-screen-slot-bar" style="height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:50px;width:0%;transition:width .4s;"></div>
+      </div>
+    </div>
+
+    <!-- Plan cards -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Available plans</div>
+    <div id="sub-screen-plans" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;"></div>
+
+    <!-- Divider -->
+    <div style="border-top:1px solid var(--border);margin-bottom:20px;"></div>
+
+    <!-- Help & complaints -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Help &amp; Support</div>
+
+    <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.open('mailto:support@trustsquare.co','_blank')">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);">✉ Email support</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">support@trustsquare.co</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.open('mailto:billing@trustsquare.co?subject=Billing+enquiry','_blank')">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);">💳 Billing enquiry</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Questions about charges or invoices</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <div class="ms-card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.open('mailto:support@trustsquare.co?subject=Complaint','_blank')">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);">🚩 Lodge a complaint</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">We respond within 2 business days</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <div class="ms-card" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="goTo('eula')">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);">📄 Terms &amp; Conditions</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">TrustSquare EULA and platform rules</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:var(--text-3);"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
 
   </div>

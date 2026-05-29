@@ -998,6 +998,132 @@ function goTo(name){
   if(name==='seller-onboard') sobInit();
   window.scrollTo(0,0);
 }
+// ── SUBSCRIPTION SCREEN ──────────────────────────────────────
+const _SUB_TIERS = [
+  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    color:'#64748b', desc:'No credit card required' },
+  { id:'standard',     label:'Standard',     usd:12,  slots:10,  zar:216,  color:'#4f46e5', desc:'Best for active sellers' },
+  { id:'professional', label:'Professional', usd:20,  slots:25,  zar:360,  color:'#7c3aed', desc:'For serious sellers' },
+  { id:'business',     label:'Business',     usd:40,  slots:60,  zar:720,  color:'#0891b2', desc:'Teams and agencies' },
+  { id:'elite',        label:'Elite',        usd:100, slots:500, zar:1800, color:'#d97706', desc:'Enterprise volume' },
+];
+const _TIER_ORDER = _SUB_TIERS.map(t => t.id);
+
+async function openSubscriptionScreen(returnTo) {
+  window._subReturnTo = returnTo || 'myspace';
+  goTo('subscription');
+  // Render loading state
+  document.getElementById('sub-screen-tier-label').textContent = '…';
+  document.getElementById('sub-screen-slots-used').textContent = '';
+  document.getElementById('sub-screen-billing').textContent = '';
+  document.getElementById('sub-screen-slot-text').textContent = '…';
+  document.getElementById('sub-screen-slot-bar').style.width = '0%';
+  document.getElementById('sub-screen-plans').innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:8px 0;">Loading…</div>';
+
+  const email = localStorage.getItem('ms_aa_email') || '';
+  let subData = null;
+  if (email && BEA_ENABLED) {
+    try {
+      const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription');
+      if (r.ok) subData = await r.json();
+    } catch(_) {}
+  }
+  _renderSubscriptionScreen(subData, email);
+}
+
+function _renderSubscriptionScreen(d, email) {
+  const tier    = d?.seller_tier || 'free';
+  const limit   = d?.slot_limit ?? 2;
+  const used    = d?.slots_used ?? 0;
+  const avail   = d?.slots_available ?? (limit - used);
+  const pending = d?.pending_downgrade_tier || null;
+  const billEnd = d?.billing_period_end ? d.billing_period_end.substring(0,10) : null;
+  const meta    = _SUB_TIERS.find(t => t.id === tier) || _SUB_TIERS[0];
+
+  // Header
+  document.getElementById('sub-screen-tier-label').textContent = meta.label + (meta.usd > 0 ? ' · $' + meta.usd + '/mo' : ' · Free');
+  document.getElementById('sub-screen-slots-used').textContent = used + ' / ' + limit + ' slots used';
+  document.getElementById('sub-screen-billing').textContent = pending
+    ? 'Downgrade to ' + (pending.charAt(0).toUpperCase()+pending.slice(1)) + ' pending ' + (billEnd||'')
+    : (billEnd ? 'Renews ' + billEnd : meta.usd > 0 ? 'Monthly billing' : 'No billing required');
+
+  // Slot bar
+  const pct = limit > 0 ? Math.min(100, Math.round((used/limit)*100)) : 0;
+  document.getElementById('sub-screen-slot-text').textContent = avail + ' slot' + (avail!==1?'s':'') + ' available';
+  const bar = document.getElementById('sub-screen-slot-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : 'linear-gradient(90deg,#6366f1,#8b5cf6)';
+
+  // Plan cards
+  const container = document.getElementById('sub-screen-plans');
+  container.innerHTML = '';
+  const curRank = _TIER_ORDER.indexOf(tier);
+
+  _SUB_TIERS.forEach(t => {
+    const tRank    = _TIER_ORDER.indexOf(t.id);
+    const isCur    = t.id === tier;
+    const isUp     = tRank > curRank;
+    const isDown   = tRank < curRank;
+    const btnLabel = isCur ? '✓ Current plan' : isUp ? 'Upgrade →' : 'Downgrade';
+    const btnColor = isCur ? 'var(--surface-2)' : isUp ? t.color : '#e2e8f0';
+    const btnTxt   = isCur ? 'var(--text-3)' : isUp ? '#fff' : '#64748b';
+
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--surface);border:1.5px solid ${isCur ? t.color : 'var(--border)'};border-radius:14px;padding:14px 16px;`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:15px;font-weight:800;color:${t.color};">${t.label}</div>
+        <button onclick="_subSelectTier('${t.id}','${t.label}',${t.usd},${isDown})" ${isCur?'disabled':''} style="background:${btnColor};color:${btnTxt};border:none;border-radius:50px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:${isCur?'default':'pointer'};opacity:${isCur?'.5':'1'};">${btnLabel}</button>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px;">
+        <span style="font-size:20px;font-weight:800;color:var(--text);">${t.usd===0?'Free':'$'+t.usd}</span>
+        ${t.usd>0?'<span style="font-size:12px;color:var(--text-3);">/month · ≈ R'+t.zar+'</span>':'<span style="font-size:12px;color:var(--text-3);">forever</span>'}
+      </div>
+      <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${t.slots} listing slots · ${t.desc}</div>
+      ${isDown && !isCur ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
+    `;
+    container.appendChild(card);
+  });
+
+  // Update the "Me" tab plan line and Overview card if visible
+  const meLine = document.getElementById('me-tab-plan-line');
+  if (meLine) meLine.textContent = meta.label + ' · ' + limit + ' slots';
+  const ovLabel = document.getElementById('overview-plan-label');
+  if (ovLabel) ovLabel.textContent = meta.label + ' plan';
+  const ovSlots = document.getElementById('overview-slot-label');
+  if (ovSlots) ovSlots.textContent = avail + ' of ' + limit + ' slots available · tap to manage';
+}
+
+async function _subSelectTier(tierId, tierLabel, usdPrice, isDowngrade) {
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (!email) { showToast('Sign in to manage your subscription'); return; }
+
+  if (tierId === 'free') {
+    if (!confirm('Switch to Free (2 slots)? Takes effect immediately.\nYou must have ≤2 active listings.')) return;
+    try {
+      const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/seller-tier/downgrade-free', { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) { showToast(d.detail || 'Could not switch plan'); return; }
+      showToast('Switched to Free plan.');
+      openSubscriptionScreen(window._subReturnTo);
+    } catch(_) { showToast('Could not switch — check your connection'); }
+    return;
+  }
+
+  const confirmMsg = isDowngrade
+    ? `Downgrade to ${tierLabel} ($${usdPrice}/mo, takes effect at end of billing period)?`
+    : `Upgrade to ${tierLabel} ($${usdPrice}/mo)?\nYou'll be redirected to Paystack to complete payment.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const r = await fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' +
+      encodeURIComponent(email) + '&tier=' + tierId, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) { showToast(d.detail || 'Could not start payment'); return; }
+    showToast(isDowngrade ? 'Downgrade scheduled.' : 'Redirecting to payment…');
+    if (d.authorization_url) window.location.href = d.authorization_url;
+  } catch(_) { showToast('Could not reach server — check your connection'); }
+}
+
 function openPlans(returnTo, showSlotCallout) {
   // returnTo: screen name to go back to. showSlotCallout: show the slot-limit warning banner.
   window._plansReturnTo = returnTo || 'dashboard';
