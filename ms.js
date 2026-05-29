@@ -10822,9 +10822,14 @@ async function loadBillingTab() {
     try {
       const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription');
       if (r.ok) d = await r.json();
-    } catch(_) {}
+    } catch(e) { console.error('loadBillingTab fetch error:', e); }
   }
-  _renderBillingTab(d, email);
+  try {
+    _renderBillingTab(d, email);
+  } catch(e) {
+    console.error('_renderBillingTab error:', e);
+    document.getElementById('billing-plans-list').innerHTML = '<div style="color:#ef4444;padding:8px;">Error loading plans. Please try again.</div>';
+  }
   loadTransactionHistory('billing-tx-list', 'billing-tx-more', true);
 }
 
@@ -11013,6 +11018,27 @@ function _renderBillingTab(d, email) {
   });
 }
 
+
+function openEulaModal() {
+  // Extract EULA text from sob-eula-scroll if it exists, else show a modal with a link
+  const eulaBox = document.getElementById('sob-eula-scroll');
+  const eulaHtml = eulaBox ? eulaBox.innerHTML : '<p style="color:var(--text-2);line-height:1.7;">Please visit <a href="https://trustsquare.co" style="color:#6366f1;">trustsquare.co</a> to read our full Terms &amp; Conditions.</p>';
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'eula-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:15px;font-weight:800;color:var(--navy);">📄 Terms &amp; Conditions</div>
+        <button onclick="document.getElementById('eula-modal-overlay').remove()" style="background:var(--surface-2);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);">✕</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 20px;flex:1;font-size:12px;line-height:1.7;color:var(--text-2);">${eulaHtml}</div>
+    </div>
+  `;
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
 function msRenderTrust(score){
   const sv = document.getElementById('ms-trust-score-val');
   if(sv) sv.textContent = score;
