@@ -10812,6 +10812,79 @@ function msTab(name, el){
   document.querySelectorAll('.ms-tab-content').forEach(t=>t.classList.remove('active'));
   const tc = document.getElementById('ms-tab-'+name);
   if(tc) tc.classList.add('active');
+  if(name === 'billing') loadBillingTab();
+}
+
+async function loadBillingTab() {
+  const email = localStorage.getItem('ms_aa_email') || '';
+  let d = null;
+  if (email && BEA_ENABLED) {
+    try {
+      const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription');
+      if (r.ok) d = await r.json();
+    } catch(_) {}
+  }
+  _renderBillingTab(d, email);
+}
+
+function _renderBillingTab(d, email) {
+  const tier  = d?.seller_tier || 'free';
+  const limit = d?.slot_limit ?? 2;
+  const used  = d?.slots_used ?? 0;
+  const avail = d?.slots_available ?? (limit - used);
+  const meta  = _SUB_TIERS.find(t => t.id === tier) || _SUB_TIERS[0];
+
+  document.getElementById('billing-tier-label').textContent = meta.label;
+  document.getElementById('billing-tier-price').textContent = meta.usd === 0 ? 'Free forever · no credit card required' : '$' + meta.usd + '/month · ≈ R' + meta.zar;
+  document.getElementById('billing-slots-used').textContent = used;
+  document.getElementById('billing-slots-limit').textContent = limit;
+  document.getElementById('billing-slots-avail').textContent = avail;
+  document.getElementById('billing-slot-text').textContent = used + ' / ' + limit;
+  const pct = limit > 0 ? Math.min(100, Math.round((used/limit)*100)) : 0;
+  const bar = document.getElementById('billing-slot-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : 'linear-gradient(90deg,#6366f1,#8b5cf6)';
+
+  const nd = document.getElementById('billing-downgrade-notice');
+  if (d?.pending_downgrade_tier) {
+    nd.style.display = 'block';
+    document.getElementById('billing-downgrade-to').textContent =
+      d.pending_downgrade_tier.charAt(0).toUpperCase() + d.pending_downgrade_tier.slice(1);
+    document.getElementById('billing-downgrade-date').textContent =
+      d.billing_period_end ? d.billing_period_end.substring(0,10) : 'end of period';
+  } else {
+    nd.style.display = 'none';
+  }
+
+  // Plan cards
+  const container = document.getElementById('billing-plans-list');
+  container.innerHTML = '';
+  const curRank = _TIER_ORDER.indexOf(tier);
+
+  _SUB_TIERS.forEach(t => {
+    const tRank  = _TIER_ORDER.indexOf(t.id);
+    const isCur  = t.id === tier;
+    const isUp   = tRank > curRank;
+    const isDown = tRank < curRank;
+    const btnLabel = isCur ? '✓ Current' : isUp ? 'Upgrade →' : 'Downgrade';
+    const btnBg    = isCur ? 'var(--surface-2)' : isUp ? t.color : '#e2e8f0';
+    const btnTxt   = isCur ? 'var(--text-3)' : isUp ? '#fff' : '#64748b';
+
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--surface);border:1.5px solid ${isCur ? t.color : 'var(--border)'};border-radius:14px;padding:14px 16px;`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div>
+          <span style="font-size:15px;font-weight:800;color:${t.color};">${t.label}</span>
+          <span style="font-size:12px;color:var(--text-3);margin-left:8px;">${t.slots} slots</span>
+        </div>
+        <button onclick="_subSelectTier('${t.id}','${t.label}',${t.usd},${isDown})" ${isCur?'disabled':''} style="background:${btnBg};color:${btnTxt};border:none;border-radius:50px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:${isCur?'default':'pointer'};opacity:${isCur?'.5':'1'};">${btnLabel}</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-2);">${t.usd === 0 ? 'Free forever' : '$'+t.usd+'/mo · ≈ R'+t.zar} · ${t.desc}</div>
+      ${isDown && !isCur ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
+    `;
+    container.appendChild(card);
+  });
 }
 
 function msRenderTrust(score){
