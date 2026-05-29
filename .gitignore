@@ -92,3 +92,6 @@ marketsquare_process_flow.html
 deploy_n8n_templates.bat
 setup_nginx_ratelimit.sh
 files.zip
+
+# Exception: Patent documents
+!Patents/*.docx
