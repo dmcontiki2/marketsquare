@@ -591,6 +591,13 @@ async function _msInit(){
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
 
+  // ── PLANS DEEP-LINK ────────────────────────────────────────
+  // trustsquare.co/?plans=1 — opens subscription plans screen directly (used by admin app link)
+  if (sp.get('plans') === '1') {
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => openPlans('dashboard'), 100);
+  }
+
   // ── PAYSTACK RETURN HANDLER ────────────────────────────────
   // Paystack redirects back to trustsquare.co?ps_return=1&reference=ms_tuppence_xxx
   // We verify the payment server-side, update the balance, and show a result.
@@ -991,12 +998,61 @@ function goTo(name){
   if(name==='seller-onboard') sobInit();
   window.scrollTo(0,0);
 }
+function openPlans(returnTo, showSlotCallout) {
+  // returnTo: screen name to go back to. showSlotCallout: show the slot-limit warning banner.
+  window._plansReturnTo = returnTo || 'dashboard';
+  const callout = document.getElementById('plans-slot-callout');
+  if (callout) callout.style.display = showSlotCallout ? 'block' : 'none';
+  // Highlight current plan button
+  const TIER_IDS = ['free','standard','professional','business','elite'];
+  const email = localStorage.getItem('ms_aa_email') || '';
+  TIER_IDS.forEach(t => {
+    const btn = document.getElementById('plan-btn-' + t);
+    if (!btn) return;
+    btn.textContent = 'Select ' + t.charAt(0).toUpperCase() + t.slice(1);
+    btn.className = t === 'standard' ? 'plan-btn accent' : t === 'free' ? 'plan-btn secondary' : 'plan-btn primary';
+  });
+  // Async: fetch current tier to mark it
+  if (email && BEA_ENABLED) {
+    fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return;
+        const cur = d.seller_tier || 'free';
+        const btn = document.getElementById('plan-btn-' + cur);
+        if (btn) { btn.textContent = '✓ Current plan'; btn.className = 'plan-btn secondary'; btn.disabled = true; }
+      }).catch(() => {});
+  }
+  goTo('plans');
+}
+
 function setPlan(tier, label){
-  // Stub: sets tier locally until Paystack is wired. Real payment gates this in production.
-  buyerTier = tier;
-  try { localStorage.setItem('ms_buyer_tier', tier); } catch(_){}
-  showToast(`${label} plan active — ${tier==='starter'?'nationwide':'international'} browsing unlocked`);
-  goTo('dashboard');
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (tier === 'free') {
+    // Downgrade to free — call self-service endpoint
+    if (!email) { showToast('Sign in first'); return; }
+    fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/seller-tier/downgrade-free', { method: 'POST' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.seller_tier) { showToast('Switched to Free plan (2 slots)'); goTo(window._plansReturnTo || 'dashboard'); }
+        else showToast(d.detail || 'Could not switch plan');
+      }).catch(() => showToast('Could not switch — check your connection'));
+    return;
+  }
+  if (!email) { showToast('Sign in first to upgrade'); return; }
+  // Initiate Paystack subscription payment
+  const cb = encodeURIComponent(window.location.href.split('?')[0] + '?sub_verify=1');
+  fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' + encodeURIComponent(email) +
+        '&tier=' + tier + '&callback_url=' + cb, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.authorization_url) {
+        showToast('Redirecting to payment…');
+        window.location.href = d.authorization_url;
+      } else {
+        showToast(d.detail || 'Payment init failed');
+      }
+    }).catch(() => showToast('Could not start payment — check your connection'));
 }
 
 function filterBrowse(cat){
@@ -3054,7 +3110,7 @@ async function sbPublishBatchListings() {
       const r = await fetch(BEA_URL + '/advert-agent/publish', { method: 'POST', body: fd });
       if (r.ok) { published++; }
       else if (r.status === 402) {
-        showToast('Slot limit reached — upgrade your subscription to publish more listings.');
+        showToast('Slot limit reached'); openPlans('aa-publish', true);
         btn.disabled = false; btn.textContent = '⏳ Publish'; break;
       }
       else { console.error('Batch publish failed', r.status, await r.text().catch(()=>'')); failed++; }
@@ -6320,7 +6376,7 @@ async function sbDoPublish(){
         let detail='Server error '+rawRes.status;
         try{ const j=await rawRes.json(); detail=j.detail||j.message||detail; }catch(_){}
         if(rawRes.status===402){
-          if(errEl){errEl.innerHTML=`<strong>Listing slot limit reached.</strong><br>${detail}<br><a href="#" onclick="event.preventDefault();localStorage.setItem('ms_goto_billing','1');goTo('dashboard')" style="font-size:12px;color:#7c3aed;font-weight:700;margin-top:6px;display:inline-block;">Upgrade your subscription →</a>`;errEl.style.display='block';}
+          if(errEl){errEl.innerHTML=`<strong>Listing slot limit reached.</strong><br>${detail}<br><a href="#" onclick="event.preventDefault();openPlans('sell',true)" style="font-size:12px;color:#7c3aed;font-weight:700;margin-top:6px;display:inline-block;">View plans &amp; upgrade →</a>`;errEl.style.display='block';}
         } else {
           if(errEl){errEl.innerHTML=`<strong>Couldn't publish your listing.</strong><br>${detail}<br><span style="font-size:11px;color:var(--text-3);margin-top:4px;display:block;">Check your details and try again, or go back to edit.</span>`;errEl.style.display='block';}
         }
@@ -9266,7 +9322,7 @@ async function aaDoPublish() {
       let detail = 'Publish failed — please try again';
       try { const j = JSON.parse(await res.text()); detail = j.detail || detail; } catch(_) {}
       if (res.status === 402) {
-        showToast('Slot limit reached — upgrade your subscription to publish more listings.');
+        showToast('Slot limit reached'); openPlans('aa-publish', true);
       } else {
         showToast(detail);
       }

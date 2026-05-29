@@ -1296,53 +1296,84 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- PLANS -->
 <div id="screen-plans" class="screen">
   <div class="plans-header">
-    <button class="back-btn" onclick="goTo('dashboard')" style="position:absolute;left:16px;top:16px;border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <h1>Choose your plan</h1><p>Start free. Upgrade when your market grows.</p>
+    <button class="back-btn" id="plans-back-btn" onclick="goTo(window._plansReturnTo||'dashboard')" style="position:absolute;left:16px;top:16px;border-color:rgba(255,255,255,.2);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h1>Subscription Plans</h1><p>Start free. Upgrade when your market grows.</p>
   </div>
-  <div class="plans-body">
-    <div class="plan-card">
-      <div class="plan-name">Free</div><div class="plan-price">R0<span class="plan-period"> / month</span></div>
+  <!-- Slot-limit callout — shown when arriving from a publish block -->
+  <div id="plans-slot-callout" style="display:none;margin:16px 16px 0;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;">
+    <strong>⚠️ Listing slot limit reached.</strong> Upgrade your plan to publish more listings.
+  </div>
+  <div class="plans-body" id="plans-body">
+    <!-- Free -->
+    <div class="plan-card" id="plan-card-free">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0<span class="plan-period"> / month</span></div>
       <div class="plan-zar">No credit card required</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 active listings</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller CV page</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility (<span id="plans-home-city">your city</span>)</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30-day listing · free renewal</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fade reminder sent before expiry</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller profile</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No search alerts</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No country-wide visibility</div>
       </div>
-      <button class="plan-btn secondary" onclick="showToast('You are on the Free plan — local city only')">Current plan</button>
+      <button class="plan-btn secondary" id="plan-btn-free" onclick="setPlan('free','Free')">Select Free</button>
     </div>
-    <div class="plan-card recommended">
+    <!-- Standard -->
+    <div class="plan-card recommended" id="plan-card-standard">
       <div class="plan-rec-badge">Most popular</div>
-      <div class="plan-name">Standard</div><div class="plan-price">$5<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">≈ R90 / month</div>
+      <div class="plan-name">Standard</div>
+      <div class="plan-price">$12<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R216 / month</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>20 active listings</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 active listing slots</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Country-wide visibility</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Search alerts when buyers match</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>60-day listing · free renewal</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in city search</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fade reminder sent before expiry</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in search</div>
         <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No international visibility</div>
       </div>
-      <button class="plan-btn accent" onclick="setPlan('starter','Standard')">Upgrade to Standard</button>
+      <button class="plan-btn accent" id="plan-btn-standard" onclick="setPlan('standard','Standard')">Upgrade to Standard</button>
     </div>
-    <div class="plan-card">
-      <div class="plan-name">International</div><div class="plan-price">$15<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">≈ R270 / month</div>
+    <!-- Professional -->
+    <div class="plan-card" id="plan-card-professional">
+      <div class="plan-name">Professional</div>
+      <div class="plan-price">$20<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R360 / month</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>40 active listings</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility — all cities</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>25 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Country-wide visibility</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Search alerts when buyers match</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in search</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Standard features</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>90-day listing · free renewal</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fade reminder sent before expiry</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>High-value multi-buyer pool (Phase 2)</div>
       </div>
-      <button class="plan-btn primary" onclick="setPlan('premium','International')">Upgrade to International</button>
+      <button class="plan-btn primary" id="plan-btn-professional" onclick="setPlan('professional','Professional')">Upgrade to Professional</button>
     </div>
-    <div style="text-align:center;font-size:12px;color:var(--text-3);padding:8px 0 16px;line-height:1.6;font-weight:400;">All prices exclude VAT. Tuppence intro fees apply on all plans.<br>No commission ever. Listings fade gracefully — renew free at any time.</div>
+    <!-- Business -->
+    <div class="plan-card" id="plan-card-business">
+      <div class="plan-name">Business</div>
+      <div class="plan-price">$40<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R720 / month</div>
+      <div class="plan-features">
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>60 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility — all cities</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Professional features</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multi-city reach</div>
+      </div>
+      <button class="plan-btn primary" id="plan-btn-business" onclick="setPlan('business','Business')">Upgrade to Business</button>
+    </div>
+    <!-- Elite -->
+    <div class="plan-card" id="plan-card-elite">
+      <div class="plan-name">Elite</div>
+      <div class="plan-price">$100<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R1,800 / month</div>
+      <div class="plan-features">
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>500 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility — all cities</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Business features</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account support</div>
+      </div>
+      <button class="plan-btn primary" id="plan-btn-elite" onclick="setPlan('elite','Elite')">Upgrade to Elite</button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--text-3);padding:8px 0 16px;line-height:1.6;">All prices in USD, excluding VAT.<br>No commission ever. Cancel anytime.</div>
   </div>
 </div>
 
@@ -3037,6 +3068,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
       <div id="sb-b8-err" style="display:none;color:#dc2626;font-size:13px;margin-bottom:12px;border-radius:8px;background:rgba(220,38,38,.07);padding:10px 13px;"></div>
     </div>
+    <div style="padding:0 20px 4px;">
+      <div style="background:var(--surface-2);border-radius:10px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;color:var(--text-2);line-height:1.4;">Free plan · <strong>2 listing slots</strong><br><span style="color:var(--text-3);">Upgrade anytime for more</span></div>
+        <button onclick="openPlans('publish')" style="background:none;border:1px solid var(--border);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--purple);cursor:pointer;font-family:'Syne',sans-serif;white-space:nowrap;">View plans →</button>
+      </div>
+    </div>
     <div class="pub-footer">
       <button class="btn-bk" onclick="sbGoStep('b7')">← Back</button>
       <button class="btn-next" id="sb-b8-publish-btn" onclick="sbDoPublish()">Publish listing →</button>
@@ -3094,7 +3131,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="my-listings" style="margin-top:4px;"></div>
     <button onclick="goTo('aa-home')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">✨ List with AI Coach</button>
     <button onclick="goTo('publish')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--border);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">+ Quick Add Listing</button>
-    <button onclick="goTo('plans')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">View Plans &amp; Upgrade</button>
+    <button onclick="openPlans('dashboard')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">📋 View Plans &amp; Upgrade</button>
   </div>
 
   <!-- Requests tab -->
