@@ -1,3 +1,33 @@
+## Session 92 · 29 May 2026 · Transaction history, Billing tab fixes, EULA v1.6, Email infrastructure
+
+**Transaction history:**
+- GET /tuppence/history BEA endpoint — paginated, newest-first, running balance per row.
+- Tuppence screen wired with live data + load-more pagination.
+- My Space Billing tab transaction section — monthly grouping, type icons, coloured amounts.
+
+**Billing tab + T&C fixes:**
+- Plans loading fixed via cache-bust v127.
+- T&C modal rebuilt to render clean HTML extracted from Word doc source — no more white-on-white text.
+- openEulaModal() uses text-node walker bypassing all inline styles.
+
+**EULA v1.6:**
+- All 18 identified gaps closed. Internal reviewer notes removed from user-facing document.
+- FICA repositioned — TrustSquare is not a FICA accountable institution as an introduction-only platform.
+- Tuppence recharacterised as prepaid platform service fee — not virtual asset, not financial product.
+- All [COUNSEL REQUIRED] placeholders filled with known TrustSquare details.
+- 3 [COUNSEL REVIEW] flags remain for attorney review before publication.
+
+**Email infrastructure:**
+- 4 live @trustsquare.co addresses via Cloudflare Email Routing: support, legal, billing, compliance.
+- All forwarding to dmcontiki2@gmail.com. Catch-all enabled.
+- Gmail filters + TrustSquare/* labels configured for automatic sorting.
+
+**AI email triage (paused):**
+- Architecture designed: Cloudflare Email Worker → BEA → Claude AI categorise → Gmail SMTP reply.
+- Blocked on Gmail App Password (David locked out). Resume next session.
+
+Smoke test: 30/30 ✅
+
 ## Session 91 · 29 May 2026 · Subscription tiers + transaction history
 
 **5-tier subscription redesign:**

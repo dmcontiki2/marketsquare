@@ -1,7 +1,7 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · Session 91 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · Session 92 complete
 
 ## Last Completed (Session 91 — 2026-05-29)
 - **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.
@@ -73,7 +73,22 @@ All five sessions of the photo pipeline + listing lifecycle build plan are done:
 - Smoke test: 30/30 ✅.
 - **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit. Smoke test: 30/30 ✅.
 
-## Next Session (92)
+## Last Completed (Session 92 — 2026-05-29)
+- **Transaction history**: GET /tuppence/history BEA endpoint live. Tuppence screen + Billing tab wired with real paginated data, monthly grouping, type icons, running balance.
+- **Billing tab fixes**: Plans loading fixed (cache-bust v127), T&C modal now renders clean HTML from Word doc source.
+- **EULA v1.6**: All 18 identified gaps closed. Removed reviewer notes. FICA repositioned — not applicable to TrustSquare as introduction-only platform. Tuppence recharacterised as platform service fee. All [COUNSEL REQUIRED] placeholders filled. 3 [COUNSEL REVIEW] flags remain for attorney.
+- **Email infrastructure**: 4 live @trustsquare.co addresses via Cloudflare Email Routing (support/legal/billing/compliance → dmcontiki2@gmail.com). Catch-all enabled. Gmail filters + labels configured.
+- Smoke test: 30/30 ✅
+
+## Next Session (93)
+- Read STATUS.md first. Session 92 complete. Go straight into execution.
+- **AI email triage (PAUSED — needs Gmail App Password)**: David locked out of Gmail for 6 hours. Resume: (1) Generate Gmail App Password at myaccount.google.com/security → App passwords → "TrustSquare BEA". (2) Add to server .env as GMAIL_APP_PASSWORD. (3) Build Cloudflare Email Worker + BEA AI triage endpoint.
+- Recommended priorities:
+  1. **AI email triage** — complete the Cloudflare Email Worker + BEA Claude triage + Gmail SMTP reply system.
+  2. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF.
+  3. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
+  4. **Paystack plan wiring** — create Paystack subscription plans for 4 paid tiers.
+  5. **EULA v1.6 attorney review** — send to Michalsons/Werksmans/Hogan Lovells before publish.
 - Read STATUS.md first. Session 91 complete. Go straight into execution.
 - **Set AI spend config**: call `PUT /admin/ai-spend/config` with `monthly_income_usd` once first paid subs arrive.
 - **Update cost model**: update Cost_Breakdown_GlobalLaunch.xlsx with new tier prices ($12/$20/$40/$100).
