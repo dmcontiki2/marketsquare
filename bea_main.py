@@ -12,7 +12,7 @@ import httpx
 from PIL import Image, ImageOps
 import io
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 app = FastAPI(title="TrustSquare BEA", version="1.3.0")
 
@@ -137,6 +137,10 @@ def run_migrations(conn):
         "ALTER TABLE user_credentials ADD COLUMN updated_at TEXT",
         # seller subscription tier — added Session 35
         "ALTER TABLE users ADD COLUMN seller_tier TEXT NOT NULL DEFAULT 'free'",
+        # subscription slot limit + pending downgrade — added Session 91
+        "ALTER TABLE users ADD COLUMN slot_limit INTEGER NOT NULL DEFAULT 2",
+        "ALTER TABLE users ADD COLUMN pending_downgrade_tier TEXT",
+        "ALTER TABLE users ADD COLUMN billing_period_end TEXT",
         # category-scoped credentials — added Session 37
         "ALTER TABLE user_credentials ADD COLUMN listing_category TEXT",
         "ALTER TABLE listings ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0",
@@ -385,6 +389,30 @@ def run_migrations(conn):
             "UPDATE users SET is_superuser = 1 WHERE email = ? AND is_superuser = 0",
             (su_email,)
         )
+    # ── AI Spend Logging (Session 90) ─────────────────────────
+    conn.execute("""CREATE TABLE IF NOT EXISTS ai_spend_log (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        email         TEXT    NOT NULL DEFAULT '',
+        endpoint      TEXT    NOT NULL,
+        model         TEXT    NOT NULL,
+        est_cost_usd  REAL    NOT NULL DEFAULT 0.0,
+        logged_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_month ON ai_spend_log(logged_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_email ON ai_spend_log(email, logged_at DESC)")
+
+    conn.execute("""CREATE TABLE IF NOT EXISTS ai_spend_config (
+        id                  INTEGER PRIMARY KEY CHECK (id = 1),
+        monthly_income_usd  REAL    NOT NULL DEFAULT 0.0,
+        alert_threshold_pct REAL    NOT NULL DEFAULT 20.0,
+        alert_email         TEXT    NOT NULL DEFAULT 'dmcontiki2@gmail.com',
+        last_alerted_at     TEXT
+    )""")
+    # Seed default config row (id=1 enforced by CHECK constraint)
+    conn.execute("""INSERT OR IGNORE INTO ai_spend_config
+        (id, monthly_income_usd, alert_threshold_pct, alert_email)
+        VALUES (1, 0.0, 20.0, 'dmcontiki2@gmail.com')""")
+
     conn.commit()
 
     # ── Trust Score Hub (Section 3 · v1.3.0) ────────────────────
@@ -685,16 +713,72 @@ run_migrations(_startup_conn)
 seed_geo_za(_startup_conn)
 migrate_listings_to_geo_city(_startup_conn)
 _backfill_geo_coords(_startup_conn)
+# Backfill slot_limit for existing users based on their current seller_tier
+try:
+    _startup_conn.execute("""
+        UPDATE users SET slot_limit = CASE seller_tier
+            WHEN 'standard'     THEN 10
+            WHEN 'professional' THEN 25
+            WHEN 'business'     THEN 60
+            WHEN 'elite'        THEN 500
+            WHEN 'starter'      THEN 10
+            WHEN 'premium'      THEN 25
+            ELSE 2
+        END
+        WHERE slot_limit = 2 AND seller_tier NOT IN ('free', '')
+    """)
+    # Superusers always get 500 slots (they bypass enforcement but panel should show correctly)
+    _startup_conn.execute("UPDATE users SET slot_limit=500 WHERE is_superuser=1 AND slot_limit < 500")
+    _startup_conn.commit()
+except Exception as _e:
+    _log.warning("slot_limit backfill skipped: %s", _e)
 _startup_conn.close()
+
+def _apply_pending_downgrades():
+    """Apply any pending tier downgrades where billing_period_end has passed."""
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT email, pending_downgrade_tier FROM users "
+            "WHERE pending_downgrade_tier IS NOT NULL "
+            "AND billing_period_end <= datetime('now')"
+        ).fetchall()
+        for row in rows:
+            new_tier = row["pending_downgrade_tier"]
+            new_limit = _tier_slot_limit(new_tier)
+            conn.execute(
+                "UPDATE users SET seller_tier=?, slot_limit=?, pending_downgrade_tier=NULL "
+                "WHERE LOWER(email)=?",
+                (new_tier, new_limit, row["email"].lower())
+            )
+            _log.info("Downgrade applied: %s → %s", row["email"], new_tier)
+        if rows:
+            conn.commit()
+    except Exception as exc:
+        _log.warning("Pending downgrade worker error: %s", exc)
+    finally:
+        conn.close()
+
+_apply_pending_downgrades()
 
 # n8n webhook URLs (Task 2 — optional, skip silently if not set)
 N8N_WEBHOOK_ACCEPT     = os.getenv("N8N_WEBHOOK_ACCEPT")
 N8N_WEBHOOK_DECLINE    = os.getenv("N8N_WEBHOOK_DECLINE")
 N8N_WEBHOOK_NEW_INTRO  = os.getenv("N8N_WEBHOOK_NEW_INTRO")
+N8N_WEBHOOK_AI_ALERT   = os.getenv("N8N_WEBHOOK_AI_ALERT")   # AI spend red flag alert
 if not N8N_WEBHOOK_ACCEPT:
     _log.warning("N8N_WEBHOOK_ACCEPT not set — intro-accepted emails disabled")
 if not N8N_WEBHOOK_DECLINE:
     _log.warning("N8N_WEBHOOK_DECLINE not set — intro-declined emails disabled")
+
+# ── AI SPEND COST CONSTANTS (USD, conservative estimates) ─────
+# Used by async spend logger — non-blocking, appended after each AI call
+_AI_COST = {
+    "haiku":          0.0023,   # claude-haiku-4-5 — 800in+400out tokens avg
+    "sonnet":         0.0150,   # claude-sonnet-4-6 — standard call
+    "sonnet_vision":  0.0400,   # claude-sonnet-4-6 — with 12 images
+    "sonnet_rewrite": 0.0150,
+}
 
 # Hetzner Object Storage (Task 3 — optional, falls back to local /media)
 HETZNER_S3_ENDPOINT   = os.getenv("HETZNER_S3_ENDPOINT")
@@ -761,7 +845,7 @@ def _s3_upload(data: bytes, key: str, content_type: str) -> str:
       2. Mirror identical bytes to /var/www/marketsquare/media/<key> — served via nginx /media/.
     If R2 is unreachable the buyer app JS falls back to /media/<key> via onerror handler.
     Storage decision: 17 May 2026 — write-to-both approved by David Conradie.
-    CPX32 upgrade planned 25 May 2026 (160GB disk); Hetzner Volume (€0.052/GB) on standby.
+    CPX32 live (4vCPU, 8GB RAM, 76GB SSD). 100GB Hetzner Volume mounted at /mnt/HC_Volume_105840760 for Overpass DB.
     At 50,000 listings + photos ≈ 30GB — well within CPX32 capacity for years.
     """
     import os as _os
@@ -799,6 +883,93 @@ async def _fire_webhook(url: str, payload: dict):
             await client.post(url, json=payload)
     except Exception as exc:
         _log.error("Webhook POST to %s failed: %s", url, exc)
+
+
+def _log_ai_spend(email: str, endpoint: str, model_key: str):
+    """Background task: log AI call cost + trigger alert check if threshold crossed.
+    Non-blocking — called via background_tasks.add_task() after every AI call.
+    Never raises — log errors only.
+    """
+    try:
+        cost = _AI_COST.get(model_key, 0.0023)
+        conn = database.get_db()
+        try:
+            conn.execute(
+                "INSERT INTO ai_spend_log (email, endpoint, model, est_cost_usd) VALUES (?,?,?,?)",
+                (email or '', endpoint, model_key, cost)
+            )
+            conn.commit()
+            # Check alert threshold (non-blocking — catch all errors)
+            _maybe_fire_spend_alert(conn)
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.error("_log_ai_spend failed: %s", exc)
+
+
+def _maybe_fire_spend_alert(conn):
+    """Check if current month AI spend has crossed the configured threshold.
+    Fires n8n webhook at most once per day. Silent if not configured.
+    """
+    try:
+        cfg = conn.execute(
+            "SELECT monthly_income_usd, alert_threshold_pct, alert_email, last_alerted_at "
+            "FROM ai_spend_config WHERE id = 1"
+        ).fetchone()
+        if not cfg or cfg["monthly_income_usd"] <= 0:
+            return  # income not configured yet — skip
+
+        # Current calendar month spend
+        month_start = __import__('datetime').datetime.utcnow().strftime('%Y-%m-01')
+        row = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) as total FROM ai_spend_log "
+            "WHERE logged_at >= ?", (month_start,)
+        ).fetchone()
+        month_spend = row["total"] if row else 0.0
+
+        threshold_usd = cfg["monthly_income_usd"] * (cfg["alert_threshold_pct"] / 100.0)
+        if month_spend < threshold_usd:
+            return  # under threshold — nothing to do
+
+        # Check last alerted — don't fire more than once per day
+        last = cfg["last_alerted_at"] or ""
+        today = __import__('datetime').datetime.utcnow().strftime('%Y-%m-%d')
+        if last.startswith(today):
+            return  # already alerted today
+
+        # Update last_alerted_at
+        conn.execute(
+            "UPDATE ai_spend_config SET last_alerted_at = ? WHERE id = 1",
+            (__import__('datetime').datetime.utcnow().isoformat(),)
+        )
+        conn.commit()
+
+        # Fire n8n alert webhook if configured
+        pct_used = (month_spend / cfg["monthly_income_usd"] * 100) if cfg["monthly_income_usd"] > 0 else 0
+        payload = {
+            "alert": "ai_spend_threshold",
+            "month_spend_usd": round(month_spend, 4),
+            "income_usd": cfg["monthly_income_usd"],
+            "threshold_pct": cfg["alert_threshold_pct"],
+            "pct_used": round(pct_used, 1),
+            "alert_email": cfg["alert_email"],
+            "message": (
+                f"TrustSquare AI spend alert: ${month_spend:.4f} spent this month "
+                f"({pct_used:.1f}% of ${cfg['monthly_income_usd']:.2f} income). "
+                f"Threshold: {cfg['alert_threshold_pct']}%."
+            ),
+        }
+        _log.warning("AI spend alert fired: %s", payload["message"])
+        if N8N_WEBHOOK_AI_ALERT:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload))
+            except Exception:
+                pass  # alert failure must never affect user response
+    except Exception as exc:
+        _log.error("_maybe_fire_spend_alert failed: %s", exc)
 
 
 # Serve local media files (fallback when Hetzner Object Storage not yet configured)
@@ -897,6 +1068,34 @@ async def purge_cache(x_admin_key: str = Header(None)):
     await _cf_purge_all()
     return {"purged": True}
 
+@app.post("/admin/refresh-pois/{listing_id}")
+async def refresh_pois(listing_id: int, x_admin_key: str = Header(None)):
+    """Force-refresh nearby POIs for a property listing. Clears cached value and re-fetches from Overpass."""
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "")
+    if ADMIN_KEY and x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    conn = database.get_db()
+    row = conn.execute("SELECT category, listing_lat, listing_lng, geo_city_id FROM listings WHERE id=?", (listing_id,)).fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Listing not found")
+    # Clear existing POIs so auto_link_pois will re-fetch
+    conn.execute("UPDATE listings SET nearby_pois=NULL WHERE id=?", (listing_id,))
+    conn.commit()
+    # Get coords — prefer listing-specific, fall back to city centroid
+    lat = float(row["listing_lat"]) if row["listing_lat"] else None
+    lng = float(row["listing_lng"]) if row["listing_lng"] else None
+    if (not lat or not lng) and row["geo_city_id"]:
+        city_row = conn.execute("SELECT lat, lng FROM geo_cities WHERE id=?", (row["geo_city_id"],)).fetchone()
+        if city_row:
+            lat, lng = float(city_row["lat"]), float(city_row["lng"])
+    conn.close()
+    if not lat or not lng:
+        raise HTTPException(status_code=422, detail="No coordinates available for this listing")
+    import threading
+    threading.Thread(target=auto_link_pois, args=(listing_id, lat, lng), daemon=True).start()
+    return {"status": "refresh_queued", "listing_id": listing_id, "lat": lat, "lng": lng}
+
 # ── LISTINGS (public read, protected write) ──────────────────
 
 @app.get("/listings")
@@ -952,10 +1151,10 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                 {branch_a}
                 UNION
                 {branch_b}
-            ) ORDER BY created_at DESC LIMIT 50"""
+            ) ORDER BY created_at DESC LIMIT 200"""
         params = params_a + params_b
     else:
-        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT 50"
+        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT 200"
         params = params_a
 
     rows = conn.execute(sql, params).fetchall()
@@ -1084,12 +1283,15 @@ def _derived_radius_km(city_lat: float, city_lon: float, country_iso2: str) -> f
 _POI_CATEGORIES = {
     "schools":      [("amenity", "school"), ("amenity", "college")],
     "universities": [("amenity", "university")],
-    "shopping":     [("shop", "mall"), ("amenity", "marketplace")],
+    "shopping":     [("shop", "supermarket"), ("shop", "grocery"),
+                      ("shop", "convenience"), ("shop", "mall"),
+                      ("amenity", "marketplace")],
     "hospitals":    [("amenity", "hospital")],
     "police":       [("amenity", "police")],
 }
 
-_POI_RADIUS_M = 15000  # 15km radius for POI search
+_POI_RADIUS_M = 15000      # 15km radius for most POI categories
+_POI_SHOPPING_RADIUS_M = 3000  # 3km for shopping — supermarkets/grocery stores are local
 
 def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) -> dict:
     """Query OSM Overpass API for property-relevant POIs near a location.
@@ -1108,30 +1310,45 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
         a = _math.sin(dlat/2)**2 + _math.cos(_math.radians(lat1)) * _math.cos(_math.radians(lat2)) * _math.sin(dlon/2)**2
         return round(R * 2 * _math.asin(_math.sqrt(a)), 2)
 
-    # Build one combined Overpass query for all POI types
+    # Build one combined Overpass query; shopping uses tighter 3km radius
     union_parts = []
     for cat, tags in _POI_CATEGORIES.items():
+        cat_radius = _POI_SHOPPING_RADIUS_M if cat == "shopping" else radius_m
         for key, val in tags:
-            union_parts.append(f'node["{key}"="{val}"](around:{radius_m},{lat},{lon});')
-            union_parts.append(f'way["{key}"="{val}"](around:{radius_m},{lat},{lon});')
+            union_parts.append(f'node["{key}"="{val}"](around:{cat_radius},{lat},{lon});')
+            union_parts.append(f'way["{key}"="{val}"](around:{cat_radius},{lat},{lon});')
 
     query = '[out:json][timeout:15];(\n' + '\n'.join(union_parts) + '\n);out center 50;'
 
     try:
         import socket as _socket
-        # overpass-api.de is blocked on this host; use kumi.systems mirror.
+        # Three independent public mirrors — tried in order, 10s timeout each.
+        # localhost:12345 reserved for self-hosted Overpass (to be wired in Session 89).
         # Force IPv4 to avoid IPv6 connection hang on Hetzner.
         _orig_getaddrinfo = _socket.getaddrinfo
         def _ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
             return _orig_getaddrinfo(host, port, _socket.AF_INET, type, proto, flags)
         _socket.getaddrinfo = _ipv4_only
         try:
-            url = 'https://overpass.kumi.systems/api/interpreter'
-            data = _parse.urlencode({'data': query}).encode()
-            req = _req.Request(url, data=data, headers={'User-Agent': 'TrustSquare/1.0',
-                                                         'Content-Type': 'application/x-www-form-urlencoded'})
-            with _req.urlopen(req, timeout=25) as resp:
-                result = _json.loads(resp.read())
+            mirrors = [
+                ('https://overpass-api.de/api/interpreter',            {'User-Agent': 'TrustSquare/1.0 (contact@trustsquare.co)', 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': '*/*'}),
+                ('https://overpass.openstreetmap.fr/api/interpreter',  {'User-Agent': 'TrustSquare/1.0', 'Content-Type': 'application/x-www-form-urlencoded'}),
+                ('https://overpass.kumi.systems/api/interpreter',      {'User-Agent': 'TrustSquare/1.0', 'Content-Type': 'application/x-www-form-urlencoded'}),
+            ]
+            result = None
+            for url, headers in mirrors:
+                try:
+                    data = _parse.urlencode({'data': query}).encode()
+                    req = _req.Request(url, data=data, headers=headers)
+                    with _req.urlopen(req, timeout=10) as resp:
+                        result = _json.loads(resp.read())
+                    _log.info('Overpass POI query succeeded via %s', url)
+                    break  # success — stop trying mirrors
+                except Exception as _mir_exc:
+                    _log.warning('Overpass mirror %s failed: %s', url, _mir_exc)
+                    continue
+            if result is None:
+                return {}
         finally:
             _socket.getaddrinfo = _orig_getaddrinfo
     except Exception as e:
@@ -1167,7 +1384,7 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
             cat_results['schools'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'university':
             cat_results['universities'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
-        elif shop == 'mall' or amenity == 'marketplace':
+        elif shop in ('mall', 'supermarket', 'grocery', 'convenience') or amenity == 'marketplace':
             cat_results['shopping'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'hospital':
             cat_results['hospitals'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
@@ -1254,7 +1471,7 @@ def auto_link_pois(listing_id: int, city_lat: float, city_lon: float):
         conn.commit()
         conn.close()
     except Exception as e:
-        pass  # never block publish
+        _log.warning('auto_link_pois listing %s failed: %s', listing_id, e)
 
 
 def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
@@ -1343,6 +1560,25 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
             detail="EULA not accepted — seller must accept the TrustSquare Terms before publishing."
         )
     user_trust = int(user_row["trust_score"] or 0) if user_row else 0
+
+    # Slot guard: enforce subscription slot limit (superusers exempt)
+    if not is_super:
+        slot_row = conn.execute(
+            "SELECT slot_limit FROM users WHERE LOWER(email)=?", (email,)
+        ).fetchone()
+        slot_limit = int(slot_row["slot_limit"]) if slot_row and slot_row["slot_limit"] else 2
+        live_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status = 'live')",
+            (email,)
+        ).fetchone()["n"]
+        if live_count >= slot_limit:
+            conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail=f"Listing slot limit reached ({live_count}/{slot_limit}). "
+                       f"Upgrade your subscription at trustsquare.co/admin.html to publish more listings."
+            )
 
     conn.execute(
         """UPDATE listings
@@ -2123,6 +2359,46 @@ def get_user(email: str):
         raise HTTPException(status_code=404, detail="User not found")
     return dict(row)
 
+@app.get("/users/{email}/subscription")
+def get_user_subscription(email: str):
+    """Return seller's subscription tier, slot usage, and pending downgrade info."""
+    email = email.lower().strip()
+    conn = database.get_db()
+    try:
+        row = conn.execute(
+            "SELECT seller_tier, slot_limit, pending_downgrade_tier, billing_period_end "
+            "FROM users WHERE LOWER(email)=?", (email,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        tier = row["seller_tier"] or "free"
+        slot_limit = int(row["slot_limit"]) if row["slot_limit"] else _tier_slot_limit(tier)
+        live_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status = 'live')",
+            (email,)
+        ).fetchone()["n"]
+        draft_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND listing_status = 'draft'",
+            (email,)
+        ).fetchone()["n"]
+        plan = _SELLER_SUB_TIERS.get(tier, _SELLER_SUB_TIERS["free"])
+    finally:
+        conn.close()
+    return {
+        "email": email,
+        "seller_tier": tier,
+        "tier_label": plan["label"],
+        "slot_limit": slot_limit,
+        "slots_used": live_count,
+        "slots_available": max(0, slot_limit - live_count),
+        "draft_count": draft_count,
+        "pending_downgrade_tier": row["pending_downgrade_tier"],
+        "billing_period_end": row["billing_period_end"],
+        "usd_per_month": plan["usd"],
+    }
+
 @app.get("/users/{email}/trust")
 def get_user_trust(email: str):
     """Return trust score + per-signal breakdown for My Space dashboard.
@@ -2685,26 +2961,72 @@ async def paystack_webhook(request: Request):
     return {"status": "ok"}
 
 # ── SELLER SUBSCRIPTION PAYMENTS ────────────────────────────
-# Tier pricing (USD → ZAR at R18/$ conservative rate):
-#   starter   = $5/mo  → R90/mo
-#   premium   = $15/mo → R270/mo
-# Reference prefixes: ms_sub_starter_xxx / ms_sub_premium_xxx
+# 5-tier design (Session 91). USD → ZAR at R18/$ conservative rate.
+# Downgrades: pending until billing_period_end, then applied by worker.
+# Reference prefixes: ms_sub_{tier}_xxx
 
 _SELLER_SUB_TIERS = {
-    "starter":  {"amount_rands": 90.0,  "label": "Standard ($5/month)"},
-    "premium":  {"amount_rands": 270.0, "label": "International ($15/month)"},
+    "free":         {"amount_rands": 0.0,    "label": "Free",         "slot_limit": 2,   "usd": 0},
+    "standard":     {"amount_rands": 216.0,  "label": "Standard",     "slot_limit": 10,  "usd": 12},
+    "professional": {"amount_rands": 360.0,  "label": "Professional", "slot_limit": 25,  "usd": 20},
+    "business":     {"amount_rands": 720.0,  "label": "Business",     "slot_limit": 60,  "usd": 40},
+    "elite":        {"amount_rands": 1800.0, "label": "Elite",        "slot_limit": 500, "usd": 100},
+    # Legacy tiers (kept for backward compat — map to new tiers on next renewal)
+    "starter":      {"amount_rands": 90.0,   "label": "Standard (legacy)", "slot_limit": 10, "usd": 5},
+    "premium":      {"amount_rands": 270.0,  "label": "Professional (legacy)", "slot_limit": 25, "usd": 15},
 }
+
+def _tier_slot_limit(tier: str) -> int:
+    """Return slot limit for a tier name."""
+    return _SELLER_SUB_TIERS.get(tier, _SELLER_SUB_TIERS["free"])["slot_limit"]
+
+@app.get("/subscription/tiers")
+def list_subscription_tiers():
+    """Return all seller subscription tiers with pricing and slot limits."""
+    tiers = []
+    for key in ("free", "standard", "professional", "business", "elite"):
+        plan = _SELLER_SUB_TIERS[key]
+        tiers.append({
+            "id": key,
+            "label": plan["label"],
+            "slot_limit": plan["slot_limit"],
+            "usd_per_month": plan["usd"],
+            "rands_per_month": plan["amount_rands"],
+        })
+    return {"tiers": tiers}
+
 
 @app.post("/payment/seller-subscription/initialize")
 def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
-    """Initialize a Paystack payment for a seller subscription tier upgrade.
-    tier: 'starter' or 'premium'
+    """Initialize a Paystack payment for a seller subscription tier change.
+    tier: free | standard | professional | business | elite
+    Upgrades: charged immediately.
+    Downgrades: scheduled for billing_period_end (pending_downgrade_tier set, not yet applied).
+    Free tier: no payment needed — handled by PUT /users/{email}/seller-tier directly.
     Returns {status, reference, authorization_url, tier, amount_rands}
     """
     email = email.lower().strip()
-    if tier not in _SELLER_SUB_TIERS:
-        raise HTTPException(status_code=400, detail="tier must be 'starter' or 'premium'")
+    paid_tiers = ("standard", "professional", "business", "elite")
+    if tier not in paid_tiers:
+        raise HTTPException(status_code=400, detail=f"tier must be one of: {', '.join(paid_tiers)}")
     plan = _SELLER_SUB_TIERS[tier]
+
+    # Determine if this is a downgrade (pending) or upgrade (immediate)
+    conn = database.get_db()
+    try:
+        user = conn.execute(
+            "SELECT seller_tier, slot_limit FROM users WHERE LOWER(email)=?", (email,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    current_tier = (user["seller_tier"] if user else "free") or "free"
+    tier_order = ["free", "standard", "professional", "business", "elite",
+                  "starter", "premium"]  # legacy at end
+    current_rank = tier_order.index(current_tier) if current_tier in tier_order else 0
+    new_rank = tier_order.index(tier) if tier in tier_order else 0
+    is_downgrade = new_rank < current_rank
+
     reference = f"ms_sub_{tier}_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
         email=email,
@@ -2714,6 +3036,7 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
             "type": "seller_subscription",
             "tier": tier,
             "email": email,
+            "is_downgrade": is_downgrade,
         },
         callback_url=callback_url or None,
     )
@@ -2725,15 +3048,17 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
             "tier": tier,
             "label": plan["label"],
             "amount_rands": plan["amount_rands"],
+            "is_downgrade": is_downgrade,
         }
     raise HTTPException(status_code=400, detail="Subscription payment initialization failed")
 
 
 @app.get("/payment/seller-subscription/verify")
 def verify_seller_subscription(reference: str):
-    """Verify a seller subscription payment and upgrade the seller's tier.
-    On success: sets users.seller_tier = tier from metadata.
-    Returns {status, email, tier, label}
+    """Verify a seller subscription payment and apply the tier change.
+    Upgrades: applied immediately (seller_tier + slot_limit updated).
+    Downgrades: pending_downgrade_tier set; applied at billing_period_end by worker.
+    Returns {status, email, tier, label, is_downgrade, effective}
     """
     result = payments.verify_payment(reference)
     if not (result.get("status") and result["data"]["status"] == "success"):
@@ -2745,27 +3070,52 @@ def verify_seller_subscription(reference: str):
 
     tier  = metadata.get("tier", "")
     email = metadata.get("email", "").lower().strip()
+    is_downgrade = metadata.get("is_downgrade", False)
 
     if tier not in _SELLER_SUB_TIERS:
         raise HTTPException(status_code=400, detail=f"Unknown tier in metadata: {tier!r}")
     if not email:
         raise HTTPException(status_code=400, detail="Email missing from payment metadata")
 
+    plan = _SELLER_SUB_TIERS[tier]
+    slot_limit = plan["slot_limit"]
+    # Billing period end = 30 days from now
+    billing_end = (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     conn = database.get_db()
     try:
-        # Upsert user row in case they haven't completed POST /users yet
-        conn.execute(
-            "INSERT INTO users (email, seller_tier) VALUES (?, ?) "
-            "ON CONFLICT(email) DO UPDATE SET seller_tier=excluded.seller_tier",
-            (email, tier),
-        )
+        if is_downgrade:
+            # Schedule downgrade — keep current tier active until billing_period_end
+            conn.execute(
+                "INSERT INTO users (email, pending_downgrade_tier, billing_period_end) VALUES (?, ?, ?) "
+                "ON CONFLICT(email) DO UPDATE SET "
+                "  pending_downgrade_tier=excluded.pending_downgrade_tier,"
+                "  billing_period_end=excluded.billing_period_end",
+                (email, tier, billing_end),
+            )
+            effective = "end_of_billing_period"
+        else:
+            # Upgrade: apply immediately
+            conn.execute(
+                "INSERT INTO users (email, seller_tier, slot_limit, billing_period_end, pending_downgrade_tier) "
+                "VALUES (?, ?, ?, ?, NULL) "
+                "ON CONFLICT(email) DO UPDATE SET "
+                "  seller_tier=excluded.seller_tier,"
+                "  slot_limit=excluded.slot_limit,"
+                "  billing_period_end=excluded.billing_period_end,"
+                "  pending_downgrade_tier=NULL",
+                (email, tier, slot_limit, billing_end),
+            )
+            effective = "immediate"
         conn.commit()
     finally:
         conn.close()
 
-    plan = _SELLER_SUB_TIERS[tier]
-    _log.info("Seller subscription upgraded: %s → %s (ref %s)", email, tier, reference)
-    return {"status": "ok", "email": email, "tier": tier, "label": plan["label"]}
+    _log.info("Seller subscription %s: %s → %s (ref %s, effective: %s)",
+              "downgrade scheduled" if is_downgrade else "upgraded",
+              email, tier, reference, effective)
+    return {"status": "ok", "email": email, "tier": tier, "label": plan["label"],
+            "slot_limit": slot_limit, "is_downgrade": is_downgrade, "effective": effective}
 
 
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
@@ -2836,8 +3186,8 @@ class AAPublishRequest(BaseModel):
 
 
 @app.post("/advert-agent/market-note")
-async def aa_market_note(req: dict):
-    """Lightweight inline market context note — no session gating, no structured coaching.
+async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
+    """Lightweight inline market context note — existence-gated (Session 90).
     Accepts {email, prompt} and returns {response} with a single Haiku sentence.
     Used by sbTriggerMarketNote() in the sell flow (B3 inline note + Path A inline note).
     """
@@ -2847,6 +3197,15 @@ async def aa_market_note(req: dict):
     prompt = (req.get("prompt") or "").strip()
     if not prompt:
         raise HTTPException(status_code=400, detail="prompt is required")
+
+    # Existence gate — email must belong to a registered user (Session 90)
+    _email = (req.get("email") or "").strip().lower()
+    if _email:
+        _gc = database.get_db()
+        _exists = _gc.execute("SELECT 1 FROM users WHERE LOWER(email)=? LIMIT 1", (_email,)).fetchone()
+        _gc.close()
+        if not _exists:
+            raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
 
     try:
         async with httpx.AsyncClient(timeout=12) as client:
@@ -2869,6 +3228,7 @@ async def aa_market_note(req: dict):
                 },
             )
         text = resp.json()["content"][0]["text"].strip()
+        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku")
         return {"response": text}
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
@@ -2897,7 +3257,7 @@ def aa_status(email: str):
 
 
 @app.post("/advert-agent/coach")
-async def aa_coach(req: AACoachRequest):
+async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     """Gate check + Claude Haiku call + return coaching output."""
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI Coach not configured")
@@ -2909,16 +3269,11 @@ async def aa_coach(req: AACoachRequest):
     ).fetchone()
 
     if not row:
-        # Auto-register — first-time sellers get 1 free coaching session
-        conn.execute(
-            "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0)",
-            (req.email,)
+        conn.close()
+        raise HTTPException(
+            status_code=401,
+            detail="Unrecognised account — please complete seller registration first."
         )
-        conn.commit()
-        row = conn.execute(
-            "SELECT aa_free_used, aa_sessions_remaining, trust_score FROM users WHERE email = ?",
-            (req.email,)
-        ).fetchone()
 
     free_used     = row["aa_free_used"] or 0
     current_score = row["trust_score"] or 0
@@ -3202,6 +3557,7 @@ async def aa_coach(req: AACoachRequest):
         conn.commit()
     conn.close()
 
+    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku")
     return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
 
 
@@ -3315,9 +3671,27 @@ async def aa_publish(
             medium_url = url
 
     conn = database.get_db()
-    # Inherit seller trust_score from users table (default 40 if not found)
-    ts_row = conn.execute("SELECT trust_score FROM users WHERE email = ?", (email,)).fetchone()
+    # Inherit seller trust_score + slot_limit from users table
+    ts_row = conn.execute(
+        "SELECT trust_score, slot_limit, is_superuser FROM users WHERE LOWER(email) = ?", (email,)
+    ).fetchone()
     seller_trust = int(ts_row["trust_score"] or 40) if ts_row else 40
+    is_super = bool(ts_row["is_superuser"]) if ts_row else False
+    # Slot guard at publish time (superusers exempt)
+    if not is_super:
+        slot_limit = int(ts_row["slot_limit"]) if ts_row and ts_row["slot_limit"] else 2
+        live_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status = 'live')",
+            (email,)
+        ).fetchone()["n"]
+        if live_count >= slot_limit:
+            conn.close()
+            raise HTTPException(
+                status_code=402,
+                detail=f"Listing slot limit reached ({live_count}/{slot_limit}). "
+                       f"Upgrade your subscription at trustsquare.co/admin.html to publish more listings."
+            )
     # Store AI-suggested price as anchor for AI3 price-check
     try:
         ai_price_anchor = float(price.replace("R","").replace(",","").strip()) if price else None
@@ -6038,7 +6412,7 @@ class AIGuidanceRequest(BaseModel):
 
 
 @app.post("/trust-score/guidance")
-async def trust_score_guidance(req: AIGuidanceRequest):
+async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: BackgroundTasks):
     cat_signals       = _CATEGORY_SIGNALS.get(req.category, {})
     universal_signals = {k: v for k, v in _TRUST_SIGNALS.items() if k.startswith("universal.")}
 
@@ -6057,6 +6431,10 @@ async def trust_score_guidance(req: AIGuidanceRequest):
         user_row = None
     finally:
         conn.close()
+
+    # Existence gate — must be a registered user before AI call (Session 90)
+    if not user_row:
+        raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
 
     earned_map = {r["signal_id"]: r["status"] for r in earned_rows} if earned_rows else {}
     # Supplement earned_map with direct user-table flags so guidance is accurate
@@ -6198,6 +6576,7 @@ async def trust_score_guidance(req: AIGuidanceRequest):
     guidance["current_score"] = current_score
     guidance["score_target"]  = score_target
     guidance["points_needed"] = points_needed
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku")
     return guidance
 
 
@@ -6291,7 +6670,7 @@ class UploadCommentRequest(BaseModel):
 
 
 @app.post("/trust-score/upload-comment")
-async def trust_score_upload_comment(req: UploadCommentRequest):
+async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks: BackgroundTasks):
     """After a seller uploads a document, return a short AI comment:
     what this contributes to their Trust Score and what to upload next."""
     conn = database.get_db()
@@ -6305,6 +6684,10 @@ async def trust_score_upload_comment(req: UploadCommentRequest):
         ).fetchone()
     finally:
         conn.close()
+
+    # Existence gate (Session 90)
+    if not user_row:
+        raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
 
     cred_status = {r["signal_id"]: r["status"] for r in (earned_rows or [])}
     current_score = int(user_row["trust_score"] or 0) if user_row else 0
@@ -6372,6 +6755,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest):
             + (f"Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)." if next_suggestion else "")
         )
 
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku")
     return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
 
 
@@ -7263,23 +7647,74 @@ def remove_listing_city(listing_id: int, city_id: int, email: str):
 
 @app.put("/users/{email}/seller-tier")
 def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_key)):
-    """Admin / Paystack webhook: set seller subscription tier.
-    tier must be: free | starter | premium
+    """Admin: set seller subscription tier immediately (bypasses Paystack).
+    tier must be: free | standard | professional | business | elite | starter | premium
+    Also applies pending downgrades — call with tier=free for immediate free downgrade.
+    Enforces slot guard: if active listings > new slot_limit, returns 409 with count.
     """
     email = email.lower().strip()
-    if tier not in ("free", "starter", "premium"):
-        raise HTTPException(status_code=400, detail="tier must be free, starter, or premium")
+    valid_tiers = set(_SELLER_SUB_TIERS.keys())
+    if tier not in valid_tiers:
+        raise HTTPException(status_code=400, detail=f"tier must be one of: {', '.join(sorted(valid_tiers))}")
+    new_limit = _tier_slot_limit(tier)
     conn = database.get_db()
     try:
-        result = conn.execute(
-            "UPDATE users SET seller_tier=? WHERE LOWER(email)=?", (tier, email)
-        )
-        if result.rowcount == 0:
+        user = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if not user:
             raise HTTPException(status_code=404, detail="Seller not found")
+        # Slot guard: count active (live/draft) listings
+        active_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status IN ('live','draft'))",
+            (email,)
+        ).fetchone()["n"]
+        if active_count > new_limit:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Seller has {active_count} active listings but {tier} allows only {new_limit}. "
+                       f"Archive {active_count - new_limit} listing(s) before downgrading."
+            )
+        conn.execute(
+            "UPDATE users SET seller_tier=?, slot_limit=?, pending_downgrade_tier=NULL "
+            "WHERE LOWER(email)=?",
+            (tier, new_limit, email)
+        )
         conn.commit()
     finally:
         conn.close()
-    return {"email": email, "seller_tier": tier}
+    return {"email": email, "seller_tier": tier, "slot_limit": new_limit}
+
+
+@app.post("/users/{email}/seller-tier/downgrade-free")
+def downgrade_to_free(email: str):
+    """Self-service: seller requests immediate downgrade to free tier.
+    Blocked if active listing count > 2. No payment required.
+    """
+    email = email.lower().strip()
+    free_limit = _tier_slot_limit("free")
+    conn = database.get_db()
+    try:
+        user = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        active_count = conn.execute(
+            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
+            "AND (listing_status IS NULL OR listing_status IN ('live','draft'))",
+            (email,)
+        ).fetchone()["n"]
+        if active_count > free_limit:
+            raise HTTPException(
+                status_code=409,
+                detail=f"You have {active_count} active listings. Archive down to {free_limit} before switching to Free."
+            )
+        conn.execute(
+            "UPDATE users SET seller_tier='free', slot_limit=?, pending_downgrade_tier=NULL WHERE LOWER(email)=?",
+            (free_limit, email)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"email": email, "seller_tier": "free", "slot_limit": free_limit}
 
 
 # ── DASHBOARD SUMMARY ────────────────────────────────────────
@@ -7731,7 +8166,7 @@ def health_resources():
         },
         "db_sizes": db_sizes,
         "response_ms": response_ms,
-        "plan": "CPX22 · 2vCPU · 4GB RAM · 80GB SSD · 20TB/mo · €7.49/mo",
+        "plan": "CPX32 · 4vCPU · 8GB RAM · 76GB SSD + 100GB Volume · 20TB/mo · €24.57/mo",
         "checkedAt": __import__('datetime').datetime.utcnow().strftime("%d %b %Y · %H:%M UTC"),
     }
 
@@ -7930,9 +8365,115 @@ def admin_deactivate_user(user_id: int, _key: str = Depends(auth.require_api_key
         conn.close()
 
 
+
+# ── AI SPEND REGISTER (Session 90) ──────────────────────────────────────────
+# GET  /admin/ai-spend          — current month summary + status
+# PUT  /admin/ai-spend/config   — update income + threshold
+# These are admin-key protected. David uses these to monitor and intervene.
+
+@app.get("/admin/ai-spend")
+def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
+    """Return current-month AI spend, income config, % used, and per-endpoint breakdown.
+    Red flag status: 'ok' | 'warning' | 'alert' based on threshold.
+    """
+    import datetime as _dt
+    conn = database.get_db()
+    try:
+        cfg = conn.execute(
+            "SELECT monthly_income_usd, alert_threshold_pct, alert_email, last_alerted_at "
+            "FROM ai_spend_config WHERE id = 1"
+        ).fetchone()
+        month_start = _dt.datetime.utcnow().strftime('%Y-%m-01')
+        total_row = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) as total, COUNT(*) as calls "
+            "FROM ai_spend_log WHERE logged_at >= ?", (month_start,)
+        ).fetchone()
+        by_endpoint = conn.execute(
+            "SELECT endpoint, model, COUNT(*) as calls, ROUND(SUM(est_cost_usd),6) as cost "
+            "FROM ai_spend_log WHERE logged_at >= ? "
+            "GROUP BY endpoint, model ORDER BY cost DESC", (month_start,)
+        ).fetchall()
+        # Last 30 days daily totals for trending
+        daily = conn.execute(
+            "SELECT DATE(logged_at) as day, ROUND(SUM(est_cost_usd),6) as cost, COUNT(*) as calls "
+            "FROM ai_spend_log WHERE logged_at >= DATE('now','-30 days') "
+            "GROUP BY day ORDER BY day DESC LIMIT 30"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    income  = float(cfg["monthly_income_usd"]) if cfg else 0.0
+    thresh  = float(cfg["alert_threshold_pct"]) if cfg else 20.0
+    spend   = float(total_row["total"]) if total_row else 0.0
+    calls   = int(total_row["calls"]) if total_row else 0
+    thresh_usd = income * thresh / 100.0 if income > 0 else 0.0
+    pct_used   = (spend / income * 100) if income > 0 else 0.0
+
+    if income <= 0:
+        status = "unconfigured"
+    elif spend >= thresh_usd:
+        status = "alert"
+    elif spend >= thresh_usd * 0.75:
+        status = "warning"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "month": _dt.datetime.utcnow().strftime('%Y-%m'),
+        "spend_usd": round(spend, 6),
+        "calls_this_month": calls,
+        "income_usd": income,
+        "threshold_pct": thresh,
+        "threshold_usd": round(thresh_usd, 4),
+        "pct_used": round(pct_used, 2),
+        "last_alerted_at": cfg["last_alerted_at"] if cfg else None,
+        "alert_email": cfg["alert_email"] if cfg else None,
+        "by_endpoint": [dict(r) for r in by_endpoint],
+        "daily_trend": [dict(r) for r in daily],
+    }
+
+
+class AISpendConfigUpdate(BaseModel):
+    monthly_income_usd:  Optional[float] = None
+    alert_threshold_pct: Optional[float] = None
+    alert_email:         Optional[str]   = None
+
+
+@app.put("/admin/ai-spend/config")
+def admin_ai_spend_config(cfg: AISpendConfigUpdate, _key: str = Depends(auth.require_api_key)):
+    """Update AI spend monitoring config.
+    monthly_income_usd  — actual monthly platform revenue (USD). Alert fires when
+                          AI spend crosses alert_threshold_pct % of this.
+    alert_threshold_pct — default 20%. At $100 income → alert at $20 AI spend.
+    alert_email         — where the red flag notification goes.
+    """
+    conn = database.get_db()
+    try:
+        if cfg.monthly_income_usd is not None:
+            conn.execute("UPDATE ai_spend_config SET monthly_income_usd=? WHERE id=1",
+                         (max(0.0, cfg.monthly_income_usd),))
+        if cfg.alert_threshold_pct is not None:
+            pct = max(1.0, min(100.0, cfg.alert_threshold_pct))
+            conn.execute("UPDATE ai_spend_config SET alert_threshold_pct=? WHERE id=1", (pct,))
+        if cfg.alert_email is not None:
+            conn.execute("UPDATE ai_spend_config SET alert_email=? WHERE id=1",
+                         (cfg.alert_email.strip(),))
+        # Reset last_alerted_at so a fresh alert can fire on the next check
+        conn.execute("UPDATE ai_spend_config SET last_alerted_at=NULL WHERE id=1")
+        conn.commit()
+        row = conn.execute(
+            "SELECT monthly_income_usd, alert_threshold_pct, alert_email FROM ai_spend_config WHERE id=1"
+        ).fetchone()
+    finally:
+        conn.close()
+    return {"status": "ok", "config": dict(row)}
+
+
 # ── DEMO DATA ENDPOINTS (Session 66 FEA hollowing) ──────────────────────────
 # Serves the demo LISTINGS and SELLERS arrays that were previously bundled
 # in marketsquare.html. The FEA fetches these lazily instead of inlining them.
+
 
 _DEMO_LISTINGS_CACHE = None
 _DEMO_SELLERS_CACHE  = None
@@ -8302,6 +8843,15 @@ async def vision_draft(
     if len(photos) > 12:
         raise HTTPException(status_code=413, detail="Too many photos — maximum 12")
 
+    # Existence gate — seller_email must belong to a registered user (Session 90)
+    _ve_email = (seller_email or "").strip().lower()
+    if _ve_email:
+        _vc = database.get_db()
+        _ve = _vc.execute("SELECT 1 FROM users WHERE LOWER(email)=? LIMIT 1", (_ve_email,)).fetchone()
+        _vc.close()
+        if not _ve:
+            raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+
     # ── 1. Read and validate photos ──────────────────────────────────────────
     image_blocks = []
     warnings = []
@@ -8491,6 +9041,7 @@ async def vision_draft(
             "Identifying information was detected in photos and removed from this listing to protect seller anonymity."
         )
 
+    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision")
     return {
         "draft": draft,
         "warnings": all_warnings,

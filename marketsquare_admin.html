@@ -1530,17 +1530,58 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
 
 <!-- ══ VIEW: BILLING ══════════════════════════════════════ -->
 <div id="view-billing" class="view">
-  <div class="view-header">Account & Billing</div>
-  <div class="view-sub">Subscription, Tuppence balance and transactions</div>
-  <div style="padding:0 20px;">
-    <div class="info-box warn">💳 Billing features require Paystack live mode (pending CIPC registration). This section activates when Paystack goes live.</div>
-    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin:16px 0 10px;">Tuppence Wallet</div>
-    <div class="summary-stats">
-      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Balance (T)</div></div>
-      <div class="ss-card"><div class="ss-val" style="color:var(--text-3);">—</div><div class="ss-label">Total spent</div></div>
+  <div class="view-header">Subscription</div>
+  <div class="view-sub">Manage your listing slots and subscription tier</div>
+  <div style="padding:0 20px 100px;">
+
+    <!-- Current plan card -->
+    <div id="sub-current-card" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:14px;padding:20px;color:#fff;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.75;margin-bottom:4px;">Current Plan</div>
+      <div id="sub-tier-label" style="font-size:22px;font-weight:800;margin-bottom:2px;">—</div>
+      <div id="sub-tier-price" style="font-size:13px;opacity:.8;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:20px;">
+        <div>
+          <div id="sub-slots-used" style="font-size:24px;font-weight:800;">—</div>
+          <div style="font-size:11px;opacity:.7;">Slots used</div>
+        </div>
+        <div>
+          <div id="sub-slots-limit" style="font-size:24px;font-weight:800;">—</div>
+          <div style="font-size:11px;opacity:.7;">Slot limit</div>
+        </div>
+        <div>
+          <div id="sub-slots-avail" style="font-size:24px;font-weight:800;">—</div>
+          <div style="font-size:11px;opacity:.7;">Available</div>
+        </div>
+      </div>
     </div>
-    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin:16px 0 10px;">Transaction log</div>
-    <div class="info-box">No transactions recorded yet.</div>
+
+    <!-- Pending downgrade notice -->
+    <div id="sub-downgrade-notice" style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400e;">
+      ⏳ <strong>Downgrade pending:</strong> <span id="sub-downgrade-to"></span><br>
+      <span style="font-size:12px;opacity:.8;">Takes effect: <span id="sub-downgrade-date"></span></span>
+    </div>
+
+    <!-- Slot usage bar -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;">
+        <span>Listing Slots</span>
+        <span id="sub-slot-text">— / —</span>
+      </div>
+      <div style="background:var(--surface-2);border-radius:50px;height:8px;overflow:hidden;">
+        <div id="sub-slot-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#4f46e5);border-radius:50px;width:0%;transition:width .4s;"></div>
+      </div>
+    </div>
+
+    <!-- Tier cards -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Available Plans</div>
+    <div id="sub-tier-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+    <!-- Downgrade to free -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <button onclick="subDowngradeFree()" style="width:100%;background:transparent;border:1.5px solid var(--border);color:var(--text-2);border-radius:50px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Switch to Free (2 slots)</button>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:6px;">Requires ≤2 active listings. Takes effect immediately.</div>
+    </div>
+
   </div>
 </div>
 
@@ -2751,6 +2792,7 @@ function goView(name) {
   if (name === 'analytics') loadAnalytics();
   if (name === 'cities') loadCities();
   if (name === 'showcase') loadShowcase();
+  if (name === 'billing') loadSubscription();
 }
 
 // ── MY LISTINGS ────────────────────────────────────────────
@@ -2838,6 +2880,133 @@ async function deleteLM(id, title) {
 }
 
 // ── ALERTS ─────────────────────────────────────────────────
+// ── SUBSCRIPTION PANEL ─────────────────────────────────────
+const TIER_ORDER = ['free','standard','professional','business','elite'];
+const TIER_META = {
+  free:         { label:'Free',         usd:0,   slots:2,   color:'#64748b' },
+  standard:     { label:'Standard',     usd:12,  slots:10,  color:'#2563eb' },
+  professional: { label:'Professional', usd:20,  slots:25,  color:'#7c3aed' },
+  business:     { label:'Business',     usd:40,  slots:60,  color:'#0891b2' },
+  elite:        { label:'Elite',        usd:100, slots:500, color:'#d97706' },
+};
+
+let _subData = null;
+
+async function loadSubscription() {
+  const email = sellerData?.email;
+  if (!email) {
+    document.getElementById('sub-tier-label').textContent = 'Log in to view';
+    return;
+  }
+  try {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription');
+    if (!r.ok) throw new Error(r.status);
+    _subData = await r.json();
+    renderSubscription(_subData);
+  } catch(e) {
+    document.getElementById('sub-tier-label').textContent = 'Unable to load';
+  }
+}
+
+function renderSubscription(d) {
+  const tier = d.seller_tier || 'free';
+  const meta = TIER_META[tier] || TIER_META.free;
+  document.getElementById('sub-tier-label').textContent = meta.label;
+  document.getElementById('sub-tier-price').textContent = meta.usd === 0 ? 'Free forever' : `$${meta.usd}/month`;
+  document.getElementById('sub-slots-used').textContent = d.slots_used ?? '—';
+  document.getElementById('sub-slots-limit').textContent = d.slot_limit ?? '—';
+  document.getElementById('sub-slots-avail').textContent = d.slots_available ?? '—';
+  document.getElementById('sub-slot-text').textContent = `${d.slots_used} / ${d.slot_limit} slots`;
+  const pct = d.slot_limit > 0 ? Math.min(100, Math.round((d.slots_used / d.slot_limit) * 100)) : 0;
+  document.getElementById('sub-slot-bar').style.width = pct + '%';
+  document.getElementById('sub-slot-bar').style.background =
+    pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : 'linear-gradient(90deg,#7c3aed,#4f46e5)';
+
+  // Pending downgrade
+  const nd = document.getElementById('sub-downgrade-notice');
+  if (d.pending_downgrade_tier) {
+    nd.style.display = 'block';
+    document.getElementById('sub-downgrade-to').textContent =
+      (TIER_META[d.pending_downgrade_tier]?.label || d.pending_downgrade_tier);
+    document.getElementById('sub-downgrade-date').textContent =
+      d.billing_period_end ? d.billing_period_end.substring(0,10) : 'end of billing period';
+  } else {
+    nd.style.display = 'none';
+  }
+
+  // Tier cards
+  const container = document.getElementById('sub-tier-list');
+  container.innerHTML = '';
+  const tierOrder = ['standard','professional','business','elite'];
+  const currentRank = TIER_ORDER.indexOf(tier);
+
+  tierOrder.forEach(t => {
+    const m = TIER_META[t];
+    const tRank = TIER_ORDER.indexOf(t);
+    const isCurrent = t === tier;
+    const isUpgrade = tRank > currentRank;
+    const label = isCurrent ? 'Current plan' : isUpgrade ? 'Upgrade' : 'Downgrade';
+    const btnColor = isCurrent ? '#e2e8f0' : isUpgrade ? m.color : '#94a3b8';
+    const btnText = isCurrent ? '#64748b' : '#fff';
+    const btnDisabled = isCurrent;
+
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--surface);border:1.5px solid ${isCurrent ? m.color : 'var(--border)'};border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;`;
+    card.innerHTML = `
+      <div>
+        <div style="font-size:15px;font-weight:700;color:${m.color};">${m.label}</div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:2px;">$${m.usd}/mo · ${m.slots} listing slots</div>
+      </div>
+      <button onclick="subChangeTier('${t}')" ${btnDisabled ? 'disabled' : ''}
+        style="background:${btnColor};color:${btnText};border:none;border-radius:50px;padding:7px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:${btnDisabled ? 'default' : 'pointer'};opacity:${btnDisabled ? '.5' : '1'};">
+        ${label}
+      </button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function subChangeTier(tier) {
+  const email = sellerData?.email;
+  if (!email) return showToast('No seller selected');
+  const meta = TIER_META[tier];
+  const currentTier = _subData?.seller_tier || 'free';
+  const currentRank = TIER_ORDER.indexOf(currentTier);
+  const newRank = TIER_ORDER.indexOf(tier);
+  const isDowngrade = newRank < currentRank;
+
+  const confirmMsg = isDowngrade
+    ? `Downgrade to ${meta.label} ($${meta.usd}/mo, ${meta.slots} slots)?\nTakes effect at end of billing period.`
+    : `Upgrade to ${meta.label} ($${meta.usd}/mo, ${meta.slots} slots)?\nYou'll be redirected to Paystack.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const r = await fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' +
+      encodeURIComponent(email) + '&tier=' + tier, { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || r.status);
+    window.open(data.authorization_url, '_blank');
+    showToast(isDowngrade ? 'Downgrade scheduled — takes effect at billing period end.' : 'Redirecting to payment…');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function subDowngradeFree() {
+  const email = sellerData?.email;
+  if (!email) return showToast('No seller selected');
+  if (!confirm('Switch to Free (2 slots)? Takes effect immediately.\nYou must have ≤2 active listings.')) return;
+  try {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/seller-tier/downgrade-free', { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || r.status);
+    showToast('Switched to Free tier.');
+    loadSubscription();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
 async function loadAlerts() {
   const c = document.getElementById('alerts-container');
   c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Checking intros...</div>';
@@ -5330,7 +5499,7 @@ async function adminHaikoDraftDesc() {
           </button>
           <button id="adm-ai-yield-btn" onclick="admAIYield()" style="display:none;
             flex:1;min-width:120px;padding:10px 14px;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
-            📈 Yield Calculator <span style="font-size:11px;opacity:.8;">(1T)</span>
+            📈 Yield Calculator <span style="font-size:11px;opacity:.8;">(1T · investors)</span>
           </button>
         </div>
         <div id="adm-ai-services-result" style="margin-top:12px;display:none;"></div>

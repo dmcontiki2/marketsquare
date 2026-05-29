@@ -1,3 +1,84 @@
+## Session 90 · 28 May 2026 · AI guardrails — existence gate + spend register
+
+**Existence gate on 5 previously open AI endpoints:**
+- `POST /advert-agent/market-note` — now requires valid registered email before any Anthropic API call. Unknown email → HTTP 401.
+- `POST /advert-agent/coach` — removed auto-register path; unknown email now blocked at gate instead of silently creating a new user row.
+- `POST /trust-score/guidance` — gate added; non-AI fallback path still works for unrecognised emails (returns local guidance).
+- `POST /trust-score/upload-comment` — gate added.
+- `POST /listings/vision-draft` — gate added on seller_email when provided.
+- All gates: one indexed DB lookup, ~0.1ms, zero UX impact for legitimate registered sellers.
+
+**Async spend logger (non-blocking):**
+- New `ai_spend_log` table: records email, endpoint, model, estimated cost (USD), timestamp after every AI call across all 10 endpoints.
+- `_log_ai_spend()` fires as a FastAPI `BackgroundTasks` task — user response is never delayed.
+- Cost constants: Haiku $0.0023, Sonnet $0.015, Sonnet Vision $0.04 per call.
+
+**Spend register + red flag alert:**
+- New `ai_spend_config` table (id=1 singleton): `monthly_income_usd`, `alert_threshold_pct` (default 20%), `alert_email`.
+- `GET /admin/ai-spend` — returns current-month spend, call count, % of income used, per-endpoint breakdown, 30-day daily trend, status: `ok` / `warning` / `alert` / `unconfigured`.
+- `PUT /admin/ai-spend/config` — update income, threshold %, alert email at any time.
+- Alert fires via `N8N_WEBHOOK_AI_ALERT` (set in .env) when spend crosses threshold — at most once per day. No user impact — alerting is entirely async and never blocks a response.
+- Config income set to $0 by default (unconfigured) — update via PUT after first paid subscriptions arrive.
+
+**Cost model impact:** AI cost per listing remains <$0.10/year. Free tier infra cost $0.08/year. No change to tier pricing model. This session adds monitoring infrastructure, not new costs.
+
+---
+
+## Session 89 · 28 May 2026 · Kronborg anonymity pass, photo galleries, description enrichment
+
+**Full anonymity pass — all 39 listings:**
+- Titles: "Kronborg Estate" → "Luxury Furnished Apartments" throughout.
+- Descriptions: stripped all occurrences of "Kronborg", "193 Albert Street". Header now reads "Waterkloof, Pretoria." only.
+- Map pins: `listing_lat`/`listing_lng` cleared to NULL — FEA falls back to `suburb_lat`/`suburb_lng` (Waterkloof centroid). Building coordinates no longer exposed to buyers.
+- Unit 116: price cleared to NULL, title updated to "POA" — Maroushka to re-enter correct price via admin tool.
+
+**Services + features block added to all 39 listings:**
+- Appended structured bullets: electricity R1,016 · water R498 · WiFi R398 · cleaning R198 · linen R198 · total R2,308/month · optional laundry R498.
+- Features: luxury/spacious, classical styling, riverside kloof setting, US Embassy/UK/UN security approval.
+
+**BEA listing query limit raised 50 → 200:**
+- `GET /listings` had `LIMIT 50`. With 39 Kronborg + 16 MTG = 55 live listings, the MTG Collectors cards were being cut off (only 11 of 16 returned). Raised to 200 — all categories now return correctly. BEA restarted. Pagination (M0) added to backlog for pre-global-launch implementation.
+
+**Yield calculator — backlog items added (H7a, H7b):**
+- H7a: render full calculation workings (implied price, formula, net deductions, market context) + mandatory financial advice disclaimer in FEA result panel.
+- H7b: country-aware benchmarks — detect listing country from geo_city_id and apply local yield norms and jurisdiction-specific disclaimer. Required for global launch.
+
+**Anonymity fix — address in description text:**
+- Stripped "193 Albert Street, Waterkloof, Pretoria" from all 39 listing descriptions. Cleared street_address column to NULL. Zero address leaks remain.
+
+**Kronborg photos — full gallery upload:**
+- SCP'd all 39 unit folders. Uploaded 510 photos across 37 listings. Units 109 (video only) and 308 (corrupt JPEG) remain photo-free — Maroushka to supply.
+
+**Anonymity fix — CRITICAL (all 39 listings):**
+- Stripped "193 Albert Street, Waterkloof, Pretoria" from every Kronborg listing description. The batch script had embedded the full street address in the public description field, violating the platform's core anonymity principle (sellers are anonymous until introduction). Cleared street_address DB column to NULL for all 39 rows. Verified with LIKE '%Albert%' scan — zero leaks remain.
+
+**Kronborg photos — full gallery upload:**
+- SCP'd all 39 unit folders from David's Kronberg/ folder to server. Uploaded 510 photos across 37 listings (avg 14 photos/unit) using the multi-photo strip architecture (photos stored as `[photos:url1|url2|...]` prefix in description + thumb_url/medium_url for grid card). All units now have full carousel galleries.
+- Units with no usable photos: 109 (only a .mp4 video), 308 (single JPEG truncated/corrupt — Pillow rejects it). Maroushka to supply replacement photos via admin tool.
+- 3 units (403, 405, 408) had JPGs alongside HEIC files — re-SCP'd and uploaded successfully.
+
+**POI verification:**
+- Confirmed all 39 Kronborg listings have 11 POIs across schools/shopping/hospitals/police. Shopping POIs use 3km radius with supermarket/grocery/convenience tags — deployed in Session 88 and confirmed working.
+
+## Session 88 · 28 May 2026 · Server upgrade, Kronborg listings, Overpass, POI fixes
+
+**Server upgrade — CPX22 → CPX32 + 100GB volume:**
+- Upgraded Hetzner server to CPX32 (4 vCPU, 8GB RAM). Root disk was at 100% — moved 39GB Overpass DB to new 100GB attached volume (`/mnt/HC_Volume_105840760/overpass`). Root disk now at 22% (57GB free). All services restarted cleanly.
+
+**Kronborg Estate — 39 listings live (miconradie1@gmail.com):**
+- Batch-created all 39 Kronborg Luxury Apartment units (IDs 192–230) under Maroushka's account. Photos uploaded from local Kronberg/ folder for units 102a–116 (units 201+ had no photos in SCP transfer — Maroushka to add via admin tool). All listings live at Waterkloof, Pretoria. Prices R8,990–R35,990/pm from spreadsheet.
+
+**Yield calculator label fix (ms.js):**
+- Changed yield button label from generic "What's the yield?" to "📈 Investor Yield Calculator" with subtitle "For investors — calculates gross rental yield on this property". Admin tool updated to show "(1T · investors)".
+
+**Shopping POI radius fix (bea_main.py):**
+- Added `shop=supermarket/grocery/convenience` and `amenity=marketplace` to shopping category. Added per-category radius: shopping uses 3km (was 15km) so local shops appear instead of only large malls. Listing 169 (Brooklyn) now shows Pick n Pay 0.44km, Spar 0.88km, Woolworths Foods 2.11km.
+
+**Overpass mirror hardening (bea_main.py):**
+- Replaced two mirrors that shared the same server (kumi.systems = private.coffee) with three genuinely independent operators. Added `Accept: */*` header to fix overpass-api.de HTTP 406. Added per-mirror logging. Self-hosted Overpass DB import completed (SA data, 39GB) but container DB index files corrupted — deferred to Session 89. Public mirrors remain primary.
+
+**Session 88 smoke test: 30/30 ✅**
+
 ## Session 87e · 27 May 2026 · Price check labels, contrast fixes, amenities repair
 
 **Price check panel headers — category-aware (ms.js v118):**
@@ -2911,3 +2992,9 @@ Smoke test: 30/30 ✅
 **FEA (`ms.js`):** `POI_META` already had `universities` and `police` entries — no change needed.
 
 BEA deployed and restarted. Smoke test: 30/30 ✅
+
+## Session 91 — 2026-05-29
+
+**Subscription tier redesign (5 tiers):** Replaced the old 2-tier (starter/premium) system with a 5-tier model: Free $0/2 slots · Standard $12/10 · Professional $20/25 · Business $40/60 · Elite $100/500. DB: added `slot_limit`, `pending_downgrade_tier`, `billing_period_end` columns to `users`; startup backfill sets slot_limit from existing seller_tier; superusers always get 500 slots. BEA: new `GET /subscription/tiers` endpoint; slot enforcement added at both publish paths (publish_listing + advert-agent/publish) with HTTP 402 on limit breach; `GET /users/{email}/subscription` returns full slot usage; `POST /users/{email}/seller-tier/downgrade-free` for self-service free downgrade; `PUT /users/{email}/seller-tier` updated to enforce slot guard + accept all 5 tier names. Downgrades: scheduled via `pending_downgrade_tier` + `billing_period_end`, applied by `_apply_pending_downgrades()` worker at every restart. Admin UI: `view-billing` panel rebuilt — current plan card with slot usage bar, colour-coded fill, pending downgrade notice, tier upgrade/downgrade cards, free downgrade button. Smoke test: 30/30 ✅.
+
+Cost model impact: New tier prices ($12/$20/$40/$100/mo) replace old $5/$15 tiers. Update Cost_Breakdown_GlobalLaunch.xlsx subscription revenue assumptions.
