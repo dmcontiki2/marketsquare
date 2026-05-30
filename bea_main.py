@@ -9213,11 +9213,13 @@ async def scryfall_price_by_id(scryfall_id: str) -> dict | None:
         return None
 
 
-def fraud_flag(asking_zar: float | None, floor_zar: float | None) -> dict | None:
-    """First-class Trust-Score safety rule. If a buyer is being offered something
-    far below a VERIFIED market floor, that is a scam signal (counterfeit, stolen,
-    bait) — not a bargain. Returns a warning dict, or None if no concern.
-    Only fires when we have a real floor to compare against."""
+def price_caution(asking_zar: float | None, floor_zar: float | None) -> dict | None:
+    """Neutral price-position note. We do NOT allege fraud — we have no substantive
+    evidence and never characterise a listing as counterfeit, stolen, or a scam.
+    We simply report, factually, that an asking price sits well below the verified,
+    locally-sourced market price, so the buyer can make their own informed decision.
+    Returns a note dict, or None if the price is within normal range. Only fires
+    when we have a real verified floor to compare against."""
     if not asking_zar or not floor_zar or floor_zar <= 0:
         return None
     ratio = asking_zar / floor_zar
@@ -9225,18 +9227,22 @@ def fraud_flag(asking_zar: float | None, floor_zar: float | None) -> dict | None
         pct = round((1 - ratio) * 100)
         return {
             "level": "danger",
-            "headline": "Verify authenticity before paying",
-            "detail": (f"This asking price is about {pct}% below the verified market "
-                       f"floor for this item. A price this low is a common sign of a "
-                       f"counterfeit, stolen, or bait listing — confirm authenticity "
-                       f"and meet safely before sending any money."),
+            "headline": "Priced well below the verified market",
+            "detail": (f"This asking price is about {pct}% below the verified, "
+                       f"locally-sourced market price for this item. That may simply be "
+                       f"a good deal — but a gap this large is worth understanding before "
+                       f"you commit. We can\u2019t see the listing\u2019s condition or "
+                       f"provenance, so check those for yourself. This is information, "
+                       f"not financial advice."),
         }
     if ratio < 0.70:
         return {
             "level": "caution",
-            "headline": "Unusually cheap — check carefully",
-            "detail": ("This is priced well below the verified market range. It may be "
-                       "a genuine deal, but verify condition and authenticity first."),
+            "headline": "Below the usual market range",
+            "detail": ("This is priced below the verified market range for the item. "
+                       "It may be a genuine deal; we\u2019d just suggest checking the "
+                       "condition and details before deciding. Information, not "
+                       "financial advice."),
         }
     return None
 
@@ -9652,10 +9658,11 @@ async def ai_price_check(listing_id: int, email: str):
         _log.error("ai-price-check: %s", exc)
         raise HTTPException(status_code=500, detail="AI price check failed — no Tuppence charged")
 
-    # ── Fraud guard: only fires against a VERIFIED floor. Overrides the verdict. ─
-    safety_flag = fraud_flag(asking_zar, floor_zar)
+    # ── Price-position note: only fires against a VERIFIED floor. Not a fraud
+    #    allegation — a neutral observation that the price is well below market. ─
+    safety_flag = price_caution(asking_zar, floor_zar)
     if safety_flag and safety_flag["level"] == "danger":
-        verdict = "verify_authenticity"
+        verdict = "below_verified_market"
 
     # DELIVER-THEN-CHARGE: a verified result was produced — charge exactly now.
     cc = database.get_db()

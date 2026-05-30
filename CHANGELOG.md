@@ -1,3 +1,6 @@
+## Session 95c · 30 May 2026 · Soften price warning — observation, not fraud allegation
+
+Per David: we charge for a verified check even when the price looks suspicious, but we must NOT characterise a listing as fraud/counterfeit/stolen without substantive evidence we don't have. Reworded the low-price warning to a neutral, factual price-position note. Renamed `fraud_flag()` → `price_caution()` in `bea_main.py`; removed all "counterfeit / stolen / bait / scam / verify authenticity" language. The danger-tier message now reads: "Priced well below the verified market — this asking price is about N% below the verified, locally-sourced market price… may simply be a good deal, but worth understanding before you commit… This is information, not financial advice." Verdict value `verify_authenticity` → `below_verified_market`. `ms.js` banner softened from red/🚩 to amber/📉 with the calmer copy and the app's standard "not financial advice" disclaimer. Charging unchanged — a verified result still costs 1T. Both files pass ast.parse / node --check.
 ## Session 95b · 30 May 2026 · Deliver-then-charge — Tuppence only for a verified service + honest Yield rebuild
 
 **David's rule:** never deduct a Tuppence unless the AI delivers a real, verified service — not a guess or a half-truth. If we can't, we say so and charge nothing.

@@ -2858,7 +2858,7 @@ async function buyerPriceCheck(id) {
       below_market:  { icon: '🔥', label: 'Below market',     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
       above_market:  { icon: '⚠️',  label: 'Above market',    color: '#92400e', bg: '#fef3c7', border: '#fcd34d' },
       cannot_assess: { icon: 'ℹ️',  label: 'Insufficient data',color: '#374151', bg: '#f3f4f6', border: '#d1d5db' },
-      verify_authenticity: { icon: '⚠️', label: 'Verify before paying', color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
+      below_verified_market: { icon: 'ℹ️', label: 'Below verified market', color: '#92400e', bg: '#fffbeb', border: '#fcd34d' },
     };
     const vc = verdictConfig[data.verdict] || verdictConfig.cannot_assess;
 
@@ -2888,12 +2888,12 @@ async function buyerPriceCheck(id) {
       : 'ℹ️ AI guide only — not a verified price · confirm before buying';
     const _sf = data.safety_flag;
     const _sfBanner = _sf ? `
-        <div style="background:${_sf.level === 'danger' ? '#fee2e2' : '#fef3c7'};border:1.5px solid ${_sf.level === 'danger' ? '#f87171' : '#fcd34d'};border-radius:10px;padding:12px 14px;">
+        <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 14px;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
-            <span style="font-size:16px;">${_sf.level === 'danger' ? '🚩' : '⚠️'}</span>
-            <span style="font-size:12px;font-weight:800;color:${_sf.level === 'danger' ? '#991b1b' : '#92400e'};">${_sf.headline}</span>
+            <span style="font-size:16px;">${_sf.level === 'danger' ? '📉' : 'ℹ️'}</span>
+            <span style="font-size:12px;font-weight:800;color:#92400e;">${_sf.headline}</span>
           </div>
-          <div style="font-size:11px;color:${_sf.level === 'danger' ? '#7f1d1d' : '#78350f'};line-height:1.5;">${_sf.detail}</div>
+          <div style="font-size:11px;color:#78350f;line-height:1.5;">${_sf.detail}</div>
         </div>` : '';
     res.style.display = 'block';
     res.innerHTML = `
