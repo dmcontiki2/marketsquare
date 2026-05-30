@@ -1,7 +1,16 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · Session 93 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · AI email triage live (draft-only) · Session 94 complete
+
+## Last Completed (Session 94 — 2026-05-30)
+- **AI email triage — end to end.** `POST /email/inbound` (secret-auth) classifies inbound mail with Claude Haiku → `{category, urgency, draft_reply, auto_safe}`, stores in new `email_triage` table, AI spend logged. Categories: support/billing/legal/compliance/spam/other.
+- **Conservative auto-send gate**: draft-only by default. Auto-reply only when `EMAIL_AUTO_SEND=1` + `GMAIL_APP_PASSWORD` set + model `auto_safe` + category ∈ {support,billing}. Legal/compliance/ambiguous always held. Spam → skipped.
+- `GET /admin/email-triage` (API-key) for ops review. `_smtp_send_reply()` Gmail SMTP sender (587 STARTTLS), threads replies.
+- **Cloudflare Email Worker** built (`cloudflare_email_worker/`): postal-mime parse → POST to BEA + safety-net forward to inbox, never bounces mail. wrangler.toml + README + package.json.
+- `EMAIL_INBOUND_SECRET` generated, added to `/etc/environment`, BEA restarted. Verified live: support→drafted, spam→skipped, legal→drafted/high, bad secret→401. Smoke 30/30 ✅.
+- ⚠️ **Repaired truncated local `bea_main.py`** (was 9698 lines, missing `get_tuppence_history`+) by rebuilding from server's good copy before editing. Now 9972 lines, matches server.
+- **For David**: (1) deploy worker via Wrangler + set `EMAIL_INBOUND_SECRET` secret (value in CHANGELOG); point Email Routing at it. (2) Add `GMAIL_APP_PASSWORD`+`EMAIL_AUTO_SEND=1` later to enable auto-reply. (3) Commit `bea_main.py` + `cloudflare_email_worker/` + docs from PowerShell.
 
 ## Last Completed (Session 93 — 2026-05-29)
 - **World Heritage / Wonders layer expanded 120 → 332 sites** (+212; clears ≥320 target). UNESCO-led: 142 UNESCO, 97 National Park, 47 National Museum, 46 Archaeological. South Africa 5 → **30 sites**; 91 countries total.
@@ -90,32 +99,14 @@ All five sessions of the photo pipeline + listing lifecycle build plan are done:
 - **Email infrastructure**: 4 live @trustsquare.co addresses via Cloudflare Email Routing (support/legal/billing/compliance → dmcontiki2@gmail.com). Catch-all enabled. Gmail filters + labels configured.
 - Smoke test: 30/30 ✅
 
-## Next Session (93)
-- Read STATUS.md first. Session 92 complete. Go straight into execution.
-- **AI email triage (PAUSED — needs Gmail App Password)**: David locked out of Gmail for 6 hours. Resume: (1) Generate Gmail App Password at myaccount.google.com/security → App passwords → "TrustSquare BEA". (2) Add to server .env as GMAIL_APP_PASSWORD. (3) Build Cloudflare Email Worker + BEA AI triage endpoint.
+## Next Session (95)
+- Read STATUS.md first. Session 94 complete. Go straight into execution.
+- **Finish email triage rollout (David action)**: deploy the Cloudflare worker (`cloudflare_email_worker/`), set its `EMAIL_INBOUND_SECRET` Wrangler secret, and point Email Routing rules at it. Optionally add `GMAIL_APP_PASSWORD`+`EMAIL_AUTO_SEND=1` to enable auto-reply for support/billing.
 - Recommended priorities:
-  1. **AI email triage** — complete the Cloudflare Email Worker + BEA Claude triage + Gmail SMTP reply system.
-  2. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF.
-  3. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
-  4. **Paystack plan wiring** — create Paystack subscription plans for 4 paid tiers.
+  1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
+  2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
+  3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
+  4. **Admin ops: email-triage panel** — surface `GET /admin/email-triage` in dashboard.html (drafts + 30-day category counts).
   5. **EULA v1.6 attorney review** — send to Michalsons/Werksmans/Hogan Lovells before publish.
-- Read STATUS.md first. Session 91 complete. Go straight into execution.
-- **Set AI spend config**: call `PUT /admin/ai-spend/config` with `monthly_income_usd` once first paid subs arrive.
-- **Update cost model**: update Cost_Breakdown_GlobalLaunch.xlsx with new tier prices ($12/$20/$40/$100).
-- Recommended priorities:
-  1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
-  2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
-  3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
-  4. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
-  5. **Paystack live mode** — paste sk_live_ + webhook secret into .env once CIPC approved.
-  6. **Maroushka + Dave phone test** — H4: lightbox, back buttons, My Requests tab on real devices.
-- Read STATUS.md first. Session 91 complete. Go straight into execution.
-- **Set AI spend config**: call `PUT /admin/ai-spend/config` with `monthly_income_usd` once first paid subs arrive.
-- **Update cost model**: update Cost_Breakdown_GlobalLaunch.xlsx with new tier prices ($12/$20/$40/$100).
-- Recommended priorities:
-  1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
-  2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
-  3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
-  4. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
-  5. **Paystack live mode** — paste sk_live_ + webhook secret into .env once CIPC approved.
-  6. **Maroushka + Dave phone test** — H4: lightbox, back buttons, My Requests tab on real devices.
+  6. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
+- Standing reminders: set AI spend config (`PUT /admin/ai-spend/config` with monthly_income_usd) once first paid subs arrive; update Cost_Breakdown_GlobalLaunch.xlsx with tier prices ($12/$20/$40/$100).

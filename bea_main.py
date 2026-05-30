@@ -12,6 +12,9 @@ import httpx
 from PIL import Image, ImageOps
 import io
 import logging
+import smtplib
+from email.message import EmailMessage
+from email.utils import parseaddr, formataddr
 from datetime import datetime, timezone, timedelta
 
 app = FastAPI(title="TrustSquare BEA", version="1.3.0")
@@ -413,6 +416,23 @@ def run_migrations(conn):
         (id, monthly_income_usd, alert_threshold_pct, alert_email)
         VALUES (1, 0.0, 20.0, 'dmcontiki2@gmail.com')""")
 
+    # AI Email Triage (Session 94) — one row per inbound email handled by POST /email/inbound
+    conn.execute("""CREATE TABLE IF NOT EXISTS email_triage (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_addr     TEXT    NOT NULL DEFAULT '',
+        to_addr       TEXT    NOT NULL DEFAULT '',
+        subject       TEXT    NOT NULL DEFAULT '',
+        body_preview  TEXT    NOT NULL DEFAULT '',
+        category      TEXT    NOT NULL DEFAULT 'other',
+        urgency       TEXT    NOT NULL DEFAULT 'normal',
+        draft_reply   TEXT    NOT NULL DEFAULT '',
+        status        TEXT    NOT NULL DEFAULT 'drafted',
+        message_id    TEXT,
+        received_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_recv ON email_triage(received_at DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_cat  ON email_triage(category, received_at DESC)")
+
     conn.commit()
 
     # ── Trust Score Hub (Section 3 · v1.3.0) ────────────────────
@@ -811,6 +831,19 @@ else:
 # Anthropic — Advert Agent AI Coach
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AA_MODEL = "claude-haiku-4-5-20251001"
+
+# AI EMAIL TRIAGE (Session 94) — inbound @trustsquare.co mail forwarded by a
+# Cloudflare Email Worker to POST /email/inbound (auth: EMAIL_INBOUND_SECRET).
+# Replies sent via Gmail SMTP using a Google App Password.
+EMAIL_INBOUND_SECRET = os.getenv("EMAIL_INBOUND_SECRET")
+GMAIL_ADDRESS        = os.getenv("GMAIL_ADDRESS", "dmcontiki2@gmail.com")
+GMAIL_APP_PASSWORD   = os.getenv("GMAIL_APP_PASSWORD")
+EMAIL_AUTO_SEND      = os.getenv("EMAIL_AUTO_SEND", "0") == "1"
+TRIAGE_MODEL = "claude-haiku-4-5-20251001"
+if not EMAIL_INBOUND_SECRET:
+    _log.warning("EMAIL_INBOUND_SECRET not set — /email/inbound will reject all calls")
+if not GMAIL_APP_PASSWORD:
+    _log.warning("GMAIL_APP_PASSWORD not set — triage replies will be drafted, never sent")
 
 CF_ZONE_ID    = os.getenv("CF_ZONE_ID")
 CF_CACHE_TOKEN = os.getenv("CF_CACHE_TOKEN")
@@ -9726,3 +9759,248 @@ def get_tuppence_history(email: str, limit: int = 50, offset: int = 0):
     }
 
 # ── END AI TUPPENCE SERVICES — TIER 2 (Session 74) ──────────────────────────────────────────
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# AI EMAIL TRIAGE — Session 94
+# Inbound @trustsquare.co mail -> Cloudflare Email Worker -> POST /email/inbound
+# -> Claude classifies + drafts a reply -> optional Gmail SMTP auto-send.
+# Safety: draft-only by default (EMAIL_AUTO_SEND off). Replies only sent for
+# clear-cut support/billing categories AND only when EMAIL_AUTO_SEND=1 and a
+# Gmail App Password is present. Everything else is stored as a draft for David.
+# ════════════════════════════════════════════════════════════════════════════
+
+_TRIAGE_CATEGORIES = ["support", "billing", "legal", "compliance", "spam", "other"]
+_AUTO_SEND_CATEGORIES = {"support", "billing"}
+
+
+class InboundEmail(BaseModel):
+    from_addr: str
+    to_addr: str = ""
+    subject: str = ""
+    body: str = ""
+    message_id: Optional[str] = None
+
+
+def _smtp_send_reply(to_addr: str, subject: str, body: str,
+                     in_reply_to: Optional[str] = None) -> bool:
+    """Send a plain-text reply via Gmail SMTP. Returns True on success.
+    Never raises. Requires GMAIL_APP_PASSWORD; returns False if unset."""
+    if not GMAIL_APP_PASSWORD:
+        _log.warning("_smtp_send_reply skipped — GMAIL_APP_PASSWORD not set")
+        return False
+    to_clean = parseaddr(to_addr)[1]
+    if not to_clean:
+        _log.warning("_smtp_send_reply skipped — no valid recipient in %r", to_addr)
+        return False
+    try:
+        msg = EmailMessage()
+        msg["From"] = formataddr(("TrustSquare Support", GMAIL_ADDRESS))
+        msg["To"] = to_clean
+        msg["Subject"] = subject if subject.lower().startswith("re:") else f"Re: {subject}"
+        if in_reply_to:
+            msg["In-Reply-To"] = in_reply_to
+            msg["References"] = in_reply_to
+        msg.set_content(body)
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+            server.starttls()
+            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+        _log.info("Triage reply sent to %s", to_clean)
+        return True
+    except Exception as exc:
+        _log.error("_smtp_send_reply failed: %s", exc)
+        return False
+
+
+async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
+    """Call Claude to classify an inbound email and draft a reply.
+    Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
+    fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False}
+    if not ANTHROPIC_API_KEY:
+        return fallback
+    body_trim = (body or "")[:4000]
+    user_payload = f"From: {from_addr}\nSubject: {subject}\n\n{body_trim}"
+    system = (
+        "You are the email triage assistant for TrustSquare, a South African local "
+        "marketplace connecting buyers with anonymous, trusted sellers via an "
+        "introduction currency called Tuppence. You read one inbound customer email "
+        "and return STRICT JSON only — no prose, no markdown fences.\n\n"
+        "JSON shape: {\"category\": one of "
+        "[\"support\",\"billing\",\"legal\",\"compliance\",\"spam\",\"other\"], "
+        "\"urgency\": one of [\"low\",\"normal\",\"high\"], "
+        "\"draft_reply\": a short, warm, professional plain-text reply signed "
+        "'The TrustSquare Team', "
+        "\"auto_safe\": boolean — true ONLY if a routine support or billing question "
+        "the draft can fully answer with no human judgement.}\n\n"
+        "Rules: Never reveal seller identities or internal data. Never promise refunds "
+        "(Tuppence is strictly non-refundable). For legal, compliance, disputes, threats, "
+        "or anything ambiguous set auto_safe=false. For spam set draft_reply to empty "
+        "string and auto_safe=false. Keep replies under 120 words."
+    )
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": TRIAGE_MODEL,
+                    "max_tokens": 400,
+                    "system": system,
+                    "messages": [{"role": "user", "content": user_payload}],
+                },
+            )
+        raw = resp.json()["content"][0]["text"].strip()
+        if raw.startswith("```"):
+            raw = raw.strip("`")
+            if raw.startswith("json"):
+                raw = raw[4:].strip()
+        parsed = json.loads(raw)
+        cat = parsed.get("category", "other")
+        if cat not in _TRIAGE_CATEGORIES:
+            cat = "other"
+        urg = parsed.get("urgency", "normal")
+        if urg not in ("low", "normal", "high"):
+            urg = "normal"
+        return {
+            "category": cat,
+            "urgency": urg,
+            "draft_reply": (parsed.get("draft_reply") or "").strip(),
+            "auto_safe": bool(parsed.get("auto_safe", False)),
+        }
+    except Exception as exc:
+        _log.error("_classify_email failed: %s", exc)
+        return fallback
+
+
+@app.post("/email/inbound")
+async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
+                        x_inbound_secret: str = Header(default="")):
+    """Receive an inbound email (from the Cloudflare Email Worker), triage with
+    Claude, store the result, optionally auto-reply via Gmail SMTP.
+    Auth: X-Inbound-Secret header (EMAIL_INBOUND_SECRET)."""
+    if not EMAIL_INBOUND_SECRET:
+        raise HTTPException(status_code=503, detail="Email triage not configured")
+    if x_inbound_secret != EMAIL_INBOUND_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid inbound secret")
+
+    from_addr = (req.from_addr or "").strip()
+    subject = (req.subject or "").strip()
+    body = req.body or ""
+    if not from_addr:
+        raise HTTPException(status_code=400, detail="from_addr is required")
+
+    result = await _classify_email(from_addr, subject, body)
+    background_tasks.add_task(_log_ai_spend, from_addr, "/email/inbound", "haiku")
+
+    category = result["category"]
+    urgency = result["urgency"]
+    draft_reply = result["draft_reply"]
+
+    status = "drafted"
+    can_auto = (
+        EMAIL_AUTO_SEND
+        and bool(GMAIL_APP_PASSWORD)
+        and result["auto_safe"]
+        and category in _AUTO_SEND_CATEGORIES
+        and bool(draft_reply)
+    )
+    if category == "spam":
+        status = "skipped"
+    elif can_auto:
+        sent = _smtp_send_reply(from_addr, subject, draft_reply, req.message_id)
+        status = "sent" if sent else "failed"
+
+    try:
+        conn = database.get_db()
+        try:
+            conn.execute(
+                "INSERT INTO email_triage "
+                "(from_addr, to_addr, subject, body_preview, category, urgency, "
+                " draft_reply, status, message_id) VALUES (?,?,?,?,?,?,?,?,?)",
+                (from_addr, (req.to_addr or "").strip(), subject, body[:500],
+                 category, urgency, draft_reply, status, req.message_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.error("email_triage persist failed: %s", exc)
+
+    return {
+        "category": category,
+        "urgency": urgency,
+        "status": status,
+        "auto_send_enabled": EMAIL_AUTO_SEND,
+        "reply_drafted": bool(draft_reply),
+    }
+
+
+@app.get("/admin/email-triage")
+def admin_email_triage(limit: int = 50, offset: int = 0,
+                       _key: str = Depends(auth.require_api_key)):
+    """List recent triaged emails for the ops dashboard. API-key gated."""
+    limit = max(1, min(limit, 200))
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, from_addr, subject, category, urgency, status, "
+            "       substr(draft_reply,1,400) AS draft_reply, received_at "
+            "FROM email_triage ORDER BY received_at DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+        total = conn.execute("SELECT COUNT(*) FROM email_triage").fetchone()[0]
+        by_cat = conn.execute(
+            "SELECT category, COUNT(*) AS n FROM email_triage "
+            "WHERE received_at >= datetime('now','-30 days') GROUP BY category"
+        ).fetchall()
+    finally:
+        conn.close()
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "by_category_30d": {r["category"]: r["n"] for r in by_cat},
+        "items": [dict(r) for r in rows],
+    }
+
+
+
+@app.get("/dashboard/email-triage")
+def dashboard_email_triage(limit: int = 20):
+    """Unauthenticated read-only triage feed for the ops dashboard.
+    Mirrors /dashboard/summary's no-auth posture (security = obscure dashboard URL).
+    Returns recent rows + 30-day category/status counts. Draft text truncated."""
+    limit = max(1, min(limit, 50))
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, from_addr, subject, category, urgency, status, "
+            "       substr(draft_reply,1,600) AS draft_reply, received_at "
+            "FROM email_triage ORDER BY received_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        total = conn.execute("SELECT COUNT(*) FROM email_triage").fetchone()[0]
+        by_cat = conn.execute(
+            "SELECT category, COUNT(*) AS n FROM email_triage "
+            "WHERE received_at >= datetime('now','-30 days') GROUP BY category"
+        ).fetchall()
+        by_status = conn.execute(
+            "SELECT status, COUNT(*) AS n FROM email_triage "
+            "WHERE received_at >= datetime('now','-30 days') GROUP BY status"
+        ).fetchall()
+    finally:
+        conn.close()
+    return {
+        "total": total,
+        "by_category_30d": {r["category"]: r["n"] for r in by_cat},
+        "by_status_30d": {r["status"]: r["n"] for r in by_status},
+        "items": [dict(r) for r in rows],
+    }
+
+# ── END AI EMAIL TRIAGE — Session 94 ─────────────────────────────────────────
+

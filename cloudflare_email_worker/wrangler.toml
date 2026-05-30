@@ -1,0 +1,13 @@
+name = "trustsquare-email-triage"
+main = "src/worker.js"
+compatibility_date = "2025-05-01"
+
+# Plain (non-secret) vars. The two secrets — EMAIL_INBOUND_SECRET and
+# (optionally) a different BEA_INBOUND_URL — are set with `wrangler secret put`,
+# NOT here, so they never land in git.
+[vars]
+BEA_INBOUND_URL = "https://trustsquare.co/email/inbound"
+
+# Email Routing binding is configured in the Cloudflare dashboard
+# (Email → Email Routing → Email Workers), not in wrangler.toml.
+# After `wrangler deploy`, bind the worker to your catch-all / addresses there.

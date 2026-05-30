@@ -16,6 +16,8 @@
 
 **Re-linked all live listings:** Added `relink_wonders.py` (one-off server maintenance script). It re-matched all **55 live listings** against the expanded set using the same publish-time matcher, preserving seller-set wonders and overwriting only auto-linked ones. Every listing now links **5** sites (was capped at 3). A Pretoria listing now links Ditsong Museum, Apartheid Museum, Origins Centre, Cradle of Humankind and Sterkfontein Caves — a genuinely rich, relevant set where before it had almost nothing in radius.
 
+**Re-linked demo data too (follow-up):** The 50 wonder-linked demo Adventures listings (`demo_listings.json`, served by `/demo-listings`) still pointed at the old sparse set with only 1–3 links each. Re-matched all 50 against the expanded 332-set using the same haversine + category-affinity logic, **5 each, deduped by site name** (so e.g. "British Museum" / "The Metropolitan Museum of Art" never appear twice). Pretoria experiences link Ditsong/Origins/Sterkfontein/Cradle of Humankind/Apartheid Museum; Pretoria accommodation links national parks (Pilanesberg, Marakele, Blyde River…); New York, London and Sydney each get 5 relevant local sites. Sydney's radius was widened (sparse region) so it reaches 5. Deployed demo_listings.json, restarted BEA (in-memory demo cache), purged cache; `/demo-listings` now serves 5 links on all 50 (link-count distribution {5: 50}).
+
 **Deploy & verify:** wonders.json (332) + bea_main.py deployed to Hetzner; BEA restarted (v1.3.1, /health ok); `GET /wonders` returns 332 live (public + localhost); Cloudflare cache purged. `GET /listings/149/wonders` (the exact endpoint the FEA detail strip renders) returns 5 full wonder objects with valid Commons photos. `smoke_test.py` — all checks pass (heritage check now reads 332 sites).
 
 Cost model impact: negligible. Static JSON + free Wikimedia Commons hotlinks + free Wikipedia/Wikidata sourcing — $0 ongoing, no paid APIs. The only added bandwidth is a slightly larger wonders.json and up to 5 (vs 3) thumbnail loads per listing detail, all served by Wikimedia's CDN.
@@ -3072,3 +3074,37 @@ BEA deployed and restarted. Smoke test: 30/30 ✅
 **Subscription tier redesign (5 tiers):** Replaced the old 2-tier (starter/premium) system with a 5-tier model: Free $0/2 slots · Standard $12/10 · Professional $20/25 · Business $40/60 · Elite $100/500. DB: added `slot_limit`, `pending_downgrade_tier`, `billing_period_end` columns to `users`; startup backfill sets slot_limit from existing seller_tier; superusers always get 500 slots. BEA: new `GET /subscription/tiers` endpoint; slot enforcement added at both publish paths (publish_listing + advert-agent/publish) with HTTP 402 on limit breach; `GET /users/{email}/subscription` returns full slot usage; `POST /users/{email}/seller-tier/downgrade-free` for self-service free downgrade; `PUT /users/{email}/seller-tier` updated to enforce slot guard + accept all 5 tier names. Downgrades: scheduled via `pending_downgrade_tier` + `billing_period_end`, applied by `_apply_pending_downgrades()` worker at every restart. Admin UI: `view-billing` panel rebuilt — current plan card with slot usage bar, colour-coded fill, pending downgrade notice, tier upgrade/downgrade cards, free downgrade button. Smoke test: 30/30 ✅.
 
 Cost model impact: New tier prices ($12/$20/$40/$100/mo) replace old $5/$15 tiers. Update Cost_Breakdown_GlobalLaunch.xlsx subscription revenue assumptions.
+
+## Session 94 — 2026-05-30 · AI Email Triage
+
+**Inbound email triage end-to-end.** Built the Cloudflare Email Worker → BEA Claude triage → optional Gmail SMTP reply system that was paused in Session 92/93 pending a Gmail App Password.
+
+**BEA (`bea_main.py`):**
+- New `email_triage` table (from/to/subject/body_preview/category/urgency/draft_reply/status/message_id/received_at) + two indexes, created in the schema init block.
+- `POST /email/inbound` — receives an inbound email from the CF worker, authenticated by a shared `X-Inbound-Secret` header (`EMAIL_INBOUND_SECRET`, stored in `/etc/environment`). Calls `_classify_email()` (Claude Haiku) which returns strict JSON `{category, urgency, draft_reply, auto_safe}`, persists the triage row, and conditionally auto-replies. AI spend logged via the Session 90 register (`_log_ai_spend(from_addr, "/email/inbound", "haiku")`).
+- `_classify_email()` system prompt enforces TrustSquare rules: never reveal seller identities, never promise refunds (Tuppence non-refundable), legal/compliance/disputes/ambiguous → `auto_safe=false`, spam → empty draft. Safe `other`/no-draft fallback on any failure — never raises.
+- `_smtp_send_reply()` — Gmail SMTP (smtp.gmail.com:587 STARTTLS) reply sender; threads via In-Reply-To/References. Returns False (never raises) when `GMAIL_APP_PASSWORD` unset.
+- **Conservative auto-send gate**: a reply is auto-sent only when ALL hold — `EMAIL_AUTO_SEND=1`, `GMAIL_APP_PASSWORD` present, model said `auto_safe`, category ∈ {support, billing}, and a non-empty draft exists. Default is draft-only: every email is classified and stored but nothing is sent. Spam → `skipped`.
+- `GET /admin/email-triage` (API-key gated) — paginated recent triage rows + 30-day category counts for the ops dashboard.
+
+**Cloudflare Email Worker (`cloudflare_email_worker/`):** new folder with `src/worker.js` (postal-mime parse → POST to BEA with the secret; forwards a copy to the human inbox as a safety net; never throws so mail is never bounced), `wrangler.toml`, `package.json`, README with deploy + secret steps, `.gitignore`.
+
+**Verified live:** support email → drafted (anonymity-safe explanation of introductions/Tuppence), spam → skipped (no draft), legal "cease and desist" → drafted + high urgency, never auto-sent. Bad secret → 401. Both routes live in OpenAPI. Smoke test 30/30 ✅.
+
+**Generated `EMAIL_INBOUND_SECRET`** added to server `/etc/environment` and BEA restarted. The same value must be set as a Wrangler secret on the worker (value handed to David below).
+
+Cost model impact: AI email triage adds ~$0.0023 (Haiku) per inbound email classified. At low inbound volume (<100/mo pre-launch) this is negligible (<$0.25/mo). Auto-send is OFF, so no SMTP send volume yet.
+
+**For David:**
+1. Deploy the worker: `cd cloudflare_email_worker; npm install; npx wrangler login; npx wrangler secret put EMAIL_INBOUND_SECRET` (value: `ms_inbound_YdWP31p8GKi9YfLc10nSOxlqibGAQ2gzrrjbvqRjVlA`); `npx wrangler deploy`; then point Email Routing rules at the worker.
+2. To enable auto-reply later: add `GMAIL_APP_PASSWORD` + `EMAIL_AUTO_SEND=1` to `/etc/environment`, restart BEA.
+3. Commit from PowerShell: `bea_main.py`, the new `cloudflare_email_worker/` folder, `CHANGELOG.md`, `STATUS.md`.
+4. ⚠️ Local `bea_main.py` was truncated (was 9698 lines, missing `get_tuppence_history` + everything after) — repaired this session by rebuilding from the server's good `main.py` (9728 lines) before applying changes. The repaired local file is now 9972 lines and matches the server. Commit it to fix the repo copy.
+
+### Session 94 (cont.) — Auto-reply enabled
+
+Gmail App Password added to server `/etc/environment` (`GMAIL_APP_PASSWORD`), `GMAIL_ADDRESS=dmcontiki2@gmail.com`, `EMAIL_AUTO_SEND=1`. BEA restarted. Live-verified: routine support email auto-replied via Gmail SMTP (`status: sent`); legal email correctly held (`status: drafted`) despite auto-send being on. Cloudflare worker switched to postal-mime parser (dashboard paste v2) — subject/body now extracted reliably. support@trustsquare.co routed to the worker and tested end-to-end. Remaining addresses (legal/billing/compliance/catch-all) can be pointed at the same worker when desired.
+
+### Session 94 (cont.) — Ops dashboard email-triage panel
+
+Added `GET /dashboard/email-triage` (unauthenticated, mirrors /dashboard/summary's obscure-URL posture) returning recent rows + 30-day category/status counts. Added "📧 EMAIL TRIAGE" panel to dashboard.html Ops tab: category count tiles, auto-sent vs held counts, and a scrollable list of recent emails with category/status badges and the drafted reply inline. Loads via loadEmailTriage() on Ops tab open. ⚠️ Note: the Edit tool truncated dashboard.html mid-build (large-HTML hazard per CLAUDE.md) and a broken copy briefly deployed — repaired immediately by rebuilding the file tail via Python and redeploying. Smoke 30/30 ✅.
