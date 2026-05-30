@@ -2815,7 +2815,7 @@ async function buyerPriceCheck(id) {
     return;
   }
 
-  if (!confirm('This will use 1T to get an AI market price comparison for this listing. Proceed?')) return;
+  if (!confirm('This checks the price against a verified market source. 1T is charged ONLY if we can verify a real price — never for a guess. Proceed?')) return;
 
   btn.disabled = true;
   btn.querySelector('span:first-child').textContent = '⏳ Checking market…';
@@ -2858,6 +2858,7 @@ async function buyerPriceCheck(id) {
       below_market:  { icon: '🔥', label: 'Below market',     color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
       above_market:  { icon: '⚠️',  label: 'Above market',    color: '#92400e', bg: '#fef3c7', border: '#fcd34d' },
       cannot_assess: { icon: 'ℹ️',  label: 'Insufficient data',color: '#374151', bg: '#f3f4f6', border: '#d1d5db' },
+      verify_authenticity: { icon: '⚠️', label: 'Verify before paying', color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
     };
     const vc = verdictConfig[data.verdict] || verdictConfig.cannot_assess;
 
@@ -2866,10 +2867,38 @@ async function buyerPriceCheck(id) {
                  : data.local_vs_global === 'similar'          ? '≈ Similar local & global'
                  : '';
 
+    // No verified source for this category — we charged nothing. Show honestly.
+    if (data.verdict === 'cannot_verify' || data.charged === false) {
+      res.style.display = 'block';
+      res.innerHTML = `
+        <div style="background:#f3f4f6;border:1.5px solid #d1d5db;border-radius:10px;padding:13px 15px;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+            <span style="font-size:15px;">ℹ️</span>
+            <span style="font-size:12px;font-weight:700;color:#374151;">No verified price — not charged</span>
+          </div>
+          <div style="font-size:12px;color:#374151;line-height:1.55;">${data.assessment || 'We could not verify a market price for this item, so no Tuppence was charged.'}</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:7px;">0T charged · ${data.tuppence_remaining}T balance</div>
+        </div>`;
+      btn.style.display = 'none';
+      return;
+    }
+    // Honest provenance label + safety banner (price-integrity fix)
+    const _pcSource = data.verified
+      ? '✅ Verified market price · TCGPlayer via Scryfall · live FX'
+      : 'ℹ️ AI guide only — not a verified price · confirm before buying';
+    const _sf = data.safety_flag;
+    const _sfBanner = _sf ? `
+        <div style="background:${_sf.level === 'danger' ? '#fee2e2' : '#fef3c7'};border:1.5px solid ${_sf.level === 'danger' ? '#f87171' : '#fcd34d'};border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+            <span style="font-size:16px;">${_sf.level === 'danger' ? '🚩' : '⚠️'}</span>
+            <span style="font-size:12px;font-weight:800;color:${_sf.level === 'danger' ? '#991b1b' : '#92400e'};">${_sf.headline}</span>
+          </div>
+          <div style="font-size:11px;color:${_sf.level === 'danger' ? '#7f1d1d' : '#78350f'};line-height:1.5;">${_sf.detail}</div>
+        </div>` : '';
     res.style.display = 'block';
     res.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px;">
-
+        ${_sfBanner}
         <!-- Panel 1: SA Market -->
         <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;">
           <div style="font-size:11px;font-weight:700;color:#15803d;letter-spacing:.04em;margin-bottom:5px;">${_panelLocal}</div>
@@ -2900,7 +2929,7 @@ async function buyerPriceCheck(id) {
         </div>`
           : ''}
 
-        <div style="font-size:10px;color:#9ca3af;padding:0 2px;">AI market analysis · ${data.tuppence_remaining}T remaining · Based on AI training data · actual prices may vary</div>
+        <div style="font-size:10px;color:#9ca3af;padding:0 2px;">${_pcSource} · ${data.tuppence_remaining}T remaining</div>
       </div>`;
     // Hide the trigger button — result is now shown
     btn.style.display = 'none';
@@ -2939,7 +2968,7 @@ async function buyerYieldCalc(id) {
     return;
   }
 
-  if (!confirm('This will use 1T to get an AI property yield analysis for this listing. Proceed?')) return;
+  if (!confirm('This calculates the real rental yield. 1T is charged ONLY if a yield can be computed (you may be asked for the purchase price or rent). Proceed?')) return;
 
   btn.disabled = true;
   btn.querySelector('span:first-child').textContent = '⏳ Calculating yield…';
@@ -2961,7 +2990,32 @@ async function buyerYieldCalc(id) {
     if (r.status === 402) { showToast('Insufficient Tuppence'); return; }
     if (r.status === 400) { showToast('Yield calc only available for Property listings'); return; }
     if (!r.ok) { showToast('Yield calculation failed'); return; }
-    const data = await r.json();
+    let data = await r.json();
+
+    // Real yields need both purchase price AND rent. If one is missing we were
+    // NOT charged — ask for it, then re-run with the figure. Still no charge until
+    // a real calculation is produced.
+    if (data.status === 'needs_input') {
+      const askMsg = data.need === 'rent'
+        ? 'Enter the expected MONTHLY RENT (Rand) to calculate the real yield (no Tuppence charged yet):'
+        : 'Enter the likely PURCHASE PRICE (Rand) to calculate the real yield (no Tuppence charged yet):';
+      const entry = window.prompt(askMsg, '');
+      const val = entry == null ? null : parseFloat(String(entry).replace(/[^0-9.]/g, ''));
+      if (!val || val <= 0) {
+        showToast('No figure entered — nothing charged');
+        btn.disabled = false;
+        btn.querySelector('span:first-child').textContent = "📈 What's the yield on this?";
+        return;
+      }
+      const param = data.need === 'rent' ? '&rent=' : '&purchase_price=';
+      const r2 = await fetch(
+        BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(buyerEmail) + param + val,
+        { method: 'POST' }
+      );
+      if (!r2.ok) { showToast('Yield calculation failed'); return; }
+      data = await r2.json();
+      if (data.status === 'needs_input') { showToast('Still missing a figure — nothing charged'); return; }
+    }
 
     res.style.display = 'block';
     res.innerHTML = `
@@ -2980,8 +3034,9 @@ async function buyerYieldCalc(id) {
           ? `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Rent estimate: ${data.monthly_rent_estimate}</div>` : ''}
         <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
         <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
-        <div style="font-size:10px;color:#9ca3af;">AI yield analysis · ${data.tuppence_remaining}T remaining</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:3px;line-height:1.4;">Based on AI training data · prices may vary · not financial advice</div>
+        ${data.purchase_price_used && data.monthly_rent_used
+          ? `<div style="font-size:11px;color:#374151;margin-bottom:4px;">Computed from ${data.purchase_price_used} purchase · ${data.monthly_rent_used}/month · net assumes ${data.net_cost_assumption_pct} costs</div>` : ''}
+        <div style="font-size:10px;color:#9ca3af;">✅ Calculated figure (not an AI guess) · ${data.tuppence_remaining}T remaining · not financial advice</div>
       </div>`;
     btn.style.display = 'none';
   } catch(e) { showToast('Yield calculation error'); }
@@ -7823,16 +7878,30 @@ async function elRunYield() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Calculating…'; }
   if (out) out.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0;">📈 Calculating yield…</div>';
   try {
-    if (!confirm('This will use 1T to get an AI property yield analysis for this listing. Proceed?')) {
+    if (!confirm('This calculates the real rental yield. 1T is charged ONLY if a yield can be computed (you may be asked for the purchase price or rent). Proceed?')) {
       if (btn) { btn.disabled = false; btn.textContent = '📈 Yield Calc'; }
       if (out) out.innerHTML = '';
       return;
     }
     const numId = typeof elCurrentId === 'string' ? elCurrentId.replace('bea_', '') : elCurrentId;
-    const r = await fetch(BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(email), { method: 'POST' });
+    let r = await fetch(BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(email), { method: 'POST' });
     if (r.status === 400) { showToast('Yield calc only available for Property listings'); return; }
+    if (r.status === 402) { showToast('Insufficient Tuppence'); return; }
     if (!r.ok) { showToast('Yield calculation failed'); return; }
-    const data = await r.json();
+    let data = await r.json();
+    if (data.status === 'needs_input') {
+      const askMsg = data.need === 'rent'
+        ? 'Enter the expected MONTHLY RENT (Rand) — no Tuppence charged yet:'
+        : 'Enter the likely PURCHASE PRICE (Rand) — no Tuppence charged yet:';
+      const entry = window.prompt(askMsg, '');
+      const val = entry == null ? null : parseFloat(String(entry).replace(/[^0-9.]/g, ''));
+      if (!val || val <= 0) { showToast('No figure entered — nothing charged'); return; }
+      const param = data.need === 'rent' ? '&rent=' : '&purchase_price=';
+      r = await fetch(BEA_URL + '/listings/' + numId + '/yield-calc?email=' + encodeURIComponent(email) + param + val, { method: 'POST' });
+      if (!r.ok) { showToast('Yield calculation failed'); return; }
+      data = await r.json();
+      if (data.status === 'needs_input') { showToast('Still missing a figure — nothing charged'); return; }
+    }
     if (out) out.innerHTML = `
       <div style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:10px;">📈 AI Property Yield Analysis</div>
@@ -7847,8 +7916,9 @@ async function elRunYield() {
           </div>
         </div>
         <div style="font-size:11px;font-weight:600;color:#065f46;margin-bottom:4px;">Benchmark: ${data.sa_yield_benchmark}</div>
-        ${data.commentary ? `<div style="font-size:11px;color:#374151;line-height:1.5;margin-top:6px;">${data.commentary}</div>` : ''}
-        <div style="font-size:10px;color:#6ee7b7;margin-top:8px;">${data.tuppence_remaining}T remaining</div>
+        ${data.market_context ? `<div style="font-size:11px;color:#374151;line-height:1.5;margin-top:6px;">${data.market_context}</div>` : ''}
+        ${data.purchase_price_used && data.monthly_rent_used ? `<div style="font-size:10px;color:#374151;margin-top:6px;">Computed from ${data.purchase_price_used} purchase · ${data.monthly_rent_used}/month</div>` : ''}
+        <div style="font-size:10px;color:#6ee7b7;margin-top:8px;">✅ Calculated figure · ${data.tuppence_remaining}T remaining</div>
       </div>`;
     showToast('📈 Yield analysis complete');
   } catch(e) {

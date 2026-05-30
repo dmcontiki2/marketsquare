@@ -1,3 +1,33 @@
+## Session 95b · 30 May 2026 · Deliver-then-charge — Tuppence only for a verified service + honest Yield rebuild
+
+**David's rule:** never deduct a Tuppence unless the AI delivers a real, verified service — not a guess or a half-truth. If we can't, we say so and charge nothing.
+
+**AI3 Price Check — charging restructured to deliver-then-charge:** removed the up-front deduction. Now: a pre-flight balance check (`_require_tuppence`, no deduction); the AI runs; 1T is deducted *only at the very end* and *only* when a verified Scryfall price was produced. Categories with no price feed no longer get a charged "qualitative guide" — they return `verdict: cannot_verify`, `charged: false`, and an honest "we don't guess, nothing charged" message (free). Failure paths charge nothing (corrected the old error string that falsely said "Tuppence charged"). New helpers `_current_tuppence()` (read-only balance) and `_require_tuppence()`.
+
+**AI4 Property Yield — rebuilt honest + deliver-then-charge:** a real gross yield needs purchase price AND annual rent; a listing carries only one. The endpoint now takes its own figure from the listing and accepts the missing one via `?rent=` or `?purchase_price=`. If absent → `status: needs_input`, `charged: false` (free) and the UI prompts for the figure, then re-runs. The yield is computed in **Python** (`gross = annual_rent / purchase_price`), net = gross − transparent 3% cost assumption (shown, not hidden). The LLM writes only the one-sentence benchmark; if it fails, we fall back to a neutral sentence and still return the real numbers. 1T charged only when a real calculation is produced. Both the buyer (`buyerYieldCalc`) and seller (`elRunYield`) paths in `ms.js` handle `needs_input`, show "✅ Calculated figure (not an AI guess)", and confirm dialogs now say 1T is charged only if a result can be produced.
+
+**Verified:** pure-logic simulation passed all money paths — verified+fair → 1T; verified+scam → 1T + fraud warning (real service delivered); no-feed → 0T; yield with both inputs → 1T (9.6% on R1M @ R8k/mo, math checks); yield missing input → 0T. `ast.parse` / `node --check` clean on both files.
+
+**Decision flagged for David:** the verified-but-scam case (real price + fraud warning) currently still charges 1T, on the basis that a genuine protective service was delivered. Say the word to make fraud-warning results free too.
+
+**Cost model impact:** revenue per AI3/AI4 call drops slightly — no-feed price checks and missing-input yields now generate $0 (previously 1T each). AI cost is also lower on those paths (no Anthropic call on the free branches; yield uses a shorter narration-only prompt at 250 max_tokens vs 400). Net: more honest, marginally less Tuppence revenue, lower API spend.
+
+**Demo-mode note:** both remain live-listing-only (numeric BEA id); demo/`ph_` ids decline client-side — no new DEMO_MODE branch required.
+
+## Session 95 · 30 May 2026 · AI Price Check integrity fix — feed-driven prices + fraud guard
+
+**The problem (found by Maurice's Lion's Eye Diamond test):** AI3 "Fair Price" and AI4 "Property Yield" generated all numbers, ranges and source names by asking the LLM to estimate them from training data — no price feed anywhere. On an obscure Reserved List card the app said "$170–$220 · below market · move quickly" when the real TCGPlayer price was $788.89 (~R12,800). The app cheerled a textbook scam listing (R2,500, ~80% below the verified floor). Architectural, not a model glitch.
+
+**The fix (this session — Fair Price / collectibles path):** Re-architected AI3 on the principle *the model writes the sentence, the system produces the number.* New backend helpers in `bea_main.py`: `live_usd_zar()` (live USD→ZAR, free endpoints frankfurter.dev / open.er-api.com, 12h cache, replaces the stale hard-coded R18.50 — currently ~R16.22); `resolve_scryfall_id()` (maps a collectible title to a real Scryfall card, disambiguates printings — skips digital-only nulls, picks cheapest paper printing with a non-null usd); `scryfall_price_by_id()`; and `fraud_flag()` (first-class Trust-Score rule: asking < 50% of a *verified* floor → danger warning, 50–70% → caution). `ai_price_check` now resolves→fetches→narrates: for cards it hands the LLM the verified figure and forbids it inventing numbers or saying "move quickly"; for no-feed categories it returns an explicitly-labelled qualitative *guide*, or `cannot_assess`. New listings store a resolved `scryfall_id` (additive column); legacy listings resolve lazily on first check. `ms.js` adds a `verify_authenticity` verdict, a prominent danger/caution safety banner, a verified-vs-estimate provenance label, and replaces the misleading "Based on AI training data" footnote with an honest per-result source line.
+
+**Verified:** live dry-run against the real LED case passed — resolved Mirage (paper, not digital Vintage Masters), $788.89 × R16.22 = R12,799 floor, R2,500 asking → danger flag (80% below), fair price → no flag. `ast.parse`/`node --check` clean on both files.
+
+**Still open (next session):** AI4 Property Yield not yet rebuilt — still LLM-estimated (less acute: bounded %). Plan: compute gross yield in Python from purchase price + rent, ask user for the missing input, LLM writes only the benchmark sentence. Also: confirm "Rule B7 / no-consumption-API" wording — not found in Codex v4.7.
+
+**Cost model impact:** AI3 now makes 1 Scryfall call + (cached) 1 FX call per check for collectibles, plus the existing Sonnet call. Scryfall and FX are free/no-key, so no consumption-API cost added; Sonnet token use is marginally lower (shorter prompts). FX cached 12h.
+
+**Demo-mode note:** AI3 is a live-listing-only feature (numeric BEA id required; demo/`ph_` ids gracefully decline in `ms.js`), so no new DEMO_MODE branch was required — the existing guard at the buyerPriceCheck id-parse covers it.
+
 ## Session 93 · 29 May 2026 · World Heritage / Wonders layer expanded 120 → 332 sites
 
 **Data expansion (the core task):**

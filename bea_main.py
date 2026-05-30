@@ -312,6 +312,11 @@ def run_migrations(conn):
     if "ai_suggested_price" not in listing_cols2:
         # Stores the AI vision-draft price so AI3 price-check can anchor to it
         conn.execute("ALTER TABLE listings ADD COLUMN ai_suggested_price REAL")
+    if "scryfall_id" not in listing_cols2:
+        # Resolved Scryfall card id for collectible listings, so AI3 price-check
+        # can fetch a REAL market price instead of an AI guess. NULL = not a card
+        # / not resolved. Set at listing creation; see resolve_scryfall_id().
+        conn.execute("ALTER TABLE listings ADD COLUMN scryfall_id TEXT")
 
     # intro_requests gets an intro_type column to distinguish standard vs LM
     intro_cols2 = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
@@ -3730,11 +3735,17 @@ async def aa_publish(
         ai_price_anchor = float(price.replace("R","").replace(",","").strip()) if price else None
     except Exception:
         ai_price_anchor = None
+    # Resolve a real Scryfall card id for collectible listings so AI3 can fetch a
+    # VERIFIED market price instead of guessing. Best-effort; NULL if not a card.
+    try:
+        scryfall_id = await resolve_scryfall_id(title, category)
+    except Exception:
+        scryfall_id = None
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
-        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor),
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
+        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id),
     )
     listing_id = cursor.lastrowid
     # Upsert user record so seller can use AA coach going forward
@@ -9097,6 +9108,139 @@ async def vision_draft(
 #   AI3  POST /listings/{id}/price-check?email=  Sonnet  buyer gets market comparison
 
 
+# ── REAL PRICE FEED HELPERS (Session: price-integrity fix) ───────────────────
+# Principle: the model writes the SENTENCE, the system produces the NUMBER.
+# These helpers fetch verifiable figures so ai_price_check never invents prices.
+
+import time as _time
+
+_FX_CACHE = {"rate": None, "ts": 0.0}        # USD->ZAR, refreshed daily
+_FX_TTL   = 60 * 60 * 12                      # 12h
+_FX_FALLBACK = 18.50                          # last-known; only if every feed fails
+
+async def live_usd_zar() -> float:
+    """Live USD->ZAR mid-rate, cached 12h. Falls back to last-known on failure.
+    Free endpoints, no key — keeps the no-consumption-API stance."""
+    now = _time.time()
+    if _FX_CACHE["rate"] and (now - _FX_CACHE["ts"]) < _FX_TTL:
+        return _FX_CACHE["rate"]
+    for url, getter in (
+        ("https://api.frankfurter.dev/v1/latest?base=USD&symbols=ZAR",
+         lambda j: j["rates"]["ZAR"]),
+        ("https://open.er-api.com/v6/latest/USD",
+         lambda j: j["rates"]["ZAR"]),
+    ):
+        try:
+            async with httpx.AsyncClient(timeout=8) as c:
+                r = await c.get(url)
+                rate = float(getter(r.json()))
+                if 5 < rate < 50:                # sanity band
+                    _FX_CACHE.update(rate=rate, ts=now)
+                    return rate
+        except Exception as exc:
+            _log.warning("FX fetch failed (%s): %s", url, exc)
+    return _FX_CACHE["rate"] or _FX_FALLBACK
+
+
+# Categories for which a real collectible price feed (Scryfall) applies.
+_SCRYFALL_CATS = {"card", "cards", "trading", "trading cards", "collectibles", "collectables"}
+
+async def resolve_scryfall_id(title: str, category: str) -> str | None:
+    """Best-effort: map a listing title to a Scryfall card with a REAL paper
+    (non-digital) USD price. Returns the Scryfall id, or None if not a confident
+    match. Disambiguates printings — a bare name lookup can return a digital-only
+    printing with usd:null, so we search and pick the cheapest printing that has
+    a real usd price."""
+    if not title:
+        return None
+    cat = (category or "").lower()
+    if not any(k in cat for k in _SCRYFALL_CATS):
+        return None
+    # Strip common noise from a marketplace title to get a plausible card name.
+    name = title.strip()
+    try:
+        async with httpx.AsyncClient(timeout=10,
+                headers={"User-Agent": "TrustSquare/1.0", "Accept": "application/json"}) as c:
+            # Search all printings of the named card that have a non-null usd price.
+            q = f'!"{name}" game:paper'
+            r = await c.get("https://api.scryfall.com/cards/search",
+                            params={"q": q, "unique": "prints", "order": "usd"})
+            if r.status_code != 200:
+                # Fuzzy fallback — single best match by name only.
+                r2 = await c.get("https://api.scryfall.com/cards/named",
+                                 params={"fuzzy": name})
+                if r2.status_code == 200:
+                    d = r2.json()
+                    if (d.get("prices") or {}).get("usd"):
+                        return d.get("id")
+                return None
+            cards = r.json().get("data", [])
+            priced = [d for d in cards if (d.get("prices") or {}).get("usd")]
+            if not priced:
+                return None
+            # cheapest real printing = the conservative market floor
+            priced.sort(key=lambda d: float(d["prices"]["usd"]))
+            return priced[0].get("id")
+    except Exception as exc:
+        _log.warning("scryfall resolve failed for %r: %s", name, exc)
+        return None
+
+
+async def scryfall_price_by_id(scryfall_id: str) -> dict | None:
+    """Fetch live prices for a known Scryfall id. Returns
+    {usd, eur, name, set_name, reserved} or None."""
+    if not scryfall_id:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10,
+                headers={"User-Agent": "TrustSquare/1.0", "Accept": "application/json"}) as c:
+            r = await c.get(f"https://api.scryfall.com/cards/{scryfall_id}")
+            if r.status_code != 200:
+                return None
+            d = r.json()
+            pr = d.get("prices") or {}
+            if not pr.get("usd"):
+                return None
+            return {
+                "usd": float(pr["usd"]),
+                "eur": float(pr["eur"]) if pr.get("eur") else None,
+                "name": d.get("name"),
+                "set_name": d.get("set_name"),
+                "reserved": bool(d.get("reserved")),
+            }
+    except Exception as exc:
+        _log.warning("scryfall price fetch failed (%s): %s", scryfall_id, exc)
+        return None
+
+
+def fraud_flag(asking_zar: float | None, floor_zar: float | None) -> dict | None:
+    """First-class Trust-Score safety rule. If a buyer is being offered something
+    far below a VERIFIED market floor, that is a scam signal (counterfeit, stolen,
+    bait) — not a bargain. Returns a warning dict, or None if no concern.
+    Only fires when we have a real floor to compare against."""
+    if not asking_zar or not floor_zar or floor_zar <= 0:
+        return None
+    ratio = asking_zar / floor_zar
+    if ratio < 0.50:
+        pct = round((1 - ratio) * 100)
+        return {
+            "level": "danger",
+            "headline": "Verify authenticity before paying",
+            "detail": (f"This asking price is about {pct}% below the verified market "
+                       f"floor for this item. A price this low is a common sign of a "
+                       f"counterfeit, stolen, or bait listing — confirm authenticity "
+                       f"and meet safely before sending any money."),
+        }
+    if ratio < 0.70:
+        return {
+            "level": "caution",
+            "headline": "Unusually cheap — check carefully",
+            "detail": ("This is priced well below the verified market range. It may be "
+                       "a genuine deal, but verify condition and authenticity first."),
+        }
+    return None
+
+
 PRICE_CHECK_MODEL = "claude-sonnet-4-6"  # AI3 — needs market reasoning depth
 
 
@@ -9118,6 +9262,30 @@ def _deduct_tuppence(conn, email: str, amount: int, description: str) -> int:
         (email, -amount, description)
     )
     return balance - amount
+
+
+def _current_tuppence(email: str) -> int:
+    """Read-only Tuppence balance on a fresh connection. Used by deliver-then-charge
+    paths to report 'tuppence_remaining' when NO charge was made."""
+    c = database.get_db()
+    try:
+        row = c.execute(
+            "SELECT COALESCE(SUM(amount), 0) as bal FROM transactions WHERE user_email = ?",
+            (email,)
+        ).fetchone()
+        return int(row["bal"])
+    finally:
+        c.close()
+
+
+def _require_tuppence(email: str, amount: int = 1) -> None:
+    """Pre-flight guard: ensure the buyer COULD pay before we run a paid AI service.
+    Raises 402 if not. Does NOT deduct — deduction happens only on a verified result."""
+    if _current_tuppence(email) < amount:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Insufficient Tuppence — you need {amount}T to run this check."
+        )
 
 
 # ── AI1 — Listing Rewrite ─────────────────────────────────────────────────────
@@ -9320,11 +9488,20 @@ async def ai_seller_audit(listing_id: int, email: str):
 
 @app.post("/listings/{listing_id}/price-check")
 async def ai_price_check(listing_id: int, email: str):
-    """AI3: Buyer pays 1T — Claude Sonnet gives three-panel market intelligence:
-    1. SA second-hand market range  2. Assessment of asking price  3. Official/global prices
-    Anchors to ai_suggested_price stored at listing creation.
-    Returns {verdict, sa_context, sa_range, assessment, official_context, official_range,
-             asking_price, tuppence_remaining}.
+    """AI3: Buyer pays 1T — honest, three-panel price intelligence.
+
+    INTEGRITY MODEL (price-integrity fix):
+      The model writes the SENTENCE; the system produces the NUMBER.
+      - Collectibles with a resolved Scryfall id  -> VERIFIED feed price (USD->ZAR
+        live rate). The LLM only narrates the real figures it is handed.
+      - Everything else -> an explicitly-labelled QUALITATIVE GUIDE. The LLM may
+        give a rough range but it is flagged 'not a verified price', and we never
+        cheerlead ('move quickly' is not permitted anywhere).
+      - A first-class fraud guard fires when asking price is far below a VERIFIED
+        floor: the verdict becomes a warning, never a 'buy' nudge.
+    Returns {verdict, source, sa_context, sa_range, assessment, official_context,
+             official_range, local_vs_global, asking_price, verified, safety_flag,
+             tuppence_remaining, ...legacy}.
     """
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI not configured")
@@ -9335,54 +9512,116 @@ async def ai_price_check(listing_id: int, email: str):
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
 
-    remaining = _deduct_tuppence(
-        conn, email, 1,
-        f"AI Price Check · #{listing_id} · {listing['title'][:40]}"
-    )
-    conn.commit()
-    conn.close()
+    # DELIVER-THEN-CHARGE (Session 95): we do NOT deduct here. Tuppence is only
+    # charged at the end, and ONLY if we produced a verified service. A guess,
+    # a 'cannot verify', or any failure costs the buyer nothing.
+    _require_tuppence(email, 1)   # pre-flight only — no deduction yet
+    category    = listing["category"] or "General"
+    city        = listing["city"] or "South Africa"
+    title       = listing["title"] or "(no title)"
+    desc        = listing["description"] or "(no description)"
+    price       = listing["price"] or "(no price)"
+    scryfall_id = listing["scryfall_id"] if "scryfall_id" in listing.keys() else None
+    conn.close()  # done reading; charging happens on its own connection at the end
 
-    category          = listing["category"] or "General"
-    city              = listing["city"] or "South Africa"
-    title             = listing["title"] or "(no title)"
-    desc              = listing["description"] or "(no description)"
-    price             = listing["price"] or "(no price)"
-    ai_anchor         = listing["ai_suggested_price"]  # stored at vision-draft time; may be None
+    # Parse the buyer-facing asking price into a number for ratio checks.
+    asking_zar = None
+    try:
+        asking_zar = float(str(price).replace("R", "").replace(",", "").strip())
+    except Exception:
+        asking_zar = None
 
-    anchor_note = (
-        f"The AI originally suggested R{ai_anchor:,.0f} when this listing was created. "
-        "Use this as the anchor for your assessment — do not invent a new price from scratch."
-    ) if ai_anchor else (
-        "No AI-suggested price was stored for this listing. Assess the asking price independently."
-    )
+    # ── Step 1+2: try to resolve a REAL verified price (collectibles) ──────────
+    verified_block = None        # text handed to the model as ground truth
+    official_range = "N/A"
+    official_ctx   = ""
+    floor_zar      = None
+    verified       = False
+    source         = "ai_estimate"
 
-    system_prompt = (
-        "You are a market pricing expert for TrustSquare, a South African peer-to-peer marketplace. "
-        "You give buyers honest, specific three-panel price intelligence. Be direct — no filler. "
-        "Panel 1: South African second-hand market (local reality). "
-        "Panel 2: Assessment of the asking price vs the SA market. "
-        "Panel 3: Official/international/collector market prices (e.g. TCGPlayer, Card Kingdom, "
-        "Bid or Buy, AutoTrader, Property24, or other category-appropriate sources). "
-        "Always respond with a single valid JSON object — no markdown, no explanation."
-    )
+    # Late-resolve a scryfall id if the listing predates this column.
+    if not scryfall_id:
+        try:
+            scryfall_id = await resolve_scryfall_id(title, category)
+            if scryfall_id:
+                c2 = database.get_db()
+                c2.execute("UPDATE listings SET scryfall_id = ? WHERE id = ?",
+                           (scryfall_id, listing_id))
+                c2.commit(); c2.close()
+        except Exception:
+            scryfall_id = None
 
-    user_prompt = (
-        f"A buyer is considering this {category} listing in {city}, South Africa:\n\n"
-        f"TITLE: {title}\n"
-        f"DESCRIPTION: {desc}\n"
-        f"ASKING PRICE: {price}\n\n"
-        f"{anchor_note}\n\n"
-        "Return JSON with exactly these keys (all strings, 60 words max per field):\n"
-        "{\n"
-        '  "verdict": "fair" | "above_market" | "below_market" | "cannot_assess",\n'
-        '  "sa_context": "<SA second-hand market reality for this item/category in this city — specific prices>",\n'
-        '  "sa_range": "<e.g. R800–R1,200 or N/A>",\n'
-        '  "assessment": "<direct verdict on whether the asking price is fair vs SA market — 1-2 sentences>",\n'
-        '  "official_context": "<what official sources, collector platforms, or international markets list for this — name the source if known>",\n'
-        '  "official_range": "<e.g. USD $45–$80 on TCGPlayer / R1,500–R2,000 on Bid or Buy, or N/A if no official market exists>",\n'
-        '  "local_vs_global": "cheaper_locally" | "cheaper_globally" | "similar" | "cannot_compare"\n'
-        "}"
-    )
+    if scryfall_id:
+        feed = await scryfall_price_by_id(scryfall_id)
+        if feed and feed.get("usd"):
+            rate = await live_usd_zar()
+            usd  = feed["usd"]
+            floor_zar = usd * rate
+            verified = True
+            source   = "scryfall"
+            reserved = " (Reserved List — cannot be reprinted)" if feed.get("reserved") else ""
+            official_range = f"R{floor_zar:,.0f}  (USD ${usd:,.2f} \u00d7 R{rate:.2f}/USD)"
+            official_ctx   = (f"Verified market price for {feed.get('name')} "
+                              f"[{feed.get('set_name')}]{reserved}: "
+                              f"USD ${usd:,.2f} on TCGPlayer (via Scryfall), "
+                              f"\u2248 R{floor_zar:,.0f} at today's rate.")
+            verified_block = (
+                f"VERIFIED MARKET DATA (use these EXACT figures, do not alter them):\n"
+                f"- Card: {feed.get('name')} [{feed.get('set_name')}]{reserved}\n"
+                f"- Verified market price: USD ${usd:,.2f} = R{floor_zar:,.0f} "
+                f"(live rate R{rate:.2f}/USD)\n"
+                f"- Buyer's asking price: {price}\n"
+            )
+
+    # ── Step 3: narrate. Two prompt modes: verified vs qualitative-guide ───────
+    if verified_block:
+        system_prompt = (
+            "You are a pricing analyst for TrustSquare, a South African marketplace. "
+            "You are given VERIFIED market figures. You must NEVER invent, round, or "
+            "contradict them — only explain them in plain language. Never tell a buyer "
+            "to 'move quickly' or 'buy now'. Be honest and protective. "
+            "Always respond with a single valid JSON object — no markdown."
+        )
+        user_prompt = (
+            f"A buyer is considering this {category} listing in {city}, South Africa.\n\n"
+            f"TITLE: {title}\nDESCRIPTION: {desc[:400]}\n\n"
+            f"{verified_block}\n"
+            "Write a short, honest assessment comparing the asking price to the verified "
+            "market price. Do not output any price number other than those given above.\n"
+            "Return JSON with these keys (strings, 50 words max each):\n"
+            "{\n"
+            '  "verdict": "fair" | "above_market" | "below_market" | "cannot_assess",\n'
+            '  "sa_context": "<note on the SA second-hand reality for this item, qualitative>",\n'
+            '  "assessment": "<plain-language read on the asking price vs the verified figure>",\n'
+            '  "local_vs_global": "cheaper_locally" | "cheaper_globally" | "similar" | "cannot_compare"\n'
+            "}"
+        )
+    else:
+        # No verified price feed for this category. Per the integrity rule, we do
+        # NOT sell a guess. Return an honest 'cannot verify' and charge nothing.
+        _log.info("ai-price-check: listing #%d buyer=%s NO-FEED -> free cannot_verify",
+                  listing_id, email)
+        bal = _current_tuppence(email)
+        return {
+            "verdict":          "cannot_verify",
+            "source":           "no_feed",
+            "verified":         False,
+            "charged":          False,
+            "sa_context":       "",
+            "sa_range":         "N/A",
+            "assessment":       ("We don\u2019t yet have a verified price source for this "
+                                 "category, so we won\u2019t guess. No Tuppence was charged. "
+                                 "Compare the asking price against similar local listings "
+                                 "before deciding."),
+            "official_context": "",
+            "official_range":   "N/A",
+            "local_vs_global":  "cannot_compare",
+            "asking_price":     price,
+            "safety_flag":      None,
+            "tuppence_remaining": bal,
+            "context":          "",
+            "suggested_range":  "N/A",
+        }
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
@@ -9404,28 +9643,47 @@ async def ai_price_check(listing_id: int, email: str):
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
-        verdict          = str(result.get("verdict", "cannot_assess"))[:20]
-        sa_context       = str(result.get("sa_context", ""))[:600]
-        sa_range         = str(result.get("sa_range", "N/A"))[:100]
-        assessment       = str(result.get("assessment", ""))[:400]
-        official_context = str(result.get("official_context", ""))[:600]
-        official_range   = str(result.get("official_range", "N/A"))[:150]
-        local_vs_global  = str(result.get("local_vs_global", "cannot_compare"))[:20]
+        verdict         = str(result.get("verdict", "cannot_assess"))[:20]
+        sa_context      = str(result.get("sa_context", ""))[:600]
+        sa_range        = str(result.get("sa_range", "N/A"))[:100]
+        assessment      = str(result.get("assessment", ""))[:400]
+        local_vs_global = str(result.get("local_vs_global", "cannot_compare"))[:20]
     except Exception as exc:
         _log.error("ai-price-check: %s", exc)
-        raise HTTPException(status_code=500, detail="AI price check failed — Tuppence charged")
+        raise HTTPException(status_code=500, detail="AI price check failed — no Tuppence charged")
 
-    _log.info("ai-price-check: listing #%d buyer=%s verdict=%s local_vs_global=%s",
-              listing_id, email, verdict, local_vs_global)
+    # ── Fraud guard: only fires against a VERIFIED floor. Overrides the verdict. ─
+    safety_flag = fraud_flag(asking_zar, floor_zar)
+    if safety_flag and safety_flag["level"] == "danger":
+        verdict = "verify_authenticity"
+
+    # DELIVER-THEN-CHARGE: a verified result was produced — charge exactly now.
+    cc = database.get_db()
+    try:
+        remaining = _deduct_tuppence(
+            cc, email, 1,
+            f"AI Price Check \u00b7 #{listing_id} \u00b7 {title[:40]}"
+        )
+        cc.commit()
+    finally:
+        cc.close()
+
+    _log.info("ai-price-check: listing #%d buyer=%s verdict=%s verified=%s flag=%s charged=1T",
+              listing_id, email, verdict, verified,
+              safety_flag["level"] if safety_flag else "none")
     return {
         "verdict":          verdict,
+        "source":           source,            # 'scryfall'
+        "verified":         verified,          # True only when a real feed was used
+        "charged":          True,
         "sa_context":       sa_context,
         "sa_range":         sa_range,
         "assessment":       assessment,
-        "official_context": official_context,
+        "official_context": official_ctx,
         "official_range":   official_range,
         "local_vs_global":  local_vs_global,
         "asking_price":     price,
+        "safety_flag":      safety_flag,        # None | {level, headline, detail}
         "tuppence_remaining": remaining,
         # Legacy fields — kept for backward compat
         "context":          assessment,
@@ -9447,12 +9705,19 @@ async def ai_price_check(listing_id: int, email: str):
 # ── AI4 — Property Yield Calculator ──────────────────────────────────────────
 
 @app.post("/listings/{listing_id}/yield-calc")
-async def ai_yield_calc(listing_id: int, email: str):
-    """AI4: Seller/buyer pays 1T — Claude Haiku calculates gross yield, net yield estimate,
-    and SA market comparison for a Property listing.
-    Returns {gross_yield_pct, net_yield_estimate_pct, monthly_rent_estimate, market_context,
-             sa_yield_benchmark, tuppence_remaining}.
-    Only available for Property category listings.
+async def ai_yield_calc(listing_id: int, email: str,
+                        rent: float | None = None,
+                        purchase_price: float | None = None):
+    """AI4: Property yield — HONEST & deliver-then-charge (Session 95).
+
+    A real gross yield needs BOTH a purchase price and an annual rent. A listing
+    only carries one number (sale price OR monthly rent), so we:
+      - take the listing's own figure for its side, and
+      - accept the OTHER figure from the caller (?rent= or ?purchase_price=).
+    If the second figure is missing we return needs_input and charge NOTHING.
+    The yield is computed in PYTHON (not guessed by the model). The LLM only
+    writes the benchmark sentence. 1T is charged ONLY when a real yield is
+    produced from real inputs.
     """
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI not configured")
@@ -9468,56 +9733,93 @@ async def ai_yield_calc(listing_id: int, email: str):
         conn.close()
         raise HTTPException(status_code=400, detail="Yield calculator is only available for Property listings")
 
-    remaining = _deduct_tuppence(
-        conn, email, 1,
-        f"AI Yield Calc · #{listing_id} · {listing['title'][:40]}"
-    )
-    conn.commit()
+    city          = listing["city"] or "South Africa"
+    suburb        = listing["suburb"] or ""
+    title         = listing["title"] or "(no title)"
+    desc          = listing["description"] or ""
+    price_raw     = listing["price"] or ""
+    listing_type  = (listing["listing_type"] if "listing_type" in listing.keys() else None) or ""
     conn.close()
 
-    city    = listing["city"] or "South Africa"
-    suburb  = listing["suburb"] or ""
-    title   = listing["title"] or "(no title)"
-    desc    = listing["description"] or ""
-    price   = listing["price"] or "(no price)"
+    # Pre-flight: can the buyer pay at all? (No deduction yet.)
+    _require_tuppence(email, 1)
 
+    def _num(v):
+        try:
+            return float(str(v).replace("R", "").replace(",", "")
+                         .replace("/month", "").replace("pm", "").strip())
+        except Exception:
+            return None
+
+    listing_amount = _num(price_raw)
+    lt = listing_type.lower()
+    is_rental = ("rent" in lt) or ("rent" in (title + " " + desc).lower() and "for sale" not in lt)
+
+    # Resolve purchase_price (annual rent / monthly rent) from listing + caller input.
+    monthly_rent = None
+    buy_price    = None
+    need = None
+    if is_rental:
+        # Listing price IS the monthly rent. Need the purchase price from caller.
+        monthly_rent = listing_amount
+        buy_price    = purchase_price
+        if not buy_price:
+            need = "purchase_price"
+    else:
+        # Listing price IS the sale/purchase price. Need expected monthly rent.
+        buy_price    = listing_amount
+        monthly_rent = rent
+        if not monthly_rent:
+            need = "rent"
+
+    # Honest 'needs input' — FREE, no Tuppence charged.
+    if need or not buy_price or not monthly_rent or buy_price <= 0 or monthly_rent <= 0:
+        bal = _current_tuppence(email)
+        prompt_for = ("the expected monthly rent" if need == "rent"
+                      else "the likely purchase price" if need == "purchase_price"
+                      else "both the purchase price and the monthly rent")
+        return {
+            "status":           "needs_input",
+            "charged":          False,
+            "need":             need or "both",
+            "listing_amount":   listing_amount,
+            "is_rental":        is_rental,
+            "message":          (f"To calculate a real yield we need {prompt_for}. "
+                                 f"Enter it and we\u2019ll compute the actual figure — "
+                                 f"no Tuppence is charged until we do."),
+            "tuppence_remaining": bal,
+        }
+
+    # ── REAL computation in Python (deterministic, auditable) ──────────────────
+    annual_rent = monthly_rent * 12.0
+    gross = (annual_rent / buy_price) * 100.0
+
+    # Net estimate: subtract a transparent cost band (rates, levies, maintenance,
+    # vacancy). We show the assumption rather than hiding it inside a model guess.
+    NET_COST_PCT = 3.0
+    net = gross - NET_COST_PCT
+
+    # LLM writes ONLY the qualitative benchmark sentence — handed the real numbers.
     location_str = f"{suburb}, {city}" if suburb else city
-
-    system_prompt = (
-        "You are a South African property investment analyst. You provide concise, honest yield "
-        "calculations and market benchmarks for residential and commercial property. "
-        "You know current SA rental yield ranges by city tier. "
-        "Always respond with a single valid JSON object — no markdown, no explanation."
-    )
-
-    # SA yield benchmarks embedded in prompt (updated 2026)
     sa_benchmarks = (
-        "SA GROSS YIELD BENCHMARKS (2026): "
-        "Pretoria residential 7–10%, Cape Town residential 5–7%, Johannesburg residential 6–9%, "
-        "Durban residential 7–10%, secondary cities 8–12%, "
-        "commercial/office 9–12%, student accommodation 10–14%. "
-        "Net yield = gross yield minus estimated costs (rates, levies, maintenance, vacancy): "
-        "typically subtract 2–3.5% from gross for residential, 2–4% for commercial."
+        "SA GROSS YIELD BENCHMARKS (2026): Pretoria residential 7-10%, "
+        "Cape Town 5-7%, Johannesburg 6-9%, Durban 7-10%, secondary cities 8-12%, "
+        "commercial 9-12%, student accommodation 10-14%."
     )
-
+    system_prompt = (
+        "You are a South African property analyst. You are GIVEN a computed gross "
+        "yield — never recalculate or contradict it. Write one honest sentence placing "
+        "it against the local benchmark. No filler, no 'buy now'. "
+        "Respond with a single valid JSON object — no markdown."
+    )
     user_prompt = (
-        f"Property listing in {location_str}, South Africa.\n\n"
-        f"TITLE: {title}\n"
-        f"DESCRIPTION: {desc[:500]}\n"
-        f"ASKING PRICE / RENT: {price}\n\n"
-        f"{sa_benchmarks}\n\n"
-        "Tasks:\n"
-        "1. If this is a rental listing (monthly price), calculate gross yield assuming the asking price "
-        "   implies a purchase price in line with the area's yield benchmark. "
-        "   If this is a sale listing, estimate the likely rental income to calculate gross yield.\n"
-        "2. Estimate net yield after costs.\n"
-        "3. Assess whether the implied yield is above, at, or below the SA benchmark for this area.\n\n"
-        "Return JSON with exactly these keys:\n"
-        '{"gross_yield_pct": "<e.g. 8.2%>", '
-        '"net_yield_estimate_pct": "<e.g. 5.8%>", '
-        '"monthly_rent_estimate": "<e.g. R14,500/month or Already rental listing>", '
-        '"market_context": "<2-3 sentences honest assessment vs SA benchmarks>", '
-        '"sa_yield_benchmark": "<e.g. Pretoria residential: 7–10% gross>"}'
+        f"Property in {location_str}, South Africa.\n"
+        f"Purchase price: R{buy_price:,.0f}. Monthly rent: R{monthly_rent:,.0f}. "
+        f"COMPUTED gross yield: {gross:.1f}% (annual rent / purchase price).\n"
+        f"{sa_benchmarks}\n"
+        "Return JSON: {\"market_context\": \"<one honest sentence vs the benchmark for "
+        "this city/type>\", \"sa_yield_benchmark\": \"<the matching benchmark, e.g. "
+        "Pretoria residential: 7-10% gross>\"}"
     )
 
     try:
@@ -9531,7 +9833,7 @@ async def ai_yield_calc(listing_id: int, email: str):
                 },
                 json={
                     "model": AA_MODEL,
-                    "max_tokens": 400,
+                    "max_tokens": 250,
                     "system": system_prompt,
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
@@ -9540,23 +9842,43 @@ async def ai_yield_calc(listing_id: int, email: str):
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
-        gross_yield         = str(result.get("gross_yield_pct", "N/A"))[:20]
-        net_yield           = str(result.get("net_yield_estimate_pct", "N/A"))[:20]
-        monthly_rent        = str(result.get("monthly_rent_estimate", "N/A"))[:80]
-        market_context      = str(result.get("market_context", ""))[:600]
-        sa_yield_benchmark  = str(result.get("sa_yield_benchmark", ""))[:120]
+        market_context     = str(result.get("market_context", ""))[:400]
+        sa_yield_benchmark = str(result.get("sa_yield_benchmark", ""))[:120]
     except Exception as exc:
-        _log.error("ai-yield-calc: %s", exc)
-        raise HTTPException(status_code=500, detail="AI yield calculation failed — Tuppence charged")
+        # The model only writes the narrative; if it fails we STILL have the real
+        # numbers. Degrade gracefully with a neutral sentence rather than failing —
+        # but only charge because the core (computed) service succeeded.
+        _log.warning("ai-yield-calc narration failed (numbers still valid): %s", exc)
+        market_context = (f"Computed gross yield {gross:.1f}% on a R{buy_price:,.0f} "
+                          f"purchase at R{monthly_rent:,.0f}/month.")
+        sa_yield_benchmark = "SA residential benchmark: ~7-10% gross (varies by city)."
 
-    _log.info("ai-yield-calc: listing #%d email=%s gross=%s", listing_id, email, gross_yield)
+    # DELIVER-THEN-CHARGE: a real, computed yield was produced — charge now.
+    cc = database.get_db()
+    try:
+        remaining = _deduct_tuppence(
+            cc, email, 1,
+            f"AI Yield Calc \u00b7 #{listing_id} \u00b7 {title[:40]}"
+        )
+        cc.commit()
+    finally:
+        cc.close()
+
+    _log.info("ai-yield-calc: listing #%d email=%s gross=%.1f%% charged=1T",
+              listing_id, email, gross)
     return {
-        "gross_yield_pct":       gross_yield,
-        "net_yield_estimate_pct": net_yield,
-        "monthly_rent_estimate": monthly_rent,
-        "market_context":        market_context,
-        "sa_yield_benchmark":    sa_yield_benchmark,
-        "tuppence_remaining":    remaining,
+        "status":                 "ok",
+        "charged":                True,
+        "computed":               True,        # numbers came from arithmetic, not a model
+        "gross_yield_pct":        f"{gross:.1f}%",
+        "net_yield_estimate_pct": f"{net:.1f}%",
+        "net_cost_assumption_pct": f"{NET_COST_PCT:.1f}%",
+        "purchase_price_used":    f"R{buy_price:,.0f}",
+        "monthly_rent_used":      f"R{monthly_rent:,.0f}",
+        "monthly_rent_estimate":  f"R{monthly_rent:,.0f}/month",   # legacy key
+        "market_context":         market_context,
+        "sa_yield_benchmark":     sa_yield_benchmark,
+        "tuppence_remaining":     remaining,
     }
 
 
