@@ -1,7 +1,7 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · AI email triage live (draft-only) · Session 94 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · AI email triage LIVE with auto-reply (support@ routed, EMAIL_AUTO_SEND=1) · Session 94 complete
 
 ## Last Completed (Session 94 — 2026-05-30)
 - **AI email triage — end to end.** `POST /email/inbound` (secret-auth) classifies inbound mail with Claude Haiku → `{category, urgency, draft_reply, auto_safe}`, stores in new `email_triage` table, AI spend logged. Categories: support/billing/legal/compliance/spam/other.
@@ -9,8 +9,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - `GET /admin/email-triage` (API-key) for ops review. `_smtp_send_reply()` Gmail SMTP sender (587 STARTTLS), threads replies.
 - **Cloudflare Email Worker** built (`cloudflare_email_worker/`): postal-mime parse → POST to BEA + safety-net forward to inbox, never bounces mail. wrangler.toml + README + package.json.
 - `EMAIL_INBOUND_SECRET` generated, added to `/etc/environment`, BEA restarted. Verified live: support→drafted, spam→skipped, legal→drafted/high, bad secret→401. Smoke 30/30 ✅.
-- ⚠️ **Repaired truncated local `bea_main.py`** (was 9698 lines, missing `get_tuppence_history`+) by rebuilding from server's good copy before editing. Now 9972 lines, matches server.
-- **For David**: (1) deploy worker via Wrangler + set `EMAIL_INBOUND_SECRET` secret (value in CHANGELOG); point Email Routing at it. (2) Add `GMAIL_APP_PASSWORD`+`EMAIL_AUTO_SEND=1` later to enable auto-reply. (3) Commit `bea_main.py` + `cloudflare_email_worker/` + docs from PowerShell.
+- **ROLLOUT COMPLETE (done this session)**: Cloudflare worker deployed (dashboard, postal-mime parser), `EMAIL_INBOUND_SECRET` set as Wrangler secret, `support@trustsquare.co` routed to worker. `GMAIL_APP_PASSWORD` + `GMAIL_ADDRESS` + `EMAIL_AUTO_SEND=1` added to `/etc/environment`. Live-verified: real support email auto-replied via Gmail SMTP (status=sent), legal email held (status=drafted). Replies currently send FROM dmcontiki2@gmail.com.
+- **Ops dashboard panel**: `GET /dashboard/email-triage` (no-auth, obscure-URL) + "📧 EMAIL TRIAGE" panel on Ops tab — category/status counts + recent emails with drafts inline.
+- ⚠️ **Repaired two truncations this session** (large-file Edit hazard): local `bea_main.py` (rebuilt from server, now 9972 lines) and `dashboard.html` (rebuilt tail via Python after a broken copy briefly deployed; now intact, smoke 30/30).
+- **For David**: (1) Commit from PowerShell: `bea_main.py`, `dashboard.html`, `cloudflare_email_worker/`, `STATUS.md`, `CHANGELOG.md`. (2) Optional: route `legal@`/`billing@`/`compliance@`/catch-all to the same worker. (3) Optional: switch reply From-address to support@trustsquare.co via a transactional sender (e.g. Resend, already used in CityLauncher).
 
 ## Last Completed (Session 93 — 2026-05-29)
 - **World Heritage / Wonders layer expanded 120 → 332 sites** (+212; clears ≥320 target). UNESCO-led: 142 UNESCO, 97 National Park, 47 National Museum, 46 Archaeological. South Africa 5 → **30 sites**; 91 countries total.
@@ -100,13 +102,12 @@ All five sessions of the photo pipeline + listing lifecycle build plan are done:
 - Smoke test: 30/30 ✅
 
 ## Next Session (95)
-- Read STATUS.md first. Session 94 complete. Go straight into execution.
-- **Finish email triage rollout (David action)**: deploy the Cloudflare worker (`cloudflare_email_worker/`), set its `EMAIL_INBOUND_SECRET` Wrangler secret, and point Email Routing rules at it. Optionally add `GMAIL_APP_PASSWORD`+`EMAIL_AUTO_SEND=1` to enable auto-reply for support/billing.
+- Read STATUS.md first. Session 94 complete (AI email triage shipped AND rolled out with live auto-reply). Go straight into execution.
 - Recommended priorities:
   1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
   2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
   3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
-  4. **Admin ops: email-triage panel** — surface `GET /admin/email-triage` in dashboard.html (drafts + 30-day category counts).
-  5. **EULA v1.6 attorney review** — send to Michalsons/Werksmans/Hogan Lovells before publish.
-  6. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
+  4. **EULA v1.6 attorney review** — send to Michalsons/Werksmans/Hogan Lovells before publish.
+  5. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
+- Email triage optional follow-ups: route legal@/billing@/compliance@/catch-all to the worker; switch reply From-address to support@trustsquare.co (transactional sender).
 - Standing reminders: set AI spend config (`PUT /admin/ai-spend/config` with monthly_income_usd) once first paid subs arrive; update Cost_Breakdown_GlobalLaunch.xlsx with tier prices ($12/$20/$40/$100).
