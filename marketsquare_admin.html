@@ -4542,6 +4542,7 @@ async function addBatchDraftToQueue(i) {
       if (!blob || blob.size < 100) throw new Error('Empty blob');
       const fd = new FormData();
       fd.append('file', blob, 'card.jpg');
+      fd.append('category', 'Collectors');  // S98: triggers server-side vision auto-orient for card scans
       const up = await fetch(BEA_URL + '/listings/photo', {
         method: 'POST',
         headers: { 'X-Api-Key': API_KEY },

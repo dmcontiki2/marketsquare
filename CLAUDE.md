@@ -49,11 +49,12 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
 
-**Session end checklist (mandatory — all four required):**
-1. Run smoke test: `python3 smoke_test.py` — ALL checks must pass before closing. Fix any failures before proceeding to steps 2–4.
-2. Append to `CHANGELOG.md`
-3. Update `STATUS.md` (Live State, Last Completed, Next Session)
-4. Update and deploy `dashboard.html` to the server — fetch current version first (`strings /var/www/marketsquare/dashboard.html | grep currentSession`), update DATA object (currentSession, nextSession, liveState, lastDone, nextGoals, blockers, highPriority, directions, recentChangelog), deploy via scp. Never skip this step.
+**Session end checklist (mandatory — all five required, in order):**
+1. Run smoke test: `python3 smoke_test.py` — ALL checks must pass before closing. Fix any failures before proceeding.
+2. Append a Session entry to `CHANGELOG.md` (with `Cost model impact:` if AI volume/cost/concurrency/pricing changed).
+3. Append a line to `AUDIT_PROGRESS.md` if any audit item moved.
+4. Update `STATUS.md`: bump the Live State session number, add a new `## Last Completed (Session N)` block and a `## Next Session (N+1)` block. The first `Session (\d+)` match in this file is what `/dashboard/summary` reports as currentSession — keep it accurate.
+5. **Baseline write-back (the dashboard is live-data-driven — do NOT hand-edit a DATA object).** `scp STATUS.md CHANGELOG.md BACKLOG.md AUDIT_PROGRESS.md root@178.104.73.239:/var/www/marketsquare/`. The BEA parses these at `GET /dashboard/summary`, so this single step refreshes the live dashboard for the next session. Then confirm: `curl -s https://trustsquare.co/dashboard/summary | python3 -c "import sys,json;print(json.load(sys.stdin)['currentSession'])"` shows the new number. Only re-deploy `dashboard.html` itself when its MARKUP/JS changed (respect the DASHBOARD VERSION GUARD below); routine session state needs only the scp of the four docs. This step is what lets David always view the latest — never skip it.
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 

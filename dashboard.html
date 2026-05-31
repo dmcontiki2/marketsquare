@@ -555,7 +555,7 @@ function switchView(view) {
   } else if (view === 'ops') {
     dash.style.display = 'none';
     graph.classList.remove('visible');
-    if(ops) { ops.style.display = 'block'; loadOpsMetrics(); loadEmailTriage(); }
+    if(ops) { ops.style.display = 'block'; loadOpsMetrics(); loadEmailTriage(); loadAiCost(); }
   } else {
     dash.style.display = '';
     graph.classList.remove('visible');
@@ -1313,6 +1313,12 @@ loadDashboard();
     </div>
   </div>
   <div class="health-panel">
+    <div class="health-title">💰 AI COST &amp; MARGIN <span class="health-updated" id="aicost-updated">loading…</span></div>
+    <div class="health-grid" id="aicost-metrics" style="margin-bottom:14px;"></div>
+    <div id="aicost-ceiling" style="margin-bottom:12px;"></div>
+    <div id="aicost-endpoints" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+  <div class="health-panel">
     <div class="health-title">📧 EMAIL TRIAGE <span class="health-updated" id="triage-updated">loading…</span></div>
     <div class="health-grid" id="triage-counts" style="margin-bottom:14px;"></div>
     <div id="triage-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -1381,6 +1387,51 @@ function loadEmailTriage() {
     document.getElementById('triage-list').innerHTML = rows || '<div style="color:#64748b;font-size:13px;">No triaged emails yet.</div>';
   }).catch(()=>{
     document.getElementById('triage-updated').textContent = 'fetch failed';
+  });
+}
+
+function loadAiCost() {
+  const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
+  fetch(base + '/dashboard/cost').then(r=>r.json()).then(d=>{
+    document.getElementById('aicost-updated').textContent = d.month + ' · ' + (d.calls_this_month||0) + ' calls';
+    const usd = v => '$' + (Number(v)||0).toFixed(4);
+    const m = d.modelled || {}; const c = d.ceilings || {};
+    const marginTxt = (d.margin_pct===null||d.margin_pct===undefined)
+        ? 'set income' : d.margin_pct.toFixed(1) + '%';
+    const marginCol = (d.margin_pct===null||d.margin_pct===undefined) ? '#94a3b8'
+        : (d.margin_pct >= 50 ? '#4ade80' : d.margin_pct >= 0 ? '#fbbf24' : '#fca5a5');
+    let tiles = '';
+    tiles += '<div class="health-metric"><div class="hm-label">Spend this month</div><div class="hm-value">'+usd(d.month_cost_usd)+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Cost / AI user</div><div class="hm-value">'+usd(d.cost_per_user_usd)+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Cost / call</div><div class="hm-value">'+usd(d.cost_per_call_usd)+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Margin vs income</div><div class="hm-value" style="color:'+marginCol+'">'+marginTxt+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Real-token costed</div><div class="hm-value">'+(d.real_token_pct||0)+'%</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Modelled @100 / @100k</div><div class="hm-value">'+usd(m.cost_100_users_usd)+' / '+usd(m.cost_100k_users_usd)+'</div></div>';
+    document.getElementById('aicost-metrics').innerHTML = tiles;
+
+    const pcap = c.daily_platform_ceiling_usd || 0;
+    const ucap = c.daily_user_ceiling_usd || 0;
+    const pct = c.platform_pct_of_ceiling || 0;
+    const barCol = c.platform_breached ? '#ef4444' : pct >= 75 ? '#f59e0b' : '#4ade80';
+    let ceilHtml = '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">C1 HARD CEILING · today '+usd(c.today_spend_usd)+' / '+(pcap?usd(pcap):'off')+' platform · '+(ucap?usd(ucap):'off')+'/user/day</div>';
+    if (pcap > 0) {
+      ceilHtml += '<div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;">'
+        + '<div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+barCol+';"></div></div>';
+      if (c.platform_breached) ceilHtml += '<div style="font-size:11px;color:#fca5a5;margin-top:4px;">⛔ Platform ceiling reached — new paid AI calls refused (429) until 00:00 UTC.</div>';
+    }
+    document.getElementById('aicost-ceiling').innerHTML = ceilHtml;
+
+    const esc = s => (s||'').replace(/[&<>]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+    const rows = (d.by_endpoint||[]).map(e=>{
+      const realTag = (e.real_rows>0) ? '<span style="color:#4ade80;font-size:10px;">●real</span>' : '<span style="color:#64748b;font-size:10px;">○est</span>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05);padding:4px 0;">'
+        + '<span style="color:#cbd5e1;">'+esc(e.endpoint)+' <span style="color:#64748b;">('+esc(e.model)+')</span></span>'
+        + '<span style="color:#e2e8f0;">'+e.calls+' · $'+(Number(e.cost)||0).toFixed(4)+' '+realTag+'</span>'
+        + '</div>';
+    }).join('');
+    document.getElementById('aicost-endpoints').innerHTML = rows || '<div style="color:#64748b;font-size:13px;">No AI spend logged this month.</div>';
+  }).catch(()=>{
+    document.getElementById('aicost-updated').textContent = 'fetch failed';
   });
 }
 </script>

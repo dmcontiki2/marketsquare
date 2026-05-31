@@ -1,3 +1,72 @@
+## Session 99 · 31 May 2026 · O2 — guarded auto-deploy sync of backend modules
+
+Closed the long-deferred audit item **O2**: the four backend Python modules imported by `main.py` — `auth.py`, `database.py`, `storage.py`, `payments.py` — were in the repo but were never pushed by `deploy_marketsquare.bat` (server copies were the only source of truth, so the S1 hardened `auth.py` had never actually reached the server).
+
+**deploy_marketsquare.bat changes (surgical):**
+1. Pre-flight: added existence checks for `auth.py`, `database.py`, `storage.py`, `payments.py` alongside the existing HTML/JS/CSS checks — the script aborts if any module is missing rather than shipping a partial backend.
+2. New **Step 3d**, placed immediately before the BEA deploy/restart (Step 4) so the modules land *before* `systemctl restart`: scp each of the four modules with the same `if %errorlevel% neq 0 → abort` guard used everywhere else.
+3. Verify section: added a post-deploy line asserting all four modules are present on the server.
+
+**Live deploy performed this session (mirrors the new bat step):** server `auth.py` was still the pre-S1 version (1287 B, contained the `ms_admin_changeme` default); confirmed `MS_API_KEY` is set in the systemd unit Environment *and* in the running process before touching anything, backed up the server file to `auth.py.bak-20260531`, then scp'd all four modules. AST-checked each in the BEA venv (4/4 OK), server shas now match local. BEA restarted **active**, `/health` ok (v1.3.1), bad-key POST → 401 (auth still enforced), Cloudflare purged. smoke_test 30/30 ✅.
+
+Cost model impact: none — deploy-tooling/IP-sync change only; no AI volume, concurrency, or pricing change.
+
+## Session 98 · 31 May 2026 · Dashboard reorder + session-end write-back + MtG card orientation (cleanup + vision auto-orient) + horizontal card-row scroll
+
+Four operator-reported items, all deployed live. All large-file edits via Python string-replace (bea_main.py, dashboard.html, ms.css, marketsquare.html, marketsquare_admin.html) — no Edit/Write on the big files.
+
+**1 · Dashboard panel order.** Moved the "💰 AI COST & MARGIN" panel above "📧 EMAIL TRIAGE" on the Ops tab (dashboard.html). Byte-neutral reorder; loader + JS unchanged.
+
+**2 · Session-end baseline write-back (now mandatory).** Rewrote the CLAUDE.md session-end checklist to 5 steps and corrected the stale step-4 (it told us to hand-edit a DATA object; the dashboard is live-data-driven). The reliable refresh is `scp STATUS.md CHANGELOG.md BACKLOG.md AUDIT_PROGRESS.md` to the server — BEA parses them at GET /dashboard/summary. dashboard.html is re-deployed ONLY when its markup/JS changes. This makes "David can always view the latest" a guaranteed step, and the scheduled audit-runner already does the same write-back each run.
+
+**3 · MtG card orientation — root cause + cleanup + durable fix.** The earlier EXIF fix never reverted; it is structurally unable to correct an image that has NO EXIF tag but rotated pixels (these card scans came in 800×600 landscape, tag-stripped). Diagnosis confirmed by inspecting the live R2 images. (a) CLEANUP: rotated the 9 genuinely-sideways cards (IDs 231,232,233,235,236,237,238,239,240) to upright and re-uploaded under the same R2 keys — 234 "Emrakul, Aeons Torn" is a genuinely-landscape card and was correctly left alone. First pass rotated 180° wrong (caught by visual verification, not dimensions — portrait size alone is not proof of upright); corrected with a 180° flip; all 9 visually re-verified upright. (b) FORWARD FIX: new `_vision_orient_image()` — on a LANDSCAPE Collectors photo upload, a cheap Haiku vision call reads the card's text ("text is readable in only one orientation") and returns none/cw/ccw/flip; the server rotates before baking. EXIF-independent, scales to bulk uploads, leaves genuinely-landscape items alone, fails OPEN. Wired into POST /listings/photo behind a new `category` form field; admin batch-card upload now sends `category=Collectors`. Spend logged + ceiling-aware.
+
+**4 · Horizontal card-row scroll (Heritage/Wonders + all .feat-scroll-btn rows).** Root cause: the arrow buttons were positioned OUTSIDE the strip (left/right:-18px) and clipped by the app container, and were hidden on mobile. Fix (ms.css): arrows moved inside the edge (4px), shown on all viewports, and the strip set `flex-wrap:nowrap` + `-webkit-overflow-scrolling:touch` + smooth scroll so it reliably overflows and swipes. Applies to all 6 carousels sharing the class. ms.css ?v= bumped 113→114.
+
+Deployed: main.py, dashboard.html, static/ms.css, admin.html, index.html (cache-bust) to Hetzner; BEA restarted clean; Cloudflare purged. Smoke 30/30 ✅. Server backups: *.s97bak. Cleanup scripts left on server: rotate_cards.py, rotate_fix180.py.
+
+**Cost model impact:** New per-upload vision-orient call fires ONLY on landscape Collectors photos (most card photos are portrait and skip it) — ~1 Haiku call (8 max_tokens, 512px probe) per landscape collectible upload, logged to ai_spend_log and subject to the C1 daily ceiling. Negligible at current volume; bounded by the platform ceiling at scale.
+## Session 97 · 31 May 2026 · Phase-1 cost guardrails — C1 hard ceiling, C2 real-token costing, C3 AI3/AI4 logging + dashboard cost panel
+
+Built the audit's Phase-1 cost controls. All BEA edits applied via Python string-replacement (the large-file truncation hazard bit once mid-session — `bea_main.py` was restored byte-clean from the server, the source of truth, then re-applied safely; no Edit/Write on the big files).
+
+**C2 — real-token costing.** New `_MODEL_PRICE` table (USD per 1M tokens: Haiku 0.80/4.00, Sonnet 3.00/15.00, Opus 15.00/75.00) + `_token_cost()` + `_usage_tokens()` (pulls `usage.input_tokens/output_tokens` from the Anthropic response). `ai_spend_log` gained `input_tokens`, `output_tokens`, `cost_is_real` columns. `_log_ai_spend()` now takes optional token counts: real tokens → exact cost, `cost_is_real=1`; absent → flat `_AI_COST` estimate, `cost_is_real=0` (backward compatible). Wired real-token capture into all 7 paid AI ops (coach, market-note, guidance, upload-comment, vision-draft, price-check, yield). Live-verified: a real guidance call logged `cost_is_real` and lifted `real_token_pct` 0→7.7% with the true computed cost ($0.000978, not the $0.0023 flat estimate).
+
+**C3 — spend logging on AI3/AI4.** Price-check and yield were previously unlogged. Both now call `_log_ai_spend()` with real token counts after a charged result (yield falls back to flat estimate only on the narration-failed graceful-degrade path).
+
+**C1 — hard daily cost ceiling (refuse, not just alert).** New `_check_cost_ceiling(email)` pre-flight guard on every paid AI op. `ai_spend_config` gained `daily_user_ceiling_usd` (default $0.50) and `daily_platform_ceiling_usd` (default $100, sized off the audit's ~$82/day @100k model). When today's logged spend reaches a cap, the next paid call is REFUSED with HTTP 429 — superusers exempt from the per-user rail but still counted toward platform; fail-OPEN on internal error so a glitch never locks out a paying user; 0 disables a rail. Live-verified: platform cap set below today's spend → guidance call returned 429 with the pause message AND logged no spend (refused before the AI call). Restored to $100 after the test.
+
+**Dashboard cost panel (C4).** New no-auth `GET /dashboard/cost` (obscure-URL posture, like `/dashboard/email-triage`) returns the four audit metrics — cost/AI-user, cost/call, margin vs income, real-token coverage — plus a modelled @100/@100k run-rate and the C1 ceiling status. New "💰 AI COST & MARGIN" panel on the dashboard Ops tab renders the tiles, a platform-ceiling progress bar (amber ≥75%, red on breach), and a per-endpoint table tagged ●real/○est. `/admin/ai-spend` enriched with `ceilings` (incl. top users today) and `cost_quality`; `PUT /admin/ai-spend/config` now accepts both ceilings (round-trip verified).
+
+Deployed: `main.py` + `dashboard.html` to Hetzner (server AST-checked before restart), BEA restarted clean (startup complete, migrations applied), Cloudflare purged. Smoke test 30/30 ✅. Server backups kept as `main.py.s96bak` / `dashboard.html.s96bak`.
+
+**Deferred to next session:** O2 — guarded one-time sync of `auth.py`/`database.py`/`storage.py`/`payments.py` into the auto-deploy (the auth.py fail-closed change is live-safe since `MS_API_KEY` is set, but the wiring needs a coordinated deploy).
+
+**Cost model impact:** No change to per-call economics. Costing is now exact (real tokens) rather than flat-estimated, so the dashboard run-rate will tighten as the estimate rows age out. The C1 ceiling is a hard spend cap: at the $100/day platform default, maximum AI exposure is ~$3,000/mo regardless of load — a true ceiling on the cost line.
+
+## Session 96 · 31 May 2026 · Full commercial-readiness audit + Phase-1 guardrails started
+
+Switched from one-at-a-time fixes to a single full-stack audit (deliverable: TrustSquare_Commercial_Readiness_Audit.docx, running log: AUDIT_PROGRESS.md). Reviewed all 128 BEA endpoints, FEA, server modules, deploy, security and cost. Good news up front: no hardcoded secrets in the BEA, all SQL parameterised, SQLite WAL already enabled, and every paid AI operation runs 93-99% margin (modelled). The app is fundamentally sound; the gaps are guardrails and IP-safety, not rot.
+
+**Critical fixes applied this session:**
+- S2: Pulled the IP-bearing server-only modules `auth.py`, `database.py`, `storage.py` into the repo (payments.py was already local). Verified byte-identical to the server via sha256. Previously these existed ONLY on the server — unversioned and unbacked-up; now they are in git.
+- S1: Removed the guessable default API key (`ms_admin_changeme`) from auth.py — the BEA now refuses to start if `MS_API_KEY` is unset (fail-closed). Confirmed `MS_API_KEY` is set on the server, so this is safe to deploy.
+- P1: Confirmed WAL + synchronous=NORMAL already on (no change needed).
+
+**Deliberately NOT done (sequenced, with reason):** did not wire auth/database/storage/payments into the auto-deploy yet (O2) — the server copies are the source of truth and the auth.py change needs a coordinated deploy; auto-pushing now could regress the server. Will sequence that as a guarded one-time sync.
+
+**Top of next session (Phase 1 cont.):** C1 hard token/cost ceiling per-user + platform-wide (refuse when exceeded, not just alert) · C2 cost from real API token counts not flat constants · C3 add missing spend-logging to AI3/AI4 · cost+margin+server-cost panels on dashboard.html.
+
+**Architecture decision recorded:** server scaling/KPI logic goes INSIDE the BEA as read-only observe-and-alert (feeding the dashboard), never auto-scale — no new service, no recurring cost, no machine that can spend money on its own. David resizes the Hetzner box on the signal.
+
+**Cost model impact:** none this session (no AI-path changes). Audit confirms 100 users ~$11.61/mo, 100k users ~$2,474/mo, both net positive at 4 paid AI ops/user/mo.
+## Session 95d · 30 May 2026 · Deploy script now self-bumps cache-buster + deploys static assets
+
+Closed two real gaps in `deploy_marketsquare.bat` that made `ms.js`/`ms.css` updates a fragile manual job. Findings while investigating: (1) the deploy script never deployed `ms.js`/`ms.css` at all — they were scp'd by hand; (2) it never bumped the `?v=` version inside `marketsquare.html` — the `?v=%random%` at the end only cache-busts David's own verification browser tabs, not the served asset; (3) the service worker (`/var/www/marketsquare/service-worker.js`) is Web-Push-only — it has NO fetch handler and does not cache `ms.js`, so it is NOT a stale-asset risk (and it already calls skipWaiting/clients.claim). So only two cache layers actually matter: the HTML `?v=` and nginx-immutable/Cloudflare.
+
+Changes to `deploy_marketsquare.bat`: new Step 0 auto-increments `ms.js?v=` and `ms.css?v=` in `marketsquare.html` via an inline PowerShell regex (aborts the deploy if it fails, so we never ship a stale-cached asset); new Step 3c scp's `ms.js` and `ms.css` to `/static/`; new Step 5b calls the existing `/admin/purge-cache` BEA endpoint to purge Cloudflare; verification now confirms `static/ms.js` is present and prints the served `?v=`. Pre-flight now also checks `ms.js`/`ms.css` exist locally. Net effect: David runs one script, the version bump + static deploy + edge purge all happen automatically — no more hand-editing `?v=`.
+
+No app-logic change. Backup of the prior script kept as deploy_marketsquare.bat.bak in the sandbox.
 ## Session 95c · 30 May 2026 · Soften price warning — observation, not fraud allegation
 
 Per David: we charge for a verified check even when the price looks suspicious, but we must NOT characterise a listing as fraud/counterfeit/stolen without substantive evidence we don't have. Reworded the low-price warning to a neutral, factual price-position note. Renamed `fraud_flag()` → `price_caution()` in `bea_main.py`; removed all "counterfeit / stolen / bait / scam / verify authenticity" language. The danger-tier message now reads: "Priced well below the verified market — this asking price is about N% below the verified, locally-sourced market price… may simply be a good deal, but worth understanding before you commit… This is information, not financial advice." Verdict value `verify_authenticity` → `below_verified_market`. `ms.js` banner softened from red/🚩 to amber/📉 with the calmer copy and the app's standard "not financial advice" disclaimer. Charging unchanged — a verified result still costs 1T. Both files pass ast.parse / node --check.

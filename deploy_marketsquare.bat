@@ -50,7 +50,59 @@ if not exist "%PROJECT%\service-worker.js" (
     pause
     exit /b 1
 )
-echo  All four files found locally.
+if not exist "%PROJECT%\ms.js" (
+    echo  ERROR: ms.js not found in %PROJECT%
+    pause
+    exit /b 1
+)
+if not exist "%PROJECT%\ms.css" (
+    echo  ERROR: ms.css not found in %PROJECT%
+    pause
+    exit /b 1
+)
+if not exist "%PROJECT%\auth.py" (
+    echo  ERROR: auth.py not found in %PROJECT%
+    pause
+    exit /b 1
+)
+if not exist "%PROJECT%\database.py" (
+    echo  ERROR: database.py not found in %PROJECT%
+    pause
+    exit /b 1
+)
+if not exist "%PROJECT%\storage.py" (
+    echo  ERROR: storage.py not found in %PROJECT%
+    pause
+    exit /b 1
+)
+if not exist "%PROJECT%\payments.py" (
+    echo  ERROR: payments.py not found in %PROJECT%
+    pause
+    exit /b 1
+)
+echo  All required files found locally.
+echo.
+
+:: ── Step 0: Auto-bump cache-buster (?v=N) on ms.js + ms.css ──
+:: The browser caches each ?v= URL forever (nginx 'immutable'), so a deploy only
+:: reaches users when the version number changes. Bumped automatically here so it
+:: is never a manual step. Only the buyer app loads ms.js / ms.css.
+echo  [0/7] Bumping cache-buster version on ms.js and ms.css...
+powershell -NoProfile -Command ^
+  "$f = '%PROJECT%\marketsquare.html';" ^
+  "$c = Get-Content -Raw -LiteralPath $f;" ^
+  "$c = [regex]::Replace($c, 'ms\.js\?v=(\d+)', { 'ms.js?v=' + ([int]$args[0].Groups[1].Value + 1) });" ^
+  "$c = [regex]::Replace($c, 'ms\.css\?v=(\d+)', { 'ms.css?v=' + ([int]$args[0].Groups[1].Value + 1) });" ^
+  "Set-Content -NoNewline -LiteralPath $f -Value $c;" ^
+  "$jsv = [regex]::Match($c, 'ms\.js\?v=(\d+)').Groups[1].Value;" ^
+  "$cssv = [regex]::Match($c, 'ms\.css\?v=(\d+)').Groups[1].Value;" ^
+  "Write-Host ('  ms.js -> v=' + $jsv + '   ms.css -> v=' + $cssv)"
+if %errorlevel% neq 0 (
+    echo  ERROR: version bump failed. Aborting so we do not ship a stale-cached asset.
+    pause
+    exit /b 1
+)
+echo  Done.
 echo.
 
 :: ── Step 1: Deploy buyer app ──────────────────────────────
@@ -86,11 +138,62 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3c: Deploy static assets (ms.js + ms.css -> /static/) ──
+echo  [3c] Deploying static assets (ms.js, ms.css -^> /static/)...
+scp "%PROJECT%\ms.js" %SERVER%:%REMOTE%/static/ms.js
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for ms.js. Check SSH connection.
+    pause
+    exit /b 1
+)
+scp "%PROJECT%\ms.css" %SERVER%:%REMOTE%/static/ms.css
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for ms.css. Check SSH connection.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
 :: ── Step 3b: Deploy World Heritage data (wonders.json) ────
 echo  [3b] Deploying Wonders data (wonders.json -^> wonders.json)...
 scp "%PROJECT%\wonders.json" %SERVER%:%REMOTE%/wonders.json
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for wonders.json. Check SSH connection.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: ── Step 3d: Deploy backend modules (auth/database/storage/payments) ──
+:: These four modules are imported by main.py but were previously NOT auto-deployed
+:: (server-only). O2 audit fix: sync them here, guarded. auth.py is fail-closed
+:: (refuses to start if MS_API_KEY is unset) — MS_API_KEY is confirmed set in the
+:: systemd unit environment, so this is live-safe. They land BEFORE the BEA restart
+:: below so the restart picks up the new modules atomically.
+echo  [3d] Deploying backend modules (auth.py, database.py, storage.py, payments.py)...
+scp "%PROJECT%\auth.py" %SERVER%:%REMOTE%/auth.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for auth.py. Check SSH connection.
+    pause
+    exit /b 1
+)
+scp "%PROJECT%\database.py" %SERVER%:%REMOTE%/database.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for database.py. Check SSH connection.
+    pause
+    exit /b 1
+)
+scp "%PROJECT%\storage.py" %SERVER%:%REMOTE%/storage.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for storage.py. Check SSH connection.
+    pause
+    exit /b 1
+)
+scp "%PROJECT%\payments.py" %SERVER%:%REMOTE%/payments.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for payments.py. Check SSH connection.
     pause
     exit /b 1
 )
@@ -128,6 +231,11 @@ if %errorlevel% neq 0 (
 )
 echo.
 
+:: ── Step 5b: Purge Cloudflare edge cache ──
+echo  [5b] Purging Cloudflare cache...
+ssh %SERVER% "curl -s http://localhost:8000/admin/purge-cache >nul 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+echo.
+
 :: ── Step 6: Verify deploy on server ──────────────────────
 echo  [6/6] Verifying deploy on server...
 echo.
@@ -139,6 +247,8 @@ ssh %SERVER% "grep -q 'tuppence/balance' %REMOTE%/main.py && echo   [OK] BEA: tu
 ssh %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishlist feed endpoints confirmed || echo   [FAIL] BEA: wishlist endpoints missing - redeploy needed"
 
 ssh %SERVER% "systemctl is-active marketsquare >nul 2>&1 && echo   [OK] BEA service is active || echo   [FAIL] BEA service is NOT active - check journalctl"
+
+ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && echo   [OK] BEA: backend modules (auth/database/storage/payments) present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
 
 ssh %SERVER% "grep -q 'dev-tools\|devtools' %REMOTE%/admin.html && echo   [OK] Admin: new admin.html confirmed on server || echo   [FAIL] Admin: old admin.html still on server"
 
@@ -161,6 +271,9 @@ ssh %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: 
 ssh %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
 
 ssh %SERVER% "curl -s http://localhost:8000/health | grep -q '1.3.0' && echo   [OK] BEA reports v1.3.0 || echo   [FAIL] BEA version mismatch - check service restart"
+
+ssh %SERVER% "test -f %REMOTE%/static/ms.js && echo   [OK] static/ms.js present on server || echo   [FAIL] static/ms.js missing - redeploy needed"
+ssh %SERVER% "grep -oE 'ms\.js\?v=[0-9]+' %REMOTE%/index.html | head -1 | sed 's/^/   [INFO] served buyer app references /'"
 
 echo.
 echo  ============================================================

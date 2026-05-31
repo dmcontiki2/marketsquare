@@ -408,6 +408,16 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_month ON ai_spend_log(logged_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_spend_email ON ai_spend_log(email, logged_at DESC)")
+    # C2 (Session 97) — real token counts + flag for real-cost vs flat-estimate rows.
+    for _col, _ddl in (
+        ("input_tokens",  "ALTER TABLE ai_spend_log ADD COLUMN input_tokens  INTEGER NOT NULL DEFAULT 0"),
+        ("output_tokens", "ALTER TABLE ai_spend_log ADD COLUMN output_tokens INTEGER NOT NULL DEFAULT 0"),
+        ("cost_is_real",  "ALTER TABLE ai_spend_log ADD COLUMN cost_is_real  INTEGER NOT NULL DEFAULT 0"),
+    ):
+        try:
+            conn.execute(_ddl)
+        except Exception:
+            pass
 
     conn.execute("""CREATE TABLE IF NOT EXISTS ai_spend_config (
         id                  INTEGER PRIMARY KEY CHECK (id = 1),
@@ -420,6 +430,16 @@ def run_migrations(conn):
     conn.execute("""INSERT OR IGNORE INTO ai_spend_config
         (id, monthly_income_usd, alert_threshold_pct, alert_email)
         VALUES (1, 0.0, 20.0, 'dmcontiki2@gmail.com')""")
+    # C1 (Session 97) — HARD daily cost ceilings (USD), per-user + platform. 0 = off.
+    # When the day's spend reaches the cap, the next paid AI call is REFUSED (429).
+    for _col, _ddl in (
+        ("daily_user_ceiling_usd",     "ALTER TABLE ai_spend_config ADD COLUMN daily_user_ceiling_usd     REAL NOT NULL DEFAULT 0.50"),
+        ("daily_platform_ceiling_usd", "ALTER TABLE ai_spend_config ADD COLUMN daily_platform_ceiling_usd REAL NOT NULL DEFAULT 100.0"),
+    ):
+        try:
+            conn.execute(_ddl)
+        except Exception:
+            pass
 
     # AI Email Triage (Session 94) — one row per inbound email handled by POST /email/inbound
     conn.execute("""CREATE TABLE IF NOT EXISTS email_triage (
@@ -796,14 +816,45 @@ if not N8N_WEBHOOK_ACCEPT:
 if not N8N_WEBHOOK_DECLINE:
     _log.warning("N8N_WEBHOOK_DECLINE not set — intro-declined emails disabled")
 
-# ── AI SPEND COST CONSTANTS (USD, conservative estimates) ─────
-# Used by async spend logger — non-blocking, appended after each AI call
+# ── AI SPEND COST CONSTANTS (USD) ─────────────────────────────
+# Two layers: _AI_COST flat fallback (when a call site passes no tokens) and
+# _MODEL_PRICE real per-MILLION-token list prices (C2, Session 97). When usage
+# {input_tokens, output_tokens} is passed, the logger computes the EXACT cost.
 _AI_COST = {
     "haiku":          0.0023,   # claude-haiku-4-5 — 800in+400out tokens avg
     "sonnet":         0.0150,   # claude-sonnet-4-6 — standard call
     "sonnet_vision":  0.0400,   # claude-sonnet-4-6 — with 12 images
     "sonnet_rewrite": 0.0150,
 }
+
+# Real list prices, USD per 1,000,000 tokens (input, output). Update if Anthropic re-prices.
+_MODEL_PRICE = {
+    "haiku":          (0.80,  4.00),
+    "sonnet":         (3.00, 15.00),
+    "sonnet_vision":  (3.00, 15.00),
+    "sonnet_rewrite": (3.00, 15.00),
+    "opus":           (15.00, 75.00),
+}
+
+def _token_cost(model_key: str, in_tok: int, out_tok: int) -> float:
+    """Exact USD cost from real token counts (C2). Falls back to the flat estimate."""
+    price = _MODEL_PRICE.get(model_key)
+    if not price:
+        return _AI_COST.get(model_key, 0.0023)
+    in_rate, out_rate = price
+    return (in_tok / 1_000_000.0) * in_rate + (out_tok / 1_000_000.0) * out_rate
+
+
+def _usage_tokens(resp_json: dict):
+    """(input_tokens, output_tokens) from an Anthropic response, or (None, None)."""
+    try:
+        u = resp_json.get("usage") or {}
+        it = u.get("input_tokens"); ot = u.get("output_tokens")
+        if it is None and ot is None:
+            return (None, None)
+        return (int(it or 0), int(ot or 0))
+    except Exception:
+        return (None, None)
 
 # Hetzner Object Storage (Task 3 — optional, falls back to local /media)
 HETZNER_S3_ENDPOINT   = os.getenv("HETZNER_S3_ENDPOINT")
@@ -923,21 +974,33 @@ async def _fire_webhook(url: str, payload: dict):
         _log.error("Webhook POST to %s failed: %s", url, exc)
 
 
-def _log_ai_spend(email: str, endpoint: str, model_key: str):
+def _log_ai_spend(email: str, endpoint: str, model_key: str,
+                  in_tok: int | None = None, out_tok: int | None = None):
     """Background task: log AI call cost + trigger alert check if threshold crossed.
     Non-blocking — called via background_tasks.add_task() after every AI call.
     Never raises — log errors only.
+
+    C2 (Session 97): real token counts -> exact cost via _MODEL_PRICE, cost_is_real=1.
+    No tokens (legacy sites) -> flat _AI_COST estimate, cost_is_real=0. Backward compatible.
     """
     try:
-        cost = _AI_COST.get(model_key, 0.0023)
+        if in_tok is not None or out_tok is not None:
+            it, ot = int(in_tok or 0), int(out_tok or 0)
+            cost = _token_cost(model_key, it, ot)
+            is_real = 1
+        else:
+            it, ot = 0, 0
+            cost = _AI_COST.get(model_key, 0.0023)
+            is_real = 0
         conn = database.get_db()
         try:
             conn.execute(
-                "INSERT INTO ai_spend_log (email, endpoint, model, est_cost_usd) VALUES (?,?,?,?)",
-                (email or '', endpoint, model_key, cost)
+                "INSERT INTO ai_spend_log "
+                "(email, endpoint, model, est_cost_usd, input_tokens, output_tokens, cost_is_real) "
+                "VALUES (?,?,?,?,?,?,?)",
+                (email or '', endpoint, model_key, cost, it, ot, is_real)
             )
             conn.commit()
-            # Check alert threshold (non-blocking — catch all errors)
             _maybe_fire_spend_alert(conn)
         finally:
             conn.close()
@@ -1008,6 +1071,63 @@ def _maybe_fire_spend_alert(conn):
                 pass  # alert failure must never affect user response
     except Exception as exc:
         _log.error("_maybe_fire_spend_alert failed: %s", exc)
+
+
+def _check_cost_ceiling(email: str) -> None:
+    """C1 (Session 97) — HARD daily cost ceiling. Pre-flight guard before every paid
+    AI call. REFUSES (HTTP 429) when today's logged AI spend has reached the per-user
+    or platform-wide USD ceiling. Distinct from observe-and-alert. Ceiling 0 = off.
+    Superusers exempt from the per-user rail (still counted toward platform).
+    Fail-OPEN on internal error — never lock a legitimate paying user out.
+    """
+    try:
+        conn = database.get_db()
+        try:
+            cfg = conn.execute(
+                "SELECT daily_user_ceiling_usd, daily_platform_ceiling_usd "
+                "FROM ai_spend_config WHERE id = 1"
+            ).fetchone()
+            if not cfg:
+                return
+            user_cap     = cfg["daily_user_ceiling_usd"]     or 0.0
+            platform_cap = cfg["daily_platform_ceiling_usd"] or 0.0
+            if user_cap <= 0 and platform_cap <= 0:
+                return
+            day_start = __import__('datetime').datetime.utcnow().strftime('%Y-%m-%d 00:00:00')
+            if platform_cap > 0:
+                prow = conn.execute(
+                    "SELECT COALESCE(SUM(est_cost_usd),0) as t FROM ai_spend_log WHERE logged_at >= ?",
+                    (day_start,)
+                ).fetchone()
+                if (prow["t"] if prow else 0.0) >= platform_cap:
+                    _log.warning("C1 platform ceiling hit: $%.4f >= $%.2f — refusing (%s)",
+                                 prow["t"], platform_cap, email)
+                    raise HTTPException(
+                        status_code=429,
+                        detail="AI services are temporarily paused (daily platform budget reached). "
+                               "Please try again later."
+                    )
+            if user_cap > 0 and email:
+                su = conn.execute("SELECT is_superuser FROM users WHERE email = ?", (email,)).fetchone()
+                if not (su and su["is_superuser"]):
+                    urow = conn.execute(
+                        "SELECT COALESCE(SUM(est_cost_usd),0) as t FROM ai_spend_log "
+                        "WHERE email = ? AND logged_at >= ?", (email, day_start)
+                    ).fetchone()
+                    if (urow["t"] if urow else 0.0) >= user_cap:
+                        _log.warning("C1 user ceiling hit: %s $%.4f >= $%.2f — refusing",
+                                     email, urow["t"], user_cap)
+                        raise HTTPException(
+                            status_code=429,
+                            detail="You've reached today's AI usage limit on this account. "
+                                   "It resets at 00:00 UTC."
+                        )
+        finally:
+            conn.close()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _log.error("_check_cost_ceiling failed (failing open): %s", exc)
 
 
 # Serve local media files (fallback when Hetzner Object Storage not yet configured)
@@ -2123,12 +2243,82 @@ def get_cities(country: Optional[str] = None):
 # Accepts a photo, compresses to thumb + medium, stores both,
 # returns URLs. Called by admin tool before creating listing.
 
+def _vision_orient_image(img, hint: str = ""):
+    """Session 98 — content-based orientation for collectible/card photos.
+
+    EXIF-based correction (ImageOps.exif_transpose) cannot fix an image that has
+    no EXIF tag but rotated pixels (e.g. desktop-saved or re-encoded card scans).
+    For such images the reliable signal is the TEXT: a card's title/rules text is
+    only readable in one orientation. We ask a cheap Haiku vision call which way is
+    up and rotate to match. Returns (corrected_img, rotated_bool, model_in, model_out).
+
+    Only worth calling on LANDSCAPE collectible images — a portrait card is almost
+    always already upright, and a genuinely-landscape item (sealed box, banknote)
+    will correctly come back as 'none'. Fails OPEN: any error returns the image
+    unchanged so a vision hiccup never blocks an upload.
+    """
+    import base64 as _b64
+    try:
+        if not ANTHROPIC_API_KEY:
+            return (img, False, None, None)
+        w, h = img.size
+        if w <= h:
+            return (img, False, None, None)   # already portrait/upright — skip the call
+
+        # Downscale a copy for the vision call (cheap; orientation needs no detail).
+        probe = img.copy()
+        probe.thumbnail((512, 512), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=70)
+        b64 = _b64.b64encode(pbuf.getvalue()).decode()
+
+        prompt = (
+            "This is a photo of a collectible (often a trading card) that may be rotated. "
+            "Decide how to rotate it so any TEXT and the main subject read normally, "
+            "right-side up. If the item has text, the correct orientation is the one where "
+            "the text reads left-to-right, top-to-bottom. "
+            "Reply with ONLY one word: none, cw, ccw, or flip. "
+            "none = already upright; cw = rotate 90 clockwise; ccw = rotate 90 counter-clockwise; "
+            "flip = rotate 180."
+        )
+        with httpx.Client(timeout=20) as client:
+            resp = client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_API_KEY,
+                         "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={
+                    "model": AA_MODEL,
+                    "max_tokens": 8,
+                    "messages": [{"role": "user", "content": [
+                        {"type": "image", "source": {"type": "base64",
+                         "media_type": "image/jpeg", "data": b64}},
+                        {"type": "text", "text": prompt},
+                    ]}],
+                },
+            )
+        rj = resp.json()
+        ans = (rj.get("content", [{}])[0].get("text", "") or "").strip().lower()
+        it, ot = _usage_tokens(rj)
+        # PIL.rotate is COUNTER-CLOCKWISE for positive angles.
+        if "ccw" in ans:
+            return (img.rotate(90, expand=True), True, it, ot)
+        if "cw" in ans:
+            return (img.rotate(-90, expand=True), True, it, ot)
+        if "flip" in ans:
+            return (img.rotate(180, expand=True), True, it, ot)
+        return (img, False, it, ot)   # 'none' or unrecognised → leave as-is
+    except Exception as exc:
+        _log.warning("_vision_orient_image failed (leaving image unchanged): %s", exc)
+        return (img, False, None, None)
+
+
 @app.post("/listings/photo")
 async def upload_listing_photo(
     file: UploadFile = File(...),
     listing_id: Optional[int] = Form(None),
     is_primary: Optional[str] = Form(None),
     caption: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
     _key: str = Depends(auth.require_api_key)
 ):
     # Validate file type
@@ -2145,6 +2335,14 @@ async def upload_listing_photo(
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read image file")
+
+    # Session 98 — collectibles: EXIF can't fix tag-less rotated card scans, so for
+    # a landscape Collectors photo, ask vision which way is up and rotate to match.
+    if (category or "").strip().lower() == "collectors":
+        img, _oriented, _oin, _oout = _vision_orient_image(img, hint="trading card")
+        if _oriented:
+            _log.info("photo upload: vision re-oriented collectible image (listing=%s)", listing_id)
+            _log_ai_spend("", "/listings/photo:orient", "haiku", _oin, _oout)
 
     # ── Thumbnail (~100KB) ──────────────────────────────────
     thumb = img.copy()
@@ -3244,6 +3442,7 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
         _gc.close()
         if not _exists:
             raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+    _check_cost_ceiling(_email)   # C1 — refuse if daily cost ceiling reached
 
     try:
         async with httpx.AsyncClient(timeout=12) as client:
@@ -3265,8 +3464,10 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
                     "messages": [{"role": "user", "content": prompt}],
                 },
             )
-        text = resp.json()["content"][0]["text"].strip()
-        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku")
+        _mn_json = resp.json()
+        text = _mn_json["content"][0]["text"].strip()
+        _mn_in, _mn_out = _usage_tokens(_mn_json)   # C2
+        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku", _mn_in, _mn_out)
         return {"response": text}
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
@@ -3312,6 +3513,8 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
             status_code=401,
             detail="Unrecognised account — please complete seller registration first."
         )
+
+    _check_cost_ceiling(req.email)   # C1 — refuse if daily cost ceiling reached
 
     free_used     = row["aa_free_used"] or 0
     current_score = row["trust_score"] or 0
@@ -3559,7 +3762,9 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
                 },
             )
         resp.raise_for_status()
-        coaching_text = resp.json()["content"][0]["text"]
+        _coach_json = resp.json()
+        coaching_text = _coach_json["content"][0]["text"]
+        _co_in, _co_out = _usage_tokens(_coach_json)   # C2
     except Exception as exc:
         conn.close()
         _log.error("AA coach Claude call failed: %s", exc)
@@ -3595,7 +3800,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
         conn.commit()
     conn.close()
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku")
+    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku", _co_in, _co_out)
     return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
 
 
@@ -6479,6 +6684,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     # Existence gate — must be a registered user before AI call (Session 90)
     if not user_row:
         raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+    _check_cost_ceiling(req.email)   # C1 — refuse if daily cost ceiling reached
 
     earned_map = {r["signal_id"]: r["status"] for r in earned_rows} if earned_rows else {}
     # Supplement earned_map with direct user-table flags so guidance is accurate
@@ -6588,7 +6794,9 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
                 },
             )
         resp.raise_for_status()
-        raw = resp.json()["content"][0]["text"]
+        _g_json = resp.json()
+        raw = _g_json["content"][0]["text"]
+        _g_in, _g_out = _usage_tokens(_g_json)   # C2
     except Exception as exc:
         _log.warning("AI guidance Haiku call failed: %s", exc)
         return {
@@ -6620,7 +6828,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     guidance["current_score"] = current_score
     guidance["score_target"]  = score_target
     guidance["points_needed"] = points_needed
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku")
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku", _g_in, _g_out)
     return guidance
 
 
@@ -6732,6 +6940,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
     # Existence gate (Session 90)
     if not user_row:
         raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+    _check_cost_ceiling(req.email)   # C1 — refuse if daily cost ceiling reached
 
     cred_status = {r["signal_id"]: r["status"] for r in (earned_rows or [])}
     current_score = int(user_row["trust_score"] or 0) if user_row else 0
@@ -6791,15 +7000,18 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
                 },
             )
         resp.raise_for_status()
-        comment = resp.json()["content"][0]["text"].strip()
+        _uc_json = resp.json()
+        comment = _uc_json["content"][0]["text"].strip()
+        _uc_in, _uc_out = _usage_tokens(_uc_json)   # C2
     except Exception as exc:
         _log.warning("upload-comment Haiku call failed: %s", exc)
         comment = (
             f"✅ {signal_name} submitted (+{signal_pts} pts once verified). "
             + (f"Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)." if next_suggestion else "")
         )
+        _uc_in, _uc_out = None, None   # API failed — flat estimate
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku")
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku", _uc_in, _uc_out)
     return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
 
 
@@ -8424,7 +8636,8 @@ def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     try:
         cfg = conn.execute(
-            "SELECT monthly_income_usd, alert_threshold_pct, alert_email, last_alerted_at "
+            "SELECT monthly_income_usd, alert_threshold_pct, alert_email, last_alerted_at, "
+            "daily_user_ceiling_usd, daily_platform_ceiling_usd "
             "FROM ai_spend_config WHERE id = 1"
         ).fetchone()
         month_start = _dt.datetime.utcnow().strftime('%Y-%m-01')
@@ -8433,7 +8646,9 @@ def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
             "FROM ai_spend_log WHERE logged_at >= ?", (month_start,)
         ).fetchone()
         by_endpoint = conn.execute(
-            "SELECT endpoint, model, COUNT(*) as calls, ROUND(SUM(est_cost_usd),6) as cost "
+            "SELECT endpoint, model, COUNT(*) as calls, ROUND(SUM(est_cost_usd),6) as cost, "
+            "       SUM(input_tokens) as in_tok, SUM(output_tokens) as out_tok, "
+            "       SUM(cost_is_real) as real_rows "
             "FROM ai_spend_log WHERE logged_at >= ? "
             "GROUP BY endpoint, model ORDER BY cost DESC", (month_start,)
         ).fetchall()
@@ -8443,6 +8658,21 @@ def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
             "FROM ai_spend_log WHERE logged_at >= DATE('now','-30 days') "
             "GROUP BY day ORDER BY day DESC LIMIT 30"
         ).fetchall()
+        # C1 — today's spend vs ceilings (platform + top users today)
+        day_start = _dt.datetime.utcnow().strftime('%Y-%m-%d 00:00:00')
+        today_row = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) as total, COUNT(*) as calls "
+            "FROM ai_spend_log WHERE logged_at >= ?", (day_start,)
+        ).fetchone()
+        top_users_today = conn.execute(
+            "SELECT email, ROUND(SUM(est_cost_usd),6) as cost, COUNT(*) as calls "
+            "FROM ai_spend_log WHERE logged_at >= ? AND email != '' "
+            "GROUP BY email ORDER BY cost DESC LIMIT 5", (day_start,)
+        ).fetchall()
+        real_row = conn.execute(
+            "SELECT COALESCE(SUM(cost_is_real),0) as real, COUNT(*) as total "
+            "FROM ai_spend_log WHERE logged_at >= ?", (month_start,)
+        ).fetchone()
     finally:
         conn.close()
 
@@ -8452,6 +8682,14 @@ def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
     calls   = int(total_row["calls"]) if total_row else 0
     thresh_usd = income * thresh / 100.0 if income > 0 else 0.0
     pct_used   = (spend / income * 100) if income > 0 else 0.0
+
+    user_cap     = float(cfg["daily_user_ceiling_usd"])     if cfg else 0.0
+    platform_cap = float(cfg["daily_platform_ceiling_usd"]) if cfg else 0.0
+    today_spend  = float(today_row["total"]) if today_row else 0.0
+    today_calls  = int(today_row["calls"]) if today_row else 0
+    platform_pct = (today_spend / platform_cap * 100) if platform_cap > 0 else 0.0
+    real_n  = int(real_row["real"])  if real_row else 0
+    real_t  = int(real_row["total"]) if real_row else 0
 
     if income <= 0:
         status = "unconfigured"
@@ -8475,13 +8713,29 @@ def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
         "alert_email": cfg["alert_email"] if cfg else None,
         "by_endpoint": [dict(r) for r in by_endpoint],
         "daily_trend": [dict(r) for r in daily],
+        "ceilings": {
+            "daily_user_ceiling_usd":     round(user_cap, 4),
+            "daily_platform_ceiling_usd": round(platform_cap, 4),
+            "today_spend_usd":            round(today_spend, 6),
+            "today_calls":                today_calls,
+            "platform_pct_of_ceiling":    round(platform_pct, 1),
+            "platform_ceiling_breached":  bool(platform_cap > 0 and today_spend >= platform_cap),
+            "top_users_today":            [dict(r) for r in top_users_today],
+        },
+        "cost_quality": {
+            "real_token_rows": real_n,
+            "total_rows":      real_t,
+            "real_pct":        round((real_n / real_t * 100) if real_t else 0.0, 1),
+        },
     }
 
 
 class AISpendConfigUpdate(BaseModel):
-    monthly_income_usd:  Optional[float] = None
-    alert_threshold_pct: Optional[float] = None
-    alert_email:         Optional[str]   = None
+    monthly_income_usd:         Optional[float] = None
+    alert_threshold_pct:        Optional[float] = None
+    alert_email:                Optional[str]   = None
+    daily_user_ceiling_usd:     Optional[float] = None   # C1 — 0 disables
+    daily_platform_ceiling_usd: Optional[float] = None   # C1 — 0 disables
 
 
 @app.put("/admin/ai-spend/config")
@@ -8503,11 +8757,17 @@ def admin_ai_spend_config(cfg: AISpendConfigUpdate, _key: str = Depends(auth.req
         if cfg.alert_email is not None:
             conn.execute("UPDATE ai_spend_config SET alert_email=? WHERE id=1",
                          (cfg.alert_email.strip(),))
-        # Reset last_alerted_at so a fresh alert can fire on the next check
+        if cfg.daily_user_ceiling_usd is not None:
+            conn.execute("UPDATE ai_spend_config SET daily_user_ceiling_usd=? WHERE id=1",
+                         (max(0.0, cfg.daily_user_ceiling_usd),))
+        if cfg.daily_platform_ceiling_usd is not None:
+            conn.execute("UPDATE ai_spend_config SET daily_platform_ceiling_usd=? WHERE id=1",
+                         (max(0.0, cfg.daily_platform_ceiling_usd),))
         conn.execute("UPDATE ai_spend_config SET last_alerted_at=NULL WHERE id=1")
         conn.commit()
         row = conn.execute(
-            "SELECT monthly_income_usd, alert_threshold_pct, alert_email FROM ai_spend_config WHERE id=1"
+            "SELECT monthly_income_usd, alert_threshold_pct, alert_email, "
+            "daily_user_ceiling_usd, daily_platform_ceiling_usd FROM ai_spend_config WHERE id=1"
         ).fetchone()
     finally:
         conn.close()
@@ -8895,6 +9155,7 @@ async def vision_draft(
         _vc.close()
         if not _ve:
             raise HTTPException(status_code=401, detail="Unrecognised account — please complete seller registration first.")
+    _check_cost_ceiling(_ve_email)   # C1 — refuse if daily cost ceiling reached
 
     # ── 1. Read and validate photos ──────────────────────────────────────────
     image_blocks = []
@@ -8991,6 +9252,7 @@ async def vision_draft(
             raise HTTPException(status_code=502, detail=f"AI error: {err_msg}")
 
         raw_text = body["content"][0]["text"].strip()
+        _vd_in, _vd_out = _usage_tokens(body)   # C2
 
         # Strip markdown code fences if Claude wraps the JSON anyway
         if raw_text.startswith("```"):
@@ -9085,7 +9347,7 @@ async def vision_draft(
             "Identifying information was detected in photos and removed from this listing to protect seller anonymity."
         )
 
-    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision")
+    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision", _vd_in, _vd_out)
     return {
         "draft": draft,
         "warnings": all_warnings,
@@ -9522,6 +9784,7 @@ async def ai_price_check(listing_id: int, email: str):
     # charged at the end, and ONLY if we produced a verified service. A guess,
     # a 'cannot verify', or any failure costs the buyer nothing.
     _require_tuppence(email, 1)   # pre-flight only — no deduction yet
+    _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
     category    = listing["category"] or "General"
     city        = listing["city"] or "South Africa"
     title       = listing["title"] or "(no title)"
@@ -9645,7 +9908,9 @@ async def ai_price_check(listing_id: int, email: str):
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        _resp_json = resp.json()
+        raw = _resp_json["content"][0]["text"].strip()
+        _pc_in, _pc_out = _usage_tokens(_resp_json)   # C2/C3
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -9674,6 +9939,9 @@ async def ai_price_check(listing_id: int, email: str):
         cc.commit()
     finally:
         cc.close()
+
+    # C3 — log real AI spend for this paid call (was previously unlogged).
+    _log_ai_spend(email, "/listings/ai-price-check", "sonnet", _pc_in, _pc_out)
 
     _log.info("ai-price-check: listing #%d buyer=%s verdict=%s verified=%s flag=%s charged=1T",
               listing_id, email, verdict, verified,
@@ -9750,6 +10018,7 @@ async def ai_yield_calc(listing_id: int, email: str,
 
     # Pre-flight: can the buyer pay at all? (No deduction yet.)
     _require_tuppence(email, 1)
+    _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
         try:
@@ -9845,7 +10114,9 @@ async def ai_yield_calc(listing_id: int, email: str,
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        _yc_json = resp.json()
+        raw = _yc_json["content"][0]["text"].strip()
+        _yc_in, _yc_out = _usage_tokens(_yc_json)   # C2/C3
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -9859,6 +10130,7 @@ async def ai_yield_calc(listing_id: int, email: str,
         market_context = (f"Computed gross yield {gross:.1f}% on a R{buy_price:,.0f} "
                           f"purchase at R{monthly_rent:,.0f}/month.")
         sa_yield_benchmark = "SA residential benchmark: ~7-10% gross (varies by city)."
+        _yc_in, _yc_out = None, None   # narration failed — flat estimate
 
     # DELIVER-THEN-CHARGE: a real, computed yield was produced — charge now.
     cc = database.get_db()
@@ -9870,6 +10142,9 @@ async def ai_yield_calc(listing_id: int, email: str,
         cc.commit()
     finally:
         cc.close()
+
+    # C3 — log real AI spend for this paid call (was previously unlogged).
+    _log_ai_spend(email, "/listings/yield-calc", "haiku", _yc_in, _yc_out)
 
     _log.info("ai-yield-calc: listing #%d email=%s gross=%.1f%% charged=1T",
               listing_id, email, gross)
@@ -10332,4 +10607,88 @@ def dashboard_email_triage(limit: int = 20):
     }
 
 # ── END AI EMAIL TRIAGE — Session 94 ─────────────────────────────────────────
+
+
+# ── AI COST DASHBOARD PANEL (Session 97 · C2/C1) ─────────────────────────────
+# No-auth read-only feed for the ops dashboard (obscure-URL posture, like
+# /dashboard/email-triage). Surfaces the four audit metrics:
+#   1. per-user AI token cost     2. cost-vs-revenue margin per op
+#   3. monthly running cost (this month, real)  4. modelled @100 / @100k users
+# plus the C1 hard-ceiling status and C2 real-token coverage.
+
+@app.get("/dashboard/cost")
+def dashboard_cost():
+    """Unauthenticated AI cost + margin + ceiling snapshot for the ops dashboard."""
+    import datetime as _dt
+    conn = database.get_db()
+    try:
+        month_start = _dt.datetime.utcnow().strftime('%Y-%m-01')
+        day_start   = _dt.datetime.utcnow().strftime('%Y-%m-%d 00:00:00')
+        tot = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) AS cost, COUNT(*) AS calls, "
+            "       COALESCE(SUM(cost_is_real),0) AS real_rows, "
+            "       COALESCE(SUM(input_tokens),0) AS in_tok, COALESCE(SUM(output_tokens),0) AS out_tok "
+            "FROM ai_spend_log WHERE logged_at >= ?", (month_start,)
+        ).fetchone()
+        by_ep = conn.execute(
+            "SELECT endpoint, model, COUNT(*) AS calls, ROUND(SUM(est_cost_usd),6) AS cost, "
+            "       COALESCE(SUM(cost_is_real),0) AS real_rows "
+            "FROM ai_spend_log WHERE logged_at >= ? GROUP BY endpoint, model ORDER BY cost DESC",
+            (month_start,)
+        ).fetchall()
+        today = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) AS cost, COUNT(*) AS calls "
+            "FROM ai_spend_log WHERE logged_at >= ?", (day_start,)
+        ).fetchone()
+        active_users = conn.execute(
+            "SELECT COUNT(DISTINCT email) AS n FROM ai_spend_log "
+            "WHERE logged_at >= ? AND email != ''", (month_start,)
+        ).fetchone()["n"]
+        cfg = conn.execute(
+            "SELECT monthly_income_usd, daily_user_ceiling_usd, daily_platform_ceiling_usd "
+            "FROM ai_spend_config WHERE id = 1"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    month_cost = float(tot["cost"]); calls = int(tot["calls"])
+    real_rows = int(tot["real_rows"])
+    income = float(cfg["monthly_income_usd"]) if cfg else 0.0
+    user_cap = float(cfg["daily_user_ceiling_usd"]) if cfg else 0.0
+    platform_cap = float(cfg["daily_platform_ceiling_usd"]) if cfg else 0.0
+    today_cost = float(today["cost"]); today_calls = int(today["calls"])
+
+    cost_per_user = (month_cost / active_users) if active_users else 0.0
+    cost_per_call = (month_cost / calls) if calls else 0.0
+    margin_pct = ((income - month_cost) / income * 100) if income > 0 else None
+    real_pct = round((real_rows / calls * 100) if calls else 0.0, 1)
+
+    # Modelled run-rate (audit figures): 4 paid AI ops/user/mo at the blended
+    # per-call cost observed this month (or a conservative $0.012 fallback).
+    blended = cost_per_call if cost_per_call > 0 else 0.012
+    model_100  = round(blended * 4 * 100, 2)
+    model_100k = round(blended * 4 * 100_000, 2)
+
+    return {
+        "month": _dt.datetime.utcnow().strftime('%Y-%m'),
+        "month_cost_usd": round(month_cost, 6),
+        "calls_this_month": calls,
+        "active_ai_users": active_users,
+        "cost_per_user_usd": round(cost_per_user, 6),
+        "cost_per_call_usd": round(cost_per_call, 6),
+        "income_usd": income,
+        "margin_pct": (round(margin_pct, 1) if margin_pct is not None else None),
+        "real_token_pct": real_pct,
+        "modelled": {"per_user_ops_mo": 4, "blended_call_usd": round(blended, 6),
+                     "cost_100_users_usd": model_100, "cost_100k_users_usd": model_100k},
+        "ceilings": {
+            "daily_user_ceiling_usd": round(user_cap, 4),
+            "daily_platform_ceiling_usd": round(platform_cap, 4),
+            "today_spend_usd": round(today_cost, 6),
+            "today_calls": today_calls,
+            "platform_pct_of_ceiling": round((today_cost / platform_cap * 100) if platform_cap > 0 else 0.0, 1),
+            "platform_breached": bool(platform_cap > 0 and today_cost >= platform_cap),
+        },
+        "by_endpoint": [dict(r) for r in by_ep],
+    }
 

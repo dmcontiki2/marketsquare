@@ -1,7 +1,72 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 56 live listings · World Heritage layer 332 sites · AI email triage LIVE with auto-reply (support@ routed, EMAIL_AUTO_SEND=1) · Session 94 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 65 live listings · World Heritage layer 332 sites · AI email triage LIVE · AI Price Check feed-driven + deliver-then-charge · AI cost guardrails LIVE (real-token + hard daily ceiling + dashboard panel) · Card photos: vision auto-orient on collectibles + 9 live cards fixed upright · Backend modules (auth/database/storage/payments) now in guarded auto-deploy (O2) · Session 99 complete
+
+## Last Completed (Session 99 — 2026-05-31)
+- **O2 DONE (deferred since 96/97/98).** Guarded sync of the four backend modules `auth.py`/`database.py`/`storage.py`/`payments.py` into `deploy_marketsquare.bat`. Previously these were imported by `main.py` but never auto-deployed (server-only).
+- **deploy_marketsquare.bat**: added (a) pre-flight existence checks for all four modules (abort if any missing), (b) a new **Step 3d** that scp's the four modules to the server *before* the BEA restart so the new code is picked up atomically, each with the standard fail-on-error guard, and (c) a verify line confirming all four are present on the server post-deploy.
+- **Live deploy this session**: server `auth.py` was still the old (pre-S1) version with the guessable `ms_admin_changeme` default; deployed the hardened fail-closed version (the other three were already byte-identical). Confirmed `MS_API_KEY` is set in the systemd unit env and the running process before deploying — fail-closed auth is therefore live-safe.
+- Backed up server `auth.py` → `auth.py.bak-20260531`. scp'd all four modules; AST-checked each in the BEA venv (4/4 OK); shas now match local exactly. BEA restarted **active**, `/health` ok v1.3.1, bad-key write → 401 (auth still enforced), Cloudflare purged. smoke 30/30 ✅.
+- **Cost model impact**: none — deploy-tooling change only, no AI-path or pricing change.
+
+## Next Session (100)
+- **Phase 2 audit items** (from the readiness report): next ranked findings after Phase 1 + O2 are now all closed.
+- Optional follow-ups: extend vision auto-orient to the single-photo + create-listing photo paths; set `monthly_income_usd` via `PUT /admin/ai-spend/config` once first paid subs arrive to light the dashboard margin %.
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination, Paystack plan wiring, EULA v1.6 attorney review.
+
+## Last Completed (Session 98 — 2026-05-31)
+- **Dashboard**: AI Cost & Margin panel moved above Email Triage (Ops tab).
+- **Session-end write-back now mandatory** (CLAUDE.md checklist rewritten to 5 steps): scp STATUS/CHANGELOG/BACKLOG/AUDIT_PROGRESS to the server every session — dashboard is live-data-driven (no DATA hand-edit). Corrected the stale step-4. This guarantees the latest is always viewable.
+- **MtG card orientation**: root cause = EXIF correction can't fix tag-less rotated scans (not a regression). (a) Rotated the 9 genuinely-sideways live cards upright (231,232,233,235,236,237,238,239,240); 234 left alone (genuinely landscape). Verified visually (first pass was 180° off — caught before finalising). (b) Forward fix `_vision_orient_image()`: landscape Collectors uploads get a cheap Haiku text-orientation check → rotate before baking. EXIF-independent, scales, fails open. Admin sends `category=Collectors`.
+- **Horizontal card rows**: arrows were positioned outside the strip and clipped; moved inside (4px), shown on all viewports, strips set `flex-wrap:nowrap` + touch scroll. Fixes all 6 carousels. ms.css v114.
+- Deployed main.py + dashboard.html + ms.css + admin.html + index.html; BEA restarted clean; Cloudflare purged; smoke 30/30 ✅.
+- **Cost model impact**: vision-orient fires only on landscape Collectors uploads (~1 Haiku call, logged + ceiling-bound). Negligible.
+
+## Next Session (99)
+- **O2 (deferred since 96/97/98) — do first**: guarded one-time sync of `auth.py`/`database.py`/`storage.py`/`payments.py` into `deploy_marketsquare.bat`. Live-safe (MS_API_KEY set).
+- Optional follow-ups: extend vision auto-orient to the single-photo + create-listing photo paths (currently batch-card path covered); set `monthly_income_usd` once paid subs arrive to light the dashboard margin %.
+- Standing: self-hosted Overpass re-import (BLOCKER), GET /listings pagination, Paystack plan wiring, EULA v1.6 attorney review.
+
+## Last Completed (Session 97 — 2026-05-31)
+- **Phase-1 cost guardrails (audit C1–C3 + dashboard).** All BEA edits via Python string-replacement after a mid-session truncation was caught and the file restored byte-clean from the server.
+- **C2 real-token costing**: `_MODEL_PRICE` per-1M-token table + `_token_cost()`/`_usage_tokens()`; `ai_spend_log` += input_tokens/output_tokens/cost_is_real; `_log_ai_spend()` computes exact cost from real tokens (flag `cost_is_real`), flat estimate when absent. Wired into all 7 paid AI ops. Live: real_token_pct 0→7.7% on first real call.
+- **C3**: AI3 (price-check) + AI4 (yield) now log spend with real tokens (were unlogged).
+- **C1 hard ceiling**: `_check_cost_ceiling()` REFUSES paid AI calls (HTTP 429) when daily per-user ($0.50 default) or platform ($100 default) USD cap is hit. Superusers exempt from user rail; fail-open; 0=off. Live-verified refusal + no-spend-on-refusal. Tunable via `PUT /admin/ai-spend/config`.
+- **Dashboard**: no-auth `GET /dashboard/cost` + "💰 AI COST & MARGIN" Ops panel (cost/user, cost/call, margin, real-token %, modelled @100/@100k, ceiling bar, per-endpoint ●real/○est). `/admin/ai-spend` enriched.
+- Deployed main.py + dashboard.html, BEA restarted clean, Cloudflare purged, smoke 30/30 ✅. Server backups: `main.py.s96bak`, `dashboard.html.s96bak`.
+- **Cost model impact**: per-call economics unchanged; costing now exact (real tokens). C1 is a true spend cap — at the $100/day platform default, max AI exposure ≈ $3,000/mo regardless of load.
+
+## Next Session (98)
+- **O2 (deferred from 96/97)**: guarded one-time sync of `auth.py`/`database.py`/`storage.py`/`payments.py` into `deploy_marketsquare.bat` auto-deploy. The auth.py fail-closed change is live-safe (`MS_API_KEY` set), but wiring needs a coordinated deploy — do it as the first task.
+- **Set AI spend config** once first paid subs arrive: `PUT /admin/ai-spend/config` with `monthly_income_usd` (unlocks the margin % on the dashboard) — ceilings already default-on.
+- **Phase 2 audit items** (from the readiness report): next ranked findings after Phase 1.
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination (M0), Paystack plan wiring, EULA v1.6 attorney review.
+- Continuity: session-end scp of STATUS/CHANGELOG/BACKLOG/AUDIT_PROGRESS to server is the handoff — `/dashboard/summary` parses currentSession from STATUS.
+
+## Last Completed (Session 96 — 2026-05-31)
+- **Full commercial-readiness audit** (deliverable: `TrustSquare_Commercial_Readiness_Audit.docx`; running log: `AUDIT_PROGRESS.md`). Reviewed all 128 BEA endpoints, FEA, server modules, deploy, security, cost. Findings: no hardcoded secrets, all SQL parameterised, SQLite WAL already on, every paid AI op modelled at 93–99% margin.
+- **S2 (CRIT) DONE**: pulled server-only IP modules `auth.py`, `database.py`, `storage.py` into the repo (payments.py was already local); verified byte-identical to server via sha256. Previously unversioned/unbacked-up.
+- **S1 (CRIT) DONE**: removed guessable default API key (`ms_admin_changeme`) from `auth.py` — BEA now fails closed if `MS_API_KEY` unset. Confirmed set on server, safe to deploy.
+- **P1**: confirmed WAL + synchronous=NORMAL already enabled (no change needed).
+- **Deferred (O2)**: auth/database/storage/payments NOT yet wired into auto-deploy — server copies are source of truth; auth.py change needs a coordinated guarded sync.
+- **Cost model impact**: none this session (no AI-path changes). 100 users ≈ $11.61/mo, 100k users ≈ $2,474/mo, both net positive.
+
+## Next Session (97)
+- **Phase 1 cont. (the audit's next items):**
+  1. **C1** — hard token/cost ceiling per-user + platform-wide: refuse when exceeded, not just alert.
+  2. **C2** — derive cost from real API token counts, not flat constants.
+  3. **C3** — add missing spend-logging to AI3 (price check) and AI4 (yield).
+  4. Cost + margin + server-cost panels on `dashboard.html`.
+- **O2**: guarded one-time sync of `auth.py`/`database.py`/`storage.py`/`payments.py` into auto-deploy (coordinated; auth.py fail-closed change is live-safe since MS_API_KEY is set).
+- **Continuity**: session-end now scp's STATUS/CHANGELOG/BACKLOG/AUDIT_PROGRESS to the server (done this session — `/dashboard/summary` was stale at Session 94). Add a deterministic session-end scp helper + scheduled morning brief per SESSION_BOOTSTRAP.md.
+- Architecture decision (recorded): server scaling/KPI logic lives INSIDE the BEA as read-only observe-and-alert feeding the dashboard — never auto-scale, no new service, no machine that can spend money on its own.
+
+## Last Completed (Session 95 — 2026-05-30, incl. 95b/95c/95d)
+- **AI Price Check integrity (95)**: re-architected AI3 on "the model writes the sentence, the system produces the number." New helpers `live_usd_zar()`, `resolve_scryfall_id()`, `scryfall_price_by_id()`, `price_caution()`. Verified Scryfall prices for collectibles; no-feed categories return an honest qualitative guide or cannot_assess.
+- **95b deliver-then-charge**: Tuppence deducted only after a verified service is delivered. AI3 no-feed → `cannot_verify`, free. AI4 yield rebuilt — gross computed in Python from purchase price + rent, missing input prompts the user, free until a real number is produced.
+- **95c**: softened low-price warning to a neutral price-position note (no fraud/counterfeit language); `fraud_flag()` → `price_caution()`, verdict `below_verified_market`.
+- **95d**: `deploy_marketsquare.bat` now auto-bumps `ms.js`/`ms.css` `?v=` and deploys static assets + Cloudflare purge — one-script deploy.
 
 ## Last Completed (Session 94 — 2026-05-30)
 - **AI email triage — end to end.** `POST /email/inbound` (secret-auth) classifies inbound mail with Claude Haiku → `{category, urgency, draft_reply, auto_safe}`, stores in new `email_triage` table, AI spend logged. Categories: support/billing/legal/compliance/spam/other.
@@ -47,67 +112,4 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 ## Last Completed (Session 88 — 2026-05-28)
 - **Server upgrade**: CPX22 → CPX32 (8GB RAM, 4 vCPU). Added 100GB Hetzner volume. Moved 39GB Overpass DB to volume (`/mnt/HC_Volume_105840760/overpass`). Root disk: 100% → 22% (57GB free).
-- **Kronborg Estate listings**: 39 apartments (IDs 192–230) batch-created and published under miconradie1@gmail.com. Waterkloof, Pretoria. Prices R8,990–R35,990/pm. Photos uploaded for units 102a–116. Units 201+ need photos added via admin tool.
-- **Yield calculator**: Button relabelled "📈 Investor Yield Calculator" with subtitle clarifying it's for investors, not renters. Admin tool updated.
-- **Shopping POIs**: Added supermarket/grocery/convenience tags, 3km radius for shopping vs 15km for other categories. Local shops now appear correctly.
-- **Overpass mirrors**: Three independent public mirrors confirmed working. Self-hosted Overpass DB import completed (SA, 39GB on volume) but index files corrupted — container deferred to Session 89.
-- Smoke test: 30/30 ✅
-
-## Last Completed (Session 87g — 2026-05-27)
-- POI categories fixed: BEA now filters generic OSM names ("school ground" etc.) and deduplicates within 200m. Listing 169 POIs re-fetched — now shows Schools, Universities, Shopping, Hospitals, Police (5 tabs, all named). UP - Groenkloof not in OSM as amenity=university (OSM gap). BEA deployed.
-
-## Last Completed (Session 87f — 2026-05-27)
-- Map pin fix: `listing_lat`/`listing_lng` now mapped into live listing objects in `loadLiveListings()`. Map renderer uses `l.listing_lat || l.suburb_lat` — previously only suburb coords were mapped so listing-specific pins never appeared. Listing 169 (Brooklyn property) now shows pin at correct coordinates. ms.js v122 deployed.
-
-## Last Completed (Session 87e — 2026-05-27)
-- Price check panel headers now category-aware (Property→"LOCAL PROPERTY MARKET"/"REGIONAL & NATIONAL MARKET", Cars→"SA USED CAR MARKET"/"BOOK VALUE & NATIONAL", etc.). Contrast fixes: 16x rgba white text bumped from .5/.6 to .8/.85 opacity across sell flow + vision overlay. Nearby amenities fixed for listing 169 (geo_city_id was NULL — root cause: create_listing INSERT didn't set it; fixed for all future listings). ms.js v118 deployed.
-
-## Last Completed (Session 87d — 2026-05-27)
-- AI trust coach dynamic tier target: score_target now points to next tier above seller's current score (65 → targets 70 "Trusted", not hardcoded 50). Intro text always overridden server-side to prevent AI hallucinating old target. All fallback paths updated. BEA file truncation repaired again (ai-batch-cards closing lines).
-
-## Last Completed (Session 87c — 2026-05-27)
-- AI trust coach guidance fixed: `current_score` now reads from `users.trust_score` (was recomputing from credentials, showing 15 instead of 65). All category transaction signals now show "My Dashboard → Intros tab" instructions. AI no longer recommends already-earned signals. BEA file repaired — was silently truncated mid-string at line 9002.
-
-## Last Completed (Session 87b — 2026-05-27)
-- Trust tab ID upload: "Upload ID →" action button on unearned Government-issued ID signal row. BEA POST /users/{email}/upload-id (no API key, auto-approves, +15 pts). Score updates live without page reload. ms.js v114, ms.css v113.
-
-## Last Completed (Session 87 — 2026-05-26)
-- Category Home Mode: long-press any category tile to personalise the home screen. Full-bleed hero, live count + price range stats, CTA to Browse. One-time tooltip, ⭐ star on active tile, Reset Home button. Persisted in localStorage. All 7 categories supported. ms.js v113, ms.css v112 deployed.
-- Smoke test: 30/30 ✅
-
-## Blueprint v1.1 Complete (Sessions 80–84)
-All five sessions of the photo pipeline + listing lifecycle build plan are done:
-- listing_photos table (r2_key UNIQUE, ON DELETE CASCADE)
-- listing_tier_config (single source of truth for tier timing)
-- seller_extra_slots (extra slot purchase audit ledger)
-- expires_at + warning_sent_at on listings, all 17 live listings backfilled
-- BEA Photo API: presign, confirm, delete, reorder, list
-- GET /listings/{id} returns photos[] array
-- Expiry worker (live→expired at expires_at, hourly)
-- Warning worker (n8n webhook 7 days before expiry, 6-hourly) — NOW WIRED TO LIVE n8n
-- Admin UI: presign→PUT→confirm upload, structured photo strip, per-operation delete
-- Auto-seed at publish + create — pipeline fully self-maintaining
-
-## Last Completed (Session 91 — 2026-05-29)
-- **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.
-- **Real transaction history**: `GET /tuppence/history` endpoint (paginated, running balance). Tuppence screen wired with live data + load-more. My Space Billing tab transaction section. Monthly grouping, type icons, coloured amounts.
-- Smoke test: 30/30 ✅.
-- **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit. Smoke test: 30/30 ✅.
-
-## Last Completed (Session 92 — 2026-05-29)
-- **Transaction history**: GET /tuppence/history BEA endpoint live. Tuppence screen + Billing tab wired with real paginated data, monthly grouping, type icons, running balance.
-- **Billing tab fixes**: Plans loading fixed (cache-bust v127), T&C modal now renders clean HTML from Word doc source.
-- **EULA v1.6**: All 18 identified gaps closed. Removed reviewer notes. FICA repositioned — not applicable to TrustSquare as introduction-only platform. Tuppence recharacterised as platform service fee. All [COUNSEL REQUIRED] placeholders filled. 3 [COUNSEL REVIEW] flags remain for attorney.
-- **Email infrastructure**: 4 live @trustsquare.co addresses via Cloudflare Email Routing (support/legal/billing/compliance → dmcontiki2@gmail.com). Catch-all enabled. Gmail filters + labels configured.
-- Smoke test: 30/30 ✅
-
-## Next Session (95)
-- Read STATUS.md first. Session 94 complete (AI email triage shipped AND rolled out with live auto-reply). Go straight into execution.
-- Recommended priorities:
-  1. **Self-hosted Overpass (BLOCKER)** — corrupt index files. Re-import SA PBF, wire localhost:12345 as primary BEA mirror.
-  2. **GET /listings pagination (M0)** — replace LIMIT 200 with offset pagination + infinite scroll.
-  3. **Paystack plan wiring** — create Paystack subscription plans for the 4 paid tiers; wire plan_code into the subscription initialize endpoint.
-  4. **EULA v1.6 attorney review** — send to Michalsons/Werksmans/Hogan Lovells before publish.
-  5. **Yield calculator breakdown (H7a)** — render full workings + financial advice disclaimer.
-- Email triage optional follow-ups: route legal@/billing@/compliance@/catch-all to the worker; switch reply From-address to support@trustsquare.co (transactional sender).
-- Standing reminders: set AI spend config (`PUT /admin/ai-spend/config` with monthly_income_usd) once first paid subs arrive; update Cost_Breakdown_GlobalLaunch.xlsx with tier prices ($12/$20/$40/$100).
+- **Kronborg Estate listings**: 39 apartments (IDs 192–230) batch-created and published under miconradie1@gmail.com. Waterkloof, Pretoria. Prices R8,990–R35,990/pm. Photos uploaded for units 102a–116. Unit
