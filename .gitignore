@@ -95,3 +95,5 @@ files.zip
 
 # Exception: Patent documents
 !Patents/*.docx
+
+!TrustSquare_PostAudit_Roadmap.docx
