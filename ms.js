@@ -8145,6 +8145,42 @@ function showToast(msg){
 }
 
 // ── FEATURED CAROUSEL desktop scroll ─────────────────────────
+// S99: generic scroll-arrow injector. For any strip el that horizontally
+// overflows, wrap it in a position:relative container and add the same
+// .feat-scroll-btn arrows the World Heritage row uses. Idempotent + safe on
+// mobile (arrows are small, shown on all viewports per ms.css). Call after a
+// strip's innerHTML is (re)populated.
+function ensureScrollArrows(strip){
+  try{
+    if(!strip) return;
+    // already wrapped?
+    if(strip.parentElement && strip.parentElement.classList.contains('hscroll-arrowwrap')) {
+      // refresh visibility against current overflow
+      const overflow = strip.scrollWidth > strip.clientWidth + 4;
+      strip.parentElement.querySelectorAll('.feat-scroll-btn').forEach(b=>b.style.display = overflow ? 'flex' : 'none');
+      return;
+    }
+    const overflow = strip.scrollWidth > strip.clientWidth + 4;
+    if(!overflow) return;            // nothing to scroll — no arrows
+    const wrap=document.createElement('div');
+    wrap.className='hscroll-arrowwrap';
+    wrap.style.position='relative';
+    strip.parentNode.insertBefore(wrap, strip);
+    wrap.appendChild(strip);
+    const mk=(dir,cls,glyph)=>{
+      const b=document.createElement('button');
+      b.className='feat-scroll-btn '+cls;
+      b.setAttribute('aria-label', dir<0?'Scroll left':'Scroll right');
+      b.innerHTML=glyph;
+      b.onclick=()=>{ const card=strip.querySelector(':scope > *');
+        const step=card?(card.offsetWidth+12)*2:300; strip.scrollBy({left:dir*step,behavior:'smooth'}); };
+      return b;
+    };
+    wrap.appendChild(mk(-1,'feat-scroll-btn-left','&#8249;'));
+    wrap.appendChild(mk(1,'feat-scroll-btn-right','&#8250;'));
+  }catch(e){ /* never break render over a nice-to-have */ }
+}
+
 function featScroll(dir){
   const el=document.getElementById('home-featured');
   if(!el)return;
@@ -11499,7 +11535,7 @@ async function loadDetailWonders(listing) {
         </div>
       </div>`;
     }).join('');
-    if(cards) { list.innerHTML = cards; strip.style.display = ''; }
+    if(cards) { list.innerHTML = cards; strip.style.display = ''; requestAnimationFrame(()=>ensureScrollArrows(list)); }
     return;
   }
   try {
@@ -11518,6 +11554,7 @@ async function loadDetailWonders(listing) {
         </div>
       </div>`).join('');
     strip.style.display = 'block';
+    requestAnimationFrame(()=>ensureScrollArrows(list));
   } catch(e) { console.warn('loadDetailWonders failed', e); }
 }
 
