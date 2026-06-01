@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "report_type": "weekly_discovery_scan",
+  "generated_at": "2026-06-01T09:14:20Z",
+  "generated_by": "weekly auto scan",
+  "scan_scope": [
+    "bea_main.py",
+    "auth.py",
+    "database.py",
+    "storage.py",
+    "payments.py",
+    "ms.js",
+    "marketsquare.html (inline)",
+    "marketsquare_admin.html (inline)"
+  ],
+  "tools": [
+    "ruff (F,E9,B,C90)",
+    "vulture",
+    "pylint cyclic-import",
+    "eslint 9 (no-undef/dupe/unreachable/unused)"
+  ],
+  "totals": {
+    "found_this_week": 0,
+    "fixed_this_week": 5,
+    "still_open": 11,
+    "note": "Re-scan delta. The audit-runner closed the KYC import/name crash-bug batch: SCAN-1 (SONNET_MODEL defined, line 904) plus SCAN-2/3/4/6 (module-top imports re/hashlib/urllib.request/base64 added at lines 11-14, _json refs now resolve) all disappeared from the scan. 11 baseline issues persist. 0 genuinely new findings. Detection-only pass; no code changed, no deploy."
+  },
+  "severity_breakdown": {
+    "CRIT": 1,
+    "HIGH": 3,
+    "MED": 2,
+    "LOW": 5
+  },
+  "open_issues": [
+    {
+      "id": "SCAN-5",
+      "sev": "CRIT",
+      "file": "bea_main.py",
+      "line": 7111,
+      "summary": "MEDIA_DIR undefined (should be _LOCAL_MEDIA_DIR) - F821 in upload_seller_document"
+    },
+    {
+      "id": "SCAN-7",
+      "sev": "HIGH",
+      "file": "bea_main.py",
+      "line": 9365,
+      "summary": "background_tasks undefined in vision_draft (F821) - add to endpoint signature"
+    },
+    {
+      "id": "SCAN-8",
+      "sev": "MED",
+      "file": "bea_main.py",
+      "line": 6024,
+      "summary": "duplicate dict key 'category.cars.service_history' (F601) - second silently overrides first"
+    },
+    {
+      "id": "SCAN-9",
+      "sev": "MED",
+      "file": "bea_main.py",
+      "line": 8240,
+      "summary": "unused 'import json as _j' (F401, 8240) + body/body_bytes dead locals (F841, 8238/8241)"
+    },
+    {
+      "id": "SCAN-10",
+      "sev": "LOW",
+      "file": "bea_main.py",
+      "line": 4008,
+      "summary": "redundant 'from datetime import timedelta' re-imports (F811 at 4008 and 8453; already imported line 22)"
+    },
+    {
+      "id": "SCAN-11",
+      "sev": "LOW",
+      "file": "bea_main.py",
+      "line": 3885,
+      "summary": "unused locals/loop vars: skip_fields (3885), sig_suburb_id (4186), cutoff (6232), e (1527), photo_entry (2529), loop vars hi2 (5917)/idx (10246); vulture: family (1502,1603), hint (2261), unused import _sqlite3 (1692)"
+    },
+    {
+      "id": "SCAN-12",
+      "sev": "LOW",
+      "file": "database.py",
+      "line": 2,
+      "summary": "unused 'import os' (F401)"
+    },
+    {
+      "id": "JS-1",
+      "sev": "HIGH",
+      "file": "ms.js",
+      "line": 617,
+      "summary": "updateTuppenceDisplay() undefined (should be updateTuppenceUI, defined line 810) - post-credit balance refresh throws"
+    },
+    {
+      "id": "JS-2",
+      "sev": "HIGH",
+      "file": "ms.js",
+      "line": 86,
+      "summary": "updateLocBadge() undefined (should be updateBadgeLabel, defined line 112) - badge refresh throws"
+    },
+    {
+      "id": "HTML-1",
+      "sev": "LOW",
+      "file": "marketsquare_admin.html",
+      "line": 2785,
+      "summary": "dead var currentView (written 2785/2794, never read)"
+    },
+    {
+      "id": "HTML-2",
+      "sev": "LOW",
+      "file": "marketsquare_admin.html",
+      "line": 1834,
+      "summary": "dead locals editingIdx (1834)/photoFile (4503)/tier (5216)/ur (5218)/status (5290)"
+    }
+  ],
+  "fixed_issues": [
+    {
+      "id": "SCAN-1",
+      "summary": "SONNET_MODEL undefined in KYC path - fixed: defined at bea_main.py:904"
+    },
+    {
+      "id": "SCAN-2",
+      "summary": "bare 're' unbound in KYC funcs - fixed: 'import re' at bea_main.py:11"
+    },
+    {
+      "id": "SCAN-3",
+      "summary": "'hashlib' undefined in _hash_id_number - fixed: 'import hashlib' at bea_main.py:12"
+    },
+    {
+      "id": "SCAN-4",
+      "summary": "'urllib'/'base64' undefined in KYC doc fetch - fixed: imports at bea_main.py:13-14"
+    },
+    {
+      "id": "SCAN-6",
+      "summary": "_json undefined at 6823/6827 - fixed: refs now resolve (no longer F821)"
+    }
+  ],
+  "history": [
+    {
+      "week_of": "2026-06-01",
+      "found": 16,
+      "fixed": 0,
+      "open": 16
+    },
+    {
+      "week_of": "2026-06-01",
+      "found": 0,
+      "fixed": 0,
+      "open": 16
+    },
+    {
+      "week_of": "2026-06-01",
+      "found": 0,
+      "fixed": 5,
+      "open": 11
+    }
+  ]
+}

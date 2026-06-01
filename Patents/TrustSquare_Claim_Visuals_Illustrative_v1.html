@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustSquare — Claim Visuals (Illustrative, Non-Claim Material)</title>
+<style>
+  :root{
+    --ink:#1c2733; --dim:#5a6b7b; --line:#cfd9e2; --accent:#2E5A88;
+    --accent2:#3b7a57; --warn:#9a6b00; --bg:#ffffff; --panel:#f5f8fb;
+    --burn:#b03a3a;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#e9eef3;margin:0;padding:24px;line-height:1.5;}
+  .sheet{max-width:920px;margin:0 auto;background:var(--bg);padding:40px 48px;box-shadow:0 1px 6px rgba(0,0,0,.12);}
+  h1{color:var(--accent);font-size:26px;margin:0 0 4px;}
+  .sub{color:var(--dim);font-size:14px;margin:0 0 18px;}
+  .banner{background:#fff4e0;border:1px solid #e6c577;color:#6b4e00;font-size:13px;
+    padding:12px 16px;border-radius:6px;margin:0 0 28px;}
+  .banner strong{color:#8a6400;}
+  .claim{border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:0 0 18px;page-break-inside:avoid;}
+  .claim h2{font-size:17px;margin:0 0 2px;color:var(--ink);}
+  .claim .tag{display:inline-block;font-size:11px;font-weight:bold;color:#fff;background:var(--accent);
+    border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle;}
+  .claim .gist{color:var(--dim);font-size:13px;margin:4px 0 14px;}
+  svg{display:block;margin:0 auto;max-width:100%;}
+  .cap{text-align:center;color:var(--dim);font-size:12px;margin-top:8px;font-style:italic;}
+  .foot{color:var(--dim);font-size:12px;border-top:1px solid var(--line);margin-top:24px;padding-top:14px;}
+  text{font-family:Arial,Helvetica,sans-serif;}
+  @media print{body{background:#fff;padding:0;} .sheet{box-shadow:none;}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>TrustSquare — Claim Concept Visuals</h1>
+  <p class="sub">Illustrative companion to IP Brief v4 · Trustsquare (Pty) Ltd · Reg 2026/340128/07 · May 2026</p>
+
+  <div class="banner">
+    <strong>ILLUSTRATIVE / NON-CLAIM MATERIAL.</strong> These diagrams are a perception and briefing aid only.
+    They are <strong>not</strong> patent figures, do <strong>not</strong> form part of any claim, and must <strong>not</strong> be
+    filed with, or treated as limiting the scope of, the provisional or any subsequent application. Formal patent
+    figures, if any, should be drawn by counsel to match final claim language. The legal claims themselves remain text-only
+    in the IP Brief, deliberately, so that no drawing narrows their scope.
+  </div>
+
+  <!-- CLAIM 1 -->
+  <div class="claim">
+    <h2>Claim 1 — Unified Participation Model<span class="tag">STRONG</span></h2>
+    <p class="gist">One user record; "buyer" or "seller" is a <em>state derived from activity</em>, not a column.</p>
+    <svg viewBox="0 0 760 150" role="img" aria-label="One user record producing buyer and seller states">
+      <rect x="300" y="50" width="160" height="50" rx="8" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="380" y="72" text-anchor="middle" font-size="13" font-weight="bold" fill="#1c2733">one user record</text>
+      <text x="380" y="90" text-anchor="middle" font-size="11" fill="#5a6b7b">id · email · balance · listings</text>
+      <!-- buyer branch -->
+      <path d="M300 75 H190" stroke="#5a6b7b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+      <rect x="40" y="52" width="150" height="46" rx="8" fill="#fff" stroke="#3b7a57" stroke-width="2"/>
+      <text x="115" y="72" text-anchor="middle" font-size="12" font-weight="bold" fill="#3b7a57">BUYER state</text>
+      <text x="115" y="89" text-anchor="middle" font-size="10" fill="#5a6b7b">balance &gt; 0, no listings</text>
+      <!-- seller branch -->
+      <path d="M460 75 H570" stroke="#5a6b7b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+      <rect x="570" y="52" width="150" height="46" rx="8" fill="#fff" stroke="#2E5A88" stroke-width="2"/>
+      <text x="645" y="72" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E5A88">SELLER state</text>
+      <text x="645" y="89" text-anchor="middle" font-size="10" fill="#5a6b7b">has ≥1 listing</text>
+      <text x="380" y="128" text-anchor="middle" font-size="11" fill="#5a6b7b">same record can be both at once — role emerges from what the user does</text>
+      <defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#5a6b7b"/></marker></defs>
+    </svg>
+    <p class="cap">Role is computed, not stored.</p>
+  </div>
+
+  <!-- CLAIM 2 -->
+  <div class="claim">
+    <h2>Claim 2 — Tuppence Introduction Currency<span class="tag">STRONG</span></h2>
+    <p class="gist">A fixed, buyer-paid unit, <em>burned before</em> the introduction and never refunded — the inverse of a referral fee.</p>
+    <svg viewBox="0 0 760 190" role="img" aria-label="Tuppence burned before introduction, contrasted with a referral fee">
+      <!-- coin in -->
+      <circle cx="80" cy="55" r="22" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="80" y="60" text-anchor="middle" font-size="15" font-weight="bold" fill="#2E5A88">1T</text>
+      <text x="80" y="95" text-anchor="middle" font-size="10" fill="#5a6b7b">buyer pays</text>
+      <path d="M104 55 H170" stroke="#5a6b7b" stroke-width="2" fill="none" marker-end="url(#b)"/>
+      <!-- burn -->
+      <rect x="170" y="33" width="120" height="44" rx="8" fill="#fff" stroke="#b03a3a" stroke-width="2"/>
+      <text x="230" y="52" text-anchor="middle" font-size="12" font-weight="bold" fill="#b03a3a">BURNED</text>
+      <text x="230" y="68" text-anchor="middle" font-size="10" fill="#b03a3a">non-refundable</text>
+      <path d="M290 55 H356" stroke="#5a6b7b" stroke-width="2" fill="none" marker-end="url(#b)"/>
+      <rect x="356" y="33" width="140" height="44" rx="8" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="426" y="52" text-anchor="middle" font-size="12" font-weight="bold" fill="#1c2733">introduction</text>
+      <text x="426" y="68" text-anchor="middle" font-size="10" fill="#5a6b7b">requested (blind)</text>
+      <text x="600" y="50" text-anchor="middle" font-size="11" fill="#5a6b7b">paid up-front,</text>
+      <text x="600" y="65" text-anchor="middle" font-size="11" fill="#5a6b7b">whatever happens next</text>
+      <!-- contrast row -->
+      <line x1="40" y1="112" x2="720" y2="112" stroke="#cfd9e2" stroke-width="1"/>
+      <text x="40" y="134" font-size="12" font-weight="bold" fill="#3b7a57">TrustSquare intro fee</text>
+      <text x="40" y="152" font-size="11" fill="#5a6b7b">buyer-paid · fixed · before intro · keep-regardless · paid blind</text>
+      <text x="40" y="172" font-size="12" font-weight="bold" fill="#b03a3a">Referral / commission</text>
+      <text x="270" y="172" font-size="11" fill="#5a6b7b">seller-paid · % of deal · after deal · only if deal closes · parties known</text>
+      <defs><marker id="b" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#5a6b7b"/></marker></defs>
+    </svg>
+    <p class="cap">The fee is spent into the dark, and the platform keeps it either way.</p>
+  </div>
+
+  <!-- CLAIM 3 -->
+  <div class="claim">
+    <h2>Claim 3 — Anonymous Introduction Protocol<span class="tag">STRONG</span></h2>
+    <p class="gist">No identity crosses until <em>both</em> sides agree — then contact details unlock <em>simultaneously</em>.</p>
+    <svg viewBox="0 0 760 160" role="img" aria-label="Mutual anonymity until simultaneous bilateral disclosure">
+      <rect x="40" y="40" width="150" height="50" rx="8" fill="#fff" stroke="#3b7a57" stroke-width="2"/>
+      <text x="115" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#3b7a57">Buyer</text>
+      <text x="115" y="79" text-anchor="middle" font-size="10" fill="#5a6b7b">sees Trust Score only</text>
+      <rect x="570" y="40" width="150" height="50" rx="8" fill="#fff" stroke="#2E5A88" stroke-width="2"/>
+      <text x="645" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E5A88">Seller</text>
+      <text x="645" y="79" text-anchor="middle" font-size="10" fill="#5a6b7b">sees pseudonym only</text>
+      <!-- wall -->
+      <line x1="380" y1="24" x2="380" y2="106" stroke="#b03a3a" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="380" y="18" text-anchor="middle" font-size="10" fill="#b03a3a">no PII crosses</text>
+      <!-- gate -->
+      <rect x="300" y="116" width="160" height="34" rx="8" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="380" y="138" text-anchor="middle" font-size="11" font-weight="bold" fill="#1c2733">mutual accept → unlock both</text>
+      <path d="M190 65 H300" stroke="#5a6b7b" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <path d="M460 65 H570" stroke="#5a6b7b" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+    </svg>
+    <p class="cap">Disclosure is simultaneous and only after both consent.</p>
+  </div>
+
+  <!-- CLAIM 4 -->
+  <div class="claim">
+    <h2>Claim 4 — Trust Score Composite<span class="tag">SOLID</span></h2>
+    <p class="gist">A server-computed 0–100 score from <em>observed behaviour</em> — never self-reported.</p>
+    <svg viewBox="0 0 760 150" role="img" aria-label="Weighted trust score components computed server-side">
+      <g font-size="11" fill="#1c2733">
+        <rect x="40"  y="40" width="120" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="100" y="61" text-anchor="middle">Credentials 30%</text>
+        <rect x="40"  y="82" width="120" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="100" y="103" text-anchor="middle">Completed 25%</text>
+        <rect x="170" y="40" width="120" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="230" y="61" text-anchor="middle">Ratings 25%</text>
+        <rect x="170" y="82" width="120" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="230" y="103" text-anchor="middle">Response 10%</text>
+        <rect x="300" y="61" width="120" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="360" y="82" text-anchor="middle">Tenure 10%</text>
+      </g>
+      <path d="M420 78 H500" stroke="#5a6b7b" stroke-width="2" marker-end="url(#d)"/>
+      <circle cx="600" cy="78" r="48" fill="#f5f8fb" stroke="#3b7a57" stroke-width="3"/>
+      <text x="600" y="74" text-anchor="middle" font-size="22" font-weight="bold" fill="#3b7a57">0–100</text>
+      <text x="600" y="94" text-anchor="middle" font-size="10" fill="#5a6b7b">server-computed</text>
+      <defs><marker id="d" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#5a6b7b"/></marker></defs>
+    </svg>
+    <p class="cap">Reputation the seller cannot edit.</p>
+  </div>
+
+  <!-- CLAIM 5 -->
+  <div class="claim">
+    <h2>Claim 5 — Geo-Hierarchical Visibility Gating<span class="tag">SOLID</span></h2>
+    <p class="gist">Reach widens with subscription tier across four geographic levels — not with ad spend.</p>
+    <svg viewBox="0 0 760 160" role="img" aria-label="Four nested geographic levels gated by subscription tier">
+      <rect x="60"  y="30" width="640" height="110" rx="8" fill="#f0f6ff" stroke="#2E5A88"/>
+      <text x="80" y="48" font-size="11" fill="#2E5A88">Country — Business / Elite</text>
+      <rect x="120" y="55" width="520" height="78" rx="6" fill="#e3eefb" stroke="#2E5A88"/>
+      <text x="140" y="72" font-size="11" fill="#2E5A88">Region — Professional</text>
+      <rect x="190" y="80" width="380" height="48" rx="6" fill="#d2e4f7" stroke="#2E5A88"/>
+      <text x="210" y="97" font-size="11" fill="#2E5A88">City — Standard</text>
+      <rect x="270" y="104" width="220" height="20" rx="4" fill="#3b7a57"/>
+      <text x="380" y="118" text-anchor="middle" font-size="10" fill="#fff">Suburb — Free</text>
+    </svg>
+    <p class="cap">Visibility is earned by tier, level by level.</p>
+  </div>
+
+  <!-- CLAIM 6 -->
+  <div class="claim">
+    <h2>Claim 6 — Founding Seller Cohort<span class="tag">SOLID</span></h2>
+    <p class="gist">The first 60 sellers per city hold permanent priority placement — for good.</p>
+    <svg viewBox="0 0 760 130" role="img" aria-label="First sixty sellers per city pinned permanently to the top">
+      <rect x="300" y="20" width="160" height="30" rx="6" fill="#3b7a57"/><text x="380" y="40" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">★ Founding 1–60</text>
+      <rect x="300" y="56" width="160" height="22" rx="4" fill="#eaf1f7" stroke="#cfd9e2"/><text x="380" y="71" text-anchor="middle" font-size="10" fill="#5a6b7b">later sellers</text>
+      <rect x="300" y="82" width="160" height="22" rx="4" fill="#eaf1f7" stroke="#cfd9e2"/><text x="380" y="97" text-anchor="middle" font-size="10" fill="#5a6b7b">later sellers</text>
+      <text x="500" y="40" font-size="11" fill="#5a6b7b">never expires —</text>
+      <text x="500" y="56" font-size="11" fill="#5a6b7b">survives tier changes</text>
+      <text x="120" y="40" font-size="11" fill="#5a6b7b">per city,</text>
+      <text x="120" y="56" font-size="11" fill="#5a6b7b">no ongoing payment</text>
+    </svg>
+    <p class="cap">A one-time launch incentive, honoured permanently.</p>
+  </div>
+
+  <!-- CLAIM 7 -->
+  <div class="claim">
+    <h2>Claim 7 — Combination Claim + AI Services Layer<span class="tag">STRONG</span></h2>
+    <p class="gist">Claims 1–6 as one system, plus 5-tier slots, Tuppence-gated AI services, and an AI guardrail.</p>
+    <svg viewBox="0 0 760 160" role="img" aria-label="Core platform combined with subscription, AI services and guardrail layers">
+      <rect x="40" y="50" width="200" height="60" rx="8" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="140" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E5A88">Core: Claims 1–6</text>
+      <text x="140" y="93" text-anchor="middle" font-size="10" fill="#5a6b7b">anonymity + Tuppence + trust</text>
+      <g font-size="11">
+        <rect x="290" y="20" width="200" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="390" y="41" text-anchor="middle" fill="#1c2733">5-tier slots (server-enforced)</text>
+        <rect x="290" y="63" width="200" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="390" y="84" text-anchor="middle" fill="#1c2733">AI services (Tuppence-gated)</text>
+        <rect x="290" y="106" width="200" height="34" rx="6" fill="#eaf1f7" stroke="#2E5A88"/><text x="390" y="127" text-anchor="middle" fill="#1c2733">AI guardrail (existence gate)</text>
+      </g>
+      <path d="M240 80 H290" stroke="#5a6b7b" stroke-width="2"/>
+      <path d="M490 37 H560 V70" stroke="#5a6b7b" stroke-width="1.5" fill="none"/>
+      <path d="M490 80 H560" stroke="#5a6b7b" stroke-width="1.5" fill="none"/>
+      <path d="M490 123 H560 V90" stroke="#5a6b7b" stroke-width="1.5" fill="none"/>
+      <rect x="560" y="55" width="160" height="50" rx="8" fill="#f5f8fb" stroke="#3b7a57" stroke-width="2"/>
+      <text x="640" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#3b7a57">one integrated</text>
+      <text x="640" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#3b7a57">platform</text>
+    </svg>
+    <p class="cap">The combination is the invention — non-obvious even where parts are not.</p>
+  </div>
+
+  <!-- CLAIM 8 -->
+  <div class="claim">
+    <h2>Claim 8 — Heritage Content Linking<span class="tag">SOLID</span></h2>
+    <p class="gist">Structured place-metadata as a <em>non-transactional</em> overlay on an anonymous listing — the method, not the catalogue size.</p>
+    <svg viewBox="0 0 760 150" role="img" aria-label="Listing linked to place metadata as an informational overlay">
+      <rect x="60" y="45" width="160" height="60" rx="8" fill="#fff" stroke="#2E5A88" stroke-width="2"/>
+      <text x="140" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#1c2733">anonymous listing</text>
+      <text x="140" y="88" text-anchor="middle" font-size="10" fill="#5a6b7b">location + category</text>
+      <path d="M220 75 H320" stroke="#5a6b7b" stroke-width="2" marker-end="url(#h)"/>
+      <text x="270" y="65" text-anchor="middle" font-size="10" fill="#5a6b7b">auto proximity +</text>
+      <text x="270" y="92" text-anchor="middle" font-size="10" fill="#5a6b7b">seller links</text>
+      <rect x="320" y="40" width="180" height="70" rx="8" fill="#f5f8fb" stroke="#3b7a57" stroke-width="2"/>
+      <text x="410" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#3b7a57">place overlay</text>
+      <text x="410" y="84" text-anchor="middle" font-size="10" fill="#5a6b7b">photo · history · context</text>
+      <text x="410" y="100" text-anchor="middle" font-size="10" fill="#5a6b7b">informational only</text>
+      <rect x="540" y="50" width="180" height="50" rx="6" fill="#fff4e0" stroke="#e6c577"/>
+      <text x="630" y="71" text-anchor="middle" font-size="10" fill="#6b4e00">how it's used is the claim —</text>
+      <text x="630" y="87" text-anchor="middle" font-size="10" fill="#6b4e00">count is just today's data</text>
+      <defs><marker id="h" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#5a6b7b"/></marker></defs>
+    </svg>
+    <p class="cap">The protected idea is the method; the number of sites is incidental.</p>
+  </div>
+
+  <!-- CLAIM 9 -->
+  <div class="claim">
+    <h2>Claim 9 — AI-Mediated Inbound Communication Triage<span class="tag">STRONG</span></h2>
+    <p class="gist">Inbound mail is classified by AI, but a reply only auto-sends when a model self-check <em>and</em> a hard category allow-list both pass.</p>
+    <svg viewBox="0 0 760 200" role="img" aria-label="Email ingestion, classification and conservative conjunctive auto-send gate">
+      <rect x="30" y="80" width="110" height="40" rx="6" fill="#fff" stroke="#2E5A88" stroke-width="2"/>
+      <text x="85" y="98" text-anchor="middle" font-size="11" font-weight="bold" fill="#1c2733">inbound</text>
+      <text x="85" y="113" text-anchor="middle" font-size="10" fill="#5a6b7b">email</text>
+      <path d="M140 100 H180" stroke="#5a6b7b" stroke-width="2" marker-end="url(#e)"/>
+      <rect x="180" y="78" width="110" height="44" rx="6" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="235" y="96" text-anchor="middle" font-size="10" font-weight="bold" fill="#2E5A88">secret-auth</text>
+      <text x="235" y="111" text-anchor="middle" font-size="10" fill="#5a6b7b">gate (401/503)</text>
+      <path d="M290 100 H330" stroke="#5a6b7b" stroke-width="2" marker-end="url(#e)"/>
+      <rect x="330" y="78" width="120" height="44" rx="6" fill="#f5f8fb" stroke="#2E5A88" stroke-width="2"/>
+      <text x="390" y="96" text-anchor="middle" font-size="10" font-weight="bold" fill="#2E5A88">classify (Haiku)</text>
+      <text x="390" y="111" text-anchor="middle" font-size="9" fill="#5a6b7b">cat · urgency · draft · safe</text>
+      <path d="M450 100 H490" stroke="#5a6b7b" stroke-width="2" marker-end="url(#e)"/>
+      <!-- gate diamond -->
+      <polygon points="560,70 620,100 560,130 500,100" fill="#fff4e0" stroke="#9a6b00" stroke-width="2"/>
+      <text x="560" y="96" text-anchor="middle" font-size="9" fill="#6b4e00">auto_safe</text>
+      <text x="560" y="108" text-anchor="middle" font-size="9" fill="#6b4e00">AND support/billing?</text>
+      <!-- yes -->
+      <path d="M620 100 H680" stroke="#3b7a57" stroke-width="2" marker-end="url(#e2)"/>
+      <text x="650" y="92" text-anchor="middle" font-size="9" fill="#3b7a57">both yes</text>
+      <rect x="680" y="82" width="70" height="36" rx="6" fill="#e6f3ec" stroke="#3b7a57"/>
+      <text x="715" y="104" text-anchor="middle" font-size="10" font-weight="bold" fill="#3b7a57">send</text>
+      <!-- no -->
+      <path d="M560 130 V165 H680" stroke="#b03a3a" stroke-width="2" marker-end="url(#e3)"/>
+      <text x="600" y="160" text-anchor="middle" font-size="9" fill="#b03a3a">else / legal / ambiguous</text>
+      <rect x="680" y="148" width="70" height="36" rx="6" fill="#fbeaea" stroke="#b03a3a"/>
+      <text x="715" y="170" text-anchor="middle" font-size="10" font-weight="bold" fill="#b03a3a">hold draft</text>
+      <text x="60" y="160" font-size="10" fill="#5a6b7b">default = draft-only · every message logged · spam skipped</text>
+      <defs>
+        <marker id="e" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#5a6b7b"/></marker>
+        <marker id="e2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#3b7a57"/></marker>
+        <marker id="e3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#b03a3a"/></marker>
+      </defs>
+    </svg>
+    <p class="cap">Two independent locks must both open before anything sends — a model false-positive alone can't.</p>
+  </div>
+
+  <div class="foot">
+    TrustSquare (Pty) Ltd · Reg 2026/340128/07 · trustsquare.co — <strong>Illustrative companion only; not a claim, not a patent figure, not for filing.</strong>
+    Pair with IP Brief v4 for the controlling claim language. Open in a browser and Print → Save as PDF if a PDF copy is needed.
+  </div>
+</div>
+</body>
+</html>

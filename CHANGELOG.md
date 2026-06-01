@@ -1,3 +1,27 @@
+## Session 102 · 1 June 2026 · SCAN-2/3/4/6 — KYC crash-bugs fixed (missing module-level imports + _json name)
+
+Batched the four "add a top-level import / fix a name" KYC crash-bugs into one run, as the runner priority override explicitly permits (all surgical edits in the same file, `bea_main.py`). These were latent `NameError` → HTTP 500 crashes on the SA-ID / KYC verification path, which isn't exercised in prod yet.
+
+**SCAN-2 (`re`).** Bare `re.sub`/`re.search` used at lines 7428/7455/7461/7558/7614/7757 in `_sa_id_validate`, `_hash_id_number`, `_normalise_name` and the KYC fetch block, but the module only imported `re as _re_match` (an alias) — bare `re` was unbound. **SCAN-3 (`hashlib`).** `hashlib.sha256` at 7456 (`_hash_id_number`) with no module-level `import hashlib`. **SCAN-4 (`urllib`/`base64`).** `urllib.request.Request`/`urlopen` (7503/7504) and `base64.standard_b64encode` (7506) in the KYC doc-fetch block, with no import in that scope.
+
+Fix: added four module-level imports after `import json` (line 11–14): `import re`, `import hashlib`, `import urllib.request`, `import base64`. The pre-existing `re as _re_match` alias and the in-function `import urllib.request`/`import base64`/`import re as _re` locals are left untouched — they harmlessly shadow and remain valid.
+
+**SCAN-6 (`_json`).** In the score-guidance fallback block (~6826/6830) `_json.loads(...)` was called but `_json` was never bound in that function (the module has `import json` and, separately, `import json as _json_mod`). Fix: replaced the two bare `_json.loads` calls with `json.loads`. Every other `_json` usage in the module is backed by an in-function `import json as _json` and was left untouched.
+
+`ast.parse` clean locally and in the BEA venv on the server. Module loads under the systemd env with all four names bound (`re/hashlib/urllib/base64` all True). Deployed main.py (server backup `main.py.bak-20260601-scan2346`); BEA restarted active; `/health` ok v1.3.1; Cloudflare purged; smoke 39/39 ✅.
+
+Cost model impact: none — adds standard-library imports and fixes a name; no new AI calls, no pricing/concurrency change.
+
+## Session 101 · 1 June 2026 · SCAN-1 — KYC verification crash-bug fixed (undefined SONNET_MODEL)
+
+First of the CRIT KYC crash-bugs (SCAN-1→7) flagged by the 1 June static-analysis discovery scan, worked per the runner priority override (numeric order, ahead of S3/S5/L3a).
+
+**SCAN-1.** `bea_main.py` referenced `SONNET_MODEL` at three sites in the SA-ID / KYC ID-verification path (`model=SONNET_MODEL` on the Anthropic call, plus two response-payload `"model"` fields, ~lines 7544/7571/7575) but the name was **defined nowhere** in the module — a guaranteed `NameError` → HTTP 500 the instant that endpoint runs. Latent in prod because the KYC verification path isn't exercised yet. Fix: added a module-level `SONNET_MODEL = "claude-sonnet-4-6"` beside the other `*_MODEL` constants (line 900, after `AA_MODEL`), matching the established `VISION_MODEL` value/standard. Single Python string-replace per the large-file rule; `ast.parse` clean locally and in the BEA venv on the server (now 1 definition + 3 usages resolve).
+
+Deployed main.py (server backup `main.py.bak-20260601`); BEA restarted active; `/health` ok v1.3.1; Cloudflare purged; smoke 30/30 ✅.
+
+Cost model impact: none — defines a constant already implied by an existing call; no new AI calls, pricing, concurrency, or volume change.
+
 ## Session 100 · 1 June 2026 · S4 — CORS lock-down (Phase 2 security hardening)
 
 [S4 · HIGH · DONE] Closed the open CORS hole in the BEA. `bea_main.py` previously set `allow_origins=["*"]` **and** `allow_origin_regex=".*"`, so any website could call the BEA from a visitor's browser. Replaced both with an explicit `ALLOWED_ORIGINS` allowlist (`https://trustsquare.co`, `https://www.trustsquare.co`) and removed the catch-all regex. `allow_credentials` stays False; the buyer app, admin tool and dashboard are all same-origin on trustsquare.co and auth is X-Api-Key/email (not cookie), so the lock-down breaks no legitimate flow. Verified local+server byte-identical base before deploy; one surgical Python string-replace; `ast.parse` local + in the BEA venv on the server. Deployed main.py (server backup `main.py.bak-20260601`), BEA restarted **active**, `/health` ok v1.3.1, Cloudflare purged, smoke 39/39 ✅. Live CORS check: allowed origin → `access-control-allow-origin: https://trustsquare.co`; disallowed origin → no ACAO header (blocked).

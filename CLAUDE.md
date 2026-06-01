@@ -58,6 +58,16 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 
+## Scale-shape invariants (design for it, don't plan for it)
+These are not future work. They are how code is written *now* so that scaling later is a config change, not a rewrite. Each costs ~nothing today and saves a rip-out at traffic. Hold to them every session; if a change would violate one, flag it rather than silently breaking it. **We are NOT building shards, replicas, queues, or multi-region now — do not add that infrastructure on spec.** These rules only keep the door open.
+
+1. **DB access through one thin layer, standard SQL only.** No SQLite-only pragmas or local-file assumptions leaking into route handlers. The SQLite→Postgres move must stay a connection-string swap + test, not a hunt across call sites.
+2. **Money-touching writes are transactional now.** Wrap every Tuppence debit and intro-accept in an explicit transaction even though SQLite's single writer would let us skip it. The ledger path stays strictly consistent; this code must already be correct under concurrency before Postgres arrives. (See Tuppence no-refunds rule — correctness here is load-bearing.)
+3. **No state on the box.** Requests carry their own auth; shared state lives in the DB/Redis, never in process memory or a local session file. This is what lets the BEA later run as N identical copies behind a load balancer with zero code change.
+4. **Media is always a URL, never bytes in the DB or local disk.** Already true via R2 — keep it that way. A CDN in front later is then a DNS/config change, not a code change.
+5. **Carry `city_id`; never assume a global pool.** Data is naturally geo-partitioned — always scope queries by city/region and never write logic that only works if all rows live together. Keeps city/region sharding cheap if it's ever needed.
+6. **Reads tolerate staleness; the ledger does not.** Browse counts, listing feeds, geo lookups may be cached/eventually-consistent. Tuppence balance and intro state must read authoritative. Decide which bucket a new read falls in when you write it.
+
 ## Sandbox SSH setup (run at the start of every session before any SSH/SCP)
 The sandbox does not persist SSH keys between sessions. At the start of every session, run this before any SSH or SCP command:
 ```bash

@@ -8,6 +8,10 @@ import auth
 import storage
 import os
 import json
+import re
+import hashlib
+import urllib.request
+import base64
 import httpx
 from PIL import Image, ImageOps
 import io
@@ -895,6 +899,9 @@ else:
 # Anthropic — Advert Agent AI Coach
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AA_MODEL = "claude-haiku-4-5-20251001"
+# KYC / SA-ID verification model (SCAN-1 fix — was referenced undefined in the
+# ID-verification path at ~7541/7568/7572). Matches VISION_MODEL standard.
+SONNET_MODEL = "claude-sonnet-4-6"
 
 # AI EMAIL TRIAGE (Session 94) — inbound @trustsquare.co mail forwarded by a
 # Cloudflare Email Worker to POST /email/inbound (auth: EMAIL_INBOUND_SECRET).
@@ -6820,11 +6827,11 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     import re as _re
     guidance = {}
     try:
-        guidance = _json.loads(raw)
+        guidance = json.loads(raw)
     except Exception:
         m2 = _re.search(r'\{[\s\S]*\}', raw)
         try:
-            guidance = _json.loads(m2.group(0)) if m2 else {}
+            guidance = json.loads(m2.group(0)) if m2 else {}
         except Exception:
             guidance = {}
 
