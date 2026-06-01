@@ -97,3 +97,22 @@ files.zip
 !Patents/*.docx
 
 !TrustSquare_PostAudit_Roadmap.docx
+
+# ── Listing media — NEVER in the repo (scale-shape invariant #4: media is a URL via R2) ──
+# Listing photos/videos belong in R2 object storage, referenced by URL — not committed.
+# Repo history hit ~1GB of Kronberg media before this rule; do not let it grow further.
+Kronberg/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.avif
+*.mp4
+*.mov
+*.MOV
+*.avi
+*.mkv
+*.heic
+*.HEIC
+# If a small UI/source image must be tracked, add an explicit "!path/to/file" exception below.
