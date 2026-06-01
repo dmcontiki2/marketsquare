@@ -48,3 +48,10 @@ Zero-manual-git session handoff, server as source of truth. See SESSION_BOOTSTRA
 - [O2 · DONE] `deploy_marketsquare.bat` now syncs `auth.py`/`database.py`/`storage.py`/`payments.py` to the server (pre-flight existence checks + new Step 3d scp before BEA restart + post-deploy verify line). These were repo-only and never auto-deployed.
 - Live-deployed the four modules this run (server `auth.py` was still the pre-S1 `ms_admin_changeme` version — now the hardened fail-closed one). MS_API_KEY confirmed set in systemd env + running process first; server auth.py backed up to `auth.py.bak-20260531`. AST 4/4 OK, BEA active, /health v1.3.1, bad-key→401, CF purged, smoke 30/30.
 - **Phase 1 + O2 now all CLOSED.** Next open items are Phase 2 audit findings from the readiness report.
+
+
+## Session 100 — 1 June 2026 · Phase 2 starts — S4 CORS lock-down
+
+- [S4 · HIGH · DONE] BEA CORS restricted from `allow_origins=["*"]` + `allow_origin_regex=".*"` to an explicit allowlist (`https://trustsquare.co`, `https://www.trustsquare.co`); regex removed; `allow_credentials` stays False. Same-origin apps + header/email auth → no legitimate caller affected. Deployed main.py (backup `main.py.bak-20260601`), AST OK local+server-venv, BEA active, /health v1.3.1, CF purged, smoke 39/39. Live: allowed origin echoed in ACAO, evil origin blocked (no ACAO).
+- Continuity fix: also completed the **Session-99 baseline write-back** the previous runner had skipped (dashboard was stuck on Session 98 though O2 was done/committed). Docs now scp'd; /dashboard/summary current.
+- **Phase 2 remaining:** S3 (HIGH — move API key from `?api_key=` query param to X-Api-Key header only; verify/remove the CDN header-stripping assumption first), S5 (MED — gate test/auto-approve payment endpoints behind a production env flag, fail-closed). Then S-sweep input validation, D1 fabrication sweep (Phase 4).

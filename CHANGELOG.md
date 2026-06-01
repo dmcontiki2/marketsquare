@@ -1,3 +1,11 @@
+## Session 100 · 1 June 2026 · S4 — CORS lock-down (Phase 2 security hardening)
+
+[S4 · HIGH · DONE] Closed the open CORS hole in the BEA. `bea_main.py` previously set `allow_origins=["*"]` **and** `allow_origin_regex=".*"`, so any website could call the BEA from a visitor's browser. Replaced both with an explicit `ALLOWED_ORIGINS` allowlist (`https://trustsquare.co`, `https://www.trustsquare.co`) and removed the catch-all regex. `allow_credentials` stays False; the buyer app, admin tool and dashboard are all same-origin on trustsquare.co and auth is X-Api-Key/email (not cookie), so the lock-down breaks no legitimate flow. Verified local+server byte-identical base before deploy; one surgical Python string-replace; `ast.parse` local + in the BEA venv on the server. Deployed main.py (server backup `main.py.bak-20260601`), BEA restarted **active**, `/health` ok v1.3.1, Cloudflare purged, smoke 39/39 ✅. Live CORS check: allowed origin → `access-control-allow-origin: https://trustsquare.co`; disallowed origin → no ACAO header (blocked).
+
+Note: this run also completed the Session-99 baseline write-back that the prior runner had left unsynced — the live dashboard was still reporting Session 98 although S99 (O2) was fully done and committed locally. STATUS/CHANGELOG/AUDIT_PROGRESS are now scp'd to the server, so /dashboard/summary reflects the true latest session.
+
+**Cost model impact:** none — security/config change only, no AI-path, pricing, concurrency or volume change.
+
 ## Session 99 · 31 May 2026 · O2 — guarded auto-deploy sync of backend modules
 
 Closed the long-deferred audit item **O2**: the four backend Python modules imported by `main.py` — `auth.py`, `database.py`, `storage.py`, `payments.py` — were in the repo but were never pushed by `deploy_marketsquare.bat` (server copies were the only source of truth, so the S1 hardened `auth.py` had never actually reached the server).

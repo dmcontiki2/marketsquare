@@ -19,10 +19,18 @@ from datetime import datetime, timezone, timedelta
 
 app = FastAPI(title="TrustSquare BEA", version="1.3.0")
 
+# S4 (audit · HIGH): CORS locked to TrustSquare origins only.
+# Previously allow_origins=["*"] + allow_origin_regex=".*" — any site could call the BEA
+# from a user's browser. Auth is X-Api-Key/email (allow_credentials stays False), and the
+# buyer/admin/dashboard are all same-origin on trustsquare.co, so an explicit allowlist
+# breaks nothing. A new origin must be added here deliberately.
+ALLOWED_ORIGINS = [
+    "https://trustsquare.co",
+    "https://www.trustsquare.co",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_origin_regex=".*",
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
