@@ -1,7 +1,23 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 65 live listings · World Heritage layer 332 sites · AI email triage LIVE · AI Price Check feed-driven + deliver-then-charge · AI cost guardrails LIVE (real-token + hard daily ceiling + dashboard panel) · Card photos: vision auto-orient on collectibles + 9 live cards fixed upright · Backend modules (auth/database/storage/payments) now in guarded auto-deploy (O2) · CORS locked to trustsquare.co origins (S4) · KYC verification path crash-fixed (SCAN-1 SONNET_MODEL + SCAN-2/3/4/6 missing imports re/hashlib/urllib/base64 + _json name + SCAN-5 doc-upload MEDIA_DIR→_LOCAL_MEDIA_DIR) · Session 103 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 65 live listings · World Heritage layer 332 sites · AI email triage LIVE · AI Price Check feed-driven + deliver-then-charge · AI cost guardrails LIVE (real-token + hard daily ceiling + dashboard panel) · Card photos: vision auto-orient on collectibles + 9 live cards fixed upright · Backend modules (auth/database/storage/payments) now in guarded auto-deploy (O2) · CORS locked to trustsquare.co origins (S4) · KYC verification path crash-fixed (SCAN-1 SONNET_MODEL + SCAN-2/3/4/6 missing imports re/hashlib/urllib/base64 + _json name + SCAN-5 doc-upload MEDIA_DIR→_LOCAL_MEDIA_DIR) · FEA wallet UX overhaul: How-introductions compact picker + transaction filters + AI-services list refresh (added Yield Estimate & Batch Card Lister) + refund mechanism removed (ms.js v129 / ms.css v115) · Session 104 complete
+
+## Last Completed (Session 104 — 2026-06-01)
+- **Tuppence Wallet UX overhaul (FEA, David-requested).** Buyer-app `marketsquare.html` / `ms.js` / `ms.css`:
+  1. **"How introductions work"** — replaced the 4×8 model-table with a compact explainer: 7-category dropdown + scrollable one-feature-at-a-time top bar (chevrons + dots) + colour-coded answer card with a plain-language line.
+  2. **Transaction history** — added type + date-range filters, a fixed-height (~340px) scroll, and a working "Load more"; client-side filter over loaded items.
+  3. **AI Services** — moved below transactions and refreshed: added the previously-missing **AI Yield Estimate** + **AI Batch Card Lister** (both live + in active use) with accurate entry-point hints; clarified "Why No Intros?" lives in the listing Edit screen.
+  4. **Refund removed as a mechanism** — dropped the Refunds filter option + the `refund` `_TX_ICON` ledger type. Kept all `non-refundable` policy/legal/EULA text and the BEA "never promise refunds" guardrail.
+- **Verify:** node --check clean; CSS braces balanced; HTML intact; HIW data unit-tested (21/21 cells vs old table) + filter logic; full jsdom DOM test green. Bumped ms.js v128→129, ms.css v114→115.
+- **Deploy:** scp'd index.html + static/ms.js + static/ms.css (remote bytes == local), Cloudflare purged, smoke **all-green**, FEA baseline refreshed (`--update-baseline`); live markers confirmed (hiw-cat present, refund/model-table absent, v129/v115). No BEA change → no restart.
+- **Cost model impact:** none — display/UX only; added AI services already existed and were already billed.
+
+## Next Session (105)
+- **EULA wording decision (David):** ToS still has a clause titled "Refunds" (body: non-refundable) in the inline + rendered EULA. If the word should go from the heading too, rename "Refunds" → "No Refunds" across all EULA copies in one pass (default: leave for the v1.6 attorney-review pass).
+- **Resume KYC crash-bug block — SCAN-7 (HIGH):** `background_tasks` undefined at ~9365 in `vision_draft` (F821) → add `background_tasks: BackgroundTasks` to the endpoint signature; verify AST + smoke before deploy.
+- **After SCAN-7: Phase 2 normal order** — S3 (API key off `?api_key=` → X-Api-Key header), S5 (gate test/auto-approve payment endpoints behind a prod env flag, fail-closed), L3a (support@trustsquare.co mailbox), then SCAN-8…12 + JS-1/JS-2 + HTML-1/HTML-2 cleanup.
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination, Paystack plan wiring, EULA v1.6 attorney review.
 
 ## Last Completed (Session 103 — 2026-06-01)
 - **SCAN-5 DONE (CRIT · KYC doc-upload crash-bug).** `upload_seller_document` (`POST /users/{email}/documents`, bea_main.py:7111) used undefined `MEDIA_DIR` in its R2-unconfigured local-fallback branch — a latent `NameError` → HTTP 500 on any document upload when `_S3_CONFIGURED` is false. Replaced with the module's `_LOCAL_MEDIA_DIR = "/var/www/marketsquare/media"` (line 942) after confirming it is the intended dir: it is the same dir `_s3_upload` mirrors to, nginx serves it at `/media/`, and the fallback's returned `url = /media/{safe}` resolves there.
