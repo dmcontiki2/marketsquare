@@ -992,7 +992,7 @@ function goTo(name){
   if(name==='aa-home')aaRenderHome();
   if(name==='aa-coach')aaRenderCoachScreen();
   if(name==='aa-publish')aaRenderPublishScreen();
-  if(name==='tuppence'){aaLoadWalletSessions();loadTransactionHistory('tn-history','tn-load-more');}
+  if(name==='tuppence'){aaLoadWalletSessions();hiwInit();txSyncFilterUI();loadTransactionHistory('tn-history','tn-load-more');}
   if(name==='myspace')msInit();
   if(name==='guided-onboard') goInit();
   if(name==='seller-onboard') sobInit();
@@ -10949,9 +10949,97 @@ const _TX_ICON = {
   topup:        { icon: '💰', label: 'Top-up',          color: '#16a34a' },
   ai_service:   { icon: '🤖', label: 'AI service',      color: '#7c3aed' },
   intro:        { icon: '🤝', label: 'Introduction',    color: '#2563eb' },
-  refund:       { icon: '↩️',  label: 'Refund',          color: '#0891b2' },
   subscription: { icon: '📋', label: 'Subscription',    color: '#d97706' },
 };
+
+/* How Introductions Work — compact category/feature explainer (Session) */
+const HIW_CATS = [
+  { label: '🏡 Property',      group: 0 },
+  { label: '🚗 Cars',          group: 0 },
+  { label: '🏕 Accommodation', group: 1 },
+  { label: '🌿 Experiences',   group: 1 },
+  { label: '🎓 Tutors',        group: 2 },
+  { label: '⚙️ Services',    group: 2 },
+  { label: '🏺 Collectors',    group: 2 },
+];
+// group 0 = Property & Cars · 1 = Accommodation & Experiences · 2 = Tutors/Services/Collectors
+const HIW_FEATURES = [
+  { label: 'Listing paused on intro', ans: ['Yes — holds slot','No','No'], tone: ['yes','no','no'],
+    desc: ['When a buyer requests an intro your listing pauses, so the item is held just for them while you reply.',
+           'Your listing stays live — several guests can request the same dates at the same time.',
+           'Your listing stays live — several buyers can reach you at the same time.'] },
+  { label: 'Multiple buyers at once', ans: ['Up to 3','Unlimited','Unlimited'], tone: ['partial','yes','yes'],
+    desc: ['Up to 3 buyers can hold an intro at once, so a serious buyer always has a slot.',
+           'Any number of guests can enquire together — you choose who to confirm.',
+           'Any number of buyers can reach you together — there is no cap.'] },
+  { label: 'Booking / scheduling', ans: ['No','Date-based slot','Availability match'], tone: ['no','yes','partial'],
+    desc: ['No calendar — it is a direct introduction to discuss the sale.',
+           'Buyers choose a date when they request the introduction.',
+           'Buyers request a time that fits the availability you have set.'] },
+  { label: 'Buyer pays on acceptance', ans: ['1T = $2','1T = $2','1T = $2'], tone: ['yes','yes','yes'],
+    desc: ['The buyer spends 1 Tuppence (about $2) only when you accept the intro — never before.',
+           'The buyer spends 1 Tuppence (about $2) only when you accept the intro — never before.',
+           'The buyer spends 1 Tuppence (about $2) only when you accept the intro — never before.'] },
+  { label: 'No response within 48 hrs', ans: ['Trust −5','Trust −5','Trust −5'], tone: ['no','no','no'],
+    desc: ['If you do not reply within 48 hours your trust score drops by 5. No money is lost by anyone.',
+           'If you do not reply within 48 hours your trust score drops by 5. No money is lost by anyone.',
+           'If you do not reply within 48 hours your trust score drops by 5. No money is lost by anyone.'] },
+  { label: 'Respond within 24 hrs', ans: ['Trust +3','Trust +3','Trust +3'], tone: ['yes','yes','yes'],
+    desc: ['Reply within 24 hours and your trust score rises by 3 — fast replies build a stronger profile.',
+           'Reply within 24 hours and your trust score rises by 3 — fast replies build a stronger profile.',
+           'Reply within 24 hours and your trust score rises by 3 — fast replies build a stronger profile.'] },
+  { label: 'Response window', ans: ['48 hrs','48 hrs','48 hrs'], tone: ['yes','yes','yes'],
+    desc: ['You have 48 hours to respond to every introduction request.',
+           'You have 48 hours to respond to every introduction request.',
+           'You have 48 hours to respond to every introduction request.'] },
+];
+let _hiwFeat = 0;
+function hiwInit(){
+  const sel = document.getElementById('hiw-cat');
+  if (!sel) return;
+  if (!sel.options.length) sel.innerHTML = HIW_CATS.map(function(cat,i){ return '<option value="'+i+'">'+cat.label+'</option>'; }).join('');
+  const dots = document.getElementById('hiw-dots');
+  if (dots) dots.innerHTML = HIW_FEATURES.map(function(_f,i){ return '<span class="hiw-dot'+(i===_hiwFeat?' on':'')+'" onclick="hiwGo('+i+')"></span>'; }).join('');
+  hiwRender();
+}
+function hiwStep(d){ _hiwFeat = (_hiwFeat + d + HIW_FEATURES.length) % HIW_FEATURES.length; hiwRender(); }
+function hiwGo(i){ _hiwFeat = i; hiwRender(); }
+function hiwRender(){
+  const sel = document.getElementById('hiw-cat'); if (!sel) return;
+  const g = (HIW_CATS[+sel.value] || HIW_CATS[0]).group;
+  const f = HIW_FEATURES[_hiwFeat] || HIW_FEATURES[0];
+  const lbl = document.getElementById('hiw-feat-label'); if (lbl) lbl.textContent = f.label;
+  const ans = document.getElementById('hiw-answer'); if (ans){ ans.textContent = f.ans[g]; ans.className = 'hiw-answer ' + f.tone[g]; }
+  const desc = document.getElementById('hiw-desc'); if (desc) desc.textContent = f.desc[g];
+  const dots = document.querySelectorAll('#hiw-dots .hiw-dot');
+  dots.forEach(function(dd,i){ dd.classList.toggle('on', i === _hiwFeat); });
+}
+
+/* Transaction history filters (type + date range), applied client-side over loaded items */
+const _txFilters = {};
+function txSyncFilterUI(){
+  const f = _txFilters['tn-history']; if (!f) return;
+  const t = document.getElementById('tx-filter-type'); if (t) t.value = f.type || 'all';
+  const r = document.getElementById('tx-filter-range'); if (r) r.value = f.range || 'all';
+}
+function txApplyFilter(){
+  const t = document.getElementById('tx-filter-type');
+  const r = document.getElementById('tx-filter-range');
+  _txFilters['tn-history'] = { type: t ? t.value : 'all', range: r ? r.value : 'all' };
+  const st = _txState['tn-history'];
+  _renderTxList('tn-history', st ? st.items : []);
+}
+function _txPassesFilter(tx, f){
+  if (!f) return true;
+  if (f.type && f.type !== 'all' && tx.type !== f.type) return false;
+  if (f.range && f.range !== 'all'){
+    const days = parseInt(f.range, 10);
+    const t = new Date((tx.created_at || '').replace(' ', 'T') + 'Z').getTime();
+    if (isNaN(t)) return false;
+    if (t < Date.now() - days * 86400000) return false;
+  }
+  return true;
+}
 
 function _txMeta(type) {
   return _TX_ICON[type] || { icon: '•', label: type, color: '#64748b' };
@@ -11009,12 +11097,16 @@ async function loadTransactionHistory(listId, moreId, reset) {
 function _renderTxList(listId, items, balance) {
   const el = document.getElementById(listId);
   if (!el) return;
-  if (!items.length) { el.innerHTML = _txEmptyState('No transactions yet'); return; }
+  const all = items || [];
+  const _f = _txFilters[listId];
+  const shown = _f ? all.filter(function(tx){ return _txPassesFilter(tx, _f); }) : all;
+  if (!all.length) { el.innerHTML = _txEmptyState('No transactions yet'); return; }
+  if (!shown.length) { el.innerHTML = _txEmptyState('No transactions match this filter'); return; }
 
   // Group by calendar month
   const groups = {};
   const groupOrder = [];
-  items.forEach(tx => {
+  shown.forEach(tx => {
     const d = new Date((tx.created_at||'').replace(' ','T')+'Z');
     const key = d.toLocaleDateString('en-ZA',{month:'long',year:'numeric'});
     if (!groups[key]) { groups[key] = []; groupOrder.push(key); }

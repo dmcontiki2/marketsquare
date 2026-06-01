@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=114">
+<link rel="stylesheet" href="/static/ms.css?v=115">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -1151,57 +1151,22 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- HOW INTRODUCTIONS WORK -->
     <div class="tn-sec">
       <h2>How introductions work</h2>
-      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each Tuppence buys one anonymous introduction. You pay only when you choose to connect — sellers are free to list, and there are no penalties for anyone.</p>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each Tuppence buys one anonymous introduction. You pay only when you choose to connect. Pick your category, then step through how it works.</p>
 
-      <!-- Three-column model table -->
-      <div class="model-table" style="font-size:11.5px;">
-        <div class="mt-head" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Feature</div>
-          <div>🏡 Property &amp; 🚗 Cars</div>
-          <div>🏕 Accommodation &amp; 🌿 Experiences</div>
-          <div>🎓 Tutors · ⚙️ Services · 🏺 Collectors</div>
+      <div class="hiw" id="hiw-widget">
+        <div class="hiw-bar">
+          <button type="button" class="hiw-nav" id="hiw-prev" onclick="hiwStep(-1)" aria-label="Previous feature">&lsaquo;</button>
+          <div class="hiw-feat">
+            <div class="hiw-feat-label" id="hiw-feat-label">Listing paused on intro</div>
+            <div class="hiw-dots" id="hiw-dots"></div>
+          </div>
+          <button type="button" class="hiw-nav" id="hiw-next" onclick="hiwStep(1)" aria-label="Next feature">&rsaquo;</button>
         </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Listing paused on intro</div>
-          <div class="yes">Yes — holds slot</div>
-          <div class="no">No</div>
-          <div class="no">No</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Multiple buyers at once</div>
-          <div class="partial">Up to 3</div>
-          <div class="yes">Unlimited</div>
-          <div class="yes">Unlimited</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Booking / scheduling</div>
-          <div class="no">No</div>
-          <div class="yes">Date-based slot</div>
-          <div class="partial">Availability match</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Buyer pays on acceptance</div>
-          <div class="yes">1T = $2</div>
-          <div class="yes">1T = $2</div>
-          <div class="yes">1T = $2</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>No response within 48hrs</div>
-          <div class="no">Trust −5</div>
-          <div class="no">Trust −5</div>
-          <div class="no">Trust −5</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Respond within 24hrs</div>
-          <div class="yes">Trust +3</div>
-          <div class="yes">Trust +3</div>
-          <div class="yes">Trust +3</div>
-        </div>
-        <div class="mt-row" style="grid-template-columns:1.4fr 1fr 1fr 1fr;">
-          <div>Response window</div>
-          <div class="yes">48 hrs</div>
-          <div class="yes">48 hrs</div>
-          <div class="yes">48 hrs</div>
+        <div class="hiw-body">
+          <label class="hiw-cat-lbl" for="hiw-cat">Category</label>
+          <select class="hiw-cat" id="hiw-cat" onchange="hiwRender()" aria-label="Choose a category"></select>
+          <div class="hiw-answer" id="hiw-answer">Yes &mdash; holds slot</div>
+          <div class="hiw-desc" id="hiw-desc"></div>
         </div>
       </div>
     </div>
@@ -1234,55 +1199,89 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
     </div>
 
-    <!-- AI TUPPENCE SERVICES -->
+    <!-- TRANSACTION HISTORY -->
     <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
-      <h2>⚡ Use your Tuppence — AI Services</h2>
-      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each service costs 1T and is non-refundable. Charged from your Tuppence balance.</p>
+      <h2>Transaction history</h2>
+      <div class="tx-filter">
+        <select class="tx-filter-sel" id="tx-filter-type" onchange="txApplyFilter()" aria-label="Filter by type">
+          <option value="all">All types</option>
+          <option value="topup">Top-ups</option>
+          <option value="ai_service">AI services</option>
+          <option value="intro">Introductions</option>
+          <option value="subscription">Subscriptions</option>
+        </select>
+        <select class="tx-filter-sel" id="tx-filter-range" onchange="txApplyFilter()" aria-label="Filter by date">
+          <option value="all">All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+      <div class="tn-table tx-scroll" id="tn-history">
+        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading&hellip;</div>
+      </div>
+      <button type="button" class="tx-more" id="tn-load-more" style="display:none;" onclick="loadMoreTransactions()">Load more</button>
+    </div>
+
+    <!-- AI TUPPENCE SERVICES (moved below transactions) -->
+    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
+      <h2>&#9889; Use your Tuppence &mdash; AI Services</h2>
+      <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each AI service is charged from your Tuppence balance and is non-refundable. Most cost 1T; batch tools are priced per run.</p>
       <!-- Seller AI services -->
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers · in your listing edit screen</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers &middot; in your listing edit screen</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">✨</div>
+          <div style="font-size:22px;flex-shrink:0;">&#10024;</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Listing Rewrite <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude rewrites your title and description using current SA market language and buyer psychology. Pre-fills your edit form — review and save.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → Edit → "✨ Rewrite Listing"</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Listing Rewrite <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude rewrites your title and description using current SA market language and buyer psychology &mdash; pre-fills your edit form to review and save.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#10024; Rewrite"</div>
           </div>
           <div style="font-size:12px;font-weight:700;color:#d97706;background:#fef3c7;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">🔍</div>
+          <div style="font-size:22px;flex-shrink:0;">&#128269;</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Intros? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude reviews your listing — title, description, price, and trust score — then gives you 3 specific things to fix right now to attract more buyers.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → Edit → "🔍 Why No Intros?"</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Intros? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude reviews your listing &mdash; title, description, price and trust score &mdash; then gives you 3 specific fixes to attract more buyers right now.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#128269; Why No Intros?"</div>
           </div>
           <div style="font-size:12px;font-weight:700;color:#059669;background:#d1fae5;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
         </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">&#127183;</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Batch Card Lister <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; per run</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Upload photos of many collector cards at once and Claude drafts a separate listing for each &mdash; title, set, condition and a suggested price.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; + Sell &rarr; Collector cards &rarr; "Batch Cards"</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#5b21b6;background:#ede9fe;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">bulk</div>
+        </div>
       </div>
       <!-- Buyer AI services -->
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For buyers · on any listing</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For buyers &middot; on any listing</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">💡</div>
+          <div style="font-size:22px;flex-shrink:0;">&#128161;</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Is This a Fair Price? <span style="font-size:11px;font-weight:400;color:var(--text-3);">· 1T</span></div>
-            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude compares the asking price to current SA market rates and gives you a verdict: fair, above market, or below market — plus a suggested fair range.</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">📍 Open any listing → "💡 Is this a fair price?"</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Is This a Fair Price? <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude compares the asking price to current SA market rates and gives a verdict &mdash; fair, above or below market &mdash; plus a suggested fair range.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; "&#128161; Is this a fair price?"</div>
           </div>
           <div style="font-size:12px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">&#128200;</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">AI Yield Estimate <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Claude estimates rental yield and return for a property or accommodation listing using current SA market data. Sellers can run it from Edit too.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Property / accommodation listing &rarr; "&#128200; Investor Yield Calculator"</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#0e7490;background:#cffafe;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">1T</div>
         </div>
       </div>
       <div style="font-size:11px;color:var(--text-3);margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:8px;">
         <strong>Non-refundable policy:</strong> AI services are charged on use. If the AI call fails due to a server error, no Tuppence is deducted. Results are provided as-is for guidance only.
-      </div>
-    </div>
-
-    <!-- TRANSACTION HISTORY -->
-    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
-      <h2>Transaction history</h2>
-      <div class="tn-table" id="tn-history">
-        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
       </div>
     </div>
 
@@ -3966,7 +3965,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=128"></script>
+<script src="/static/ms.js?v=129"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->
