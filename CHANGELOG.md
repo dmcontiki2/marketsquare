@@ -1,3 +1,27 @@
+## Tooling · 1 June 2026 · load_sandbox_ssh.sh — Hetzner host-key seeding + SSH multiplexing (test-runner fix)
+
+Not a BEA build session — a sandbox dev-tooling fix to `load_sandbox_ssh.sh`, surfaced by the scheduled TEST/QUALITY runner. The first `smoke_test.py` run of the day reported 29 false failures (0-byte HTML fetch, "Host key verification failed", every SSH-backed check red) even though the live site was fully healthy (all endpoints 200, BEA v1.3.1). Root cause was purely the sandbox SSH setup, not a product regression: `load_sandbox_ssh.sh` copied the private key but (a) never seeded the server's host key into `~/.ssh/known_hosts`, so every SSH call failed host-key verification, and (b) opened a fresh un-multiplexed connection per check — smoke_test.py makes ~12 SSH calls, which together blow past the sandbox's 45s shell timeout.
+
+Fix (both additions idempotent, safe to run every session): (1) after the key copy, `ssh-keygen -F` checks whether the host is already known and, if not, `ssh-keyscan -H 178.104.73.239 >> ~/.ssh/known_hosts` seeds it; (2) an `~/.ssh/config` block for the host with `ControlMaster auto` + `ControlPath ~/.ssh/cm/%r@%h:%p` + `ControlPersist 300` + `StrictHostKeyChecking accept-new`, so the smoke test's repeated SSH calls reuse one socket and finish well inside the timeout.
+
+Gotcha worth remembering: the first edit attempt used the Edit tool and the write to the Windows mount **truncated at 824 bytes mid-line** — the same large-file truncation the CLAUDE.md HTML/py rule warns about, which bites small scripts here too. Rewrote the full 1871-byte file via Python `open(path,'w',newline='\n').write(...)` from the sandbox side, which wrote cleanly. Use the Python-write method (not Edit/Write) for any script edits in this folder.
+
+Verified from a wiped SSH state (only `id_ed25519` present): script runs clean and prints its success line; a fresh `ssh` connects with no prompt; re-running does not duplicate the known_hosts keys (3 host entries, hashed) or the config Host block (stays 1); and `smoke_test.py` then completes in a single bash call within the timeout, 30/30 green. Read-only on production throughout — no server, BEA, or git change made by the runner; `load_sandbox_ssh.sh` references the gitignored key by name only (no secrets), so it is safe to commit. David to `git add/commit/push` from PowerShell per the index.lock rule.
+
+Cost model impact: none — sandbox dev-tooling only; no AI calls, pricing, concurrency, email volume, or city-launch mechanics changed.
+
+## Session 103 · 1 June 2026 · SCAN-5 — KYC document-upload crash-bug fixed (undefined MEDIA_DIR)
+
+Fifth of the CRIT/HIGH KYC crash-bugs (SCAN-1→7) from the 1 June static-analysis discovery scan, worked per the runner priority override (numeric order, one per run, ahead of S3/S5/L3a).
+
+**SCAN-5 (`MEDIA_DIR`).** In `upload_seller_document` (`POST /users/{email}/documents`, bea_main.py:7111) the R2-unconfigured local-fallback branch built its save path with `os.path.join(MEDIA_DIR, safe)`, but `MEDIA_DIR` is defined nowhere in the module — a latent `NameError` → HTTP 500 the moment a document upload runs while `_S3_CONFIGURED` is false. The module instead defines `_LOCAL_MEDIA_DIR = "/var/www/marketsquare/media"` (line 942) — the same dir `_s3_upload` mirrors to, the dir nginx serves at `/media/`, and exactly where the fallback's returned `url = /media/{safe}` resolves. Confirmed the intended dir, then replaced the single `MEDIA_DIR` reference with `_LOCAL_MEDIA_DIR`. Latent in prod because R2 is configured (the fallback branch never executes), so the fix is behavior-neutral on the live path.
+
+One surgical Python `str.replace` driver, old-string asserted to match exactly once; the `_LOCAL_MEDIA_DIR` definition (942) and its existing correct use (972) left untouched. `ast.parse` clean locally and in the BEA venv on the server; `os` (line 9) and `_LOCAL_MEDIA_DIR` (942) are both module-level bound, so the fixed line resolves at runtime. Deployed main.py (server backup `main.py.bak-20260601-scan5`); BEA restarted active; `/health` ok v1.3.1; Cloudflare purged; smoke all-green ✅.
+
+Continuity: also synced the 09:14Z weekly-discovery-scan block into the server's AUDIT_PROGRESS.md (it had been appended locally by the weekly-scan task but never scp'd), and purged the stale Cloudflare-cached `/dashboard/summary` (it was serving a 31 May Session-98 snapshot; now reflects the live session).
+
+Cost model impact: none — replaces an undefined name with the correct module constant; no new AI calls, no pricing/concurrency change.
+
 ## Session 102 · 1 June 2026 · SCAN-2/3/4/6 — KYC crash-bugs fixed (missing module-level imports + _json name)
 
 Batched the four "add a top-level import / fix a name" KYC crash-bugs into one run, as the runner priority override explicitly permits (all surgical edits in the same file, `bea_main.py`). These were latent `NameError` → HTTP 500 crashes on the SA-ID / KYC verification path, which isn't exercised in prod yet.
@@ -3230,15 +3254,4 @@ Cost model impact: New tier prices ($12/$20/$40/$100/mo) replace old $5/$15 tier
 Cost model impact: AI email triage adds ~$0.0023 (Haiku) per inbound email classified. At low inbound volume (<100/mo pre-launch) this is negligible (<$0.25/mo). Auto-send is OFF, so no SMTP send volume yet.
 
 **For David:**
-1. Deploy the worker: `cd cloudflare_email_worker; npm install; npx wrangler login; npx wrangler secret put EMAIL_INBOUND_SECRET` (value: `ms_inbound_YdWP31p8GKi9YfLc10nSOxlqibGAQ2gzrrjbvqRjVlA`); `npx wrangler deploy`; then point Email Routing rules at the worker.
-2. To enable auto-reply later: add `GMAIL_APP_PASSWORD` + `EMAIL_AUTO_SEND=1` to `/etc/environment`, restart BEA.
-3. Commit from PowerShell: `bea_main.py`, the new `cloudflare_email_worker/` folder, `CHANGELOG.md`, `STATUS.md`.
-4. ⚠️ Local `bea_main.py` was truncated (was 9698 lines, missing `get_tuppence_history` + everything after) — repaired this session by rebuilding from the server's good `main.py` (9728 lines) before applying changes. The repaired local file is now 9972 lines and matches the server. Commit it to fix the repo copy.
-
-### Session 94 (cont.) — Auto-reply enabled
-
-Gmail App Password added to server `/etc/environment` (`GMAIL_APP_PASSWORD`), `GMAIL_ADDRESS=dmcontiki2@gmail.com`, `EMAIL_AUTO_SEND=1`. BEA restarted. Live-verified: routine support email auto-replied via Gmail SMTP (`status: sent`); legal email correctly held (`status: drafted`) despite auto-send being on. Cloudflare worker switched to postal-mime parser (dashboard paste v2) — subject/body now extracted reliably. support@trustsquare.co routed to the worker and tested end-to-end. Remaining addresses (legal/billing/compliance/catch-all) can be pointed at the same worker when desired.
-
-### Session 94 (cont.) — Ops dashboard email-triage panel
-
-Added `GET /dashboard/email-triage` (unauthenticated, mirrors /dashboard/summary's obscure-URL posture) returning recent rows + 30-day category/status counts. Added "📧 EMAIL TRIAGE" panel to dashboard.html Ops tab: category count tiles, auto-sent vs held counts, and a scrollable list of recent emails with category/status badges and the drafted reply inline. Loads via loadEmailTriage() on Ops tab open. ⚠️ Note: the Edit tool truncated dashboard.html mid-build (large-HTML hazard per CLAUDE.md) and a broken copy briefly deployed — repaired immediately by rebuilding the file tail via Python and redeploying. Smoke 30/30 ✅.
+1. Deploy the worker: `cd cloudflare_email_worker; npm install; npx wrangler login; npx wra
