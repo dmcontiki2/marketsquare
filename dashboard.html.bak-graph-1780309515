@@ -584,17 +584,14 @@ function getGalaxyData() {
     { id: 'risks',    label: 'Risk Register', sub: 'Live risks',  group: 'RiskRegister',   size: 20, drilldown: 'risks', detail: 'Live risk register — security, legal, operational & technical risks' },
   ];
 
-  // Blockers and Priorities are collapsed into single parent nodes.
-  // Their individual items live one level down (drilldown), not as loose satellites.
-  const _blockers = (DATA.blockers || []).slice(0, 8);
-  if (_blockers.length) {
-    nodes.push({ id: 'blockers', label: 'Blockers', sub: _blockers.length + ' active', group: 'Blocker', size: 18, drilldown: 'blockers', detail: 'Launch blockers — click to view all ' + _blockers.length + ' open blockers' });
-  }
-  if (priorities.length) {
-    nodes.push({ id: 'priorities', label: 'Priorities', sub: priorities.length + ' this session', group: 'Priority', size: 18, drilldown: 'priorities', detail: 'Next-session priorities — click to view each' });
-  }
+  (DATA.blockers || []).slice(0, 4).forEach((b, i) =>
+    nodes.push({ id: 'blocker_'+i, label: b.length>22?b.slice(0,22)+'…':b, sub:'Blocker', group:'Blocker', size:11, detail:b }));
 
-  // ── Risk Register satellites (definition only — rendered under drilldown, not at Level 1) ──
+  priorities.forEach((p, i) => {
+    const text = p.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
+    nodes.push({ id:'pri_'+i, label:text.length>24?text.slice(0,24)+'…':text, sub:`Priority ${i+1}`, group:'Priority', size:11, detail:text });
+  });
+  // ── Risk Register satellites ──────────────────────────────────────────────
   const RISK_ITEMS = [
     { id:'r1',  label:'Prior art — patent',     detail:'No outreach until patent filed. A single email sent before filing voids the prior art defence entirely.', status:'open' },
     { id:'r2',  label:'Nginx security headers', detail:'CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy not yet set. Required before public launch.', status:'open' },
@@ -609,9 +606,19 @@ function getGalaxyData() {
     { id:'r11', label:'FEA file size',           detail:'marketsquare.html is large. IP must stay in BEA. FEA is a display layer only — do not add business logic.', status:'monitor' },
     { id:'r12', label:'Wave 1 prior to baseline',detail:'Wave 1 outreach before baseline freeze risks exposing a moving codebase to real users. Baseline before scale.', status:'open' },
   ];
-  // (Risk items are NOT pushed to Level 1 — they render under the Risk Register drilldown.)
-  // Stash on DATA so getDrilldownData can read the same list without recomputing.
-  window._RISK_ITEMS = RISK_ITEMS;
+  const statusColor = { open:'#f43f5e', monitor:'#f59e0b', closed:'#10b981' };
+  RISK_ITEMS.forEach((r, i) => {
+    nodes.push({
+      id: r.id,
+      label: r.label.length > 22 ? r.label.slice(0,22)+'…' : r.label,
+      sub: r.status === 'open' ? '🔴 Open' : r.status === 'monitor' ? '🟡 Monitor' : '✅ Closed',
+      group: 'RiskRegister',
+      size: 11,
+      detail: '[' + (r.status === 'open' ? '🔴 OPEN' : r.status === 'monitor' ? '🟡 MONITOR' : '✅ CLOSED') + '] ' + r.detail,
+      color: statusColor[r.status],
+      type: r.status,
+    });
+  });
 
   const edges = [
     {source:'ts',target:'risks',strength:0.5},{source:'ts',target:'bea',strength:0.9},{source:'cl',target:'bea',strength:0.7},{source:'aa',target:'bea',strength:0.6},
@@ -626,8 +633,8 @@ function getGalaxyData() {
     {source:'aa',target:'ts',strength:0.7},{source:'infra',target:'ts',strength:0.5},
     {source:'infra',target:'cl',strength:0.5},{source:'infra',target:'aa',strength:0.5},
   ];
-  if (_blockers.length) edges.push({source:'ts',target:'blockers',strength:0.6});
-  if (priorities.length) edges.push({source:'ts',target:'priorities',strength:0.5});
+  (DATA.blockers||[]).slice(0,4).forEach((_,i)=>edges.push({source:'ts',target:'blocker_'+i,strength:0.6}));
+  priorities.forEach((_,i)=>edges.push({source:'ts',target:'pri_'+i,strength:0.5}));
   return { nodes, edges };
 }
 
@@ -695,7 +702,7 @@ function getDrilldownData(projectId) {
     },
     risks: {
       center: { label: 'Risk Register', color: '#f43f5e' },
-      nodes: (window._RISK_ITEMS || []).map(r => ({
+      nodes: RISK_ITEMS.map(r => ({
         label: r.label,
         sub: r.status === 'open' ? '🔴 Open' : r.status === 'monitor' ? '🟡 Monitor' : '✅ Closed',
         color: r.status === 'open' ? '#f43f5e' : r.status === 'monitor' ? '#f59e0b' : '#10b981',
@@ -703,34 +710,6 @@ function getDrilldownData(projectId) {
         type: r.status,
         detail: (r.status === 'open' ? '🔴 OPEN' : r.status === 'monitor' ? '🟡 MONITOR' : '✅ CLOSED') + ' — ' + r.detail,
       }))
-    },
-    blockers: {
-      center: { label: 'Blockers', color: '#ef4444' },
-      nodes: (DATA.blockers || []).slice(0, 8).map(b => ({
-        label: b.length > 22 ? b.slice(0, 22) + '…' : b,
-        sub: '⛔ Blocker',
-        color: '#ef4444',
-        size: 13,
-        type: 'risk',
-        detail: '⛔ BLOCKER — ' + b,
-      }))
-    },
-    priorities: {
-      center: { label: 'Priorities', color: '#06b6d4' },
-      nodes: (function() {
-        const pr = (DATA.nextGoals || '').split('\n').filter(l => /^\d+\./.test(l.trim()));
-        return pr.map((pp, i) => {
-          const text = pp.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
-          return {
-            label: text.length > 24 ? text.slice(0, 24) + '…' : text,
-            sub: 'Priority ' + (i + 1),
-            color: '#06b6d4',
-            size: 13,
-            type: 'priority',
-            detail: text,
-          };
-        });
-      })()
     }
   };
   return map[projectId] || null;

@@ -81,7 +81,7 @@ If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from P
 - Git remote: github.com/dmcontiki2/marketsquare
 
 ## Server deployment
-- Server: Hetzner CPX22 · 178.104.73.239 · Ubuntu 24.04
+- Server: Hetzner CPX32 · 178.104.73.239 · Ubuntu 24.04 · 4 vCPU · 8 GB RAM (upgraded from CPX22 on 25 May 2026)
 - Nginx serves from: /var/www/marketsquare/
 - **Always cd to working directory first:** `cd C:\Users\David\Projects\MarketSquare`
 - Deploy buyer app: `scp marketsquare.html root@178.104.73.239:/var/www/marketsquare/index.html`

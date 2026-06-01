@@ -7108,7 +7108,7 @@ async def upload_seller_document(
         url = _s3_upload(raw, key, ct)
     else:
         safe = key.replace("/", "_")
-        path = os.path.join(MEDIA_DIR, safe)
+        path = os.path.join(_LOCAL_MEDIA_DIR, safe)
         with open(path, "wb") as fh:
             fh.write(raw)
         url = f"/media/{safe}"
