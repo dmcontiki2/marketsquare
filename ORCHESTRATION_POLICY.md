@@ -121,3 +121,19 @@ from the page is a later enhancement.
 ## 10 · Bootstrap
 On the first Orchestrator run, if `queue.json` is absent it is built from the open items in
 `AUDIT_PROGRESS.md`. Until a queue exists, the Fixer no-ops cleanly. The loop is self-seeding.
+
+---
+
+## 11 · Model-tiering policy (RM-4 · adopted 2 Jun 2026)
+**Default is deterministic Python/shell. A model is the exception, justified per call.** Imported from `ROADMAP_4_AI_INDEPENDENCE.md` §2 and adopted as binding policy for this loop and for CityLauncher.
+
+| Tier | Use it for | Cadence |
+|---|---|---|
+| **Deterministic Python / shell** | the default — all sensing, scanning, health, plumbing, queue ordering, report assembly, the §6.2 gate **path** pre-catch, Haiko's decision tree, keyword-table lookups | every run · zero token · runs on the box under `cron` |
+| **Opus** | one-off attended design & architecture (roadmaps, the modularization plan, a gate-policy redesign) | rare, human-in-the-loop · never in the daily loop |
+| **Sonnet** | sparse, checkpoint-only judgment — the Fixer's actual code edit; the ambiguous-triage residue; a weekly review checkpoint | only when a deterministic gate has **already** flagged that judgment is required |
+| **Haiku** | — | **RETIRED.** Its one job (CityLauncher keyword phrasing) is served by the existing `CATEGORY_EXPANSIONS` table; a model is consulted only on a true table-miss, and that consult is Sonnet-grade. No standing Haiku dependency. |
+
+**Operating rule (carry into every session):** *deterministic by default; escalate to Sonnet only at a checkpoint a script couldn't decide; Opus only for attended design; Haiku not used.* **Litmus test:** "If I wrote the rule out in full, would it be correct ≥95% of the time and safe on the other 5%?" Yes → deterministic cron; No → smallest model tier above.
+
+**Migration (phased per ROADMAP_4 §3, gates intact):** Sensor→cron first (Phase 1 — runs in **shadow** writing `findings.cron.json` until 7-day parity, then flips to `findings.json` and the Claude Sensor task is paused), then Orchestrator plumbing→cron with a Sonnet checkpoint **only** on ambiguous items (Phase 2), then retire Haiku in CityLauncher (Phase 3). The two gates, `staged.json`, the approval flow, and `report.json` / the live page never change shape — only *who writes them* flips from a Claude session to a cron script.

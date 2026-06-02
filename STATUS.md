@@ -13,6 +13,7 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - **Cost model impact:** none — no AI calls (local hashing only), no pricing/infra/concurrency/email/city-launch change.
 
 ## Next Session (110)
+- **RM-4 Phase 1 LIVE (shadow):** deterministic zero-token `sensor.py` on server cron @ 01:30 UTC (=03:30 SAST) writing `findings.cron.json` for parity vs the Claude Sensor; model-tiering policy adopted as ORCHESTRATION_POLICY §11; `smoke_test.py` gained `--local`. First parity run: smoke 38/38, health/spend/anomaly all match; only gap = open_items 16 vs 17 = **AUDIT_PROGRESS.md marker staleness** → flip SCAN-2…6 to DONE + add `[· OPEN]` markers for A11Y-1/2/3, ADMIN_KEY, L3a, S5. After ~7d parity → `sensor.py --live` + pause `trustsquare-orch-sensor` task. Monday scan still on the Claude pass until ruff/vulture/pylint venv is on the box. (Plan: `LAUNCH_READINESS_PLAN.html`, Wave A.)
 - **Unit 314 (listing 216)** — get real interior photos from Maroushka (now photoless); same for already-empty Units 109/308.
 - **Optional anonymity follow-up:** sanitise kept amenity image filenames on R2 (re-upload pool/garden shots under hashed keys, rewrite URLs) to remove the address from the photo URL.
 - **Still pending from CHANGELOG Session 108 (built, NOT deployed):** Tiered Value Selector steps 3–5 + David's `git add/commit` of the BEA framework + `ai_service_tiers.py`.

@@ -3315,3 +3315,21 @@ Phone-only (<=480px) override: category grid 3-col->2-col with taller 3:2 tiles 
 
 ## Session 107c — 2026-06-02 · Local Market home tile height parity (phone)
 Phone (<=480px): #lm-home-tile aspect-ratio 6/1 -> 3/1 !important so the full-width Local Market banner matches the 3:2 category tile height for a uniform grid; laptop unchanged. ms.css media-query edit + cache-buster v116->v117 in marketsquare.html, both via Python str.replace driver. Deploy
+
+## Session 110 (attended build) — 2026-06-02 · RM-4 Phase 1: deterministic Sensor → server cron (SHADOW) + model-tiering policy
+
+**Context.** Wave-A lead of the launch-readiness plan (`LAUNCH_READINESS_PLAN.html`). RM-4 "AI-independence": move the maintenance loop's mechanical work to zero-token server cron, reserving an LLM only where judgment pays. This session ships the A1 unit — adopt the model-tiering policy + migrate the Sensor to cron — in the safest (shadow) form.
+
+**Model-tiering policy adopted (ORCHESTRATION_POLICY.md §11, imported from ROADMAP_4 §2):** deterministic Python/shell is the default; Opus for attended design only; Sonnet for sparse checkpoint-only judgment; **Haiku RETIRED**. Litmus test + operating rule included; binding for the loop and CityLauncher.
+
+**`smoke_test.py` gained an additive `--local` mode.** A `_run()` transport wraps every shell assertion: default = ssh to the box (David's workstation usage, behaviour unchanged); `--local` = run the SAME commands on the box itself (server-cron usage). Both modes verified. Deployed to the server via heredoc because the sandbox mount truncated the file mid-write — the canonical (Read/file-tool) copy was intact and is what reached the server (159 lines, AST-clean).
+
+**`sensor.py` — deterministic, zero-token cron Sensor.** Reproduces the Claude-Sensor's `findings.json` with no model: runs `smoke_test.py --local`, curls `/health` + `/dashboard/cost` + `/dashboard/summary`, runs `fea_integrity_check.py`, parses AUDIT_PROGRESS.md open markers, Monday-guards the static scan, assembles `findings.json` in the exact live schema, appends a `$0 / 0-token` line to the log. Read-only re product code; always exits 0.
+
+**Deployed in SHADOW mode (zero behaviour change).** The cron writes `findings.cron.json` + `log.cron.md` ALONGSIDE the live files, so the running loop is completely undisturbed during the parity window. Installed `30 1 * * *` (01:30 UTC = 03:30 SAST) in root crontab, preserving the existing DB-backup job. `scp`'d sensor.py + fea_integrity_check.py; smoke_test.py via heredoc; all three AST-clean on the box.
+
+**First shadow run — parity vs live `findings.json`:** smoke 38/38 ✓, all_green ✓, health ok/1.3.1 ✓, spend (today 0.0 / month 0.003861 / 2 calls) ✓, anomalies 1 (bea_version drift) ✓, FEA baseline seeded. **Only divergence: open_items 16 vs 17** — pure AUDIT_PROGRESS.md staleness, not a sensor bug: the parser correctly reads `[ID · SEV · OPEN]` markers, which still flag SCAN-2…6 as OPEN (actually fixed Sessions 102–103) and lack markers for A11Y-1/2/3, ADMIN_KEY, L3a, S5.
+
+**Next (parity → cutover):** (1) make AUDIT_PROGRESS markers honest — flip SCAN-2…6 → DONE; add OPEN markers for A11Y-1/2/3, ADMIN_KEY, L3a, S5 → deterministic open_items then matches. (2) After ~7 days of `findings.cron.json` == the Claude-Sensor's `findings.json`, run `sensor.py --live` from cron and PAUSE the `trustsquare-orch-sensor` scheduled task (instant rollback = un-pause + drop `--live`). (3) Install ruff/vulture/pylint in a venv on the box (absent today) so the cron owns the Monday static scan; until then the Monday Claude pass still owns it. Then RM-4 Phase 2 (Orchestrator plumbing → cron + Sonnet checkpoint).
+
+**Cost model impact:** none to user-facing AI spend or the cost ceiling — maintenance/ops loop only. First step toward the ~70–90% maintenance-token cut (retires 1 of 3 daily Claude sessions once parity proves out). The cron sensor itself is zero-token.

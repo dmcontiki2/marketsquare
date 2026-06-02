@@ -18,10 +18,16 @@ def check(name, ok, detail=""):
         print(f"  {FAIL} {name}{d}")
         failures.append(name)
 
+LOCAL = "--local" in sys.argv  # --local: run shell cmds on THIS host (server cron); default: ssh from a workstation
+
+def _run(cmd, stdin=None, timeout=25):
+    """Transport for every shell assertion. Default ssh's to the box (David's workstation usage);
+    --local runs the SAME command on the box itself (server-cron usage). Identical otherwise."""
+    argv = ["bash", "-c", cmd] if LOCAL else ["ssh", "root@178.104.73.239", cmd]
+    return subprocess.run(argv, input=stdin, capture_output=True, timeout=timeout)
+
 def ssh(cmd, stdin=None, timeout=25):
-    r = subprocess.run(["ssh", "root@178.104.73.239", cmd],
-                       input=stdin, capture_output=True, timeout=timeout)
-    return r.stdout.decode("utf-8", errors="replace")
+    return _run(cmd, stdin, timeout).stdout.decode("utf-8", errors="replace")
 
 def ssh_json(cmd):
     try: return json.loads(ssh(cmd))
@@ -64,17 +70,13 @@ check("ms.js cache immutable",  "immutable" in js_hdr)
 
 # 3. JS syntax (check ms.js on server)
 print("\n[3] JavaScript syntax")
-r = subprocess.run(["ssh", "root@178.104.73.239",
-                    "node --check /var/www/marketsquare/static/ms.js"],
-                   capture_output=True, timeout=20)
+r = _run("node --check /var/www/marketsquare/static/ms.js", timeout=20)
 check("ms.js syntax valid", r.returncode == 0, r.stderr.decode()[:120].strip())
 # ms-data block (still inline)
 m = re.search(r'<script id="ms-data"[^>]*>(.*?)</script>', html, re.S)
 if m:
-    subprocess.run(["ssh", "root@178.104.73.239", "cat > /tmp/smoke_ms-data.js"],
-                   input=m.group(1).encode(), capture_output=True, timeout=20)
-    r2 = subprocess.run(["ssh", "root@178.104.73.239", "node --check /tmp/smoke_ms-data.js"],
-                        capture_output=True, timeout=20)
+    _run("cat > /tmp/smoke_ms-data.js", stdin=m.group(1).encode(), timeout=20)
+    r2 = _run("node --check /tmp/smoke_ms-data.js", timeout=20)
     check("ms-data syntax valid", r2.returncode == 0, r2.stderr.decode()[:120].strip())
 else:
     check("ms-data block found", False)
@@ -98,10 +100,9 @@ h = ssh_json("curl -s --max-time 5 'http://localhost:8000/health'")
 check("BEA /health ok", bool(h and h.get("status") == "ok"))
 # Count all live non-demo listings directly from DB — category-agnostic
 # (GET /listings excludes local_market category so we bypass that filter here)
-live_count_raw = subprocess.run(
-    ["ssh", "root@178.104.73.239",
-     r"""sqlite3 /var/www/marketsquare/marketsquare.db "SELECT COUNT(*) FROM listings WHERE listing_status='live' AND (is_demo=0 OR is_demo IS NULL);" """],
-    capture_output=True, timeout=10
+live_count_raw = _run(
+    r"""sqlite3 /var/www/marketsquare/marketsquare.db "SELECT COUNT(*) FROM listings WHERE listing_status='live' AND (is_demo=0 OR is_demo IS NULL);" """,
+    timeout=10
 )
 n_live = int(live_count_raw.stdout.decode().strip() or "0")
 check(f"BEA live listings ({n_live})", n_live >= 1)
