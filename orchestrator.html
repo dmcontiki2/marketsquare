@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>TrustSquare · Orchestrator</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#131c2e; --card2:#0f1828; --line:#243149;
+    --tx:#e6eaf2; --tx2:#9fb0c9; --tx3:#6b7c97;
+    --green:#34d399; --amber:#fbbf24; --red:#f87171; --blue:#60a5fa; --navy:#1e3a5f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.2px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--tx3);margin:26px 0 10px;font-weight:700}
+  .hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+  .sub{color:var(--tx2);font-size:12px;margin-top:3px}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .row{display:flex;gap:10px;align-items:flex-start}
+  .row .sev{flex:0 0 auto;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;margin-top:1px}
+  .sev.CRIT{background:#3a1620;color:#fda4af} .sev.HIGH{background:#3a2a12;color:#fcd34d}
+  .sev.MED{background:#13314a;color:#93c5fd} .sev.LOW{background:#1c2937;color:#9fb0c9}
+  .ttl{font-weight:600}
+  .meta{color:var(--tx2);font-size:12px;margin-top:2px}
+  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px}
+  .pill.reg{background:#3a1620;color:#fda4af} .pill.fin{background:#2a1a3a;color:#d8b4fe}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .stat .k{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
+  .stat .v{font-size:20px;font-weight:800;margin-top:4px}
+  .muted{color:var(--tx2)} .empty{color:var(--tx3);font-style:italic;padding:6px 2px}
+  .headline{background:linear-gradient(0deg,var(--card),var(--card));border-left:3px solid var(--blue);padding:12px 16px;border-radius:10px;margin:14px 0;font-size:15px}
+  .approve{border-left:3px solid var(--amber)}
+  details summary{cursor:pointer;color:var(--tx2);font-size:13px;font-weight:600;padding:4px 0}
+  code{background:#0a121f;padding:1px 6px;border-radius:5px;color:#cbd5e1;font-size:12px}
+  .foot{margin-top:30px;color:var(--tx3);font-size:11px;border-top:1px solid var(--line);padding-top:12px}
+  /* gate */
+  #gate{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9}
+  #gate .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;width:300px;text-align:center}
+  #gate input{width:100%;margin:14px 0;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--tx);text-align:center;font-size:16px}
+  #gate button{width:100%;padding:10px;border:0;border-radius:8px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}
+  #app{display:block}
+</style>
+</head>
+<body>
+<div id="gate"><div class="box">
+  <div style="font-weight:800;font-size:16px">TrustSquare Orchestrator</div>
+  <div class="sub">Enter access code</div>
+  <input id="code" type="password" inputmode="numeric" autofocus />
+  <button onclick="checkCode()">Enter</button>
+</div></div>
+
+<div id="app"><div class="wrap">
+  <div class="hdr">
+    <div>
+      <h1>🧭 Orchestrator — Daily Brief</h1>
+      <div class="sub" id="when">Loading…</div>
+    </div>
+    <div id="health" class="badge"><span class="dot" style="background:var(--tx3)"></span> checking…</div>
+  </div>
+
+  <div class="headline" id="headline">Loading the latest brief…</div>
+
+  <h2>⏳ Awaiting your approval</h2>
+  <div id="staged"></div>
+
+  <h2>✅ Shipped (last run)</h2>
+  <div id="shipped"></div>
+
+  <h2>📋 Queued next</h2>
+  <div id="queue"></div>
+
+  <h2>📊 Health &amp; spend</h2>
+  <div class="grid" id="stats"></div>
+
+  <details><summary>🗂️ Filed &amp; ignored</summary>
+    <div style="margin-top:8px"><div class="muted" style="font-size:12px;margin-bottom:4px">Filed (needs a human / another track)</div><div id="filed"></div></div>
+    <div style="margin-top:10px"><div class="muted" style="font-size:12px;margin-bottom:4px">Ignored (confirmed false positives)</div><div id="ignored"></div></div>
+  </details>
+
+  <div class="foot">
+    Source of truth: <code>/orchestrator/report.json</code> · refreshed daily by the Orchestrator (~05:00 SAST).
+    To approve a staged item, tell Claude <code>approve &lt;id&gt;</code> in a session.
+    <span id="genby"></span>
+  </div>
+</div></div>
+
+<script>
+function checkCode(){
+  var v=document.getElementById('code').value.trim();
+  if(v==='96315'){ sessionStorage.setItem('orch_ok','1'); show(); }
+  else { document.getElementById('code').value=''; document.getElementById('code').placeholder='try again'; }
+}
+function show(){ document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='block'; load(); }
+window.addEventListener('DOMContentLoaded',function(){ document.getElementById('app').style.display='block'; load(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Enter' && document.getElementById('gate').style.display!=='none') checkCode(); });
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function sevTag(s){s=(s||'LOW').toUpperCase();return '<span class="sev '+s+'">'+s+'</span>';}
+function itemRow(it,opts){
+  opts=opts||{};
+  var gate='';
+  if(it.gate && /reg/i.test(it.gate)) gate='<span class="pill reg">Regulatory</span>';
+  else if(it.gate && /fin/i.test(it.gate)) gate='<span class="pill fin">Financial</span>';
+  var meta=[];
+  if(it.reason) meta.push(esc(it.reason));
+  if(it.track) meta.push('→ '+esc(it.track));
+  if(it.when) meta.push(esc(it.when));
+  if(it.verdict) meta.push(esc(it.verdict));
+  var appbtn=(opts.approve&&it.id)?'<button class="appbtn" style="margin-top:10px;padding:7px 16px;border-radius:8px;border:1px solid #2f7f57;background:#16412c;color:#d6f3e3;cursor:pointer;font:inherit;font-weight:600" onclick="approveItem(\''+esc(it.id)+'\',this)">Approve \u2713</button>':'';
+  return '<div class="card '+(opts.approve?'approve':'')+'"><div class="row">'+sevTag(it.sev)+
+    '<div style="flex:1"><div class="ttl">'+esc(it.id?('['+it.id+'] '):'')+esc(it.title||it.action||'')+gate+'</div>'+
+    (meta.length?'<div class="meta">'+meta.join(' · ')+'</div>':'')+appbtn+'</div></div></div>';
+}
+function fill(elId,arr,opts,emptyMsg){
+  var el=document.getElementById(elId);
+  if(!arr||!arr.length){ el.innerHTML='<div class="empty">'+(emptyMsg||'Nothing.')+'</div>'; return; }
+  el.innerHTML=arr.map(function(it){return itemRow(it,opts);}).join('');
+}
+
+async function approveItem(id, btn){
+  if(!confirm('Approve '+id+'?\n\nThis records your approval and moves '+id+' to the front of the queue. The next maintenance run ships it \u2014 and only if the smoke test passes. Nothing deploys right now.')) return;
+  var old=btn.textContent; btn.disabled=true; btn.textContent='Approving\u2026';
+  try{
+    var r=await fetch('/orchestrator/approve',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({id:id})});
+    if(!r.ok){ throw new Error('HTTP '+r.status+' \u2014 '+(await r.text())); }
+    await r.json();
+    btn.textContent='\u2713 Approved \u2014 ships next run'; btn.style.background='#0f3320'; btn.style.cursor='default';
+    var card=btn.closest('.card'); if(card) card.style.opacity='0.7';
+  }catch(e){ btn.disabled=false; btn.textContent=old; alert('Approval failed: '+e.message); }
+}
+
+async function jget(u){ try{ var r=await fetch(u,{cache:'no-store'}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+
+async function load(){
+  var rep=await jget('/orchestrator/report.json');
+  if(!rep){
+    document.getElementById('headline').textContent='No brief yet — the Orchestrator has not completed its first run. Check back after 05:00 SAST.';
+    document.getElementById('when').textContent='—';
+  } else {
+    document.getElementById('headline').textContent=rep.summary_line||'Daily brief';
+    document.getElementById('when').textContent='Loop date: '+(rep.loop_date||'?')+(rep.generated_at?(' · generated '+new Date(rep.generated_at).toLocaleString()):'');
+    fill('staged',rep.staged,{approve:true},'Nothing waiting on you. ✨');
+    fill('shipped',rep.shipped,{},'Nothing shipped last run.');
+    fill('queue',rep.queue_next,{},'Queue empty.');
+    fill('filed',rep.filed,{},'None.');
+    fill('ignored',rep.ignored,{},'None.');
+    if(rep.generated_by) document.getElementById('genby').textContent=' · by '+rep.generated_by;
+  }
+  // live health + spend (same-origin, existing endpoints)
+  var sum=await jget('/dashboard/summary'); var cost=await jget('/dashboard/cost'); var hlt=await jget('/health');
+  var hb=document.getElementById('health');
+  var ok = (hlt && hlt.status==='ok') || (sum && (sum.beaHealth==='ok'||sum.health==='ok'||sum.status==='ok'));
+  hb.innerHTML='<span class="dot" style="background:'+(ok?'var(--green)':'var(--amber)')+'"></span> BEA '+(ok?'healthy':'check');
+  var stats=[];
+  var sess=(rep&&rep.sensor&&rep.sensor.smoke)|| (sum&&(sum.currentSession?('Session '+sum.currentSession):''));
+  if(sum&&sum.currentSession!=null) stats.push(['Session',sum.currentSession]);
+  if(rep&&rep.sensor&&rep.sensor.smoke) stats.push(['Smoke',rep.sensor.smoke]);
+  if(rep&&rep.sensor&&rep.sensor.scan_delta) stats.push(['Scan Δ',rep.sensor.scan_delta]);
+  if(cost){
+    if(cost.ceilings&&cost.ceilings.today_spend_usd!=null) stats.push(["Today's AI",'$'+Number(cost.ceilings.today_spend_usd).toFixed(2)]);
+    if(cost.ceilings&&cost.ceilings.daily_platform_ceiling_usd!=null) stats.push(['Ceiling','$'+Number(cost.ceilings.daily_platform_ceiling_usd).toFixed(0)]);
+    if(cost.margin_pct!=null) stats.push(['Margin',Number(cost.margin_pct).toFixed(0)+'%']);
+  }
+  if(sum&&sum.blockers!=null){var b=Array.isArray(sum.blockers)?sum.blockers.length:sum.blockers; stats.push(['Blockers',b]);}
+  document.getElementById('stats').innerHTML = stats.length? stats.map(function(s){
+    return '<div class="stat"><div class="k">'+esc(s[0])+'</div><div class="v">'+esc(s[1])+'</div></div>';}).join('')
+    : '<div class="empty">Health endpoints unavailable.</div>';
+}
+</script>
+</body>
+</html>

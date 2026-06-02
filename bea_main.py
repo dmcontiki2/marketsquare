@@ -7077,7 +7077,7 @@ async def upload_seller_document(
     label: str = Form(""),
     visibility: str = Form("private"),
     signal_id: str = Form(None),
-    _key: str = Depends(auth.require_api_key_header_or_query),
+    _key: str = Depends(auth.require_api_key),
 ):
     """Upload a document for a seller. Stores to R2, records in seller_documents.
     Non-ID doc types are auto-earned immediately (self-attestation model).
@@ -7201,7 +7201,7 @@ async def upload_seller_document(
 def list_seller_documents(
     email: str,
     category: Optional[str] = None,
-    _key: str = Depends(auth.require_api_key_header_or_query),
+    _key: str = Depends(auth.require_api_key),
 ):
     """List documents for a seller. If category is provided, returns only docs
     whose signal_id matches that category prefix, plus universal/track_record docs
@@ -7276,7 +7276,7 @@ def list_public_documents(email: str, intro_id: int = None):
 def delete_seller_document(
     email: str,
     doc_id: int,
-    _key: str = Depends(auth.require_api_key_header_or_query),
+    _key: str = Depends(auth.require_api_key),
 ):
     """Delete a document record (does not delete from R2 — orphan cleanup runs separately)."""
     email = email.lower().strip()
@@ -9138,6 +9138,7 @@ Return ONLY the JSON. No markdown. No explanation."""
 
 @app.post("/listings/vision-draft")
 async def vision_draft(
+    background_tasks: BackgroundTasks,
     photos: list[UploadFile] = File(...),
     category_hint: str = Form(default=""),
     seller_email: str = Form(default=""),
@@ -10707,3 +10708,78 @@ def dashboard_cost():
         "by_endpoint": [dict(r) for r in by_ep],
     }
 
+
+
+# ── Orchestrator: in-page approval of a staged (gated) item ───────────────
+# Gated at the nginx layer (location = /orchestrator/approve, same Basic Auth
+# as the orchestrator page). Records approval per ORCHESTRATION_POLICY §8:
+# move the item out of `staged` → front of the Fixer `queue` (approved:true,
+# verdict auto-ship), and keep report.json consistent for the live page.
+# It NEVER ships, deploys, or moves money — the next Fixer run does the work,
+# still smoke-gated. It only rewrites the orchestrator JSON state files.
+class _OrchApproveBody(BaseModel):
+    id: str
+
+_ORCH_DIR = _PROJECT_ROOT / "orchestrator"
+
+def _orch_read_json(name, default):
+    import json as _j
+    p = _ORCH_DIR / name
+    try:
+        return _j.loads(p.read_text(encoding="utf-8")) if p.exists() else default
+    except Exception:
+        return default
+
+def _orch_write_json(name, data):
+    import json as _j, os as _o
+    p = _ORCH_DIR / name
+    tmp = str(p) + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        _j.dump(data, f, indent=2)
+    _o.replace(tmp, str(p))
+
+@app.post("/orchestrator/approve")
+def orchestrator_approve(body: _OrchApproveBody):
+    """Approve a staged (Regulatory/Financial-gated) item from the ops page.
+    nginx Basic-Auth-gated (same realm as the page). Moves the item to the
+    front of the Fixer queue with approved:true; the next Fixer run ships it
+    (still smoke-gated). Never deploys or moves money itself."""
+    item_id = (body.id or "").strip()
+    if not item_id:
+        raise HTTPException(status_code=400, detail="missing id")
+
+    staged = _orch_read_json("staged.json", [])
+    queue  = _orch_read_json("queue.json", [])
+    report = _orch_read_json("report.json", {})
+
+    match = next((s for s in staged if s.get("id") == item_id), None)
+    if match is None:
+        raise HTTPException(status_code=404, detail=f"{item_id} is not awaiting approval")
+
+    q_entry = {
+        "id": match.get("id"),
+        "sev": match.get("sev", "MED"),
+        "action": match.get("title") or match.get("action") or match.get("id"),
+        "verdict": "auto-ship",
+        "gate": match.get("gate"),
+        "approved": True,
+    }
+    queue = [q for q in queue if q.get("id") != item_id]
+    queue.insert(0, q_entry)
+    staged = [s for s in staged if s.get("id") != item_id]
+
+    if isinstance(report, dict):
+        report["staged"] = [s for s in (report.get("staged") or []) if s.get("id") != item_id]
+        qn = [q for q in (report.get("queue_next") or []) if q.get("id") != item_id]
+        qn.insert(0, {"id": q_entry["id"], "sev": q_entry["sev"],
+                      "title": q_entry["action"], "verdict": "auto-ship", "approved": True})
+        report["queue_next"] = qn
+
+    _orch_write_json("staged.json", staged)
+    _orch_write_json("queue.json", queue)
+    if isinstance(report, dict) and report:
+        _orch_write_json("report.json", report)
+
+    return {"ok": True, "id": item_id, "approved": True, "queue_position": 1,
+            "staged_remaining": len(staged),
+            "note": "Approved — moved to the front of the queue; the next Fixer run ships it (smoke-gated)."}
