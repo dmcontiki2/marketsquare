@@ -126,3 +126,40 @@
 | # | Item | Area |
 |---|---|---|
 | L9 | **Secrets rotation + editor access model.** Rotate `MS_API_KEY` / `MS_ADMIN_PASSWORD` / `MS_JWT_SECRET` (the three surfaced in a Cowork chat transcript 2 Jun — not a live breach: stored correctly server-side, app not yet public, Paystack test mode, 4 trusted editors — but treat as to-rotate). Kill the `96315` reuse (admin password shares the client-side `/support` gate code); replace client-side page gates with real auth (cf. `/orchestrator` Basic Auth). Move secrets from inline systemd `Environment=` lines to a `chmod 600` EnvironmentFile. Design per-editor accounts + FIDO2 hardware-key (dongle) + password for all 4 editors. JWT secret first (forging risk; rotation invalidates outstanding magic-link tokens); API-key rotation also updates the admin app + n8n. **Deferred by David to avoid halting the build — execute at/near launch with Claude's guidance. The orchestrator loop must FILE this, never auto-action it (security setting).** | Security |
+
+---
+
+## 🚀 Launch-Readiness Track — owner plan · 2 Jun 2026 · Orchestrator-managed
+*Scope: Pretoria (Tshwane) public launch. External blockers (L1/L3/L4/L5/L6/L7/L9 + Overpass) deliberately set aside — see the 🔴 and 🔒 sections above; they are FILE-only for the loop and do not gate this track. Rendered view: `LAUNCH_READINESS_PLAN.html`.*
+
+**Lane key (maps to ORCHESTRATION_POLICY §4–§5):** `AUTO-SHIP` = nightly Fixer, verified + non-gated · `STAGE` = verified but hits Gate 1 (regulatory) / Gate 2 (financial), awaits `approve <id>` · `ATTENDED` = design/feature/structural, FILE'd + built in an attended session (loop never executes) · `CONTENT/OPS` = supply/photos/onboarding/config.
+
+### P0 — launch gates within our control
+| # | Action | Lane | Gate | Wave |
+|---|--------|------|------|------|
+| H2/H3 | Introduction notification loop — buyer emailed on accept/decline; seller emailed on new intro (n8n + BEA) | ATTENDED + n8n | — | A |
+| M1/M2 | Money-path proven in test mode — test-card top-up→webhook→Tuppence credit; subscription subscribe/verify/activate | ATTENDED | — | A |
+| S5 | Gate test/auto-approve payment endpoints behind a fail-closed prod flag | STAGE | Gate 2 | A (on `approve S5`) |
+| M0 | `GET /listings` pagination (`?page=&page_size=` + `total`) + FEA infinite scroll | ATTENDED | — | A/B |
+| M5/M6 | Reach 60 founding sellers (37 more from 23/60); real Maroushka content + interior photos for units 314/109/308 | CONTENT/OPS | — | Continuous (lead now) |
+| RM-5 | Revive CityLauncher ("the gem") — finish + first real run of the orchestration brain (durable dead-source memory, Sonnet checkpoint-strategist, server-side saturation scheduler, MX email-verify). OSM-first runs now; wide SERP scale waits on the parked Overpass blocker | ATTENDED | — | A |
+
+### P1 — credible first impression + cost discipline
+| # | Action | Lane | Gate | Wave |
+|---|--------|------|------|------|
+| RM-1 | Home-page redesign implement (value-prop hero + first-run explainer, lift sub-12px type floor, emoji→SVG, desktop frame) | ATTENDED (design) | — | C |
+| H1 | Local Market parity (cards/detail/intro identical to standard categories) | ATTENDED (design) | — | C |
+| H7a/H7b/H7 | Yield tools fully visible — render full breakdown (H7a), country-aware benchmarks (H7b), gross-yield badge on Property cards (H7); unlocks F8 | ATTENDED | — | B/C |
+| RM-4 | AI-independence — Sensor/Orchestrator to server cron, Sonnet sparse checkpoints, retire Haiku (~70–90% maintenance-token cut). **Cost model impact: large standing reduction.** | ATTENDED (build) | — | A |
+| M8/H5 | Content & photo pass — royalty-free shopfronts, cap `wd-hero` height, audit `w=800` params; `thumb_url` on demo listings 40–51 | CONTENT/OPS + design | — | C |
+| RM-6 | Email overhaul — 9 templates onto steel-blue/Syne brand; badges match `trustTier()`; inherits RM-1's look | ATTENDED (design) | — | C (after RM-1) |
+
+### P2 — foundation (makes scaling a config change)
+| # | Action | Lane | Gate | Wave |
+|---|--------|------|------|------|
+| RM-2 | BEA modularization M1 → `core_spend.py` (build-ready), then M2+ | ATTENDED (FILE'd — loop never restructures) | — | B |
+| RM-3 | FEA streamline — `ms.js` → 14 classic-script files; drop dead `PROP_PHOTOS`/`PROSPECTS` | ATTENDED (build) | — | B (after M1) |
+| A11Y-1/2/3 | Accessibility — focus ring, `aria-live`, admin alt-text/labels | ATTENDED (design) | — | C |
+
+### Continuous — nightly auto-ship lane (already queued; no action needed)
+JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HTML-2, plus the ADMIN_KEY backstop (`/admin/purge-cache` + `/admin/refresh-pois` unauthenticated while `ADMIN_KEY` unset). All `AUTO-SHIP`, one/night (~8 days). S5 is the only `STAGE` item in this lane.

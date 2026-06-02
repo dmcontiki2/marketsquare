@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Launch-Readiness Plan (Owner View)</title>
+<style>
+  :root{
+    --steel:#33597a; --steel-dk:#22405a; --steel-lt:#5b85a8;
+    --ink:#1c2530; --muted:#5c6b7a; --line:#e2e8ef; --bg:#f5f8fb;
+    --p0:#c0392b; --p1:#d98324; --p2:#3a7d52; --cont:#5b6b9a;
+    --auto:#2f8f5b; --stage:#c97b1e; --att:#3866b0; --content:#7a55a8; --aside:#8a93a0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       line-height:1.5;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 26px 80px}
+  h1,h2,h3{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;letter-spacing:-.01em;color:var(--steel-dk)}
+  h1{font-size:30px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:15px;margin:0 0 26px}
+  h2{font-size:20px;margin:38px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--steel-lt)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--steel)}
+  p{margin:9px 0}
+  .lede{background:#fff;border:1px solid var(--line);border-left:4px solid var(--steel);
+        border-radius:8px;padding:16px 18px;margin:0 0 8px}
+  .note{background:#fff7ec;border:1px solid #f0d9b5;border-radius:8px;padding:12px 15px;margin:14px 0;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:10px 0 4px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+  th{background:var(--steel);color:#fff;font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none}
+  tr:nth-child(even) td{background:#fafcfe}
+  td.id{font-weight:700;color:var(--steel-dk);white-space:nowrap}
+  .chip{display:inline-block;padding:1px 8px;border-radius:11px;font-size:11.5px;font-weight:700;
+        color:#fff;white-space:nowrap;line-height:1.7}
+  .auto{background:var(--auto)} .stage{background:var(--stage)} .att{background:var(--att)}
+  .content{background:var(--content)} .aside{background:var(--aside)}
+  .pbadge{display:inline-block;padding:1px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#fff}
+  .b0{background:var(--p0)} .b1{background:var(--p1)} .b2{background:var(--p2)} .bc{background:var(--cont)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:10px 0 4px;font-size:13px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .wave{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin:12px 0}
+  .wave h3{margin-top:0}
+  .tl{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+  .tl .col{flex:1;min-width:220px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--steel);
+           border-radius:8px;padding:12px 14px}
+  .tl .col.b{border-top-color:var(--steel-lt)} .tl .col.c{border-top-color:var(--p2)}
+  .tl h3{margin:0 0 6px;font-size:14.5px}
+  .tl ul{margin:6px 0 0;padding-left:18px} .tl li{margin:3px 0;font-size:13px}
+  ul.tight{margin:6px 0;padding-left:20px} ul.tight li{margin:4px 0}
+  .foot{margin-top:34px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  code{background:#eef3f8;padding:1px 5px;border-radius:4px;font-size:12.5px}
+  .small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>TrustSquare — Launch-Readiness Plan</h1>
+  <p class="sub">Owner / designer view · 2 June 2026 · scoped to the <strong>Pretoria (Tshwane) public launch</strong> · managed by the Orchestrator loop</p>
+
+  <div class="lede">
+    <p style="margin-top:0"><strong>The brief.</strong> Everything below is what I'd do next <em>if I owned and designed this</em> — and it deliberately <strong>sets aside the external blockers</strong> (attorney/EULA, CIPC, FSCA, POPIA, the human-only secrets rotation, the Overpass re-import). Those are parked in their own lane at the bottom so nothing is lost, but they don't gate this plan.</p>
+    <p style="margin-bottom:0"><strong>The shape.</strong> A marketplace launches when three things are true: it <strong>functions end-to-end</strong>, it has <strong>enough supply</strong>, and the <strong>first impression is credible</strong>. The plan is ordered against exactly those, then handed to the Orchestrator in its own vocabulary so the boring half runs itself and only real decisions reach you.</p>
+  </div>
+
+  <h2>How the Orchestrator manages this plan</h2>
+  <p>The live loop (<code>Sensor 03:30</code> → <code>Fixer 04:00</code> → <code>Orchestrator 05:00</code>, one pass/day) already triages every item into <strong>FIX / FILE / IGNORE</strong> against two approval gates. I've tagged each action with the lane it lands in, so the plan plugs straight into the existing policy rather than inventing a new process:</p>
+  <div class="legend">
+    <span><span class="chip auto">AUTO-SHIP</span> verified, non-gated → nightly Fixer deploys it unattended</span>
+    <span><span class="chip stage">STAGE</span> verified but hits Gate 1 (regulatory) or Gate 2 (financial) → waits for your <code>approve &lt;id&gt;</code></span>
+    <span><span class="chip att">ATTENDED</span> design / feature / structural → FILE'd; built in an attended session (loop never touches it)</span>
+    <span><span class="chip content">CONTENT/OPS</span> supply, photos, onboarding, config</span>
+    <span><span class="chip aside">SET ASIDE</span> external / legal / human-only blocker — parked, not scheduled</span>
+  </div>
+  <div class="note">The loop only <em>auto-executes</em> the AUTO-SHIP lane. Design, features and structural refactors are explicitly off-limits to it (Policy §7) — so for those, "managed by the Orchestrator" means it <strong>tracks and surfaces</strong> them on the daily report/dashboard while they're worked in attended waves. The two gates remain the only hard stops, and <em>uncertainty defaults to STAGE</em>.</div>
+
+  <h2>The plan — P0 · launch gates within our control</h2>
+  <p class="small">These are the things that, if missing, mean we cannot honestly open the doors in Pretoria. None of them depend on a blocker.</p>
+  <table>
+    <tr><th>ID</th><th>Action</th><th>Why it's a launch gate</th><th>Lane</th><th>When</th></tr>
+    <tr><td class="id">H2·H3</td><td><strong>Close the introduction notification loop</strong> — buyer emailed on accept/decline; seller emailed on new intro request (n8n + BEA).</td><td>The core transaction is an introduction. If neither side is told it happened, the product doesn't work — this is the single biggest functional hole.</td><td><span class="chip att">ATTENDED</span> + n8n</td><td><span class="pbadge b0">Wave A</span></td></tr>
+    <tr><td class="id">M1·M2·S5</td><td><strong>Prove the money path in test mode</strong> — test-card top-up → webhook → Tuppence credit (M1); subscription subscribe/verify/activate (M2); and gate the test/auto-approve payment endpoints behind a fail-closed prod flag (S5).</td><td>We can't go live on Paystack yet (CIPC), but we <em>can</em> prove the whole flow end-to-end in test mode and make sure the test bypasses can't fire in prod.</td><td><span class="chip att">ATTENDED</span> + <span class="chip stage">STAGE</span> (S5, Gate 2)</td><td><span class="pbadge b0">Wave A</span></td></tr>
+    <tr><td class="id">M0</td><td><strong><code>GET /listings</code> pagination</strong> — replace the <code>LIMIT 200</code> hardpoint with <code>?page=&amp;page_size=</code> + <code>total</code>; FEA infinite-scroll.</td><td>Maroushka alone is 39 units; a real Pretoria feed will pass 200 fast and silently truncate. Must precede any growth in supply.</td><td><span class="chip att">ATTENDED</span></td><td><span class="pbadge b0">Wave A/B</span></td></tr>
+    <tr><td class="id">M5·M6</td><td><strong>Get to 60 founding sellers</strong> — 37 more (currently 23/60); plus real Maroushka content and interior photos for the now-photoless units 314/109/308.</td><td>Supply <em>is</em> the launch gate for a marketplace. 23 sellers is a demo; 60 is a market. This is the number that decides the date.</td><td><span class="chip content">CONTENT/OPS</span></td><td><span class="pbadge bc">Continuous — lead now</span></td></tr>
+    <tr><td class="id">RM-5</td><td><strong>Revive CityLauncher — "the gem"</strong> — finish + first real run of the orchestration brain: durable dead-source memory, Sonnet checkpoint-strategist, server-side saturation scheduler, MX-only email verify, agent-targeted sources.</td><td>This is the <em>engine</em> that gets us to 60 sellers and then to Wave-1 cities. Its smart layer never actually ran (<code>orchestration.db</code> = 0 bytes) — so it's "finish + switch on," not "fix what failed."</td><td><span class="chip att">ATTENDED</span> (biggest build)</td><td><span class="pbadge b0">Wave A</span></td></tr>
+  </table>
+  <p class="small">Note on RM-5: full SERP scale is gated by the parked Overpass re-import blocker, but the OSM-first path runs now — so this starts immediately and only the wide-scale pass waits.</p>
+
+  <h2>P1 · credible first impression + cost discipline</h2>
+  <table>
+    <tr><th>ID</th><th>Action</th><th>Why</th><th>Lane</th><th>When</th></tr>
+    <tr><td class="id">RM-1</td><td><strong>Implement the home-page redesign</strong> — value-prop hero + first-run explainer (the model is currently only taught at the paywall), lift the sub-12px type floor, emoji→SVG, proper desktop frame. Design + mockup are ready.</td><td>The home page is the whole pitch. Today the hero is empty and the model isn't explained until a buyer hits the wall — worst possible order.</td><td><span class="chip att">ATTENDED</span> (design)</td><td><span class="pbadge b1">Wave C</span></td></tr>
+    <tr><td class="id">H1</td><td><strong>Local Market parity</strong> — LM cards, detail screen and intro flow look and behave identically to Property/Tutors/Services (not a separate visual code path).</td><td>Inconsistency reads as "half-built." Parity makes the newest category feel native.</td><td><span class="chip att">ATTENDED</span> + <span class="chip content">design</span></td><td><span class="pbadge b1">Wave C</span></td></tr>
+    <tr><td class="id">H7a·H7b·H7</td><td><strong>Make the Yield tools fully visible</strong> — render the full yield breakdown the BEA already returns (H7a), country-aware benchmarks (H7b), and a zero-effort gross-yield badge on Property cards (H7). Unlocks the self-funding filter (F8) next.</td><td>We already pay for and compute this — discarding it on the FEA wastes the spend and the differentiation for investment buyers.</td><td><span class="chip att">ATTENDED</span></td><td><span class="pbadge b1">Wave B/C</span></td></tr>
+    <tr><td class="id">RM-4</td><td><strong>AI-independence</strong> — move Sensor/Orchestrator plumbing to server cron, Sonnet for sparse checkpoints, retire Haiku. ~70–90% standing maintenance-token cut.</td><td>The cheapest win on the board and net cost-<em>negative</em>: it pays for everything else's token budget. Do it early.</td><td><span class="chip att">ATTENDED</span> (build)</td><td><span class="pbadge b1">Wave A</span></td></tr>
+    <tr><td class="id">M8·H5</td><td><strong>Content & photo pass</strong> — replace hotlinked Unsplash shopfronts with royalty-free (Wikimedia/Pexels), cap <code>wd-hero</code> height on desktop, audit <code>w=800</code> params; add <code>thumb_url</code> to demo listings 40–51 (H5).</td><td>Hotlinking is outside Unsplash terms and images are being quality-degraded. A dedicated pre-launch session.</td><td><span class="chip content">CONTENT/OPS</span> + design</td><td><span class="pbadge b1">Wave C</span></td></tr>
+    <tr><td class="id">RM-6</td><td><strong>Email overhaul</strong> — bring all 9 templates onto the current steel-blue/Syne brand; make badges match canonical <code>trustTier()</code>. Inherits the home-page look.</td><td>Transactional email is the off-platform face of the brand; today it's pre-rebrand navy+gold. Lock RM-1 first, then ship the set.</td><td><span class="chip att">ATTENDED</span> (design)</td><td><span class="pbadge b1">Wave C</span></td></tr>
+  </table>
+
+  <h2>P2 · foundation that makes scaling a config change</h2>
+  <table>
+    <tr><th>ID</th><th>Action</th><th>Why</th><th>Lane</th><th>When</th></tr>
+    <tr><td class="id">RM-2</td><td><strong>BEA modularization M1</strong> — extract 7 spend symbols → <code>core_spend.py</code> (18 call sites re-import, zero logic edits). Build-ready today; then M2+.</td><td>Modularization is what lets multiple agents work the BEA safely in parallel — it unblocks throughput, not just tidiness.</td><td><span class="chip att">ATTENDED</span> (FILE'd — loop never restructures)</td><td><span class="pbadge b2">Wave B</span></td></tr>
+    <tr><td class="id">RM-3</td><td><strong>FEA streamline</strong> — <code>ms.js</code> (11,996 lines / 308 fns) → 14 classic-script files; drop dead <code>PROP_PHOTOS</code> + <code>PROSPECTS</code>.</td><td>Same parallel-safety argument on the front end; do after M1 proves the pattern.</td><td><span class="chip att">ATTENDED</span> (build)</td><td><span class="pbadge b2">Wave B</span></td></tr>
+    <tr><td class="id">A11Y-1·2·3</td><td><strong>Accessibility pass</strong> — visible focus ring, <code>aria-live</code> on dynamic regions, admin alt-text + form labels.</td><td>Cheap, right, and reduces legal surface. FILE'd to the design track.</td><td><span class="chip att">ATTENDED</span> (design)</td><td><span class="pbadge b1">Wave C</span></td></tr>
+  </table>
+
+  <h2>Continuous · the nightly auto-ship lane (no scheduling needed)</h2>
+  <p>These are already discovered by the Sensor and queued; the Fixer clears one per night and either auto-ships or stages it. They need <strong>no action from you</strong> — they're listed so the plan is complete.</p>
+  <table>
+    <tr><th>Order</th><th>Item</th><th>Lane</th></tr>
+    <tr><td class="id">1</td><td><strong>JS-2</strong> — <code>updateLocBadge()</code> → <code>updateBadgeLabel()</code> (latent ReferenceError on listings re-render)</td><td><span class="chip auto">AUTO-SHIP</span></td></tr>
+    <tr><td class="id">2–6</td><td><strong>SCAN-8…12</strong> — duplicate dict key, dead <code>json</code> import + locals, redundant <code>timedelta</code> re-imports, unused locals/loop vars, stray <code>import os</code></td><td><span class="chip auto">AUTO-SHIP</span></td></tr>
+    <tr><td class="id">7–8</td><td><strong>HTML-1 / HTML-2</strong> — dead <code>currentView</code> + unused admin module-level locals</td><td><span class="chip auto">AUTO-SHIP</span></td></tr>
+    <tr><td class="id">+</td><td><strong>ADMIN_KEY backstop</strong> — <code>/admin/purge-cache</code> + <code>/admin/refresh-pois</code> are unauthenticated while <code>ADMIN_KEY</code> is unset → set it / fail-closed (security, non-gated)</td><td><span class="chip auto">AUTO-SHIP</span></td></tr>
+    <tr><td class="id">⏸</td><td><strong>S5</strong> — gate test/auto-approve payment endpoints behind a prod flag (also a P0 item above)</td><td><span class="chip stage">STAGE</span> · Gate 2</td></tr>
+  </table>
+
+  <h2>Sequencing — three waves, run in parallel with continuous lanes</h2>
+  <div class="tl">
+    <div class="col">
+      <h3>Wave A · function + supply + cost</h3>
+      <ul>
+        <li>RM-4 AI-independence (cost lead)</li>
+        <li>RM-5 CityLauncher revive (supply engine)</li>
+        <li>H2/H3 notification loop</li>
+        <li>M1/M2 + S5 money-path test</li>
+        <li>M0 pagination</li>
+      </ul>
+    </div>
+    <div class="col b">
+      <h3>Wave B · foundation</h3>
+      <ul>
+        <li>RM-2 BEA M1 → M2+</li>
+        <li>RM-3 FEA streamline (after M1)</li>
+        <li>H7a/H7b/H7 yield tools</li>
+      </ul>
+    </div>
+    <div class="col c">
+      <h3>Wave C · pre-launch polish</h3>
+      <ul>
+        <li>RM-1 home-page redesign</li>
+        <li>H1 Local Market parity</li>
+        <li>RM-6 email overhaul (after RM-1)</li>
+        <li>M8/H5 content &amp; photo pass</li>
+        <li>A11Y-1/2/3</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small">Underneath all three, continuously: the nightly auto-ship hygiene lane, and founding-seller growth toward 60.</p>
+
+  <h2>⏸ Set aside — parked, tracked, deliberately not scheduled</h2>
+  <p class="small">Per the brief these don't gate the plan. Kept here so they resurface at the right moment (most are the existing 🔴 launch-blocker list).</p>
+  <table>
+    <tr><th>ID</th><th>Item</th><th>Status / note</th></tr>
+    <tr><td class="id">L1·L4·L5·L6·L3</td><td>EULA counsel review · Privacy Policy publish · FSCA Tuppence classification · POPIA consent timing · NCC direct-marketer registration</td><td>External / attorney dependency. The Orchestrator <strong>FILEs</strong> these, never actions them.</td></tr>
+    <tr><td class="id">L7</td><td>Paystack live mode (<code>sk_live_</code> + webhook secret)</td><td>Blocked on CIPC approval. The test-mode proof (M1/M2 above) is the controllable half.</td></tr>
+    <tr><td class="id">L9</td><td>Secrets rotation + per-editor FIDO2 access model</td><td><strong>Human-only</strong>, near-launch. Policy mandates the loop FILE this and never auto-action it.</td></tr>
+    <tr><td class="id">—</td><td>Self-hosted Overpass re-import</td><td>Standing technical blocker; gates CityLauncher's <em>wide</em> SERP scale only. OSM-first path works now.</td></tr>
+    <tr><td class="id">L2 / L8</td><td>Company reg number in EULA/footer · IP brief + patent strategy</td><td><strong>Now effectively unblocked:</strong> reg <code>2026/340128/07</code> is obtained and the patent refresh is done (Jun 2026). The reg-number insertion is a small <span class="chip stage">STAGE</span> (Gate 1) change — fold it into the EULA v1.6 pass.</td></tr>
+    <tr><td class="id">L3a</td><td>Real <code>support@trustsquare.co</code> mailbox</td><td>Mostly ops (Cloudflare routing + Brevo SMTP); the one BEA <code>_smtp_send_reply()</code> env edit is controllable and could move to the active lane once the ops config is set.</td></tr>
+  </table>
+
+  <h2>What happens after you approve this</h2>
+  <ul class="tight">
+    <li><strong>The AUTO-SHIP lane needs nothing</strong> — JS-2, SCAN-8…12, HTML-1/2 and the ADMIN_KEY backstop are already queued; the loop clears them at ~one/night (~8 days).</li>
+    <li><strong>S5 ships the moment you say <code>approve S5</code></strong> — it's verified and waiting on the Gate-2 hold.</li>
+    <li><strong>Wave A/B/C items are attended</strong> — the Orchestrator surfaces them on the daily report so they don't fall off, but each is built in a focused session (one feature/fix per task, per the operating rules).</li>
+    <li><strong>The plan itself becomes live state</strong> once the four baseline docs are written back to the server (command below) — then <code>/dashboard/summary</code> and the orchestrator page carry it for every future session.</li>
+  </ul>
+
+  <div class="foot">
+    Sources: STATUS.md (Session 109) · BACKLOG.md · AUDIT_PROGRESS.md · ORCHESTRATION_POLICY.md v1.0 · ROADMAP_MASTER.md + ROADMAP_1/2/3/4/6 · CityLauncher redesign spec. IDs reference the existing backlog/roadmap so this plan layers onto the current corpus rather than replacing it.
+  </div>
+
+</div>
+</body>
+</html>
