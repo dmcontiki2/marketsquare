@@ -6,6 +6,7 @@ from typing import Optional
 import database
 import auth
 import storage
+import ai_service_tiers  # Tiered Value Selector: tier config + availability resolver
 import os
 import json
 import re
@@ -9770,8 +9771,99 @@ async def ai_seller_audit(listing_id: int, email: str):
 
 # ── AI3 — Buyer Price Check (upgraded Session 77: three-panel intelligence) ──
 
+# -- Tiered Value Selector: availability helpers + value-tiers endpoint --------
+PAID_TIERS_ENABLED = False  # launch: free/owned tiers only. Flip per provider
+                            # once revenue + B7 ceiling + contract are in place.
+
+_CAT_TO_TIERKEY = {
+    "card": "cards", "cards": "cards", "trading": "cards",
+    "trading cards": "cards", "collectibles": "cards", "collectables": "cards",
+    "property": "property", "estate agents": "property", "accommodation": "property",
+    "vehicles": "vehicles", "vehicle": "vehicles", "cars": "vehicles", "auto": "vehicles",
+}
+
+def _listing_country_iso2(listing) -> str:
+    c = (listing["country"] if "country" in listing.keys() else None) or "ZA"
+    c = str(c).strip()
+    M = {"south africa": "ZA", "united kingdom": "UK", "england": "UK",
+         "scotland": "UK", "wales": "UK", "united states": "US", "usa": "US",
+         "united states of america": "US", "america": "US", "australia": "AU"}
+    return M.get(c.lower(), (c.upper()[:2] if len(c) >= 2 else "ZA"))
+
+def _comp_count(listing) -> int:
+    """Cheap proxy: active same-category, same-city listings (excl. this one)."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) AS n FROM listings "
+                "WHERE category = ? AND city = ? AND id <> ? "
+                "AND COALESCE(status,'active') != 'paused'",
+                ((listing["category"] or ""), (listing["city"] or ""), listing["id"]),
+            ).fetchone()
+            return int(row["n"]) if row else 0
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+def _tierkey_for(listing, service: str) -> str:
+    if service == "yield":
+        return "property"
+    cat = (listing["category"] or "").strip().lower()
+    return _CAT_TO_TIERKEY.get(cat, cat)
+
+def _offered_value_tiers(listing, service: str):
+    """Gated tiers for this listing+service. Hide rule lives in ai_service_tiers."""
+    return ai_service_tiers.available_tiers(
+        service, _tierkey_for(listing, service), _listing_country_iso2(listing),
+        providers=ai_service_tiers.DEFAULT_PROVIDERS,
+        paid_enabled=PAID_TIERS_ENABLED,
+        comp_count=_comp_count(listing),
+    )
+
+def _resolver_ready(service: str, tierkey: str) -> dict:
+    """Which tiers can actually be SERVED today. Everything else is config-only
+    until the resolver build (steps 3-5) wires it. Today: only collectible cards
+    (Scryfall, 1T) auto-resolve; the yield 'your figures' path is handled inline."""
+    if service == "fair_price" and tierkey == "cards":
+        return {"1T": True}
+    return {}
+
+@app.get("/listings/{listing_id}/value-tiers")
+async def listing_value_tiers(listing_id: int, service: str = "fair_price"):
+    """Tiered Value Selector: returns the colour-coded chips the FEA should show
+    for this listing+service, already gated (free-only at launch; hidden where we
+    cannot deliver a true answer). Read-only; charges nothing."""
+    if service not in ("fair_price", "yield"):
+        raise HTTPException(status_code=400, detail="Unknown service")
+    conn = database.get_db()
+    listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    conn.close()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    tierkey = _tierkey_for(listing, service)
+    chips = ai_service_tiers.chips_payload(
+        service, tierkey, _listing_country_iso2(listing),
+        providers=ai_service_tiers.DEFAULT_PROVIDERS,
+        paid_enabled=PAID_TIERS_ENABLED,
+        comp_count=_comp_count(listing),
+    )
+    ready = _resolver_ready(service, tierkey)
+    for ch in chips:
+        ch["ready"] = ready.get(ch["tier"], False)
+    return {
+        "listing_id": listing_id,
+        "service": service,
+        "country": _listing_country_iso2(listing),
+        "category": tierkey,
+        "paid_tiers_enabled": PAID_TIERS_ENABLED,
+        "chips": chips,
+    }
+
+
 @app.post("/listings/{listing_id}/price-check")
-async def ai_price_check(listing_id: int, email: str):
+async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None):
     """AI3: Buyer pays 1T — honest, three-panel price intelligence.
 
     INTEGRITY MODEL (price-integrity fix):
@@ -9799,7 +9891,18 @@ async def ai_price_check(listing_id: int, email: str):
     # DELIVER-THEN-CHARGE (Session 95): we do NOT deduct here. Tuppence is only
     # charged at the end, and ONLY if we produced a verified service. A guess,
     # a 'cannot verify', or any failure costs the buyer nothing.
-    _require_tuppence(email, 1)   # pre-flight only — no deduction yet
+    # Tiered Value Selector: legacy callers (tier=None) keep 1T behaviour; a
+    # tier-aware caller must request a tier actually offered for this listing.
+    if tier is None:
+        _charge = 1
+    else:
+        _offered_t = {t["tier"] for t in _offered_value_tiers(listing, "fair_price")}
+        if tier not in _offered_t:
+            conn.close()
+            raise HTTPException(status_code=400,
+                detail=f"Tier {tier} is not available for this listing")
+        _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
+    _require_tuppence(email, _charge)   # pre-flight only — no deduction yet
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
     category    = listing["category"] or "General"
     city        = listing["city"] or "South Africa"
@@ -9949,7 +10052,7 @@ async def ai_price_check(listing_id: int, email: str):
     cc = database.get_db()
     try:
         remaining = _deduct_tuppence(
-            cc, email, 1,
+            cc, email, _charge,
             f"AI Price Check \u00b7 #{listing_id} \u00b7 {title[:40]}"
         )
         cc.commit()
@@ -9998,7 +10101,8 @@ async def ai_price_check(listing_id: int, email: str):
 @app.post("/listings/{listing_id}/yield-calc")
 async def ai_yield_calc(listing_id: int, email: str,
                         rent: float | None = None,
-                        purchase_price: float | None = None):
+                        purchase_price: float | None = None,
+                        tier: Optional[str] = None):
     """AI4: Property yield — HONEST & deliver-then-charge (Session 95).
 
     A real gross yield needs BOTH a purchase price and an annual rent. A listing
@@ -10033,7 +10137,16 @@ async def ai_yield_calc(listing_id: int, email: str,
     conn.close()
 
     # Pre-flight: can the buyer pay at all? (No deduction yet.)
-    _require_tuppence(email, 1)
+    # Tiered Value Selector: legacy callers (tier=None) keep 1T behaviour.
+    if tier is None:
+        _charge = 1
+    else:
+        _offered_t = {t["tier"] for t in _offered_value_tiers(listing, "yield")}
+        if tier not in _offered_t:
+            raise HTTPException(status_code=400,
+                detail=f"Tier {tier} is not available for this listing")
+        _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
+    _require_tuppence(email, _charge)
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
@@ -10152,7 +10265,7 @@ async def ai_yield_calc(listing_id: int, email: str,
     cc = database.get_db()
     try:
         remaining = _deduct_tuppence(
-            cc, email, 1,
+            cc, email, _charge,
             f"AI Yield Calc \u00b7 #{listing_id} \u00b7 {title[:40]}"
         )
         cc.commit()
