@@ -3343,3 +3343,17 @@ Wave-A P0. **Discovery: the buyer/seller introduction email loop was already ful
 **Verification:** the shared "SMTP account" credential is the same one the Listing Expiry Warning workflow used for its successful 26-May send → credential proven to deliver. Fired all three webhooks with a test payload routed to dmcontiki2@gmail.com; each returned HTTP 200 "Workflow was started", with no errors in the n8n logs and no error executions saved. **David confirmed all three branded emails arrived in the Primary inbox (not spam).** H2/H3 **DONE**.
 
 **Flags:** (1) the accept email promises an in-app "anonymous messaging system" — confirm that channel exists or define the post-acceptance connection path; (2) deliverability is healthy (Primary inbox; `noreply@` SPF/DKIM fine). **Cost model impact:** none (no code change; n8n email volume only on real intros).
+
+## Session 110c — 2026-06-02 · S5 fail-closed payment gate + /payment/verify idempotency (Gate-2, David-approved) — deployed
+
+**Money path audited (built, like H2/H3) + 3 Gate-2 issues found.** Full Paystack path is wired (initialize → verify + webhook → credit/activate); webhook is HMAC-SHA512-verified + idempotent. But: (1) **S5 launch blocker** — live key is `sk_test`, so test cards return `success` and `/payment/verify`, `/payment/seller-subscription/verify`, `/wishlist/subscription/verify` all minted REAL Tuppence/tiers for fake money; (2) `PAYSTACK_WEBHOOK_SECRET` is unset → the idempotent webhook always 400s (the reliable credit path is off); (3) `/payment/verify` had no idempotency → double-credit on a callback refresh (no-refunds = no claw-back).
+
+**Fix (David-approved, Gate 2):** added `_payment_grants_allowed()` — fail-closed entitlement gate (live key always passes; a test/unset key passes ONLY when `ALLOW_TEST_PAYMENTS=1`) guarding all 4 grant paths; plus the webhook's reference-dedup added to `/payment/verify`. Applied via the Python str.replace driver against the server's authoritative `main.py` (5 surgical insertions; diff-gated = 5 inserts / 0 deletions); venv `ast` clean.
+
+**Deployed + verified:** backup `main.py.bak-20260602-s5`; BEA restarted, `/health` ok v1.3.1; 5 guards present; under the live env (sk_test, `ALLOW_TEST_PAYMENTS` unset) `_payment_grants_allowed()` → **False** (test-card grants now refused, fail-closed); **smoke 39/39** green.
+
+**⚠️ Divergence found + handled:** the committed local `bea_main.py` (HEAD = Tiered Value Selector BEA steps 1-2, today's 12:20 commit) was AHEAD of the deployed server by ~119 lines — TVS was committed but never deployed (the "built, NOT deployed" STATUS item). S5 was therefore deployed onto the server's old base (TVS stays pending, as intended); the local working copy is re-synced to HEAD(TVS)+S5 (`git diff HEAD` = S5 additions only, 0 removed) so a future TVS deploy carries S5 with it.
+
+**For David:** (1) commit `bea_main.py` (now TVS+S5) — a stale `.git/index.lock` may need clearing first (`Remove-Item .git\index.lock`). (2) Ops to finish the money path: set `PAYSTACK_WEBHOOK_SECRET` (enables the reliable webhook credit path); to run the M1/M2 test-card flow, set `ALLOW_TEST_PAYMENTS=1` temporarily. (3) When live `sk_live_` keys land, grants auto-resume — no code change needed.
+
+**Cost model impact:** none (a gate + idempotency; no pricing/volume change). Behaviour change: top-ups/subscriptions fail-closed until live keys or the test flag — the correct pre-launch posture.

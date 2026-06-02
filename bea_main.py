@@ -3079,6 +3079,16 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = 
 import payments
 import uuid
 
+def _payment_grants_allowed() -> bool:
+    """Gate 2 (S5) - fail-closed entitlement gate. A Paystack TEST key (or no key)
+    must NOT mint real Tuppence / subscriptions in production. Live keys always pass;
+    a test/unset key passes ONLY when ALLOW_TEST_PAYMENTS=1 (dev/staging). Prevents
+    test-card payments granting real entitlements while live-mode is pending."""
+    key = os.getenv("PAYSTACK_SECRET_KEY", "")
+    if key.startswith("sk_live"):
+        return True
+    return os.getenv("ALLOW_TEST_PAYMENTS", "") == "1"
+
 @app.post("/payment/initialize")
 def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
     amount_rands = tuppence * 36
@@ -3109,7 +3119,13 @@ def verify_payment(reference: str):
         tuppence = metadata.get("tuppence", 0)
         email    = metadata.get("email", "")
         ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
+        if not _payment_grants_allowed():
+            raise HTTPException(status_code=503, detail="Payments are not live yet - top-ups are temporarily disabled.")
         conn = database.get_db()
+        # Idempotency (mirror the webhook): skip if this reference was already credited
+        if conn.execute("SELECT id FROM transactions WHERE description LIKE ?", (f"%ref {reference}%",)).fetchone():
+            conn.close()
+            return {"status": "ok", "tuppence_credited": 0, "ai_sessions_credited": 0, "email": email, "note": "already processed"}
         conn.execute(
             "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
             (email, "topup", tuppence, f"Tuppence top-up via Paystack · ref {reference}")
@@ -3174,6 +3190,10 @@ async def paystack_webhook(request: Request):
         if not email or not reference:
             _log.warning("Paystack webhook charge.success missing email/reference: %s", reference)
             return {"status": "ok"}  # Always return 200 to Paystack
+
+        if not _payment_grants_allowed():
+            _log.warning("Paystack webhook: grants gated (test key, ALLOW_TEST_PAYMENTS!=1) - ref %s not credited", reference)
+            return {"status": "ok"}
 
         conn = database.get_db()
         # Idempotency: skip if this reference was already processed
@@ -3328,6 +3348,9 @@ def verify_seller_subscription(reference: str):
         raise HTTPException(status_code=400, detail=f"Unknown tier in metadata: {tier!r}")
     if not email:
         raise HTTPException(status_code=400, detail="Email missing from payment metadata")
+
+    if not _payment_grants_allowed():
+        raise HTTPException(status_code=503, detail="Payments are not live yet - subscriptions are temporarily disabled.")
 
     plan = _SELLER_SUB_TIERS[tier]
     slot_limit = plan["slot_limit"]
@@ -4988,6 +5011,8 @@ def verify_global_subscription(reference: str):
         buyer_token = meta.get("buyer_token", "")
         if not buyer_token:
             raise HTTPException(status_code=400, detail="Missing buyer_token in metadata")
+        if not _payment_grants_allowed():
+            raise HTTPException(status_code=503, detail="Payments are not live yet - subscriptions are temporarily disabled.")
         now = datetime.now(timezone.utc)
         expires = (now + timedelta(days=30)).isoformat()
         conn = database.get_db()
