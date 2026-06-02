@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare — Home redesign mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Live tokens (mirrors ms.css :root) ───────────────────────── */
+  :root{
+    --bg:#f4f5f7;--surface:#ffffff;--surface-2:#eef0f3;--border:#e2e5ea;
+    --text:#111827;--text-2:#4b5563;--text-3:#555f6e;
+    --accent:#1e3a5f;--accent-light:#eef2f8;
+    --navy:#111827;--navy-light:#1e3a5f;
+    --green:#065f46;--green-bg:#d1fae5;
+    --blue:#1d4ed8;--blue-bg:#dbeafe;
+    --gold:#92400e;--gold-bg:#fef3c7;
+    --r:10px;--r-sm:6px;
+    --sh:0 1px 2px rgba(0,0,0,.04),0 3px 10px rgba(0,0,0,.04);
+    --sh-md:0 2px 6px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
+    --t:.15s cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  /* ── Desktop frame (Change 5): branded backdrop + device shell ── */
+  body{
+    font-family:'Inter',sans-serif;color:var(--text);
+    min-height:100vh;-webkit-font-smoothing:antialiased;
+    /* soft branded field behind the column */
+    background:
+      radial-gradient(1100px 600px at 50% -10%, #18233a 0%, #0c1322 45%, #0a0f1a 100%);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:36px 16px 60px;
+  }
+  /* desktop gutter wordmark/tagline (only shows when there's room) */
+  .gutter-brand{
+    position:fixed;left:max(28px,calc(50% - 540px));top:54px;
+    width:240px;color:#fff;display:none;
+  }
+  @media(min-width:1024px){.gutter-brand{display:block;}}
+  .gutter-brand .gb-mark{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;letter-spacing:.2px;}
+  .gutter-brand .gb-tag{margin-top:10px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.6);font-weight:400;}
+  .gutter-brand .gb-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:7px;vertical-align:middle;}
+
+  /* The phone column, framed as an intentional preview */
+  .phone{
+    width:430px;max-width:100%;background:var(--bg);
+    border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 10px 40px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
+  }
+
+  /* ── Hero (Change 1 + 6) ──────────────────────────────────────── */
+  .home-hero{background:#111827;padding:30px 22px 22px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.06);}
+  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
+  .hero-brandcol{display:flex;flex-direction:column;gap:5px;}
+  /* Wordmark 15px → 22px Syne 800 */
+  .hero-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:.2px;line-height:1;}
+  /* Trust micro-proof — concrete number, 12px @70% */
+  .hero-proof{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;}
+  .hero-proof .pdot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex:none;}
+  /* City badge — unchanged style, label lifted to 11px */
+  .city-badge{display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 11px;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);}
+  .city-badge .bl{color:rgba(255,255,255,.55);}
+
+  .hero-body{position:relative;z-index:1;margin-top:20px;}
+  /* Eyebrow lifted 10px@45% → 12px@70% */
+  .hero-eyebrow{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:12px;}
+  /* Value-prop headline — the biggest thing on screen */
+  .home-hero h1{font-family:'Syne',sans-serif;font-size:29px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:12px;letter-spacing:-.4px;}
+  /* Model explainer — novel nouns weighted 600 */
+  .home-hero p{color:rgba(255,255,255,.62);font-size:14px;line-height:1.55;font-weight:400;max-width:34ch;}
+  .home-hero p b{font-weight:600;color:rgba(255,255,255,.92);}
+  .hero-learn{margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:9px 15px;border-radius:50px;cursor:pointer;transition:background var(--t);}
+  .hero-learn:hover{background:rgba(255,255,255,.18);}
+  .hero-learn svg{width:15px;height:15px;}
+
+  /* ── First-run explainer card (Change 2) ──────────────────────── */
+  .intro-card{margin:14px 14px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-md);overflow:hidden;}
+  .intro-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;}
+  .intro-head h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+  .intro-x{background:none;border:none;cursor:pointer;color:var(--text-3);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background var(--t);}
+  .intro-x:hover{background:var(--surface-2);}
+  .intro-x svg{width:16px;height:16px;}
+  .intro-steps{padding:4px 16px 6px;display:flex;flex-direction:column;gap:14px;}
+  .istep{display:flex;gap:13px;align-items:flex-start;}
+  .istep-ic{flex:none;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;}
+  .istep-ic svg{width:20px;height:20px;}
+  .ic-anon{background:var(--blue-bg);color:var(--blue);}
+  .ic-trust{background:var(--green-bg);color:var(--green);}
+  .ic-tup{background:var(--gold-bg);color:var(--gold);}
+  .istep-txt h4{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+  .istep-txt p{font-size:13px;line-height:1.5;color:var(--text-2);}
+  .istep-txt p b{color:var(--text);font-weight:600;}
+  .intro-foot{display:flex;align-items:center;gap:12px;padding:6px 16px 16px;}
+  .intro-go{flex:1;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background var(--t);}
+  .intro-go:hover{background:#16304f;}
+  .intro-skip{background:none;border:none;color:var(--text-3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+  .intro-skip:hover{color:var(--text-2);}
+
+  /* "Show the explainer again" affordance once dismissed */
+  .reopen-row{display:none;justify-content:center;padding:14px 14px 2px;}
+  .reopen-row.show{display:flex;}
+  .reopen-row button{background:none;border:1px solid var(--border);color:var(--accent);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:7px 14px;border-radius:50px;cursor:pointer;}
+
+  /* ── Below the fold: categories (Change 3 + 4) ────────────────── */
+  .sec-head{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 8px;}
+  .sec-head h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+  .sec-head .titlewrap{display:flex;align-items:center;gap:8px;}
+  .sec-head .secico{width:18px;height:18px;color:var(--accent);}
+  .sec-head a{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none;}
+  .sec-head .gear{color:var(--text-3);width:18px;height:18px;cursor:pointer;}
+
+  .cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:0 14px;}
+  .cat-tile{border-radius:var(--r);overflow:hidden;aspect-ratio:2/1;position:relative;cursor:pointer;}
+  .cat-bg{width:100%;height:100%;}
+  .cat-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.6) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px;}
+  /* names 11px → 12px, counts 9px → 13px */
+  .cat-name{color:#fff;font-size:12px;font-weight:600;letter-spacing:.2px;}
+  .cat-count{color:rgba(255,255,255,.72);font-size:13px;margin-top:1px;font-weight:400;}
+
+  /* Local Market full-width tile — SVG icon, not emoji */
+  .lm-tile{grid-column:1/-1;aspect-ratio:auto;height:54px;border-radius:var(--r);overflow:hidden;position:relative;cursor:pointer;margin-top:1px;}
+  .lm-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1f2937,#111827);}
+  .lm-row{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;}
+  .lm-row svg{width:20px;height:20px;}
+  .lm-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+  .lm-count{font-size:13px;color:rgba(255,255,255,.72);}
+
+  .foot-note{text-align:center;font-size:12px;color:var(--text-3);padding:18px 16px 22px;line-height:1.5;}
+
+  /* annotation chips so reviewer sees what changed */
+  .anno{position:relative;}
+  .anno::after{content:attr(data-anno);position:absolute;right:-8px;top:50%;transform:translate(100%,-50%);background:#22c55e;color:#06281a;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px;white-space:nowrap;letter-spacing:.3px;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  @media(max-width:1180px){.anno::after{display:none;}}
+
+  .caption{color:rgba(255,255,255,.5);font-size:12px;text-align:center;margin-top:18px;font-family:'Inter',sans-serif;max-width:430px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+  <!-- Desktop gutter brand (visible ≥1024px) -->
+  <div class="gutter-brand">
+    <div class="gb-mark">TrustSquare</div>
+    <div class="gb-tag"><span class="gb-dot"></span>Buy from trusted neighbours — without trading your privacy.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;">
+  <div class="phone">
+
+    <!-- ════ HERO (Change 1 + 6) ════ -->
+    <div class="home-hero">
+      <div class="hero-top">
+        <div class="hero-brandcol">
+          <div class="hero-logo anno" data-anno="22px Syne, was 15px">TrustSquare</div>
+          <div class="hero-proof anno" data-anno="trust micro-proof"><span class="pdot"></span>23 verified sellers in Pretoria</div>
+        </div>
+        <div class="city-badge">South&nbsp;Africa<span class="bl">Pretoria</span></div>
+      </div>
+
+      <div class="hero-body">
+        <div class="hero-eyebrow anno" data-anno="12px @70%, was 10px @45%">Local Marketplace · Pretoria</div>
+        <h1>Buy from trusted neighbours — without trading your privacy.</h1>
+        <p>Sellers stay anonymous and earn a <b>trust score</b>. Spend one <b>Tuppence</b> for a verified introduction when you find someone you like.</p>
+        <button class="hero-learn" onclick="openIntro()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          How it works
+        </button>
+      </div>
+    </div>
+
+    <!-- ════ FIRST-RUN EXPLAINER CARD (Change 2) ════ -->
+    <div class="intro-card" id="introCard">
+      <div class="intro-head">
+        <h3>How TrustSquare works</h3>
+        <button class="intro-x" onclick="dismissIntro()" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="intro-steps">
+        <div class="istep">
+          <div class="istep-ic ic-anon">
+            <!-- shield / privacy -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9.5 12.5l1.7 1.7 3.3-3.6"/></svg>
+          </div>
+          <div class="istep-txt">
+            <h4>1 · Browse anonymously</h4>
+            <p>Sellers list what they offer but stay private. No names, no spam, no contact details on display.</p>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-ic ic-trust">
+            <!-- trust score / verified -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 8 9 8 9s8-4 8-9V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <div class="istep-txt">
+            <h4>2 · Read the trust score</h4>
+            <p>Every seller earns a score from verified ID, credentials and successful introductions. Higher means more proven.</p>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-ic ic-tup">
+            <!-- coin / Tuppence -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 0 1 0 4H9m0 0h4M9 7v10"/></svg>
+          </div>
+          <div class="istep-txt">
+            <h4>3 · Spend a Tuppence to connect</h4>
+            <p>When you find the right one, one Tuppence buys a verified introduction. <b>It's non-refundable — your signal that you're serious.</b></p>
+          </div>
+        </div>
+      </div>
+      <div class="intro-foot">
+        <button class="intro-go" onclick="dismissIntro()">Start browsing</button>
+        <button class="intro-skip" onclick="dismissIntro()">Don't show again</button>
+      </div>
+    </div>
+
+    <!-- reopen affordance (shown after dismiss) -->
+    <div class="reopen-row" id="reopenRow">
+      <button onclick="openIntro()">How it works ↺</button>
+    </div>
+
+    <!-- ════ BELOW THE FOLD — unchanged structure, lifted type + SVG icons ════ -->
+    <div class="sec-head">
+      <h2>Categories</h2>
+      <a href="javascript:void(0)">All →</a>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-tile"><div class="cat-bg" style="background:#1e3a5f"></div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count anno" data-anno="13px, was 9px">12 listings</div></div></div>
+      <div class="cat-tile"><div class="cat-bg" style="background:#14532d"></div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count">8 listings</div></div></div>
+      <div class="cat-tile"><div class="cat-bg" style="background:#7c2d12"></div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count">15 listings</div></div></div>
+      <div class="cat-tile"><div class="cat-bg" style="background:#064e3b"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count">5 listings</div></div></div>
+      <div class="cat-tile"><div class="cat-bg" style="background:#44403c"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count">9 listings</div></div></div>
+      <div class="cat-tile"><div class="cat-bg" style="background:#0c1a2e"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count">7 listings</div></div></div>
+
+      <div class="lm-tile anno" data-anno="SVG icon, was 🛍️">
+        <div class="lm-bg"></div>
+        <div class="lm-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-4h16l1 4M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M3 9h18M9 13h6"/></svg>
+          <span class="lm-name">Local Market</span>
+          <span class="lm-count">48 sellers</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="titlewrap">
+        <svg class="secico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+        <h2 class="anno" data-anno="SVG globe, was 🌍">World Heritage</h2>
+      </div>
+      <a href="javascript:void(0)">All →</a>
+    </div>
+
+    <div class="sec-head">
+      <h2>For You</h2>
+      <svg class="gear anno" data-anno="SVG gear + aria-label, was ⚙️" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Wishlist settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+
+    <div class="foot-note">Featured carousel and the personalised feed continue below — unchanged by this redesign.</div>
+
+  </div>
+
+  <div class="caption">
+    Mockup · TrustSquare home redesign (first-run). Palette + fonts mirror <b>ms.css</b> v115 tokens (Syne + Inter).<br>
+    Green chips mark what changed. Click <b>How it works</b> / <b>✕</b> to toggle the first-run card. Resize ≥1024px to see the desktop gutter brand.
+  </div>
+  </div>
+
+<script>
+  // Pure-static demo of the one-time gate. In production this is a localStorage flag (ts_seen_intro).
+  function dismissIntro(){
+    document.getElementById('introCard').style.display='none';
+    document.getElementById('reopenRow').classList.add('show');
+  }
+  function openIntro(){
+    document.getElementById('introCard').style.display='block';
+    document.getElementById('reopenRow').classList.remove('show');
+    document.getElementById('introCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+</script>
+</body>
+</html>

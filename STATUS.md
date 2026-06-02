@@ -1,7 +1,50 @@
 # TrustSquare — Status
 
 ## Live State
-BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 65 live listings · World Heritage layer 332 sites · AI email triage LIVE · AI Price Check feed-driven + deliver-then-charge · AI cost guardrails LIVE (real-token + hard daily ceiling + dashboard panel) · Card photos: vision auto-orient on collectibles + 9 live cards fixed upright · Backend modules (auth/database/storage/payments) now in guarded auto-deploy (O2) · CORS locked to trustsquare.co origins (S4) · KYC verification path crash-fixed (SCAN-1 SONNET_MODEL + SCAN-2/3/4/6 missing imports re/hashlib/urllib/base64 + _json name + SCAN-5 doc-upload MEDIA_DIR→_LOCAL_MEDIA_DIR) · FEA wallet UX overhaul: How-introductions compact picker + transaction filters + AI-services list refresh (added Yield Estimate & Batch Card Lister) + refund mechanism removed (ms.js v129 / ms.css v115) · Session 104 complete
+BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trustsquare.co · 65 live listings · World Heritage layer 332 sites · AI email triage LIVE · AI Price Check feed-driven + deliver-then-charge · AI cost guardrails LIVE (real-token + hard daily ceiling + dashboard panel) · Card photos: vision auto-orient on collectibles + 9 live cards fixed upright · Backend modules (auth/database/storage/payments) now in guarded auto-deploy (O2) · CORS locked to trustsquare.co origins (S4) · KYC verification path crash-fixed (SCAN-1 SONNET_MODEL + SCAN-2/3/4/6 missing imports re/hashlib/urllib/base64 + _json name + SCAN-5 doc-upload MEDIA_DIR→_LOCAL_MEDIA_DIR + SCAN-7 vision-draft background_tasks param — block SCAN-1→7 closed) · FEA wallet UX overhaul: How-introductions compact picker + transaction filters + AI-services list refresh (added Yield Estimate & Batch Card Lister) + refund mechanism removed (ms.js v130 / ms.css v115) · S3 DONE: BEA API key now X-Api-Key-header-only on the 3 KYC seller-document endpoints (`?api_key=` query fallback removed + dead `require_api_key_header_or_query` retired; CDN header-stripping assumption disproven) · JS-1 DONE: buyer-app post-payment Tuppence balance refresh crash-fixed (undefined `updateTuppenceDisplay()`→`updateTuppenceUI()`; ms.js v131) · Session 107 complete
+
+## Last Completed (Session 107 — 2026-06-02)
+- **JS-1 DONE (HIGH · buyer-app crash-fix).** The Paystack payment-return handler in `ms.js` credited the local balance (`tuppence += credited`) then called `updateTuppenceDisplay()` to repaint it — a function defined nowhere (the only genuinely-undefined call in `ms.js` per the 1 Jun ESLint sweep). It threw a ReferenceError, aborting the rest of the top-up success path (success toast + navigation to the wallet) on every real payment return.
+- **Fix:** renamed the single call to `updateTuppenceUI()` (the real repaint fn, `ms.js:823` — zero-arg, writes `tuppence` into the nav badge, balance display, home balance, and dash counter). Verified the target's signature/behavior match the call shape before renaming; the `tuppence += credited` credit line was left untouched (pure display repaint, not ledger — authoritative balance is server-side). One surgical Python str.replace (old-string unique; `updateTuppenceDisplay` 1→0; `ms.js` −5 bytes), never Edit/Write.
+- **Gate:** frontend-only (`ms.js` + index cache-bust) — clears Gate 1 and Gate 2; JS-1 is the exact auto-ship boundary example in ORCHESTRATION_POLICY §5. Auto-shipped.
+- **Verify/deploy:** `node --check` clean; diff vs freshly-pulled server = exactly the one renamed line + the `ms.js?v=130→131` cache-bust in index.html (local byte-identical to server beforehand). No BEA change → no restart. Server backups `*.bak-20260602-js1`; scp `static/ms.js` + `index.html` (bytes == local); Cloudflare purged. Live through CF: index serves `ms.js?v=131`, served `ms.js` has 0 `updateTuppenceDisplay`, fix site reads `tuppence += credited;`→`updateTuppenceUI();`; `/health` ok v1.3.1; **smoke 39/39** pre + post.
+- **Cost model impact:** none — display-repaint rename only.
+
+## Next Session (108)
+- **JS-2 (HIGH)** — next auto-ship item in the maintenance queue: `ms.js:86` calls `updateLocBadge()` (defined nowhere) inside a "re-render everything" block after a listings mutation → ReferenceError on the location-badge refresh. Rename to `updateBadgeLabel()` (defined `ms.js:112`) after confirming its signature/behavior match the intended 2-line location-badge update. `node --check` + smoke before deploy.
+- **Then the rest of the auto-ship queue:** SCAN-8 (duplicate dict key `category.cars.service_history`), SCAN-9 (dead `json` import + `body`/`body_bytes` locals), SCAN-10 (redundant `from datetime import timedelta` re-imports), SCAN-11 (dead locals / unused loop vars → `_`), SCAN-12 (`import os` in database.py), HTML-1 (dead `currentView`), HTML-2 (unused admin module-level locals).
+- **Attended / staged track (deliberately NOT in the auto-ship queue):** S5 (MED · Gate 2 — gate the test/auto-approve payment endpoints behind a prod env flag, fail-closed; **stages** for David's approval), L3a (support@trustsquare.co real mailbox), SCAN-PANEL-1/2 (weekly-scan dashboard panel), the ADMIN_KEY FOUND_NEW, and A11Y-1/2/3.
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination, Paystack plan wiring, EULA v1.6 attorney review.
+
+## Last Completed (Session 106 — 2026-06-02)
+- **S3 DONE (Phase 2 · HIGH).** Moved the BEA API key off the `?api_key=` query param to the `X-Api-Key` header only, across the three seller-document (KYC) endpoints that shared the dual-mode dependency `auth.require_api_key_header_or_query`: `POST` / `GET` / `DELETE /users/{email}/documents[/{doc_id}]`. A key in the query string lands in nginx + Cloudflare logs and browser history; every other protected endpoint was already header-only.
+- **Disproved the CDN assumption first (the gate).** The query fallback rested on a docstring claim that "Cloudflare strips custom headers." False, proven twice: (a) the admin app already calls these same three endpoints header-only in production through Cloudflare; (b) a live request through trustsquare.co with only `X-Api-Key` → 200, no-auth → 401, wrong key → 401. Cloudflare passes the header through untouched.
+- **Edits (surgical, 3 files + cache-bust).** `bea_main.py`: 3 endpoint deps `require_api_key_header_or_query` → `require_api_key` (whole-file diff = exactly those 3 lines). `auth.py`: deleted the now-dead `require_api_key_header_or_query` fn + its orphaned `Query` import — the query-auth path is gone, not just unused. `ms.js`: retired all 3 `?api_key=` sites — the POST upload already sent the header (URL trimmed); the two `apiGet` list calls relied only on the query string (the shared `apiGet` sends no headers), so added an `apiGetAuth(path)` helper that sends `X-Api-Key` and pointed both at it. Bumped `ms.js?v=129 → v=130`. All via the Python str.replace driver, never Edit/Write.
+- **Verify/deploy.** AST clean local + BEA venv; node --check clean; per-file diff vs the freshly-pulled server copy = only the intended changes (local was byte-identical to server on all four files); `main.py` imports under the live systemd unit env before restart. Server backups `*.bak-20260602-s3`; scp main.py/auth.py/static/ms.js/index.html (server bytes == local on all 4); BEA **active**, `/health` ok v1.3.1 (localhost + public). **Live auth test through CF:** GET header→200, GET `?api_key=`→401, GET no-auth→401; DELETE header→404 (auth passed, doc absent), DELETE `?api_key=`→401. Cloudflare purged; live app serves `ms.js?v=130`; **smoke all-green** pre + post.
+- **Cost model impact:** none — auth-mechanism change only; no new AI calls, pricing, concurrency, email-volume, or city-launch change.
+
+## Next Session (107)
+- **Phase 2 cont. — S5 (MED):** gate the test / auto-approve payment endpoints behind a production env flag, fail-closed (launch blocker while Paystack live-mode is pending). AST + smoke before deploy.
+- **Then L3a:** support@trustsquare.co real mailbox — one surgical env-driven `_smtp_send_reply()` edit + ops Cloudflare/Brevo config (see SUPPORT_MAILBOX_SETUP.md). Replies currently send from dmcontiki2@gmail.com.
+- **Then:** SCAN-8…12 cleanup + SCAN-PANEL-1/2 (weekly-scan dashboard panel) + JS-1/JS-2 (ms.js latent ReferenceErrors) + HTML-1/HTML-2 dead-var cleanup + the ADMIN_KEY FOUND_NEW (`/admin/purge-cache` + `/admin/refresh-pois` unauthenticated when `ADMIN_KEY` unset) + A11Y-1/2/3 (focus ring, aria-live, admin alt-text/labels).
+- **Deferred (David default):** EULA "Refunds" → "No Refunds" heading rename — leave for the v1.6 attorney-review pass (not an audit item).
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination, Paystack plan wiring, EULA v1.6 attorney review.
+
+## Last Completed (Session 105 — 2026-06-01)
+- **SCAN-7 DONE (HIGH · final KYC/vision crash-bug — block SCAN-1→7 now CLOSED).** `bea_main.py` `vision_draft` (`POST /listings/vision-draft`) called `background_tasks.add_task(_log_ai_spend, …)` (line 9365) but `background_tasks` was never in the endpoint signature — a guaranteed `NameError` → HTTP 500 at request time, *after* the Claude Vision call had already run (so the draft was computed then discarded and its spend never logged). Latent because every existing param had a `File(...)`/`Form(...)` default, so the route imported cleanly.
+- **Fix:** added `background_tasks: BackgroundTasks` as the **first** parameter of `vision_draft` (a no-default param must precede defaulted ones — valid Python; matches `create_listing`/`create_intro`). `BackgroundTasks` already imported (line 1); FastAPI injects it by annotation regardless of position, so the unguarded call site is now always non-None. One surgical Python str.replace (old-string unique); +39 bytes (501792→501831), LF-only, diff = exactly one inserted line.
+- **Verify/deploy:** `ast.parse` clean local + BEA venv; AST introspection confirms the deployed `main.py` `vision_draft` now lists `background_tasks` first. main.py deployed (server backup `main.py.bak-20260601-scan7`, server bytes == local); BEA **active**, `/health` ok v1.3.1; Cloudflare purged; **smoke 39/39 ✅** pre- and post-deploy.
+- **Minor finding (flagged, not actioned — one item/run):** `ADMIN_KEY` is unset on the server, so `/admin/purge-cache` + `/admin/refresh-pois` accept unauthenticated calls. Low risk (cache purge / POI refresh only); logged in AUDIT_PROGRESS.md for triage.
+- **Cost model impact:** none — adds a framework-injected parameter so the already-billed vision-draft spend actually logs (it was dropped on the crash); no new AI calls, no pricing/concurrency change.
+
+## Next Session (106)
+- **Phase 2 resumes (KYC/vision crash-bug block closed) — S3 (HIGH):** move the BEA API key off the `?api_key=` query param (it lands in nginx/Cloudflare logs + browser history) to `X-Api-Key` header only across the 3 endpoints + ms.js; first verify/remove the CDN header-stripping assumption that justified the query fallback. AST + smoke before deploy.
+- **Then S5 (MED):** gate the test/auto-approve payment endpoints behind a production env flag, fail-closed (launch blocker while Paystack live-mode pending).
+- **Then L3a:** support@trustsquare.co real mailbox — one surgical env-driven `_smtp_send_reply()` edit + ops Cloudflare/Brevo config (SUPPORT_MAILBOX_SETUP.md).
+- **Then:** SCAN-8…12 cleanup + SCAN-PANEL-1/2 (weekly-scan dashboard panel) + JS-1/JS-2 (ms.js latent ReferenceErrors) + HTML-1/HTML-2 dead-var cleanup.
+- **New minor finding (this run):** `ADMIN_KEY` unset → `/admin/purge-cache` + `/admin/refresh-pois` unauthenticated; set the env or fail-closed (rank below S3/S5/L3a).
+- **Deferred (David default):** EULA "Refunds" → "No Refunds" heading rename — leave for the v1.6 attorney-review pass (not an audit item).
+- Standing: self-hosted Overpass re-import (BLOCKER), `GET /listings` pagination, Paystack plan wiring, EULA v1.6 attorney review.
 
 ## Last Completed (Session 104 — 2026-06-01)
 - **Tuppence Wallet UX overhaul (FEA, David-requested).** Buyer-app `marketsquare.html` / `ms.js` / `ms.css`:
@@ -147,32 +190,4 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - **Photos all royalty-free (Wikimedia Commons)** with photographer attribution: 228/231 new scenic photos credit a named author; all 332 photo URLs verified HTTP-200 before deploy. `photo_author`/`photo_licence`/`photo_source` populated from Commons extmetadata.
 - **Path fix**: canonical `wonders.json` moved to project root (matches loader + server layout); `assets/` synced; deploy script updated.
 - **Auto-link cap 3 → 5** (`auto_link_wonders` default in bea_main.py) — reversible, flagged for David. FEA renders 5 cleanly.
-- **All 55 live listings re-linked** via `relink_wonders.py` (seller-set wonders preserved). Pretoria listing now links 5 relevant Gauteng sites.
-- Deployed to Hetzner, BEA restarted, Cloudflare purged, `GET /wonders` = 332 live. Smoke test: all checks ✅.
-- Corrected stale Session 59 CHANGELOG claim that 400 sites had shipped (they never did).
-- ⚠️ **For David**: review the auto-link cap change (3→5) — revert the single `max_links` default if undesired. **Commit `wonders.json` (data file) + bea_main.py + relink_wonders.py + deploy_marketsquare.bat + docs from PowerShell.**
-
-## Last Completed (Session 91 — 2026-05-29)
-- **Subscription tier redesign**: 5 tiers — Free $0/2 slots, Standard $12/10, Professional $20/25, Business $40/60, Elite $100/500. DB: `slot_limit`, `pending_downgrade_tier`, `billing_period_end` on `users`. BEA: slot enforcement at publish (HTTP 402 on limit breach), `GET /subscription/tiers`, `GET /users/{email}/subscription`, downgrade-to-free endpoint, pending downgrade worker at startup. Admin UI: rebuilt billing panel with plan card, slot bar, tier cards. Superusers: 500 slot limit.
-- **Real transaction history**: `GET /tuppence/history` endpoint (paginated, running balance). Tuppence screen wired with live data + load-more. My Space Billing tab transaction section. Monthly grouping, type icons, coloured amounts.
-- Smoke test: 30/30 ✅.
-
-## Last Completed (Session 90 — 2026-05-28)
-- **AI guardrails**: Existence gate on 5 open AI endpoints (market-note, coach, guidance, upload-comment, vision-draft). Unknown email → HTTP 401 before any Anthropic call.
-- **Spend register**: `ai_spend_log` table + async `_log_ai_spend()` background task logging every AI call (non-blocking). `ai_spend_config` singleton with income/threshold/alert config.
-- **Admin endpoints**: `GET /admin/ai-spend` (current-month summary + trend) and `PUT /admin/ai-spend/config` (update income + threshold).
-- **Red flag alert**: n8n webhook fires when spend crosses % of income — max once/day. Set `N8N_WEBHOOK_AI_ALERT` in .env and `PUT /admin/ai-spend/config` with your monthly income to activate.
-- Smoke test: 30/30 ✅
-
-## Last Completed (Session 89 — 2026-05-28)
-- **Kronborg anonymity fix**: Stripped "193 Albert Street" from all 39 listing descriptions. Cleared street_address to NULL. Zero address leaks remain.
-- **Kronborg photos**: SCP'd all 39 unit folders. Uploaded 510 photos across 37 listings (avg 14/unit). Multi-photo carousel populated. Unit 109 (video only) and 308 (corrupt JPEG) remain photo-free — Maroushka to supply.
-- **POI verification**: All 39 listings have 11 POIs across schools/shopping/hospitals/police. Shopping at 3km confirmed live.
-- **Full anonymity pass (all 39 listings)**: Titles renamed "Kronborg Estate" → "Luxury Furnished Apartments". Descriptions stripped of all estate/address references. Map pins cleared (listing_lat/lng → NULL) — all 39 now show suburb centroid (Waterkloof), not building coordinates.
-- **Services + features block**: Appended to every listing description — electricity, water, WiFi, cleaning, linen, laundry prices + estate features (luxury, riverside, US Embassy/UN approved).
-- **Unit 116 price**: Cleared to NULL (title shows "POA") — Maroushka to re-enter correct price.
-- Smoke test: 30/30 ✅
-
-## Last Completed (Session 88 — 2026-05-28)
-- **Server upgrade**: CPX22 → CPX32 (8GB RAM, 4 vCPU). Added 100GB Hetzner volume. Moved 39GB Overpass DB to volume (`/mnt/HC_Volume_105840760/overpass`). Root disk: 100% → 22% (57GB free).
-- **Kronborg Estate listings**: 39 apartments (IDs 192–230) batch-created and published under miconradie1@gmail.com. Waterkloof, Pretoria. Prices R8,990–R35,990/pm. Photos uploaded for units 102a–116. Unit
+- **All 55 live listings re-linked** via `relink_wonders.py` (selle

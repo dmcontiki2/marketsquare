@@ -118,3 +118,11 @@
 - Activity log: new `listing_events` table (listing_id, event_type, detail, created_at) — lightweight append-only
 - All AI services must have DEMO_MODE guards returning mock responses
 
+
+---
+
+## 🔒 Security — near-launch (added 2 Jun 2026 · David-deferred · HUMAN-ONLY — do NOT auto-action)
+
+| # | Item | Area |
+|---|---|---|
+| L9 | **Secrets rotation + editor access model.** Rotate `MS_API_KEY` / `MS_ADMIN_PASSWORD` / `MS_JWT_SECRET` (the three surfaced in a Cowork chat transcript 2 Jun — not a live breach: stored correctly server-side, app not yet public, Paystack test mode, 4 trusted editors — but treat as to-rotate). Kill the `96315` reuse (admin password shares the client-side `/support` gate code); replace client-side page gates with real auth (cf. `/orchestrator` Basic Auth). Move secrets from inline systemd `Environment=` lines to a `chmod 600` EnvironmentFile. Design per-editor accounts + FIDO2 hardware-key (dongle) + password for all 4 editors. JWT secret first (forging risk; rotation invalidates outstanding magic-link tokens); API-key rotation also updates the admin app + n8n. **Deferred by David to avoid halting the build — execute at/near launch with Claude's guidance. The orchestrator loop must FILE this, never auto-action it (security setting).** | Security |

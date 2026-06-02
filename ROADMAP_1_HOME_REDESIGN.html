@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Home-page Redesign · TrustSquare</title><style>
+  :root{--navy:#15314e;--navy2:#1d3f63;--accent:#2f6fb0;--ink:#1f2937;--meta:#6b7280;
+    --line:#d8dee6;--bg:#fff;--soft:#f4f6f9;--green:#1e8a4c;--greenbg:#e6f4ea;
+    --blue:#2563eb;--bluebg:#e6effd;--amber:#b07d12;--amberbg:#fbf2dd;--grey:#5b6b7e;--greybg:#eef1f4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .page{max-width:880px;margin:0 auto;padding:42px 40px 80px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h1{font-size:30px;font-weight:800;color:var(--navy);margin:0 0 14px;letter-spacing:-.3px;line-height:1.2}
+  h2{font-size:21px;font-weight:800;color:var(--navy);margin:34px 0 4px;letter-spacing:-.2px;border-bottom:2px solid var(--soft);padding-bottom:5px}
+  h3{font-size:16px;font-weight:700;color:var(--navy2);margin:22px 0 4px}
+  h4{font-size:14px;font-weight:700;color:var(--navy2);margin:16px 0 4px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none}
+  strong{color:#142a44}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:700;font-size:12.5px}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:var(--soft)}
+  code{background:#eef1f4;border:1px solid #e1e6ec;border-radius:4px;padding:1px 6px;font-size:12.5px;color:#334155;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#0f1b2d;color:#e6edf6;padding:14px 16px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.5}
+  pre code{background:none;border:0;color:inherit;padding:0}
+  blockquote{border-left:4px solid var(--accent);background:var(--soft);margin:12px 0;padding:10px 16px;border-radius:0 8px 8px 0;color:#374151}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .p-green{background:var(--greenbg);color:var(--green)}
+  .p-blue{background:var(--bluebg);color:var(--blue)}
+  .p-amber{background:var(--amberbg);color:var(--amber)}
+  .p-grey{background:var(--greybg);color:var(--grey)}
+  @media print{body{font-size:12px}.page{padding:0}}
+</style></head><body><div class="page"><div class="eyebrow">TrustSquare · Roadmap</div><h1>Roadmap 1 — Home Page Redesign (First-Run)</h1>
+<p><strong>Date:</strong> 2 June 2026 · <strong>Author:</strong> Layout/UX pass · <strong>Stage:</strong> PLANNING / DESIGN ONLY (no code touched)
+<strong>Builds on:</strong> <code>DESIGN_CRITIQUE_2026-06-01.md</code> — whose headline finding is that the home screen <em>teaches the novel model at the paywall, not before</em>. This roadmap turns that finding into a concrete, implementable first-run redesign.
+<strong>Companion artifact:</strong> <code>home_mockup.html</code> — a standalone static mockup of the proposed hero + first-run explainer card, using the live palette and fonts (Syne + Inter). Open it in a browser to see the target.</p>
+<blockquote>
+<p><strong>Scope discipline.</strong> This is a redesign of the <strong><code>#screen-home</code> hero + the top of the home feed</strong>, plus two cross-cutting fixes (type floor, emoji→icon, desktop frame). It is deliberately <em>not</em> a rewrite. Every change below is a surgical edit to <code>marketsquare.html</code> / <code>ms.css</code> and is sized to fit the project's "one feature per task" rule. Nothing here changes the Tuppence ledger, the API surface, or the demo/live wiring.</p>
+</blockquote>
+<hr />
+<h2>0 · The problem in one screen</h2>
+<p>Today <code>#screen-home</code> is:</p>
+<pre><code>[ TrustSquare (15px) ]            [ ZA / Pretoria badge ]   ← hero-top
+[ empty .hero-body ]                                         ← sells nothing
+Categories                                          All →
+[ 3-col photo grid ] [ 🛍️ Local Market ] [ Featured ] [ 🌍 World Heritage ] [ For You ]
+</code></pre>
+<p>A first-time visitor meets a photo grid and never learns <em>what makes this marketplace different</em>. The three load-bearing concepts — <strong>anonymous sellers</strong>, an earned <strong>trust score</strong>, and a <strong>non-refundable Tuppence introduction</strong> — are introduced for the first time <em>at the moment money is spent</em>. That is the worst possible place to teach a novel mechanic: comprehension and the payment decision collide.</p>
+<p>The fix is not more copy everywhere — it is <strong>one confident hero that states the value prop and explains the model in 1–2 lines, plus a one-time dismissible explainer card, shown before the paywall.</strong> Everything else on the home screen stays.</p>
+<hr />
+<h2>1 · Ranked changes (by impact)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>Impact</th>
+<th>Effort</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>Hero states value prop + 1-line model explainer</strong></td>
+<td>🔴 Highest</td>
+<td>S</td>
+<td><code>marketsquare.html</code> <code>.hero-body</code> + <code>ms.css</code> <code>.home-hero</code></td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>One-time first-run explainer card</strong> (anonymity → trust → Tuppence, 3 steps)</td>
+<td>🔴 Highest</td>
+<td>M</td>
+<td><code>marketsquare.html</code> new block + small JS flag</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>Lift the sub-12px type floor</strong> (9–11px → 12–13px; widen primary↔secondary gap)</td>
+<td>🟠 High</td>
+<td>S</td>
+<td><code>ms.css</code> (token-level)</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>Emoji → inline SVG icons</strong> (categories, Local Market, World Heritage, "For You" gear)</td>
+<td>🟡 Medium</td>
+<td>M</td>
+<td><code>marketsquare.html</code> + <code>ms.css</code></td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>Pleasant desktop frame</strong> for the 430px column (branded backdrop + device shell)</td>
+<td>🟡 Medium</td>
+<td>S</td>
+<td><code>ms.css</code> <code>@media (min-width:768px)</code></td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong>Hero wordmark + trust micro-proof</strong> (15px → 22px Syne; add "23 verified sellers · Pretoria")</td>
+<td>🟢 Polish</td>
+<td>S</td>
+<td><code>marketsquare.html</code> + <code>ms.css</code></td>
+</tr>
+</tbody>
+</table>
+<p>S = under an hour · M = a focused session.</p>
+<hr />
+<h2>2 · Change 1 — A hero that sells (and explains)</h2>
+<h3>Before</h3>
+<pre><code class="language-css">.home-hero{background:#111827;padding:36px 20px 10px;...}
+.hero-logo{font-size:15px;font-weight:700;...}
+.hero-body{}            /* EMPTY */
+</code></pre>
+<p>The hero is a thin dark strip with a small wordmark and an empty body. It establishes a mood but communicates nothing.</p>
+<h3>After</h3>
+<p>A taller hero (still the same <code>#111827</code> navy, same overflow rules) carrying <strong>three things in strict hierarchy</strong>:</p>
+<ol>
+<li><strong>Eyebrow</strong> (overline): <code>LOCAL MARKETPLACE · PRETORIA</code> — 12px, Inter 600, letter-spacing 1.5px, white @ 70% (lifted from the current 45%/10px — see Change 3).</li>
+<li><strong>Headline</strong> (the value prop): <strong>"Buy from trusted neighbours — without trading your privacy."</strong> — Syne 800, 28–30px, white, <code>line-height:1.1</code>, <code>letter-spacing:-0.4px</code>. This is the single biggest element on the screen and the first thing the eye lands on.</li>
+<li><strong>Sub / model line</strong> (the explainer): <em>"Sellers stay anonymous and earn a </em><em>trust score</em><em>. Spend one </em><em>Tuppence</em><em> for a verified introduction when you find someone you like."</em> — Inter 400, 14px, white @ 60%, <code>line-height:1.5</code>, max 2 lines. The two product nouns (<code>trust score</code>, <code>Tuppence</code>) are weighted to 600 so the novel vocabulary is visually flagged on first sight.</li>
+</ol>
+<h3>Rationale</h3>
+<ul>
+<li>States <em>what</em> (buy from neighbours), <em>why it's different</em> (privacy / anonymity), and <em>the mechanic</em> (trust score + one-Tuppence introduction) <strong>before</strong> any category tap or paywall — directly answering the critique's #1 recommendation.</li>
+<li>Keeps the existing visual language: same navy band, same <code>z-index</code> layering, no new colours. It is a content + sizing change, not a restyle.</li>
+<li>The explainer line is the <em>teaser</em>; the full lesson lives in the one-time card (Change 2) so the hero never becomes a wall of text on repeat visits.</li>
+</ul>
+<h3>Markup sketch (for <code>.hero-body</code>, currently empty)</h3>
+<pre><code class="language-html">&lt;div class=&quot;hero-body&quot;&gt;
+  &lt;div class=&quot;hero-eyebrow&quot;&gt;LOCAL MARKETPLACE · PRETORIA&lt;/div&gt;
+  &lt;h1&gt;Buy from trusted neighbours — without trading your privacy.&lt;/h1&gt;
+  &lt;p&gt;Sellers stay anonymous and earn a &lt;b&gt;trust score&lt;/b&gt;. Spend one
+     &lt;b&gt;Tuppence&lt;/b&gt; for a verified introduction when you find someone you like.&lt;/p&gt;
+  &lt;button class=&quot;hero-learn&quot; onclick=&quot;openFirstRunExplainer()&quot;&gt;How it works&lt;/button&gt;
+&lt;/div&gt;
+</code></pre>
+<p><code>.home-hero h1</code> and <code>.home-hero p</code> rules already exist in <code>ms.css</code> (30px/800 and 14px/55% respectively) — they just have nothing to style today. This change <em>uses</em> them and only nudges the eyebrow + adds the <code>.hero-learn</code> text-button.</p>
+<hr />
+<h2>3 · Change 2 — One-time first-run explainer card</h2>
+<p>A dismissible card shown <strong>once</strong> (gated on a <code>localStorage</code> flag, e.g. <code>ts_seen_intro</code>) directly under the hero on a visitor's first session, and re-openable any time via the hero's "How it works" button. Three numbered steps, each an icon + a 13–14px line:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Icon (SVG)</th>
+<th>Copy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1 · Browse anonymously</strong></td>
+<td>eye-off / shield</td>
+<td>Sellers list what they offer but stay private. No names, no spam, no contact details on display.</td>
+</tr>
+<tr>
+<td><strong>2 · Read the trust score</strong></td>
+<td>shield-check</td>
+<td>Every seller earns a score from verified ID, credentials and successful introductions. Higher = more proven.</td>
+</tr>
+<tr>
+<td><strong>3 · Spend a Tuppence to connect</strong></td>
+<td>handshake / coin</td>
+<td>When you find the right one, one Tuppence buys a verified introduction. <strong>It's non-refundable — it's your signal that you're serious.</strong></td>
+</tr>
+</tbody>
+</table>
+<p>A primary <strong>"Start browsing"</strong> button dismisses it; a quiet <strong>"Don't show again"</strong> sets the flag.</p>
+<h3>Rationale</h3>
+<ul>
+<li>This is where the <em>full</em> model lesson lives, so the hero stays lean. It runs <strong>before</strong> the first paywall, defusing the collision the critique identified.</li>
+<li>The "non-refundable = serious signal" framing is stated <strong>here, calmly, as a feature</strong> — not first encountered as a scary line at the spend confirm. This aligns with the no-refunds rule (it's load-bearing for commitment-signal, Banks Act, and patent novelty) and with the existing 11 "non-refundable" strings; we are <em>teaching</em> it earlier, not weakening it.</li>
+<li>One-time + re-openable = no nag on repeat visits, but always recoverable. Matches the critique's "skippable first-run card" suggestion.</li>
+</ul>
+<h3>Wiring note (project rule)</h3>
+<p>The card reads no API and no Tuppence balance — it is pure static content gated by <code>localStorage</code>. <strong>No <code>DEMO_MODE</code> branch needed</strong> (it makes no BEA call). The "How it works" button just toggles the card's visibility. Flag this explicitly in the implementing session so the demo-wiring audit is satisfied trivially.</p>
+<hr />
+<h2>4 · Change 3 — Lift the sub-12px type floor</h2>
+<p>The critique measured the scale as bottom-heavy: <strong>13px ×76, 12px ×64, 11px ×58, 14px ×47, 10px ×44, 9px ×16</strong>, plus stray 8px. Everything whispers; nothing leads. Concrete floor:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Today</th>
+<th>Proposed</th>
+<th>Where (examples)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Body / metadata</td>
+<td>9–11px</td>
+<td><strong>13px</strong></td>
+<td><code>.cat-count</code> (9px), card meta, <code>#wf-empty-hint</code> (12px ok)</td>
+</tr>
+<tr>
+<td>Secondary labels</td>
+<td>10px</td>
+<td><strong>12px</strong></td>
+<td><code>.hero-eyebrow</code>, <code>.nb</code> bottom-nav (10px), <code>.cat-name</code> (11px → 12px)</td>
+</tr>
+<tr>
+<td>Micro-labels (true overlines/badges only)</td>
+<td>8–9px</td>
+<td><strong>11px floor</strong></td>
+<td><code>.tbadge</code> (9px), <code>.feat-badge</code> (8px), <code>.model-badge</code> (9px), <code>.paused-badge</code> (9px)</td>
+</tr>
+<tr>
+<td>Primary text</td>
+<td>14–15px</td>
+<td><strong>15–16px</strong></td>
+<td>unchanged, but now clearly above secondary</td>
+</tr>
+<tr>
+<td>Section headers</td>
+<td>15px</td>
+<td><strong>16–17px</strong></td>
+<td><code>.sec-head h2</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule of thumb to adopt:</strong> nothing that conveys <em>meaning</em> renders below 12px; <strong>11px is the absolute floor and is reserved for genuine micro-labels</strong> (uppercase overlines, status pills). Widen the gap between primary (15–16px) and secondary (12–13px) so hierarchy reads at a glance.</p>
+<h3>Rationale</h3>
+<ul>
+<li>Single biggest readability win on mobile and it restores hierarchy <em>for free</em> — no new components, just token nudges (critique rec #2).</li>
+<li>Most of these live in <code>ms.css</code> as single declarations, so this is a find-tune-verify pass, not a refactor. Keep the change isolated to size values; do not touch colours (contrast already clears AA per the critique).</li>
+<li>Watch item: a few dense rows (trust badges, feat badges) may need 1–2px more vertical padding once text grows — verify the category overlay and card footers don't clip after the bump.</li>
+</ul>
+<hr />
+<h2>5 · Change 4 — Emoji → inline SVG icons</h2>
+<p>Emoji used as iconography (🛍️ Local Market, 🌍 World Heritage, ⚙️ For-You gear, the flag/type emoji in the wonder selects) render inconsistently across OSes and clash with the otherwise refined Syne/Inter system.</p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Today</th>
+<th>Proposed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local Market home tile</td>
+<td><code>🛍️ Local Market</code></td>
+<td>inline <code>&lt;svg&gt;</code> storefront/tag glyph, <code>currentColor</code>, 18px, sitting left of the label</td>
+</tr>
+<tr>
+<td>World Heritage header</td>
+<td><code>🌍 World Heritage</code></td>
+<td>inline <code>&lt;svg&gt;</code> globe glyph</td>
+</tr>
+<tr>
+<td>"For You" settings</td>
+<td><code>⚙️</code> link</td>
+<td>inline <code>&lt;svg&gt;</code> gear (also gets an <code>aria-label="Wishlist settings"</code>)</td>
+</tr>
+<tr>
+<td>Explainer-card steps</td>
+<td>—</td>
+<td>the eye-off / shield-check / handshake SVGs from Change 2</td>
+</tr>
+</tbody>
+</table>
+<p>Keep <strong>country-flag emoji in the <code>&lt;select&gt;</code> options</strong> — those are genuine flags, render acceptably, and swapping 50+ to SVG is out of scope. The fix targets <em>UI iconography only</em>.</p>
+<h3>Rationale</h3>
+<ul>
+<li>Restores visual consistency and removes the cross-platform rendering lottery (critique "minor, low-cost" item).</li>
+<li>Use a single tiny inline-SVG style (stroke, <code>currentColor</code>, 1.5–2px) so icons inherit text colour and stay crisp at any DPI — the app already uses this pattern (e.g. the cat-home back chevron, plan-feat checkmarks).</li>
+<li>Pair every icon-only control with an <code>aria-label</code> (the gear has none today) — also closes a small a11y gap.</li>
+</ul>
+<hr />
+<h2>6 · Change 5 — A pleasant desktop frame</h2>
+<p>Today <code>@media (min-width:768px)</code> just widens <code>body</code> from 430px → 900px and stretches a few bars. On a wide screen the app is "an un-optimised phone view floating in empty space." We <strong>embrace mobile-first</strong> (path (a) from the critique) rather than rebuild a multi-column layout:</p>
+<ul>
+<li><strong>Backdrop:</strong> behind the column, a soft branded field — a subtle navy→bg vertical gradient or a very low-contrast geometric/topographic texture in <code>--accent-light</code>, so the gutter looks <em>intentional</em>.</li>
+<li><strong>Device shell:</strong> wrap the 430px column in a faint card — <code>border-radius:24px</code>, a single soft shadow (reuse <code>--sh-md</code>), 1px <code>--border</code> — so it reads as a deliberate "app preview" frame, not a stranded mobile page.</li>
+<li><strong>Keep it at 430px on desktop</strong> (revert the 900px body widen for the home/feed surfaces, or cap the <em>frame</em> at ~430 and let the backdrop fill the rest). The 900px widen currently distorts the carefully-tuned mobile column.</li>
+<li>Optional, cheap: a slim left-aligned wordmark + one-line tagline in the desktop gutter beside the frame, so a desktop first impression also carries the value prop.</li>
+</ul>
+<h3>Rationale</h3>
+<ul>
+<li>Lowest-effort path to a credible desktop first impression — pure CSS in the existing media query, no new layout system, no risk to mobile (critique "both viewports" section).</li>
+<li>A framed column signals "designed for your phone" rather than "broken on desktop," which on a trust-led product matters for credibility.</li>
+<li>Watch item: ensure fixed-position bars (<code>.bnav</code>, <code>.sticky-cta</code>, <code>.cv-sticky</code>, <code>.pub-footer</code>) align to the <em>framed column</em>, not the 900px width — they currently re-pin to <code>max-width:900px</code> in the desktop query.</li>
+</ul>
+<hr />
+<h2>7 · Change 6 — Wordmark + trust micro-proof</h2>
+<p>Small but high-leverage on a trust product:</p>
+<ul>
+<li><strong>Wordmark:</strong> <code>.hero-logo</code> 15px/700 → <strong>20–22px Syne 800</strong>. It's the one moment that should establish identity; 15px undersells it (critique first-impression note).</li>
+<li><strong>Micro-proof line</strong> under or beside the city badge: e.g. <strong>"23 verified sellers in Pretoria"</strong> (Inter 600, 12px, white @ 70%). Turns the abstract "trusted" claim into a concrete number on first sight. (Pull from live count where available; in DEMO mode show the seeded count — this <em>does</em> read data, so gate it: <code>if (DEMO_MODE) {...seeded count...} else {...GET count...}</code>.)</li>
+</ul>
+<h3>Rationale</h3>
+<ul>
+<li>Cheap credibility: a real number ("23 verified sellers") does more for first-run trust than another adjective.</li>
+<li>The wordmark bump costs one CSS value and fixes the "identity moment is undersized" finding.</li>
+</ul>
+<hr />
+<h2>8 · Proposed first-run home, end state</h2>
+<pre><code>┌──────────────────────────────────────────────┐  ← desktop: framed 430px column on branded backdrop
+│  TrustSquare (22px)            ZA / Pretoria   │
+│  23 verified sellers in Pretoria               │
+│                                                │
+│  LOCAL MARKETPLACE · PRETORIA                  │  ← 12px eyebrow @70%
+│  Buy from trusted neighbours —                 │  ← 28px Syne 800 (value prop)
+│  without trading your privacy.                 │
+│  Sellers stay anonymous and earn a trust       │  ← 14px @60% (model line)
+│  score. Spend one Tuppence for a verified      │
+│  introduction.                  [How it works] │
+├──────────────────────────────────────────────┤
+│  ┌── How TrustSquare works ─────────  ✕ ──┐   │  ← one-time card (first session only)
+│  │ ◉ 1  Browse anonymously                 │   │
+│  │ ◉ 2  Read the trust score               │   │
+│  │ ◉ 3  Spend a Tuppence to connect        │   │
+│  │              [ Start browsing ]          │   │
+│  └──────────────────────────────────────────┘  │
+├──────────────────────────────────────────────┤
+│  Categories                            All →   │  ← unchanged below here
+│  [ Property ][ Tutors ][ Services ] …          │  ← cat-count lifted 9px→13px, names 11px→12px
+│  [ ▦ Local Market ]   (SVG icon, not 🛍️)       │
+│  Featured  ‹ … ›                               │
+│  ▦ World Heritage   (SVG globe, not 🌍)        │
+│  For You                              ⚙(SVG)   │
+└──────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2>9 · Sequencing &amp; guardrails</h2>
+<p><strong>Suggested order (each is a standalone task, smoke-test between):</strong>
+1. <strong>Change 3 (type floor)</strong> first — it's token-level, touches everything, and de-risks the visual sizing for all later changes.
+2. <strong>Change 1 (hero copy/hierarchy)</strong> — uses the now-correct type scale.
+3. <strong>Change 2 (explainer card)</strong> — depends on the hero "How it works" hook.
+4. <strong>Change 4 (emoji→icon)</strong> + <strong>Change 6 (wordmark/proof)</strong> — cosmetic, bundle if desired.
+5. <strong>Change 5 (desktop frame)</strong> — isolated CSS, last.</p>
+<p><strong>Guardrails (from CLAUDE.md):</strong>
+- HTML edits to <code>marketsquare.html</code> use the <strong>Python string-replace driver</strong>, never Write/Edit (the file truncates). Verify the <code>&lt;/html&gt;</code> tail after every write.
+- Any data-reading addition (the "23 verified sellers" count in Change 6) <strong>must carry a <code>DEMO_MODE</code> branch</strong>; the explainer card and hero copy read no data and need none — state this in the session note so the demo audit passes.
+- No ledger / API / pricing impact in any change here → <strong>no <code>Cost model impact:</code> line</strong> needed in CHANGELOG.
+- Don't touch colour tokens; contrast already clears AA. This pass is sizing, copy, icons, and one frame.</p>
+<p><strong>What this roadmap deliberately does NOT do:</strong> rebuild the feed, add a multi-column desktop layout, restyle the category grid imagery, or change the spend-confirm flow. Those are separate, lower-priority items; the win here is <em>first-run comprehension</em>, achieved with surgical edits.</p>
+<hr />
+<p><em>Companion mockup: <code>home_mockup.html</code> (open in browser). Palette/fonts match live (<code>ms.css</code> v115 tokens, Syne + Inter via Google Fonts). Mockup is illustrative — final copy/counts come from live data and the Codex.</em></p></div></body></html>

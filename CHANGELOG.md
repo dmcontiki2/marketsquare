@@ -1,3 +1,43 @@
+## Session 107 · 2 June 2026 · JS-1 DONE — buyer-app Tuppence balance-refresh crash-fix (post-payment success path)
+
+With Phase 2's S3 shipped, the orchestrated maintenance loop picked the top queued item: **JS-1 (HIGH)**, a latent ReferenceError in the buyer app `ms.js`. After a successful Paystack top-up, the payment-return handler credits the local balance (`tuppence += credited`) and then called `updateTuppenceDisplay()` to repaint it — but no function by that name is defined anywhere in the codebase (it was the only genuinely-undefined call in `ms.js` per the 1 June ESLint sweep). The call therefore threw, aborting the rest of the success path (the confirmation toast and the navigation to the wallet) on every real payment return.
+
+**The fix (one line).** Renamed the call to `updateTuppenceUI()` — the real balance-repaint function (defined `ms.js:823`), which takes no arguments and writes the current `tuppence` value into the nav badge, the balance display, the home balance, and the dashboard counter. Confirmed before renaming that the target's signature matches the call shape (both zero-arg) and that it repaints exactly the elements the caller expects; the four pre-existing `updateTuppenceUI()` call sites all use the same zero-arg form. The `tuppence += credited` credit line directly above was left untouched — this is a pure display repaint, not a ledger change (the authoritative balance is server-side and re-synced from `GET /tuppence/balance` on load).
+
+**Gate check.** Frontend-only: the diff touches `ms.js` (the renamed call) and `marketsquare.html` (cache-buster bump only). No `payments.py`, no BEA Tuppence-ledger credit/debit code, no EULA / KYC / anonymity copy — JS-1 is the exact auto-ship boundary example named in ORCHESTRATION_POLICY §5 (a Tuppence-balance *display* repaint auto-ships; only code that actually credits or debits balance hits Gate 2). Cleared both gates → auto-shipped.
+
+**Verify + deploy.** Edit applied via the Python `str.replace` driver (old-string asserted to match exactly once; `updateTuppenceDisplay` count 1→0; `ms.js` −5 bytes), never the Edit/Write tool. `node --check` clean; a diff of each edited file against the freshly-pulled server copy showed *only* the intended changes — the one renamed line in `ms.js` and the one version-string bump in `index.html` (the local working copy was byte-identical to the server on both files beforehand). Bumped the cache-buster `ms.js?v=130 → v=131` (`ms.css` unchanged at v=115). No BEA change → no restart. Server files backed up (`*.bak-20260602-js1`); scp'd `static/ms.js` + `index.html` (server bytes == local on both). Cloudflare purged; **live verification through CF:** `index.html` serves `ms.js?v=131`, the served `ms.js` no longer contains `updateTuppenceDisplay` (count 0), and the fix site reads `tuppence += credited;` → `updateTuppenceUI();`. `/health` ok v1.3.1; **smoke test 39/39** pre- and post-deploy.
+
+**Cost model impact:** none — frontend display-repaint rename only; no AI calls, pricing, concurrency, email-volume, or city-launch change.
+
+## Session 106 · 2 June 2026 · S3 DONE — API key moved off the `?api_key=` query param to `X-Api-Key` header only (Phase 2)
+
+With the KYC/vision crash-bug block (SCAN-1 -> SCAN-7) closed, Phase 2 resumes at its next ranked finding: **S3 (HIGH)**. The BEA accepted its single write key two ways on three seller-document endpoints — the `X-Api-Key` header *or* an `?api_key=` query parameter. A key in the query string lands in nginx and Cloudflare access logs and in browser history, so it was the weakest exposure surface for the platform's only write key. S3 removes the query path entirely; the key now travels only in the header.
+
+**The three endpoints** all sit on the seller-document (KYC) path and shared one dual-mode auth dependency, `auth.require_api_key_header_or_query`: `POST /users/{email}/documents` (upload), `GET /users/{email}/documents` (list), and `DELETE /users/{email}/documents/{doc_id}` (delete). Every other protected endpoint in the BEA already used the header-only `auth.require_api_key`; these three were the only exceptions.
+
+**Verified the CDN assumption first — the gate for the whole change.** The query fallback existed because of an assumption written into the dependency's own docstring: that "Cloudflare strips custom headers." That is exactly what S3 had to disprove before it was safe to remove the fallback, and it was disproven two independent ways: (1) the admin app (`marketsquare_admin.html`) has been calling all three of these same endpoints with the `X-Api-Key` header and **no** query param all along, in production, through Cloudflare — so the header demonstrably reaches the BEA; (2) a live request through `https://trustsquare.co` carrying only the header returned 200, no-auth returned 401, and a wrong key returned 401. The assumption is false; Cloudflare passes `X-Api-Key` through untouched.
+
+**Changes (surgical, three files).** `bea_main.py`: the three endpoint signatures switched from `Depends(auth.require_api_key_header_or_query)` to `Depends(auth.require_api_key)` — the only diff in the file is those three lines. `auth.py`: deleted the now-unused `require_api_key_header_or_query` function and its orphaned `Query` import, so the query-auth code path is gone entirely and cannot be re-attached by accident — this is the "remove the assumption" half of S3. `ms.js`: the buyer app was the only remaining `?api_key=` caller (three sites). The bare-`fetch` upload (line 7477) already sent the header, so only its URL needed trimming; the two `apiGet(...)` list calls (6983, 7485) relied solely on the query string because the shared `apiGet` helper sends no headers — added a small sibling helper `apiGetAuth(path)` that issues the same GET with the `X-Api-Key` header and pointed both calls at it. All edits applied via the Python `str.replace` driver (each old-string asserted to match exactly once), never the Edit/Write tool.
+
+**Verify + deploy.** Local: `ast.parse` clean (bea_main.py + auth.py), `node --check` clean (ms.js), and a diff of every edited file against the freshly-pulled server copy showed *only* the intended changes (no drift — the local working copy was byte-identical to the server on all four files). On the server, before restart: AST clean in the BEA venv; `auth.py` imports cleanly with a key present (header-only `require_api_key` retained; `header_or_query` and `Query` gone); and `main.py` imports cleanly under the live systemd unit environment (VAPID + DB init OK). Bumped the buyer-app cache-buster `ms.js?v=129 -> v=130` (ms.css unchanged at v=115) so returning visitors fetch the new ms.js rather than a cached copy that still used the query param. Server files backed up (`*.bak-20260602-s3`); scp'd `main.py`, `auth.py`, `static/ms.js`, `index.html` (server bytes == local on all four); BEA restarted **active**, `/health` ok v1.3.1 (localhost + public). **Live auth-mechanism test through Cloudflare:** GET with header -> 200, GET with `?api_key=` -> 401, GET no-auth -> 401; DELETE with header -> 404 (auth passed, doc absent), DELETE with `?api_key=` -> 401. Cloudflare purged; live buyer app now serves `ms.js?v=130`; **smoke test all-green** pre- and post-deploy.
+
+**Cost model impact:** none — authentication-mechanism change only; no new AI calls, no pricing, concurrency, email-volume, or city-launch change.
+
+## Session 105 · 1 June 2026 · SCAN-7 DONE — vision-draft `background_tasks` crash-fix (KYC/vision crash-bug block CLOSED)
+
+The audit's KYC/vision crash-bug block (SCAN-1 -> SCAN-7) is now fully closed; this session fixed the last one, SCAN-7.
+
+**SCAN-7 (HIGH - latent NameError -> HTTP 500).** `bea_main.py`'s `vision_draft` endpoint (`POST /listings/vision-draft`, the Photo-First AI Onboarding handler) called `background_tasks.add_task(_log_ai_spend, ...)` at line 9365, but `background_tasks` was never declared in the endpoint signature. Because every existing parameter carried a `File(...)`/`Form(...)` default, the route imported cleanly and the bug stayed latent - it would only throw at request time, *after* the Claude Vision call had already run, so the expensive draft was computed and then discarded by the 500 and its spend was never logged.
+
+**Fix.** Added `background_tasks: BackgroundTasks` as the **first** parameter of `vision_draft`. A no-default parameter must precede the defaulted ones (otherwise Python raises `SyntaxError`), so leading is the correct placement here; it also matches the existing convention in `create_listing` and `create_intro`. `BackgroundTasks` was already imported (line 1) and FastAPI injects it by type annotation regardless of position, so the previously-unguarded call site is now guaranteed to receive a real instance. The edit was a single surgical Python `str.replace` (old-string asserted unique), +39 bytes (501,792 -> 501,831), line endings preserved (LF-only), and a `diff` against the pre-edit copy showed exactly one inserted line.
+
+**Verify + deploy.** `ast.parse` clean locally and in the BEA venv on the server; AST introspection confirms the deployed `main.py`'s `vision_draft` now lists `background_tasks` first. Server file backed up to `main.py.bak-20260601-scan7`; `main.py` scp'd (server bytes == local); BEA restarted **active**, `/health` ok v1.3.1 (localhost + public); Cloudflare purged; **smoke 39/39** both pre- and post-deploy.
+
+**Minor finding (flagged, not actioned - one-item-per-run rule).** `ADMIN_KEY` is unset on the live server, so `POST /admin/purge-cache` and `POST /admin/refresh-pois/{listing_id}` currently accept unauthenticated requests (each handler enforces the key only `if ADMIN_KEY`). Low severity - cache purge / POI refresh only, no data exposure - but a mild origin-load vector worth gating. Logged in AUDIT_PROGRESS.md for triage.
+
+**Cost model impact:** none. The change adds a framework-injected parameter so the existing, already-billed vision-draft spend actually logs (it was being dropped on the crash); no new AI calls, no pricing or concurrency change. Cost-tracking accuracy improves if anything.
+
 ## Session 104 · 1 June 2026 · Tuppence Wallet UX overhaul + refund mechanism removed (FEA)
 
 David-requested redesign of the Tuppence Wallet screen (buyer app) — three fixes plus a policy correction, all front-end (`marketsquare.html` markup, `ms.js` logic, `ms.css` styles); no BEA change, no restart.
@@ -3239,35 +3279,24 @@ Smoke test: 30/30 ✅
 
 **Data fix:** cleared `nearby_pois` for listing 169 and re-fetched with the corrected code. New result: Schools (3), Universities (1 — STADIO Higher Education), Shopping (3), Hospitals (3), Police (3). UP - Groenkloof Campus does not appear in OSM as `amenity=university` — it's an OSM tagging gap, not a code issue.
 
-**FEA (`ms.js`):** `POI_META` already had `universities` and `police` entries — no change needed.
+**FEA (`ms.js`):** `POI_MET
+## Session 107b — 2026-06-02 · FEA home-page category grid (phone)
+Phone-only (<=480px) override: category grid 3-col->2-col with taller 3:2 tiles (was 2:1) for bigger, more tappable category blocks; laptop unchanged at 3-col. One CSS media query in ms.css (after .cat-tile:active), ms.css cache-buster v115->v116 in marketsquare.html. Both edits via the Python str.replace driver; braces balanced; HTML ends </html>. Deployed ms.css+index, Cloudflare purged. Cost model impact: none (CSS only).
 
-BEA deployed and restarted. Smoke test: 30/30 ✅
+## Session 107c — 2026-06-02 · Local Market home tile height parity (phone)
+Phone (<=480px): #lm-home-tile aspect-ratio 6/1 -> 3/1 !important so the full-width Local Market banner matches the 3:2 category tile height for a uniform grid; laptop unchanged. ms.css media-query edit + cache-buster v116->v117 in marketsquare.html, both via Python str.replace driver. Deployed + Cloudflare purged. Cost model impact: none (CSS only).
 
-## Session 91 — 2026-05-29
+## Session 107d — 2026-06-02 · Wonder-detail hero height + back-arrow contrast (systemic)
+wd-hero 240px -> 44vh (min280/max440) so more of the photo shows and text scrolls below. Fixed black-on-black back arrow: #wd-back-btn svg stroke #fff, PLUS a systemic rule .back-btn[style*="background:rgba(0,0,0"] svg{stroke:#fff} so any dark-scrim back button auto-gets a white arrow (stops the recurring issue). ms.css only + cache-bust v117->v118. Cost model impact: none.
 
-**Subscription tier redesign (5 tiers):** Replaced the old 2-tier (starter/premium) system with a 5-tier model: Free $0/2 slots · Standard $12/10 · Professional $20/25 · Business $40/60 · Elite $100/500. DB: added `slot_limit`, `pending_downgrade_tier`, `billing_period_end` columns to `users`; startup backfill sets slot_limit from existing seller_tier; superusers always get 500 slots. BEA: new `GET /subscription/tiers` endpoint; slot enforcement added at both publish paths (publish_listing + advert-agent/publish) with HTTP 402 on limit breach; `GET /users/{email}/subscription` returns full slot usage; `POST /users/{email}/seller-tier/downgrade-free` for self-service free downgrade; `PUT /users/{email}/seller-tier` updated to enforce slot guard + accept all 5 tier names. Downgrades: scheduled via `pending_downgrade_tier` + `billing_period_end`, applied by `_apply_pending_downgrades()` worker at every restart. Admin UI: `view-billing` panel rebuilt — current plan card with slot usage bar, colour-coded fill, pending downgrade notice, tier upgrade/downgrade cards, free downgrade button. Smoke test: 30/30 ✅.
+## Session 107e — 2026-06-02 · Wonder-detail bottom padding
+wd-sheet padding 20px -> 20px 20px 100px so the Back-to-listing button clears the fixed bottom nav (.bnav). ms.css only + cache-bust v118->v119. Cost model impact: none.
 
-Cost model impact: New tier prices ($12/$20/$40/$100/mo) replace old $5/$15 tiers. Update Cost_Breakdown_GlobalLaunch.xlsx subscription revenue assumptions.
+## Session 107f — 2026-06-02 · Wonder-detail navy strip fix
+Root cause of the dark band under the content: #screen-wonder-detail bg was var(--navy), peeking below the white .wd-sheet on short pages. Changed page bg to var(--surface) (matches the sheet) so it is seamless to the nav; trimmed wd-sheet bottom padding 100px -> 80px (still clears the fixed nav on long pages). ms.css only + cache-bust v119->v120. Cost model impact: none.
 
-## Session 94 — 2026-05-30 · AI Email Triage
+## Session 108 — 2026-06-02 · World Heritage image curation (all 332)
+Replaced hot-linked Wikimedia thumbs with self-hosted, optimised, royalty-free imagery for all 332 wonders. Pipeline: relevance-gated Pixabay (free Content License) primary -> Wikimedia (CC) fallback; downloaded server-side, optimised to <=1600px JPEG, hosted under /media/wonders, served via the BEA /wonders cache. Sources: 331 Pixabay-free + 1 Wikimedia-CC, ZERO paid, 0 errors. Per-image provenance captured: platform, source URL, image id, photographer, licence, acquisition date (2026-06-02). Originals preserved (photo_orig*) for one-click revert; 174 had high-res originals (gem_review flag). Relevance gate fixed a popularity-mismatch (Japan photo for Table Mountain); close-up de-preference biases wildlife parks toward scenery. Next: credit-on-cards (#18). Cost model impact: none (free image sources, server-side, no AI tokens in the picking).
 
-**Inbound email triage end-to-end.** Built the Cloudflare Email Worker → BEA Claude triage → optional Gmail SMTP reply system that was paused in Session 92/93 pending a Gmail App Password.
-
-**BEA (`bea_main.py`):**
-- New `email_triage` table (from/to/subject/body_preview/category/urgency/draft_reply/status/message_id/received_at) + two indexes, created in the schema init block.
-- `POST /email/inbound` — receives an inbound email from the CF worker, authenticated by a shared `X-Inbound-Secret` header (`EMAIL_INBOUND_SECRET`, stored in `/etc/environment`). Calls `_classify_email()` (Claude Haiku) which returns strict JSON `{category, urgency, draft_reply, auto_safe}`, persists the triage row, and conditionally auto-replies. AI spend logged via the Session 90 register (`_log_ai_spend(from_addr, "/email/inbound", "haiku")`).
-- `_classify_email()` system prompt enforces TrustSquare rules: never reveal seller identities, never promise refunds (Tuppence non-refundable), legal/compliance/disputes/ambiguous → `auto_safe=false`, spam → empty draft. Safe `other`/no-draft fallback on any failure — never raises.
-- `_smtp_send_reply()` — Gmail SMTP (smtp.gmail.com:587 STARTTLS) reply sender; threads via In-Reply-To/References. Returns False (never raises) when `GMAIL_APP_PASSWORD` unset.
-- **Conservative auto-send gate**: a reply is auto-sent only when ALL hold — `EMAIL_AUTO_SEND=1`, `GMAIL_APP_PASSWORD` present, model said `auto_safe`, category ∈ {support, billing}, and a non-empty draft exists. Default is draft-only: every email is classified and stored but nothing is sent. Spam → `skipped`.
-- `GET /admin/email-triage` (API-key gated) — paginated recent triage rows + 30-day category counts for the ops dashboard.
-
-**Cloudflare Email Worker (`cloudflare_email_worker/`):** new folder with `src/worker.js` (postal-mime parse → POST to BEA with the secret; forwards a copy to the human inbox as a safety net; never throws so mail is never bounced), `wrangler.toml`, `package.json`, README with deploy + secret steps, `.gitignore`.
-
-**Verified live:** support email → drafted (anonymity-safe explanation of introductions/Tuppence), spam → skipped (no draft), legal "cease and desist" → drafted + high urgency, never auto-sent. Bad secret → 401. Both routes live in OpenAPI. Smoke test 30/30 ✅.
-
-**Generated `EMAIL_INBOUND_SECRET`** added to server `/etc/environment` and BEA restarted. The same value must be set as a Wrangler secret on the worker (value handed to David below).
-
-Cost model impact: AI email triage adds ~$0.0023 (Haiku) per inbound email classified. At low inbound volume (<100/mo pre-launch) this is negligible (<$0.25/mo). Auto-send is OFF, so no SMTP send volume yet.
-
-**For David:**
-1. Deploy the worker: `cd cloudflare_email_worker; npm install; npx wrangler login; npx wra
+## Session 108b — 2026-06-02 · Wonder images re-run (accuracy + de-dup)
+Re-ran curation with a stricter relevance gate (site NAME must appear in photo tags - removed the loose country-only match that put SA zebras on Robben Island etc.) + cross-wonder de-duplication (no image reused). Result: 331 ok, ALL 332 photos unique, 298 name-matched Pixabay + 33 site-accurate Wikimedia fallback, 1 error (kept prior). Fixes the duplicate zebras/gorilla/water-carriers and wrong-subject mismatches David caught. Originals still preserved (photo_orig*). Provenance retained. Also scheduled a weekly READ-ONLY Wikidata data-integrity audit (trustsquare-wonder-data-audit) - surfaced many duplicate ENTRIES in wonders.json to clean. Cost model impact: none.

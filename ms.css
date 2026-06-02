@@ -65,6 +65,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 12px 2px;}
 .cat-tile{border-radius:var(--r);overflow:hidden;aspect-ratio:2/1;position:relative;cursor:pointer;transition:transform var(--t);}
 .cat-tile:active{transform:scale(.97);}
+/* phone: 2-col category grid, taller 3:2 tiles (laptop unchanged at 3-col) */
+@media (max-width:480px){.cat-grid{grid-template-columns:1fr 1fr;}.cat-tile{aspect-ratio:3/2;}#lm-home-tile{aspect-ratio:3/1!important;}}
 .cat-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;}
 .cat-bg img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
 .cat-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px;}
@@ -139,7 +141,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wonder-card-type{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
 .wonder-card-name{font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:2px;}
 .wonder-card-country{font-size:10px;color:rgba(255,255,255,.4);}
-#screen-wonder-detail{background:var(--navy);}
+#screen-wonder-detail{background:var(--surface);}
 
 /* ── Property POI Strip ───────────────────────────────────── */
 .poi-strip-wrap{margin:0 0 18px 0;}
@@ -163,8 +165,12 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .wd-photo-credit{position:absolute;bottom:26px;right:8px;background:rgba(0,0,0,0.52);color:rgba(255,255,255,0.85);font-size:10px;padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:4px;z-index:5;pointer-events:auto;}
 .wd-photo-credit a{color:rgba(255,255,255,0.72);text-decoration:none;border-bottom:0.5px solid rgba(255,255,255,0.35);}
 .wd-photo-credit a:hover{color:#fff;}
-.wd-hero{width:100%;height:240px;object-fit:cover;display:block;}
-.wd-sheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px;position:relative;z-index:2;}
+.wd-hero{width:100%;height:44vh;min-height:280px;max-height:440px;object-fit:cover;display:block;}
+/* over-photo back arrow must be white (wonder detail) */
+#wd-back-btn svg{stroke:#fff;}
+/* systemic: ANY back-btn on a dark scrim gets a white arrow (stops black-on-black recurrence) */
+.back-btn[style*="background:rgba(0,0,0"] svg{stroke:#fff !important;}
+.wd-sheet{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-18px;padding:20px 20px 80px;position:relative;z-index:2;}
 .wd-type-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
 .wd-type-np{background:rgba(16,185,129,.15);color:#10b981;}
 .wf-chip{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:all .15s;}

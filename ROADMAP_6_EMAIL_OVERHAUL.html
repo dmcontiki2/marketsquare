@@ -1,0 +1,284 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Email Overhaul · TrustSquare</title><style>
+  :root{--navy:#15314e;--navy2:#1d3f63;--accent:#2f6fb0;--ink:#1f2937;--meta:#6b7280;
+    --line:#d8dee6;--bg:#fff;--soft:#f4f6f9;--green:#1e8a4c;--greenbg:#e6f4ea;
+    --blue:#2563eb;--bluebg:#e6effd;--amber:#b07d12;--amberbg:#fbf2dd;--grey:#5b6b7e;--greybg:#eef1f4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .page{max-width:880px;margin:0 auto;padding:42px 40px 80px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h1{font-size:30px;font-weight:800;color:var(--navy);margin:0 0 14px;letter-spacing:-.3px;line-height:1.2}
+  h2{font-size:21px;font-weight:800;color:var(--navy);margin:34px 0 4px;letter-spacing:-.2px;border-bottom:2px solid var(--soft);padding-bottom:5px}
+  h3{font-size:16px;font-weight:700;color:var(--navy2);margin:22px 0 4px}
+  h4{font-size:14px;font-weight:700;color:var(--navy2);margin:16px 0 4px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none}
+  strong{color:#142a44}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:700;font-size:12.5px}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:var(--soft)}
+  code{background:#eef1f4;border:1px solid #e1e6ec;border-radius:4px;padding:1px 6px;font-size:12.5px;color:#334155;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#0f1b2d;color:#e6edf6;padding:14px 16px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.5}
+  pre code{background:none;border:0;color:inherit;padding:0}
+  blockquote{border-left:4px solid var(--accent);background:var(--soft);margin:12px 0;padding:10px 16px;border-radius:0 8px 8px 0;color:#374151}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .p-green{background:var(--greenbg);color:var(--green)}
+  .p-blue{background:var(--bluebg);color:var(--blue)}
+  .p-amber{background:var(--amberbg);color:var(--amber)}
+  .p-grey{background:var(--greybg);color:var(--grey)}
+  @media print{body{font-size:12px}.page{padding:0}}
+</style></head><body><div class="page"><div class="eyebrow">TrustSquare · Roadmap</div><h1>ROADMAP #6 — TrustSquare Outreach Email Overhaul</h1>
+<p><strong>Author:</strong> Lifecycle-email design + copy pass
+<strong>Date:</strong> 2026-06-02
+<strong>Status:</strong> PLANNING + 1 refreshed draft (<code>property_outreach_v2.html</code>). Nothing sent, deployed, or committed.
+<strong>Scope:</strong> 9 templates in <code>n8n/email_templates/</code> — 7 <code>*_outreach</code> (cold seller acquisition) + 2 lifecycle (<code>intro_accepted</code>, <code>intro_declined</code>).</p>
+<blockquote>
+<p><strong>DEPENDENCY — READ FIRST.</strong> These emails are the brand's first impression and must mirror the live app. They therefore <strong>inherit the home-page design direction from Roadmap #1 (home-page redesign).</strong> Do not mass-produce the other 8 templates until #1 locks the refreshed palette, type scale, hero treatment, and the canonical listing-card / trust-badge look. The single <code>property_outreach_v2.html</code> draft in this batch is built against the <strong>current</strong> <code>ms.css</code> tokens so it is shippable today and doubles as the reference skin once #1 is signed off. If #1 changes a token, only the shared header block (below) needs re-touching, not nine bespoke layouts.</p>
+</blockquote>
+<hr />
+<h2>A · Audit — 9 templates vs. current branding &amp; product model</h2>
+<h3>A.1 The headline problem: the emails predate the rebrand and the current design system</h3>
+<p>All seven <code>*_outreach</code> templates are dated April and were written <strong>before</strong> the <code>trustsquare.co</code> rebrand and before the current <code>ms.css</code> design system existed. They are internally consistent with each other but <strong>diverged from the live app</strong>. Concretely:</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Emails (April)</th>
+<th>Live app (<code>ms.css</code> / <code>ms.js</code>, Jun 2026)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary navy</td>
+<td><code>#1a1a2e</code> (indigo-black)</td>
+<td><code>--navy:#111827</code> (true slate-black)</td>
+<td><strong>Drift</strong> — warmer/bluer than current</td>
+</tr>
+<tr>
+<td>Action / accent</td>
+<td><code>#d4a853</code> warm gold on <strong>everything</strong> (CTA buttons, headers, prices)</td>
+<td><code>--accent:#1e3a5f</code> steel-blue is the primary action colour; CTA buttons in-app are <code>var(--accent)</code> blue, <strong>not</strong> gold</td>
+<td><strong>Wrong</strong> — gold is now a <em>tier</em> signal, not the brand action colour</td>
+</tr>
+<tr>
+<td>Gold's real role</td>
+<td>Generic brand colour</td>
+<td>Reserved: <code>--gold:#92400e</code>/bg <code>#fef3c7</code> = <strong>Highly Trusted</strong> badge tier + dark-hero eyebrow (<code>rgba(200,135,58)</code>) only</td>
+<td><strong>Misused</strong> — over-applied gold cheapens the "Highly Trusted" signal</td>
+</tr>
+<tr>
+<td>Fonts</td>
+<td>System stack only (<code>-apple-system…</code>)</td>
+<td><strong>Syne</strong> 700/800 (headings) + <strong>Inter</strong> 300–700 (body), loaded from Google Fonts</td>
+<td><strong>Missing</strong> — no brand type at all</td>
+</tr>
+<tr>
+<td>Trust badge</td>
+<td>Hand-coded chips: "✓ Trusted", "★ Established", "⭐ Highly Trusted" with <strong>ad-hoc colours</strong> (<code>#2a7a2a</code>, <code>#2a4aaa</code>, <code>#8a6000</code>) and inconsistent label↔colour mapping</td>
+<td>Single source of truth <code>trustTier(s)</code> → <code>tbadge(s)</code> renders <code>★ {score}</code> with fixed tiers (see C.2)</td>
+<td><strong>Inconsistent</strong> — labels, colours, and the score-number convention don't match the app</td>
+</tr>
+<tr>
+<td>Card chrome</td>
+<td>"Phone mockup" (notch bar, <code>9:41 ●●●●○ WiFi</code> status bar)</td>
+<td>Real cards are flat <code>.lcard</code> tiles, no phone frame</td>
+<td><strong>Dated</strong> — skeuomorphic phone frame is 2019-era; app itself doesn't show one</td>
+</tr>
+<tr>
+<td>CTA verb</td>
+<td>"Request Introduction · 1T" (correct concept)</td>
+<td>In-app primary is "Request Introduction" + cost pill</td>
+<td><strong>OK concept</strong>, wrong colour token</td>
+</tr>
+</tbody>
+</table>
+<h3>A.2 What's actually GOOD and must be preserved</h3>
+<p>The April templates are not a teardown job. Keep:
+- <strong>The send-gated, magic-link flow.</strong> <code>?magic=…</code> → personalised pre-filled draft → "you sign on when you accept your listing." This matches the live onboarding funnel (<code>#screen-guided-onboard</code>) and the "account created at accept" rule. Do not touch the mechanic.
+- <strong>The "no commission / pay-to-introduce filters tyre-kickers / you stay anonymous until you accept" three-pillar argument.</strong> It is on-model and Codex-aligned.
+- <strong>The "✏️ A quick draft for {{first_name}}" personalised-card block.</strong> This is the single strongest conversion device in the set — it shows the prospect their <em>own</em> listing already half-built. Keep it; just reskin it to the real card.
+- <strong>Per-vertical hero gradients</strong> (property=navy/blue, collectors=oxblood, adventures=green, accommodation=amber, services=steel, tutors=teal). A vertical accent stripe is fine <strong>as long as</strong> the brand navy + the real CTA colour + the real trust badge stay consistent across all of them. Vertical colour = flavour; brand colour = constant.
+- <strong>POPIA-adjacent footer honesty</strong> ("you're receiving this because your … appears in {{city}}'s public records") + unsubscribe. Legally load-bearing for cold B2B outreach. Keep and standardise wording.</p>
+<h3>A.3 Product-model accuracy check (against CLAUDE.md + memory)</h3>
+<ul>
+<li>✅ <strong>Tuppence = USD $2, 1T per accepted introduction, charged on accept only.</strong> <code>intro_declined</code> correctly states "No Tuppence was charged." Consistent with the no-refunds rule (memory: Tuppence non-refundable) — keep that framing; never imply refundability anywhere.</li>
+<li>✅ <strong>AI Listing Coach = "1 Tuppence for 8 coaching sessions."</strong> Consistent across templates. Leave the pricing as a variable-friendly phrase so a cost-model change is a one-string edit, not a nine-file hunt.</li>
+<li>⚠️ <strong>"USD $2" hard-coded.</strong> Fine for now, but flag: if the cost model changes the Tuppence price, every outreach template needs it. <strong>Recommendation:</strong> template it as <code>{{intro_fee_display}}</code> (default "1 Tuppence (~USD $2)") in v2 so n8n injects one value. (Not done in this draft beyond the property file — noted as a batch task.)</li>
+<li>⚠️ <strong>Legal entity / footer.</strong> The two <em>lifecycle</em> emails already carry the correct full footer: <code>Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Pretoria, South Africa</code>. The seven <em>outreach</em> emails carry only "TrustSquare · trustsquare.co". <strong>Standardise all nine on the lifecycle footer</strong> (reg number is required for commercial email; matches memory's legal-entity record).</li>
+<li>⚠️ <strong>Launch city.</strong> Templates are <code>{{city_name}}</code>-driven (good, geo-portable per scale-shape invariant #5). Current launch city is <strong>Pretoria</strong> — sample suburbs in mockups (Waterkloof, Centurion, Pretoria East) are correct. Keep city as a variable; never hard-code.</li>
+</ul>
+<h3>A.4 Per-template one-liners</h3>
+<ol>
+<li><strong>property_outreach.html</strong> — Strongest of the set. Reskin to current tokens (done → v2). Reference template for the batch.</li>
+<li><strong>collectors_outreach.html</strong> — Oxblood hero is striking; "POA/ENF/Firm" price tags are a nice collector-authentic touch — preserve. Highest-value vertical → lean hardest into discretion + the Highly-Trusted (gold) badge here.</li>
+<li><strong>adventures_experiences_outreach.html</strong> — Good "ready to book" angle. Update FGASA/PADI credential chips to real trust-badge component.</li>
+<li><strong>adventures_accommodation_outreach.html</strong> — The OTA-commission maths callout ("Airbnb takes ~R460…") is the best single persuasion block in the whole set. Keep verbatim, reskin frame.</li>
+<li><strong>services_technical_outreach.html</strong> — Call-out-fee + hourly-rate split is correct and useful. Keep.</li>
+<li><strong>services_casuals_outreach.html</strong> — (not re-read in full; same family) — align to Casuals = Queue model badge (<code>👥 Queue</code>) vs Technical = Commit, per <code>ms.js</code> model-badge logic. Flag for the batch.</li>
+<li><strong>tutors_outreach.html</strong> — "online or in-person" + subject list good. Reskin.</li>
+<li><strong>intro_accepted.html</strong> — Already on rebrand footer + correct Tuppence-deduct copy. Lightest touch: swap gold CTA→accent-blue, add Syne/Inter, embed the real accepted-listing card (live visual) instead of the plain text <code>.listing-card</code> strip.</li>
+<li><strong>intro_declined.html</strong> — Already empathetic + "no charge" correct. Same light touch: type + colour + show 2–3 <em>alternative</em> live cards in the same category (re-engagement) instead of a flat tip list.</li>
+</ol>
+<hr />
+<h2>B · Embedding LIVE APP VISUALS inside the emails</h2>
+<p>David's ask: <em>"the app's visual pages inside the email."</em> The strategy is to render <strong>faithful, hand-built HTML/table reproductions</strong> of three app surfaces — not screenshots, not the live DOM (email clients run no JS and won't load the SPA). Each is a static, inline-styled twin of the real component, so the inbox looks like the app.</p>
+<h3>B.1 Three reusable visual blocks</h3>
+<ol>
+<li><strong>Listing card</strong> (<code>.lcard</code> twin) — image (or emoji/solid fallback), category eyebrow, title, <code>📍 area</code>, price (<code>formatZAR</code>-style "R 3,200,000"), and the <strong>real trust badge</strong> <code>★ {score}</code> in tier colour. This is the hero visual in <code>property_outreach_v2.html</code>.</li>
+<li><strong>Trust badge</strong> (<code>tbadge</code> twin) — standalone, reused inside the card and callable on its own in lifecycle emails. Exact tier mapping in C.2.</li>
+<li><strong>Marketplace strip</strong> — a horizontal row of 3 mini listing cards = the "Other listings in {{city}}" social-proof band. Replaces the dated phone-mockup frames with flat cards that match the live <code>.lgrid</code>.</li>
+</ol>
+<h3>B.2 Render-faithfully rules</h3>
+<ul>
+<li><strong>Build from the component source, not by eye.</strong> Colours, the <code>★ {score}</code> convention, tier thresholds, and the "Request Introduction · 1T" CTA come straight from <code>ms.js</code> (<code>trustTier</code>, <code>tbadge</code>, the <code>.lcard</code> template at ms.js:2339). When #1 restyles the card, update these twins from the same source in lockstep.</li>
+<li><strong>Tables + inline CSS only</strong> (see D). No flex/grid in the visual blocks — Outlook ignores them. The marketplace strip is a single <code>&lt;tr&gt;</code> of <code>&lt;td width="33%"&gt;</code> cells.</li>
+<li><strong>Image with graceful fallback (3 layers):</strong>
+  1. Real photo via <code>background-image</code> <strong>and</strong> an <code>&lt;img&gt;</code> with <code>alt</code>.
+  2. If images are off/blocked: a solid <code>bgcolor</code> (the category colour) carries the card so text + badge still read.
+  3. <code>alt</code> text states the listing ("4-bed family home, Pretoria East") so screen-readers + image-off inboxes still get the offer.</li>
+<li><strong>Personalised card uses the prospect's own data</strong> (<code>{{prospect_listing_title}}</code>, <code>{{prospect_suburb}}</code>) on a "New Seller" badge (score shown as the New/grey tier, since a brand-new seller starts pre-trust). The 3-up strip uses generic-but-realistic neighbours with varied tiers (Established/Trusted/Highly Trusted) to show the ladder a seller can climb.</li>
+<li><strong>No phone frame.</strong> Drop the notch + <code>9:41 WiFi</code> chrome. Show the flat card exactly as the app renders it. (This is the single biggest "looks like 2025 not 2019" upgrade.)</li>
+</ul>
+<h3>B.3 Image hosting</h3>
+<p>Mockup photos currently hot-link Unsplash with sizing params — fine for deliverability (HTTPS, cached). <strong>Scale-shape invariant #4 (media is a URL):</strong> keep all email imagery as hosted URLs (R2/Cloudflare or Unsplash), never inline base64 (bloats the email, trips spam filters). When real listing photos exist, point the strip at R2 URLs.</p>
+<hr />
+<h2>C · Authoritative design tokens (the shared "email skin")</h2>
+<blockquote>
+<p>Build one shared header/footer/badge partial; every vertical imports it. This is what makes #1's output a one-place change.</p>
+</blockquote>
+<h3>C.1 Palette (from <code>ms.css :root</code>, current)</h3>
+<pre><code>--navy     #111827   header bar, footer-on-dark, hero base
+--accent   #1e3a5f   PRIMARY ACTION (CTA buttons, links, card CTA) — steel blue, NOT gold
+--bg       #f4f5f7   email body background
+--surface  #ffffff   card / wrapper background
+--border   #e2e5ea   hairlines
+--text     #111827 / --text-2 #4b5563 / --text-3 #555f6e
+Eyebrow/dark-hero gold accent: rgba(200,135,58,.85)  (#C8873A) — sparingly, on dark only
+</code></pre>
+<p>Per-vertical hero gradient stays as flavour, but the <strong>CTA button is always <code>--accent</code> blue</strong> and the <strong>header bar is always <code>--navy</code></strong>, across all nine.</p>
+<h3>C.2 Trust badge — single source of truth (<code>trustTier</code> @ ms.js:815)</h3>
+<p>Render as <code>★ {score}</code> in a rounded chip, <code>background:{bg}; color:{c}</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Score</th>
+<th>Label</th>
+<th>Text colour</th>
+<th>Chip bg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt; 40</code></td>
+<td>New</td>
+<td><code>#6b7280</code> (grey)</td>
+<td><code>#f3f4f6</code></td>
+</tr>
+<tr>
+<td><code>40–69</code></td>
+<td>Established</td>
+<td><code>--blue #1d4ed8</code></td>
+<td><code>--blue-bg #dbeafe</code></td>
+</tr>
+<tr>
+<td><code>70–89</code></td>
+<td>Trusted</td>
+<td><code>--green #065f46</code></td>
+<td><code>--green-bg #d1fae5</code></td>
+</tr>
+<tr>
+<td><code>≥ 90</code></td>
+<td>Highly Trusted</td>
+<td><code>--gold #92400e</code></td>
+<td><code>--gold-bg #fef3c7</code></td>
+</tr>
+</tbody>
+</table>
+<p>(Note: <code>ms.js</code> has a <em>second</em> tier function ~line 6330 using <code>#16a34a</code>/<code>#2563eb</code>/<code>#C8873A</code> for a different surface. For the <strong>card badge twin</strong>, use the <code>tbadge()</code> CSS-var set above — that is what renders on <code>.lcard</code>.) Emails must hard-code the hex (no CSS vars in email) but the values come from here.</p>
+<h3>C.3 Type</h3>
+<ul>
+<li>Headings: <code>'Syne', sans-serif</code> 700/800. Body: <code>'Inter', sans-serif</code>.</li>
+<li>Load via <code>&lt;link&gt;</code> in <code>&lt;head&gt;</code> <strong>and</strong> name them in a <code>font-family</code> stack with a system fallback (<code>'Syne', 'Segoe UI', Arial, sans-serif</code>) — many clients ignore web fonts; the fallback must look intentional.</li>
+</ul>
+<hr />
+<h2>D · Email-client-safe constraints (hard rules for the batch)</h2>
+<ol>
+<li><strong>Table-based layout.</strong> Outer 600px <code>&lt;table&gt;</code> wrapper; all multi-column rows (the 3-up strip, feature lists) are <code>&lt;table&gt;&lt;tr&gt;&lt;td&gt;</code>. No CSS <code>display:flex</code> / <code>grid</code> for structural layout — Outlook (Word engine) drops them. (The current April templates already do this for the mockups; extend it to the feature rows that currently use <code>display:flex</code>.)</li>
+<li><strong>Inline CSS on every element.</strong> A <code>&lt;style&gt;</code> block in <code>&lt;head&gt;</code> is fine for progressive enhancement (and the <code>.class</code> styles the April files use will work in most modern clients), <strong>but</strong> every visually-critical rule (bg colour, padding, font, the badge colours) must <strong>also</strong> be inline so it survives Gmail/Outlook stripping <code>&lt;head&gt;</code>. The visual blocks (B.1) are already fully inline — keep that discipline.</li>
+<li><strong>No JavaScript, no <code>&lt;form&gt;</code>, no external CSS file.</strong> CTAs are bulletproof <code>&lt;a&gt;</code> buttons (padded <code>&lt;a&gt;</code> with bg colour; for Outlook robustness, a VML roundrect comment is optional but recommended for the primary CTA).</li>
+<li><strong>No web-font dependency for legibility.</strong> See C.3 — always a system fallback.</li>
+<li><strong>Dark-mode fallback.</strong>
+   - Don't rely on pure-white card backgrounds being preserved — some clients invert. Give cards an explicit <code>bgcolor="#ffffff"</code> on the <code>&lt;td&gt;</code> (attribute, not just CSS) so inversion is predictable.
+   - Avoid pure-black text on transparent; use the explicit <code>--text</code> hex so dark-mode auto-contrast behaves.
+   - The navy header (<code>#111827</code>) already reads in both modes — keep dark UI elements genuinely dark so they don't get force-lightened oddly.</li>
+<li><strong>Image-off fallback (B.2).</strong> Every image has <code>alt</code>; every image-bearing cell has a solid <code>bgcolor</code> underneath; the offer never depends on an image loading. CTA is never an image.</li>
+<li><strong>Width + mobile.</strong> 600px max wrapper; single-column body; the 3-up strip uses <code>width="33%"</code> cells that gracefully narrow. <code>&lt;meta name="viewport"&gt;</code> present. Min tap target 44px on the CTA.</li>
+<li><strong>Preheader.</strong> Add a hidden preheader span (first ~90 chars shown in inbox preview) — currently missing on all nine. e.g. <em>"No commission, ever. List anonymously in {{city_name}} — buyers pay to reach you."</em></li>
+<li><strong>Plain-text part.</strong> n8n should send a <code>text/plain</code> alternative (deliverability + accessibility). Note for the n8n workflow owner; not an HTML concern.</li>
+<li><strong>Spam-hygiene.</strong> Real reg-number footer, working unsubscribe, no all-caps subject, balanced text:image ratio (the flat-card strip is mostly live HTML text, which helps).</li>
+</ol>
+<hr />
+<h2>E · Agent-targeted messaging angles — the three priority verticals</h2>
+<p>The cold-outreach insight: we are emailing <strong>professionals who already do this for a living</strong> (estate agents, travel agents, collection dealers). The generic "list your stuff" framing under-sells. Each needs a tailored wedge that respects their existing business and positions TrustSquare as <em>additional, commission-free, anonymous demand</em> — not a replacement for their livelihood.</p>
+<h3>E.1 Estate agents (→ <code>property_outreach_v2.html</code>, this batch)</h3>
+<ul>
+<li><strong>Wedge:</strong> "A second pipeline that costs you nothing per deal." Agents live on commission; lead-gen portals (Property24, Private Property) charge listing fees and flood them with tyre-kickers. TrustSquare flips it: <strong>buyers pay to reach you</strong>, you stay anonymous until you accept, and <strong>TrustSquare never takes a cut of the sale or rental</strong> — only the buyer's intro fee.</li>
+<li><strong>Reframe anonymity for a pro:</strong> not "hide your identity" (an agent <em>wants</em> to be known) but <strong>"qualify before you reveal"</strong> — you don't burn your number on a casual browser; the intro fee pre-filters. Anonymity = lead-quality filter, not secrecy.</li>
+<li><strong>Proof device:</strong> the embedded live listing card showing a Pretoria property with a <strong>Trusted/Highly-Trusted</strong> badge — signals "this is where serious buyers already are."</li>
+<li><strong>CTA:</strong> "List a Property in {{city_name}}" — and note an agent can list <strong>multiple</strong> properties (their whole roll), each a separate magic-link listing.</li>
+<li><strong>Tone:</strong> peer-to-peer, commercially literate, ROI-first. Avoid consumer hand-holding.</li>
+</ul>
+<h3>E.2 Travel agents (→ batch; touches <code>adventures_experiences</code> + <code>adventures_accommodation</code>)</h3>
+<ul>
+<li><strong>Wedge:</strong> "Direct bookings, zero OTA commission." Travel agents and the operators they represent bleed 15–25% to Booking.com / Airbnb / Viator. TrustSquare = <strong>commission-free direct demand</strong>; the agent keeps the full margin and the client relationship.</li>
+<li><strong>Reframe:</strong> for an agent who packages experiences/stays, TrustSquare is a <strong>commission-free distribution channel</strong> they can list their portfolio on — each experience or property a listing, each enquiry pre-paid and serious (no time-wasting "just checking availability" floods).</li>
+<li><strong>Proof device:</strong> keep the accommodation OTA-maths callout ("On a R2,000/night booking: Airbnb takes ~R460… TrustSquare takes a once-off intro fee") — it is devastatingly concrete for this audience. Pair with a live "Stays" card carrying a trust badge.</li>
+<li><strong>CTA:</strong> "List Your Experiences / Stays in {{city_name}}" — multi-listing framing again.</li>
+<li><strong>Tone:</strong> margin-protection, "own your guest relationship," anti-platform-dependency.</li>
+</ul>
+<h3>E.3 Collection dealers / shops (→ batch; <code>collectors_outreach</code>)</h3>
+<ul>
+<li><strong>Wedge:</strong> "Move high-value stock discreetly, without auction commission or a public price." Dealers hate two things: auction-house buyer's+seller's premiums (often 25%+ combined) and <strong>publicly visible asking prices / unsold-lot stigma.</strong> TrustSquare gives a <strong>private, no-public-bidding</strong> channel where price and identity stay hidden until a serious, pre-paid buyer is introduced.</li>
+<li><strong>Reframe anonymity for a dealer:</strong> discretion is a <em>feature they already sell</em> to their own clients. TrustSquare extends it — <strong>"no public price, no failed-auction record, no premium."</strong> The intro fee guarantees the enquirer is a real buyer, not a rival dealer fishing for your inventory/pricing.</li>
+<li><strong>Proof device:</strong> lean hardest into the <strong>gold "Highly Trusted" badge</strong> here — for high-value items, the trust tier <em>is</em> the product. Show a collectors card (e.g. a watch or coin lot) with <code>★ 92</code> gold badge + "Provenance" cue.</li>
+<li><strong>CTA:</strong> "List an Item in {{city_name}}" + multi-listing (dealers have stock, not one item).</li>
+<li><strong>Tone:</strong> discreet, connoisseur-literate, premium. No emoji-heavy consumer voice; restraint signals seriousness to this audience.</li>
+</ul>
+<h3>E.4 Cross-vertical copy spine (shared across all three)</h3>
+<ol>
+<li><strong>Hook:</strong> name their pain in their language (commission / tyre-kickers / public price).</li>
+<li><strong>Mechanic in one line:</strong> buyer pays a small intro fee to reach you → you stay private → you accept only who you want → TrustSquare never touches your deal.</li>
+<li><strong>Live proof:</strong> the embedded card + trust badge (the app, in the inbox).</li>
+<li><strong>Founding-seller urgency:</strong> first sellers in {{city}} are featured first + free to list.</li>
+<li><strong>Send-gated CTA:</strong> magic link → pre-filled draft → sign on only at accept.</li>
+</ol>
+<hr />
+<h2>F · Execution plan &amp; sequencing</h2>
+<p><strong>Phase 0 — BLOCKED ON #1.</strong> Lock the home-page redesign (palette / type / card look). The tokens in §C are the <em>current</em> system and what <code>property_outreach_v2.html</code> is built on; if #1 evolves them, update §C + the shared partial first.</p>
+<p><strong>Phase 1 — Reference draft (THIS BATCH, done).</strong>
+- <code>property_outreach_v2.html</code>: current tokens, embedded live listing-card + trust-badge, 3-up marketplace strip (flat cards, no phone frame), agent-tailored copy (§E.1), preheader, rebrand footer with reg number, all client-safe per §D. Send-gated CTA unchanged.</p>
+<p><strong>Phase 2 — Build the shared partial, then re-skin the other 6 outreach templates</strong> (collectors, experiences, accommodation, services-technical, services-casuals, tutors) from the property v2 reference:
+- Swap legacy <code>#1a1a2e</code>/<code>#d4a853</code> → §C tokens (navy header + accent-blue CTA + correct tier badge).
+- Add Syne/Inter + preheader + standard reg-number footer.
+- Replace phone-mockups with the flat marketplace strip.
+- Apply the per-vertical messaging wedge (§E.2, §E.3) — collectors → gold-tier lean; travel → OTA-maths; services → keep call-out/rate + correct Commit/Queue model badge.
+- Template <code>{{intro_fee_display}}</code> so a cost-model change is one variable.</p>
+<p><strong>Phase 3 — Re-skin the 2 lifecycle templates</strong> (<code>intro_accepted</code>, <code>intro_declined</code>):
+- Lightest touch (already on rebrand footer + correct Tuppence copy). Type + colour only, <strong>plus</strong> embed the real listing card: accepted → show the accepted listing as a live card; declined → show 2–3 <em>alternative</em> same-category live cards for re-engagement (replacing the flat tip list).</p>
+<p><strong>Phase 4 — QA matrix.</strong> Render-test all nine in Gmail (web/iOS/Android), Apple Mail, Outlook (Windows/web), dark mode, and images-off. Verify: CTA is accent-blue everywhere; trust badges match §C; no broken layout in Outlook; preheader correct; unsubscribe + reg footer present; offer survives images-off.</p>
+<p><strong>Phase 5 — n8n wiring (workflow owner, not HTML):</strong> plain-text alternative part; <code>{{intro_fee_display}}</code> injection; per-vertical → per-template routing already exists.</p>
+<h3>Deliverables in THIS batch</h3>
+<ol>
+<li><code>ROADMAP_6_EMAIL_OVERHAUL.md</code> (this file).</li>
+<li><code>property_outreach_v2.html</code> (the reference draft).</li>
+</ol>
+<h3>Flags / assumptions</h3>
+<ul>
+<li>§C tokens are the <strong>current</strong> system; they are the dependency hand-off point with #1. Built v2 on them so it ships even if #1 slips.</li>
+<li>Did not re-read <code>services_casuals_outreach.html</code> in full (same April family); its one model-specific note (Casuals = Queue badge) is captured for Phase 2.</li>
+<li>"USD $2" left literal in v2's prose for now; <code>{{intro_fee_display}}</code> templating is a Phase-2 batch task to avoid a nine-file edit later.</li>
+</ul></div></body></html>

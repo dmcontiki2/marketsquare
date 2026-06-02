@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>TrustSquare — Master Roadmap</title>
+<style>
+  :root{
+    --navy:#15314e; --navy2:#1d3f63; --accent:#2f6fb0;
+    --ink:#1f2937; --meta:#6b7280; --line:#d8dee6; --bg:#ffffff; --soft:#f4f6f9;
+    --green:#1e8a4c; --greenbg:#e6f4ea; --blue:#2563eb; --bluebg:#e6effd;
+    --amber:#b07d12; --amberbg:#fbf2dd; --grey:#5b6b7e; --greybg:#eef1f4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .page{max-width:880px;margin:0 auto;padding:46px 40px 80px}
+  h1{font-size:34px;font-weight:800;color:var(--navy);margin:0;letter-spacing:-.3px}
+  .subtitle{font-size:19px;font-weight:700;color:var(--accent);margin:6px 0 4px}
+  .meta{font-size:13px;color:var(--meta);font-style:italic;margin:0 0 8px}
+  h2{font-size:21px;font-weight:800;color:var(--navy);margin:38px 0 6px;letter-spacing:-.2px}
+  h2 .em{color:var(--accent)}
+  .rule{height:3px;background:linear-gradient(90deg,var(--accent),transparent);border:0;margin:4px 0 16px;width:90px;border-radius:2px}
+  p{margin:10px 0}
+  .lead{color:#374151}
+  table{border-collapse:collapse;width:100%;margin:14px 0 6px;font-size:13.5px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:700;font-size:13px}
+  th:first-child{border-top-left-radius:8px} th:last-child{border-top-right-radius:8px}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:var(--soft)}
+  td .id{font-weight:800;color:var(--navy)}
+  code{background:#eef1f4;border:1px solid #e1e6ec;border-radius:4px;padding:1px 6px;font-size:12.5px;color:#334155;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .pill{display:inline-block;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .p-green{background:var(--greenbg);color:var(--green)}
+  .p-blue{background:var(--bluebg);color:var(--blue)}
+  .p-amber{background:var(--amberbg);color:var(--amber)}
+  .p-grey{background:var(--greybg);color:var(--grey)}
+  .tag{font-weight:800}
+  .t-green{color:var(--green)} .t-blue{color:var(--blue)} .t-amber{color:var(--amber)} .t-navy{color:var(--navy)}
+  .callout{border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+  .callout.warn{border-left-color:var(--amber);background:var(--amberbg)}
+  .callout.good{border-left-color:var(--green);background:var(--greenbg)}
+  ol,ul{margin:10px 0;padding-left:22px} li{margin:6px 0}
+  .wave{margin:14px 0;padding:13px 16px;border:1px solid var(--line);border-radius:10px}
+  .wave h3{margin:0 0 6px;font-size:15px;color:var(--navy)}
+  .wave .lbl{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;color:var(--meta);font-size:12.5px}
+  .foot code{font-size:12px}
+  @media print{body{font-size:12px} .page{padding:0} a{color:var(--ink)}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>TrustSquare</h1>
+  <div class="subtitle">Master Roadmap — post-orchestrator</div>
+  <p class="meta">v1.0 · 2 June 2026 · synthesized from 6 parallel planning agents · sequence + cross-cutting view</p>
+  <p class="lead">Each stream has its own detailed document. This is the sequencing and cross-cutting view that ties them together.</p>
+
+  <h2>Streams &amp; status</h2>
+  <hr class="rule"/>
+  <table>
+    <thead><tr><th>#</th><th>Stream</th><th>Deliverable</th><th>Status</th><th>Headline</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="id">1</td>
+        <td>Home-page redesign</td>
+        <td><code>ROADMAP_1_HOME_REDESIGN.md</code> + <code>home_mockup.html</code></td>
+        <td><span class="pill p-green">Designed + mockup</span></td>
+        <td>Model is taught at the paywall; hero is empty. Add value-prop + first-run explainer, lift the sub-12px type floor, emoji→SVG, desktop frame.</td>
+      </tr>
+      <tr>
+        <td class="id">2</td>
+        <td>BEA modularization M1</td>
+        <td><code>ROADMAP_2_BEA_MODULARIZATION.md</code></td>
+        <td><span class="pill p-green">Build-ready</span></td>
+        <td>7 symbols → <code>core_spend.py</code>; 18 call sites all re-import (zero logic edits); only <code>_fire_webhook</code> needs an injection seam. (<code>smoke_test.py</code> = 32 checks.)</td>
+      </tr>
+      <tr>
+        <td class="id">3</td>
+        <td>FEA streamline</td>
+        <td><code>ROADMAP_3_FEA_STREAMLINE.md</code></td>
+        <td><span class="pill p-blue">Plan ready</span></td>
+        <td><code>ms.js</code> 11,996 lines / 308 fns / no IIFE → classic scripts, 14 files. <code>PROP_PHOTOS</code> (0 refs) + <code>PROSPECTS</code> (1) dead-weight candidates.</td>
+      </tr>
+      <tr>
+        <td class="id">4</td>
+        <td>AI-independence</td>
+        <td><code>ROADMAP_4_AI_INDEPENDENCE.md</code></td>
+        <td><span class="pill p-blue">Plan ready</span></td>
+        <td>Move Sensor + Orchestrator plumbing to server cron, Sonnet for sparse checkpoints, retire Haiku → <span class="tag t-green">~70–90% maintenance-token cut</span>.</td>
+      </tr>
+      <tr>
+        <td class="id">5</td>
+        <td>CityLauncher revive <span class="tag t-amber">(the gem)</span></td>
+        <td><code>CityLauncher/CITYLAUNCHER_REDESIGN.md</code></td>
+        <td><span class="pill p-blue">Spec ready</span></td>
+        <td>The orchestration brain <span class="tag t-amber">never ran</span> (<code>orchestration.db</code> = 0 bytes). Dead-source memory resets each cycle (the Gumtree burn). Fixes specced.</td>
+      </tr>
+      <tr>
+        <td class="id">6</td>
+        <td>Email overhaul</td>
+        <td><code>ROADMAP_6_EMAIL_OVERHAUL.md</code> + <code>property_outreach_v2.html</code></td>
+        <td><span class="pill p-blue">Plan + 1 draft</span></td>
+        <td>9 templates pre-rebrand (legacy navy+gold vs current steel-blue / Syne); badges don't match canonical <code>trustTier()</code>. Inherits #1's look.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Cross-cutting findings <span class="em">that shape the plan</span></h2>
+  <hr class="rule"/>
+  <div class="callout warn">
+    <strong>1 · The gem's brain never actually ran.</strong> CityLauncher's <code>orchestration.db</code> is empty — Haiko / scheduler / expansion is scaffold that never executed against data; the 219 prospects came from the simpler pipeline. So #5 "didn't deliver" because the smart layer was <em>never switched on</em> — not tried-and-failed. Reframes #5 from "revive" to "finish + first real run," under the redesign.
+  </div>
+  <div class="callout warn">
+    <strong>2 · The Hetzner box has two hard edges (both with free workarounds).</strong> The server IP is already flagged by DuckDuckGo / Bing — server-side search-harvest is throttled (<span class="tag t-green">OSM-first sidesteps it</span>; a residential proxy is the only full fix = a zero-cost-gate exception, David's call). Outbound <strong>port 25 is usually blocked</strong>, so email verification runs <span class="tag t-green">MX-only (free)</span> + paid-API fallback, not live SMTP.
+  </div>
+  <ol>
+    <li><strong>#1 gates #6.</strong> Email visuals inherit the home-page design language — lock #1 first; the v2 email draft ships on current tokens meanwhile.</li>
+    <li><strong>#4 is the cheap win:</strong> <span class="tag t-green">~70–90% maintenance-token cut</span>, mostly deterministic migration, and it sets the model-tiering that #5 inherits.</li>
+    <li><strong>#2 is build-ready today</strong> — surgical, gated, atomic, clear of the 03:30 / 04:00 / 05:00 orchestrator windows.</li>
+  </ol>
+
+  <h2>Recommended sequence <span class="em">(token-aware)</span></h2>
+  <hr class="rule"/>
+  <div class="wave">
+    <span class="lbl" style="color:var(--green)">Wave A — growth + cost · lead</span>
+    <h3>A1 · #4 P0–P1 &nbsp;→&nbsp; A2 · #5 CityLauncher</h3>
+    <p style="margin:4px 0"><strong>A1:</strong> set the model-tiering policy (Opus design / Sonnet sparse checkpoint / deterministic default / Haiku retired) and move the Sensor to server cron. Zero-token, low-risk; establishes the policy #5 inherits.</p>
+    <p style="margin:4px 0"><strong>A2:</strong> durable dead-source memory + Sonnet checkpoint-strategist + server-side saturation scheduler + MX email-verify (clean the 219) + agent-targeted sources. Biggest build; spec ready. 60-city = <span class="tag t-amber">~4–8 truly concurrent</span> draining a rolling 1–3 day pass; self-hosted Overpass to go wider.</p>
+  </div>
+  <div class="wave">
+    <span class="lbl">Wave B — foundation · attended, parallelizable</span>
+    <h3>B1 · #2 BEA M1 &nbsp;·&nbsp; B2 · #3 FEA F-series</h3>
+    <p style="margin:4px 0">B1 is build-ready → then M2+. B2 follows once M1 proves the pattern. Modularization is itself what unlocks safe parallel-agent work.</p>
+  </div>
+  <div class="wave">
+    <span class="lbl">Wave C — pre-launch polish</span>
+    <h3>C1 · #1 home-page &nbsp;·&nbsp; C2 · #6 email</h3>
+    <p style="margin:4px 0">C1 implement (designed + mockup ready). C2 full set after #1 locks the look (v2 draft already in hand).</p>
+  </div>
+
+  <h2>Decisions for David</h2>
+  <hr class="rule"/>
+  <ol>
+    <li><strong>Lead</strong> — confirm Wave A (gem #5 + the #4 cost-cut) leads, with BEA M1 in parallel, or reprioritize.</li>
+    <li><strong>SERP harvest</strong> — rely on OSM-first only (free), or approve a residential proxy (zero-cost-gate exception) for DDG / Bing?</li>
+    <li><strong>Email verify</strong> — MX-only free path (recommended), skip live SMTP given port 25, paid API only if too noisy?</li>
+    <li><strong>FEA plan</strong> — keep <code>ROADMAP_3</code> standalone, or fold into <code>MODULARIZATION_PLAN.md</code> as siblings?</li>
+    <li><strong>Cron timezone</strong> — confirm server TZ (UTC vs SAST) for #4 scheduling.</li>
+  </ol>
+
+  <div class="callout good">
+    <strong>Token note.</strong> Wave A is net cost-<em>negative</em> over time: #4 cuts standing maintenance tokens ~70–90%, while #5's Sonnet usage is hard-capped (~6 calls / city / cycle, checkpoints only) and used sparingly pre-launch. The heavy spend was today's parallel planning pass — execution is far cheaper.
+  </div>
+
+  <div class="foot">
+    Detailed stream docs (same folder unless noted): <code>ROADMAP_1_HOME_REDESIGN.md</code> · <code>ROADMAP_2_BEA_MODULARIZATION.md</code> · <code>ROADMAP_3_FEA_STREAMLINE.md</code> · <code>ROADMAP_4_AI_INDEPENDENCE.md</code> · <code>ROADMAP_6_EMAIL_OVERHAUL.md</code> · <code>CityLauncher/CITYLAUNCHER_REDESIGN.md</code>. &nbsp;Tip: print this page → Save as PDF for a fixed copy.
+  </div>
+
+</div>
+</body>
+</html>

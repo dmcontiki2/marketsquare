@@ -1,0 +1,497 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>FEA Streamline · TrustSquare</title><style>
+  :root{--navy:#15314e;--navy2:#1d3f63;--accent:#2f6fb0;--ink:#1f2937;--meta:#6b7280;
+    --line:#d8dee6;--bg:#fff;--soft:#f4f6f9;--green:#1e8a4c;--greenbg:#e6f4ea;
+    --blue:#2563eb;--bluebg:#e6effd;--amber:#b07d12;--amberbg:#fbf2dd;--grey:#5b6b7e;--greybg:#eef1f4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .page{max-width:880px;margin:0 auto;padding:42px 40px 80px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h1{font-size:30px;font-weight:800;color:var(--navy);margin:0 0 14px;letter-spacing:-.3px;line-height:1.2}
+  h2{font-size:21px;font-weight:800;color:var(--navy);margin:34px 0 4px;letter-spacing:-.2px;border-bottom:2px solid var(--soft);padding-bottom:5px}
+  h3{font-size:16px;font-weight:700;color:var(--navy2);margin:22px 0 4px}
+  h4{font-size:14px;font-weight:700;color:var(--navy2);margin:16px 0 4px}
+  p{margin:10px 0}
+  a{color:var(--accent);text-decoration:none}
+  strong{color:#142a44}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:700;font-size:12.5px}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:var(--soft)}
+  code{background:#eef1f4;border:1px solid #e1e6ec;border-radius:4px;padding:1px 6px;font-size:12.5px;color:#334155;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#0f1b2d;color:#e6edf6;padding:14px 16px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.5}
+  pre code{background:none;border:0;color:inherit;padding:0}
+  blockquote{border-left:4px solid var(--accent);background:var(--soft);margin:12px 0;padding:10px 16px;border-radius:0 8px 8px 0;color:#374151}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .p-green{background:var(--greenbg);color:var(--green)}
+  .p-blue{background:var(--bluebg);color:var(--blue)}
+  .p-amber{background:var(--amberbg);color:var(--amber)}
+  .p-grey{background:var(--greybg);color:var(--grey)}
+  @media print{body{font-size:12px}.page{padding:0}}
+</style></head><body><div class="page"><div class="eyebrow">TrustSquare · Roadmap</div><h1>ROADMAP 3 — FEA Streamline &amp; Modularization Plan</h1>
+<p><strong>Drafted Session 100 · 2 June 2026 · PLANNING ONLY — no code changed in this pass</strong></p>
+<p>This is the front-end sibling of <code>MODULARIZATION_PLAN.md</code> (the BEA M-series). It targets <strong>size and modularity</strong>, not bugs — a prior ESLint sweep found <code>ms.js</code> structurally clean (0 errors). The goal: turn one 12k-line monolith into a small set of concern-scoped files loaded in order, <strong>incrementally and atomically</strong>, never a big-bang rewrite.</p>
+<h2>The artefact today (measured, this session)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Bytes</th>
+<th>Role</th>
+<th>Served from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ms.js</code></td>
+<td><strong>11,996</strong></td>
+<td>703,274</td>
+<td>All FEA behaviour</td>
+<td><code>/static/ms.js?v=131</code></td>
+</tr>
+<tr>
+<td><code>marketsquare.html</code></td>
+<td>3,974</td>
+<td>369,455</td>
+<td>Shell + <code>#ms-data</code> globals + admin gate</td>
+<td><code>index.html</code></td>
+</tr>
+<tr>
+<td><code>ms.css</code></td>
+<td>1,187</td>
+<td>115,801</td>
+<td>All FEA styling</td>
+<td><code>/static/ms.css?v=115</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>ms.js</code> carries <strong>308 top-level <code>function</code> declarations</strong> and <strong>115 module-scope <code>const/let/var</code></strong> bindings. It is the single biggest FEA quality/truncation risk and the blocker to safe concurrent front-end agent work (two agents cannot edit one 12k-line file without collision).</p>
+<hr />
+<h2>How ms.js is structured today (the constraints that shape everything below)</h2>
+<p><strong>1. Bare top-level globals — NO outer IIFE wrapper.</strong> Every <code>function name(){…}</code> declared at column 0 becomes <code>window.name</code>, which is exactly how the HTML reaches it: <code>onclick="goTo(...)"</code>, <code>oninput="..."</code>, etc. The HTML handler surface is large — e.g. <code>toggleOpt</code> appears in <strong>158</strong> inline <code>onclick</code>s, <code>goTo</code> in <strong>49</strong>, <code>sbGoStep</code> in <strong>25</strong>. <strong>Any module split must keep these names global</strong> (window-scoped). This is the central load-order/coupling rule.</p>
+<p><strong>2. Self-running inline IIFEs do order-sensitive init.</strong> Four <code>(function(){…})()</code> blocks run on parse:
+   - L6625 — injects an <code>sb-*</code> onboarding <code>&lt;style&gt;</code> block into the head
+   - L7652 — <code>_preloadWonders()</code> fetch on DOMContentLoaded
+   - L8645 — AA section close
+   - L10261 / L10264 — <code>window.addEventListener('load', …)</code> boots the wishlist (<code>wlBootToken → wlLoadFeed → wlStartPolling</code>)
+   Plus the main boot: <code>_msInit()</code> behind a <code>document.readyState</code> guard (L788–795) which calls <code>renderFeatured/renderGrid/renderDash/renderRecruit/renderHomeStats/renderCatCounts/loadHomeWonders/catHomeInit</code> and <code>_resolveActiveCity().then(loadLiveListings)</code>.</p>
+<p><strong>3. CSS-in-JS leakage.</strong> <strong>11</strong> dynamic <code>&lt;style&gt;</code> injections live inside <code>ms.js</code> (e.g. the <code>sb-gate-btn</code> block at L6625). These are styling that escaped <code>ms.css</code> — a consolidation candidate (§2).</p>
+<p><strong>4. Only 12 explicit <code>window.X =</code> assignments.</strong> Almost all globalness is implicit (bare <code>function</code>). The 12 explicit ones (<code>window.goTo</code>, <code>window.openDetail</code>, <code>window.filterBrowse</code>, <code>window.setFilter</code>, <code>window.poiTabClick</code>, and dev/transient state like <code>window._sbMarketNoteTimer</code>) are defensive re-exports — worth auditing but not load-bearing for the split.</p>
+<hr />
+<h2>1 · Function / concern inventory &amp; proposed module boundaries</h2>
+<p><code>ms.js</code> already uses <strong>prefix-based pseudo-namespacing</strong> — the functions cluster cleanly by prefix, which makes the module boundaries almost self-evident. Top-level function counts by prefix:</p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Count</th>
+<th>Concern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sb*</code></td>
+<td>36</td>
+<td>"Smart Build" seller onboarding wizard (photo→fields→signals→preview)</td>
+</tr>
+<tr>
+<td><code>go*</code></td>
+<td>23</td>
+<td>"Guided Onboarding" 3-step photo-first flow</td>
+</tr>
+<tr>
+<td><code>aa*</code></td>
+<td>23</td>
+<td>Advert Agent (AI listing assistant + flow sheet)</td>
+</tr>
+<tr>
+<td><code>ms*</code></td>
+<td>17</td>
+<td>Core init / tabs / trust / stats / wishlist render / history</td>
+</tr>
+<tr>
+<td><code>sob*</code></td>
+<td>10</td>
+<td>Seller onboarding (magic-link / tier / EULA gate)</td>
+</tr>
+<tr>
+<td><code>pa*</code></td>
+<td>7</td>
+<td>Publish-after wizard steps</td>
+</tr>
+<tr>
+<td><code>el*</code></td>
+<td>6</td>
+<td>Edit-listing screen + doc hub</td>
+</tr>
+<tr>
+<td><code>wp*</code></td>
+<td>5</td>
+<td>Wonders/POI link-picker</td>
+</tr>
+<tr>
+<td><code>wl*</code></td>
+<td>5</td>
+<td>Local-market wishlist feed/polling</td>
+</tr>
+<tr>
+<td><code>hiw*</code></td>
+<td>4</td>
+<td>"How Introductions Work" explainer</td>
+</tr>
+<tr>
+<td><code>wf*</code></td>
+<td>3</td>
+<td>Wonders feed taps/scroll</td>
+</tr>
+<tr>
+<td><code>tx*</code></td>
+<td>2</td>
+<td>Transaction-history filters</td>
+</tr>
+<tr>
+<td><code>lm*</code></td>
+<td>2</td>
+<td>Local-market modal</td>
+</tr>
+<tr>
+<td>(un-prefixed)</td>
+<td>~165</td>
+<td>geo, grid/cards, wallet, filters, map, detail, modals, formatters</td>
+</tr>
+</tbody>
+</table>
+<h3>Proposed file boundaries (loaded in this order)</h3>
+<p>The split groups by concern and by load dependency. Earlier files define helpers and state that later files use; the shell loads them sequentially so all names land on <code>window</code> before <code>_msInit</code> runs.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Proposed file</th>
+<th>Concern</th>
+<th>Seed functions / state</th>
+<th>Est. lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F0</strong></td>
+<td><code>ms-core.js</code></td>
+<td>Config, env, formatters, tiny utils, <strong>shared mutable state</strong></td>
+<td><code>BEA_URL</code>, <code>BEA_ENABLED</code>, <code>API_KEY</code>, <code>DEMO_MODE</code>, <code>r2Fallback</code>, <code>normCat</code>, <code>formatZAR</code>, <code>formatDesc*</code>, <code>formatIntroTime</code>, <code>isOffline</code>, <code>isSuperuser</code>, <code>esc</code>, <code>showToast</code>, offline banners</td>
+<td>~600</td>
+</tr>
+<tr>
+<td><strong>F1</strong></td>
+<td><code>ms-geo.js</code></td>
+<td>Location hierarchy + map</td>
+<td><code>activeCountry/Region/City/Suburb</code>, <code>_haversineKm</code>, <code>_distLabel</code>, <code>_detectLocation</code>, <code>handleCityBadgeClick</code>, <code>selectDemo*</code>, <code>setViewMode</code>, <code>renderMap</code>, <code>_resolveActiveCity</code></td>
+<td>~700</td>
+</tr>
+<tr>
+<td><strong>F2</strong></td>
+<td><code>ms-wallet.js</code></td>
+<td>Tuppence / subscription / top-up</td>
+<td><code>tuppence</code>, <code>trustTier</code>, <code>tbadge</code>, <code>updateTuppenceUI</code>, <code>topUp</code>, <code>addTx</code>, <code>_renderSubscriptionScreen</code>, <code>openPlans</code>, <code>setPlan</code>, <code>_SUB_TIERS</code>, <code>_TIER_ORDER</code></td>
+<td>~550</td>
+</tr>
+<tr>
+<td><strong>F3</strong></td>
+<td><code>ms-listings.js</code></td>
+<td>Grid, cards, featured, detail, filters, saved</td>
+<td><code>LISTINGS</code>-consuming code: <code>renderGrid</code>, <code>cardHtml</code>, <code>renderFeatured</code>, <code>openDetail</code>, <code>findListing</code>, <code>catCfg</code>, <code>filterBrowse</code>, <code>setFilter</code>, <code>applyFilters</code>, <code>filterState</code>, <code>toggleWish</code>, <code>renderSaved</code>, advent grid (<code>adv*</code>, <code>renderAdvGrid</code>)</td>
+<td>~2,000</td>
+</tr>
+<tr>
+<td><strong>F4</strong></td>
+<td><code>ms-seller-profile.js</code></td>
+<td>Anonymous seller CV / credentials</td>
+<td><code>openSellerCV</code>, <code>openBEASellerProfile</code>, <code>cvAvatarHtml</code>, <code>maskContactInfo</code>, <code>credPhotoHtml</code>, edit-CV (<code>openCVEdit</code>, <code>renderCVEditForm</code>, <code>saveCVEdit</code>, tags)</td>
+<td>~700</td>
+</tr>
+<tr>
+<td><strong>F5</strong></td>
+<td><code>ms-onboard-sb.js</code></td>
+<td>Smart-Build wizard</td>
+<td>all <code>sb*</code> + <code>hk*</code> + <code>_sb*</code> + <code>SB_FIELDS</code>/<code>SB_PHOTO_SLOTS</code>/<code>SB_SIGNALS</code></td>
+<td>~1,900</td>
+</tr>
+<tr>
+<td><strong>F6</strong></td>
+<td><code>ms-onboard-go.js</code></td>
+<td>Guided-onboarding flow</td>
+<td>all <code>go*</code> + <code>GO_CAT_*</code> + <code>goState</code></td>
+<td>~1,200</td>
+</tr>
+<tr>
+<td><strong>F7</strong></td>
+<td><code>ms-onboard-misc.js</code></td>
+<td>Magic-link / tier / publish-after / dash</td>
+<td><code>sob*</code>, <code>pa*</code>, <code>obSelect*</code>, <code>submitOnboard</code>, <code>renderDash</code>, <code>dashState</code>, <code>renderRecruit</code></td>
+<td>~1,400</td>
+</tr>
+<tr>
+<td><strong>F8</strong></td>
+<td><code>ms-edit-listing.js</code></td>
+<td>Edit-after-publish + doc hub</td>
+<td>all <code>el*</code> + <code>EL_DOC_*</code></td>
+<td>~900</td>
+</tr>
+<tr>
+<td><strong>F9</strong></td>
+<td><code>ms-ai-advert.js</code></td>
+<td>Advert Agent</td>
+<td>all <code>aa*</code> + <code>AA_CATEGORIES</code>/<code>aaDB</code>/<code>AA_FLOWS</code></td>
+<td>~1,500</td>
+</tr>
+<tr>
+<td><strong>F10</strong></td>
+<td><code>ms-wonders.js</code></td>
+<td>Wonders / POI / link-picker</td>
+<td><code>wp*</code>, <code>wf*</code>, <code>wonders*</code>, lightbox (<code>openLightbox*</code>, <code>_lb*</code>)</td>
+<td>~900</td>
+</tr>
+<tr>
+<td><strong>F11</strong></td>
+<td><code>ms-local-market.js</code></td>
+<td>Local-market wishlist + modal</td>
+<td><code>wl*</code>, <code>lm*</code>, <code>_wl*</code>, <code>_lm*</code>, <code>WL_*</code> keys</td>
+<td>~900</td>
+</tr>
+<tr>
+<td><strong>F12</strong></td>
+<td><code>ms-me.js</code></td>
+<td>"Me" tab: trust hub, tx history, intros, HIW</td>
+<td><code>msTab</code>, <code>msRenderTrust</code>, <code>msRenderIntroList</code>, <code>tx*</code>, <code>hiw*</code>, <code>_tx*</code>, history (<code>msTrackView</code>, <code>msTimeAgo</code>)</td>
+<td>~1,100</td>
+</tr>
+<tr>
+<td><strong>F13</strong></td>
+<td><code>ms-boot.js</code></td>
+<td><strong>Loads LAST.</strong> <code>_msInit</code>, readyState guard, the <code>window.load</code> wishlist boot, the 30s refresh interval</td>
+<td>(no new logic — just the orchestration moved out)</td>
+<td>~200</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rationale for the boundaries:</strong> the four onboarding/AI clusters (<code>sb</code>, <code>go</code>, <code>aa</code>, plus edit-listing) are ~5,500 lines combined and are the bulk of the weight — they are also the most self-contained (their own state objects, their own field configs). Splitting those four out alone would drop <code>ms-core</code> + the always-loaded path well under 4,000 lines, which is the single highest-value move. The boot orchestration must be the <strong>last</strong> file so every name it references already exists on <code>window</code>.</p>
+<hr />
+<h2>2 · Candidate dead-weight / consolidation (conservative — FLAG, do not assume)</h2>
+<p>These are <em>flagged for a human/architect decision</em>, not pre-approved deletions. None should be removed inside a modularization step — consolidation is a separate, later track.</p>
+<ol>
+<li><strong><code>PROP_PHOTOS</code> — 0 references in ms.js.</strong> Defined in the HTML <code>#ms-data</code> block, never read by <code>ms.js</code>. <strong>Flag:</strong> likely dead, but confirm it isn't read by the second inline script or admin before removing.</li>
+<li><strong><code>PROSPECTS</code> — 1 reference.</strong> Near-dead. Verify the single use is live before touching.</li>
+<li><strong>11 CSS-in-JS <code>&lt;style&gt;</code> injections in ms.js</strong> (e.g. <code>sb-gate-btn</code> at L6625). <strong>Flag:</strong> these belong in <code>ms.css</code>. Moving them is a clean win but is a <em>CSS</em> change with its own visual-regression risk — schedule as a separate "CSS-in-JS reclaim" step <strong>after</strong> the JS split, one block at a time.</li>
+<li><strong><code>DEMO_MODE</code> / <code>DEMO_DISPLAY_MODE</code> / <code>setDemoDisplay</code> / dev toggles</strong> — already tagged <code>// TODO: REMOVE BEFORE LAUNCH</code> in source. These are demo scaffolding, not dead, but are a known pre-launch reduction. Out of scope for <em>this</em> roadmap (launch checklist owns it) — listed so the modularizer doesn't accidentally bake them into a "permanent" module.</li>
+<li><strong><code>formatDescLegacy</code> vs <code>formatDescJSON</code> vs <code>formatDesc</code></strong> (L445/490/505) — three description formatters. <strong>Flag:</strong> check whether <code>formatDescLegacy</code> still has live callers; if <code>formatDesc</code> fully supersedes it, it's a consolidation candidate. Do <strong>not</strong> assume — grep callers first.</li>
+<li><strong>12 explicit <code>window.X =</code> re-exports</strong> — once a clean module layout exists, decide whether these stay (belt-and-braces) or are redundant. Low priority; harmless if kept.</li>
+</ol>
+<p><strong>Net:</strong> there is little hard dead code (the ESLint-clean finding holds). The real "weight" is structural, not garbage — so the win comes from <em>splitting</em>, not <em>deleting</em>. Keep deletions minimal and separately gated.</p>
+<hr />
+<h2>3 · Global-coupling / load-order risk — and how to preserve it</h2>
+<p>This is the load-bearing risk. Three coupling layers:</p>
+<h3>(a) HTML <code>#ms-data</code> → ms.js data globals</h3>
+<p>The inline <code>&lt;script id="ms-data"&gt;</code> (HTML L41–140) defines globals that <code>ms.js</code> depends on. Confirmed reference counts in <code>ms.js</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Global</th>
+<th>Defined in</th>
+<th>ms.js refs</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SELLERS</code></td>
+<td><code>#ms-data</code></td>
+<td><strong>45</strong></td>
+<td><code>let</code> (reassigned by boot)</td>
+</tr>
+<tr>
+<td><code>LISTINGS</code></td>
+<td><code>#ms-data</code></td>
+<td><strong>44</strong></td>
+<td><code>let</code> (reassigned by boot)</td>
+</tr>
+<tr>
+<td><code>SELLER_PHOTOS</code></td>
+<td><code>#ms-data</code></td>
+<td>14</td>
+<td><code>const</code></td>
+</tr>
+<tr>
+<td><code>CATS</code></td>
+<td><code>#ms-data</code></td>
+<td>13</td>
+<td><code>const</code></td>
+</tr>
+<tr>
+<td><code>acceptedIntros</code></td>
+<td><code>#ms-data</code></td>
+<td>6</td>
+<td><code>const</code></td>
+</tr>
+<tr>
+<td><code>PROSPECTS</code></td>
+<td><code>#ms-data</code></td>
+<td>1</td>
+<td><code>const</code></td>
+</tr>
+<tr>
+<td><code>PROP_PHOTOS</code></td>
+<td><code>#ms-data</code></td>
+<td>0</td>
+<td><code>const</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Critical subtlety:</strong> <code>_msInit</code> <em>reassigns</em> <code>LISTINGS</code> and <code>SELLERS</code> when demo data is fetched (<code>LISTINGS = dlData.listings</code>). Because they are <code>let</code> on the shared global scope, this mutation is visible everywhere. <strong>Any module that holds a private reference would break this.</strong> → Rule: keep <code>LISTINGS</code>/<code>SELLERS</code> as mutable globals on <code>window</code> (or a single shared <code>window.MS_DATA</code> namespace); never <code>import</code>-copy them into a module closure.</p>
+<h3>(b) ms.js bare functions → HTML inline handlers</h3>
+<p>The HTML has hundreds of <code>onclick="fnName(...)"</code> attributes resolving against <code>window</code>. Top callers: <code>toggleOpt</code> ×158, <code>goTo</code> ×49, <code>sbGoStep</code> ×25, <code>toggleOptMulti</code> ×12, <code>selectAdvCountry</code> ×10. <strong>Rule:</strong> every split-out function must remain a global <code>function</code> (or be explicitly re-assigned to <code>window</code>). <strong>Do NOT introduce ES modules (<code>type="module"</code>)</strong> — module scope is not global, so every inline handler would 404. If a true module system is ever wanted, every inline handler must first be migrated to <code>addEventListener</code> — that is a large, separate project, explicitly <em>out of scope</em> here.</p>
+<h3>(c) Order-sensitive boot</h3>
+<p><code>_msInit</code> and the <code>window.load</code> wishlist boot assume all render/fetch helpers already exist. <strong>Rule:</strong> the boot file (<code>ms-boot.js</code>, F13) loads <strong>last</strong>; all other files load before it in dependency order (F0 core first).</p>
+<h3>How to preserve all three</h3>
+<ul>
+<li>Split files are <strong>plain classic scripts</strong> (<code>&lt;script src=...&gt;</code>), not modules — globals stay global automatically.</li>
+<li>Load order in the HTML is explicit and fixed: <code>ms-core.js</code> → … → <code>ms-boot.js</code> (F0…F13), each with its own <code>?v=</code> cache-bust.</li>
+<li>The <code>#ms-data</code> block and its 7 globals <strong>stay exactly where they are</strong> in the HTML, loaded before any <code>ms-*.js</code>. The split changes <em>where ms.js code lives</em>, not <em>how the data globals are provided</em>.</li>
+<li>Optional hardening (later, not required for the split): wrap the 7 data globals in one <code>window.MS_DATA = {…}</code> object to make the contract explicit — but only if every reference is updated in the same atomic step. For the first pass, <strong>leave the globals untouched</strong>.</li>
+</ul>
+<hr />
+<h2>4 · Safe-edit method (mirrors the CLAUDE.md HTML/JS write rule)</h2>
+<p>Per CLAUDE.md and the "large-file-edits truncate" memory: <strong>never use the Edit or Write tool on <code>ms.js</code> or <code>marketsquare.html</code>.</strong> They are large and will be silently truncated. All edits go through a Python string-replace driver, gated by <code>node --check</code>.</p>
+<p><strong>Per-extraction procedure (atomic):</strong>
+1. <strong>Back up first.</strong> Copy the current <code>ms.js</code> to <code>ms.js.feaN.bak</code> (local) before any change. Server <code>static/ms.js</code> is also a recoverable source of truth (mirror the BEA rule).
+2. <strong>Carve, don't retype.</strong> A Python driver reads <code>ms.js</code>, slices the exact line range for the target cluster into the new <code>ms-&lt;concern&gt;.js</code>, then <code>str.replace()</code>s that block out of <code>ms.js</code> with a one-line load-order comment. Assert each <code>old_string</code> matches <strong>exactly once</strong> before writing (raise/abort otherwise). Never hand-retype function bodies.
+3. <strong>Syntax-gate both files:</strong> <code>node --check ms.js</code> AND <code>node --check ms-&lt;concern&gt;.js</code>. Both must pass. (The BEA uses <code>ast.parse</code>; the JS equivalent is <code>node --check</code>.)
+4. <strong>Tail-integrity check.</strong> After every write, verify the file did not truncate. <code>ms.js</code> currently ends with the comment line <code>// ── END Category Home Mode ─…</code> plus a trailing <code>\n</code> — note it is a <code>.js</code>, so the check is <strong>not</strong> <code>endswith('&lt;/html&gt;')</code>. Use a known-final-marker assertion:
+   <code>python
+   c = open('ms.js', encoding='utf-8').read()
+   assert c.rstrip().endswith('END Category Home Mode'), 'ms.js TRUNCATED: ' + repr(c[-60:])</code>
+   (After F13 retires the old tail, re-anchor on whatever the new final marker is.) For <code>marketsquare.html</code>, keep the existing rule: assert it still ends with <code>&lt;/html&gt;</code>.
+5. <strong>Wire the new file into the HTML</strong> via the Python driver too (insert <code>&lt;script src="/static/ms-&lt;concern&gt;.js?v=1"&gt;&lt;/script&gt;</code> in the correct order <strong>before</strong> <code>ms-boot.js</code>). Never Edit-tool the HTML.
+6. <strong>Local smoke + manual render check</strong>, then deploy, then <strong>verify in a real browser</strong> before reporting done (per "verify-before-reporting" memory): load the demo URL, confirm grid renders across all 4 cities, open a listing, open the wallet, run one onboarding step. Check the console for <code>ReferenceError: &lt;fn&gt; is not defined</code> — that is the canonical symptom of a load-order break.
+7. <strong>If any gate fails: revert from <code>ms.js.feaN.bak</code>, document, stop.</strong> Never leave <code>ms.js</code> half-split.</p>
+<p><strong>Deploy note (from CLAUDE.md):</strong> <code>ms.js</code>/<code>ms.css</code> are served from <code>/static/</code> — <code>scp ms.js root@…:/var/www/marketsquare/static/ms.js</code> (NOT root). Bump <code>?v=</code> and purge Cloudflare after deploy. Ask David to run git from PowerShell — never commit from the sandbox.</p>
+<hr />
+<h2>5 · Incremental sequence (the F-series — smallest/safest first)</h2>
+<p>Mirrors the BEA M-series philosophy: <strong>one extraction at a time, atomic, fully gated, independently shippable, each smoke-tested before the next begins.</strong> Earn confidence on the safest cluster first.</p>
+<p>The order is chosen so that (a) the first step proves the "carve a cluster into a new classic-script file + wire load order + boot still works" pattern on the <strong>most self-contained</strong> cluster, and (b) the highest-traffic, most-interlinked code (<code>ms-listings</code>, core) moves <strong>last</strong>, once the pattern is proven.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Extract</th>
+<th>To file</th>
+<th>Risk</th>
+<th>Why this order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F1</strong></td>
+<td>Advert Agent (all <code>aa*</code> + <code>AA_*</code>/<code>aaDB</code>)</td>
+<td><code>ms-ai-advert.js</code></td>
+<td><strong>Low</strong></td>
+<td>Largest <em>self-contained</em> cluster (23 fns, own state, own consts). Few cross-refs into core render path. Best proof-of-pattern seed.</td>
+</tr>
+<tr>
+<td><strong>F2</strong></td>
+<td>Edit-listing (all <code>el*</code> + <code>EL_DOC_*</code>)</td>
+<td><code>ms-edit-listing.js</code></td>
+<td><span class="pill p-blue">Low</span></td>
+<td>Self-contained screen, clear boundary, own state.</td>
+</tr>
+<tr>
+<td><strong>F3</strong></td>
+<td>"How Introductions Work" + Wonders/POI + lightbox (<code>hiw*</code>, <code>wp*</code>, <code>wf*</code>, lightbox)</td>
+<td><code>ms-wonders.js</code></td>
+<td>Low–Med</td>
+<td>Mostly leaf UI; <code>_preloadWonders</code> IIFE moves with it (keep its DOMContentLoaded guard).</td>
+</tr>
+<tr>
+<td><strong>F4</strong></td>
+<td>Local-market wishlist + modal (<code>wl*</code>, <code>lm*</code>, <code>WL_*</code>)</td>
+<td><code>ms-local-market.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>Moves the <code>window.load</code> wishlist boot — must stay registered; verify polling still starts.</td>
+</tr>
+<tr>
+<td><strong>F5</strong></td>
+<td>Smart-Build wizard (<code>sb*</code>, <code>hk*</code>, <code>SB_*</code>)</td>
+<td><code>ms-onboard-sb.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>1,900 lines, biggest single win. Moves the <code>sb-gate-btn</code> <code>&lt;style&gt;</code> IIFE (keep it).</td>
+</tr>
+<tr>
+<td><strong>F6</strong></td>
+<td>Guided-onboarding (<code>go*</code>, <code>GO_CAT_*</code>)</td>
+<td><code>ms-onboard-go.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>Sibling of F5; same pattern.</td>
+</tr>
+<tr>
+<td><strong>F7</strong></td>
+<td>Magic-link / tier / publish-after / dash (<code>sob*</code>, <code>pa*</code>, <code>obSelect*</code>, <code>renderDash</code>, <code>renderRecruit</code>)</td>
+<td><code>ms-onboard-misc.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>The remaining onboarding tail.</td>
+</tr>
+<tr>
+<td><strong>F8</strong></td>
+<td>Seller CV / credentials (<code>openSellerCV</code>, <code>cvAvatarHtml</code>, <code>maskContactInfo</code>, CV edit)</td>
+<td><code>ms-seller-profile.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>Anonymity-sensitive — verify masking unchanged (A2 rule).</td>
+</tr>
+<tr>
+<td><strong>F9</strong></td>
+<td>Wallet / Tuppence / subscription (<code>tuppence</code>, <code>topUp</code>, <code>addTx</code>, <code>_SUB_TIERS</code>)</td>
+<td><code>ms-wallet.js</code></td>
+<td>Med–High</td>
+<td>Money-touching UI; verify balance display + top-up + ledger render. Coordinate with no-refunds rule.</td>
+</tr>
+<tr>
+<td><strong>F10</strong></td>
+<td>Geo + map (<code>active*</code>, <code>_detectLocation</code>, <code>renderMap</code>, <code>_resolveActiveCity</code>)</td>
+<td><code>ms-geo.js</code></td>
+<td><span class="pill p-amber">High</span></td>
+<td>Boot depends on <code>_resolveActiveCity</code>; map uses Leaflet (already a CDN dep).</td>
+</tr>
+<tr>
+<td><strong>F11</strong></td>
+<td>Listings/grid/cards/detail/filters (<code>renderGrid</code>, <code>cardHtml</code>, <code>openDetail</code>, <code>filterState</code>, adv grid)</td>
+<td><code>ms-listings.js</code></td>
+<td><strong>High</strong></td>
+<td>Biggest + most interlinked + most inline handlers (<code>toggleOpt</code> ×158). Do late, once pattern is bullet-proof.</td>
+</tr>
+<tr>
+<td><strong>F12</strong></td>
+<td>Core config/formatters/utils + shared state</td>
+<td><code>ms-core.js</code></td>
+<td><span class="pill p-amber">High</span></td>
+<td>What's <em>left</em> after F1–F11 — the always-loaded base. Loads <strong>first</strong>.</td>
+</tr>
+<tr>
+<td><strong>F13</strong></td>
+<td><code>_msInit</code>, readyState guard, <code>window.load</code> boot, 30s interval</td>
+<td><code>ms-boot.js</code></td>
+<td><span class="pill p-amber">Med</span></td>
+<td>Pure orchestration move. Loads <strong>last</strong>. Final step — the file <code>ms.js</code> is now just (or near-empty and retired).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Per-step gate (every F-step):</strong> back up → Python carve (assert unique match) → <code>node --check</code> both files → tail-integrity check → wire <code>&lt;script&gt;</code> in correct order via Python → local smoke + browser render check across 4 cities → deploy to <code>/static/</code> + bump <code>?v=</code> + Cloudflare purge → re-verify live → if any gate fails, revert and stop.</p>
+<p><strong>Concurrency unlock (same as BEA):</strong> once F1–F3 land, two front-end agents can work on <em>different</em> <code>ms-*.js</code> files in separate git worktrees with no collision — the prerequisite for concurrent FEA agent work. While this F-series is in progress, the build runner must <strong>not</strong> do its own structural edits to <code>ms.js</code> — only surgical in-place fixes to existing functions; module extraction is owned by this watched track (mirror the guard note already in <code>MODULARIZATION_PLAN.md</code>).</p>
+<p><strong>Definition of done per step:</strong> code works in a live browser (verified, not assumed) AND a one-paragraph CHANGELOG entry appended. Target end-state: no FEA file over ~2,000 lines; <code>ms-core</code> + always-loaded path well under 4,000; the four onboarding/AI clusters fully isolated.</p>
+<h2>Status</h2>
+<ul>
+<li>[ ] F1 <code>ms-ai-advert.js</code> — <strong>next action</strong> (lowest-risk seed; proves the classic-script carve + load-order + boot pattern)</li>
+<li>[ ] F2–F13 — sequenced after F1 proves the gate, smallest/safest first, each independently shippable.</li>
+</ul>
+<hr />
+<p><em>Planning deliverable only. No edits were made to <code>ms.js</code>, <code>marketsquare.html</code>, or <code>ms.css</code>; no deploy; no git. All structural facts above were measured against the live files this session.</em></p></div></body></html>

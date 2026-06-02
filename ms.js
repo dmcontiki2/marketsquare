@@ -168,6 +168,19 @@ async function apiGet(path) {
   }
 }
 
+// Authenticated GET — sends the X-Api-Key header. Use for protected GET endpoints
+// (e.g. seller documents). Key travels in the header, never the query string (S3).
+async function apiGetAuth(path) {
+  try {
+    const res = await fetch(BEA_URL + path, { headers: { 'X-Api-Key': API_KEY } });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    return await res.json();
+  } catch(e) {
+    console.warn('BEA GET (auth) failed:', path, e);
+    return null;
+  }
+}
+
 async function apiPost(path, data) {
   try {
     const res = await fetch(BEA_URL + path, {
@@ -614,7 +627,7 @@ async function _msInit(){
             const aiCredited = d.ai_sessions_credited || 0;
             // Update local Tuppence balance
             tuppence += credited;
-            updateTuppenceDisplay();
+            updateTuppenceUI();
             // Show success message
             let msg = '';
             if(credited>0 && aiCredited>0) msg=`Payment successful — ${credited}T and ${aiCredited} AI uses added!`;
@@ -6980,7 +6993,7 @@ async function elLoadSidebarPanels(email, category) {
     dhSec.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;">⏳ Loading documents…</div>';
     try {
       const [docs, tsData] = await Promise.all([
-        apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY + (category ? '&category=' + encodeURIComponent(category) : '')).catch(() => []),
+        apiGetAuth('/users/' + encodeURIComponent(email) + '/documents' + (category ? '?category=' + encodeURIComponent(category) : '')).catch(() => []),
         apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (category ? '&category=' + encodeURIComponent(category) : '')).catch(() => null)
       ]);
       // Extract declarable signals from all category items
@@ -7474,7 +7487,7 @@ async function elDocHubUpload(email) {
   fd.append('label', label || fileInput.files[0].name);
   fd.append('visibility', postIntro ? 'post_intro' : 'private');
   try {
-    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY, {
+    const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents', {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -7482,7 +7495,7 @@ async function elDocHubUpload(email) {
     if (status) status.textContent = '✅ Uploaded — fetching AI feedback…';
     // Reload doc list + re-fetch declarations state
     const [docs, tsDataUp] = await Promise.all([
-      apiGet('/users/' + encodeURIComponent(email) + '/documents?api_key=' + API_KEY + (elCurrentCat ? '&category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => []),
+      apiGetAuth('/users/' + encodeURIComponent(email) + '/documents' + (elCurrentCat ? '?category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => []),
       apiGet('/trust-score/breakdown?email=' + encodeURIComponent(email) + (elCurrentCat ? '&category=' + encodeURIComponent(elCurrentCat) : '')).catch(() => null)
     ]);
     const dhSec = document.getElementById('el-dochub-section');
