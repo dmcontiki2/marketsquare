@@ -1274,8 +1274,13 @@ async def refresh_pois(listing_id: int, x_admin_key: str = Header(None)):
 
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None,
-                 suburb: Optional[str] = None, demo: int = 0):
+                 suburb: Optional[str] = None, demo: int = 0,
+                 page: int = 1, page_size: int = 200):
     conn = database.get_db()
+    # M0 pagination: default page_size=200 preserves prior behaviour; FEA passes page/page_size for infinite scroll
+    page = max(1, page)
+    page_size = max(1, min(page_size, 200))
+    _offset = (page - 1) * page_size
 
     # Resolve city name → geo_city_id for extended-city matching
     city_row = conn.execute(
@@ -1325,11 +1330,11 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                 {branch_a}
                 UNION
                 {branch_b}
-            ) ORDER BY created_at DESC LIMIT 200"""
-        params = params_a + params_b
+            ) ORDER BY created_at DESC LIMIT ? OFFSET ?"""
+        params = params_a + params_b + [page_size, _offset]
     else:
-        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT 200"
-        params = params_a
+        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT ? OFFSET ?"
+        params = params_a + [page_size, _offset]
 
     rows = conn.execute(sql, params).fetchall()
     conn.close()

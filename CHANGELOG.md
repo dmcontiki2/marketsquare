@@ -3357,3 +3357,13 @@ Wave-A P0. **Discovery: the buyer/seller introduction email loop was already ful
 **For David:** (1) commit `bea_main.py` (now TVS+S5) — a stale `.git/index.lock` may need clearing first (`Remove-Item .git\index.lock`). (2) Ops to finish the money path: set `PAYSTACK_WEBHOOK_SECRET` (enables the reliable webhook credit path); to run the M1/M2 test-card flow, set `ALLOW_TEST_PAYMENTS=1` temporarily. (3) When live `sk_live_` keys land, grants auto-resume — no code change needed.
 
 **Cost model impact:** none (a gate + idempotency; no pricing/volume change). Behaviour change: top-ups/subscriptions fail-closed until live keys or the test flag — the correct pre-launch posture.
+
+## Session 110d — 2026-06-02 · M0 part 1: `GET /listings` offset pagination (BEA, non-breaking) — deployed
+
+Wave-A P0. `GET /listings` had a hard `LIMIT 200` in both query branches (home-city + the extended-city UNION) — a city with >200 listings would silently truncate. Added `page` / `page_size` params (default `page_size=200` → behaviour unchanged for existing callers), `LIMIT ? OFFSET ?` on both branches, `page_size` clamped 1..200 and `page>=1`. **Response stays a bare array (no shape change → FEA + smoke unaffected).** Non-gated (listings feed).
+
+Applied via the str.replace driver to the server's running base (old+S5) and, identically, to the local TVS+S5 copy (dual-apply; diff-gated: 2 surgical edits each, `ast` clean). Deployed server `main.py` (backup `main.py.bak-20260602-m0`); `/health` ok v1.3.1; **smoke 39/39**. Live verification: default (no params) returns the full 65-listing feed unchanged; `page=1`/`page=2` at `page_size=3` return distinct, non-overlapping pages of 3.
+
+Local `bea_main.py` re-synced to TVS+S5+M0 (sha256-verified byte-identical to the deployed logic, 10928 lines; no TVS lost). Server runs old-base+S5+M0; TVS deploy still pending.
+
+**Next (M0 part 2):** FEA infinite scroll in `ms.js` — request pages with a small `page_size`, append at grid bottom, stop when a page returns < `page_size`. `total` in the body deferred (has-more-by-count suffices; a header can be added later). **For David:** commit `bea_main.py` (now TVS+S5+M0); still don't redeploy `bea_main.py` to the server (carries pending TVS). Cost model impact: none.
