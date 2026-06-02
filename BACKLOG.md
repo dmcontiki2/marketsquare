@@ -30,8 +30,8 @@
 | | · Detail screen should match the standard detail screen layout (photo carousel, full description, seller stats) | |
 | | · Browse page LM banner should use same grid as other categories, not a separate layout | |
 | | · LM intro flow should feel the same as standard intro (not a separate code path visually) | |
-| H2 | **n8n email notifications** — buyer emailed when seller accepts or declines intro | BEA + n8n |
-| H3 | **Seller-facing intro notifications** — seller emailed when new intro request arrives | BEA + n8n |
+| H2 | ✅ **DONE (verified 2 Jun)** · n8n email notifications — buyer emailed when seller accepts or declines intro | BEA + n8n |
+| H3 | ✅ **DONE (verified 2 Jun)** · Seller-facing intro notifications — seller emailed when new intro request arrives | BEA + n8n |
 | H4 | **Maroushka + Dave phone test** — lightbox, back buttons, My Requests tab live test | Testing |
 | H5 | **Showcase photos** — add `thumb_url` to demo listings 40–51 (royalty-free images) | Buyer app |
 | H6 | **Tutors & Services edit parity** — confirm all structured fields save and display correctly after edit | Buyer + Admin |
@@ -137,7 +137,7 @@
 ### P0 — launch gates within our control
 | # | Action | Lane | Gate | Wave |
 |---|--------|------|------|------|
-| H2/H3 | Introduction notification loop — buyer emailed on accept/decline; seller emailed on new intro (n8n + BEA) | ATTENDED + n8n | — | A |
+| H2/H3 ✅ | Introduction notification loop — **DONE / verified 2 Jun.** Found fully built in a prior session but never run; switched on + tested end-to-end (3 branded, anonymity-safe emails confirmed delivered to inbox). No code change. | DONE | — | A |
 | M1/M2 | Money-path proven in test mode — test-card top-up→webhook→Tuppence credit; subscription subscribe/verify/activate | ATTENDED | — | A |
 | S5 | Gate test/auto-approve payment endpoints behind a fail-closed prod flag | STAGE | Gate 2 | A (on `approve S5`) |
 | M0 | `GET /listings` pagination (`?page=&page_size=` + `total`) + FEA infinite scroll | ATTENDED | — | A/B |
