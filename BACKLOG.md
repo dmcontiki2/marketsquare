@@ -184,7 +184,7 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 
 | # | Open action (the gap, so nobody has to remember it) | Area | Lane |
 |---|---|---|---|
-| AU-DEPLOY | Wire protected `/auctions` route (reuse `/orchestrator` Basic-Auth) + Cloudflare purge, so one `scp` publishes the concept doc behind login | Server/Ops | ATTENDED |
+| AU-DEPLOY | ✅ **DONE (3 Jun)** — `/auctions` live behind orchestrator Basic-Auth; verified 401 unauthed (origin + Cloudflare); update via one `scp` to `/var/www/marketsquare/auctions.html` | Server/Ops | DONE |
 | AU-BACKUP | Server-hosted canon has **no version history** (the gap of the scp-only choice) — add a periodic snapshot/backup (git or Drive) for rollback | Ops | ATTENDED |
 | AU-ENTRY | Confirm bidder entry = **free + trust-gated** (David's lean) vs a small Tuppence seat-burn | Design | ATTENDED |
 | AU-OFFER | "Closest offer" semantics: **highest** vs **closest-to-a-private-seller-target**; define a seller minimum-offer floor | Design | ATTENDED |
@@ -192,3 +192,5 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 | AU-FORMATS | v1 = English-ascending + make-an-offer; stage Dutch / sealed / reverse later | Build scope | ATTENDED |
 | AU-PATENT | Fold auction claims (intro-not-sale · real-escrow/Tuppence bond · anonymous-via-app-auth · deferred offer-triggered intro) into the pre-filing supplement; prior-art check vs Whatnot + Pingsby | Legal/IP | ATTENDED (ties L8) |
 | AU-COSTMODEL | Cost-model placeholders to set: real verification cost/rate; **load-test** max websocket conns/box (8,000 est.) | Cost model | ATTENDED |
+
+> **NGINX-HYGIENE — discovered during AU-DEPLOY (3 Jun):** stale `marketsquare.bak-*` files in `/etc/nginx/sites-enabled/` are loaded by nginx as live server blocks (harmless "conflicting server_name" warnings today, but a latent footgun — a reorder could shadow the real vhost). Cleanup: move `*.bak-*` out of `sites-enabled` into a non-included backup dir, then `nginx -t` + reload. ATTENDED (touch nginx only in an attended session).
