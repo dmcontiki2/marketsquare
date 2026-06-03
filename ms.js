@@ -1402,7 +1402,8 @@ function applyFilters(cat){
   if(cat==='property'){
     filterState.property.minPrice = document.getElementById('fp-min')?.value || '';
     filterState.property.maxPrice = document.getElementById('fp-max')?.value || '';
-    filterState.property.listingType = getSelOptInSection('Listing Type','fs-property');
+    const _ltSel = getSelOptInSection('Listing Type','fs-property');
+    filterState.property.listingType = _ltSel==='For Rent' ? 'rent' : (_ltSel==='For Sale' ? 'sale' : '');
     filterState.property.type        = getSelOptInSection('Property Type','fs-property');
     filterState.property.beds        = getSelOptInSection('Bedrooms','fs-property');
     filterState.property.baths       = getSelOptInSection('Bathrooms','fs-property');
