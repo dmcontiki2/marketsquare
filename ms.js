@@ -1237,12 +1237,16 @@ function renderFilterBar(){
   const area = document.getElementById('filter-bar-area');
   if(!area) return;
 
-  // Global Trust >= selector (shown on every category AND on All)
-  const _tOpts = [0,60,70,80,90].map(t=>`<option value="${t}"${trustMin===t?' selected':''}>${t ? 'Trust \u2265 '+t : 'Trust: Any'}</option>`).join('');
-  const trustHtml = `<select aria-label="Minimum trust score" onchange="setTrustMin(this.value)" style="border:1px solid var(--border,#e5e7eb);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700;background:#fff;color:var(--ink,#111827);flex:none;">${_tOpts}</select>`;
+  // Universal layer (Trust now; price/area/scope/currency later) now lives INSIDE the filter sheets.
+  _ensureUniversalBlocks();
 
   if(activeFilter==='All'){
-    area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">${trustHtml}</div>`;
+    area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">
+      <div class="filter-pill" style="flex:1;justify-content:center;gap:6px;" onclick="openFilterSheet('all')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filter
+      </div>
+    </div>`;
     renderActiveFilterTags();
     return;
   }
@@ -1266,17 +1270,70 @@ function renderFilterBar(){
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
       Filtered Search${badgeHtml}
     </div>
-    ${trustHtml}
   </div>`;
 
   renderActiveFilterTags();
 }
 
 function openFilterSheet(cat){
-  document.getElementById('fs-'+cat).classList.add('open');
+  _ensureUniversalBlocks();
+  const _s = document.getElementById('fs-'+cat);
+  if(_s) _s.classList.add('open');
+  syncAllUniPills();
 }
 function closeFsBg(e, id){
   if(e.target.id===id) document.getElementById(id).classList.remove('open');
+}
+
+// ── Universal filter layer (two-layer, category-scoped model) ──
+// One shared block at the top of every filter sheet. Trust now; price/area/scope/currency/Save as they come online.
+function _universalBlockHtml(){
+  const ts=[['0','Any trust'],['60','Trust ≥ 60'],['70','Trust ≥ 70'],['80','Trust ≥ 80'],['90','Trust ≥ 90']];
+  const pills=ts.map(function(p){return `<div class="fs-opt uni-tpill" data-t="${p[0]}" onclick="setTrustMinUI(${p[0]})">${p[1]}</div>`;}).join('');
+  return `<div class="fs-section uni-block" style="background:rgba(14,116,144,.06);border:1px solid rgba(14,116,144,.22);border-radius:12px;padding:10px 12px;margin-bottom:12px;">
+      <div class="fs-label uni-head" style="color:#0e7490;">◆ Universal · applies in every category</div>
+      <div class="fs-options uni-trust-opts">${pills}</div>
+    </div>`;
+}
+function _ensureUniversalBlocks(){
+  ['property','tutors','services','adventures','collectors','cars'].forEach(function(cat){
+    const sheet=document.querySelector('#fs-'+cat+' .filter-sheet');
+    if(sheet && !sheet.querySelector('.uni-block')){
+      const anchor=sheet.querySelector('.fs-sub')||sheet.querySelector('.fs-title')||sheet.querySelector('.fs-handle');
+      const tmp=document.createElement('div'); tmp.innerHTML=_universalBlockHtml().trim();
+      const block=tmp.firstChild;
+      if(anchor && anchor.nextSibling) sheet.insertBefore(block, anchor.nextSibling);
+      else if(anchor) sheet.appendChild(block);
+      else sheet.insertBefore(block, sheet.firstChild);
+    }
+  });
+  if(!document.getElementById('fs-all')){
+    const bg=document.createElement('div');
+    bg.className='filter-sheet-bg'; bg.id='fs-all';
+    bg.setAttribute('onclick',"closeFsBg(event,'fs-all')");
+    bg.innerHTML=`<div class="filter-sheet">
+      <div class="fs-handle"></div>
+      <div class="fs-title">⚙ Filter · All categories</div>
+      <div class="fs-sub">The universal layer — pick a category for its own filters</div>
+      ${_universalBlockHtml()}
+      <div class="fs-actions">
+        <button class="fs-clear" onclick="setTrustMinUI(0)">Clear</button>
+        <button class="fs-apply" onclick="document.getElementById('fs-all').classList.remove('open');renderGrid();">Show results</button>
+      </div>
+    </div>`;
+    document.body.appendChild(bg);
+  }
+  syncAllUniPills();
+}
+function syncAllUniPills(){
+  const v=trustMin||0;
+  document.querySelectorAll('.uni-tpill').forEach(function(p){
+    p.classList.toggle('sel', parseInt(p.dataset.t,10)===v);
+  });
+}
+function setTrustMinUI(v){
+  setTrustMin(v);
+  syncAllUniPills();
 }
 
 function toggleOpt(el, group){

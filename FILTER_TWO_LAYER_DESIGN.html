@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Filter, simplified — two layers, category-scoped</title>
+<style>
+  :root{
+    --navy:#1e3a5f; --ink:#111827; --t2:#4b5563; --t3:#555f6e; --bg:#f4f5f7; --line:#e5e7eb; --card:#fff;
+    --grn:#065f46; --grnbg:#d1fae5; --blu:#1d4ed8; --blubg:#dbeafe; --gold:#92400e; --goldbg:#fef3c7;
+    --pur:#6b21a8; --purbg:#f3e8ff; --uni:#0e7490; --unibg:#cffafe; --page:#eef1f5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55;font-size:15px}
+  .wrap{max-width:1120px;margin:0 auto;padding:32px 24px 70px}
+  h1{font-family:"Syne","Segoe UI",sans-serif;font-weight:800;color:var(--navy);font-size:28px;margin:0 0 4px}
+  .sub{color:var(--t2);margin:0 0 22px;font-size:15.5px}
+  h2{font-family:"Syne","Segoe UI",sans-serif;color:var(--navy);font-size:20px;margin:34px 0 8px;padding-top:10px;border-top:2px solid #cfd8e2}
+  .lead{color:var(--t2);margin:0 0 14px}
+  p{margin:9px 0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+  .hero{border-left:5px solid var(--navy)}
+  .key{background:var(--unibg);border:1px solid #a5e8ef;border-left:5px solid var(--uni);border-radius:12px;padding:14px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--navy);color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:#fafcfe}
+  td.cat{font-weight:700;color:var(--navy);white-space:nowrap}
+  .u{background:var(--unibg);color:var(--uni);border-radius:5px;padding:1px 6px;font-size:12px;font-weight:700;white-space:nowrap;display:inline-block;margin:1px 2px}
+  .f{background:#eef1f5;color:var(--t2);border-radius:5px;padding:1px 6px;font-size:12px;white-space:nowrap;display:inline-block;margin:1px 2px}
+  .board{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-top:6px}
+  .scr{width:288px}
+  .scr .cap{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;color:var(--navy);font-size:14px;margin:0 0 6px}
+  .phone{width:288px;background:#fff;border:8px solid #11202f;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(17,32,47,.16)}
+  .stat{height:18px;background:#11202f}
+  .sheet{padding:12px 13px 14px}
+  .grab{width:36px;height:4px;background:#d1d5db;border-radius:3px;margin:0 auto 9px}
+  .sheet h3{font-family:"Syne","Segoe UI",sans-serif;margin:0 0 8px;font-size:15px;color:var(--navy)}
+  .ublock{background:var(--unibg);border:1px solid #a5e8ef;border-radius:10px;padding:9px 10px;margin-bottom:10px}
+  .ublock .ut{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--uni);text-transform:uppercase;margin-bottom:6px}
+  .ctl{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:5px 0;color:var(--ink)}
+  .ctl .v{font-weight:700;color:var(--navy)}
+  .track{height:4px;background:#e5e7eb;border-radius:3px;position:relative;margin:4px 0 2px}
+  .track .fill{position:absolute;height:4px;border-radius:3px;background:var(--uni)}
+  .track .knob{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--uni);top:-4px}
+  .seg{display:flex;border:1px solid #a5e8ef;border-radius:7px;overflow:hidden;margin-top:3px}
+  .seg div{flex:1;text-align:center;font-size:10.5px;font-weight:700;padding:5px 0;color:var(--t2);background:#fff;border-right:1px solid #d8eef1}
+  .seg div:last-child{border-right:none} .seg div.on{background:var(--uni);color:#fff} .seg div.lk{color:#9aa3af}
+  .fblock .ft{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--t3);text-transform:uppercase;margin:8px 0 6px}
+  .pills{display:flex;flex-wrap:wrap;gap:5px}
+  .pill{border:1px solid var(--line);border-radius:14px;padding:3px 9px;font-size:11px;color:var(--t2)}
+  .pill.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .save{display:flex;gap:8px;margin-top:11px}
+  .save .a{flex:1;background:var(--navy);color:#fff;border-radius:18px;text-align:center;font-weight:800;font-size:12.5px;padding:9px}
+  .save .b{border:1.5px solid var(--navy);color:var(--navy);border-radius:18px;font-weight:800;font-size:12px;padding:9px 12px}
+  ul.plain{margin:8px 0;padding-left:20px} ul.plain li{margin:6px 0}
+  .foot{margin-top:28px;color:var(--t2);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Filter, simplified — two layers, category-scoped</h1>
+  <p class="sub">Refines the in-app filter design · 3 June 2026 · grounded in the real <code>filterState</code> · your idea, made concrete</p>
+
+  <div class="card hero">
+    <p style="margin-top:0"><b>Your insight:</b> don't build one search that tries to cover every category at once — scope it to the category the buyer is already in. That single move dissolves most of the complexity, because the filter only ever shows <i>one</i> category's fields plus a small shared layer.</p>
+    <p style="margin-bottom:0"><b>The model is two layers:</b> a <span class="u">UNIVERSAL</span> layer that's identical everywhere, and <span class="f">category facets</span> shown only for the category you're in. One filter per category = universal top + that category's facets. On <b>All</b>, just the universal layer.</p>
+  </div>
+
+  <div class="key">
+    <b>The discovery from laying it out:</b> <span class="u">price</span> and <span class="u">area / suburb</span> are currently <b>duplicated in all six category sheets</b> — but they're not category-specific at all, they're universal. Folding them into the shared layer (alongside the new Trust, scope, currency, Save) <b>removes ~12 duplicated controls</b> and is why the clean mockup felt clean: it was showing the universal layer + one category, not six comprehensive sheets stacked.
+  </div>
+
+  <h2>The map — what's universal vs each category's own (from your real filters)</h2>
+  <p class="lead"><span class="u">teal = universal</span> (lives in the shared layer, once) · <span class="f">grey = that category's facets</span> (shown only there). Adventures keeps its own dedicated screen today.</p>
+  <table>
+    <tr><th>Category</th><th>Universal layer (shared, once)</th><th>Its own facets (scoped)</th></tr>
+    <tr><td class="cat">Property</td>
+      <td><span class="u">price</span><span class="u">area/suburb</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">listing type (rent/sale)</span><span class="f">property type</span><span class="f">beds</span><span class="f">baths</span><span class="f">garages</span><span class="f">furnished</span><span class="f">pets</span><span class="f">features</span></td></tr>
+    <tr><td class="cat">Tutors</td>
+      <td><span class="u">max rate</span><span class="u">area</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">subject</span><span class="f">level</span><span class="f">mode (online/in-person)</span></td></tr>
+    <tr><td class="cat">Services</td>
+      <td><span class="u">max rate</span><span class="u">area</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">class (technical/casual)</span><span class="f">service type</span><span class="f">availability</span></td></tr>
+    <tr><td class="cat">Collectors</td>
+      <td><span class="u">price</span><span class="u">area</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">collectible type</span><span class="f">condition</span><span class="f">era</span></td></tr>
+    <tr><td class="cat">Cars</td>
+      <td><span class="u">price</span><span class="u">area</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">make</span><span class="f">year from</span><span class="f">transmission</span><span class="f">max mileage</span></td></tr>
+    <tr><td class="cat">Adventures</td>
+      <td><span class="u">price</span><span class="u">area</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">adventure type</span><span class="f">duration</span><span class="f">group size</span></td></tr>
+    <tr><td class="cat">Local Market <span style="font-weight:400;color:var(--t2);font-size:10.5px">· the 7th</span></td>
+      <td><span class="u">price</span><span class="u">area/suburb</span><span class="u">Trust ≥</span><span class="u">scope</span><span class="u">currency</span><span class="u">Save</span></td>
+      <td><span class="f">🔎 free-text search</span><span class="f">condition</span> <span style="color:var(--t2);font-size:11px;font-style:italic">— anything-goes inventory, so search beats fixed facets</span></td></tr>
+  </table>
+  <p style="font-size:13.5px;color:var(--t2)">Read it down the middle column: the teal layer is the <b>same every time</b> — build it once. Read across the right: that's the genuine, valuable per-vertical complexity — kept, but only ever shown for the one category. Nobody wades through Cars' mileage to filter Collectors. <b>Local Market is the deliberate exception</b> (the 7th): its inventory is unpredictable by nature, so its right-hand layer is a free-text search box — plus an optional Condition tag — instead of fixed facets. The simplest road, and the honest one.</p>
+
+  <h2>Same universal top, different facets — four sample screens</h2>
+  <div class="board">
+
+    <!-- PROPERTY -->
+    <div class="scr">
+      <div class="cap">Property</div>
+      <div class="phone"><div class="stat"></div><div class="sheet">
+        <div class="grab"></div><h3>Filter · Property</h3>
+        <div class="ublock">
+          <div class="ut">Universal — same on every category</div>
+          <div class="ctl"><span>Price</span><span class="v">R0 – R5m</span></div>
+          <div class="track"><div class="fill" style="left:0;width:48%"></div><div class="knob" style="left:0"></div><div class="knob" style="left:46%"></div></div>
+          <div class="ctl"><span>Minimum trust</span><span class="v">≥ 70</span></div>
+          <div class="track"><div class="fill" style="left:0;width:62%"></div><div class="knob" style="left:60%"></div></div>
+          <div class="ctl"><span>Where</span><span class="v">Local ▾</span></div>
+          <div class="seg"><div class="on">Local</div><div class="lk">Nearby 🔒</div><div class="lk">Global 🔒</div></div>
+        </div>
+        <div class="fblock">
+          <div class="ft">Property only</div>
+          <div class="pills"><span class="pill sel">For Rent</span><span class="pill">For Sale</span><span class="pill sel">House</span><span class="pill">3+ beds</span><span class="pill">2+ baths</span><span class="pill">Garage</span><span class="pill">Furnished</span><span class="pill">Pets</span></div>
+        </div>
+        <div class="save"><div class="a">Show matches</div><div class="b">♡ Save</div></div>
+      </div></div>
+    </div>
+
+    <!-- CARS -->
+    <div class="scr">
+      <div class="cap">Cars — same top, different facets</div>
+      <div class="phone"><div class="stat"></div><div class="sheet">
+        <div class="grab"></div><h3>Filter · Cars</h3>
+        <div class="ublock">
+          <div class="ut">Universal — same on every category</div>
+          <div class="ctl"><span>Price</span><span class="v">R0 – R400k</span></div>
+          <div class="track"><div class="fill" style="left:0;width:55%"></div><div class="knob" style="left:0"></div><div class="knob" style="left:53%"></div></div>
+          <div class="ctl"><span>Minimum trust</span><span class="v">≥ 80</span></div>
+          <div class="track"><div class="fill" style="left:0;width:74%"></div><div class="knob" style="left:72%"></div></div>
+          <div class="ctl"><span>Where</span><span class="v">Local ▾</span></div>
+          <div class="seg"><div class="on">Local</div><div class="lk">Nearby 🔒</div><div class="lk">Global 🔒</div></div>
+        </div>
+        <div class="fblock">
+          <div class="ft">Cars only</div>
+          <div class="pills"><span class="pill sel">Toyota</span><span class="pill">2018+</span><span class="pill sel">Automatic</span><span class="pill">&lt; 100k km</span></div>
+        </div>
+        <div class="save"><div class="a">Show matches</div><div class="b">♡ Save</div></div>
+      </div></div>
+    </div>
+
+    <!-- LOCAL MARKET -->
+    <div class="scr">
+      <div class="cap">Local Market — same top, free-text not facets</div>
+      <div class="phone"><div class="stat"></div><div class="sheet">
+        <div class="grab"></div><h3>Filter · Local Market</h3>
+        <div class="ublock">
+          <div class="ut">Universal — same on every category</div>
+          <div class="ctl"><span>Price</span><span class="v">R0 – R2k</span></div>
+          <div class="track"><div class="fill" style="left:0;width:30%"></div><div class="knob" style="left:0"></div><div class="knob" style="left:28%"></div></div>
+          <div class="ctl"><span>Minimum trust</span><span class="v">≥ 60</span></div>
+          <div class="track"><div class="fill" style="left:0;width:50%"></div><div class="knob" style="left:48%"></div></div>
+          <div class="ctl"><span>Where</span><span class="v">Local ▾</span></div>
+          <div class="seg"><div class="on">Local</div><div class="lk">Nearby 🔒</div><div class="lk">Global 🔒</div></div>
+        </div>
+        <div class="fblock">
+          <div class="ft">Local Market — search, not facets</div>
+          <div style="display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--t2);font-size:12px">🔎 <span style="font-style:italic">e.g. "drill", "baby cot", "firewood"…</span></div>
+          <div class="pills" style="margin-top:8px"><span class="pill sel">Any condition</span><span class="pill">New</span><span class="pill">Used</span></div>
+        </div>
+        <div class="save"><div class="a">Show matches</div><div class="b">♡ Save</div></div>
+      </div></div>
+    </div>
+
+    <!-- ALL -->
+    <div class="scr">
+      <div class="cap">All — universal layer only</div>
+      <div class="phone"><div class="stat"></div><div class="sheet">
+        <div class="grab"></div><h3>Filter · All categories</h3>
+        <div class="ublock">
+          <div class="ut">Universal — the whole filter on All</div>
+          <div class="ctl"><span>Price</span><span class="v">any</span></div>
+          <div class="track"><div class="fill" style="left:0;width:100%"></div><div class="knob" style="left:0"></div><div class="knob" style="left:97%"></div></div>
+          <div class="ctl"><span>Minimum trust</span><span class="v">≥ 70</span></div>
+          <div class="track"><div class="fill" style="left:0;width:62%"></div><div class="knob" style="left:60%"></div></div>
+          <div class="ctl"><span>Where</span><span class="v">Local ▾</span></div>
+          <div class="seg"><div class="on">Local</div><div class="lk">Nearby 🔒</div><div class="lk">Global 🔒</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--t2);text-align:center;padding:6px 4px">No category chosen → no facets. Pick a category to narrow further.</div>
+        <div class="save"><div class="a">Show matches</div><div class="b">♡ Save</div></div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <h2>What this fixes, and what it means to build</h2>
+  <ul class="plain">
+    <li><b>Removes the redundancy you felt.</b> Today a category shows the old comprehensive sheet <i>plus</i> my bolted-on Trust selector in the bar — two mechanisms. In the new model there's <b>one filter</b>: the Trust selector moves into the universal top of the sheet, and the bar is just the single "Filter" entry.</li>
+    <li><b>Consolidates the duplicated universals.</b> Price and area/suburb stop being copied into all six sheets; they live once in the universal layer. Less to build, less to keep in sync, less for the buyer to parse.</li>
+    <li><b>Keeps the real complexity — scoped.</b> Every category keeps its own facets (that's what makes vertical search good); they're just never shown all at once.</li>
+    <li><b>"A search that remembers what you're looking at"</b> = entering the filter from within a category opens it pre-scoped to that category. The flow: Browse → All (universal only) → pick a category → its filter (universal + that category's facets).</li>
+    <li><b>It maps straight onto the Step 1 spec.</b> The filter spec is <code>[universal params] + category</code>; the facets are the per-category extension (the P1 "category filters server-side" item). This refinement <i>clarifies</i> the backend, doesn't add to it.</li>
+  </ul>
+
+  <div class="card" style="border-left:5px solid var(--grn)">
+    <p style="margin:0"><b>Proposed live merge (the build, once you're happy with this):</b> (1) add a shared <i>universal section</i> to the top of each category's filter sheet — Trust now, with price/area consolidated in, and scope/currency/Save as they come online; (2) retire the standalone Trust selector from the bar; (3) give <b>All</b> a universal-only filter sheet so every view opens one consistent filter; (4) <b>Local Market</b> gets the universal top + a free-text search box (and an optional Condition tag) in place of facet pills. Done carefully on the live <code>ms.js</code>/sheets with node-check + a visual pass (worth waiting for the Chrome extension to be back so I can verify the core feed before you test).</p>
+  </div>
+
+  <div class="foot">Refines FILTER_APP_MOCKUP.html with your category-scoped, two-layer model. Facet lists taken verbatim from the live <code>filterState</code> (property/tutors/services/adventures/collectors/cars). Universal layer = Trust · price · location/scope · currency · Save-as-Wishlist. Local Market is the 7th — universal layer + free-text search, not facets. Sits under GLOBAL_MARKETPLACE_DESIGN.html → the Filter mechanism.</div>
+</div>
+</body>
+</html>

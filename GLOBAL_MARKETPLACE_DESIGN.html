@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Global Marketplace Design — one engine, three hats</title>
+<style>
+  :root{
+    --steel:#33597a; --steel-dk:#22405a; --steel-lt:#5b85a8; --ink:#1c2530; --muted:#5c6b7a;
+    --line:#e2e8ef; --bg:#f5f8fb; --card:#ffffff;
+    --local:#3a7d52; --near:#3866b0; --global:#7a55a8; --feat:#c97b1e; --no:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;font-size:15.5px}
+  .wrap{max-width:980px;margin:0 auto;padding:34px 26px 80px}
+  h1,h2,h3{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;letter-spacing:-.01em;color:var(--steel-dk)}
+  h1{font-size:31px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 24px}
+  h2{font-size:21px;margin:42px 0 6px;padding-top:8px;border-top:2px solid var(--steel-lt)}
+  h2 .n{display:inline-block;background:var(--steel);color:#fff;font-size:14px;width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;margin-right:8px;vertical-align:middle}
+  .lead{color:var(--muted);margin:0 0 14px}
+  p{margin:10px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 2px rgba(20,40,60,.04)}
+  .hero{border-left:5px solid var(--steel)}
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;text-align:center}
+  .fig svg{max-width:100%;height:auto}
+  .cap{color:var(--muted);font-size:13px;margin:8px 4px 0;text-align:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:13.5px}
+  .pill{display:inline-block;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;color:#fff}
+  table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+  th{background:var(--steel);color:#fff;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:#fafcfe}
+  ul.plain{margin:8px 0;padding-left:20px} ul.plain li{margin:7px 0}
+  .adopt{background:#eef6f0;border:1px solid #cfe6d8;border-left:5px solid var(--local);border-radius:12px;padding:14px 18px;margin:14px 0}
+  .open{background:#fff7ec;border:1px solid #f0d9b5;border-left:5px solid var(--feat);border-radius:12px;padding:14px 18px;margin:14px 0}
+  .reassure{background:#eef6f0;border:1px solid #cfe6d8;border-left:5px solid var(--local);border-radius:12px;padding:16px 20px;margin:22px 0}
+  .price{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f7fb;border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:inline-block;margin:6px 0}
+  b{color:var(--steel-dk)} .foot{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>TrustSquare — Global Marketplace Design</h1>
+  <p class="sub">One unified design · global from day one · Filter · Wishlist · Tuppence-enhance · 2 June 2026 · maths kept under the hood</p>
+
+  <div class="card hero">
+    <p style="margin-top:0;font-size:16.5px"><b>The one idea:</b> a buyer writes a simple list — <i>what · how much · how trusted · how near</i> — and <b>one engine</b> serves it three ways: shows matches <b>now</b> (Search), watches for matches <b>later</b> (Wishlist), and lets a seller fairly <b>stand out</b> within that list (Tuppence-enhance). Same engine, three hats.</p>
+    <p style="margin-bottom:0"><b>Why global isn't scary:</b> your revenue is Tuppence + subscriptions only — you never touch the goods money (buyer and seller settle directly). So <b>currency is a display concern, not a payments rebuild.</b> "Global" = three buildable things: a worldwide <b>geo-scope</b>, <b>currency display</b>, and <b>per-country onboarding</b>. The geo-hierarchy you already have (Country → Region → City → Suburb) is the backbone.</p>
+  </div>
+
+  <!-- V1 what global means -->
+  <div class="fig">
+    <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Global means geo-scope, currency display and per-country onboarding — not a payments rebuild">
+      <rect x="12" y="34" width="158" height="82" rx="10" fill="#eef6f0" stroke="#3a7d52" stroke-width="1.5"/>
+      <text x="91" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#2c5d3f">Geo-scope</text>
+      <text x="91" y="84" text-anchor="middle" font-size="10.5" fill="#5c6b7a">suburb → city →</text>
+      <text x="91" y="98" text-anchor="middle" font-size="10.5" fill="#5c6b7a">country → global</text>
+      <rect x="184" y="34" width="158" height="82" rx="10" fill="#eef6f0" stroke="#3a7d52" stroke-width="1.5"/>
+      <text x="263" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#2c5d3f">Currency display</text>
+      <text x="263" y="84" text-anchor="middle" font-size="10.5" fill="#5c6b7a">show prices in the</text>
+      <text x="263" y="98" text-anchor="middle" font-size="10.5" fill="#5c6b7a">buyer's currency</text>
+      <rect x="356" y="34" width="170" height="82" rx="10" fill="#eef6f0" stroke="#3a7d52" stroke-width="1.5"/>
+      <text x="441" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#2c5d3f">Per-country onboarding</text>
+      <text x="441" y="84" text-anchor="middle" font-size="10.5" fill="#5c6b7a">add currency + processor</text>
+      <text x="441" y="98" text-anchor="middle" font-size="10.5" fill="#5c6b7a">+ seed sellers</text>
+      <rect x="548" y="34" width="160" height="82" rx="10" fill="#fbeeec" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="628" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#9e2f23">NOT a</text>
+      <text x="628" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#9e2f23">payments rebuild</text>
+      <text x="628" y="98" text-anchor="middle" font-size="10" fill="#9e2f23">(goods money never</text>
+      <text x="628" y="110" text-anchor="middle" font-size="10" fill="#9e2f23">touches the platform)</text>
+      <text x="360" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#22405a">What "global" actually means here</text>
+    </svg>
+  </div>
+
+  <div class="adopt">
+    <b>Your three decisions, now baked in:</b>
+    <ul class="plain" style="margin:6px 0 0">
+      <li><b>Nearby = within-country</b> — the "nearby" tier pulls adjacent cities in the same country (one currency per tier). Cross-border adjacency can slot in later with no redesign.</li>
+      <li><b>Prices auto-convert</b> to the buyer's currency, original shown alongside — and the price band normalises to their currency so it never lies.</li>
+      <li><b>Default breadth is category-decided</b> — local-only things (services, viewings) default local; shippable things (collectibles) default wider.</li>
+    </ul>
+  </div>
+
+  <h2><span class="n">1</span>The global foundation</h2>
+  <p class="lead">The substrate all three mechanisms sit on. Build it generic, and any country plugs in the same way.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Worldwide geo-hierarchy: world to country to region to city to suburb, any country plugs in">
+      <rect x="300" y="12" width="120" height="34" rx="8" fill="#22405a"/><text x="360" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">🌍 World</text>
+      <line x1="360" y1="46" x2="360" y2="62" stroke="#5b85a8" stroke-width="1.5"/>
+      <!-- countries -->
+      <rect x="60"  y="62" width="120" height="30" rx="7" fill="#33597a"/><text x="120" y="82" text-anchor="middle" font-size="12" fill="#fff">South Africa · R</text>
+      <rect x="300" y="62" width="120" height="30" rx="7" fill="#33597a"/><text x="360" y="82" text-anchor="middle" font-size="12" fill="#fff">United Kingdom · £</text>
+      <rect x="540" y="62" width="120" height="30" rx="7" fill="#33597a"/><text x="600" y="82" text-anchor="middle" font-size="12" fill="#fff">Australia · A$</text>
+      <text x="690" y="82" font-size="11" fill="#5c6b7a">…+ any</text>
+      <line x1="360" y1="56" x2="120" y2="62" stroke="#cdd8e3"/><line x1="360" y1="56" x2="600" y2="62" stroke="#cdd8e3"/>
+      <!-- chain under one country -->
+      <line x1="120" y1="92" x2="120" y2="108" stroke="#5b85a8" stroke-width="1.5"/>
+      <rect x="60" y="108" width="120" height="26" rx="6" fill="#eef3f8" stroke="#5b85a8"/><text x="120" y="125" text-anchor="middle" font-size="11.5" fill="#22405a">Region (Gauteng)</text>
+      <line x1="120" y1="134" x2="120" y2="148" stroke="#5b85a8" stroke-width="1.5"/>
+      <rect x="60" y="148" width="120" height="26" rx="6" fill="#eef3f8" stroke="#5b85a8"/><text x="120" y="165" text-anchor="middle" font-size="11.5" fill="#22405a">City (Pretoria)</text>
+      <line x1="120" y1="174" x2="120" y2="188" stroke="#5b85a8" stroke-width="1.5"/>
+      <rect x="60" y="188" width="120" height="26" rx="6" fill="#eef3f8" stroke="#5b85a8"/><text x="120" y="205" text-anchor="middle" font-size="11.5" fill="#22405a">Suburb (Brooklyn)</text>
+      <!-- listing tag -->
+      <rect x="300" y="150" width="360" height="64" rx="10" fill="#fafcfe" stroke="#e2e8ef"/>
+      <text x="320" y="172" font-size="12.5" font-weight="700" fill="#22405a">Every listing carries:</text>
+      <text x="320" y="192" font-size="11.5" fill="#1c2530">country · region · city · suburb · <b>currency</b> · trust score</text>
+      <text x="320" y="208" font-size="10.5" fill="#5c6b7a">→ that's all the engine needs to filter, rank and convert, anywhere.</text>
+    </svg>
+    <div class="cap">You already run this 4-level hierarchy for ZA (9 provinces · 54 cities · 11,679 suburbs). Global = the same shape, more countries — adding one is config, not a rewrite.</div>
+  </div>
+
+  <p><b>Currency, the simple way (your choice):</b> each listing keeps its <i>native</i> price; the buyer sees it converted to their own currency with the original alongside, and their price-band filter compares in their currency. The intro fee never wobbles — it's Tuppence, pegged to $2.</p>
+  <div class="price">DeWalt drill &nbsp;·&nbsp; <b>R4,200</b> &nbsp;<span style="color:#5c6b7a">(≈ $230 · £180)</span> &nbsp;·&nbsp; intro fee: <b>1 Tuppence ($2, fixed)</b></div>
+  <p style="font-size:14px;color:var(--muted);margin-top:4px">Payment processors (Paystack for Africa, Stripe for the rest) only ever handle <b>Tuppence top-ups + subscriptions</b>, routed by country. The goods deal is buyer↔seller, off-platform — so no multi-currency checkout to build.</p>
+
+  <h2><span class="n">2</span>One engine, three hats</h2>
+  <p class="lead">The reason we design them together: it's literally the same filter + matcher underneath.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="One engine reading filter, geo, currency and trust, feeding Search, Wishlist and Enhance">
+      <!-- inputs -->
+      <rect x="14" y="60" width="150" height="130" rx="10" fill="#fff" stroke="#5b85a8" stroke-width="1.5"/>
+      <text x="89" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#22405a">THE LIST + DATA</text>
+      <text x="30" y="106" font-size="11.5" fill="#1c2530">• filter spec</text>
+      <text x="30" y="126" font-size="11.5" fill="#1c2530">• geo (where)</text>
+      <text x="30" y="146" font-size="11.5" fill="#1c2530">• currency</text>
+      <text x="30" y="166" font-size="11.5" fill="#1c2530">• trust score</text>
+      <line x1="164" y1="125" x2="226" y2="125" stroke="#5b85a8" stroke-width="2"/><polygon points="226,119 238,125 226,131" fill="#5b85a8"/>
+      <!-- engine -->
+      <circle cx="300" cy="125" r="56" fill="#33597a"/>
+      <text x="300" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">THE</text>
+      <text x="300" y="138" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">ENGINE</text>
+      <!-- three outputs -->
+      <line x1="356" y1="125" x2="430" y2="60" stroke="#5b85a8" stroke-width="2"/><polygon points="424,55 436,57 428,66" fill="#5b85a8"/>
+      <line x1="356" y1="125" x2="430" y2="125" stroke="#5b85a8" stroke-width="2"/><polygon points="430,119 442,125 430,131" fill="#5b85a8"/>
+      <line x1="356" y1="125" x2="430" y2="190" stroke="#5b85a8" stroke-width="2"/><polygon points="424,184 436,193 428,196" fill="#5b85a8"/>
+      <rect x="444" y="34" width="262" height="52" rx="10" fill="#eef3f8" stroke="#3866b0" stroke-width="1.5"/>
+      <text x="458" y="56" font-size="13" font-weight="700" fill="#22405a">SEARCH — show matches now</text>
+      <text x="458" y="74" font-size="11" fill="#5c6b7a">the geo window + buyer controls</text>
+      <rect x="444" y="99" width="262" height="52" rx="10" fill="#f3eef8" stroke="#7a55a8" stroke-width="1.5"/>
+      <text x="458" y="121" font-size="13" font-weight="700" fill="#22405a">WISHLIST — watch for matches</text>
+      <text x="458" y="139" font-size="11" fill="#5c6b7a">save the list → ping when one lands</text>
+      <rect x="444" y="164" width="262" height="52" rx="10" fill="#fbf2e3" stroke="#c97b1e" stroke-width="1.5"/>
+      <text x="458" y="186" font-size="13" font-weight="700" fill="#22405a">ENHANCE — a seller stands out</text>
+      <text x="458" y="204" font-size="11" fill="#5c6b7a">Tuppence reach / rank, inside the list</text>
+    </svg>
+    <div class="cap">Build the list + matcher once. Search runs it live, Wishlist saves it, Enhance lets a seller nudge their place within it. None can ever leave the buyer's filter.</div>
+  </div>
+
+  <h2><span class="n">3</span>What the buyer sees &amp; controls</h2>
+  <p class="lead">Close-first, every card on-filter, prices in their currency — and they hold the dials.</p>
+  <div class="chips">
+    <span class="chip"><span class="pill" style="background:var(--local)">Scope</span> Local · + Nearby · + Global <span style="color:#5c6b7a">(default decided by category; widens with subscription tier)</span></span>
+    <span class="chip"><span class="pill" style="background:var(--near)">Currency</span> shown in yours, original alongside</span>
+    <span class="chip"><span class="pill" style="background:var(--no)">Hide global</span> one-tap "local only"</span>
+  </div>
+  <p>The window is the one from the Filter brief: roughly <b>local-heavy with a small nearby + global sprinkle</b>, everything matching the filter, and an explicit <b>"look wider?"</b> step at the end — never a silent mix. Scope is also an <b>entitlement</b>: free sees local/nearby, the Global subscription unlocks the worldwide ring (a clean "unlock global?" prompt, not an ad).</p>
+
+  <h2><span class="n">4</span>Buyer controls &amp; stress-tests (the edge cases)</h2>
+  <p class="lead">The behaviours that stop it becoming chaos — captured so they're not forgotten.</p>
+  <table>
+    <tr><th>Situation</th><th>What the engine does (plain English)</th></tr>
+    <tr><td><b>30 near-identical sellers</b></td><td>Fair <b>rotation</b> — whoever's been shown least lately surfaces first, reshuffled each visit. No one hogs every intro, no one's buried; all still appear. Small quality signals (photos, completeness) break ties.</td></tr>
+    <tr><td><b>Nothing local, plenty nearby</b></td><td>No dead end: "nothing in your city — 8 nearby, 5 global," widen with a clear label, <b>offer a Wishlist</b> ("ping me when one's listed here"), and log it as a <b>demand signal</b> for where to recruit sellers.</td></tr>
+    <tr><td><b>Unrealistic filter</b></td><td>Honest zero — never a fake match (a boost can't fill the gap). Then points at the <b>one blocker</b>: "nothing at R10 — 3 under R500" or "no seller rated ≥99; top near you is 92 — show those?"</td></tr>
+    <tr><td><b>Global subscriber</b></td><td>Wider rings <b>unlocked</b>; still close-first by default, with a richer global slice they can flip to "global-first" for rare items where distance doesn't matter.</td></tr>
+    <tr><td><b>"Don't show global"</b></td><td>Scope control collapses to local (or local+nearby); sticky and category-smart.</td></tr>
+    <tr><td><b>Cross-country prices</b></td><td>Auto-converted to the buyer's currency; the price band normalises so it filters honestly everywhere.</td></tr>
+  </table>
+  <div class="card" style="border-left:5px solid var(--feat)"><p style="margin:0"><b>The no-spam line (unchanged):</b> an enhanced listing must still match the buyer's filter, is capped in volume, always labelled "Featured", and only trusted listings can be boosted. A boost is a relevant card nudged up — never an advert that barges in. Tuppence buys reach (to nearby cities, within-country) or a small rank nudge — never noise.</p></div>
+
+  <h2><span class="n">5</span>How we'd build it — plain steps, global from line 1</h2>
+  <p class="lead">Each step is useful the day it ships. Designed so adding a country is config, never a rewrite.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Four phases, with ZA first but any country plugging in">
+      <line x1="178" y1="12" x2="178" y2="150" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <text x="178" y="168" text-anchor="middle" font-size="10" fill="#c0392b">↑ ZA goes live here · others plug in the same way</text>
+      <rect x="14" y="26" width="158" height="96" rx="10" fill="#33597a"/><text x="30" y="50" font-size="20" font-weight="700" fill="#fff">1</text>
+      <text x="30" y="72" font-size="12" font-weight="700" fill="#fff">Honest foundation</text>
+      <text x="30" y="90" font-size="10.3" fill="#cfe0ee">Filter/sort/paginate on</text>
+      <text x="30" y="103" font-size="10.3" fill="#cfe0ee">the server; every listing</text>
+      <text x="30" y="116" font-size="10.3" fill="#cfe0ee">carries country + currency.</text>
+      <rect x="188" y="26" width="158" height="96" rx="10" fill="#3f6e93"/><text x="204" y="50" font-size="20" font-weight="700" fill="#fff">2</text>
+      <text x="204" y="72" font-size="12" font-weight="700" fill="#fff">Geo window + money</text>
+      <text x="204" y="90" font-size="10.3" fill="#dce7f1">Close-first scope control,</text>
+      <text x="204" y="103" font-size="10.3" fill="#dce7f1">category default, prices</text>
+      <text x="204" y="116" font-size="10.3" fill="#dce7f1">auto-converted.</text>
+      <rect x="362" y="26" width="158" height="96" rx="10" fill="#5b85a8"/><text x="378" y="50" font-size="20" font-weight="700" fill="#fff">3</text>
+      <text x="378" y="72" font-size="12" font-weight="700" fill="#fff">Wishlist + alerts</text>
+      <text x="378" y="90" font-size="10.3" fill="#eaf1f7">Save a list, get pinged</text>
+      <text x="378" y="103" font-size="10.3" fill="#eaf1f7">worldwide; reuses your</text>
+      <text x="378" y="116" font-size="10.3" fill="#eaf1f7">email + push rails.</text>
+      <rect x="536" y="26" width="170" height="96" rx="10" fill="#7a55a8"/><text x="552" y="50" font-size="20" font-weight="700" fill="#fff">4</text>
+      <text x="552" y="72" font-size="12" font-weight="700" fill="#fff">Tuppence-enhance</text>
+      <text x="552" y="90" font-size="10.3" fill="#ece4f4">Sellers nudge reach/rank,</text>
+      <text x="552" y="103" font-size="10.3" fill="#ece4f4">inside the rules, labelled</text>
+      <text x="552" y="116" font-size="10.3" fill="#ece4f4">and capped.</text>
+    </svg>
+    <div class="cap">Per-country onboarding (CityLauncher) matures alongside: each new market = add a currency + a processor + seed sellers + link its within-country neighbours.</div>
+  </div>
+
+  <h2><span class="n">6</span>Decisions</h2>
+  <div class="adopt"><b>Adopted (yours):</b> within-country "nearby" · auto-convert prices to the buyer's currency · category-decided default breadth.</div>
+  <div class="open">
+    <b>Still open — small calls for later (none block the design):</b>
+    <ul class="plain" style="margin:6px 0 0">
+      <li><b>FX rates</b> — which source and how often to refresh (daily is plenty; display-only, so precision isn't critical).</li>
+      <li><b>Second market</b> — which country after ZA (drives CityLauncher + processor priority). Design stays country-agnostic regardless.</li>
+      <li><b>Category → default-scope map</b> — the exact list of "local-only" vs "shippable" categories.</li>
+      <li><b>Rotation window</b> — how often the fair-rotation reshuffles ties.</li>
+    </ul>
+  </div>
+
+  <div class="reassure">
+    <p style="margin:0 0 6px"><b>Not a tall order — and global-first actually de-risks you.</b> Because currency is display-only and the geo-hierarchy already exists, designing for the world now costs almost nothing extra and saves a painful rebuild later. You already own the parts:</p>
+    <ul class="plain" style="margin:6px 0 0">
+      <li>the <b>4-level geo-hierarchy</b> (built for ZA, generic for any country);</li>
+      <li><b>trust scores</b> + the <b>listing_cities reach</b> link (ranking + the nearby tier, half-built);</li>
+      <li>the <b>email + push pipeline</b> (your Wishlist alerts) and <b>Tuppence</b> (the fair, currency-stable boost currency).</li>
+    </ul>
+    <p style="margin:10px 0 0">ZA can be the first market live (Stripe timing) — but nothing here is ZA-shaped. The only must-before-launch piece is <b>Step 1</b>; the rest is a calm rollout as cities fill.</p>
+  </div>
+
+  <div class="foot">
+    Design vision — broad strokes; data model, ranking weights, FX mechanics and pagination internals deliberately under the hood. Builds on TrustSquare's existing pieces (Country→Region→City→Suburb geo, trust scores, listing_cities reach, the n8n + Web Push rails, Tuppence) + standard marketplace practice (close-first ranking, relevance-bounded promotion, saved-search alerts, display-currency conversion). Supersedes/extends <i>FILTER_ENGINE_DESIGN.html</i>. Next step when you're ready: a build spec for Step 1.
+  </div>
+
+</div>
+</body>
+</html>

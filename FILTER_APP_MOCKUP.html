@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Filter in the app — mockups</title>
+<style>
+  :root{
+    --navy:#1e3a5f; --ink:#111827; --t2:#4b5563; --t3:#555f6e; --bg:#f4f5f7; --line:#e5e7eb; --card:#fff;
+    --grn:#065f46; --grnbg:#d1fae5; --blu:#1d4ed8; --blubg:#dbeafe; --gold:#92400e; --goldbg:#fef3c7;
+    --pur:#6b21a8; --purbg:#f3e8ff; --amber:#b45309; --amberbg:#fef3c7;
+    --page:#eef1f5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+       font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 70px}
+  h1{font-family:"Syne","Segoe UI",sans-serif;font-weight:800;letter-spacing:-.01em;color:var(--navy);font-size:28px;margin:0 0 4px}
+  .sub{color:var(--t2);margin:0 0 22px;font-size:15.5px}
+  .legend{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:0 0 22px}
+  .legend b{color:var(--navy)}
+  .legend .new{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;font-size:11px;font-weight:700;padding:1px 7px;margin-right:4px}
+  .board{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+  .screen{width:300px}
+  .screen .cap{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;color:var(--navy);font-size:14.5px;margin:0 0 4px}
+  .screen .note{color:var(--t2);font-size:12.5px;margin:0 0 10px;min-height:32px}
+  /* phone frame */
+  .phone{width:300px;height:600px;background:#fff;border:8px solid #11202f;border-radius:30px;overflow:hidden;
+         box-shadow:0 8px 26px rgba(17,32,47,.18);display:flex;flex-direction:column;position:relative}
+  .stat{height:22px;background:#11202f}
+  .hdr{background:var(--navy);color:#fff;padding:10px 14px}
+  .hdr .wm{font-family:"Syne","Segoe UI",sans-serif;font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .hdr .loc{font-size:11px;color:#c7d6e6;margin-top:1px}
+  .body{flex:1;overflow:hidden;background:var(--bg);padding:10px 12px}
+  /* filter bar */
+  .fbar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .fpill{flex:1;background:var(--navy);color:#fff;border-radius:22px;padding:8px 12px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;justify-content:center}
+  .scope-chip{background:#fff;border:1px solid var(--line);border-radius:22px;padding:7px 10px;font-size:12px;color:var(--ink);font-weight:600}
+  .count{font-size:12px;color:var(--t2);margin:2px 2px 8px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tag{background:#fff;border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px;color:var(--t2)}
+  .tag b{color:var(--ink)}
+  /* cards */
+  .lc{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:8px;position:relative}
+  .lc .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .lc .ti{font-weight:700;font-size:13px;color:var(--ink)}
+  .lc .pr{font-weight:800;font-size:13px;color:var(--navy);white-space:nowrap}
+  .lc .meta{font-size:11.5px;color:var(--t2);margin-top:2px;display:flex;justify-content:space-between}
+  .badge{display:inline-block;border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px}
+  .b-local{background:var(--grnbg);color:var(--grn)} .b-near{background:var(--blubg);color:var(--blu)} .b-global{background:var(--purbg);color:var(--pur)}
+  .b-trust{background:var(--blubg);color:var(--blu)}
+  .b-feat{background:var(--goldbg);color:var(--amber);border:1px solid #f1d59a}
+  .conv{color:var(--t3);font-weight:500;font-size:11px}
+  .boundary{border-top:1.5px dashed #cbb; margin:8px 0 8px; text-align:center}
+  .boundary .lbl{font-size:10.5px;color:#9a6b6b;background:var(--bg);display:inline-block;transform:translateY(-8px);padding:0 8px}
+  .wider{background:var(--navy);color:#fff;border-radius:20px;text-align:center;font-size:11.5px;font-weight:700;padding:7px}
+  /* sheet */
+  .sheet-bg{flex:1;background:rgba(17,32,47,.45);display:flex;flex-direction:column;justify-content:flex-end}
+  .sheet{background:#fff;border-radius:18px 18px 0 0;padding:14px 15px 16px;max-height:540px;overflow:auto}
+  .grab{width:38px;height:4px;background:#d1d5db;border-radius:3px;margin:0 auto 10px}
+  .sheet h3{font-family:"Syne","Segoe UI",sans-serif;margin:0 0 2px;font-size:16px;color:var(--navy)}
+  .sheet .sec{margin:13px 0 0}
+  .sheet .lab{font-size:12px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;margin-bottom:6px}
+  .sheet .hint{font-size:11px;color:var(--t2);margin-top:4px}
+  .track{height:5px;background:#e5e7eb;border-radius:3px;position:relative;margin:10px 4px}
+  .track .fill{position:absolute;height:5px;border-radius:3px;background:var(--navy)}
+  .track .knob{position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--navy);top:-5px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg div{flex:1;text-align:center;font-size:12px;font-weight:700;padding:8px 0;color:var(--t2);background:#fff;border-right:1px solid var(--line)}
+  .seg div:last-child{border-right:none}
+  .seg div.on{background:var(--navy);color:#fff}
+  .seg div.lock{color:#9aa3af}
+  .ccy{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;font-weight:700;color:var(--ink);display:inline-flex;gap:6px;align-items:center}
+  .act{display:flex;gap:9px;margin-top:16px}
+  .btn-pri{flex:1;background:var(--navy);color:#fff;border-radius:22px;text-align:center;font-weight:800;font-size:13.5px;padding:11px}
+  .btn-sec{border:1.5px solid var(--navy);color:var(--navy);border-radius:22px;text-align:center;font-weight:800;font-size:13px;padding:11px 14px;display:flex;align-items:center;gap:6px}
+  /* empty + confirm */
+  .empty{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 14px;text-align:center;margin-top:18px}
+  .empty .big{font-size:30px}
+  .empty .h{font-weight:700;font-size:14px;margin:8px 0 2px;color:var(--ink)}
+  .empty .s{font-size:12px;color:var(--t2);margin-bottom:12px}
+  .opt{display:block;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:12.5px;font-weight:700;color:var(--navy);margin:7px 0;background:#fff}
+  .opt.hi{background:var(--goldbg);border-color:#f1d59a;color:var(--amber)}
+  .confirm{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 14px;text-align:center;margin-top:60px}
+  .confirm .ck{width:46px;height:46px;border-radius:50%;background:var(--grnbg);color:var(--grn);font-size:26px;font-weight:800;line-height:46px;margin:0 auto 10px}
+  .confirm .h{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;font-size:16px;color:var(--navy)}
+  .confirm .spec{background:var(--bg);border-radius:9px;font-size:11.5px;color:var(--t2);padding:8px;margin:10px 0}
+  .footann{max-width:1180px;margin:26px auto 0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+  .footann h2{font-family:"Syne","Segoe UI",sans-serif;color:var(--navy);font-size:18px;margin:0 0 8px}
+  .footann ul{margin:6px 0;padding-left:20px} .footann li{margin:6px 0;font-size:14px}
+  .foot{max-width:1180px;margin:20px auto 0;color:var(--t2);font-size:12.5px}
+  b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The filter, designed into the app</h1>
+  <p class="sub">Mobile-first mockups · 2 June 2026 · upgrades the app's existing filter-bar → filter-sheet → active-tags pattern, in the real brand. Shapes the build; nothing is wired yet.</p>
+
+  <div class="legend">
+    <b>What's new vs the filter today:</b>
+    <span class="new">NEW</span>a <b>Trust ≥</b> threshold ·
+    <span class="new">NEW</span>a <b>Local · Nearby · Global</b> scope (tier-gated) ·
+    <span class="new">NEW</span><b>currency</b> shown in the buyer's money ·
+    <span class="new">NEW</span><b>Save as Wishlist</b> (the same filter becomes an alert).
+    Everything else reuses what's already there — the filter pill, the bottom sheet, the active-filter tags, the trust badges.
+  </div>
+
+  <div class="board">
+
+    <!-- SCREEN 1 -->
+    <div class="screen">
+      <div class="cap">1 · Browse + filter bar</div>
+      <div class="note">The entry point as it is today — pill opens the sheet — now showing the active filters, a result count and the scope.</div>
+      <div class="phone">
+        <div class="stat"></div>
+        <div class="hdr"><div class="wm">TrustSquare</div><div class="loc">South Africa · Gauteng · Pretoria · Brooklyn</div></div>
+        <div class="body">
+          <div class="fbar">
+            <div class="fpill">⚙ Filters · 3 active</div>
+            <div class="scope-chip">📍 Local ▾</div>
+          </div>
+          <div class="count">42 matches in Pretoria</div>
+          <div class="tags">
+            <span class="tag">≤ <b>R5,000</b> ✕</span>
+            <span class="tag">Trust ≥ <b>70</b> ✕</span>
+            <span class="tag"><b>Drills</b> ✕</span>
+          </div>
+          <div class="lc"><div class="row"><span class="ti">Bosch drill</span><span class="pr">R2,100</span></div><div class="meta"><span>Trust 88 · Brooklyn</span><span class="badge b-local">In Pretoria</span></div></div>
+          <div class="lc"><div class="row"><span class="ti">Makita set</span><span class="pr">R3,400</span></div><div class="meta"><span>Trust 81 · Menlo Park</span><span class="badge b-local">In Pretoria</span></div></div>
+          <div class="lc"><div class="row"><span class="ti">Hammer drill</span><span class="pr">R2,900</span></div><div class="meta"><span>Trust 84 · Hatfield</span><span class="badge b-local">In Pretoria</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2 -->
+    <div class="screen">
+      <div class="cap">2 · The filter sheet (upgraded)</div>
+      <div class="note">The centre of it. Same bottom-sheet, now with trust, scope, currency — and one filter doubles as a saved alert.</div>
+      <div class="phone">
+        <div class="stat"></div>
+        <div class="sheet-bg">
+          <div class="sheet">
+            <div class="grab"></div>
+            <h3>Filters · Power tools</h3>
+            <div class="sec">
+              <div class="lab"><span>Price</span><span class="ccy">R ZAR ▾</span></div>
+              <div class="track"><div class="fill" style="left:0;width:52%"></div><div class="knob" style="left:0"></div><div class="knob" style="left:50%"></div></div>
+              <div class="hint">R0 — R5,000 · shown in your currency wherever you browse</div>
+            </div>
+            <div class="sec">
+              <div class="lab"><span>Minimum trust</span><span style="color:var(--navy)">≥ 70</span></div>
+              <div class="track"><div class="fill" style="left:0;width:62%"></div><div class="knob" style="left:60%"></div></div>
+              <div class="hint">Higher = more proven sellers. Most sit 70–96.</div>
+            </div>
+            <div class="sec">
+              <div class="lab"><span>Where to look</span></div>
+              <div class="seg"><div class="on">Local</div><div class="lock">Nearby 🔒</div><div class="lock">Global 🔒</div></div>
+              <div class="hint">Nearby &amp; Global open up on a wider plan — never mixed in unless you choose.</div>
+            </div>
+            <div class="act">
+              <div class="btn-pri">Show 42 matches</div>
+              <div class="btn-sec">♡ Save</div>
+            </div>
+            <div class="hint" style="text-align:center;margin-top:8px">“Save” keeps this exact filter and pings you when a new match is listed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3 -->
+    <div class="screen">
+      <div class="cap">3 · Results — close-first, every card on-filter</div>
+      <div class="note">Mostly local, a little nearby/global (when unlocked), each labelled. A Featured card sits naturally — still inside the filter.</div>
+      <div class="phone">
+        <div class="stat"></div>
+        <div class="hdr"><div class="wm">TrustSquare</div><div class="loc">Drills · ≤ R5,000 · Trust ≥ 70</div></div>
+        <div class="body">
+          <div class="fbar"><div class="fpill">⚙ Filters · 3 active</div><div class="scope-chip">📍 +Global ▾</div></div>
+          <div class="lc"><div class="row"><span class="ti">Bosch drill</span><span class="pr">R2,100</span></div><div class="meta"><span>Trust 88</span><span class="badge b-local">In Pretoria</span></div></div>
+          <div class="lc" style="border-color:#f1d59a"><div class="row"><span class="ti">DeWalt drill</span><span class="pr">R4,200</span></div><div class="meta"><span><span class="badge b-feat">★ Featured</span> Trust 90</span><span class="badge b-local">In Pretoria</span></div></div>
+          <div class="lc"><div class="row"><span class="ti">Ryobi drill</span><span class="pr">R1,750</span></div><div class="meta"><span>Trust 76</span><span class="badge b-local">In Pretoria</span></div></div>
+          <div class="lc"><div class="row"><span class="ti">Cordless drill</span><span class="pr">R3,800</span></div><div class="meta"><span>Trust 82 · Centurion</span><span class="badge b-near">Nearby</span></div></div>
+          <div class="lc"><div class="row"><span class="ti">Collector drill</span><span class="pr">R4,900 <span class="conv">≈ $270</span></span></div><div class="meta"><span>Trust 95</span><span class="badge b-global">Global</span></div></div>
+          <div class="boundary"><span class="lbl">end of matches in your filter</span></div>
+          <div class="wider">↕ Look wider?  Nearby · Global</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4 -->
+    <div class="screen">
+      <div class="cap">4 · Nothing local → choose, never silent</div>
+      <div class="note">An empty city is never a dead end: expand on your terms, or turn the search into a wishlist (which also tells us where to recruit sellers).</div>
+      <div class="phone">
+        <div class="stat"></div>
+        <div class="hdr"><div class="wm">TrustSquare</div><div class="loc">South Africa · Pretoria</div></div>
+        <div class="body">
+          <div class="fbar"><div class="fpill">⚙ Filters · 3 active</div><div class="scope-chip">📍 Local ▾</div></div>
+          <div class="empty">
+            <div class="big">🔍</div>
+            <div class="h">No drills in Pretoria match yet</div>
+            <div class="s">≤ R5,000 · Trust ≥ 70 — nothing local right now.</div>
+            <div class="opt">↗ Look nearby · 8 found</div>
+            <div class="opt">🌍 Look globally · 5 found</div>
+            <div class="opt hi">🔔 Tell me when one's listed in Pretoria</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5 -->
+    <div class="screen">
+      <div class="cap">5 · Filter → Wishlist (the same engine)</div>
+      <div class="note">Saving a filter is the wishlist. The alert rides the notification pipeline already built for introductions.</div>
+      <div class="phone">
+        <div class="stat"></div>
+        <div class="hdr"><div class="wm">TrustSquare</div><div class="loc">South Africa · Pretoria</div></div>
+        <div class="body">
+          <div class="confirm">
+            <div class="ck">✓</div>
+            <div class="h">Wishlist saved</div>
+            <div class="spec"><b>Drill</b> · ≤ R5,000 · Trust ≥ 70 · 📍 Pretoria</div>
+            <div style="font-size:12.5px;color:var(--t2)">We'll notify you the moment a match is listed — by push or email.</div>
+            <div class="opt" style="margin-top:14px">Manage in My Wishlists →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footann">
+    <h2>How it sits in the app</h2>
+    <ul>
+      <li><b>Reuses the real pattern.</b> The filter pill, the bottom sheet, the active-filter tags and the trust badges all exist today (<code>renderFilterBar → openFilterSheet → renderActiveFilterTags</code>, <code>filterState</code>, <code>trustTier()</code>). We extend them, not replace them.</li>
+      <li><b>Four genuinely new controls:</b> the <b>Trust ≥</b> slider, the <b>Local · Nearby · Global</b> scope (locked rings open with the subscription tier — a clean upsell, not an ad), the <b>currency</b> selector (prices show in the buyer's money; ZAR-only today so it's invisible at launch), and <b>Save</b> (filter → wishlist alert).</li>
+      <li><b>Honours the design critique:</b> type floor lifted to ≥12px, icons not emoji-as-iconography in the real build, a visible focus ring on every control, and a guaranteed scrim under any text-on-photo.</li>
+      <li><b>The results obey the rules:</b> close-first, every card on-filter, tier-labelled, Featured clearly marked and still matching; expansion is always the buyer's explicit, labelled choice.</li>
+    </ul>
+    <p style="margin:8px 0 0;font-size:14px;color:var(--t2)">Next, when you're happy with the feel: I fold these screens into the Step 1 build (the backend serves exactly this shape), and we wire the sheet in <code>ms.js</code> on top of the existing filter functions.</p>
+  </div>
+
+  <div class="foot">Static mockups for direction — not the live app. Brand tokens taken from the live source (navy #1e3a5f, semantic badge pairs, 10px radii, Syne + Inter) per DESIGN_CRITIQUE_2026-06-01. Sits under GLOBAL_MARKETPLACE_DESIGN.html.</div>
+</div>
+</body>
+</html>

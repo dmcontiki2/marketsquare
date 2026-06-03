@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Step 1 Build Spec — The Honest Foundation</title>
+<style>
+  :root{
+    --steel:#33597a; --steel-dk:#22405a; --steel-lt:#5b85a8; --ink:#1c2530; --muted:#5c6b7a;
+    --line:#e2e8ef; --bg:#f5f8fb; --card:#ffffff;
+    --p0:#c0392b; --p1:#d98324; --p2:#3a7d52; --ok:#2f8f5b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;font-size:15px}
+  .wrap{max-width:1000px;margin:0 auto;padding:34px 26px 80px}
+  h1,h2,h3{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;letter-spacing:-.01em;color:var(--steel-dk)}
+  h1{font-size:29px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:15.5px;margin:0 0 22px}
+  h2{font-size:20px;margin:36px 0 8px;padding-top:8px;border-top:2px solid var(--steel-lt)}
+  h2 .n{display:inline-block;background:var(--steel);color:#fff;font-size:13px;width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;margin-right:8px;vertical-align:middle}
+  h3{font-size:15.5px;margin:18px 0 6px;color:var(--steel)}
+  p{margin:9px 0} .lead{color:var(--muted);margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+  .hero{border-left:5px solid var(--steel)}
+  code{background:#eef3f8;padding:1px 6px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  pre{background:#1c2530;color:#e7eef5;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.5;font-family:ui-monospace,Menlo,Consolas,monospace}
+  pre .k{color:#8fc7ff} pre .s{color:#b9e6a8} pre .c{color:#7d8aa0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+  th{background:var(--steel);color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:#fafcfe}
+  td.id{font-weight:700;color:var(--steel-dk);white-space:nowrap}
+  .pri{display:inline-block;border-radius:5px;padding:1px 7px;font-size:11.5px;font-weight:700;color:#fff}
+  .b0{background:var(--p0)} .b1{background:var(--p1)} .b2{background:var(--p2)}
+  ul.plain{margin:7px 0;padding-left:20px} ul.plain li{margin:6px 0}
+  .ac{background:#f3f7fb;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
+  .ac b{color:var(--steel-dk)}
+  .tag{display:inline-block;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;background:#eef3f8;color:var(--steel-dk);border:1px solid #d4e0ec}
+  .warn{background:#fff7ec;border:1px solid #f0d9b5;border-left:5px solid var(--p1);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .foot{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  b{color:var(--steel-dk)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Step 1 Build Spec — The Honest Foundation</h1>
+  <p class="sub">TrustSquare Global Marketplace · the one piece needed before launch · 2 June 2026 · v1</p>
+
+  <div class="card hero">
+    <p style="margin-top:0"><b>What this builds:</b> the listings query that <b>filters, sorts and paginates entirely on the server</b>, scoped by city, returning an <b>anonymity-safe, currency-aware</b> result with <b>stable pagination</b> — and the single <b>canonical "filter spec"</b> that Search (now) and Wishlist (later) will both reuse.</p>
+    <p style="margin-bottom:0"><b>Why it's first:</b> every later piece — the geo window, Wishlist alerts, Tuppence-enhance — sits on top of honest, consistent, global-ready results. Get this right and adding a country (or a million listings) is a config change, not a rewrite. <b>Scope is deliberately tight</b> — no ranking, no window composition, no alerts here.</p>
+  </div>
+
+  <h2><span class="n">1</span>Problem</h2>
+  <p>Three foundation cracks, all in the buyer feed (<code>GET /listings</code> in <code>bea_main.py</code>):</p>
+  <ul class="plain">
+    <li><b>Filters lie at volume.</b> The server returns up to a fixed slice; the browser (<code>renderGrid</code>) then filters by price, trust, beds, etc. on whatever it received. So in a busy city a filter like "drill ≤ R5k, trust ≥ 70" only searches the loaded slice — real matches get hidden. A backend limit is changing what a filter <i>means</i>, which is wrong.</li>
+    <li><b>No currency/country on a listing.</b> Prices are free-text strings; there is no per-listing currency or normalised price, so cross-country comparison and an honest price-band filter are impossible. This blocks "global" entirely.</li>
+    <li><b>The buyer response leaks the seller.</b> The endpoint returns every row column verbatim — including <code>seller_email</code> — to buyers. That violates the absolute anonymity rule (A2): seller identity must never reach a buyer.</li>
+  </ul>
+  <p class="lead">Step 1 fixes all three so the feed is consistent, global-ready, and anonymous — the bedrock for Steps 2–4.</p>
+
+  <h2><span class="n">2</span>Goals (measurable)</h2>
+  <ul class="plain">
+    <li>A filter returns the <b>complete, correct</b> match set for a city regardless of how many listings exist (10 or 10,000) — proven where matches exceed one page.</li>
+    <li>One <b>canonical filter spec + matcher</b> — the exact query Search uses and Wishlist will reuse, with zero duplicate matching logic.</li>
+    <li>Every listing carries a <b>currency + resolvable country</b>; the price band filters in the buyer's currency.</li>
+    <li><b>Zero</b> seller-identifying fields in any buyer-facing response.</li>
+    <li>Pagination is <b>stable</b> (no duplicates or skips) and <b>scales</b> (keyset, not offset).</li>
+    <li><b>Adding a country is config</b> — no query rewrite (scale-shape invariant #5).</li>
+  </ul>
+
+  <h2><span class="n">3</span>Non-goals (explicitly NOT in Step 1)</h2>
+  <table>
+    <tr><th>Out of scope</th><th>Why / where it lives</th></tr>
+    <tr><td>Geo-tiered 60/20/20 window + relevance ranking</td><td>Step 2. Step 1 just returns the correct, filtered, recency-sorted set.</td></tr>
+    <tr><td>Wishlist / saved-search alerts</td><td>Step 3 (reuses this spec + the notification rails).</td></tr>
+    <tr><td>Tuppence-enhance (reach/rank boost)</td><td>Step 4.</td></tr>
+    <tr><td>Cross-border "nearby"</td><td>Deferred by decision — nearby stays within-country; design leaves the hook.</td></tr>
+    <tr><td>Live FX conversion service</td><td>Launch is single-currency (ZAR); Step 1 adds the <i>column + contract</i> only, so multi-currency is a later config add.</td></tr>
+    <tr><td>A search engine (Elasticsearch/Typesense)</td><td>SQL + indexes are ample at launch scale; revisit only if SQL outgrows.</td></tr>
+    <tr><td>Full-text keyword search (<code>q=</code>)</td><td>P1 fast-follow, not core to the foundation.</td></tr>
+  </table>
+
+  <h2><span class="n">4</span>User stories</h2>
+  <ul class="plain">
+    <li><b>Buyer:</b> "I want my price/trust/category filter to return <i>every</i> match in my city, so I don't miss options as the city grows."</li>
+    <li><b>Buyer:</b> "I want to scroll a long result list smoothly — no duplicates, no gaps — even as new listings appear."</li>
+    <li><b>Buyer (global-ready):</b> "I want prices shown in my own currency so I can compare like-for-like."</li>
+    <li><b>Seller:</b> "I want my email and identity <i>never</i> exposed in buyer search results."</li>
+    <li><b>Platform:</b> "I want one canonical listings query, so Search and Wishlist match listings with identical logic and can't drift apart."</li>
+  </ul>
+
+  <h2><span class="n">5</span>Requirements</h2>
+  <h3><span class="pri b0">P0</span> Must-have — the feature cannot ship without these</h3>
+  <table>
+    <tr><th>ID</th><th>Requirement</th><th>Acceptance criteria</th></tr>
+    <tr><td class="id">R1</td><td><b>Core filters move server-side</b> — category, price_min/max, trust_min, suburb applied in SQL (not the browser).</td><td>Given a city with more matches than one page, the total matches the engine reports equals the true DB count for that filter — independent of page size. No core-band filtering remains in <code>renderGrid</code>.</td></tr>
+    <tr><td class="id">R2</td><td><b>Keyset pagination + stable sort.</b> Deterministic <code>ORDER BY created_at DESC, id DESC</code>; cursor encodes the last <code>(created_at,id)</code>.</td><td>Paging/scrolling through a result set never repeats or skips a listing, even when new listings are inserted mid-scroll. No <code>OFFSET</code> on the hot path.</td></tr>
+    <tr><td class="id">R3</td><td><b>Anonymity-safe response.</b> Return a <b>whitelist</b> of buyer-safe fields only; strip <code>seller_email</code> and any internal/PII columns.</td><td>The <code>GET /listings</code> JSON contains zero <code>seller_email</code> (and no other seller-identifying field) for any query. Verified by an automated assertion + a one-off audit.</td></tr>
+    <tr><td class="id">R4</td><td><b>Per-listing currency + country.</b> Add a <code>currency</code> (ISO-4217) column, backfilled <code>ZAR</code>; country resolvable via the geo chain (or denormalised <code>country_iso2</code>).</td><td>Every listing row has a non-null currency; the response includes <code>currency</code>; country derivable for every live listing.</td></tr>
+    <tr><td class="id">R5</td><td><b>Currency-aware price band.</b> <code>price_min/max</code> interpreted in the buyer's display currency; normalisation hook present (pass-through while single-currency).</td><td>With one currency, behaviour is identical to a plain numeric band. The contract carries a currency so a second currency is a config add, not a code change.</td></tr>
+    <tr><td class="id">R6</td><td><b>Canonical response contract.</b> <code>{ listings:[…], page:{ next_cursor, has_more } }</code>; the FEA reads <code>.listings</code> and drops client-side band filtering.</td><td>FEA renders correctly from the new shape; a compat shim tolerates the old bare-array during cutover; smoke 39/39.</td></tr>
+    <tr><td class="id">R7</td><td><b>Standard SQL, thin layer, city-scoped</b> (scale-shape #1 &amp; #5). Parameterised; no SQLite-only pragmas in the handler; always scoped by <code>city_id</code>.</td><td>Query is parameterised + standard SQL (SQLite→Postgres is a connection swap); every query path carries <code>city_id</code>.</td></tr>
+  </table>
+
+  <h3><span class="pri b1">P1</span> Should-have — fast-follow after launch</h3>
+  <ul class="plain">
+    <li>Full-text <code>q=</code> search over title + description.</li>
+    <li>Server-side <b>category facet counts</b> ("Property (42)").</li>
+    <li>Exact <code>total</code> count in the page object (vs <code>has_more</code> only).</li>
+    <li>Move the <b>category-specific</b> filters (beds/baths/subject/level/features) server-side too (still client-side after Step 1).</li>
+  </ul>
+  <h3><span class="pri b2">P2</span> Future — design for, don't build now</h3>
+  <ul class="plain">
+    <li>Geo-tier ranking + the 60/20/20 window composition (Step 2) — the sort key + cursor are built to extend to a relevance score without a rewrite.</li>
+    <li>Multi-currency live FX (market #2).</li>
+    <li>Search-engine migration if SQL ever outgrows.</li>
+  </ul>
+
+  <h2><span class="n">6</span>Technical contract</h2>
+  <h3>Endpoint — evolve <code>GET /listings</code></h3>
+  <table>
+    <tr><th>Param</th><th>Meaning (Step 1)</th></tr>
+    <tr><td class="id">city / city_id</td><td>The buyer's scope anchor (required). Step 1 = single city; <span class="tag">scope</span> param reserved for Step 2 (city·region·country·global).</td></tr>
+    <tr><td class="id">category</td><td>Optional category filter (already server-side today).</td></tr>
+    <tr><td class="id">price_min, price_max</td><td>Numeric band, in <code>currency</code> below.</td></tr>
+    <tr><td class="id">currency</td><td>Buyer's display currency (default = city's currency). Drives band normalisation + display.</td></tr>
+    <tr><td class="id">trust_min</td><td>Minimum trust score (e.g. 70).</td></tr>
+    <tr><td class="id">suburb</td><td>Optional suburb narrow.</td></tr>
+    <tr><td class="id">demo</td><td>Existing seed-data toggle (unchanged).</td></tr>
+    <tr><td class="id">cursor</td><td>Opaque keyset cursor (encodes last <code>created_at,id</code> + a filter signature). Absent = first page.</td></tr>
+    <tr><td class="id">page_size</td><td>Default 24, max 100.</td></tr>
+  </table>
+
+  <h3>Response shape</h3>
+<pre><span class="c">// buyer-safe whitelist — no seller_email, no internal columns</span>
+{
+  <span class="k">"listings"</span>: [
+    { <span class="k">"id"</span>, <span class="k">"title"</span>, <span class="k">"price"</span>, <span class="k">"currency"</span>, <span class="k">"price_display"</span>,
+      <span class="k">"category"</span>, <span class="k">"city"</span>, <span class="k">"suburb"</span>, <span class="k">"area"</span>, <span class="k">"trust_score"</span>,
+      <span class="k">"thumb_url"</span>, <span class="k">"photos"</span>, <span class="k">"beds"</span>, <span class="k">"baths"</span>, <span class="k">"listing_lat"</span>, <span class="k">"listing_lng"</span>,
+      <span class="k">"nearby_pois"</span>, <span class="k">"linked_wonders"</span>, <span class="k">"created_at"</span> }
+  ],
+  <span class="k">"page"</span>: { <span class="k">"next_cursor"</span>: <span class="s">"…"</span>, <span class="k">"has_more"</span>: <span class="k">true</span> }   <span class="c">// total: P1</span>
+}</pre>
+  <h3>Sort + keyset (the stable-pagination core)</h3>
+<pre><span class="k">ORDER BY</span> created_at <span class="k">DESC</span>, id <span class="k">DESC</span>
+<span class="c">-- next page: carry the last row's (created_at, id)</span>
+<span class="k">WHERE</span> (created_at, id) &lt; (:last_created, :last_id)   <span class="c">-- tuple compare</span>
+<span class="k">LIMIT</span> :page_size</pre>
+  <p style="font-size:13.5px;color:var(--muted)">The sort key is deliberately a <i>tuple ending in <code>id</code></i> so it's unique + stable, and so Step 2 can prepend a relevance score (<code>ORDER BY score DESC, created_at DESC, id DESC</code>) without changing the pagination mechanism.</p>
+
+  <h3>Data model</h3>
+  <ul class="plain">
+    <li><code>ALTER TABLE listings ADD COLUMN currency TEXT DEFAULT 'ZAR'</code> — backfill existing rows to ZAR. (Optionally also <code>country_iso2</code> denormalised for query speed — see open question.)</li>
+    <li>Index for the keyset path: <code>(city, listing_status, created_at, id)</code> (+ category if filtered often).</li>
+    <li>The query stays inside the existing thin DB access path — no SQLite-only pragmas leak into the handler.</li>
+  </ul>
+
+  <div class="warn"><b>Migration / rollout (important — touches the core feed + big files):</b> the BEA change (<code>bea_main.py</code>) and the FEA change (<code>ms.js</code> <code>loadLiveListings</code> + drop client-side band filtering) must land together, since the response shape changes. Use a compat shim (accept bare-array <i>or</i> wrapped) during cutover. The offset pagination already deployed is the interim — Step 1 upgrades it to keyset + the contract. All edits via the Python str-replace driver (never Edit/Write on the big files), <code>ast</code>/<code>node --check</code> + smoke before deploy, and applied to the correct base given the pending-TVS divergence. <b>Attended build, not auto-ship.</b></div>
+
+  <h2><span class="n">7</span>Success metrics</h2>
+  <table>
+    <tr><th>Metric</th><th>Target / method</th></tr>
+    <tr><td><b>Correctness</b></td><td>Automated test: filtered count == true DB count at &gt; 1 page. Zero "missing match" reports.</td></tr>
+    <tr><td><b>Pagination stability</b></td><td>Test inserts rows mid-scroll → zero duplicates/skips across pages.</td></tr>
+    <tr><td><b>Anonymity</b></td><td>Assertion in smoke + audit: zero <code>seller_email</code> in any buyer response.</td></tr>
+    <tr><td><b>Performance</b></td><td>Listings query p95 stays flat as a city grows (keyset, indexed) — sanity-benchmark at ~10k synthetic rows.</td></tr>
+    <tr><td><b>No regression</b></td><td>Smoke 39/39; ZA feed (single currency, current volumes) behaves exactly as today.</td></tr>
+  </table>
+
+  <h2><span class="n">8</span>Open questions</h2>
+  <ul class="plain">
+    <li><span class="tag">Eng</span> Denormalise <code>country_iso2</code> onto listings, or resolve via the geo chain each query? (speed vs normalisation) — <i>non-blocking.</i></li>
+    <li><span class="tag">Eng</span> Confirm the buyer-safe field whitelist against everything <code>ms.js</code> actually consumes, so nothing the FEA needs is dropped. — <i>blocking the FEA cutover.</i></li>
+    <li><span class="tag">Eng</span> Cutover style: in-place + compat shim, or a <code>/listings/v2</code> alongside the old until the FEA flips? — <i>blocking.</i></li>
+    <li><span class="tag">Product</span> <code>page_size</code> default (24?) + max (100?). — <i>non-blocking.</i></li>
+    <li><span class="tag">Data</span> FX source + refresh cadence — deferred (single currency at launch), decide before market #2.</li>
+  </ul>
+
+  <h2><span class="n">9</span>How Step 1 itself ships — small, safe slices</h2>
+  <table>
+    <tr><th>Slice</th><th>What</th><th>Risk</th></tr>
+    <tr><td class="id">1a</td><td>Schema: <code>currency</code> column + backfill ZAR + keyset index. Additive only.</td><td>Very low (no behaviour change).</td></tr>
+    <tr><td class="id">1b</td><td>BEA: rewrite the query — server-side core filters + keyset + anonymity whitelist + wrapped response (behind a flag or <code>/v2</code>).</td><td>Medium (core query) — diff-gated, ast + smoke.</td></tr>
+    <tr><td class="id">1c</td><td>FEA: <code>loadLiveListings</code> reads the new contract; remove client-side band filtering; grid render unchanged.</td><td>Medium (core feed) — node-check + a real browser pass.</td></tr>
+    <tr><td class="id">1d</td><td>Cut over, verify correctness + anonymity + stability, smoke, refresh FEA baseline.</td><td>Low once 1b/1c proven.</td></tr>
+  </table>
+  <p class="lead">Each slice is independently verifiable; nothing deploys without ast/node-check + smoke 39/39, applied to the correct base given the pending-TVS divergence.</p>
+
+  <div class="card" style="border-left:5px solid var(--ok)">
+    <p style="margin:0"><b>This retires the original M0 question.</b> "Infinite scroll" was really R1+R2+R6 done properly — server-side filtering with stable keyset paging. Once Step 1 lands, the feed simply pages correctly at any volume, and Steps 2–4 (window, Wishlist, enhance) bolt straight on. On your go-ahead, I'll translate the <b>P0</b> rows into <code>BACKLOG.md</code> items so the build workflow can pick them up.</p>
+  </div>
+
+  <div class="foot">
+    Build spec v1 · scoped tight on purpose. Grounded in the live <code>GET /listings</code> handler (two <code>LIMIT 200</code> branches, bare-array response incl. <code>seller_email</code>, client-side filtering in <code>renderGrid</code>), the 4-level geo-hierarchy, the scale-shape invariants (#1 thin DB layer · #5 city-scoped · #6 reads tolerate staleness) and the A2 anonymity rule. Sits under GLOBAL_MARKETPLACE_DESIGN.html → Step 1.
+  </div>
+
+</div>
+</body>
+</html>

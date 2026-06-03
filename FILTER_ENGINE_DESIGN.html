@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Filter & Search Engine — Design Vision</title>
+<style>
+  :root{
+    --steel:#33597a; --steel-dk:#22405a; --steel-lt:#5b85a8; --ink:#1c2530; --muted:#5c6b7a;
+    --line:#e2e8ef; --bg:#f5f8fb; --card:#ffffff;
+    --local:#3a7d52; --near:#3866b0; --global:#7a55a8; --feat:#c97b1e; --no:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;font-size:15.5px}
+  .wrap{max-width:960px;margin:0 auto;padding:34px 26px 80px}
+  h1,h2,h3{font-family:"Syne","Segoe UI",sans-serif;font-weight:700;letter-spacing:-.01em;color:var(--steel-dk)}
+  h1{font-size:31px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 26px}
+  h2{font-size:21px;margin:40px 0 6px}
+  .lead{color:var(--muted);margin:0 0 14px;font-size:15.5px}
+  p{margin:10px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 2px rgba(20,40,60,.04)}
+  .hero{border-left:5px solid var(--steel)}
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;text-align:center}
+  .fig svg{max-width:100%;height:auto}
+  .cap{color:var(--muted);font-size:13px;margin:8px 4px 0;text-align:center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:13.5px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  ul.plain{margin:8px 0;padding-left:20px} ul.plain li{margin:7px 0}
+  .rule{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+  .rule .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--steel);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .reassure{background:#eef6f0;border:1px solid #cfe6d8;border-left:5px solid var(--local);border-radius:12px;padding:16px 20px;margin:22px 0}
+  .foot{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  b{color:var(--steel-dk)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>TrustSquare — Filter &amp; Search Engine</h1>
+  <p class="sub">Design vision · broad strokes · 2 June 2026 · the maths kept under the hood</p>
+
+  <div class="card hero">
+    <p style="margin-top:0;font-size:16.5px"><b>The whole idea in one line:</b> a buyer writes a simple "shopping list" — <i>what, how much, how trusted, how near</i> — and one smart engine either shows the matches now (<b>Search</b>) or keeps the list and taps them on the shoulder when a match appears later (<b>Wishlist</b>). Same list, two doors.</p>
+    <p style="margin-bottom:0">Everything they see is <b>close-first, trusted, and fresh</b> — and <b>nothing</b> ever appears that isn't on their list. No ads barging in. No spam. The clever ordering happens invisibly; the buyer just sees a sensible, honest shelf.</p>
+  </div>
+
+  <!-- ============ VISUAL A — one engine two doors ============ -->
+  <h2>One engine, two doors</h2>
+  <p class="lead">The same "filter" powers both searching now and being notified later. Build it once.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="One filter feeds the engine, which serves Search now and Wishlist alerts later">
+      <!-- filter spec -->
+      <rect x="14" y="64" width="176" height="86" rx="10" fill="#fff" stroke="#5b85a8" stroke-width="1.5"/>
+      <text x="102" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="#22405a">YOUR LIST</text>
+      <text x="102" y="108" text-anchor="middle" font-size="11.5" fill="#5c6b7a">item · price band</text>
+      <text x="102" y="125" text-anchor="middle" font-size="11.5" fill="#5c6b7a">trust ≥ 70 · how near</text>
+      <!-- arrow -->
+      <line x1="190" y1="107" x2="252" y2="107" stroke="#5b85a8" stroke-width="2"/>
+      <polygon points="252,101 264,107 252,113" fill="#5b85a8"/>
+      <!-- engine -->
+      <circle cx="330" cy="107" r="52" fill="#33597a"/>
+      <text x="330" y="103" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">THE</text>
+      <text x="330" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">ENGINE</text>
+      <!-- split arrows -->
+      <line x1="396" y1="107" x2="470" y2="64" stroke="#5b85a8" stroke-width="2"/>
+      <polygon points="464,58 476,61 467,70" fill="#5b85a8"/>
+      <line x1="396" y1="107" x2="470" y2="150" stroke="#5b85a8" stroke-width="2"/>
+      <polygon points="464,144 476,153 467,156" fill="#5b85a8"/>
+      <!-- search now -->
+      <rect x="478" y="34" width="228" height="58" rx="10" fill="#eef3f8" stroke="#3866b0" stroke-width="1.5"/>
+      <text x="492" y="58" font-size="13.5" font-weight="700" fill="#22405a">SEARCH — right now</text>
+      <text x="492" y="78" font-size="12" fill="#5c6b7a">"show me the matches today"</text>
+      <!-- wishlist later -->
+      <rect x="478" y="122" width="228" height="58" rx="10" fill="#f3eef8" stroke="#7a55a8" stroke-width="1.5"/>
+      <text x="492" y="146" font-size="13.5" font-weight="700" fill="#22405a">WISHLIST — later</text>
+      <text x="492" y="166" font-size="12" fill="#5c6b7a">"tap me when one shows up"</text>
+    </svg>
+    <div class="cap">A saved list is just a search you didn't run yet. Wishlist re-uses the email/notification rails you already have.</div>
+  </div>
+
+  <!-- ============ VISUAL B — the window (centrepiece) ============ -->
+  <h2>What the buyer actually sees</h2>
+  <p class="lead">A tidy window: mostly close to home, a little from nearby, a little from the wider world — <b>but every single card is on their list</b>. When they reach the end, <i>they</i> choose whether to look further.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A results window: filter bar on top, then cards coloured by how near they are, then an expand control at the bottom">
+      <!-- outer window -->
+      <rect x="150" y="14" width="300" height="404" rx="16" fill="#fff" stroke="#22405a" stroke-width="2"/>
+      <!-- filter bar -->
+      <rect x="164" y="28" width="272" height="40" rx="8" fill="#22405a"/>
+      <text x="300" y="46" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">YOUR FILTER</text>
+      <text x="300" y="61" text-anchor="middle" font-size="10.5" fill="#bcd0e2">drill · ≤ R5 000 · trust ≥ 70 · 📍 Pretoria</text>
+
+      <!-- cards: 6 local (green), 2 nearby (blue), 2 global (purple) -->
+      <!-- local -->
+      <rect x="164" y="78"  width="272" height="26" rx="6" fill="#eaf3ee" stroke="#3a7d52"/>
+      <rect x="168" y="82"  width="6" height="18" rx="3" fill="#3a7d52"/>
+      <text x="182" y="95" font-size="11" fill="#1c2530">Bosch drill · R2 100 · Trust 88</text>
+      <text x="424" y="95" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <rect x="164" y="108" width="272" height="26" rx="6" fill="#eaf3ee" stroke="#3a7d52"/>
+      <rect x="168" y="112" width="6" height="18" rx="3" fill="#3a7d52"/>
+      <text x="182" y="125" font-size="11" fill="#1c2530">Makita set · R3 400 · Trust 81</text>
+      <text x="424" y="125" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <rect x="164" y="138" width="272" height="26" rx="6" fill="#fbf2e3" stroke="#c97b1e"/>
+      <rect x="168" y="142" width="6" height="18" rx="3" fill="#c97b1e"/>
+      <text x="182" y="151" font-size="11" fill="#1c2530">DeWalt drill · R4 200 · Trust 90</text>
+      <text x="182" y="161" font-size="8.5" fill="#c97b1e">★ Featured (still matches your filter)</text>
+      <text x="424" y="151" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <rect x="164" y="168" width="272" height="26" rx="6" fill="#eaf3ee" stroke="#3a7d52"/>
+      <rect x="168" y="172" width="6" height="18" rx="3" fill="#3a7d52"/>
+      <text x="182" y="185" font-size="11" fill="#1c2530">Ryobi drill · R1 750 · Trust 76</text>
+      <text x="424" y="185" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <rect x="164" y="198" width="272" height="26" rx="6" fill="#eaf3ee" stroke="#3a7d52"/>
+      <rect x="168" y="202" width="6" height="18" rx="3" fill="#3a7d52"/>
+      <text x="182" y="215" font-size="11" fill="#1c2530">Hammer drill · R2 900 · Trust 84</text>
+      <text x="424" y="215" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <rect x="164" y="228" width="272" height="26" rx="6" fill="#eaf3ee" stroke="#3a7d52"/>
+      <rect x="168" y="232" width="6" height="18" rx="3" fill="#3a7d52"/>
+      <text x="182" y="245" font-size="11" fill="#1c2530">Impact driver · R3 100 · Trust 79</text>
+      <text x="424" y="245" text-anchor="end" font-size="9.5" fill="#3a7d52">In Pretoria</text>
+
+      <!-- nearby -->
+      <rect x="164" y="258" width="272" height="26" rx="6" fill="#eaf0f8" stroke="#3866b0"/>
+      <rect x="168" y="262" width="6" height="18" rx="3" fill="#3866b0"/>
+      <text x="182" y="275" font-size="11" fill="#1c2530">Cordless drill · R3 800 · Trust 82</text>
+      <text x="424" y="275" text-anchor="end" font-size="9.5" fill="#3866b0">Nearby · Centurion</text>
+
+      <rect x="164" y="288" width="272" height="26" rx="6" fill="#eaf0f8" stroke="#3866b0"/>
+      <rect x="168" y="292" width="6" height="18" rx="3" fill="#3866b0"/>
+      <text x="182" y="305" font-size="11" fill="#1c2530">Drill + bits · R2 450 · Trust 85</text>
+      <text x="424" y="305" text-anchor="end" font-size="9.5" fill="#3866b0">Nearby · Midrand</text>
+
+      <!-- global -->
+      <rect x="164" y="318" width="272" height="26" rx="6" fill="#f3eef8" stroke="#7a55a8"/>
+      <rect x="168" y="322" width="6" height="18" rx="3" fill="#7a55a8"/>
+      <text x="182" y="335" font-size="11" fill="#1c2530">Collector drill · R4 900 · Trust 95</text>
+      <text x="424" y="335" text-anchor="end" font-size="9.5" fill="#7a55a8">Global</text>
+
+      <rect x="164" y="348" width="272" height="26" rx="6" fill="#f3eef8" stroke="#7a55a8"/>
+      <rect x="168" y="352" width="6" height="18" rx="3" fill="#7a55a8"/>
+      <text x="182" y="365" font-size="11" fill="#1c2530">Rare cordless · R4 100 · Trust 91</text>
+      <text x="424" y="365" text-anchor="end" font-size="9.5" fill="#7a55a8">Global</text>
+
+      <!-- boundary + expand -->
+      <line x1="164" y1="384" x2="436" y2="384" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <text x="300" y="398" text-anchor="middle" font-size="9.5" fill="#c0392b">— end of matches in your filter —</text>
+      <rect x="178" y="402" width="244" height="22" rx="11" fill="#22405a"/>
+      <text x="300" y="417" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">↕ Look wider?  Nearby · Countrywide · Global</text>
+
+      <!-- legend -->
+      <rect x="466" y="120" width="244" height="190" rx="10" fill="#fafcfe" stroke="#e2e8ef"/>
+      <text x="478" y="142" font-size="12.5" font-weight="700" fill="#22405a">The mix in the window</text>
+      <circle cx="486" cy="166" r="7" fill="#3a7d52"/><text x="500" y="170" font-size="12" fill="#1c2530"><tspan font-weight="700">~60%</tspan> close to you (your city)</text>
+      <circle cx="486" cy="196" r="7" fill="#3866b0"/><text x="500" y="200" font-size="12" fill="#1c2530"><tspan font-weight="700">~20%</tspan> surrounding cities</text>
+      <circle cx="486" cy="226" r="7" fill="#7a55a8"/><text x="500" y="230" font-size="12" fill="#1c2530"><tspan font-weight="700">~20%</tspan> the wider world</text>
+      <circle cx="486" cy="256" r="7" fill="#c97b1e"/><text x="500" y="260" font-size="12" fill="#1c2530">★ a <tspan font-weight="700">Featured</tspan> card — still on-filter</text>
+      <text x="478" y="290" font-size="10.5" fill="#5c6b7a">Going wider is the buyer's</text>
+      <text x="478" y="304" font-size="10.5" fill="#5c6b7a">choice — never automatic.</text>
+    </svg>
+    <div class="cap">The ratios are a guide, not a cage. The key promise: out-of-filter results never sneak in — the buyer is always offered the choice to expand, clearly labelled.</div>
+  </div>
+
+  <!-- ============ VISUAL C — the recipe ============ -->
+  <h2>How it decides the order (the bit we keep under the hood)</h2>
+  <p class="lead">Behind the curtain, three simple dials decide which card sits where. You never see numbers — just a sensible order.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three dials — closeness, trust, freshness — combine into a sensible order">
+      <g>
+        <circle cx="120" cy="80" r="40" fill="#fff" stroke="#3a7d52" stroke-width="2.5"/>
+        <line x1="120" y1="80" x2="120" y2="50" stroke="#3a7d52" stroke-width="3" stroke-linecap="round" transform="rotate(35 120 80)"/>
+        <text x="120" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#22405a">Closeness</text>
+        <text x="120" y="158" text-anchor="middle" font-size="10.5" fill="#5c6b7a">how near to you</text>
+      </g>
+      <g>
+        <circle cx="270" cy="80" r="40" fill="#fff" stroke="#33597a" stroke-width="2.5"/>
+        <line x1="270" y1="80" x2="270" y2="50" stroke="#33597a" stroke-width="3" stroke-linecap="round" transform="rotate(-15 270 80)"/>
+        <text x="270" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#22405a">Trust</text>
+        <text x="270" y="158" text-anchor="middle" font-size="10.5" fill="#5c6b7a">the seller's score</text>
+      </g>
+      <g>
+        <circle cx="420" cy="80" r="40" fill="#fff" stroke="#7a55a8" stroke-width="2.5"/>
+        <line x1="420" y1="80" x2="420" y2="50" stroke="#7a55a8" stroke-width="3" stroke-linecap="round" transform="rotate(20 420 80)"/>
+        <text x="420" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#22405a">Freshness</text>
+        <text x="420" y="158" text-anchor="middle" font-size="10.5" fill="#5c6b7a">how recent / complete</text>
+      </g>
+      <line x1="468" y1="80" x2="528" y2="80" stroke="#5b85a8" stroke-width="2"/>
+      <polygon points="528,74 540,80 528,86" fill="#5b85a8"/>
+      <rect x="548" y="50" width="158" height="60" rx="10" fill="#33597a"/>
+      <text x="627" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">A sensible</text>
+      <text x="627" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">order</text>
+    </svg>
+    <div class="cap">We tune the dials under the hood. The buyer just gets a list that feels right — closest &amp; most trusted near the top.</div>
+  </div>
+
+  <!-- ============ VISUAL D — guardrails ============ -->
+  <h2>The house rules — why this never becomes spam</h2>
+  <p class="lead">You were firm: enhancement, not adverts. Here's the line that keeps it honest, drawn in pictures.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Left: our way, a featured card that still matches the filter. Right: spam, an off-topic ad, which we never do.">
+      <!-- OUR WAY -->
+      <rect x="14" y="14" width="330" height="222" rx="12" fill="#eef6f0" stroke="#3a7d52" stroke-width="1.5"/>
+      <text x="36" y="40" font-size="14" font-weight="700" fill="#2c5d3f">✓ Our way — Enhancement</text>
+      <rect x="36" y="54" width="286" height="26" rx="6" fill="#fff" stroke="#3a7d52"/><text x="48" y="71" font-size="11" fill="#1c2530">Drill · R2 100 · Trust 88 · Pretoria</text>
+      <rect x="36" y="86" width="286" height="30" rx="6" fill="#fbf2e3" stroke="#c97b1e" stroke-width="1.5"/><text x="48" y="100" font-size="11" fill="#1c2530">Drill · R4 200 · Trust 90 · Pretoria</text><text x="48" y="111" font-size="8.5" fill="#c97b1e">★ Featured — paid a small nudge, still on your list</text>
+      <rect x="36" y="122" width="286" height="26" rx="6" fill="#fff" stroke="#3a7d52"/><text x="48" y="139" font-size="11" fill="#1c2530">Drill · R1 750 · Trust 76 · Pretoria</text>
+      <text x="36" y="172" font-size="11" fill="#2c5d3f">Everything still matches "drill · ≤R5k · trust ≥70".</text>
+      <text x="36" y="190" font-size="11" fill="#2c5d3f">The featured card just sits a little higher —</text>
+      <text x="36" y="208" font-size="11" fill="#2c5d3f">labelled, capped, and trusted.</text>
+
+      <!-- SPAM -->
+      <rect x="376" y="14" width="330" height="222" rx="12" fill="#fbeeec" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="398" y="40" font-size="14" font-weight="700" fill="#9e2f23">✗ Spam — never us</text>
+      <rect x="398" y="54" width="286" height="26" rx="6" fill="#fff" stroke="#c8c8c8"/><text x="410" y="71" font-size="11" fill="#1c2530">Drill · R2 100 · Trust 88 · Pretoria</text>
+      <rect x="398" y="86" width="286" height="30" rx="6" fill="#fff" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5 3"/><text x="410" y="104" font-size="11" fill="#9e2f23">💳 Payday loan! · unrelated · paid to barge in</text>
+      <line x1="402" y1="101" x2="680" y2="101" stroke="#c0392b" stroke-width="2"/>
+      <rect x="398" y="122" width="286" height="26" rx="6" fill="#fff" stroke="#c8c8c8"/><text x="410" y="139" font-size="11" fill="#1c2530">Drill · R1 750 · Trust 76 · Pretoria</text>
+      <text x="398" y="172" font-size="11" fill="#9e2f23">An off-list advert paying to interrupt you.</text>
+      <text x="398" y="190" font-size="11" fill="#9e2f23">This is what breaks trust — so the engine</text>
+      <text x="398" y="208" font-size="11" fill="#9e2f23">simply can't do it: off-filter can't be bought.</text>
+    </svg>
+  </div>
+  <div class="chips">
+    <span class="chip"><span class="dot" style="background:var(--steel)"></span> 1 · Stays on your list — a boost can't show anything you didn't ask for</span>
+    <span class="chip"><span class="dot" style="background:var(--steel)"></span> 2 · A nudge, not a takeover — most of the screen is always earned, not paid</span>
+    <span class="chip"><span class="dot" style="background:var(--steel)"></span> 3 · Always labelled "Featured"</span>
+    <span class="chip"><span class="dot" style="background:var(--steel)"></span> 4 · Only trusted listings can be boosted — money can't lift junk</span>
+  </div>
+  <div class="card">
+    <p style="margin:0"><b>Where Tuppence fits (your idea, kept clean):</b> a <i>seller</i> can spend Tuppence to <b>reach the next suburb or two</b>, or for a <b>small rank nudge inside the buyer's filter</b> — never cash, never noise, always capped and labelled. Because a boost <i>can't leave the buyer's list</i>, it's a help, not an advert. You already have the "reach the next city" plumbing (the <i>listing_cities</i> link) — this is the same idea, made a deliberate, fair choice.</p>
+  </div>
+
+  <!-- ============ search + wishlist ============ -->
+  <h2>Search and Wishlist — the same list, two uses</h2>
+  <p class="lead">This is why we build it once.</p>
+  <ul class="plain">
+    <li><b>Search</b> runs the list right now and shows the window above.</li>
+    <li><b>Wishlist</b> quietly keeps the list, watches new listings as sellers post them, and pings the buyer the moment a match lands — by email or push. (It re-uses the very notification pipeline we just switched on for introductions.)</li>
+    <li>One "list" + one "matcher" powers both. Zillow, eBay and Rightmove all work exactly this way: a saved search <i>is</i> an alert.</li>
+  </ul>
+
+  <!-- ============ VISUAL E — phases ============ -->
+  <h2>How we'd build it — four plain steps</h2>
+  <p class="lead">Each step stands on its own and is useful the day it ships. Only the first is needed for launch.</p>
+  <div class="fig">
+    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Four build phases left to right">
+      <!-- launch marker -->
+      <line x1="178" y1="14" x2="178" y2="150" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <text x="178" y="170" text-anchor="middle" font-size="10" fill="#c0392b">↑ launch needs only Step 1</text>
+
+      <g>
+        <rect x="14" y="30" width="158" height="96" rx="10" fill="#33597a"/>
+        <text x="30" y="54" font-size="20" font-weight="700" fill="#fff">1</text>
+        <text x="30" y="76" font-size="12.5" font-weight="700" fill="#fff">Honest filters</text>
+        <text x="30" y="95" font-size="10.5" fill="#cfe0ee">Sorting &amp; filtering</text>
+        <text x="30" y="109" font-size="10.5" fill="#cfe0ee">move to the back —</text>
+        <text x="30" y="123" font-size="10.5" fill="#cfe0ee">same result every time.</text>
+      </g>
+      <g>
+        <rect x="188" y="30" width="158" height="96" rx="10" fill="#3f6e93"/>
+        <text x="204" y="54" font-size="20" font-weight="700" fill="#fff">2</text>
+        <text x="204" y="76" font-size="12.5" font-weight="700" fill="#fff">The geo window</text>
+        <text x="204" y="95" font-size="10.5" fill="#dce7f1">Close-first, with the</text>
+        <text x="204" y="109" font-size="10.5" fill="#dce7f1">nearby + global sprinkle</text>
+        <text x="204" y="123" font-size="10.5" fill="#dce7f1">+ the "look wider" button.</text>
+      </g>
+      <g>
+        <rect x="362" y="30" width="158" height="96" rx="10" fill="#5b85a8"/>
+        <text x="378" y="54" font-size="20" font-weight="700" fill="#fff">3</text>
+        <text x="378" y="76" font-size="12.5" font-weight="700" fill="#fff">Saved lists + alerts</text>
+        <text x="378" y="95" font-size="10.5" fill="#eaf1f7">Wishlist: leave a list,</text>
+        <text x="378" y="109" font-size="10.5" fill="#eaf1f7">get pinged when a</text>
+        <text x="378" y="123" font-size="10.5" fill="#eaf1f7">match appears.</text>
+      </g>
+      <g>
+        <rect x="536" y="30" width="170" height="96" rx="10" fill="#7a55a8"/>
+        <text x="552" y="54" font-size="20" font-weight="700" fill="#fff">4</text>
+        <text x="552" y="76" font-size="12.5" font-weight="700" fill="#fff">Fair Tuppence boost</text>
+        <text x="552" y="95" font-size="10.5" fill="#ece4f4">Sellers nudge reach or</text>
+        <text x="552" y="109" font-size="10.5" fill="#ece4f4">rank — inside the rules,</text>
+        <text x="552" y="123" font-size="10.5" fill="#ece4f4">labelled and capped.</text>
+      </g>
+    </svg>
+    <div class="cap">Steps 2–4 roll out as supply grows — there's no rush until a city's listings get large.</div>
+  </div>
+
+  <div class="reassure">
+    <p style="margin:0 0 6px"><b>Is this a tall order? No.</b> The hard thinking is this page. The mechanics are standard marketplace fare, and <b>you already own about half the parts:</b></p>
+    <ul class="plain" style="margin:6px 0 0">
+      <li>the <b>"reach the next city" link</b> (listing_cities) — the surrounding-cities tier, half-built;</li>
+      <li><b>Trust scores</b> on every listing — your ranking dial is already there;</li>
+      <li>the <b>email + push pipeline</b> we just switched on — that's your Wishlist alerts;</li>
+      <li><b>Tuppence</b> — the fair, no-refund, no-ads currency for the boost.</li>
+    </ul>
+    <p style="margin:10px 0 0">The only piece truly needed <i>before</i> launch is <b>Step 1</b> (make filters honest, so a busy city never hides matches). Everything else is a calm, staged rollout.</p>
+  </div>
+
+  <div class="foot">
+    Design vision — broad strokes only; data model, ranking weights and pagination internals deliberately left under the hood. Built on TrustSquare's existing pieces (listing_cities reach, trust scores, the n8n + Web Push rails, Tuppence) and standard marketplace practice (close-first ranking, relevance-bounded promotion, saved-search alerts). When you want, the next step is a build spec that turns Step 1 into tasks.
+  </div>
+
+</div>
+</body>
+</html>
