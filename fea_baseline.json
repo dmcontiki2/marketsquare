@@ -1,11 +1,11 @@
 {
   "_comment": "TrustSquare FEA integrity baseline. Refresh ONLY after a confirmed, intentional deploy: python3 fea_integrity_check.py --update-baseline. A same-version byte delta is a tamper/corruption signal, not a deploy.",
-  "updated_at": "2026-06-03T09:25:33Z",
+  "updated_at": "2026-06-03T10:19:30Z",
   "bea_version": "1.3.1",
-  "index_bytes": 372327,
+  "index_bytes": 372438,
   "ms_js": {
-    "version": 138,
-    "bytes": 719294
+    "version": 139,
+    "bytes": 719505
   },
   "ms_css": {
     "version": 120,

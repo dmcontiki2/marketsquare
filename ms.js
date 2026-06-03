@@ -318,6 +318,9 @@ async function loadLiveListings(retryCount) {
           mode:         l.mode         || null,
           service_type: l.service_type || null,
           availability: l.availability || null,
+          collectibleType: l.collectible_type || '',
+          condition:       l.condition || '',
+          era: (function(){var y=parseInt(l.era_year)||0; return !y?'':(y<1900?'Pre-1900':(y<=1950?'1900–1950':(y<=2000?'1950–2000':'Post-2000')));})(),
           nearby_pois:  l.nearby_pois  || null,
           linked_wonders: l.linked_wonders || null,
           listing_lat:  l.listing_lat  || null,
@@ -2336,10 +2339,10 @@ function renderGrid(){
 
     if(l.cat==='Collectors'){
       const fc = filterState.collectors;
-      if(fc.collectibleType && fc.collectibleType!=='' && l.collectibleType && l.collectibleType!==fc.collectibleType) return false;
+      if(fc.collectibleType && fc.collectibleType!=='' && l.collectibleType!==fc.collectibleType) return false;
       if(fc.maxPrice && l.priceNum > parseInt(fc.maxPrice)) return false;
-      if(fc.condition && fc.condition!=='' && l.condition && l.condition!==fc.condition) return false;
-      if(fc.era && fc.era!=='' && l.era && l.era!==fc.era) return false;
+      if(fc.condition && fc.condition!=='' && l.condition!==fc.condition) return false;
+      if(fc.era && fc.era!=='' && l.era!==fc.era) return false;
       if(fc.area && fc.area!=='' && l.suburb !== fc.area) return false;
     }
 

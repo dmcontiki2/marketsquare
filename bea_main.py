@@ -134,6 +134,9 @@ def run_migrations(conn):
         ("mode",         "TEXT"),
         ("service_type", "TEXT"),
         ("availability", "TEXT"),
+        ("collectible_type", "TEXT"),
+        ("condition",        "TEXT"),
+        ("era_year",         "INTEGER"),
     ]:
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")

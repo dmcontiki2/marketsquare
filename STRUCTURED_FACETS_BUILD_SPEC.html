@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Structured Facet Fields — build spec</title>
+<style>
+  :root{
+    --navy:#1e3a5f; --ink:#111827; --t2:#4b5563; --bg:#eef1f5; --line:#e5e7eb; --card:#fff;
+    --grn:#065f46; --grnbg:#d1fae5; --red:#b91c1c; --redbg:#fee2e2; --gold:#92400e; --goldbg:#fef3c7;
+    --uni:#0e7490; --unibg:#cffafe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 70px}
+  h1{font-family:"Syne","Segoe UI",sans-serif;font-weight:800;color:var(--navy);font-size:27px;margin:0 0 4px}
+  .sub{color:var(--t2);margin:0 0 22px;font-size:15.5px}
+  h2{font-family:"Syne","Segoe UI",sans-serif;color:var(--navy);font-size:19px;margin:30px 0 8px;padding-top:10px;border-top:2px solid #cfd8e2}
+  p{margin:9px 0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 18px;margin:12px 0}
+  .hero{border-left:5px solid var(--navy)}
+  .key{background:var(--unibg);border:1px solid #a5e8ef;border-left:5px solid var(--uni);border-radius:12px;padding:13px 18px;margin:14px 0}
+  .win{background:var(--grnbg);border:1px solid #6ee7b7;border-left:5px solid var(--grn);border-radius:12px;padding:13px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--navy);color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:#fafcfe}
+  td.c{font-weight:700;color:var(--navy);white-space:nowrap}
+  .auto{background:var(--grnbg);color:var(--grn);border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;white-space:nowrap}
+  .seller{background:var(--goldbg);color:var(--gold);border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;white-space:nowrap}
+  code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .phase{display:flex;gap:12px;align-items:flex-start;margin:10px 0;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+  .pn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .phase b{color:var(--navy)}
+  ul{margin:8px 0;padding-left:20px} li{margin:5px 0}
+  .foot{margin-top:26px;color:var(--t2);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Structured Facet Fields — build spec</h1>
+  <p class="sub">The proper fix for the Collectors / Cars / Adventures filters · 3 June 2026 · Collectors-first, Scryfall-powered</p>
+
+  <div class="card hero">
+    <p style="margin-top:0"><b>The problem (root cause of all three filter bugs you found).</b> The per-category facet filters were built in the UI, but for live listings the values exist only as free text in the title. The BEA has <b>no</b> <code>collectible_type</code>, <code>condition</code>, or <code>era</code> column (same for Cars make/year/transmission and Adventures type/duration/group). So the filters have nothing to match on, and the lenient logic shows every listing under every selection.</p>
+    <p style="margin-bottom:0"><b>The fix.</b> Make these real, stored fields — captured once, filtered reliably — instead of guessing from text.</p>
+  </div>
+
+  <div class="win">
+    <b>The lever — Scryfall is already wired.</b> The BEA already resolves a Scryfall card id at listing creation (<code>resolve_scryfall_id()</code>) and stores <code>scryfall_id</code>. Since your Collectors inventory is heavily MTG cards, that means <b>type and set-year can be auto-filled from Scryfall</b> — the seller types nothing, and existing cards can be backfilled from their stored id. Only physical <b>condition</b> needs a human (Scryfall can't know the state of the actual copy).
+  </div>
+
+  <h2>Data model — new <code>listings</code> columns</h2>
+  <p style="color:var(--t2);font-size:13.5px"><span class="auto">auto</span> = derived from Scryfall / existing data · <span class="seller">seller</span> = chosen at onboarding. All nullable, added via the existing idempotent <code>ALTER TABLE … ADD COLUMN</code> pattern.</p>
+  <table>
+    <tr><th>Category</th><th>Column</th><th>Type</th><th>Source</th><th>Notes</th></tr>
+    <tr><td class="c" rowspan="3">Collectors</td><td><code>collectible_type</code></td><td>TEXT</td><td><span class="auto">auto</span> cards · <span class="seller">seller</span> else</td><td>Cards → "Cards &amp; Memorabilia" from Scryfall; others picked</td></tr>
+    <tr><td><code>condition</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td>Add <b>Near Mint</b> + align to real grades (Mint/Near Mint/Excellent/Good/Fair)</td></tr>
+    <tr><td><code>era_year</code></td><td>INTEGER</td><td><span class="auto">auto</span> cards · <span class="seller">seller</span> else</td><td>Store the <b>year</b>; FEA buckets to Pre-1900 / 1900–1950 / 1950–2000 / Post-2000</td></tr>
+    <tr><td class="c" rowspan="4">Cars</td><td><code>car_make</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td></td></tr>
+    <tr><td><code>car_year</code></td><td>INTEGER</td><td><span class="seller">seller</span></td><td>FEA does the "Year from" comparison</td></tr>
+    <tr><td><code>transmission</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td>Auto / Manual</td></tr>
+    <tr><td><code>mileage</code></td><td>INTEGER</td><td><span class="seller">seller</span></td><td>FEA does the "max mileage" comparison</td></tr>
+    <tr><td class="c" rowspan="3">Adventures</td><td><code>adventure_type</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td></td></tr>
+    <tr><td><code>duration</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td></td></tr>
+    <tr><td><code>group_size</code></td><td>TEXT</td><td><span class="seller">seller</span></td><td></td></tr>
+  </table>
+
+  <h2>Build order — Collectors first (it's what you're testing + has the Scryfall win)</h2>
+
+  <div class="phase"><div class="pn">1</div><div><b>BEA — store + serve the fields.</b> Add the Collectors columns to the migration list; accept them on create/edit (<code>POST</code>/<code>PUT /listings</code>); return them in <code>GET /listings</code>. Extend <code>resolve_scryfall_id()</code> to also capture the card's <b>set-year and type</b> at creation. <i>Low-risk: nullable columns, the established pattern. One BEA deploy + restart.</i></div></div>
+
+  <div class="phase"><div class="pn">2</div><div><b>FEA — map + filter.</b> Map the new columns onto the browse listing object; bucket <code>era_year</code> → era; add <b>Near Mint</b> to the condition options. The Collectors filters now actually filter. <i>ms.js only — you can test Collectors working at this point.</i></div></div>
+
+  <div class="phase"><div class="pn">3</div><div><b>Onboarding — capture them.</b> Add Collectible Type / Condition / Year to the create + edit forms. For cards, type + year arrive pre-filled from Scryfall (seller just confirms + sets condition). <i>Admin/onboarding form change.</i></div></div>
+
+  <div class="phase"><div class="pn">4</div><div><b>Backfill — fix the existing listings.</b> The ~26 live Collectors listings: cards get type + year from their stored <code>scryfall_id</code> (a one-time script); condition parsed from the title where present, else flagged for a quick seller/admin pass. <i>One-time data script.</i></div></div>
+
+  <p style="margin-top:14px">Then repeat Phases 1–4 for <b>Cars</b> and <b>Adventures</b> (same pattern, no Scryfall — all seller-entered).</p>
+
+  <div class="key">
+    <b>Holds the scale-shape invariants:</b> nullable columns, standard SQL through the one DB layer, <code>city_id</code> scoping untouched, reads tolerate staleness. Nothing here is a rewrite — it's the data the filters were always meant to read.
+  </div>
+
+  <div class="card" style="border-left:5px solid var(--grn)">
+    <p style="margin:0"><b>Proposed next action:</b> on your go I start <b>Phase 1 (Collectors)</b> — add the three columns + Scryfall set-year/type capture, deploy + verify the BEA — then <b>Phase 2</b> so you can test the Collectors filters actually working. Phases 3 (onboarding) and 4 (backfill) follow once you're happy with how 1–2 behave. One open call for you: <b>condition grades</b> — I'll use Mint / Near Mint / Excellent / Good / Fair unless you'd prefer the standard card-grading ladder (Mint / Near Mint / Lightly Played / Moderately Played / Heavily Played / Damaged).</p>
+  </div>
+
+  <div class="foot">Spec for the "Build structured fields" path you chose. Fixes the cause behind the listing-type, furnished, and Collectors-facet bugs. Scryfall integration already present in bea_main.py (resolve_scryfall_id / scryfall_price_by_id). No money-path or anonymity impact.</div>
+</div>
+</body>
+</html>
