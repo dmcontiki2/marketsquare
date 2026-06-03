@@ -83,7 +83,7 @@ async function devSetMode(isDemo) {
     }
   }
   // Re-render everything
-  updateLocBadge();
+  updateBadgeLabel();
   renderGrid();
   renderCatCounts();
   initLMHomeTile();
@@ -2674,24 +2674,17 @@ function openDetail(id){
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
-      <div id="detail-price-check-${id}" style="margin-bottom:14px;">
-        <button onclick="buyerPriceCheck('${id}')" id="detail-pc-btn-${id}"
-          style="width:100%;background:var(--surface-2);border:1.5px solid #fde68a;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
-          <span style="font-size:13px;font-weight:700;color:#92400e;">💡 Is this a fair price?</span>
-          <span style="font-size:11px;color:#b45309;font-weight:600;background:#fef3c7;padding:3px 9px;border-radius:20px;">1T · AI price check</span>
-        </button>
+      <div id="detail-price-check-${id}" style="margin-bottom:14px;display:none;">
+        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:2px;font-family:'Syne',sans-serif;">💡 Is this a fair price?</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Choose how precise you need it — you only pay if we return a real figure.</div>
+        <div id="detail-pc-chips-${id}"></div>
         <div id="detail-pc-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>
       ${(l.cat==='Property'||l.cat==='Estate Agents'||l.cat==='Accommodation') ? `
-      <div id="detail-yield-${id}" style="margin-bottom:14px;">
-        <button onclick="buyerYieldCalc('${id}')" id="detail-yield-btn-${id}"
-          style="width:100%;background:var(--surface-2);border:1.5px solid #c4b5fd;border-radius:10px;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'Syne',sans-serif;">
-          <div style="text-align:left;">
-            <span style="font-size:13px;font-weight:700;color:#5b21b6;">📈 Investor Yield Calculator</span>
-            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">For investors — calculates gross rental yield on this property</div>
-          </div>
-          <span style="font-size:11px;color:#7c3aed;font-weight:600;background:#f5f3ff;padding:3px 9px;border-radius:20px;">1T · AI</span>
-        </button>
+      <div id="detail-yield-${id}" style="margin-bottom:14px;display:none;">
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:2px;font-family:'Syne',sans-serif;">📈 Investor Yield Calculator</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Gross rental yield — choose how precise you need it.</div>
+        <div id="detail-yield-chips-${id}"></div>
         <div id="detail-yield-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>` : ''}
       ${isAdv ? '<div class="adv-stat-strip">' + (function(){
@@ -2779,6 +2772,7 @@ function openDetail(id){
   goTo('detail');
   loadDetailWonders(l);
   loadDetailPois(l);
+  tvsInitDetail(id, l.cat);
   if (photos.length > 1) {
     const stripEl = document.getElementById('pstrip-' + id);
     if (stripEl) {
@@ -2803,6 +2797,149 @@ function openDetail(id){
 }
 
 // ── AI3: Buyer Price Check (Session 73) ──────────────────────────────────────
+// -- Tiered Value Selector (TVS) chip selector + tier-aware checks (STEP 4) ----
+function tvsInitDetail(id, cat){
+  try{
+    tvsLoadService(id,'fair_price','detail-price-check-'+id,'detail-pc-chips-'+id);
+    if(cat==='Property'||cat==='Estate Agents'||cat==='Accommodation')
+      tvsLoadService(id,'yield','detail-yield-'+id,'detail-yield-chips-'+id);
+  }catch(e){}
+}
+async function tvsLoadService(id, service, wrapId, chipsId){
+  const wrap=document.getElementById(wrapId), box=document.getElementById(chipsId);
+  if(!wrap||!box) return;
+  let chips=[];
+  if(DEMO_MODE){
+    chips=[{tier:'0T',color:'green',name:(service==='yield'?'Area yield':'Area guide'),desc:'Suburb benchmark (demo data).',ready:true,tuppence:0}];
+  } else {
+    const numId=parseInt(String(id).replace('bea_',''));
+    if(isNaN(numId)){ wrap.style.display='none'; return; }
+    try{
+      const r=await fetch(BEA_URL+'/listings/'+numId+'/value-tiers?service='+service);
+      if(!r.ok){ wrap.style.display='none'; return; }
+      const d=await r.json();
+      chips=(d.chips||[]).filter(c=>c.ready);
+    }catch(_){ wrap.style.display='none'; return; }
+  }
+  if(!chips.length){ wrap.style.display='none'; return; }   // hide rule: nothing true to offer
+  const fn = service==='yield' ? 'tvsYieldCalc' : 'tvsPriceCheck';
+  box.innerHTML = chips.map(c=>tvsChip(id,c,fn)).join('');
+  wrap.style.display='';
+}
+function tvsChip(id,c,fn){
+  const m={green:['#bfe6cf','#f3fbf6','#1a8a52','#e7f6ee'],blue:['#bcd9f1','#f3f9fe','#1b6fb5','#e8f1fa'],gold:['#e8d39a','#fdf9ee','#a87a16','#fbf2da']};
+  const col=m[c.color]||['#e5e7eb','#fafafa','#555','#eee'];
+  const cost=c.tier==='0T'?'Free':c.tier;
+  return `<button onclick="${fn}('${id}','${c.tier}')" style="width:100%;text-align:left;border:1.5px solid ${col[0]};background:${col[1]};border-radius:11px;padding:10px 13px;margin:6px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:'Syne',sans-serif;"><span><span style="font-weight:700;font-size:13px;color:${col[2]};">${c.name}</span><span style="display:block;font-size:11px;color:#6b7280;margin-top:2px;">${c.desc}</span></span><span style="font-weight:800;font-size:12px;color:${col[2]};background:${col[3]};padding:3px 10px;border-radius:20px;white-space:nowrap;">${cost}</span></button>`;
+}
+function tvsReloadChips(id, service){
+  if(service==='yield') tvsLoadService(id,'yield','detail-yield-'+id,'detail-yield-chips-'+id);
+  else tvsLoadService(id,'fair_price','detail-price-check-'+id,'detail-pc-chips-'+id);
+}
+function tvsCard(opts){
+  const flag=opts.flag?`<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#78350f;"><b>${opts.flag.headline||''}</b><br>${opts.flag.detail||''}</div>`:'';
+  const range=(opts.range&&opts.range!=='N/A')?`<div style="font-size:13px;font-weight:800;color:#111827;margin:4px 0;">${opts.range}</div>`:'';
+  const badge=opts.tier?`<span style="font-size:10px;font-weight:700;background:#eef2ff;color:#3730a3;padding:2px 8px;border-radius:20px;">${opts.tier==='0T'?'Free':opts.tier}</span>`:'';
+  const prov=opts.provenance?`<div style="font-size:10.5px;color:#6b7280;margin-top:7px;">Source: ${opts.provenance}</div>`:'';
+  const bal=(opts.remaining!==undefined&&opts.remaining!==null)?`<div style="font-size:10px;color:#9ca3af;margin-top:3px;">${opts.charged?('Charged '+opts.charged+' - '):''}${opts.remaining}T balance</div>`:'';
+  return `<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:11px;padding:13px 15px;">${flag}<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:12px;font-weight:800;color:#111827;">${opts.title||''}</span>${badge}</div>${range}<div style="font-size:12px;color:#374151;line-height:1.55;">${opts.body||''}</div>${prov}<div style="font-size:10px;color:#9ca3af;margin-top:5px;font-style:italic;">${opts.label||''}</div>${bal}</div>`;
+}
+async function tvsPriceCheck(id, tier){
+  const res=document.getElementById('detail-pc-result-'+id), box=document.getElementById('detail-pc-chips-'+id);
+  if(!res) return;
+  const label='Indicative only - information, not financial advice or a formal valuation.';
+  if(DEMO_MODE){
+    res.style.display='block'; if(box) box.style.display='none';
+    res.innerHTML=tvsCard({title:'Area guide (demo)',range:'R9,000-R16,000 per m2',body:'Suburb benchmark for this area. Demo data, not property-specific.',provenance:'PayProp/TPN (demo), 2026 Q1',tier:'0T',label:label});
+    return;
+  }
+  const email=localStorage.getItem('ms_aa_email')||localStorage.getItem('ms_user_email')||'';
+  if(!email){ showToast('Sign in to use AI price tools'); return; }
+  if(tier!=='0T'){
+    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email)); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
+    const need=tier==='2T'?2:1;
+    if(bal<need){ showToast('Insufficient Tuppence - top up to use this check'); return; }
+    const msg=tier==='2T'
+      ? 'This premium check uses a licensed data partner and costs 2T. You are charged only if we return a real, property-specific figure. Proceed?'
+      : 'This checks the price against a verified source. 1T is charged ONLY if we verify a real price - never for a guess. Proceed?';
+    if(!confirm(msg)) return;
+  }
+  const numId=parseInt(String(id).replace('bea_','')); if(isNaN(numId)){ showToast('Only available on live listings'); return; }
+  if(box) box.innerHTML='<div style="font-size:12px;color:#6b7280;padding:8px;">Checking market...</div>';
+  try{
+    const r=await fetch(BEA_URL+'/listings/'+numId+'/price-check?email='+encodeURIComponent(email)+'&tier='+tier,{method:'POST'});
+    if(r.status===402){ showToast('Insufficient Tuppence'); tvsReloadChips(id,'fair_price'); return; }
+    if(!r.ok){ showToast('Price check failed'); tvsReloadChips(id,'fair_price'); return; }
+    const d=await r.json();
+    res.style.display='block'; if(box) box.style.display='none';
+    if(d.verdict==='area_guide'){
+      res.innerHTML=tvsCard({title:'Area guide',range:d.official_range,body:d.assessment,provenance:(d.official_context||'')+(d.provenance_date?(' ('+d.provenance_date+')'):''),tier:'0T',label:d.indicative_label||label,remaining:d.tuppence_remaining});
+      return;
+    }
+    if(d.verdict==='cannot_verify'||d.charged===false){
+      res.innerHTML=tvsCard({title:'No verified price - not charged',body:d.assessment||'We could not verify a market price, so nothing was charged.',label:label,remaining:d.tuppence_remaining});
+      return;
+    }
+    const srcName=d.source==='internal_comps'?'TrustSquare comparable listings'
+      :d.source==='land_registry'?'HM Land Registry sold prices'
+      :d.source==='scryfall'?'TCGPlayer via Scryfall (live FX)':(d.source||'verified feed');
+    res.innerHTML=tvsCard({title:'Verified market read',range:d.official_range,body:(d.assessment||d.context||''),provenance:(d.official_context||srcName),tier:tier,label:label,remaining:d.tuppence_remaining,charged:(tier==='2T'?'2T':'1T'),flag:d.safety_flag});
+  }catch(e){ showToast('Price check error'); tvsReloadChips(id,'fair_price'); }
+}
+async function tvsYieldCalc(id, tier){
+  const res=document.getElementById('detail-yield-result-'+id), box=document.getElementById('detail-yield-chips-'+id);
+  if(!res) return;
+  const label='Indicative only - not financial advice. A figure shown may be estimated from area benchmarks (not property-specific); verify with a registered property practitioner.';
+  if(DEMO_MODE){
+    res.style.display='block'; if(box) box.style.display='none';
+    res.innerHTML=`<div style="background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:11px;padding:13px 15px;"><div style="font-weight:800;color:#5b21b6;font-size:18px;">8.4% gross</div><div style="font-size:12px;color:#374151;margin-top:4px;">Demo: area-benchmark yield for this suburb.</div><div style="font-size:10px;color:#9ca3af;margin-top:6px;font-style:italic;">${label}</div></div>`;
+    return;
+  }
+  const email=localStorage.getItem('ms_aa_email')||localStorage.getItem('ms_user_email')||'';
+  if(!email){ showToast('Sign in to use the yield calculator'); return; }
+  if(tier!=='0T'){
+    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email)); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
+    const need=tier==='2T'?2:1;
+    if(bal<need){ showToast('Insufficient Tuppence'); return; }
+    const msg=tier==='2T'?'This premium yield uses a licensed data partner and costs 2T. Charged only if we compute a real yield. Proceed?':'This computes the real rental yield. 1T is charged only if a yield is produced (you may be asked for a figure). Proceed?';
+    if(!confirm(msg)) return;
+  }
+  const numId=parseInt(String(id).replace('bea_','')); if(isNaN(numId)){ showToast('Only available on live listings'); return; }
+  try{
+    let r=await fetch(BEA_URL+'/listings/'+numId+'/yield-calc?email='+encodeURIComponent(email)+'&tier='+tier,{method:'POST'});
+    if(r.status===402){ showToast('Insufficient Tuppence'); return; }
+    if(r.status===400){ showToast('Yield calc is for Property listings'); return; }
+    if(!r.ok){ showToast('Yield calculation failed'); return; }
+    let d=await r.json();
+    if(d.status==='needs_input'){
+      const ask=d.need==='rent'?'Enter the expected MONTHLY RENT (no Tuppence charged yet):':'Enter the likely PURCHASE PRICE (no Tuppence charged yet):';
+      const e=window.prompt(ask,''); const val=e==null?null:parseFloat(String(e).replace(/[^0-9.]/g,''));
+      if(!val||val<=0){ showToast('No figure entered - nothing charged'); return; }
+      const p=d.need==='rent'?'&rent=':'&purchase_price=';
+      r=await fetch(BEA_URL+'/listings/'+numId+'/yield-calc?email='+encodeURIComponent(email)+'&tier='+tier+p+val,{method:'POST'});
+      if(!r.ok){ showToast('Yield calculation failed'); return; }
+      d=await r.json();
+      if(d.status==='needs_input'){ showToast('Still missing a figure - nothing charged'); return; }
+    }
+    res.style.display='block'; if(box) box.style.display='none';
+    const band=d.net_cost_band||{};
+    res.innerHTML=`<div style="background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:11px;padding:13px 15px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:#fff;border:1px solid #e9d5ff;border-radius:8px;padding:9px;text-align:center;"><div style="font-size:10px;color:#7c3aed;font-weight:600;">GROSS YIELD</div><div style="font-size:22px;font-weight:800;color:#5b21b6;">${d.gross_yield_pct||''}</div></div>
+        <div style="background:#fff;border:1px solid #e9d5ff;border-radius:8px;padding:9px;text-align:center;"><div style="font-size:10px;color:#7c3aed;font-weight:600;">NET YIELD EST.</div><div style="font-size:22px;font-weight:800;color:#5b21b6;">${d.net_yield_estimate_pct||''}</div></div>
+      </div>
+      ${d.gross_formula?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Workings: ${d.gross_formula}</div>`:''}
+      ${d.annual_rent_used?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Annual rent ${d.annual_rent_used}${d.purchase_price_used?(' on '+d.purchase_price_used+' purchase'):''}.</div>`:''}
+      ${band.typical?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Net assumes ~${band.typical}% costs (${band.components||''}).</div>`:''}
+      <div style="font-size:12px;color:#374151;line-height:1.55;margin-bottom:4px;">${d.market_context||''}</div>
+      ${d.sa_yield_benchmark?`<div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:4px;">Benchmark: ${d.sa_yield_benchmark}</div>`:''}
+      <div style="font-size:10.5px;color:#6b7280;margin-bottom:3px;">Price source: ${d.purchase_price_source||'listing'} | Rent source: ${d.monthly_rent_source||'your figure'}</div>
+      <div style="font-size:10px;color:#9ca3af;font-style:italic;">${d.disclaimer||label}</div>
+      ${(d.tuppence_remaining!==undefined&&d.tuppence_remaining!==null)?`<div style="font-size:10px;color:#9ca3af;margin-top:3px;">${d.charged?('Charged '+(tier==='2T'?'2T':'1T')+' - '):''}${d.tuppence_remaining}T balance</div>`:''}
+    </div>`;
+  }catch(e){ showToast('Yield calculation error'); }
+}
+
 async function buyerPriceCheck(id) {
   const l = findListing(id);
   if (!l) return;

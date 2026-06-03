@@ -7,6 +7,8 @@ import database
 import auth
 import storage
 import ai_service_tiers  # Tiered Value Selector: tier config + availability resolver
+import feature_flags     # TVS STEP 5: server-readable paid/provider flag store
+import tier_resolvers    # TVS STEP 3: FREE/owned data resolvers (no paid/consumption API)
 import os
 import json
 import re
@@ -9802,8 +9804,15 @@ async def ai_seller_audit(listing_id: int, email: str):
 # ── AI3 — Buyer Price Check (upgraded Session 77: three-panel intelligence) ──
 
 # -- Tiered Value Selector: availability helpers + value-tiers endpoint --------
-PAID_TIERS_ENABLED = False  # launch: free/owned tiers only. Flip per provider
-                            # once revenue + B7 ceiling + contract are in place.
+# STEP 5: the paid master switch AND per-provider liveness now come from the
+# server-readable feature_flags store (feature_flags.json), so enabling a paid
+# provider later is a CONFIG change, not a code edit. Safe defaults: paid OFF,
+# every paid/contract provider OFF, free/open/owned providers ON.
+def _paid_tiers_enabled() -> bool:
+    return feature_flags.paid_tiers_enabled()
+
+def _tier_providers() -> dict:
+    return feature_flags.providers()
 
 _CAT_TO_TIERKEY = {
     "card": "cards", "cards": "cards", "trading": "cards",
@@ -9847,18 +9856,18 @@ def _offered_value_tiers(listing, service: str):
     """Gated tiers for this listing+service. Hide rule lives in ai_service_tiers."""
     return ai_service_tiers.available_tiers(
         service, _tierkey_for(listing, service), _listing_country_iso2(listing),
-        providers=ai_service_tiers.DEFAULT_PROVIDERS,
-        paid_enabled=PAID_TIERS_ENABLED,
+        providers=_tier_providers(),
+        paid_enabled=_paid_tiers_enabled(),
         comp_count=_comp_count(listing),
     )
 
-def _resolver_ready(service: str, tierkey: str) -> dict:
-    """Which tiers can actually be SERVED today. Everything else is config-only
-    until the resolver build (steps 3-5) wires it. Today: only collectible cards
-    (Scryfall, 1T) auto-resolve; the yield 'your figures' path is handled inline."""
-    if service == "fair_price" and tierkey == "cards":
-        return {"1T": True}
-    return {}
+def _resolver_ready(service: str, tierkey: str, country: str = "ZA") -> dict:
+    """STEP 3: which tiers have a BUILT, runnable resolver today. Delegates to
+    tier_resolvers.served_tiers, which is credential-aware: collectible feeds that
+    need a key (BrickLink/Numista/JustTCG) report ready ONLY when that key is set,
+    so the FEA never shows a chip we cannot actually deliver."""
+    return tier_resolvers.served_tiers(
+        service, tierkey, country, creds=tier_resolvers.creds_from_env())
 
 @app.get("/listings/{listing_id}/value-tiers")
 async def listing_value_tiers(listing_id: int, service: str = "fair_price"):
@@ -9873,23 +9882,140 @@ async def listing_value_tiers(listing_id: int, service: str = "fair_price"):
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
     tierkey = _tierkey_for(listing, service)
+    _ctry = _listing_country_iso2(listing)
     chips = ai_service_tiers.chips_payload(
-        service, tierkey, _listing_country_iso2(listing),
-        providers=ai_service_tiers.DEFAULT_PROVIDERS,
-        paid_enabled=PAID_TIERS_ENABLED,
+        service, tierkey, _ctry,
+        providers=_tier_providers(),
+        paid_enabled=_paid_tiers_enabled(),
         comp_count=_comp_count(listing),
     )
-    ready = _resolver_ready(service, tierkey)
+    ready = _resolver_ready(service, tierkey, _ctry)
     for ch in chips:
-        ch["ready"] = ready.get(ch["tier"], False)
+        ch["ready"] = bool(ready.get(ch["tier"], False))
     return {
         "listing_id": listing_id,
         "service": service,
-        "country": _listing_country_iso2(listing),
+        "country": _ctry,
         "category": tierkey,
-        "paid_tiers_enabled": PAID_TIERS_ENABLED,
+        "paid_tiers_enabled": _paid_tiers_enabled(),
         "chips": chips,
     }
+
+
+# -- Tiered Value Selector STEP 3: FREE/owned fair-price + comps helpers -------
+_INDICATIVE_LABEL = ("Indicative only - information, not financial advice or a "
+                     "formal valuation.")
+
+def _parse_money(v):
+    """Parse a price string ('R1 200 000', '$1,700/mo') to a float, or None."""
+    if v is None:
+        return None
+    cleaned = re.sub(r"[^0-9.]", "", str(v).replace(",", "").replace(" ", ""))
+    try:
+        f = float(cleaned)
+        return f if f > 0 else None
+    except Exception:
+        return None
+
+def _comp_amounts(category, city, exclude_id, rentals_only=False):
+    """Parsed amounts of active same-category, same-city listings (excl. this one)
+    - raw material for an internal-comps median. Owned data only."""
+    out = []
+    try:
+        conn = database.get_db()
+        try:
+            try:
+                rows = conn.execute(
+                    "SELECT price, COALESCE(listing_type,\'\') AS lt FROM listings "
+                    "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
+                    ((category or ""), (city or ""), exclude_id)).fetchall()
+            except Exception:
+                rows = conn.execute(
+                    "SELECT price, \'\' AS lt FROM listings "
+                    "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
+                    ((category or ""), (city or ""), exclude_id)).fetchall()
+        finally:
+            conn.close()
+        for r in rows:
+            if rentals_only and "rent" not in ((r["lt"] or "").lower()):
+                continue
+            amt = _parse_money(r["price"])
+            if amt:
+                out.append(amt)
+    except Exception:
+        return []
+    return out
+
+async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, category, city, asking_zar):
+    """STEP 3 fair-price resolver for non-card categories (FREE/owned sources only).
+    Returns ('verified', {...}) | ('area_guide', {...}) | None. The NUMBER always
+    comes from a feed or arithmetic; the model only narrates the verified branch."""
+    try:
+        if tierkey == "property" and country == "UK" and tier == "1T":
+            lr = await tier_resolvers.uk_land_registry_median(city)
+            if lr:
+                med = lr["value"]
+                return ("verified", {
+                    "source": "land_registry", "floor_zar": None,
+                    "official_range": "GBP " + format(med, ",.0f") + "  (median of " + str(lr["n"]) + " sold)",
+                    "official_ctx": lr["provenance"],
+                    "block": ("VERIFIED MARKET DATA (use these EXACT figures, do not alter): "
+                              + lr["provenance"] + " | Median sold price GBP " + format(med, ",.0f")
+                              + " | Source: HM Land Registry Price Paid (Open Government Licence).")})
+        if tier == "1T" and tierkey in ("property", "vehicles"):
+            est = tier_resolvers.internal_comps_estimate(_comp_amounts(category, city, listing_id), min_n=8)
+            if est:
+                med = est["value"]
+                return ("verified", {
+                    "source": "internal_comps", "floor_zar": med,
+                    "official_range": "R" + format(med, ",.0f") + "  (median of " + str(est["n"]) + " comparable " + str(city) + " listings)",
+                    "official_ctx": est["provenance"],
+                    "block": ("VERIFIED MARKET DATA (use these EXACT figures, do not alter): "
+                              + est["provenance"] + " | Median asking price R" + format(med, ",.0f")
+                              + " | These are comparable TrustSquare listings, not this exact item.")})
+        if tier == "0T" and tierkey == "property" and country == "ZA":
+            fa = None
+            try:
+                if "floor_area" in listing.keys() and listing["floor_area"]:
+                    fa = float(listing["floor_area"])
+            except Exception:
+                fa = None
+            g = tier_resolvers.za_area_price_guide(city, floor_area=fa)
+            if g:
+                imp = ""
+                if g.get("implied_value"):
+                    imp = (" For ~" + format(fa, ".0f") + " m2 that implies about R"
+                           + format(g["implied_low"], ",.0f") + "-R" + format(g["implied_high"], ",.0f") + ".")
+                assess = ("Typical asking prices in " + str(city) + " run " + g["range_text"]
+                          + " (" + g["source"] + ", " + str(g["date"]) + ")." + imp
+                          + " This is an area benchmark, not a figure for this specific property "
+                          "- compare it against the asking price yourself. " + _INDICATIVE_LABEL)
+                return ("area_guide", {
+                    "source": "payprop_tpn", "range_text": g["range_text"],
+                    "assessment": assess, "provenance": g["source"] + " (" + str(g["date"]) + ")",
+                    "date": g["date"]})
+        if tier == "1T" and tierkey in ("lego", "coins", "tcg"):
+            title = (listing["title"] if "title" in listing.keys() else "") or ""
+            feed = None
+            if tierkey == "lego":
+                feed = await tier_resolvers.bricklink_price(title)
+            elif tierkey == "coins":
+                feed = await tier_resolvers.numista_price(title)
+            else:
+                feed = await tier_resolvers.justtcg_price(title)
+            if feed and feed.get("value"):
+                rate = await live_usd_zar()
+                usd = float(feed["value"]); zar = usd * rate
+                return ("verified", {
+                    "source": feed["source"], "floor_zar": zar,
+                    "official_range": "R" + format(zar, ",.0f") + "  (USD $" + format(usd, ",.2f") + " x R" + format(rate, ".2f") + "/USD)",
+                    "official_ctx": feed["provenance"],
+                    "block": ("VERIFIED MARKET DATA (use these EXACT figures, do not alter): "
+                              + feed["provenance"] + " | Verified price USD $" + format(usd, ",.2f")
+                              + " = R" + format(zar, ",.0f") + ".")})
+    except Exception as exc:
+        _log.warning("fair-price resolve failed: %s", exc)
+    return None
 
 
 @app.post("/listings/{listing_id}/price-check")
@@ -9992,6 +10118,36 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
             )
 
     # ── Step 3: narrate. Two prompt modes: verified vs qualitative-guide ───────
+    # -- STEP 3: no card feed -> try the FREE/owned resolver for the chosen tier
+    if (not verified_block) and (tier is not None):
+        _fpx = await _fair_price_resolve(
+            listing, listing_id, tier, _tierkey_for(listing, "fair_price"),
+            _listing_country_iso2(listing), category, city, asking_zar)
+        if _fpx and _fpx[0] == "verified":
+            _e = _fpx[1]
+            verified = True
+            source = _e["source"]
+            floor_zar = _e.get("floor_zar")
+            official_range = _e["official_range"]
+            official_ctx = _e["official_ctx"]
+            verified_block = _e["block"]
+        elif _fpx and _fpx[0] == "area_guide":
+            _e = _fpx[1]
+            _log.info("ai-price-check: listing #%d buyer=%s AREA-GUIDE %s (0T free)",
+                      listing_id, email, _e["source"])
+            return {
+                "verdict": "area_guide", "source": _e["source"],
+                "verified": False, "charged": False,
+                "sa_context": "", "sa_range": _e.get("range_text", "N/A"),
+                "assessment": _e["assessment"],
+                "official_context": _e.get("provenance", ""),
+                "official_range": _e.get("range_text", "N/A"),
+                "local_vs_global": "cannot_compare", "asking_price": price,
+                "safety_flag": None, "tuppence_remaining": _current_tuppence(email),
+                "indicative_label": _INDICATIVE_LABEL,
+                "provenance_date": _e.get("date", ""),
+                "context": _e["assessment"], "suggested_range": _e.get("range_text", "N/A"),
+            }
     if verified_block:
         system_prompt = (
             "You are a pricing analyst for TrustSquare, a South African marketplace. "
@@ -10128,6 +10284,62 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
 
 # ── AI4 — Property Yield Calculator ──────────────────────────────────────────
 
+async def _yield_fill_missing(need, tier, country, city, suburb, listing, listing_id):
+    """STEP 3: source the missing yield half (rent OR purchase price) from a
+    FREE/owned feed, per tier + country. Returns {value, provenance, date,
+    specificity} or None. Numbers come from feeds/arithmetic, never a model."""
+    try:
+        area = suburb or city
+        _cat = listing["category"] if ("category" in listing.keys() and listing["category"]) else "Property"
+        if need == "rent":
+            if country == "US" and tier == "1T":
+                r = tier_resolvers.us_market_rent(area)
+                if r:
+                    return r
+            if country == "UK" and tier == "1T":
+                r = tier_resolvers.uk_market_rent(area)
+                if r:
+                    return r
+            if country == "ZA" and tier == "1T":
+                est = tier_resolvers.internal_comps_estimate(
+                    _comp_amounts(_cat, city, listing_id, rentals_only=True),
+                    min_n=8, label="comparable rentals")
+                if est:
+                    return {"value": est["value"], "provenance": est["provenance"],
+                            "date": est["date"], "specificity": est["specificity"]}
+            if country == "ZA" and tier == "0T":
+                r = tier_resolvers.za_area_rent(city)
+                if r:
+                    return r
+        else:
+            if country == "UK" and tier == "1T":
+                lr = await tier_resolvers.uk_land_registry_median(city)
+                if lr:
+                    return {"value": lr["value"], "provenance": lr["provenance"],
+                            "date": lr["date"], "specificity": lr["specificity"]}
+            if tier == "1T" and country in ("US", "ZA", "AU"):
+                est = tier_resolvers.internal_comps_estimate(
+                    _comp_amounts(_cat, city, listing_id), min_n=8)
+                if est:
+                    return {"value": est["value"], "provenance": est["provenance"],
+                            "date": est["date"], "specificity": est["specificity"]}
+            if country == "ZA" and tier == "0T":
+                fa = None
+                try:
+                    if "floor_area" in listing.keys() and listing["floor_area"]:
+                        fa = float(listing["floor_area"])
+                except Exception:
+                    fa = None
+                g = tier_resolvers.za_area_price_guide(city, floor_area=fa)
+                if g and g.get("implied_value"):
+                    return {"value": g["implied_value"],
+                            "provenance": g["source"] + " area price guide",
+                            "date": g["date"], "specificity": g["specificity"]}
+    except Exception as exc:
+        _log.warning("yield fill failed: %s", exc)
+    return None
+
+
 @app.post("/listings/{listing_id}/yield-calc")
 async def ai_yield_calc(listing_id: int, email: str,
                         rent: float | None = None,
@@ -10208,6 +10420,19 @@ async def ai_yield_calc(listing_id: int, email: str,
             need = "rent"
 
     # Honest 'needs input' — FREE, no Tuppence charged.
+    # -- STEP 3: source the missing half from a FREE/owned feed (per tier+country)
+    _country_y = _listing_country_iso2(listing)
+    _rent_src = "your figure"
+    _price_src = "the listing"
+    if need and tier is not None:
+        _filled = await _yield_fill_missing(need, tier, _country_y, city, suburb, listing, listing_id)
+        if _filled:
+            if need == "rent":
+                monthly_rent = _filled["value"]; _rent_src = _filled["provenance"]
+            else:
+                buy_price = _filled["value"]; _price_src = _filled["provenance"]
+            need = None
+
     if need or not buy_price or not monthly_rent or buy_price <= 0 or monthly_rent <= 0:
         bal = _current_tuppence(email)
         prompt_for = ("the expected monthly rent" if need == "rent"
@@ -10231,24 +10456,32 @@ async def ai_yield_calc(listing_id: int, email: str,
 
     # Net estimate: subtract a transparent cost band (rates, levies, maintenance,
     # vacancy). We show the assumption rather than hiding it inside a model guess.
-    NET_COST_PCT = 3.0
+    # STEP 3: versioned, dated per-region net-cost band replaces the flat 3%.
+    _band = tier_resolvers.net_cost_band(_country_y)
+    NET_COST_PCT = float(_band.get("typical", 3.0))
     net = gross - NET_COST_PCT
 
     # LLM writes ONLY the qualitative benchmark sentence — handed the real numbers.
     location_str = f"{suburb}, {city}" if suburb else city
-    sa_benchmarks = (
-        "SA GROSS YIELD BENCHMARKS (2026): Pretoria residential 7-10%, "
-        "Cape Town 5-7%, Johannesburg 6-9%, Durban 7-10%, secondary cities 8-12%, "
-        "commercial 9-12%, student accommodation 10-14%."
-    )
+    _BENCHMARKS = {
+        "ZA": ("SA GROSS YIELD BENCHMARKS (2026): Pretoria residential 7-10%, "
+               "Cape Town 5-7%, Johannesburg 6-9%, Durban 7-10%, secondary cities 8-12%, "
+               "commercial 9-12%, student accommodation 10-14%."),
+        "UK": ("UK GROSS YIELD BENCHMARKS: prime London 3-5%, regional cities 5-8%, "
+               "northern England 6-9%."),
+        "US": ("US GROSS YIELD BENCHMARKS: coastal metros 3-5%, Sunbelt 5-8%, "
+               "Midwest/secondary 7-10%."),
+        "AU": "AU GROSS YIELD BENCHMARKS: Sydney/Melbourne 2.5-4%, Brisbane/Perth 4-6%.",
+    }
+    sa_benchmarks = _BENCHMARKS.get(_country_y, _BENCHMARKS["ZA"])
     system_prompt = (
-        "You are a South African property analyst. You are GIVEN a computed gross "
+        "You are a property market analyst. You are GIVEN a computed gross "
         "yield — never recalculate or contradict it. Write one honest sentence placing "
         "it against the local benchmark. No filler, no 'buy now'. "
         "Respond with a single valid JSON object — no markdown."
     )
     user_prompt = (
-        f"Property in {location_str}, South Africa.\n"
+        f"Property in {location_str} ({_country_y}).\n"
         f"Purchase price: R{buy_price:,.0f}. Monthly rent: R{monthly_rent:,.0f}. "
         f"COMPUTED gross yield: {gross:.1f}% (annual rent / purchase price).\n"
         f"{sa_benchmarks}\n"
@@ -10292,15 +10525,18 @@ async def ai_yield_calc(listing_id: int, email: str,
         _yc_in, _yc_out = None, None   # narration failed — flat estimate
 
     # DELIVER-THEN-CHARGE: a real, computed yield was produced — charge now.
-    cc = database.get_db()
-    try:
-        remaining = _deduct_tuppence(
-            cc, email, _charge,
-            f"AI Yield Calc \u00b7 #{listing_id} \u00b7 {title[:40]}"
-        )
-        cc.commit()
-    finally:
-        cc.close()
+    if _charge and _charge > 0:
+        cc = database.get_db()
+        try:
+            remaining = _deduct_tuppence(
+                cc, email, _charge,
+                f"AI Yield Calc \u00b7 #{listing_id} \u00b7 {title[:40]}"
+            )
+            cc.commit()
+        finally:
+            cc.close()
+    else:
+        remaining = _current_tuppence(email)
 
     # C3 — log real AI spend for this paid call (was previously unlogged).
     _log_ai_spend(email, "/listings/yield-calc", "haiku", _yc_in, _yc_out)
@@ -10317,8 +10553,21 @@ async def ai_yield_calc(listing_id: int, email: str,
         "purchase_price_used":    f"R{buy_price:,.0f}",
         "monthly_rent_used":      f"R{monthly_rent:,.0f}",
         "monthly_rent_estimate":  f"R{monthly_rent:,.0f}/month",   # legacy key
+        "annual_rent_used":       f"R{annual_rent:,.0f}",
         "market_context":         market_context,
         "sa_yield_benchmark":     sa_yield_benchmark,
+        "country":                _country_y,
+        "tier":                   (tier or "1T"),
+        "purchase_price_source":  _price_src,
+        "monthly_rent_source":    _rent_src,
+        "gross_formula":          f"(R{monthly_rent:,.0f} x 12) / R{buy_price:,.0f} = {gross:.1f}%",
+        "net_cost_band":          {"low": _band.get("low"), "typical": _band.get("typical"),
+                                   "high": _band.get("high"), "components": _band.get("components"),
+                                   "source": _band.get("source"), "updated": _band.get("updated")},
+        "indicative_label":       _INDICATIVE_LABEL,
+        "disclaimer":             ("Indicative only - not financial advice. Where a figure was "
+                                   "estimated from area benchmarks it is not property-specific; "
+                                   "verify with a registered property practitioner."),
         "tuppence_remaining":     remaining,
     }
 

@@ -1,0 +1,33 @@
+{
+  "_comment": "TrustSquare feature/provider flags — read live by the BEA (feature_flags.py). To enable a PAID/contract provider later: set paid_tiers_enabled=true AND that provider=true, AFTER B7 sign-off (a hard monthly cost ceiling) + a contract where one is needed + a CHANGELOG 'Cost model impact:' line. Editing this file is a config change, not a code edit — no redeploy needed. A malformed file is ignored and the safe baseline (paid off, all paid providers off) is used.",
+  "_b7": "PAID providers below are billed per-request / by contract / via a consumption API. They MUST stay false until David explicitly enables them with a ceiling. Free/open/owned providers carry no marginal cost and stay true.",
+  "paid_tiers_enabled": false,
+  "providers": {
+    "scryfall": true,
+    "bricklink": true,
+    "numista": true,
+    "justtcg_free": true,
+    "land_registry": true,
+    "ons_voa": true,
+    "hud_fmr": true,
+    "us_assessor": true,
+    "payprop_tpn": true,
+    "internal_comps": true,
+
+    "pricecharting": false,
+    "pcgs": false,
+    "gocollect": false,
+    "watchcharts": false,
+    "propertydata": false,
+    "rentcast": false,
+    "attom": false,
+    "loom": false,
+    "lightstone": false,
+    "domain": false,
+    "corelogic": false,
+    "sqm": false,
+    "caphpi": false,
+    "redbook": false,
+    "transunion_auto": false
+  }
+}
