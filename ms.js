@@ -1217,6 +1217,10 @@ const filterState = {
   cars:       { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' },
 };
 
+// Global Trust >= filter (applies across all categories; client-side over loaded listings)
+let trustMin = 0;
+function setTrustMin(v){ trustMin = parseInt(v,10) || 0; renderActiveFilterTags(); renderGrid(); }
+
 function setFilter(el, cat){
   if(cat==='Adventures'){ goTo('adventures'); refreshAdvCatChips(); renderAdvGrid(); return; }
   activeFilter = cat;
@@ -1232,7 +1236,16 @@ function setFilter(el, cat){
 function renderFilterBar(){
   const area = document.getElementById('filter-bar-area');
   if(!area) return;
-  if(activeFilter==='All'){ area.innerHTML=''; return; }
+
+  // Global Trust >= selector (shown on every category AND on All)
+  const _tOpts = [0,60,70,80,90].map(t=>`<option value="${t}"${trustMin===t?' selected':''}>${t ? 'Trust \u2265 '+t : 'Trust: Any'}</option>`).join('');
+  const trustHtml = `<select aria-label="Minimum trust score" onchange="setTrustMin(this.value)" style="border:1px solid var(--border,#e5e7eb);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700;background:#fff;color:var(--ink,#111827);flex:none;">${_tOpts}</select>`;
+
+  if(activeFilter==='All'){
+    area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">${trustHtml}</div>`;
+    renderActiveFilterTags();
+    return;
+  }
 
   const cat = activeFilter.toLowerCase();
   const fs = filterState[cat];
@@ -1248,11 +1261,12 @@ function renderFilterBar(){
     ? `<span style="background:var(--accent);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;">${activeCount}</span>`
     : '';
 
-  area.innerHTML = `<div class="filter-bar">
-    <div class="filter-pill${activeCount>0?' has-value':''}" style="width:100%;justify-content:center;gap:6px;" onclick="openFilterSheet('${cat}')">
+  area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">
+    <div class="filter-pill${activeCount>0?' has-value':''}" style="flex:1;justify-content:center;gap:6px;" onclick="openFilterSheet('${cat}')">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
       Filtered Search${badgeHtml}
     </div>
+    ${trustHtml}
   </div>`;
 
   renderActiveFilterTags();
@@ -1700,6 +1714,8 @@ function renderActiveFilterTags(){
   const cat = activeFilter.toLowerCase();
   const fs = filterState[cat] || {};
   const tags = [];
+
+  if(trustMin) tags.push('\u2605 Trust \u2265 '+trustMin);
 
   if(cat==='property'){
     if(fs.minPrice||fs.maxPrice) tags.push(`💰 ${formatZAR(fs.minPrice)||'R0.00'} – ${fs.maxPrice?formatZAR(fs.maxPrice):'any'}`);
@@ -2201,6 +2217,9 @@ function renderGrid(){
       if (DEMO_DISPLAY_MODE === 'demo') return false;
     }
     // END TODO
+
+    // Global Trust >= filter (skip placeholders, which carry no trust)
+    if(trustMin && !isPlaceholder && (l.trust||0) < trustMin) return false;
 
     // Category-specific filtering
     if(l.cat==='Property'){
