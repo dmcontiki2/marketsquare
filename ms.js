@@ -1306,6 +1306,12 @@ function _ensureUniversalBlocks(){
       else if(anchor) sheet.appendChild(block);
       else sheet.insertBefore(block, sheet.firstChild);
     }
+    if(sheet){
+      sheet.querySelectorAll('.fs-section').forEach(function(sec){
+        const lbl=sec.querySelector('.fs-label');
+        if(lbl && /^Area/i.test(lbl.textContent.trim()) && !sec.classList.contains('uni-block')) sec.style.display='none';
+      });
+    }
   });
   if(!document.getElementById('fs-all')){
     const bg=document.createElement('div');
