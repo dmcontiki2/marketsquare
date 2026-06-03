@@ -116,3 +116,8 @@ Kronberg/
 *.heic
 *.HEIC
 # If a small UI/source image must be tracked, add an explicit "!path/to/file" exception below.
+
+# Transient build/deploy backups — originals live in git history + on the server, never version these
+*.bak-tiersbuild
+*.bak-2*
+*.s*bak
