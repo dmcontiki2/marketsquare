@@ -143,6 +143,16 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ════════════════════════════════════════════════════════════ -->
 
 <link rel="stylesheet" href="/static/ms.css?v=120">
+  <!-- TrustSquare brand -->
+  <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
+  <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/static/brand/site.webmanifest?v=3">
+  <meta name="theme-color" content="#22C55E">
+  <meta property="og:title" content="TrustSquare">
+  <meta property="og:description" content="A mobile-first local marketplace connecting buyers with trusted, anonymous sellers.">
+  <meta property="og:image" content="/static/brand/og-image-1200x630.png">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
 <!-- ── ADMIN LOGIN GATE v2 ── inserted by Session 65 ── REMOVE BEFORE PUBLIC LAUNCH ── -->
@@ -156,7 +166,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- LOGIN SCREEN -->
     <div id="gate-login-screen">
       <div style="text-align:center;margin-bottom:32px;">
-        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">TrustSquare</div>
+        <div style="text-align:center;"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:42px;width:auto;"></div>
         <div id="gate-subtitle" style="font-size:13px;color:#64748b;margin-top:6px;letter-spacing:1px;text-transform:uppercase;">Marketplace Preview</div>
       </div>
       <div id="admin-gate-error" style="
@@ -182,7 +192,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- FORCE PIN CHANGE SCREEN -->
     <div id="gate-change-screen" style="display:none;">
       <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;">TrustSquare</div>
+        <div style="text-align:center;"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:42px;width:auto;"></div>
         <div style="font-size:13px;color:#f59e0b;margin-top:6px;letter-spacing:1px;text-transform:uppercase;">Choose Your PIN</div>
         <div id="gate-change-name" style="font-size:14px;color:#555f6e;margin-top:8px;"></div>
       </div>
@@ -327,7 +337,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div id="screen-home" class="screen active">
   <div class="home-hero">
     <div class="hero-top">
-      <div class="hero-logo">TrustSquare</div>
+      <div class="hero-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:30px;width:auto;display:block;"></div>
       <!-- TODO: REMOVE BEFORE LAUNCH — dev-only DEMO/LIVE toggle -->
       <div id="dev-mode-toggle" style="display:flex;align-items:center;background:rgba(0,0,0,.35);border-radius:20px;padding:2px;gap:1px;border:1px solid rgba(255,255,255,.12);">
         <button id="dmt-demo" onclick="devSetMode(true)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:#e63946;color:#fff;">DEMO</button>
@@ -666,7 +676,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
 
     <div class="fs-section">
-      <div class="fs-label">Subject</div>
+      <div class="fs-label">Subject / Activity</div>
       <div class="fs-options">
         <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Any</div>
         <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Maths & Science</div>
@@ -674,6 +684,21 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">English</div>
         <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Accounting</div>
         <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Languages</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Music</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Art</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Chess</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Gym / Fitness</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Boxing</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Wrestling</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Martial Arts</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Gymnastics</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Dancing</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Swimming</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Tennis</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Rugby</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Cricket</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Soccer</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'ft-subject')">Athletics</div>
       </div>
     </div>
 
@@ -801,6 +826,22 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Any</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Experiences</div>
         <div class="fs-opt" onclick="toggleOpt(this,'fa-type')">Accommodation</div>
+      </div>
+    </div>
+
+    <div class="fs-section">
+      <div class="fs-label">Environment</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Bush &amp; Wildlife</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Mountain &amp; Highlands</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Coastal &amp; Beach</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Garden &amp; Winelands</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Wetlands &amp; Lakes</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Desert &amp; Karoo</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Forest &amp; Fynbos</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Urban &amp; Township</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fa-env')">Farm &amp; Rural</div>
       </div>
     </div>
 
@@ -1389,6 +1430,14 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <button class="adv-subcat-btn active" id="adv-btn-all" onclick="setAdvSubcat('all',this)">All</button>
       <button class="adv-subcat-btn" id="adv-btn-accommodation" onclick="setAdvSubcat('adventures_accommodation',this)">🏕 Stays</button>
       <button class="adv-subcat-btn" id="adv-btn-experiences" onclick="setAdvSubcat('adventures_experiences',this)">🌄 Experiences</button>
+    </div>
+    <!-- Filtered Search — opens fs-adventures; applies to both Stays & Experiences -->
+    <div style="padding:2px 0 0;">
+      <div id="adv-filter-pill" onclick="openFilterSheet('adventures')" style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        <span>Filtered Search</span>
+        <span id="adv-filter-badge" style="display:none;background:#e8c97b;color:#3a2a08;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;"></span>
+      </div>
     </div>
     <!-- Category filter chips (4 fixed + More) — inside dark hero -->
     <div class="adv-cat-row" id="adv-cat-row" style="display:none;">
@@ -2541,7 +2590,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <button style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.65);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:24px;" onclick="goTo('home')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> Back
       </button>
-      <div class="ob-logo">MARKETSQUARE</div>
+      <div class="ob-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:24px;width:auto;display:block;"></div>
       <div class="ob-eyebrow">Sell on TrustSquare · Pretoria</div>
       <h1>Reach serious buyers.<br>No commission.</h1>
       <p>TrustSquare connects you directly with qualified buyers via a secure introduction system. You stay anonymous until both parties agree to connect.</p>
@@ -3966,7 +4015,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=139"></script>
+<script src="/static/ms.js?v=140"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

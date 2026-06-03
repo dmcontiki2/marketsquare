@@ -1217,7 +1217,7 @@ const filterState = {
   property:   { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'', listingType:'', furnished:'', pets:'', features:[] },
   tutors:     { maxRate:'', subject:'', level:'', mode:'', area:'' },
   services:   { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' },
-  adventures: { adventureType:'', maxPrice:'', duration:'', groupSize:'', area:'' },
+  adventures: { adventureType:'', environment:'', maxPrice:'', duration:'', groupSize:'', area:'' },
   collectors: { collectibleType:'', maxPrice:'', condition:'', era:'', area:'' },
   cars:       { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' },
 };
@@ -1419,7 +1419,7 @@ function applyFilters(cat){
     filterState.property.features    = getSelOptsInSection('Features','fs-property');
   } else if(cat==='tutors'){
     filterState.tutors.maxRate  = document.getElementById('ft-max')?.value || '';
-    filterState.tutors.subject  = getSelOptInSection('Subject','fs-tutors');
+    filterState.tutors.subject  = getSelOptInSection('Subject / Activity','fs-tutors');
     filterState.tutors.level    = getSelOptInSection('Level','fs-tutors');
     filterState.tutors.mode     = getSelOptInSection('Mode','fs-tutors');
     filterState.tutors.area     = getSelOptInSection('Area','fs-tutors');
@@ -1431,6 +1431,7 @@ function applyFilters(cat){
     filterState.services.area          = getSelOptInSection('Area','fs-services');
   } else if(cat==='adventures'){
     filterState.adventures.adventureType = getSelOptInSection('Adventure Type','fs-adventures');
+    filterState.adventures.environment   = getSelOptInSection('Environment','fs-adventures');
     filterState.adventures.maxPrice      = document.getElementById('fa-max')?.value || '';
     filterState.adventures.duration      = getSelOptInSection('Duration','fs-adventures');
     filterState.adventures.groupSize     = getSelOptInSection('Group Size','fs-adventures');
@@ -1449,6 +1450,7 @@ function applyFilters(cat){
     filterState.cars.mileage      = getSelOptInSection('Max Mileage (km)','fs-cars');
   }
   document.getElementById('fs-'+cat).classList.remove('open');
+  if(cat==='adventures'){ refreshAdvFilterBadge(); renderAdvGrid(); return; }
   renderActiveFilterTags();
   renderGrid();
 }
@@ -1467,7 +1469,7 @@ function clearFilters(cat){
     const el=document.getElementById('fv-max'); if(el)el.value='';
     document.querySelectorAll('#fs-services .fs-opt').forEach(o=>o.classList.remove('sel'));
   } else if(cat==='adventures'){
-    filterState.adventures = { adventureType:'', maxPrice:'', duration:'', groupSize:'', area:'' };
+    filterState.adventures = { adventureType:'', environment:'', maxPrice:'', duration:'', groupSize:'', area:'' };
     const el=document.getElementById('fa-max'); if(el)el.value='';
     document.querySelectorAll('#fs-adventures .fs-opt').forEach(o=>o.classList.remove('sel'));
   } else if(cat==='collectors'){
@@ -1480,6 +1482,7 @@ function clearFilters(cat){
     document.querySelectorAll('#fs-cars .fs-opt').forEach(o=>o.classList.remove('sel'));
   }
   document.getElementById('fs-'+cat).classList.remove('open');
+  if(cat==='adventures'){ refreshAdvFilterBadge(); renderAdvGrid(); return; }
   renderActiveFilterTags();
   renderGrid();
 }
@@ -1699,10 +1702,25 @@ function selectAdvCountry(code, name, flag){
   renderAdvGrid();
 }
 
+function refreshAdvFilterBadge(){
+  const badge=document.getElementById('adv-filter-badge');
+  const pill=document.getElementById('adv-filter-pill');
+  if(!badge) return;
+  const fa=filterState.adventures||{};
+  let n=0;
+  ['adventureType','environment','maxPrice','duration','groupSize','area'].forEach(k=>{ if(fa[k] && fa[k]!=='') n++; });
+  if(typeof trustMin!=='undefined' && trustMin) n++;
+  if(n>0){ badge.textContent=n; badge.style.display='';
+    if(pill){ pill.style.background='rgba(232,201,123,.22)'; pill.style.borderColor='rgba(232,201,123,.6)'; } }
+  else { badge.style.display='none';
+    if(pill){ pill.style.background='rgba(255,255,255,.14)'; pill.style.borderColor='rgba(255,255,255,.28)'; } }
+}
+
 function renderAdvGrid(){
   const grid = document.getElementById('adv-grid');
   const countEl = document.getElementById('adv-results-count');
   if(!grid) return;
+  refreshAdvFilterBadge();
 
   // Filter listings
   let items = LISTINGS.filter(l => {
@@ -1724,6 +1742,19 @@ function renderAdvGrid(){
       const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
       if(!typeVal || typeVal !== advCat) return false;
     }
+
+    // Filtered Search (fs-adventures) — applies to both Stays & Experiences
+    const fa = filterState.adventures;
+    if(fa){
+      if(fa.adventureType==='Experiences'   && !cat.includes('experien')) return false;
+      if(fa.adventureType==='Accommodation' && !cat.includes('accommodation')) return false;
+      if(fa.environment && fa.environment!=='' && (l.environment_type||'')!==fa.environment) return false;
+      if(fa.maxPrice && Number(l.priceNum||l.price||0) > parseInt(fa.maxPrice)) return false;
+      if(fa.area && fa.area!=='' && (l.suburb||'')!==fa.area) return false;
+      if(fa.duration && fa.duration!=='' && l.duration && l.duration!==fa.duration) return false;
+      if(fa.groupSize && fa.groupSize!=='' && (l.groupSize||l.group_size) && (l.groupSize||l.group_size)!==fa.groupSize) return false;
+    }
+    if(typeof trustMin!=='undefined' && trustMin && Number(l.trust||0) < trustMin) return false;
     return true;
   });
 
