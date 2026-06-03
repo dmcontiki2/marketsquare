@@ -279,9 +279,11 @@ async function loadLiveListings(retryCount) {
           if(l.listing_type) listingType = l.listing_type === 'For Rent' ? 'rent' : 'sale';
           else if(/for rent|per month|monthly rent|to let|to-let|rental/i.test(desc)) listingType='rent';
           else if(/for sale|asking price|selling price/i.test(desc)) listingType='sale';
-          if(/fully furnished/i.test(desc)) furnished='Fully furnished';
-          else if(/semi-furnished/i.test(desc)) furnished='Semi-furnished';
-          else if(/\bunfurnished\b/i.test(desc)) furnished='Unfurnished';
+          const _furSrc=((l.title||'')+' '+desc);
+          if(/\bunfurnished\b/i.test(_furSrc)) furnished='Unfurnished';
+          else if(/semi[-\s]?furnished/i.test(_furSrc)) furnished='Semi-furnished';
+          else if(/fully furnished/i.test(_furSrc)) furnished='Fully furnished';
+          else if(/\bfurnished\b/i.test(_furSrc)) furnished='Fully furnished';
           const petsM=desc.match(/Pets:\s*(Yes|No|Negotiable)/i); if(petsM) pets=petsM[1];
           const featM=desc.match(/Features:\s*([^\n]+)/); if(featM) features=featM[1].split(',').map(f=>f.trim()).filter(Boolean);
         }
