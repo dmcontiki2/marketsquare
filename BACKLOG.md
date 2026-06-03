@@ -176,3 +176,19 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 
 ## 🔍 Audit Function — day-one feature · FOR REVIEW (flagged 3 Jun 2026)
 **David-flagged as important + nearly forgotten** — an "Audit function" intended in the app from day one. Believed to (a) potentially form part of the **patents**, (b) be a **major attraction**, (c) carry substantial prior thinking ("a lot of great ideas") **not yet written down**. **Status: TO DEFINE** — needs a full review discussion to capture the concept before it can be specced or placed on the live ops dashboard. Next: David to brain-dump (what it audits · who uses it · the trust/anonymity + patent-novelty angle · the attraction), and/or recover from his previous laptop (Genesis-era archive) + the Solar Council Codex / old planning docs. Parked here so it is never lost again. (See memory project_audit_function.md.)
+
+---
+
+## 🔨 Auctions & Offers — concept captured · open actions (added 3 Jun 2026)
+**Recovered Genesis-era feature, now designed.** Concept doc + live-sim cost model live in `\Projects\Codices` (`TrustSquare_Auctions_and_Offers_Concept.html`, `TrustSquare_Auction_Cost_Model.xlsx`), indexed in `SOLAR_COUNCIL_MASTER_INDEX.md`. Model locked: intro-auction (not a sale) · real-money bids + real-escrow surety settle off-platform · Tuppence = simple burns (airtime always / winner-intro on success only) · data-theatre, **no video** (video = curated external links only) · one engine, many formats/modes incl. "make an offer". Chosen deploy = **server-primary behind `/orchestrator` auth, local folder as backup, one `scp` push**. **All items ATTENDED — design/build, the orchestrator loop never executes these.** (See memory project_auction_feature.md.)
+
+| # | Open action (the gap, so nobody has to remember it) | Area | Lane |
+|---|---|---|---|
+| AU-DEPLOY | Wire protected `/auctions` route (reuse `/orchestrator` Basic-Auth) + Cloudflare purge, so one `scp` publishes the concept doc behind login | Server/Ops | ATTENDED |
+| AU-BACKUP | Server-hosted canon has **no version history** (the gap of the scp-only choice) — add a periodic snapshot/backup (git or Drive) for rollback | Ops | ATTENDED |
+| AU-ENTRY | Confirm bidder entry = **free + trust-gated** (David's lean) vs a small Tuppence seat-burn | Design | ATTENDED |
+| AU-OFFER | "Closest offer" semantics: **highest** vs **closest-to-a-private-seller-target**; define a seller minimum-offer floor | Design | ATTENDED |
+| AU-VERIFY | Define the platform-vetted **independent-verifier panel** + how results report to the app; seller pays the verifier directly (off-platform, $0 to platform) | Design/Ops | ATTENDED |
+| AU-FORMATS | v1 = English-ascending + make-an-offer; stage Dutch / sealed / reverse later | Build scope | ATTENDED |
+| AU-PATENT | Fold auction claims (intro-not-sale · real-escrow/Tuppence bond · anonymous-via-app-auth · deferred offer-triggered intro) into the pre-filing supplement; prior-art check vs Whatnot + Pingsby | Legal/IP | ATTENDED (ties L8) |
+| AU-COSTMODEL | Cost-model placeholders to set: real verification cost/rate; **load-test** max websocket conns/box (8,000 est.) | Cost model | ATTENDED |
