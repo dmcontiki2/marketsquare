@@ -192,6 +192,7 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 | AU-FORMATS | v1 = English-ascending + make-an-offer; stage Dutch / sealed / reverse later | Build scope | ATTENDED |
 | AU-PATENT | Fold auction claims (intro-not-sale · real-escrow/Tuppence bond · anonymous-via-app-auth · deferred offer-triggered intro) into the pre-filing supplement; prior-art check vs Whatnot + Pingsby | Legal/IP | ATTENDED (ties L8) |
 | AU-COSTMODEL | Cost-model placeholders to set: real verification cost/rate; **load-test** max websocket conns/box (8,000 est.) | Cost model | ATTENDED |
+| AU-ARCH | ✅ **DONE (3 Jun)** — architecture decided + documented: auctions = a BEA router (`auctions.py`) on the transactional ledger; live-bid theatre = a separate stateless realtime gateway ("BEAA") only at v2 (Redis pub/sub, extractable); lazy `auctions.js` on the FEA. Splits RM-2/RM-3 pulled forward, incremental (strangler), auctions first — no dev freeze. Diagram + A3 Word doc in `\Projects\Codices`. | Architecture | DONE |
 
 > **NGINX-HYGIENE — ✅ RESOLVED (3 Jun):** stale `marketsquare.bak-*` files moved out of `/etc/nginx/sites-enabled/` to `/root/nginx-backups/`; "conflicting server_name" warnings now zero; `nginx -t` clean + reloaded.
 
