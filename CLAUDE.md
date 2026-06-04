@@ -45,16 +45,24 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Change size:** Maximum one feature or one bug fix per task. If a change touches more than one file section, split it and complete each part fully before starting the next.
 
-**Git commits:** Always ask David to run git add/commit/push from PowerShell — never commit from the sandbox. The sandbox and Windows share the same folder mount under different OS users; sandbox-created index.lock files block Windows git and vice versa, and neither side can remove the other's lock.
+**Git commits:** Always ask David to run git add/commit/push from PowerShell — never commit from the sandbox. The sandbox and Windows share the same folder mount under different OS users; sandbox-created index.lock files block Windows git and vice versa, and neither side can remove the other's lock. At session end, sweep the whole working tree into a commit (see **Session end checklist** step 6) so commits never drift behind the live server — deploys and the overnight loop write files without committing, so the catch-up must be comprehensive (`git add -A`), not scoped to the session's files.
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
 
-**Session end checklist (mandatory — all five required, in order):**
+**Session end checklist (mandatory — all six required, in order):**
 1. Run smoke test: `python3 smoke_test.py` — ALL checks must pass before closing. Fix any failures before proceeding.
 2. Append a Session entry to `CHANGELOG.md` (with `Cost model impact:` if AI volume/cost/concurrency/pricing changed).
 3. Append a line to `AUDIT_PROGRESS.md` if any audit item moved.
 4. Update `STATUS.md`: bump the Live State session number, add a new `## Last Completed (Session N)` block and a `## Next Session (N+1)` block. The first `Session (\d+)` match in this file is what `/dashboard/summary` reports as currentSession — keep it accurate.
 5. **Baseline write-back (the dashboard is live-data-driven — do NOT hand-edit a DATA object).** `scp STATUS.md CHANGELOG.md BACKLOG.md AUDIT_PROGRESS.md root@178.104.73.239:/var/www/marketsquare/`. The BEA parses these at `GET /dashboard/summary`, so this single step refreshes the live dashboard for the next session. Then confirm: `curl -s https://trustsquare.co/dashboard/summary | python3 -c "import sys,json;print(json.load(sys.stdin)['currentSession'])"` shows the new number. Only re-deploy `dashboard.html` itself when its MARKUP/JS changed (respect the DASHBOARD VERSION GUARD below); routine session state needs only the scp of the four docs. This step is what lets David always view the latest — never skip it.
+6. **Git sync — end every session with a clean tree (commits must never drift behind the live server).** Run `git status --short` from the sandbox. If anything is pending — this includes drift left by mid-session `scp` deploys and by the overnight orchestrator loop, both of which deploy without committing — surface a paste-ready PowerShell block and have David run it before closing:
+   ```
+   cd C:\Users\David\Projects\MarketSquare
+   git add -A
+   git commit -m "<session summary>"
+   git push
+   ```
+   `git add -A` deliberately sweeps the WHOLE tree (not just this session's files) so loop/deploy drift never accumulates. Never commit from the sandbox (index.lock conflict — see **Git commits** above); the agent runs read-only `git status`/`git diff` and surfaces the commands, David runs the commit/push. Before surfacing, confirm no secret is staged (`ssh_hetzner_key` / any `.env` must stay gitignored). The session is not done until `git status` is clean and pushed.
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 

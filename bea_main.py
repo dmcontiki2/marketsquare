@@ -137,6 +137,10 @@ def run_migrations(conn):
         ("collectible_type", "TEXT"),
         ("condition",        "TEXT"),
         ("era_year",         "INTEGER"),
+        ("ai_grade",         "TEXT"),
+        ("ai_grade_conf",    "REAL"),
+        ("ai_grade_notes",   "TEXT"),
+        ("grade_tier",       "INTEGER"),
     ]:
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
@@ -11178,3 +11182,269 @@ def orchestrator_approve(body: _OrchApproveBody):
     return {"ok": True, "id": item_id, "approved": True, "queue_position": 1,
             "staged_remaining": len(staged),
             "note": "Approved — moved to the front of the queue; the next Fixer run ships it (smoke-gated)."}
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# TIERED GRADING — PHASE A  (Session 44, 4 Jun 2026)  [additive, flag-gated]
+# Tier-1 AI condition grader for collectible cards + a private review page.
+# NON-DESTRUCTIVE: results are written ONLY to the new ai_grade / ai_grade_conf
+# / ai_grade_notes / grade_tier columns — the seller-facing `condition` column
+# is NEVER touched. Buyer-facing display is gated OFF (SHOW_AI_GRADE_TO_BUYERS
+# defaults to "0"); no buyer surface reads ai_grade until Phase B flips it on.
+# Reuses the existing card-vision setup: VISION_MODEL (claude-sonnet-4-6 — the
+# same model ai-batch-cards uses because Haiku lacks vision depth for cards) and
+# the ANTHROPIC_API_KEY env var.
+# ═════════════════════════════════════════════════════════════════════════
+import secrets as _ts_secrets
+import html as _ts_html
+from fastapi import Response as _TSResponse
+from fastapi.responses import HTMLResponse as _TSHTMLResponse
+
+SHOW_AI_GRADE_TO_BUYERS = os.getenv("SHOW_AI_GRADE_TO_BUYERS", "0") == "1"
+
+AI_GRADE_VOCAB = ["Near Mint", "Lightly Played", "Moderately Played",
+                  "Heavily Played", "Damaged"]
+
+
+def _grade_extract_photo_urls(photo_urls=None, thumb_url=None, medium_url=None, limit=3):
+    """Ordered, de-duplicated list of up to `limit` real image URLs from a
+    listing's photo fields. photo_urls is a JSON array whose entries may carry a
+    '::caption' suffix (see upload_listing_photo); falls back to medium_url then
+    thumb_url."""
+    urls = []
+    if photo_urls:
+        try:
+            arr = json.loads(photo_urls)
+            if isinstance(arr, list):
+                for entry in arr:
+                    if not entry:
+                        continue
+                    u = str(entry).split("::", 1)[0].strip()
+                    if u:
+                        urls.append(u)
+        except Exception:
+            pass
+    for u in (medium_url, thumb_url):
+        if u and str(u).strip():
+            urls.append(str(u).strip())
+    seen = set()
+    out = []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeout=60):
+    """Tier-1 AI condition grade for a collectible card from its photo(s).
+
+    Returns dict: {"grade": <one of AI_GRADE_VOCAB or None>,
+                   "confidence": <float 0..1 or None>, "notes": <str <=120>,
+                   "model": VISION_MODEL, "in_tokens": int|None,
+                   "out_tokens": int|None, "error": <str|None>}.
+    Fails SOFT — never raises, never writes the DB. On missing key / no photos /
+    timeout / parse error it returns grade=None with an `error` string so the
+    caller can skip and record it."""
+    result = {"grade": None, "confidence": None, "notes": "",
+              "model": VISION_MODEL, "in_tokens": None, "out_tokens": None,
+              "error": None}
+    if not ANTHROPIC_API_KEY:
+        result["error"] = "no_api_key"
+        return result
+    urls = _grade_extract_photo_urls(photo_urls, thumb_url, medium_url)
+    if not urls:
+        result["error"] = "no_photos"
+        return result
+
+    content_blocks = []
+    for u in urls:
+        try:
+            with httpx.Client(timeout=20) as _c:
+                r = _c.get(u)
+            if r.status_code != 200 or not r.content:
+                continue
+            media_type = "image/jpeg"
+            cl = (r.headers.get("content-type") or "").lower()
+            if "png" in cl:
+                media_type = "image/png"
+            elif "webp" in cl:
+                media_type = "image/webp"
+            elif "gif" in cl:
+                media_type = "image/gif"
+            b64 = base64.b64encode(r.content).decode()
+            content_blocks.append({"type": "image", "source": {
+                "type": "base64", "media_type": media_type, "data": b64}})
+        except Exception:
+            continue
+    if not content_blocks:
+        result["error"] = "photo_fetch_failed"
+        return result
+
+    system_prompt = (
+        "You are a CONSERVATIVE trading-card condition grader for a marketplace. "
+        "From the photo(s) ALONE, give an INDICATIVE TCGplayer-style condition read. "
+        "Use EXACTLY one of these grades: Near Mint, Lightly Played, Moderately Played, "
+        "Heavily Played, Damaged. Photos hide flaws, so when uncertain grade DOWN and "
+        "lower your confidence — never over-claim condition. Judge corners, edges, "
+        "surface scratches/whitening, centering and creasing only as far as the image "
+        "actually shows. Respond with STRICT JSON and nothing else: "
+        '{"grade": "<one of the five>", "confidence": <0..1 number>, '
+        '"notes": "<=120 chars; the single biggest visible factor>"}.'
+    )
+    content_blocks.append({"type": "text", "text": (
+        "Grade the condition of the card in these photo(s). "
+        "Be conservative; reply with the JSON only.")})
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            resp = client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_API_KEY,
+                         "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={"model": VISION_MODEL, "max_tokens": 300,
+                      "system": system_prompt,
+                      "messages": [{"role": "user", "content": content_blocks}]},
+            )
+        rj = resp.json()
+        it, ot = _usage_tokens(rj)
+        result["in_tokens"], result["out_tokens"] = it, ot
+        raw = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        parsed = json.loads(raw)
+        g = str(parsed.get("grade", "")).strip()
+        match = next((v for v in AI_GRADE_VOCAB if v.lower() == g.lower()), None)
+        if match is None:
+            result["error"] = "bad_grade:" + g[:40]
+            return result
+        conf = parsed.get("confidence")
+        try:
+            conf = max(0.0, min(1.0, float(conf)))
+        except Exception:
+            conf = None
+        result["grade"] = match
+        result["confidence"] = conf
+        result["notes"] = str(parsed.get("notes", ""))[:120]
+        return result
+    except Exception as exc:
+        result["error"] = "call_or_parse_error:" + str(exc)[:80]
+        return result
+
+
+# ── /grading-review — PRIVATE review page (David only; NOT linked from buyer app)
+# Basic-Auth enforced HERE in the BEA (self-contained — no nginx change). Mirrors
+# the orchestrator's gated-page intent. Reuses the existing admin credential so
+# David logs in with something he already holds; no new secret is stored.
+_GRADING_REVIEW_USER = os.getenv("GRADING_REVIEW_USER", "david")
+_GRADING_REVIEW_PASS = (os.getenv("GRADING_REVIEW_PASS")
+                        or os.getenv("MS_ADMIN_PASSWORD") or "")
+
+
+def _grading_review_auth(request: Request):
+    hdr = request.headers.get("authorization", "")
+    if not hdr.startswith("Basic "):
+        return False
+    try:
+        raw = base64.b64decode(hdr[6:]).decode("utf-8", "ignore")
+        u, _, p = raw.partition(":")
+        return (_GRADING_REVIEW_PASS != ""
+                and _ts_secrets.compare_digest(u, _GRADING_REVIEW_USER)
+                and _ts_secrets.compare_digest(p, _GRADING_REVIEW_PASS))
+    except Exception:
+        return False
+
+
+@app.get("/grading-review")
+def grading_review(request: Request):
+    if not _grading_review_auth(request):
+        return _TSResponse(
+            status_code=401, content="Authentication required.",
+            headers={"WWW-Authenticate": 'Basic realm="TrustSquare Grading Review"'})
+
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, title, condition, ai_grade, ai_grade_conf, ai_grade_notes, "
+            "grade_tier, thumb_url, medium_url, photo_urls "
+            "FROM listings WHERE category='Collectors' "
+            "ORDER BY (ai_grade IS NULL) ASC, ai_grade_conf ASC, id ASC"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    def esc(x):
+        return _ts_html.escape("" if x is None else str(x))
+
+    total = len(rows)
+    graded = sum(1 for r in rows if r["ai_grade"])
+    dist = {}
+    for r in rows:
+        if r["ai_grade"]:
+            dist[r["ai_grade"]] = dist.get(r["ai_grade"], 0) + 1
+    dist_str = ", ".join("%s: %d" % (k, dist[k]) for k in AI_GRADE_VOCAB if k in dist) or "none yet"
+
+    cards_html = []
+    for r in rows:
+        urls = _grade_extract_photo_urls(r["photo_urls"], r["thumb_url"], r["medium_url"])
+        imgs = "".join('<img src="%s" loading="lazy" alt="">' % esc(u) for u in urls[:3]) \
+            or '<div class="noimg">no photo</div>'
+        conf = r["ai_grade_conf"]
+        conf_txt = ("%.0f%%" % (conf * 100)) if isinstance(conf, (int, float)) else "—"
+        low = isinstance(conf, (int, float)) and conf < 0.6
+        ai_grade = r["ai_grade"] or "— (not graded)"
+        cond = r["condition"] or "— (none on file)"
+        mismatch = bool(r["ai_grade"] and r["condition"]
+                        and r["ai_grade"].strip().lower() != r["condition"].strip().lower())
+        flags = []
+        if low:
+            flags.append('<span class="flag low">low confidence</span>')
+        if mismatch:
+            flags.append('<span class="flag mm">differs from condition</span>')
+        tier_txt = esc(r["grade_tier"]) if r["grade_tier"] else "—"
+        cards_html.append(
+            '<div class="card"><div class="imgs">%s</div><div class="meta">'
+            '<div class="title">#%s · %s</div>'
+            '<div class="row"><span class="lbl">AI grade (Tier %s)</span>'
+            '<span class="grade %s">%s</span><span class="conf">conf %s</span></div>'
+            '<div class="row"><span class="lbl">Existing condition</span>'
+            '<span class="cond">%s</span></div>'
+            '<div class="notes">%s</div><div class="flags">%s</div>'
+            '</div></div>'
+            % (imgs, esc(r["id"]), esc(r["title"]), tier_txt,
+               ("low" if low else "ok"), esc(ai_grade), conf_txt,
+               esc(cond), esc(r["ai_grade_notes"] or ""), " ".join(flags))
+        )
+
+    page = (
+        "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<title>TrustSquare · Grading Review (Phase A)</title><style>"
+        "body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#eef1f5;color:#111827;margin:0;padding:24px}"
+        "h1{color:#1e3a5f;font-size:22px;margin:0 0 4px}.sub{color:#4b5563;margin:0 0 16px;font-size:14px;max-width:760px}"
+        ".bar{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px}"
+        ".card{display:flex;gap:14px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:12px}"
+        ".imgs{display:flex;gap:6px;flex:0 0 auto}.imgs img{width:90px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;background:#f1f5f9}"
+        ".noimg{width:90px;height:120px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;border:1px dashed #cbd5e1;border-radius:8px}"
+        ".meta{flex:1 1 auto;min-width:0}.title{font-weight:700;color:#1e3a5f;margin-bottom:8px}"
+        ".row{display:flex;align-items:center;gap:10px;margin:4px 0;flex-wrap:wrap}"
+        ".lbl{width:150px;color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:.03em}"
+        ".grade{font-weight:700;padding:2px 10px;border-radius:6px;background:#cffafe;color:#0e7490}.grade.low{background:#fef3c7;color:#92400e}"
+        ".conf{color:#4b5563;font-size:13px}.cond{font-weight:600;color:#374151}"
+        ".notes{color:#4b5563;font-size:13px;margin-top:6px;font-style:italic}"
+        ".flags{margin-top:6px;min-height:4px}.flag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;margin-right:6px}"
+        ".flag.low{background:#fef3c7;color:#92400e}.flag.mm{background:#fee2e2;color:#b91c1c}"
+        "</style></head><body>"
+        "<h1>Grading Review — Phase A · Tier-1 AI card grades</h1>"
+        "<p class='sub'>Indicative AI condition reads from photos only — <b>not certified, not live to buyers.</b> "
+        "Sorted with ungraded last and lowest-confidence first, so the reads most worth eyeballing are at the top. "
+        "The existing <code>condition</code> value is shown beside each AI grade for comparison; it was not modified.</p>"
+        "<div class='bar'><b>%d</b> Collectors cards &middot; <b>%d</b> graded &middot; distribution — %s</div>"
+        "%s</body></html>"
+        % (total, graded, esc(dist_str), "".join(cards_html))
+    )
+    return _TSHTMLResponse(content=page)
+# ═════════════════════════ END TIERED GRADING PHASE A ═════════════════════

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Evidence-Based Tiered Grading — design</title>
+<style>
+  :root{
+    --navy:#1e3a5f; --ink:#111827; --t2:#4b5563; --t3:#5b6573; --bg:#eef1f5; --line:#e5e7eb;
+    --grn:#065f46; --grnbg:#d1fae5; --red:#b91c1c; --redbg:#fee2e2; --gold:#92400e; --goldbg:#fef3c7;
+    --uni:#0e7490; --unibg:#cffafe; --pur:#6b21a8; --purbg:#f3e8ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 70px}
+  h1{font-family:"Syne","Segoe UI",sans-serif;font-weight:800;color:var(--navy);font-size:27px;margin:0 0 4px}
+  .sub{color:var(--t2);margin:0 0 22px;font-size:15.5px}
+  h2{font-family:"Syne","Segoe UI",sans-serif;color:var(--navy);font-size:19px;margin:30px 0 8px;padding-top:10px;border-top:2px solid #cfd8e2}
+  h3{font-size:15.5px;color:var(--navy);margin:16px 0 4px}
+  p{margin:9px 0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 18px;margin:12px 0}
+  .hero{border-left:5px solid var(--navy)}
+  .key{background:var(--unibg);border:1px solid #a5e8ef;border-left:5px solid var(--uni);border-radius:12px;padding:13px 18px;margin:14px 0}
+  .warn{background:var(--goldbg);border:1px solid #fcd34d;border-left:5px solid var(--gold);border-radius:12px;padding:13px 18px;margin:14px 0}
+  .night{background:var(--purbg);border:1px solid #d8b4fe;border-left:5px solid var(--pur);border-radius:12px;padding:14px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--navy);color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:#fafcfe}
+  td.t{font-weight:700;color:var(--navy);white-space:nowrap}
+  .tier{display:inline-block;border-radius:5px;padding:1px 8px;font-size:11px;font-weight:700}
+  .t1{background:var(--unibg);color:var(--uni)} .t2{background:var(--grnbg);color:var(--grn)} .t3{background:var(--purbg);color:var(--pur)}
+  code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  ul{margin:8px 0;padding-left:20px} li{margin:5px 0}
+  .foot{margin-top:26px;color:var(--t2);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Evidence-Based Tiered Grading</h1>
+  <p class="sub">Condition as a verification ladder, not a seller's claim · 3 June 2026 · cards first, cars to follow · ties to Trust Score + the Audit Function</p>
+
+  <div class="card hero">
+    <p style="margin-top:0"><b>The principle (David, 3 June).</b> A seller cannot grade their own item — they lack the standing and often the skill. So TrustSquare <i>derives</i> condition from evidence, and lets that evidence get stronger in tiers. The first grade the app accepts is an <b>AI read of the photos</b>; better grades come from <b>verification</b>. This is the marketplace's whole premise applied to condition: <b>trust from evidence, not identity.</b></p>
+    <p style="margin-bottom:0">It is almost certainly part of the <b>Audit Function</b> — a progressive, auditable provenance ladder — and therefore likely patent-relevant. Design the two as one idea.</p>
+  </div>
+
+  <h2>The grading ladder</h2>
+  <table>
+    <tr><th>Tier</th><th>Cards</th><th>Cars</th><th>What it means to the buyer</th></tr>
+    <tr><td class="t"><span class="tier t1">Tier 1 · baseline</span></td>
+      <td><b>AI grade from photos</b> — required set: front, back, zoomed edge/side. Outputs an indicative TCGplayer grade + confidence.</td>
+      <td><b>AI from photos</b> (exterior + interior) <b>+ logbook completeness</b>. Indicative condition band.</td>
+      <td>App-acceptable. Honest, instant, free. Labelled <i>"AI-assessed from photos — not certified."</i></td></tr>
+    <tr><td class="t"><span class="tier t2">Tier 2 · verified</span></td>
+      <td><b>Verified certificate</b> (PSA / BGS / CGC) — numeric grade 1–10 + cert number + provenance.</td>
+      <td><b>Documented history + specs</b> — full service history, DEKRA / roadworthy, accident record.</td>
+      <td>Higher confidence, backed by a third party. Surfaces a stronger badge + lifts Trust Score.</td></tr>
+    <tr><td class="t"><span class="tier t3">Tier 3 · expert</span></td>
+      <td>Professional in-hand grading (the cert process itself, or a TrustSquare-appointed grader).</td>
+      <td><b>Physical expert drive</b> — the "We Buy Cars" move: an expert drives it, listens, feels how it performs. The only true read.</td>
+      <td>The apex. Premium / partner-led — not every listing gets it; it's an earned, paid, or partner verification.</td></tr>
+  </table>
+  <p style="color:var(--t2);font-size:13.5px">A listing always sits at a tier, and the badge says which. A buyer instantly knows whether "Near Mint" is an AI guess from a photo or a PSA 9 on a cert — that distinction is the product.</p>
+
+  <h2>How Tier 1 (AI grading) works</h2>
+  <p>At listing time the seller supplies the required photos. A vision model reads them and returns a structured verdict: a grade from the agreed vocabulary, a <b>confidence</b> (0–1), and a one-line rationale ("soft corners + light edge whitening → Lightly Played"). The grade is stored, displayed with its tier badge and the honesty label, and feeds the Trust Score. Low-confidence reads are flagged for verification rather than shown as fact.</p>
+  <div class="warn"><b>Honesty rail.</b> An AI photo grade is <b>indicative</b>. It must never be presented as a certified grade, and the UI must always show the tier so an AI read is never mistaken for a verified one. Over-claiming condition is a trust- and liability-risk we don't take.</div>
+
+  <h3>Two vocabularies, one ladder</h3>
+  <p>Raw items use <b>descriptive</b> grades the eye/AI can judge — TCGplayer's <code>Near Mint / Lightly Played / Moderately Played / Heavily Played / Damaged</code>. Certified items carry a <b>numeric</b> grade — PSA/BGS/CGC <code>1–10</code>. The ladder spans both: Tier 1 speaks descriptive, Tier 2 adds numeric + provenance. The badge maps between them so the feed stays scannable.</p>
+
+  <h2>Cars — the same idea, different evidence</h2>
+  <p>Tier 1 is looks (photos) plus <b>logbook completeness</b> — a present, complete logbook is itself a trust signal. Tier 2 layers the documented record: full service history, DEKRA / roadworthy certificate, accident/finance checks (all strong, verifiable SA signals). Tier 3 is the expert drive — irreplaceable, because a car's true condition is heard and felt, not photographed. Tier 3 is a premium/partner verification, not a default.</p>
+
+  <h2>Where it plugs in</h2>
+  <ul>
+    <li><b>Trust Score</b> — grade tier is a Trust input: a verified Tier 2/3 listing should score and rank above an unverified Tier 1.</li>
+    <li><b>Audit Function</b> — the tier history (AI grade → cert → expert) is an auditable provenance trail. This is the shared spine; build them together.</li>
+    <li><b>Existing AI vision</b> — reuses the vision pipeline already in the BEA (KYC/safety vision), so this is an extension, not a new stack.</li>
+    <li><b>Anonymity (A2)</b> — graders see the item, never the seller; photos must carry no identity (no faces, plates, documents). Same rule the listing photos already follow.</li>
+  </ul>
+
+  <div class="key"><b>Cost-model impact.</b> Tier 1 is one vision call per listing (or per re-grade). Negligible per item, real at volume — so it belongs in the free/paid AI-feature tiering (Tier 1 free as a trust-builder; verification flows can be paid/partner). Flag in the cost model when this goes to volume.</div>
+
+  <h2>Data model (new, additive — nothing overwritten)</h2>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td><code>ai_grade</code></td><td>Tier-1 grade from the vision model (descriptive vocab)</td></tr>
+    <tr><td><code>ai_grade_conf</code></td><td>Confidence 0–1</td></tr>
+    <tr><td><code>ai_grade_notes</code></td><td>One-line rationale</td></tr>
+    <tr><td><code>grade_tier</code></td><td>1 / 2 / 3 — which rung this listing is on</td></tr>
+    <tr><td><code>cert_grade</code> / <code>cert_id</code> / <code>cert_body</code></td><td>Tier-2 certificate: numeric grade, cert number, PSA/BGS/CGC</td></tr>
+  </table>
+  <p style="color:var(--t2);font-size:13.5px">The existing <code>condition</code> column (the seller/back-filled descriptive value) stays as-is. <code>ai_grade</code> is separate, so nothing is destroyed and the two can be compared during review.</p>
+
+  <h2>Phased rollout</h2>
+  <ul>
+    <li><b>Phase A (tonight, see below):</b> Tier-1 AI card grader — fields + grader + grade the existing cards + a private review page. Flag-gated OFF for buyers.</li>
+    <li><b>Phase B:</b> review with David → tune the prompt/vocab/threshold → flip the badge live for cards.</li>
+    <li><b>Phase C:</b> Tier-2 cert capture (upload + fields + badge) and onboarding integration.</li>
+    <li><b>Phase D:</b> cars Tier-1 (photos + logbook) once car inventory exists; Tier-3 partner model.</li>
+    <li><b>Phase E:</b> wire grade tier into Trust Score + the Audit Function trail.</li>
+  </ul>
+
+  <div class="night">
+    <h2 style="border:0;margin-top:0;padding-top:0">▶ The overnight build (Phase A) — bounded, safe, reviewable</h2>
+    <p style="margin-top:0">This is exactly what the scheduled action will build tonight, and only this:</p>
+    <ul>
+      <li><b>BEA:</b> add the additive columns (<code>ai_grade</code>, <code>ai_grade_conf</code>, <code>ai_grade_notes</code>, <code>grade_tier</code>) via the idempotent migration. A grading function that sends a listing's photos to the vision model and returns {grade, confidence, notes}. Reuses the existing vision setup + key.</li>
+      <li><b>Grade the existing ~26 Collectors cards</b> (small sample, ~cents of vision cost) → write to the <i>new</i> fields. The existing <code>condition</code> is never touched.</li>
+      <li><b>Private review page</b> (Basic-Auth, like the orchestrator page): each card's photos beside its AI grade, confidence and rationale — so you can judge the AI's eye against reality, and the doc against the mechanics.</li>
+      <li><b>Buyer-facing display stays OFF</b> behind a flag (default off). No buyer sees an AI grade until you've reviewed and we flip it on together.</li>
+    </ul>
+    <p><b>Guardrails the scheduled agent must hold:</b> non-destructive (new fields only); not live to buyers (flag off); reversible (backups of BEA + DB before any change); safe-edit discipline (string-replace driver + AST/node check + sha-verify, restore on failure); verify <code>/health</code> after the BEA restart; refresh the FEA baseline so the 03:30 Sensor stays quiet; append a CHANGELOG entry with a <code>Cost model impact:</code> line; and if anything can't be completed safely, roll back and leave a clear note rather than force it.</p>
+    <p style="margin-bottom:0"><b>Tomorrow you review:</b> this document, the private grading page (real AI grades on your real cards), and the flagged-off implementation — then your feedback edits the doc <i>and</i> the build from a shared, concrete starting point.</p>
+  </div>
+
+  <div class="foot">Captures David's 3 June grading principle. Cards first (live inventory + Scryfall-linked); cars and certs follow. AI Tier-1 is indicative, never certified. Additive + flag-gated — nothing live or destructive until reviewed. Linked: Trust Score, Audit Function (patent), AI Fair-Price/Yield tiering, anonymity A2.</div>
+</div>
+</body>
+</html>
