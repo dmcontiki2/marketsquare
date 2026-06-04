@@ -31,9 +31,10 @@ CITIES = [
  ("GB","England","Bristol",51.4545,-2.5879,2),
  ("GB","Wales","Cardiff",51.4816,-3.1791,2),
  ("GB","England","Leicester",52.6369,-1.1398,2),
- ("ZA","Eastern Cape","Port Elizabeth",-33.9608,25.6022,2),
+ # Port Elizabeth -> renamed Gqeberha (2021); Nelspruit -> renamed Mbombela (2009).
+ # Both already exist in the GeoNames ZA seed, so we do NOT re-add them (would duplicate).
+ # Only East London was genuinely missing from the original seed.
  ("ZA","Eastern Cape","East London",-33.0153,27.9116,2),
- ("ZA","Mpumalanga","Nelspruit",-25.4753,30.9694,2),
 ]
 def region_id(conn,iso2,name):
     r=conn.execute("SELECT id FROM geo_regions WHERE country_iso2=? AND name=?",(iso2,name)).fetchone()
