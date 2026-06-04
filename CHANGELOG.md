@@ -3526,3 +3526,12 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 **Still open (BACKLOG W12-FORYOU):** the LIVE geo-scoping of this feed — a Houston/Phoenix buyer in live mode should see city/country-relevant recommendations, not Pretoria ones. Needs a server-side city/country scope on the BEA feed endpoints.
 
 **Cost model impact:** none — client-side display only.
+
+
+## Session 120 — 2026-06-04 · Category tiles always show (empty cities read "0 listings")
+
+**Feedback (David).** After the placeholder fix, empty demo/prospect cities (e.g. Chicago, Cape Town) showed NO category tiles at all — the demo-mode logic hid any 0-count tile. David wants the category cards to stay visible with "0 listings" so the structure is always shown, not removed.
+
+**Fix (`ms.js` v146→v147).** Removed the demo-only "hide empty category tiles" behaviour in `renderCatCounts` (a pre-launch TODO) — the six category tiles and the Local Market tile now always render with their count (0 when empty). Populated cities (New York, Pretoria) are unchanged; empty cities now show all categories at "0 listings", consistent with the eventual launch behaviour. node --check + smoke all-green; deployed; index `ms.js?v=147`; Cloudflare purged.
+
+**Cost model impact:** none — client-side display only.

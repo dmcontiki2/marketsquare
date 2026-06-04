@@ -2323,17 +2323,18 @@ function renderCatCounts() {
           normCat(l.cat) === 'LocalMarket' &&
           (!_aCity || !l.city || l.city === _aCity)
         ).length;
-        tile.style.display = demoLMCount > 0 ? '' : 'none';
+        tile.style.display = '';
         const countEl = document.getElementById('lm-home-count');
-        if (countEl && demoLMCount > 0) countEl.textContent = demoLMCount + (demoLMCount === 1 ? ' listing' : ' listings');
+        if (countEl) countEl.textContent = demoLMCount + (demoLMCount === 1 ? ' listing' : ' listings');
       }
       return;
     }
     const name = tile.querySelector('.cat-name').textContent.trim();
     const n = counts[name] || 0;
     tile.querySelector('.cat-count').textContent = n + (n === 1 ? ' listing' : ' listings');
-    // TODO: REMOVE BEFORE LAUNCH — hide empty category tiles in demo mode
-    if (DEMO_MODE) tile.style.display = n > 0 ? '' : 'none';
+    // Category tiles always show — even at 0 listings — so empty/prospect cities still
+    // display the full category structure (David: don't remove the cards, show 0).
+    tile.style.display = '';
   });
 }
 
