@@ -8084,6 +8084,9 @@ def dashboard_summary():
     blockers  = _table_bold_items(_section(backlog, r"## 🔴 Launch Blockers[^\n]*"))
     high_pri  = _table_bold_items(_section(backlog, r"## 🟠 High Priority[^\n]*"))
     medium    = _table_bold_items(_section(backlog, r"## 🟡 Medium Priority[^\n]*"))
+    _auc_sec  = _section(backlog, r"## 🔨 Auctions[^\n]*")
+    auctions  = [{"id": _r.strip().strip("|").split("|")[0].strip(), "done": "✅" in _r}
+                 for _r in _auc_sec.splitlines() if _r.strip().startswith("| AU-")]
 
     # Parse next session priorities
     priority_items = _bullet_items(next_goals)
@@ -8220,6 +8223,7 @@ def dashboard_summary():
         "highPriority": high_pri[:6],
         "medium": medium[:6],
         "priorityItems": priority_items[:6],
+        "auctions": auctions,
         "directions": directions,
         "stats": {
             "liveListings": live_count,
