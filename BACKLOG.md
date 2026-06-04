@@ -209,4 +209,13 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 | W12-SUBURBS | International cities (US/GB/AU) have no suburb hierarchy — the suburb panel shows "All suburbs" only and free-tier suburb gating stays ZA-only. Seed suburbs per city (GeoNames country dumps) if/when suburb-level precision is wanted for intl launches. | Data/BEA | ATTENDED |
 | W12-WAVE3 | Wave 3 AU cities (Melbourne, Brisbane, Perth, Adelaide, Gold Coast, Newcastle, Canberra, Wollongong, Hobart) not seeded — out of the Wave 1/2 scope; seed via `seed_wave12_cities.py` pattern when Wave 3 approaches. | Data | ATTENDED |
 | W12-VISUAL | In-app visual click-test of the city picker + map alignment was deferred (Chrome extension offline this session) — run the walkthrough + screenshot once Chrome reconnects. | QA | ATTENDED |
-| W12-FORYOU | The "For You" / wishlist feed (`wlLoadFeed` → BEA `/wishlist/showcase` + `/wishlist/feed`) is NOT geo-scoped: it showed Pretoria collectibles while browsing Houston (demo) and would show cross-city recommendations in live mode too. Add a city/country scope to those endpoints (or filter returned cards by active city). Affects live, not just demo. | BEA + FEA | ATTENDED |
+| W12-FORYOU | **Demo part DONE (S119): For You feed hidden in demo mode** so real listings no longer bleed into demo prospect cities. **Remaining (live):** the feed (`wlLoadFeed` → BEA `/wishlist/feed` + `/wishlist/showcase`) is not geo-scoped, so a live Houston/Phoenix buyer would see Pretoria recommendations. Add a city/country scope to those endpoints (or filter returned cards by active city/country). | BEA | ATTENDED |
+
+
+## 🔧 Orchestrator loop — doc-writeback hardening (open action · filed 4 Jun 2026)
+**The overnight loop's BACKLOG/STATUS/CHANGELOG writeback keeps truncating files** (the large-file write hazard). `BACKLOG.md` was silently truncated and caught + restored TWICE this run (Sessions 117 & 118), losing rows each time until restored from the committed copy; STATUS Live State was clobbered once too. Risk: a session's `git add -A` could commit a truncated doc if not caught.
+
+| # | Open action | Area | Lane |
+|---|---|---|---|
+| LOOP-1 | Harden the loop's doc-writeback with safe-write + verify: write to a temp file, assert it still ends correctly (tail + expected length / anchor) before replacing the real file; on failure, abort the writeback and leave the prior file intact. Mirror the `open/read/str.replace/write` + verify discipline used for the big HTML/JS files. | Orchestrator/Ops | ATTENDED |
+| LOOP-2 | Interim guard until LOOP-1 ships: every session runs `GIT_OPTIONAL_LOCKS=0 git status` and confirms BACKLOG/STATUS/CHANGELOG are intact (not truncated) before surfacing the commit — restore any truncated doc from `git show HEAD:<file>` first. | Process | ATTENDED |

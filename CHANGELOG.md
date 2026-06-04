@@ -3515,3 +3515,14 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 **Also noticed (filed, not fixed here): the "For You" / wishlist feed is not geo-scoped** — it pulls real listings from the BEA `/wishlist/showcase` + `/wishlist/feed` endpoints and showed Pretoria collectibles while browsing Houston. This affects live mode too (a Houston buyer would see Pretoria recommendations) and needs a server-side city/country scope. Logged on BACKLOG as W12-FORYOU.
 
 **Cost model impact:** none — client-side display only.
+
+
+## Session 119 — 2026-06-04 · "For You" feed hidden in demo mode (stop real-listing bleed)
+
+**Bug (David-reported, follow-up).** After the placeholder fix, demo prospect cities (e.g. Phoenix) still showed real Pretoria collectibles in the "For You" strip. That strip is the personalised wishlist feed (`wlLoadFeed` → BEA `/wishlist/feed`), which returns the buyer's real wishlist-matched listings — there is no demo equivalent, so in demo mode it could only ever show real (Pretoria) data, bleeding into every demo city.
+
+**Fix (`ms.js` v145→v146).** `wlLoadFeed` now hides the entire For You section when `DEMO_MODE` is on (and restores it in live); `devSetMode` re-evaluates it on the demo/live toggle. Demo prospect cities now have a clean home (no cross-city real-listing bleed); live mode is unchanged. node --check + smoke all-green; deployed; index `ms.js?v=146`; Cloudflare purged.
+
+**Still open (BACKLOG W12-FORYOU):** the LIVE geo-scoping of this feed — a Houston/Phoenix buyer in live mode should see city/country-relevant recommendations, not Pretoria ones. Needs a server-side city/country scope on the BEA feed endpoints.
+
+**Cost model impact:** none — client-side display only.

@@ -93,6 +93,7 @@ async function devSetMode(isDemo) {
   renderCatCounts();
   initLMHomeTile();
   if (typeof renderWondersStrip === 'function') renderWondersStrip();
+  if (typeof wlLoadFeed === 'function') wlLoadFeed();
   if (!isDemo) loadLiveListings();
   // Show/hide existing demo-toggle-panel if present
   var tp = document.getElementById("demo-toggle-panel");
@@ -10267,6 +10268,20 @@ async function wlLoadFeed() {
   const upBox = document.getElementById('wf-upgrade');
   const emptyHint = document.getElementById('wf-empty-hint');
   if (!wrap) return;
+  // The personalised feed has no demo data, so in demo mode it can only show real
+  // listings (e.g. Pretoria) — hide the whole section to avoid bleeding into a demo
+  // prospect city. (Live geo-scoping of this feed is tracked separately as W12-FORYOU.)
+  const _wfSec = heading ? heading.closest('.sec-head') : null;
+  const _wfWrap = document.getElementById('wf-wrap');
+  if (DEMO_MODE) {
+    if (_wfSec) _wfSec.style.display = 'none';
+    if (_wfWrap) _wfWrap.style.display = 'none';
+    if (upBox) upBox.style.display = 'none';
+    if (emptyHint) emptyHint.style.display = 'none';
+    return;
+  }
+  if (_wfSec) _wfSec.style.display = '';
+  if (_wfWrap) _wfWrap.style.display = '';
   if (!_wlToken) await wlBootToken();
   // First decide showcase vs personalised by signal count
   let signals = [];
