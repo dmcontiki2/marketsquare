@@ -1953,7 +1953,7 @@ async function _loadAndRenderCities() {
     : '/geo/cities?country=' + activeCountry.iso2;
   const data = await _geoFetch(path);
   list.innerHTML = (Array.isArray(data) ? data : []).map(c =>
-    `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}')">${c.name}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
+    `<div class="city-option${activeCity.id === c.id ? ' selected' : ''}" onclick="selectCity(${c.id},'${c.name.replace(/'/g,"\\'")}',${c.lat},${c.lng})">${c.name}${activeCity.id === c.id ? '<span style="color:var(--accent);">✓</span>' : ''}</div>`
   ).join('') || '<div class="city-option" style="opacity:.5">No cities available</div>';
 }
 
@@ -2001,10 +2001,10 @@ async function selectRegion(id, name) {
 // TODO: REMOVE BEFORE LAUNCH — demo city switcher
 // TODO: REMOVE BEFORE LAUNCH — demo country selector
 const DEMO_COUNTRY_CITIES = {
-  'ZA': [{ name:'Pretoria' }],
-  'US': [{ name:'New York' }],
-  'GB': [{ name:'London' }],
-  'AU': [{ name:'Sydney' }],
+  'ZA': [{name:'Pretoria',lat:-25.74486,lng:28.18783},{name:'Cape Town',lat:-33.92584,lng:18.42322},{name:'Johannesburg',lat:-26.20227,lng:28.04363},{name:'Durban',lat:-29.8579,lng:31.0292},{name:'Port Elizabeth',lat:-33.9608,lng:25.6022},{name:'Bloemfontein',lat:-29.12107,lng:26.214},{name:'East London',lat:-33.0153,lng:27.9116},{name:'Polokwane',lat:-23.90449,lng:29.46885},{name:'Nelspruit',lat:-25.4753,lng:30.9694},{name:'Kimberley',lat:-28.73226,lng:24.76232},{name:'Pietermaritzburg',lat:-29.61679,lng:30.39278}],
+  'US': [{name:'New York',lat:40.7128,lng:-74.006},{name:'Los Angeles',lat:34.0522,lng:-118.2437},{name:'Chicago',lat:41.8781,lng:-87.6298},{name:'Houston',lat:29.7604,lng:-95.3698},{name:'Phoenix',lat:33.4484,lng:-112.074},{name:'Philadelphia',lat:39.9526,lng:-75.1652},{name:'San Antonio',lat:29.4241,lng:-98.4936},{name:'San Diego',lat:32.7157,lng:-117.1611},{name:'Dallas',lat:32.7767,lng:-96.797},{name:'San Jose',lat:37.3382,lng:-121.8863},{name:'Austin',lat:30.2672,lng:-97.7431}],
+  'GB': [{name:'London',lat:51.5074,lng:-0.1278},{name:'Manchester',lat:53.4808,lng:-2.2426},{name:'Birmingham',lat:52.4862,lng:-1.8904},{name:'Leeds',lat:53.8008,lng:-1.5491},{name:'Glasgow',lat:55.8642,lng:-4.2518},{name:'Sheffield',lat:53.3811,lng:-1.4701},{name:'Edinburgh',lat:55.9533,lng:-3.1883},{name:'Liverpool',lat:53.4084,lng:-2.9916},{name:'Bristol',lat:51.4545,lng:-2.5879},{name:'Cardiff',lat:51.4816,lng:-3.1791},{name:'Leicester',lat:52.6369,lng:-1.1398}],
+  'AU': [{name:'Sydney',lat:-33.8688,lng:151.2093}],
 };
 function selectDemoCountry(iso2, name) {
   activeCountry = { iso2, name };
@@ -2024,37 +2024,47 @@ function selectDemoCountry(iso2, name) {
 // END TODO
 
 function selectDemoCity(name) {
-  activeCity = { id: null, name };
+  // Find this demo city's entry (coords + iso2) across all demo countries
+  let _iso2 = null, _hit = null;
+  for (const _k in DEMO_COUNTRY_CITIES) {
+    const _f = DEMO_COUNTRY_CITIES[_k].find(c => c.name === name);
+    if (_f) { _iso2 = _k; _hit = _f; break; }
+  }
+  activeCity = { id: null, name, lat: _hit ? _hit.lat : null, lng: _hit ? _hit.lng : null };
   activeSuburb = null;
   activeRegion = null;
-  // Update country to match demo city
-  const cityCountry = { 'Pretoria': {iso2:'ZA', name:'South Africa'}, 'New York': {iso2:'US', name:'United States'}, 'London': {iso2:'GB', name:'United Kingdom'}, 'Sydney': {iso2:'AU', name:'Australia'} };
-  if (cityCountry[name]) activeCountry = cityCountry[name];
-  // Sync Adventures country filter and World Heritage filter with selected city
-  const cityAdvMap = { 'Pretoria': {code:'ZA', name:'South Africa', flag:'🇿🇦'}, 'New York': {code:'US', name:'United States', flag:'🇺🇸'}, 'London': {code:'GB', name:'United Kingdom', flag:'🇬🇧'}, 'Sydney': {code:'AU', name:'Australia', flag:'🇦🇺'} };
-  if (cityAdvMap[name]) { const a=cityAdvMap[name]; advCountry=a.code; advCountryName=a.name; advCountryFlag=a.flag; _wfCountry=a.code; const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=a.flag; const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=a.name; }
+  // Update country + Adventures/World-Heritage filters to match selected city
+  const _CN = { 'ZA':'South Africa', 'US':'United States', 'GB':'United Kingdom', 'AU':'Australia' };
+  const _CF = { 'ZA':'🇿🇦', 'US':'🇺🇸', 'GB':'🇬🇧', 'AU':'🇦🇺' };
+  if (_iso2) {
+    activeCountry = { iso2:_iso2, name:_CN[_iso2] || _iso2 };
+    advCountry=_iso2; advCountryName=_CN[_iso2]||_iso2; advCountryFlag=_CF[_iso2]||''; _wfCountry=_iso2;
+    const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=_CF[_iso2]||'';
+    const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=_CN[_iso2]||_iso2;
+  }
   closeCitySelector();
   updateBadgeLabel();
-  // Clear stale BEA live listings from previous city immediately so renderGrid
-  // doesn't show Pretoria listings while NY is loading (city-switch flush)
+  // Clear stale BEA live listings from previous city immediately (city-switch flush)
   for (let i = LISTINGS.length - 1; i >= 0; i--) {
     if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
   }
   renderGrid();
   renderCatCounts();
   if (typeof renderWondersStrip === 'function') renderWondersStrip();
-  // Reload live BEA listings for the new city (fixes stale counts + wrong distances)
+  if (viewMode === 'map') renderMap();
+  // Reload live BEA listings for the new city
   loadLiveListings(0);
 }
 // END TODO
 
-async function selectCity(id, name) {
-  activeCity   = { id, name };
+async function selectCity(id, name, lat, lng) {
+  activeCity   = { id, name, lat: (lat==null?null:lat), lng: (lng==null?null:lng) };
   activeSuburb = null;
   closeCitySelector();
   updateBadgeLabel();
   renderGrid();
   renderCatCounts();
+  if (viewMode === 'map') renderMap();
 }
 
 async function selectSuburb(id, name) {
@@ -2170,7 +2180,9 @@ function renderMap(){
     'Sydney':     [-33.8688, 151.2093],
   };
   if(!listings.length){
-    const ctr = CITY_CENTERS[activeCity.name] || [-25.75, 28.19];
+    let ctr;
+    if(activeCity && activeCity.lat!=null && activeCity.lng!=null) ctr=[activeCity.lat, activeCity.lng];
+    else ctr = CITY_CENTERS[activeCity.name] || [-25.75, 28.19];
     _leafletMap.setView(ctr, 12);
     return;
   }

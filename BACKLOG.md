@@ -184,7 +184,7 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 
 | # | Open action (the gap, so nobody has to remember it) | Area | Lane |
 |---|---|---|---|
-| AU-DEPLOY | ✅ **DONE (3 Jun)** — `/auctions` live behind orchestrator Basic-Auth; verified 401 unauthed (origin + Cloudflare); update via one `scp` to `/var/www/marketsquare/auctions.html` | Server/Ops | DONE |
+| AU-DEPLOY | ✅ **DONE (3 Jun)** — `/auctions` live behind its OWN dedicated Basic-Auth (realm "TrustSquare Auctions (secret)", `.htpasswd_auctions`, user `david`); verified 401 unauthed (origin + Cloudflare); update via one `scp` to `/var/www/marketsquare/auctions.html` | Server/Ops | DONE |
 | AU-BACKUP | Server-hosted canon has **no version history** (the gap of the scp-only choice) — add a periodic snapshot/backup (git or Drive) for rollback | Ops | ATTENDED |
 | AU-ENTRY | Confirm bidder entry = **free + trust-gated** (David's lean) vs a small Tuppence seat-burn | Design | ATTENDED |
 | AU-OFFER | "Closest offer" semantics: **highest** vs **closest-to-a-private-seller-target**; define a seller minimum-offer floor | Design | ATTENDED |
@@ -193,4 +193,15 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 | AU-PATENT | Fold auction claims (intro-not-sale · real-escrow/Tuppence bond · anonymous-via-app-auth · deferred offer-triggered intro) into the pre-filing supplement; prior-art check vs Whatnot + Pingsby | Legal/IP | ATTENDED (ties L8) |
 | AU-COSTMODEL | Cost-model placeholders to set: real verification cost/rate; **load-test** max websocket conns/box (8,000 est.) | Cost model | ATTENDED |
 
-> **NGINX-HYGIENE — discovered during AU-DEPLOY (3 Jun):** stale `marketsquare.bak-*` files in `/etc/nginx/sites-enabled/` are loaded by nginx as live server blocks (harmless "conflicting server_name" warnings today, but a latent footgun — a reorder could shadow the real vhost). Cleanup: move `*.bak-*` out of `sites-enabled` into a non-included backup dir, then `nginx -t` + reload. ATTENDED (touch nginx only in an attended session).
+> **NGINX-HYGIENE — ✅ RESOLVED (3 Jun):** stale `marketsquare.bak-*` files moved out of `/etc/nginx/sites-enabled/` to `/root/nginx-backups/`; "conflicting server_name" warnings now zero; `nginx -t` clean + reloaded.
+
+
+## 🌍 Wave 1/2 City Readiness — gaps (filed Session 113 · 4 Jun 2026)
+**Done this session:** all Wave 1 (New York, London, Sydney) + Wave 2 (10 US, 10 UK, 10 ZA incl. the 3 newly-added) cities are seeded in the geo hierarchy with accurate centre coords and are selectable in the buyer app; `renderMap` now auto-centres on the selected city (`ms.js` v141). Remaining open actions so nothing relies on memory:
+
+| # | Open action (the gap) | Area | Lane |
+|---|---|---|---|
+| W12-ADMIN | Admin seller-onboarding region/city picker is hardcoded `country=ZA` (`populateRegions` -> `/geo/regions?country=ZA`; city list -> `/geo/cities?country=ZA`). Add a country selector feeding region->city so non-ZA Wave 1/2 prospects can be assigned a `geo_city_id`. Magic link carries the city *name* but geo resolution for non-ZA is the gap. | Admin + BEA | ATTENDED |
+| W12-SUBURBS | International cities (US/GB/AU) have no suburb hierarchy — the suburb panel shows "All suburbs" only and free-tier suburb gating stays ZA-only. Seed suburbs per city (GeoNames country dumps) if/when suburb-level precision is wanted for intl launches. | Data/BEA | ATTENDED |
+| W12-WAVE3 | Wave 3 AU cities (Melbourne, Brisbane, Perth, Adelaide, Gold Coast, Newcastle, Canberra, Wollongong, Hobart) not seeded — out of the Wave 1/2 scope; seed via `seed_wave12_cities.py` pattern when Wave 3 approaches. | Data | ATTENDED |
+| W12-VISUAL | In-app visual click-test of the city picker + map alignment was deferred (Chrome extension offline this session) — run the walkthrough + screenshot once Chrome reconnects. | QA | ATTENDED |
