@@ -60,6 +60,11 @@ async function devSetMode(isDemo) {
     activeRegion  = null;
     activeCity    = { id: 47, name: "Pretoria" };
     activeSuburb  = null;
+    // Reset the World Heritage filter too — a demo US/UK/AU city sets _wfCountry to
+    // that country; without this, switching back to live ZA leaves the strip stuck
+    // on the demo country's heritage while the selector still reads "All".
+    _wfCountry = 'all';
+    const _wfs = document.getElementById('wf-country-select'); if (_wfs) _wfs.value = 'all';
   }
   // If switching to demo and arrays are empty, fetch from BEA first
   if (isDemo && BEA_ENABLED && !LISTINGS.some(l => String(l.id).startsWith('demo_'))) {
@@ -87,6 +92,7 @@ async function devSetMode(isDemo) {
   renderGrid();
   renderCatCounts();
   initLMHomeTile();
+  if (typeof renderWondersStrip === 'function') renderWondersStrip();
   if (!isDemo) loadLiveListings();
   // Show/hide existing demo-toggle-panel if present
   var tp = document.getElementById("demo-toggle-panel");
@@ -2039,6 +2045,7 @@ function selectDemoCity(name) {
   if (_iso2) {
     activeCountry = { iso2:_iso2, name:_CN[_iso2] || _iso2 };
     advCountry=_iso2; advCountryName=_CN[_iso2]||_iso2; advCountryFlag=_CF[_iso2]||''; _wfCountry=_iso2;
+    { const _wfs=document.getElementById('wf-country-select'); if(_wfs && Array.from(_wfs.options).some(o=>o.value===_iso2)) _wfs.value=_iso2; }
     const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=_CF[_iso2]||'';
     const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=_CN[_iso2]||_iso2;
   }
@@ -2223,7 +2230,21 @@ function renderMap(){
 // ── HOME SCREEN STATS ──────────────────────────────────────
 
 function renderHomeStats() {
-  const live = LISTINGS.filter(l => !l.id.startsWith('ph_'));
+  const _aCity = activeCity ? (activeCity.name || '') : '';
+  const live = LISTINGS.filter(l => {
+    if (l.id.startsWith('ph_')) return false;
+    // Respect the selected city — demo listings + live BEA listings are per-city,
+    // so an empty city (e.g. New York in demo) must read 0, not another city's total.
+    if (DEMO_MODE && String(l.id).startsWith('demo_')) {
+      const lCity = l.city || l.area || '';
+      if (lCity && _aCity && lCity !== _aCity) return false;
+    }
+    if (l.isLive) {
+      const lCity = l.city || l.area || '';
+      if (lCity && _aCity && lCity !== _aCity) return false;
+    }
+    return true;
+  });
   const n    = live.length;
   // FLAG: Sellers count needs BEA /sellers/count?city= endpoint — using listing count as proxy until then
   const sellersEl  = document.getElementById('home-sellers');
@@ -2272,7 +2293,18 @@ function renderCatCounts() {
   if (hasLive) {
     Object.assign(counts, liveCounts);
   } else {
+    // Mirror the active-city filter so a selected city with no listings (e.g. New York
+    // in demo) reads 0 instead of falling back to another city's totals.
+    const _aCity = activeCity ? (activeCity.name || '') : '';
     LISTINGS.forEach(l => {
+      if (DEMO_MODE && String(l.id).startsWith('demo_')) {
+        const lCity = l.city || l.area || '';
+        if (lCity && _aCity && lCity !== _aCity) return;
+      }
+      if (l.isLive) {
+        const lCity = l.city || l.area || '';
+        if (lCity && _aCity && lCity !== _aCity) return;
+      }
       const cat = normCat(l.cat);
       counts[cat] = (counts[cat] || 0) + 1;
     });

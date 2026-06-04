@@ -3480,3 +3480,25 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 **Verify/deploy.** `ast.parse` clean locally and in the BEA venv on the server; `smoke_test.py` all-green pre- and post-deploy; the live-listings endpoint (a trust-score consumer) still served 65 listings after the restart. Server file backed up to `main.py.bak-20260604-scan8`; `scp bea_main.py → /var/www/marketsquare/main.py` (server sha256 == local); `systemctl restart marketsquare` → active; `/health` ok v1.3.1 on localhost and through Cloudflare; Cloudflare cache purged (`{"purged":true}`). Served `main.py` confirmed to carry `category.cars.service_history` exactly once.
 
 **Cost model impact:** none — a configuration dedup with no change to AI call volume, pricing, concurrency, or city-launch mechanics.
+
+
+## Session 116 — 2026-06-04 · Demo home-page counts now respect the selected city
+
+**Bug (David-reported).** In demo mode, selecting an empty prospect city (e.g. New York) showed the wrong category counts + home stats (Pretoria's numbers); clicking into a category correctly showed nothing, but returning to the home page still showed the wrong numbers.
+
+**Root cause.** Two home-count functions ignored `activeCity`, unlike `renderGrid` (which filters demo/live listings by city): `renderHomeStats()` counted all non-placeholder listings with no city filter; and `renderCatCounts()`'s count-all fallback (which fires when the selected city has zero matching listings) counted every listing globally — so an empty city fell back to Pretoria's totals.
+
+**Fix (`ms.js` v142→v143).** Applied the same demo/live active-city filter the grid uses to both functions, so an empty city reads 0 (demo-mode then hides the empty tiles) and the home page matches the grid. Verified with a Node unit-test of the filter predicate (New York → 0; Pretoria → its listings), node --check, and smoke all-green. Deployed; index `ms.js?v=143`; Cloudflare purged.
+
+**Cost model impact:** none — client-side display count only.
+
+
+## Session 117 — 2026-06-04 · World Heritage strip stuck on demo country after returning to live
+
+**Bug (David-reported).** Visiting a demo US city (heritage correctly showed US sites), then toggling back to LIVE / ZA (Pretoria) left the World Heritage strip stuck on the US cards and unscrollable to ZA — even though the country selector still read "All".
+
+**Root cause.** `selectDemoCity` sets `_wfCountry` to the selected city's country (e.g. 'US') and re-renders the strip, but (a) it never synced the `wf-country-select` dropdown, so the dropdown kept showing "All" while the filter was 'US', and (b) the LIVE toggle (`devSetMode`) reset the active country/city to ZA but never reset `_wfCountry` or re-rendered the strip — so the 'US' heritage filter persisted into live ZA.
+
+**Fix (`ms.js` v143→v144).** (1) `selectDemoCity` now syncs `wf-country-select` to the chosen country so the dropdown always reflects the active filter; (2) switching to LIVE in `devSetMode` resets `_wfCountry='all'` and the dropdown to "All"; (3) `devSetMode` re-renders the wonders strip on mode switch. Returning to live ZA now shows "All" heritage (Africa/ZA first, fully scrollable), matching the selector. node --check + smoke all-green; deployed; index `ms.js?v=144`; Cloudflare purged.
+
+**Cost model impact:** none — client-side display only.
