@@ -3468,3 +3468,15 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 **Seed script hardened.** `seed_wave12_cities.py` no longer re-adds Port Elizabeth or Nelspruit (commented as renamed/duplicate); only East London remains among the ZA additions, so a re-run cannot recreate the duplicates.
 
 **Cost model impact:** none — geo data + display only.
+
+## Session 115 — 2026-06-04 · SCAN-8 DONE (trust-score duplicate dict key)
+
+**Context.** Top of the maintenance auto-ship queue. The 1 June static-analysis scan (ruff F601) flagged a duplicate dict key in the trust-score signals map: `_CATEGORY_SIGNALS["Cars_private"]` defined `"category.cars.service_history"` twice. In a Python dict literal the second binding silently wins, so the richer first entry (`"Service history on file"`, how-to-earn "Upload scan of service book or dealer service records (full or partial history).") was being overridden by a terser duplicate (`"Service history"`, "Upload service book."). Both carried `points: 4`, so the trust-score arithmetic was already correct — the bug was cosmetic (the weaker copy rendered) but real config debt.
+
+**Fix (surgical, behaviour-checked).** Removed the terser duplicate line, keeping the fuller entry as the sole definition of the key. Applied with a Python open/str.replace/write driver (never Edit/Write on `bea_main.py` per the truncation rule): the old string was asserted to match exactly once, the post-state asserted the key now appears once and the fuller copy remains, and `ast.parse` was run before writing. Whole-file diff vs a freshly-pulled server copy = exactly the one deleted line (local was byte-identical to the server beforehand). −124 bytes; 11454→11453 lines.
+
+**Gate (ORCHESTRATION_POLICY §5 / §6.2).** Trust-score display config only — the diff touches none of `payments.py`, the Tuppence ledger, EULA/Terms/Privacy copy, or the SA-ID/KYC code, and the points value is unchanged so there is no scoring shift. Clears Gate 1 (regulatory) and Gate 2 (financial) with positive confidence → auto-shipped.
+
+**Verify/deploy.** `ast.parse` clean locally and in the BEA venv on the server; `smoke_test.py` all-green pre- and post-deploy; the live-listings endpoint (a trust-score consumer) still served 65 listings after the restart. Server file backed up to `main.py.bak-20260604-scan8`; `scp bea_main.py → /var/www/marketsquare/main.py` (server sha256 == local); `systemctl restart marketsquare` → active; `/health` ok v1.3.1 on localhost and through Cloudflare; Cloudflare cache purged (`{"purged":true}`). Served `main.py` confirmed to carry `category.cars.service_history` exactly once.
+
+**Cost model impact:** none — a configuration dedup with no change to AI call volume, pricing, concurrency, or city-launch mechanics.

@@ -6061,7 +6061,6 @@ _CATEGORY_SIGNALS = {
         "category.cars.finance_clear":     {"name": "Finance clearance", "points": 4, "how_to_earn": "Upload letter from financial institution confirming no outstanding finance on this vehicle."},
         "category.cars.private_seller":    {"name": "Private seller declaration", "points": 0, "how_to_earn": "Declare: I am a private seller, not a registered dealer. Displayed to buyers as a transparency label — regulatory protections differ. No points but visible on listing."},
         "category.cars.rwc":               {"name": "Roadworthy certificate (RWC)", "points": 6, "how_to_earn": "Upload roadworthy certificate."},
-        "category.cars.service_history":   {"name": "Service history", "points": 4, "how_to_earn": "Upload service book."},
     },
     "Tutors": {
         "category.tutors.clearance":       {"name": "Police clearance / DBS check", "points": 8, "how_to_earn": "Upload SAPS clearance (saps.gov.za) · DBS (UK) · WWC (AU) · state background check (US). Critical for tutors working with minors."},
