@@ -3502,3 +3502,16 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 **Fix (`ms.js` v143→v144).** (1) `selectDemoCity` now syncs `wf-country-select` to the chosen country so the dropdown always reflects the active filter; (2) switching to LIVE in `devSetMode` resets `_wfCountry='all'` and the dropdown to "All"; (3) `devSetMode` re-renders the wonders strip on mode switch. Returning to live ZA now shows "All" heritage (Africa/ZA first, fully scrollable), matching the selector. node --check + smoke all-green; deployed; index `ms.js?v=144`; Cloudflare purged.
 
 **Cost model impact:** none — client-side display only.
+
+
+## Session 118 — 2026-06-04 · Placeholder "coming soon" cards leaked into every city's counts
+
+**Bug (David-reported).** In demo mode an empty prospect city (e.g. Houston) showed "1 listing" under Property, Tutors and Services while the other categories were hidden — a confusing partial state.
+
+**Root cause.** Three placeholder listings (`ph_property`, `ph_tutors`, `ph_services` — paused "… listings coming soon" cards tagged city=Pretoria) were never city-filtered. They are not `demo_`-prefixed and not `isLive`, so they slipped past the Session 116 count filter: the `renderCatCounts` count-all fallback (which fires when the selected city has no real listings) counted them, giving every empty city a phantom 1 in P/T/S, and `renderGrid` showed them in every city.
+
+**Fix (`ms.js` v144→v145).** Excluded `ph_` placeholders from the `renderCatCounts` fallback, and city-scoped them in `renderGrid` so they only appear for their own city (Pretoria). Empty cities now read 0 across all categories (tiles hidden, consistent with New York); Pretoria is unchanged. Verified by simulating the count logic against the live demo data (Houston → {}, Pretoria → full counts) + node --check + smoke all-green. Deployed; index `ms.js?v=145`; Cloudflare purged.
+
+**Also noticed (filed, not fixed here): the "For You" / wishlist feed is not geo-scoped** — it pulls real listings from the BEA `/wishlist/showcase` + `/wishlist/feed` endpoints and showed Pretoria collectibles while browsing Houston. This affects live mode too (a Houston buyer would see Pretoria recommendations) and needs a server-side city/country scope. Logged on BACKLOG as W12-FORYOU.
+
+**Cost model impact:** none — client-side display only.

@@ -2297,6 +2297,9 @@ function renderCatCounts() {
     // in demo) reads 0 instead of falling back to another city's totals.
     const _aCity = activeCity ? (activeCity.name || '') : '';
     LISTINGS.forEach(l => {
+      // Placeholders are Pretoria-tagged "coming soon" scaffolding — never count them
+      // toward another city's tiles (this caused New York/Houston to show phantom 1s).
+      if (String(l.id).startsWith('ph_')) return;
       if (DEMO_MODE && String(l.id).startsWith('demo_')) {
         const lCity = l.city || l.area || '';
         if (lCity && _aCity && lCity !== _aCity) return;
@@ -2339,6 +2342,13 @@ function renderGrid(){
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');
     if(l.paused && !isPlaceholder) return false;
+    // Placeholders are city-scoped scaffolding — only show for their own city
+    // (otherwise the Pretoria "coming soon" cards bleed into every city's grid).
+    if(isPlaceholder){
+      const _pCity = l.city || l.area || '';
+      const _aCityG = activeCity.name || '';
+      if(_pCity && _aCityG && _pCity !== _aCityG) return false;
+    }
     // Suburb filter — skip placeholders and only filter when a suburb is selected
     if(nearbyMode && !isPlaceholder && !nearbySuburbs.includes(l.suburb)) return false;
     if(!nearbyMode && activeSuburb && !isPlaceholder && l.suburb !== activeSuburb.name) return false;
