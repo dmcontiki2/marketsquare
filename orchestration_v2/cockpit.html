@@ -54,8 +54,8 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <div class="ph done"><div class="pn">PHASE 1</div><div class="pt">Detect</div><span class="st">✓ built</span></div>
   <div class="ph done"><div class="pn">PHASE 2</div><div class="pt">Triage</div><span class="st">✓ built</span></div>
   <div class="ph done"><div class="pn">PHASE 3</div><div class="pt">Fix</div><span class="st">✓ built</span></div>
-  <div class="ph lock"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">next</span></div>
-  <div class="ph lock"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">queued</span></div>
+  <div class="ph done"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">✓ built</span></div>
+  <div class="ph lock"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">next</span></div>
 </div>
 
 <h2>The lanes (your pre-approved authority)</h2>
@@ -72,6 +72,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <a class="btn ghost" href="triage.html">🗂️ Triage engine (Phase 2)</a>
   <a class="btn" href="triage_board.html">📋 Triage board (live)</a>
   <a class="btn ghost" href="fix.html">🔧 Fix engine (Phase 3)</a>
+  <a class="btn ghost" href="prevent.html">🛡️ Prevent engine (Phase 4)</a>
 </div>
 
 <h2>Functions — activate as they come online</h2>
@@ -83,7 +84,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
 </div>
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Triage</b> <span class="ph-tag">· Phase 2 · available</span><small>Dedupes a Detect run against the backlog + ignore-list, assigns a lane (🟢/🟡/🔴) and a priority, and lays it on the board. Tap <b>Copy</b>, paste it to Claude in chat.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Triage engine on the latest Detect findings.')">Copy run command</button></div></div>
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Fix (with lanes)</b> <span class="ph-tag">· Phase 3 · available</span><small>Consumes the green lane one item at a time — backup → surgical edit → verify (node/ast + smoke) → ship. Amber stages; red is never touched. Tap <b>Copy</b>, paste it to Claude.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Fix engine on the triaged queue.')">Copy run command</button></div></div>
-<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Prevent — monitors</b> <span class="ph-tag">· Phase 4</span><small>Scheduled double-verify for each known weak point.</small></div><div class="act"><span class="lockbadge">coming P4</span></div></div>
+<div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Prevent — guards + monitors</b> <span class="ph-tag">· Phase 4 · available</span><small>A poka-yoke per fixed defect (re-flags a regression) + a gentle monitor for weak points we don't control. A failure re-enters Triage → Fix. Tap <b>Copy</b>, paste it to Claude.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run Prevent — check the regression guards and the image monitor.')">Copy run command</button></div></div>
 <div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Librarian + Automate</b> <span class="ph-tag">· Phase 5</span><small>The loop runs itself nightly; these become live server buttons.</small></div><div class="act"><span class="lockbadge">coming P5</span></div></div>
 
 <div class="note"><b>How activation works today:</b> available functions run through Claude — the Copy button hands you the exact command to paste. When the Orchestrator is wired in <b>Phase 5</b>, these turn into live buttons that trigger the server directly (and the green lane runs on its own overnight). Honest by design — no button pretends to do more than it does yet.</div>

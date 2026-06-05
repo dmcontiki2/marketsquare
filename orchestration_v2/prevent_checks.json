@@ -1,0 +1,51 @@
+{
+  "schema": "prevent-v1",
+  "generated_at": "2026-06-05T09:07:12Z",
+  "ms": "/var/www/marketsquare/static/ms.js",
+  "summary": {
+    "guards": 3,
+    "guards_pass": 3,
+    "guards_fail": 0,
+    "monitors": 1
+  },
+  "checks": [
+    {
+      "id": "G-DEMO6",
+      "kind": "guard",
+      "protects": "DEMO-6",
+      "fixed_in": "S125",
+      "desc": "renderAdvGrid honours the data's per field",
+      "status": "PASS",
+      "detail": "found 'const _advPer = l.per'"
+    },
+    {
+      "id": "G-DEMO7",
+      "kind": "guard",
+      "protects": "DEMO-7",
+      "fixed_in": "S125",
+      "desc": "renderCatCounts excludes paused listings from tile counts",
+      "status": "PASS",
+      "detail": "2/2 paused guards present"
+    },
+    {
+      "id": "G-PHOTO",
+      "kind": "guard",
+      "protects": "S123 P2#2",
+      "fixed_in": "S123",
+      "desc": "card photo source matches the detail view (poka-yoke)",
+      "status": "PASS",
+      "detail": "9 card-site poka-yokes present (floor 4)"
+    },
+    {
+      "id": "M-IMG",
+      "kind": "monitor",
+      "status": "ALERT",
+      "checked": 30,
+      "total_gallery_urls": 498,
+      "dead": 3,
+      "transient": 0,
+      "ok": 27,
+      "detail": "3/30 sampled gallery URLs DEAD (gentle); 27 ok, 0 transient; 498 gallery URLs total"
+    }
+  ]
+}

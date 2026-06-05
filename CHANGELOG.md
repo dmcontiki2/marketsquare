@@ -1,3 +1,13 @@
+## Session 126 · 5 June 2026 · Orchestration v2 Phase 4 (Prevent) — guards + monitor, the loop closes
+
+Built Phase 4: Prevent — a poka-yoke per fixed defect class + a monitor for the weak points we don't control. Deterministic, zero-token `orchestration_v2/prevent.py` with an auditable registry; it watches, never changes anything; and a guard/monitor failure is written back out as a Detect-schema finding (`findings_prevent.json`) so it flows straight into Triage → Fix — the five-stage loop now closes on itself.
+
+Guards (regression poka-yokes against the deployed ms.js): **G-DEMO6** (renderAdvGrid still honours l.per), **G-DEMO7** (renderCatCounts still excludes paused at both count paths), **G-PHOTO** (the S123 card/detail photo poka-yoke present, floor 4). Each shipped fix is now permanent — a regression re-flags itself automatically. Monitor: **M-IMG**, a gentle low-concurrency HEAD check of the demo-image galleries (only a real 404/410 counts as dead — the 5 Jun detect_verify lesson against rate-limit false positives).
+
+First live run (on the server, where the cron will run it): all 3 guards PASS; M-IMG sampled 30 of 498 secondary-gallery URLs and found **3 genuinely dead with 0 false positives** (0 transient) — the same link-rot DEMO-5 was routed to DEMO-4's R2 self-host for, now under a standing watch. Cockpit: Phase 4 → built, Prevent card live with a Copy-run-command, prevent.html playbook button. Deployed prevent.py + prevent_checks.json + cockpit to /orchestrator/v2/ behind the orchestrator login (chmod 644, sha parity, 401 unauthed).
+
+Cost model impact: none — read-only deterministic guards + a gentle monitor; no AI calls, pricing, concurrency, email-volume, or city-launch change.
+
 ## Session 125 · 5 June 2026 · Orchestration v2 Phase 3 (Fix) — built + first green-lane batch shipped
 
 Built Phase 3 of the arc: Fix — the stage that consumes the green lane of a triaged run, one item at a time, under the verify-or-revert + lane gates; the downstream end of the Detect → Triage → Fix tissue. Per the model-tiering policy, `orchestration_v2/fix.py` is the deterministic harness (queue-manager, gate-recorder, board-regenerator) while the surgical edit itself is the Sonnet checkpoint applied with the established bash-python str-replace + node/ast + smoke discipline. fix.py: `--next` prints the top green item + the safety checklist; `--ship/--route/--fail` flip the item's status in `triaged.json`, append `fix_results.json`, and regenerate the board (reusing the Triage renderer + splicing a "Fix — this run" panel; triage.py untouched). Green ships (pre-authorised in Phase 0); amber stages; red is never consumable.
