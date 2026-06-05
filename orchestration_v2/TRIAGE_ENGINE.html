@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Triage Engine — Orchestration v2 · Phase 2</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.doc{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:24px 26px;margin-bottom:22px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 6px;font-size:25px;font-weight:700;letter-spacing:-.3px}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+header.hd .badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.5px;background:#16402a;color:#7fe0a3;border:1px solid #2c6b45;border-radius:20px;padding:4px 11px}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 11px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:11px}
+.lead{font-size:14.5px;color:var(--ink);margin:0}
+.muted{color:var(--muted);font-size:13px}
+.invoke{background:var(--navy);color:#dbe7f2;border-radius:12px;padding:14px 16px;font-family:'Consolas',ui-monospace,monospace;font-size:13.5px}
+.invoke .p{color:#7fd4bb}
+.invoke .eg{display:block;margin-top:7px;color:#8ea7be;font-style:italic;font-size:12.5px}
+.step{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin-bottom:8px;border-left:4px solid var(--teal)}
+.step .n{display:inline-flex;min-width:24px;height:24px;border-radius:7px;background:var(--tealbg);color:var(--teal);align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.step b{font-size:13.5px}
+.step small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.45}
+pre.schema{background:#0e1c2e;color:#cfe0f0;border-radius:11px;padding:14px 16px;font-family:'Consolas',ui-monospace,monospace;font-size:12.5px;line-height:1.7;overflow-x:auto;margin:0}
+pre.schema .k{color:#7fd4bb}
+.lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.lane{border-radius:11px;padding:12px 14px;border:1px solid}
+.lane.g{background:var(--greenbg);border-color:#bfe0c1}.lane.a{background:var(--amberbg);border-color:#f0dcb4}.lane.r{background:var(--redbg);border-color:#f0c4c4}
+.lane h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:6px}
+.lane.g h3{color:var(--green)}.lane.a h3{color:var(--amber)}.lane.r h3{color:var(--red)}
+.lane p{margin:3px 0 0;font-size:12px;color:var(--ink);line-height:1.4}
+.lane .eg{font-size:11px;color:var(--muted);margin-top:5px}
+.guard{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.guard .ic{font-size:15px}
+.guard b{font-size:13.5px}.guard small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.proof{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:12px;padding:13px 16px}
+.proof b{color:var(--green)}
+.kpis{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.kpi{flex:1;min-width:78px;background:#fff;border:1px solid #bfe0c1;border-radius:9px;padding:7px 9px;text-align:center}
+.kpi .v{font-size:18px;font-weight:800;color:var(--green)}.kpi .l{font-size:10.5px;color:var(--muted);font-weight:600}
+.next{background:#f0f3f6;border:1px solid var(--line);border-radius:12px;padding:13px 16px;font-size:13px;color:var(--muted)}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+@media(max-width:640px){.lanes{grid-template-columns:1fr}}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare · Orchestration v2</div>
+  <h1>Triage Engine — Phase 2</h1>
+  <p>Turns a raw Detect run into a governed, de-duplicated, prioritized queue. It decides; it never fixes.</p>
+  <span class="badge">🟢 GREEN LANE · deterministic · zero-token · the connective tissue Detect → Fix</span>
+</header>
+
+<h2>What it is</h2>
+<div class="card"><p class="lead">Detect finds; Triage <b>governs</b>. Every raw finding is de-duplicated against what we already know (the backlog, the dismissed-list, the changelog), given a <b>lane</b> (who may act) and a <b>priority</b> (how urgent), and laid out on a board. Known issues are never re-reported; dismissed false-positives never come back to bother you; only genuinely new, genuinely actionable work moves forward — and the green lane flows straight into Fix.</p></div>
+
+<h2>How you call it</h2>
+<div class="invoke"><span class="p">&gt;</span> Run the Triage engine on <b>the latest Detect findings</b><span class="eg">deterministic helper: triage.py --findings &lt;run&gt;.json → triaged.json + triage_board.html</span></div>
+
+<h2>How it runs</h2>
+<div class="step"><span class="n">1</span><div><b>Dedupe — against the second brain</b><small>Each finding gets a stable key = <code>file ∷ root-token</code> (line numbers excluded — they drift). Matched three ways: the <b>backlog</b> (already filed → reuse the id, never duplicate), the <b>ignore-list</b> (already dismissed → drop, reason kept), and the <b>changelog</b> (already fixed → resolved; re-detected later → a regression).</small></div></div>
+<div class="step"><span class="n">2</span><div><b>Classify a lane — red checked first</b><small>The policy's path pre-catch: anything touching money, secrets, permissions, deletions, public actions or schema is red <i>before</i> intent is even read. Green only for confirmed-safe classes; everything else amber. Fail-safe: ambiguous never reaches green.</small></div></div>
+<div class="step"><span class="n">3</span><div><b>Prioritize — P1 · P2 · P3</b><small>Urgency, orthogonal to the lane. P1 breakage/crash/security, P2 degraded/latent, P3 dead-code/cosmetic. Orders the work within each lane.</small></div></div>
+<div class="step"><span class="n">4</span><div><b>Write &amp; surface</b><small>The governed queue goes to <code>triaged.json</code> (what Fix consumes) and the visual <b>triage board</b> in your cockpit. Known/dismissed items sit out of the way, kept — never re-raised.</small></div></div>
+
+<h2>What a triaged item looks like</h2>
+<pre class="schema"><span class="k">dedupe_key:</span> file ∷ root-token        <span class="k">verdict:</span> new | known-filed | known-ignored | resolved | regression
+<span class="k">lane:</span>       green | amber | red       <span class="k">priority:</span> P1 | P2 | P3
+<span class="k">ref:</span>        the backlog / ignore id   <span class="k">status:</span>  queued (→Fix) | staged (→you) | dropped</pre>
+
+<h2>The three lanes — who may act <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(approved once, in Phase 0)</span></h2>
+<div class="lanes">
+  <div class="lane g"><h3>🟢 Green</h3><p>auto-ship — reversible, well-understood.</p><div class="eg">demo data · FE cosmetic · dead code · docs · poka-yokes. <b>→ Fix consumes this lane.</b></div></div>
+  <div class="lane a"><h3>🟡 Amber</h3><p>do + notify — reversible, 1-click undo.</p><div class="eg">backend that passes tests · verified data change.</div></div>
+  <div class="lane r"><h3>🔴 Red</h3><p>always asks — never pre-authorised.</p><div class="eg">money · Tuppence ledger · payments · secrets · permissions · deletions · public posts · schema. <b>Never auto-consumed.</b></div></div>
+</div>
+
+<h2>Guardrails</h2>
+<div class="card">
+  <div class="guard"><span class="ic">🟢</span><div><b>Decides, never fixes</b><small>Triage changes no code. The green queue it produces is what the Fix stage acts on, under the lane rules.</small></div></div>
+  <div class="guard"><span class="ic">🔴</span><div><b>Fail-safe to red</b><small>Positive confidence is required to call something green. Ambiguous, needs-confirm, or any red signal → it never auto-ships. Silence is not a pass; a red proposal is never downgraded.</small></div></div>
+  <div class="guard"><span class="ic">🔌</span><div><b>Deterministic &amp; off-grid</b><small>A zero-token Python script — auditable rule tables, no model in the loop. A model is consulted only for the rare item a rule genuinely can't classify.</small></div></div>
+</div>
+
+<h2>It already proved the point</h2>
+<div class="proof"><p class="lead" style="font-size:13.5px"><b>First live run — the Session 123 Detect sweep (12 findings in).</b> Triage recognised every one: it routed three already-filed items straight to the Fix queue, marked three as resolved this run, and quietly dismissed six known false-positives — surfacing <b>nothing</b> new for you to read and <b>nothing</b> in the red lane. That is the whole point: from a dozen raw flags, the human sees only the three that matter, already governed.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">3</div><div class="l">→ Fix (green)</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">resolved</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">dismissed</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">need you</div></div>
+  </div>
+</div>
+
+<h2>Next brick (waits for your go)</h2>
+<div class="next">Fix with lanes <b>(P3)</b> — the green queue above becomes applied, verified fixes (amber/red staged for you); then Prevent monitors <b>(P4)</b> and the Orchestrator + Scheduler cutover <b>(P5)</b>.</div>
+
+<p class="foot">Orchestration v2 · Phase 2 of 5 · green lane · engine: triage.py · board: triage_board.html · TRIAGE_ENGINE.html</p>
+</div></body></html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Triage Board - Orchestration v2</title><style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;
+--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.5}
+.doc{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:16px}
+header.hd .ey{font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 3px;font-size:22px;font-weight:700}
+header.hd p{margin:0;color:#b9c4d0;font-size:13px}
+.strip{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 6px}
+.kpi{flex:1;min-width:96px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--card)}
+.kpi .v{font-size:22px;font-weight:800;line-height:1}.kpi .l{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+.kpi.g .v{color:var(--green)}.kpi.a .v{color:var(--amber)}.kpi.r .v{color:var(--red)}.kpi.t .v{color:var(--teal)}.kpi.m .v{color:var(--muted)}
+h2{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:22px 0 10px}
+.lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.col{border:1px solid var(--line);border-radius:13px;padding:11px;background:var(--card)}
+.col h3{margin:0 0 9px;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
+.col.g h3{color:var(--green)}.col.a h3{color:var(--amber)}.col.r h3{color:var(--red)}
+.col h3 .cnt{font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px}
+.col.g h3 .cnt{background:var(--greenbg);color:var(--green)}.col.a h3 .cnt{background:var(--amberbg);color:var(--amber)}.col.r h3 .cnt{background:var(--redbg);color:var(--red)}
+.it{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;border-left:4px solid var(--line)}
+.it.g{border-left-color:var(--green)}.it.a{border-left-color:var(--amber)}.it.r{border-left-color:var(--red)}
+.it .top{display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap}
+.it b{font-size:13px}
+.it .meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.it .meta code{background:#eef1f4;border-radius:5px;padding:1px 5px;font-size:10.5px}
+.pri{font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px}
+.pri.P1{background:var(--redbg);color:var(--red)}.pri.P2{background:var(--amberbg);color:var(--amber)}.pri.P3{background:#eef1f4;color:var(--muted)}
+.vp{font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;border:1px solid var(--line);color:var(--muted)}
+.vp.filed{background:var(--bluebg);color:var(--blue);border-color:#cfe0f2}
+.vp.new{background:var(--tealbg);color:var(--teal);border-color:#a9e0cf}
+.vp.reg{background:var(--redbg);color:var(--red);border-color:#f0c4c4}
+.empty{color:var(--muted);font-size:12px;font-style:italic;padding:8px 4px}
+.flowline{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:11px;padding:10px 14px;font-size:12.5px;color:#23612a;margin-top:12px}
+.flowline b{color:var(--green)}
+details{border:1px solid var(--line);border-radius:12px;background:var(--card);margin-top:10px;padding:4px 14px}
+details summary{cursor:pointer;font-size:13px;font-weight:700;padding:9px 0;color:var(--ink)}
+.drow{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:12px}
+.drow .dico{font-size:13px;margin-top:1px}
+.drow .dttl{font-weight:600}.drow .dwhy{color:var(--muted);font-size:11.5px;margin-top:1px}
+.dref{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:24px}
+@media(max-width:720px){.lanes{grid-template-columns:1fr}}
+</style></head><body><div class="doc">
+<header class="hd"><div class="ey">Solar Council &middot; TrustSquare &middot; Orchestration v2 &middot; Phase 2</div>
+<h1>Triage Board</h1><p>S123-demo-sweep &middot; demo mode · 4 cities · all home sections &middot; triaged 2026-06-05T08:20:27Z</p></header>
+
+<div class="strip">
+  <div class="kpi g"><div class="v">3</div><div class="l">&rarr; Fix (green)</div></div>
+  <div class="kpi a"><div class="v">0</div><div class="l">review (amber)</div></div>
+  <div class="kpi r"><div class="v">0</div><div class="l">needs you (red)</div></div>
+  <div class="kpi t"><div class="v">3</div><div class="l">resolved</div></div>
+  <div class="kpi m"><div class="v">6</div><div class="l">dismissed</div></div>
+  <div class="kpi m"><div class="v">12</div><div class="l">findings in</div></div>
+</div>
+
+<h2>The governed queue &middot; who may act</h2>
+<div class="lanes"><div class="col g"><h3>&#128994; Green<span class="cnt">3</span></h3><div class="it green"><div class="top"><span class="pri P3">P3</span><b>Demo gallery images</b> <span class="vp filed">filed: DEMO-5</span></div><div class="meta">27 dead Unsplash URLs sit in the secondary gallery of 34 demo listings (hero fine; only seen on swipe).<br><code>demo_listings.json</code> &middot; demo-listings-json::gallery-dead-urls &middot; <span title="handed to Phase 3 Fix">&rarr; Fix</span></div></div><div class="it green"><div class="top"><span class="pri P3">P3</span><b>Adventures price suffix</b> <span class="vp filed">filed: DEMO-6</span></div><div class="meta">demo_stay_2 (per:/person/night) is mislabeled /night.<br><code>ms.js</code> &middot; ms-js::renderadvgrid-per-suffix &middot; <span title="handed to Phase 3 Fix">&rarr; Fix</span></div></div><div class="it green"><div class="top"><span class="pri P3">P3</span><b>Category counts paused-guard</b> <span class="vp filed">filed: DEMO-7</span></div><div class="meta">Latent: a future non-placeholder paused demo listing could inflate a category tile count.<br><code>ms.js</code> &middot; ms-js::rendercatcounts-paused-guard &middot; <span title="handed to Phase 3 Fix">&rarr; Fix</span></div></div></div><div class="col a"><h3>&#128993; Amber<span class="cnt">0</span></h3><div class="empty">no amber items</div></div><div class="col r"><h3>&#128308; Red<span class="cnt">0</span></h3><div class="empty">no red items</div></div></div>
+<div class="empty" style="font-style:normal">Nothing in the red lane this run &mdash; no money, secrets, permissions, deletions or public actions were touched. Red always waits for you; today it has nothing to ask.</div>
+<div class="flowline"><b>Detect &rarr; Fix tissue:</b> the 3 green item(s) above are the queue
+Phase 3 (Fix) consumes, highest priority first. Amber is do-and-notify; red is human-only and never auto-consumed.</div>
+
+<details open><summary>&#10003; Resolved this run (3)</summary><div class="drow"><span class="dico">&#10003;</span><div style="flex:1"><div class="dttl">LIVE demo-bleed</div><div class="dwhy">Already fixed in Session 123 - resolved this run.</div></div><div class="dref">Session 123</div></div><div class="drow"><span class="dico">&#10003;</span><div style="flex:1"><div class="dttl">Adventures taxonomy</div><div class="dwhy">Already fixed in Session 123 - resolved this run.</div></div><div class="dref">Session 123</div></div><div class="drow"><span class="dico">&#10003;</span><div style="flex:1"><div class="dttl">Card/detail photo parity</div><div class="dwhy">Already fixed in Session 123 - resolved this run.</div></div><div class="dref">Session 123</div></div></details>
+<details><summary>&#8856; Dismissed &mdash; won't be re-raised (6)</summary><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">Adventure currency</div><div class="dwhy">Adventure price is computed correctly per country (_priceLabel / ADV_COUNTRY_CURRENCY, fixed S122); grid == detail. No mismatch.</div></div><div class="dref">S123-FP-currency</div></div><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">Placeholder counts</div><div class="dwhy">ph_ placeholder cards are excluded from category counts and city-scoped (S118/S145). They do not leak into other cities&#x27; counts.</div></div><div class="dref">S123-FP-placeholder</div></div><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">World Heritage reset</div><div class="dwhy">World Heritage strip demo-&gt;live reset is wired (_wfCountry reset + dropdown sync + re-render, S117/S144).</div></div><div class="dref">S123-FP-heritage</div></div><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">Detail hero images</div><div class="dwhy">All detail-page hero images verified alive on gentle low-concurrency HEAD re-check. The earlier dead read was an Unsplash rate-limit false positive.</div></div><div class="dref">S123-FP-hero</div></div><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">Category tile row</div><div class="dwhy">The category tile row is identical across cities via normCat and always renders (0-count tiles show &#x27;0 listings&#x27;, S120/S147).</div></div><div class="dref">S123-FP-tiles</div></div><div class="drow"><span class="dico">&#8856;</span><div style="flex:1"><div class="dttl">Unnamed first-pass flags</div><div class="dwhy">Two further S123 first-pass flags dismissed on gentle verify; not individually named in the record. Held as one aggregate so the 7-of-9 count reconciles.</div></div><div class="dref">S123-FP-aggregate</div></div></details>
+
+<p class="foot">Generated by triage.py (deterministic, zero-token) &middot; triage_board.html &middot; behind the orchestrator login</p>
+</div></body></html>

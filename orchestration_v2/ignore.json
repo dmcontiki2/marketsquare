@@ -1,0 +1,47 @@
+{
+  "_doc": "Triage ignore-list - the 'second brain' of findings already ruled out, so Detect can re-raise them forever and Triage will quietly drop them (never re-bothering David). Keyed entries match by dedupe_key (file::root-token) - identity, collision-free. Term-only entries (no key) match when ALL match_terms appear as whole words. Seeded from the Session 123 gentle-verify dismissals. Add to this whenever a finding is confirmed a false positive; never delete a reason (that is how a dropped issue stays dropped).",
+  "ignored": [
+    {
+      "ref": "S123-FP-currency",
+      "key": "ms-js::adventure-currency-grid-detail",
+      "match_terms": ["currency", "mismatch"],
+      "reason": "Adventure price is computed correctly per country (_priceLabel / ADV_COUNTRY_CURRENCY, fixed S122); grid == detail. No mismatch.",
+      "dismissed_run": "S123-demo-sweep"
+    },
+    {
+      "ref": "S123-FP-placeholder",
+      "key": "ms-js::ph-placeholder-count-leak",
+      "match_terms": ["ph_", "leak"],
+      "reason": "ph_ placeholder cards are excluded from category counts and city-scoped (S118/S145). They do not leak into other cities' counts.",
+      "dismissed_run": "S123-demo-sweep"
+    },
+    {
+      "ref": "S123-FP-tiles",
+      "key": "ms-js::category-tile-city-divergence",
+      "match_terms": ["category tile", "cities"],
+      "reason": "The category tile row is identical across cities via normCat and always renders (0-count tiles show '0 listings', S120/S147).",
+      "dismissed_run": "S123-demo-sweep"
+    },
+    {
+      "ref": "S123-FP-heritage",
+      "key": "ms-js::heritage-demo-live-reset",
+      "match_terms": ["heritage", "reset"],
+      "reason": "World Heritage strip demo->live reset is wired (_wfCountry reset + dropdown sync + re-render, S117/S144).",
+      "dismissed_run": "S123-demo-sweep"
+    },
+    {
+      "ref": "S123-FP-hero",
+      "key": "ms-js::detail-hero-dead",
+      "match_terms": ["detail-page hero", "dead"],
+      "reason": "All detail-page hero images verified alive on gentle low-concurrency HEAD re-check. The earlier dead read was an Unsplash rate-limit false positive.",
+      "dismissed_run": "S123-demo-sweep"
+    },
+    {
+      "ref": "S123-FP-aggregate",
+      "key": "demo::s123-aggregate-fp",
+      "match_terms": ["aggregate", "ruled out"],
+      "reason": "Two further S123 first-pass flags dismissed on gentle verify; not individually named in the record. Held as one aggregate so the 7-of-9 count reconciles.",
+      "dismissed_run": "S123-demo-sweep"
+    }
+  ]
+}
