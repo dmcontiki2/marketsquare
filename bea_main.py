@@ -8277,12 +8277,6 @@ def get_wonder(wonder_id: str):
 @app.put("/listings/{listing_id}/wonders")
 def update_listing_wonders(listing_id: int, request: Request):
     """Set linked_wonders for a listing (up to 5 wonder IDs). Email-auth required."""
-    import asyncio
-    body = asyncio.run(request.json()) if hasattr(request, '_body') else {}
-    # Sync read
-    import json as _j
-    body_bytes = b""
-    # Use the standard approach
     return _update_listing_wonders_sync(listing_id, request)
 
 def _update_listing_wonders_sync(listing_id: int, request: Request):

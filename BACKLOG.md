@@ -65,7 +65,7 @@
 | F1 | **Adventures category** — Experiences + Accommodation sub-classes, Trust Score signals | All |
 | F2 | **Collectors category** — catalogue reference, condition, edition/year fields | All |
 | F3 | **Wave 1 cities** — New York · London · Sydney onboarding and CityLauncher campaigns | All |
-| F4 | **Stripe international payments** — needed for Wave 1 non-ZAR buyers (IoM or Singapore entity required) | Payments |
+| F4 | **International payments for US/UK/AU launch — cheap, NO US entity, NO travel · David proceeding 5 Jun 2026.** Stale assumption corrected: a SA (Pty) Ltd does NOT need a foreign entity. Lead path = **Merchant of Record (Paddle / Lemon Squeezy)** — seller of record, accepts US/UK/AU cards, handles all foreign VAT, pays out to SA (Payoneer/Wise/PayPal), one integration, ~5% + $0.50/txn (replaces the ~$100/mo foreign-entity line) and sidesteps the Stripe-direct + Paystack/CIPC blockers. Alternatives: SA multi-currency gateway (PayGenius/Peach ~4%, self-handle VAT) or a remote UK Ltd -> Stripe (lowest fees, more admin). Pre-checks: confirm the MoR allows selling intro-credits; confirm SA "export of services" VAT with accountant; sell Tuppence in $5-$20 bundles to amortise fixed per-txn fees. Claude offered a fee-math one-pager. | Payments |
 | F5 | **Paystack recurring subscriptions** — automate Global wishlist tier renewal (currently manual) | BEA |
 | F6 | **Referral system** — Trust Score +5 for verified referrals | BEA + Admin |
 | F7 | **Automated git commits from sandbox** — remove need for David to run PowerShell git commands | DevOps |
