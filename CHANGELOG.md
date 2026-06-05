@@ -3545,3 +3545,18 @@ Flags: (1) pre-existing — the fs-adventures sheet still shows "Adventure Type"
 - **Verify/deploy:** `ast.parse` clean local + BEA venv; whole-file diff vs a freshly-pulled server copy = exactly the 6 removed lines (local was byte-identical to server beforehand); `smoke_test.py` all-green pre + post (incl. the BEA `/wonders` check, 304 sites). Server backup `main.py.bak-20260605-scan9`; scp `bea_main.py` → `main.py` (server sha256 == local); BEA restarted **active**, `/health` ok v1.3.1 (localhost + public); Cloudflare purged (`{"purged":true}`); served `main.py` confirmed carrying the 2-line handler.
 - **Cost model impact:** none — dead-code removal; no AI calls, pricing, concurrency, or city-launch change.
 - **Next (auto-ship queue):** SCAN-10 → SCAN-11 → SCAN-12 → DASH-VER-1 → HTML-1 → HTML-2 → SCAN-PANEL-1/2.
+
+
+## Session 122 — 2026-06-05 · Demo-mode sweep fixes (titles, currency, US heritage, type-filter, loading)
+
+**Context.** First run of the parallel-subagent "one-pass" demo audit (4 agents, one per home section, cross-checked). It surfaced 3 user-visible HIGH bugs (only 1 previously screenshotted) plus MED/LOW. Fixed the HIGH + cheap MED here, at root cause where possible.
+
+**Data fix (`demo_listings.json` + BEA restart).** (1) 60 listings had no `title` (all NY/London/Sydney Collectors + Cars) → "undefined" in featured/grid/detail/map. Added real titles derived from each description. (2) 30 non-ZA Adventures had `priceNum:null` + `per:null` → added both (priceNum from price; per "/person").
+
+**Code fix (`ms.js` v147→v148).** (a) New `_priceLabel(l)` helper routes Adventure prices through `ADV_COUNTRY_CURRENCY` (US $, GB £, AU A$) in grid + featured — they showed Rands ("R89") while detail showed the correct "$89"; now consistent and it protects live data. (b) Title fallback at grid/featured/detail — "undefined" can never render again (poka-yoke). (c) `per` guard removes the stray "null". (d) `_wfCountryMap['US']` now aliases "USA" — Yellowstone/Yosemite/Grand Canyon (tagged "USA") were vanishing under the US filter; US sites 13→16. (e) Heritage type-filter (`_wfType`) now resets on city-switch + demo→live (v144 reset country only). (f) `renderWondersStrip` shows a "Loading heritage sites…" placeholder instead of blank before data loads.
+
+**Verify.** node --check clean; API re-checked (0 missing titles, 0 null priceNum/per); currency sim ($89 not R89); US heritage 16 incl. the 3 flagships; smoke all-green. Deployed; CF purged.
+
+**Filed (BACKLOG, lower priority):** DEMO-1 LM-tile dual-writer + suburb inconsistency (latent); DEMO-2 heritage coverage gaps; DEMO-3 demo data cosmetics.
+
+**Cost model impact:** none — demo data + display only.

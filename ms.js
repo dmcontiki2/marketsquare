@@ -65,6 +65,8 @@ async function devSetMode(isDemo) {
     // on the demo country's heritage while the selector still reads "All".
     _wfCountry = 'all';
     const _wfs = document.getElementById('wf-country-select'); if (_wfs) _wfs.value = 'all';
+    _wfType = 'all';
+    const _wft = document.getElementById('wf-type-select'); if (_wft) _wft.value = 'all';
   }
   // If switching to demo and arrays are empty, fetch from BEA first
   if (isDemo && BEA_ENABLED && !LISTINGS.some(l => String(l.id).startsWith('demo_'))) {
@@ -452,6 +454,17 @@ function formatZAR(value) {
   const parts = n.toFixed(2).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return 'R' + parts[0] + '.' + parts[1];
+}
+
+function _priceLabel(l){
+  if(l.price===null||l.price===undefined||l.price==='') return null;
+  const isAdv=(String(l.cat||'').toLowerCase().indexOf('adventures')===0)||l.cat==='Adventures';
+  if(isAdv && typeof ADV_COUNTRY_CURRENCY!=='undefined'){
+    const cur=ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R';
+    const n=Number(String(l.price).replace(/[^0-9.]/g,''));
+    if(!isNaN(n)) return cur+n.toLocaleString();
+  }
+  return formatZAR(l.price)||l.price;
 }
 
 function formatDescLegacy(desc) {
@@ -2047,6 +2060,7 @@ function selectDemoCity(name) {
     activeCountry = { iso2:_iso2, name:_CN[_iso2] || _iso2 };
     advCountry=_iso2; advCountryName=_CN[_iso2]||_iso2; advCountryFlag=_CF[_iso2]||''; _wfCountry=_iso2;
     { const _wfs=document.getElementById('wf-country-select'); if(_wfs && Array.from(_wfs.options).some(o=>o.value===_iso2)) _wfs.value=_iso2; }
+    _wfType='all'; { const _wft=document.getElementById('wf-type-select'); if(_wft) _wft.value='all'; }
     const _af=document.getElementById('adv-country-flag'); if(_af) _af.textContent=_CF[_iso2]||'';
     const _an=document.getElementById('adv-country-name'); if(_an) _an.textContent=_CN[_iso2]||_iso2;
   }
@@ -2523,10 +2537,10 @@ function cardHtml(l){
     </div>
     <div class="cbody">
       <div class="ccat">${l.cat}</div>
-      <div class="ctitle">${l.title}</div>
+      <div class="ctitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="cloc">📍 ${l.area}${_distLabel(l)}</div>
       <div class="cbot">
-        <div class="cprice">${l.price?`${formatZAR(l.price)||l.price}<span class="per"> ${l.per}</span>`:'<span class="neg">Negotiable</span>'}</div>
+        <div class="cprice">${l.price?`${_priceLabel(l)}${l.per?`<span class="per"> ${l.per}</span>`:''}`:'<span class="neg">Negotiable</span>'}</div>
         ${tbadge(l.trust)}
       </div>
       ${l.sellerIdx!=null?`<div class="seller-cv-badge" onclick="event.stopPropagation();openSellerCV(${l.sellerIdx},'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>`:''}
@@ -2562,12 +2576,12 @@ function renderFeatured(){
       <div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:${catCfg(l).bg};">${imgHtml}${featTrust}</div>
       <div style="padding:6px 9px 4px;flex:1;">
         <div class="ccat" style="font-size:9px;margin-bottom:2px;">${l.cat}</div>
-        <div class="ctitle" style="font-size:11.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.title}</div>
+        <div class="ctitle" style="font-size:11.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       </div>
       <div style="padding:0 9px 8px;display:flex;flex-direction:column;gap:2px;">
         <div class="cloc" style="font-size:9.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${l.area}</div>
         <div style="display:flex;align-items:center;">
-          <div class="cprice" style="font-size:11px;white-space:nowrap;">${l.price?(formatZAR(l.price)||l.price):'<span class="neg">POA</span>'}<span class="per" style="font-size:9px;"> ${l.per}</span></div>
+          <div class="cprice" style="font-size:11px;white-space:nowrap;">${l.price?_priceLabel(l):'<span class="neg">POA</span>'}${l.per?`<span class="per" style="font-size:9px;"> ${l.per}</span>`:''}</div>
         </div>
       </div>
     </div>`;
@@ -2833,7 +2847,7 @@ function openDetail(id){
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}
       </div>
-      <div class="dtitle">${l.title}</div>
+      <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||''} ${l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
       <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
         <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
@@ -8552,7 +8566,7 @@ const _wfCountryMap = {
   'PT': ['Portugal'],
   'RU': ['Russia'],
   // Americas
-  'US': ['United States'],
+  'US': ['United States','USA'],
   'MX': ['Mexico'],
   'PE': ['Peru'],
   'AR': ['Argentina'],
@@ -8586,7 +8600,8 @@ function setWonderFilter(dim, val) {
 
 function renderWondersStrip() {
   const list = document.getElementById('home-wonders-list');
-  if(!list || !_wpAllWonders.length) return;
+  if(!list) return;
+  if(!_wpAllWonders.length){ list.innerHTML='<div style="padding:20px 16px;color:var(--text-3);font-size:13px;">Loading heritage sites…</div>'; return; }
   let filtered = _wpAllWonders;
   if(_wfCountry !== 'all') {
     const frags = _wfCountryMap[_wfCountry]||[];

@@ -220,3 +220,12 @@ JS-2 → SCAN-8 → SCAN-9 → SCAN-10 → SCAN-11 → SCAN-12 → HTML-1 → HT
 |---|---|---|---|
 | LOOP-1 | Harden the loop's doc-writeback with safe-write + verify: write to a temp file, assert it still ends correctly (tail + expected length / anchor) before replacing the real file; on failure, abort the writeback and leave the prior file intact. Mirror the `open/read/str.replace/write` + verify discipline used for the big HTML/JS files. | Orchestrator/Ops | ATTENDED |
 | LOOP-2 | Interim guard until LOOP-1 ships: every session runs `GIT_OPTIONAL_LOCKS=0 git status` and confirms BACKLOG/STATUS/CHANGELOG are intact (not truncated) before surfacing the commit — restore any truncated doc from `git show HEAD:<file>` first. | Process | ATTENDED |
+
+## 🧪 Demo-mode sweep — remaining items (filed Session 122 · 5 Jun 2026)
+First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Remaining (lower priority):
+
+| # | Open action | Area | Lane |
+|---|---|---|---|
+| DEMO-1 | Local Market tile count is written by TWO functions (`renderCatCounts` lm-branch + `initLMHomeTile`) with different filter rules, and ignores the active-suburb filter the 6 standard tiles honour; also the no-live count fallback drops the suburb filter. Latent today (numbers agree) but real. Unify into one predicate incl. suburb. | FEA | ATTENDED |
+| DEMO-2 | World Heritage coverage gaps: 5 `_wfCountryMap` countries (BO/CD/IR/LY/PT) have no dropdown option (unreachable); confirm "332 vs 304" sites; latent dropdown-sync guard in `selectDemoCity`. | FEA/Data | ATTENDED |
+| DEMO-3 | Demo data cosmetics: `area` can be far from `city` (a "Pretoria" listing showing "📍 Mozambique"); `city_country` vs `country` field inconsistency. Demo-only. | Data | ATTENDED |
