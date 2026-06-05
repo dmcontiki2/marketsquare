@@ -1,0 +1,36 @@
+{
+  "schema": "fix-v1",
+  "results": [
+    {
+      "at": "2026-06-05T08:50:47Z",
+      "id": "T-123-05",
+      "ref": "DEMO-6",
+      "lane": "green",
+      "priority": "P3",
+      "action": "ship",
+      "title": "Adventures price suffix",
+      "detail": "renderAdvGrid honours l.per (mislabeled /person/night fixed); ms.js v153; deployed, smoke-green, live-verified"
+    },
+    {
+      "at": "2026-06-05T08:50:47Z",
+      "id": "T-123-06",
+      "ref": "DEMO-7",
+      "lane": "green",
+      "priority": "P3",
+      "action": "ship",
+      "title": "Category counts paused-guard",
+      "detail": "renderCatCounts excludes l.paused at both count sites; ms.js v153; deployed, smoke-green"
+    },
+    {
+      "at": "2026-06-05T08:50:47Z",
+      "id": "T-123-04",
+      "ref": "DEMO-5",
+      "lane": "green",
+      "priority": "P3",
+      "action": "route",
+      "title": "Demo gallery images",
+      "to": "DEMO-4",
+      "reason": "27 dead gallery URLs: correct fix is R2 self-host (DEMO-4), not re-hotlinking rot-prone Unsplash URLs (S122 link-rot lesson). Not a surgical green code change."
+    }
+  ]
+}

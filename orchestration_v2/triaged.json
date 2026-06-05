@@ -7,14 +7,17 @@
     "run": "S123-demo-sweep",
     "session": 123,
     "in": 12,
-    "to_fix_green": 3,
+    "to_fix_green": 0,
     "review_amber": 0,
     "need_you_red": 0,
     "resolved": 3,
     "dismissed": 6,
     "known_filed": 3,
     "new": 0,
-    "regression": 0
+    "regression": 0,
+    "shipped": 2,
+    "routed": 1,
+    "failed": 0
   },
   "items": [
     {
@@ -90,8 +93,10 @@
       "reason": "Already on the backlog as DEMO-5 - reusing, not re-filed.",
       "confidence": "confirmed",
       "suggested_fix": "",
-      "status": "queued",
-      "consumed_by_fix": true
+      "status": "routed",
+      "consumed_by_fix": true,
+      "routed_to": "DEMO-4",
+      "route_reason": "27 dead gallery URLs: correct fix is R2 self-host (DEMO-4), not re-hotlinking rot-prone Unsplash URLs (S122 link-rot lesson). Not a surgical green code change."
     },
     {
       "id": "T-123-05",
@@ -109,8 +114,10 @@
       "reason": "Already on the backlog as DEMO-6 - reusing, not re-filed.",
       "confidence": "confirmed",
       "suggested_fix": "",
-      "status": "queued",
-      "consumed_by_fix": true
+      "status": "shipped",
+      "consumed_by_fix": true,
+      "shipped_at": "2026-06-05T08:50:47Z",
+      "ship_detail": "renderAdvGrid honours l.per (mislabeled /person/night fixed); ms.js v153; deployed, smoke-green, live-verified"
     },
     {
       "id": "T-123-06",
@@ -128,8 +135,10 @@
       "reason": "Already on the backlog as DEMO-7 - reusing, not re-filed.",
       "confidence": "confirmed",
       "suggested_fix": "",
-      "status": "queued",
-      "consumed_by_fix": true
+      "status": "shipped",
+      "consumed_by_fix": true,
+      "shipped_at": "2026-06-05T08:50:47Z",
+      "ship_detail": "renderCatCounts excludes l.paused at both count sites; ms.js v153; deployed, smoke-green"
     },
     {
       "id": "T-123-07",

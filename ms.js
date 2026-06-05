@@ -1807,9 +1807,10 @@ function renderAdvGrid(){
     const badgeCol = isAccom ? '#1e3a5f' : '#065f46';
     const envLabel = l.environment_type || '';
     const cur = ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()] || 'R';
-    const priceLabel = isAccom
-      ? (l.price ? `From ${cur}${Number(l.price).toLocaleString()}/night` : '')
-      : (l.price ? `${cur}${Number(l.price).toLocaleString()}/person` : '');
+    const _advPer = l.per ? l.per : (isAccom ? '/night' : '/person');  // DEMO-6: honour the data's per field
+    const priceLabel = l.price
+      ? `${isAccom ? 'From ' : ''}${cur}${Number(l.price).toLocaleString()}${_advPer}`
+      : '';
     const countryCode = (l.country||'ZA').toUpperCase();
     const flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
     const _advImg=(l.photos&&l.photos[0])||l.photo;
@@ -2291,6 +2292,7 @@ function renderCatCounts() {
   const liveCounts = {};
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
+    if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     // TODO: REMOVE BEFORE LAUNCH — mirror DEMO_DISPLAY_MODE filter
@@ -2330,6 +2332,7 @@ function renderCatCounts() {
       // Placeholders are Pretoria-tagged "coming soon" scaffolding — never count them
       // toward another city's tiles (this caused New York/Houston to show phantom 1s).
       if (String(l.id).startsWith('ph_')) return;
+      if (l.paused) return;   // DEMO-7: a paused demo listing must not inflate a tile count
       if (!DEMO_MODE && String(l.id).startsWith('demo_')) return;
       if (DEMO_MODE && String(l.id).startsWith('demo_')) {
         const lCity = l.city || l.area || '';

@@ -53,8 +53,8 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <div class="ph done"><div class="pn">PHASE 0</div><div class="pt">Design</div><span class="st">✓ approved</span></div>
   <div class="ph done"><div class="pn">PHASE 1</div><div class="pt">Detect</div><span class="st">✓ built</span></div>
   <div class="ph done"><div class="pn">PHASE 2</div><div class="pt">Triage</div><span class="st">✓ built</span></div>
-  <div class="ph lock"><div class="pn">PHASE 3</div><div class="pt">Fix</div><span class="st">next</span></div>
-  <div class="ph lock"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">queued</span></div>
+  <div class="ph done"><div class="pn">PHASE 3</div><div class="pt">Fix</div><span class="st">✓ built</span></div>
+  <div class="ph lock"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">next</span></div>
   <div class="ph lock"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">queued</span></div>
 </div>
 
@@ -71,6 +71,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <a class="btn ghost" href="detect.html">🔎 Detect engine (Phase 1)</a>
   <a class="btn ghost" href="triage.html">🗂️ Triage engine (Phase 2)</a>
   <a class="btn" href="triage_board.html">📋 Triage board (live)</a>
+  <a class="btn ghost" href="fix.html">🔧 Fix engine (Phase 3)</a>
 </div>
 
 <h2>Functions — activate as they come online</h2>
@@ -81,7 +82,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <div class="act"><button class="copybtn" onclick="cp(this,'Run the Detect engine on demo mode, all cities, all home sections.')">Copy run command</button></div>
 </div>
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Triage</b> <span class="ph-tag">· Phase 2 · available</span><small>Dedupes a Detect run against the backlog + ignore-list, assigns a lane (🟢/🟡/🔴) and a priority, and lays it on the board. Tap <b>Copy</b>, paste it to Claude in chat.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Triage engine on the latest Detect findings.')">Copy run command</button></div></div>
-<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Fix (with lanes)</b> <span class="ph-tag">· Phase 3</span><small>Auto-apply safe classes; stage amber/red for you.</small></div><div class="act"><span class="lockbadge">coming P3</span></div></div>
+<div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Fix (with lanes)</b> <span class="ph-tag">· Phase 3 · available</span><small>Consumes the green lane one item at a time — backup → surgical edit → verify (node/ast + smoke) → ship. Amber stages; red is never touched. Tap <b>Copy</b>, paste it to Claude.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Fix engine on the triaged queue.')">Copy run command</button></div></div>
 <div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Prevent — monitors</b> <span class="ph-tag">· Phase 4</span><small>Scheduled double-verify for each known weak point.</small></div><div class="act"><span class="lockbadge">coming P4</span></div></div>
 <div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Librarian + Automate</b> <span class="ph-tag">· Phase 5</span><small>The loop runs itself nightly; these become live server buttons.</small></div><div class="act"><span class="lockbadge">coming P5</span></div></div>
 

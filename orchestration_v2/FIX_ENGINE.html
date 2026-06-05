@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fix Engine — Orchestration v2 · Phase 3</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.doc{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:24px 26px;margin-bottom:22px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 6px;font-size:25px;font-weight:700;letter-spacing:-.3px}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+header.hd .badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.5px;background:#16402a;color:#7fe0a3;border:1px solid #2c6b45;border-radius:20px;padding:4px 11px}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 11px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:11px}
+.lead{font-size:14.5px;color:var(--ink);margin:0}
+.invoke{background:var(--navy);color:#dbe7f2;border-radius:12px;padding:14px 16px;font-family:'Consolas',ui-monospace,monospace;font-size:13.5px}
+.invoke .p{color:#7fd4bb}
+.invoke .eg{display:block;margin-top:7px;color:#8ea7be;font-style:italic;font-size:12.5px}
+.step{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin-bottom:8px;border-left:4px solid var(--teal)}
+.step .n{display:inline-flex;min-width:24px;height:24px;border-radius:7px;background:var(--tealbg);color:var(--teal);align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.step b{font-size:13.5px}
+.step small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.45}
+.step.ship{border-left-color:var(--green)}.step.ship .n{background:var(--greenbg);color:var(--green)}
+.lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.lane{border-radius:11px;padding:12px 14px;border:1px solid}
+.lane.g{background:var(--greenbg);border-color:#bfe0c1}.lane.a{background:var(--amberbg);border-color:#f0dcb4}.lane.r{background:var(--redbg);border-color:#f0c4c4}
+.lane h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:6px}
+.lane.g h3{color:var(--green)}.lane.a h3{color:var(--amber)}.lane.r h3{color:var(--red)}
+.lane p{margin:3px 0 0;font-size:12px;color:var(--ink);line-height:1.4}
+.guard{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.guard .ic{font-size:15px}
+.guard b{font-size:13.5px}.guard small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.proof{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:12px;padding:13px 16px}
+.proof b{color:var(--green)}
+.kpis{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.kpi{flex:1;min-width:84px;background:#fff;border:1px solid #bfe0c1;border-radius:9px;padding:7px 9px;text-align:center}
+.kpi .v{font-size:18px;font-weight:800;color:var(--green)}.kpi .l{font-size:10.5px;color:var(--muted);font-weight:600}
+.next{background:#f0f3f6;border:1px solid var(--line);border-radius:12px;padding:13px 16px;font-size:13px;color:var(--muted)}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+@media(max-width:640px){.lanes{grid-template-columns:1fr}}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare · Orchestration v2</div>
+  <h1>Fix Engine — Phase 3</h1>
+  <p>Consumes the green lane of a triaged run, one item at a time, under the verify-or-revert gates. The end of the Detect → Triage → Fix tissue.</p>
+  <span class="badge">🟢 GREEN LANE · pre-authorised · backup + verify + revert · RED never touched</span>
+</header>
+
+<h2>What it is</h2>
+<div class="card"><p class="lead">Triage governs; Fix <b>acts</b> — but only inside the lane you pre-approved. It takes the green queue from <code>triaged.json</code>, highest priority first, and for each item makes one surgical, verified, reversible change and ships it. Amber is staged for a glance; <b>red is never consumable here.</b> Anything bigger than a surgical change is routed onward, not forced.</p></div>
+
+<h2>How you call it</h2>
+<div class="invoke"><span class="p">&gt;</span> Run the Fix engine on <b>the triaged queue</b><span class="eg">harness: fix.py --next · fix.py --ship &lt;id&gt; --detail "…" · fix.py --route &lt;id&gt; --to &lt;ref&gt; · fix.py --fail &lt;id&gt;</span></div>
+
+<h2>How it runs — one item, fully, then the next</h2>
+<div class="step"><span class="n">1</span><div><b>Pick the top green item</b><small>From <code>triaged.json</code>, lane=green &amp; status=queued, highest priority first. Amber/red are skipped (amber stays staged; red waits for you).</small></div></div>
+<div class="step"><span class="n">2</span><div><b>Back up first</b><small>A timestamped server backup of every target file before a byte changes — rollback is always one copy away.</small></div></div>
+<div class="step"><span class="n">3</span><div><b>Surgical edit</b><small>One well-understood change via a bash-python <code>str.replace</code> driver (never the Edit/Write tools on big files), asserting the old text matches exactly once.</small></div></div>
+<div class="step"><span class="n">4</span><div><b>Verify — or revert</b><small><code>node --check</code> / <code>ast.parse</code>, a whole-file diff that is <i>only</i> the intended change, then <code>smoke_test.py</code> must stay all-green. Any failure → revert, mark failed, never deploy a red smoke.</small></div></div>
+<div class="step ship"><span class="n">5</span><div><b>Ship (green is pre-authorised)</b><small>Deploy (scp + cache-bump + chmod 644 + Cloudflare purge), re-verify live, refresh the FEA baseline. Green ships without stopping to ask — that authority was granted once, in Phase 0.</small></div></div>
+<div class="step"><span class="n">6</span><div><b>Record &amp; drain the board</b><small>Flip the item to shipped/routed/failed in <code>triaged.json</code>, append <code>fix_results.json</code>, regenerate the board so the queue visibly empties.</small></div></div>
+
+<h2>The lane gate at the moment of action</h2>
+<div class="lanes">
+  <div class="lane g"><h3>🟢 Green</h3><p>verified → <b>shipped</b> unattended. Reversible, logged.</p></div>
+  <div class="lane a"><h3>🟡 Amber</h3><p>done + <b>staged</b> with a 1-click undo. Never silently shipped.</p></div>
+  <div class="lane r"><h3>🔴 Red</h3><p><b>never touched.</b> Stays for the human — every time, no exceptions.</p></div>
+</div>
+
+<h2>Guardrails</h2>
+<div class="card">
+  <div class="guard"><span class="ic">🔁</span><div><b>One item per run</b><small>Small blast radius. Each fix is isolated, verified and recorded on its own, so a failure never cascades.</small></div></div>
+  <div class="guard"><span class="ic">↩️</span><div><b>Verify-or-revert</b><small>Backup before, verify after, revert on any failure. A red smoke is never deployed.</small></div></div>
+  <div class="guard"><span class="ic">↪️</span><div><b>Never force a non-surgical change</b><small>If the right fix is bigger than a surgical edit (a refactor, a data/storage migration), Fix <b>routes</b> it to the proper track instead of hacking it — it never makes things worse.</small></div></div>
+</div>
+
+<h2>First live run — the S123 green queue</h2>
+<div class="proof"><p class="lead" style="font-size:13.5px"><b>Three green items in, handled correctly.</b> Two were clean one-line <code>ms.js</code> fixes and shipped (v153, smoke-green, live-verified); the third was <i>not</i> a surgical code change, so Fix routed it rather than re-introduce a known problem.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">2</div><div class="l">shipped</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">routed</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">failed</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">red touched</div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin:9px 0 0"><b>DEMO-6</b> renderAdvGrid now honours the data's <code>per</code> field (the mislabeled <code>/person/night</code> stay). <b>DEMO-7</b> renderCatCounts excludes paused listings from tile counts (both count paths). <b>DEMO-5</b> (27 dead gallery URLs) → routed to <b>DEMO-4</b>'s R2 self-host rather than re-hotlinking rot-prone Unsplash URLs.</p>
+</div>
+
+<h2>Next brick (waits for your go)</h2>
+<div class="next">Prevent <b>(P4)</b> — a poka-yoke per fixed defect class (so it can't recur) + a scheduled monitor for the weak points we don't control; then the Orchestrator + Scheduler cutover <b>(P5)</b> that runs Detect → Triage → Fix → Prevent nightly, surfacing only amber/red to your cockpit.</div>
+
+<p class="foot">Orchestration v2 · Phase 3 of 5 · green lane · harness: fix.py · records: fix_results.json · FIX_ENGINE.html</p>
+</div></body></html>
