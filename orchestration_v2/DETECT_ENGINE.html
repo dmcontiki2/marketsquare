@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Detect Engine — Orchestration v2 · Phase 1</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.doc{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:24px 26px;margin-bottom:22px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 6px;font-size:25px;font-weight:700;letter-spacing:-.3px}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+header.hd .badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.5px;background:#16402a;color:#7fe0a3;border:1px solid #2c6b45;border-radius:20px;padding:4px 11px}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 11px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:11px}
+.lead{font-size:14.5px;color:var(--ink);margin:0}
+.muted{color:var(--muted);font-size:13px}
+.invoke{background:var(--navy);color:#dbe7f2;border-radius:12px;padding:14px 16px;font-family:'Consolas',ui-monospace,monospace;font-size:13.5px}
+.invoke .p{color:#7fd4bb}
+.invoke .eg{display:block;margin-top:7px;color:#8ea7be;font-style:italic;font-size:12.5px}
+.step{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin-bottom:8px;border-left:4px solid var(--teal)}
+.step .n{display:inline-flex;min-width:24px;height:24px;border-radius:7px;background:var(--tealbg);color:var(--teal);align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.step b{font-size:13.5px}
+.step small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.45}
+.step.flag{border-left-color:var(--amber)}.step.flag .n{background:var(--amberbg);color:var(--amber)}
+pre.schema{background:#0e1c2e;color:#cfe0f0;border-radius:11px;padding:14px 16px;font-family:'Consolas',ui-monospace,monospace;font-size:12.5px;line-height:1.7;overflow-x:auto;margin:0}
+pre.schema .k{color:#7fd4bb}
+.guard{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.guard .ic{font-size:15px}
+.guard b{font-size:13.5px}.guard small{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.proof{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:12px;padding:13px 16px}
+.proof b{color:var(--green)}
+.next{background:#f0f3f6;border:1px solid var(--line);border-radius:12px;padding:13px 16px;font-size:13px;color:var(--muted)}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare · Orchestration v2</div>
+  <h1>Detect Engine — Phase 1</h1>
+  <p>The reusable, one-command version of the parallel sweep. It finds; it never fixes.</p>
+  <span class="badge">🟢 GREEN LANE · reads &amp; reasons only · reversible · model-agnostic</span>
+</header>
+
+<h2>What it is</h2>
+<div class="card"><p class="lead">The one-off sweep we ran by hand on 5 June 2026, rebuilt as a thing you can summon. Point it at a <b>scope</b>; it fans out agents in parallel, each audits one slice, then the findings are consolidated, adversarially cross-checked, and <b>gently re-verified</b> before a word reaches you.</p></div>
+
+<h2>How you call it</h2>
+<div class="invoke"><span class="p">&gt;</span> Run the Detect engine on <b>&lt;scope&gt;</b><span class="eg">e.g. "Run the Detect engine on demo mode, all cities, all home sections."</span></div>
+
+<h2>How it runs</h2>
+<div class="step"><span class="n">1</span><div><b>Slice</b><small>Break the scope into independent units, one per agent (aim 3–6).</small></div></div>
+<div class="step"><span class="n">2</span><div><b>Fan out — in parallel</b><small>One agent per slice, each with the shared context, its checklist, and the output schema. Agents report only — never fix.</small></div></div>
+<div class="step"><span class="n">3</span><div><b>Consolidate</b><small>Merge the agents' findings and remove duplicates.</small></div></div>
+<div class="step"><span class="n">4</span><div><b>Adversarial cross-check</b><small>Hunt contradictions and over-counts; resolve or down-grade. (This caught "80 vs 60" and a false undercount on 5 Jun.)</small></div></div>
+<div class="step flag"><span class="n">5</span><div><b>Gentle verify — never hammer</b><small>Anything depending on a live resource must survive <code>detect_verify.py</code> (low concurrency + retry). Aggressive checks rate-limit and fool the tool into false positives. A finding isn't real until it passes a gentle check.</small></div></div>
+<div class="step"><span class="n">6</span><div><b>Write &amp; surface</b><small>The prioritised list goes to the Second Brain, the summary to your cockpit.</small></div></div>
+
+<h2>What a finding looks like</h2>
+<pre class="schema"><span class="k">SEV:</span>        HIGH | MED | LOW
+<span class="k">SLICE:</span>      which agent / area
+<span class="k">SYMPTOM:</span>    what the user sees
+<span class="k">ROOT CAUSE:</span> function / file / line, or data field
+<span class="k">FIX:</span>        suggested — for the Fix stage, NOT done here
+<span class="k">LANE:</span>       green | amber | red   (proposed)
+<span class="k">CONFIDENCE:</span> confirmed | NEEDS-CONFIRM</pre>
+
+<h2>Guardrails</h2>
+<div class="card">
+  <div class="guard"><span class="ic">🟢</span><div><b>Green lane only</b><small>Detect changes nothing. Fixes happen in the Fix stage, under the lane rules.</small></div></div>
+  <div class="guard"><span class="ic">🔎</span><div><b>Verify gently, always</b><small>The detector never trusts its own first answer on anything live.</small></div></div>
+  <div class="guard"><span class="ic">🔌</span><div><b>Model-agnostic</b><small>Any reasoning model can run this — it's instructions + a helper. Off-grid ready.</small></div></div>
+</div>
+
+<h2>It already proved the point</h2>
+<div class="proof"><p class="lead" style="font-size:13.5px"><b>On its very first run, the gentle verifier caught a bug in itself.</b> Python hands back 404s as exceptions, so the first version misfiled a dead link as "transient." Found, fixed, re-tested — it now tells real-dead from rate-limited correctly. That's the whole philosophy in miniature: verify everything, including your own tools.</p></div>
+
+<h2>Next bricks (not built yet — each waits for your go)</h2>
+<div class="next">Triage formalised <b>(P2)</b> · Fix with lanes + poka-yokes <b>(P3)</b> · Prevent monitors <b>(P4)</b> · Orchestrator + Scheduler wiring &amp; controlled cutover from the old loop <b>(P5)</b>.</div>
+
+<p class="foot">Orchestration v2 · Phase 1 of 5 · green lane · companion script: detect_verify.py · DETECT_ENGINE.html</p>
+</div></body></html>

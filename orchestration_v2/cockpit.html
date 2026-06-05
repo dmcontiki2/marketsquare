@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orchestration v2 — Control Room</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55}
+.doc{max-width:880px;margin:0 auto;padding:26px 20px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:20px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 4px;font-size:24px;font-weight:700}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:26px 0 11px}
+.phases{display:flex;gap:7px;flex-wrap:wrap}
+.ph{flex:1;min-width:120px;border-radius:11px;padding:11px 12px;border:1px solid var(--line);background:var(--card)}
+.ph .pn{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted)}
+.ph .pt{font-size:13px;font-weight:600;margin:3px 0 5px}
+.ph .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block}
+.ph.done{border-color:#bfe0c1;background:var(--greenbg)}.ph.done .st{background:#cdebcf;color:var(--green)}.ph.done .pn{color:var(--green)}
+.ph.lock .st{background:#eef1f4;color:var(--muted)}
+.lanes{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.lane{flex:1;min-width:150px;border-radius:10px;padding:9px 12px;font-size:12px;border:1px solid}
+.lane.g{background:var(--greenbg);border-color:#bfe0c1;color:#23612a}.lane.a{background:var(--amberbg);border-color:#f0dcb4;color:#7a4e0e}.lane.r{background:var(--redbg);border-color:#f0c4c4;color:#8a2525}
+.lane b{display:block;font-size:12.5px;margin-bottom:1px}
+.docbtns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--navy);color:#fff;text-decoration:none;border:none;border-radius:10px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.fn{display:flex;gap:13px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px}
+.fn .dot{font-size:17px}
+.fn .body{flex:1;min-width:0}
+.fn .body b{font-size:14px}
+.fn .body .ph-tag{font-size:11px;color:var(--muted);font-weight:600}
+.fn .body small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.fn.avail{border-left:4px solid var(--green)}
+.fn.lock{border-left:4px solid var(--line);opacity:.72}
+.fn .act{white-space:nowrap}
+.copybtn{background:var(--green);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.copybtn:active{transform:scale(.97)}
+.lockbadge{font-size:11px;font-weight:700;color:var(--muted);background:#eef1f4;border-radius:20px;padding:5px 11px;white-space:nowrap}
+.note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:11px;padding:12px 15px;font-size:12.5px;color:var(--muted);margin-top:6px}
+.note b{color:var(--ink)}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+.cmd{font-family:'Consolas',ui-monospace,monospace;background:#0e1c2e;color:#cfe0f0;padding:2px 7px;border-radius:6px;font-size:12px}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare</div>
+  <h1>Orchestration v2 — Control Room</h1>
+  <p>Check every piece of the self-healing system, and switch on each function as it comes online.</p>
+</header>
+
+<h2>Build progress</h2>
+<div class="phases">
+  <div class="ph done"><div class="pn">PHASE 0</div><div class="pt">Design</div><span class="st">✓ approved</span></div>
+  <div class="ph done"><div class="pn">PHASE 1</div><div class="pt">Detect</div><span class="st">✓ built</span></div>
+  <div class="ph lock"><div class="pn">PHASE 2</div><div class="pt">Triage</div><span class="st">next</span></div>
+  <div class="ph lock"><div class="pn">PHASE 3</div><div class="pt">Fix</div><span class="st">queued</span></div>
+  <div class="ph lock"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">queued</span></div>
+  <div class="ph lock"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">queued</span></div>
+</div>
+
+<h2>The lanes (your pre-approved authority)</h2>
+<div class="lanes">
+  <div class="lane g"><b>🟢 Green</b>autonomous · reversible · logged</div>
+  <div class="lane a"><b>🟡 Amber</b>do + notify · 1-click undo</div>
+  <div class="lane r"><b>🔴 Red</b>always asks you · money/secrets/deletes/public</div>
+</div>
+
+<h2>Documents</h2>
+<div class="docbtns">
+  <a class="btn" href="design.html">📐 Design spec (Phase 0)</a>
+  <a class="btn ghost" href="detect.html">🔎 Detect engine (Phase 1)</a>
+</div>
+
+<h2>Functions — activate as they come online</h2>
+<div class="fn avail">
+  <div class="dot">🟢</div>
+  <div class="body"><b>Detect engine</b> <span class="ph-tag">· Phase 1 · available</span>
+    <small>Runs the parallel sweep over any scope, finds issues, gently verifies. Today it runs through Claude — tap <b>Copy</b>, paste it to Claude in chat.</small></div>
+  <div class="act"><button class="copybtn" onclick="cp(this,'Run the Detect engine on demo mode, all cities, all home sections.')">Copy run command</button></div>
+</div>
+<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Triage</b> <span class="ph-tag">· Phase 2</span><small>Consolidate + adversarial cross-check + gentle re-verify.</small></div><div class="act"><span class="lockbadge">coming P2</span></div></div>
+<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Fix (with lanes)</b> <span class="ph-tag">· Phase 3</span><small>Auto-apply safe classes; stage amber/red for you.</small></div><div class="act"><span class="lockbadge">coming P3</span></div></div>
+<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Prevent — monitors</b> <span class="ph-tag">· Phase 4</span><small>Scheduled double-verify for each known weak point.</small></div><div class="act"><span class="lockbadge">coming P4</span></div></div>
+<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Librarian + Automate</b> <span class="ph-tag">· Phase 5</span><small>The loop runs itself nightly; these become live server buttons.</small></div><div class="act"><span class="lockbadge">coming P5</span></div></div>
+
+<div class="note"><b>How activation works today:</b> available functions run through Claude — the Copy button hands you the exact command to paste. When the Orchestrator is wired in <b>Phase 5</b>, these turn into live buttons that trigger the server directly (and the green lane runs on its own overnight). Honest by design — no button pretends to do more than it does yet.</div>
+
+<p class="foot">Orchestration v2 · Control Room · behind ops auth · updates as each phase ships</p>
+<script>
+function cp(btn,txt){var t=btn.textContent;function done(){btn.textContent='✓ Copied';setTimeout(function(){btn.textContent=t},1600);}
+try{navigator.clipboard.writeText(txt).then(done,function(){window.prompt('Copy this command for Claude:',txt);});}
+catch(e){window.prompt('Copy this command for Claude:',txt);}}
+</script>
+</div></body></html>
