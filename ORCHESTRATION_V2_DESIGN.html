@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orchestration v2 — Phase 0 Design Spec</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.doc{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:24px 26px;margin-bottom:22px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 4px;font-size:25px;font-weight:700;letter-spacing:-.3px}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+header.hd .meta{margin-top:12px;font-size:12px;color:#8ea0b2}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:30px 0 12px;display:flex;align-items:center;gap:8px}
+h2 .n{display:inline-flex;width:22px;height:22px;border-radius:6px;background:var(--navy);color:#fff;align-items:center;justify-content:center;font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.lead{font-size:14px;color:var(--ink)}
+.muted{color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chip{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;border-left:4px solid var(--teal)}
+.chip .num{font-size:17px;font-weight:800;color:var(--teal);min-width:18px}
+.chip b{font-size:14px}
+.chip div small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.45}
+/* flow diagram */
+.flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:6px 0}
+.fbox{flex:1;min-width:115px;background:var(--bluebg);border:1px solid #cfe0f2;border-radius:10px;padding:10px 11px;text-align:center}
+.fbox .t{font-size:12.5px;font-weight:700;color:var(--blue)}
+.fbox .s{font-size:11px;color:#3a5a78;margin-top:2px;line-height:1.35}
+.arrow{display:flex;align-items:center;color:#9bb0c4;font-size:20px;font-weight:700}
+.parts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.part{background:var(--navy);color:#fff;border-radius:9px;padding:9px 12px;font-size:12.5px;flex:1;min-width:150px}
+.part b{display:block;color:#7fd4bb;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+/* lanes */
+.lane{border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid}
+.lane.g{background:var(--greenbg);border-color:#bfe0c1}.lane.a{background:var(--amberbg);border-color:#f0dcb4}.lane.r{background:var(--redbg);border-color:#f0c4c4}
+.lane h3{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+.lane.g h3{color:var(--green)}.lane.a h3{color:var(--amber)}.lane.r h3{color:var(--red)}
+.lane .badge{font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase}
+.lane.g .badge{background:#cdebcf;color:var(--green)}.lane.a .badge{background:#f6e2bd;color:var(--amber)}.lane.r .badge{background:#f4cccc;color:var(--red)}
+.lane p{margin:4px 0 0;font-size:13px;color:var(--ink)}
+.lane .eg{font-size:12px;color:var(--muted);margin-top:5px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+th{background:#f0f3f6;text-align:left;padding:9px 11px;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+td{padding:9px 11px;border-top:1px solid var(--line);vertical-align:top}
+td .ln{font-weight:700;font-size:11px;padding:1px 7px;border-radius:10px}
+.ln.g{background:var(--greenbg);color:var(--green)}.ln.a{background:var(--amberbg);color:var(--amber)}.ln.r{background:var(--redbg);color:var(--red)}
+.ask{background:var(--navy);color:#fff;border-radius:14px;padding:20px 22px;margin-top:8px}
+.ask h2{color:#7fd4bb;margin-top:0}
+.ask ol{margin:8px 0 0;padding-left:20px}.ask li{margin:7px 0;font-size:14px;color:#dbe4ec}
+.ask .key{background:#13314a;border:1px solid #244b66;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13.5px;color:#cfe0f0}
+.pill{display:inline-block;font-size:11px;font-weight:700;color:var(--teal);background:var(--tealbg);border-radius:20px;padding:2px 9px;margin-left:6px}
+.honors{font-size:11.5px;color:var(--teal);margin-top:7px;font-weight:600}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare</div>
+  <h1>Orchestration v2 — Phase 0 Design</h1>
+  <p>A clean rewiring of the self-healing system: Detect · Triage · Fix · Prevent · Automate. Design only — no code until you approve.</p>
+  <div class="meta">For review &amp; red-pen · 5 June 2026 · David + Claude · <b style="color:#7fd4bb">rev 2 — self-curating Second Brain (Karpathy LLM-Wiki + PARA + Librarian)</b></div>
+</header>
+
+<h2><span class="n">0</span>Your 5 rules = the acceptance test for this design</h2>
+<div class="grid2">
+  <div class="chip"><div class="num">1</div><div><b>Simple feedback</b><small>The system speaks in plain, visual terms — never a complex report. One glance tells you what happened.</small></div></div>
+  <div class="chip"><div class="num">2</div><div><b>Always visual</b><small>Every output — this spec, the cockpit, the nightly summary — is visual-first.</small></div></div>
+  <div class="chip"><div class="num">3</div><div><b>Zero memory-reliance</b><small>Everything the system knows or decides lives in the Second Brain + cockpit. You never have to remember.</small></div></div>
+  <div class="chip"><div class="num">4</div><div><b>David core</b><small>No money, no tokens, no effort, fewer tools, independence, off-grid, simplicity — engineered in, see below.</small></div></div>
+  <div class="chip" style="border-left-color:var(--red)"><div class="num" style="color:var(--red)">5</div><div><b>Robust safety + pre-authorised authority</b><small>The AI acts freely in safe lanes (no stopping to ask). Only the dangerous lane ever stops for you. You approve the lanes once.</small></div></div>
+</div>
+
+<h2><span class="n">1</span>The shape of the machine</h2>
+<div class="card">
+  <div class="flow">
+    <div class="fbox"><div class="t">1 · DETECT</div><div class="s">sweep everything, in parallel</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox"><div class="t">2 · TRIAGE</div><div class="s">consolidate + gently verify</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox"><div class="t">3 · FIX</div><div class="s">instance + class</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox"><div class="t">4 · PREVENT</div><div class="s">poka-yoke + monitors</div></div>
+    <div class="arrow">↻</div>
+    <div class="fbox" style="background:#e7f4e8;border-color:#bfe0c1"><div class="t" style="color:var(--green)">5 · AUTOMATE</div><div class="s">runs itself, surfaces to you</div></div>
+  </div>
+  <p class="muted" style="margin:10px 0 2px">Five parts make it run:</p>
+  <div class="parts">
+    <div class="part"><b>Orchestrator</b>the conductor — runs the loop, applies the lane rules</div>
+    <div class="part"><b>Scheduler</b>the when — nightly + on-demand</div>
+    <div class="part"><b>Agents</b>the workers — fan out, do the sweep &amp; fixes</div>
+    <div class="part"><b>Second Brain</b>durable memory — model-agnostic, carries off-grid</div>
+    <div class="part"><b>Live Artifact</b>your cockpit — the one page you open</div>
+  </div>
+  <div class="honors">✓ Honors #2 visual · #4 fewer tools (reuses Hetzner, R2, git, the dashboard — nothing new) · independence (model-agnostic)</div>
+</div>
+
+<h2><span class="n">2</span>The heart of it — who's allowed to do what <span class="pill">your rule #5</span></h2>
+<p class="muted" style="margin-top:-4px">You approve these three <b>lanes</b> once. After that the system runs without stopping for permission — <b>except the red lane, which always stops.</b> That's how we get robust safety <em>and</em> no human gate-jams.</p>
+<div class="lane g"><h3>🟢 Green — autonomous <span class="badge">pre-approved · no stop</span></h3>
+  <p>Reversible, low-risk, well-understood. The AI does it and logs it. You find out in the morning summary, not by being asked.</p>
+  <div class="eg"><b>e.g.</b> display fixes, demo-data corrections, poka-yoke guards, doc updates, deterministic monitors, front-end deploys that pass smoke + gates.</div>
+</div>
+<div class="lane a"><h3>🟡 Amber — do + notify <span class="badge">reversible · 1-click undo</span></h3>
+  <p>Slightly higher impact but fully reversible (git/backup). The AI does it, then flags it prominently on your cockpit with a one-click revert.</p>
+  <div class="eg"><b>e.g.</b> backend changes that pass tests, data migrations with a verified backup, new monitors.</div>
+</div>
+<div class="lane r"><h3>🔴 Red — always ask <span class="badge">never pre-authorised</span></h3>
+  <p>Irreversible or high-stakes. The system <b>stops</b> and waits for your explicit yes — every time, no exceptions, even if it's 3am.</p>
+  <div class="eg"><b>e.g.</b> anything touching money / the Tuppence ledger / live payments · secrets &amp; security · access permissions · deletions · public posts &amp; outreach · schema-destroying changes.</div>
+</div>
+<div class="honors">✓ Honors #5 robust safety (red is immovable) + pre-authorised authority (green/amber run free) · #3 every action is logged, not remembered</div>
+
+<h2><span class="n">3</span>What each stage promises (contracts)</h2>
+<table>
+<tr><th>Stage</th><th>Takes in</th><th>Produces</th><th>Lane</th></tr>
+<tr><td><b>Detect</b></td><td>a scope (e.g. "demo mode, all cities")</td><td>raw findings, with evidence</td><td><span class="ln g">green</span></td></tr>
+<tr><td><b>Triage</b></td><td>raw findings</td><td>deduped, cross-checked, <i>gently</i> re-verified list (no tool fooling itself)</td><td><span class="ln g">green</span></td></tr>
+<tr><td><b>Fix</b></td><td>the verified list</td><td>applied fixes + a staged queue for anything amber/red</td><td><span class="ln g">g</span>/<span class="ln a">a</span>/<span class="ln r">r</span> per item</td></tr>
+<tr><td><b>Prevent</b></td><td>each fixed defect class</td><td>a poka-yoke (makes the class impossible) + a scheduled monitor for weak points we don't control</td><td><span class="ln g">green</span></td></tr>
+<tr><td><b>Automate</b></td><td>the schedule</td><td>the loop running 1–4 nightly, surfacing only amber/red to the cockpit</td><td><span class="ln g">green</span></td></tr>
+</table>
+<div class="honors">✓ Honors #4 no tokens: Detect &amp; Prevent run as deterministic scripts (no model) wherever possible; the model is reserved for judgment (Triage, hard fixes) — token spend only where it pays</div>
+
+<h2><span class="n">4</span>The Second Brain — a self-curating library</h2>
+<div class="grid2">
+  <div class="card" style="border-left:4px solid var(--blue)">
+    <b>The library — the memory</b>
+    <p class="muted">Plain Markdown in git (STATUS, CHANGELOG, BACKLOG, memory notes, baselines) — the <b>Karpathy &ldquo;LLM&nbsp;Wiki&rdquo; pattern</b>: the AI grows and interlinks it for you. Every model — cloud Claude now, an open model off-grid later — reads the same store.</p>
+    <p class="muted" style="margin-top:6px"><b>Why files, not an app:</b> simplicity, off-grid, git = free versioning + the safe copy. Obsidian stays an <i>optional viewer</i> &mdash; never a dependency.</p>
+    <div class="honors">✓ #3 memory · #4 independence / off-grid / fewer tools / simplicity</div>
+  </div>
+  <div class="card" style="border-left:4px solid var(--teal)">
+    <b>Live Artifact — your cockpit</b>
+    <p class="muted">One living page. "Since last night: <b style="color:var(--green)">7 fixed</b>, <b style="color:var(--amber)">2 to review</b>, <b style="color:var(--red)">1 needs you</b>." Visual, reload for fresh, approve the few reds with a tap.</p>
+    <p class="muted" style="margin-top:6px"><b>The only thing you open.</b> No hunting screenshot-by-screenshot.</p>
+    <div class="honors">✓ #1 simple · #2 visual · #4 no effort</div>
+  </div>
+</div>
+<p class="muted" style="margin:16px 0 7px"><b>Shelved PARA-style, so it can never grow into a pile:</b></p>
+<div class="flow">
+  <div class="fbox" style="background:#e7f4e8;border-color:#bfe0c1"><div class="t" style="color:var(--green)">LIVE CANON</div><div class="s">what&rsquo;s true right now</div></div>
+  <div class="fbox"><div class="t">PROJECTS</div><div class="s">active work in flight</div></div>
+  <div class="fbox" style="background:var(--tealbg);border-color:#9fe1cb"><div class="t" style="color:var(--teal)">REFERENCE</div><div class="s">durable how-it-works</div></div>
+  <div class="fbox" style="background:#eef1f4;border-color:var(--line)"><div class="t" style="color:var(--muted)">ARCHIVE</div><div class="s">done / superseded &mdash; kept, out of the way</div></div>
+</div>
+<div class="card" style="border-left:4px solid var(--green);margin-top:11px">
+  <b>🟢 The Librarian &mdash; a green-lane agent <span class="pill">your input, answered</span></b>
+  <p class="muted" style="margin-top:5px">Runs on a schedule with zero effort from you: merges duplicates, fixes stale facts, files new notes into PARA, archives what&rsquo;s done, keeps the index clean. It is find &rarr; fix &rarr; prevent pointed at the knowledge itself &mdash; so the repository <b>curates itself</b> instead of growing unchecked. (Seed block already exists: the <i>consolidate-memory</i> skill.)</p>
+  <div class="honors">✓ resolves &ldquo;grows unchecked / needs a librarian&rdquo; · #3 nothing memory-reliant · #4 no effort</div>
+</div>
+
+<h2><span class="n">5</span>The loop's old wound, cured by design</h2>
+<div class="card" style="border-left:4px solid var(--green)">
+  <p class="lead" style="margin:0 0 6px">The current loop keeps truncating your BACKLOG and dropping git locks. v2 fixes the <b>cause</b>, not the symptom:</p>
+  <div class="flow" style="margin-top:6px">
+    <div class="fbox" style="background:#fff;border-color:var(--line)"><div class="t" style="color:var(--ink)">write to temp</div></div><div class="arrow">→</div>
+    <div class="fbox" style="background:#fff;border-color:var(--line)"><div class="t" style="color:var(--ink)">verify</div><div class="s">tail + length + anchors</div></div><div class="arrow">→</div>
+    <div class="fbox" style="background:#fff;border-color:var(--line)"><div class="t" style="color:var(--ink)">atomic swap</div></div><div class="arrow">→</div>
+    <div class="fbox" style="background:#e7f4e8;border-color:#bfe0c1"><div class="t" style="color:var(--green)">commit to git</div><div class="s">git = the safe copy</div></div>
+  </div>
+  <p class="muted" style="margin:9px 0 0">A half-written file can never replace a good one. This is the LOOP-1 fix — designed in, not bolted on.</p>
+</div>
+
+<h2><span class="n">6</span>How we switch over — no morphing</h2>
+<div class="card">
+  <p class="lead" style="margin:0"><b>Build v2 beside the old loop (shadow mode)</b> → run both, compare for a few nights → <b>cut over</b> when parity is proven → <b style="color:var(--red)">decommission the old patched loop</b>. A controlled cutover, never an in-flight patch. Exactly your rule.</p>
+</div>
+
+<div class="ask">
+  <h2 style="border:none">What I need from you</h2>
+  <ol>
+    <li><b>Red-pen this design</b> — anything missing, anything you'd shape differently.</li>
+    <li><b>One real decision:</b> approve the three <b>lane definitions</b> in §2. That single approval is the "authority given in advance" — after it, the system runs without per-action gates (except red).</li>
+  </ol>
+  <div class="key">Everything else flows from that one decision. Approve the lanes and Phase 1 (the Detect engine) can begin — still nothing risky, still all reversible.</div>
+</div>
+
+<p style="text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px">Phase 0 of 5 · design only · no code written yet · ORCHESTRATION_V2_DESIGN.html</p>
+</div></body></html>
