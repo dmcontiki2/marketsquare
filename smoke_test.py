@@ -88,7 +88,7 @@ if dl:
     n    = dl.get("count", 0)
     cats = list({l["cat"] for l in dl.get("listings", [])})
     check(f"demo-listings endpoint ({n} entries)", n >= 200)
-    for cat in ["Property", "Adventures", "Collectors", "Cars"]:
+    for cat in ["Property", "adventures_experiences", "adventures_accommodation", "Collectors", "Cars"]:
         check(f"  cat:{cat}", cat in cats)
 else:
     check("demo-listings endpoint reachable", False)

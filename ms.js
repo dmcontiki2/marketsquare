@@ -2520,8 +2520,8 @@ function cardHtml(l){
   const _catCfg=catCfg(l)||{};
   const _fallbackPhoto=_catCfg.catPhoto;
   const _fallbackDiv=`<div class="emoji-fallback" style="background:${_catCfg.bg}">${_catCfg.icon}</div>`;
-  const imgHtml=l.photo
-    ?`<img src="${l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}">${_fallbackPhoto?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="display:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`:_fallbackDiv}`
+  const imgHtml=((l.photos&&l.photos[0])||l.photo)
+    ?`<img src="${(l.photos&&l.photos[0])||l.photo}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='${_fallbackPhoto?'block':'flex'}">${_fallbackPhoto?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" style="display:none;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`:_fallbackDiv}`
     :(_fallbackPhoto
         ?`<img src="${_fallbackPhoto}" alt="${l.cat}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_fallbackDiv}`
         :_fallbackDiv);
@@ -2567,8 +2567,8 @@ function renderFeatured(){
   }
   document.getElementById('home-featured').innerHTML=featured.map(l=>{
     const _fCfg=catCfg(l)||{};
-    const imgHtml=l.photo
-      ?`<img src="${l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">`
+    const imgHtml=((l.photos&&l.photos[0])||l.photo)
+      ?`<img src="${(l.photos&&l.photos[0])||l.photo}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">`
       :(_fCfg.catPhoto
           ?`<img src="${_fCfg.catPhoto}" alt="${l.cat}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;\'>${_fCfg.icon}</div>')">`
           :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${_fCfg.icon}</div>`);
@@ -8687,7 +8687,7 @@ function renderMyRequests(){
     const hasIntro=([...acceptedIntros]).some(k=>k.endsWith('-'+l.id));
     const badge=hasIntro?'<span style="font-size:10px;font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 6px;margin-left:6px;">Intro sent</span>':'<span style="font-size:10px;font-weight:700;color:var(--text-3);background:var(--surface-2);border-radius:4px;padding:2px 6px;margin-left:6px;">Saved</span>';
     return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;" onclick="openDetail('${l.id}')">
-      <div style="height:90px;background:${catCfg(l).bg};overflow:hidden;">${l.photo?`<img src="${l.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${catCfg(l).icon}</div>`}</div>
+      <div style="height:90px;background:${catCfg(l).bg};overflow:hidden;">${((l.photos&&l.photos[0])||l.photo)?`<img src="${(l.photos&&l.photos[0])||l.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;">${catCfg(l).icon}</div>`}</div>
       <div style="padding:10px 12px 12px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">${l.cat}${badge}</div>
         <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px;line-height:1.3;">${l.title}</div>
@@ -10771,8 +10771,8 @@ async function lmLoadGrid() {
           const t = trustTier(l.trust || 0);
           const loc = _lmEsc(l.suburb || activeCity.name || '');
           const price = l.price ? (formatZAR(l.price) || String(l.price)) : '<span class="neg">Negotiable</span>';
-          const imgHtml = l.photo
-            ? `<img src="${_lmEsc(l.photo)}" alt="${_lmEsc(l.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
+          const imgHtml = ((l.photos&&l.photos[0])||l.photo)
+            ? `<img src="${_lmEsc((l.photos&&l.photos[0])||l.photo)}" alt="${_lmEsc(l.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
             : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
           const svLM = wishlist.has(l.id);
           return (
