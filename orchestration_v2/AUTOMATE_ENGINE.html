@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Automate + Cutover — Orchestration v2 · Phase 5</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.doc{max-width:880px;margin:0 auto;padding:30px 22px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:24px 26px;margin-bottom:22px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 6px;font-size:25px;font-weight:700;letter-spacing:-.3px}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px}
+header.hd .badge{display:inline-block;margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.5px;background:#16402a;color:#7fe0a3;border:1px solid #2c6b45;border-radius:20px;padding:4px 11px}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:11px}
+.lead{font-size:14.5px;color:var(--ink);margin:0}
+.flow{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;margin:4px 0}
+.fbox{flex:1;min-width:84px;background:var(--bluebg);border:1px solid #cfe0f2;border-radius:10px;padding:9px 9px;text-align:center}
+.fbox .t{font-size:12px;font-weight:700;color:var(--blue)}
+.fbox .s{font-size:10px;color:#3a5a78;margin-top:2px;line-height:1.3}
+.arrow{display:flex;align-items:center;color:#9bb0c4;font-size:16px;font-weight:700}
+.sched{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.slot{flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--card)}
+.slot .tm{font-size:13px;font-weight:800;color:var(--teal)}.slot .nm{font-size:11.5px;color:var(--muted);margin-top:1px}
+.proof{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:12px;padding:13px 16px}
+.proof b{color:var(--green)}
+ol.cut{counter-reset:c;list-style:none;padding:0;margin:0}
+ol.cut li{position:relative;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px 12px 46px;margin-bottom:9px;font-size:13px}
+ol.cut li::before{counter-increment:c;content:counter(c);position:absolute;left:12px;top:12px;width:24px;height:24px;border-radius:7px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+ol.cut li b{font-size:13.5px}
+ol.cut code{background:#0e1c2e;color:#cfe0f0;border-radius:5px;padding:1px 6px;font-size:11.5px;font-family:'Consolas',ui-monospace,monospace}
+.gate{background:var(--amberbg);border:1px solid #f0dcb4;border-radius:11px;padding:11px 14px;font-size:12.5px;color:#7a4e0e;margin-bottom:10px}
+.gate b{color:var(--amber)}
+.rev{background:var(--greenbg);border:1px solid #bfe0c1;border-radius:11px;padding:11px 14px;font-size:12.5px;color:#23612a;margin-top:8px}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare · Orchestration v2</div>
+  <h1>Automate + Cutover — Phase 5</h1>
+  <p>The deterministic nightly conductor that runs the whole arc on its own — and the controlled switch-over from the old loop.</p>
+  <span class="badge">🟢 GREEN LANE · zero-token · SHADOW now · deploys nothing</span>
+</header>
+
+<h2>What it is</h2>
+<div class="card"><p class="lead"><code style="background:#eef1f4;border-radius:5px;padding:1px 6px">orchestrator_v2.py</code> is the conductor: every night it runs Detect (sense) + Prevent, triages the result, and writes one <b>“since last night”</b> report to your cockpit. It is deterministic and zero-token — the surgical Fix edit stays a Sonnet checkpoint, surfaced here as a green <b>work order</b>, never run by the conductor. Right now it runs in <b>shadow</b>: it writes its own files, deploys nothing, and never touches the old loop — so the two run side by side until you’re ready to switch over.</p></div>
+
+<h2>It runs itself — nightly, on the box</h2>
+<div class="card">
+  <div class="flow">
+    <div class="fbox"><div class="t">DETECT</div><div class="s">sensor.py sense</div></div><div class="arrow">→</div>
+    <div class="fbox" style="background:var(--tealbg);border-color:#9fe1cb"><div class="t" style="color:var(--teal)">PREVENT</div><div class="s">guards + monitor</div></div><div class="arrow">→</div>
+    <div class="fbox"><div class="t">TRIAGE</div><div class="s">dedupe + lane</div></div><div class="arrow">→</div>
+    <div class="fbox"><div class="t">report</div><div class="s">since last night</div></div><div class="arrow">→</div>
+    <div class="fbox" style="background:#e7f4e8;border-color:#bfe0c1"><div class="t" style="color:var(--green)">FIX</div><div class="s">work order (Sonnet)</div></div>
+  </div>
+  <div class="sched">
+    <div class="slot"><div class="tm">03:30</div><div class="nm">sensor.py — sense (cron)</div></div>
+    <div class="slot"><div class="tm">03:50</div><div class="nm">orchestrator_v2.py — conductor (cron, shadow)</div></div>
+    <div class="slot"><div class="tm">cockpit</div><div class="nm">“since last night” panel reads the report</div></div>
+  </div>
+</div>
+
+<h2>First shadow run</h2>
+<div class="proof"><p class="lead" style="font-size:13.5px"><b>The whole arc ran itself, for zero tokens, and disturbed nothing.</b> smoke 39/39 · health ok · guards 3/3 pass · monitor 2 dead / 15 sampled · triage → 1 green work-order item (already-filed) + 1 amber for review + 0 red · cost $0 / 0 tokens. The old loop’s state files were untouched — true shadow.</p></div>
+
+<h2>The cutover — the one deliberate switch left</h2>
+<div class="gate"><b>Gated on parity, by design.</b> The Phase-0 plan is explicit: run v2 beside the old loop, compare for a night or two, then cut over. So none of the steps below fire on their own — they wait for your “go”, and every one is reversible.</div>
+<ol class="cut">
+  <li><b>Watch a parity night.</b> Let the 03:50 conductor run once or twice beside the old loop; compare its report to the old loop’s <code>report.json</code>. It should see the same or more, for no tokens.</li>
+  <li><b>Turn on the v2 Fixer (Sonnet checkpoint).</b> A small scheduled task that reads the green <b>work order</b> from <code>orchestrator_v2_report.json</code>, makes the one surgical fix under the lane gates (verify-or-revert + smoke), ships green / stages amber·red, and records — the same discipline used by hand in Phase 3.</li>
+  <li><b>Retire the old loop.</b> Disable the three old Claude tasks — <code>trustsquare-orch-sensor</code>, <code>-fixer</code>, <code>-orchestrator</code> — in one move each (reversible: re-enable any time).</li>
+  <li><b>Flip the conductor to live.</b> Change the cron from <code>orchestrator_v2.py</code> to <code>orchestrator_v2.py --live</code>. The deterministic sensor + conductor + the v2 Fixer are now the loop; the old patch-pile is gone.</li>
+</ol>
+<div class="rev"><b>Fully reversible at every step.</b> Re-enable the old tasks, drop the v2 Fixer, or remove the conductor’s cron line — nothing here deletes data or deploys code. The old loop keeps running untouched until step 3.</div>
+
+<h2>Why this finishes the rewiring</h2>
+<div class="card"><p class="lead" style="font-size:13.5px">With Automate live, all five stages run as one self-healing loop on the box — Detect → Triage → Fix → Prevent — surfacing only amber/red and a one-line summary to your cockpit, for essentially zero tokens. The clean rewiring is complete, and the old patched loop (the one that kept truncating BACKLOG) is retired by a controlled switch, not a morph. <b>The system now maintains itself.</b></p></div>
+
+<p class="foot">Orchestration v2 · Phase 5 of 5 · conductor: orchestrator_v2.py · report: orchestrator_v2_report.json · AUTOMATE_ENGINE.html</p>
+</div></body></html>

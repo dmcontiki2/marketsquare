@@ -250,3 +250,10 @@ First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Rem
 |---|---|---|---|
 | PREVENT-HOMESTATS | `renderHomeStats` (`const live = LISTINGS.filter…`, ms.js ~2263) has the SAME ph_-excluded-but-not-paused pattern that DEMO-7 fixed in `renderCatCounts`. Left out of DEMO-7's scope deliberately. Add a guard + the `if (l.paused) return false;` fix (a clean future Detect → Triage → Fix item, or fold into a shared count-filter helper). | FEA | ATTENDED |
 | PREVENT-SMOKE-DEPLOY | Process poka-yoke for the S125 deploy drift: add `smoke_test.py` to the standard deploy set so the server test never lags the committed one again (it asserted a stale `Adventures` category → false fail). One line in the deploy checklist / a guard that the served smoke matches HEAD. | Ops/Orchestration | ATTENDED |
+
+## ⚙️ Orchestration v2 — Phase 5 Automate (shipped Session 127) · cutover pending
+**The 5-stage arc is built end-to-end and runs itself nightly in SHADOW.** `orchestrator_v2.py` (deterministic, zero-token) on server cron 03:50 SAST runs Detect→Triage→Fix→Prevent, writes the cockpit "since last night" panel, deploys nothing, leaves the old loop untouched. First pass clean (smoke 39/39, guards 3/3, $0). Plan + commands in `automate.html`.
+
+| # | Open action (the gap) | Area | Lane |
+|---|---|---|---|
+| CUTOVER-1 | **The controlled cutover (the last switch).** After a shadow parity night: (1) turn on a v2 Fixer — a Sonnet-checkpoint scheduled task that consumes the green work order from `orchestrator_v2_report.json` under the lane gates (verify-or-revert + smoke); (2) retire the 3 old Claude loop tasks (`trustsquare-orch-sensor`/`-fixer`/`-orchestrator`); (3) flip the conductor cron to `orchestrator_v2.py --live`. Fully reversible at every step; nothing fires without David's go. Retires the old patched loop (and moots LOOP-1). | Orchestration/Ops | ATTENDED — needs David's go |

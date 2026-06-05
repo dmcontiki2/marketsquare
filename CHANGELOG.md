@@ -1,3 +1,15 @@
+## Session 127 · 5 June 2026 · Orchestration v2 Phase 5 (Automate) — the loop runs itself (shadow); the arc is complete
+
+Built the final stage: Automate. New deterministic, zero-token `orchestration_v2/orchestrator_v2.py` — the nightly conductor that runs the whole v2 arc on the box: Detect (reads the deterministic sensor.py sense) + Prevent (prevent.py guards + image monitor) → assembles a Detect-schema finding set → Triage (triage.py dedupe + lane + priority) → writes one "since last night" report. The surgical Fix edit stays a Sonnet checkpoint, surfaced as a green work order — the conductor never edits or ships code itself.
+
+SHADOW by design (the Phase-0 controlled-cutover discipline): it writes only to /orchestrator/v2/, deploys nothing, and never touches the old loop's §9 state files. Scheduled on the server crontab at 01:50 UTC (03:50 SAST), right after the deterministic sensor's 01:30 run and before the old Claude loop — so v2 and the old loop run side by side for a parity window. Reversible (one cron line).
+
+First shadow pass (verified): smoke 39/39, health ok, guards 3/3 pass, image monitor 2 dead / 15 sampled (0 false positives, 498 watched), triage → 1 green work-order item (the dead images, deduped to the already-filed DEMO-5) + 1 amber (a sense anomaly) + 0 red; cost $0 / 0 tokens; the old loop's findings.json/queue.json/report.json were untouched (timestamp-confirmed). Cockpit: a live "since last night" panel (fetches orchestrator_v2_report.json), Phase 5 → built, Automate card live, automate.html playbook + cutover plan. Deployed orchestrator_v2.py + report + cockpit + automate.html to /orchestrator/v2/ behind the orchestrator login (chmod 644, sha parity, 401 unauthed).
+
+The five-stage clean rewiring is now built end to end — Detect → Triage → Fix → Prevent → Automate — and runs itself nightly in shadow. The one remaining step is the controlled cutover (documented in automate.html, filed CUTOVER-1): after a parity night, turn on a v2 Fixer (Sonnet checkpoint) that consumes the green work order, retire the 3 old Claude loop tasks (orch-sensor/fixer/orchestrator), and flip the conductor to --live. Every cutover step is reversible; none fires without David's go.
+
+Cost model impact: standing maintenance token cost trends to ~zero — the nightly loop is now deterministic zero-token; the old loop's per-night Sensor/Fixer/Orchestrator model calls retire at cutover. No pricing, concurrency, email-volume, or city-launch change.
+
 ## Session 126 · 5 June 2026 · Orchestration v2 Phase 4 (Prevent) — guards + monitor, the loop closes
 
 Built Phase 4: Prevent — a poka-yoke per fixed defect class + a monitor for the weak points we don't control. Deterministic, zero-token `orchestration_v2/prevent.py` with an auditable registry; it watches, never changes anything; and a guard/monitor failure is written back out as a Detect-schema finding (`findings_prevent.json`) so it flows straight into Triage → Fix — the five-stage loop now closes on itself.

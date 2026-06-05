@@ -48,6 +48,32 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <p>Check every piece of the self-healing system, and switch on each function as it comes online.</p>
 </header>
 
+<h2>Since last night — the loop runs itself</h2>
+<div id="sln" style="background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:6px">
+  <div style="color:var(--muted);font-size:13px">Loading the latest nightly run…</div>
+</div>
+<script>
+(function(){
+  function kpi(v,l,col){return '<div style="flex:1;min-width:76px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center"><div style="font-size:20px;font-weight:800;color:'+col+'">'+(v==null?'&ndash;':v)+'</div><div style="font-size:10.5px;color:var(--muted);font-weight:600;margin-top:2px">'+l+'</div></div>';}
+  fetch('orchestrator_v2_report.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(r){
+    var s=r.since_last_night||{}, mode=(r.mode||'shadow');
+    var badge='<span style="font-size:10px;font-weight:800;letter-spacing:.5px;border-radius:20px;padding:2px 9px;'+(mode==='live'?'background:#cdebcf;color:var(--green)':'background:#fbf0db;color:var(--amber)')+'">'+mode.toUpperCase()+'</span>';
+    document.getElementById('sln').innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px"><div style="font-size:13.5px"><b>'+(r.loop_date||'')+'</b> &middot; nightly conductor '+badge+'</div><div style="font-size:11.5px;color:var(--green);font-weight:700">cost $0 &middot; 0 tokens</div></div>'
+      +'<div style="display:flex;gap:7px;flex-wrap:wrap">'
+      +kpi(s.to_fix_green,'&rarr; Fix (green)','var(--green)')
+      +kpi(s.review_amber,'review (amber)','var(--amber)')
+      +kpi(s.need_you_red,'need you (red)','var(--red)')
+      +kpi(s.guards,'guards','var(--teal)')
+      +kpi(s.monitor_dead,'dead imgs','var(--muted)')
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:9px">smoke '+(s.smoke||'?')+' &middot; health '+(s.health||'?')+' &middot; '+(s.monitor||'')+'</div>';
+  }).catch(function(){
+    document.getElementById('sln').innerHTML='<div style="color:var(--muted);font-size:13px">No nightly run loaded yet — the conductor runs in shadow at 03:50 SAST (behind this same login). Reload after a run.</div>';
+  });
+})();
+</script>
+
 <h2>Build progress</h2>
 <div class="phases">
   <div class="ph done"><div class="pn">PHASE 0</div><div class="pt">Design</div><span class="st">✓ approved</span></div>
@@ -55,7 +81,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <div class="ph done"><div class="pn">PHASE 2</div><div class="pt">Triage</div><span class="st">✓ built</span></div>
   <div class="ph done"><div class="pn">PHASE 3</div><div class="pt">Fix</div><span class="st">✓ built</span></div>
   <div class="ph done"><div class="pn">PHASE 4</div><div class="pt">Prevent</div><span class="st">✓ built</span></div>
-  <div class="ph lock"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">next</span></div>
+  <div class="ph done"><div class="pn">PHASE 5</div><div class="pt">Automate</div><span class="st">✓ built</span></div>
 </div>
 
 <h2>The lanes (your pre-approved authority)</h2>
@@ -73,6 +99,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <a class="btn" href="triage_board.html">📋 Triage board (live)</a>
   <a class="btn ghost" href="fix.html">🔧 Fix engine (Phase 3)</a>
   <a class="btn ghost" href="prevent.html">🛡️ Prevent engine (Phase 4)</a>
+  <a class="btn ghost" href="automate.html">⚙️ Automate + cutover (Phase 5)</a>
 </div>
 
 <h2>Functions — activate as they come online</h2>
@@ -85,7 +112,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Triage</b> <span class="ph-tag">· Phase 2 · available</span><small>Dedupes a Detect run against the backlog + ignore-list, assigns a lane (🟢/🟡/🔴) and a priority, and lays it on the board. Tap <b>Copy</b>, paste it to Claude in chat.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Triage engine on the latest Detect findings.')">Copy run command</button></div></div>
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Fix (with lanes)</b> <span class="ph-tag">· Phase 3 · available</span><small>Consumes the green lane one item at a time — backup → surgical edit → verify (node/ast + smoke) → ship. Amber stages; red is never touched. Tap <b>Copy</b>, paste it to Claude.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the Fix engine on the triaged queue.')">Copy run command</button></div></div>
 <div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Prevent — guards + monitors</b> <span class="ph-tag">· Phase 4 · available</span><small>A poka-yoke per fixed defect (re-flags a regression) + a gentle monitor for weak points we don't control. A failure re-enters Triage → Fix. Tap <b>Copy</b>, paste it to Claude.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run Prevent — check the regression guards and the image monitor.')">Copy run command</button></div></div>
-<div class="fn lock"><div class="dot">🔒</div><div class="body"><b>Librarian + Automate</b> <span class="ph-tag">· Phase 5</span><small>The loop runs itself nightly; these become live server buttons.</small></div><div class="act"><span class="lockbadge">coming P5</span></div></div>
+<div class="fn avail"><div class="dot">🟢</div><div class="body"><b>Automate — nightly conductor</b> <span class="ph-tag">· Phase 5 · shadow, scheduled</span><small>Runs Detect → Triage → Fix → Prevent on the box at 03:50 SAST — zero-token, deploys nothing, writes the “since last night” panel above. Cutover (retire the old loop) is staged for after a parity night.</small></div><div class="act"><button class="copybtn" onclick="cp(this,'Run the v2 conductor now (shadow) and show me the since-last-night report.')">Copy run command</button></div></div>
 
 <div class="note"><b>How activation works today:</b> available functions run through Claude — the Copy button hands you the exact command to paste. When the Orchestrator is wired in <b>Phase 5</b>, these turn into live buttons that trigger the server directly (and the green lane runs on its own overnight). Honest by design — no button pretends to do more than it does yet.</div>
 
