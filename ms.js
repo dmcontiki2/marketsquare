@@ -1803,8 +1803,9 @@ function renderAdvGrid(){
       : (l.price ? `${cur}${Number(l.price).toLocaleString()}/person` : '');
     const countryCode = (l.country||'ZA').toUpperCase();
     const flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
-    const imgHtml = (l.photo||(l.photos&&l.photos[0]))
-      ? `<img class="adv-card-img" src="${esc(l.photo||(l.photos&&l.photos[0]))}" alt="${esc(l.title||'')}" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">`
+    const _advImg=(l.photos&&l.photos[0])||l.photo;
+    const imgHtml = _advImg
+      ? `<img class="adv-card-img" src="${esc(_advImg)}" alt="${esc(l.title||'')}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="adv-card-img-placeholder" style="display:none;">${isAccom?'🏕':'🌄'}</div>`
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
     return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
@@ -1813,7 +1814,7 @@ function renderAdvGrid(){
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${badgeCol};background:${badgeBg};padding:2px 8px;border-radius:10px;">${catLabel}</span>
           ${envLabel ? `<span style="font-size:10px;color:#6b7280;">${envLabel}</span>` : ''}
-          <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag} ${countryCode}</span>
+          <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag}</span>
         </div>
         <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;line-height:1.3;">${esc(l.title||l.name||'Untitled')}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
@@ -2848,7 +2849,7 @@ function openDetail(id){
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}
       </div>
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
-      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||''} ${l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
+      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
       <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
         <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
