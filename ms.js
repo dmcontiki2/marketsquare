@@ -89,6 +89,15 @@ async function devSetMode(isDemo) {
       if (LISTINGS[i].isLive) LISTINGS.splice(i, 1);
     }
   }
+  // Remove demo + placeholder listings when switching to LIVE (mirror of the above).
+  // Otherwise demo data persists in LISTINGS and, because per-city scoping only runs
+  // in DEMO_MODE, an empty live city (e.g. Sydney) shows the full demo totals.
+  if (!isDemo) {
+    for (let i = LISTINGS.length - 1; i >= 0; i--) {
+      const _id = String(LISTINGS[i].id);
+      if (_id.startsWith('demo_') || _id.startsWith('ph_')) LISTINGS.splice(i, 1);
+    }
+  }
   // Re-render everything
   updateBadgeLabel();
   renderGrid();
@@ -2073,6 +2082,8 @@ function selectDemoCity(name) {
   }
   renderGrid();
   renderCatCounts();
+  renderFeatured();
+  renderHomeStats();
   if (typeof renderWondersStrip === 'function') renderWondersStrip();
   if (viewMode === 'map') renderMap();
   // Reload live BEA listings for the new city
@@ -2087,6 +2098,8 @@ async function selectCity(id, name, lat, lng) {
   updateBadgeLabel();
   renderGrid();
   renderCatCounts();
+  renderFeatured();
+  renderHomeStats();
   if (viewMode === 'map') renderMap();
 }
 
@@ -2249,6 +2262,7 @@ function renderHomeStats() {
   const _aCity = activeCity ? (activeCity.name || '') : '';
   const live = LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
+    if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     // Respect the selected city — demo listings + live BEA listings are per-city,
     // so an empty city (e.g. New York in demo) must read 0, not another city's total.
     if (DEMO_MODE && String(l.id).startsWith('demo_')) {
@@ -2316,6 +2330,7 @@ function renderCatCounts() {
       // Placeholders are Pretoria-tagged "coming soon" scaffolding — never count them
       // toward another city's tiles (this caused New York/Houston to show phantom 1s).
       if (String(l.id).startsWith('ph_')) return;
+      if (!DEMO_MODE && String(l.id).startsWith('demo_')) return;
       if (DEMO_MODE && String(l.id).startsWith('demo_')) {
         const lCity = l.city || l.area || '';
         if (lCity && _aCity && lCity !== _aCity) return;
@@ -2553,6 +2568,7 @@ function renderFeatured(){
   const _featCity = activeCity.name || '';
   const featured = LISTINGS.filter(l=>{
     if (!l.feat || l.paused) return false;
+    if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     // In demo mode, only show featured listings for the active city
     if (DEMO_MODE && String(l.id).startsWith('demo_')) {
       const lCity = l.city || l.area || '';
