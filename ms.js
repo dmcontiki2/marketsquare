@@ -1016,7 +1016,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace')) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name.startsWith('aa-'))) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -3162,6 +3162,7 @@ async function tvsYieldCalc(id, tier){
 }
 
 async function buyerPriceCheck(id) {
+  if (DEMO_MODE) { showToast('This is a demo — live price checks are disabled.'); return; }
   const l = findListing(id);
   if (!l) return;
   const btn = document.getElementById('detail-pc-btn-' + id);
@@ -3317,6 +3318,7 @@ async function buyerPriceCheck(id) {
 
 // ── AI4: Buyer Yield Calculator (Session 75) ──────────────────────────────
 async function buyerYieldCalc(id) {
+  if (DEMO_MODE) { showToast('This is a demo — live yield calculations are disabled.'); return; }
   const l = findListing(id);
   if (!l) return;
   const btn = document.getElementById('detail-yield-btn-' + id);
@@ -10213,10 +10215,12 @@ async function wlSendSignal(payload) {
 
 // ── Signal capture hooks (called from existing UI handlers) ──
 function wlCaptureCategory(cat) {
+  if (DEMO_MODE) return; // demo browsing must not write to live wishlist data
   if (!cat || cat === 'All') return;
   wlSendSignal({ signal_type: 'browse_search', raw_text: cat, category: cat });
 }
 function wlCaptureView(listing) {
+  if (DEMO_MODE) return; // demo browsing must not write to live wishlist/view data
   if (!listing) return;
   const cat = listing.cat || listing.category;
   const txt = (listing.title || '') + ' ' + (listing.description || listing.desc || '');
@@ -10227,6 +10231,7 @@ function wlCaptureView(listing) {
   }
 }
 function wlCaptureSearch(query, cat) {
+  if (DEMO_MODE) return; // demo browsing must not write to live wishlist data
   if (!query || query.length < 2) return;
   if (_wlSearchDebounce) clearTimeout(_wlSearchDebounce);
   _wlSearchDebounce = setTimeout(() => {
@@ -10437,6 +10442,7 @@ async function wlForgetMe() {
 }
 
 async function wlRenderSettings() {
+  if (DEMO_MODE) return; // wishlist settings screen is demo-blocked; never hit the API
   if (!_wlToken) await wlBootToken();
   // Trust filter active state
   const floor = parseInt(localStorage.getItem(WL_TRUST_KEY) || '0', 10) || 0;
@@ -10490,6 +10496,7 @@ async function wlRenderSettings() {
 }
 
 async function wlStartGlobalCheckout() {
+  if (DEMO_MODE) { showToast('This is a demo. Visit trustsquare.co to subscribe.'); return; }
   // Email is required by Paystack — use stored email if present
   const email = localStorage.getItem('ms_user_email') || prompt('Email for Paystack receipt:');
   if (!email) return;

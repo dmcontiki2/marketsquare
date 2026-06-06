@@ -1,3 +1,15 @@
+## Post-Session-129 · 6 June 2026 — demo-mode wiring hardening (audit-driven)
+
+Audited demo-mode wiring across `marketsquare.html` + `ms.js` against the CLAUDE.md "every BEA call needs a DEMO_MODE guard" rule. The buyer surface was substantially sound — `submitIntro` gates its `/intros` POST on `l.isLive` (demo listings never post), `openDetail`/`openSellerCV` render purely from the local arrays, and the listing-detail price/yield tools, the For-You feed, the LM home tile and the geo panels already carry explicit DEMO_MODE branches. Closed one real gap + three latent ones — 8 one-line guards in `ms.js` (+686 B, pure-LF, `node --check` clean, whole-file diff exactly 8 add / 1 mod):
+- **Wishlist signal-capture (the real gap):** `wlCaptureView` / `wlCaptureCategory` / `wlCaptureSearch` now early-return in DEMO_MODE, so demo browse/search/view no longer fires live `POST /wishlist/signal` + `POST /listings/{id}/view` (was silently polluting live wishlist-matching + view counters — `.catch`-silent so never user-visible, but real writes from a demo).
+- **goTo nav block:** added `wishlist`, `guided-onboard`, `aa-*` to the demo screen-block at the `goTo` choke (was `tuppence/dashboard/onboard/publish/sell-b/plans/myspace`).
+- **Wishlist settings + global checkout:** `wlRenderSettings` and `wlStartGlobalCheckout` now early-return in demo — required because the wishlist hooks wrap `goTo` and still call `wlRenderSettings()` *after* the block returns, so the nav-block alone wouldn't have stopped the settings reads or the Paystack-subscription init.
+- **Legacy price tools:** `buyerPriceCheck` / `buyerYieldCalc` (superseded by the guarded TVS chips) now decline in demo instead of relying on the email-gate + numId-NaN fallthrough — which, since the pre-launch admin gate seeds `ms_user_email`, could otherwise have hit `/tuppence/balance` and popped a real "1T will be charged" confirm on a demo listing.
+
+Deploy: `scp ms.js` → `/static/` (server byte-match 730115 B, server `node --check` OK), CF purged (`{"purged":true}`), `smoke_test.py --local` ALL OK (demo-bleed guards §8 intact, 302 demo-listings, all critical fns present). Production users unaffected — every added guard is a DEMO_MODE-only branch (false in live).
+
+Cost model impact: none material — strictly *removes* a few per-demo-session wishlist/view API writes; no pricing, AI volume, concurrency, email, or city-launch change.
+
 ## Session 127 · 5 June 2026 · Orchestration v2 Phase 5 (Automate) — the loop runs itself (shadow); the arc is complete
 
 Built the final stage: Automate. New deterministic, zero-token `orchestration_v2/orchestrator_v2.py` — the nightly conductor that runs the whole v2 arc on the box: Detect (reads the deterministic sensor.py sense) + Prevent (prevent.py guards + image monitor) → assembles a Detect-schema finding set → Triage (triage.py dedupe + lane + priority) → writes one "since last night" report. The surgical Fix edit stays a Sonnet checkpoint, surfaced as a green work order — the conductor never edits or ships code itself.

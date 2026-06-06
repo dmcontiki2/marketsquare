@@ -98,7 +98,7 @@ If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from P
 - Deploy ms.js: `scp ms.js root@178.104.73.239:/var/www/marketsquare/static/ms.js` ⚠️ nginx serves from /static/ not root
 - Deploy ms.css: `scp ms.css root@178.104.73.239:/var/www/marketsquare/static/ms.css` ⚠️ nginx serves from /static/ not root
 - Restart BEA: `ssh root@178.104.73.239 "systemctl restart marketsquare"`
-- Purge Cloudflare cache after deploy: token stored in server `.env` as `CF_CACHE_TOKEN` and `CF_ZONE_ID` — call via BEA: `curl -s https://trustsquare.co/admin/purge-cache` or use the sandbox helper in bea_main.py `_cf_purge_all()`
+- Purge Cloudflare cache after deploy: token stored in server `.env` as `CF_CACHE_TOKEN` and `CF_ZONE_ID` — call via BEA: `curl -s -X POST https://trustsquare.co/admin/purge-cache` (endpoint requires POST — GET fails; corrected Session 129) or use the sandbox helper in bea_main.py `_cf_purge_all()`
 - Reload nginx after config changes: `nginx -s reload`
 - CityLauncher: /var/www/citylauncher/ · port 8001 · citylauncher.service · nginx /launch/ + /launch-api/
 
