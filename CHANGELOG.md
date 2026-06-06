@@ -10,6 +10,12 @@ The five-stage clean rewiring is now built end to end — Detect → Triage → 
 
 Cost model impact: standing maintenance token cost trends to ~zero — the nightly loop is now deterministic zero-token; the old loop's per-night Sensor/Fixer/Orchestrator model calls retire at cutover. No pricing, concurrency, email-volume, or city-launch change.
 
+## Interim deploy · 6 June 2026 (evening) — PLANS page: Tuppence per tier + dev-override label
+
+Display-only FEA deploy (ms.js v153→v154, index.html script ref bumped). Plan cards now show the locked monthly Tuppence allocations beside the slot caps — Standard "+ 6 T monthly", Professional "+ 10 T", Business "+ 20 T", Elite "+ 50 T" (gilt-coloured chip, visually distinct from the slate slots chip per the slots-vs-Tuppence clarity canon; allocations = price÷2 per Canon Addendum №1 rev 2, restoring 1T=$2). Billing header now labels the superuser testing state: when slot_limit exceeds the tier's real cap (bea_main.py startup backfill forces 500 on is_superuser accounts) the plan subtitle appends "admin test account — slot limit raised to 500 (dev override)", so the four family test accounts (David, Maroushka, David Junior, Maurice — the latter two pre-created on the live DB this evening with is_superuser=1) no longer read as a Free-tier contradiction. Deployed via scp + chmod 644 + CF purge; smoke_test.py ALL OK; fea_baseline.json refreshed (index 376547B, ms.js v154 728614B, ms.css v120 116322B, BEA 1.3.1). The functional side (TIER_TUPPENCE_MONTHLY in the BEA, Founders redemption, AI-uses copy purge at bea_main.py:3862 / ms.js 667/885/9617/9632 / marketsquare.html:1806) remains queued as BACKLOG L9 for the dedicated session.
+
+---
+
 ## Session 126 · 5 June 2026 · Orchestration v2 Phase 4 (Prevent) — guards + monitor, the loop closes
 
 Built Phase 4: Prevent — a poka-yoke per fixed defect class + a monitor for the weak points we don't control. Deterministic, zero-token `orchestration_v2/prevent.py` with an auditable registry; it watches, never changes anything; and a guard/monitor failure is written back out as a Detect-schema finding (`findings_prevent.json`) so it flows straight into Triage → Fix — the five-stage loop now closes on itself.

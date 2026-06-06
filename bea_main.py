@@ -9,6 +9,7 @@ import storage
 import ai_service_tiers  # Tiered Value Selector: tier config + availability resolver
 import feature_flags     # TVS STEP 5: server-readable paid/provider flag store
 import tier_resolvers    # TVS STEP 3: FREE/owned data resolvers (no paid/consumption API)
+import launch_redemption  # Founders Badge + monthly Tuppence allocation + flood control (Canon Addendum 1)
 import os
 import json
 import re
@@ -1346,13 +1347,21 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         params = params_a + [page_size, _offset]
 
     rows = conn.execute(sql, params).fetchall()
+    _founders = launch_redemption.founders_email_set(conn)
     conn.close()
-    return [dict(r) for r in rows]
+    out = []
+    for _r in rows:
+        _d = dict(_r)
+        if _founders and (_d.get("seller_email") or "").lower() in _founders:
+            _d["founders"] = True
+        out.append(_d)
+    return out
 
 @app.post("/listings")
 def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
+    launch_redemption.check_listing_velocity(listing.seller_email)  # per-day flood control (env-gated OFF)
     conn = database.get_db()
     # Resolve geo_city_id from city name at creation time
     _gcity_row = conn.execute(
@@ -3396,6 +3405,10 @@ def verify_seller_subscription(reference: str):
                 (email, tier, slot_limit, billing_end),
             )
             effective = "immediate"
+            try:
+                launch_redemption.grant_monthly_tuppence(conn, email, tier)
+            except Exception as _alloc_e:
+                _log.warning("monthly Tuppence grant skipped for %s: %s", email, _alloc_e)
         conn.commit()
     finally:
         conn.close()
@@ -3859,22 +3872,11 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
 
 @app.post("/advert-agent/buy-pack")
 def aa_buy_pack(email: str, sessions: int = 8):
-    """Credit seller with coaching sessions. Default 8 (1T standard pack). Pass sessions= for bulk packs."""
-    conn = database.get_db()
-    row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Seller not registered")
-    conn.execute(
-        "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
-        (sessions, email)
-    )
-    conn.commit()
-    new_bal = conn.execute(
-        "SELECT aa_sessions_remaining FROM users WHERE email = ?", (email,)
-    ).fetchone()["aa_sessions_remaining"]
-    conn.close()
-    return {"sessions_remaining": new_bal}
+    """RETIRED (Canon Addendum 1): 'AI uses' no longer exist. In-app AI guidance
+    is free; advanced AI features are Tuppence-priced per use."""
+    raise HTTPException(
+        status_code=410,
+        detail="AI coaching packs are retired — the AI Coach charges your Tuppence wallet per use (first use free).")
 
 
 @app.post("/advert-agent/publish")
@@ -6149,6 +6151,24 @@ _CATEGORY_SIGNALS = {
     #   Serious seller, 2 certs + 2 memberships        → 40 + ~25 = 65 (Established ✓)
     #   Expert, dual membership + named role + certs   → 40 + ~45 = 85 (Trusted ✓)
     #   Top of field, national role + full profile     → 40 + ~55 = 95 (Highly Trusted ✓)
+    "Travel": {
+        "category.travel.asata_member":      {"name": "ASATA membership", "points": 10, "how_to_earn": "Upload ASATA membership number — verified against the public member register."},
+        "category.travel.iata_accredited":   {"name": "IATA accreditation", "points": 10, "how_to_earn": "Upload IATA agency code — verified via IATA CheckACode where available."},
+        "category.travel.cipc_registered":   {"name": "Registered company (CIPC)", "points": 6, "how_to_earn": "Upload CIPC registration number."},
+        "category.travel.years_3_7":         {"name": "Trading 3–7 years", "points": 5, "how_to_earn": "Upload company profile / CV."},
+        "category.travel.years_7plus":       {"name": "Trading 7+ years", "points": 5, "how_to_earn": "Upload company profile / CV.", "additional_to": "category.travel.years_3_7"},
+        "category.travel.client_insurance":  {"name": "Client travel-insurance facility", "points": 4, "how_to_earn": "Upload proof of the travel-insurance facility offered to clients."},
+        "category.travel.financial_bonding": {"name": "Financial bonding / guarantee", "points": 5, "how_to_earn": "Upload proof of a bonding or guarantee scheme protecting client payments."},
+    },
+    "Tour_Guides": {
+        "category.tour_guides.provincial_reg":  {"name": "Registered tourist guide (provincial)", "points": 12, "how_to_earn": "Upload your provincial registrar guide badge number (Tourism Act) — verified where the register is available."},
+        "category.tour_guides.cathsseta_qual":  {"name": "CATHSSETA guiding qualification", "points": 8, "how_to_earn": "Upload qualification certificate."},
+        "category.tour_guides.first_aid":       {"name": "Current First Aid / Emergency Response", "points": 6, "how_to_earn": "Upload with expiry date."},
+        "category.tour_guides.exp_3_7":         {"name": "Guiding experience 3–7 years", "points": 5, "how_to_earn": "Upload CV."},
+        "category.tour_guides.exp_7plus":       {"name": "Guiding experience 7+ years", "points": 5, "how_to_earn": "Upload CV.", "additional_to": "category.tour_guides.exp_3_7"},
+        "category.tour_guides.languages":       {"name": "Guides in 3+ languages", "points": 4, "how_to_earn": "List languages; upload certificates where held."},
+        "category.tour_guides.site_specialist": {"name": "Site / route specialist accreditation", "points": 5, "how_to_earn": "Upload site-specific accreditation (e.g. World Heritage site guide)."},
+    },
     "local_market": {
         # ── Identity (max ~20 from category — Universal also contributes) ──
         "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
@@ -11443,3 +11463,7 @@ def grading_review(request: Request):
     )
     return _TSHTMLResponse(content=page)
 # ═════════════════════════ END TIERED GRADING PHASE A ═════════════════════
+
+
+# ── Founders Badge / Launch Special routes (Canon Addendum 1) — env-gated OFF ──
+app.include_router(launch_redemption.router)

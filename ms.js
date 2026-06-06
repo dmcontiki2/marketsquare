@@ -1047,11 +1047,11 @@ function goTo(name){
 }
 // ── SUBSCRIPTION SCREEN ──────────────────────────────────────
 const _SUB_TIERS = [
-  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    color:'#64748b', desc:'No credit card required' },
-  { id:'standard',     label:'Standard',     usd:12,  slots:10,  zar:216,  color:'#4f46e5', desc:'Best for active sellers' },
-  { id:'professional', label:'Professional', usd:20,  slots:25,  zar:360,  color:'#7c3aed', desc:'For serious sellers' },
-  { id:'business',     label:'Business',     usd:40,  slots:60,  zar:720,  color:'#0891b2', desc:'Teams and agencies' },
-  { id:'elite',        label:'Elite',        usd:100, slots:500, zar:1800, color:'#d97706', desc:'Enterprise volume' },
+  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    tup:0,  color:'#64748b', desc:'No credit card required' },
+  { id:'standard',     label:'Standard',     usd:12,  slots:10,  zar:216,  tup:6,  color:'#4f46e5', desc:'Best for active sellers' },
+  { id:'professional', label:'Professional', usd:20,  slots:25,  zar:360,  tup:10, color:'#7c3aed', desc:'For serious sellers' },
+  { id:'business',     label:'Business',     usd:40,  slots:60,  zar:720,  tup:20, color:'#0891b2', desc:'Teams and agencies' },
+  { id:'elite',        label:'Elite',        usd:100, slots:500, zar:1800, tup:50, color:'#d97706', desc:'Enterprise volume' },
 ];
 const _TIER_ORDER = _SUB_TIERS.map(t => t.id);
 
@@ -11538,7 +11538,9 @@ function _renderBillingTab(d, email) {
   const meta  = _SUB_TIERS.find(t => t.id === tier) || _SUB_TIERS[0];
 
   document.getElementById('billing-tier-label').textContent = meta.label;
-  document.getElementById('billing-tier-price').textContent = meta.usd === 0 ? 'Free forever · no credit card required' : '$' + meta.usd + '/month · ≈ R' + meta.zar;
+  let _priceTxt = meta.usd === 0 ? 'Free forever · no credit card required' : '$' + meta.usd + '/month · ≈ R' + meta.zar;
+  if (limit > meta.slots) _priceTxt += ' · admin test account — slot limit raised to ' + limit + ' (dev override)';
+  document.getElementById('billing-tier-price').textContent = _priceTxt;
   document.getElementById('billing-slots-used').textContent = used;
   document.getElementById('billing-slots-limit').textContent = limit;
   document.getElementById('billing-slots-avail').textContent = avail;
@@ -11579,7 +11581,7 @@ function _renderBillingTab(d, email) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div>
           <span style="font-size:15px;font-weight:800;color:${t.color};">${t.label}</span>
-          <span style="font-size:12px;color:var(--text-3);margin-left:8px;">${t.slots} slots</span>
+          <span style="font-size:12px;color:var(--text-3);margin-left:8px;">${t.slots} slots</span>${t.tup > 0 ? '<span style="font-size:12px;font-weight:700;color:#b8862f;margin-left:8px;">+ '+t.tup+' T monthly</span>' : ''}
         </div>
         <button onclick="_subSelectTier('${t.id}','${t.label}',${t.usd},${isDown})" ${isCur?'disabled':''} style="background:${btnBg};color:${btnTxt};border:none;border-radius:50px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:${isCur?'default':'pointer'};opacity:${isCur?'.5':'1'};">${btnLabel}</button>
       </div>
