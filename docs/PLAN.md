@@ -253,7 +253,7 @@ Gates are hard stops. No phase advances until the gate passes.
 | claude-haiku-4-5 | Covered by 1T pack purchases | ~$0.001/1k tokens input |
 | **Total fixed** | **~R70/month** | Well within B6 target |
 
-Revenue kicks in at Gate 2: intro fees (1T = R36 per introduction accepted) + AA packs (1T = 8 coaching sessions).
+Revenue kicks in at Gate 2: intro fees (1T = R36 per introduction accepted) + Tuppence-priced AI features (in-app guidance free; advanced AI per use in Tuppence — AI-uses packs RETIRED 6 Jun 2026).
 
 ---
 
