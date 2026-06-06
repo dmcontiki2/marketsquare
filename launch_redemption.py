@@ -125,9 +125,23 @@ CREATE TABLE IF NOT EXISTS launch_redeem_attempts (
 );
 """
 
+_schema_done = False
+
 
 def _ensure_schema(conn) -> None:
-    conn.executescript(_SCHEMA)
+    """Idempotent, cheap after first call. NEVER executescript when the tables
+    already exist — executescript commits any pending transaction, which would
+    break the caller's transactional contract (e.g. the subscription-apply hook).
+    Production tables are pre-created at deploy; this is the belt-and-braces."""
+    global _schema_done
+    if _schema_done:
+        return
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='founders_badges'"
+    ).fetchone()
+    if not row:
+        conn.executescript(_SCHEMA)
+    _schema_done = True
 
 
 # ── code validation (exact mirror of the issuing side) ───────────────────────

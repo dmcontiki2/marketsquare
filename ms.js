@@ -664,9 +664,8 @@ async function _msInit(){
             updateTuppenceUI();
             // Show success message
             let msg = '';
-            if(credited>0 && aiCredited>0) msg=`Payment successful — ${credited}T and ${aiCredited} AI uses added!`;
-            else if(credited>0) msg=`Payment successful — ${credited} Tuppence added to your wallet!`;
-            else if(aiCredited>0) msg=`Payment successful — ${aiCredited} AI coaching uses added!`;
+            if(credited>0) msg=`Payment successful — ${credited} Tuppence added to your wallet!`;
+            else if(aiCredited>0) msg='Payment confirmed!'; // legacy AI-pack return — packs retired (Canon Addendum 1)
             else msg='Payment confirmed!';
             showToast(msg, 5000);
             // Navigate to wallet so they see the new balance
@@ -853,6 +852,19 @@ function trustTier(s){
   return{label:'Highly Trusted',c:'var(--gold)',bg:'var(--gold-bg)'};
 }
 function tbadge(s){const t=trustTier(s);return`<span class="tbadge" style="background:${t.bg};color:${t.c};padding:2px 7px;font-size:10px;border-radius:10px;font-weight:700;">★ ${s}</span>`;}
+// Founders Badge — the Ruby Spark (Canon Addendum 1). Red is the only colour no trust
+// tier owns; on the whole platform it means exactly one thing. One line on tap, no perks UI.
+const DEMO_FOUNDERS_IDS = new Set(['demo_col_1','demo_col_2']);
+function isFounders(l){
+  if(!l) return false;
+  if(DEMO_MODE) return DEMO_FOUNDERS_IDS.has(String(l.id)); // demo branch: curated demo holders
+  return !!l.founders;                                      // live branch: BEA founders flag
+}
+function fspark(l){
+  return isFounders(l)
+    ? `<img src="/static/founders_spark.svg" alt="Founders Badge" style="width:16px;height:16px;vertical-align:middle;margin-left:4px;cursor:pointer;flex:none;" onclick="event.stopPropagation();showToast('Founders Badge · minted at launch 2026 — never minted again',4000)">`
+    : '';
+}
 
 function updateTuppenceUI(){
   const navBadge = document.getElementById('nav-tn-badge'); if(navBadge) navBadge.textContent=tuppence;
@@ -881,8 +893,8 @@ function aaBuyAIPack(t, sessions){
   if(isOffline()){ showToast("You're offline - purchase needs a connection"); return; }
   pendingTopUpAmount=t; pendingAIPackSessions=sessions;
   const usd=t*2;
-  document.getElementById('topup-modal-desc').textContent='Purchase '+sessions+' AI coaching uses ('+t+'T).';
-  document.getElementById('topup-bundle-label').textContent=t+'T · '+sessions+' AI uses';
+  document.getElementById('topup-modal-desc').textContent='Top up '+t+'T — the AI Coach charges your wallet per use (first use free).';
+  document.getElementById('topup-bundle-label').textContent=t+'T wallet top-up';
   document.getElementById('topup-zar-label').textContent='R'+(t*36);
   document.getElementById('topup-usd-label').textContent='$'+usd;
   document.getElementById('topup-modal').classList.add('open');
@@ -1047,7 +1059,7 @@ function goTo(name){
 }
 // ── SUBSCRIPTION SCREEN ──────────────────────────────────────
 const _SUB_TIERS = [
-  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    tup:0,  color:'#64748b', desc:'No credit card required' },
+  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    tup:0,  color:'#64748b', desc:'Card verified · never charged' },
   { id:'standard',     label:'Standard',     usd:12,  slots:10,  zar:216,  tup:6,  color:'#4f46e5', desc:'Best for active sellers' },
   { id:'professional', label:'Professional', usd:20,  slots:25,  zar:360,  tup:10, color:'#7c3aed', desc:'For serious sellers' },
   { id:'business',     label:'Business',     usd:40,  slots:60,  zar:720,  tup:20, color:'#0891b2', desc:'Teams and agencies' },
@@ -1830,7 +1842,7 @@ function renderAdvGrid(){
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
           <div>
             <span style="font-size:14px;font-weight:700;color:#111827;">${priceLabel}</span>
-            ${l.trust ? `<div style="margin-top:4px;">${tbadge(l.trust)}</div>` : ''}
+            ${l.trust ? `<div style="margin-top:4px;">${tbadge(l.trust)}${fspark(l)}</div>` : ''}
           </div>
           <button style="background:#111827;color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;" onclick="event.stopPropagation();openDetail('${esc(l.id)}')">View →</button>
         </div>
@@ -2560,7 +2572,7 @@ function cardHtml(l){
       <div class="cloc">📍 ${l.area}${_distLabel(l)}</div>
       <div class="cbot">
         <div class="cprice">${l.price?`${_priceLabel(l)}${l.per?`<span class="per"> ${l.per}</span>`:''}`:'<span class="neg">Negotiable</span>'}</div>
-        ${tbadge(l.trust)}
+        ${tbadge(l.trust)}${fspark(l)}
       </div>
       ${l.sellerIdx!=null?`<div class="seller-cv-badge" onclick="event.stopPropagation();openSellerCV(${l.sellerIdx},'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>`:''}
     </div>
@@ -2681,7 +2693,7 @@ function openBEASellerProfile(l) {
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
+        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div>${fspark(l)}</div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
@@ -2734,7 +2746,7 @@ function openSellerCV(sellerIdx,listingId){
       <div class="cv-headline">${s.headline}</div>
       <div class="cv-cat">${s.cat} · ${regionLabel} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div></div>
+        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div>${fspark(l)}</div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
@@ -2865,7 +2877,7 @@ function openDetail(id){
       <div class="dcat-row">
         <span class="dcat">${catDisplayLabel}</span>
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
-        ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}
+        ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
@@ -4274,7 +4286,7 @@ let sobState = {
   cat: '',
   city: '',
   drafts: [],          // [{id, title, price, category}] from GET /listings/mine
-  selectedTier: 'free' // 'free' | 'starter' | 'premium'
+  selectedTier: 'free' // 'free' | 'standard' | 'professional'
 };
 
 function sobGoPhase(n) {
@@ -4360,7 +4372,7 @@ async function sobContinueFromTier() {
 
 function sobSelTier(tier) {
   sobState.selectedTier = tier;
-  ['free','starter','premium'].forEach(t => {
+  ['free','standard','professional'].forEach(t => {
     const card = document.getElementById('sob-tier-' + t);
     if (!card) return;
     card.classList.toggle('selected', t === tier);
@@ -9614,7 +9626,7 @@ async function aaRenderCoachScreen() {
   if (!email) {
     balanceHtml = `
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Enter your email to check coaching sessions</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Enter your email to use the AI Coach</div>
         <input type="email" id="aa-coach-email" placeholder="you@example.com"
                style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:'Inter',sans-serif;">
         <button onclick="aaSaveEmail()" class="aa-btn-primary" style="margin-top:10px;width:100%;">Confirm email</button>
@@ -9629,7 +9641,7 @@ async function aaRenderCoachScreen() {
           <button onclick="aaClearEmail()" style="background:none;border:none;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;padding:0;">Change</button>
         </div>
         <div style="font-size:13px;font-weight:600;word-break:break-all;">${email}</div>
-        <div id="aa-session-badge" style="margin-top:8px;font-size:13px;color:var(--text-3);">Checking coaching sessions…</div>
+        <div id="aa-session-badge" style="margin-top:8px;font-size:13px;color:var(--text-3);">Checking your wallet…</div>
       </div>`;
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     // Async fetch balance
@@ -11538,7 +11550,7 @@ function _renderBillingTab(d, email) {
   const meta  = _SUB_TIERS.find(t => t.id === tier) || _SUB_TIERS[0];
 
   document.getElementById('billing-tier-label').textContent = meta.label;
-  let _priceTxt = meta.usd === 0 ? 'Free forever · no credit card required' : '$' + meta.usd + '/month · ≈ R' + meta.zar;
+  let _priceTxt = meta.usd === 0 ? 'Free forever · card verified at signup, never charged' : '$' + meta.usd + '/month · ≈ R' + meta.zar;
   if (limit > meta.slots) _priceTxt += ' · admin test account — slot limit raised to ' + limit + ' (dev override)';
   document.getElementById('billing-tier-price').textContent = _priceTxt;
   document.getElementById('billing-slots-used').textContent = used;
