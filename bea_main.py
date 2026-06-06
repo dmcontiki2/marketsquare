@@ -4043,7 +4043,6 @@ def get_tuppence_balance(email: str):
 # placeholder. The Haiko agent socket is defined as MATCHER below.
 
 import re as _re_match
-from datetime import timedelta
 
 # Stop words filtered before keyword scoring — keeps matches signal-rich
 _STOP_WORDS = {
@@ -8487,7 +8486,6 @@ def health_resources():
 
 import bcrypt as _bcrypt
 import jwt as _pyjwt
-from datetime import timedelta
 from pydantic import BaseModel as _BaseModel
 
 _ADMIN_PASSWORD = os.environ.get("MS_ADMIN_PASSWORD", "")
