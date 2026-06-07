@@ -259,3 +259,18 @@ First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Rem
 | # | Open action (the gap) | Area | Lane |
 |---|---|---|---|
 | CUTOVER-1 | **The controlled cutover (the last switch).** After a shadow parity night: (1) turn on a v2 Fixer — a Sonnet-checkpoint scheduled task that consumes the green work order from `orchestrator_v2_report.json` under the lane gates (verify-or-revert + smoke); (2) retire the 3 old Claude loop tasks (`trustsquare-orch-sensor`/`-fixer`/`-orchestrator`); (3) flip the conductor cron to `orchestrator_v2.py --live`. Fully reversible at every step; nothing fires without David's go. Retires the old patched loop (and moots LOOP-1). | Orchestration/Ops | ATTENDED — needs David's go |
+
+
+## 🪜 Autonomy Ladder — Orchestrator-managed track (added 6 Jun 2026 · post-S129 · canonical doc: AUTONOMY_LADDER.docx)
+**Current rung: 2 — Shadow autonomy · Destination: Rung 7 — Karoo posture.** Autonomy is earned by evidence gates, never assumed; every rung reversible; rung advancement is a weekly-review decision by David — the loop reports gate metrics in the daily brief but NEVER auto-advances a rung.
+
+| # | Gate (the evidence) | Rung | Lane |
+|---|---|---|---|
+| AL-1 | **Rung 2→3 exit:** 3 consecutive clean parity nights — shadow plan ≡ what the live loop shipped/would ship, zero false-criticals, conductor cost $0 (Sonnet checkpoint excepted). On pass → table CUTOVER-1 at the next review. | 2→3 | AUTO-REPORT |
+| AL-2 | **Rung 3 entry = CUTOVER-1** (already filed under Orchestration v2 Phase 5 — same item, not a duplicate). Needs David's go. | 3 | ATTENDED |
+| AL-3 | **Rung 3→4 exit:** 14 nights fix-precision ≥95% (fix counts only if it survives 7 days) · zero out-of-scope ships · one clean rollback drill · doc-writeback hardening item (filed 4 Jun) CLOSED. | 3→4 | AUTO-REPORT |
+| AL-4 | **Rung 4→5 exit:** 30-day rolling precision ≥97% · MTTR <12h · ledger-anomaly counter still at zero (never resets) · demo-mode sweep clean across 4 cities. | 4→5 | AUTO-REPORT |
+| AL-5 | **Rung 5 gates (all blocking, jointly):** scaling-KPI capacity watcher LIVE · money-path M1/M2/S5 passed · security hardening executed (🔒 section above — HUMAN-ONLY items stay David's) · escalation page-drill passed · CPA s63 cure live · launch-code redemption + Ruby Spark badge mint in BEA · RM-5 → 60 founding sellers. | 5 | MIXED |
+| AL-6 | **Rung 6 — launch month:** AUTONOMY FREEZE (no new authority granted) · every incident harvested into ORCHESTRATION_POLICY.md/Codex · zero Sev-1 mis-pages. | 6 | ATTENDED |
+| AL-7 | **Rung 7 declaration:** joint 8+1 sign-off per AUTONOMY_LADDER.docx §3 — 60 sellers stable, revenue ≥ run-rate infra+AI cost, 6 green weeks, repeated page drill, one full quarter of weekly reviews with no missed-escalation finding. | 7 | ATTENDED |
+| AL-8 | **Wake-David channel decision** (call vs WhatsApp vs email) for SEV-1 — one-line David decision, then encode in ESCALATION POLICY (ORCHESTRATION_POLICY.md §12). | — | DAVID |

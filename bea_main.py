@@ -1713,7 +1713,6 @@ def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
     top = scored[:max_links]
     linked = [{"id": wid, "auto_linked": True} for _, wid, _ in top]
 
-    import sqlite3 as _sqlite3
     conn = database.get_db()
     conn.execute(
         "UPDATE listings SET linked_wonders = ? WHERE id = ? AND (linked_wonders IS NULL OR linked_wonders = '[]' OR linked_wonders = '')",
@@ -2282,7 +2281,7 @@ def get_cities(country: Optional[str] = None):
 # Accepts a photo, compresses to thumb + medium, stores both,
 # returns URLs. Called by admin tool before creating listing.
 
-def _vision_orient_image(img, hint: str = ""):
+def _vision_orient_image(img):
     """Session 98 — content-based orientation for collectible/card photos.
 
     EXIF-based correction (ImageOps.exif_transpose) cannot fix an image that has
@@ -2378,7 +2377,7 @@ async def upload_listing_photo(
     # Session 98 — collectibles: EXIF can't fix tag-less rotated card scans, so for
     # a landscape Collectors photo, ask vision which way is up and rotate to match.
     if (category or "").strip().lower() == "collectors":
-        img, _oriented, _oin, _oout = _vision_orient_image(img, hint="trading card")
+        img, _oriented, _oin, _oout = _vision_orient_image(img)
         if _oriented:
             _log.info("photo upload: vision re-oriented collectible image (listing=%s)", listing_id)
             _log_ai_spend("", "/listings/photo:orient", "haiku", _oin, _oout)
@@ -3922,7 +3921,6 @@ async def aa_publish(
         "tools":        "Tools / equipment",
         "payment":      "Payment",
     }
-    skip_fields = {"title", "item_name", "desc", "price", "price_per_person", "service_class"}
     for key, label in field_labels.items():
         val = field_data.get(key, "").strip() if isinstance(field_data.get(key), str) else ""
         if val:
@@ -4222,7 +4220,6 @@ class LocalKeywordMatcher:
             score += min(20.0, body_ratio * 20.0)
 
         # Suburb / city match
-        sig_suburb_id = signal.get("suburb_id")
         sig_city_id = signal.get("city_id")
         if sig_city_id and listing_intent.get("geo_city_id") and sig_city_id == listing_intent["geo_city_id"]:
             score += 10.0
@@ -5955,7 +5952,7 @@ def _trust_tier(score: int) -> dict:
         if lo <= s <= hi:
             # Find the next tier
             next_t = None
-            for lo2, hi2, name2, color2 in TRUST_TIERS:
+            for lo2, _, name2, color2 in TRUST_TIERS:
                 if lo2 > hi:
                     next_t = {"name": name2, "threshold": lo2, "delta": lo2 - s, "color": color2}
                     break
@@ -6287,7 +6284,6 @@ def _compute_universal_track_status(conn, email: str) -> dict:
     out["track_record.intro_20"] = "earned" if intro_count >= 20 else "missing"
 
     # Zero ignored intros in 90 days
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
     ignored = conn.execute(
         """SELECT COUNT(*) AS n FROM intro_requests i
            JOIN listings l ON l.id = i.listing_id
@@ -10658,7 +10654,7 @@ async def ai_batch_card_listings(req: BatchCardRequest):
         }
     ]
 
-    for idx, img_b64 in enumerate(images):
+    for _, img_b64 in enumerate(images):
         # Detect media type from base64 header or default to jpeg
         media_type = "image/jpeg"
         if img_b64.startswith("data:"):

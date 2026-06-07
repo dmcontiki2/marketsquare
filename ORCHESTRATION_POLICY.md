@@ -137,3 +137,21 @@ On the first Orchestrator run, if `queue.json` is absent it is built from the op
 **Operating rule (carry into every session):** *deterministic by default; escalate to Sonnet only at a checkpoint a script couldn't decide; Opus only for attended design; Haiku not used.* **Litmus test:** "If I wrote the rule out in full, would it be correct ≥95% of the time and safe on the other 5%?" Yes → deterministic cron; No → smallest model tier above.
 
 **Migration (phased per ROADMAP_4 §3, gates intact):** Sensor→cron first (Phase 1 — runs in **shadow** writing `findings.cron.json` until 7-day parity, then flips to `findings.json` and the Claude Sensor task is paused), then Orchestrator plumbing→cron with a Sonnet checkpoint **only** on ambiguous items (Phase 2), then retire Haiku in CityLauncher (Phase 3). The two gates, `staged.json`, the approval flow, and `report.json` / the live page never change shape — only *who writes them* flips from a Claude session to a cron script.
+
+
+---
+
+## 12 · Escalation Policy — when the loop wakes David (added 6 Jun 2026 · from AUTONOMY_LADDER.docx §4)
+Autonomy is trustworthy only if its silence is informative: **no call means nothing needs you.**
+
+| Severity | Triggers (any one) | Action | Latency |
+|---|---|---|---|
+| **SEV-1** | Ledger mismatch / any Tuppence balance anomaly · live payment-provider failure · security-breach indicator · data loss · site down >15 min unrecovered · contact from a regulator or lawyer | **Safe-hold the affected path, then WAKE DAVID — any hour** (channel: TBD, see AL-8) | Immediate |
+| **SEV-2** | Capacity watcher amber · a shipped fix rolled back · scraper source newly blocked · day-over-day cost spike >25% · repeated auth failures | Flag in daily brief + same-day message | Same day |
+| **SEV-3** | Routine fixes shipped · polish · doc drift · dependency notices | Daily brief; weekly review queue | Weekly |
+
+**Safe-hold default.** If triage confidence is below threshold, or a change would touch any gated class, the loop holds safe and notifies — it never guess-ships. A held item is a success of this policy, not a failure of the loop.
+
+**Never automated — at any rung, by principle:** movement of money in any direction (refunds do not exist, by canon) · credentials, secrets, access permissions · legal filings & regulatory correspondence (CIPC, Paystack live, patents) · Codex amendments / WhitePaper lineage (supersede via Addendum, never edit) · pricing, tiers, Tuppence allocations.
+
+This section is enforced in conjunction with the two-gate policy (§6) — it does not widen any auto-ship lane; it defines the alarm wire that lets the lanes widen safely as the Autonomy Ladder climbs (BACKLOG → 🪜 track).
