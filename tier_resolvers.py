@@ -53,7 +53,12 @@ def served_tiers(service: str, tierkey: str, country: str,
             out["1T"] = True                       # UK=Land Registry / US,ZA,AU=comps
         elif tierkey == "vehicles":
             out["1T"] = True                       # internal comps
-        # comics / watches: no free specific feed yet -> nothing ready (FILE)
+        # S130: official eBay Browse asking-price band (free tier) lights ALL
+        # collectible tierkeys incl. comics/watches once EBAY_APP_ID/EBAY_CERT_ID
+        # are set; honest asking-not-sold wording enforced at the consumer.
+        if tierkey in ("lego", "coins", "tcg", "cards", "comics", "watches") \
+                and creds.get("ebay"):
+            out["1T"] = True
     elif service == "yield":
         if tierkey == "property":
             if country == "ZA":
@@ -70,6 +75,8 @@ def creds_from_env() -> dict:
                           or os.environ.get("BRICKLINK_OAUTH_TOKEN")),
         "numista":   bool(os.environ.get("NUMISTA_API_KEY")),
         "justtcg":   bool(os.environ.get("JUSTTCG_API_KEY")),
+        "ebay":      bool(os.environ.get("EBAY_APP_ID")
+                          and os.environ.get("EBAY_CERT_ID")),
     }
 
 
@@ -236,30 +243,80 @@ async def bricklink_price(query: str, *, timeout: float = 8.0) -> Optional[dict]
 
 
 async def numista_price(query: str, *, timeout: float = 8.0) -> Optional[dict]:
-    """Coin catalogue price via Numista. None unless NUMISTA_API_KEY is set."""
+    """Coin price via Numista v3 catalogue estimates (S130 fix: the v3 endpoint
+    is /types, not /coins — the original stub 404'd and could never price).
+    Chain: /types?q -> /types/{id}/issues (year-matched from the query when
+    possible, else latest) -> /issues/{id}/prices?currency=USD. Returns the
+    mid-grade (VF) estimate with the full g->unc band. Catalogue estimates are
+    collector references, NOT sale prices — the provenance says so. None
+    unless NUMISTA_API_KEY is set (B7-safe). ~3 calls/check (quota 2k/month)."""
     key = os.environ.get("NUMISTA_API_KEY")
     if not key or not query:
         return None
     try:
+        import re as _re
         import httpx
-        async with httpx.AsyncClient(timeout=timeout, headers={
-            "Numista-API-Key": key, "User-Agent": "TrustSquare/1.0"}) as c:
-            r = await c.get("https://api.numista.com/api/v3/coins",
-                            params={"q": query, "count": 1})
+        hdrs = {"Numista-API-Key": key, "User-Agent": "TrustSquare/1.0"}
+        async with httpx.AsyncClient(timeout=timeout, headers=hdrs) as c:
+            r = await c.get("https://api.numista.com/api/v3/types",
+                            params={"q": query, "count": 3, "lang": "en"})
             if r.status_code != 200:
                 return None
-            items = (r.json() or {}).get("coins") or []
-            if not items:
+            types = (r.json() or {}).get("types") or []
+            if not types:
                 return None
-            return {"value": None, "ref": items[0].get("id"),
-                    "source": "numista", "provenance": "Numista catalogue match",
-                    "date": "live", "specificity": "catalogue reference"}
+            t = types[0]
+            tid = t.get("id")
+            title = t.get("title") or "matched type"
+            r = await c.get(f"https://api.numista.com/api/v3/types/{tid}/issues")
+            if r.status_code != 200:
+                return None
+            issues = r.json() or []
+            if not issues:
+                return None
+            chosen = None
+            m = _re.search(r"\b(1[89]\d\d|20\d\d)\b", query)
+            if m:
+                want = int(m.group(1))
+                for i in issues:
+                    if i.get("gregorian_year") == want or i.get("year") == want:
+                        chosen = i
+                        break
+            issue = chosen or issues[-1]
+            r = await c.get(("https://api.numista.com/api/v3/types/"
+                             f"{tid}/issues/{issue['id']}/prices"),
+                            params={"currency": "USD"})
+            if r.status_code != 200:
+                return None
+            prices = (r.json() or {}).get("prices") or []
+        by_grade = {p.get("grade"): p.get("price")
+                    for p in prices if p.get("price")}
+        if not by_grade:
+            return None
+        vals = sorted(v for v in by_grade.values() if v)
+        val = by_grade.get("vf") or by_grade.get("f") or by_grade.get("xf") \
+            or vals[len(vals) // 2]
+        iy = issue.get("gregorian_year") or issue.get("year") or ""
+        return {"value": float(val), "low": vals[0], "high": vals[-1],
+                "currency": "USD", "source": "numista", "ref": tid,
+                "provenance": ("Numista catalogue estimate - " + str(title)
+                               + (f" ({iy})" if iy else "")
+                               + ", grade VF - collector reference, not a sale price"),
+                "date": "live",
+                "specificity": ("catalogue estimate for the matched type/issue "
+                                "- verify exact variety")}
     except Exception:
         return None
 
 
 async def justtcg_price(query: str, *, timeout: float = 8.0) -> Optional[dict]:
-    """TCG price via JustTCG free tier. None unless JUSTTCG_API_KEY is set."""
+    """TCG price via JustTCG free tier (S130 fix: prices live per-VARIANT
+    (condition x printing), not at card level — the original stub read a
+    nonexistent top-level price and always returned None). Baseline = the
+    CHEAPEST Near Mint printing (conservative "from" price for the common
+    printing); the disclosed band spans ALL conditions/printings, because a
+    1st-edition NM can be 50x the unlimited NM. None unless JUSTTCG_API_KEY
+    is set (B7-safe)."""
     key = os.environ.get("JUSTTCG_API_KEY")
     if not key or not query:
         return None
@@ -271,11 +328,119 @@ async def justtcg_price(query: str, *, timeout: float = 8.0) -> Optional[dict]:
             if r.status_code != 200:
                 return None
             items = (r.json() or {}).get("data") or []
-            price = (items[0].get("price") if items else None)
-            if not price:
+        if not items:
+            return None
+        card = items[0]
+        variants = [v for v in (card.get("variants") or [])
+                    if v.get("price") and float(v["price"]) > 0]
+        if not variants:
+            return None
+        allp = sorted(float(v["price"]) for v in variants)
+        nm = sorted(float(v["price"]) for v in variants
+                    if (v.get("condition") or "").lower() == "near mint")
+        val = nm[0] if nm else allp[len(allp) // 2]
+        name = card.get("name") or "matched card"
+        setn = card.get("set_name") or ""
+        num = card.get("number") or ""
+        basis = ("cheapest Near Mint printing" if nm
+                 else "median across conditions/printings")
+        return {"value": float(val), "low": allp[0], "high": allp[-1],
+                "currency": "USD", "source": "justtcg", "ref": card.get("id"),
+                "provenance": (f"JustTCG market price - {name}"
+                               + (f", {setn}" if setn else "")
+                               + (f" #{num}" if num else "")
+                               + f"; baseline = {basis}; band spans all "
+                                 "conditions/printings"),
+                "date": "live",
+                "specificity": ("card-specific; match YOUR printing + condition "
+                                "- 1st-edition/graded copies trade far above "
+                                "the baseline")}
+    except Exception:
+        return None
+
+
+# ── eBay Browse API (official, free tier) — S130 quick-win ──────────────────
+# ASKING-price band from live listings. Credential-gated (B7-safe): no key, no
+# call. Number = median/percentile arithmetic over API results; LLM narrates.
+
+_EBAY_TOKEN: dict = {"val": None, "exp": 0.0}
+
+
+async def _ebay_token(timeout: float = 8.0) -> Optional[str]:
+    app_id = os.environ.get("EBAY_APP_ID")
+    cert = os.environ.get("EBAY_CERT_ID")
+    if not app_id or not cert:
+        return None
+    import time as _t
+    if _EBAY_TOKEN["val"] and _t.time() < _EBAY_TOKEN["exp"] - 60:
+        return _EBAY_TOKEN["val"]
+    try:
+        import base64
+        import httpx
+        basic = base64.b64encode(f"{app_id}:{cert}".encode()).decode()
+        async with httpx.AsyncClient(timeout=timeout) as c:
+            r = await c.post(
+                "https://api.ebay.com/identity/v1/oauth2/token",
+                headers={"Authorization": "Basic " + basic,
+                         "Content-Type": "application/x-www-form-urlencoded"},
+                data={"grant_type": "client_credentials",
+                      "scope": "https://api.ebay.com/oauth/api_scope"})
+            if r.status_code != 200:
                 return None
-            return {"value": float(price), "currency": "USD", "source": "justtcg",
-                    "provenance": "JustTCG free-tier market price", "date": "live",
-                    "specificity": "card-specific"}
+            d = r.json() or {}
+            tok = d.get("access_token")
+            if not tok:
+                return None
+            _EBAY_TOKEN["val"] = tok
+            _EBAY_TOKEN["exp"] = _t.time() + float(d.get("expires_in", 7200))
+            return tok
+    except Exception:
+        return None
+
+
+async def ebay_asking_band(query: str, *, timeout: float = 8.0) -> Optional[dict]:
+    """ASKING-price band (p10-p90 + median) of live eBay listings matching the
+    query, via the official Browse API free tier. These are asking prices of
+    currently-listed comparable items — NEVER sold prices; the consumer must
+    keep that wording. None unless EBAY_APP_ID + EBAY_CERT_ID are set."""
+    if not query:
+        return None
+    tok = await _ebay_token(timeout=timeout)
+    if not tok:
+        return None
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=timeout, headers={
+                "Authorization": "Bearer " + tok,
+                "User-Agent": "TrustSquare/1.0"}) as c:
+            r = await c.get(
+                "https://api.ebay.com/buy/browse/v1/item_summary/search",
+                params={"q": query, "limit": 50})
+            if r.status_code != 200:
+                return None
+            items = (r.json() or {}).get("itemSummaries") or []
+        vals = []
+        for it in items:
+            try:
+                p = it.get("price") or {}
+                if (p.get("currency") or "USD") == "USD":
+                    v = float(p.get("value"))
+                    if v > 0:
+                        vals.append(v)
+            except Exception:
+                continue
+        if len(vals) < 5:
+            return None
+        vals.sort()
+        med = statistics.median(vals)
+        lo = vals[max(0, int(len(vals) * 0.1))]
+        hi = vals[min(len(vals) - 1, int(len(vals) * 0.9))]
+        return {"value": med, "n": len(vals), "low": lo, "high": hi,
+                "currency": "USD", "source": "ebay_browse",
+                "provenance": (f"eBay live-listing ASKING-price band "
+                               f"(official Browse API, n={len(vals)})"),
+                "date": "live",
+                "specificity": ("asking prices of comparable items currently "
+                                "listed (NOT sold prices)")}
     except Exception:
         return None

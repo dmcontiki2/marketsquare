@@ -10012,18 +10012,39 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
                     "source": "payprop_tpn", "range_text": g["range_text"],
                     "assessment": assess, "provenance": g["source"] + " (" + str(g["date"]) + ")",
                     "date": g["date"]})
-        if tier == "1T" and tierkey in ("lego", "coins", "tcg"):
+        if tier == "1T" and tierkey in ("lego", "coins", "tcg", "cards", "comics", "watches"):
             title = (listing["title"] if "title" in listing.keys() else "") or ""
             feed = None
             if tierkey == "lego":
                 feed = await tier_resolvers.bricklink_price(title)
             elif tierkey == "coins":
                 feed = await tier_resolvers.numista_price(title)
-            else:
+            elif tierkey == "tcg":
                 feed = await tier_resolvers.justtcg_price(title)
+            # S130 quick-win: official eBay Browse ASKING-price band as the
+            # collectible fallback (free tier, credential-gated, B7-safe).
+            if (not feed or not feed.get("value")) and _tier_providers().get("ebay_browse"):
+                feed = await tier_resolvers.ebay_asking_band(title)
             if feed and feed.get("value"):
                 rate = await live_usd_zar()
                 usd = float(feed["value"]); zar = usd * rate
+                if feed.get("source") == "ebay_browse":
+                    # Honesty rule: an asking band is NEVER presented as a
+                    # verified/sold price - the wording carries the difference.
+                    lo_z = float(feed["low"]) * rate; hi_z = float(feed["high"]) * rate
+                    return ("verified", {
+                        "source": feed["source"], "floor_zar": zar,
+                        "official_range": ("R" + format(lo_z, ",.0f") + "-R" + format(hi_z, ",.0f")
+                                           + " asking (median R" + format(zar, ",.0f")
+                                           + " / USD $" + format(usd, ",.2f") + " x R" + format(rate, ".2f") + "/USD)"),
+                        "official_ctx": feed["provenance"],
+                        "block": ("MARKET ASKING-PRICE BAND (use these EXACT figures, do not alter; "
+                                  "these are ASKING prices of comparable items currently listed on eBay - "
+                                  "NOT sold prices, so treat as an upper-leaning guide): "
+                                  + feed["provenance"] + " | Median asking USD $" + format(usd, ",.2f")
+                                  + " = R" + format(zar, ",.0f")
+                                  + "; band USD $" + format(float(feed["low"]), ",.2f")
+                                  + "-$" + format(float(feed["high"]), ",.2f") + ".")})
                 return ("verified", {
                     "source": feed["source"], "floor_zar": zar,
                     "official_range": "R" + format(zar, ",.0f") + "  (USD $" + format(usd, ",.2f") + " x R" + format(rate, ".2f") + "/USD)",

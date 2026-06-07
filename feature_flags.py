@@ -47,6 +47,7 @@ FREE_PROVIDERS: tuple[str, ...] = (
     "us_assessor",     # US county assessor / FHFA — public
     "payprop_tpn",     # ZA aggregate rent/price benchmarks — free reports
     "internal_comps",  # our own marketplace comps
+    "ebay_browse",     # eBay Browse API asking-price band - official free tier (S130)
 )
 
 # PAID = billed per-request / contract / consumption API → OFF until David

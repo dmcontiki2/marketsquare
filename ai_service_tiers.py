@@ -55,6 +55,7 @@ DEFAULT_PROVIDERS: dict[str, bool] = {
     "us_assessor":     True,   # US county assessor / FHFA, public
     "payprop_tpn":     True,   # ZA aggregate rent/price benchmarks (free reports)
     "internal_comps":  True,   # our own marketplace comps (still needs sample!)
+    "ebay_browse":     True,   # eBay Browse asking-price band - official free tier (S130)
 
     # --- paid / contract (OFF until revenue + B7 + contract) ---
     "pricecharting":   False,  # collectibles multi-category (flat sub)
