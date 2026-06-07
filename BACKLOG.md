@@ -1,27 +1,43 @@
 # MarketSquare · Feature & Fix Backlog
-*Updated Session 62 · 18 May 2026*
+*Updated S131 · 7 June 2026 — launch-blocker re-triage (see 🔴/🟧/🟨)*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 
 ---
 
 ## 🔴 Launch Blockers — must fix before public launch
 
+*Re-triaged 7 Jun 2026 (S131) per founder decisions: self-filed CIPC provisional + alternative PSP in parallel. 11 reds → 1 true external blocker · 7 self-executable actions (🟧) · 3 founder-call optionals (🟨) · 1 done. Reasoning: CityLauncher CHANGELOG S131 + chat 7 Jun.*
+
 | # | Item | Area |
 |---|---|---|
-| L1 | **Counsel EULA review** — South African attorney must review and fill all `[COUNSEL REQUIRED]` sections before app goes public | Legal |
-| L2 | **Company registration number** — insert Trustsquare (Pty) Ltd reg number into EULA Section 2 and app footer | Legal |
-| L3 | **NCC direct marketer registration — counsel to confirm first** — counsel must advise whether TrustSquare (Pty) Ltd is required to register as a direct marketer with the NCC under the CPA. Transactional intro emails to opted-in users are likely exempt; CityLauncher cold outreach may not be. Section 6.6 EULA updated to remove false "is registered" claim and replaced with a compliant placeholder pending counsel confirmation. If registration is required, obtain reg number and insert into Section 6.6. | Legal |
-| L3a | **support@trustsquare.co mailbox** — OPEN (verified S100): no real mailbox exists. Triage replies currently send from `dmcontiki2@gmail.com` via Gmail SMTP; MX is Cloudflare forward-only; SPF/DKIM half-set for Brevo. Fix plan in `SUPPORT_MAILBOX_SETUP.md`: (A) add Cloudflare routing address, (B) Brevo SMTP send from support@, (C) one BEA env/code edit (ready), (D) verify SPF/DKIM pass then close. Used in EULA §5.4/6.5/6.6/7.x/13/14/15 — EULA undeliverable until done. | Ops |
-| L4 | **Privacy Policy page** — draft and publish trustsquare.co/privacy (required by EULA Section 9.1 and POPIA) | Legal |
-| L5 | **FSCA guidance on Tuppence** — confirm Tuppence classification as non-virtual-asset with FSCA or comply if reclassified (EULA Section 12) | Legal |
-| L6 | **POPIA consent timing** — counsel must confirm whether magic link email collection constitutes prior consent or whether EULA gate must move earlier in the flow | Legal |
-| L7 | **Paystack live mode** — paste `sk_live_` + webhook secret into `.env` once CIPC registration approved | Server |
-| L8 | **IP Brief v3 + Patent Strategy v2 — Session 80 (Opus)** — Update `TrustSquare_IP_Brief_v2_May2026.docx` and `TrustSquare_IP_Patent_Strategy_v1.docx` to reflect: (1) A8 no-punitive-Tuppence principle; (2) corrected commitment-signal argument (buyer's irreversible 1T spend, not seller penalty); (3) new features (AI5 Batch Cards, AI4 Yield Calc, World Heritage linking); (4) updated pack tiers. Produce lawyer-ready handoff summary. Full briefing in `SESSION_80_OPUS_IP_BRIEF.md`. **Must be done before submitting to patent attorney.** | Legal / IP |
-| L9 | ✅ **DONE — items 1–3 interim 6 Jun (ms.js v154) · items 4–5 Session 129 (launch_redemption.py + v155).** Billing/PLANS page → final Tuppence canon + Founders redemption (Session A scope) — page currently shows slots only. Build: (1) monthly Tuppence per card — Standard 6T · Professional 10T · Business 20T · Elite 50T (1T=$2, allocation=price÷2, Canon Addendum №1 rev 2); (2) slots-vs-Tuppence display rule — slot METER (e.g. 26/60 used) vs WALLET balance, never bare equal numbers; (3) label the superuser slot override (bea_main.py:798 forces 500 on admin accounts — reads as a Free-tier lie on the billing header); (4) TIER_TUPPENCE_MONTHLY {6,10,20,50} in BEA + Founders Badge redemption (mint gate Business/Elite + window, ID-hash, ×1.2 rounded up, velocity limit, Ruby Spark render); (5) purge remaining AI-uses copy (bea_main.py:3862, ms.js 667/885/9617/9632, marketsquare.html:1806). | BEA + Buyer app |
-| L10 | **Card-on-file at signup — enforce what the copy now promises** — billing/onboarding copy (fixed 6 Jun) states "card verified at signup, never charged" on Free (canon, David: card required even on Free for (1) identity/trust validation against a valid account — anti-fraud, and (2) a frictionless upgrade path). The actual signup flow does NOT yet capture/verify a card (Paystack test mode). Build with Paystack live: zero-amount auth / R1 refundable tokenization at onboarding, store token for upgrades. Until built, this is copy-ahead-of-code — acceptable pre-launch only. | Onboarding + Paystack |
-
+| B1 | **Payments live mode — the one true external gate** — the launch special requires $40/$100 paid plans in launch month, so a live PSP must exist at launch. Unblocked-in-principle: CIPC reg done (2026/340128/07) · patent-pending once the provisional is filed (A7) · mechanism publicly disclosed on trustsquare.co. ACTION NOW: submit Paystack live application AND run the alternative PSP application in parallel — first to approve wins; then paste `sk_live_` + webhook secret into `.env` (was L7) and build A6 card-on-file. | Payments |
 
 ---
+
+## 🟧 Pre-Launch Required Actions — self-executable (re-marked from blockers, S131)
+
+*Must EXIST at launch (several are legally required artifacts) but WE produce them — no external dependency, so they are work items, not gates.*
+
+| # | Item | Area |
+|---|---|---|
+| A1 | [LEGAL-REQUIRED artifact] **Privacy Policy page** — draft + publish trustsquare.co/privacy (POPIA + EULA §9.1). AI-draft → David approves → publish. (was L4) | Legal |
+| A2 | [LEGAL-REQUIRED mechanics] **POPIA consent timing** — wire consent capture at signup / magic-link entry; outreach opt-out already engine-enforced (opted_out sync + one-email rule). (was L6) | Legal |
+| A3 | **EULA finalisation** — fill remaining `[COUNSEL REQUIRED]` sections with best-effort founder-approved text so the EULA exists and is deliverable at launch; counsel review itself moved to O1. (was L1) | Legal |
+| A4 | **Company reg number into EULA §2 + app footer** — number EXISTS: Trustsquare (Pty) Ltd 2026/340128/07; insert + display (ECTA s43 expects it shown). (was L2) | Legal |
+| A5 | **support@trustsquare.co mailbox** — plan ready in SUPPORT_MAILBOX_SETUP.md: Cloudflare route → Brevo SMTP from support@ → one BEA env/code edit → verify SPF/DKIM. EULA §5.4/6.5/6.6/7.x/13/14/15 depend on it. (was L3a) | Ops |
+| A6 | **Card-on-file at signup — enforce what the copy promises** — zero-amount auth / R1 refundable tokenization at onboarding, store token for upgrades. Gated by B1 going live; copy-ahead-of-code acceptable pre-launch only. (was L10) | Onboarding |
+| A7 | **File CIPC provisional patent — self-file, ~R900** — thrice-checked pack ready (IP Brief v6 · Patent Strategy v4 · Provisional Spec, claims C1–C13 incl. Tuppence HOLD). Filing = patent-pending + de-risks PSP onboarding. Supersedes L8 (IP Brief v3 / Strategy v2 — that refresh is DONE). | IP |
+| A8 | ✅ **DONE — L9 closed: items 1–3 interim 6 Jun (ms.js v154) · items 4–5 Session 129 (launch_redemption.py + v155)** — billing/PLANS Tuppence canon + Founders redemption. | BEA + Buyer app |
+
+---
+
+## 🟨 Founder-Call Optionals — risk notes, never gates (S131)
+
+| # | Item | Area |
+|---|---|---|
+| O1 | [RISK NOTE] **Counsel EULA review** — optional comfort pass over the A3 text; founder's call on timing/spend. (was L1's counsel half) | Legal |
+| O2 | [RISK NOTE] **FSCA guidance on Tuppence** — optional comfort letter; the no-refund / no-deposit / burn-on-service design is the load-bearing protection (EULA §12). (was L5) | Legal |
+| O3 | [RISK NOTE] **NCC direct-marketer registration** — registry believed non-operationalised; the real obligation (POPIA s69 consent/opt-out mechanics) is already enforced in the outreach engine. Counsel confirm = optional. (was L3) | Legal |
 
 ## 🟠 High Priority — needed for a solid user experience at launch
 
@@ -281,3 +297,20 @@ First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Rem
 | DDG-IP-1 | DuckDuckGo 403/connect-timeout from the Hetzner IP — source_health ladder cooling it (10m→24h); decide: drop ddg server-side or proxy. OSM + bing carrying. | LOW |
 | PLAYWRIGHT-1 | playwright not installed in server system python — browser-tier jobs (pool cap 4) cannot run; OSM-first unaffected. Install playwright + chromium when a browser-only source is needed. | MED |
 | LAUNCH-DEADLINE-1 | LAUNCH_SPECIAL_DEADLINE provisionally 2026-08-01 BOTH sides (BEA launch.conf + CityLauncher .env) — re-set to the true end-of-launch-month before LAUNCH_SPECIAL_ENABLED=1 / redemption flags flip. Same value both sides. | GATE |
+
+## S130-flags resolved (7 Jun 2026, David decisions)
+| ID | Decision |
+|---|---|
+| DDG-IP-1 | **ACCEPTED — no spend.** source_health ladder cools ddg to 24h retries by design; no proxy (independence/cost rule). Revisit only if bing also degrades. CLOSED. |
+| PLAYWRIGHT-1 | **WON'T-DO server-side.** Every browser-tier source is unusable from Hetzner anyway (Property24 IP-blocked · Gumtree dead_permanent · GMaps key disabled). Replacement: **local Property24/GMaps run on David's machine** (`run_za_estate_agents.py`, runs now during discovery) → INSERT OR IGNORE to server (unique-email index verified, 0 dupes). CLOSED. |
+| CUTOVER-1 | **GO tomorrow morning if tonight = 3rd consecutive clean shadow night** (Jun 6 + Jun 7 clean: smoke 39/39, guards 3/3, $0). Attended, reversible. Scheduled morning check will verify night 3 + present the runbook. |
+
+## LAUNCH-FLIP CHECKLIST (one page — execute at launch-month lock, supersedes LAUNCH-DEADLINE-1 as a lone item)
+Run the clean-refresh pass first (re-scrape launch city + free MX re-verify), then flip in this order:
+1. `LAUNCH_SPECIAL_DEADLINE=<true end of launch month>` — BOTH sides, same value (BEA `marketsquare.service.d/launch.conf` + CityLauncher `.env`).
+2. Re-enable Sonnet layer if wanted: uncomment `ANTHROPIC_API_KEY` in CityLauncher `.env` (S131 disabled it for $0 discovery).
+3. Activate Resend $20/mo 50k tier (B7-approved S131, ceiling $20/mo).
+4. CityLauncher: `LAUNCH_SPECIAL_ENABLED=1`.
+5. BEA: `LAUNCH_REDEMPTION_ENABLED=1` + `TUPPENCE_MONTHLY_ENABLED=1` + `LISTING_VELOCITY_ENABLED=1`; `systemctl daemon-reload && systemctl restart marketsquare citylauncher-strategist citylauncher-scraper`.
+6. `POST /launch/sync-registry` after first issuing run; verify `/launch/status` shows codes + gates true.
+7. First email wave still HALTS at AWAITING_APPROVAL — David approves manually.
