@@ -11484,3 +11484,91 @@ def grading_review(request: Request):
 
 # ── Founders Badge / Launch Special routes (Canon Addendum 1) — env-gated OFF ──
 app.include_router(launch_redemption.router)
+
+# ═══ AI FEATURE HOLD LEDGER (AdvertAgent service · commit→burn→release) ═══
+# Canonical Tuppence HOLD model (Codex v4.8 / C10–C13): commit-on-request,
+# burn-on-delivery, release-on-failure. A8-compliant: purchase-only deduction
+# (AI service, A8(ii)); a failed run ALWAYS releases — never a punitive keep.
+# Called only by the AdvertAgent service (port 8002) with X-Api-Key.
+# Ledger stays in THIS one thin layer (scale-shape invariant 1 + 2).
+
+@app.post("/tuppence/ai-commit")
+def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key)):
+    """Place a hold: balance check + negative 'ai_hold' row, atomically."""
+    email = (payload.get("email") or "").strip().lower()
+    amount = int(payload.get("amount") or 0)
+    function_id = (payload.get("function_id") or "unknown")[:64]
+    job_id = (payload.get("job_id") or "unknown")[:64]
+    if not email or amount < 1:
+        raise HTTPException(status_code=422, detail="email and positive amount required")
+    conn = database.get_db()
+    conn.isolation_level = None
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT COALESCE(SUM(amount),0) AS bal FROM transactions WHERE user_email=?",
+            (email,)).fetchone()
+        balance = int(row["bal"])
+        if balance < amount:
+            conn.execute("ROLLBACK")
+            raise HTTPException(status_code=402,
+                detail=f"Insufficient Tuppence — balance {balance}T, this AI feature needs {amount}T")
+        cur = conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
+            (email, "ai_hold", -amount, f"AI feature hold \u00b7 {function_id} \u00b7 job {job_id}"))
+        hold_id = cur.lastrowid
+        conn.execute("COMMIT")
+        return {"hold_id": hold_id, "email": email, "amount": amount,
+                "balance_after": balance - amount}
+    except HTTPException:
+        raise
+    except Exception as e:
+        try: conn.execute("ROLLBACK")
+        except Exception: pass
+        raise HTTPException(status_code=500, detail=f"ai-commit failed: {e}")
+    finally:
+        conn.close()
+
+
+@app.post("/tuppence/ai-settle")
+def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key)):
+    """Settle a hold: outcome 'delivered' → burn; 'failed' → release (refund row).
+    Idempotent: a hold can be settled exactly once (409 on re-settle)."""
+    hold_id = int(payload.get("hold_id") or 0)
+    outcome = payload.get("outcome")
+    if outcome not in ("delivered", "failed"):
+        raise HTTPException(status_code=422, detail="outcome must be delivered|failed")
+    conn = database.get_db()
+    conn.isolation_level = None
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute("SELECT * FROM transactions WHERE id=?", (hold_id,)).fetchone()
+        if not row:
+            conn.execute("ROLLBACK")
+            raise HTTPException(status_code=404, detail="hold not found")
+        if row["type"] != "ai_hold":
+            conn.execute("ROLLBACK")
+            raise HTTPException(status_code=409, detail=f"hold already settled ({row['type']})")
+        if outcome == "delivered":
+            conn.execute("UPDATE transactions SET type='ai_burn', description=description||' \u00b7 delivered' WHERE id=?",
+                         (hold_id,))
+        else:
+            conn.execute("UPDATE transactions SET type='ai_hold_released' WHERE id=?", (hold_id,))
+            conn.execute(
+                "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
+                (row["user_email"], "ai_release", -int(row["amount"]),
+                 f"AI feature release (no charge \u2014 run failed) \u00b7 hold {hold_id}"))
+        bal = conn.execute(
+            "SELECT COALESCE(SUM(amount),0) AS bal FROM transactions WHERE user_email=?",
+            (row["user_email"],)).fetchone()
+        conn.execute("COMMIT")
+        return {"hold_id": hold_id, "outcome": outcome, "balance_after": int(bal["bal"])}
+    except HTTPException:
+        raise
+    except Exception as e:
+        try: conn.execute("ROLLBACK")
+        except Exception: pass
+        raise HTTPException(status_code=500, detail=f"ai-settle failed: {e}")
+    finally:
+        conn.close()
+
