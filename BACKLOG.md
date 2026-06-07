@@ -307,7 +307,7 @@ Run the clean-refresh pass first (re-scrape launch city + free MX re-verify), th
 
 | # | Item | Area |
 |---|---|---|
-| AI-1 | **FEA integration** — AI Features entry in marketsquare.html (DEMO_MODE guard mandatory); replace /ai/ Basic-Auth dev gate with real user auth | AdvertAgent |
+| AI-1 | **FEA integration** — ✅ DONE S133 (wallet entry + screen, demo-blocked, dry-run-default-ON $0 testing). REMAINING: real user auth on /ai/ + hide dry-run toggle at launch | AdvertAgent |
 | AI-2 | Promote stubs in revenue order: weekend_itinerary (3T, intro-flywheel; needs Adventures listings) → property_dossier (5T) → offer_advisor (2T) | AdvertAgent |
 | AI-3 | G1 wording amendment at council review — buyer-side AI services under A8(ii) | Governance |
 | AI-4 | API rate-limit tier review before launch volume (serial worker is the stopgap; 2 parallel web-search runs 429 today) | AdvertAgent |

@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=120">
+<link rel="stylesheet" href="/static/ms.css?v=121">
   <!-- TrustSquare brand -->
   <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
@@ -1173,6 +1173,31 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
 
 <!-- TUPPENCE -->
+<!-- ═══ AI FEATURES · AdvertAgent advanced functions (S133) — paid per use, NOT introductions ═══ -->
+<div id="screen-ai-features" class="screen">
+  <div class="ai-head">
+    <button class="ai-back" onclick="goTo('tuppence')">&#8249;</button>
+    <div>
+      <div class="ai-title">AI Features</div>
+      <div class="ai-sub">Advanced AI &middot; paid per use in Tuppence &middot; <b>not used for introductions</b></div>
+    </div>
+  </div>
+  <div id="ai-grid" class="ai-grid"></div>
+  <div id="ai-runpanel" class="ai-panel" style="display:none">
+    <div class="ai-fn-title" id="ai-fn-title"></div>
+    <div class="ai-fn-blurb" id="ai-fn-blurb"></div>
+    <div id="ai-params"></div>
+    <label class="ai-dry"><input type="checkbox" id="ai-dryrun" checked> Sample preview &mdash; $0, no Tuppence charged <span class="ai-dev">(testing phase &middot; untick for a real run)</span></label>
+    <button class="ai-runbtn" id="ai-runbtn" onclick="aiRun()"></button>
+    <div class="ai-status" id="ai-status"></div>
+    <div id="ai-routemap"></div><div class="ai-maplinks" id="ai-maplinks"></div>
+    <div class="ai-safetybox" id="ai-safetybox"></div>
+    <div class="ai-result" id="ai-result" style="display:none"></div>
+    <div class="ai-meta" id="ai-meta"></div>
+  </div>
+  <div class="ai-foot">Holds commit on request &middot; burn on delivery &middot; released on failure &mdash; a failed run never charges</div>
+</div>
+
 <div id="screen-tuppence" class="screen">
   <div class="tn-header" style="position:relative;">
     <button class="back-btn" onclick="goTo('home')" aria-label="Back" style="position:absolute;top:16px;left:20px;border-color:rgba(255,255,255,.25);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -1189,6 +1214,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="tn-coach-sessions" style="display:none;"></div>
   </div>
   <div class="tn-body">
+
+    <!-- ADVANCED AI FEATURES entry (S133) -->
+    <div class="tn-sec">
+      <h2>AI feature credits</h2>
+      <p style="font-size:12px;color:var(--text-2);margin:0 0 10px;">Advanced AI, paid per use in Tuppence &mdash; <b>not used for introductions</b>. In-app guidance stays free.</p>
+      <button class="ai-entry" onclick="goTo('ai-features');try{aiBoot()}catch(e){}">
+        <span><b>Open AI Features</b><br><span style="font-size:11px;opacity:.8">Market reports &middot; trip planners &middot; dossiers</span></span><span style="font-size:22px;line-height:1">&#8250;</span>
+      </button>
+    </div>
 
     <!-- HOW INTRODUCTIONS WORK -->
     <div class="tn-sec">
@@ -4015,7 +4049,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=155"></script>
+<script src="/static/ms.js?v=156"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

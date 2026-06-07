@@ -1016,7 +1016,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name.startsWith('aa-'))) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='ai-features'||name.startsWith('aa-'))) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -12376,3 +12376,215 @@ function _updateCatStars() {
   });
 }
 // ── END Category Home Mode ───────────────────────────────────────────────────
+
+// ═══════════════ AI FEATURES (AdvertAgent advanced functions · S133) ═══════════════
+// Paid per use in Tuppence — NOT introductions (Briefing §5). Service: /ai/ (port 8002).
+// Dry-run defaults ON during the test phase ($0, replays fixtures). DEMO_MODE: screen is
+// blocked at the goTo choke; aiRun double-guards. REVIEW BEFORE LAUNCH: hide dry-run toggle.
+let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[];
+
+async function aiBoot(){
+  if (DEMO_MODE) return;
+  if (AI_FNS.length) return;
+  try{
+    AI_FNS = await (await fetch('/ai/functions')).json();
+    document.getElementById('ai-grid').innerHTML = AI_FNS.map(f=>`
+      <div class="ai-card" id="ai-card-${f.id}" onclick="aiSel('${f.id}')">
+        <div class="ai-row">
+          <span class="ai-tag ${f.side}">${f.side.toUpperCase()}</span>
+          <span class="ai-tag price">${f.price_t}T per use</span>
+          <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
+        </div>
+        <h3>${f.name}</h3><p>${f.blurb}</p>
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('ai-grid').innerHTML =
+      '<div class="ai-err-box">AI Features are unreachable right now — please try again shortly.</div>';
+  }
+}
+
+function aiSel(id){
+  AI_SEL = AI_FNS.find(f=>f.id===id);
+  AI_PHOTOS = [];
+  document.querySelectorAll('.ai-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('ai-card-'+id).classList.add('sel');
+  const p = document.getElementById('ai-runpanel'); p.style.display='block';
+  document.getElementById('ai-fn-title').textContent = AI_SEL.name;
+  document.getElementById('ai-fn-blurb').textContent = AI_SEL.blurb;
+  const photoUI = AI_SEL.accepts_photos ? `
+    <label class="ai-lbl">Photos of your items (up to 12 — auto-compressed)
+      <input type="file" id="ai-photo-in" accept="image/*" multiple onchange="aiAddPhotos(this.files)">
+    </label><div class="ai-thumbs" id="ai-thumbs"></div>` : '';
+  document.getElementById('ai-params').innerHTML = photoUI + AI_SEL.params.map(pp=>`
+    <label class="ai-lbl">${pp.label}${pp.required?'':' (optional)'}
+      ${pp.options
+        ? `<select id="ai-p-${pp.key}">${pp.options.map(o=>`<option>${o}</option>`).join('')}</select>`
+        : (pp.placeholder.includes('\n')||pp.key==='items'||pp.key==='inventory')
+        ? `<textarea id="ai-p-${pp.key}" placeholder="${pp.placeholder.replace(/"/g,'&quot;')}"></textarea>`
+        : `<input id="ai-p-${pp.key}" placeholder="${pp.placeholder.replace(/"/g,'&quot;')}">`}
+    </label>`).join('');
+  const dry = document.getElementById('ai-dryrun').checked;
+  document.getElementById('ai-runbtn').textContent =
+    dry ? 'Preview sample · $0' : `Run · holds ${AI_SEL.price_t}T`;
+  document.getElementById('ai-runbtn').disabled = false;
+  document.getElementById('ai-status').textContent='';
+  document.getElementById('ai-result').style.display='none';
+  document.getElementById('ai-meta').textContent='';
+  aiDrawMap(null); aiSafety(null);
+  p.scrollIntoView({behavior:'smooth'});
+}
+document.addEventListener('change', e=>{
+  if(e.target && e.target.id==='ai-dryrun' && AI_SEL){
+    document.getElementById('ai-runbtn').textContent =
+      e.target.checked ? 'Preview sample · $0' : `Run · holds ${AI_SEL.price_t}T`;
+  }
+});
+
+async function aiAddPhotos(files){
+  for(const f of files){
+    if(AI_PHOTOS.length>=12) break;
+    const url = await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f);});
+    const img = await new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.src=url;});
+    const sc = Math.min(1, 1280/Math.max(img.width,img.height));
+    const cv = document.createElement('canvas');
+    cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    AI_PHOTOS.push(cv.toDataURL('image/jpeg',0.8));
+  }
+  aiThumbs();
+  const inp=document.getElementById('ai-photo-in'); if(inp) inp.value='';
+}
+function aiThumbs(){
+  const t=document.getElementById('ai-thumbs'); if(!t) return;
+  t.innerHTML = AI_PHOTOS.map((p,i)=>`<div class="ai-ph"><img src="${p}"><span onclick="AI_PHOTOS.splice(${i},1);aiThumbs()">&times;</span></div>`).join('');
+}
+
+async function aiRun(){
+  if (DEMO_MODE) { showToast('AI Features run in live mode only'); return; }   // demo guard (belt & braces)
+  if (!AI_SEL) return;
+  const email = localStorage.getItem('ms_user_email') || '';
+  if (!email) { showToast('Sign in first — your email identifies your Tuppence wallet'); return; }
+  const params = {};
+  AI_SEL.params.forEach(pp=>{ const el=document.getElementById('ai-p-'+pp.key); params[pp.key]=el?el.value:''; });
+  if (AI_PHOTOS.length) params.photos = AI_PHOTOS;
+  const dry = document.getElementById('ai-dryrun').checked;
+  const st = document.getElementById('ai-status');
+  document.getElementById('ai-runbtn').disabled = true;
+  st.innerHTML = '<span class="ai-spin"></span>' + (dry?'preparing sample…':'committing Tuppence hold…');
+  document.getElementById('ai-result').style.display='none';
+  try{
+    const r = await fetch('/ai/run', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({function_id:AI_SEL.id, email:email, params:params, dry_run:dry})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || 'request failed');
+    if(d.status==='stub'){ st.innerHTML = `<span class="ai-ok">${d.message}</span>`;
+      document.getElementById('ai-runbtn').disabled=false; return; }
+    AI_T0 = Date.now();
+    st.innerHTML = `<span class="ai-spin"></span>${d.note}`;
+    AI_POLL = setInterval(()=>aiPoll(d.job_id), dry?1500:4000);
+  }catch(e){
+    st.innerHTML = `<span class="ai-bad">&#10007; ${e.message}</span>`;
+    document.getElementById('ai-runbtn').disabled=false;
+  }
+}
+
+async function aiPoll(jobId){
+  let j; try{ j = await (await fetch('/ai/jobs/'+jobId)).json(); }catch(e){ return; }
+  const el = Math.round((Date.now()-AI_T0)/1000);
+  const st = document.getElementById('ai-status');
+  if(j.status==='queued'||j.status==='running'){
+    st.innerHTML = `<span class="ai-spin"></span>${j.status} · ${el}s (web-research runs take 1–4 min)`; return;
+  }
+  clearInterval(AI_POLL); AI_POLL=null;
+  document.getElementById('ai-runbtn').disabled=false;
+  if(j.status==='delivered'){
+    st.innerHTML = `<span class="ai-ok">&#10003; delivered in ${el}s${j.cost_usd>0?` — ${AI_SEL.price_t}T used (service rendered)`:' — $0 sample'}</span>`;
+    let txt = j.result||'', wps=null;
+    const wm = txt.match(/```json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*```/);
+    if(wm){ try{ wps=JSON.parse(wm[1]).waypoints; txt=txt.replace(wm[0],''); }catch(e){} }
+    const sm = txt.match(/##\s*\d*\s*[·]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
+    if(sm){ aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[·]?\s*/,'## ⚠️ '))); txt=txt.replace(sm[0],''); }
+    else aiSafety(null);
+    document.getElementById('ai-result').innerHTML = aiMd(txt);
+    document.getElementById('ai-result').style.display='block';
+    aiDrawMap(wps);
+    document.getElementById('ai-meta').textContent =
+      j.cost_usd>0 ? `model ${j.model} · ${j.searches} web searches` : 'sample preview — superseded by the first real run';
+    try{ updateTuppenceUI(); }catch(e){}
+  }else{
+    st.innerHTML = `<span class="ai-bad">&#10007; run failed — your hold was released, you were NOT charged.</span>`;
+    aiDrawMap(null); aiSafety(null);
+  }
+}
+
+function aiSafety(html){
+  const b = document.getElementById('ai-safetybox');
+  if(!html){ b.style.display='none'; b.innerHTML=''; return; }
+  b.innerHTML = html; b.style.display='block';
+}
+
+function aiLeaflet(cb){
+  if(window.L){ cb(); return; }
+  const l=document.createElement('link'); l.rel='stylesheet';
+  l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l);
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload=cb; document.head.appendChild(s);
+}
+let AI_MAP=null;
+function aiDrawMap(wps){
+  const div=document.getElementById('ai-routemap'), links=document.getElementById('ai-maplinks');
+  links.innerHTML=''; if(AI_MAP){ try{AI_MAP.remove();}catch(e){} AI_MAP=null; }
+  if(!wps||!wps.length){ div.style.display='none'; return; }
+  aiLeaflet(()=>{
+    const pts = wps.filter(w=>isFinite(w.lat)&&isFinite(w.lon));
+    if(pts.length<2){ div.style.display='none'; return; }
+    div.style.display='block';
+    AI_MAP = L.map('ai-routemap');
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {attribution:'© OpenStreetMap contributors', maxZoom:18}).addTo(AI_MAP);
+    const ll = pts.map(w=>[w.lat,w.lon]);
+    if(ll.length>2 && (ll[0][0]!==ll[ll.length-1][0]||ll[0][1]!==ll[ll.length-1][1])) ll.push(ll[0]);
+    L.polyline(ll,{color:'#2e4b8f',weight:3,dashArray:'6 8'}).addTo(AI_MAP);
+    pts.forEach((w,i)=>{
+      L.marker([w.lat,w.lon],{icon:L.divIcon({className:'',
+        html:`<div class="ai-pin">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]})})
+       .addTo(AI_MAP).bindPopup(`<b>${i+1} · ${w.name||''}</b><br>${w.stop_type||''} · day ${w.day||'?'}`);
+    });
+    AI_MAP.fitBounds(L.latLngBounds(ll).pad(0.15));
+    const seen=new Set(), uniq=pts.filter(w=>{const k=w.lat+','+w.lon; if(seen.has(k))return false; seen.add(k); return true;});
+    links.innerHTML = `Indicative route — pins geocoded via OpenStreetMap · <a href="https://www.google.com/maps/dir/${uniq.map(w=>w.lat+','+w.lon).join('/')}" target="_blank" rel="noopener">turn-by-turn directions</a>`;
+    setTimeout(()=>{ try{AI_MAP.invalidateSize();}catch(e){} }, 250);
+  });
+}
+
+function aiEsc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function aiInline(s){return s
+  .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+  .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
+function aiMd(src){
+  const lines=aiEsc(src).split('\n'); let out='',i=0,inList=false,inFence=false;
+  const closeList=()=>{ if(inList){out+='</ul>';inList=false;} };
+  while(i<lines.length){
+    let L2=lines[i];
+    if(L2.startsWith('```')){ closeList(); out+=inFence?'</pre>':'<pre>'; inFence=!inFence; i++; continue; }
+    if(inFence){ out+=L2+'\n'; i++; continue; }
+    if(L2.includes('|') && i+1<lines.length && /^\s*\|?[\s:|-]+\|/.test(lines[i+1])){
+      closeList(); let t='<table>',hdr=true;
+      while(i<lines.length && lines[i].includes('|')){
+        const cells=lines[i].split('|').map(c=>c.trim()).filter((c,ix,a)=>!(ix===0&&c==='')&&!(ix===a.length-1&&c===''));
+        if(/^[\s:|-]+$/.test(lines[i].replace(/\|/g,''))){i++;continue;}
+        t+='<tr>'+cells.map(c=>`<${hdr?'th':'td'}>${aiInline(c)}</${hdr?'th':'td'}>`).join('')+'</tr>';
+        hdr=false; i++;
+      }
+      out+=t+'</table>'; continue;
+    }
+    if(L2.startsWith('## ')){ closeList(); out+=`<h2>${aiInline(L2.slice(3))}</h2>`; }
+    else if(L2.startsWith('### ')){ closeList(); out+=`<h3>${aiInline(L2.slice(4))}</h3>`; }
+    else if(/^\s*[-*] /.test(L2)){ if(!inList){out+='<ul>';inList=true;} out+=`<li>${aiInline(L2.replace(/^\s*[-*] /,''))}</li>`; }
+    else if(L2.trim()===''){ closeList(); }
+    else { closeList(); out+=`<p>${aiInline(L2)}</p>`; }
+    i++;
+  }
+  closeList(); return out;
+}
+// ═══════════════ END AI FEATURES ═══════════════
