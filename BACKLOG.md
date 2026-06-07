@@ -274,3 +274,10 @@ First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Rem
 | AL-6 | **Rung 6 — launch month:** AUTONOMY FREEZE (no new authority granted) · every incident harvested into ORCHESTRATION_POLICY.md/Codex · zero Sev-1 mis-pages. | 6 | ATTENDED |
 | AL-7 | **Rung 7 declaration:** joint 8+1 sign-off per AUTONOMY_LADDER.docx §3 — 60 sellers stable, revenue ≥ run-rate infra+AI cost, 6 green weeks, repeated page drill, one full quarter of weekly reviews with no missed-escalation finding. | 7 | ATTENDED |
 | AL-8 | **Wake-David channel decision** (call vs WhatsApp vs email) for SEV-1 — one-line David decision, then encode in ESCALATION POLICY (ORCHESTRATION_POLICY.md §12). | — | DAVID |
+
+## S130 filed (7 Jun 2026) — CityLauncher engine live-run gaps
+| ID | Item | Lane |
+|---|---|---|
+| DDG-IP-1 | DuckDuckGo 403/connect-timeout from the Hetzner IP — source_health ladder cooling it (10m→24h); decide: drop ddg server-side or proxy. OSM + bing carrying. | LOW |
+| PLAYWRIGHT-1 | playwright not installed in server system python — browser-tier jobs (pool cap 4) cannot run; OSM-first unaffected. Install playwright + chromium when a browser-only source is needed. | MED |
+| LAUNCH-DEADLINE-1 | LAUNCH_SPECIAL_DEADLINE provisionally 2026-08-01 BOTH sides (BEA launch.conf + CityLauncher .env) — re-set to the true end-of-launch-month before LAUNCH_SPECIAL_ENABLED=1 / redemption flags flip. Same value both sides. | GATE |
