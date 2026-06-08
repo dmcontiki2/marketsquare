@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "report_type": "weekly_discovery_scan",
-  "generated_at": "2026-06-01T09:14:20Z",
-  "generated_by": "weekly auto scan",
+  "generated_at": "2026-06-08T13:28:29Z",
+  "generated_by": "orchestrator-sensor (Monday deep scan)",
   "scan_scope": [
     "bea_main.py",
     "auth.py",
@@ -14,124 +14,135 @@
     "marketsquare_admin.html (inline)"
   ],
   "tools": [
-    "ruff (F,E9,B,C90)",
-    "vulture",
-    "pylint cyclic-import",
-    "eslint 9 (no-undef/dupe/unreachable/unused)"
+    "ruff 0.15 (F,E9,B)",
+    "vulture 2.16 (min-confidence 80)",
+    "pylint 4.0 cyclic-import",
+    "eslint 9 (no-undef/no-dupe-keys/no-unreachable/no-unused-vars)"
   ],
   "totals": {
-    "found_this_week": 0,
-    "fixed_this_week": 5,
-    "still_open": 11,
-    "note": "Re-scan delta. The audit-runner closed the KYC import/name crash-bug batch: SCAN-1 (SONNET_MODEL defined, line 904) plus SCAN-2/3/4/6 (module-top imports re/hashlib/urllib.request/base64 added at lines 11-14, _json refs now resolve) all disappeared from the scan. 11 baseline issues persist. 0 genuinely new findings. Detection-only pass; no code changed, no deploy."
+    "found_this_week": 4,
+    "fixed_this_week": 9,
+    "still_open": 6,
+    "note": "Delta vs 2026-06-01 report. 9 of the 11 prior-open closed since last scan: the crash-class block (SCAN-5 MEDIA_DIR + SCAN-7 background_tasks) — ZERO F821 undefined-name anywhere now — plus SCAN-8/9/10/11/12 and JS-1/JS-2 (updateTuppenceDisplay/updateLocBadge both 0 occurrences). pylint 10.00/10, no cyclic imports. 2 prior-open persist (HTML-1, HTML-2); SCAN-12 shipped concurrently mid-run by Fixer S134. 4 newly tracked: SCAN-13 (unused Query import), SCAN-14 (unused param on retired 410 stub), SCAN-15 (SCAN-11 closure remnant — 2 dead locals never removed), SCAN-16 (aggregate: 24x B904 pre-existing exception-chaining style, batchable). ALL 6 open are LOW — no crash-class open. Detection-only; no code changed, no deploy."
   },
   "severity_breakdown": {
-    "CRIT": 1,
-    "HIGH": 3,
-    "MED": 2,
-    "LOW": 5
+    "CRIT": 0,
+    "HIGH": 0,
+    "MED": 0,
+    "LOW": 6
   },
   "open_issues": [
     {
-      "id": "SCAN-5",
-      "sev": "CRIT",
-      "file": "bea_main.py",
-      "line": 7111,
-      "summary": "MEDIA_DIR undefined (should be _LOCAL_MEDIA_DIR) - F821 in upload_seller_document"
-    },
-    {
-      "id": "SCAN-7",
-      "sev": "HIGH",
-      "file": "bea_main.py",
-      "line": 9365,
-      "summary": "background_tasks undefined in vision_draft (F821) - add to endpoint signature"
-    },
-    {
-      "id": "SCAN-8",
-      "sev": "MED",
-      "file": "bea_main.py",
-      "line": 6024,
-      "summary": "duplicate dict key 'category.cars.service_history' (F601) - second silently overrides first"
-    },
-    {
-      "id": "SCAN-9",
-      "sev": "MED",
-      "file": "bea_main.py",
-      "line": 8240,
-      "summary": "unused 'import json as _j' (F401, 8240) + body/body_bytes dead locals (F841, 8238/8241)"
-    },
-    {
-      "id": "SCAN-10",
+      "id": "SCAN-13",
       "sev": "LOW",
       "file": "bea_main.py",
-      "line": 4008,
-      "summary": "redundant 'from datetime import timedelta' re-imports (F811 at 4008 and 8453; already imported line 22)"
+      "line": 1,
+      "summary": "NEW: unused 'Query' in `from fastapi import ...` (F401 + vulture 90%); orphaned after S106 query-auth removal (only other occurrence is a docstring). Fix: drop Query from the line-1 import"
     },
     {
-      "id": "SCAN-11",
+      "id": "SCAN-14",
       "sev": "LOW",
       "file": "bea_main.py",
-      "line": 3885,
-      "summary": "unused locals/loop vars: skip_fields (3885), sig_suburb_id (4186), cutoff (6232), e (1527), photo_entry (2529), loop vars hi2 (5917)/idx (10246); vulture: family (1502,1603), hint (2261), unused import _sqlite3 (1692)"
+      "line": 3873,
+      "summary": "NEW: unused param 'sessions' (vulture 100%) in retired aa_buy_pack 410 stub. Fix: drop `sessions: int = 8` (or remove the whole retired endpoint). Not gated — 410 stub, no ledger/pricing logic runs"
     },
     {
-      "id": "SCAN-12",
+      "id": "SCAN-15",
       "sev": "LOW",
-      "file": "database.py",
-      "line": 2,
-      "summary": "unused 'import os' (F401)"
+      "file": "bea_main.py",
+      "line": 1551,
+      "summary": "SCAN-11 REMNANT (closure incomplete): 2 named dead locals never removed — `e` (1551, `except Exception as e` unused) + `photo_entry` (2552, dead `photo_entry = medium_url`). Fix: `except Exception:`; remove the dead photo_entry line"
     },
     {
-      "id": "JS-1",
-      "sev": "HIGH",
-      "file": "ms.js",
-      "line": 617,
-      "summary": "updateTuppenceDisplay() undefined (should be updateTuppenceUI, defined line 810) - post-credit balance refresh throws"
-    },
-    {
-      "id": "JS-2",
-      "sev": "HIGH",
-      "file": "ms.js",
-      "line": 86,
-      "summary": "updateLocBadge() undefined (should be updateBadgeLabel, defined line 112) - badge refresh throws"
+      "id": "SCAN-16",
+      "sev": "LOW",
+      "file": "bea_main.py",
+      "line": 0,
+      "summary": "AGGREGATE (pre-existing, surfaced by full B-rule scan; NOT a regression): 24x B904 raise-without-from inside except (e.g. 11528 ai-commit, 11571 ai-settle). Cosmetic — traceback clarity only; batchable `raise ... from e`. 1x B905 zip-without-strict also noted"
     },
     {
       "id": "HTML-1",
       "sev": "LOW",
       "file": "marketsquare_admin.html",
       "line": 2785,
-      "summary": "dead var currentView (written 2785/2794, never read)"
+      "summary": "dead var currentView (written, never read) — confirmed still open (2 refs)"
     },
     {
       "id": "HTML-2",
       "sev": "LOW",
       "file": "marketsquare_admin.html",
       "line": 1834,
-      "summary": "dead locals editingIdx (1834)/photoFile (4503)/tier (5216)/ur (5218)/status (5290)"
+      "summary": "dead locals editingIdx/photoFile/tier/ur/status — confirmed still open (ur/tier/status/photoFile re-flagged by eslint no-unused-vars)"
     }
   ],
   "fixed_issues": [
     {
-      "id": "SCAN-1",
-      "summary": "SONNET_MODEL undefined in KYC path - fixed: defined at bea_main.py:904"
+      "id": "SCAN-5",
+      "summary": "MEDIA_DIR undefined (F821, doc-upload) — fixed (no F821 anywhere)"
     },
     {
-      "id": "SCAN-2",
-      "summary": "bare 're' unbound in KYC funcs - fixed: 'import re' at bea_main.py:11"
+      "id": "SCAN-7",
+      "summary": "background_tasks undefined (F821, vision_draft) — fixed (no F821 anywhere)"
     },
     {
-      "id": "SCAN-3",
-      "summary": "'hashlib' undefined in _hash_id_number - fixed: 'import hashlib' at bea_main.py:12"
+      "id": "SCAN-8",
+      "summary": "duplicate dict key category.cars.service_history (F601) — fixed S115"
     },
     {
-      "id": "SCAN-4",
-      "summary": "'urllib'/'base64' undefined in KYC doc fetch - fixed: imports at bea_main.py:13-14"
+      "id": "SCAN-9",
+      "summary": "dead import json + body/body_bytes locals in PUT /wonders — fixed S121"
     },
     {
-      "id": "SCAN-6",
-      "summary": "_json undefined at 6823/6827 - fixed: refs now resolve (no longer F821)"
+      "id": "SCAN-10",
+      "summary": "redundant `from datetime import timedelta` re-imports (F811) — fixed S128"
+    },
+    {
+      "id": "SCAN-11",
+      "summary": "dead locals/import sweep (skip_fields/sig_suburb_id/cutoff/_sqlite3/hi2/idx/hint) — fixed S130 (2 remnants → SCAN-15)"
+    },
+    {
+      "id": "JS-1",
+      "summary": "updateTuppenceDisplay() undefined — fixed S107 (0 occurrences)"
+    },
+    {
+      "id": "JS-2",
+      "summary": "updateLocBadge() undefined — fixed S111 (0 occurrences)"
+    },
+    {
+      "id": "SCAN-12",
+      "summary": "unused 'import os' in database.py (F401) — shipped CONCURRENTLY during this scan run (Fixer Session 134); ruff F401 now clean on database.py"
     }
   ],
+  "false_positives_reconfirmed": [
+    {
+      "id": "FP-family",
+      "file": "bea_main.py",
+      "line": "1526,1627",
+      "reason": "vulture 'family' — signature-mandated params of the socket.getaddrinfo IPv4-only monkeypatch wrappers; renaming breaks keyword callers. IGNORE (re-confirmed)"
+    },
+    {
+      "id": "FP-tshLoad",
+      "file": "marketsquare_admin.html",
+      "line": 3595,
+      "reason": "eslint no-func-assign 'tshLoad' — intentional decorator/wrapper (`const _origTshLoad = tshLoad; tshLoad = async function...` to load docs after trust-score). Works as written. IGNORE"
+    },
+    {
+      "id": "FP-B008",
+      "file": "bea_main.py",
+      "line": "various",
+      "reason": "ruff B008 x7 function-call-in-default-argument — FastAPI Depends()/Query()/File() in defaults is the required framework idiom, not a bug. IGNORE"
+    }
+  ],
+  "health_at_scan": {
+    "bea_health": "ok",
+    "bea_version": "1.3.1",
+    "smoke": "40/40",
+    "pylint_rating": "10.00/10",
+    "cyclic_imports": 0,
+    "today_spend_usd": 0.0,
+    "platform_ceiling_usd": 100.0,
+    "real_token_pct": 100.0
+  },
   "history": [
     {
       "week_of": "2026-06-01",
@@ -150,6 +161,12 @@
       "found": 0,
       "fixed": 5,
       "open": 11
+    },
+    {
+      "week_of": "2026-06-08",
+      "found": 4,
+      "fixed": 9,
+      "open": 6
     }
   ]
 }

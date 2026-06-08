@@ -3715,3 +3715,12 @@ Cost model impact: none — free-tier feed, called only inside the existing deli
 ## Session 130 addendum 5 — 7 June 2026 · BrickLink closed won't-do (ZA country exit)
 
 David hit a wall registering for the BrickLink API: root cause is not the registration flow — **BrickLink ceased all operations in South Africa on 12 Dec 2025** (country-level exit), so no ZA registration path exists; the API additionally requires an operating seller store + static-IP token registration. Decision: BrickLink = WON'T-DO. No coverage lost: the S130 eBay Browse fallback already includes the lego tierkey, so LEGO fair-price lights via the asking-price band the moment the eBay keyset lands. The credential-gated bricklink resolver stays in code, dark and harmless. **DATA-KEYS-1 final shape: Numista ✅ live · JustTCG ✅ live · eBay keyset pending (~1 day, chased by tomorrow's scheduled session) · BrickLink closed.** Cost model impact: none.
+
+
+## Session 134 — 8 June 2026 · SCAN-12 DONE (unused `import os` in database.py) — database.py scan block CLOSED
+
+- [SCAN-12 · LOW · DONE] `database.py` imported `os` at line 2 (F401) but never used it — the only `os` token in the module was the import line itself (0 `os.` references), so removal is behaviour-neutral. Removed via one surgical Python `str.replace` on a freshly server-pulled copy (anchored on the unique `import sqlite3` + `import os` pair; never Edit/Write); −10 bytes (2837→2827). This was the last open item in the `database.py` portion of the 1 June static-analysis scan.
+- **Gate:** clears Gate 1 + Gate 2 with positive confidence — the SQLite DB-access layer's import block touches no `payments.py` / Tuppence-ledger / EULA-Terms-Privacy / KYC-SA-ID code and no pricing/refund path (ORCHESTRATION_POLICY §5 / §6.2); auto-shipped.
+- **Verify/deploy:** local mount byte-identical to server pre-edit; `ast.parse` + no-pyc `compile()` clean local; on the server, `ast.parse` **and** a live `import database` in the BEA venv (DB_PATH resolved); whole-file diff vs the server copy = exactly the one removed line; `smoke_test.py --local` 40/40 all-green pre **and** post. Server backup `database.py.bak-20260608-scan12`; scp `database.py` (three-way sha256 parity mount == /tmp == server); `systemctl restart marketsquare` → active; `/health` ok v1.3.1 (direct 127.0.0.1:8000 + public via Cloudflare); CF purged (`{purged:true}`).
+- Cost model impact: none.
+- **Next (auto-ship queue):** DASH-VER-1 → HTML-1 → HTML-2 → SCAN-PANEL-1+2. Staged: none. Filed: A11Y-1/2/3, ADMIN_KEY, L3a, TR-90D.

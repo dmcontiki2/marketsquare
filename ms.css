@@ -1244,3 +1244,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-ph span{position:absolute;top:-6px;right:-6px;background:#f87171;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;text-align:center;line-height:18px;cursor:pointer}
 .ai-entry{width:100%;display:flex;justify-content:space-between;align-items:center;background:#13234a;border:1px solid #24407c;border-radius:12px;padding:13px 14px;color:#eaf0fb;text-align:left;cursor:pointer;font:inherit}
 .ai-err-box{background:#2a1212;border:1px solid #6b2222;color:#f0b0b0;border-radius:10px;padding:12px;font-size:12.5px;margin:0 0 8px}
+.ai-savebtn{width:100%;background:#0d1a38;color:#bcd3f5;border:1px solid #24407c;border-radius:10px;padding:11px;font-size:13.5px;cursor:pointer;margin-top:10px;font-weight:700}
+.ai-listbtns{display:flex;gap:8px;margin-top:8px}
+.ai-listbtns button{flex:1;background:#f0b429;color:#1a1300;border:0;border-radius:10px;padding:11px 6px;font-size:13px;font-weight:800;cursor:pointer}
+.ai-listbtns button:last-child{background:#0d1a38;color:#f0b429;border:1px solid #6b5516}

@@ -12381,7 +12381,7 @@ function _updateCatStars() {
 // Paid per use in Tuppence — NOT introductions (Briefing §5). Service: /ai/ (port 8002).
 // Dry-run defaults ON during the test phase ($0, replays fixtures). DEMO_MODE: screen is
 // blocked at the goTo choke; aiRun double-guards. REVIEW BEFORE LAUNCH: hide dry-run toggle.
-let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[];
+let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, AI_ITEMS=null;
 
 async function aiBoot(){
   if (DEMO_MODE) return;
@@ -12430,6 +12430,8 @@ function aiSel(id){
   document.getElementById('ai-status').textContent='';
   document.getElementById('ai-result').style.display='none';
   document.getElementById('ai-meta').textContent='';
+  document.getElementById('ai-savebtn').style.display='none';
+  document.getElementById('ai-listbtns').style.display='none';
   aiDrawMap(null); aiSafety(null);
   p.scrollIntoView({behavior:'smooth'});
 }
@@ -12462,12 +12464,13 @@ function aiThumbs(){
 async function aiRun(){
   if (DEMO_MODE) { showToast('AI Features run in live mode only'); return; }   // demo guard (belt & braces)
   if (!AI_SEL) return;
-  const email = localStorage.getItem('ms_user_email') || '';
-  if (!email) { showToast('Sign in first — your email identifies your Tuppence wallet'); return; }
+  const email = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';   // app-standard chain
+  if (!email) { showToast('Open My Space and sign in first — your email identifies your Tuppence wallet'); return; }
   const params = {};
   AI_SEL.params.forEach(pp=>{ const el=document.getElementById('ai-p-'+pp.key); params[pp.key]=el?el.value:''; });
   if (AI_PHOTOS.length) params.photos = AI_PHOTOS;
   const dry = document.getElementById('ai-dryrun').checked;
+  if (dry && AI_PHOTOS.length) showToast('Sample mode: your photos are NOT analyzed — untick Sample preview for a real run');
   const st = document.getElementById('ai-status');
   document.getElementById('ai-runbtn').disabled = true;
   st.innerHTML = '<span class="ai-spin"></span>' + (dry?'preparing sample…':'committing Tuppence hold…');
@@ -12500,6 +12503,11 @@ async function aiPoll(jobId){
   if(j.status==='delivered'){
     st.innerHTML = `<span class="ai-ok">&#10003; delivered in ${el}s${j.cost_usd>0?` — ${AI_SEL.price_t}T used (service rendered)`:' — $0 sample'}</span>`;
     let txt = j.result||'', wps=null;
+    AI_ITEMS=null;
+    const im = txt.match(/```json\s*(\{[\s\S]*?"items"[\s\S]*?\})\s*```/);
+    if(im && AI_SEL && AI_SEL.id==='collectables_advert'){
+      try{ AI_ITEMS=JSON.parse(im[1]).items; txt=txt.replace(im[0],''); }catch(e){}
+    }
     const wm = txt.match(/```json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*```/);
     if(wm){ try{ wps=JSON.parse(wm[1]).waypoints; txt=txt.replace(wm[0],''); }catch(e){} }
     const sm = txt.match(/##\s*\d*\s*[·]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
@@ -12510,6 +12518,18 @@ async function aiPoll(jobId){
     aiDrawMap(wps);
     document.getElementById('ai-meta').textContent =
       j.cost_usd>0 ? `model ${j.model} · ${j.searches} web searches` : 'sample preview — superseded by the first real run';
+    const sb=document.getElementById('ai-safetybox');
+    const ml=document.querySelector('#ai-maplinks a');
+    AI_LAST = { fn: AI_SEL?AI_SEL.name:'AI report',
+                html: document.getElementById('ai-result').innerHTML,
+                safety: (sb && sb.style.display!=='none') ? sb.innerHTML : '',
+                link: ml ? ml.href : '' };
+    document.getElementById('ai-savebtn').style.display='block';
+    const lb=document.getElementById('ai-listbtns');
+    if(AI_ITEMS && AI_ITEMS.length){
+      document.getElementById('ai-listeach').textContent='\u{1F5C2} List separately ('+AI_ITEMS.length+')';
+      lb.style.display='flex';
+    } else { lb.style.display='none'; }
     try{ updateTuppenceUI(); }catch(e){}
   }else{
     st.innerHTML = `<span class="ai-bad">&#10007; run failed — your hold was released, you were NOT charged.</span>`;
@@ -12588,3 +12608,81 @@ function aiMd(src){
   closeList(); return out;
 }
 // ═══════════════ END AI FEATURES ═══════════════
+
+// Save / print a delivered report — opens a clean white print view; browser dialog offers paper or Save-as-PDF.
+function aiPrint(){
+  if(!AI_LAST) return;
+  const w = window.open('', '_blank');
+  if(!w){ showToast('Allow pop-ups to save the report'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+AI_LAST.fn+' — MarketSquare report</title><style>'
+   +'body{font:13px/1.5 Segoe UI,Arial,sans-serif;color:#111;margin:26px;max-width:760px}'
+   +'h1{font-size:20px;color:#1f3864;margin:0 0 2px}.sub{color:#666;font-size:11px;margin:0 0 14px;border-bottom:2px solid #1f3864;padding-bottom:8px}'
+   +'h2{font-size:15px;color:#1f3864;margin:16px 0 6px}h3{font-size:13px;color:#2e4b8f;margin:12px 0 4px}'
+   +'table{border-collapse:collapse;width:100%;font-size:11.5px;margin:8px 0}th,td{border:1px solid #999;padding:4px 7px;text-align:left}th{background:#eef2fa}'
+   +'.safety{background:#fff8e1;border:1px solid #d4b106;border-left:5px solid #d4b106;padding:10px 12px;border-radius:6px;margin:12px 0}'
+   +'a{color:#1f3864}pre{background:#f4f4f4;padding:8px;font-size:10.5px;overflow-x:auto}'
+   +'.foot{margin-top:20px;font-size:10px;color:#777;border-top:1px solid #ccc;padding-top:8px}'
+   +'@media print{.noprint{display:none}}</style></head><body>'
+   +'<h1>'+AI_LAST.fn+'</h1><div class="sub">MarketSquare AI report · '+new Date().toLocaleString()+' · all figures are estimates</div>'
+   +(AI_LAST.safety?'<div class="safety">'+AI_LAST.safety+'</div>':'')
+   +AI_LAST.html
+   +(AI_LAST.link?'<p><b>Route directions:</b> <a href="'+AI_LAST.link+'">'+AI_LAST.link+'</a></p>':'')
+   +'<div class="foot">Generated by MarketSquare AI Features · estimates and awareness only — not certified valuations, financial, legal or safety advice · trustsquare.co</div>'
+   +'<button class="noprint" onclick="window.print()" style="margin-top:14px;padding:10px 18px;font-size:14px">Print / Save as PDF</button>'
+   +'</body></html>');
+  w.document.close();
+  setTimeout(function(){ try{ w.print(); }catch(e){} }, 500);
+}
+
+// ── Report → listings bridge: create AA wizard drafts (seller reviews & publishes; never auto-publish) ──
+function aiTypeMap(t){
+  t=(t||'').toLowerCase();
+  if(t.includes('card')) return 'Trading Cards (MTG / Pokémon / Baseball)';
+  if(t.includes('stamp')) return 'Stamps';
+  if(t.includes('coin')) return 'Coins';
+  if(t.includes('memorabilia')) return 'Memorabilia';
+  return 'Other';
+}
+function aiDataUrlToBlob(d){
+  const a=d.split(','), m=a[0].match(/:(.*?);/)[1], b=atob(a[1]);
+  const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+  return new Blob([u],{type:m});
+}
+function aiSeedEmail(){
+  return sessionStorage.getItem('aa_email') || localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
+}
+async function aiListLot(){
+  if(!AI_ITEMS || !AI_ITEMS.length) return;
+  const lotTitle = (AI_LAST && AI_LAST.fn==='Collectables Advert + Market Report' && AI_ITEMS.length>1)
+    ? ('Collection · '+AI_ITEMS.length+' items — '+(AI_ITEMS[0].title||'collectables')) : (AI_ITEMS[0].title||'Collection');
+  const total = AI_ITEMS.reduce((s,it)=>s+(parseFloat(it.price_suggest)||0),0);
+  const slots=['front','back','condition_closeup'];
+  const photos = AI_PHOTOS.slice(0,3).map((p,i)=>({slot:slots[i], blob:aiDataUrlToBlob(p)}));
+  const draft = { id:'aa_'+Date.now(), email:aiSeedEmail(), category:'Collectors', stage:1,
+    fields:{ title:lotTitle.slice(0,80), item_type:aiTypeMap(AI_ITEMS[0].item_type),
+      condition:'Per item — AI visual estimates in report (final grades follow MarketSquare assessment)',
+      catalogue_ref:'Various — see AI report', edition_year:'',
+      price: total?String(Math.round(total)):'' },
+    photos:photos, created_at:Date.now(), updated_at:Date.now() };
+  await aaDB.put(draft);
+  showToast('1 lot draft created — review & publish');
+  aaRenderHome(); goTo('aa-home');
+}
+async function aiListEach(){
+  if(!AI_ITEMS || !AI_ITEMS.length) return;
+  const base = Date.now();
+  for(let i=0;i<AI_ITEMS.length;i++){
+    const it=AI_ITEMS[i];
+    const pi=(it.photo_index===0||it.photo_index)?it.photo_index:i;
+    const photos = AI_PHOTOS[pi] ? [{slot:'front', blob:aiDataUrlToBlob(AI_PHOTOS[pi])}] : [];
+    const draft = { id:'aa_'+(base+i), email:aiSeedEmail(), category:'Collectors', stage:1,
+      fields:{ title:(it.title||'Item '+(i+1)).slice(0,80), item_type:aiTypeMap(it.item_type),
+        condition:(it.condition_est||'')+' (AI visual estimate — final grade follows MarketSquare assessment)',
+        catalogue_ref:it.catalogue_ref||'', edition_year:it.edition_year||'',
+        price: it.price_suggest?String(Math.round(parseFloat(it.price_suggest))):'' },
+      photos:photos, created_at:Date.now(), updated_at:Date.now() };
+    await aaDB.put(draft);
+  }
+  showToast(AI_ITEMS.length+' drafts created — review & publish each');
+  aaRenderHome(); goTo('aa-home');
+}
