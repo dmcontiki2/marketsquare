@@ -567,7 +567,7 @@ function switchView(view) {
   } else if (view === 'ops') {
     dash.style.display = 'none';
     graph.classList.remove('visible');
-    if(ops) { ops.style.display = 'block'; loadOpsMetrics(); loadEmailTriage(); loadAiCost(); }
+    if(ops) { ops.style.display = 'block'; loadOpsMetrics(); loadEmailTriage(); loadAiCost(); loadCodeScan(); }
   } else {
     dash.style.display = '';
     graph.classList.remove('visible');
@@ -1363,6 +1363,12 @@ loadDashboard();
     <div id="aicost-endpoints" style="display:flex;flex-direction:column;gap:6px;"></div>
   </div>
   <div class="health-panel">
+    <div class="health-title">🔍 WEEKLY CODE SCAN <span class="health-updated" id="scan-updated">loading…</span></div>
+    <div class="health-grid" id="scan-metrics" style="margin-bottom:14px;"></div>
+    <div id="scan-history" style="margin-bottom:12px;"></div>
+    <div id="scan-issues" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+  <div class="health-panel">
     <div class="health-title">📧 EMAIL TRIAGE <span class="health-updated" id="triage-updated">loading…</span></div>
     <div class="health-grid" id="triage-counts" style="margin-bottom:14px;"></div>
     <div id="triage-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -1477,6 +1483,47 @@ function loadAiCost() {
   }).catch(()=>{
     document.getElementById('aicost-updated').textContent = 'fetch failed';
   });
+}
+
+function loadCodeScan() {
+  const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
+  fetch(base + '/dashboard/scan').then(r=>r.json()).then(d=>{
+    const upd = document.getElementById('scan-updated');
+    if (!d || d.available === false) {
+      upd.textContent = 'no report';
+      document.getElementById('scan-metrics').innerHTML = '<div class="hm-value" style="color:#94a3b8">No scan report yet — the weekly deep scan has not written SCAN_REPORT.json.</div>';
+      document.getElementById('scan-history').innerHTML = '';
+      document.getElementById('scan-issues').innerHTML = '';
+      return;
+    }
+    const esc = s => (s||'').toString().replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const t = d.totals || {}; const sv = d.severity_breakdown || {};
+    upd.textContent = (d.generated_at||'').slice(0,10) + ' · ' + (d.generated_by||'scan');
+    const sevCol = { CRIT:'#ef4444', HIGH:'#f87171', MED:'#fbbf24', LOW:'#94a3b8' };
+    let tiles = '';
+    tiles += '<div class="health-metric"><div class="hm-label" style="color:#f59e0b">Found this week</div><div class="hm-value">'+(t.found_this_week||0)+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label" style="color:#4ade80">Fixed this week</div><div class="hm-value">'+(t.fixed_this_week||0)+'</div></div>';
+    tiles += '<div class="health-metric"><div class="hm-label">Still open</div><div class="hm-value">'+(t.still_open||0)+'</div></div>';
+    ['CRIT','HIGH','MED','LOW'].forEach(k=>{ if (sv[k]!==undefined) tiles += '<div class="health-metric"><div class="hm-label" style="color:'+sevCol[k]+'">'+k+'</div><div class="hm-value">'+sv[k]+'</div></div>'; });
+    if (d.health_at_scan && d.health_at_scan.pylint_rating) tiles += '<div class="health-metric"><div class="hm-label">pylint</div><div class="hm-value">'+esc(d.health_at_scan.pylint_rating)+'</div></div>';
+    document.getElementById('scan-metrics').innerHTML = tiles;
+    const hist = (d.history||[]).slice(-6); let h = '';
+    if (hist.length) {
+      const maxv = Math.max(1, ...hist.map(x=>Math.max(x.found||0, x.fixed||0, x.open||0)));
+      h += '<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">FOUND · FIXED · OPEN by scan</div>';
+      hist.forEach(x=>{
+        const bar = (v,col)=>'<div style="height:7px;width:'+Math.round((v/maxv)*100)+'%;background:'+col+';border-radius:3px;min-width:2px;"></div>';
+        h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><span style="font-size:10px;color:#64748b;width:74px;flex:none;">'+esc(x.week_of)+'</span><div style="flex:1;display:flex;flex-direction:column;gap:2px;">'+bar(x.found||0,'#f59e0b')+bar(x.fixed||0,'#4ade80')+bar(x.open||0,'#64748b')+'</div><span style="font-size:10px;color:#94a3b8;width:92px;flex:none;text-align:right;">'+(x.found||0)+'f / '+(x.fixed||0)+'✓ / '+(x.open||0)+'o</span></div>';
+      });
+    }
+    document.getElementById('scan-history').innerHTML = h;
+    const rows = (d.open_issues||[]).map(it=>{
+      const col = sevCol[it.sev] || '#94a3b8';
+      const loc = esc(it.file) + (it.line ? ':'+it.line : '');
+      return '<div style="display:flex;gap:8px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05);padding:5px 0;"><span style="color:'+col+';font-weight:700;min-width:50px;flex:none;">'+esc(it.sev)+'</span><div><span style="color:#e2e8f0;font-weight:600;">'+esc(it.id)+'</span> <span style="color:#64748b;">'+loc+'</span><div style="color:#cbd5e1;margin-top:2px;">'+esc(it.summary)+'</div></div></div>';
+    }).join('');
+    document.getElementById('scan-issues').innerHTML = rows || '<div style="color:#4ade80;font-size:13px;">No open scan issues. 🎉</div>';
+  }).catch(()=>{ document.getElementById('scan-updated').textContent = 'fetch failed'; });
 }
 </script>
 

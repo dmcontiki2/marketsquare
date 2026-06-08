@@ -9,8 +9,17 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - **Verify/deploy:** local mount byte-identical to the server pre-edit; `ast.parse` + no-pyc `compile()` clean local, then `ast.parse` **and** a live `import database` in the BEA venv on the deployed copy (DB_PATH resolved); diff vs server = exactly the one removed line; `smoke_test.py --local` 40/40 all-green pre **and** post. Server backup `database.py.bak-20260608-scan12`; scp `database.py` (three-way sha256 parity mount == /tmp == server); `systemctl restart marketsquare` → **active**; `/health` ok v1.3.1 (direct 127.0.0.1:8000 + public through Cloudflare); CF purged (`{purged:true}`).
 - **Cost model impact:** none — dead-import removal; no AI calls, pricing, concurrency, or city-launch change.
 
+- **[Attended top-up · David-approved “ship the queue” · 8 Jun] Remaining maintenance queue cleared the same day.**
+  - **DASH-VER-1 · LOW · DONE** — `/dashboard/summary` `bea_version` 1.3.0→1.3.1 (hardcoded @bea_main.py:8249) + the FastAPI app-title `version=` (line 28); both lagged `/health` 1.3.1. Verified live through Cloudflare (`bea_version=1.3.1`). Display/metadata only → clears Gate 1+2.
+  - **SCAN-PANEL-1 · OPS · DONE** — new no-auth `GET /dashboard/scan` (mirrors `/dashboard/cost`; reads `SCAN_REPORT.json` via `_read_file`, returns `{available:false}` if absent). Live: found 4 / fixed 9 / open 6.
+  - **SCAN-PANEL-2 · OPS · DONE** — “🔍 WEEKLY CODE SCAN” panel in `dashboard.html` after AI Cost & Margin (plain DOM — Chart.js is **not** loaded in the dashboard; found/fixed/open tiles + severity + per-scan history bars + open-issues list). DASHBOARD VERSION GUARD respected (server==pull).
+  - **HTML-1 · LOW · DONE** — removed dead `currentView` (decl + write) from `marketsquare_admin.html`.
+  - **HTML-2 · LOW · mostly DONE** — removed unused `editingIdx`, `photoFile`, `tier` + dropped the unused `const ur =` binding (the `await fetch` is preserved → behaviour-identical). **`status` left**: every `status` token is a live `getElementById` ref — the eslint flag needs per-site confirmation (default-to-safe).
+  - **Verify/deploy (each):** fresh server pull as source of truth + sha256 parity + `ast.parse` (BEA) / `node --check` (both admin & dashboard inline blocks clean) + `smoke_test.py` 40/40 pre+post + timestamped backups `*.bak-20260608-ship` + chmod 644 + CF purge; the 3 mount copies byte-synced. No concurrent-deploy collision (loop Fixer finished 13:31Z; these deploys 14:01–14:13Z, each guarded by a pre-deploy server-sha re-check).
+  - **Cost model impact:** none.
+
 ## Next Session (135)
-- **Maintenance auto-ship queue (top → back):** DASH-VER-1 (stale `bea_version` 1.3.0→1.3.1 in `/dashboard/summary` vs `/health` 1.3.1 — reconfirmed live-drifted this run) → HTML-1 → HTML-2 → SCAN-PANEL-1+2.
+- **Maintenance auto-ship queue (top → back):** *(prior queue DASH-VER-1 / HTML-1 / HTML-2 / SCAN-PANEL-1+2 all shipped 8 Jun — attended top-up.)* Newly surfaced by the 8 Jun deep scan: SCAN-13 (unused `Query` import) → SCAN-14 (unused `sessions` param on the 410 stub) → SCAN-15 (SCAN-11 remnants `e`@1551 + `photo_entry`@2552) → SCAN-16 **non-ledger** B904 sites (auto-ship). **STAGE (Gate 2):** SCAN-16 ledger sites `bea_main.py:11528/11571` (ai-commit/ai-settle) — financial, needs approval. Residue: HTML-2 `status` (per-site confirm).
 - **Standing:** ORCH-POLICY-1; DEMO-4 R2 self-host (carries DEMO-5); PREVENT-HOMESTATS; W12-FORYOU (live); PAYMENTS (F4); LOOP-1; TR-90D (triage); CUTOVER-1 (attended/gated — NOT a fixer item).
 - **Awaiting your approval:** none.
 

@@ -25,7 +25,7 @@ from email.message import EmailMessage
 from email.utils import parseaddr, formataddr
 from datetime import datetime, timezone, timedelta
 
-app = FastAPI(title="TrustSquare BEA", version="1.3.0")
+app = FastAPI(title="TrustSquare BEA", version="1.3.1")
 
 # S4 (audit · HIGH): CORS locked to TrustSquare origins only.
 # Previously allow_origins=["*"] + allow_origin_regex=".*" — any site could call the BEA
@@ -8246,7 +8246,7 @@ def dashboard_summary():
             "pendingIntros": pending_intros,
             "tuppenceTopup": tuppence_total,
         },
-        "bea_version": "1.3.0",
+        "bea_version": "1.3.1",
     }
 
 
@@ -11138,6 +11138,27 @@ def dashboard_cost():
         },
         "by_endpoint": [dict(r) for r in by_ep],
     }
+
+
+@app.get("/dashboard/scan")
+def dashboard_scan():
+    """Unauthenticated read-only weekly code-scan snapshot for the ops dashboard.
+    Mirrors /dashboard/cost's no-auth posture (security = the obscure dashboard URL).
+    Reads SCAN_REPORT.json from the app dir via _read_file(); returns
+    {"available": false} when the file is absent or unparseable so the panel
+    renders an empty-state instead of erroring."""
+    import json as _json_scan
+    raw = _read_file("SCAN_REPORT.json")
+    if not raw:
+        return {"available": False}
+    try:
+        data = _json_scan.loads(raw)
+    except Exception:
+        return {"available": False, "error": "unparseable SCAN_REPORT.json"}
+    if isinstance(data, dict):
+        data["available"] = True
+        return data
+    return {"available": True, "data": data}
 
 
 

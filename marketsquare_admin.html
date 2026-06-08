@@ -1837,7 +1837,6 @@ let sellerData  = { name: '', email: '', city: 'Pretoria' };
 let selectedCat = '';
 let listingQueue = [];   // { formData, photos: [{thumbUrl, mediumUrl, localPreview}], status: 'queued'|'published' }
 let publishedIds = [];
-let editingIdx = null;
 
 const CAT_ICONS = { Property: '🏡', Tutors: '🎓', Services: '🔧', Adventures: '🧭', Collectors: '🏆', Cars: '🚗', LocalMarket: '🛒' };
 
@@ -2788,7 +2787,6 @@ function showToast(msg) {
 }
 
 // ── VIEW MANAGEMENT ────────────────────────────────────────
-let currentView = 'onboard';
 
 function goView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -2797,7 +2795,6 @@ function goView(name) {
   document.getElementById('nav-' + name).classList.add('active');
   const isWizard = name === 'onboard';
   document.getElementById('footer-bar').style.display = isWizard ? 'flex' : 'none';
-  currentView = name;
   window.scrollTo(0, 0);
   if (name === 'listings' && !allListings.length) loadAllListings();
   if (name === 'alerts') loadAlerts();
@@ -4506,7 +4503,6 @@ async function runAI5BatchCards() {
 async function addBatchDraftToQueue(i) {
   const d = (window._ai5Drafts || [])[i];
   const photoDataUrl = (window._ai5Photos || [])[i];
-  const photoFile    = (_batchPhotos[i] || {}).file || null;
   if (!d) return;
 
   const btn = document.getElementById('bc-add-btn-' + i);
@@ -5219,9 +5215,8 @@ async function cityExtendLoad(email, listingId) {
   panel.style.display = 'block';
 
   // Check seller tier
-  let tier = 'free';
   try {
-    const ur = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/identity-status', {
+    await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/identity-status', {
       headers: { 'X-Api-Key': API_KEY }
     });
     // identity-status doesn't return tier — use a simpler check
