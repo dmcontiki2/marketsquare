@@ -1,5 +1,5 @@
 # TrustSquare Orchestrated Maintenance — Operating Policy
-**v1.0 · 2 June 2026 · David-approved**
+**v1.1 · 10 June 2026 · David-approved** *(v1.1 adds §6.7 — one git push/day, Orchestrator-owned; v1.0 · 2 June 2026)*
 
 The single source of truth for the background maintenance loop. The Sensor, Fixer, and
 Orchestrator scheduled tasks each read this file at the start of every run. Change behaviour
@@ -93,6 +93,7 @@ David-approved, to avoid impeding progress with extra holds. Example: adding aut
 5. **One item per run. No git from the sandbox** (David commits from PowerShell). Deploy only via the
    standard `scp` + `systemctl restart marketsquare` + Cloudflare purge.
 6. **Codex is law.** If a business-logic gap appears, FILE it; never invent product rules.
+7. **One git push per day — the Orchestrator owns it (David-approved · 10 June 2026).** The loop hands David exactly ONE commit/push block per day, in the Orchestrator's daily brief. The Orchestrator runs last (05:00, after the 04:00 Fixer), so its `git add -A` sweep captures the Fixer's shipped change, any deploy/FEA drift, and the doc write-backs in a single commit. **The Fixer and Sensor NEVER surface a push** — the Fixer still does its normal doc write-back + scp, then records "N files pending → deferred to the Orchestrator sweep" and stops. *Rationale:* both agents act on the same working tree and git commits the tree (not per-agent diffs), so a second push always finds "nothing to commit." *Backstop:* if the Orchestrator misses a day, pending changes sit safely uncommitted and the next sweep catches them (`git add -A` is comprehensive by design). Attended (non-loop) sessions keep doing their own session-end sweep. Before surfacing, the Orchestrator confirms no secret is staged (`ssh_hetzner_key` / any `.env` stays gitignored).
 
 ## 7 · What this loop never touches (owned by David + attended sessions)
 - Design / UX / accessibility items → **FILE** to the design track.
