@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=121">
+<link rel="stylesheet" href="/static/ms.css?v=122">
   <!-- TrustSquare brand -->
   <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
@@ -1188,6 +1188,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="ai-fn-blurb" id="ai-fn-blurb"></div>
     <div id="ai-params"></div>
     <label class="ai-dry"><input type="checkbox" id="ai-dryrun" checked> Sample preview &mdash; $0, no Tuppence charged <span class="ai-dev">(testing phase &middot; untick for a real run)</span></label>
+    <button class="ai-exbtn" id="ai-exbtn" onclick="aiExample()">&#128065; See an example (free)</button>
     <button class="ai-runbtn" id="ai-runbtn" onclick="aiRun()"></button>
     <div class="ai-status" id="ai-status"></div>
     <div id="ai-routemap"></div><div class="ai-maplinks" id="ai-maplinks"></div>
@@ -4054,7 +4055,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=160"></script>
+<script src="/static/ms.js?v=161"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

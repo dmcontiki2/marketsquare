@@ -313,3 +313,4 @@ Run the clean-refresh pass first (re-scrape launch city + free MX re-verify), th
 | AI-4 | API rate-limit tier review before launch volume (serial worker is the stopgap; 2 parallel web-search runs 429 today) | AdvertAgent |
 | AI-5 | Wallet UI: AI feature spend must render under "AI feature credits — not used for introductions" (Briefing §5) when FEA wiring lands | AdvertAgent |
 | AI-6 | nginx housekeeping: sites-enabled/marketsquare.bak_gate loads as a duplicate server block (pre-existing warn) — move out of sites-enabled | Infra |
+| AI-7 | **Featured Local Slots** (DESIGNED, awaiting decision — AdvertAgent/Featured_Local_Slots_Design_Brief.docx) — subscriber-promoted local listings (3 mini-cards) at foot of relevant AI reports, 50/100T, area-bound, density scales by city. Needs 2 council rulings (ad-free brand · business-vs-A2 anonymity) + design-first clean build post-launch when subscriber inventory exists. $0 AI cost (revenue generator). | AdvertAgent |

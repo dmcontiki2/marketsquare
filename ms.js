@@ -12395,7 +12395,7 @@ async function aiBoot(){
           <span class="ai-tag price">${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
         </div>
-        <h3>${f.name}</h3><p>${f.blurb}</p>
+        <h3><span class="ai-ico">${f.icon||'\u2728'}</span> ${f.name}</h3><p>${f.blurb}</p>
       </div>`).join('');
   }catch(e){
     document.getElementById('ai-grid').innerHTML =
@@ -12632,6 +12632,31 @@ function aiPrint(){
    +'</body></html>');
   w.document.close();
   setTimeout(function(){ try{ w.print(); }catch(e){} }, 500);
+}
+
+// Free worked example — no Tuppence, no sign-in; shows what a report looks like before buying.
+async function aiExample(){
+  if(!AI_SEL) return;
+  const st=document.getElementById('ai-status');
+  st.innerHTML='<span class="ai-spin"></span>loading example\u2026';
+  document.getElementById('ai-result').style.display='none';
+  document.getElementById('ai-listbtns').style.display='none';
+  document.getElementById('ai-savebtn').style.display='none';
+  aiDrawMap(null); aiSafety(null);
+  try{
+    const r=await fetch('/ai/example/'+AI_SEL.id);
+    if(!r.ok) throw new Error('no example yet');
+    const d=await r.json();
+    let txt=d.result||'', wps=null;
+    const wm=txt.match(/\u0060\u0060\u0060json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*\u0060\u0060\u0060/);
+    if(wm){try{wps=JSON.parse(wm[1]).waypoints;txt=txt.replace(wm[0],'');}catch(e){}}
+    const sm=txt.match(/##\s*\d*\s*[\u00b7]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
+    if(sm){aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[\u00b7]?\s*/,'## \u26a0\ufe0f ')));txt=txt.replace(sm[0],'');}
+    st.innerHTML='<span class="ai-ok">\u2713 Example \u2014 this is a sample of what you receive (free, no Tuppence used)</span>';
+    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt);
+    document.getElementById('ai-result').style.display='block';
+    aiDrawMap(wps);
+  }catch(e){ st.innerHTML='<span class="ai-bad">No example available yet for this one.</span>'; }
 }
 
 // ── Report → listings bridge: create AA wizard drafts (seller reviews & publishes; never auto-publish) ──

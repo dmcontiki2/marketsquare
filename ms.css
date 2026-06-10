@@ -1248,3 +1248,6 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-listbtns{display:flex;gap:8px;margin-top:8px}
 .ai-listbtns button{flex:1;background:#f0b429;color:#1a1300;border:0;border-radius:10px;padding:11px 6px;font-size:13px;font-weight:800;cursor:pointer}
 .ai-listbtns button:last-child{background:#0d1a38;color:#f0b429;border:1px solid #6b5516}
+.ai-ico{font-size:17px;margin-right:3px}
+.ai-exbtn{width:100%;background:transparent;color:#7cc4ff;border:1px solid #24407c;border-radius:10px;padding:10px;font-size:13px;cursor:pointer;margin-top:10px;font-weight:600}
+.ai-exbanner{background:#10324f;color:#bcd3f5;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:10px;display:inline-block}
