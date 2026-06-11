@@ -23,7 +23,7 @@ LOCAL = "--local" in sys.argv  # --local: run shell cmds on THIS host (server cr
 def _run(cmd, stdin=None, timeout=25):
     """Transport for every shell assertion. Default ssh's to the box (David's workstation usage);
     --local runs the SAME command on the box itself (server-cron usage). Identical otherwise."""
-    argv = ["bash", "-c", cmd] if LOCAL else ["ssh", "root@178.104.73.239", cmd]
+    argv = ["bash", "-c", cmd] if LOCAL else ["ssh", "msdeploy@178.104.73.239", cmd]  # scoped deploy user (11 Jun 2026); root@ = break-glass only
     return subprocess.run(argv, input=stdin, capture_output=True, timeout=timeout)
 
 def ssh(cmd, stdin=None, timeout=25):

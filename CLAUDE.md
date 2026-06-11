@@ -143,3 +143,6 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 - 4-level geo hierarchy live: Country → Region → City → Suburb (ZA seeded: 9 provinces, 54 cities, 11,679 suburbs)
 - Edit-after-publish with version control live in both apps (Session 20)
 - Next milestone: Deploy Session 20 changes · Paystack live mode · n8n email notifications
+
+## David's document preferences (added 11 Jun 2026)
+**Always deliver reports/documents to David as formatted Word (.docx) files, never raw .md/.txt** — he reads them in MS Word and plain markdown opens as an unreadable encoding dialog. Generate the .docx with real styling (headings, tables, colour for CRITICAL/WARN) alongside any machine-readable .md. This applies to audit reports, sweeps, deliberations — anything he will read.

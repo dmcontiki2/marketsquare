@@ -1,3 +1,15 @@
+## Session 135c · 11 June 2026 — Cost-principle enforcement: nightly sweep + spend endpoint (attended, staged)
+
+Codified David's three cost principles (P1 $0-first / Haiku-or-cheaper / hardcode-where-clever · P2 budget every call · P3 independence & hot-swap) into automation:
+
+- **`scripts/cost_compliance_sweep.py`** — pure-static, $0, no-network sweep of all 7 repos: AST wrapper-compliance on every Anthropic call site (ceiling + spend-log + Tuppence metering), model discipline (Haiku default; Sonnet allowed only paid+metered; Opus = critical), paid-provider flag check (ai_service_tiers + feature_flags.json), BEFORE-YOU-TEST cost-surface checklist (dry-run default, Google Places key, ceiling reminder — the two incidents that bit us), cost-workbook drift vs code tiers, optional live spend pull. Writes `Records/COST_SWEEP_<date>.md`; exit 2 on critical.
+- **`GET /admin/ai-spend/summary`** (bea_main.py, admin-key gated) — today/7-day spend, ceilings (warns when platform ceiling 0/unset = uncapped), per-endpoint breakdown. Live-spend wiring for the sweep via MS_BEA_URL + MS_API_KEY. TestClient ✓ (200 with key, 401 without).
+- **Scheduled task** `nightly-cost-compliance-sweep` (02:00, Cowork) — runs the sweep, diffs against the previous report, summarises new findings each morning.
+
+First sweep results (2026-06-11): 2 critical — `grade_card_condition` (bea_main.py:~11454) unwrapped+unmetered (dormant, no callers); `data_audit.py:158` uses Opus. 10 warnings incl. 3 Tuppence-metered endpoints not spend-logged (AI1/AI2/AI5) and workbook Assumptions still on the old $12/$20/$40/$100 tiers.
+
+**Cost model impact:** none — the sweep and endpoint are $0 by construction; they exist to keep everything else inside the model.
+
 ## Session 135b · 11 June 2026 — Simpler Model audit gaps closed (attended, staged)
 
 The three gaps from the morning audit, built for David to test locally. Nothing deployed or committed; backups `*.bak-20260611-062545` beside every edited file.

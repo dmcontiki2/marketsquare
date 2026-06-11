@@ -3433,6 +3433,40 @@ def verify_seller_subscription(reference: str):
 
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
 
+@app.get("/admin/ai-spend/summary")
+def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
+    """Live AI-spend summary for the nightly cost-compliance sweep (P2, 11 Jun 2026).
+    Returns today's and 7-day spend, the configured ceilings, and a 7-day
+    per-endpoint/model breakdown. Read-only; $0; admin key required."""
+    conn = database.get_db()
+    try:
+        today = datetime.utcnow().strftime("%Y-%m-%d 00:00:00")
+        week = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d 00:00:00")
+        t = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS u, COUNT(*) AS n "
+                         "FROM ai_spend_log WHERE logged_at >= ?", (today,)).fetchone()
+        w = conn.execute("SELECT COALESCE(SUM(est_cost_usd),0) AS u, COUNT(*) AS n "
+                         "FROM ai_spend_log WHERE logged_at >= ?", (week,)).fetchone()
+        cfg = conn.execute("SELECT daily_user_ceiling_usd, daily_platform_ceiling_usd "
+                           "FROM ai_spend_config WHERE id = 1").fetchone()
+        by_ep = conn.execute(
+            "SELECT endpoint, model, COALESCE(SUM(est_cost_usd),0) AS usd, COUNT(*) AS calls, "
+            "SUM(cost_is_real) AS real_rows FROM ai_spend_log WHERE logged_at >= ? "
+            "GROUP BY endpoint, model ORDER BY usd DESC LIMIT 25", (week,)).fetchall()
+    finally:
+        conn.close()
+    return {
+        "today_usd": round(t["u"], 4), "today_calls": t["n"],
+        "week_usd": round(w["u"], 4), "week_calls": w["n"],
+        "daily_user_ceiling_usd": (cfg["daily_user_ceiling_usd"] if cfg else 0) or 0,
+        "daily_platform_ceiling_usd": (cfg["daily_platform_ceiling_usd"] if cfg else 0) or 0,
+        "ceiling_warning": (None if cfg and (cfg["daily_platform_ceiling_usd"] or 0) > 0
+                            else "platform ceiling is 0/unset — AI spend is UNCAPPED"),
+        "by_endpoint": [{"endpoint": r["endpoint"], "model": r["model"],
+                         "usd": round(r["usd"], 4), "calls": r["calls"],
+                         "estimated_rows": r["calls"] - (r["real_rows"] or 0)} for r in by_ep],
+    }
+
+
 @app.post("/admin/migrate-photos")
 def migrate_photos(_key: str = Depends(auth.require_api_key)):
     """Migrate existing local photos to Hetzner Object Storage.

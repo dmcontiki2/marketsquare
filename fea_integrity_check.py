@@ -17,6 +17,12 @@ A separate prior gotcha was an off-by-one from measuring sizes via shell command
 substitution (which strips trailing newlines). This script removes both failure
 modes by validating + retrying, and by measuring raw byte length in-process.
 
+2026-06-11 (FEA-INTEGRITY-FP-1): Cloudflare injects bytes into the publicly served
+HTML, so the public-fetch byte compare false-alerted daily. The fingerprint now
+measures the ON-DISK origin files (index.html, static/ms.js, static/ms.css) -- the
+source of truth the loop already sha-verifies against local -- and reports the
+CF-vs-origin index delta as an informational note only, never an alert.
+
 What counts as a signal
 -----------------------
   * same version, different byte size  -> ALERT (tamper / corruption / bad deploy)
@@ -146,18 +152,43 @@ def bea_version():
         return None
 
 
+DISK_FILES = {
+    "index": "index.html",
+    "ms.js": os.path.join("static", "ms.js"),
+    "ms.css": os.path.join("static", "ms.css"),
+}
+
+
+def measure_disk(name):
+    """Read the served asset straight from disk (the origin source of truth on this box).
+    Immune to Cloudflare edge HTML injection (FEA-INTEGRITY-FP-1). Floor-checked like
+    the old fetch path so a truncated/corrupt file still raises."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), DISK_FILES[name])
+    with open(path, "rb") as f:
+        body = f.read()
+    if len(body) < MIN_BYTES[name]:
+        raise RuntimeError(f"{name}: on-disk size {len(body)}B below sanity floor {MIN_BYTES[name]}B")
+    return {"bytes": len(body), "body": body}
+
+
 def gather():
-    """Fetch + validate everything. Raises RuntimeError on inability to measure."""
-    idx = measure("index", f"{BASE}/")
+    """Measure origin (on-disk) assets + parse versions. Raises RuntimeError on inability to measure."""
+    idx = measure_disk("index")
     vjs, vcss = parse_versions(idx["body"])
-    js = measure("ms.js", f"{BASE}/static/ms.js?v={vjs}")
-    css = measure("ms.css", f"{BASE}/static/ms.css?v={vcss}")
+    js = measure_disk("ms.js")
+    css = measure_disk("ms.css")
+    cf_index_bytes = None
+    try:  # informational only: how many bytes the Cloudflare edge adds to the HTML
+        cf_index_bytes = measure("index", f"{BASE}/")["bytes"]
+    except Exception:
+        pass
     return {
         "bea_version": bea_version(),
         "index_bytes": idx["bytes"],
         "ms_js": {"version": vjs, "bytes": js["bytes"]},
         "ms_css": {"version": vcss, "bytes": css["bytes"]},
-        "attempts": {"index": idx["attempts"], "ms.js": js["attempts"], "ms.css": css["attempts"]},
+        "cf_index_bytes": cf_index_bytes,
+        "attempts": {"index": 1, "ms.js": 1, "ms.css": 1},
     }
 
 
@@ -186,6 +217,13 @@ def compare(live, base):
                 f"{label} v{lv['version']} bytes {bv['bytes']} -> {lv['bytes']} (delta {d:+d}) "
                 f"- SAME version, size changed = tamper/corruption signal"
             )
+
+    cfb = live.get("cf_index_bytes")
+    if cfb is not None and cfb != live["index_bytes"]:
+        notes.append(
+            f"edge serves index {cfb}B vs origin {live['index_bytes']}B "
+            f"(delta {cfb - live['index_bytes']:+d}B = Cloudflare HTML injection; informational, never an alert)"
+        )
 
     return alerts, notes
 

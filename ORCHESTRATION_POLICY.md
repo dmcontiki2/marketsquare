@@ -1,5 +1,5 @@
 # TrustSquare Orchestrated Maintenance — Operating Policy
-**v1.1 · 10 June 2026 · David-approved** *(v1.1 adds §6.7 — one git push/day, Orchestrator-owned; v1.0 · 2 June 2026)*
+**v1.2 · 11 June 2026 · David-approved** *(v1.2 merges the three daily tasks into one sequential 06:30 run + hardened SSH to the scoped `msdeploy` user — see §2; v1.1 adds §6.7 — one git push/day, Orchestrator-owned; v1.0 · 2 June 2026)*
 
 The single source of truth for the background maintenance loop. The Sensor, Fixer, and
 Orchestrator scheduled tasks each read this file at the start of every run. Change behaviour
@@ -23,9 +23,22 @@ genuinely matter reach David. Design, UX, and architecture are owned by David + 
 ```
 
 ## 2 · Daily cadence (local / SAST)
-- **03:30 — Sensor** (read-only sense)
-- **04:00 — Fixer** (works exactly one item from the queue)
-- **05:00 — Orchestrator** (triage + write the daily report + set the next queue)
+**One merged task — `trustsquare-daily-loop` at 06:30** — runs the three phases sequentially in a
+single session (v1.2, David-approved 11 Jun 2026):
+- **Phase 1 — Sensor** (read-only sense)
+- **Phase 2 — Fixer** (works exactly one item from the queue seeded by yesterday's Phase 3)
+- **Phase 3 — Orchestrator** (triage + write the daily report + set the next queue + the §6.7 git block)
+
+*Why merged:* the old 03:30/04:00/05:00 separate tasks relied on clock-gap ordering, which collapsed
+whenever the machine was asleep at fire time (recurring LOOP-STALL, 8 + 11 Jun 2026) — catch-up runs
+fired all three simultaneously. Sequential phases in one run make ordering structural. 06:30 sits
+after typical machine wake so on-time runs are the norm. The cron sensor shadow (`findings.cron.json`,
+01:30) is unchanged and remains the fallback when the app is closed.
+
+**SSH (v1.2 hardening):** the loop connects as the scoped **`msdeploy`** user (owns
+`/var/www/marketsquare`; sudo limited to `systemctl restart|status|is-active marketsquare`).
+`root@` is David's break-glass fallback only — the loop never uses it; if msdeploy access breaks,
+the loop flags SEV-2 and runs read-only.
 
 One full loop per day. Discovery→report-of-fix latency is ~26h by design; that is fine for hygiene.
 
