@@ -1,0 +1,31 @@
+--- a/marketsquare_admin.html
++++ b/marketsquare_admin.html
+@@ -3072,5 +3072,5 @@
+ 
+ async function doAcceptIntro(id) {
+-  if (!confirm('Accept intro #' + id + '? This will charge 1T to the buyer.')) return;
++  if (!confirm('Accept intro #' + id + '? This burns the 1T the buyer committed at request.')) return;
+   showToast('Accepting...');
+   try {
+@@ -3781,6 +3781,5 @@
+     res.innerHTML = `<strong>${email}</strong><br>
+       Tuppence balance: <strong>${tData.balance}T</strong><br>
+-      AI sessions remaining: <strong>${uData ? (uData.aa_sessions_remaining || 0) : 'user not registered'}</strong><br>
+-      Free AI session used: <strong>${uData ? (uData.aa_free_used ? 'Yes' : 'No') : '—'}</strong>`;
++      AI: in-app guidance free · advanced AI per-use in Tuppence (session counters retired — CC-002)`;
+     res.style.display = 'block';
+   } catch(e) {
+@@ -5247,5 +5246,5 @@
+     <div style="background:#ecfdf5;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+       <div style="font-size:13px;font-weight:700;color:#065f46;">🌍 Extend City Reach</div>
+-      <div style="font-size:11px;color:#6b7280;">$5/month · Starter</div>
++      <div style="font-size:11px;color:#6b7280;">from $12/month · paid plans</div>
+     </div>
+     <div style="padding:12px 14px;">
+@@ -5335,5 +5334,5 @@
+         <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 12px;margin-top:4px;">
+           <div style="font-size:13px;font-weight:700;color:#92400e;">🔒 Starter subscription required</div>
+-          <div style="font-size:12px;color:#374151;margin-top:4px;">Upgrade to <strong>$5/month</strong> to extend your listing to other cities and reach buyers nationwide.</div>
++          <div style="font-size:12px;color:#374151;margin-top:4px;">Upgrade to a paid plan (from <strong>$12/month</strong>) to extend your listing to other cities and reach buyers nationwide.</div>
+         </div>`;
+       return;

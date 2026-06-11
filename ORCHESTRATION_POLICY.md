@@ -100,6 +100,16 @@ David-approved, to avoid impeding progress with extra holds. Example: adding aut
 - `bea_main.py` structure → **FILE** to the modularization track (M1→M9 in `MODULARIZATION_PLAN.md`).
 - Legal / ops launch blockers (EULA counsel, Paystack live, support mailbox, etc.) → **FILE**.
 
+### 7.1 · Change-Control mode (big cross-cutting changes — the loop never auto-runs these)
+A **large change that ripples across many artifacts** (a Codex rule, pricing/tier model, IP/whitepaper
+lineage, a business-process redefinition) is governed by **`CHANGE_CONTROL_PROTOCOL.md` (CCP)**, not this
+nightly loop. The CCP **reuses the three roles** — Sensor (mechanical grep of the change's *term map* across
+the whole tree, zero-token), Fixer (surgical edits), Orchestrator (verify-to-zero + report) — but runs them
+**ATTENDED and fully gated**: every canon/pricing/IP edit stages for David (Gates §5 + the §12 never-automated
+list). The nightly loop's job is to **FILE** any drift it senses that belongs to an open CCP change
+(`CHANGE_REGISTER.md`), never to action it. The CCP's "verified" bar = Sensor grep returns **zero** surviving
+old tokens **and** the traceability matrix is 100% **and** smoke is green.
+
 ## 8 · Approval flow (v1)
 Staged items appear on the live page and in the daily report under **"Awaiting your approval."**
 To approve: tell Claude **"approve `<id>`"** in any session. The item is marked `approved:true` and

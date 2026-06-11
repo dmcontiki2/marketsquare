@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function(){
+  var k = sessionStorage.getItem('ts_support_auth');
+  if (k !== '96315') {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.innerHTML = '';
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:#0b0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Inter,sans-serif;z-index:9999;';
+      overlay.innerHTML = '<div style="text-align:center;padding:32px;max-width:360px;width:90%;">'
+        + '<div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800;color:#e2e8f0;margin-bottom:4px;">TrustSquare</div>'
+        + '<div style="font-size:13px;color:#64748b;margin-bottom:32px;">Support Centre</div>'
+        + '<div style="font-size:14px;color:#94a3b8;margin-bottom:12px;">Enter access code to continue</div>'
+        + '<input id="ts-pw" type="password" placeholder="Access code" autofocus style="width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:#111827;color:#e2e8f0;font-size:16px;outline:none;text-align:center;letter-spacing:4px;font-family:Inter,sans-serif;margin-bottom:12px;">'
+        + '<button onclick="tsAuth()" style="width:100%;padding:14px;border-radius:12px;background:#d4a853;border:none;color:#0b0f1a;font-size:15px;font-weight:700;font-family:Syne,sans-serif;cursor:pointer;">Enter →</button>'
+        + '<div id="ts-err" style="margin-top:10px;font-size:12px;color:#f87171;display:none;">Incorrect code. Please try again.</div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+      document.getElementById('ts-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') tsAuth(); });
+    });
+  }
+  window.tsAuth = function() {
+    var val = document.getElementById('ts-pw').value;
+    if (val === '96315') {
+      sessionStorage.setItem('ts_support_auth', '96315');
+      location.reload();
+    } else {
+      document.getElementById('ts-err').style.display = 'block';
+      document.getElementById('ts-pw').value = '';
+      document.getElementById('ts-pw').focus();
+    }
+  };
+})();
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support · TrustSquare</title>
+  <meta name="description" content="Get help with TrustSquare — answers for buyers and sellers, and direct contact with our support team.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0b0f1a;
+      --navy-2:  #111827;
+      --navy-3:  #1a2232;
+      --gold:    #d4a853;
+      --gold-lt: #e8c97a;
+      --text:    #e2e8f0;
+      --text-2:  #94a3b8;
+      --text-3:  #64748b;
+      --border:  rgba(255,255,255,.08);
+      --border-2:rgba(255,255,255,.13);
+      --green:   #4ade80;
+      --radius:  14px;
+    }
+
+    body {
+      background: var(--navy);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,15,26,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; }
+    .nav-logo span { color: var(--gold); }
+    .nav-back { font-size: 13px; color: var(--text-2); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color .15s; }
+    .nav-back:hover { color: var(--gold); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0b0f1a 0%, #111827 60%, #1a1a2e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 72px 24px 60px;
+      text-align: center;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 18px; }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(28px,5vw,44px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 14px; }
+    .hero h1 span { color: var(--gold); }
+    .hero p { font-size: 17px; color: var(--text-2); max-width: 560px; margin: 0 auto 32px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.25);
+      color: var(--green); border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600;
+    }
+    .hero-badge::before { content: '●'; font-size: 8px; }
+
+    /* ── Layout ── */
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Contact cards ── */
+    .contact-row {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+      padding: 48px 0 0;
+    }
+    @media(max-width:640px){ .contact-row { grid-template-columns: 1fr; } }
+
+    .contact-card {
+      background: var(--navy-3); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      text-align: center; transition: border-color .2s;
+    }
+    .contact-card:hover { border-color: var(--gold); }
+    .contact-card .icon { font-size: 32px; margin-bottom: 12px; }
+    .contact-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .contact-card p { font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
+    .contact-card a {
+      display: inline-block; font-size: 13px; font-weight: 700;
+      color: var(--gold); text-decoration: none; border: 1.5px solid var(--gold);
+      border-radius: 8px; padding: 7px 18px; transition: all .15s;
+    }
+    .contact-card a:hover { background: var(--gold); color: var(--navy); }
+    .response-tag { display: inline-block; font-size: 11px; color: var(--text-3); margin-top: 8px; }
+
+    /* ── Section titles ── */
+    .section-head {
+      text-align: center; padding: 64px 0 32px;
+    }
+    .section-head .pill {
+      display: inline-block; background: rgba(212,168,83,.12); color: var(--gold);
+      border: 1px solid rgba(212,168,83,.25); border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      padding: 4px 14px; margin-bottom: 14px;
+    }
+    .section-head h2 { font-family: 'Syne', sans-serif; font-size: clamp(22px,4vw,32px); font-weight: 800; }
+
+    /* ── FAQ tabs ── */
+    .faq-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 32px; }
+    .faq-tab {
+      padding: 8px 22px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: 1.5px solid var(--border); color: var(--text-2);
+      background: transparent; transition: all .15s; font-family: 'Inter', sans-serif;
+    }
+    .faq-tab.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,83,.08); }
+
+    /* ── FAQ accordions ── */
+    .faq-group { display: none; }
+    .faq-group.active { display: block; }
+
+    .faq-item {
+      background: var(--navy-3); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+    }
+    .faq-q {
+      width: 100%; text-align: left; padding: 18px 20px;
+      background: transparent; border: none; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      font-size: 15px; font-weight: 600; color: var(--text); font-family: 'Inter', sans-serif;
+      transition: color .15s;
+    }
+    .faq-q:hover { color: var(--gold); }
+    .faq-q .arrow { font-size: 18px; color: var(--text-3); transition: transform .25s; flex-shrink: 0; }
+    .faq-item.open .faq-q .arrow { transform: rotate(180deg); color: var(--gold); }
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s;
+      font-size: 14px; color: var(--text-2); line-height: 1.75;
+      padding: 0 20px;
+    }
+    .faq-item.open .faq-a { max-height: 400px; padding: 0 20px 20px; }
+    .faq-a a { color: var(--gold); text-decoration: none; }
+    .faq-a a:hover { text-decoration: underline; }
+
+    /* ── Contact form ── */
+    .contact-form-wrap {
+      background: var(--navy-3); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 40px; margin: 48px 0 0;
+    }
+    .contact-form-wrap h3 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .contact-form-wrap p { font-size: 14px; color: var(--text-2); margin-bottom: 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:560px){ .form-row { grid-template-columns: 1fr; } }
+    .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-field label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; }
+    .form-field input, .form-field select, .form-field textarea {
+      background: var(--navy-2); border: 1.5px solid var(--border-2);
+      color: var(--text); border-radius: 8px; padding: 11px 14px;
+      font-size: 14px; font-family: 'Inter', sans-serif;
+      transition: border-color .15s; outline: none; width: 100%;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--gold); }
+    .form-field textarea { resize: vertical; min-height: 110px; }
+    .form-field select { appearance: none; cursor: pointer; }
+    .form-submit {
+      margin-top: 8px; width: 100%; padding: 14px;
+      background: var(--gold); color: var(--navy); font-size: 15px; font-weight: 800;
+      border: none; border-radius: 10px; cursor: pointer; font-family: 'Syne', sans-serif;
+      transition: background .15s;
+    }
+    .form-submit:hover { background: var(--gold-lt); }
+    .form-success {
+      display: none; text-align: center; padding: 32px;
+      color: var(--green); font-size: 15px; font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border); margin-top: 80px;
+      padding: 32px 24px; text-align: center;
+      font-size: 12px; color: var(--text-3);
+    }
+    footer a { color: var(--text-3); text-decoration: none; }
+    footer a:hover { color: var(--gold); }
+    .footer-logo { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--text-2); margin-bottom: 8px; }
+    .footer-logo span { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="https://trustsquare.co">Trust<span>Square</span></a>
+  <a class="nav-back" href="https://trustsquare.co">← Back to marketplace</a>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-icon">💬</div>
+  <h1>How can we <span>help you?</span></h1>
+  <p>Find answers to common questions, or reach our support team directly. We're here to help buyers and sellers get the most out of TrustSquare.</p>
+  <div class="hero-badge">Support team active · Mon–Fri, 8am–6pm SAST</div>
+</div>
+
+<!-- Contact cards -->
+<div class="container">
+  <div class="contact-row">
+
+    <div class="contact-card">
+      <div class="icon">✉️</div>
+      <h3>Email Support</h3>
+      <p>Send us a message and we'll get back to you within one business day.</p>
+      <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>
+      <div class="response-tag">Response within 24 hours</div>
+    </div>
+
+    <div class="contact-card">
+      <div class="icon">📖</div>
+      <h3>Browse the FAQs</h3>
+      <p>Quick answers to the most common questions from buyers and sellers.</p>
+      <a href="#faqs">View FAQs ↓</a>
+      <div class="response-tag">Instant answers</div>
+    </div>
+
+    <div class="contact-card">
+      <div class="icon">🛒</div>
+      <h3>Back to Marketplace</h3>
+      <p>Ready to browse listings or manage your seller account?</p>
+      <a href="https://trustsquare.co">Open TrustSquare</a>
+      <div class="response-tag">Always available</div>
+    </div>
+
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="section-head" id="faqs">
+    <div class="pill">FAQ</div>
+    <h2>Frequently Asked Questions</h2>
+  </div>
+
+  <div class="faq-tabs">
+    <button class="faq-tab active" onclick="switchTab('buyers', this)">🛍 Buyers</button>
+    <button class="faq-tab" onclick="switchTab('sellers', this)">🏪 Sellers</button>
+    <button class="faq-tab" onclick="switchTab('payments', this)">💳 Payments & Refunds</button>
+  </div>
+
+  <!-- Buyers FAQ -->
+  <div class="faq-group active" id="faq-buyers">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do I connect with a seller on TrustSquare?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">Browse listings in your city and category. When you find something you're interested in, tap the listing to view details. Use your credits to send a connection request to the seller. If the seller confirms, you'll be notified and can proceed from there — your personal contact details remain private throughout.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Are my personal details shared with sellers?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">No. TrustSquare is designed to protect your privacy. Your name and email address are never shared with sellers without your explicit consent. All communication is handled through the TrustSquare platform until you choose to share more.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What is the Trust Score shown on listings?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">The Trust Score is a rating from 70–96 that reflects the reliability and track record of a seller on TrustSquare. It is based on factors such as response rate, completed connections, and account standing. Higher scores indicate sellers with a stronger history of engagement.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What happens if a seller doesn't respond to my request?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">When you send a connection request, 1 credit is committed (held). If the seller does not confirm, the hold is released back to you in full — a credit is only used when a seller actively confirms. Sellers who consistently fail to respond will see their Trust Score affected. You can browse other listings and send requests freely.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Can I use TrustSquare outside South Africa?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">TrustSquare is currently live in Pretoria, South Africa. Additional cities including New York, London, and Sydney are coming in Wave 1 of our global expansion. Stay tuned for launch announcements.</div>
+    </div>
+
+  </div>
+
+  <!-- Sellers FAQ -->
+  <div class="faq-group" id="faq-sellers">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do I list my product or service on TrustSquare?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">Create a seller account via the TrustSquare admin panel. Complete your profile, accept the seller terms, and create your listing with photos, description, and pricing. Once published, your listing goes live and becomes visible to buyers in your city and category. You must have an active subscription to publish listings.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What are the seller subscription tiers?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">TrustSquare offers three tiers:<br><br>
+        <strong>Free</strong> — R0/month · 2 active listings · 30-day duration<br>
+        <strong>Starter</strong> — $5/month · 20 active listings · 60-day duration<br>
+        <strong>Premium</strong> — $15/month · 50 active listings · 120-day duration<br><br>
+        All tiers include access to the seller dashboard, photo uploads, and Trust Score tracking.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What happens when my listing expires?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">Listings have a set duration depending on your subscription tier. You'll receive an email reminder 7 days before your listing expires. After expiry, your listing is removed from buyer searches but your listing details are saved. You can renew from the admin panel at any time — no re-approval required.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How does my Trust Score work?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">Your Trust Score is calculated automatically based on your engagement on the platform. Responding promptly to buyer requests, completing connections, and maintaining an active listing in good standing all contribute positively. Your score is displayed on every listing you publish and is visible to buyers before they engage.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Am I obligated to accept every buyer request?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">No. You are never obligated to accept a buyer connection request. You can decline at any time. However, consistent non-responses may affect your Trust Score over time. A buyer's committed credit is only used when you actively confirm — declining releases their hold, so it costs them nothing and maintains a fair marketplace for everyone.</div>
+    </div>
+
+  </div>
+
+  <!-- Payments FAQ -->
+  <div class="faq-group" id="faq-payments">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do buyer credits work?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">Buyers purchase credit packs to send connection requests to sellers. When a buyer sends a request, the credit is committed (held). It is only used when a seller actively confirms; if a seller declines or does not respond, the hold is released and no credits are used. All payments are processed securely through Paystack.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What is your refund policy?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">
+        <strong>Buyer credits:</strong> Since a committed credit is released in full on a declined or expired request, and only consumed on confirmed connections, there is generally nothing to refund on a declined request. If you experience a verified technical payment failure, contact <a href="mailto:support@trustsquare.co">support@trustsquare.co</a> within 14 days for a full refund.<br><br>
+        <strong>Seller subscriptions:</strong> You may cancel your subscription at any time. Your listings remain active until the end of the paid period. No partial refunds are issued for unused listing days, consistent with standard subscription practice.<br><br>
+        Our full Refund and Cancellation Policy is available upon request — email <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Which payment methods are accepted?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">All payments on TrustSquare are processed through Paystack, which supports major South African debit and credit cards (Visa, Mastercard), EFT, and other local payment methods. Your payment details are handled entirely by Paystack and are never stored on TrustSquare servers.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do I cancel my seller subscription?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">You can cancel your subscription at any time from the TrustSquare admin panel. Your listings will remain active until the end of the current billing period. After that, any listings exceeding the free tier limit will move to draft status automatically. To cancel, log in to the admin panel and navigate to Account → Subscription.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do I raise a dispute?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a">TrustSquare facilitates connections between buyers and sellers but is not a party to the underlying transaction. For platform-related issues (payments, account access, listing problems), contact <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>. For disputes with the other party in a transaction, our team can provide guidance but cannot adjudicate commercial disagreements between independent parties.</div>
+    </div>
+
+  </div>
+
+  <!-- Contact form -->
+  <div class="contact-form-wrap">
+    <h3>Still need help?</h3>
+    <p>Send us a message and we'll get back to you within one business day (Mon–Fri, 8am–6pm SAST).</p>
+
+    <form id="support-form" onsubmit="submitForm(event)">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Your Name</label>
+          <input type="text" placeholder="David Maurice" required>
+        </div>
+        <div class="form-field">
+          <label>Email Address</label>
+          <input type="email" placeholder="you@email.com" required>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>I am a…</label>
+        <select required>
+          <option value="">Select one</option>
+          <option>Buyer</option>
+          <option>Seller</option>
+          <option>Press / Media</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Topic</label>
+        <select required>
+          <option value="">Select a topic</option>
+          <option>Account access</option>
+          <option>Payment or billing</option>
+          <option>Listing issue</option>
+          <option>Trust Score query</option>
+          <option>Refund request</option>
+          <option>Report a problem</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Message</label>
+        <textarea placeholder="Describe your issue or question in as much detail as possible…" required></textarea>
+      </div>
+      <button type="submit" class="form-submit">Send Message →</button>
+    </form>
+
+    <div class="form-success" id="form-success">
+      ✅ Message sent — we'll be in touch within one business day. Thank you!
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Trust<span>Square</span></div>
+  <p style="margin-bottom:10px;">
+    <a href="https://trustsquare.co">Marketplace</a> &nbsp;·&nbsp;
+    <a href="/support">Support</a> &nbsp;·&nbsp;
+    <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>
+  </p>
+  <p>Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Pretoria, South Africa</p>
+  <p style="margin-top:8px;font-size:11px;color:#475569;">
+    © 2026 Trustsquare (Pty) Ltd. All rights reserved.
+  </p>
+</footer>
+
+<script>
+  function switchTab(group, btn) {
+    document.querySelectorAll('.faq-group').forEach(g => g.classList.remove('active'));
+    document.querySelectorAll('.faq-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('faq-' + group).classList.add('active');
+    btn.classList.add('active');
+    // Close all open items in the new group
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  }
+
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    // Close all in this group
+    btn.closest('.faq-group').querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  function submitForm(e) {
+    e.preventDefault();
+    // In production this would POST to the BEA or a form handler
+    // For now show success message and send email
+    document.getElementById('support-form').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+    // mailto fallback
+    const form = e.target;
+    const name = form.querySelector('input[type=text]').value;
+    const email = form.querySelector('input[type=email]').value;
+    const msg = form.querySelector('textarea').value;
+    const topic = form.querySelectorAll('select')[1].value;
+    window.location.href = `mailto:support@trustsquare.co?subject=${encodeURIComponent('[Support] ' + topic)}&body=${encodeURIComponent('From: ' + name + ' <' + email + '>\n\n' + msg)}`;
+  }
+</script>
+
+</body>
+</html>

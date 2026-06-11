@@ -1,0 +1,9 @@
+--- a/service_company_outreach.html
++++ b/service_company_outreach.html
+@@ -127,5 +127,5 @@
+ 
+       <div class="value-prop">
+-        <p><strong>How the deal works:</strong> A client finds your service and pays a small Tuppence introduction fee (1T = USD $2) to request contact. You review the enquiry privately and accept only the introductions you want. You then quote and do the job exactly as you do today — <strong>TrustSquare never touches the job or takes a cent of it.</strong></p>
++        <p><strong>How the deal works:</strong> A client finds your service and commits a small Tuppence introduction fee (1T = USD $2) to request contact — it is only used when you accept. You review the enquiry privately and accept only the introductions you want. You then quote and do the job exactly as you do today — <strong>TrustSquare never touches the job or takes a cent of it.</strong></p>
+       </div>
+ 

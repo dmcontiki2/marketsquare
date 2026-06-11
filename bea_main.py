@@ -790,6 +790,7 @@ try:
             WHEN 'business'     THEN 60
             WHEN 'elite'        THEN 500
             WHEN 'starter'      THEN 10
+            WHEN 'pro'          THEN 30
             WHEN 'premium'      THEN 25
             ELSE 2
         END
@@ -3260,14 +3261,19 @@ async def paystack_webhook(request: Request):
 # Reference prefixes: ms_sub_{tier}_xxx
 
 _SELLER_SUB_TIERS = {
-    "free":         {"amount_rands": 0.0,    "label": "Free",         "slot_limit": 2,   "usd": 0},
-    "standard":     {"amount_rands": 216.0,  "label": "Standard",     "slot_limit": 10,  "usd": 12},
-    "professional": {"amount_rands": 360.0,  "label": "Professional", "slot_limit": 25,  "usd": 20},
-    "business":     {"amount_rands": 720.0,  "label": "Business",     "slot_limit": 60,  "usd": 40},
-    "elite":        {"amount_rands": 1800.0, "label": "Elite",        "slot_limit": 500, "usd": 100},
-    # Legacy tiers (kept for backward compat — map to new tiers on next renewal)
-    "starter":      {"amount_rands": 90.0,   "label": "Standard (legacy)", "slot_limit": 10, "usd": 5},
-    "premium":      {"amount_rands": 270.0,  "label": "Professional (legacy)", "slot_limit": 25, "usd": 15},
+    # Simpler Model (adopted 9-10 Jun 2026) — offered to new sellers
+    "free":    {"amount_rands": 0.0,   "label": "Free",    "slot_limit": 2,  "usd": 0},
+    "starter": {"amount_rands": 90.0,  "label": "Starter", "slot_limit": 10, "usd": 5},
+    "pro":     {"amount_rands": 360.0, "label": "Pro",     "slot_limit": 30, "usd": 20},
+    "agency":  {"amount_rands": 0.0,   "label": "Agency",  "slot_limit": 10, "usd": 0},
+    # ^ Agency is FREE + verified; slot_limit here is the BASE — the trust-graduated cap
+    #   (10 new -> 100 verified -> 500 established + review) is applied separately, category-aware.
+    # Legacy 5-tier (retained for existing users until migration; NOT offered to new sellers)
+    "standard":     {"amount_rands": 216.0,  "label": "Standard (legacy)",     "slot_limit": 10,  "usd": 12},
+    "professional": {"amount_rands": 360.0,  "label": "Professional (legacy)", "slot_limit": 25,  "usd": 20},
+    "business":     {"amount_rands": 720.0,  "label": "Business (legacy)",     "slot_limit": 60,  "usd": 40},
+    "elite":        {"amount_rands": 1800.0, "label": "Elite (legacy)",        "slot_limit": 500, "usd": 100},
+    "premium":      {"amount_rands": 270.0,  "label": "Professional (legacy)", "slot_limit": 25,  "usd": 15},
 }
 
 def _tier_slot_limit(tier: str) -> int:
@@ -3278,7 +3284,7 @@ def _tier_slot_limit(tier: str) -> int:
 def list_subscription_tiers():
     """Return all seller subscription tiers with pricing and slot limits."""
     tiers = []
-    for key in ("free", "standard", "professional", "business", "elite"):
+    for key in ("free", "starter", "pro", "agency"):
         plan = _SELLER_SUB_TIERS[key]
         tiers.append({
             "id": key,
@@ -3870,7 +3876,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
 
 
 @app.post("/advert-agent/buy-pack")
-def aa_buy_pack(email: str, sessions: int = 8):
+def aa_buy_pack(email: str):
     """RETIRED (Canon Addendum 1): 'AI uses' no longer exist. In-app AI guidance
     is free; advanced AI features are Tuppence-priced per use."""
     raise HTTPException(

@@ -1,0 +1,9 @@
+--- a/AdvertAgent__AGENT_BRIEFING.md
++++ b/AdvertAgent__AGENT_BRIEFING.md
+@@ -93,5 +93,5 @@
+ | Stage 3 zero-balance CTA | "Buy 1T pack" | "Buy AI Pack — 8 sessions · 1T" |
+ | Free session badge | "Free" | "1 free coaching session included" |
+-| Any intro-fee reference | "AI pack" or "coaching" | "Introduction fee · 1T on seller acceptance" |
++| Any intro-fee reference | "AI pack" or "coaching" | "Introduction fee · 1T committed on request, burned on seller acceptance" |
+ 
+ The Tuppence wallet screen must show two visually separated sections:

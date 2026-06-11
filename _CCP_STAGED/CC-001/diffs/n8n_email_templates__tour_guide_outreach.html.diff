@@ -1,0 +1,9 @@
+--- a/tour_guide_outreach.html
++++ b/tour_guide_outreach.html
+@@ -123,5 +123,5 @@
+ 
+       <div class="value-prop">
+-        <p><strong>How the deal works:</strong> A traveller finds your tour and pays a small Tuppence introduction fee (1T = USD $2) to request contact. You review the enquiry privately and accept only the introductions you want. You then quote, book and run the tour exactly as you do today — <strong>TrustSquare never touches the booking or takes a cent of it.</strong></p>
++        <p><strong>How the deal works:</strong> A traveller finds your tour and commits a small Tuppence introduction fee (1T = USD $2) to request contact — it is only used when you accept. You review the enquiry privately and accept only the introductions you want. You then quote, book and run the tour exactly as you do today — <strong>TrustSquare never touches the booking or takes a cent of it.</strong></p>
+       </div>
+ 

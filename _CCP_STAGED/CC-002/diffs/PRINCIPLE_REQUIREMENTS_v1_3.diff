@@ -1,0 +1,43 @@
+--- a/docs/PRINCIPLE_REQUIREMENTS.md (v1.2 deployed)
++++ b/PRINCIPLE_REQUIREMENTS_v1_3_DRAFT.md
+@@ -1,6 +1,6 @@
+ # PRINCIPLE_REQUIREMENTS.md
+ **Solar Council · MarketSquare Platform**
+-Version 1.2 · 17 May 2026
+-Source of truth: Solar_Council_Codex_v4_5.docx · AGENT_BRIEFING.md v1.7 · Session 61 infrastructure decisions
++Version 1.3 — DRAFT (CCP CC-001 + CC-002) · 10 June 2026 · ⚠ NOT in force until David approves; the deployed v1.2 (17 May) remains controlling. NOTE: the AdvertAgent/CityLauncher/Codices copies are still v1.1 (12 Apr) — the four copies have diverged; after approval copy THIS file to all four folders.
++Source of truth: Solar_Council_Codex_v4_8_DRAFT.docx (v4_7 + Canon Addendum 1 rev 2 until landed) · AGENT_BRIEFING.md v1.8-staged · Session 61 infrastructure decisions
+ 
+ This file is read-only. No agent or Cowork task may modify it.
+@@ -14,5 +14,5 @@
+ ### A1 · Tuppence is the only transaction currency
+ - 1 Tuppence (1T) = USD $2. Fixed. Not configurable.
+-- Buyer pays only. Charged only after seller explicitly accepts an introduction.
++- The requester pays (the service consumer — the buyer, for introductions). Tuppence follows the HOLD (CC-001): committed on request → burned on delivery (seller accepts / AI result delivered) → released in full on decline, 48-h expiry, or AI failure. A release frees an un-spent hold — it is never a refund.
+ - Seller earns zero commission. MarketSquare earns from intro fees + subscriptions only.
+ - Applies to: FEA wallet · BEA /intros/accept · Paystack flow · all pricing displays.
+@@ -52,10 +52,11 @@
+ - Applies to: CityLauncher KPI · admin tool count · city wave cascade · +1 Dashboard KPI page.
+ 
+-### A7 · Buyer subscription tiers (preliminary)
+-- Free: $0 · 3 sessions/day · local city only.
+-- Starter: $5/mo · 20/day · country scope.
+-- Premium: $15/mo · 50/day · global.
+-- Preliminary as of April 2026. Final values confirmed before Paystack live mode activation.
+-- Applies to: FEA plans screen · BEA session gating (not yet built).
++### A7 · Subscription tiers (5-tier canon — Session 91 / CC-002)
++- One subscription family: Free $0 · Standard $12/mo · Professional $20/mo · Business $40/mo · Elite $100/mo.
++- Listing slots are a CAP (meter display, not a wallet): 2 / 10 / 25 / 60 / 500.
++- Monthly Tuppence to paid tiers = price ÷ 2 at 1T = $2: 6 / 10 / 20 / 50T (Founders ×1.2 rounded up: 8 / 12 / 24 / 60T).
++- "AI uses" / AI-session allowances are RETIRED: in-app AI guidance is free; advanced AI functions are Tuppence-priced per use through the HOLD ledger (/tuppence/ai-commit + /tuppence/ai-settle).
++- Daily Introduction-session limits are retired [AD-07 — David confirm].
++- Applies to: FEA plans screen + wallet · BEA verify_seller_subscription + launch_redemption.py · EULA tier disclosure · support FAQ.
+ 
+ ---
+@@ -270,5 +271,5 @@
+ | Live domain | trustsquare.co |
+ | API key header | X-Api-Key: ms_mk_2026_pretoria_admin |
+-| Codex version | Solar_Council_Codex_v4_5.docx |
++| Codex version | Solar_Council_Codex_v4_8_DRAFT.docx (pending David; v4_7 controlling) |
+ | AGENT_BRIEFING version | v1.3 · 11 April 2026 |
+ | BEA geo param | `country` (NOT country_iso2) |

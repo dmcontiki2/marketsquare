@@ -1,0 +1,33 @@
+--- a/eula_clean.html (cc001-staged)
++++ b/eula_clean.html
+@@ -525,13 +525,21 @@
+ <tr>
+ <td>Free — $0/month</td>
+-<td>3 Introduction sessions per day; local city only</td>
+-</tr>
+-<tr>
+-<td>Starter — $5/month</td>
+-<td>20 Introduction sessions per day; country scope</td>
+-</tr>
+-<tr>
+-<td>Premium — $15/month</td>
+-<td>50 Introduction sessions per day; global scope</td>
++<td>2 listing slots (cap)</td>
++</tr>
++<tr>
++<td>Standard — $12/month</td>
++<td>10 listing slots (cap) · 6 Tuppence monthly</td>
++</tr>
++<tr>
++<td>Professional — $20/month</td>
++<td>25 listing slots (cap) · 10 Tuppence monthly</td>
++</tr>
++<tr>
++<td>Business — $40/month</td>
++<td>60 listing slots (cap) · 20 Tuppence monthly</td>
++</tr>
++<tr>
++<td>Elite — $100/month</td>
++<td>500 listing slots (cap) · 50 Tuppence monthly</td>
+ </tr>
+ </tbody>

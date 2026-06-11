@@ -1,0 +1,9 @@
+--- a/intro_declined.html
++++ b/intro_declined.html
+@@ -78,5 +78,5 @@
+       <div class="no-charge-box">
+         <div class="icon">✅</div>
+-        <p><strong>No Tuppence was charged.</strong> Your wallet balance is unchanged — introduction fees are only deducted when a seller accepts. You can use your Tuppence on any future introduction.</p>
++        <p><strong>Your 1 Tuppence hold has been released back to your wallet.</strong> Your balance is whole again — committed Tuppence is only used when a seller accepts. You can use it on any future introduction.</p>
+       </div>
+ 

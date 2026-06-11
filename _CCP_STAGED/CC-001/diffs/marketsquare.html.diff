@@ -1,0 +1,9 @@
+--- a/marketsquare.html
++++ b/marketsquare.html
+@@ -3868,5 +3868,5 @@
+     <div class="tn-deduct-notice">
+       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+-      1 Tuppence ($2) deducted only on seller acceptance
++      1 Tuppence ($2) committed when you request — used only when the seller accepts; released if declined
+     </div>
+     <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="m-name" placeholder="Full name"></div>

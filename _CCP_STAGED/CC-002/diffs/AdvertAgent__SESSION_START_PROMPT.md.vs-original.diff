@@ -1,0 +1,28 @@
+--- a/AdvertAgent__SESSION_START_PROMPT.md
++++ b/AdvertAgent__SESSION_START_PROMPT.md
+@@ -18,5 +18,5 @@
+ - `POST /advert-agent/coach`     — AI coaching call (Haiku, gated by subscription)
+ - `POST /advert-agent/publish`   — PDF + pending draft creation
+-- `POST /advert-agent/buy-pack`  — Tuppence pack purchase (Paystack)
++- `POST /advert-agent/buy-pack` — **410 Gone** (packs retired 6 Jun 2026; per-use HOLD via `/tuppence/ai-commit`+`ai-settle`)
+ 
+ ## The 4-stage flow
+@@ -34,8 +34,8 @@
+ 
+ Mandatory copy:
+-- Pack button:   "Buy AI Pack · 8 sessions · 1T"   ← NOT "Buy pack · 1 Tuppence"
+-- Wallet card:   "AI Coach Credits"                 ← NOT "AI Credits"
++- Pack button: RETIRED — packs gone; advanced AI per-use in Tuppence
++- Wallet card: "AI feature credits" (canon CC-002)  ← legacy titles retired
+ - Subtitle:      "Not used for introductions"
+-- Stage 3 zero: "Buy AI Pack — 8 sessions · 1T"    ← NOT "Buy 1T pack"
++- Stage 3 zero: "Top up Tuppence — advanced AI is priced per use"
+ - Free badge:   "1 free coaching session included"  ← NOT "Free"
+ 
+@@ -43,5 +43,5 @@
+ 1. ANTHROPIC_API_KEY not yet set in /etc/environment on Hetzner — coach endpoint not live
+ 2. PDF generation: /advert-agent/publish returns pdf_url: null — WeasyPrint not integrated
+-3. Tuppence buy-pack: aaBuyPack() shows "coming soon" — Paystack flow not wired
++3. (RETIRED) buy-pack flow — endpoint 410; per-use HOLD pricing replaces packs (CC-002)
+ 4. Cross-device pickup code: drafts in IndexedDB on device only, no sync yet
+ 

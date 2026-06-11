@@ -1,0 +1,16 @@
+--- a/AGENT_BRIEFING.md
++++ b/AGENT_BRIEFING.md
+@@ -25,5 +25,5 @@
+ ### Tuppence (T)
+ - Introduction currency. **1 Tuppence = USD $2.**
+-- Only the **buyer** pays, and only **after the seller accepts** the introduction.
++- The **requester** pays (the service consumer — the buyer, for introductions). Tuppence is **committed on request → burned on delivery (seller accepts) → released on decline/expiry** (Tuppence HOLD, Codex v4.8 / CC-001).
+ - Seller earns zero commission — they simply get connected.
+ - **AI Coach Credits** are a separate balance, never merged with intro Tuppence. Tiered packs: 5T=40 uses · 10T=100 uses · 25T=320 uses. Purchased via the same Paystack flow with `ai_pack_sessions` metadata.
+@@ -142,5 +142,5 @@
+ | GET | `/intros` | None | All pending intros |
+ | GET | `/intros/{listing_id}` | None | Intros for one listing |
+-| PUT | `/intros/{id}/accept` | API key | Accept intro · charges 1T |
++| PUT | `/intros/{id}/accept` | API key | Accept intro · burns the buyer's committed 1T hold |
+ | PUT | `/intros/{id}/decline` | API key | Decline intro |
+ | POST | `/payment/initialize?tuppence=N&ai_pack_sessions=M` | None | Paystack checkout — M=0 for intro Tuppence, M>0 for AI pack |

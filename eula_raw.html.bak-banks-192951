@@ -1,0 +1,1046 @@
+<p><strong>MarketSquare</strong></p>
+<p>trustsquare.co</p>
+<p><strong>Terms of Use /</strong></p>
+<p><strong>End User License Agreement (EULA)</strong></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Version</strong></p>
+<p>1.3 — Draft</p></td>
+<td><p><strong>Status</strong></p>
+<p>For legal review — not yet published (v1.3: charge-timing + Banks Act corrections)</p></td>
+</tr>
+<tr class="even">
+<td><p><strong>Prepared</strong></p>
+<p>17 May 2026</p></td>
+<td><p><strong>Governing Law</strong></p>
+<p>Republic of South Africa</p></td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>⚠ Legal Review Required Before Publication</strong></p>
+<p>This draft has been prepared using comparative analysis of Airbnb, Booking.com, Viator, GetYourGuide, Gumtree SA, and Property24 terms, combined with South African statutory requirements (POPIA, ECT Act, CPA, NCA, FICA, FSCA). It must be reviewed by a South African admitted attorney before deployment. Sections marked [COUNSEL REQUIRED] need jurisdiction-specific legal input. Recommended firms: Michalsons (legal tech), Werksmans (commercial law), Hogan Lovells (technology law).</p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Reviewer Notes &amp; Gap Summary</strong></p>
+</blockquote>
+<p>This document incorporates MarketSquare's original draft EULA and closes 18 critical gaps identified through comparative analysis of comparable platforms and South African statutory requirements. The following table summarises all gaps and their treatment in this draft.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Gap</strong></td>
+<td><strong>Severity</strong></td>
+<td><strong>Status in this Draft</strong></td>
+</tr>
+<tr class="even">
+<td>No Privacy Policy referenced or linked</td>
+<td>CRITICAL</td>
+<td>Section 8 — POPIA clause added; Privacy Policy page must be published at trustsquare.co/privacy before launch</td>
+</tr>
+<tr class="odd">
+<td>Anonymity vs. FICA KYC conflict</td>
+<td>CRITICAL</td>
+<td>Section 3 — Deferred KYC model documented; FICA justification included</td>
+</tr>
+<tr class="even">
+<td>No POPIA consent mechanism at account creation</td>
+<td>CRITICAL</td>
+<td>Section 3.10 &amp; 8.3 — Explicit consent clause added with legal basis</td>
+</tr>
+<tr class="odd">
+<td>Tuppence regulatory status (FSCA virtual asset risk)</td>
+<td>CRITICAL</td>
+<td>Section 11 — Virtual asset classification clause; non-transferability as key defence</td>
+</tr>
+<tr class="even">
+<td>No media/photo upload rights licence</td>
+<td>HIGH</td>
+<td>Section 8 — Full in-platform use licence (all current and future MarketSquare apps); explicit no-sale-to-third-parties commitment; IP indemnity placing full liability on uploading User; Adventures-specific photo standards; notice-and-takedown process</td>
+</tr>
+<tr class="odd">
+<td>No limitation of liability cap</td>
+<td>HIGH</td>
+<td>Section 10 — Cap at earned Tuppence (seller) / ZAR 500 (buyer); ECT Act safe harbour</td>
+</tr>
+<tr class="even">
+<td>No dispute resolution clause</td>
+<td>HIGH</td>
+<td>Section 4 — South African Arbitration Foundation, Cape Town, 60-day pre-negotiation</td>
+</tr>
+<tr class="odd">
+<td>No ECT Act §44 cooling-off right</td>
+<td>HIGH</td>
+<td>Section 5.4 — ECT Act §44 scope: TrustSquare's service is complete on acceptance; post-acceptance disputes are buyer/seller matters</td>
+</tr>
+<tr class="even">
+<td>No professional licensing / credential clause</td>
+<td>MEDIUM</td>
+<td>Section 7 — EAAB, certification uplift for Adventures, verification process</td>
+</tr>
+<tr class="odd">
+<td>No Trust Score explanation (algorithm black box)</td>
+<td>MEDIUM</td>
+<td>Section 12 — Algorithmic factors, penalty schedule, decay rules</td>
+</tr>
+<tr class="even">
+<td>CPA 2026 direct marketing opt-out registry</td>
+<td>HIGH</td>
+<td>Section 6.6 — NCC registration, opt-out registry pre-check, unsubscribe mechanism</td>
+</tr>
+<tr class="odd">
+<td>No EULA gate at onboarding (photo rights exposure)</td>
+<td>HIGH</td>
+<td>Section 1.4 — EULA acceptance gate before registration; Adventures photo rights explicitly included</td>
+</tr>
+<tr class="even">
+<td>No governing law clause</td>
+<td>HIGH</td>
+<td>Section 13 — Republic of South Africa; mandatory SA law supremacy list</td>
+</tr>
+<tr class="odd">
+<td>No termination rights clause</td>
+<td>MEDIUM</td>
+<td>Section 14 — User + platform termination; Tuppence forfeiture; survival clause</td>
+</tr>
+<tr class="even">
+<td>Adventures: no certification / Trust uplift clause</td>
+<td>MEDIUM</td>
+<td>Section 7.3–7.5 — Certification upload, pending review, bonus points on approval</td>
+</tr>
+<tr class="odd">
+<td>No data breach notification procedure</td>
+<td>MEDIUM</td>
+<td>Section 8.9 — 30-day notification; Information Regulator reporting</td>
+</tr>
+<tr class="even">
+<td>International data transfer (Hetzner/Cloudflare EU hosting)</td>
+<td>MEDIUM</td>
+<td>Section 8.7 — GDPR adequacy; Data Processing Agreement reference</td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Sections Requiring Counsel Input</strong></p>
+<p>The following sections are marked [COUNSEL REQUIRED] throughout the document and must be completed by a South African admitted attorney before publication: jurisdiction choice confirmation; FICA/KYC deferred verification legal justification; NCA applicability if Tuppence purchase is enabled; FSCA virtual asset classification letter; NCC direct marketer registration number; arbitration clause enforceability review; privacy policy drafting; company/operator legal name and registration number insertion.</p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>1. Definitions &amp; Interpretation</strong></p>
+</blockquote>
+<p><strong>1.1 Definitions</strong></p>
+<p>In this Agreement, the following terms have the meanings assigned to them below:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Term</strong></td>
+<td><strong>Meaning</strong></td>
+</tr>
+<tr class="even">
+<td>Platform / MarketSquare</td>
+<td>The online marketplace operated by [Company Name] (registration number [REG NO]) at trustsquare.co, including all mobile applications, web services, APIs, and related features.</td>
+</tr>
+<tr class="odd">
+<td>Operator / We / Us / Our</td>
+<td>[Company Name], the registered operator of the Platform. [COUNSEL REQUIRED: insert full legal entity name, registration number, and registered address]</td>
+</tr>
+<tr class="even">
+<td>User / You / Your</td>
+<td>Any person or entity who accesses, registers on, or uses the Platform in any capacity.</td>
+</tr>
+<tr class="odd">
+<td>Seller</td>
+<td>A User who creates a listing to offer goods, services, accommodation, experiences, or other categories on the Platform.</td>
+</tr>
+<tr class="even">
+<td>Buyer</td>
+<td>A User who browses listings and initiates introductions with Sellers.</td>
+</tr>
+<tr class="odd">
+<td>Listing</td>
+<td>A Seller's profile-linked offering displayed on the Platform, described by category, title, price, suburb, and optional photos.</td>
+</tr>
+<tr class="even">
+<td>Introduction</td>
+<td>A buyer-initiated connection request to a Seller. 1 Tuppence is committed (held) when the Buyer makes the request and is burned only when the introduction is delivered — i.e. when the Seller accepts, which reveals both parties' contact details. If the Seller declines or the request expires, the hold is released in full and no Tuppence is used.</td>
+</tr>
+<tr class="odd">
+<td>Tuppence / T</td>
+<td>The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the fee for an Introduction, committed on request and burned only on delivery (Seller acceptance); released if declined or expired; (ii) AI Feature Tuppence — an optional per-use fee for advanced AI features. Everyday in-app guidance is free; advanced features are priced per use and capped (Free / 2T / 3T / 5T), available to Buyers and Sellers. See Section 5.</td>
+</tr>
+<tr class="even">
+<td>AdvertAgent / AI Feature</td>
+<td>The Platform's optional AI-assisted support for listings, research and reports, powered by an external AI provider. Available to Buyers and Sellers. Everyday in-app guidance is free; advanced features are priced per use in Tuppence (Free / 2T / 3T / 5T), shown before you use them.</td>
+</tr>
+<tr class="odd">
+<td>Trust Score</td>
+<td>A numeric score (0–100) assigned to each Seller that reflects reliability, response rate, and compliance history. Governs listing visibility and priority.</td>
+</tr>
+<tr class="even">
+<td>Anonymity Gate / Mode B</td>
+<td>The Platform's default state in which a Seller's identity is hidden from Buyers until both parties accept an Introduction.</td>
+</tr>
+<tr class="odd">
+<td>Magic Link</td>
+<td>A personalised, single-use onboarding URL sent to prospective Sellers that pre-populates the onboarding wizard with the Seller's details.</td>
+</tr>
+<tr class="even">
+<td>Certification / Credential</td>
+<td>A verifiable professional qualification, licence, or registration uploaded by a Seller to the Platform for Trust Score bonus consideration.</td>
+</tr>
+<tr class="odd">
+<td>Adventures</td>
+<td>A Platform category comprising two subcategories: Adventures Accommodation (accommodation listings) and Adventures Experiences (activity and experience listings).</td>
+</tr>
+<tr class="even">
+<td>Collectors</td>
+<td>A planned Platform category for physical and digital collectibles, including trading cards, memorabilia, art, and similar items. Launch subject to Solar Council confirmation of introduction model and category rules.</td>
+</tr>
+<tr class="odd">
+<td>EULA / Agreement</td>
+<td>This End User License Agreement, including all schedules, annexures, and documents incorporated by reference.</td>
+</tr>
+<tr class="even">
+<td>POPIA</td>
+<td>The Protection of Personal Information Act No. 4 of 2013 (South Africa) and its regulations, as amended.</td>
+</tr>
+<tr class="odd">
+<td>ECT Act</td>
+<td>The Electronic Communications and Transactions Act No. 25 of 2002 (South Africa).</td>
+</tr>
+<tr class="even">
+<td>CPA</td>
+<td>The Consumer Protection Act No. 68 of 2008 (South Africa).</td>
+</tr>
+<tr class="odd">
+<td>FICA</td>
+<td>The Financial Intelligence Centre Act No. 38 of 1998 (South Africa), as amended.</td>
+</tr>
+<tr class="even">
+<td>NCA</td>
+<td>The National Credit Act No. 34 of 2005 (South Africa).</td>
+</tr>
+<tr class="odd">
+<td>FSCA</td>
+<td>The Financial Sector Conduct Authority of South Africa.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1.2 Interpretation</strong></p>
+<ul>
+<li><p>References to statutes include amendments and subordinate legislation made under them.</p></li>
+<li><p>The singular includes the plural and vice versa.</p></li>
+<li><p>Headings are for convenience only and do not affect interpretation.</p></li>
+<li><p>"Including" and similar expressions are not words of limitation.</p></li>
+<li><p>References to days mean calendar days unless stated as "business days" (Monday to Friday, excluding South African public holidays).</p></li>
+<li><p>References to USD are to United States Dollars; references to ZAR or Rand are to South African Rand.</p></li>
+</ul>
+<blockquote>
+<p><strong>2. Platform Identity, Scope &amp; Acceptance</strong></p>
+</blockquote>
+<p><strong>2.1 Platform Identity</strong></p>
+<p>The Platform is operated by [Company Name / Operator] (registration number [REG NO], [COUNSEL REQUIRED: insert registered address]) and provides an anonymity-first marketplace connecting Buyers and Sellers across multiple categories including real estate, tutoring, services, casual work, Adventures (accommodation and experiences), and Collectors (physical and digital collectibles).</p>
+<p><strong>2.2 Scope of These Terms</strong></p>
+<p>This EULA governs your access to and use of the Platform via mobile applications, web services, APIs, and all related functionality. It must be read together with the Platform's Privacy Policy at trustsquare.co/privacy.</p>
+<p><strong>2.3 Role of the Platform</strong></p>
+<p>The Platform facilitates connections between Buyers and Sellers. It is not a party to any transaction and does not:</p>
+<ul>
+<li><p>Own, control, or take title to any listing, property, service, or experience offered by Sellers</p></li>
+<li><p>Represent, employ, or create an agency relationship with Buyers or Sellers</p></li>
+<li><p>Guarantee the outcome, quality, safety, legality, or suitability of any transaction</p></li>
+<li><p>Act as a financial intermediary between Users for non-Tuppence transactions</p></li>
+</ul>
+<p><strong>2.4 EULA Acceptance Gate — Mandatory Before Registration</strong></p>
+<p>You must read and accept this EULA before your registration is created on the Platform. The acceptance process is as follows:</p>
+<ol type="1">
+<li><p>You receive a Magic Link via email or click a sign-up link on the Platform.</p></li>
+<li><p>On clicking the link, an EULA acceptance screen is presented as the first step before any registration or listing data is created.</p></li>
+<li><p>You must tick "I have read and agree to the Terms of Use / EULA and Privacy Policy" and click "Accept and Continue".</p></li>
+<li><p>The Platform records your acceptance timestamp and EULA version number. This record is stored in the Platform's database and constitutes your binding agreement.</p></li>
+<li><p>Clicking "Accept and Continue" constitutes your electronic signature on this Agreement per Section 4 of the ECT Act.</p></li>
+</ol>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Why Acceptance Happens Here</strong></p>
+<p>The Adventures category involves photo uploads of properties and experiences. The Platform's licence to store, display, and present those photos must be explicitly consented to at the point of intent — not assumed from an email click. Acceptance here also satisfies POPIA's requirement for informed, specific, opt-in consent before personal data is processed.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>2.5 Eligibility</strong></p>
+<p>By accepting this EULA you represent and warrant that:</p>
+<ul>
+<li><p>You are at least 18 years of age;</p></li>
+<li><p>You have the legal capacity to enter binding agreements under South African law;</p></li>
+<li><p>You are not subject to sanctions, a court order barring Platform use, or a prohibition on your profession;</p></li>
+<li><p>If registering on behalf of a legal entity, you have authority to bind that entity;</p></li>
+<li><p>All information you provide is accurate, complete, and not misleading.</p></li>
+</ul>
+<blockquote>
+<p><strong>3. User Accounts, Anonymity &amp; Identity Verification</strong></p>
+</blockquote>
+<p><strong>3.1 Anonymity Principle — Mode B</strong></p>
+<p>The Platform is built on an anonymity-first model. When you create a Seller account, your identity — name, email, business name, contact details, and exact location — is not revealed to Buyers. Your public profile shows only:</p>
+<ul>
+<li><p>An emoji avatar (randomly assigned)</p></li>
+<li><p>Your category (e.g. Property, Adventures Accommodation)</p></li>
+<li><p>Your Trust Score (0–100)</p></li>
+<li><p>Your suburb or city (general location only)</p></li>
+<li><p>A certification badge if verified credentials have been approved (see Section 7.3)</p></li>
+</ul>
+<p>No photo. No name. No contact details. No personal identifiers — until both parties complete the bilateral acceptance described in Section 3.2.</p>
+<p><strong>3.2 Bilateral Identity Reveal — The Acceptance Gate</strong></p>
+<p>A Seller's identity is revealed to a Buyer only when both of the following occur simultaneously:</p>
+<ul>
+<li><p>The Buyer sends the Seller an Introduction request, and</p></li>
+<li><p>The Seller accepts that Introduction (within the applicable response window).</p></li>
+</ul>
+<p>At the moment of bilateral acceptance, each party is shown the other's full name, email address, phone number, suburb/city, and — for Sellers — any verified professional credentials. Until both parties accept, full anonymity is maintained.</p>
+<p><strong>3.3 Prohibited Circumvention of Anonymity</strong></p>
+<p>You may not attempt to reveal your identity to the other party before bilateral acceptance. Prohibited actions include:</p>
+<ul>
+<li><p>Including your name, phone number, business name, or contact email in listing text or titles</p></li>
+<li><p>Linking to external social media profiles that identify you by name</p></li>
+<li><p>Communicating via off-platform channels before Introduction acceptance</p></li>
+</ul>
+<p>Exception: Professional licence numbers and certification badges may be displayed as part of the credential system (Section 7.4). These are anonymity-neutral: they signal verified quality without revealing personal identity.</p>
+<p><strong>3.4 Deferred KYC — FICA Compliance Model [COUNSEL REQUIRED]</strong></p>
+<p>South Africa's FICA requires customer identification before a business relationship commences. The Platform interprets "business relationship" as the first Introduction acceptance (i.e. the first transaction), not account creation. This interpretation must be confirmed by legal counsel before publication.</p>
+<p>Under this model, full identity verification is deferred as follows:</p>
+<ul>
+<li><p>Before first Introduction acceptance: account requires verified email only. Full identity is not yet required.</p></li>
+<li><p>After first Introduction acceptance: FICA-compliant identity verification is initiated within 24 hours. This must be completed within 5 business days. If verification fails or is not completed, the Introduction is cancelled. Tuppence already spent remains spent.</p></li>
+</ul>
+<p><strong>3.5 Identity Verification Process</strong></p>
+<p>After accepting your first Introduction, you will be asked to provide:</p>
+<ol start="6" type="1">
+<li><p>A government-issued identity document (South African Smart Card ID, passport, or driver's licence);</p></li>
+<li><p>Proof of address dated within 3 months (utility bill, bank statement, or lease agreement);</p></li>
+<li><p>A liveness check (selfie with ID via the Platform's third-party verification partner: [COUNSEL REQUIRED: insert provider]).</p></li>
+</ol>
+<p>Verification is normally completed within 3 business days. Your identity documents are encrypted in transit (TLS 1.3), stored on the Platform's server (Hetzner CPX32, Germany — upgraded from CPX22 on 25 May 2026), and accessible only to the Platform's compliance team. Documents are retained for 7 years per FICA requirements and then securely deleted.</p>
+<p><strong>3.6 Regulatory Disclosure</strong></p>
+<p>Notwithstanding the anonymity principle, the Platform may disclose your identity and account data to the South African Police Service, National Prosecuting Authority, Financial Intelligence Centre, courts, SARS, or FSCA, upon receipt of a lawful court order, administrative demand, or equivalent legal process. You will be notified of any such disclosure within 30 days unless the order prohibits notification.</p>
+<p><strong>3.7 User Responsibilities</strong></p>
+<p>You are responsible for all activity conducted under your account. You must not share your account credentials with any other person. You must notify the Platform immediately at support@trustsquare.co if you suspect unauthorised access to your account.</p>
+<blockquote>
+<p><strong>4. Listings, Content Accuracy &amp; Categories</strong></p>
+</blockquote>
+<p><strong>4.1 Seller Responsibility</strong></p>
+<p>You are solely responsible for the accuracy, completeness, legality, and currency of your listing content, including all descriptions, prices, photos, availability, and credential claims. The Platform does not verify listing content and makes no representations as to its accuracy.</p>
+<p><strong>4.2 Platform Moderation Rights</strong></p>
+<p>The Platform reserves the right to:</p>
+<ul>
+<li><p>Remove, hide, or edit any listing that violates this EULA, applicable law, or Platform policies;</p></li>
+<li><p>Suspend or terminate a Seller's account for repeated or serious violations;</p></li>
+<li><p>Reorder or prioritise listings in search results based on Trust Score and other ranking factors (see Section 12);</p></li>
+<li><p>At its discretion, refuse to onboard any prospective Seller.</p></li>
+</ul>
+<p><strong>4.3 Prohibited Listing Content</strong></p>
+<p>You may not list content that:</p>
+<ul>
+<li><p>Is false, misleading, deceptive, or fraudulent;</p></li>
+<li><p>Infringes the intellectual property rights of any third party;</p></li>
+<li><p>Promotes illegal goods, services, or activities;</p></li>
+<li><p>Contains obscene, defamatory, hateful, or discriminatory material;</p></li>
+<li><p>Includes personal contact details in violation of Section 3.3;</p></li>
+<li><p>Claims professional credentials you do not hold.</p></li>
+</ul>
+<p><strong>4.4 Categories — Open-Ended Strings</strong></p>
+<p>The Platform's category system is open-ended. Current and planned categories include Property (Estate Agents), Tutors, Services, Casuals, Adventures Accommodation, Adventures Experiences, and Collectors. New categories may be added at any time with notice to Users. Category strings are read dynamically from the Platform's data and are never hardcoded. Each category may have specific rules, introduction models, and Trust Score mechanics as described in Section 12.</p>
+<p><strong>4.5 Adventures Category — Photo Standards</strong></p>
+<p>Listings in the Adventures category (Accommodation and Experiences) are strongly encouraged to include high-quality photos. By uploading photos to an Adventures listing you confirm that:</p>
+<ul>
+<li><p>You are the copyright owner of the photos, or have explicit written permission from the copyright holder to use them commercially;</p></li>
+<li><p>The photos accurately represent the property or experience as of the listing date;</p></li>
+<li><p>The photos do not contain personally identifiable information that would breach Section 3.3.</p></li>
+</ul>
+<blockquote>
+<p><strong>5. Transactions &amp; Tuppence — The Introduction Currency</strong></p>
+</blockquote>
+<p><strong>5.1 How Tuppence Works</strong></p>
+<p>All Platform transactions are denominated in Tuppence. 1 Tuppence (1T) = USD $2.00 (fixed). This rate does not change and does not fluctuate with currency markets.</p>
+<p>The Tuppence model works as follows:</p>
+<ol start="9" type="1">
+<li><p>A Buyer sends an Introduction request to a Seller at no immediate cost. No Tuppence is deducted from the Buyer's balance at the time of sending. In the Casuals category, the roles are described as Requester (the person seeking help, who pays the 1T) and Helper (the person who listed their availability, who accepts). The Tuppence mechanics are identical — the party seeking the service always pays, the listed party always accepts.</p></li>
+<li><p>If the Seller accepts the Introduction, 1T is deducted from the Buyer's Tuppence balance and credited to the Seller's Tuppence Wallet. Both parties' contact details are then revealed to each other. This is the only event that triggers a Tuppence deduction. (In Casuals: if the Helper accepts the Requester's Introduction, 1T is deducted from the Requester's balance and credited to the Helper's Wallet. The mechanics are identical.)</p></li>
+<li><p>If the Seller declines or does not respond within the 48-hour window, no Tuppence is deducted from the Buyer's balance. The Introduction closes with no charge to either party.</p></li>
+<li><p>No further Platform fee applies to any subsequent transaction between Buyer and Seller. All post-Introduction transactions occur independently of the Platform.</p></li>
+</ol>
+<p><strong>5.2 Tuppence Restrictions</strong></p>
+<p>Tuppence is subject to the following restrictions:</p>
+<ul>
+<li><p>Non-transferable: Tuppence cannot be transferred between User accounts;</p></li>
+<li><p>Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency. [Note: Cash-out functionality may be introduced in future, subject to FSCA compliance and updated terms];</p></li>
+<li><p>Platform-exclusive: Tuppence has no monetary value outside the Platform and cannot be used on any other platform;</p></li>
+<li><p>Non-inheritable and non-assignable: Tuppence cannot be inherited or transferred on account closure;</p></li>
+<li><p>No expiry (current state): Tuppence balances do not expire unless the Platform closes or your account is terminated for breach.</p></li>
+</ul>
+<p><strong>5.3 Introduction Model by Category</strong></p>
+<p>The introduction model differs by category. The Platform reserves the right to update these models with notice:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Category</strong></td>
+<td><strong>Model</strong></td>
+<td><strong>Trust Score Penalty for Ignoring</strong></td>
+</tr>
+<tr class="even">
+<td>Property (Estate Agents)</td>
+<td>Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically. No Tuppence is deducted (Principle A8).</td>
+<td>−5 points for ignoring</td>
+</tr>
+<tr class="odd">
+<td>Tutors</td>
+<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>
+<td>−3 points for ignoring; no penalty for declining</td>
+</tr>
+<tr class="even">
+<td>Services</td>
+<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>
+<td>−3 points for ignoring; no penalty for declining</td>
+</tr>
+<tr class="odd">
+<td>Casuals</td>
+<td>Soft Queue: proximity and referral-based discovery. Role note: in Casuals the Lister is the Helper (offering their availability); the Requester (seeking help) pays 1T to reach them. The Tuppence direction is unchanged — the seeker of the service pays on the Helper's acceptance.</td>
+<td>No Trust Score penalty</td>
+</tr>
+<tr class="even">
+<td>Adventures Accommodation</td>
+<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>
+<td>No Trust Score penalty — seasonal and capacity constraints acknowledged</td>
+</tr>
+<tr class="odd">
+<td>Adventures Experiences</td>
+<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>
+<td>No Trust Score penalty — seasonal and capacity constraints acknowledged</td>
+</tr>
+<tr class="even">
+<td>Collectors</td>
+<td>Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically. No Tuppence is deducted (Principle A8). [COUNSEL REQUIRED: confirm model with council before Collectors category launch — see note below]</td>
+<td>−5 points for ignoring [subject to council confirmation]</td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Adventures — No Trust Score Penalty</strong></p>
+<p>Adventures Sellers (both Accommodation and Experiences) are exempt from Trust Score penalties for non-response to Introductions. This reflects the legitimate seasonal, capacity, and availability constraints specific to accommodation and experiences operators, and is a deliberate departure from the Tutors/Services Soft Queue model.</p></td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Collectors — Introduction Model Pending Council Confirmation</strong></p>
+<p>The Collectors category (physical and digital collectibles, trading cards, memorabilia, art) is planned but not yet live. The introduction model shown above (Commitment, same as Property) is the recommended model — a rare or unique item should only be offered to one serious Buyer at a time. However, this must be confirmed by the Solar Council before the Collectors category is activated. This EULA entry is a placeholder and will be updated at that time.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>5.4 ECT Act §44 — Scope and Applicability to TrustSquare</strong></p>
+<p>The ECT Act §44 7-day cooling-off right applies to agreements for the supply of goods or services concluded electronically. TrustSquare supplies one service only: the Introduction. The 1 Tuppence is committed (held) when the Buyer requests the Introduction and is burned at the moment the service is delivered — when the Seller accepts. That burned Tuppence is the fee for the completed service and is not subject to reversal under ECT Act §44. Until delivery, the Tuppence is only held, not spent.</p>
+<ul>
+<li><p>If the Seller has not yet accepted the Introduction, the Buyer may withdraw the request by emailing support@trustsquare.co with the subject line "WITHDRAW: [Introduction ID]". Only a hold was placed; it is released in full and no Tuppence is burned.</p></li>
+<li><p>Any right the Buyer may have to cancel or reverse the underlying transaction with the Seller (for example, a property rental agreement, tutor engagement, or service contract) is a matter between the Buyer and the Seller under the CPA, the NCA, or any other applicable law. TrustSquare is not a party to that transaction and has no obligation or liability in connection with it.</p></li>
+</ul>
+<p>TrustSquare's Introduction fee is earned and final on delivery (Seller acceptance); the hold is burned at that point. Before delivery it is only held, and is released if the Introduction is declined or expires. No reissuance of Tuppence is made on the basis of what occurs between Buyer and Seller after the Introduction is completed. Post-acceptance disputes — including any claim that a deal was not concluded, that goods or services were not delivered, or that either party acted in bad faith — are matters for the parties themselves and, if necessary, the National Consumer Commission or a competent court. TrustSquare's liability in such cases is limited as set out in Section 10.</p>
+<p><strong>5.5 AI Feature Tuppence — Optional, Per-Use, Separate from Introductions</strong></p>
+<p>The Platform offers an optional AI-assisted feature ("AdvertAgent" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks. AI Feature usage is charged in Tuppence and is governed by the following rules, which are distinct from and independent of the Introduction Tuppence model:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Characteristic</strong></td>
+<td><strong>AI Feature Tuppence</strong></td>
+</tr>
+<tr class="even">
+<td>Who it applies to</td>
+<td>Buyers and Sellers — some features are buyer-side (area / price research), some seller-side (listing help). Optional; not part of the core marketplace flow.</td>
+</tr>
+<tr class="odd">
+<td>Nature of use</td>
+<td>Entirely optional. A Seller chooses to invoke an AI feature. No AI feature is triggered automatically or as a condition of listing or receiving Introductions.</td>
+</tr>
+<tr class="even">
+<td>Why Tuppence is charged</td>
+<td>Advanced AI features are powered by an external AI provider and are a priced service: each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm; everyday in-app guidance is free. AI Feature Tuppence and Introduction Tuppence remain separate flows, and neither is a financial product or instrument.</td>
+</tr>
+<tr class="odd">
+<td>Access model</td>
+<td>Everyday in-app AI guidance is free. Advanced AI features are pay-per-use from your Tuppence balance (capped at 5T); the price is shown before you confirm. No subscription is required to use a paid feature.</td>
+</tr>
+<tr class="even">
+<td>Pricing</td>
+<td>Advanced AI features are priced per use, in Tuppence, capped: Free / 2T / 3T / 5T. The price for each feature is disclosed at the point of use, before you confirm.</td>
+</tr>
+<tr class="odd">
+<td>Refunds</td>
+<td>A hold is placed when you start a paid AI feature and is burned on delivery; if the run fails, the hold is released and no Tuppence is used. Once a result is delivered, the Tuppence is non-refundable.</td>
+</tr>
+<tr class="even">
+<td>Relationship to Introductions</td>
+<td>AI Feature Tuppence and Introduction Tuppence are separate balances and flows. Using AI features does not affect your Introduction Tuppence balance, Trust Score, or listing status.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Important — AI Feature Tuppence is Different in Nature</strong></p>
+<p>Introduction Tuppence is the Platform's core marketplace fee. AI Feature Tuppence is a separate, optional charge for advanced AI features — a priced service billed per use (capped — Free / 2T / 3T / 5T), distinct from the Introduction fee. Everyday in-app AI guidance is free. Neither Tuppence type is a financial product or instrument.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>5.6 Tuppence and the Platform — Not a Financial Intermediary</strong></p>
+<p>The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions.</p>
+<p><strong>5.7 Tuppence Holds and Reversals</strong></p>
+<p>The Platform may temporarily hold or reverse Tuppence transactions to prevent fraud, address system errors, or correct processing anomalies. The Platform will notify affected Users within 48 hours of any hold or reversal and will resolve the matter within 5 business days.</p>
+<blockquote>
+<p><strong>6. Fees, Subscriptions &amp; Payment</strong></p>
+</blockquote>
+<p><strong>6.1 Fee Disclosure</strong></p>
+<p>The Platform charges only for the following, which are presented to you before the transaction is confirmed:</p>
+<ul>
+<li><p>Introduction Tuppence: 1T (USD $2) per Introduction — committed (held) on the Buyer's balance when the request is made and burned only upon Seller acceptance / delivery (Section 5.1–5.4). The hold is released on decline, expiry or non-response — no Tuppence is burned in those cases;</p></li>
+<li><p>AI Feature Tuppence: per use, in Tuppence, capped (Free / 2T / 3T / 5T) and shown before use; everyday in-app guidance is free (Section 5.5);</p></li>
+<li><p>Buyer subscription fees for premium access tiers (see Section 6.2);</p></li>
+<li><p>Seller AI feature subscription fees, if elected (see Section 5.5);</p></li>
+<li><p>Any future Tuppence top-up or purchase fees (subject to updated terms and FSCA compliance).</p></li>
+</ul>
+<p>There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees, subscriptions, and paid AI features. Advanced AI features are a priced service (per use, capped), separate from the Introduction fee (see Section 5.5).</p>
+<p><strong>6.2 Buyer Subscription Tiers [Preliminary — subject to change]</strong></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Tier</strong></td>
+<td><strong>Details</strong></td>
+</tr>
+<tr class="even">
+<td>Free — $0/month</td>
+<td>3 Introduction sessions per day; local city only</td>
+</tr>
+<tr class="odd">
+<td>Starter — $5/month</td>
+<td>20 Introduction sessions per day; country scope</td>
+</tr>
+<tr class="even">
+<td>Premium — $15/month</td>
+<td>50 Introduction sessions per day; global scope</td>
+</tr>
+</tbody>
+</table>
+<p>Subscription tiers and pricing are preliminary as of April 2026 and will be confirmed before payment processing is activated. Updated terms will be provided.</p>
+<p><strong>6.3 Tuppence Service Credit Reissuance (not a Refund)</strong></p>
+<p>Tuppence is a non-transferable, non-redeemable platform service credit. It is not money. No Tuppence is deducted from a Buyer's balance unless and until the Seller explicitly accepts the Introduction. If the Seller declines or does not respond, no charge arises and no reissuance is necessary. The Platform will reissue Tuppence units (not ZAR) to a Buyer's balance as a discretionary service credit only in the following circumstances:</p>
+<ul>
+<li><p>Seller did not respond to the Introduction within the 48-hour window — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required; the Introduction closes automatically with no charge to the Buyer;</p></li>
+<li><p>Seller declined the Introduction — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required; the Introduction closes with no charge to the Buyer;</p></li>
+<li><p>Buyer withdraws the Introduction request before Seller acceptance (per Section 5.4) — no Tuppence was deducted, so no reissuance is required; the Introduction closes with no charge;</p></li>
+<li><p>Tuppence is not reissuable under any circumstance. Spending Tuppence on an Introduction request or AI feature consumes the Tuppence regardless of outcome. This is the consideration for the buyer-commitment signal that underpins the Platform’s anti-spam design.</p></li>
+<li><p>The Platform terminates your account for convenience under Section 14.3 — unused Tuppence is forfeited; no cash payment or ZAR conversion is made (see Section 14.3 for the applicable outcome).</p></li>
+</ul>
+<p>Tuppence already credited to a Seller's Wallet upon acceptance of an Introduction is not reissuable under any circumstances. Tuppence is not redeemable for cash under any circumstances. Tuppence balances accrue no interest. Unused Tuppence expires after 24 consecutive months of account inactivity (no login, no Introduction, no purchase). The Platform will notify you by email not less than 30 days before expiry. Tuppence may not be used by a Buyer to settle any obligation owed to a Seller outside of the Platform's Introduction flow; any purported such arrangement is void and of no effect. Nothing in this Section 6.3 creates a contractual right of repayment of money paid; all reissuances described above are discretionary platform actions exercised by TrustSquare (Pty) Ltd in accordance with its consumer-protection obligations and SARB interpretive guidance on stored-value service credits. Once a Seller has accepted an Introduction and 1T has been deducted from the Buyer's balance, that deduction is final and irrevocable. Any subsequent agreement between Buyer and Seller to act as though the Introduction did not occur, to conduct their transaction outside the Platform in order to avoid the Tuppence charge, or to request a reversal on the grounds that no transaction ultimately took place between them, does not entitle either party to a reissuance. The accepted risk of an Introduction not resulting in a completed transaction is borne by the accepting party — the Seller in standard categories, the Helper in the Casuals category.</p>
+<p><strong>6.4 Payment Processor</strong></p>
+<p>Tuppence purchases (when enabled) and subscription payments are processed by Paystack (a registered payment service provider in South Africa). By making a payment on the Platform, you agree to Paystack's terms and privacy policy. The Platform is not responsible for payment processing errors, delays, or security incidents attributable to Paystack.</p>
+<p><strong>6.5 Taxes</strong></p>
+<p>You are solely responsible for determining and remitting all taxes arising from your use of the Platform, including income tax, VAT, and any withholding obligations. The Platform does not withhold or remit taxes on your behalf. You may request a Tuppence transaction history statement for tax purposes by emailing support@trustsquare.co. [OPERATIONAL: confirm support@trustsquare.co mailbox is live and monitored before EULA is published to production.]</p>
+<p><strong>6.6 Direct Marketing Compliance (CPA 2026 Amendment)</strong></p>
+<p>[COUNSEL REQUIRED: Confirm whether TrustSquare (Pty) Ltd is required to register as a direct marketer with the NCC under the CPA, given that (a) Introduction notification emails are transactional (sent only to registered users who opted in at account creation) and (b) prospecting outreach is conducted via a separate CityLauncher tool. If registration is required, insert NCC Registration No. and activate this clause. Until confirmed and registration obtained, the following placeholder applies:] The Platform complies with the direct marketing provisions of the Consumer Protection Act No. 68 of 2008. Every promotional communication sent by the Platform includes an unsubscribe mechanism. Opt-out requests are processed within 5 business days.</p>
+<p>By creating an account you opt in to Introduction notification emails and Platform marketing. You may opt out at any time via your account settings or by emailing support@trustsquare.co with the subject "OPT-OUT".</p>
+<blockquote>
+<p><strong>7. Professional Credentials, Certification &amp; AI Features</strong></p>
+</blockquote>
+<p><strong>7.1 Professional Licensing Obligations</strong></p>
+<p>If your category requires professional registration or licensing under South African law, you agree to hold the required licence at the time of listing and keep it valid throughout your use of the Platform. Known licensing requirements include:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Category</strong></td>
+<td><strong>Licensing Requirement</strong></td>
+</tr>
+<tr class="even">
+<td>Property (Estate Agents)</td>
+<td>Registration with the Estate Agency Affairs Board (EAAB)</td>
+</tr>
+<tr class="odd">
+<td>Services (Electricians, Plumbers)</td>
+<td>Trade licence or professional registration as applicable under sector legislation</td>
+</tr>
+<tr class="even">
+<td>Tutors</td>
+<td>Teaching credential or institutional affiliation preferred; not mandatory</td>
+</tr>
+<tr class="odd">
+<td>Casuals</td>
+<td>No licence required</td>
+</tr>
+<tr class="even">
+<td>Adventures Accommodation</td>
+<td>Compliance with applicable municipal accommodation bylaws and tourism permits</td>
+</tr>
+<tr class="odd">
+<td>Adventures Experiences</td>
+<td>Registered tourism guide (CATHSSETA) where required by law; sector-specific qualifications (e.g. PADI for diving, SAMSA for marine activities)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>7.2 Licence Attestation</strong></p>
+<p>At account creation, you attest that you hold all required professional licences and that you are not barred by law from practising your profession. False attestation is grounds for immediate account termination and may give rise to civil or criminal liability. The Platform reserves the right to verify your licence through official registers (e.g. EAAB database).</p>
+<p><strong>7.3 Adventures Certification Uplift — Trust Score Bonus</strong></p>
+<p>Sellers in the Adventures category (Accommodation and Experiences) may upload verifiable credentials to earn a Trust Score bonus that increases listing visibility. This mechanism is specific to Adventures and does not apply to other categories without a separate platform decision.</p>
+<p>Bonus certification types and indicative Trust Score awards:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Certification</strong></td>
+<td><strong>Indicative Bonus</strong></td>
+</tr>
+<tr class="even">
+<td>TGCSA grading — 1 star</td>
+<td>+5 points</td>
+</tr>
+<tr class="odd">
+<td>TGCSA grading — 2 star</td>
+<td>+10 points</td>
+</tr>
+<tr class="even">
+<td>TGCSA grading — 3 star</td>
+<td>+15 points</td>
+</tr>
+<tr class="odd">
+<td>TGCSA grading — 4 star</td>
+<td>+20 points</td>
+</tr>
+<tr class="even">
+<td>TGCSA grading — 5 star</td>
+<td>+25 points</td>
+</tr>
+<tr class="odd">
+<td>SATSA membership</td>
+<td>+10 points</td>
+</tr>
+<tr class="even">
+<td>FEDHASA membership</td>
+<td>+8 points</td>
+</tr>
+<tr class="odd">
+<td>CATHSSETA registered tourism guide</td>
+<td>+10 points</td>
+</tr>
+<tr class="even">
+<td>SA Mountain Club / UIAA guide certification</td>
+<td>+12 points</td>
+</tr>
+<tr class="odd">
+<td>PADI / NAUI / SAMSA diving/marine certification</td>
+<td>+12 points</td>
+</tr>
+<tr class="even">
+<td>Liquor licence (WSET or national)</td>
+<td>+6 points</td>
+</tr>
+<tr class="odd">
+<td>Wilderness first aid / first aid certification</td>
+<td>+5 points</td>
+</tr>
+<tr class="even">
+<td>PDP / SABOA transport operator licence</td>
+<td>+8 points</td>
+</tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Bonus Values Are Indicative</strong></p>
+<p>The Trust Score bonus values above are indicative and subject to confirmation in the Solar Council Codex. Final values will be published in the Platform's Trust Score policy document before the Adventures category goes live.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>7.4 Certification Upload &amp; Review Process</strong></p>
+<p>To claim a certification bonus:</p>
+<ol start="13" type="1">
+<li><p>Upload a photo or PDF of your certificate during Adventures onboarding or from your Seller profile.</p></li>
+<li><p>The certification is marked Pending Review. The Trust Score bonus is not applied until an administrator has reviewed and approved the certification.</p></li>
+<li><p>Review is normally completed within 5 business days.</p></li>
+<li><p>On approval, the bonus is applied to your Trust Score and your listing re-ranks accordingly.</p></li>
+<li><p>If a certificate expires or is revoked, you must notify the Platform within 5 business days. The Platform may withdraw the bonus and adjust your Trust Score.</p></li>
+</ol>
+<p><strong>7.5 Anonymity and Credentials</strong></p>
+<p>Certification badges (e.g. a shield icon with star count or certification abbreviation) are visible on your listing card to Buyers before Introduction acceptance. This is a deliberate exception to the anonymity principle: the badge signals verified quality without revealing your personal identity. Your underlying certificate and personal details are stored by the Platform but are never disclosed to Buyers until bilateral acceptance.</p>
+<p><strong>7.6 AI-Assisted Features</strong></p>
+<p>The Platform may use artificial intelligence and machine learning to assess listing quality, detect duplicate listings or potential fraud, provide category recommendations, and surface relevant listings to Buyers. AI features do not make final decisions: the Platform retains override authority, and no AI-generated output is used to permanently penalise a User without human review. You may not use automated tools, bots, or scripts to interact with the Platform.</p>
+<blockquote>
+<p><strong>8. User-Uploaded Content, Photo Rights &amp; IP Indemnity</strong></p>
+</blockquote>
+<p><strong>8.1 Your Copyright Ownership</strong></p>
+<p>You retain full copyright ownership of all content you upload to the Platform, including listing photos, videos, descriptions, and other media ("Your Content"). Nothing in this EULA transfers copyright ownership from you to the Platform.</p>
+<p><strong>8.2 Licence Granted to the Platform — Full In-Platform Use</strong></p>
+<p>By uploading Your Content to the Platform, you grant the Platform and its affiliates, sub-contractors, and technical service providers a non-exclusive, worldwide, royalty-free, perpetual, irrevocable licence to use Your Content in the following ways across all current and future MarketSquare applications and platform features:</p>
+<ul>
+<li><p>Store, host, cache, and back up Your Content on Platform servers and content delivery networks;</p></li>
+<li><p>Display and present Your Content on all Platform screens, listing cards, search results, category browsers, Buyer-facing views, and Seller dashboards — across web, mobile, and any future application in the MarketSquare product family;</p></li>
+<li><p>Technically process Your Content as needed for Platform operation: resizing, cropping, compression, format conversion, thumbnail generation, and watermarking for display optimisation — without material alteration of the substantive content;</p></li>
+<li><p>Use Your Content within Platform-internal promotional and discovery features, including featured listings, category highlights, onboarding screens, and in-app recommendations shown to Platform Users;</p></li>
+<li><p>Reproduce and distribute Your Content solely within the Platform ecosystem to facilitate the connection between Buyers and Sellers;</p></li>
+<li><p>Retain a cached or archived copy of Your Content for legal, compliance, audit, or dispute resolution purposes for up to 7 years after your account is closed, as required by applicable law.</p></li>
+</ul>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>What This Licence Covers</strong></p>
+<p>This licence covers everything needed to run, operate, and develop MarketSquare and its apps. It is intentionally broad within the Platform ecosystem. It does not give the Platform any right to use your photos outside that ecosystem — see Section 8.3 for the hard limits.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>8.3 What the Platform Will Never Do With Your Content</strong></p>
+<p>Notwithstanding the broad licence in Section 8.2, the Platform gives you the following unconditional commitments:</p>
+<ul>
+<li><p>The Platform will never sell, license, or transfer Your Content to any third party as photo stock, stock imagery, or for any independent commercial purpose outside the Platform;</p></li>
+<li><p>The Platform will never provide Your Content to stock photography agencies, image libraries, data brokers, advertising networks, or any external commercial entity;</p></li>
+<li><p>The Platform will never use Your Content in external advertising or marketing campaigns — print, digital, social media, or otherwise — without your express prior written consent given separately from this EULA;</p></li>
+<li><p>The Platform will never create derivative works from Your Content for sale or distribution outside the Platform.</p></li>
+</ul>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Platform Commitment — No Photo Stock Sales</strong></p>
+<p>The Platform operates on a marketplace model. Selling or licensing user-uploaded photos to third parties is not part of that model and will never be. If this policy changes in the future, users will be individually notified and fresh consent will be required before any such use.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>8.4 User Warranty — Ownership and Right to Upload</strong></p>
+<p>By uploading any photo, image, video, or other media to the Platform, you make the following legally binding warranties to the Platform on each occasion of upload:</p>
+<ol start="18" type="1">
+<li><p>You are the sole and original copyright owner of the uploaded content, OR you hold a valid, written, transferable licence from the copyright owner that expressly authorises you to grant the licence in Section 8.2;</p></li>
+<li><p>The content does not infringe any copyright, moral right, trade mark, design right, personality right, right of privacy, right of publicity, or any other intellectual property or personal right of any third party anywhere in the world;</p></li>
+<li><p>You have obtained all necessary consents from any identifiable persons appearing in photos (including model releases where required) and from any property owners whose property is depicted, where such consent is required by applicable law;</p></li>
+<li><p>The content is not defamatory, obscene, unlawful, threatening, harassing, or otherwise in violation of any applicable law;</p></li>
+<li><p>Your upload does not violate any confidentiality obligation, court order, or contractual restriction binding on you;</p></li>
+<li><p>You have the full legal capacity and authority to grant this licence and to make these warranties.</p></li>
+</ol>
+<p>These warranties are given by you each time you upload content. They are ongoing and must remain true for as long as Your Content remains on the Platform. If any warranty becomes false after upload (for example, because a third party asserts copyright), you must notify the Platform immediately at legal@trustsquare.co and request removal of the affected content.</p>
+<p><strong>8.5 IP Indemnity — User's Full Liability for Infringing Uploads</strong></p>
+<p>The Platform accepts no liability for any intellectual property infringement arising from content uploaded by Users. You agree to fully indemnify, defend, and hold harmless the Platform, its directors, officers, employees, agents, and technical service providers from and against all claims, demands, proceedings, losses, damages, costs, and expenses (including reasonable legal fees) arising from or in connection with:</p>
+<ul>
+<li><p>Any claim by a third party that Your Content infringes that party's copyright, trade mark, design right, patent, moral right, right of privacy, right of publicity, or any other intellectual property or proprietary right;</p></li>
+<li><p>Any claim arising from your failure to obtain required model releases, property releases, or other consents for content depicted in your photos;</p></li>
+<li><p>Any breach of the warranties in Section 8.4;</p></li>
+<li><p>Any use by the Platform of Your Content in accordance with the licence granted in Section 8.2 that is subsequently alleged to infringe a third-party right because of your failure to hold the necessary rights at the time of upload;</p></li>
+<li><p>Any takedown notice, DMCA claim, or equivalent IP enforcement action filed against the Platform as a result of Your Content.</p></li>
+</ul>
+<p>This indemnity obligation survives the termination of your account and this EULA. The Platform reserves the right to assume exclusive control of the defence of any indemnified claim at your cost, in which case you agree to cooperate fully with the Platform's defence.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><p><strong>Plain Language Summary of Section 8.5</strong></p>
+<p>If you upload a photo that belongs to someone else and that person sues us, you pay — not us. This is the same standard applied by Airbnb, Booking.com, Viator, and every major platform that accepts user-uploaded images. It is fair, standard, and non-negotiable. Upload only photos you own or have written permission to use commercially.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>8.6 Platform's IP Enforcement Response (Notice and Takedown)</strong></p>
+<p>If a third party believes that content on the Platform infringes their intellectual property rights, they may submit a written notice to legal@trustsquare.co including: a description of the allegedly infringing content and its location on the Platform; evidence of the claimant's ownership of the right allegedly infringed; and a statement that the claimant has a good-faith belief that the use is not authorised. The Platform will:</p>
+<ol start="24" type="1">
+<li><p>Acknowledge receipt within 1 business day;</p></li>
+<li><p>Investigate within 5 business days;</p></li>
+<li><p>Disable access to content that, on reasonable assessment, appears to infringe a third-party right;</p></li>
+<li><p>Notify the User who uploaded the content of the takedown and the reason;</p></li>
+<li><p>Provide the User with an opportunity to submit a counter-notice if they dispute the claim.</p></li>
+</ol>
+<p>The Platform's response to a takedown notice does not constitute an admission of liability. The Platform acts as an intermediary in good faith and its actions are taken in compliance with the ECT Act Section 79 safe harbour provisions.</p>
+<p><strong>8.7 Adventures Category — Photo Standards</strong></p>
+<p>Adventures listings (Accommodation and Experiences) are photo-intensive by nature. In addition to the warranties in Section 8.4, Sellers listing Adventures content additionally confirm by each upload that:</p>
+<ul>
+<li><p>Photos accurately and honestly represent the accommodation, property, or experience as at the date of upload and have not been digitally manipulated in a way that materially misrepresents what a guest would encounter;</p></li>
+<li><p>No photo depicts a property or experience that the Seller does not have the right to offer on the Platform;</p></li>
+<li><p>For accommodation photos: the Seller has the right to permit guests to access and stay in the depicted property;</p></li>
+<li><p>For experience photos: the photos depict activities that the Seller is qualified and authorised to offer.</p></li>
+</ul>
+<p><strong>8.8 Content Removal</strong></p>
+<p>If you delete a listing, the associated photos and media are removed from public display within 48 hours. If you delete your account, all publicly visible links to Your Content are removed. Cached content on third-party CDN networks may persist for up to 30 days before expiry.</p>
+<p>Content required for legal, compliance, or dispute purposes is retained for up to 7 years after account closure per Section 8.2 and applicable law. This retained content is not accessible to the public or to other Users.</p>
+<p><strong>8.9 Platform's Own Intellectual Property</strong></p>
+<p>All Platform software, source code, design systems, trade marks, trade names, logos, and proprietary content are the property of the Operator or its licensors and are protected by South African and international intellectual property law. Nothing in this EULA grants you any right to use the Platform's intellectual property other than as strictly necessary to use the Platform in accordance with this EULA. Unauthorised reproduction, reverse-engineering, or commercial use of the Platform's intellectual property is strictly prohibited and may give rise to civil and criminal liability.</p>
+<blockquote>
+<p><strong>9. Privacy, Data Protection &amp; POPIA Compliance</strong></p>
+</blockquote>
+<p><strong>9.1 Privacy Policy</strong></p>
+<p>The Platform's full Privacy Policy is available at trustsquare.co/privacy [COUNSEL REQUIRED: Privacy Policy must be drafted and published before launch] and is incorporated into this EULA by reference. In the event of any conflict between this EULA and the Privacy Policy regarding personal data matters, the Privacy Policy prevails.</p>
+<p><strong>9.2 Data We Collect and Why</strong></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Data Type</strong></td>
+<td><strong>Purpose &amp; Legal Basis</strong></td>
+</tr>
+<tr class="even">
+<td>Identity: name, email, phone, SA ID number</td>
+<td>FICA KYC compliance; account management; Introduction acceptance. Legal basis: contractual necessity; legal obligation (FICA).</td>
+</tr>
+<tr class="odd">
+<td>Location: suburb, city, region</td>
+<td>Listing display; proximity-based search. Legal basis: contractual necessity.</td>
+</tr>
+<tr class="even">
+<td>Photos and listing media</td>
+<td>Listing display; all Platform app features; cached CDN distribution. Legal basis: contractual necessity (per Section 8.2 licence grant). Not sold to third parties per Section 8.3.</td>
+</tr>
+<tr class="odd">
+<td>Transaction data: Tuppence earned/spent, Introduction history</td>
+<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>
+</tr>
+<tr class="even">
+<td>Device and usage data: IP address, browser, analytics</td>
+<td>Fraud prevention; platform improvement. Legal basis: legitimate interest. Retained 30 days, anonymised.</td>
+</tr>
+<tr class="odd">
+<td>Certification documents: certificate photos/PDFs</td>
+<td>Trust Score bonus processing; credential verification. Legal basis: consent (given on upload).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>9.3 POPIA Consent</strong></p>
+<p>By accepting this EULA, you give informed, specific, opt-in consent (as required by POPIA) to the processing described in Section 9.2. You specifically consent to deferred identity verification as described in Section 3.4. You may withdraw any consent by deleting your account (Section 14.1), subject to legally mandated retention periods.</p>
+<p><strong>9.4 Data Retention</strong></p>
+<ul>
+<li><p>Active accounts: identity and transaction data retained for account lifetime plus 7 years (FICA requirement);</p></li>
+<li><p>Deleted accounts: personal data anonymised or deleted within 30 days, except where a legal hold applies;</p></li>
+<li><p>Certification documents: retained while account is active; deleted on account closure unless a regulatory hold applies;</p></li>
+<li><p>Usage analytics: 30 days (anonymised at collection);</p></li>
+<li><p>All data: permanently deleted after applicable retention period expires.</p></li>
+</ul>
+<p><strong>9.5 Third-Party Disclosure</strong></p>
+<p>Personal data is disclosed only to:</p>
+<ul>
+<li><p>South African regulatory and law enforcement bodies on lawful demand (SAPS, NPA, FIC, SARS, FSCA, Information Regulator);</p></li>
+<li><p>Other Users, only after bilateral Introduction acceptance (Section 3.2);</p></li>
+<li><p>Payment processors (Paystack) for transaction processing, under data processing agreement;</p></li>
+<li><p>Service providers (Cloudflare R2 (primary) and Hetzner local disk (redundant mirror) for photo storage; email delivery provider) under data processing agreements and POPIA-compliant terms;</p></li>
+<li><p>The Platform's identity verification partner (Section 3.5) for KYC processing.</p></li>
+</ul>
+<p>Personal data is never sold to third parties.</p>
+<p><strong>9.6 International Data Transfers</strong></p>
+<p>Platform servers are hosted on Hetzner (currently CPX22, upgrading to CPX32 on 25 May 2026), located in Germany (EU). Photo storage uses a write-to-both architecture: Cloudflare R2 (EU-based CDN, primary) with automatic failover to a Hetzner local disk mirror on the same EU-hosted server. All storage is EU-based and governed by GDPR, which provides an adequate level of protection recognised under POPIA. Data Processing Agreements are in place with Cloudflare and Hetzner.</p>
+<p><strong>9.7 Your POPIA Rights</strong></p>
+<p>You have the following rights under POPIA, exercisable by emailing legal@trustsquare.co:</p>
+<ul>
+<li><p>Access: request a copy of your personal data in machine-readable format (CSV or JSON);</p></li>
+<li><p>Correction: update inaccurate data via your profile settings or by contacting support;</p></li>
+<li><p>Deletion (Right to be Forgotten): request deletion of your account and data within 30 days, subject to legal holds;</p></li>
+<li><p>Object: opt out of marketing communications, analytics, or specific processing activities;</p></li>
+<li><p>Lodge a complaint with the South African Information Regulator at inforegulator.org.za.</p></li>
+</ul>
+<p>Requests are processed within 20 business days.</p>
+<p><strong>9.8 Data Security</strong></p>
+<p>The Platform employs TLS 1.3 encryption in transit, server-side encryption at rest, role-based access controls, and daily encrypted backups to Cloudflare R2 with 14-day retention. Photos are stored redundantly on both Cloudflare R2 and a Hetzner local disk mirror, ensuring availability even if either storage layer is temporarily unreachable. Security is audited periodically by [COUNSEL REQUIRED: insert audit provider or frequency].</p>
+<p><strong>9.9 Data Breach Notification</strong></p>
+<p>In the event of a data breach that compromises the confidentiality, integrity, or availability of your personal data, the Platform will notify you by email and notify the South African Information Regulator within 30 days of becoming aware of the breach, as required by POPIA. The notification will describe the nature of the breach, the data affected, and the steps taken or planned.</p>
+<blockquote>
+<p><strong>10. Disputes, Enforcement &amp; Liability</strong></p>
+</blockquote>
+<p><strong>10.1 User Disputes</strong></p>
+<p>Disputes about listing content, transaction outcomes, service quality, or post-Introduction conduct are between the relevant Users. The Platform may, at its discretion, assist in facilitating communication but does not adjudicate, arbitrate, or guarantee any outcome in User-to-User disputes.</p>
+<p><strong>10.2 Platform Enforcement</strong></p>
+<p>The Platform may take the following enforcement steps in response to violations of this EULA or applicable law, in escalating order:</p>
+<ol start="29" type="1">
+<li><p>Warning notice by email;</p></li>
+<li><p>Temporary listing suspension;</p></li>
+<li><p>Trust Score reduction;</p></li>
+<li><p>Account suspension;</p></li>
+<li><p>Permanent account ban and data deletion;</p></li>
+<li><p>Referral to law enforcement or regulatory authorities.</p></li>
+</ol>
+<p><strong>10.3 Pre-Dispute Negotiation (60 Days)</strong></p>
+<p>Before either party initiates arbitration or litigation in connection with any dispute arising out of or relating to this EULA, the disputing party must send a written claim to the other party (or to support@trustsquare.co for disputes involving the Platform) describing the dispute in reasonable detail. The parties have 60 days from the date the claim is received to resolve the dispute by negotiation in good faith. This requirement does not apply to applications for urgent injunctive relief, IP infringement claims, or fraud.</p>
+<p><strong>10.4 Binding Arbitration [COUNSEL REQUIRED]</strong></p>
+<p>If the 60-day negotiation period expires without resolution, disputes between a User and the Platform shall be resolved by binding arbitration conducted in English under the rules of the South African Arbitration Foundation (SAAF), with the seat of arbitration in Cape Town, South Africa. The arbitrator shall be a practising South African attorney or advocate with at least 5 years' experience in commercial or technology law. Arbitration proceedings are confidential. Each party bears its own legal costs; the SAAF's arbitrator fees are split equally unless the arbitrator finds that one party acted in bad faith.</p>
+<p><strong>10.5 Consumer Protection Act Override</strong></p>
+<p>Nothing in this Section limits any rights you have under the Consumer Protection Act No. 68 of 2008 (CPA), including the right to approach the National Consumer Commission or the right to bring a claim in a Magistrate's Court for claims under ZAR 10,000. Any cooling-off or cancellation rights in respect of the underlying transaction between Buyer and Seller (property rental, tutor engagement, service contract, etc.) are rights exercisable against the Seller, not against TrustSquare. See Section 5.4.</p>
+<p><strong>10.6 Limitation of Liability</strong></p>
+<p>To the fullest extent permitted by South African law, the Platform's total aggregate liability to you in any 12-month period shall not exceed:</p>
+<ul>
+<li><p>For Sellers: the total Tuppence earned and credited to your Wallet during that period, valued at USD $2 per Tuppence; or</p></li>
+<li><p>For Buyers or other Users: ZAR 500.</p></li>
+</ul>
+<p>The Platform is not liable for any of the following, whether arising in contract, delict, statute, or otherwise:</p>
+<ul>
+<li><p>Indirect, incidental, consequential, special, or punitive damages;</p></li>
+<li><p>Loss of profit, revenue, data, business opportunity, goodwill, or anticipated savings;</p></li>
+<li><p>Actions, omissions, or conduct of any Seller, Buyer, or third party;</p></li>
+<li><p>Platform unavailability, bugs, errors, or interruptions except where caused by the Platform's gross negligence;</p></li>
+<li><p>Regulatory fines or compliance costs arising from your own violations.</p></li>
+</ul>
+<p>Nothing in this section limits the Platform's liability for death or personal injury caused by its own gross negligence or wilful misconduct, or for fraud.</p>
+<p><strong>10.7 ECT Act Safe Harbour (§79)</strong></p>
+<p>The Platform provides an intermediary service as defined in the ECT Act. The Platform does not initiate, select, or modify User-generated content (listings, photos, contact details). Subject to compliance with Section 10.8, the Platform is not liable for such User content.</p>
+<p><strong>10.8 Notice and Takedown</strong></p>
+<p>If you believe Platform content is illegal, infringes your rights, or violates this EULA, notify the Platform by email at legal@trustsquare.co with a description of the content, its location on the Platform, and evidence supporting your claim. The Platform will: (i) confirm receipt within 24 hours; (ii) investigate within 48 hours; (iii) disable access to content found to be illegal; and (iv) notify you of the outcome.</p>
+<blockquote>
+<p><strong>11. Trust Score, Ranking &amp; Enforcement Criteria</strong></p>
+</blockquote>
+<p><strong>11.1 Trust Score System</strong></p>
+<p>Every Seller has a Trust Score (0–100) that reflects their reliability and compliance on the Platform. The score determines listing display position and the badge displayed on listing cards.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Score Range</strong></td>
+<td><strong>Badge &amp; Visibility</strong></td>
+</tr>
+<tr class="even">
+<td>0–39</td>
+<td>New — no badge; listed last in search results</td>
+</tr>
+<tr class="odd">
+<td>40–69</td>
+<td>Established — blue badge; standard listing position</td>
+</tr>
+<tr class="even">
+<td>70–89</td>
+<td>Trusted — green badge; higher visibility</td>
+</tr>
+<tr class="odd">
+<td>90–100</td>
+<td>Highly Trusted — gold badge + featured position</td>
+</tr>
+</tbody>
+</table>
+<p><strong>11.2 Score Factors</strong></p>
+<p>Trust Score is calculated algorithmically based on: time active on the Platform; number of accepted Introductions; response rate (percentage of Introductions responded to within 48 hours); average Buyer rating; formal complaint count; policy violations; and — for Adventures Sellers — approved certification bonuses (Section 7.3).</p>
+<p><strong>11.3 Trust Score Penalties</strong></p>
+<p>Penalties are applied automatically and in accordance with the introduction model for your category (see Section 5.3). Penalties decay over time: each penalty reduces by 50% every 90 days. Full recovery typically occurs within 180 days. The Platform does not manually waive penalties on User request. If you believe a penalty was applied in error, contact compliance@trustsquare.co.</p>
+<p><strong>11.4 Account Suspension for Low Score</strong></p>
+<p>If your Trust Score falls below 0, your account is automatically suspended. To request reactivation, contact compliance@trustsquare.co after 30 days. You may alternatively delete your account and re-register after a 90-day waiting period.</p>
+<p><strong>11.5 Public Display</strong></p>
+<p>Your Trust Score and badge tier are visible to all Platform Users on your profile and listing card, before and after Introduction acceptance. This is an inherent part of the Platform's transparency model.</p>
+<blockquote>
+<p><strong>12. Tuppence — Regulatory Classification &amp; Virtual Asset Status</strong></p>
+</blockquote>
+<p><strong>12.1 Current Classification</strong></p>
+<p>MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional a per-use, capped charge (Free / 2T / 3T / 5T)). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</p>
+<ul>
+<li><p>Tuppence is non-transferable between Users (a key criterion for FSCA virtual asset classification is fungibility and transferability);</p></li>
+<li><p>Tuppence cannot be converted to cash or any other currency;</p></li>
+<li><p>Tuppence cannot be traded on any exchange;</p></li>
+<li><p>1T = USD $2 is a fixed platform rate, not a market price.</p></li>
+</ul>
+<p><strong>12.2 If Reclassified</strong></p>
+<p>If the FSCA reclassifies Tuppence as a virtual asset or determines that the Platform requires a Crypto Asset Service Provider (CASP) licence, the Platform will:</p>
+<ol start="35" type="1">
+<li><p>Apply for the required FSCA licence within 180 days of the reclassification notice;</p></li>
+<li><p>Update this EULA and the Privacy Policy to reflect new compliance obligations;</p></li>
+<li><p>Notify all active Users of the regulatory status change by email;</p></li>
+<li><p>Implement FICA-compliant KYC/AML screening as required.</p></li>
+</ol>
+<p><strong>12.3 NCA — Current Non-Applicability</strong></p>
+<p>Tuppence is currently earned through Introduction acceptance and is not purchased by Users via credit or installment. The National Credit Act (NCA) therefore does not apply to Tuppence in its current form. If a Tuppence purchase mechanism is introduced in future, the NCA's affordability assessment and disclosure obligations will apply, and fresh consent will be obtained from Users at that time.</p>
+<p><strong>12.4 No Financial Advice</strong></p>
+<p>The Platform does not provide financial, investment, or tax advice regarding Tuppence. You are responsible for understanding the legal and tax implications of Tuppence in your own jurisdiction. South African Users should consult SARS guidance on virtual assets and barter transactions.</p>
+<blockquote>
+<p><strong>13. Governing Law, Jurisdiction &amp; Mandatory SA Law</strong></p>
+</blockquote>
+<p><strong>13.1 Governing Law</strong></p>
+<p>This EULA is governed by and construed in accordance with the laws of the Republic of South Africa, without regard to its conflicts of law principles.</p>
+<p><strong>13.2 Mandatory SA Law Supremacy</strong></p>
+<p>The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:</p>
+<ul>
+<li><p>Protection of Personal Information Act No. 4 of 2013 (POPIA)</p></li>
+<li><p>Consumer Protection Act No. 68 of 2008 (CPA)</p></li>
+<li><p>Electronic Communications and Transactions Act No. 25 of 2002 (ECT Act)</p></li>
+<li><p>Financial Intelligence Centre Act No. 38 of 1998 (FICA), as amended</p></li>
+<li><p>National Credit Act No. 34 of 2005 (NCA) — if and when applicable</p></li>
+<li><p>Financial Sector Regulation Act No. 9 of 2017 and subordinate FSCA regulations</p></li>
+<li><p>Constitution of the Republic of South Africa, Act 108 of 1996</p></li>
+</ul>
+<p><strong>13.3 Jurisdiction</strong></p>
+<p>You irrevocably and unconditionally consent to the non-exclusive jurisdiction of the High Court of South Africa and relevant Magistrate's Courts for the resolution of disputes not subject to arbitration under Section 10.4. For arbitrated disputes, the seat of arbitration is Cape Town, South Africa.</p>
+<p><strong>13.4 Contact</strong></p>
+<p>For legal notices and EULA-related communications: legal@trustsquare.co or [COUNSEL REQUIRED: insert postal address of registered office].</p>
+<blockquote>
+<p><strong>14. Termination &amp; Suspension</strong></p>
+</blockquote>
+<p><strong>14.1 User Termination</strong></p>
+<p>You may terminate your account at any time by submitting a written request to support@trustsquare.co. Termination takes effect immediately. Upon termination:</p>
+<ul>
+<li><p>All unused Tuppence is forfeited (non-refundable);</p></li>
+<li><p>Your active listings are removed from public display within 48 hours;</p></li>
+<li><p>Your account data is deleted or anonymised within 30 days, subject to FICA and other legal retention obligations;</p></li>
+<li><p>Buyers with open Introduction requests are notified that the Seller is no longer available. Tuppence spent on closed Introductions is consumed; no reissuance is made.</p></li>
+</ul>
+<p><strong>14.2 Immediate Termination for Breach</strong></p>
+<p>The Platform may terminate your account immediately, without notice, if you:</p>
+<ul>
+<li><p>Violate this EULA, POPIA, CPA, ECT Act, FICA, or any applicable South African law;</p></li>
+<li><p>Post fraudulent, illegal, defamatory, or harmful content;</p></li>
+<li><p>Fail to complete identity verification (Section 3.5) after acceptance of a first Introduction;</p></li>
+<li><p>Attempt to circumvent the Anonymity Gate (Section 3.3);</p></li>
+<li><p>Engage in money laundering, terrorism financing, or sanctions evasion (FICA);</p></li>
+<li><p>Claim false professional credentials;</p></li>
+<li><p>Harass, abuse, or threaten other Users or Platform staff.</p></li>
+</ul>
+<p>Upon termination for breach, all unused Tuppence is forfeited. The Platform reserves the right to recover damages arising from the breach.</p>
+<p><strong>14.3 Termination for Convenience</strong></p>
+<p>The Platform may terminate your account on 30 days' written notice to your registered email address for any reason, provided you have no active Introduction disputes or pending arbitrations. If such termination occurs, all unused Tuppence in your account is forfeited. Tuppence is not redeemable for cash or ZAR under any circumstances, including on account termination. You will be notified of the termination and forfeiture at the email address registered to your account.</p>
+<p><strong>14.4 Survival</strong></p>
+<p>The following sections survive account termination and continue in full force: Section 1 (Definitions), Section 3.6 (Regulatory Disclosure), Section 8 (User-Uploaded Content), Section 9 (Privacy and POPIA), Section 10.3–10.8 (Disputes and Liability), Section 13 (Governing Law), and any accrued Tuppence obligations.</p>
+<blockquote>
+<p><strong>15. Changes, Miscellaneous &amp; Contact</strong></p>
+</blockquote>
+<p><strong>15.1 Changes to These Terms</strong></p>
+<p>The Platform may update this EULA at any time. When material changes are made, you will be notified by email to your registered address and by an in-app notification at least 14 days before the changes take effect. The updated version number and effective date are displayed on this page at trustsquare.co/terms.</p>
+<p>Continued use of the Platform after the effective date constitutes acceptance of the updated EULA. If you do not accept the updated terms, you must close your account before the effective date.</p>
+<p><strong>15.2 Entire Agreement</strong></p>
+<p>This EULA, together with the Privacy Policy at trustsquare.co/privacy and any Platform policies or guidelines published at trustsquare.co/legal, constitutes the entire agreement between you and the Platform regarding your use of the Platform, and supersedes all prior agreements, representations, or understandings relating to the same subject matter.</p>
+<p><strong>15.3 Severability</strong></p>
+<p>If any provision of this EULA is found to be unlawful, void, or unenforceable, that provision shall be severed from the EULA. The remaining provisions shall continue in full force and effect.</p>
+<p><strong>15.4 Waiver</strong></p>
+<p>The Platform's failure to enforce any provision of this EULA at any time does not constitute a waiver of that provision or of the right to enforce it in the future.</p>
+<p><strong>15.5 No Agency</strong></p>
+<p>Nothing in this EULA creates a partnership, joint venture, agency, franchise, or employment relationship between you and the Platform.</p>
+<p><strong>15.6 Assignment</strong></p>
+<p>You may not assign or transfer your rights or obligations under this EULA without the Platform's prior written consent. The Platform may assign its rights and obligations to a successor entity upon written notice to you.</p>
+<p><strong>15.7 Force Majeure</strong></p>
+<p>The Platform is not liable for any failure or delay in performance caused by circumstances beyond its reasonable control, including natural disasters, load-shedding, telecommunications failures, cyberattacks, or government action, provided the Platform notifies you as soon as reasonably practicable and takes reasonable steps to resume performance.</p>
+<p><strong>15.8 Plain Language</strong></p>
+<p>This EULA is written in plain English. If you do not understand any provision, please contact support@trustsquare.co and we will provide a plain-language explanation within 5 business days. You may request a copy of this EULA and your transaction history at any time.</p>
+<p><strong>15.9 Contact</strong></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><strong>Purpose</strong></td>
+<td><strong>Contact</strong></td>
+</tr>
+<tr class="even">
+<td>General support</td>
+<td>support@trustsquare.co</td>
+</tr>
+<tr class="odd">
+<td>Legal notices / EULA</td>
+<td>legal@trustsquare.co</td>
+</tr>
+<tr class="even">
+<td>Compliance / Trust Score queries</td>
+<td>compliance@trustsquare.co</td>
+</tr>
+<tr class="odd">
+<td>Privacy / POPIA / data requests</td>
+<td>legal@trustsquare.co</td>
+</tr>
+<tr class="even">
+<td>South African Information Regulator</td>
+<td>inforegulator.org.za</td>
+</tr>
+<tr class="odd">
+<td>National Consumer Commission</td>
+<td>thencc.org.za</td>
+</tr>
+</tbody>
+</table>
+<p><strong>— End of TrustSquare Terms of Use / EULA v1.3 —</strong></p>
+<p><em>v1.3 Draft for legal review — not for publication</em></p>

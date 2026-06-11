@@ -1,0 +1,125 @@
+--- a/bea_main.py
++++ b/bea_main.py
+@@ -1203,5 +1203,5 @@
+     email: str
+     name: Optional[str] = None
+-    ai_sessions: Optional[int] = None   # free sessions to credit on registration
++    # ai_sessions RETIRED (CC-002): AI-uses/sessions concept removed — in-app guidance is free
+ 
+ class ListingUpdate(BaseModel):
+@@ -2608,18 +2608,10 @@
+     conn = database.get_db()
+     # INSERT OR IGNORE so existing sellers don't raise an error.
+-    # Track whether the row is new so we only credit ai_sessions once.
+-    result = conn.execute(
++    conn.execute(
+         "INSERT OR IGNORE INTO users (email, name) VALUES (?,?)",
+         (user.email, user.name)
+     )
+-    is_new = result.rowcount > 0
+     conn.commit()
+-    # Credit free AI sessions only on first registration — not on repeat calls.
+-    if is_new and user.ai_sessions and user.ai_sessions > 0:
+-        conn.execute(
+-            "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+-            (user.ai_sessions, user.email)
+-        )
+-        conn.commit()
++    # CC-002: free-AI-sessions registration credit RETIRED (in-app guidance is free; no session counters).
+     conn.close()
+     return {"message": "User created successfully"}
+@@ -3113,5 +3105,5 @@
+ 
+ @app.post("/payment/initialize")
+-def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
++def initialize_payment(email: str, tuppence: int, callback_url: str = ""):  # ai-pack param retired (CC-002)
+     amount_rands = tuppence * 36
+     reference = f"ms_tuppence_{uuid.uuid4().hex[:12]}"
+@@ -3120,5 +3112,5 @@
+         amount_rands=amount_rands,
+         reference=reference,
+-        metadata={"tuppence": tuppence, "email": email, "ai_pack_sessions": ai_pack_sessions},
++        metadata={"tuppence": tuppence, "email": email},
+         callback_url=callback_url or None
+     )
+@@ -3129,5 +3121,4 @@
+             "authorization_url": result["data"]["authorization_url"],
+             "tuppence": tuppence,
+-            "ai_pack_sessions": ai_pack_sessions,
+             "amount_rands": amount_rands
+         }
+@@ -3141,5 +3132,4 @@
+         tuppence = metadata.get("tuppence", 0)
+         email    = metadata.get("email", "")
+-        ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
+         if not _payment_grants_allowed():
+             raise HTTPException(status_code=503, detail="Payments are not live yet - top-ups are temporarily disabled.")
+@@ -3148,22 +3138,13 @@
+         if conn.execute("SELECT id FROM transactions WHERE description LIKE ?", (f"%ref {reference}%",)).fetchone():
+             conn.close()
+-            return {"status": "ok", "tuppence_credited": 0, "ai_sessions_credited": 0, "email": email, "note": "already processed"}
++            return {"status": "ok", "tuppence_credited": 0, "email": email, "note": "already processed"}
+         conn.execute(
+             "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
+             (email, "topup", tuppence, f"Tuppence top-up via Paystack · ref {reference}")
+         )
+-        if ai_sessions > 0:
+-            # Ensure user record exists, then credit AI sessions
+-            conn.execute(
+-                "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) ON CONFLICT(email) DO NOTHING",
+-                (email,)
+-            )
+-            conn.execute(
+-                "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+-                (ai_sessions, email)
+-            )
++        # CC-002: AI-pack session crediting RETIRED (packs gone; advanced AI is per-use via the HOLD ledger)
+         conn.commit()
+         conn.close()
+-        return {"status": "ok", "tuppence_credited": tuppence, "ai_sessions_credited": ai_sessions, "email": email}
++        return {"status": "ok", "tuppence_credited": tuppence, "email": email}
+     raise HTTPException(status_code=400, detail="Payment verification failed")
+ 
+@@ -3208,5 +3189,4 @@
+         email     = metadata.get("email", "")
+         tuppence  = int(metadata.get("tuppence", 0) or 0)
+-        ai_sessions = int(metadata.get("ai_pack_sessions", 0) or 0)
+ 
+         if not email or not reference:
+@@ -3237,16 +3217,5 @@
+             _log.info("Paystack webhook: credited %dT to %s (ref %s)", tuppence, email, reference)
+ 
+-        if ai_sessions > 0:
+-            conn.execute(
+-                "INSERT INTO users (email, aa_free_used, aa_sessions_remaining) VALUES (?, 0, 0) "
+-                "ON CONFLICT(email) DO NOTHING",
+-                (email,)
+-            )
+-            conn.execute(
+-                "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+-                (ai_sessions, email)
+-            )
+-            _log.info("Paystack webhook: credited %d AI sessions to %s (ref %s)", ai_sessions, email, reference)
+-
++        # CC-002: AI-pack session crediting RETIRED (packs gone; advanced AI is per-use via the HOLD ledger)
+         conn.commit()
+         conn.close()
+@@ -7920,5 +7889,5 @@
+             raise HTTPException(
+                 status_code=402,
+-                detail="Multi-city reach requires a Starter subscription ($5/month). Upgrade at trustsquare.co/admin.html"
++                detail="Multi-city reach requires a paid subscription (from $12/month). Upgrade at trustsquare.co/admin.html"
+             )
+ 
+@@ -8152,9 +8121,9 @@
+ 
+     # AdvertAgent direction card
+-    aa_items = ["Review AI coach session usage", "Gate sbTriggerMarketNote behind tier",
++    aa_items = ["Review AI coach usage (per-use canon)", "Gate sbTriggerMarketNote behind tier",
+                 "Test free-seller nudge banner", "Verify token cost per coach call"]
+     aa_prompt = (
+         "Review AdvertAgent AI coach usage. Gate inline market notes behind seller tier. "
+-        "Ensure free sellers see the upgrade nudge when ai_sessions=0."
++        "Ensure free sellers see the upgrade nudge (per-use AI canon \u2014 no session counters)."
+     )
+ 

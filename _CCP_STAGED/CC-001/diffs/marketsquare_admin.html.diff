@@ -1,0 +1,9 @@
+--- a/marketsquare_admin.html
++++ b/marketsquare_admin.html
+@@ -3072,5 +3072,5 @@
+ 
+ async function doAcceptIntro(id) {
+-  if (!confirm('Accept intro #' + id + '? This will charge 1T to the buyer.')) return;
++  if (!confirm('Accept intro #' + id + '? This burns the 1T the buyer committed at request.')) return;
+   showToast('Accepting...');
+   try {

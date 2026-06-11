@@ -1388,67 +1388,48 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div class="plan-zar">Card verified at signup · never charged</div>
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>2 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tuppence pay-as-you-go</div>
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Anonymous seller profile</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Local city visibility</div>
-        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No search alerts</div>
-        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No country-wide visibility</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
       </div>
       <button class="plan-btn secondary" id="plan-btn-free" onclick="setPlan('free','Free')">Select Free</button>
     </div>
-    <!-- Standard -->
-    <div class="plan-card recommended" id="plan-card-standard">
+    <!-- Starter -->
+    <div class="plan-card recommended" id="plan-card-starter">
       <div class="plan-rec-badge">Most popular</div>
-      <div class="plan-name">Standard</div>
-      <div class="plan-price">$12<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">≈ R216 / month</div>
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">$5<span class="plan-period"> / month</span></div>
+      <div class="plan-zar">≈ R90 / month</div>
       <div class="plan-features">
         <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 active listing slots</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Country-wide visibility</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Search alerts when buyers match</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in search</div>
-        <div class="plan-feat no"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No international visibility</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>+2 Tuppence every month</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
       </div>
-      <button class="plan-btn accent" id="plan-btn-standard" onclick="setPlan('standard','Standard')">Upgrade to Standard</button>
+      <button class="plan-btn accent" id="plan-btn-starter" onclick="setPlan('starter','Starter')">Upgrade to Starter</button>
     </div>
-    <!-- Professional -->
-    <div class="plan-card" id="plan-card-professional">
-      <div class="plan-name">Professional</div>
+    <!-- Pro -->
+    <div class="plan-card" id="plan-card-pro">
+      <div class="plan-name">Pro</div>
       <div class="plan-price">$20<span class="plan-period"> / month</span></div>
       <div class="plan-zar">≈ R360 / month</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>25 active listing slots</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Country-wide visibility</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Search alerts when buyers match</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority position in search</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Standard features</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 active listing slots</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>+10 Tuppence every month</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All features included</div>
       </div>
-      <button class="plan-btn primary" id="plan-btn-professional" onclick="setPlan('professional','Professional')">Upgrade to Professional</button>
+      <button class="plan-btn primary" id="plan-btn-pro" onclick="setPlan('pro','Pro')">Upgrade to Pro</button>
     </div>
-    <!-- Business -->
-    <div class="plan-card" id="plan-card-business">
-      <div class="plan-name">Business</div>
-      <div class="plan-price">$40<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">≈ R720 / month</div>
+    <!-- Agency -->
+    <div class="plan-card" id="plan-card-agency">
+      <div class="plan-name">Agency</div>
+      <div class="plan-price">Free<span class="plan-period"> · verified</span></div>
+      <div class="plan-zar">Estate agencies · car dealers · schools &amp; varsities · travel &amp; tour · collector shops</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>60 active listing slots</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility — all cities</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Professional features</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multi-city reach</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing allowance set on review of your agency size — grows with Trust Score</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Buy Tuppence &amp; AI only as you need</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>No subscription — we earn on introductions, not access</div>
       </div>
-      <button class="plan-btn primary" id="plan-btn-business" onclick="setPlan('business','Business')">Upgrade to Business</button>
-    </div>
-    <!-- Elite -->
-    <div class="plan-card" id="plan-card-elite">
-      <div class="plan-name">Elite</div>
-      <div class="plan-price">$100<span class="plan-period"> / month</span></div>
-      <div class="plan-zar">≈ R1,800 / month</div>
-      <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>500 active listing slots</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>International visibility — all cities</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>All Business features</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account support</div>
-      </div>
-      <button class="plan-btn primary" id="plan-btn-elite" onclick="setPlan('elite','Elite')">Upgrade to Elite</button>
+      <button class="plan-btn secondary" id="plan-btn-agency" onclick="setPlan('agency','Agency')">Apply as an agency</button>
     </div>
     <div style="text-align:center;font-size:12px;color:var(--text-3);padding:8px 0 16px;line-height:1.6;">All prices in USD, excluding VAT.<br>No commission ever. Cancel anytime.</div>
   </div>
@@ -1848,31 +1829,30 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
-      <div class="sob-tier-card" id="sob-tier-standard" onclick="sobSelTier('standard')">
+      <div class="sob-tier-card" id="sob-tier-starter" onclick="sobSelTier('starter')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="sob-tier-name">Standard</div>
-          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);">≈ R216 / month</div>
+          <div class="sob-tier-name">Starter</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);">≈ R90 / month</div>
         </div>
-        <div class="sob-tier-price">$12 / month · Billed monthly</div>
+        <div class="sob-tier-price">$5 / month · Billed monthly</div>
         <div class="sob-tier-feat">
           <span>✓ 10 active listings</span>
-          <span>✓ Country-wide visibility</span>
-          <span>✓ Buyer search alerts</span>
-          <span>✓ Priority position in city search</span>
+          <span>✓ +2 Tuppence every month</span>
+          <span>✓ All features included</span>
           <span>✓ 60-day listing · free renewal · fade reminder sent</span>
         </div>
       </div>
 
-      <div class="sob-tier-card" id="sob-tier-professional" onclick="sobSelTier('professional')">
+      <div class="sob-tier-card" id="sob-tier-pro" onclick="sobSelTier('pro')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="sob-tier-name">Professional</div>
+          <div class="sob-tier-name">Pro</div>
           <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);">≈ R360 / month</div>
         </div>
         <div class="sob-tier-price">$20 / month · Billed monthly</div>
         <div class="sob-tier-feat">
-          <span>✓ 25 active listings</span>
-          <span>✓ Priority position in search</span>
-          <span>✓ All Standard features</span>
+          <span>✓ 30 active listings</span>
+          <span>✓ +10 Tuppence every month</span>
+          <span>✓ All features included</span>
           <span>✓ 90-day listing · free renewal · fade reminder sent</span>
         </div>
       </div>
@@ -1996,11 +1976,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Listing</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A Seller's profile-linked offering displayed on the Platform, described by category, title, price, suburb, and optional photos.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Introduction</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A buyer-initiated connection request to a Seller, charged at 1 Tuppence, which — if accepted — reveals both parties' contact details to each other.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A buyer-initiated connection request to a Seller. 1 Tuppence is committed (held) when the Buyer makes the request and is burned only when the introduction is delivered — i.e. when the Seller accepts, which reveals both parties' contact details. If the Seller declines or the request expires, the hold is released in full and no Tuppence is used.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tuppence / T</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the mandatory fee paid by Buyers per Introduction; (ii) AI Feature Tuppence — an optional, subscription-gated fee paid by Sellers for AI-assisted features, representing cost-recovery for an external AI API. See Section 5.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the fee for an Introduction, committed on request and burned only on delivery (Seller acceptance); released if declined or expired; (ii) AI Feature Tuppence — an optional per-use fee for advanced AI features. Everyday in-app guidance is free; advanced features are priced per use and capped (Free / 2T / 3T / 5T), available to Buyers and Sellers. See Section 5.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AdvertAgent / AI Feature</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's optional AI-assisted Seller support feature, powered by an external AI API. Seller-facing only. Accessed via paid subscription. Charged in AI Feature Tuppence. Not part of the core marketplace flow. Pricing TBD.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">The Platform's optional AI-assisted support for listings, research and reports, powered by an external AI provider. Available to Buyers and Sellers. Everyday in-app guidance is free; advanced features are priced per use in Tuppence (Free / 2T / 3T / 5T), shown before you use them.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Trust Score</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A numeric score (0–100) assigned to each Seller that reflects reliability, response rate, and compliance history. Governs listing visibility and priority.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Anonymity Gate / Mode B</strong></div>
@@ -2169,40 +2149,40 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div style="margin:5px 0;font-size:11px;">You have the right to cancel an Introduction request within 7 calendar days of the request being sent, without reason and without penalty, provided the Seller has not yet accepted the Introduction. To cancel:</div>
 <div style="margin:5px 0;font-size:11px;">Click the "Cancel" link in the Introduction confirmation email, or</div>
 <div style="margin:5px 0;font-size:11px;">Email support@trustsquare.co with the subject line "CANCEL: [Introduction ID]" within 7 days.</div>
-<div style="margin:5px 0;font-size:11px;">Tuppence spent on an Introduction request is consumed at the time of request. The Consumer Protection Act s 16 cooling-off right applies to direct marketing transactions only; Tuppence purchases are buyer-initiated and are not subject to a cooling-off refund right. Tuppence is non-refundable under any circumstance.</div>
-<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.5 AI Feature Tuppence — Optional, Subscription-Based, Separate from Introductions</strong></div>
+<div style="margin:5px 0;font-size:11px;">Tuppence for an Introduction is committed (held) at the time of request and burned only when the introduction is delivered (Seller acceptance); the hold is released if declined or expired. The Consumer Protection Act s 16 cooling-off right applies to direct marketing transactions only; Tuppence purchases are buyer-initiated and are not subject to a cooling-off refund right. A burned (delivered) Introduction is non-refundable.</div>
+<div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.5 AI Feature Tuppence — Optional, Per-Use, Separate from Introductions</strong></div>
 <div style="margin:5px 0;font-size:11px;">The Platform offers an optional AI-assisted feature ("AdvertAgent" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks. AI Feature usage is charged in Tuppence and is governed by the following rules, which are distinct from and independent of the Introduction Tuppence model:</div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Characteristic</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Who it applies to</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Sellers only. Not available to Buyers. Not part of the core marketplace flow.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Buyers and Sellers — some features are buyer-side (area / price research), some seller-side (listing help). Optional; not part of the core marketplace flow.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Nature of use</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Entirely optional. A Seller chooses to invoke an AI feature. No AI feature is triggered automatically or as a condition of listing or receiving Introductions.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Why Tuppence is charged</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI features are powered by an external AI API (currently Anthropic Claude). The Platform incurs a real per-use cost from this third-party provider. Tuppence charged for AI use is cost-recovery for that external API cost — it is not platform revenue in the same sense as Introduction Tuppence.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Advanced AI features are powered by an external AI provider and are a priced service: each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm; everyday in-app guidance is free. AI Feature Tuppence and Introduction Tuppence remain separate flows, and neither is a financial product or instrument. Tuppence is non-refundable and cannot be exchanged back into money — it is prepaid consideration for Platform services, not a deposit. A released hold returns un-spent Tuppence, never cash.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Access model</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI features are accessed via a paid Seller subscription tier. The subscription fee covers a quota of AI interactions per billing period. Usage beyond the quota may incur additional Tuppence charges, disclosed at the point of use.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Everyday in-app AI guidance is free. Advanced AI features are pay-per-use from your Tuppence balance (capped at 5T); the price is shown before you confirm. No subscription is required to use a paid feature.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Pricing</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence pricing and subscription tiers are not yet finalised. They will be published and notified to Users before the AI feature is activated. No AI Feature charges will be applied without prior disclosure and your acceptance of updated terms.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Advanced AI features are priced per use, in Tuppence, capped: Free / 2T / 3T / 5T. The price for each feature is disclosed at the point of use, before you confirm.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Refunds</strong></div>
-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence is non-refundable under any circumstance once an AI request is submitted. Submitting an AI request consumes the Tuppence regardless of the output quality or outcome.</strong></div>
+<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">A hold is placed when you start a paid AI feature and is burned on delivery; if the run fails, the hold is released and no Tuppence is used. Once a result is delivered, the Tuppence is non-refundable.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Relationship to Introductions</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">AI Feature Tuppence and Introduction Tuppence are separate balances and flows. Using AI features does not affect your Introduction Tuppence balance, Trust Score, or listing status.</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Important — AI Feature Tuppence is Different in Nature</strong></div>
-<div style="margin:5px 0;font-size:11px;">Introduction Tuppence is the Platform's core marketplace fee — it is how the Platform earns revenue. AI Feature Tuppence is different: it is a pass-through cost-recovery mechanism for a real external API expense. The Platform does not profit from AI Feature Tuppence beyond recovering its cost of providing the feature. This distinction matters for how you budget your Platform use and for regulatory classification purposes.</div>
+<div style="margin:5px 0;font-size:11px;">Introduction Tuppence is the Platform's core marketplace fee. AI Feature Tuppence is a separate, optional charge for advanced AI features — a priced service billed per use (capped — Free / 2T / 3T / 5T), distinct from the Introduction fee. Everyday in-app AI guidance is free. Neither Tuppence type is a financial product or instrument.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.6 Tuppence and the Platform — Not a Financial Intermediary</strong></div>
-<div style="margin:5px 0;font-size:11px;">The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions.</div>
+<div style="margin:5px 0;font-size:11px;">The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions. Tuppence is non-refundable and cannot be exchanged back into money; it is prepaid consideration for Platform services, not a deposit, financial product, or instrument. A released hold returns un-spent Tuppence, never cash.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">5.7 Tuppence Holds and Reversals</strong></div>
 <div style="margin:5px 0;font-size:11px;">The Platform may temporarily hold or reverse Tuppence transactions to prevent fraud, address system errors, or correct processing anomalies. The Platform will notify affected Users within 48 hours of any hold or reversal and will resolve the matter within 5 business days.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6. Fees, Subscriptions &amp; Payment</strong></div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.1 Fee Disclosure</strong></div>
 <div style="margin:5px 0;font-size:11px;">The Platform charges only for the following, which are presented to you before the transaction is confirmed:</div>
 <div style="margin:5px 0;font-size:11px;">Introduction Tuppence: 1T (USD $2) per Introduction request, charged to the Buyer (Section 5.1–5.4);</div>
-<div style="margin:5px 0;font-size:11px;">AI Feature Tuppence: variable Tuppence per AI interaction, charged to Sellers who opt into AI-assisted features via a paid subscription (Section 5.5). Pricing TBD — no charges apply until pricing is published and accepted;</div>
+<div style="margin:5px 0;font-size:11px;">AI Feature Tuppence: per use, in Tuppence, capped (Free / 2T / 3T / 5T) and shown before use; everyday in-app guidance is free (Section 5.5);</div>
 <div style="margin:5px 0;font-size:11px;">Buyer subscription fees for premium access tiers (see Section 6.2);</div>
 <div style="margin:5px 0;font-size:11px;">Seller AI feature subscription fees, if elected (see Section 5.5);</div>
 <div style="margin:5px 0;font-size:11px;">Any future Tuppence top-up or purchase fees (subject to updated terms and FSCA compliance).</div>
-<div style="margin:5px 0;font-size:11px;">There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees and subscriptions only. AI Feature Tuppence is cost-recovery for an external API, not an additional profit margin (see Section 5.5).</div>
+<div style="margin:5px 0;font-size:11px;">There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees, subscriptions, and paid AI features. Advanced AI features are a priced service (per use, capped), separate from the Introduction fee (see Section 5.5).</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.2 Buyer Subscription Tiers [Preliminary — subject to change]</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tier</strong></div>
 <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Details</strong></div>
@@ -2485,7 +2465,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div style="margin:5px 0;font-size:11px;">Your Trust Score and badge tier are visible to all Platform Users on your profile and listing card, before and after Introduction acceptance. This is an inherent part of the Platform's transparency model.</div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12. Tuppence — Regulatory Classification &amp; Virtual Asset Status</strong></div>
 <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">12.1 Current Classification</strong></div>
-<div style="margin:5px 0;font-size:11px;">MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional cost-recovery for an external AI API). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</div>
+<div style="margin:5px 0;font-size:11px;">MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional a per-use, capped charge (Free / 2T / 3T / 5T)). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</div>
 <div style="margin:5px 0;font-size:11px;">Tuppence is non-transferable between Users (a key criterion for FSCA virtual asset classification is fungibility and transferability);</div>
 <div style="margin:5px 0;font-size:11px;">Tuppence cannot be converted to cash or any other currency;</div>
 <div style="margin:5px 0;font-size:11px;">Tuppence cannot be traded on any exchange;</div>
@@ -4055,7 +4035,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=161"></script>
+<script src="/static/ms.js?v=163"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

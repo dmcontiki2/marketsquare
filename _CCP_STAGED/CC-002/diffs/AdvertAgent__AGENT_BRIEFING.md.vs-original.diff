@@ -1,0 +1,25 @@
+--- a/AdvertAgent__AGENT_BRIEFING.md
++++ b/AdvertAgent__AGENT_BRIEFING.md
+@@ -81,5 +81,5 @@
+ | **What 1T buys** | One introduction event | Advanced AI features per use (in-app guidance free) |
+ | **Governed by** | A1 (product principle — locked) | G1 (AdvertAgent principle) |
+-| **Wallet display** | "Tuppence balance · used for introductions" | "AI Coach Credits · not used for introductions" |
++| **Wallet display** | "Tuppence balance · used for introductions" | "AI feature credits · not used for introductions" |
+ 
+ **Mandatory UI copy rules (AdvertAgent screens only):**
+@@ -87,11 +87,11 @@
+ | Context | Forbidden ❌ | Required ✅ |
+ |---|---|---|
+-| Pack purchase button | "Buy pack · 1 Tuppence" | "Buy AI Pack · 8 sessions · 1T" |
+-| Wallet AI card title | "AI Credits" | "AI Coach Credits" |
++| Pack purchase button | RETIRED — packs gone (Canon Addendum 1); advanced AI is per-use | — |
++| Wallet AI card title | "AI Credits" | "AI feature credits" |
+ | Wallet AI card subtitle | — | "Not used for introductions" |
+ | Stage 3 balance display | "1 session remaining" | "1 coaching session remaining" |
+-| Stage 3 zero-balance CTA | "Buy 1T pack" | "Buy AI Pack — 8 sessions · 1T" |
++| Stage 3 zero-balance CTA | RETIRED — packs gone | "Top up Tuppence — advanced AI is priced per use" |
+ | Free session badge | "Free" | "1 free coaching session included" |
+-| Any intro-fee reference | "AI pack" or "coaching" | "Introduction fee · 1T on seller acceptance" |
++| Any intro-fee reference | "AI pack" or "coaching" | "Introduction fee · 1T committed on request, burned on seller acceptance" |
+ 
+ The Tuppence wallet screen must show two visually separated sections:

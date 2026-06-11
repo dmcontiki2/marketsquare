@@ -1,0 +1,9 @@
+--- a/agency_outreach.html
++++ b/agency_outreach.html
+@@ -119,5 +119,5 @@
+ 
+       <div class="value-prop">
+-        <p><strong>How the deal works:</strong> A buyer finds your listing and pays a small Tuppence introduction fee (1T = USD $2) to request contact. You review their interest privately and accept only the introductions you want. You then transact and earn your commission exactly as you do today — <strong>TrustSquare never touches your deal or takes a cent of your commission.</strong></p>
++        <p><strong>How the deal works:</strong> A buyer finds your listing and commits a small Tuppence introduction fee (1T = USD $2) to request contact — it is only used when you accept. You review their interest privately and accept only the introductions you want. You then transact and earn your commission exactly as you do today — <strong>TrustSquare never touches your deal or takes a cent of your commission.</strong></p>
+       </div>
+ 

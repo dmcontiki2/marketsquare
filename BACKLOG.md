@@ -314,3 +314,15 @@ Run the clean-refresh pass first (re-scrape launch city + free MX re-verify), th
 | AI-5 | Wallet UI: AI feature spend must render under "AI feature credits — not used for introductions" (Briefing §5) when FEA wiring lands | AdvertAgent |
 | AI-6 | nginx housekeeping: sites-enabled/marketsquare.bak_gate loads as a duplicate server block (pre-existing warn) — move out of sites-enabled | Infra |
 | AI-7 | **Featured Local Slots** (DESIGNED, awaiting decision — AdvertAgent/Featured_Local_Slots_Design_Brief.docx) — subscriber-promoted local listings (3 mini-cards) at foot of relevant AI reports, 50/100T, area-bound, density scales by city. Needs 2 council rulings (ad-free brand · business-vs-A2 anonymity) + design-first clean build post-launch when subscriber inventory exists. $0 AI cost (revenue generator). | AdvertAgent |
+
+---
+
+## 🔁 Change-Control Protocol — standing process + active changes (added 10 Jun 2026 · David-approved)
+**Big cross-cutting changes (canon / pricing / IP / business-process) now run through the Change-Control Protocol** so nothing gets dropped across the 60+ artifacts in five repos + the live server. Canonical: `CHANGE_CONTROL_PROTOCOL.md`. Active tickets + term maps: `CHANGE_REGISTER.md`. Reusable matrix: `TRACEABILITY_MATRIX_TEMPLATE.xlsx`. The guarantee = a **term map** a grep drives to **zero** (replaces human recall); the **Sensor/Fixer/Orchestrator** roles run the step-5 dry-run **attended + fully gated** (a canon change is exactly what the nightly loop must NOT auto-run — POLICY §7/§12).
+
+| # | Item | Stage | Lane |
+|---|---|---|---|
+| CCP-0 | **Adopt the protocol** — `CHANGE_CONTROL_PROTOCOL.md` v1.0 written + wired here + into ORCHESTRATION_POLICY §7.1. | ✅ DONE 10 Jun | — |
+| CC-001 | **Tuppence HOLD model** (commit-on-request → burn-on-delivery → release-on-decline; payer = service consumer; Codex→v4.8, IP Brief→v6, claims C10–C13). Term map DRAFT in `CHANGE_REGISTER.md`. | 4/5 STAGED (Fable 10 Jun — matrices+edits+drafts done, proof PASS; David: verify term map + land canon) | ATTENDED (Gate 1+2, §12) |
+| CC-002 | **Pricing + AI canon** ("AI uses"/sessions retired; in-app AI FREE, advanced AI per-use Tuppence; tiers $0/12/20/40/100; allocs 6/10/20/50T @ 1T=$2; slots 2/10/25/60/500 cap). Term map DRAFT in `CHANGE_REGISTER.md`. | 4/5 STAGED (Fable 10 Jun — staged incl. Gate-2 bea diff; David: verify + land) | ATTENDED (Gate 2, §12) |
+| CC-SEQ | **Sequencing call:** land CC-001 (sets the charge mechanism) before CC-002 (pricing copy refers to it); or run together with one merged term map / single Sensor pass. Decide at Step 1. | David call | DAVID |

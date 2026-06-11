@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Clients in {{city_name}} — No Platform Commission</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f0; color: #1a1a1a; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: #1a1a2e; padding: 32px 40px; text-align: center; }
+    .header-logo { font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; }
+    .header-logo span { color: #d4a853; }
+    .hero { background: linear-gradient(135deg, #1c2b4a 0%, #253660 60%, #2e4480 100%); padding: 48px 40px; text-align: center; }
+    .hero-icon { font-size: 48px; margin-bottom: 16px; }
+    .hero-title { font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.3; margin-bottom: 12px; }
+    .hero-subtitle { font-size: 16px; color: #b0c4e8; line-height: 1.6; }
+    .body { padding: 40px; }
+    .greeting { font-size: 16px; color: #333; margin-bottom: 24px; line-height: 1.6; }
+    .value-prop { background: #f4f6fb; border-left: 4px solid #2e4480; border-radius: 0 8px 8px 0; padding: 20px 24px; margin: 24px 0; }
+    .value-prop p { font-size: 15px; color: #444; line-height: 1.7; }
+    .features { margin: 32px 0; }
+    .feature { display: flex; align-items: flex-start; margin-bottom: 20px; }
+    .feature-icon { font-size: 22px; margin-right: 16px; flex-shrink: 0; margin-top: 2px; }
+    .feature-text h4 { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+    .feature-text p { font-size: 14px; color: #666; line-height: 1.5; }
+    .city-badge { display: inline-block; background: #1c2b4a; color: #b0c4e8; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin-bottom: 24px; }
+    .cta-section { text-align: center; padding: 32px 0; }
+    .cta-button { display: inline-block; background: #2e4480; color: #ffffff; font-size: 17px; font-weight: 700; padding: 16px 40px; border-radius: 8px; text-decoration: none; letter-spacing: 0.3px; }
+    .cta-note { font-size: 13px; color: #888; margin-top: 12px; }
+    .how-it-works { background: #f4f6fb; border-radius: 8px; padding: 28px; margin: 24px 0; }
+    .how-it-works h3 { font-size: 16px; font-weight: 700; color: #1c2b4a; margin-bottom: 16px; }
+    .step { display: flex; align-items: center; margin-bottom: 12px; }
+    .step-num { background: #1c2b4a; color: #b0c4e8; font-size: 13px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; }
+    .step p { font-size: 14px; color: #555; }
+    .founders-note { background: #f0f4ff; border: 1px solid #b0c4e8; border-radius: 8px; padding: 20px 24px; margin: 24px 0; }
+    .founders-note p { font-size: 14px; color: #1c2b4a; line-height: 1.6; }
+    .services-list { background: #f8f8f4; border-radius: 8px; padding: 16px 20px; margin: 16px 0; font-size: 13px; color: #555; line-height: 1.8; }
+    .callout-note { background: #fffbf0; border: 1px solid #e8d4a0; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; color: #7a6020; }
+    .footer { background: #f0f0ea; padding: 28px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #888; line-height: 1.7; }
+    .footer a { color: #666; }
+    .unsubscribe { margin-top: 12px; }
+    .unsubscribe a { font-size: 12px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <div class="header">
+      <div class="header-logo">Trust<span>Square</span></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-icon">🔧</div>
+      <div class="hero-title">Get Quality Clients in {{city_name}} — Keep Every Rand You Earn</div>
+      <div class="hero-subtitle">For skilled trades, contractors, and technical specialists. Anonymous. Commission-free. Serious enquiries only.</div>
+    </div>
+
+    <div class="body">
+
+      <div class="city-badge">⚙️ {{city_name}} · Technical Services Invitation</div>
+
+      <p class="greeting">
+        Hi {{first_name}},<br><br>
+        We're launching TrustSquare in {{city_name}} — a marketplace built for skilled tradespeople and technical specialists who want quality clients without paying commissions to a platform, an agency, or a middleman.
+      </p>
+
+      <div class="value-prop">
+        <p><strong>The deal:</strong> Clients find you through TrustSquare, pay a small fee to request your contact details, and you decide whether to accept. Your phone number and name are never shared until you say yes. Your earnings are 100% yours.</p>
+      </div>
+
+      <div class="services-list">
+        <strong>Who this is for:</strong> Electricians · Plumbers · Builders · Carpenters · Painters · HVAC specialists · IT support · Web developers · Photographers · Videographers · Accountants · Engineers · Architects · and any other skilled trade or technical profession.
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-text">
+            <h4>No cold calls, no tyre-kickers</h4>
+            <p>Clients pay before they contact you — filtering serious enquiries from casual browsers automatically.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">💼</div>
+          <div class="feature-text">
+            <h4>Set your call-out fee and rates upfront</h4>
+            <p>Specify your hourly rate, project rates, or call-out fee so clients know exactly what to expect before they reach out.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📬</div>
+          <div class="feature-text">
+            <h4>Multiple open enquiries at once</h4>
+            <p>Your listing stays live while you manage multiple introduction requests. Accept the jobs you want.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⭐</div>
+          <div class="feature-text">
+            <h4>Build your Trust Score over time</h4>
+            <p>Verified credentials, referrals, and successful introductions build your reputation. Higher scores = better placement in search.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout-note">
+        💡 You can list a call-out fee (e.g. R350/visit) separately from your hourly rate — so clients see the full cost picture before they contact you.
+      </div>
+
+      <div class="how-it-works">
+        <h3>Getting live in {{city_name}}</h3>
+        <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+        <div class="step"><div class="step-num">2</div><p>Add your trade, rates, and area of service — plus up to 10 photos: completed jobs, work in progress, your equipment, and any qualifications or certificates</p></div>
+        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as buyers will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+      </div>
+
+
+      <!--LAUNCH_SPECIAL_START-->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;">
+        <tr>
+          <td style="border-radius:12px;padding:22px 24px;background:#1a1a2e;">
+            <p style="font-size:11px;color:#d4a853;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;font-family:sans-serif;margin:0 0 8px 0;">⚜️ Launch special — offered once, never again</p>
+            <p style="font-size:14px;color:#e8e8f0;font-family:sans-serif;line-height:1.6;margin:0 0 12px 0;">This is your <strong style="color:#d4a853;">personal launch number — yours alone, linked to one ID</strong>. Redeem it on the <strong style="color:#d4a853;">$40 Business or $100 Elite subscription</strong> during the launch month and you're minted a <strong style="color:#d4a853;">lifetime Founders Badge</strong> — <strong style="color:#d4a853;">20% bonus Tuppence on any paid plan, every month, for life</strong> (24 instead of 20 Tuppence monthly on Business · 60 instead of 50 on Elite). Pause your subscription later and the normal free Tuppence applies — the badge waits, for life.</p>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;"><tr>
+              <td style="background:#0f1424;border:1px dashed #d4a853;border-radius:8px;padding:10px 18px;">
+                <span style="font-size:18px;font-weight:800;color:#d4a853;font-family:'Courier New',monospace;letter-spacing:2px;">{{launch_code}}</span>
+              </td>
+            </tr></table>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px;"><tr>
+              <td style="background:#ffffff;border-radius:8px;padding:8px 12px;">
+                <span style="font-size:9.5px;font-weight:700;color:#8a6000;background:#f9efe2;border-radius:4px;padding:2px 7px;font-family:sans-serif;">⭐ Highly Trusted</span>
+                <span style="font-size:14px;color:#b3362e;padding-left:6px;">✦</span>
+                <span style="font-size:11px;color:#777;font-family:sans-serif;padding-left:8px;">the ruby Founders mark — beside your trust badge, on every listing you own</span>
+              </td>
+            </tr></table>
+            <p style="font-size:12px;color:#a0b0c8;font-family:sans-serif;line-height:1.6;margin:0;">Valid from launch day until <strong style="color:#e8e8f0;">{{special_deadline}}</strong> — the final closing; this special is never repeated. One redemption, one ID, redeemable only on the $40 Business or $100 Elite tiers. Entirely optional — the free tier remains free, forever.</p>
+            <p style="font-size:12px;color:#d4a853;font-family:sans-serif;line-height:1.6;margin:10px 0 0;font-style:italic;">The ruby spark ✦ is minted once in the platform's lifetime — at the founding — and never again, at any price, in any promotion. Whoever wears it was here when it began.</p>
+          </td>
+        </tr>
+      </table>
+      <!--LAUNCH_SPECIAL_END-->
+
+      <div style="background:#f4f6fb; border-radius:8px; padding:20px 24px; margin:24px 0; border-left:4px solid #b0c4e8;">
+        <p style="font-size:14px; color:#444; line-height:1.7;"><strong>Optional: AI Listing Coach</strong> — Not sure how to describe your service professionally? Our AI Coach guides you through building a clear, complete listing that covers your trade, pricing, and scope of work. The in-app AI guidance is <strong>free</strong>, with advanced AI features available for Tuppence whenever you want them. You don't need it to list — but it helps you put your best foot forward from day one.</p>
+      </div>
+
+      <!-- ── Personalised Draft ──────────────────────────────── -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;">
+        <tr>
+          <td style="border:2px dashed #b0c4e8;border-radius:12px;padding:20px;background:#f4f6fb;">
+            <p style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;font-family:sans-serif;margin:0 0 14px 0;">✏️ A quick draft for {{first_name}}</p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:8px;border:1px solid #c8d8f0;overflow:hidden;">
+              <tr>
+                <td style="background:#1c2b4a;padding:10px 16px;border-radius:8px 8px 0 0;">
+                  <span style="font-size:11px;font-weight:700;color:#b0c4e8;font-family:sans-serif;letter-spacing:0.3px;">TrustSquare · Technical Services · {{city_name}}</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:14px 16px 8px;">
+                  <p style="font-size:15px;font-weight:700;color:#1a1a2e;font-family:sans-serif;margin:0 0 4px 0;">{{prospect_listing_title}}</p>
+                  <p style="font-size:12px;color:#999;font-family:sans-serif;margin:0 0 14px 0;">📍 {{prospect_suburb}}&nbsp;&nbsp;·&nbsp;&nbsp;New Seller</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:0 16px 14px;">
+                  <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background:#1c2b4a;border-radius:6px;padding:9px 18px;">
+                        <span style="font-size:12px;font-weight:700;color:#b0c4e8;font-family:sans-serif;">Request Introduction &nbsp;·&nbsp; 1T</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <p style="font-size:12px;color:#888;margin:10px 0 0 0;line-height:1.6;font-family:sans-serif;">This is auto-generated from your details. Click the button below to personalise it and go live in 3 minutes.</p>
+          </td>
+        </tr>
+      </table>
+      <!-- ── End Personalised Draft ─────────────────────────── -->
+
+      <div class="cta-section">
+        <a href="{{magic_link}}" class="cta-button">List My Services in {{city_name}}</a>
+        <p class="cta-note">No registration needed upfront. Free to list. You sign on when you accept your listing.</p>
+
+        <!-- ── Live listings showcase (REAL demo data — true cards) ── -->
+        <p style="font-size:13px;color:#999;margin:28px 0 16px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600;">Services already live on TrustSquare</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+          <tr>
+
+            <td width="33%" align="center" valign="top" style="padding:0 6px;">
+              <table cellpadding="0" cellspacing="0" border="0" style="width:148px;background:#1a1a2e;border-radius:22px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+                <tr><td>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="padding:6px 0 4px;text-align:center;">
+                      <div style="display:inline-block;background:#0a0a1a;width:40px;height:10px;border-radius:6px;"></div>
+                    </td></tr>
+                  </table>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:14px;overflow:hidden;">
+                    <tr><td style="background:#f8f6f0;padding:4px 8px;font-size:8px;color:#999;font-family:sans-serif;">9:41 ●●●●○ WiFi</td></tr>
+                    <tr><td style="background:#1a1a2e;padding:6px 8px;font-size:9px;font-weight:700;color:#d4a853;font-family:sans-serif;letter-spacing:0.3px;">TrustSquare · Services</td></tr>
+                    <tr><td style="height:68px;background-color:#5a7a96;background-image:url('https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80');background-size:cover;background-position:center;vertical-align:bottom;padding:0 0 5px;">
+                      <span style="font-size:7px;color:#fff;font-family:sans-serif;background:rgba(0,0,0,0.45);padding:1px 5px;border-radius:2px;display:inline-block;">Centurion</span>
+                    </td></tr>
+                    <tr><td style="padding:7px 8px;background:#fff;">
+                      <div style="font-size:8.5px;font-weight:700;color:#1a1a2e;font-family:sans-serif;line-height:1.3;margin-bottom:3px;">Registered Electrician<br>— Fault Finding & Co…</div>
+                      <div style="font-size:9px;color:#c8952a;font-weight:700;font-family:sans-serif;margin-bottom:4px;">R 650 call-out + R 280/hr</div>
+                      <div style="display:inline-block;background:#e7f6ec;border-radius:3px;padding:1px 5px;font-size:7px;color:#15803d;font-family:sans-serif;font-weight:600;">✓ Trusted</div>
+                    </td></tr>
+                    <tr><td style="padding:5px 8px 8px;background:#fff;">
+                      <div style="background:#1a1a2e;border-radius:5px;padding:5px;text-align:center;font-size:7.5px;color:#d4a853;font-weight:700;font-family:sans-serif;">Request Introduction · 1T</div>
+                    </td></tr>
+                  </table>
+                  <div style="height:8px;"></div>
+                </td></tr>
+              </table>
+            </td>
+
+            <td width="33%" align="center" valign="top" style="padding:0 6px;">
+              <table cellpadding="0" cellspacing="0" border="0" style="width:148px;background:#1a1a2e;border-radius:22px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+                <tr><td>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="padding:6px 0 4px;text-align:center;">
+                      <div style="display:inline-block;background:#0a0a1a;width:40px;height:10px;border-radius:6px;"></div>
+                    </td></tr>
+                  </table>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:14px;overflow:hidden;">
+                    <tr><td style="background:#f8f6f0;padding:4px 8px;font-size:8px;color:#999;font-family:sans-serif;">9:41 ●●●●○ WiFi</td></tr>
+                    <tr><td style="background:#1a1a2e;padding:6px 8px;font-size:9px;font-weight:700;color:#d4a853;font-family:sans-serif;letter-spacing:0.3px;">TrustSquare · Services</td></tr>
+                    <tr><td style="height:68px;background-color:#5a7a96;background-image:url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80');background-size:cover;background-position:center;vertical-align:bottom;padding:0 0 5px;">
+                      <span style="font-size:7px;color:#fff;font-family:sans-serif;background:rgba(0,0,0,0.45);padding:1px 5px;border-radius:2px;display:inline-block;">Brooklyn</span>
+                    </td></tr>
+                    <tr><td style="padding:7px 8px;background:#fff;">
+                      <div style="font-size:8.5px;font-weight:700;color:#1a1a2e;font-family:sans-serif;line-height:1.3;margin-bottom:3px;">CA(SA) — Tax Returns &<br>Small Business Accou…</div>
+                      <div style="font-size:9px;color:#c8952a;font-weight:700;font-family:sans-serif;margin-bottom:4px;">R 1 800 per tax return</div>
+                      <div style="display:inline-block;background:#e7f6ec;border-radius:3px;padding:1px 5px;font-size:7px;color:#15803d;font-family:sans-serif;font-weight:600;">✓ Trusted</div>
+                    </td></tr>
+                    <tr><td style="padding:5px 8px 8px;background:#fff;">
+                      <div style="background:#1a1a2e;border-radius:5px;padding:5px;text-align:center;font-size:7.5px;color:#d4a853;font-weight:700;font-family:sans-serif;">Request Introduction · 1T</div>
+                    </td></tr>
+                  </table>
+                  <div style="height:8px;"></div>
+                </td></tr>
+              </table>
+            </td>
+
+            <td width="33%" align="center" valign="top" style="padding:0 6px;">
+              <table cellpadding="0" cellspacing="0" border="0" style="width:148px;background:#1a1a2e;border-radius:22px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+                <tr><td>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="padding:6px 0 4px;text-align:center;">
+                      <div style="display:inline-block;background:#0a0a1a;width:40px;height:10px;border-radius:6px;"></div>
+                    </td></tr>
+                  </table>
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:14px;overflow:hidden;">
+                    <tr><td style="background:#f8f6f0;padding:4px 8px;font-size:8px;color:#999;font-family:sans-serif;">9:41 ●●●●○ WiFi</td></tr>
+                    <tr><td style="background:#1a1a2e;padding:6px 8px;font-size:9px;font-weight:700;color:#d4a853;font-family:sans-serif;letter-spacing:0.3px;">TrustSquare · Services</td></tr>
+                    <tr><td style="height:68px;background-color:#5a7a96;background-image:url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80');background-size:cover;background-position:center;vertical-align:bottom;padding:0 0 5px;">
+                      <span style="font-size:7px;color:#fff;font-family:sans-serif;background:rgba(0,0,0,0.45);padding:1px 5px;border-radius:2px;display:inline-block;">Groenkloof</span>
+                    </td></tr>
+                    <tr><td style="padding:7px 8px;background:#fff;">
+                      <div style="font-size:8.5px;font-weight:700;color:#1a1a2e;font-family:sans-serif;line-height:1.3;margin-bottom:3px;">Registered<br>Physiotherapist — Home Visits, P…</div>
+                      <div style="font-size:9px;color:#c8952a;font-weight:700;font-family:sans-serif;margin-bottom:4px;">R 900 per session</div>
+                      <div style="display:inline-block;background:#e7f6ec;border-radius:3px;padding:1px 5px;font-size:7px;color:#15803d;font-family:sans-serif;font-weight:600;">✓ Trusted</div>
+                    </td></tr>
+                    <tr><td style="padding:5px 8px 8px;background:#fff;">
+                      <div style="background:#1a1a2e;border-radius:5px;padding:5px;text-align:center;font-size:7.5px;color:#d4a853;font-weight:700;font-family:sans-serif;">Request Introduction · 1T</div>
+                    </td></tr>
+                  </table>
+                  <div style="height:8px;"></div>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- ── End live listings showcase ── -->
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <p>TrustSquare · trustsquare.co<br>
+      The anonymous marketplace for serious service providers.<br>
+      You're receiving this because your trade or business appears in {{city_name}}'s local directory.</p>
+      <div class="unsubscribe">
+        <a href="{{unsubscribe_link}}">Unsubscribe — don't email me again</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

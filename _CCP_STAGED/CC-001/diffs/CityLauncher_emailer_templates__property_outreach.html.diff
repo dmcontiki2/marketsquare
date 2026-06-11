@@ -1,0 +1,9 @@
+--- a/property_outreach.html
++++ b/property_outreach.html
+@@ -70,5 +70,5 @@
+ 
+       <div class="value-prop">
+-        <p><strong>How it works:</strong> A buyer finds your listing and pays a small Tuppence introduction fee (USD $2) to request contact. You review their message privately. Accept only the introductions you want — your identity is never revealed until you say yes.</p>
++        <p><strong>How it works:</strong> A buyer finds your listing and commits a small Tuppence introduction fee (USD $2) to request contact — it is only used when you accept. You review their message privately. Accept only the introductions you want — your identity is never revealed until you say yes.</p>
+       </div>
+ 

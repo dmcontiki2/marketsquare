@@ -1,0 +1,25 @@
+--- a/eula_raw.html
++++ b/eula_raw.html
+@@ -452,5 +452,5 @@
+ <li><p>Any right the Buyer may have to cancel or reverse the underlying transaction with the Seller (for example, a property rental agreement, tutor engagement, or service contract) is a matter between the Buyer and the Seller under the CPA, the NCA, or any other applicable law. TrustSquare is not a party to that transaction and has no obligation or liability in connection with it.</p></li>
+ </ul>
+-<p>TrustSquare's Introduction fee is earned and final on Seller acceptance. No reissuance of Tuppence is made on the basis of what occurs between Buyer and Seller after the Introduction is completed. Post-acceptance disputes — including any claim that a deal was not concluded, that goods or services were not delivered, or that either party acted in bad faith — are matters for the parties themselves and, if necessary, the National Consumer Commission or a competent court. TrustSquare's liability in such cases is limited as set out in Section 10.</p>
++<p>TrustSquare's Introduction fee is committed (held) on request and becomes earned and final on delivery — the moment of Seller acceptance. No reissuance of Tuppence is made on the basis of what occurs between Buyer and Seller after the Introduction is completed. Post-acceptance disputes — including any claim that a deal was not concluded, that goods or services were not delivered, or that either party acted in bad faith — are matters for the parties themselves and, if necessary, the National Consumer Commission or a competent court. TrustSquare's liability in such cases is limited as set out in Section 10.</p>
+ <p><strong>5.5 AI Feature Tuppence — Optional, Subscription-Based, Separate from Introductions</strong></p>
+ <p>The Platform offers an optional AI-assisted feature ("AdvertAgent" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks. AI Feature usage is charged in Tuppence and is governed by the following rules, which are distinct from and independent of the Introduction Tuppence model:</p>
+@@ -509,5 +509,5 @@
+ <p>The Platform charges only for the following, which are presented to you before the transaction is confirmed:</p>
+ <ul>
+-<li><p>Introduction Tuppence: 1T (USD $2) per Introduction, charged to the Buyer's balance only upon Seller acceptance of the Introduction (Section 5.1–5.4). No charge arises on submission, decline, or non-response;</p></li>
++<li><p>Introduction Tuppence: 1T (USD $2) per Introduction, committed (held) from the Buyer's balance on submission of the Introduction request, burned (earned and final) only upon Seller acceptance of the Introduction (Section 5.1–5.4), and released in full on decline or expiry. No Tuppence is used on submission, decline, or non-response;</p></li>
+ <li><p>AI Feature Tuppence: variable Tuppence per AI interaction, charged to Sellers who opt into AI-assisted features via a paid subscription (Section 5.5). Pricing TBD — no charges apply until pricing is published and accepted;</p></li>
+ <li><p>Buyer subscription fees for premium access tiers (see Section 6.2);</p></li>
+@@ -541,6 +541,6 @@
+ <p>Tuppence is a non-transferable, non-redeemable platform service credit. It is not money. No Tuppence is deducted from a Buyer's balance unless and until the Seller explicitly accepts the Introduction. If the Seller declines or does not respond, no charge arises and no reissuance is necessary. The Platform will reissue Tuppence units (not ZAR) to a Buyer's balance as a discretionary service credit only in the following circumstances:</p>
+ <ul>
+-<li><p>Seller did not respond to the Introduction within the 48-hour window — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required; the Introduction closes automatically with no charge to the Buyer;</p></li>
+-<li><p>Seller declined the Introduction — no Tuppence was deducted (the charge only fires on acceptance), so no reissuance is required; the Introduction closes with no charge to the Buyer;</p></li>
++<li><p>Seller did not respond to the Introduction within the 48-hour window — the committed 1 Tuppence hold is released in full (Tuppence is burned only on acceptance), so no reissuance is required; the Introduction closes automatically with no Tuppence used to the Buyer;</p></li>
++<li><p>Seller declined the Introduction — the committed 1 Tuppence hold is released in full (Tuppence is burned only on acceptance), so no reissuance is required; the Introduction closes with no charge to the Buyer;</p></li>
+ <li><p>Buyer withdraws the Introduction request before Seller acceptance (per Section 5.4) — no Tuppence was deducted, so no reissuance is required; the Introduction closes with no charge;</p></li>
+ <li><p>Tuppence is not reissuable under any circumstance. Spending Tuppence on an Introduction request or AI feature consumes the Tuppence regardless of outcome. This is the consideration for the buyer-commitment signal that underpins the Platform’s anti-spam design.</p></li>

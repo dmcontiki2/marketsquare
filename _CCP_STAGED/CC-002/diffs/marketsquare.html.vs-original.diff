@@ -1,0 +1,59 @@
+--- a/marketsquare.html (original)
++++ b/marketsquare.html
+@@ -2208,10 +2208,14 @@
+ <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Details</strong></div>
+ <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Free — $0/month</strong></div>
+-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">3 Introduction sessions per day; local city only</strong></div>
+-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Starter — $5/month</strong></div>
+-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">20 Introduction sessions per day; country scope</strong></div>
+-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Premium — $15/month</strong></div>
+-<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">50 Introduction sessions per day; global scope</strong></div>
+-<div style="margin:5px 0;font-size:11px;">Subscription tiers and pricing are preliminary as of April 2026 and will be confirmed before payment processing is activated. Updated terms will be provided.</div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">2 listing slots (cap)</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Standard — $12/month</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">10 listing slots (cap) · 6 Tuppence monthly</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Professional — $20/month</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">25 listing slots (cap) · 10 Tuppence monthly</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Business — $40/month</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">60 listing slots (cap) · 20 Tuppence monthly</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Elite — $100/month</strong></div>
++<div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">500 listing slots (cap) · 50 Tuppence monthly</strong></div>
++<div style="margin:5px 0;font-size:11px;">Five subscription tiers (Free / Standard / Professional / Business / Elite). Listing slots are a cap, not a wallet; monthly Tuppence accrues to paid tiers. Daily Introduction-session limits are retired. Current pricing always at the Plans screen.</div>
+ <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);margin:18px 0 6px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;"><strong style="color:rgba(255,255,255,.75);">6.3 No Refunds</strong></div>
+ <div style="margin:5px 0;font-size:11px;"><strong style="color:rgba(255,255,255,.75);">Tuppence is non-refundable, non-transferable, and non-redeemable for cash, goods or services other than the platform Introduction feature.</strong> Spending Tuppence on an Introduction request consumes the Tuppence regardless of the outcome — whether the Seller accepts, declines, ignores, or the account is closed. This is the consideration for the buyer-commitment signal that underpins the Platform’s anti-spam Introduction-gating design. By purchasing Tuppence and submitting an Introduction request, you acknowledge that Tuppence is a service credit, not goods, and is non-refundable.</div>
+@@ -2602,8 +2606,8 @@
+       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+       <h2 id="sob-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;">Your listing is now live on TrustSquare.</h2>
+-      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will arrive by email. You have 3 free AI sessions to enhance your listing whenever you're ready.</p>
++      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will arrive by email. AI listing help is included — in-app guidance is free whenever you're ready.</p>
+       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
+         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Introduction requests go to your email</div><div style="font-size:12px;color:rgba(255,255,255,.45);">No commission — buyers connect directly</div></div></div>
+-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">3 free AI sessions credited</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
++        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Free AI listing guidance</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Improve your listing from your dashboard</div></div></div>
+         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
+         <div id="sob-banking-nudge" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px;display:none;gap:12px;align-items:flex-start;">
+@@ -2800,8 +2804,8 @@
+       <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(200,135,58,.85);margin-bottom:10px;">You're live</div>
+       <h2 id="pa-success-title" style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px;"></h2>
+-      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your email. You've been given 3 free AI sessions to enhance your listing whenever you're ready.</p>
++      <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px;font-weight:400;">Introduction requests will come to your email. AI listing help is included — in-app guidance is free whenever you're ready.</p>
+       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;">
+         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔔</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Receive introduction requests</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Buyers connect directly — no commission ever</div></div></div>
+-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">3 free AI sessions credited</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Enhance your listing with AI from your dashboard</div></div></div>
++        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">✨</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Free AI listing guidance</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Enhance your listing with AI from your dashboard</div></div></div>
+         <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Your identity is protected</div><div style="font-size:12px;color:rgba(255,255,255,.45);">Name &amp; contact only revealed on mutual acceptance</div></div></div>
+       </div>
+@@ -3038,5 +3042,5 @@
+         <div style="font-size:12px;color:var(--text-3);margin-top:8px;">Edit freely. This is your listing — make it sound like you.</div>
+         <div id="sb-b4-session-nudge" style="display:none;margin-top:14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:12px 14px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;">
+-          <strong style="color:#fbbf24;">Free preview</strong> — this description was generated using your free AI credit. For full AI coaching on Trust Score, field suggestions, and ongoing listing help, add an AI Pack (5T · 40 uses) from your seller dashboard.
++          <strong style="color:#fbbf24;">Free preview</strong> — this description was generated with the free in-app AI guidance. For full AI coaching on Trust Score, field suggestions, and ongoing listing help — in-app AI guidance is free; advanced AI features are priced per use in Tuppence from your seller dashboard.
+         </div>
+       </div>
+@@ -3868,5 +3872,5 @@
+     <div class="tn-deduct-notice">
+       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+-      1 Tuppence ($2) deducted only on seller acceptance
++      1 Tuppence ($2) committed when you request — used only when the seller accepts; released if declined
+     </div>
+     <div class="field"><label>Your name <span class="req">*</span></label><input type="text" id="m-name" placeholder="Full name"></div>

@@ -169,15 +169,15 @@
 </tr>
 <tr class="even">
 <td>Introduction</td>
-<td>A buyer-initiated connection request to a Seller, charged at 1 Tuppence, which — if accepted — reveals both parties' contact details to each other.</td>
+<td>A buyer-initiated connection request to a Seller. 1 Tuppence is committed (held) when the Buyer makes the request and is burned only when the introduction is delivered — i.e. when the Seller accepts, which reveals both parties' contact details. If the Seller declines or the request expires, the hold is released in full and no Tuppence is used.</td>
 </tr>
 <tr class="odd">
 <td>Tuppence / T</td>
-<td>The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the mandatory fee paid by Buyers per Introduction; (ii) AI Feature Tuppence — an optional, subscription-gated fee paid by Sellers for AI-assisted features, representing cost-recovery for an external AI API. See Section 5.</td>
+<td>The Platform's internal transaction unit. 1 Tuppence (1T) = USD $2.00 fixed. Used within the Platform for two purposes: (i) Introduction Tuppence — the fee for an Introduction, committed on request and burned only on delivery (Seller acceptance); released if declined or expired; (ii) AI Feature Tuppence — an optional per-use fee for advanced AI features. Everyday in-app guidance is free; advanced features are priced per use and capped (Free / 2T / 3T / 5T), available to Buyers and Sellers. See Section 5.</td>
 </tr>
 <tr class="even">
 <td>AdvertAgent / AI Feature</td>
-<td>The Platform's optional AI-assisted Seller support feature, powered by an external AI API. Seller-facing only. Accessed via paid subscription. Charged in AI Feature Tuppence. Not part of the core marketplace flow. Pricing TBD.</td>
+<td>The Platform's optional AI-assisted support for listings, research and reports, powered by an external AI provider. Available to Buyers and Sellers. Everyday in-app guidance is free; advanced features are priced per use in Tuppence (Free / 2T / 3T / 5T), shown before you use them.</td>
 </tr>
 <tr class="odd">
 <td>Trust Score</td>
@@ -446,13 +446,13 @@
 </tbody>
 </table>
 <p><strong>5.4 ECT Act §44 — Scope and Applicability to TrustSquare</strong></p>
-<p>The ECT Act §44 7-day cooling-off right applies to agreements for the supply of goods or services concluded electronically. TrustSquare supplies one service only: the Introduction. Once the Seller accepts the Introduction, that service is complete and TrustSquare's obligation is fulfilled. The 1T charged at that moment is the fee for that completed service and is not subject to reversal under ECT Act §44.</p>
+<p>The ECT Act §44 7-day cooling-off right applies to agreements for the supply of goods or services concluded electronically. TrustSquare supplies one service only: the Introduction. The 1 Tuppence is committed (held) when the Buyer requests the Introduction and is burned at the moment the service is delivered — when the Seller accepts. That burned Tuppence is the fee for the completed service and is not subject to reversal under ECT Act §44. Until delivery, the Tuppence is only held, not spent.</p>
 <ul>
-<li><p>If the Seller has not yet accepted the Introduction, the Buyer may withdraw the request by emailing support@trustsquare.co with the subject line "WITHDRAW: [Introduction ID]". No Tuppence has been deducted at that point and no charge arises.</p></li>
+<li><p>If the Seller has not yet accepted the Introduction, the Buyer may withdraw the request by emailing support@trustsquare.co with the subject line "WITHDRAW: [Introduction ID]". Only a hold was placed; it is released in full and no Tuppence is burned.</p></li>
 <li><p>Any right the Buyer may have to cancel or reverse the underlying transaction with the Seller (for example, a property rental agreement, tutor engagement, or service contract) is a matter between the Buyer and the Seller under the CPA, the NCA, or any other applicable law. TrustSquare is not a party to that transaction and has no obligation or liability in connection with it.</p></li>
 </ul>
-<p>TrustSquare's Introduction fee is earned and final on Seller acceptance. No reissuance of Tuppence is made on the basis of what occurs between Buyer and Seller after the Introduction is completed. Post-acceptance disputes — including any claim that a deal was not concluded, that goods or services were not delivered, or that either party acted in bad faith — are matters for the parties themselves and, if necessary, the National Consumer Commission or a competent court. TrustSquare's liability in such cases is limited as set out in Section 10.</p>
-<p><strong>5.5 AI Feature Tuppence — Optional, Subscription-Based, Separate from Introductions</strong></p>
+<p>TrustSquare's Introduction fee is earned and final on delivery (Seller acceptance); the hold is burned at that point. Before delivery it is only held, and is released if the Introduction is declined or expires. No reissuance of Tuppence is made on the basis of what occurs between Buyer and Seller after the Introduction is completed. Post-acceptance disputes — including any claim that a deal was not concluded, that goods or services were not delivered, or that either party acted in bad faith — are matters for the parties themselves and, if necessary, the National Consumer Commission or a competent court. TrustSquare's liability in such cases is limited as set out in Section 10.</p>
+<p><strong>5.5 AI Feature Tuppence — Optional, Per-Use, Separate from Introductions</strong></p>
 <p>The Platform offers an optional AI-assisted feature ("AdvertAgent" or equivalent) that allows Sellers to access artificial intelligence support for listing creation, optimisation, and related tasks. AI Feature usage is charged in Tuppence and is governed by the following rules, which are distinct from and independent of the Introduction Tuppence model:</p>
 <table>
 <tbody>
@@ -462,7 +462,7 @@
 </tr>
 <tr class="even">
 <td>Who it applies to</td>
-<td>Sellers only. Not available to Buyers. Not part of the core marketplace flow.</td>
+<td>Buyers and Sellers — some features are buyer-side (area / price research), some seller-side (listing help). Optional; not part of the core marketplace flow.</td>
 </tr>
 <tr class="odd">
 <td>Nature of use</td>
@@ -470,19 +470,19 @@
 </tr>
 <tr class="even">
 <td>Why Tuppence is charged</td>
-<td>AI features are powered by an external AI API (currently Anthropic Claude). The Platform incurs a real per-use cost from this third-party provider. Tuppence charged for AI use is cost-recovery for that external API cost — it is not platform revenue in the same sense as Introduction Tuppence.</td>
+<td>Advanced AI features are powered by an external AI provider and are a priced service: each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm; everyday in-app guidance is free. AI Feature Tuppence and Introduction Tuppence remain separate flows, and neither is a financial product or instrument. Tuppence is non-refundable and cannot be exchanged back into money — it is prepaid consideration for Platform services, not a deposit. A released hold returns un-spent Tuppence, never cash.</td>
 </tr>
 <tr class="odd">
 <td>Access model</td>
-<td>AI features are accessed via a paid Seller subscription tier. The subscription fee covers a quota of AI interactions per billing period. Usage beyond the quota may incur additional Tuppence charges, disclosed at the point of use.</td>
+<td>Everyday in-app AI guidance is free. Advanced AI features are pay-per-use from your Tuppence balance (capped at 5T); the price is shown before you confirm. No subscription is required to use a paid feature.</td>
 </tr>
 <tr class="even">
 <td>Pricing</td>
-<td>AI Feature Tuppence pricing and subscription tiers are not yet finalised. They will be published and notified to Users before the AI feature is activated. No AI Feature charges will be applied without prior disclosure and your acceptance of updated terms.</td>
+<td>Advanced AI features are priced per use, in Tuppence, capped: Free / 2T / 3T / 5T. The price for each feature is disclosed at the point of use, before you confirm.</td>
 </tr>
 <tr class="odd">
 <td>Refunds</td>
-<td>AI Feature Tuppence is non-refundable under any circumstance once an AI request is submitted. Submitting an AI request consumes the Tuppence regardless of the output quality or outcome.</td>
+<td>A hold is placed when you start a paid AI feature and is burned on delivery; if the run fails, the hold is released and no Tuppence is used. Once a result is delivered, the Tuppence is non-refundable.</td>
 </tr>
 <tr class="even">
 <td>Relationship to Introductions</td>
@@ -494,12 +494,12 @@
 <tbody>
 <tr class="odd">
 <td><p><strong>Important — AI Feature Tuppence is Different in Nature</strong></p>
-<p>Introduction Tuppence is the Platform's core marketplace fee — it is how the Platform earns revenue. AI Feature Tuppence is different: it is a pass-through cost-recovery mechanism for a real external API expense. The Platform does not profit from AI Feature Tuppence beyond recovering its cost of providing the feature. This distinction matters for how you budget your Platform use and for regulatory classification purposes.</p></td>
+<p>Introduction Tuppence is the Platform's core marketplace fee. AI Feature Tuppence is a separate, optional charge for advanced AI features — a priced service billed per use (capped — Free / 2T / 3T / 5T), distinct from the Introduction fee. Everyday in-app AI guidance is free. Neither Tuppence type is a financial product or instrument.</p></td>
 </tr>
 </tbody>
 </table>
 <p><strong>5.6 Tuppence and the Platform — Not a Financial Intermediary</strong></p>
-<p>The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions.</p>
+<p>The Platform is not a financial intermediary between Users. Tuppence transactions — whether Introduction Tuppence or AI Feature Tuppence — are not financial products, loans, credit facilities, or investment instruments. Post-Introduction transactions (e.g. a rental payment, a coaching fee, a booking deposit) take place entirely outside the Platform between Buyer and Seller. The Platform has no involvement in, visibility of, or liability for such transactions. Tuppence is non-refundable and cannot be exchanged back into money; it is prepaid consideration for Platform services, not a deposit, financial product, or instrument. A released hold returns un-spent Tuppence, never cash.</p>
 <p><strong>5.7 Tuppence Holds and Reversals</strong></p>
 <p>The Platform may temporarily hold or reverse Tuppence transactions to prevent fraud, address system errors, or correct processing anomalies. The Platform will notify affected Users within 48 hours of any hold or reversal and will resolve the matter within 5 business days.</p>
 <blockquote>
@@ -508,13 +508,13 @@
 <p><strong>6.1 Fee Disclosure</strong></p>
 <p>The Platform charges only for the following, which are presented to you before the transaction is confirmed:</p>
 <ul>
-<li><p>Introduction Tuppence: 1T (USD $2) per Introduction, charged to the Buyer's balance only upon Seller acceptance of the Introduction (Section 5.1–5.4). No charge arises on submission, decline, or non-response;</p></li>
-<li><p>AI Feature Tuppence: variable Tuppence per AI interaction, charged to Sellers who opt into AI-assisted features via a paid subscription (Section 5.5). Pricing TBD — no charges apply until pricing is published and accepted;</p></li>
+<li><p>Introduction Tuppence: 1T (USD $2) per Introduction — committed (held) on the Buyer's balance when the request is made and burned only upon Seller acceptance / delivery (Section 5.1–5.4). The hold is released on decline, expiry or non-response — no Tuppence is burned in those cases;</p></li>
+<li><p>AI Feature Tuppence: per use, in Tuppence, capped (Free / 2T / 3T / 5T) and shown before use; everyday in-app guidance is free (Section 5.5);</p></li>
 <li><p>Buyer subscription fees for premium access tiers (see Section 6.2);</p></li>
 <li><p>Seller AI feature subscription fees, if elected (see Section 5.5);</p></li>
 <li><p>Any future Tuppence top-up or purchase fees (subject to updated terms and FSCA compliance).</p></li>
 </ul>
-<p>There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees and subscriptions only. AI Feature Tuppence is cost-recovery for an external API, not an additional profit margin (see Section 5.5).</p>
+<p>There are no hidden fees, listing fees, commissions, or booking percentages. The Platform earns from Introduction fees, subscriptions, and paid AI features. Advanced AI features are a priced service (per use, capped), separate from the Introduction fee (see Section 5.5).</p>
 <p><strong>6.2 Buyer Subscription Tiers [Preliminary — subject to change]</strong></p>
 <table>
 <tbody>
@@ -923,7 +923,7 @@
 <p><strong>12. Tuppence — Regulatory Classification &amp; Virtual Asset Status</strong></p>
 </blockquote>
 <p><strong>12.1 Current Classification</strong></p>
-<p>MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional cost-recovery for an external AI API). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</p>
+<p>MarketSquare acknowledges that Tuppence may be scrutinised by the Financial Sector Conduct Authority (FSCA) as a potential virtual asset. The Platform operates two distinct Tuppence flows: Introduction Tuppence (Buyer-to-Platform, mandatory marketplace fee) and AI Feature Tuppence (Seller-to-Platform, optional a per-use, capped charge (Free / 2T / 3T / 5T)). Both flows are assessed below. The Platform's current position is that neither constitutes a virtual asset under current FSCA classification, for the following reasons:</p>
 <ul>
 <li><p>Tuppence is non-transferable between Users (a key criterion for FSCA virtual asset classification is fungibility and transferability);</p></li>
 <li><p>Tuppence cannot be converted to cash or any other currency;</p></li>

@@ -1,0 +1,9 @@
+--- a/intro_accepted.html
++++ b/intro_accepted.html
+@@ -81,5 +81,5 @@
+       <div class="tuppence-deduct">
+         <div class="coin">🪙</div>
+-        <p><strong>1 Tuppence has been deducted</strong> from your wallet as the introduction fee. This is a one-time charge per accepted introduction — there are no further fees from TrustSquare for this connection.</p>
++        <p><strong>The 1 Tuppence you committed when you requested this introduction has now been used</strong> as the introduction fee. This is a one-time fee per delivered introduction — there are no further fees from TrustSquare for this connection.</p>
+       </div>
+ 

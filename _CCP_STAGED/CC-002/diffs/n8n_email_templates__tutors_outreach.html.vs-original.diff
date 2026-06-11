@@ -1,0 +1,9 @@
+--- a/n8n_email_templates__tutors_outreach.html
++++ b/n8n_email_templates__tutors_outreach.html
+@@ -110,5 +110,5 @@
+         <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+         <div class="step"><div class="step-num">2</div><p>Add your subjects, hourly rate, and a short bio — plus up to 10 photos: your teaching space, qualifications, certificates, or sample lesson materials</p></div>
+-        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as students will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences or AI Coach uses whenever you need them.</p></div>
++        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as students will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+       </div>
+ 

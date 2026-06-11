@@ -1,0 +1,10 @@
+--- a/marketsquare_admin.html (cc001-staged)
++++ b/marketsquare_admin.html
+@@ -3781,6 +3781,5 @@
+     res.innerHTML = `<strong>${email}</strong><br>
+       Tuppence balance: <strong>${tData.balance}T</strong><br>
+-      AI sessions remaining: <strong>${uData ? (uData.aa_sessions_remaining || 0) : 'user not registered'}</strong><br>
+-      Free AI session used: <strong>${uData ? (uData.aa_free_used ? 'Yes' : 'No') : '—'}</strong>`;
++      AI: in-app guidance free · advanced AI per-use in Tuppence (session counters retired — CC-002)`;
+     res.style.display = 'block';
+   } catch(e) {

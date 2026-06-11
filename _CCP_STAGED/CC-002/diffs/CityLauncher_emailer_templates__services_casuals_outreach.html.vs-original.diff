@@ -1,0 +1,9 @@
+--- a/CityLauncher_emailer_templates__services_casuals_outreach.html
++++ b/CityLauncher_emailer_templates__services_casuals_outreach.html
+@@ -109,5 +109,5 @@
+         <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+         <div class="step"><div class="step-num">2</div><p>Describe what you do, your rate, and availability — plus up to 10 photos showing you at work, examples of your service, or any certificates and references</p></div>
+-        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as clients will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences or AI Coach uses whenever you need them.</p></div>
++        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as clients will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+       </div>
+ 

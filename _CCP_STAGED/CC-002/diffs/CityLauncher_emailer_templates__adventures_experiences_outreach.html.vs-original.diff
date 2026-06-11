@@ -1,0 +1,9 @@
+--- a/CityLauncher_emailer_templates__adventures_experiences_outreach.html
++++ b/CityLauncher_emailer_templates__adventures_experiences_outreach.html
+@@ -110,5 +110,5 @@
+         <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+         <div class="step"><div class="step-num">2</div><p>Describe your experience, price, group size, and availability — plus up to 10 photos: the activity in action, your location, equipment, group shots, and any guide certifications</p></div>
+-        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as guests will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences or AI Coach uses whenever you need them.</p></div>
++        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as guests will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+       </div>
+ 

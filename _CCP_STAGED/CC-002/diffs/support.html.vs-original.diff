@@ -1,0 +1,45 @@
+--- a/support.html
++++ b/support.html
+@@ -310,5 +310,5 @@
+         <span class="arrow">⌄</span>
+       </button>
+-      <div class="faq-a">If a seller does not confirm your connection request, your credits are not deducted — you only pay when a seller actively confirms. Sellers who consistently fail to respond will see their Trust Score affected. You can browse other listings and send requests freely.</div>
++      <div class="faq-a">When you send a connection request, 1 credit is committed (held). If the seller does not confirm, the hold is released back to you in full — a credit is only used when a seller actively confirms. Sellers who consistently fail to respond will see their Trust Score affected. You can browse other listings and send requests freely.</div>
+     </div>
+ 
+@@ -339,8 +339,10 @@
+         <span class="arrow">⌄</span>
+       </button>
+-      <div class="faq-a">TrustSquare offers three tiers:<br><br>
+-        <strong>Free</strong> — R0/month · 2 active listings · 30-day duration<br>
+-        <strong>Starter</strong> — $5/month · 20 active listings · 60-day duration<br>
+-        <strong>Premium</strong> — $15/month · 50 active listings · 120-day duration<br><br>
++      <div class="faq-a">TrustSquare offers five tiers:<br><br>
++        <strong>Free</strong> — $0/month · 2 listing slots<br>
++        <strong>Standard</strong> — $12/month · 10 listing slots · 6 Tuppence monthly<br>
++        <strong>Professional</strong> — $20/month · 25 listing slots · 10 Tuppence monthly<br>
++        <strong>Business</strong> — $40/month · 60 listing slots · 20 Tuppence monthly<br>
++        <strong>Elite</strong> — $100/month · 500 listing slots · 50 Tuppence monthly<br><br>
+         All tiers include access to the seller dashboard, photo uploads, and Trust Score tracking.
+       </div>
+@@ -368,5 +370,5 @@
+         <span class="arrow">⌄</span>
+       </button>
+-      <div class="faq-a">No. You are never obligated to accept a buyer connection request. You can decline at any time. However, consistent non-responses may affect your Trust Score over time. Buyers are only charged when you actively confirm — so declining costs them nothing and maintains a fair marketplace for everyone.</div>
++      <div class="faq-a">No. You are never obligated to accept a buyer connection request. You can decline at any time. However, consistent non-responses may affect your Trust Score over time. A buyer's committed credit is only used when you actively confirm — declining releases their hold, so it costs them nothing and maintains a fair marketplace for everyone.</div>
+     </div>
+ 
+@@ -381,5 +383,5 @@
+         <span class="arrow">⌄</span>
+       </button>
+-      <div class="faq-a">Buyers purchase credit packs to send connection requests to sellers. Credits are only deducted when a seller actively confirms a request. If a seller declines or does not respond, no credits are deducted. All payments are processed securely through Paystack.</div>
++      <div class="faq-a">Buyers purchase credit packs to send connection requests to sellers. When a buyer sends a request, the credit is committed (held). It is only used when a seller actively confirms; if a seller declines or does not respond, the hold is released and no credits are used. All payments are processed securely through Paystack.</div>
+     </div>
+ 
+@@ -390,5 +392,5 @@
+       </button>
+       <div class="faq-a">
+-        <strong>Buyer credits:</strong> Since credits are only consumed on confirmed connections, there is generally nothing to refund on a declined request. If you experience a verified technical payment failure, contact <a href="mailto:support@trustsquare.co">support@trustsquare.co</a> within 14 days for a full refund.<br><br>
++        <strong>Buyer credits:</strong> Since a committed credit is released in full on a declined or expired request, and only consumed on confirmed connections, there is generally nothing to refund on a declined request. If you experience a verified technical payment failure, contact <a href="mailto:support@trustsquare.co">support@trustsquare.co</a> within 14 days for a full refund.<br><br>
+         <strong>Seller subscriptions:</strong> You may cancel your subscription at any time. Your listings remain active until the end of the paid period. No partial refunds are issued for unused listing days, consistent with standard subscription practice.<br><br>
+         Our full Refund and Cancellation Policy is available upon request — email <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>.

@@ -1,0 +1,37 @@
+--- a/AGENT_BRIEFING.md
++++ b/AGENT_BRIEFING.md
+@@ -25,7 +25,7 @@
+ ### Tuppence (T)
+ - Introduction currency. **1 Tuppence = USD $2.**
+-- Only the **buyer** pays, and only **after the seller accepts** the introduction.
++- The **requester** pays (the service consumer — the buyer, for introductions). Tuppence is **committed on request → burned on delivery (seller accepts) → released on decline/expiry** (Tuppence HOLD, Codex v4.8 / CC-001).
+ - Seller earns zero commission — they simply get connected.
+-- **AI Coach Credits** are a separate balance, never merged with intro Tuppence. Tiered packs: 5T=40 uses · 10T=100 uses · 25T=320 uses. Purchased via the same Paystack flow with `ai_pack_sessions` metadata.
++- **Advanced AI features** are Tuppence-priced **per use** through the HOLD ledger (`POST /tuppence/ai-commit` + `POST /tuppence/ai-settle`); **in-app AI guidance is free**. AI-uses packs are RETIRED (Canon Addendum 1 rev 2 · 6 Jun 2026); wallet shows AI feature spend as "AI feature credits — not used for introductions".
+ 
+ ### Introduction Models
+@@ -142,12 +142,12 @@
+ | GET | `/intros` | None | All pending intros |
+ | GET | `/intros/{listing_id}` | None | Intros for one listing |
+-| PUT | `/intros/{id}/accept` | API key | Accept intro · charges 1T |
++| PUT | `/intros/{id}/accept` | API key | Accept intro · burns the buyer's committed 1T hold |
+ | PUT | `/intros/{id}/decline` | API key | Decline intro |
+-| POST | `/payment/initialize?tuppence=N&ai_pack_sessions=M` | None | Paystack checkout — M=0 for intro Tuppence, M>0 for AI pack |
+-| GET | `/payment/verify` | None | Verify payment · credit Tuppence + AI sessions if ai_pack_sessions>0 |
+-| GET | `/advert-agent/status?email=` | None | AA session balance for seller |
++| POST | `/payment/initialize?tuppence=N` | None | Paystack checkout — Tuppence top-up (AI-pack param retired, CC-002) |
++| GET | `/payment/verify` | None | Verify payment · credit Tuppence |
++| GET | `/advert-agent/status?email=` | None | Coach status (legacy session counters retired — CC-002) |
+ | POST | `/advert-agent/coach` | None | Run AI coach — auto-registers unknown emails |
+ | POST | `/advert-agent/publish` | None | Submit draft listing + photos (FormData) |
+-| POST | `/advert-agent/buy-pack?email=&sessions=N` | None | Admin: manually credit AI sessions |
++| POST | `/advert-agent/buy-pack` | None | **410 Gone** — packs retired; advanced AI is per-use via the HOLD ledger |
+ | GET | `/geo/countries` | None | Active countries |
+ | GET | `/geo/regions?country=ZA` | None | Regions for country |
+@@ -168,5 +168,5 @@
+ | POST | `/users/{email}/photo` | None | Upload profile photo → square-cropped 400×400 JPEG → R2 → photo_url |
+ | GET | `/tuppence/balance?email=` | None | Current Tuppence balance from transactions table |
+-| POST | `/dev/credit?email=&tuppence=N&ai_sessions=N` | API key | **Dev-phase only** — seed account with T + AI sessions, no Paystack · **REMOVE BEFORE LAUNCH** |
++| POST | `/dev/credit?email=&tuppence=N` | API key | **Dev-phase only** — seed account with Tuppence, no Paystack · **REMOVE BEFORE LAUNCH** |
+ 
+ ---

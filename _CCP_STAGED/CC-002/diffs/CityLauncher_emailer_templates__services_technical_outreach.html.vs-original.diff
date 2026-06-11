@@ -1,0 +1,9 @@
+--- a/CityLauncher_emailer_templates__services_technical_outreach.html
++++ b/CityLauncher_emailer_templates__services_technical_outreach.html
+@@ -114,5 +114,5 @@
+         <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+         <div class="step"><div class="step-num">2</div><p>Add your trade, rates, and area of service — plus up to 10 photos: completed jobs, work in progress, your equipment, and any qualifications or certificates</p></div>
+-        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as buyers will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences or AI Coach uses whenever you need them.</p></div>
++        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as buyers will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+       </div>
+ 

@@ -1,0 +1,16 @@
+--- a/n8n_email_templates__property_outreach.html
++++ b/n8n_email_templates__property_outreach.html
+@@ -70,5 +70,5 @@
+ 
+       <div class="value-prop">
+-        <p><strong>How it works:</strong> A buyer finds your listing and pays a small Tuppence introduction fee (USD $2) to request contact. You review their message privately. Accept only the introductions you want — your identity is never revealed until you say yes.</p>
++        <p><strong>How it works:</strong> A buyer finds your listing and commits a small Tuppence introduction fee (USD $2) to request contact — it is only used when you accept. You review their message privately. Accept only the introductions you want — your identity is never revealed until you say yes.</p>
+       </div>
+ 
+@@ -108,5 +108,5 @@
+         <div class="step"><div class="step-num">1</div><p>Click below — your personalised listing form opens, pre-filled with your details</p></div>
+         <div class="step"><div class="step-num">2</div><p>Add your property details and price — plus up to 10 photos covering exterior, living areas, kitchen, bedrooms, bathrooms, and outdoor/garden spaces</p></div>
+-        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as buyers will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences or AI Coach uses whenever you need them.</p></div>
++        <div class="step"><div class="step-num">3</div><p>Preview your listing exactly as buyers will see it. Make any edits until you're happy, then accept the site's terms and conditions to go live. Your account is created at that point — and from there you can purchase Tuppences whenever you need them — in-app AI guidance is free, and advanced AI features are priced per use.</p></div>
+       </div>
+ 

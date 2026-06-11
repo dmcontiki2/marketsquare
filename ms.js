@@ -1059,11 +1059,10 @@ function goTo(name){
 }
 // ── SUBSCRIPTION SCREEN ──────────────────────────────────────
 const _SUB_TIERS = [
-  { id:'free',         label:'Free',         usd:0,   slots:2,   zar:0,    tup:0,  color:'#64748b', desc:'Card verified · never charged' },
-  { id:'standard',     label:'Standard',     usd:12,  slots:10,  zar:216,  tup:6,  color:'#4f46e5', desc:'Best for active sellers' },
-  { id:'professional', label:'Professional', usd:20,  slots:25,  zar:360,  tup:10, color:'#7c3aed', desc:'For serious sellers' },
-  { id:'business',     label:'Business',     usd:40,  slots:60,  zar:720,  tup:20, color:'#0891b2', desc:'Teams and agencies' },
-  { id:'elite',        label:'Elite',        usd:100, slots:500, zar:1800, tup:50, color:'#d97706', desc:'Enterprise volume' },
+  { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'Card verified · never charged' },
+  { id:'starter', label:'Starter', usd:5,  slots:10, zar:90,  tup:2,  color:'#4f46e5', desc:'The regular individual seller' },
+  { id:'pro',     label:'Pro',     usd:20, slots:30, zar:360, tup:10, color:'#7c3aed', desc:'The power seller' },
+  { id:'agency',  label:'Agency',  usd:0,  slots:10, zar:0,   tup:0,  color:'#b3362e', desc:'Free · verified · every category — allowance grows with Trust Score' },
 ];
 const _TIER_ORDER = _SUB_TIERS.map(t => t.id);
 
@@ -1137,7 +1136,7 @@ function _renderSubscriptionScreen(d, email) {
         <span style="font-size:20px;font-weight:800;color:var(--text);">${t.usd===0?'Free':'$'+t.usd}</span>
         ${t.usd>0?'<span style="font-size:12px;color:var(--text-3);">/month · ≈ R'+t.zar+'</span>':'<span style="font-size:12px;color:var(--text-3);">forever</span>'}
       </div>
-      <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${t.slots} listing slots · ${t.desc}</div>
+      <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${t.id==='agency' ? 'Listing allowance set on review of your agency size' : t.slots + ' listing slots'} · ${t.desc}</div>
       ${isDown && !isCur ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
     `;
     container.appendChild(card);
@@ -1189,13 +1188,13 @@ function openPlans(returnTo, showSlotCallout) {
   const callout = document.getElementById('plans-slot-callout');
   if (callout) callout.style.display = showSlotCallout ? 'block' : 'none';
   // Highlight current plan button
-  const TIER_IDS = ['free','standard','professional','business','elite'];
+  const TIER_IDS = ['free','starter','pro','agency'];
   const email = localStorage.getItem('ms_aa_email') || '';
   TIER_IDS.forEach(t => {
     const btn = document.getElementById('plan-btn-' + t);
     if (!btn) return;
     btn.textContent = 'Select ' + t.charAt(0).toUpperCase() + t.slice(1);
-    btn.className = t === 'standard' ? 'plan-btn accent' : t === 'free' ? 'plan-btn secondary' : 'plan-btn primary';
+    btn.className = t === 'starter' ? 'plan-btn accent' : (t === 'free' || t === 'agency') ? 'plan-btn secondary' : 'plan-btn primary';
   });
   // Async: fetch current tier to mark it
   if (email && BEA_ENABLED) {
@@ -4374,7 +4373,7 @@ async function sobContinueFromTier() {
 
 function sobSelTier(tier) {
   sobState.selectedTier = tier;
-  ['free','standard','professional'].forEach(t => {
+  ['free','starter','pro'].forEach(t => {
     const card = document.getElementById('sob-tier-' + t);
     if (!card) return;
     card.classList.toggle('selected', t === tier);
@@ -11600,7 +11599,7 @@ function _renderBillingTab(d, email) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div>
           <span style="font-size:15px;font-weight:800;color:${t.color};">${t.label}</span>
-          <span style="font-size:12px;color:var(--text-3);margin-left:8px;">${t.slots} slots</span>${t.tup > 0 ? '<span style="font-size:12px;font-weight:700;color:#b8862f;margin-left:8px;">+ '+t.tup+' T monthly</span>' : ''}
+          <span style="font-size:12px;color:var(--text-3);margin-left:8px;">${t.id==='agency' ? 'allowance by agency size' : t.slots + ' slots'}</span>${t.tup > 0 ? '<span style="font-size:12px;font-weight:700;color:#b8862f;margin-left:8px;">+ '+t.tup+' T monthly</span>' : ''}
         </div>
         <button onclick="_subSelectTier('${t.id}','${t.label}',${t.usd},${isDown})" ${isCur?'disabled':''} style="background:${btnBg};color:${btnTxt};border:none;border-radius:50px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:${isCur?'default':'pointer'};opacity:${isCur?'.5':'1'};">${btnLabel}</button>
       </div>
