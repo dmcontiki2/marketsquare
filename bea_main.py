@@ -3299,14 +3299,21 @@ def list_subscription_tiers():
 @app.post("/payment/seller-subscription/initialize")
 def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
     """Initialize a Paystack payment for a seller subscription tier change.
-    tier: free | standard | professional | business | elite
+    tier: starter | pro  (Simpler Model, Jun 2026)
+          + legacy standard | professional | business | elite (existing users only)
     Upgrades: charged immediately.
     Downgrades: scheduled for billing_period_end (pending_downgrade_tier set, not yet applied).
     Free tier: no payment needed — handled by PUT /users/{email}/seller-tier directly.
+    Agency: free + verified — no payment; handled by the agency verification flow.
     Returns {status, reference, authorization_url, tier, amount_rands}
     """
     email = email.lower().strip()
-    paid_tiers = ("standard", "professional", "business", "elite")
+    if tier == "agency":
+        raise HTTPException(status_code=400,
+                            detail="The Agency plan is free — no payment needed. "
+                                   "Apply via agency verification instead.")
+    # Simpler Model tiers first; legacy tiers kept payable for existing users until migration
+    paid_tiers = ("starter", "pro", "standard", "professional", "business", "elite")
     if tier not in paid_tiers:
         raise HTTPException(status_code=400, detail=f"tier must be one of: {', '.join(paid_tiers)}")
     plan = _SELLER_SUB_TIERS[tier]
@@ -3321,11 +3328,10 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
         conn.close()
 
     current_tier = (user["seller_tier"] if user else "free") or "free"
-    tier_order = ["free", "standard", "professional", "business", "elite",
-                  "starter", "premium"]  # legacy at end
-    current_rank = tier_order.index(current_tier) if current_tier in tier_order else 0
-    new_rank = tier_order.index(tier) if tier in tier_order else 0
-    is_downgrade = new_rank < current_rank
+    # Rank by price, not by a hand-kept list — works across new + legacy tiers
+    def _tier_rank(t: str) -> float:
+        return _SELLER_SUB_TIERS.get(t, _SELLER_SUB_TIERS["free"])["amount_rands"]
+    is_downgrade = _tier_rank(tier) < _tier_rank(current_tier)
 
     reference = f"ms_sub_{tier}_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
@@ -3543,6 +3549,154 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
         raise HTTPException(status_code=500, detail="AI call failed")
+
+
+# ── One-photo-one-sentence listing draft (Simpler Model, Jun 2026) ──────────
+# $0-first: a template draft always works (no key, no cost); ONE cheap Haiku
+# vision call refines it when configured and under the daily ceiling. Fails
+# OPEN to the template so a model hiccup never blocks a seller. No DB writes,
+# no Tuppence — the draft is free by design (build brief: Listing in one photo).
+
+_DRAFT_CATEGORIES = ("Property", "Tutors", "Services", "Adventures",
+                     "Collectors", "Cars", "LocalMarket")
+
+_DRAFT_CAT_KEYWORDS = {
+    "Property": ("house", "home", "apartment", "flat", "townhouse", "land", "plot",
+                 "bed ", "bedroom", "property", "office space", "commercial"),
+    "Cars": ("car", "bakkie", "vehicle", "suv", "sedan", "hatchback", "toyota", "vw",
+             "volkswagen", "ford", "bmw", "mercedes", "hyundai", "kia", "nissan",
+             "motorbike", "motorcycle", "scooter", "hilux", "ranger", "polo"),
+    "Collectors": ("stamp", "coin", "card", "krugerrand", "memorabilia", "collectible",
+                   "collectable", "vinyl", "antique", "comic", "figurine", "banknote"),
+    "Tutors": ("tutor", "tutoring", "lessons", "teach", "maths", "matric", "exam prep",
+               "coaching lessons", "language lessons"),
+    "Adventures": ("tour", "safari", "hike", "guided", "getaway", "accommodation",
+                   "guesthouse", "adventure", "experience", "excursion"),
+    "Services": ("plumber", "plumbing", "electrician", "repair", "service", "cleaning",
+                 "garden service", "painting", "builder", "accounting", "design work"),
+}
+
+def _draft_price_from_text(text: str) -> str:
+    """Pull a rand amount out of a sentence: R15k / R15 000 / R15,000 / 15000 rand."""
+    import re as _re
+    m = _re.search(r"[Rr]\s?(\d[\d\s,]*(?:\.\d+)?)\s?([kKmM]\b)?", text)
+    if not m:
+        m = _re.search(r"(\d[\d\s,]*(?:\.\d+)?)\s?(?:rand|ZAR)", text, _re.I)
+        if not m:
+            return ""
+    raw = m.group(1).replace(" ", "").replace(",", "")
+    try:
+        val = float(raw)
+    except ValueError:
+        return ""
+    suffix = (m.group(2) or "").lower() if (m.lastindex or 1) >= 2 else ""
+    if suffix == "k":
+        val *= 1_000
+    elif suffix == "m":
+        val *= 1_000_000
+    return f"R{int(val):,}".replace(",", " ")
+
+def _template_draft(intent: str, city: str) -> dict:
+    """$0 draft from the seller's one sentence — no model, no cost, always works."""
+    low = " " + intent.lower() + " "
+    category = "LocalMarket"
+    for cat, kws in _DRAFT_CAT_KEYWORDS.items():
+        if any(kw in low for kw in kws):
+            category = cat
+            break
+    import re as _re
+    title = _re.sub(r"^\s*(selling|for sale[:,]?|i'm selling|im selling|i am selling)\s+",
+                    "", intent.strip(), flags=_re.I)
+    title = _re.sub(r"[.!]\s*$", "", title)
+    # drop trailing price/hope clauses from the title
+    title = _re.split(r",?\s*(hoping|asking|looking)\s", title, flags=_re.I)[0].strip()
+    title = _re.sub(r",?\s*[Rr]\s?\d[\d\s,]*(?:\.\d+)?\s?[kKmM]?\s*(/\w+)?\s*$", "", title).strip(" ,")
+    title = (title[:1].upper() + title[1:])[:80] if title else "My listing"
+    price = _draft_price_from_text(intent)
+    desc = (f"{title}. Located in {city or 'Pretoria'}. "
+            "Condition as described by the seller — final grade follows TrustSquare's "
+            "evidence-based assessment. Request an introduction to learn more.")
+    return {"title": title, "category": category, "price": price,
+            "condition": "seller-declared", "description": desc, "source": "template"}
+
+@app.post("/listings/draft-from-photo")
+async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks):
+    """One photo + one sentence -> a drafted listing the seller fine-tunes.
+    Accepts {intent, photo_b64?, city?, email?} -> {title, category, condition,
+    price, description, source}. Free: no Tuppence, no DB writes.
+    $0-first: template draft always; ONE Haiku (vision) refinement when configured."""
+    intent = (req.get("intent") or "").strip()
+    if not intent:
+        raise HTTPException(status_code=400, detail="intent sentence is required")
+    if len(intent) > 300:
+        intent = intent[:300]
+    city = (req.get("city") or "").strip() or "Pretoria"
+    email = (req.get("email") or "").strip().lower()
+
+    draft = _template_draft(intent, city)
+
+    photo_b64 = (req.get("photo_b64") or "").strip()
+    if photo_b64.startswith("data:"):
+        photo_b64 = photo_b64.split(",", 1)[-1]
+    if len(photo_b64) > 2_500_000:   # ~1.8 MB image — frontend compresses well below this
+        photo_b64 = ""
+
+    if not ANTHROPIC_API_KEY:
+        return draft
+    try:
+        _check_cost_ceiling(email)   # C1 — over the daily ceiling: serve the $0 template
+    except HTTPException:
+        return draft
+
+    try:
+        content = []
+        if photo_b64:
+            content.append({"type": "image", "source": {"type": "base64",
+                            "media_type": "image/jpeg", "data": photo_b64}})
+        content.append({"type": "text", "text": (
+            "A seller on TrustSquare (South African marketplace) wrote ONE sentence about "
+            f"what they are selling{' and attached ONE photo' if photo_b64 else ''}:\n"
+            f"\"{intent}\"\nCity: {city}\n\n"
+            "Draft their listing. Reply with ONLY a JSON object, no other text:\n"
+            "{\"title\": \"max 80 chars, specific, no hype\", "
+            "\"category\": one of " + str(list(_DRAFT_CATEGORIES)) + ", "
+            "\"condition\": \"short honest read" + (" from the photo, e.g. 'good — light wear visible'"
+                                                       if photo_b64 else " from the sentence") + ", "
+            "never a certified grade\", "
+            "\"price\": \"suggested asking price as 'R12 500' (use the seller's number if given; "
+            "empty string if you cannot estimate honestly), "
+            "\"description\": \"2-3 factual sentences, anonymous seller voice, no contact details\"}"
+        )})
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_API_KEY,
+                         "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={"model": AA_MODEL, "max_tokens": 350,
+                      "messages": [{"role": "user", "content": content}]},
+            )
+        rj = resp.json()
+        text = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        if text.startswith("```"):
+            text = text.strip("`").lstrip("json").strip()
+        ai = json.loads(text)
+        _in, _out = _usage_tokens(rj)
+        background_tasks.add_task(_log_ai_spend, email, "/listings/draft-from-photo",
+                                  "haiku", _in, _out)
+        out = dict(draft)
+        for k in ("title", "category", "condition", "price", "description"):
+            v = (ai.get(k) or "").strip() if isinstance(ai.get(k), str) else ai.get(k)
+            if v:
+                out[k] = v
+        if out["category"] not in _DRAFT_CATEGORIES:
+            out["category"] = draft["category"]
+        out["title"] = str(out["title"])[:80]
+        out["source"] = "ai"
+        return out
+    except Exception as exc:
+        _log.warning("draft-from-photo fell back to template: %s", exc)
+        return draft
 
 
 @app.get("/advert-agent/status")

@@ -1207,6 +1207,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-tag.buyer{background:#10324f;color:#7cc4ff}.ai-tag.seller{background:#3a2c10;color:#f0b429}
 .ai-tag.live{background:#0e3527;color:#34d399}.ai-tag.stub{background:#252b3a;color:#9aa7c0}
 .ai-tag.price{background:#1b2a47;color:#bcd3f5}
+.ai-tag.free{background:#0e3527;color:#6ee7b7}
+.ai-glimpse{background:#0d2b1e;border:1px solid #1d4d36;border-radius:10px;padding:10px 12px;margin:10px 0}
+.ai-glimpse .g-title{color:#6ee7b7;font-weight:700;font-size:12px;letter-spacing:.3px;margin-bottom:4px}
+.ai-glimpse .g-shows{color:#cfe9dc;font-size:12.5px;line-height:1.45}
+.ai-glimpse .g-paid{color:#9fb7c9;font-size:11.5px;margin-top:6px;border-top:1px solid #1d4d36;padding-top:6px}
 .ai-panel{margin:6px 16px 16px;background:#13234a;border:1px solid #24407c;border-radius:14px;padding:16px;color:#eaf0fb}
 .ai-fn-title{font-size:16px;font-weight:800;color:#fff}
 .ai-fn-blurb{font-size:12px;color:#b9c6e2;margin:2px 0 6px}

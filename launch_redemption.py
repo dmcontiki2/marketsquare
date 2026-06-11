@@ -45,9 +45,16 @@ import auth
 router = APIRouter()
 
 # ── Canon allocations (Addendum 1 rev 2: price ÷ 2, the restored $2 anchor) ──
-TIER_TUPPENCE_MONTHLY = {"standard": 6, "professional": 10, "business": 20, "elite": 50}
-_LEGACY_TIER_MAP = {"starter": "standard", "premium": "professional"}  # legacy keys → canon
-_TIER_LABELS = {"standard": "Standard", "professional": "Professional",
+# Simpler Model (adopted 9-10 Jun 2026): Starter $5 → 2T/mo, Pro $20 → 10T/mo.
+# Legacy tiers retained for existing users until migration.
+TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10,
+                         "standard": 6, "professional": 10, "business": 20, "elite": 50}
+# NOTE: "starter" was once a legacy alias for "standard" (6T). It is now the canon
+# $5 Starter tier (2T). Any pre-Simpler-Model user whose DB row says 'starter'
+# must be migrated to 'standard' BEFORE this grants — see existing-user migration map.
+_LEGACY_TIER_MAP = {"premium": "professional"}  # legacy keys → canon
+_TIER_LABELS = {"starter": "Starter", "pro": "Pro",
+                "standard": "Standard", "professional": "Professional",
                 "business": "Business", "elite": "Elite"}
 QUALIFYING_TIERS = ("business", "elite")  # the ONLY minting tiers ($40 / $100)
 

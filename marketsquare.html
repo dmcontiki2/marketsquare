@@ -1186,6 +1186,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div id="ai-runpanel" class="ai-panel" style="display:none">
     <div class="ai-fn-title" id="ai-fn-title"></div>
     <div class="ai-fn-blurb" id="ai-fn-blurb"></div>
+    <div class="ai-glimpse" id="ai-glimpse" style="display:none"></div>
     <div id="ai-params"></div>
     <label class="ai-dry"><input type="checkbox" id="ai-dryrun" checked> Sample preview &mdash; $0, no Tuppence charged <span class="ai-dev">(testing phase &middot; untick for a real run)</span></label>
     <button class="ai-exbtn" id="ai-exbtn" onclick="aiExample()">&#128065; See an example (free)</button>
@@ -2684,6 +2685,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div id="pa-uz-default"><div class="uz-icon">📷</div><div class="uz-title">Tap to add a photo</div><div class="uz-sub">Camera or gallery · JPG or PNG</div></div>
         <div id="pa-uz-preview" style="display:none;"><img id="pa-uz-img" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;"><button onclick="paClearImg(event)" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text-2);">Remove photo</button></div>
       </div>
+      <div class="field" style="margin-top:18px;">
+        <label>One sentence about it <span class="opt">(optional — we draft the listing for you, free)</span></label>
+        <input type="text" id="pa-intent" placeholder="e.g. selling my 2019 MacBook, lightly used, hoping for about R15k" style="font-size:15px;">
+        <div class="hint">Add a photo + one sentence and we’ll draft the title, category, price and description — you just fine-tune.</div>
+      </div>
     </div>
     <div class="pub-footer">
       <button class="btn-bk" onclick="goTo('browse')">← Back</button>
@@ -2728,10 +2734,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <label>What are you offering? <span class="req">*</span></label>
         <input type="text" id="pa-title" placeholder="e.g. 3-bed home in Centurion" style="font-size:16px;" oninput="paCheckStep2()">
       </div>
+      <div id="pa-draft-note" style="display:none;border-radius:var(--r-sm);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:14px;">✨ <strong>Drafted for you</strong> — from your photo and sentence, free. Fine-tune anything below, then continue.</div>
       <div class="field">
         <label>Price / rate <span class="opt">(optional)</span></label>
         <input type="text" id="pa-price" placeholder="e.g. R4 200 000 or R350/hr">
         <div class="hint">Leave blank to show "Negotiable"</div>
+      </div>
+      <div class="field">
+        <label>Description <span class="opt">(optional)</span></label>
+        <textarea id="pa-desc" rows="3" placeholder="A few honest sentences about what you’re offering" style="font-size:14px;width:100%;resize:vertical;"></textarea>
       </div>
       <div id="pa-model-note" style="display:none;border-radius:var(--r-sm);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:11px 13px;font-size:12px;color:var(--text-2);line-height:1.6;margin-top:4px;">Property listings pause when a buyer requests an intro — you respond within 48 hours.</div>
     </div>

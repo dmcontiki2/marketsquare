@@ -1,3 +1,30 @@
+## Session 135b · 11 June 2026 — Simpler Model audit gaps closed (attended, staged)
+
+The three gaps from the morning audit, built for David to test locally. Nothing deployed or committed; backups `*.bak-20260611-062545` beside every edited file.
+
+**1 · Free Level-1 glimpses on all nine AI functions** (`AdvertAgent/service/advert_agent.py`): the seven missing dossiers got glimpse blocks per the Simpler Model L1-scope table — Collectables "Free Quick ID", Heritage "Free Tour Outline", Expedition "Free Expedition Outline", Liquidation "Free Liquidation Outline", Weekend "Free Weekend Outline", Study "Free Study Tips", Offer "Free Offer Tips". Smoke-tested live (TestClient): all 9 `has_glimpse=true`, `/ai/glimpse/{id}` serves each, distinct prices {2,3,5}T, 404 on unknown id.
+
+**2 · Glimpse surfaced in the app (FEA chip)** (`ms.js` · `marketsquare.html` · `ms.css`): AI cards now show a green **FREE GLIMPSE** tag and label the price "Level 2 · NT per use"; the run panel shows a glimpse box — "FREE · Level 1 — <title>", what it shows, and what paid Level 2 adds. Data ships with `/ai/functions`; no extra fetch. `node --check` ✓
+
+**3 · One-photo-one-sentence listing, live** (`bea_main.py` · `ms.js` · `marketsquare.html`): Path A step 1 gains "One sentence about it"; leaving step 1 with a sentence calls the new free `POST /listings/draft-from-photo` and prefills step 2 (title, category, price, new editable description field) under a "Drafted for you" banner. $0-first by construction: a template draft (regex price incl. k/m suffixes, keyword category, cleaned title) always works with **no key and no cost**; ONE Haiku call (vision when a photo is attached, max_tokens 350, `_check_cost_ceiling` + `_log_ai_spend`) refines it when configured, failing OPEN to the template. Client mock mirrors the template for demo/offline. Description now flows into `POST /listings`. Smoke-tested: draft 200 with correct fields, 400 on empty intent.
+
+**Also verified live:** `/subscription/tiers` = Free/$5/$20/Agency-free (2/10/30/10-base); payment gate accepts starter/pro, rejects agency with the friendly message, rejects unknown tiers.
+
+**Cost model impact:** none new — the glimpses and listing drafts are $0-first by design (template path costs nothing; the optional Haiku refine is ceiling-gated and spend-logged), per the Simpler Model "free floor must be cheap to give away" rule.
+
+## Session 135 · 11 June 2026 — Simpler Model payment path fixed (attended audit, staged)
+
+Audit of the Simpler Model build (Option A) found the new tiers were displayed but **not purchasable**: `/payment/seller-subscription/initialize` still whitelisted only the legacy tiers, so "Upgrade to Starter/Pro" returned 400. Two staged fixes, nothing deployed:
+
+- **bea_main.py** — `paid_tiers` now `(starter, pro, standard, professional, business, elite)` (legacy kept payable for existing users until migration); explicit 400 for `agency` pointing to the verification flow (Agency is free — no payment path); downgrade detection now ranks tiers by `amount_rands` instead of the stale hand-kept `tier_order` list (which ranked the new Starter above Elite). `ast.parse` ✓
+- **launch_redemption.py** — monthly Tuppence grants knew nothing of the new tiers: old `starter→standard` legacy alias would have granted a $5 Starter **6T instead of 2T**, and `pro` got **0T instead of 10T**. `TIER_TUPPENCE_MONTHLY` now `starter:2, pro:10` + legacy; `starter` alias removed (now canon); labels added. Founders ×1.2 bonus verified: Starter 2→3T, Pro 10→12T. `ast.parse` ✓
+
+Behaviour-tested: tier gate (starter/pro accepted, agency/free/bogus rejected), downgrade ranking across new+legacy tiers, and all monthly-allocation pairs — all pass. Backups: `*.bak-20260611-061528` beside both files.
+
+**Open item carried:** any pre-Simpler-Model user whose DB row says `starter` (old alias for Standard, 6T) must be migrated to `standard` before grants run — folded into the existing-user migration map follow-on. Canon Addendum 1 still cites 6/10/20/50 only — canon update staged for David.
+
+**Cost model impact:** none beyond the already-modelled Simpler Model bridge (`MarketSquare_Revenue_Bridge.docx`) — this makes the adopted $5/$20 tiers actually collectable and their 2T/10T allocations correct.
+
 ## Session 134 · 8 June 2026 — maintenance queue cleared (SCAN-12 + DASH-VER-1 + SCAN-PANEL-1/2 + HTML-1/2)
 
 The overnight loop ran ~12h late today: the Sensor's Monday deep scan wrote at 13:28Z and the Fixer shipped **SCAN-12** (unused `import os` removed from `database.py`, F401) at 13:31Z, bumping the live session to 134. An attended top-up (David: “ship the queue”) then cleared the rest of the maintenance queue the same day:

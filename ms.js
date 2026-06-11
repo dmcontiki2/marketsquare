@@ -4112,10 +4112,13 @@ let pubImg=null, pubCat='', pubClaimed=false;
 // PATH A — NEW SELLER (3 taps to live)
 // Session 38 · SELL_FLOW.md v3.0
 // ══════════════════════════════════════════════════════════
-let paState = { img: null, imgFile: null, cat: '', title: '', price: '' };
+let paState = { img: null, imgFile: null, cat: '', title: '', price: '', drafted: false, drafting: false };
 
 function resetPublish(){
-  paState = { img: null, imgFile: null, cat: '', title: '', price: '' };
+  paState = { img: null, imgFile: null, cat: '', title: '', price: '', drafted: false, drafting: false };
+  const ii=document.getElementById('pa-intent'); if(ii)ii.value='';
+  const de=document.getElementById('pa-desc');   if(de)de.value='';
+  const dn=document.getElementById('pa-draft-note'); if(dn)dn.style.display='none';
   paShowStep(1);
   // reset photo zone
   const uzd=document.getElementById('pa-uz-default'); if(uzd)uzd.style.display='block';
@@ -4148,7 +4151,68 @@ function paGoStep(n){
     if(!t){ showToast('Please enter a title for your listing'); return; }
     if(!paState.cat){ showToast('Please select a category'); return; }
   }
+  // One-photo-one-sentence draft (Simpler Model, Jun 2026): leaving step 1 with an
+  // intent sentence -> draft the listing ($0, free) and prefill step 2 to fine-tune.
+  if(n===2 && !paState.drafted && !paState.drafting){
+    const intent=(document.getElementById('pa-intent')||{}).value||'';
+    if(intent.trim()){ paDraftListing(intent.trim()); return; }
+  }
   paShowStep(n);
+}
+
+// ── $0-first listing draft: server endpoint first, client mock as fallback ──
+function paMockDraft(intent){
+  // Mirror of the server template draft — keeps the flow walkable offline / in demo.
+  const kw={Property:['house','home','apartment','flat','land','bedroom','property'],
+            Cars:['car','bakkie','vehicle','toyota','vw','ford','bmw','hilux','polo'],
+            Collectors:['stamp','coin','card','krugerrand','collectible','vinyl','antique'],
+            Tutors:['tutor','lessons','teach','maths','matric'],
+            Adventures:['tour','safari','hike','guided','accommodation','adventure'],
+            Services:['plumb','electric','repair','service','cleaning','builder']};
+  const low=' '+intent.toLowerCase()+' ';
+  let category='LocalMarket';
+  for(const [c,ws] of Object.entries(kw)){ if(ws.some(w=>low.includes(w))){ category=c; break; } }
+  const pm=intent.match(/[Rr]\s?(\d[\d\s,]*(?:\.\d+)?)\s?([kKmM]\b)?/);
+  let price='';
+  if(pm){ let v=parseFloat(pm[1].replace(/[\s,]/g,''));
+    if((pm[2]||'').toLowerCase()==='k')v*=1e3; if((pm[2]||'').toLowerCase()==='m')v*=1e6;
+    if(v) price='R'+Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+  let title=intent.replace(/^\s*(selling|for sale[:,]?|i'?m selling|i am selling)\s+/i,'')
+                  .split(/,?\s*(?:hoping|asking|looking)\s/i)[0]
+                  .replace(/,?\s*[Rr]\s?\d[\d\s,]*(?:\.\d+)?\s?[kKmM]?\s*(\/\w+)?\s*$/,'')
+                  .replace(/[.!]\s*$/,'').trim();
+  title=(title.charAt(0).toUpperCase()+title.slice(1)).slice(0,80)||'My listing';
+  return {title, category, price, description:title+'. Request an introduction to learn more.', source:'mock'};
+}
+
+function paApplyDraft(d){
+  const ti=document.getElementById('pa-title'); if(ti && d.title) ti.value=d.title;
+  const pi=document.getElementById('pa-price'); if(pi && d.price) pi.value=d.price;
+  const de=document.getElementById('pa-desc');  if(de && d.description) de.value=d.description;
+  if(d.category) paSelCat(d.category);
+  const dn=document.getElementById('pa-draft-note'); if(dn)dn.style.display='block';
+  paState.drafted=true;
+  paCheckStep2();
+}
+
+async function paDraftListing(intent){
+  paState.drafting=true;
+  showToast('\u2728 Drafting your listing\u2026 free');
+  let draft=null;
+  if(BEA_ENABLED && !DEMO_MODE && !isOffline()){
+    try{
+      const body={intent, city:(activeCity&&activeCity.name)||'Pretoria'};
+      if(paState.img) body.photo_b64=paState.img;
+      const r=await fetch(BEA_URL+'/listings/draft-from-photo',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
+        body:JSON.stringify(body)});
+      if(r.ok) draft=await r.json();
+    }catch(_){}
+  }
+  if(!draft) draft=paMockDraft(intent);
+  paState.drafting=false;
+  paShowStep(2);
+  paApplyDraft(draft);
 }
 
 function paHandleImg(e){
@@ -4246,7 +4310,7 @@ async function paDoPublish(){
         area:(activeSuburb&&activeSuburb.name)||activeCity.name,
         suburb:(activeSuburb&&activeSuburb.name)||activeCity.name,
         geo_city_id:activeCity.id||null,
-        description:'',
+        description:((document.getElementById('pa-desc')||{}).value||'').trim(),
         seller_email:email,
         listing_status:'live'
       });
@@ -12391,7 +12455,8 @@ async function aiBoot(){
       <div class="ai-card" id="ai-card-${f.id}" onclick="aiSel('${f.id}')">
         <div class="ai-row">
           <span class="ai-tag ${f.side}">${f.side.toUpperCase()}</span>
-          <span class="ai-tag price">${f.price_t}T per use</span>
+          ${f.has_glimpse?'<span class="ai-tag free">FREE GLIMPSE</span>':''}
+          <span class="ai-tag price">${f.has_glimpse?'Level 2 \u00b7 ':''}${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
         </div>
         <h3><span class="ai-ico">${f.icon||'\u2728'}</span> ${f.name}</h3><p>${f.blurb}</p>
@@ -12410,6 +12475,17 @@ function aiSel(id){
   const p = document.getElementById('ai-runpanel'); p.style.display='block';
   document.getElementById('ai-fn-title').textContent = AI_SEL.name;
   document.getElementById('ai-fn-blurb').textContent = AI_SEL.blurb;
+  // Free Level-1 glimpse chip (Simpler Model, Jun 2026): every dossier shows its free
+  // glimpse + what the paid Level-2 adds. Data ships with /ai/functions — no extra fetch.
+  const gbox = document.getElementById('ai-glimpse');
+  if (gbox) {
+    const g = AI_SEL.glimpse;
+    gbox.style.display = g ? 'block' : 'none';
+    if (g) gbox.innerHTML =
+      `<div class="g-title">FREE \u00b7 Level 1 \u2014 ${g.title}</div>` +
+      `<div class="g-shows">${g.shows}</div>` +
+      `<div class="g-paid">${g.paid_adds||('Level 2 \u00b7 '+AI_SEL.price_t+'T \u2014 the full '+AI_SEL.name+'.')}</div>`;
+  }
   const photoUI = AI_SEL.accepts_photos ? `
     <label class="ai-lbl">Photos of your items (up to 12 — auto-compressed)
       <input type="file" id="ai-photo-in" accept="image/*" multiple onchange="aiAddPhotos(this.files)">
