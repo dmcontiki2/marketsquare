@@ -12532,11 +12532,11 @@ function aiVideoTutor(id){
       '<div class="ai-vhead"><span>\u25B6 Video Tutor \u2014 '+(f.name||'How it works')+'</span>'+
       '<button class="ai-vclose" aria-label="Close">\u2715</button></div>'+
       '<video controls autoplay playsinline src="'+src+'"></video>'+
-      '<div class="ai-vfoot">How it works, step by step \u2014 and what your '+(f.price_t||5)+'T buys.</div>'+
     '</div>';
   m.addEventListener('click', e=>{ if(e.target===m || e.target.classList.contains('ai-vclose')) m.remove(); });
   const v = m.querySelector('video');
   v.addEventListener('error', ()=>{ v.outerHTML='<div class="ai-verr">Video tutor is being prepared \u2014 check back soon.</div>'; });
+  v.addEventListener('ended', ()=>{ m.remove(); });  // full-screen tutor auto-returns to the feature screen
   document.body.appendChild(m);
 }
 
