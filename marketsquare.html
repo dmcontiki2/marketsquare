@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=122">
+<link rel="stylesheet" href="/static/ms.css?v=127">
   <!-- TrustSquare brand -->
   <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
@@ -1179,7 +1179,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <button class="ai-back" onclick="goTo('tuppence')">&#8249;</button>
     <div>
       <div class="ai-title">AI Features</div>
-      <div class="ai-sub">Advanced AI &middot; paid per use in Tuppence &middot; <b>not used for introductions</b></div>
+      <div class="ai-sub">Advanced AI &middot; paid per use in Tuppence &middot; <b>introductions are charged separately (1T)</b></div>
     </div>
   </div>
   <div id="ai-grid" class="ai-grid"></div>
@@ -1195,7 +1195,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div id="ai-routemap"></div><div class="ai-maplinks" id="ai-maplinks"></div>
     <div class="ai-safetybox" id="ai-safetybox"></div>
     <div class="ai-result" id="ai-result" style="display:none"></div>
-    <button class="ai-savebtn" id="ai-savebtn" style="display:none" onclick="aiPrint()">&#128424; Save / Print report</button>
+    <div style="display:flex;gap:8px;">
+      <button class="ai-savebtn" id="ai-savebtn" style="display:none;flex:1;" onclick="aiPrint()">&#128424; Save / Print report</button>
+      <button class="ai-savebtn" id="ai-sharebtn" style="display:none;flex:1;" onclick="aiShare()">&#128228; Share report</button>
+    </div>
     <div class="ai-listbtns" id="ai-listbtns" style="display:none">
       <button onclick="aiListLot()">&#128230; List as one lot</button>
       <button id="ai-listeach" onclick="aiListEach()">&#128450; List separately</button>
@@ -1225,7 +1228,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- ADVANCED AI FEATURES entry (S133) -->
     <div class="tn-sec">
       <h2>AI feature credits</h2>
-      <p style="font-size:12px;color:var(--text-2);margin:0 0 10px;">Advanced AI, paid per use in Tuppence &mdash; <b>not used for introductions</b>. In-app guidance stays free.</p>
+      <p style="font-size:12px;color:var(--text-2);margin:0 0 10px;">Advanced AI, paid per use in Tuppence &mdash; <b>separate from the 1T introduction fee</b>: a report can lead you to a listing, but requesting the introduction is always its own charge. In-app guidance stays free.</p>
       <button class="ai-entry" onclick="goTo('ai-features');try{aiBoot()}catch(e){}">
         <span><b>Open AI Features</b><br><span style="font-size:11px;opacity:.8">Market reports &middot; trip planners &middot; dossiers</span></span><span style="font-size:22px;line-height:1">&#8250;</span>
       </button>
@@ -2852,7 +2855,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div style="display:flex;align-items:flex-start;gap:14px;">
           <div style="font-size:32px;flex-shrink:0;margin-top:2px;">&#127959;</div>
           <div>
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Fill in the details</div>
+            <div style="font-size:13.5px;font-weight:600;color:var(--text-2);margin-bottom:4px;">Prefer full control? Fill in every detail yourself</div>
             <div style="font-size:13px;color:var(--text-2);line-height:1.5;font-weight:400;">Choose your category, fill in the fields, then add photos. More control over every detail.</div>
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
               <span style="background:rgba(255,255,255,.06);color:var(--text-3);font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;">7 steps</span>
@@ -3055,7 +3058,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <!-- Rendered dynamically by sbRenderB5() -->
       </div>
     </div>
-    <input type="file" id="sb-photo-inp" accept="image/*" style="display:none" onchange="sbHandlePhotoCapture(event)">
+    <input type="file" id="sb-photo-inp" accept="image/*" capture="environment" style="display:none" onchange="sbHandlePhotoCapture(event)">
     <div class="pub-footer">
       <button class="btn-bk" onclick="sbGoStep('b4')">← Back</button>
       <button class="btn-next" onclick="sbGoStep('b6')">Continue →</button>
@@ -3145,6 +3148,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
         <div id="sb-b8-skipped" style="font-size:12px;color:var(--text-3);margin-top:8px;line-height:1.5;"></div>
       </div>
+      <div id="sb-b8-advice" style="display:none;border-radius:var(--r-sm);background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);padding:12px 14px;margin:0 0 14px;color:var(--text-2);line-height:1.5;"></div>
       <div id="sb-b8-err" style="display:none;color:#dc2626;font-size:13px;margin-bottom:12px;border-radius:8px;background:rgba(220,38,38,.07);padding:10px 13px;"></div>
     </div>
     <div style="padding:0 20px 4px;">
@@ -4046,7 +4050,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=163"></script>
+<script src="/static/ms.js?v=168"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

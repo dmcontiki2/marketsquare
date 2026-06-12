@@ -6082,6 +6082,7 @@ function sbGoStep(step){
   }
 
   // Render step-specific content
+  if(step==='b6') sbVisionEnrich();   // guided v2: one batched vision read of the photos
   if(step==='b3') sbRenderB3();
   if(step==='b4') sbRenderB4();
   if(step==='b5') sbRenderB5();
@@ -6157,7 +6158,14 @@ const SB_FIELDS = {
     {id:'floor_size',    label:'Floor size (m²)',  type:'number', placeholder:'e.g. 180'},
     {id:'stand_size',    label:'Stand size (m²)',  type:'number', placeholder:'e.g. 600'},
     {id:'suburb',        label:'Suburb',           type:'text',   placeholder:'e.g. Waterkloof'},
-    {id:'price',         label:'Asking price',     type:'text',   placeholder:'e.g. R2 500 000'}
+    {id:'price',         label:'Asking price',     type:'text',   placeholder:'e.g. R2 500 000'},
+    // Amenities & running costs (Simpler Model guided listing v2 — the SA checklist)
+    {id:'security',      label:'Security',         type:'select', opts:['','Alarm + armed response','Security estate / complex','Alarm only','Burglar bars & gates','None / other']},
+    {id:'power_backup',  label:'Solar / load-shedding backup', type:'select', opts:['','Full solar + battery','Inverter / battery only','Generator','None']},
+    {id:'fibre',         label:'Internet',         type:'select', opts:['','Fibre installed','Fibre in street','LTE only','Unknown']},
+    {id:'garden_service',label:'Garden service included?', type:'select', opts:['','Yes — included','Available at extra cost','No / not applicable']},
+    {id:'levies',        label:'Levies / HOA (R/month)',   type:'text', placeholder:'e.g. R1 850 — leave blank if none'},
+    {id:'utilities_typ', label:'Typical electricity + water (R/month)', type:'text', placeholder:'e.g. R2 400 — honest estimate'}
   ],
   Tutors: [
     {id:'subjects',      label:'Subjects',         type:'text',   placeholder:'e.g. Maths, Science'},
@@ -6505,6 +6513,42 @@ function sbGetPhotoSlots(){
   const fn=SB_PHOTO_SLOTS[key];
   if(!fn) return SB_PHOTO_SLOTS['Tutors']();
   return fn(sbState.fields);
+}
+
+// ── Guided listing v2: ONE batched vision call reads all photos → captions +
+// description polish. $0-first: fails open silently; slot names remain captions.
+async function sbVisionEnrich(){
+  try{
+    if(!BEA_ENABLED || DEMO_MODE || isOffline()) return;
+    const ph=(sbState.photos||[]).filter(p=>p.dataUrl);
+    if(ph.length<2 || sbState._enriched) return;
+    const body={ category: sbState.cat||'Property',
+                 fields: sbState.fields||{},
+                 photos: ph.slice(0,10).map(p=>({slot:p.slot, b64:p.dataUrl})) };
+    const r=await fetch(BEA_URL+'/listings/draft-from-photos',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
+      body:JSON.stringify(body)});
+    if(!r.ok) return;
+    const d=await r.json();
+    if(d && Array.isArray(d.captions)){
+      d.captions.forEach(c=>{
+        const tgt=sbState.photos.find(p=>p.slot===c.slot);
+        if(tgt && c.caption && !tgt.caption) tgt.caption=String(c.caption).slice(0,90);
+      });
+    }
+    if(d && d.description && sbState.fields && !sbState.fields._desc_locked){
+      sbState._visionDesc=d.description;
+    }
+    sbState._enriched=true;
+    showToast('\u2728 I read your photos \u2014 captions drafted, fine-tune anything');
+  }catch(_){}
+}
+
+function sbUseVisionDesc(){
+  if(!sbState._visionDesc) return;
+  sbState.description=sbState._visionDesc;
+  showToast('\u2713 Description updated from your photos');
+  sbRenderB8Preview();
 }
 
 function sbRenderB5(){
@@ -6909,6 +6953,32 @@ function sbRenderB8Preview(){
   const scoreNum=document.getElementById('sb-b8-score');
   const scoreBadge=document.getElementById('sb-b8-badge');
   const skippedEl=document.getElementById('sb-b8-skipped');
+  // Guided v2: rule-based improvement checklist — $0, no AI call
+  const adviceEl=document.getElementById('sb-b8-advice');
+  if(adviceEl){
+    const tips=[];
+    const ph=(sbState.photos||[]).filter(p=>p.dataUrl);
+    const slots=(typeof sbGetPhotoSlots==='function')?sbGetPhotoSlots():[];
+    if(ph.length < Math.min(slots.length,3)) tips.push('Add '+(Math.min(slots.length,3)-ph.length)+' more photo(s) \u2014 listings with 3+ get significantly more intro requests');
+    slots.slice(0,6).forEach(s=>{ if(!ph.find(p=>p.slot===s.key) && !String(s.key).startsWith('optional')) tips.push('Missing photo: '+s.key.replace(/_/g,' ')); });
+    const f=sbState.fields||{};
+    if(sbState.cat==='Property'){
+      if(!f.security) tips.push('State the security setup \u2014 the first question SA tenants ask');
+      if(!f.power_backup) tips.push('State solar / load-shedding backup \u2014 a top-3 rental decider');
+      if(!f.levies && !f.utilities_typ) tips.push('Add typical monthly costs (levies / electricity) \u2014 honest numbers build trust');
+    }
+    if(!f.price) tips.push('Add a price \u2014 \u201cNegotiable\u201d listings get fewer serious intros');
+    if(ph.length && !ph.some(p=>p.caption)) tips.push('Add one-line captions to your photos \u2014 they read like a walkthrough');
+    adviceEl.innerHTML = tips.length
+      ? '<div style="font-weight:700;font-size:12.5px;margin-bottom:6px;">\u2728 To further improve this listing:</div>'
+        + tips.slice(0,5).map(t=>'<div style="font-size:12px;padding:3px 0;">\u2022 '+t+'</div>').join('')
+        + '<div style="font-size:11.5px;color:var(--text-3);margin-top:8px;">Want the deep review? After publishing, run the <b>AI Listing Audit (1T)</b> from your dashboard \u2014 3 specific, prioritised improvements.</div>'
+      : '<div style="font-size:12.5px;">\u2705 Strong listing \u2014 nothing critical missing. The <b>AI Listing Audit (1T)</b> on your dashboard can still find sharper wording after you publish.</div>';
+    if(sbState._visionDesc && sbState._visionDesc!==sbState.description){
+      adviceEl.innerHTML += '<button onclick="sbUseVisionDesc()" style="margin-top:10px;background:none;border:1px solid rgba(52,211,153,.5);border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;color:var(--text);">\u2728 Use the description I wrote from your photos</button>';
+    }
+    adviceEl.style.display='block';
+  }
   if(scoreEl){ scoreEl.style.display='block'; }
   if(scoreNum) scoreNum.textContent=score;
   if(scoreBadge){scoreBadge.textContent=badge.tier;scoreBadge.style.background=badge.bg;scoreBadge.style.color=badge.color;}
@@ -12506,6 +12576,7 @@ function aiSel(id){
   document.getElementById('ai-result').style.display='none';
   document.getElementById('ai-meta').textContent='';
   document.getElementById('ai-savebtn').style.display='none';
+  var _shb=document.getElementById('ai-sharebtn'); if(_shb)_shb.style.display='none';
   document.getElementById('ai-listbtns').style.display='none';
   aiDrawMap(null); aiSafety(null);
   p.scrollIntoView({behavior:'smooth'});
@@ -12580,7 +12651,7 @@ async function aiPoll(jobId){
     let txt = j.result||'', wps=null;
     AI_ITEMS=null;
     const im = txt.match(/```json\s*(\{[\s\S]*?"items"[\s\S]*?\})\s*```/);
-    if(im && AI_SEL && AI_SEL.id==='collectables_advert'){
+    if(im && AI_SEL && (AI_SEL.id==='collectables_advert' || AI_SEL.id==='collection_liquidation')){
       try{ AI_ITEMS=JSON.parse(im[1]).items; txt=txt.replace(im[0],''); }catch(e){}
     }
     const wm = txt.match(/```json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*```/);
@@ -12588,6 +12659,7 @@ async function aiPoll(jobId){
     const sm = txt.match(/##\s*\d*\s*[·]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
     if(sm){ aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[·]?\s*/,'## ⚠️ '))); txt=txt.replace(sm[0],''); }
     else aiSafety(null);
+    txt = aiStripJson(txt);
     document.getElementById('ai-result').innerHTML = aiMd(txt);
     document.getElementById('ai-result').style.display='block';
     aiDrawMap(wps);
@@ -12596,10 +12668,12 @@ async function aiPoll(jobId){
     const sb=document.getElementById('ai-safetybox');
     const ml=document.querySelector('#ai-maplinks a');
     AI_LAST = { fn: AI_SEL?AI_SEL.name:'AI report',
+                text: txt,
                 html: document.getElementById('ai-result').innerHTML,
                 safety: (sb && sb.style.display!=='none') ? sb.innerHTML : '',
                 link: ml ? ml.href : '' };
     document.getElementById('ai-savebtn').style.display='block';
+    var _shb2=document.getElementById('ai-sharebtn'); if(_shb2)_shb2.style.display='block';
     const lb=document.getElementById('ai-listbtns');
     if(AI_ITEMS && AI_ITEMS.length){
       document.getElementById('ai-listeach').textContent='\u{1F5C2} List separately ('+AI_ITEMS.length+')';
@@ -12610,6 +12684,15 @@ async function aiPoll(jobId){
     st.innerHTML = `<span class="ai-bad">&#10007; run failed — your hold was released, you were NOT charged.</span>`;
     aiDrawMap(null); aiSafety(null);
   }
+}
+
+// Machine-readable appendices (listing fields, items, waypoints) are for the app,
+// not the reader: parse what we need first, then strip ALL leftover fenced JSON
+// and the emptied 'Listing fields' heading from the rendered report.
+function aiStripJson(txt){
+  txt = txt.replace(/```json[\s\S]*?```/g, '');
+  txt = txt.replace(/\n##\s*\d*\s*[\u00b7.]?\s*Listing fields[^\n]*\n(?=\s*(\n|##|$))/gi, '\n');
+  return txt;
 }
 
 function aiSafety(html){
@@ -12655,7 +12738,17 @@ function aiDrawMap(wps){
 function aiEsc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function aiInline(s){return s
   .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+  .replace(/listing #([\w-]+)/gi,'listing <a href="javascript:void(0)" onclick="aiOpenListing(\'$1\')" style="font-weight:700">#$1</a>')
   .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
+
+// Tap-through from an AI report to the listing — the introduction is the revenue moment.
+function aiOpenListing(id){
+  if(String(id).startsWith('example')){ showToast('Illustrative example — real runs link to live listings'); return; }
+  try{
+    if(typeof findListing==='function' && findListing(id)){ openDetail(id); return; }
+  }catch(e){}
+  showToast('Listing #'+id+' — find it under Browse (it may have closed since this report)');
+}
 function aiMd(src){
   const lines=aiEsc(src).split('\n'); let out='',i=0,inList=false,inFence=false;
   const closeList=()=>{ if(inList){out+='</ul>';inList=false;} };
@@ -12685,6 +12778,25 @@ function aiMd(src){
 // ═══════════════ END AI FEATURES ═══════════════
 
 // Save / print a delivered report — opens a clean white print view; browser dialog offers paper or Save-as-PDF.
+// Share the report: native share sheet on mobile (Web Share API), clipboard fallback.
+// $0 by design — shares the text we already have; no model call, no server round-trip.
+async function aiShare(){
+  if(!AI_LAST) return;
+  const plain = (AI_LAST.text || AI_LAST.html.replace(/<[^>]+>/g,' ')).replace(/[#*`]/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  const payload = {
+    title: AI_LAST.fn + ' \u2014 TrustSquare AI report',
+    text: AI_LAST.fn + ' \u2014 TrustSquare AI report\n' + new Date().toLocaleDateString() + '\n\n' + plain +
+          '\n\nGenerated by TrustSquare AI \u00b7 estimates only \u00b7 trustsquare.co'
+  };
+  if (navigator.share) {
+    try { await navigator.share(payload); return; } catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  try {
+    await navigator.clipboard.writeText(payload.text);
+    showToast('\u2713 Report copied \u2014 paste it anywhere');
+  } catch(e) { showToast('Could not share on this device \u2014 use Save / Print instead'); }
+}
+
 function aiPrint(){
   if(!AI_LAST) return;
   const w = window.open('', '_blank');
@@ -12717,6 +12829,7 @@ async function aiExample(){
   document.getElementById('ai-result').style.display='none';
   document.getElementById('ai-listbtns').style.display='none';
   document.getElementById('ai-savebtn').style.display='none';
+  var _shb=document.getElementById('ai-sharebtn'); if(_shb)_shb.style.display='none';
   aiDrawMap(null); aiSafety(null);
   try{
     const r=await fetch('/ai/example/'+AI_SEL.id);
@@ -12728,7 +12841,10 @@ async function aiExample(){
     const sm=txt.match(/##\s*\d*\s*[\u00b7]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
     if(sm){aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[\u00b7]?\s*/,'## \u26a0\ufe0f ')));txt=txt.replace(sm[0],'');}
     st.innerHTML='<span class="ai-ok">\u2713 Example \u2014 this is a sample of what you receive (free, no Tuppence used)</span>';
-    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt);
+    txt = aiStripJson(txt);
+    const exNote = (AI_SEL && AI_SEL.id==='collectables_advert')
+      ? '<div class="ai-exbanner" style="margin-top:6px">On a real run, buttons appear below the report to turn it into listings \u2014 \u{1F4E6} one consolidated lot, or \u{1F5C2} each item separately.</div>' : '';
+    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt)+exNote;
     document.getElementById('ai-result').style.display='block';
     aiDrawMap(wps);
   }catch(e){ st.innerHTML='<span class="ai-bad">No example available yet for this one.</span>'; }

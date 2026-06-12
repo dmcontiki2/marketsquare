@@ -45,8 +45,8 @@ if not exist "%PROJECT%\bea_main.py" (
     pause
     exit /b 1
 )
-if not exist "%PROJECT%\service-worker.js" (
-    echo  ERROR: service-worker.js not found in %PROJECT%
+if not exist "%PROJECT%\assets\service-worker.js" (
+    echo  ERROR: service-worker.js not found in %PROJECT%\assets
     pause
     exit /b 1
 )
@@ -129,7 +129,7 @@ echo.
 
 :: ── Step 3: Deploy service worker (Wishlist Web Push) ────
 echo  [3/6] Deploying service worker (service-worker.js -^> service-worker.js)...
-scp "%PROJECT%\service-worker.js" %SERVER%:%REMOTE%/service-worker.js
+scp "%PROJECT%\assets\service-worker.js" %SERVER%:%REMOTE%/service-worker.js
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for service-worker.js. Check SSH connection.
     pause

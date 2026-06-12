@@ -1,3 +1,7 @@
+## Session 135i · 12 June 2026 — AI Features copy accuracy (attended, David's catch)
+
+`marketsquare.html` (2 places): "not used for introductions" → "introductions are charged separately (1T)" / "separate from the 1T introduction fee…". The old wording predates the listing-assist AI and the dossiers' matched-listing intro links — it now read as "AI plays no part in introductions", which is false; the intended (and still true) meaning is that AI Tuppence spend never includes or replaces the introduction charge. Canon meaning unchanged; copy now says it unambiguously.
+
 ## Session 135h · 11 June 2026 — Ground-truth audit of the filing pack (attended)
 
 Full code-vs-document audit of WhitePaper v3.5 DRAFT, Provisional Specification DRAFT and Counsel Email DRAFT. Three MATERIAL inaccuracies found and fixed; two precision upgrades; intro-hold model verified accurate against bea_main + EULA §5.1-5.4.

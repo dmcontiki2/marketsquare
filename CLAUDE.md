@@ -146,3 +146,5 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 
 ## David's document preferences (added 11 Jun 2026)
 **Always deliver reports/documents to David as formatted Word (.docx) files, never raw .md/.txt** — he reads them in MS Word and plain markdown opens as an unreadable encoding dialog. Generate the .docx with real styling (headings, tables, colour for CRITICAL/WARN) alongside any machine-readable .md. This applies to audit reports, sweeps, deliberations — anything he will read.
+
+**Always end any change that needs deployment/action from David with the exact, copy-paste-ready PowerShell commands** — never just describe the steps ("redeploy as usual"). One fenced code block, complete and in order.

@@ -155,7 +155,8 @@ if os.environ.get("WONDER_AI_KEY") and review:
         cl=anthropic.Anthropic(api_key=os.environ["WONDER_AI_KEY"])
         todo=[r for r in review if r["flag"].startswith(("VERIFY","LIKELY","POLICY"))]
         q="\n".join("%d. %s — stored: %s | evidence: %s"%(i+1,r["name"],r["country"],r["wd"]) for i,r in enumerate(todo))
-        msg=cl.messages.create(model="claude-opus-4-6",max_tokens=1500,
+        # P1 cost model: Haiku for adjudication (Opus rejected — cost sweep 12 Jun 2026)
+        msg=cl.messages.create(model="claude-haiku-4-5-20251001",max_tokens=1500,
             messages=[{"role":"user","content":"For each wonder, state the country the FAMOUS landmark of that name is in, whether the stored country is correct (yes/no/contested), and one-line why.\n"+q}])
         ai_note=msg.content[0].text
     except Exception as ex:

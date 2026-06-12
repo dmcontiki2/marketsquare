@@ -2304,6 +2304,15 @@ def _vision_orient_image(img):
         if w <= h:
             return (img, False, None, None)   # already portrait/upright — skip the call
 
+        # P2 wrapper — ceiling check before the paid call. Helper fails OPEN by
+        # contract (an orientation hiccup must never block an upload), so a 429
+        # just skips the vision call and leaves the image unchanged.
+        try:
+            _check_cost_ceiling("")
+        except HTTPException:
+            _log.warning("_vision_orient_image skipped — daily cost ceiling reached")
+            return (img, False, None, None)
+
         # Downscale a copy for the vision call (cheap; orientation needs no detail).
         probe = img.copy()
         probe.thumbnail((512, 512), Image.LANCZOS)
@@ -2338,6 +2347,9 @@ def _vision_orient_image(img):
         rj = resp.json()
         ans = (rj.get("content", [{}])[0].get("text", "") or "").strip().lower()
         it, ot = _usage_tokens(rj)
+        # P2 wrapper — log spend HERE (moved from the caller): tokens are spent
+        # even when the answer is 'none' and no rotation happens.
+        _log_ai_spend("", "/listings/photo:orient", "haiku", it, ot)
         # PIL.rotate is COUNTER-CLOCKWISE for positive angles.
         if "ccw" in ans:
             return (img.rotate(90, expand=True), True, it, ot)
@@ -2381,7 +2393,7 @@ async def upload_listing_photo(
         img, _oriented, _oin, _oout = _vision_orient_image(img)
         if _oriented:
             _log.info("photo upload: vision re-oriented collectible image (listing=%s)", listing_id)
-            _log_ai_spend("", "/listings/photo:orient", "haiku", _oin, _oout)
+        # spend logging lives inside _vision_orient_image (P2 sweep, 12 Jun 2026)
 
     # ── Thumbnail (~100KB) ──────────────────────────────────
     thumb = img.copy()
@@ -3652,6 +3664,80 @@ def _template_draft(intent: str, city: str) -> dict:
             "evidence-based assessment. Request an introduction to learn more.")
     return {"title": title, "category": category, "price": price,
             "condition": "seller-declared", "description": desc, "source": "template"}
+
+@app.post("/listings/draft-from-photos")
+async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks):
+    """Guided listing v2: ONE batched Haiku vision call reads ALL the seller's
+    photos -> per-slot captions + a polished description. Free to the seller,
+    $0-first: no key / over ceiling / any error -> graceful empty result (the
+    flow continues with slot-name captions). Accepts {category, fields, photos:
+    [{slot, b64}]} -> {captions:[{slot, caption}], description, source}."""
+    photos = req.get("photos") or []
+    if not photos:
+        raise HTTPException(status_code=400, detail="photos required")
+    photos = photos[:10]
+    category = (req.get("category") or "Property")[:40]
+    fields = req.get("fields") or {}
+    empty = {"captions": [], "description": "", "source": "none"}
+    if not ANTHROPIC_API_KEY:
+        return empty
+    try:
+        _check_cost_ceiling("")
+    except HTTPException:
+        return empty
+    try:
+        content = []
+        slots = []
+        for ph in photos:
+            b64 = (ph.get("b64") or "")
+            if b64.startswith("data:"):
+                b64 = b64.split(",", 1)[-1]
+            if not b64 or len(b64) > 2_500_000:
+                continue
+            slots.append(ph.get("slot") or f"photo_{len(slots)+1}")
+            content.append({"type": "image", "source": {"type": "base64",
+                            "media_type": "image/jpeg", "data": b64}})
+        if not content:
+            return empty
+        import json as _j
+        content.append({"type": "text", "text": (
+            f"These are a seller's photos for a {category} listing on TrustSquare "
+            f"(South African marketplace), in slot order: {slots}.\n"
+            f"Listing fields so far: {_j.dumps(fields)[:800]}\n\n"
+            "Reply with ONLY a JSON object:\n"
+            "{\"captions\": [{\"slot\": slot name, \"caption\": \"one honest, specific line "
+            "describing what THIS photo shows (max 12 words, no hype, mention real visible "
+            "features)\"}],\n"
+            " \"description\": \"4-6 factual sentences describing the listing as a walkthrough "
+            "of the photos, anonymous seller voice, no contact details, no invented features - "
+            "only what is visible or stated in the fields\"}"
+        )})
+        async with httpx.AsyncClient(timeout=40) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_API_KEY,
+                         "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={"model": AA_MODEL, "max_tokens": 700,
+                      "messages": [{"role": "user", "content": content}]},
+            )
+        rj = resp.json()
+        text = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        if text.startswith("```"):
+            text = text.strip("`").lstrip("json").strip()
+        ai = json.loads(text)
+        _in, _out = _usage_tokens(rj)
+        background_tasks.add_task(_log_ai_spend, "", "/listings/draft-from-photos",
+                                  "haiku", _in, _out)
+        caps = [{"slot": str(c.get("slot",""))[:40], "caption": str(c.get("caption",""))[:90]}
+                for c in (ai.get("captions") or []) if c.get("caption")]
+        return {"captions": caps,
+                "description": str(ai.get("description",""))[:1200],
+                "source": "ai"}
+    except Exception as exc:
+        _log.warning("draft-from-photos fell back to empty: %s", exc)
+        return empty
+
 
 @app.post("/listings/draft-from-photo")
 async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks):
@@ -9827,6 +9913,7 @@ async def ai_listing_rewrite(listing_id: int, email: str):
     """
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI not configured")
+    _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     conn = database.get_db()
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
@@ -9886,7 +9973,12 @@ async def ai_listing_rewrite(listing_id: int, email: str):
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        rj = resp.json()
+        _rw_in, _rw_out = _usage_tokens(rj)
+        # P2 — Tuppence covers the revenue side; log token spend so the cost
+        # dashboard sees it too (sweep 12 Jun 2026)
+        _log_ai_spend(email, "/listings/ai-rewrite", "haiku", _rw_in, _rw_out)
+        raw = rj["content"][0]["text"].strip()
         # Strip markdown fences if model adds them
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
@@ -9915,6 +10007,7 @@ async def ai_seller_audit(listing_id: int, email: str):
     """
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="AI not configured")
+    _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     conn = database.get_db()
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
@@ -9989,7 +10082,12 @@ async def ai_seller_audit(listing_id: int, email: str):
                     "messages": [{"role": "user", "content": user_prompt}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        rj = resp.json()
+        _au_in, _au_out = _usage_tokens(rj)
+        # P2 — Tuppence covers the revenue side; log token spend so the cost
+        # dashboard sees it too (sweep 12 Jun 2026)
+        _log_ai_spend(email, "/listings/ai-audit", "haiku", _au_in, _au_out)
+        raw = rj["content"][0]["text"].strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -10827,6 +10925,7 @@ async def ai_batch_card_listings(req: BatchCardRequest):
 
     if not req.images:
         raise HTTPException(status_code=400, detail="At least one image is required")
+    _check_cost_ceiling(req.seller_email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     # Cap at 10 cards
     images = req.images[:10]
@@ -10901,13 +11000,18 @@ async def ai_batch_card_listings(req: BatchCardRequest):
                     "content-type": "application/json",
                 },
                 json={
-                    "model": "claude-sonnet-4-6",   # Vision-capable; Haiku lacks vision depth for cards
+                    "model": VISION_MODEL,   # Vision-capable; Haiku lacks vision depth for cards
                     "max_tokens": 2000,
                     "system": system_prompt,
                     "messages": [{"role": "user", "content": content_blocks}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        rj = resp.json()
+        _bc_in, _bc_out = _usage_tokens(rj)
+        # P2 — Tuppence covers the revenue side; log token spend so the cost
+        # dashboard sees it too (sweep 12 Jun 2026)
+        _log_ai_spend(req.seller_email, "/listings/batch-cards", "sonnet_vision", _bc_in, _bc_out)
+        raw = rj["content"][0]["text"].strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -11064,6 +11168,14 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
     fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False}
     if not ANTHROPIC_API_KEY:
         return fallback
+    # P2 wrapper — ceiling check before the paid call. Inbound mail is an
+    # unauthenticated external surface; on 429 fall back to the safe default
+    # (email is stored for human triage either way).
+    try:
+        _check_cost_ceiling(from_addr)
+    except HTTPException:
+        _log.warning("_classify_email skipped — daily cost ceiling reached (%s)", from_addr)
+        return fallback
     body_trim = (body or "")[:4000]
     user_payload = f"From: {from_addr}\nSubject: {subject}\n\n{body_trim}"
     system = (
@@ -11099,7 +11211,12 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
                     "messages": [{"role": "user", "content": user_payload}],
                 },
             )
-        raw = resp.json()["content"][0]["text"].strip()
+        rj = resp.json()
+        _cl_in, _cl_out = _usage_tokens(rj)
+        # P2 wrapper — log spend HERE with real tokens (moved from the caller's
+        # flat-estimate log; cost_is_real=1 on the dashboard).
+        _log_ai_spend(from_addr, "/email/inbound", "haiku", _cl_in, _cl_out)
+        raw = rj["content"][0]["text"].strip()
         if raw.startswith("```"):
             raw = raw.strip("`")
             if raw.startswith("json"):
@@ -11140,7 +11257,7 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         raise HTTPException(status_code=400, detail="from_addr is required")
 
     result = await _classify_email(from_addr, subject, body)
-    background_tasks.add_task(_log_ai_spend, from_addr, "/email/inbound", "haiku")
+    # spend logging lives inside _classify_email with real tokens (P2 sweep, 12 Jun 2026)
 
     category = result["category"]
     urgency = result["urgency"]
@@ -11501,6 +11618,13 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
     if not ANTHROPIC_API_KEY:
         result["error"] = "no_api_key"
         return result
+    # P2 wrapper — platform-rail ceiling check (no user context in batch grading).
+    # Function fails SOFT by contract, so convert the 429 into an error result.
+    try:
+        _check_cost_ceiling("")
+    except HTTPException:
+        result["error"] = "cost_ceiling_reached"
+        return result
     urls = _grade_extract_photo_urls(photo_urls, thumb_url, medium_url)
     if not urls:
         result["error"] = "no_photos"
@@ -11559,6 +11683,8 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
         rj = resp.json()
         it, ot = _usage_tokens(rj)
         result["in_tokens"], result["out_tokens"] = it, ot
+        # P2 wrapper — log real token spend (platform attribution; batch grading).
+        _log_ai_spend("", "grade_card_condition", "sonnet_vision", it, ot)
         raw = (rj.get("content", [{}])[0].get("text", "") or "").strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
@@ -11786,4 +11912,8 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
         raise HTTPException(status_code=500, detail=f"ai-settle failed: {e}")
     finally:
         conn.close()
+
+# P2 cost-compliance fixes applied 12 Jun 2026 (nightly sweep): ceiling checks +
+# real-token spend logging on grade_card_condition, _vision_orient_image,
+# _classify_email, ai-rewrite, ai-audit, batch-cards. See CHANGELOG.
 
