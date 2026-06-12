@@ -268,3 +268,10 @@ Tools: ruff 0.15 (F,E9,B) · vulture 2.16 (>=80%) · pylint 4.0 cyclic-import ·
 
 ## Daily Loop — 12 June 2026 · SCAN-16-LEDGER HELD (BASELINE-12JUN-1)
 - [SCAN-16-LEDGER · LOW · HELD] Approved (11 Jun 07:47Z) but NOT shipped: the 12 Jun 04:24Z unattended cost-sweep deploy replaced the live main.py baseline ungated (pricing/tiers class) — POLICY §6.1 default-to-stage; re-deploying would have shipped the whole unacknowledged set under the loop's name. Ships next run after David acks BASELINE-12JUN-1. Sites re-located ~11869/11912 on the 566102B baseline; old-strings still unique. Loop edited/deployed nothing.
+
+## Session 137 — 12 June 2026 (attended) · BASELINE-12JUN-1 RESOLVED + SCAN block closed
+- [BASELINE-12JUN-1 · SEV-2 · RESOLVED → APPROVED · S137] David-delegated adjudication. Whole-event delta = the one main.py diff (9 sibling deploys md5-identical mount==server); diff matches the approved Simpler-Model brief + P2 rails; `_SELLER_SUB_TIERS` byte-identical (no price change); SCAN-14 preserved; AST/restart/journal/smoke all clean; rollback would re-break starter/pro payment-init. APPROVED — process breach stays open as COST-SWEEP-LANE-1. Acked baseline banked (`main.py.bak-20260612-scan16L`).
+- [SCAN-16-LEDGER · LOW · DONE · S137] `from e` at ai-commit/ai-settle (11869/11912). 2-line diff; backup scan16L; md5+ast+restart+health green; endpoints 401-no-key re-verified; CF purged.
+- [SCAN-15 · LOW · DONE · S137] Dead `as e` (Overpass fallback, 1552) + dead `photo_entry` (2565) removed (−34B). Backup scan15; verify chain green.
+- [SCAN-16 · LOW · DONE · S137] 22× B904 → `from exc`/`from jde` (+11 `as exc` bindings) + 1× B905 `strict=False`; flake8 B904/B905 = 0. Backup scan16; verify chain green. **SCAN-13→16 block closed; auto-ship queue EMPTY.**
+- [MOUNT-TEAR-1 · DONE · S137] Mount bea_main.py healed from server (torn copy = pure prefix, md5-proven; post-restore parity 38aab78…).

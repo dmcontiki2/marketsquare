@@ -1549,7 +1549,7 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
                 return {}
         finally:
             _socket.getaddrinfo = _orig_getaddrinfo
-    except Exception as e:
+    except Exception:
         return {}
 
     # Categorise results
@@ -2139,9 +2139,9 @@ def geo_add_country(
             (iso2.upper(), name, region_label)
         )
         conn.commit()
-    except Exception:
+    except Exception as exc:
         conn.close()
-        raise HTTPException(status_code=400, detail="Country already exists or invalid data")
+        raise HTTPException(status_code=400, detail="Country already exists or invalid data") from exc
     conn.close()
     if background_tasks:
         background_tasks.add_task(_seed_country_from_geonames, iso2.upper(), name, region_label)
@@ -2384,8 +2384,8 @@ async def upload_listing_photo(
 
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Could not read image file")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not read image file") from exc
 
     # Session 98 — collectibles: EXIF can't fix tag-less rotated card scans, so for
     # a landscape Collectors photo, ask vision which way is up and rotate to match.
@@ -2514,8 +2514,8 @@ async def upload_draft_listing_photo(
 
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Could not read image file")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not read image file") from exc
 
     # Auth + draft guard
     conn = database.get_db()
@@ -2562,7 +2562,6 @@ async def upload_draft_listing_photo(
     # Persist to listing row
     # Build [photos:url1|url2|...] prefix in description (legacy) AND maintain photo_urls JSON array
     existing_desc = row["description"] or ""
-    photo_entry = medium_url
 
     # Extract existing photo_urls JSON array from DB row
     existing_photo_urls_raw = conn.execute(
@@ -2824,8 +2823,8 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
 
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Could not read image file")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Could not read image file") from exc
 
     # Square-crop to centre, then resize to 400×400
     w, h = img.size
@@ -2852,7 +2851,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
             photo_url = f"/media/{fname}"
         except Exception as exc:
             _log.error("Profile photo local save failed: %s", exc)
-            raise HTTPException(status_code=500, detail="Photo storage unavailable")
+            raise HTTPException(status_code=500, detail="Photo storage unavailable") from exc
 
     # Upsert user record and save photo_url
     conn = database.get_db()
@@ -2898,7 +2897,7 @@ async def upload_user_id(email: str, file: UploadFile = File(...)):
             id_url = f"/media/{fname}"
         except Exception as exc:
             _log.error("ID photo local save failed: %s", exc)
-            raise HTTPException(status_code=500, detail="Storage unavailable")
+            raise HTTPException(status_code=500, detail="Storage unavailable") from exc
 
     conn = database.get_db()
     try:
@@ -3209,8 +3208,8 @@ async def paystack_webhook(request: Request):
     import json as _json
     try:
         event = _json.loads(raw_body)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid JSON") from exc
 
     event_type = event.get("event")
     data = event.get("data", {})
@@ -3594,7 +3593,7 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
         return {"response": text}
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
-        raise HTTPException(status_code=500, detail="AI call failed")
+        raise HTTPException(status_code=500, detail="AI call failed") from exc
 
 
 # ── One-photo-one-sentence listing draft (Simpler Model, Jun 2026) ──────────
@@ -4113,7 +4112,7 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     except Exception as exc:
         conn.close()
         _log.error("AA coach Claude call failed: %s", exc)
-        raise HTTPException(status_code=502, detail="AI Coach unavailable — please try again")
+        raise HTTPException(status_code=502, detail="AI Coach unavailable — please try again") from exc
 
     # Parse structured JSON response; fall back gracefully if AI wraps it in markdown
     try:
@@ -4173,8 +4172,8 @@ async def aa_publish(
 
     try:
         field_data = _json.loads(fields)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid fields JSON")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid fields JSON") from exc
 
     title         = field_data.get("title") or field_data.get("item_name", "")
     price         = field_data.get("price") or field_data.get("rate")
@@ -5120,9 +5119,9 @@ def add_showcase(listing_id: int, sort_order: int = 0, _key: str = Depends(auth.
             (listing_id, sort_order)
         )
         conn.commit()
-    except Exception:
+    except Exception as exc:
         conn.close()
-        raise HTTPException(status_code=400, detail="Listing already in showcase")
+        raise HTTPException(status_code=400, detail="Listing already in showcase") from exc
     conn.close()
     return {"message": "Added to showcase", "listing_id": listing_id}
 
@@ -8583,8 +8582,8 @@ async def set_listing_wonders(listing_id: int, request: Request):
     """Set linked_wonders for a listing. Body: {email, wonder_ids: [...up to 5...]}"""
     try:
         body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from exc
     email = body.get("email","").strip()
     wonder_ids = body.get("wonder_ids", [])
     if not email:
@@ -8901,10 +8900,10 @@ def admin_verify(x_admin_token: str = Header(default=None)):
         raise HTTPException(status_code=401, detail="No token provided.")
     try:
         payload = _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
-    except _pyjwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired.")
-    except _pyjwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token.")
+    except _pyjwt.ExpiredSignatureError as exc:
+        raise HTTPException(status_code=401, detail="Token expired.") from exc
+    except _pyjwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token.") from exc
     return {"valid": True, "sub": payload.get("sub", "unknown")}
 
 @app.post("/admin/users")
@@ -9579,15 +9578,15 @@ async def vision_draft(
                     "messages": [{"role": "user", "content": user_content}],
                 },
             )
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as exc:
         _log.error("vision-draft: Claude API timeout after 45s")
         raise HTTPException(
             status_code=504,
             detail="Vision analysis timed out — try describing your listing instead"
-        )
+        ) from exc
     except Exception as exc:
         _log.error("vision-draft: Claude API call failed: %s", exc)
-        raise HTTPException(status_code=503, detail="Vision analysis unavailable")
+        raise HTTPException(status_code=503, detail="Vision analysis unavailable") from exc
 
     # ── 4. Parse Claude response ─────────────────────────────────────────────
     raw_text = ""
@@ -9615,12 +9614,12 @@ async def vision_draft(
         raise HTTPException(
             status_code=422,
             detail="Vision analysis returned unexpected format — try describing instead"
-        )
+        ) from jde
     except HTTPException:
         raise
     except Exception as exc:
         _log.error("vision-draft: unexpected parse error: %s", exc)
-        raise HTTPException(status_code=500, detail="Vision analysis failed")
+        raise HTTPException(status_code=500, detail="Vision analysis failed") from exc
 
     # ── 5. Sanitise + enrich the draft ──────────────────────────────────────
     # Merge any warnings Claude produced with our upload warnings
@@ -9987,7 +9986,7 @@ async def ai_listing_rewrite(listing_id: int, email: str):
         new_desc  = str(result.get("new_description", "")).strip()[:1000]
     except Exception as exc:
         _log.error("ai-rewrite: %s", exc)
-        raise HTTPException(status_code=500, detail="AI rewrite failed — Tuppence charged")
+        raise HTTPException(status_code=500, detail="AI rewrite failed — Tuppence charged") from exc
 
     _log.info("ai-rewrite: listing #%d email=%s", listing_id, email)
     return {
@@ -10102,7 +10101,7 @@ async def ai_seller_audit(listing_id: int, email: str):
                 })
     except Exception as exc:
         _log.error("ai-audit: %s", exc)
-        raise HTTPException(status_code=500, detail="AI audit failed — Tuppence charged")
+        raise HTTPException(status_code=500, detail="AI audit failed — Tuppence charged") from exc
 
     _log.info("ai-audit: listing #%d email=%s intros=%d", listing_id, email, intro_count)
     return {
@@ -10557,7 +10556,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
         local_vs_global = str(result.get("local_vs_global", "cannot_compare"))[:20]
     except Exception as exc:
         _log.error("ai-price-check: %s", exc)
-        raise HTTPException(status_code=500, detail="AI price check failed — no Tuppence charged")
+        raise HTTPException(status_code=500, detail="AI price check failed — no Tuppence charged") from exc
 
     # ── Price-position note: only fires against a VERIFIED floor. Not a fraud
     #    allegation — a neutral observation that the price is well below market. ─
@@ -11034,7 +11033,7 @@ async def ai_batch_card_listings(req: BatchCardRequest):
 
     except Exception as exc:
         _log.error("ai-batch-cards: %s", exc)
-        raise HTTPException(status_code=500, detail="AI batch card listing failed — Tuppence charged")
+        raise HTTPException(status_code=500, detail="AI batch card listing failed — Tuppence charged") from exc
 
     _log.info("ai-batch-cards: seller=%s city=%s cards=%d drafts=%d",
               req.seller_email, req.city, card_count, len(clean_drafts))
@@ -11082,7 +11081,7 @@ def get_tuppence_history(email: str, limit: int = 50, offset: int = 0):
         page_bal  = balance_after_rev[offset: offset + limit]
 
         transactions = []
-        for row, bal in zip(page_rows, page_bal):
+        for row, bal in zip(page_rows, page_bal, strict=False):
             transactions.append({
                 "id": row["id"],
                 "type": row["type"],
@@ -11866,7 +11865,7 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
     except Exception as e:
         try: conn.execute("ROLLBACK")
         except Exception: pass
-        raise HTTPException(status_code=500, detail=f"ai-commit failed: {e}")
+        raise HTTPException(status_code=500, detail=f"ai-commit failed: {e}") from e
     finally:
         conn.close()
 
@@ -11909,7 +11908,7 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
     except Exception as e:
         try: conn.execute("ROLLBACK")
         except Exception: pass
-        raise HTTPException(status_code=500, detail=f"ai-settle failed: {e}")
+        raise HTTPException(status_code=500, detail=f"ai-settle failed: {e}") from e
     finally:
         conn.close()
 
