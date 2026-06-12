@@ -1,4 +1,4 @@
-# Collectables Advert + Market Report — Live-Action AI Video Prompt Pack
+﻿# Collectables Advert + Market Report — Live-Action AI Video Prompt Pack
 
 For Sora, Veo 3, or Runway Gen-4. Target: 7s, portrait 9:16, 1080x1920. Veo 3 generates native audio (dialogue); for Sora/Runway, generate silent and add the VO lines in your editor.
 

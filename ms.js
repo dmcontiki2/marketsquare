@@ -386,7 +386,7 @@ async function loadLiveDash() {
               beaListingId: l.id,
               title: l.title,
               cat: normCat(l.category),
-              status: l.paused ? 'paused' : 'active',
+              status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
               photo: l.thumb_url || null,
               isCommit: normCat(l.category) === 'Property',
               intros: [],
@@ -4705,7 +4705,7 @@ async function sobGoLive() {
       // 2. Publish the draft listing
       const res = await fetch(
         BEA_URL + '/listings/' + draft.id + '/publish?email=' + encodeURIComponent(email),
-        { method: 'PUT', headers: { 'X-Api-Key': API_KEY } }
+        { method: 'PUT' }
       );
       const resText = await res.text();
       console.warn('sobGoLive publish', draft.id, res.status, resText.slice(0,200));
@@ -7186,7 +7186,9 @@ function renderDashCard(dl){
   const thumbHtml = dl.photo
     ? `<img src="${dl.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
     : CATS[dl.cat].icon;
-  const statusBadge = dl.status==='paused'
+  const statusBadge = dl.status==='draft'
+    ? '<span class="ml-status st-paused">📝 Draft — not visible to buyers yet</span>'
+    : dl.status==='paused'
     ? '<span class="ml-status st-paused">⏸ Paused — intro pending</span>'
     : pendingIntros.length>0
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
@@ -7242,9 +7244,25 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions"><button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
+      ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
     </div>
   </div>`;
+}
+
+// ── Hub: publish a stranded draft (GUIDED-PUBLISH-1, S138) ──────────────────
+async function dashPublish(listingId){
+  if (DEMO_MODE) { showToast('Not available in demo mode'); return; }
+  const email=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
+  if(!email){ showToast('Sign in first to publish'); return; }
+  try{
+    const res=await fetch(BEA_URL+'/listings/'+listingId+'/publish?email='+encodeURIComponent(email),{method:'PUT'});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.detail||('HTTP '+res.status));
+    showToast('Listing is live ✓');
+    const dl=dashState.listings.find(x=>x.beaListingId===listingId);
+    if(dl){ dl.status='active'; if(dl._raw) dl._raw.listing_status='live'; }
+    if(typeof renderDash==='function') renderDash();
+  }catch(e){ showToast('Publish failed: '+e.message, 4000); }
 }
 
 // ── Wonder auto-link banner actions ────────────────────────────────────────

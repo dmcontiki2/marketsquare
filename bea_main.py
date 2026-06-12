@@ -1724,7 +1724,7 @@ def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
     return [wid for _, wid, _ in top]
 
 @app.put("/listings/{listing_id}/publish")
-def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.require_api_key)):
+def publish_listing(listing_id: int, email: str):
     """Transition a draft listing to live. Called by the seller onboarding flow
     once the seller has chosen a subscription tier and accepted the EULA.
     Auth: ?email= must match seller_email on the listing (or listing has no owner yet).
@@ -1816,7 +1816,11 @@ def publish_listing(listing_id: int, email: str, _key: str = Depends(auth.requir
         cat_row = database.get_db().execute(
             "SELECT category FROM listings WHERE id = ?", (listing_id,)
         ).fetchone()
-        if city_row and city_row["lat"] and city_row["lng"]:
+        # Wonder auto-link allowlist (David ruling 12 Jun 2026): location-proximity
+        # only adds buyer value for Property + Adventures; Collectors/Services/etc.
+        # were collecting museum noise. Manual linking via the picker stays open to all.
+        _wcat = ((cat_row["category"] or "") if cat_row else "").strip().lower()
+        if city_row and city_row["lat"] and city_row["lng"] and _wcat in ("property", "adventures"):
             # Derive country iso2 for radius calculation
             country_row = database.get_db().execute(
                 """SELECT g.country_iso2 FROM geo_cities g

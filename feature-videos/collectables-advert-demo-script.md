@@ -1,4 +1,4 @@
-# Collectables Advert + Market Report — 7s Demo Video
+﻿# Collectables Advert + Market Report — 7s Demo Video
 
 In-app explainer, plays when user taps the demo button inside the feature. Portrait 1080x1920, 30fps, 7.0s, voiced.
 

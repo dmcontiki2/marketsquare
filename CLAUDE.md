@@ -136,7 +136,7 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 - ⚠️ Dev-only: `POST /dev/credit` endpoint and Dev Tools nav in admin app — **REMOVE BEFORE LAUNCH**
 
 ## Current development status
-- Launch city: Pretoria, South Africa · 23 / 60 founding sellers
+- Launch city: Pretoria, South Africa (+ Johannesburg twin under consideration) · 60 staged prospects/city = wave trigger, NOT a 60-seller public threshold (CC-003 corrects old docs; day-one launch carries WHCL + demos + agency onboarding)
 - BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite (9 tables) + Redis on Hetzner CPX22
 - GitHub backup: github.com/dmcontiki2/marketsquare
 - Paystack: test mode (live mode pending CIPC registration)

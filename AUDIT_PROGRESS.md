@@ -275,3 +275,7 @@ Tools: ruff 0.15 (F,E9,B) · vulture 2.16 (>=80%) · pylint 4.0 cyclic-import ·
 - [SCAN-15 · LOW · DONE · S137] Dead `as e` (Overpass fallback, 1552) + dead `photo_entry` (2565) removed (−34B). Backup scan15; verify chain green.
 - [SCAN-16 · LOW · DONE · S137] 22× B904 → `from exc`/`from jde` (+11 `as exc` bindings) + 1× B905 `strict=False`; flake8 B904/B905 = 0. Backup scan16; verify chain green. **SCAN-13→16 block closed; auto-ship queue EMPTY.**
 - [MOUNT-TEAR-1 · DONE · S137] Mount bea_main.py healed from server (torn copy = pure prefix, md5-proven; post-restore parity 38aab78…).
+
+- [GUIDED-PUBLISH-1 · HIGH · DONE · S138] Publish endpoint admin-key Depends dropped (internal email-auth complete); hub DRAFT badge + Publish button (ms.js v171); sobGoLive key removed; auth matrix tested live; correction logged (publish wiring existed in sobGoLive — grep artifact). 
+- [SELLERHUB-STATUS-1 · MED · DONE · S138] Hub status now derived from listing_status; drafts no longer masquerade as Active (the mislabel that hid David's pending publish step).
+- [WONDER-AUTOLINK-CAT-1 · DONE · S138] Auto-link allowlist Property+Adventures (David ruling); 27 listings / 135 auto-links cleaned by flag, manual picks preserved.

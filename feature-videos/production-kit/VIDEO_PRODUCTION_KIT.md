@@ -1,4 +1,4 @@
-# MarketSquare Video Production Kit
+﻿# MarketSquare Video Production Kit
 
 Repeatable pipeline used for `collectables-advert-howto-7steps-55s.mp4`. Reuse for the other 10 AI-feature videos, category demos (1–3 min), and 7s shorts.
 

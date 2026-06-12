@@ -12,6 +12,20 @@
 
 ---
 
+## CC-003 · Launch-threshold canon correction (60 prospects = wave trigger, not 60 sellers = public gate)
+**Stage:** 0/5 OPENED (attended, 12 Jun 2026) — David ruling in chat: the design has ALWAYS been *60 staged prospects per city fires the auto-email founding wave; cities launch day-one with zero native listings* (WHCL 332 sites + demos carry browse; density via waves at ~5–7% conversion + direct agency onboarding on the free Agency tier). The "public launch threshold: 60 founding sellers (20/category)" wording in docs is an AI transcription error, never council intent. **Opened:** 12 Jun 2026 · **Owner:** David (council) · **Hot lines already corrected attended:** AGENT_BRIEFING.md:14, CLAUDE.md:139.
+
+**Term map (initial, to be evidenced by the CCP run):**
+
+| # | old (pattern) | where (known so far) | new | kind |
+|---|---|---|---|---|
+| 1 | `Public launch threshold: 60 founding sellers (20 per category)` | ~~AGENT_BRIEFING.md:14~~ ✓fixed · docs/PRINCIPLE_REQUIREMENTS.md:282 · PRINCIPLE_REQUIREMENTS_v1_3_DRAFT.md:283 (+ AA/CityLauncher/Codices copies — AD-16 divergence) · Codex (verify §) | `Wave trigger: 60 staged prospects/city → founding email wave; launch day-one (WHCL+demos+agency onboarding); no seller-count public gate` | canon |
+| 2 | `23 / 60 founding sellers` style progress counters | ~~CLAUDE.md:139~~ ✓fixed · BACKLOG.md:162 (M5/M6) | reframe as founding-seller GROWTH milestone, not launch gate | copy |
+| 3 | `RM-5 → 60 founding sellers` / `60 sellers stable` | BACKLOG.md AL-5 / AL-7 (autonomy-ladder gates) | KEEP as ladder evidence milestones but reword so they cannot be read as launch gates — David call per row | gates |
+| 4 | docs/PLAN.md `20+ founding sellers ... per category` checkboxes | docs/PLAN.md:65/80/147 | historical plan doc — header-note supersede, per AD-13 pattern | historical |
+
+**Interlock:** Gate-8 of the launch-gate checklist (to be drafted) must state the corrected model. EULA/marketing copy scan for "founding"/threshold phrasing = part of the CCP evidence run. Ladder rows (map #3) are autonomy-policy, not launch canon — they survive reworded.
+
 ## CC-001 · Tuppence HOLD model
 **Stage:** 4/5 STAGED (Fable run 10 Jun) — baseline ✓ · term map evidence-based (PROVISIONAL — David verifies) · matrix built (37 rows) · staged edits + drafts complete · zero-token proof PASS on staged set · NOTHING LIVE. Awaiting David: term-map verify → canon landing (Codex v4.8 / IP v6 / EULA v1.7) → INTRO_HOLD BEA build (Gate 2). See `REPORT_CC-001.md` + `AWAITING_DAVID.md`. · **Opened:** 10 Jun 2026
 **One-paragraph change:** The Tuppence charge model is corrected to a **HOLD**:
