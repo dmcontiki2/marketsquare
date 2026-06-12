@@ -91,6 +91,15 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
   <div class="lane r"><b>🔴 Red</b>always asks you · money/secrets/deletes/public</div>
 </div>
 
+<h2>The actors — who can touch prod <span style="font-weight:600;color:var(--teal)">(updated 12 Jun 2026 · S137)</span></h2>
+<div class="lanes" style="margin-bottom:6px">
+  <div class="lane g"><b>🌙 Daily loop (Sensor → Fixer → Orchestrator)</b>nightly merged run · gates §5/§6 · default-to-stage §6.1 · writes queue/staged/results/findings/report + log.md</div>
+  <div class="lane g"><b>🛰️ v2 conductor</b>03:50 SAST cron · SHADOW — deploys nothing · cutover gated (CUTOVER-1)</div>
+  <div class="lane a"><b>👤 Attended sessions</b>David + Claude in chat · full gates · can clear the queue and adjudicate baseline decisions</div>
+  <div class="lane r"><b>🧹 Nightly cost-sweep</b>⚠ operates OUTSIDE the policy — registration pending (COST-SWEEP-LANE-1): register cadence/gates/write-backs, or fold into the daily loop</div>
+</div>
+<div class="note"><b>Baseline gate (process change, 12 Jun 2026):</b> if the live baseline is replaced ungated by any actor, the loop defaults to stage (§6.1) — the Fixer HOLDS even pre-approved items rather than re-deploy an unacknowledged baseline under its own name, and a <span class="cmd">BASELINE-&lt;date&gt;</span> decision is staged for David: approve (attribute) or roll back. First use: <b>BASELINE-12JUN-1</b> — held 04:50Z, adjudicated &amp; <b>approved</b> attended the same morning (S137); the held queue then shipped and is now empty.</div>
+
 <h2>Documents</h2>
 <div class="docbtns">
   <a class="btn" href="design.html">📐 Design spec (Phase 0)</a>
@@ -116,7 +125,7 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
 
 <div class="note"><b>How activation works today:</b> available functions run through Claude — the Copy button hands you the exact command to paste. When the Orchestrator is wired in <b>Phase 5</b>, these turn into live buttons that trigger the server directly (and the green lane runs on its own overnight). Honest by design — no button pretends to do more than it does yet.</div>
 
-<p class="foot">Orchestration v2 · Control Room · behind ops auth · updates as each phase ships</p>
+<p class="foot">Orchestration v2 · Control Room · behind ops auth · updates as each phase ships · process panel updated 12 Jun 2026 (S137)</p>
 <script>
 function cp(btn,txt){var t=btn.textContent;function done(){btn.textContent='✓ Copied';setTimeout(function(){btn.textContent=t},1600);}
 try{navigator.clipboard.writeText(txt).then(done,function(){window.prompt('Copy this command for Claude:',txt);});}
