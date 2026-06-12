@@ -1,3 +1,43 @@
+## Session 135h · 11 June 2026 — Ground-truth audit of the filing pack (attended)
+
+Full code-vs-document audit of WhitePaper v3.5 DRAFT, Provisional Specification DRAFT and Counsel Email DRAFT. Three MATERIAL inaccuracies found and fixed; two precision upgrades; intro-hold model verified accurate against bea_main + EULA §5.1-5.4.
+
+**Material fixes:** (1) Trust Score — docs described a 30/25/25/10/10 fixed-weight composite; the implemented system is an evidence-based signal-POINTS catalogue + complaint-penalty subsystem (diminishing scale, 24-month 50% decay, no user-writable path). Whitepaper §3.4 + spec claim C4 rewritten to the real (and more technical/defensible) architecture. (2) "ALL AI endpoints existence-gated" — false since the $0-first listing-draft endpoints (serve unregistered sellers by design); narrowed to metered-AI = existence gate, free assists = ceiling pre-flight + spend log; spec Claim A recitation aligned. (3) CPA s63 — docs implied the ≥36-month dormancy fix; live EULA still carries 24 months AND an internal contradiction (§5.3 "no expiry" vs §6.3 "24 months"); all three docs now state the truth (24 current, ≥36 staged, launch blocker) and the counsel email discloses it candidly.
+
+**Precision:** §5 AI cost split (Haiku assists $0.015-0.04 vs measured Sonnet L2 $0.20-0.80 against $4-10 revenue); founders-cohort qualifying mechanism marked "under canon revision" (QUALIFYING_TIERS still references retired business/elite tiers — code relic, separate fix).
+
+**Verified accurate:** intro HOLD (charge at acceptance, code line ~3046 + EULA), 4-level geo (9/54/11,680 seeded), HTTP 402 slot enforcement, 10 AI functions Free/2/3/5T with glimpses, magic-link auth, hold endpoints, non-transferability.
+
+**FOR DAVID (Gate-1 items, not document items):** EULA internal contradiction §5.3 vs §6.3 + the 24→36-month s63 extension; launch_redemption.py QUALIFYING_TIERS references retired tiers.
+
+## Session 135g · 11 June 2026 — Guided listing v2 (attended, David's sell-flow review)
+
+The guided photo-first flow (B1-B8) already had category shot-lists (Property even generates per-bedroom slots with coaching prompts), captioned multi-photo upload, an AI-drafted description step and a review step. v2 closes David's gaps — $0-first throughout:
+
+- **Rental amenities checklist** (SB_FIELDS Property): security setup, solar/load-shedding backup, fibre, garden service, levies, typical electricity+water — the questions SA tenants actually ask. Hardcoded, $0; flows into the listing.
+- **"Fill in the details" demoted** to an escape hatch ("Prefer full control?") — the photo path is the strategy; manual stays as the fail-open.
+- **Phone-camera-first capture**: `capture="environment"` on the guided photo input — the shot-list becomes a walk-through-the-apartment camera flow on mobile.
+- **Batched vision enrich** (`POST /listings/draft-from-photos`, bea_main.py): ONE Haiku call reads up to 10 photos → honest per-slot captions + a walkthrough description. Free to the seller; ceiling-checked + spend-logged; no key / over ceiling / error → graceful empty (slot names remain captions). Fired once when leaving the photo step. TestClient ✓ (no-key→200 empty, no photos→400).
+- **B8 improvement checklist** ($0, rule-based): missing shots by name, missing amenities ("state the security setup — the first question SA tenants ask"), price/caption nudges — ending with the **AI Listing Audit (1T)** upsell, and a one-tap "use the description I wrote from your photos" if vision produced a better one.
+
+Backups: `*.bak-20260611-guidedv2`. `node --check` ✓ · `ast.parse` ✓
+
+**Cost model impact:** one optional Haiku vision batch per guided listing (~$0.02-0.04, est., ceiling-gated) — within the $0-first listing budget; everything else hardcoded. The 1T audit upsell is existing metered revenue surfaced at the right moment.
+
+## Session 135f · 11 June 2026 — Reports: tappable listing links (attended)
+
+`ms.js`: every "listing #id" reference inside an AI report is now a tap-through link — `aiOpenListing()` opens the listing detail (the introduction request = the revenue moment); `#example-*` ids in fixtures show an "illustrative" toast; missing/closed listings get a friendly Browse hint. Markdown links (B&Bs, menus, sources) were already clickable. `node --check` ✓
+
+## Session 135e · 11 June 2026 — Liquidation listing buttons (attended)
+
+`ms.js`: the List-as-lot / List-separately buttons now also fire for `collection_liquidation` (was Collectables-only). Pairs with the AdvertAgent prompt change that makes the Liquidation Plan emit the per-lot items appendix. `node --check` ✓
+
+## Session 135d · 11 June 2026 — AI report polish (attended, David's test feedback)
+
+`ms.js` + `marketsquare.html`: **Share report** button added beside Save/Print — Web Share API (native share sheet on mobile), clipboard-copy fallback on desktop; $0 by design (shares existing text, no model call, no server round-trip). Shows/hides together with the print button on delivered runs. Backup: `*.bak-20260611-share`.
+
+Also: machine-readable appendices no longer render to the reader. New `aiStripJson()` removes all leftover fenced ```json blocks + the emptied "Listing fields" heading from both the delivered-run and free-example views (items/waypoints still parsed first — List-as-lot / List-separately buttons and the route map unaffected). The Collectables example now ends with a note telling the user the two listing buttons appear on a real run. Backup: `ms.js.bak-20260611-jsonhide`. `node --check` ✓ + stripper unit-tested.
+
 ## Session 135c · 11 June 2026 — Cost-principle enforcement: nightly sweep + spend endpoint (attended, staged)
 
 Codified David's three cost principles (P1 $0-first / Haiku-or-cheaper / hardcode-where-clever · P2 budget every call · P3 independence & hot-swap) into automation:
