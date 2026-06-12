@@ -326,3 +326,10 @@ Run the clean-refresh pass first (re-scrape launch city + free MX re-verify), th
 | CC-001 | **Tuppence HOLD model** (commit-on-request → burn-on-delivery → release-on-decline; payer = service consumer; Codex→v4.8, IP Brief→v6, claims C10–C13). Term map DRAFT in `CHANGE_REGISTER.md`. | 4/5 STAGED (Fable 10 Jun — matrices+edits+drafts done, proof PASS; David: verify term map + land canon) | ATTENDED (Gate 1+2, §12) |
 | CC-002 | **Pricing + AI canon** ("AI uses"/sessions retired; in-app AI FREE, advanced AI per-use Tuppence; tiers $0/12/20/40/100; allocs 6/10/20/50T @ 1T=$2; slots 2/10/25/60/500 cap). Term map DRAFT in `CHANGE_REGISTER.md`. | 4/5 STAGED (Fable 10 Jun — staged incl. Gate-2 bea diff; David: verify + land) | ATTENDED (Gate 2, §12) |
 | CC-SEQ | **Sequencing call:** land CC-001 (sets the charge mechanism) before CC-002 (pricing copy refers to it); or run together with one merged term map / single Sensor pass. Decide at Step 1. | David call | DAVID |
+
+## Filed by daily loop — 12 June 2026
+- [BASELINE-12JUN-1 · SEV-2 · blockers] Unattended cost-sweep deployed Gate-2-class code live 04:24Z (no backup/docs/log). David: approve or roll back (main.py.bak-2026-06-11-fixer + re-apply SCAN-14). Unblocks SCAN-16-LEDGER.
+- [MOUNT-TEAR-1 · blockers] Mount bea_main.py torn @11855 (562972B vs server 566102B). After ack: scp server main.py → mount bea_main.py.
+- [COST-SWEEP-LANE-1 · ops] "Nightly cost-compliance sweep" is a 4th agent lane outside ORCHESTRATION_POLICY — register it (cadence/gates/write-backs) or fold into the daily loop.
+- [FEA-DRIFT-3 · ops] ms.js v168 / ms.css v127 / index 376196B attended-deployed 10–11 Jun, uncommitted+undocumented (3rd instance). fea baseline refreshed 12 Jun; the git sweep commit still owed.
+- [GIT-INDEX-1 · ops] Sandbox git cannot parse .git/index (0xffff0000 → 0x00730000, 2 days). Temp-index workaround works; suspect Windows/sandbox git version skew.
