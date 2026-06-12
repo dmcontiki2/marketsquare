@@ -1256,3 +1256,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-ico{font-size:17px;margin-right:3px}
 .ai-exbtn{width:100%;background:transparent;color:#7cc4ff;border:1px solid #24407c;border-radius:10px;padding:10px;font-size:13px;cursor:pointer;margin-top:10px;font-weight:600}
 .ai-exbanner{background:#10324f;color:#bcd3f5;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:10px;display:inline-block}
+
+/* ── Video Tutor button + modal (FEA v169/css v128) ── */
+.ai-card h3{display:flex;align-items:center;gap:6px}
+.ai-card h3 .ai-name{flex:1;min-width:0}
+.ai-vtutor{flex:none;margin-left:auto;background:#1b2a47;border:1px solid #3d5c9e;color:#9cc3ff;font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:4px 10px;border-radius:12px;cursor:pointer;white-space:nowrap}
+.ai-vtutor:hover{background:#24407c;color:#fff}
+.ai-vmodal{position:fixed;inset:0;background:rgba(4,8,20,.82);z-index:1200;display:flex;align-items:center;justify-content:center;padding:18px}
+.ai-vbox{background:#0f1c3c;border:1px solid #2c4170;border-radius:16px;max-width:420px;width:100%;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.ai-vbox video{display:block;width:100%;max-height:72vh;background:#000}
+.ai-vhead{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#eaf0fb;font-size:13px;font-weight:700}
+.ai-vclose{background:none;border:none;color:#9aa7c0;font-size:16px;cursor:pointer;padding:2px 6px}
+.ai-vclose:hover{color:#fff}
+.ai-vfoot{padding:10px 14px;font-size:11px;color:#bcd3f5}
+.ai-verr{padding:28px 16px;text-align:center;color:#bcd3f5;font-size:12.5px}

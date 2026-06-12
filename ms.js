@@ -12516,6 +12516,30 @@ function _updateCatStars() {
 // blocked at the goTo choke; aiRun double-guards. REVIEW BEFORE LAUNCH: hide dry-run toggle.
 let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, AI_ITEMS=null;
 
+// ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
+// Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
+const AI_VIDEOS = {
+  collectables_advert: '/static/videos/collectables-advert-howto.mp4'
+};
+function aiVideoTutor(id){
+  const src = AI_VIDEOS[id]; if(!src) return;
+  const f = AI_FNS.find(x=>x.id===id)||{};
+  const old = document.getElementById('ai-vmodal'); if(old) old.remove();
+  const m = document.createElement('div');
+  m.id='ai-vmodal'; m.className='ai-vmodal';
+  m.innerHTML =
+    '<div class="ai-vbox" role="dialog" aria-modal="true" aria-label="Video tutor">'+
+      '<div class="ai-vhead"><span>\u25B6 Video Tutor \u2014 '+(f.name||'How it works')+'</span>'+
+      '<button class="ai-vclose" aria-label="Close">\u2715</button></div>'+
+      '<video controls autoplay playsinline src="'+src+'"></video>'+
+      '<div class="ai-vfoot">How it works, step by step \u2014 and what your '+(f.price_t||5)+'T buys.</div>'+
+    '</div>';
+  m.addEventListener('click', e=>{ if(e.target===m || e.target.classList.contains('ai-vclose')) m.remove(); });
+  const v = m.querySelector('video');
+  v.addEventListener('error', ()=>{ v.outerHTML='<div class="ai-verr">Video tutor is being prepared \u2014 check back soon.</div>'; });
+  document.body.appendChild(m);
+}
+
 async function aiBoot(){
   if (DEMO_MODE) return;
   if (AI_FNS.length) return;
@@ -12529,7 +12553,7 @@ async function aiBoot(){
           <span class="ai-tag price">${f.has_glimpse?'Level 2 \u00b7 ':''}${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
         </div>
-        <h3><span class="ai-ico">${f.icon||'\u2728'}</span> ${f.name}</h3><p>${f.blurb}</p>
+        <h3><span class="ai-ico">${f.icon||'\u2728'}</span> <span class="ai-name">${f.name}</span>${AI_VIDEOS[f.id]?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}</h3><p>${f.blurb}</p>
       </div>`).join('');
   }catch(e){
     document.getElementById('ai-grid').innerHTML =
