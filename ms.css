@@ -1260,8 +1260,8 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 /* ── Video Tutor button + full-screen player (FEA v170/css v129) ── */
 .ai-card h3{display:flex;align-items:center;gap:6px}
 .ai-card h3 .ai-name{flex:1;min-width:0}
-.ai-vtutor{flex:none;margin-left:auto;background:#1b2a47;border:1px solid #3d5c9e;color:#9cc3ff;font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:4px 10px;border-radius:12px;cursor:pointer;white-space:nowrap}
-.ai-vtutor:hover{background:#24407c;color:#fff}
+.ai-vtutor{flex:none;margin-left:auto;background:#f0b429;border:none;color:#0c1a2e;font-size:10.5px;font-weight:800;letter-spacing:.3px;padding:4px 11px;border-radius:12px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.ai-vtutor:hover{background:#ffc94d;color:#0c1a2e}
 .ai-vmodal{position:fixed;inset:0;background:#000;z-index:1200;display:flex;padding:0}
 .ai-vbox{position:relative;background:#000;border:none;border-radius:0;max-width:none;width:100%;box-shadow:none;display:flex;flex-direction:column}
 .ai-vbox video{flex:1;width:100%;height:100%;max-height:none;object-fit:contain;background:#000}

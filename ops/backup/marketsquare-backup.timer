@@ -1,0 +1,11 @@
+[Unit]
+Description=Run MarketSquare backup nightly
+
+[Timer]
+# 02:17 server time every day, with a small randomized delay to avoid load spikes.
+OnCalendar=*-*-* 02:17:00
+RandomizedDelaySec=600
+Persistent=true        # if the server was off at 02:17, run on next boot
+
+[Install]
+WantedBy=timers.target

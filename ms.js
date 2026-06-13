@@ -12570,8 +12570,9 @@ async function aiBoot(){
           ${f.has_glimpse?'<span class="ai-tag free">FREE GLIMPSE</span>':''}
           <span class="ai-tag price">${f.has_glimpse?'Level 2 \u00b7 ':''}${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
+          ${AI_VIDEOS[f.id]?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}
         </div>
-        <h3><span class="ai-ico">${f.icon||'\u2728'}</span> <span class="ai-name">${f.name}</span>${AI_VIDEOS[f.id]?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}</h3><p>${f.blurb}</p>
+        <h3><span class="ai-ico">${f.icon||'\u2728'}</span> <span class="ai-name">${f.name}</span></h3><p>${f.blurb}</p>
       </div>`).join('');
   }catch(e){
     document.getElementById('ai-grid').innerHTML =

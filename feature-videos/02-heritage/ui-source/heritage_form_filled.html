@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'DejaVu Sans',Arial,sans-serif}
+body{background:#fff;width:430px;padding:16px 14px}
+h1{font-size:16.5px;color:#0b1530;font-weight:bold;margin-bottom:6px}
+.sub{font-size:11.5px;color:#27406b;line-height:1.45;margin-bottom:12px}
+label{display:block;font-size:11.5px;color:#101c38;margin:11px 0 6px;font-weight:500}
+.field{background:#0e1f44;border:1px solid #2c4170;border-radius:9px;width:100%;color:#8fa1c4}
+.input{height:40px;display:flex;align-items:center;padding:0 12px;font-size:12px}
+.ta{height:74px;padding:10px 12px;font-size:12px;line-height:1.5;white-space:pre-line}
+.row{display:flex;gap:10px}
+.row .col{flex:1}
+.chk{display:flex;align-items:center;margin-top:13px;font-size:11.5px;color:#101c38}
+.box{width:13px;height:13px;border:1.5px solid #555;border-radius:2.5px;background:#fff;margin-right:8px;flex:none}
+.chk i{color:#5a6a8a;font-size:10.5px;margin-left:5px}
+.example{margin-top:12px;background:#0e1f44;border:1px solid #2c4170;border-radius:10px;height:42px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#5b9cf5;font-weight:bold}
+.run{margin-top:12px;background:#eeb33b;border-radius:11px;height:50px;display:flex;align-items:center;justify-content:center;font-size:15.5px;color:#19140a;font-weight:bold}
+</style></head><body>
+<h1>Heritage Site Tour Planner</h1>
+<div class="sub">Pick heritage site(s) &mdash; AI plans the route, overnight stops, lunch options, excursions and a full cost estimate, with selectable options along the way.</div>
+<label>Heritage sites you want to visit (one per line)</label>
+<div class="field ta" id="f_sites" style="color:#eaf1fc">Kruger National Park
+Blyde River Canyon</div>
+<label>Add a waypoint / detour (optional)</label>
+<div class="field input" id="f_waypoint" style="color:#eaf1fc">Graskop</div>
+<div class="row">
+  <div class="col"><label>Travel dates</label><div class="field input" id="f_dates" style="color:#eaf1fc">12&ndash;18 Sep</div></div>
+  <div class="col"><label>Travellers</label><div class="field input" id="f_pax" style="color:#eaf1fc">2 adults</div></div>
+</div>
+<div class="row">
+  <div class="col"><label>Departing from</label><div class="field input" id="f_city" style="color:#eaf1fc">Cape Town</div></div>
+  <div class="col"><label>Budget</label><div class="field input" id="f_budget" style="color:#eaf1fc">R30,000</div></div>
+</div>
+<label>Currency</label>
+<div class="field input" id="f_cur" style="color:#eaf1fc">ZAR</div>
+<div class="chk"><span class="box"></span>Sample preview &mdash; $0, no Tuppence charged<i>(testing phase &middot; untick for a real run)</i></div>
+<div class="example">See an example (free)</div>
+<div class="run" id="f_run">Run &middot; holds 5T</div>
+</body></html>

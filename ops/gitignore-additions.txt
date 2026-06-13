@@ -1,0 +1,20 @@
+
+# ---- ops/gitignore-additions (appended 2026-06-13) ----
+# Big media belongs in the nightly backup + Object Storage, NOT in git.
+# Finished/rendered videos
+*.mp4
+*.mov
+*.MOV
+*.webm
+feature-videos/**/*.mp4
+feature-videos/**/clips/
+feature-videos/**/inserts/
+# Raw camera media (legal/evidence stays in backup, not the app repo)
+*.heic
+*.HEIC
+Kronberg/**/*.MOV
+Kronberg/**/*.heic
+# Backup secrets (never commit)
+ops/backup/backup.env
+*.env
+!ops/backup/backup.env.example

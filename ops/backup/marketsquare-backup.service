@@ -1,0 +1,16 @@
+[Unit]
+Description=MarketSquare nightly encrypted backup (restic, 2-tier)
+Wants=network-online.target
+After=network-online.target redis-server.service
+
+[Service]
+Type=oneshot
+# Runs as root so it can read the DB, media and configs.
+ExecStart=/usr/local/sbin/marketsquare-backup.sh /etc/marketsquare-backup.env
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+# Hardening (loosen if a path is blocked):
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
