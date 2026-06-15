@@ -26,7 +26,7 @@ The Trust Score is the server-side sum of three groups. Full specification in `T
 
 **Group 1 — Universal (max 30 pts, all categories)**
 
-- Government ID verified by MarketSquare: 15 pts
+- Government ID verified by TrustSquare: 15 pts
 - Complete seller profile (bio, suburb, active listing, description): 5 pts
 - Verified referrals: 1st = 5 pts · 3rd = cumulative 8 pts · 5th+ = cumulative 10 pts (capped)
 

@@ -10,7 +10,7 @@
 - Beat 1 (clip): "My subjects, my syllabus — CAPS Maths and Physical Science — and my exam dates."
 - Beat 2 (UI insert): form fill → Run · holds 3T.
 - Beat 3 (clip): "It knows the official topic weightings, my prescribed books, free past papers — and builds it week by week."
-- Beat 4 (UI insert): plan scroll — weightings chart, week-by-week schedule, past-paper links, MarketSquare tutors slotted where they help most.
+- Beat 4 (UI insert): plan scroll — weightings chart, week-by-week schedule, past-paper links, TrustSquare tutors slotted where they help most.
 
 ## 4 · PAYOFF (1 clip + 1 UI insert)
 - UI insert (~5s): week-by-week calendar with a tutor card pinned on week 3.

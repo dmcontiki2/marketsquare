@@ -1,6 +1,6 @@
-# MarketSquare Platform · Master Project Plan
+# TrustSquare Platform · Master Project Plan
 **Version 1.0 · 14 April 2026**
-*Covers: MarketSquare FEA · Admin Tool · BEA · AdvertAgent · CityLauncher*
+*Covers: TrustSquare FEA · Admin Tool · BEA · AdvertAgent · CityLauncher*
 *Owner: David · Update this file when a gate is passed or a phase shifts.*
 
 ---

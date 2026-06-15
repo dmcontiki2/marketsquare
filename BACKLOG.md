@@ -1,4 +1,4 @@
-# MarketSquare · Feature & Fix Backlog
+# TrustSquare · Feature & Fix Backlog
 *Updated S131 · 7 June 2026 — launch-blocker re-triage (see 🔴/🟧/🟨)*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 

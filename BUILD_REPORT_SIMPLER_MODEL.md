@@ -20,7 +20,7 @@ Interactive demo built and shown (photo + one sentence → drafted, **editable**
 ---
 
 ## Files changed (every one has a `*.bak-<timestamp>` beside it)
-`marketsquare.html` · `ms.js` · `bea_main.py` (MarketSquare) · `service/advert_agent.py` (AdvertAgent).
+`marketsquare.html` · `ms.js` · `bea_main.py` (TrustSquare) · `service/advert_agent.py` (AdvertAgent).
 
 ## Follow-ons — logged, not blocking
 - **FEA chip** to display the free glimpse ("Free Area Snapshot → Investor Dossier · 3T") in the app.

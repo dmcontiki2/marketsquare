@@ -1,4 +1,4 @@
-# MarketSquare — +Sell Flow Design Spec
+# TrustSquare — +Sell Flow Design Spec
 **Version 3.0 · 2 May 2026 · AI-guided flow with full Trust Score signal integration**
 *Architect agent sign-off required for changes*
 

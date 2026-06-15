@@ -1,4 +1,4 @@
-# MarketSquare · Local Market — Requirements & Architecture
+# TrustSquare · Local Market — Requirements & Architecture
 **Version 0.2 · 27 April 2026**
 *v0.2 — Trust Score model corrected: buyer-side filter only, never a bootstrap publish gate. v0.1 contained an internal contradiction between LM-08 (publish gate at score ≥ 30) and LM-14 (sub-40 listings still visible with seller warning). LM-14 was always the intended design — see updated LM-08, LM-15, LM-17, and §11.5 below.*
 
@@ -352,7 +352,7 @@ Fix: audit every reference to city name and city ID in `marketsquare.html` and e
 
 ## 11 · EULA Requirements
 
-The following clauses must appear in the MarketSquare End User Licence Agreement and Terms of Service. They must be displayed and explicitly re-confirmed by the seller when they first activate a Local Market listing.
+The following clauses must appear in the TrustSquare End User Licence Agreement and Terms of Service. They must be displayed and explicitly re-confirmed by the seller when they first activate a Local Market listing.
 
 ### 11.1 Tuppence as Non-Refundable Platform Currency
 
@@ -366,13 +366,13 @@ If a seller's Trust Score falls below 30 **due to upheld no-show or misconduct c
 
 ### 11.3 Repeat Offender Policy
 
-MarketSquare operates a three-strike escalation policy for Trust Score violations in the Local Market:
+TrustSquare operates a three-strike escalation policy for Trust Score violations in the Local Market:
 
 - **First suspension:** Listings suspended until Trust Score restored. No time limit.
 - **Second suspension within 90 days:** Mandatory 30-day cooling-off period. Local Market access remains suspended for the full 30 days regardless of Trust Score recovery.
 - **Third suspension:** Permanent ban from the Local Market. Other platform categories remain accessible. Tuppence balance remains accessible for use in other categories.
 
-MarketSquare reserves the right to apply these measures without prior notice where Trust Score thresholds are breached.
+TrustSquare reserves the right to apply these measures without prior notice where Trust Score thresholds are breached.
 
 ### 11.4 Buyer No-Show Accountability
 
@@ -384,7 +384,7 @@ In the Local Market category only, the seller's Tuppence balance is debited by 1
 
 ### 11.6 EULA Update Process
 
-These terms may be updated by MarketSquare with 14 days notice via in-app notification. Continued use of the Local Market after the notice period constitutes acceptance of the updated terms.
+These terms may be updated by TrustSquare with 14 days notice via in-app notification. Continued use of the Local Market after the notice period constitutes acceptance of the updated terms.
 
 ---
 

@@ -1,4 +1,4 @@
-# MarketSquare · My Seller Hub — Trust Score Guidance UI
+# TrustSquare · My Seller Hub — Trust Score Guidance UI
 **Version 0.1 · 27 April 2026**
 *Standalone UI requirement — applies to marketsquare_admin.html My Seller Hub screen.*
 
@@ -93,7 +93,7 @@ This group is **category-specific** — the items shown depend on the seller's d
 | Bachelor's Degree (NQF7) | +10 | ✅ / ❌ | Upload certificate (replaces diploma pts) |
 | Honours / Postgraduate (NQF8+) | +14 | ✅ / ❌ | Upload certificate (replaces bachelor pts) |
 | Subject specialisation certificate | +5 | ✅ / ❌ | Upload subject-specific cert or transcript |
-| Teaching experience 2–5 years | +5 | ✅ / ❌ | Upload CV — reviewed by MarketSquare |
+| Teaching experience 2–5 years | +5 | ✅ / ❌ | Upload CV — reviewed by TrustSquare |
 | Teaching experience 5+ years | +6 more | ✅ / ❌ | Upload CV |
 | Strong structured CV | +2 | ✅ / ❌ | Upload CV — assessed at onboarding |
 
@@ -151,7 +151,7 @@ This group is **category-specific** — the items shown depend on the seller's d
 | Credential | Points | Status | How to earn |
 |---|---|---|---|
 | Category specialisation declared | +4 | ✅ / ❌ | Write your collecting domain in your profile |
-| 1–4 successful transactions on MarketSquare | +8 | ✅ / ❌ | Complete introductions — system tracked |
+| 1–4 successful transactions on TrustSquare | +8 | ✅ / ❌ | Complete introductions — system tracked |
 | 5–14 successful transactions | +6 more | ✅ / ❌ | System tracked |
 | 15+ successful transactions | +6 more | ✅ / ❌ | System tracked |
 | Third-party authentication cert (PCGS, PSA, CGC, SANA etc.) | +8 | ✅ / ❌ | Upload per listed item — max 1 contribution |

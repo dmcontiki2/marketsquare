@@ -76,12 +76,12 @@ Built in step 2, stored per change in `CHANGE_REGISTER.md` and the matrix's **Te
 Step 3 does **not** list artifacts from memory. It walks **every class below** and greps each. A class is
 only "clear" when grep returns zero (or the surviving hits are logged as legitimate in `notes`).
 
-1. **Canon & governance** — `Solar_Council_Codex_v4_7.docx` (canonical) · `Canon_Addendum_*` · `PRINCIPLE_REQUIREMENTS.md` · the four `AGENT_BRIEFING.md` · `ORCHESTRATION_POLICY.md` · `AUTONOMY_LADDER.docx` · **all five `CLAUDE.md`** (root, MarketSquare, AdvertAgent, CityLauncher, Codices).
+1. **Canon & governance** — `Solar_Council_Codex_v4_7.docx` (canonical) · `Canon_Addendum_*` · `PRINCIPLE_REQUIREMENTS.md` · the four `AGENT_BRIEFING.md` · `ORCHESTRATION_POLICY.md` · `AUTONOMY_LADDER.docx` · **all five `CLAUDE.md`** (root, TrustSquare, AdvertAgent, CityLauncher, Codices).
 2. **IP / patent lineage** (`\Patents`) — `TrustSquare_IP_Brief_v5` (→ v6 if open) · `Patent_Strategy_v4` · `WhitePaper_v3_4` · Pre-Filing Consultation set · Claim Visuals. ⚠️ **`TrustSquare WhitePaper v2.docx` is PUBLISHED defensive disclosure — NEVER silently edit; supersede via Addendum** (see [[project_pricing_ai_canon]]).
 3. **BEA code** — `bea_main.py` · `ai_service_tiers.py` · `payments.py` · `tier_resolvers.py` · `value_resolvers` · `auth.py` · `database.py` · `storage.py` · `feature_flags.py` · `launch_redemption.py` · `smoke_test.py` + the `test_*.py`.
 4. **FEA / apps** — `marketsquare.html` (→ index.html) · `marketsquare_admin.html` (→ admin.html) · `ms.js` · `ms.css`.
 5. **AdvertAgent** — `AI_FUNCTIONS_SPEC.md` · `AdvertAgent_AI_Functions_Spec_v1_1.docx` · `AdvertAgent_Pricing_Model.xlsx` · `AdvertAgent_AI_CostModel.xlsx` · `AdvertAgent_AI_Cost_Brief.docx` · `AdvertAgent_AI_Value_Benchmark.docx` · `AdvertAgent_HMI_Spec` · `service/`.
-6. **Cost models (.xlsx)** — `Cost_Breakdown_GlobalLaunch.xlsx` (MarketSquare **and** the Codices copy) · the AdvertAgent xlsx pair · Codices cost variants. (Edited via openpyxl; remind David of the git commit per CLAUDE.md xlsx rule.)
+6. **Cost models (.xlsx)** — `Cost_Breakdown_GlobalLaunch.xlsx` (TrustSquare **and** the Codices copy) · the AdvertAgent xlsx pair · Codices cost variants. (Edited via openpyxl; remind David of the git commit per CLAUDE.md xlsx rule.)
 7. **Email templates** — all 16 in `\n8n\email_templates` + the CityLauncher `emailer/templates/*.html` + n8n synced copies.
 8. **Dashboards / ops pages** — `dashboard.html` · `orchestrator.html` · `citylauncher_ops.html` · `LAUNCH_READINESS_PLAN.html` · plus the server's `/dashboard/summary` parse of STATUS/CHANGELOG/BACKLOG/AUDIT_PROGRESS.
 9. **Session docs** — `STATUS.md` · `CHANGELOG.md` · `BACKLOG.md` · `AUDIT_PROGRESS.md` (per project).
@@ -170,7 +170,7 @@ Done = **matrix 100% + Sensor zero + smoke green + David sign-off + report filed
 
 ## Appendix · Per-change file set
 For `CHANGE-ID = CC-NNN`:
-- `CHANGE_REGISTER.md` → the ticket + term map (lives in MarketSquare).
+- `CHANGE_REGISTER.md` → the ticket + term map (lives in TrustSquare).
 - `MATRIX_CC-NNN.xlsx` → the traceability matrix (from the template).
 - `REPORT_CC-NNN.md` / `.docx` → the step-7 closeout.
 - Git tag `ccp/CC-NNN/baseline` at step 0.

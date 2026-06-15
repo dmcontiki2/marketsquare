@@ -1,4 +1,4 @@
-/* MarketSquare service worker — handles Web Push for the Wishlist Feed.
+/* TrustSquare service worker — handles Web Push for the Wishlist Feed.
  * Served from site root (/service-worker.js) so its scope covers the whole app.
  *
  * Payload contract (set in bea_main._send_push_for_match):
@@ -17,7 +17,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'MarketSquare', body: 'New match in your wishlist' };
+  let data = { title: 'TrustSquare', body: 'New match in your wishlist' };
   if (event.data) {
     try { data = event.data.json(); }
     catch (_e) { try { data.body = event.data.text(); } catch (_e2) {} }
@@ -30,7 +30,7 @@ self.addEventListener('push', (event) => {
     renotify: false,
     data: { match_id: data.match_id || null },
   };
-  event.waitUntil(self.registration.showNotification(data.title || 'MarketSquare', opts));
+  event.waitUntil(self.registration.showNotification(data.title || 'TrustSquare', opts));
 });
 
 self.addEventListener('notificationclick', (event) => {

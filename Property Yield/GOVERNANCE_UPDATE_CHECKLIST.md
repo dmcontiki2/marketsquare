@@ -109,7 +109,7 @@ This checklist is the single reference for which governance documents require up
 
 ---
 
-### 7. CLAUDE.md (MarketSquare)
+### 7. CLAUDE.md (TrustSquare)
 **Location:** `C:\Users\David\Projects\MarketSquare\`  
 **Current version:** Not versioned
 
@@ -134,7 +134,7 @@ This checklist is the single reference for which governance documents require up
 
 ---
 
-### 9. CHANGELOG.md (MarketSquare)
+### 9. CHANGELOG.md (TrustSquare)
 **Location:** `C:\Users\David\Projects\MarketSquare\`  
 **Current version:** Append-only log
 

@@ -1,4 +1,4 @@
-# MarketSquare — Trust Score Criteria Framework
+# TrustSquare — Trust Score Criteria Framework
 **Design Specification v1.0 · 15 April 2026**
 **Governed by Principle A5 · Council review required to change tier thresholds**
 
@@ -12,7 +12,7 @@ The Trust Score (0–100) is the server-side sum of three signal groups. No sign
 |---|---|---|
 | **Universal** | Identity, profile completeness, referrals — applies to every seller | 30 |
 | **Category Credentials** | Qualifications, registrations, and professional standing per category | 40 |
-| **Platform Track Record** | Demonstrated performance on MarketSquare | 30 |
+| **Platform Track Record** | Demonstrated performance on TrustSquare | 30 |
 
 **Total maximum: 100 pts**
 
@@ -42,7 +42,7 @@ The Trust Score (0–100) is the server-side sum of three signal groups. No sign
 
 | Signal | Pts | Verification |
 |---|---|---|
-| Government-issued ID verified by MarketSquare | 15 | Manual review — David/ops checks RSA ID or passport against uploaded document |
+| Government-issued ID verified by TrustSquare | 15 | Manual review — David/ops checks RSA ID or passport against uploaded document |
 
 One-off. Score held if ID is not renewed — only removed on confirmed fraud finding.
 
@@ -54,7 +54,7 @@ One-off. Score held if ID is not renewed — only removed on confirmed fraud fin
 
 ### U3 · Verified Referrals
 
-Referrals submitted via a structured platform referral link tied to the seller's profile. MarketSquare validates the referrer is a registered user who completed a real introduction to the seller, or a verified external contact with a confirmed identity.
+Referrals submitted via a structured platform referral link tied to the seller's profile. TrustSquare validates the referrer is a registered user who completed a real introduction to the seller, or a verified external contact with a confirmed identity.
 
 | Signal | Pts | Notes |
 |---|---|---|
@@ -113,7 +113,7 @@ Referrals submitted via a structured platform referral link tied to the seller's
 | Highest qualification: Bachelor's Degree (NQF7) | 10 | *Replaces Certificate/Diploma pts — not cumulative* |
 | Highest qualification: Honours / Postgraduate (NQF8+) | 14 | *Replaces Bachelor's pts — not cumulative* |
 | Subject specialisation evidenced (subject-specific cert or transcript) | 5 | Upload reviewed |
-| Teaching / tutoring experience: 2–5 years | 5 | CV reviewed by MarketSquare |
+| Teaching / tutoring experience: 2–5 years | 5 | CV reviewed by TrustSquare |
 | Teaching / tutoring experience: 5+ years | +6 (cumulative 11) | CV reviewed |
 | Strong CV: structured, verifiable, employment dates with no unexplained gaps | 2 | Quality assessed at onboarding |
 | **Max** | **40** | *Natural cap: SACE + best qualification + experience + specialisation + CV = 40* |
@@ -206,7 +206,7 @@ Adventures has two sub-classes: **Experiences** (guided activities) and **Accomm
 | Signal | Pts | Verification |
 |---|---|---|
 | Category specialisation declared (specific collecting domain with written description) | 4 | Profile field reviewed at onboarding |
-| Items successfully transacted on MarketSquare: 1–4 | 8 | BEA system |
+| Items successfully transacted on TrustSquare: 1–4 | 8 | BEA system |
 | Items successfully transacted: 5–14 | +6 (cumulative 14) | BEA system |
 | Items successfully transacted: 15+ | +6 (cumulative 20) | BEA system |
 | Third-party authentication certificate for a listed item (SANA, PCGS, PSA, CGC, etc.) | 8 | Certificate uploaded per item — counted once per listing, max 1 contribution |

@@ -33,7 +33,7 @@ The Adventures category (subcategories: Accommodation and Experiences) introduce
 
 **Decision:** 1 Tuppence ($2) applies to Adventures introductions. No Adventures-specific pricing tier. This is final and intentional.
 
-**Why it matters:** This was an open question because a $2 intro fee on a lodge booking at R5,000/night could seem incongruously cheap. The decision is that the model's disruption to commission-based booking platforms (15–25% per booking) is the value proposition — MarketSquare earns from volume across all categories, not from a percentage of any single transaction.
+**Why it matters:** This was an open question because a $2 intro fee on a lodge booking at R5,000/night could seem incongruously cheap. The decision is that the model's disruption to commission-based booking platforms (15–25% per booking) is the value proposition — TrustSquare earns from volume across all categories, not from a percentage of any single transaction.
 
 **Where this must be confirmed:**
 
@@ -90,7 +90,7 @@ The Adventures category (subcategories: Accommodation and Experiences) introduce
 
 **Decision (18 Apr 2026):** Adventures sellers who upload verifiable certification earn a **Trust Score bonus** that increases their listing visibility. This is a new positive Trust Score pathway — the first category where credentials actively lift a seller's score rather than simply protecting it from decline.
 
-**Why:** Adventures operators deal in physical safety and quality assurance in a way that other categories do not. A certified mountain guide, a TGCSA-graded lodge, or a SATSA-registered tour operator represents a meaningfully lower risk to a buyer than an uncredentialled equivalent. Rewarding certification with visibility aligns the platform's incentives with buyer confidence — and gives MarketSquare a differentiated trust signal that OTA platforms do not surface in the same way.
+**Why:** Adventures operators deal in physical safety and quality assurance in a way that other categories do not. A certified mountain guide, a TGCSA-graded lodge, or a SATSA-registered tour operator represents a meaningfully lower risk to a buyer than an uncredentialled equivalent. Rewarding certification with visibility aligns the platform's incentives with buyer confidence — and gives TrustSquare a differentiated trust signal that OTA platforms do not surface in the same way.
 
 **Certification types and proposed Trust Score bonus values** (exact values to be confirmed in Codex):
 
@@ -157,7 +157,7 @@ Go Live → POST /listings → BEA creates record
 ```
 
 **EULA content must cover (at minimum for Adventures):**
-- Platform usage rights for uploaded photos and media — MarketSquare may display, cache, and use listing photos for platform promotion
+- Platform usage rights for uploaded photos and media — TrustSquare may display, cache, and use listing photos for platform promotion
 - Seller responsibility for accuracy of certification claims
 - Introduction model terms (Soft Queue, 1T fee, 48hr window)
 - No penalty for declining (Adventures exception)

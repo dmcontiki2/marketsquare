@@ -1,5 +1,5 @@
 """
-payments.py — Paystack integration for MarketSquare / TrustSquare (PTY) Ltd
+payments.py — Paystack integration for TrustSquare / TrustSquare (PTY) Ltd
 -----------------------------------------------------------------------------
 Reads PAYSTACK_SECRET_KEY from the server's .env file.
 

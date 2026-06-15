@@ -1,12 +1,12 @@
-# MarketSquare · Master Agent Briefing
+# TrustSquare · Master Agent Briefing
 **Version 1.8 · 17 May 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
 ---
 
-## 1 · What MarketSquare Is
+## 1 · What TrustSquare Is
 
-MarketSquare is a **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers. It runs as a single-page web app deployed at **trustsquare.co**.
+TrustSquare is a **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers. It runs as a single-page web app deployed at **trustsquare.co**.
 
 - No commission. Revenue comes from Tuppence introduction fees + buyer subscriptions only.
 - Buyer and seller identities stay hidden until **both parties accept** an introduction.
@@ -178,7 +178,7 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 | Server | Hetzner **CPX32** · 178.104.73.239 · Ubuntu 24.04 · 4 vCPU · 8 GB RAM · 160 GB NVMe · €15.49/month *(upgraded from CPX22 on 25 May 2026)* | ✅ Live |
 | SSH key | ed25519 · ~/.ssh/id_ed25519 (added 6 April 2026) | ✅ Active |
 | Domain | trustsquare.co · Cloudflare DNS + DDoS | ✅ Active |
-| SSL | Let's Encrypt · expires 21 June 2026 | ✅ Secured |
+| SSL | Cloudflare Origin CA · valid to 10 June 2041 (no renewal) · Let's Encrypt retained as fallback | ✅ Secured |
 | nginx | /var/www/marketsquare/ · 20MB upload limit | ✅ Running |
 | FastAPI BEA | systemd · auto-restart · version via GET /health | ✅ Running |
 | SQLite | WAL mode · 9 tables (5 core + 4 geo) · 7 indexes · `listing_versions` added Session 20 | ✅ Active |
@@ -266,4 +266,4 @@ City selection uses a **search-filter UI** — there is no Add City form and no 
 
 *Updated v1.6: Session 21 — trust_score live from DB (no longer hardcoded to 40); create_listing now saves all 21 fields including structured category data; smart + Sell routing with account picker; price sanitisation preventing AI-suggested text corruption; 20 demo listings seeded under dmcontiki2@gmail.com (10 tutors + 10 services, trust 48–92); category shopfront photos (Property / Tutors / Services) on home screen tiles and as listing card fallbacks. REMOVE /dev/credit + Dev Tools nav before public launch.*
 
-*Updated v1.7: Session 36 — Declaration system: `POST /users/{email}/declare` awards 80% of signal points immediately on free-text declaration; evidence upload awards remaining 20%. `user_declarations` DB table added. Local Market 40-pt base score (Established tier on signup). Stacking signal chains (`_DOC_TYPE_SIGNAL_CHAINS`). Auto-earn for all non-ID docs. AI upload comment (Haiku 4.5). Live Trust Score refresh after declaration or upload. Declaration cards rendered in buyer app Doc Hub. Four LM declarable signals: `assoc_role` (12/3 pts), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1). REMOVE /dev/credit + Dev Tools nav before public launch.*
+*Updated v1.7: Session 36 — Declaration system: `POST /users/{email}/declare` awards 80% of signal points immediately on free-text declaration; evidence upload awards remaining 20%. `user_declarations` DB table added. Local Market 40-pt base score (Established tier on signup). Stacking signal chains (`_DOC_TYPE_SIGNAL_CHAINS`). Auto-earn for all non-ID docs. AI upload comment (Haiku 4.5). Live Trust Score refresh after declaration or upload. Declaration cards rendered in buyer app Doc Hub. Four LM declarable signals: `assoc_role` (12/3 pts), `provincial_role` (8/2), `prof_body_2` (5/1), `experience_5yr` (2/1).

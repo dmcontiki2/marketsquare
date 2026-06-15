@@ -1,4 +1,4 @@
-# MarketSquare · Wishlist Feed — Requirements & Architecture
+# TrustSquare · Wishlist Feed — Requirements & Architecture
 **Version 0.2 · 26 April 2026**
 *Open questions resolved. Ready for implementation review.*
 
@@ -6,9 +6,9 @@
 
 ## 1 · Vision
 
-Transform MarketSquare from a **pull marketplace** (buyer goes looking) into a **push marketplace** (platform hunts on the buyer's behalf).
+Transform TrustSquare from a **pull marketplace** (buyer goes looking) into a **push marketplace** (platform hunts on the buyer's behalf).
 
-A buyer's search history and browsing behaviour passively builds a personal wishlist. The moment a matching listing appears anywhere on the platform, it surfaces in a **live scroll feed** on the bottom half of the MarketSquare home screen — and pings the buyer's connected wearable device.
+A buyer's search history and browsing behaviour passively builds a personal wishlist. The moment a matching listing appears anywhere on the platform, it surfaces in a **live scroll feed** on the bottom half of the TrustSquare home screen — and pings the buyer's connected wearable device.
 
 The feature requires zero extra setup from the buyer. Their intent is already captured in how they use the app.
 
@@ -123,7 +123,7 @@ When a visitor opens the app for the first time with no wishlist signals yet, th
 
 ### 3.6 Scroll Feed (Bottom Half — Home Screen)
 
-**PR-26** — The bottom half of the MarketSquare home screen is reserved for the wishlist scroll feed. It renders as a continuous horizontal scroll of matched listing cards (visual, image-forward).
+**PR-26** — The bottom half of the TrustSquare home screen is reserved for the wishlist scroll feed. It renders as a continuous horizontal scroll of matched listing cards (visual, image-forward).
 
 **PR-27** — **Empty state (new visitor / no signals):** Runs a curated showcase scroll of the most aspirational listings on the platform — gold coins, Rolex watches, rare collectors cards, high-value Adventures. Editorially curated by David. Purpose: wow factor and first impression. Transitions automatically to personalised feed once buyer has 3+ wishlist signals.
 
@@ -347,7 +347,7 @@ Seller sees: "shown to N matched buyers" — no buyer identity
 - Banking details collected at onboarding are stored encrypted and used only for Paystack payment flows — never shared, never used for profiling
 - Wishlist data is excluded from all analytics, data exports, and third-party integrations
 - POPIA compliance: data minimisation, purpose limitation, deletion-on-request (expires_at + manual delete)
-- Principle: *"Your wishlist never leaves MarketSquare."* This statement must appear in the onboarding flow and settings screen.
+- Principle: *"Your wishlist never leaves TrustSquare."* This statement must appear in the onboarding flow and settings screen.
 
 ---
 

@@ -9,7 +9,7 @@
 ## 2 · STING → 3 · WALKTHROUGH (~26s)
 - Beat 1 (clip): "City, vibe, budget — I said outdoors-y, two of us, under a thousand rand."
 - Beat 2 (UI insert): form fill → Run · holds 5T.
-- Beat 3 (clip): "A full weekend, built from real MarketSquare Adventures listings — every stop is one introduction away."
+- Beat 3 (clip): "A full weekend, built from real TrustSquare Adventures listings — every stop is one introduction away."
 - Beat 4 (UI insert): itinerary scroll — Sat hike, market lunch, sunset paddle, Sun brunch + times and costs.
 
 ## 4 · PAYOFF (1 clip + 1 UI insert)

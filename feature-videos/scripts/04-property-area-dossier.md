@@ -10,7 +10,7 @@
 - Beat 1 (clip, she presents): "I paste the listing, my work address for the commute, and what matters to us — schools and fibre."
 - Beat 2 (UI insert): form fill → Run · holds 3T.
 - Beat 3 (clip): "Area comps, rental yield, school ratings, commute times, utilities — the full picture before we even request an introduction."
-- Beat 4 (UI insert): dossier scroll + "matching MarketSquare listings" section.
+- Beat 4 (UI insert): dossier scroll + "matching TrustSquare listings" section.
 
 ## 4 · PAYOFF (1 clip + 1 UI insert)
 - UI insert (~5s): comps table + two matched listings cards.

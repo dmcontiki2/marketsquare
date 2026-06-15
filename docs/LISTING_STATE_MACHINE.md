@@ -1,11 +1,11 @@
-# MarketSquare — Listing State Machine
+# TrustSquare — Listing State Machine
 **Version 1.2 · 25 May 2026 · Locked design — do not change without Architect agent sign-off**
 
 ---
 
 ## Overview
 
-Every listing on MarketSquare exists in exactly one of seven states at any point in time.
+Every listing on TrustSquare exists in exactly one of seven states at any point in time.
 State transitions are either seller-initiated, system-triggered, or admin/legal-initiated.
 Buyers only ever interact with listings in the **LIVE** state.
 

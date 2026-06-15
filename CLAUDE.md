@@ -1,4 +1,4 @@
-# MarketSquare — Project Intelligence
+# TrustSquare — Project Intelligence
 
 ## What this project is
 A **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers via a Tuppence introduction currency. Deployed at **trustsquare.co**. Core files:

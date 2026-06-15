@@ -279,3 +279,19 @@ Tools: ruff 0.15 (F,E9,B) · vulture 2.16 (>=80%) · pylint 4.0 cyclic-import ·
 - [GUIDED-PUBLISH-1 · HIGH · DONE · S138] Publish endpoint admin-key Depends dropped (internal email-auth complete); hub DRAFT badge + Publish button (ms.js v171); sobGoLive key removed; auth matrix tested live; correction logged (publish wiring existed in sobGoLive — grep artifact). 
 - [SELLERHUB-STATUS-1 · MED · DONE · S138] Hub status now derived from listing_status; drafts no longer masquerade as Active (the mislabel that hid David's pending publish step).
 - [WONDER-AUTOLINK-CAT-1 · DONE · S138] Auto-link allowlist Property+Adventures (David ruling); 27 listings / 135 auto-links cleaned by flag, manual picks preserved.
+
+
+## Monday deep static scan — 2026-06-15 (daily-loop sensor · merged loop v1.2)
+
+Read-only scan (ruff 0.15.17 F/E9/B + vulture 2.16 + pylint 4.0.6 cyclic-import over bea_main/auth/database/storage/payments; eslint 9.39.4 over ms.js + inline JS of marketsquare.html & marketsquare_admin.html). NO code changed, NO deploy. Delta vs 2026-06-08 scan.
+
+**Prior-open ALL closed (6):** SCAN-13/14/15/16 shipped S137 (12 Jun); HTML-1 (`currentView`) + HTML-2 (`editingIdx`/`photoFile`/`tier`/`ur`/`status`) dead locals removed — eslint no longer flags any of them. Static-scan open set was empty at start of this scan.
+
+**NEW finding (1):**
+- [SCAN-17 · LOW · OPEN] `bea_main.py:3452` + `bea_main.py:8980` — ruff F811: function name `admin_ai_spend_summary` is defined twice. Line 3452 is the route `GET /admin/ai-spend/summary` (read-only daily/7-day spend summary added by the 12-Jun cost-sweep / BASELINE-12JUN-1); line 8980 is the older `GET /admin/ai-spend` (Session 90 monthly summary). The two routes have **distinct paths**, so both register and serve — verified on live: `/admin/ai-spend` and `/admin/ai-spend/summary` each return HTTP 401 (auth-gated, not 404). Impact is cosmetic: the module-level name resolves to the 2nd def (no code calls it directly — only the decorators use the functions) and FastAPI emits a duplicate OpenAPI `operation_id`. **Fix:** rename the newer handler at 3452 (e.g. `admin_ai_spend_daily_summary`); no path or logic change. **Gate:** sits in the AI-spend / cost-ceiling reporting area → triage default-to-stage (Gate 2 vicinity, §6.1) despite being behaviour-neutral.
+
+**False positives re-confirmed (IGNORE):** FP-family (vulture `family` ×2 — getaddrinfo wrapper signature params); FP-tshLoad (eslint no-func-assign — intentional wrapper decorator); FP-B008 (ruff B008 ×7 — FastAPI `File()`/`Depends()` in defaults idiom). **NEW FP:** FP-loadDashboard (`ms.js:4806` eslint no-undef — call is `typeof`-guarded `if (typeof loadDashboard==='function') loadDashboard()`; safe optional call, not a bug). The ~460 eslint no-unused-vars warnings are noise as a class (onclick handlers eslint can't see, ms-data globals used cross-file, intentional `_`, cosmetic catch(e)).
+
+**Health at scan:** BEA ok v1.3.1, smoke 39/39 (0 fail), pylint 10.00/10, 0 cyclic imports, 0 F821, today AI spend $0.00/$100 ceiling, real-token 100%.
+
+**Drift noted (not a static-scan item; FILE → Orchestrator):** [BRAND-DRIFT-1 · LOW] working-tree `ms.js` (md5 aa0de9…, brand "TrustSquare" in `_EULA_HTML` + AI-estimate caption) differs from both git HEAD (md5 b361c7…, "MarketSquare", `?v=172`) and live (md5 31a614…, "MarketSquare", `?v=173`) — i.e. an UNCOMMITTED, UNDEPLOYED EULA brand-fix sits in the tree while live still shows the old "MarketSquare" brand in the EULA modal. `_EULA_HTML` is Gate-1 (EULA copy) → never loop-touched; attended commit+deploy. Compounds the standing FEA-DRIFT baseline-refresh-owed (live v173/css v130 vs baseline v168/v127).

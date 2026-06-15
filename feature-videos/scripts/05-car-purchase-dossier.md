@@ -3,7 +3,7 @@
 **Cast:** BUYER = man early 30s, work shirt. MATE = friend leaning on doorframe. Setting: garage/driveway.
 
 ## 1 · HOOK (8s)
-- BUYER: "Found a 2019 Hilux on MarketSquare. But is the price right? And what actually goes wrong with these?"
+- BUYER: "Found a 2019 Hilux on TrustSquare. But is the price right? And what actually goes wrong with these?"
 - MATE: "TrustSquare Car Dossier — before you even meet the seller."
 
 ## 2 · STING → 3 · WALKTHROUGH (~28s)

@@ -1,5 +1,5 @@
 # PRINCIPLE_REQUIREMENTS.md
-**Solar Council · MarketSquare Platform**
+**Solar Council · TrustSquare Platform**
 Version 1.3 — DRAFT (CCP CC-001 + CC-002) · 10 June 2026 · ⚠ NOT in force until David approves; the deployed v1.2 (17 May) remains controlling. NOTE: the AdvertAgent/CityLauncher/Codices copies are still v1.1 (12 Apr) — the four copies have diverged; after approval copy THIS file to all four folders.
 Source of truth: Solar_Council_Codex_v4_8_DRAFT.docx (v4_7 + Canon Addendum 1 rev 2 until landed) · AGENT_BRIEFING.md v1.8-staged · Session 61 infrastructure decisions
 
@@ -14,7 +14,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 ### A1 · Tuppence is the only transaction currency
 - 1 Tuppence (1T) = USD $2. Fixed. Not configurable.
 - The requester pays (the service consumer — the buyer, for introductions). Tuppence follows the HOLD (CC-001): committed on request → burned on delivery (seller accepts / AI result delivered) → released in full on decline, 48-h expiry, or AI failure. A release frees an un-spent hold — it is never a refund.
-- Seller earns zero commission. MarketSquare earns from intro fees + subscriptions only.
+- Seller earns zero commission. TrustSquare earns from intro fees + subscriptions only.
 - Applies to: FEA wallet · BEA /intros/accept · Paystack flow · all pricing displays.
 
 ### A2 · Anonymity is Mode B — non-negotiable
@@ -238,10 +238,10 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 
 ## PART G · Advert Agent Project Principles (New — April 2026)
 
-*The Advert Agent is a new, separate project. It is a paid-subscription AI support function embedded inside the MarketSquare app. Core principles are established here as the project foundation. Full AGENT_BRIEFING.md to be written at project kickoff.*
+*The Advert Agent is a new, separate project. It is a paid-subscription AI support function embedded inside the TrustSquare app. Core principles are established here as the project foundation. Full AGENT_BRIEFING.md to be written at project kickoff.*
 
 ### G1 · The Advert Agent is a seller-facing paid subscription feature
-- It operates inside the MarketSquare app (FEA) as a support/assistant function for sellers.
+- It operates inside the TrustSquare app (FEA) as a support/assistant function for sellers.
 - It is NOT a buyer-facing feature. It is NOT a general AI chatbot.
 - Revenue model: paid subscription (tier and pricing TBD at kickoff).
 
@@ -253,7 +253,7 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 ### G3 · The Advert Agent is a separate Cowork project
 - Folder: `C:\Users\David\Projects\AdvertAgent\`
 - It has its own AGENT_BRIEFING.md, STATUS.md, CHANGELOG.md, and CLAUDE.md.
-- It does not share files with MarketSquare or CityLauncher projects.
+- It does not share files with TrustSquare or CityLauncher projects.
 
 ### G4 · Architecture TBD at kickoff — principles only locked here
 - Likely approach: Claude API (Sonnet 4.6) called from BEA on seller request.

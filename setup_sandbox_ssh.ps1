@@ -1,5 +1,5 @@
 # setup_sandbox_ssh.ps1
-# Run this ONCE from PowerShell to copy your SSH key into the MarketSquare
+# Run this ONCE from PowerShell to copy your SSH key into the TrustSquare
 # project folder so the Claude sandbox can use it in every future session.
 #
 # Usage:

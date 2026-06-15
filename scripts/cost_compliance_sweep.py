@@ -35,7 +35,7 @@ SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
              ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
 SKIP_FILE = re.compile(r"\.bak[-.]|\.bak$|~\$|cost_compliance_sweep\.py$")
 SCAN_EXT = {".py", ".js", ".html", ".json", ".sh", ".bat"}
-REPOS = ["MarketSquare", "AdvertAgent", "CityLauncher", "SellerScraper",
+REPOS = ["TrustSquare", "AdvertAgent", "CityLauncher", "SellerScraper",
          "Auction", "LaunchCadence", "Codices"]
 
 CRIT, WARN, INFO, OK = "CRITICAL", "WARN", "INFO", "OK"
@@ -72,7 +72,7 @@ def inventory(root: Path):
 # ── 2 · wrapper compliance: every Anthropic call wrapped (P2) ────────────────
 def wrapper_compliance(root: Path):
     findings = []
-    targets = [root / "MarketSquare" / "bea_main.py",
+    targets = [root / "TrustSquare" / "bea_main.py",
                root / "AdvertAgent" / "service" / "advert_agent.py"]
     for path in targets:
         if not path.exists():
@@ -157,7 +157,7 @@ def model_discipline(root: Path):
 # ── 4 · paid provider flags must be OFF until contracted (P3) ────────────────
 def provider_flags(root: Path):
     findings = []
-    tiers = root / "MarketSquare" / "ai_service_tiers.py"
+    tiers = root / "TrustSquare" / "ai_service_tiers.py"
     if tiers.exists():
         m = re.search(r"DEFAULT_PROVIDERS\s*:\s*dict\[str,\s*bool\]\s*=\s*\{(.*?)\n\}", read(tiers), re.S)
         if m:
@@ -169,7 +169,7 @@ def provider_flags(root: Path):
                     findings.append((CRIT, f"ai_service_tiers.py: paid provider `{name}` is ON — contract + B7 ceiling + CHANGELOG line required"))
             if not findings:
                 findings.append((OK, "ai_service_tiers.py: all paid providers OFF"))
-    ff = root / "MarketSquare" / "feature_flags.json"
+    ff = root / "TrustSquare" / "feature_flags.json"
     if ff.exists():
         try:
             flags = json.loads(read(ff))
@@ -191,7 +191,7 @@ def provider_flags(root: Path):
 # ── 5 · BEFORE-YOU-TEST cost surfaces (the repeated-test-runs guard) ─────────
 def test_surfaces(root: Path):
     out = []
-    ms_html = read(root / "MarketSquare" / "marketsquare.html")
+    ms_html = read(root / "TrustSquare" / "marketsquare.html")
     if 'id="ai-dryrun"' in ms_html:
         checked = bool(re.search(r'id="ai-dryrun"[^>]*checked', ms_html))
         out.append((OK if checked else CRIT,
@@ -212,7 +212,7 @@ def test_surfaces(root: Path):
 # ── 6 · cost-workbook drift (P2) ─────────────────────────────────────────────
 def workbook_drift(root: Path):
     findings = []
-    ms = root / "MarketSquare"
+    ms = root / "TrustSquare"
     wb_path = ms / "Cost_Breakdown_GlobalLaunch.xlsx"
     bea = read(ms / "bea_main.py")
     code_tiers = dict(re.findall(r'"(\w+)":\s*\{"amount_rands[^}]*"usd":\s*(\d+)', bea))
@@ -308,7 +308,7 @@ def main():
         lines.append(f"- **{label}** ({len(locs)}): " + ", ".join(locs[:12]) + (" …" if len(locs) > 12 else ""))
     lines.append(f"\n**Totals:** {counts[CRIT]} critical · {counts[WARN]} warnings · {counts[OK]} ok · {counts[INFO]} info\n")
 
-    rec = root / "MarketSquare" / "Records"
+    rec = root / "TrustSquare" / "Records"
     rec.mkdir(exist_ok=True)
     out_path = rec / f"COST_SWEEP_{today}.md"
     out_path.write_text("\n".join(lines), encoding="utf-8")

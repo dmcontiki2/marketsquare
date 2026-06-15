@@ -1,4 +1,4 @@
-# MarketSquare — Seller Onboarding Credential Checklist
+# TrustSquare — Seller Onboarding Credential Checklist
 **Manual onboarding reference · 15 April 2026**
 *Use this during seller onboarding to know exactly which documents to request, upload, and verify for each category. Trust Score points are only awarded after manual review and approval.*
 
