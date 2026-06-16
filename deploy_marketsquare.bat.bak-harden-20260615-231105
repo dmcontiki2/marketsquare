@@ -106,24 +106,6 @@ echo  Done.
 echo.
 
 :: ── Step 1: Deploy buyer app ──────────────────────────────
-:: -- assets FIRST: ms.js + ms.css MUST land before the HTML that references ?v=N
-:: -- otherwise Cloudflare pins the OLD js to the NEW version key (the 15-Jun cache bug).
-echo  [1a/7] Uploading static assets FIRST - ms.js and ms.css...
-scp "%PROJECT%\ms.js" %SERVER%:%REMOTE%/static/ms.js
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for ms.js. Check SSH connection.
-    pause
-    exit /b 1
-)
-scp "%PROJECT%\ms.css" %SERVER%:%REMOTE%/static/ms.css
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for ms.css. Check SSH connection.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
 echo  [1/6] Deploying buyer app (marketsquare.html -^> index.html)...
 scp "%PROJECT%\marketsquare.html" %SERVER%:%REMOTE%/index.html
 if %errorlevel% neq 0 (
@@ -288,25 +270,10 @@ ssh %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: 
 
 ssh %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
 
-ssh %SERVER% "curl -s http://localhost:8000/health | grep -qE 'status.*ok' && echo   [OK] BEA /health reports status ok || echo   [FAIL] BEA /health not ok - check service restart"
+ssh %SERVER% "curl -s http://localhost:8000/health | grep -q '1.3.0' && echo   [OK] BEA reports v1.3.0 || echo   [FAIL] BEA version mismatch - check service restart"
 
 ssh %SERVER% "test -f %REMOTE%/static/ms.js && echo   [OK] static/ms.js present on server || echo   [FAIL] static/ms.js missing - redeploy needed"
 ssh %SERVER% "grep -oE 'ms\.js\?v=[0-9]+' %REMOTE%/index.html | head -1 | sed 's/^/   [INFO] served buyer app references /'"
-
-:: -- Step 6b: CDN content check - catch stale Cloudflare BEFORE the browser does
-echo.
-echo  [6b] Verifying the LIVE ms.js through Cloudflare matches your build...
-powershell -NoProfile -Command ^
-  "$ErrorActionPreference='SilentlyContinue';" ^
-  "$html = Get-Content -Raw -LiteralPath '%PROJECT%\marketsquare.html';" ^
-  "$jsv = [regex]::Match($html, 'ms\.js\?v=(\d+)').Groups[1].Value;" ^
-  "$local = (Get-FileHash -Algorithm MD5 -LiteralPath '%PROJECT%\ms.js').Hash;" ^
-  "$tmp = Join-Path $env:TEMP ('ms_live_' + $jsv + '.js');" ^
-  "Remove-Item $tmp -ErrorAction SilentlyContinue;" ^
-  "try { Invoke-WebRequest -UseBasicParsing -Headers @{ 'Accept-Encoding' = 'identity' } -Uri ('https://trustsquare.co/static/ms.js?v=' + $jsv) -OutFile $tmp } catch {};" ^
-  "if (Test-Path $tmp) { $live = (Get-FileHash -Algorithm MD5 -LiteralPath $tmp).Hash } else { $live = 'FETCH_FAILED' };" ^
-  "if ($local -eq $live) { Write-Host ('   [OK] LIVE ms.js matches your build  md5=' + $local.Substring(0,8)) } else { Write-Host ('   [FAIL] LIVE ms.js does NOT match  local=' + $local.Substring(0,8) + '  live=' + $live); Write-Host '          Cloudflare is serving stale - just re-run this script; the auto ?v bump fixes it.' }"
-echo.
 
 echo.
 echo  ============================================================

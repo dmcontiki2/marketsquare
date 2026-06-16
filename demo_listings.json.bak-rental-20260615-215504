@@ -155,9 +155,7 @@
    "listing_lat": -25.7887,
    "listing_lng": 28.2498,
    "paused": false,
-   "queueCount": 4,
-   "rental_status": "occupied",
-   "available_from": null
+   "queueCount": 4
   },
   {
    "id": "demo_prop_2",
@@ -284,9 +282,7 @@
    "listing_lat": -25.8215,
    "listing_lng": 28.2312,
    "paused": false,
-   "queueCount": 2,
-   "rental_status": "occupied",
-   "available_from": "2026-08-15"
+   "queueCount": 2
   },
   {
    "id": "demo_prop_3",
@@ -405,9 +401,7 @@
    "listing_lat": -25.7833,
    "listing_lng": 28.2738,
    "paused": false,
-   "queueCount": 5,
-   "rental_status": "available",
-   "available_from": "2026-08-01"
+   "queueCount": 5
   },
   {
    "id": "demo_prop_4",
@@ -526,9 +520,7 @@
    "listing_lat": -25.7701,
    "listing_lng": 28.2365,
    "paused": false,
-   "queueCount": 3,
-   "rental_status": "reserved",
-   "available_from": null
+   "queueCount": 3
   },
   {
    "id": "demo_prop_5",

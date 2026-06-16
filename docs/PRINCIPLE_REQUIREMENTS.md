@@ -51,12 +51,13 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - Never launch a city below threshold. Never hardcode these numbers — they are governance rules.
 - Applies to: CityLauncher KPI · admin tool count · city wave cascade · +1 Dashboard KPI page.
 
-### A7 · Buyer subscription tiers (preliminary)
-- Free: $0 · 3 sessions/day · local city only.
-- Starter: $5/mo · 20/day · country scope.
-- Premium: $15/mo · 50/day · global.
-- Preliminary as of April 2026. Final values confirmed before Paystack live mode activation.
-- Applies to: FEA plans screen · BEA session gating (not yet built).
+### A7 · Buyer subscription tiers
+
+> **Pricing authority:** the live code constants + `MarketSquare/PRICING_CANON.md` are the single source of truth; this section is a derived summary. If it ever disagrees, fix it here — not the canon. Verify: `python scripts/check_pricing_canon.py`.
+- Free: $0 · local city scope.
+- Global: $5/mo (R90) · national + global scope.
+- Two tiers only — code is the source of truth (`_buyer_tier` → 'free' | 'global'; `WISHLIST_GLOBAL_USD = 5`, `WISHLIST_GLOBAL_ZAR = 90`). The former 3-tier $0/$5/$15 "sessions/day" spec is retired; buyers pay 1T ($2) per Introduction regardless of tier, and the subscription controls wishlist-feed reach only.
+- Applies to: FEA plans screen · BEA `/wishlist/subscription` · EULA §6.2.
 
 ---
 

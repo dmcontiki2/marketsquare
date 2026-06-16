@@ -19,6 +19,10 @@ Total: 45–70s per feature. Shorts: Hook + Sting + one walkthrough beat + Payof
 - Settings: Video → Ingredients → 9:16 → 1x → Omni Flash → 8s (12 credits; 6s=10, 4s=7 at mid-2026 promo pricing).
 - UI inserts are FREE (rendered from rebuilt app screens — see `production-kit/inserts.py` pipeline). One per feature: form + example report (+ payoff screen).
 - South African flavour where natural (Pretoria launch city) — places, prices in R, local trips.
+- Cost transparency: state the Tuppence price up front and show how it works — pressing Run places a HOLD on the fee; it is only debited from the wallet on report release (show the wallet tick down). No surprise charges.
+
+## Localization (launch)
+Launch markets reuse the same visuals — localise by swapping ONLY the voiceover track per market (local dialect/accent). Segments are modular MP4s, so a VO swap needs no clip regeneration. Bespoke country-specific examples (local destinations, prices, passports) come later, once we see which markets pull. Keep one master cut per feature; per-market VO tracks live in `production-kit/vo/<market>/`.
 
 ## Per-video credit budget
 Hook 1 clip + walkthrough 4 clips + payoff 2 clips = 7 clips ≈ 84 credits; with 30–50% retake margin ≈ **110–130 credits per feature video**. Ten features ≈ **1,100–1,300 credits** — size the Flow subscription tier on this (stings + all UI inserts cost nothing).

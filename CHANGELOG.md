@@ -1,3 +1,34 @@
+## Session 139 (Slice 3, attended — David review) · 15 June 2026 — Rental availability: seller control + deploy hardening
+
+**(a) Seller availability control (FEA edit flow).** `ms.js` only. In the post-publish edit screen (`renderEditForm` / `saveEditedListing`), Property listings now get an **Availability** selector (Available / Reserved / Occupied) + an **Available from** date picker, pre-filled from the listing and written into the existing `PUT /listings/{id}?email=` payload as `rental_status` + `available_from`. Closes the loop: a lister flips status as the unit fills or frees up, and the buyer-side badge (Slice 2) reflects it. Extends the existing PUT (no new API call), so no DEMO_MODE branch needed.
+
+**(b) Deploy hardening — root-cause fix for the recurring stale-cache problem.** `deploy_marketsquare.bat`: (1) static assets (ms.js/ms.css) now upload **before** the HTML that references the new `?v=N` — the reverse order let Cloudflare cache the OLD js under the NEW version key (the 15-Jun bug that cost hours); (2) new **[6b] step fetches the live ms.js through Cloudflare and md5-compares it to your local build**, failing loudly at deploy time instead of in the browser; (3) fixed the stale `1.3.0` health check (now version-agnostic `status:ok`).
+
+Backups: `ms.js.bak-sellerctl-*`, `deploy_marketsquare.bat.bak-harden-*`. Verified: `node --check` ms.js OK; seller-control logic 4/4; deploy ordering confirmed (assets at step 1a precede HTML at step 1/6). Cost model impact: none.
+
+## Session 139 (Slice 2, attended — David review, NOT yet deployed) · 15 June 2026 — Rental availability: buyer badge + display (FEA)
+
+Buyer-facing display for the rental availability axis from Slice 1. `ms.js` + `ms.css` + `demo_listings.json` + cache-bust bump in `marketsquare.html` (ms.js v173 / ms.css v131). Additive; non-Property and "Available now" listings render unchanged.
+
+- **ms.js:** `rentalAvail` / `rentalCardBadge` / `rentalPill` helpers mirror the BEA derived label so DEMO_MODE works client-side; the live→internal mapping now carries `rental_status` / `available_from` / `availability_label`; cards show an availability badge for occupied / reserved / upcoming (NOT for the default "Available now"); detail shows a colour-coded availability pill (incl. green "Available now").
+- **ms.css:** `.avail-badge` (card) + `.avail-pill` (detail), colour-coded occ/rsv/upc/now.
+- **demo_listings.json:** 4 demo Property listings set to occupied / occupied+date / available-from / reserved so all states show in demo mode (?demo=1). Needs a BEA restart to clear the in-memory demo cache.
+- DEMO_MODE both branches verified (live reads server `availability_label`; demo computes client-side).
+
+Backups: `ms.js/ms.css/demo_listings.json/marketsquare.html .bak-rental*`. Verified: `node --check` ms.js ✓ · demo JSON valid ✓ · client-label unit test 8/8 ✓. Spec doc bumped to v1.1 (field `availability`→`rental_status`). Deferred: seller edit control (post-publish PUT flow) — next slice. Cost model impact: none.
+
+## Session 139 (Slice 1, attended — David-deployed) · 15 June 2026 — Rental availability (occupancy): BEA foundation
+
+New seller-controlled **rental availability** axis for Property listings, kept deliberately separate from the `listing_status` 7-state lifecycle (general active-vs-retire) and from the existing free-text `availability` service field (Tutors/Services "Weekdays/Flexible"). `bea_main.py` **only** — additive and back-compatible; no behaviour change for existing listings or other categories.
+
+- **Migration:** two new `listings` columns — `rental_status TEXT NOT NULL DEFAULT 'available'` (available | reserved | occupied) + `available_from TEXT` (ISO YYYY-MM-DD) + index `idx_listings_rental_status`. Default preserves current behaviour; no backfill. Runs on startup like the Session-37 listing_status migration.
+- **Models:** `rental_status` + `available_from` added to `Listing` and `ListingUpdate` (set on create and via `PUT /listings/{id}` — change anytime).
+- **Persisted** on create (INSERT) + edit; **validated** (rental_status enum; available_from ISO date) → HTTP 400 on bad input.
+- **Read:** `GET /listings`, `/listings/mine`, `/listings/{id}` now return a derived `availability_label` for Property listings — "Available now" / "Available from <date>" / "Occupied" / "Occupied — available <date>" / "Under application" — computed at read time, so "Available from <future>" auto-flips to "Available now" on the date with no job.
+- **Deferred:** seller UI control, buyer badge (shipped in Slice 2), search-ranking demotion + optional hide-when-occupied, and rent-vs-sale gating (label currently shows for all Property listings).
+
+Backups: `bea_main.py.bak-rentalstatus-20260615-213617`. Verified: `ast.parse` ✓ · derived-label logic 7/7 ✓ · migration defaults ✓ · INSERT arity executed clean (29 cols = 28 ? + 1 NULL) ✓. Update: deployed by David (scp bea_main.py → main.py + BEA restart); live /health v1.3.1, rental_status + availability_label verified on live listings. Cost model impact: none.
+
 ## Session 135i · 12 June 2026 — AI Features copy accuracy (attended, David's catch)
 
 `marketsquare.html` (2 places): "not used for introductions" → "introductions are charged separately (1T)" / "separate from the 1T introduction fee…". The old wording predates the listing-assist AI and the dossiers' matched-listing intro links — it now read as "AI plays no part in introductions", which is false; the intended (and still true) meaning is that AI Tuppence spend never includes or replaces the introduction charge. Canon meaning unchanged; copy now says it unambiguously.

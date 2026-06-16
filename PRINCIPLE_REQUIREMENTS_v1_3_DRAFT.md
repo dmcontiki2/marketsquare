@@ -51,10 +51,13 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - Never launch a city below threshold. Never hardcode these numbers — they are governance rules.
 - Applies to: CityLauncher KPI · admin tool count · city wave cascade · +1 Dashboard KPI page.
 
-### A7 · Subscription tiers (5-tier canon — Session 91 / CC-002)
-- One subscription family: Free $0 · Standard $12/mo · Professional $20/mo · Business $40/mo · Elite $100/mo.
-- Listing slots are a CAP (meter display, not a wallet): 2 / 10 / 25 / 60 / 500.
-- Monthly Tuppence to paid tiers = price ÷ 2 at 1T = $2: 6 / 10 / 20 / 50T (Founders ×1.2 rounded up: 8 / 12 / 24 / 60T).
+### A7 · Subscription tiers (Simpler Model — supersedes the Session 91 / CC-002 5-tier draft)
+
+> **Pricing authority:** the live code constants + `MarketSquare/PRICING_CANON.md` are the single source of truth; this section is a derived summary. If it ever disagrees, fix it here — not the canon. Verify: `python scripts/check_pricing_canon.py`.
+- SELLER tiers (listing slots): Free $0 · 2 · 0T | Starter $5 · 10 · 2T | Pro $20 · 30 · 10T | Agency free+verified · 10 base. Source: `bea_main.py _SELLER_SUB_TIERS`. Legacy $12/$40/$100 retained for existing users only.
+- BUYER tiers (wishlist/search reach): Free $0 (local) | Global $5/mo (national+global). Source: `_buyer_tier` → free|global; `WISHLIST_GLOBAL_USD = 5`.
+- Listing slots are a CAP (meter display, not a wallet): Free 2 / Starter 10 / Pro 30.
+- Monthly Tuppence to paid seller tiers (price ÷ 2 at 1T = $2): Starter 2T · Pro 10T (Founders ×1.2 rounded up: Pro 10→12T). The old 5-tier $0/$12/$20/$40/$100 family is retired.
 - "AI uses" / AI-session allowances are RETIRED: in-app AI guidance is free; advanced AI functions are Tuppence-priced per use through the HOLD ledger (/tuppence/ai-commit + /tuppence/ai-settle).
 - Daily Introduction-session limits are retired [AD-07 — David confirm].
 - Applies to: FEA plans screen + wallet · BEA verify_seller_subscription + launch_redemption.py · EULA tier disclosure · support FAQ.

@@ -95,8 +95,8 @@ NOT edit)** + v3_4, AdvertAgent specs + both xlsx, `bea_main.py`, `ai_service_ti
 | 5 | `ai_pack_sessions` payment path (initialize/verify/webhook still credit "AI sessions") | bea_main.py 3115/3122/3131/3143-3167/3210-3249 · ms.js 916/661 | retire path (Gate 2 — **staged diff**, not live) | endpoint |
 | 6 | `AI sessions remaining` / `Free AI session used` admin panel | marketsquare_admin.html 3783-84 | AI feature credits framing (wallet rule: "not used for introductions") | copy |
 | 7 | `POST /payment/initialize?…&ai_pack_sessions=M` · `GET /advert-agent/status` "AA session balance" · `POST /advert-agent/buy-pack` rows | MS:AGENT_BRIEFING.md 146-151 + AA:SESSION_START_PROMPT.md 20/36/39/45 + AA:STATUS.md 100 | document 410-retired + per-use HOLD (`/tuppence/ai-commit`+`ai-settle`) | endpoint |
-| 8 | Buyer tiers `Free $0 · 3 sessions/day` / `Starter $5/mo · 20/day` / `Premium $15/mo · 50/day` | Codex tbl9 · PRINCIPLE_REQUIREMENTS.md A7 L55-57 (×4) · eula_clean/raw.html 527-535 · marketsquare.html 2210-2214 · ms.js 11615 (EULA mirror) | superseded by the ONE 5-tier model `$0/$12/$20/$40/$100` (names Free/Standard/Professional/Business/Elite, ms.js 1063-66); daily intro-session limits retired (AD-07 confirm) | number |
-| 9 | Seller tiers §11.1 `Free $0 ·2 / Starter $5 (R90) ·20 / Premium $15 (R270) ·50 listings` | Codex v4_7 §11.1 · support.html 343-344 · docs/LISTING_STATE_MACHINE.md · docs/TrustSquare_Architecture_Blueprint_v1.docx tbl5r5 | `Free $0·2 / Standard $12·10 / Professional $20·25 / Business $40·60 / Elite $100·500` — slots are a **CAP** (meter display, not a wallet) | number |
+| 8 | Buyer tiers `Free $0 · 3 sessions/day` / `Starter $5/mo · 20/day` / `Premium $15/mo · 50/day` | Codex tbl9 · PRINCIPLE_REQUIREMENTS.md A7 L55-57 (×4) · eula_clean/raw.html 527-535 · marketsquare.html 2210-2214 · ms.js 11615 (EULA mirror) | RESOLVED 15 Jun — buyer model pinned to live code: Free $0 (local) / Global $5/mo (national+global), two tiers only (`_buyer_tier` → free|global; `WISHLIST_GLOBAL_USD = 5`). The 3-tier $0/$5/$15 "sessions/day" and the "$0/$12/$20/$40/$100" conflation are both retired. Aligned across A7 (×4), eula_clean/raw.html, marketsquare.html, ms.js | number |
+| 9 | Seller tiers §11.1 `Free $0 ·2 / Starter $5 (R90) ·20 / Premium $15 (R270) ·50 listings` | Codex v4_7 §11.1 · support.html 343-344 · docs/LISTING_STATE_MACHINE.md · docs/TrustSquare_Architecture_Blueprint_v1.docx tbl5r5 | `Free $0·2 / Starter $5·10 / Pro $20·30 / Agency free·10base [RESOLVED 15 Jun — Simpler Model is current; 5-tier $12/$40/$100 superseded, legacy for existing users only]` — slots are a **CAP** (meter display, not a wallet) | number |
 | 10 | `Upgrade to Global · $5/mo` (live button) | marketsquare.html 1120 | `Upgrade · from $12/mo` (staged; David verify microcopy) | copy |
 | 11 | `2 Tuppence per batch of 20 extra slots` (§11.2) | Codex v4_7 §11.2 · LISTING_STATE_MACHINE 31/185 · Architecture_Blueprint · SESSION_NOTES ("1T = +20") | **UNRESOLVED — predates 5-tier slot-cap model (Master View flags it). AWAITING DAVID (AD-08)** | rule |
 | 12 | stale 3-tier comment `'free' \| 'standard' \| 'professional'` | ms.js 4291 | 5-tier comment | copy |
@@ -123,9 +123,4 @@ edit** (term map must route any v2 change to the Addendum, not the file).
 ## CC-002 ↔ CC-001 interaction note
 Both touch the Codex and the IP/whitepaper line in the same window. Recommend **sequencing, not parallel**:
 land **CC-001 (HOLD)** first (it sets the charge *mechanism* the pricing copy refers to), then **CC-002
-(pricing/AI)** on top. Decide at Step 1; if run together, the two term maps merge into one grep so a single
-Sensor pass proves both to zero.
-
----
-
-*Closed changes are moved below this line with their final matrix coverage % and report link.*
+(pricing/AI)** on top. Decide at Step 1; if run together, the two term map

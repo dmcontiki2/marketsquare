@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Vehicles — Listing & Verification Prototype</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#f4f5f7;--surface:#ffffff;--surface-2:#eef0f3;--border:#e2e5ea;
+  --text:#111827;--text-2:#4b5563;--text-3:#555f6e;
+  --accent:#1e3a5f;--accent-light:#eef2f8;--navy:#111827;--navy-light:#1e3a5f;
+  --green:#065f46;--green-bg:#d1fae5;--red:#991b1b;--red-bg:#fee2e2;
+  --blue:#1d4ed8;--blue-bg:#dbeafe;--gold:#92400e;--gold-bg:#fef3c7;
+  --purple:#5b21b6;--purple-bg:#ede9fe;--r:10px;--r-sm:6px;
+  --sh:0 1px 2px rgba(0,0,0,.04),0 3px 10px rgba(0,0,0,.04);
+  --sh-md:0 2px 6px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#dfe3e8;color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;padding:0 0 40px;}
+h1,h2,h3,h4{font-family:'Poppins',sans-serif;}
+
+/* prototype chrome (not part of the app) */
+.proto-bar{position:sticky;top:0;z-index:100;background:#111827;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.proto-bar .pb-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;letter-spacing:.2px;margin-right:6px;}
+.proto-bar .pb-group{display:flex;align-items:center;gap:6px;}
+.proto-bar .pb-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.45);font-weight:600;}
+.pb-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.85);border-radius:50px;padding:6px 13px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;}
+.pb-btn:hover{background:rgba(255,255,255,.16);}
+.pb-btn.active{background:#fff;color:#111827;border-color:#fff;}
+.proto-note{max-width:430px;margin:14px auto 0;padding:0 16px;font-size:11px;color:#5b6472;text-align:center;}
+
+/* phone frame */
+.phone{width:430px;max-width:100%;margin:18px auto 0;background:var(--bg);border-radius:30px;box-shadow:0 20px 60px rgba(0,0,0,.28),0 0 0 10px #1c2330,0 0 0 11px #2c3545;overflow:hidden;min-height:760px;position:relative;}
+.phone .notch{height:26px;background:#111827;display:flex;align-items:center;justify-content:center;}
+.phone .notch::after{content:'';width:90px;height:6px;border-radius:6px;background:rgba(255,255,255,.25);}
+.app{height:740px;overflow-y:auto;overflow-x:hidden;background:var(--bg);}
+.app::-webkit-scrollbar{width:0;}
+
+/* app bars / generic */
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;}
+.appbar .ab-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;}
+.appbar .ab-actions{display:flex;gap:8px;}
+.circ{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+.pad{padding:14px 16px;}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);}
+
+/* category select */
+.cat-hero{background:#111827;color:#fff;padding:26px 18px 20px;}
+.cat-hero h1{font-size:23px;font-weight:800;line-height:1.15;}
+.cat-hero p{color:rgba(255,255,255,.6);font-size:13px;margin-top:6px;}
+.subtype-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;padding:18px 16px;}
+.subtype{background:linear-gradient(160deg,#243143,#161e2b);border:1.5px solid #2c3a4e;border-radius:14px;padding:20px 8px 14px;text-align:center;cursor:pointer;transition:.18s;box-shadow:var(--sh);}
+.subtype:hover{border-color:#fbbf24;transform:translateY(-2px);}
+.subtype.sel{border-color:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.2);}
+.subtype .ic{display:flex;align-items:center;justify-content:center;height:54px;}
+.subtype .ic svg{width:52px;height:52px;stroke:#fbbf24;fill:none;}
+.subtype .nm{font-size:13px;font-weight:700;margin-top:9px;color:#fff;}
+.subtype .sub{font-size:9.5px;color:rgba(255,255,255,.5);margin-top:3px;}
+
+/* gallery */
+.lead{position:relative;height:240px;background:linear-gradient(135deg,#2c3a52,#1e2a3d);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.lead svg{width:78%;opacity:.9;}
+.lead .lead-badge{position:absolute;bottom:10px;left:10px;background:rgba(17,24,39,.78);color:#fff;font-size:10px;font-weight:600;padding:4px 9px;border-radius:6px;backdrop-filter:blur(4px);}
+.lead .photo-count{position:absolute;bottom:10px;right:10px;background:rgba(17,24,39,.78);color:#fff;font-size:10px;font-weight:600;padding:4px 9px;border-radius:6px;}
+.strip{display:flex;gap:7px;padding:9px 12px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);scrollbar-width:none;}
+.strip::-webkit-scrollbar{display:none;}
+.thumb{flex-shrink:0;width:62px;height:46px;border-radius:7px;background:linear-gradient(135deg,#3a4a63,#26344a);border:2px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.thumb svg{width:80%;opacity:.85;}
+.thumb.active{border-color:var(--accent);}
+.thumb.alt{background:linear-gradient(135deg,#4a5568,#2d3a4f);}
+
+/* listing head */
+.lhead{padding:14px 16px 6px;background:var(--surface);}
+.lhead h1{font-size:18px;font-weight:800;line-height:1.25;letter-spacing:-.2px;}
+.price-row{display:flex;align-items:baseline;gap:9px;margin-top:8px;}
+.price{font-family:'Poppins',sans-serif;font-size:25px;font-weight:800;color:var(--accent);}
+.price-was{font-size:14px;color:var(--text-3);text-decoration:line-through;}
+.price-sub{font-size:10px;color:var(--text-3);margin-top:2px;}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.bdg{font-size:10px;font-weight:700;padding:4px 9px;border-radius:50px;display:inline-flex;align-items:center;gap:4px;}
+.bdg.loc{background:var(--surface-2);color:var(--text-2);}
+.bdg.trust{background:var(--green-bg);color:var(--green);}
+.bdg.verified{background:var(--purple-bg);color:var(--purple);}
+.bdg.private{background:var(--blue-bg);color:var(--blue);}
+
+/* quick spec tiles */
+.qspec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:12px;}
+.qtile{background:var(--surface);padding:12px 6px;text-align:center;}
+.qtile svg{width:20px;height:20px;stroke:var(--accent);stroke-width:1.7;fill:none;}
+.qtile .ql{font-size:9px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:5px;}
+.qtile .qv{font-size:12.5px;font-weight:700;color:var(--text);margin-top:1px;}
+
+/* CTAs */
+.ctas{padding:14px 16px 4px;background:var(--surface);}
+.btn{width:100%;border:none;border-radius:50px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;}
+.btn.primary{background:var(--accent);color:#fff;}
+.btn.primary:hover{background:#16304e;}
+.btn-row{display:flex;gap:8px;margin-top:9px;}
+.btn.ghost{background:var(--surface);color:var(--accent);border:1.5px solid var(--border);font-size:13px;}
+.btn.ghost:hover{border-color:var(--accent);}
+
+/* estimate card */
+.est{margin:14px 16px;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface);box-shadow:var(--sh);}
+.est-free{padding:13px 14px;}
+.est-free .h{font-size:13px;font-weight:800;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:6px;}
+.est-range{font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-top:6px;}
+.est-note{font-size:10.5px;color:var(--text-3);margin-top:4px;line-height:1.45;}
+.est-verify{border-top:1px dashed var(--border);padding:12px 14px;background:#faf9ff;}
+.btn.verify{background:linear-gradient(135deg,#6d28d9,#5b21b6);color:#fff;font-size:13px;padding:11px;}
+.verified-box{display:none;}
+.verified-box.show{display:block;}
+.vrow{display:flex;gap:8px;margin-top:8px;}
+.vcell{flex:1;background:#fff;border:1px solid #ddd6fe;border-radius:8px;padding:9px;text-align:center;}
+.vcell .vl{font-size:9px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.vcell .vv{font-family:'Poppins',sans-serif;font-size:17px;font-weight:800;color:var(--purple);margin-top:2px;}
+
+/* spec panel */
+.specs{padding:6px 16px 22px;}
+.spec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:12px;box-shadow:var(--sh);}
+.spec-card h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-3);margin-bottom:8px;}
+.srow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--surface-2);font-size:12.5px;}
+.srow:last-child{border-bottom:none;}
+.srow .sk{color:var(--text-3);}
+.srow .sv{font-weight:700;color:var(--text);text-align:right;}
+.feat-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.feat-chip{background:var(--surface-2);border-radius:50px;padding:6px 12px;font-size:11.5px;font-weight:600;color:var(--text-2);}
+.cond-flag{background:var(--green-bg);color:var(--green);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;margin-bottom:8px;line-height:1.45;}
+
+/* attestation flow */
+.att-intro{padding:16px;}
+.att-intro h2{font-size:18px;font-weight:800;}
+.att-intro p{font-size:12.5px;color:var(--text-2);margin-top:6px;line-height:1.55;}
+.prov{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:50px;margin-left:6px;vertical-align:middle;}
+.prov.ai{background:var(--gold-bg);color:var(--gold);}
+.prov.ls{background:var(--purple-bg);color:var(--purple);}
+.prov.seller{background:var(--blue-bg);color:var(--blue);}
+.att-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);margin:0 16px 12px;overflow:hidden;transition:.15s;}
+.att-card.done{border-color:var(--green);}
+.att-card .ac-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--surface-2);}
+.att-card .ac-head h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);}
+.att-card .ac-body{padding:6px 14px 12px;}
+.confirm-btn{margin:10px 14px 13px;width:calc(100% - 28px);border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:50px;padding:9px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;}
+.confirm-btn:hover{background:var(--accent-light);}
+.att-card.done .confirm-btn{background:var(--green);border-color:var(--green);color:#fff;cursor:default;}
+.liability{margin:4px 16px 0;background:#fffdf5;border:1.5px solid #fde68a;border-radius:var(--r);padding:13px 14px;}
+.liability label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:11.5px;color:#4b5563;line-height:1.5;}
+.liability input{margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:var(--accent);}
+.publish-wrap{padding:14px 16px 24px;}
+.btn.publish{background:#cbd5e1;color:#fff;cursor:not-allowed;}
+.btn.publish.ready{background:var(--green);cursor:pointer;}
+.att-hint{font-size:10.5px;color:var(--text-3);text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span class="pb-title">TrustSquare · Vehicles prototype</span>
+  <div class="pb-group">
+    <span class="pb-label">Example</span>
+    <button class="pb-btn" data-car="0">Audi A3</button>
+    <button class="pb-btn" data-car="1">Mustang GT</button>
+    <button class="pb-btn" data-car="2">Fiat Panda</button>
+    <button class="pb-btn" data-car="3">BMW X3</button>
+  </div>
+  <div class="pb-group">
+    <span class="pb-label">Screen</span>
+    <button class="pb-btn" data-view="cat">1 · What are you selling</button>
+    <button class="pb-btn" data-view="listing">2 · Listing page</button>
+    <button class="pb-btn" data-view="attest">3 · Onboarding attestation</button>
+  </div>
+</div>
+<div class="proto-note">Clickable design prototype — real example data, placeholder photos. Switch cars and screens with the bar above. Try the <b>Verify value &amp; specs</b> button on the listing, and the section <b>Confirm</b> + publish gate on the onboarding screen.</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="app" id="app"></div>
+</div>
+
+<script>
+const SVG_CAR = '<svg viewBox="0 0 120 50" xmlns="http://www.w3.org/2000/svg"><path d="M8 38 L14 24 Q17 18 26 17 L74 14 Q88 13 98 22 L110 30 Q114 32 114 37 L114 40 L8 40 Z" fill="#cdd6e3"/><circle cx="32" cy="40" r="8" fill="#1c2330"/><circle cx="32" cy="40" r="3.5" fill="#9aa7ba"/><circle cx="92" cy="40" r="8" fill="#1c2330"/><circle cx="92" cy="40" r="3.5" fill="#9aa7ba"/><path d="M30 24 L70 21 L84 26 L34 28 Z" fill="#8fa0b8"/></svg>';
+const SVG_DASH='<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="48" height="24" rx="4" fill="#cdd6e3"/><circle cx="22" cy="20" r="7" fill="#1c2330"/><circle cx="40" cy="20" r="7" fill="#1c2330"/></svg>';
+const SVG_WHEEL='<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="25" r="18" fill="#1c2330"/><circle cx="25" cy="25" r="8" fill="#9aa7ba"/></svg>';
+const SVG_INT='<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="6" width="48" height="28" rx="4" fill="#b9c4d4"/><rect x="12" y="12" width="16" height="16" rx="3" fill="#8fa0b8"/><rect x="32" y="12" width="16" height="16" rx="3" fill="#8fa0b8"/></svg>';
+
+// quick-spec line icons
+const I={
+ mileage:'<svg viewBox="0 0 24 24"><path d="M12 14a6 6 0 0 1 6-6"/><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l3-3"/></svg>',
+ trans:'<svg viewBox="0 0 24 24"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="4" r="1.5"/><circle cx="12" cy="4" r="1.5"/><circle cx="18" cy="4" r="1.5"/><path d="M6 12h12"/></svg>',
+ fuel:'<svg viewBox="0 0 24 24"><rect x="4" y="3" width="9" height="18" rx="1.5"/><path d="M13 8h3l2 2v7a2 2 0 0 1-2 2"/><path d="M7 7h3"/></svg>',
+ drive:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg>',
+ engine:'<svg viewBox="0 0 24 24"><path d="M5 9h3l2-2h4v3h3l2 2v4h-2v2H8v-2H5z"/></svg>',
+ power:'<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>'
+};
+
+// custom elegant vehicle sub-type icons (24x24, stroke=currentColor)
+const VKEYS=['car','bike','caravan','trailer','boat','other'];
+const VICON={
+ car:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"/></svg>',
+ bike:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M16 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M7.5 14h5l4 -4h-10.5m1.5 4l4 -4"/><path d="M13 6h2l1.5 3l2 4"/></svg>',
+ caravan:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M11 18h7a2 2 0 0 0 2 -2v-7a2 2 0 0 0 -2 -2h-9.5a5.5 5.5 0 0 0 -5.5 5.5v3.5a2 2 0 0 0 2 2h2"/><path d="M8 7l7 -3l1 3"/><path d="M13 11.5a.5 .5 0 0 1 .5 -.5h2a.5 .5 0 0 1 .5 .5v2a.5 .5 0 0 1 -.5 .5h-2a.5 .5 0 0 1 -.5 -.5l0 -2"/><path d="M20 16h2"/></svg>',
+ trailer:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M11 17h6a2 2 0 0 0 2 -2v-3a1 1 0 0 0 -1 -1h-12a1 1 0 0 0 -1 1v3a2 2 0 0 0 2 2h2"/><path d="M5 12l-2 -1h-1"/></svg>',
+ boat:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h14.4a3 3 0 0 0 2.5 -1.34l3.1 -4.66h-6.23a4 4 0 0 0 -1.49 .29l-3.56 1.42a4 4 0 0 1 -1.49 .29h-5.73l-1.5 4"/><path d="M6 13l1.5 -5"/><path d="M6 8h8l2 3"/></svg>',
+ other:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M4 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/></svg>'
+};
+
+const CARS=[
+{
+ title:"2016 Audi A3 1.4T FSI Stronic (35 TFSI)", price:"R242 500", was:null, loc:"Centurion (GP)",
+ trust:"Established seller", verified:{trade:"R224 800",retail:"R251 900",src:"TransUnion"},
+ indicative:"R225 000 - R258 000", photos:14,
+ quick:{mileage:"91 000 km",trans:"Automatic",fuel:"Petrol",drive:"FWD (4x2)",engine:"1 395 cc",power:"110 kW"},
+ details:{Variant:"1.4T FSI Stronic (35 TFSI)","Body type":"Sedan",Colour:"Silver",Seats:"5","No. of doors":"4","Spare key":"No",Warranty:"No","Listing ref":"TS-027729"},
+ perf:{Gearbox:"Automatic - 7-spd DCT","Fuel type":"Petrol","Cylinder layout":"I4 (4-cyl)",Aspiration:"Turbo",Kilowatts:"110 kW","Engine capacity":"1 395 cc","Fuel tank":"50 L",Consumption:"4.7-5.0 L/100km","CO2":"108 g/km",Wheelbase:"2 637 mm","Tyres (F/R)":"205/55 R16"},
+ cond:{flag:"Seller-declared condition - buy a Lightstone report for an independent read.",rows:{"Service history":"Partial",Roadworthy:"Seller-declared","Spare key":"No"}},
+ feats:[]
+},
+{
+ title:"2019 Ford Mustang 5.0 GT Auto", price:"R792 900", was:null, loc:"Vereeniging (GP)",
+ trust:"Established seller", verified:{trade:"R735 000",retail:"R805 000",src:"TransUnion"},
+ indicative:"R740 000 - R815 000", photos:6,
+ quick:{mileage:"711 km",trans:"Automatic",fuel:"Petrol",drive:"RWD (4x2)",engine:"5 038 cc",power:"331 kW"},
+ details:{Variant:"5.0 GT Auto","Body type":"Coupe",Colour:"White",Seats:"4","No. of doors":"2","Spare key":"No","Listing ref":"TS-D09239"},
+ perf:{Gearbox:"Automatic - 10-spd","Fuel type":"Petrol","Cylinder layout":"V8 (8-cyl)",Aspiration:"Naturally aspirated",Kilowatts:"331 kW","Engine capacity":"5 038 cc","Fuel tank":"61 L",Consumption:"13.6 L/100km",Gears:"10"},
+ cond:{flag:"Seller reports no roadworthy-relevant faults and a complete, up-to-date service history.",rows:{"Service history":"Complete, up to date",Roadworthy:"No advisories","Spare key":"No"}},
+ feats:["CarPlay / Android Auto","Reverse camera","Auto stop-start"]
+},
+{
+ title:"2020 Fiat Panda 900T Lounge", price:"R98 900", was:null, loc:"Silver Lakes (GP)",
+ trust:"New seller", verified:{trade:"R90 500",retail:"R101 800",src:"TransUnion"},
+ indicative:"R92 000 - R106 000", photos:6,
+ quick:{mileage:"91 263 km",trans:"Manual",fuel:"Petrol",drive:"FWD (4x2)",engine:"875 cc",power:"62 kW"},
+ details:{Variant:"900T Lounge","Body type":"Hatchback",Colour:"White",Seats:"5","No. of doors":"5","Spare key":"Yes","Listing ref":"TS-403946"},
+ perf:{Gearbox:"Manual","Fuel type":"Petrol","Cylinder layout":"I2 (2-cyl)",Aspiration:"Turbo",Kilowatts:"62 kW","Engine capacity":"875 cc","Fuel tank":"37 L",Consumption:"4.2 L/100km",Gears:"5"},
+ cond:{flag:"Seller reports a complete, up-to-date service history.",rows:{"Service history":"Complete, up to date",Roadworthy:"Seller-declared","Spare key":"Yes"}},
+ feats:[]
+},
+{
+ title:"2025 BMW X3 xDrive20d M Sport (G45)", price:"R1 009 900", was:"R1 072 900", loc:"Midstream (GP)",
+ trust:"Established seller", verified:{trade:"R958 000",retail:"R1 028 500",src:"TransUnion"},
+ indicative:"R965 000 - R1 035 000", photos:6,
+ quick:{mileage:"11 881 km",trans:"Automatic",fuel:"Diesel",drive:"AWD (xDrive)",engine:"1 995 cc",power:"145 kW"},
+ details:{Variant:"xDrive20d M Sport (G45)","Body type":"SUV",Colour:"Black",Seats:"5","No. of doors":"5","Spare key":"Yes","Maintenance plan":"2030/05/27",Warranty:"2030/05/27","Listing ref":"TS-305879"},
+ perf:{Gearbox:"Automatic - 8-spd","Fuel type":"Diesel","Cylinder layout":"I4 (4-cyl)",Aspiration:"Turbo",Kilowatts:"145 kW","Engine capacity":"1 995 cc","Fuel tank":"60 L",Consumption:"6.2 L/100km",Gears:"8"},
+ cond:{flag:"Seller reports no roadworthy-relevant faults, a complete service history, and active maintenance plan + warranty to 2030.",rows:{"Service history":"Complete, up to date",Roadworthy:"No advisories","Spare key":"Yes","Maintenance plan":"Until 2030/05/27"}},
+ feats:["CarPlay / Android Auto","Reverse camera","Auto stop-start"]
+}
+];
+
+let curCar=0, curView='listing', secDone=[false,false,false];
+
+function qtile(icon,label,val){return '<div class="qtile">'+icon+'<div class="ql">'+label+'</div><div class="qv">'+val+'</div></div>';}
+function srows(obj){return Object.entries(obj).map(function(e){return '<div class="srow"><span class="sk">'+e[0]+'</span><span class="sv">'+e[1]+'</span></div>';}).join('');}
+function pick(obj,keys){var o={};keys.forEach(function(k){if(obj[k]!==undefined)o[k]=obj[k];});return o;}
+
+function renderCategory(){
+ var subs=[['Car','Sedan · SUV · Bakkie'],['Bike','Motorcycle · Scooter'],['Caravan','Towable · Motorhome'],['Trailer','Box · Car · Boat'],['Boat','Ski · Cabin · Jet'],['Other','Bus · Truck · Tractor']];
+ var tiles=subs.map(function(s,i){
+   return '<div class="subtype'+(i===0?' sel':'')+'" onclick="this.parentNode.querySelectorAll(\'.subtype\').forEach(function(e){e.classList.remove(\'sel\')});this.classList.add(\'sel\')"><div class="ic">'+VICON[VKEYS[i]]+'</div><div class="nm">'+s[0]+'</div><div class="sub">'+s[1]+'</div></div>';
+ }).join('');
+ return '<div class="cat-hero"><div class="eyebrow" style="color:rgba(255,255,255,.5)">Sell · Vehicles</div><h1>What are you selling?</h1><p>Pick a type — we tailor the questions, photos and spec sheet to it.</p></div>'
+ +'<div class="subtype-grid">'+tiles+'</div>'
+ +'<div class="pad" style="padding-top:2px"><button class="btn primary" onclick="setView(\'attest\')">Continue</button><div class="att-hint">Mirrors the WeBuyCars selector — but elevated to a top-level <b>Vehicles</b> category with sub-types, matching TransUnion data coverage.</div></div>';
+}
+
+function renderListing(){
+ var v=CARS[curCar];
+ var thumbs=[SVG_CAR,SVG_DASH,SVG_INT,SVG_WHEEL,SVG_CAR,SVG_INT];
+ var html='<div class="appbar"><div class="ab-back">Back to search</div><div class="ab-actions"><div class="circ">↗</div><div class="circ">♡</div></div></div>';
+ html+='<div class="lead">'+SVG_CAR+'<div class="lead-badge">Walk-around · tap thumbnails</div><div class="photo-count">'+v.photos+' photos</div></div>';
+ html+='<div class="strip">'+thumbs.map(function(t,i){return '<div class="thumb'+(i===0?' active':'')+(i%2?' alt':'')+'" onclick="this.parentNode.querySelectorAll(\'.thumb\').forEach(function(e){e.classList.remove(\'active\')});this.classList.add(\'active\')">'+t+'</div>';}).join('')+'</div>';
+ html+='<div class="lhead"><h1>'+v.title+'</h1><div class="price-row"><span class="price">'+v.price+'</span>'+(v.was?'<span class="price-was">'+v.was+'</span>':'')+'</div><div class="price-sub">Incl. VAT · no admin fees · private sale</div>';
+ html+='<div class="badges"><span class="bdg loc">'+v.loc+'</span><span class="bdg trust">★ '+v.trust+'</span><span class="bdg private">Private seller</span></div></div>';
+ var q=v.quick;
+ html+='<div class="qspec">'+qtile(I.mileage,'Mileage',q.mileage)+qtile(I.trans,'Transmission',q.trans)+qtile(I.fuel,'Fuel',q.fuel)+qtile(I.drive,'Drive',q.drive)+qtile(I.engine,'Engine',q.engine)+qtile(I.power,'Power',q.power)+'</div>';
+ html+='<div class="ctas"><button class="btn primary">Request an intro</button><div class="btn-row"><button class="btn ghost">Compare</button><button class="btn ghost">Set alert</button></div></div>';
+ html+='<div class="est"><div class="est-free"><div class="h">Indicative market range</div><div class="est-range">'+v.indicative+'</div><div class="est-note">Free — estimated from comparable TrustSquare listings (same make/model/year ± mileage). Indicative only, not a verified valuation.</div></div>';
+ html+='<div class="est-verify"><button class="btn verify" onclick="doVerify()">Verify value &amp; specs · 2 Tuppence</button>'
+ +'<div class="verified-box" id="vbox"><div class="vrow"><div class="vcell"><div class="vl">Trade</div><div class="vv">'+v.verified.trade+'</div></div><div class="vcell"><div class="vl">Retail</div><div class="vv">'+v.verified.retail+'</div></div></div>'
+ +'<div class="est-note" style="margin-top:8px">Verified by <b>'+v.verified.src+'</b> · 2T committed. Indicative market data — information, not financial advice or a formal valuation.</div></div></div></div>';
+ html+='<div class="specs">';
+ html+='<div class="spec-card"><h3>Vehicle details</h3>'+srows(v.details)+'</div>';
+ html+='<div class="spec-card"><h3>Vehicle condition</h3><div class="cond-flag">'+v.cond.flag+'</div>'+srows(v.cond.rows)+'</div>';
+ html+='<div class="spec-card"><h3>Vehicle performance</h3>'+srows(v.perf)+'</div>';
+ if(v.feats.length) html+='<div class="spec-card"><h3>Vehicle features</h3><div class="feat-chips">'+v.feats.map(function(f){return '<span class="feat-chip">'+f+'</span>';}).join('')+'</div></div>';
+ html+='</div>';
+ return html;
+}
+
+function renderAttest(){
+ var v=CARS[curCar];
+ var html='<div class="appbar"><div class="ab-back">Step 3 of 4 · Confirm details</div></div>';
+ html+='<div class="att-intro"><h2>Confirm your '+v.details["Body type"].toLowerCase()+' details</h2><p>We pre-filled these from your photos and entries. <b>Read each section and confirm it is correct</b> — these become your representations as the seller, not ours.</p></div>';
+ html+='<div class="att-card" id="ac0"><div class="ac-head"><h4>Vehicle details</h4><span class="prov ai">AI draft</span></div><div class="ac-body">'+srows(pick(v.details,["Variant","Body type","Colour","Seats","No. of doors"]))+'</div><button class="confirm-btn" onclick="confirmSec(0)"><span>Confirm these are correct</span></button></div>';
+ html+='<div class="att-card" id="ac1"><div class="ac-head"><h4>Performance &amp; specs</h4><span class="prov ls">Lightstone</span></div><div class="ac-body">'+srows(pick(v.perf,["Engine capacity","Kilowatts","Cylinder layout","Fuel type","Gearbox"]))+'</div><button class="confirm-btn" onclick="confirmSec(1)"><span>Confirm these are correct</span></button></div>';
+ html+='<div class="att-card" id="ac2"><div class="ac-head"><h4>Condition &amp; history</h4><span class="prov seller">You entered</span></div><div class="ac-body">'+srows(v.cond.rows)+'</div><button class="confirm-btn" onclick="confirmSec(2)"><span>Confirm these are correct</span></button></div>';
+ html+='<div class="liability"><label><input type="checkbox" id="liab" onchange="checkPublish()"><span>I confirm I have personally verified every detail above and that all information — specs, mileage, condition, history and photos — is accurate and true. These are my representations as the seller. TrustSquare does not independently verify or warrant them and accepts no liability. Uploading a document also attests to its validity.</span></label></div>';
+ html+='<div class="publish-wrap"><button class="btn publish" id="pubBtn" onclick="if(this.classList.contains(\'ready\'))alert(\'Listing published (prototype)\')">Publish listing</button><div class="att-hint" id="pubHint">Confirm all 3 sections + tick the box to publish.</div></div>';
+ return html;
+}
+
+function confirmSec(i){secDone[i]=true;var c=document.getElementById('ac'+i);c.classList.add('done');c.querySelector('.confirm-btn span').textContent='Confirmed';checkPublish();}
+function checkPublish(){var liab=document.getElementById('liab');var ok=secDone[0]&&secDone[1]&&secDone[2]&&liab&&liab.checked;var b=document.getElementById('pubBtn');var h=document.getElementById('pubHint');if(b)b.classList.toggle('ready',ok);if(h)h.textContent=ok?'Ready to publish - every detail is seller-confirmed.':'Confirm all 3 sections + tick the box to publish.';}
+function doVerify(){var box=document.getElementById('vbox');if(box)box.classList.add('show');var btn=document.querySelector('.btn.verify');if(btn){btn.textContent='Verified · 2T committed';btn.style.opacity=.6;btn.style.cursor='default';btn.onclick=null;}}
+
+function render(){
+ secDone=[false,false,false];
+ var app=document.getElementById('app');
+ if(curView==='cat')app.innerHTML=renderCategory();
+ else if(curView==='attest')app.innerHTML=renderAttest();
+ else app.innerHTML=renderListing();
+ app.scrollTop=0;
+ document.querySelectorAll('[data-car]').forEach(function(b){b.classList.toggle('active',+b.dataset.car===curCar);});
+ document.querySelectorAll('[data-view]').forEach(function(b){b.classList.toggle('active',b.dataset.view===curView);});
+}
+function setView(v){curView=v;render();}
+document.querySelectorAll('[data-car]').forEach(function(b){b.onclick=function(){curCar=+b.dataset.car;render();};});
+document.querySelectorAll('[data-view]').forEach(function(b){b.onclick=function(){curView=b.dataset.view;render();};});
+render();
+</script>
+</body>
+</html>

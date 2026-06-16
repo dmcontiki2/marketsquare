@@ -543,17 +543,6 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN fade_nudge_sent_at TEXT")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(listing_status)")
 
-    # ── Rental availability (occupancy) ─ separate axis from listing_status ──
-    # rental_status: available | reserved | occupied  (Property rentals only).
-    # Distinct from the free-text 'availability' service field and from the
-    # listing_status lifecycle. Default 'available' so existing listings are
-    # unchanged. available_from (ISO YYYY-MM-DD) drives "Available from <date>".
-    if "rental_status" not in listing_cols_sm:
-        conn.execute("ALTER TABLE listings ADD COLUMN rental_status TEXT NOT NULL DEFAULT 'available'")
-    if "available_from" not in listing_cols_sm:
-        conn.execute("ALTER TABLE listings ADD COLUMN available_from TEXT")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_rental_status ON listings(rental_status)")
-
     # ── EULA acceptance gate (Session 37) ────────────────────────
     # eula_accepted_at must be non-NULL before a seller can publish.
     # Separate from lm_eula_accepted_at (Local Market supplemental EULA).
@@ -1203,9 +1192,6 @@ class Listing(BaseModel):
     service_class: Optional[str] = None   # 'Technical' | 'Casuals'
     service_type: Optional[str] = None
     availability: Optional[str] = None
-    # Rental occupancy (Property rentals) — separate from the free-text 'availability' above
-    rental_status: Optional[str] = None   # 'available' | 'reserved' | 'occupied'
-    available_from: Optional[str] = None  # ISO date YYYY-MM-DD; drives "Available from <date>"
     # Property location (private — never returned to buyers)
     street_address: Optional[str] = None   # e.g. "12 Oak Ave, Waterkloof Ridge" — used for geocoding only
     listing_lat: Optional[float] = None    # geocoded from street_address
@@ -1239,8 +1225,6 @@ class ListingUpdate(BaseModel):
     service_class: Optional[str] = None
     service_type: Optional[str] = None
     availability: Optional[str] = None
-    rental_status: Optional[str] = None   # 'available' | 'reserved' | 'occupied'
-    available_from: Optional[str] = None  # ISO date YYYY-MM-DD
     photo_urls: Optional[str] = None    # JSON-encoded array of photo URLs
     thumb_url: Optional[str] = None     # primary thumbnail
     medium_url: Optional[str] = None    # primary medium photo
@@ -1298,38 +1282,6 @@ async def refresh_pois(listing_id: int, x_admin_key: str = Header(None)):
     return {"status": "refresh_queued", "listing_id": listing_id, "lat": lat, "lng": lng}
 
 # ── LISTINGS (public read, protected write) ──────────────────
-
-# ── Rental availability (occupancy) helpers ────────────────────────
-# Separate axis from the listing_status lifecycle and from the free-text
-# service 'availability' field. Property rentals only. The label is derived
-# at read time, so "Available from <future>" becomes "Available now" on the
-# date with no batch job. Dates compared as ISO strings (ZA single-tz launch).
-_RENTAL_STATUSES = {"available", "reserved", "occupied"}
-
-def _validate_rental_fields(rental_status, available_from):
-    if rental_status is not None and rental_status not in _RENTAL_STATUSES:
-        raise HTTPException(status_code=400,
-            detail="rental_status must be one of: available, reserved, occupied")
-    if available_from:
-        import datetime as _dt
-        try:
-            _dt.date.fromisoformat(str(available_from)[:10])
-        except (ValueError, TypeError):
-            raise HTTPException(status_code=400,
-                detail="available_from must be an ISO date (YYYY-MM-DD)")
-
-def _rental_availability(rental_status, available_from):
-    """Renter-facing availability label derived from (rental_status, available_from)."""
-    import datetime as _dt
-    status = (rental_status or "available").lower()
-    today = _dt.date.today().isoformat()
-    upcoming = bool(available_from) and str(available_from)[:10] > today
-    if status == "occupied":
-        return ("Occupied — available " + str(available_from)[:10]) if upcoming else "Occupied"
-    if status == "reserved":
-        return "Under application"
-    return ("Available from " + str(available_from)[:10]) if upcoming else "Available now"
-
 
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None,
@@ -1403,8 +1355,6 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         _d = dict(_r)
         if _founders and (_d.get("seller_email") or "").lower() in _founders:
             _d["founders"] = True
-        if (_d.get("category") or "").lower() == "property":
-            _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         out.append(_d)
     return out
 
@@ -1419,20 +1369,18 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
         "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (listing.city,)
     ).fetchone()
     _geo_city_id = _gcity_row["id"] if _gcity_row else None
-    _validate_rental_fields(listing.rental_status, listing.available_from)
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
-            subject, level, mode, service_type, availability, rental_status, available_from,
+            subject, level, mode, service_type, availability,
             trust_score, seller_email, listing_status, published_at,
             street_address, listing_lat, listing_lng, geo_city_id)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
-         (listing.rental_status or 'available'), listing.available_from,
          listing.trust_score, listing.seller_email, 'draft',
          listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id)
     )
@@ -1926,13 +1874,7 @@ def get_seller_listings(email: str):
         (email,)
     ).fetchall()
     conn.close()
-    out = []
-    for r in rows:
-        d = dict(r)
-        if (d.get("category") or "").lower() == "property":
-            d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
-        out.append(d)
-    return out
+    return [dict(r) for r in rows]
 
 @app.get("/listings/{listing_id}")
 def get_listing(listing_id: int):
@@ -1942,10 +1884,7 @@ def get_listing(listing_id: int):
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="Listing not found")
-    _d = dict(row)
-    if (_d.get("category") or "").lower() == "property":
-        _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
-    return _d
+    return dict(row)
 
 @app.put("/listings/{listing_id}")
 def update_listing(listing_id: int, update: ListingUpdate, background_tasks: BackgroundTasks, email: Optional[str] = None):
@@ -2002,8 +1941,6 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     if not d:
         conn.close()
         return {"message": "No fields changed", "listing_id": listing_id}
-
-    _validate_rental_fields(d.get("rental_status"), d.get("available_from"))
 
     # Preserve [photos:...] prefix if description is being updated without it
     if "description" in d:

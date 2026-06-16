@@ -27,7 +27,7 @@ Buyers only ever interact with listings in the **LIVE** state.
 - The only state buyers ever interact with
 - Commitment model listings auto-pause when an intro request arrives
 - Duration before Fade Out is gated by seller subscription tier (see Fade Out section)
-- **Listing count limits by tier:** Free = 2 simultaneous live listings · Starter ($5/mo) = 25 listings · Premium ($15/mo) = 50 listings
+- **Listing count limits by tier:** Free = 2 simultaneous live listings · Starter ($5/mo) = 10 · Pro ($20/mo) = 30 · Agency (free + verified) = 10 base (grows with Trust Score). Source: bea_main.py _SELLER_SUB_TIERS.
 - **Batch expansion:** Starter and Premium sellers may purchase additional listing capacity at 2T per batch of 20 extra listings. Free tier sellers must upgrade to Starter before purchasing extra slots.
 
 ### 3. PAUSED

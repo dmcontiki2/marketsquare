@@ -1,9 +1,10 @@
 """
 launch_redemption.py — Founders Badge redemption side + monthly Tuppence allocation.
 
-Canon: Canon_Addendum_1_FoundersBadge.docx rev 2 (6 Jun 2026) — the $2 anchor,
+Canon: Canon_Addendum_1_FoundersBadge.docx rev 3 (15 Jun 2026) — the $2 anchor,
 6/10/20/50 T monthly allocations, 20%-rounded-up Founders bonus (8/12/24/60),
-Business/Elite-only minting during the launch window, one badge per human, forever.
+Pro-only minting during the launch window (rev 3, 15 Jun 2026 — supersedes rev 2's
+Business/Elite, which the Simpler Model retired to legacy), one badge per human, forever.
 
 Issuing side (CityLauncher/emailer/launch_codes.py) is mirrored EXACTLY here:
 code format TSL-XXXX-XXXX-CCCC, Crockford base32 body (8 chars), 4-char
@@ -47,6 +48,7 @@ router = APIRouter()
 # ── Canon allocations (Addendum 1 rev 2: price ÷ 2, the restored $2 anchor) ──
 # Simpler Model (adopted 9-10 Jun 2026): Starter $5 → 2T/mo, Pro $20 → 10T/mo.
 # Legacy tiers retained for existing users until migration.
+# PRICING AUTHORITY — see MarketSquare/PRICING_CANON.md; run scripts/check_pricing_canon.py after any change.
 TIER_TUPPENCE_MONTHLY = {"starter": 2, "pro": 10,
                          "standard": 6, "professional": 10, "business": 20, "elite": 50}
 # NOTE: "starter" was once a legacy alias for "standard" (6T). It is now the canon
@@ -56,7 +58,7 @@ _LEGACY_TIER_MAP = {"premium": "professional"}  # legacy keys → canon
 _TIER_LABELS = {"starter": "Starter", "pro": "Pro",
                 "standard": "Standard", "professional": "Professional",
                 "business": "Business", "elite": "Elite"}
-QUALIFYING_TIERS = ("business", "elite")  # the ONLY minting tiers ($40 / $100)
+QUALIFYING_TIERS = ("pro",)  # the ONLY minting tier ($20 Pro) — rev 3, supersedes rev 2 Business/Elite
 
 # Crockford base32 — no I, L, O, U. Mirror of CityLauncher emailer/launch_codes.py.
 _ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"

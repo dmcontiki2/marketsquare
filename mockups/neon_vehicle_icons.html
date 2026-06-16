@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare · Vehicles — Neon Flame Concept</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:#04050a;color:#fff;min-height:100vh;
+ background:radial-gradient(circle at 50% 0%,#0d1018,#04050a 60%);padding:32px 16px 56px;}
+.wrap{max-width:780px;margin:0 auto;}
+h1{font-size:24px;font-weight:800;letter-spacing:.3px;text-align:center;
+ color:#fff;text-shadow:0 0 8px #ff8a3c,0 0 20px #ff2d6b;}
+.lead{text-align:center;color:#8b93a6;font-size:13px;margin:8px 0 26px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr;}}
+.tile{position:relative;background:radial-gradient(circle at 50% 28%,#141823,#06070c 75%);
+ border:1px solid #1d2435;border-radius:18px;padding:18px 10px 16px;text-align:center;overflow:hidden;
+ transition:.2s;}
+.tile:hover{border-color:#ff6a3c;box-shadow:0 0 0 1px #ff6a3c,0 0 26px rgba(255,80,60,.35);transform:translateY(-3px);}
+.iconwrap{position:relative;height:92px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;}
+.flames{position:absolute;bottom:2px;left:50%;width:82px;height:92px;opacity:.92;
+ mix-blend-mode:screen;pointer-events:none;transform-origin:50% 100%;
+ transform:translateX(-50%);animation:flick .15s infinite alternate;}
+.veh{position:relative;z-index:2;width:60px;height:60px;animation:glow 2.6s ease-in-out infinite;}
+.nm{font-size:14px;font-weight:700;margin-top:10px;color:#fff;text-shadow:0 0 10px rgba(255,138,60,.6);}
+.sub{font-size:10px;color:#7d8597;margin-top:3px;font-weight:500;letter-spacing:.2px;}
+@keyframes flick{from{opacity:.68;transform:translateX(-50%) scaleY(.93) scaleX(.98);}
+ to{opacity:1;transform:translateX(-50%) scaleY(1.06) scaleX(1.02);}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 3px #ffd166) drop-shadow(0 0 9px #fb6a3c) drop-shadow(0 0 16px #ff2d6b);}
+ 50%{filter:drop-shadow(0 0 6px #fff0a0) drop-shadow(0 0 15px #ff8a3c) drop-shadow(0 0 30px #ff2d6b);}}
+.note{text-align:center;color:#5d6678;font-size:11px;margin-top:26px;line-height:1.6;}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+ <defs>
+  <linearGradient id="neon" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff2d6b"/>
+  </linearGradient>
+  <linearGradient id="fire" x1="0" y1="1" x2="0" y2="0">
+   <stop offset="0" stop-color="#ff2d6b"/><stop offset=".4" stop-color="#fb6a2c"/>
+   <stop offset=".8" stop-color="#fde047"/><stop offset="1" stop-color="#fffce0" stop-opacity=".15"/>
+  </linearGradient>
+  <filter id="flame" x="-60%" y="-60%" width="220%" height="220%">
+   <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055" numOctaves="2" seed="4" result="n">
+    <animate attributeName="baseFrequency" dur="2.4s" values="0.018 0.05;0.03 0.085;0.018 0.05" repeatCount="indefinite"/>
+   </feTurbulence>
+   <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+   <feGaussianBlur stdDeviation="0.9"/>
+  </filter>
+ </defs>
+</svg>
+
+<div class="wrap">
+ <h1>What are you selling?</h1>
+ <div class="lead">Neon concept — animated flames, glow, pure black. (Hover a tile.)</div>
+ <div class="grid" id="grid"></div>
+ <div class="note">Concept treatment for the category selector. This is the “arcade neon” ceiling for hand-built SVG —<br>for literal photo-real vehicles we’d drop in real images or AI-rendered art.</div>
+</div>
+
+<script>
+const FLAMES='<svg class="flames" viewBox="0 0 60 92" aria-hidden="true"><g filter="url(#flame)">'
+ +'<path d="M30 90 C14 70 24 60 29 44 C35 60 41 52 38 40 C56 58 48 76 30 90Z" fill="url(#fire)"/>'
+ +'<path d="M30 90 C22 76 25 66 30 54 C35 66 37 74 30 90Z" fill="url(#fire)" opacity=".9"/>'
+ +'<path d="M30 90 C34 78 40 72 44 62 C45 76 40 84 30 90Z" fill="url(#fire)" opacity=".7"/>'
+ +'</g></svg>';
+const ICONS=[
+ ['Car','Sedan · SUV · Bakkie','<path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"/>'],
+ ['Bike','Motorcycle · Scooter','<path d="M2 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M16 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M7.5 14h5l4 -4h-10.5m1.5 4l4 -4"/><path d="M13 6h2l1.5 3l2 4"/>'],
+ ['Caravan','Towable · Motorhome','<path d="M7 18a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M11 18h7a2 2 0 0 0 2 -2v-7a2 2 0 0 0 -2 -2h-9.5a5.5 5.5 0 0 0 -5.5 5.5v3.5a2 2 0 0 0 2 2h2"/><path d="M8 7l7 -3l1 3"/><path d="M13 11.5a.5 .5 0 0 1 .5 -.5h2a.5 .5 0 0 1 .5 .5v2a.5 .5 0 0 1 -.5 .5h-2a.5 .5 0 0 1 -.5 -.5l0 -2"/><path d="M20 16h2"/>'],
+ ['Trailer','Box · Car · Boat','<path d="M9 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M11 17h6a2 2 0 0 0 2 -2v-3a1 1 0 0 0 -1 -1h-12a1 1 0 0 0 -1 1v3a2 2 0 0 0 2 2h2"/><path d="M5 12l-2 -1h-1"/>'],
+ ['Boat','Ski · Cabin · Jet','<path d="M2 17h14.4a3 3 0 0 0 2.5 -1.34l3.1 -4.66h-6.23a4 4 0 0 0 -1.49 .29l-3.56 1.42a4 4 0 0 1 -1.49 .29h-5.73l-1.5 4"/><path d="M6 13l1.5 -5"/><path d="M6 8h8l2 3"/>'],
+ ['Other','Bus · Truck · Tractor','<path d="M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M4 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/>']
+];
+document.getElementById('grid').innerHTML=ICONS.map(function(it){
+ return '<div class="tile"><div class="iconwrap">'+FLAMES
+  +'<svg class="veh" viewBox="0 0 24 24" fill="none" stroke="url(#neon)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+it[2]+'</svg>'
+  +'</div><div class="nm">'+it[0]+'</div><div class="sub">'+it[1]+'</div></div>';
+}).join('');
+</script>
+</body>
+</html>
