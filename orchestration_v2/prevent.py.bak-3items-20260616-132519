@@ -10,7 +10,6 @@ Guards (against the deployed ms.js - each protects a shipped fix):
   G-DEMO6  renderAdvGrid honours l.per          (must contain 'const _advPer = l.per')
   G-DEMO7  renderCatCounts excludes l.paused    (>= 2 paused guards, both count paths)
   G-PHOTO  card photo source == detail          (>= 4 of (l.photos&&l.photos[0])||l.photo)
-  G-PUBLISH guided listing reaches live          (dashPublish wired + go-live-before-exit guard)
 Monitors:
   M-IMG    demo-image link-health               (gentle low-concurrency HEAD; reports DEAD gallery URLs)
 
@@ -81,10 +80,6 @@ def guards(ms):
     c_photo = ms.count("(l.photos&&l.photos[0])||l.photo")
     g("G-PHOTO", "S123", "card photo source matches the detail view (poka-yoke)", c_photo >= 4,
       "%d card-site poka-yokes present (floor 4)" % c_photo, "S123 P2#2")
-    c_pub = ("function dashPublish" in ms) and ("PREVENT-PUBLISH: go-live-before-exit" in ms)
-    g("G-PUBLISH", "S138/S139", "guided listings can reach live (publish wiring + go-live-before-exit guard)", c_pub,
-      "dashPublish wiring + go-live-before-exit handoff present" if c_pub else "MISSING - guided listings may strand as drafts (GUIDED-PUBLISH-1 regression)",
-      "GUIDED-PUBLISH-1")
     return out
 
 

@@ -1,3 +1,13 @@
+## Session 139 (Slice 4, attended — David review) · 16 June 2026 — Cleared 3 long-stale board items
+
+David's call: three items had sat on the dashboard "next" board for ~5 sessions, un-started, and kept nagging him. Built all three for real (`ms.js` / `ms.css` / `orchestration_v2/prevent.py`):
+
+- **SELLERHUB 7-state status chips.** Seller hub now renders the full listing lifecycle as colour-coded chips — DRAFT / LIVE / PAUSED / FADE_OUT / WITHDRAWN / BLOCKED / ARCHIVED — via a new `sbLifecycleChip()` helper, replacing the old 3-state draft/paused/active collapse; the "N requests waiting" overlay is preserved for LIVE listings. (Logic 9/9.)
+- **Guided go-live-before-exit handoff (GUIDED-PUBLISH-1 follow-up).** Exiting the guided sell flow with an unpublished draft now surfaces a confirm that the listing is NOT live and offers to keep editing toward publishing — so drafts aren't silently stranded.
+- **PREVENT-PUBLISH guard (G-PUBLISH).** New guard in the Prevent harness checks the deployed ms.js still carries the publish wiring + the go-live-before-exit handoff; a FAIL re-enters Triage->Fix. Verified PASS against the patched ms.js.
+
+Backups: `*.bak-3items-*`. Verified: `node --check` + `ast.parse` clean; `sbLifecycleChip` 9/9; prevent.py harness run = G-PUBLISH PASS. Note: prevent.py is committed; the nightly orchestrator picks it up on its next server sync. Cost model impact: none.
+
 ## Session 139 (Slice 3, attended — David review) · 15 June 2026 — Rental availability: seller control + deploy hardening
 
 **(a) Seller availability control (FEA edit flow).** `ms.js` only. In the post-publish edit screen (`renderEditForm` / `saveEditedListing`), Property listings now get an **Availability** selector (Available / Reserved / Occupied) + an **Available from** date picker, pre-filled from the listing and written into the existing `PUT /listings/{id}?email=` payload as `rental_status` + `available_from`. Closes the loop: a lister flips status as the unit fills or frees up, and the buyer-side badge (Slice 2) reflects it. Extends the existing PUT (no new API call), so no DEMO_MODE branch needed.

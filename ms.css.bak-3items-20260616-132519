@@ -1280,10 +1280,3 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .avail-pill.upc{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
 .avail-pill.occ{background:#fef2f2;color:#991b1b;border-color:#fecaca;}
 .avail-pill.rsv{background:#fff7ed;color:#9a3412;border-color:#fed7aa;}
-
-/* ── Seller-hub 7-state lifecycle chips — Session 139 ── */
-.st-draft{background:#e0e7ff;color:#3730a3;}
-.st-fade{background:#fff7ed;color:#9a3412;}
-.st-withdrawn{background:#f3f4f6;color:#4b5563;}
-.st-blocked{background:#fee2e2;color:#991b1b;}
-.st-archived{background:#eef2f7;color:#64748b;}

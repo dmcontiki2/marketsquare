@@ -390,7 +390,6 @@ async function loadLiveDash() {
               title: l.title,
               cat: normCat(l.category),
               status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
-              listing_status: (l.listing_status || 'live').toLowerCase(),
               photo: l.thumb_url || null,
               isCommit: normCat(l.category) === 'Property',
               intros: [],
@@ -5982,15 +5981,6 @@ async function sbSaveDraft(step){
 }
 
 async function sbSaveDraftAndExit(){
-  // PREVENT-PUBLISH: go-live-before-exit guard (GUIDED-PUBLISH-1 follow-up).
-  // Surface that a saved draft is NOT live so listings aren't silently stranded as drafts.
-  if(!confirm(`Save as a draft and finish later?
-
-Your listing will NOT be visible to buyers until you publish it. You can resume and go live anytime from your dashboard (the draft shows a Publish button).
-
-OK = save draft and exit      .      Cancel = keep editing`)){
-    return; // keep editing -> path to Go live
-  }
   const step=sbState._step||'b7';
   await sbSaveDraft(step);
   showToast('💾 Draft saved — continue from your dashboard anytime');
@@ -7229,31 +7219,18 @@ function updateDashStats(){
   const td=document.getElementById('dash-tn');      if(td)td.textContent=tuppence;
 }
 
-// 7-state listing lifecycle chip for the seller hub (mirrors the BEA listing_status machine).
-function sbLifecycleChip(ls){
-  var s=(ls||'live').toLowerCase();
-  var M={
-    draft:     ['st-draft','📝 Draft — not visible yet'],
-    live:      ['st-active','● Live'],
-    paused:    ['st-paused','⏸ Paused'],
-    fade_out:  ['st-fade','🌙 Fading — refresh to stay visible'],
-    withdrawn: ['st-withdrawn','↩ Withdrawn'],
-    blocked:   ['st-blocked','⛔ Blocked'],
-    archived:  ['st-archived','🗄 Archived']
-  };
-  var c=M[s]||M.live;
-  return '<span class="ml-status '+c[0]+'">'+c[1]+'</span>';
-}
-
 function renderDashCard(dl){
   const pendingIntros = dl.intros.filter(i=>i.status==='pending');
   const thumbHtml = dl.photo
     ? `<img src="${dl.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
     : CATS[dl.cat].icon;
-  const _ls = (dl.listing_status || (dl.status==='draft'?'draft':(dl.status==='paused'?'paused':'live')));
-  const statusBadge = (_ls==='live' && pendingIntros.length>0)
+  const statusBadge = dl.status==='draft'
+    ? '<span class="ml-status st-paused">📝 Draft — not visible to buyers yet</span>'
+    : dl.status==='paused'
+    ? '<span class="ml-status st-paused">⏸ Paused — intro pending</span>'
+    : pendingIntros.length>0
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
-    : sbLifecycleChip(_ls);
+    : '<span class="ml-status st-active">● Active</span>';
 
   const introsHtml = pendingIntros.map(intro => `
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">
