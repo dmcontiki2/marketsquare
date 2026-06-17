@@ -120,4 +120,5 @@ Kronberg/
 # Transient build/deploy backups — originals live in git history + on the server, never version these
 *.bak-tiersbuild
 *.bak-2*
+*.bak-*
 *.s*bak
