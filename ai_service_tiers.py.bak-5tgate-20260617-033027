@@ -35,42 +35,6 @@ TIER_COLOR = {FREE: "green", VERIFIED: "blue", PREMIUM: "gold"}
 TIER_TUPPENCE = {FREE: 0, VERIFIED: 1, PREMIUM: 2}
 
 
-# ── Paid-feed AI class — S3 tier-gate (Free-Tier AI Cost Risk Report, 16 Jun 2026) ──
-# These are the expensive AI functions that draw on a CONTRACTED/CONSUMPTION data
-# feed (B7-class). Decision S3: reserve this class for the $20 Pro seller tier, where
-# the 5T = $10 charge covers Sonnet-plus-feed cost. Free / Starter / Agency are blocked.
-# Free-data / Haiku / OSM-Nominatim functions are NEVER in this set — cheap AI stays
-# open to free users (the conversion hook). The gate is enforced at /tuppence/ai-commit.
-#
-# NOTE: today every paid feed is flag-OFF (DEFAULT_PROVIDERS), so these functions run on
-# free/own data and the gate is dormant-but-present. Listing them here means the gate
-# activates automatically the moment a feed is contracted — no second code change needed.
-PAID_FEED_FUNCTIONS = frozenset({
-    "heritage_tour", "expedition_dossier", "weekend_itinerary",
-    "property_dossier", "car_dossier", "collection_liquidation",
-    "collectables_advert", "offer_advisor", "study_plan",
-})
-
-# Seller tiers permitted to fire the paid-feed class. Pro only (+ legacy paid tiers
-# for existing users until migration). PRICING AUTHORITY: see PRICING_CANON.md §5.
-PAID_FEED_ALLOWED_TIERS = frozenset({
-    "pro", "professional", "business", "elite",
-})
-
-
-def requires_paid_feed(function_id: str) -> bool:
-    """True when this AI function belongs to the Pro-gated paid-feed class (S3)."""
-    return (function_id or "").strip() in PAID_FEED_FUNCTIONS
-
-
-def tier_may_run(function_id: str, seller_tier: str) -> bool:
-    """Gate check: may a user on `seller_tier` fire `function_id`?
-    Non-paid-feed functions are open to everyone; the paid-feed class is Pro-only."""
-    if not requires_paid_feed(function_id):
-        return True
-    return (seller_tier or "free").strip().lower() in PAID_FEED_ALLOWED_TIERS
-
-
 # ── Provider registry ────────────────────────────────────────────────────────
 # `True`  = data source is live and licensed for our commercial use *now*.
 # `False` = not yet available (no contract / not built / B7 not approved).

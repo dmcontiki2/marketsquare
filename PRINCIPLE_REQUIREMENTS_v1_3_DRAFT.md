@@ -59,6 +59,8 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - Listing slots are a CAP (meter display, not a wallet): Free 2 / Starter 10 / Pro 30.
 - Monthly Tuppence to paid seller tiers (price ÷ 2 at 1T = $2): Starter 2T · Pro 10T (Founders ×1.2 rounded up: Pro 10→12T). The old 5-tier $0/$12/$20/$40/$100 family is retired.
 - "AI uses" / AI-session allowances are RETIRED: in-app AI guidance is free; advanced AI functions are Tuppence-priced per use through the HOLD ledger (/tuppence/ai-commit + /tuppence/ai-settle).
+- AI-class access by tier (S3 — Free-Tier AI Cost Risk Report, 16 Jun 2026; PRICING_CANON.md §5): the PAID-FEED AI class (Sonnet + a contracted data feed) is reserved for $20 Pro; Free / Starter / Agency are blocked at /tuppence/ai-commit (403, no hold placed). Cheap Haiku / free-data AI stays open to everyone. Closes the ~$39,166/yr Year-1 free-tier cost leak. Source: `ai_service_tiers.PAID_FEED_FUNCTIONS` / `PAID_FEED_ALLOWED_TIERS`.
+- Monthly grant is NON-ROLLING (S3): granted Tuppence (monthly_allocation + founders_bonus) does not accumulate — unspent grant is swept (grant_expiry row) before each new allocation; purchased/earned Tuppence is never swept. See A8 (this is a grant reset, not a penalty). Source: `launch_redemption.grant_monthly_tuppence`.
 - Daily Introduction-session limits are retired [AD-07 — David confirm].
 - Applies to: FEA plans screen + wallet · BEA verify_seller_subscription + launch_redemption.py · EULA tier disclosure · support FAQ.
 
@@ -71,6 +73,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 - The only valid reasons to deduct Tuppence are: (i) buyer pays an Introduction fee; (ii) seller or buyer purchases an AI service; (iii) seller purchases a Boost.
 - Negative behaviour (ignoring intros, declining without reason, no-shows, bad referrals) is penalised exclusively via Trust Score reduction and, in severe or repeat cases, Banishment (account suspension or permanent ban).
 - This principle is non-negotiable. No agent, architect, or future feature may introduce a Tuppence-deduction penalty under any framing (fee, bond, deposit, resubmission cost, etc.).
+- CLARIFICATION (17 Jun 2026): the non-rolling monthly grant reset (A7 / PRICING_CANON §5) is NOT a punitive deduction. It zeroes only UNSPENT GRANTED Tuppence at the moment a fresh grant is credited — a grant that resets rather than rolls over. No purchased or earned Tuppence is ever swept, and nothing is deducted in response to behaviour. A8-compliant by construction.
 - Rationale: punitive deductions create fear, erode trust, and undermine the platform's commitment-signal model. Trust Score is the correct instrument — it is visible, recoverable, and proportionate.
 - Applies to: BEA all endpoints · FEA all flows · admin tool · future agent features · EULA · any legal documentation.
 

@@ -11913,21 +11913,6 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
     conn.isolation_level = None
     try:
         conn.execute("BEGIN IMMEDIATE")
-        # ── S3 paid-feed tier-gate (Free-Tier AI Cost Risk Report, 16 Jun 2026) ──
-        # The expensive paid-feed AI class is reserved for $20 Pro, whose 5T=$10 charge
-        # covers Sonnet-plus-feed cost. Block Free/Starter/Agency BEFORE placing the hold,
-        # so a gated call never charges and never leaks. Cheap (non-paid-feed) AI stays
-        # open to everyone. PRICING AUTHORITY: PRICING_CANON.md §5.
-        if ai_service_tiers.requires_paid_feed(function_id):
-            _trow = conn.execute(
-                "SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
-            _stier = (_trow["seller_tier"] if _trow else "free") or "free"
-            if not ai_service_tiers.tier_may_run(function_id, _stier):
-                conn.execute("ROLLBACK")
-                raise HTTPException(status_code=403,
-                    detail="This AI feature is available on the Pro plan. "
-                           "Upgrade to Pro to use the full research tools — your "
-                           "Tuppence was not charged.")
         row = conn.execute(
             "SELECT COALESCE(SUM(amount),0) AS bal FROM transactions WHERE user_email=?",
             (email,)).fetchone()

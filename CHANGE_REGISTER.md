@@ -12,6 +12,38 @@
 
 ---
 
+## CC-004 · S3 AI-class Pro-gate + non-rolling monthly grant
+**Stage:** 4/5 STAGED — DEPLOY-READY (built + canon landed + deploy script patched 17 Jun 2026; live push pending on David's machine) — code staged, docs tracked, awaiting David: review -> deploy (RED money lane) -> land Codex/IP/WP DRAFTs with counsel.
+**Opened:** 17 Jun 2026 · **Owner:** David (council) · **Source decision:** `MarketSquare_FreeTier_AI_Cost_Risk_Report.docx` (16 Jun), scenario S3 + no-rollover.
+
+**One-paragraph change:** The expensive paid-feed AI class is reserved for the $20 Pro tier (enforced at `/tuppence/ai-commit`, 403 before any hold — Free/Starter/Agency blocked; cheap Haiku/free-data AI stays open to all), and granted Tuppence is made non-rolling (unspent grant swept via a `grant_expiry` row at each monthly allocation; purchased/earned Tuppence never swept). Closes the ~$39,166/yr Year-1 free-tier cost leak. A8-safe: the grant reset is not a punitive deduction.
+
+**Code (staged, py_compile clean, backups `*.bak-5tgate-20260617-033027`):**
+- `ai_service_tiers.py` — `PAID_FEED_FUNCTIONS`, `PAID_FEED_ALLOWED_TIERS`, `requires_paid_feed()`, `tier_may_run()`.
+- `bea_main.py` `/tuppence/ai-commit` — tier-gate before hold.
+- `launch_redemption.py` `grant_monthly_tuppence()` — non-rolling sweep.
+
+**Docs updated to track the decision (this is the anti-drift step):**
+
+| Doc | Current ver | Change | Bump |
+|---|---|---|---|
+| `PRICING_CANON.md` | pinned 15 Jun | +§5 AI-class access + non-rollover (authority) | in-place |
+| `docs/CHANGE_5T_GATE_AND_NONROLL_SPEC.md` | new | full spec | new file |
+| `PRINCIPLE_REQUIREMENTS_v1_3_DRAFT.md` | v1.3 draft | A7 +2 rules; A8 +clarification (reset != penalty) | in-place |
+| `Solar_Council_Codex_v4_8_DRAFT.docx` | v4.8 DRAFT | §2 +S3 note; flagged stale 5-tier line -> defers to canon | in-place (stays DRAFT, v4.7 controlling) |
+| `TrustSquare_IP_Brief_v6_DRAFT.docx` | v6 DRAFT | §0 +S3 para; grant sweep folded into existing float-expiry recital (NO new claim — David ruling) | in-place |
+| `TrustSquare_WhitePaper_v3_5_DRAFT.docx` | v3.5 DRAFT | §3.2 non-rolling grant property; §3.5 paid-feed tier gate; Version History line | in-place (no number bump pending counsel) |
+| `TrustSquare_Provisional_Specification_DRAFT_2026-06-11.docx` | v1.1 DRAFT | counsel note: detailed-description additions, claims unaffected | in-place |
+| `eula_clean.html` / `eula_raw.html` | v1.3 draft | §5.2 non-rolling granted-Tuppence carve-out; §5.5 Pro-plan AI note | in-place |
+
+**Version policy applied (David ruling 17 Jun):** edit in-place on the unfiled DRAFTs (no new vN files — avoids churn before counsel lands them); patent treats the grant sweep as a further instance of the existing time-based float-expiry recital, not a new claim. The patent/whitepaper now TRACK this decision so they cannot drift out of line.
+
+**Deploy (17 Jun 2026):** `deploy_marketsquare.bat` PATCHED to scp `ai_service_tiers.py` + `launch_redemption.py` (were missing — would have shipped a half-change) before the BEA restart, plus two post-restart grep checks (`requires_paid_feed`, `grant_expiry`). Pre-flight green: all 3 files py_compile clean; gate + sweep unit-tested. Backups `*.bak-s3-*`. The live push must run on David's Windows machine (SSH key is local; the Cowork sandbox has no key and no passwordless route to 178.104.73.239 — verified). On a fresh session: run the .bat, confirm the two `[OK]` lines.
+
+**Counsel — DECIDED, NOT A BLOCKER (David ruling 17 Jun 2026):** landing Codex v4.8 / IP v6 / WP v3.5 with a patent attorney is deferred indefinitely — cost-constrained, and it must NOT gate progress. The DRAFTs stay controlled/unfiled and are edited in-place as decisions land (they now TRACK CC-004). No future session should treat counsel sign-off as a prerequisite for shipping. Run `scripts/check_pricing_canon.py` after deploy.
+
+---
+
 ## CC-003 · Launch-threshold canon correction (60 prospects = wave trigger, not 60 sellers = public gate)
 **Stage:** 0/5 OPENED (attended, 12 Jun 2026) — David ruling in chat: the design has ALWAYS been *60 staged prospects per city fires the auto-email founding wave; cities launch day-one with zero native listings* (WHCL 332 sites + demos carry browse; density via waves at ~5–7% conversion + direct agency onboarding on the free Agency tier). The "public launch threshold: 60 founding sellers (20/category)" wording in docs is an AI transcription error, never council intent. **Opened:** 12 Jun 2026 · **Owner:** David (council) · **Hot lines already corrected attended:** AGENT_BRIEFING.md:14, CLAUDE.md:139.
 

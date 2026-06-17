@@ -381,7 +381,7 @@
 <li><p>Non-redeemable for cash (current state): Tuppence cannot currently be converted to ZAR or any other currency. [Note: Cash-out functionality may be introduced in future, subject to FSCA compliance and updated terms];</p></li>
 <li><p>Platform-exclusive: Tuppence has no monetary value outside the Platform and cannot be used on any other platform;</p></li>
 <li><p>Non-inheritable and non-assignable: Tuppence cannot be inherited or transferred on account closure;</p></li>
-<li><p>No expiry of purchased or earned Tuppence (current state): Tuppence you buy or earn does not expire unless the Platform closes or your account is terminated for breach. Granted Tuppence is different: monthly subscription allowances and promotional grants are non-rolling — any unused granted Tuppence is reset to zero when your next monthly allowance is credited, so allowances do not accumulate. This reset applies only to granted Tuppence, never to Tuppence you have purchased or earned.</p></li>
+<li><p>No expiry (current state): Tuppence balances do not expire unless the Platform closes or your account is terminated for breach.</p></li>
 </ul>
 <p><strong>5.3 Introduction Model by Category</strong></p>
 <p>The introduction model differs by category. The Platform reserves the right to update these models with notice:</p>
@@ -470,7 +470,7 @@
 </tr>
 <tr class="even">
 <td>Why Tuppence is charged</td>
-<td>Advanced AI features are powered by an external AI provider and are a priced service: each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm; everyday in-app guidance is free. Certain advanced AI features that draw on contracted external data feeds are available only on the Pro subscription plan; where a feature requires Pro, this is shown before use and no Tuppence is charged if your plan does not include it. AI Feature Tuppence and Introduction Tuppence remain separate flows, and neither is a financial product or instrument. Tuppence is non-refundable and cannot be exchanged back into money — it is prepaid consideration for Platform services, not a deposit. A released hold returns un-spent Tuppence, never cash.</td>
+<td>Advanced AI features are powered by an external AI provider and are a priced service: each use costs Tuppence (capped — Free / 2T / 3T / 5T), shown before you confirm; everyday in-app guidance is free. AI Feature Tuppence and Introduction Tuppence remain separate flows, and neither is a financial product or instrument. Tuppence is non-refundable and cannot be exchanged back into money — it is prepaid consideration for Platform services, not a deposit. A released hold returns un-spent Tuppence, never cash.</td>
 </tr>
 <tr class="odd">
 <td>Access model</td>

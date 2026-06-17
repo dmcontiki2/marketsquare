@@ -215,20 +215,6 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-:: S3 (CC-004) — AI paid-feed tier-gate + non-rolling grant modules. Imported by
-:: main.py; must land BEFORE the BEA restart so the gate + sweep ship atomically.
-scp "%PROJECT%\ai_service_tiers.py" %SERVER%:%REMOTE%/ai_service_tiers.py
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for ai_service_tiers.py. Check SSH connection.
-    pause
-    exit /b 1
-)
-scp "%PROJECT%\launch_redemption.py" %SERVER%:%REMOTE%/launch_redemption.py
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for launch_redemption.py. Check SSH connection.
-    pause
-    exit /b 1
-)
 echo  Done.
 echo.
 
@@ -275,8 +261,6 @@ echo.
 ssh %SERVER% "grep -q 'listings/mine' %REMOTE%/main.py && echo   [OK] BEA: new routes confirmed in main.py || echo   [FAIL] BEA: old main.py still on server - SCP may have failed"
 
 ssh %SERVER% "grep -q 'tuppence/balance' %REMOTE%/main.py && echo   [OK] BEA: tuppence/balance endpoint confirmed || echo   [FAIL] BEA: missing endpoint - redeploy needed"
-ssh %SERVER% "grep -q 'requires_paid_feed' %REMOTE%/ai_service_tiers.py && echo   [OK] BEA: S3 paid-feed gate present || echo   [FAIL] BEA: ai_service_tiers.py stale - redeploy needed"
-ssh %SERVER% "grep -q 'grant_expiry' %REMOTE%/launch_redemption.py && echo   [OK] BEA: non-rolling grant sweep present || echo   [FAIL] BEA: launch_redemption.py stale - redeploy needed"
 
 ssh %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishlist feed endpoints confirmed || echo   [FAIL] BEA: wishlist endpoints missing - redeploy needed"
 

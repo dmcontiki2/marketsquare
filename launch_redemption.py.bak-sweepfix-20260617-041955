@@ -244,30 +244,26 @@ def grant_monthly_tuppence(conn, email: str, tier: str, period: str = None):
     if cur.rowcount == 0:
         return None  # already granted this period
     # ── Non-rolling sweep (Free-Tier AI Cost Risk Report, 16 Jun 2026, S3) ──
-    # Granted Tuppence does NOT roll over: before crediting this period, expire the
-    # UNSPENT portion of the PREVIOUS grant so allowances cannot be banked and burst on
-    # the paid-feed class. Rule (grant-spent-first, balance-bounded):
-    #     sweep = min(current wallet balance, previous grant's total amount)
-    # This can never remove more than the user actually holds (so purchased/earned
-    # Tuppence is never touched) nor more than the last grant (so a long account does
-    # not drift). One offsetting `grant_expiry` row keeps the wallet a pure txn sum.
-    # A8-safe: this resets a grant, it is never a penalty deduction.
-    _prev = conn.execute(
-        "SELECT COALESCE(amount,0) + COALESCE(badge_bonus,0) AS prev "
-        "FROM tuppence_monthly_grants WHERE email=? AND period<>? "
-        "ORDER BY period DESC LIMIT 1", (email, period)).fetchone()
-    _prev_grant = int(_prev["prev"]) if _prev else 0
-    if _prev_grant > 0:
-        _bal_row = conn.execute(
-            "SELECT COALESCE(SUM(amount),0) AS b FROM transactions WHERE user_email=?",
-            (email,)).fetchone()
-        _balance = int(_bal_row["b"])
-        _sweep = min(_balance, _prev_grant)
-        if _sweep > 0:
-            conn.execute(
-                "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
-                (email, "grant_expiry", -_sweep,
-                 f"Monthly grant reset \u00b7 {_sweep}T unused (non-rolling)"))
+    # Granted Tuppence does NOT roll over: before crediting this period, zero out any
+    # UNSPENT prior grant so allowances cannot be banked and burst on the paid-feed
+    # class. Only the granted portion is swept — purchased and earned Tuppence is never
+    # touched. The sweep is a single offsetting ledger row, computed from the user's own
+    # history, so the wallet stays a pure transaction sum. A8-safe: this resets a grant,
+    # it is never a penalty deduction.
+    _granted = conn.execute(
+        "SELECT COALESCE(SUM(amount),0) AS g FROM transactions "
+        "WHERE user_email=? AND type IN ('monthly_allocation','founders_bonus')",
+        (email,)).fetchone()
+    _spent_on_grant = conn.execute(
+        "SELECT COALESCE(-SUM(amount),0) AS s FROM transactions "
+        "WHERE user_email=? AND type IN ('ai_hold','ai_burn','grant_expiry')",
+        (email,)).fetchone()
+    _unspent_grant = int(_granted["g"]) - int(_spent_on_grant["s"])
+    if _unspent_grant > 0:
+        conn.execute(
+            "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
+            (email, "grant_expiry", -_unspent_grant,
+             f"Monthly grant reset \u00b7 {_unspent_grant}T unused (non-rolling)"))
     label = _TIER_LABELS.get(canon_tier, canon_tier.title())
     conn.execute(
         "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",

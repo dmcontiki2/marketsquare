@@ -1,3 +1,17 @@
+## Session 140 · 17 June 2026 — 5T paid-feed Pro-gate + non-rolling monthly grant (S3 BUILT, attended)
+
+Built the two enforcement rules from the 16 Jun Free-Tier AI Cost Risk Report (scenario **S3 + no-rollover**) that had been decided but never implemented — closing the ~$3,264/mo (~$39,166/yr Year-1) un-recouped exposure where free/granted Tuppence funded the expensive paid-feed AI class.
+
+- **`ai_service_tiers.py`** — new single source of truth for the gated class: `PAID_FEED_FUNCTIONS` (the 5T paid-feed candidates), `PAID_FEED_ALLOWED_TIERS` (`pro` + legacy `professional`/`business`/`elite`), and helpers `requires_paid_feed()` / `tier_may_run()`. Pure, dependency-free, unit-tested.
+- **`bea_main.py` `/tuppence/ai-commit`** — the Tuppence-hold chokepoint now resolves the caller's `users.seller_tier` and, for a paid-feed-class function, returns **403** with a friendly upgrade message *before* placing the hold when the tier isn't allowed. Free/Starter/Agency blocked from the paid-feed class; cheap (Haiku/free-data/OSM) AI stays open to everyone. No charge on a blocked call.
+- **`launch_redemption.py` `grant_monthly_tuppence()`** — monthly grant is now **non-rolling**: before crediting the new period, any *unspent grant* (`monthly_allocation` + `founders_bonus`) is swept to zero via a single `grant_expiry` ledger row. Purchased and earned Tuppence is never touched. **A8-safe** — a grant reset, not a penalty deduction.
+
+Verified: gate logic (free/starter/agency blocked, pro allowed, legacy paid allowed, cheap AI open to free) + non-roll ledger simulation (bank-and-burst prevented; purchased Tuppence preserved across resets) both pass; `py_compile` clean on all three files; backups `*.bak-5tgate-20260617-033027`. Canon landed: `PRICING_CANON.md` gains §5; spec at `docs/CHANGE_5T_GATE_AND_NONROLL_SPEC.md`. **No price/slot/monthly-Tuppence values changed** — tiers unchanged.
+
+**Cost model impact:** closes the prospective paid-feed leak (S0 ~$39,166/yr -> ~$0 at Year-1 scale per the report's S3 column). Gate is dormant-but-present today (all paid feeds flag-OFF) and activates automatically when a feed is contracted — B7 sign-off + hard ceiling still required before any feed goes live. No new spend introduced.
+
+**NOT YET DEPLOYED** — staged locally, RED lane (money/Tuppence). Needs David: review -> `deploy_marketsquare.bat` (bea_main.py + ai_service_tiers.py + launch_redemption.py) -> restart -> smoke. Founders/grant path stays env-gated (`TUPPENCE_MONTHLY_ENABLED`).
+
 ## Session 139 (Slice 4, attended — David review) · 16 June 2026 — Cleared 3 long-stale board items
 
 David's call: three items had sat on the dashboard "next" board for ~5 sessions, un-started, and kept nagging him. Built all three for real (`ms.js` / `ms.css` / `orchestration_v2/prevent.py`):
