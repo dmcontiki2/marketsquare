@@ -3513,7 +3513,7 @@ def verify_seller_subscription(reference: str):
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
 
 @app.get("/admin/ai-spend/summary")
-def admin_ai_spend_summary(_key: str = Depends(auth.require_api_key)):
+def admin_ai_spend_daily_summary(_key: str = Depends(auth.require_api_key)):
     """Live AI-spend summary for the nightly cost-compliance sweep (P2, 11 Jun 2026).
     Returns today's and 7-day spend, the configured ceilings, and a 7-day
     per-endpoint/model breakdown. Read-only; $0; admin key required."""

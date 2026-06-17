@@ -1,3 +1,9 @@
+## Daily Loop follow-up · 2026-06-17 — SCAN-17 shipped (David-approved in chat)
+
+`bea_main.py`: resolved ruff **F811** duplicate function name `admin_ai_spend_summary` (two routes shared the name). Renamed the newer `/admin/ai-spend/summary` daily handler to `admin_ai_spend_daily_summary`; the older `/admin/ai-spend` monthly handler keeps the name. Behaviour-neutral — the name is never called in code (only the FastAPI decorators reference the functions) and the two routes have distinct paths. Surgical str.replace anchored on the decorator+def pair (+6B); ast clean local + BEA venv; server backup `main.py.bak-scan17-20260617-150527`; md5 parity; restart active; /health v1.3.1; both routes re-verified HTTP 401; CF purged; smoke 40/40 pre+post. Staged since 15 Jun (Gate-2 vicinity / cost-ceiling reporting surface); shipped under David's explicit in-chat approval 17 Jun.
+
+**Cost model impact:** none — pure rename, no pricing/ledger/AI-call change.
+
 ## Session 140 · 17 June 2026 — 5T paid-feed Pro-gate + non-rolling monthly grant (S3 BUILT, attended)
 
 Built the two enforcement rules from the 16 Jun Free-Tier AI Cost Risk Report (scenario **S3 + no-rollover**) that had been decided but never implemented — closing the ~$3,264/mo (~$39,166/yr Year-1) un-recouped exposure where free/granted Tuppence funded the expensive paid-feed AI class.
