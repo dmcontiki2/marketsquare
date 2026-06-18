@@ -1,6 +1,16 @@
 # TrustSquare · Feature & Fix Backlog
-*Updated S131 · 7 June 2026 — launch-blocker re-triage (see 🔴/🟧/🟨)*
+*Updated S140 · 18 June 2026 — added the Deferred items list (surfaced in the daily brief)*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
+
+---
+
+## 📌 Deferred items — the one durable "do it later" list (READ THIS IN THE DAILY BRIEF)
+
+**Standing rule (from the Approvals & blockers principle in CLAUDE.md):** nothing is left dangling in a chat thread. If a small item genuinely can't be done in the moment, it lands HERE with a date, and it is surfaced every morning until it's done or explicitly dropped. Do-it-now is always the default; this list is only for the true exceptions. Clear an item by deleting its row (and noting it in CHANGELOG if it shipped).
+
+| Added | Item | Why deferred | Reversible? |
+|-------|------|--------------|-------------|
+| 18 Jun (S140) | **Tier-2 render check for video faults** — `human_view_verify.py` has the render hook stubbed; wiring true render verification needs David's Chrome (Claude-in-Chrome extension) live, which can't run headless in the sandbox. | Needs David's browser session; not sandbox-doable | Yes |
 
 ---
 

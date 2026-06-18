@@ -12616,9 +12616,11 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
-  collectables_advert: '/static/videos/collectables-advert-howto.mp4',
-  heritage_tour:       '/static/videos/heritage-tour-howto.mp4'
+  collectables_advert: '/static/videos/collectables-advert-howto.mp4?v=20260618e',
+  heritage_tour:       '/static/videos/heritage-tour-howto.mp4?v=20260618c',
+  introductions:       '/static/videos/introduction.mp4?v=20260618c'
 };
+const AI_VIDEO_TITLES = { introductions: 'Introductions' };
 function aiVideoTutor(id){
   const src = AI_VIDEOS[id]; if(!src) return;
   const f = AI_FNS.find(x=>x.id===id)||{};
@@ -12627,15 +12629,30 @@ function aiVideoTutor(id){
   m.id='ai-vmodal'; m.className='ai-vmodal';
   m.innerHTML =
     '<div class="ai-vbox" role="dialog" aria-modal="true" aria-label="Video tutor">'+
-      '<div class="ai-vhead"><span>\u25B6 Video Tutor \u2014 '+(f.name||'How it works')+'</span>'+
+      '<div class="ai-vhead"><span>\u25B6 Video Tutor \u2014 '+(f.name||AI_VIDEO_TITLES[id]||'How it works')+'</span>'+
       '<button class="ai-vclose" aria-label="Close">\u2715</button></div>'+
-      '<video controls autoplay playsinline src="'+src+'"></video>'+
+      '<video controls playsinline preload="auto" src="'+src+'"></video>'+
+      '<button class="ai-vsound" hidden>\uD83D\uDD0A Tap for sound</button>'+
     '</div>';
   m.addEventListener('click', e=>{ if(e.target===m || e.target.classList.contains('ai-vclose')) m.remove(); });
   const v = m.querySelector('video');
+  const sb = m.querySelector('.ai-vsound');
   v.addEventListener('error', ()=>{ v.outerHTML='<div class="ai-verr">Video tutor is being prepared \u2014 check back soon.</div>'; });
   v.addEventListener('ended', ()=>{ m.remove(); });  // full-screen tutor auto-returns to the feature screen
   document.body.appendChild(m);
+  // Play WITH sound where the browser allows it (narration matters). If the browser
+  // blocks sound-autoplay, fall back to muted autoplay so it still plays full-screen
+  // (no stalled center play-button / 'arrow'), and offer a one-tap unmute.
+  v.muted = false;
+  const _p = v.play();
+  if (_p && _p.catch) _p.catch(()=>{
+    v.muted = true;
+    v.play().catch(()=>{});            // muted autoplay is always allowed
+    if (sb){
+      sb.hidden = false;
+      sb.addEventListener('click', ()=>{ v.muted=false; sb.hidden=true; if(v.paused) v.play().catch(()=>{}); });
+    }
+  });
 }
 
 async function aiBoot(){

@@ -19,6 +19,7 @@ RED is never consumable here; amber stays staged, never shipped. Reads/writes tr
 """
 import argparse, datetime, json, os, sys
 import triage  # same dir - reuse BOARD_CSS, esc, render_board
+import human_view_verify as hvv  # same dir - the "see what the human sees" gate
 
 
 def load(p): return json.load(open(p, encoding="utf-8"))
@@ -94,6 +95,14 @@ def main():
     ap.add_argument("--next", action="store_true")
     ap.add_argument("--ship"); ap.add_argument("--route"); ap.add_argument("--fail")
     ap.add_argument("--detail", default=""); ap.add_argument("--to", default=""); ap.add_argument("--reason", default="")
+    # human-view gate: a ship is only "done" when the live, purged, rendered page is right.
+    ap.add_argument("--verify-url", default="", help="live URL to confirm the fix at the human's layer before shipping")
+    ap.add_argument("--verify-check", default="text", choices=["link", "asset", "text", "video", "render"])
+    ap.add_argument("--verify-contains", default="", help="string that MUST be present in the served page/asset")
+    ap.add_argument("--verify-absent", default="", help="string that must NOT be present (the broken content)")
+    ap.add_argument("--verify-content-type", default="", help="for asset checks, expected content-type substring")
+    ap.add_argument("--verify-min-bytes", type=int, default=0, help="for asset checks, minimum served size")
+    ap.add_argument("--no-verify", action="store_true", help="explicitly ship without the human-view gate (logged)")
     a = ap.parse_args()
     tp = os.path.join(a.dir, "triaged.json")
     tri = load(tp)
@@ -120,6 +129,47 @@ def main():
         print("REFUSING: %s is lane=%s - Fix only ships GREEN. Amber/red stay staged for the human." % (iid, x["lane"])); return 2
 
     if a.ship:
+        # HUMAN-VIEW GATE: a fix is not "done" when the file is right - it is "done" when the
+        # live, purged, rendered page a human would load is right. Verify at the human's layer
+        # before recording a ship. GREEN -> ship. RED -> refuse + route back to triage with
+        # evidence (the loop closes on itself). No target given -> warn, don't block (never
+        # breaks existing call sites). --no-verify is an explicit, logged override.
+        if a.verify_url:
+            chk = {"check": a.verify_check, "url": a.verify_url, "label": x["id"]}
+            if a.verify_contains: chk["expect_contains"] = a.verify_contains
+            if a.verify_absent: chk["expect_absent"] = a.verify_absent
+            if a.verify_content_type: chk["expect_content_type"] = a.verify_content_type
+            if a.verify_min_bytes: chk["min_bytes"] = a.verify_min_bytes
+            v = hvv.run([chk], do_purge=True)
+            vc = v["checks"][0]
+            if v["result"] != "GREEN":
+                # do NOT ship. Route the item back into triage so the loop re-fixes it,
+                # carrying the evidence so the next pass (or David) sees proof, not a hunt.
+                x["status"] = "queued"; x["lane"] = "green"
+                x["human_view"] = {"result": "RED", "at": now(), "url": a.verify_url,
+                                   "reasons": vc.get("reasons", []), "evidence": vc.get("evidence")}
+                recompute_summary(tri); save(tp, tri)
+                record(a.dir, {"at": now(), "id": x["id"], "ref": x.get("ref"), "lane": x["lane"],
+                               "priority": x["priority"], "action": "verify_red", "title": x["title"],
+                               "url": a.verify_url, "reasons": vc.get("reasons", []),
+                               "evidence": vc.get("evidence")})
+                regen_board(tri, a.dir)
+                print("REFUSING TO SHIP %s - human-view verify is RED (the live page is not fixed):" % x["id"])
+                for r in vc.get("reasons", []):
+                    print("   - " + r)
+                if vc.get("evidence"):
+                    print("   evidence: %s" % vc["evidence"]["served_body"])
+                print("   -> re-queued for re-fix (it never reached 'shipped'). Nothing landed on David.")
+                return 3
+            print("human-view verify: GREEN (live page confirmed fixed) - cf=%s status=%s"
+                  % (vc.get("cf_cache") or "-", vc.get("live_status")))
+            x["human_view"] = {"result": "GREEN", "at": now(), "url": a.verify_url}
+        elif not a.no_verify:
+            print("WARNING: shipping %s WITHOUT a human-view check (no --verify-url given)." % x["id"])
+            print("         The file may be right while the live page stays stale - pass --verify-url to gate it.")
+            x["human_view"] = {"result": "SKIPPED", "at": now()}
+        else:
+            x["human_view"] = {"result": "OVERRIDE", "at": now()}  # --no-verify, explicit + logged
         x["status"] = "shipped"; x["shipped_at"] = now(); x["ship_detail"] = a.detail
         verb, extra = "ship", {"detail": a.detail}
     elif a.route:

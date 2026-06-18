@@ -184,6 +184,31 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3e: Deploy demo data (demo_listings.json + demo_sellers.json) ──
+:: The BEA serves /demo-listings + /demo-sellers from these files (cached in-process),
+:: so edits to demo content only go live once the file is on the box AND the BEA is
+:: restarted. Previously these were NOT auto-deployed, so demo-data edits silently
+:: never reached production (the demo-property heritage-link + NY-amenities drift,
+:: fixed 18 Jun, traced to exactly this gap). They land BEFORE the BEA restart so the
+:: in-process demo cache reloads atomically with the restart.
+echo  [3e] Deploying demo data (demo_listings.json, demo_sellers.json)...
+scp "%PROJECT%\demo_listings.json" %SERVER%:%REMOTE%/demo_listings.json
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for demo_listings.json. Check SSH connection.
+    pause
+    exit /b 1
+)
+if exist "%PROJECT%\demo_sellers.json" (
+    scp "%PROJECT%\demo_sellers.json" %SERVER%:%REMOTE%/demo_sellers.json
+    if %errorlevel% neq 0 (
+        echo  ERROR: SCP failed for demo_sellers.json. Check SSH connection.
+        pause
+        exit /b 1
+    )
+)
+echo  Done.
+echo.
+
 :: ── Step 3d: Deploy backend modules (auth/database/storage/payments) ──
 :: These four modules are imported by main.py but were previously NOT auto-deployed
 :: (server-only). O2 audit fix: sync them here, guarded. auth.py is fail-closed
@@ -282,7 +307,7 @@ ssh %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishl
 
 ssh %SERVER% "systemctl is-active marketsquare >nul 2>&1 && echo   [OK] BEA service is active || echo   [FAIL] BEA service is NOT active - check journalctl"
 
-ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && echo   [OK] BEA: backend modules (auth/database/storage/payments) present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
+ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && echo   [OK] BEA: backend modules auth,database,storage,payments present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
 
 ssh %SERVER% "grep -q 'dev-tools\|devtools' %REMOTE%/admin.html && echo   [OK] Admin: new admin.html confirmed on server || echo   [FAIL] Admin: old admin.html still on server"
 
@@ -324,6 +349,35 @@ powershell -NoProfile -Command ^
   "if ($local -eq $live) { Write-Host ('   [OK] LIVE ms.js matches your build  md5=' + $local.Substring(0,8)) } else { Write-Host ('   [FAIL] LIVE ms.js does NOT match  local=' + $local.Substring(0,8) + '  live=' + $live); Write-Host '          Cloudflare is serving stale - just re-run this script; the auto ?v bump fixes it.' }"
 echo.
 
+:: ── Step 7: Auto-commit the deployed working tree ─────────
+:: ROOT-CAUSE FIX for FEA-DRIFT (recurring since 2 Jun: ms.js/ms.css/HTML edited
+:: and pushed live but never committed, because "commit after deploy" was a manual
+:: step a human had to remember). Commits cannot be made reliably from the Cowork
+:: sandbox (its .git lives on a FUSE mount that blocks unlink -> git lock/index
+:: fails, GIT-INDEX-1), so the commit MUST happen here, on Windows, where git is
+:: native. Making the deploy itself commit means deploying == committing: the drift
+:: is now structurally impossible, not a thing anyone has to remember.
+:: Driven by PowerShell (not batch if/!var!) so it needs no delayed expansion and
+:: is non-fatal by design: a git hiccup must never fail an already-successful deploy.
+echo.
+echo  [7/7] Auto-committing the deployed working tree (FEA-DRIFT guard)...
+powershell -NoProfile -Command ^
+  "$ErrorActionPreference='SilentlyContinue';" ^
+  "Set-Location -LiteralPath '%PROJECT%';" ^
+  "git rev-parse --is-inside-work-tree *> $null;" ^
+  "if ($LASTEXITCODE -ne 0) { Write-Host '   [WARN] %PROJECT% is not a git repo - skipping auto-commit.'; exit 0 };" ^
+  "$dirty = (git status --porcelain);" ^
+  "if (-not $dirty) { Write-Host '   [OK] Working tree already clean - nothing to commit.'; exit 0 };" ^
+  "git add -A *> $null;" ^
+  "$stamp = Get-Date -Format 'yyyy-MM-dd HH:mm';" ^
+  "git commit -m ('Deploy auto-commit ' + $stamp + ' (FEA-DRIFT guard: source synced with live)') *> $null;" ^
+  "if ($LASTEXITCODE -ne 0) { Write-Host '   [WARN] git commit reported nothing committed - check git status.'; exit 0 };" ^
+  "Write-Host '   [OK] Committed all deployed changes locally.';" ^
+  "git rev-parse --abbrev-ref '@{u}' *> $null;" ^
+  "if ($LASTEXITCODE -ne 0) { Write-Host '   [INFO] No upstream tracking branch - commit is local only (fine).'; exit 0 };" ^
+  "git push *> $null;" ^
+  "if ($LASTEXITCODE -eq 0) { Write-Host '   [OK] Pushed to remote.' } else { Write-Host '   [WARN] git push failed - commit is safe locally; push manually when able.' }"
+echo.
 echo.
 echo  ============================================================
 echo   DEPLOY COMPLETE

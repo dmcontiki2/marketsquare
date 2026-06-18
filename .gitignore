@@ -29,12 +29,17 @@ npm-debug.log*
 # Temp / OS
 *.tmp
 *.bak
+*.bak-*
+*.bak.*
 *.log
 .DS_Store
 .ssh/
 
 # SSH key for Claude sandbox access — never commit this
 ssh_hetzner_key
+
+# Human-view verify runtime evidence — captured on RED, not source
+orchestration_v2/verify_evidence/
 
 # Python
 __pycache__/

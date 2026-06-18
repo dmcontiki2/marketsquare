@@ -156,3 +156,102 @@ edit** (term map must route any v2 change to the Addendum, not the file).
 Both touch the Codex and the IP/whitepaper line in the same window. Recommend **sequencing, not parallel**:
 land **CC-001 (HOLD)** first (it sets the charge *mechanism* the pricing copy refers to), then **CC-002
 (pricing/AI)** on top. Decide at Step 1; if run together, the two term map
+
+## 2026-06-18 — Video deploys: Cloudflare purge is BROKEN, use versioned URLs
+**Symptom:** Collectables tutor video kept showing the OLD stutter cut for end users
+(Maroushka) even after the new file was confirmed on the server, many times over.
+**Root cause:** `/admin/purge-cache` -> `_cf_purge_all()` silently no-ops: the running
+marketsquare service does NOT have CF_ZONE_ID / CF_CACHE_TOKEN in its process env
+(unit loads EnvironmentFile=/etc/environment, NOT /var/www/marketsquare/.env), and even
+the token in .env returns Cloudflare "Authentication error" (10000) — invalid/expired.
+So purge_everything never ran; Cloudflare kept serving the cached old mp4 (cf-cache HIT).
+The endpoint still returns {"purged":true}, which masked the failure.
+**Fix / standing method:** version every static video URL in ms.js
+(`/static/videos/X.mp4?v=YYYYMMDD<tag>`) AND bump the `ms.js?v=NNN` tag in
+marketsquare.html so the new ms.js is fetched. A new query string = new Cloudflare cache
+key = fresh fetch from origin. HTML is cf-cache DYNAMIC (never cached), so the chain
+self-busts. DO NOT trust /admin/purge-cache for videos until the CF token is renewed and
+loaded into the service env.
+**Verified in-app:** played collectables tutor inside trustsquare.co — src
+`collectables-advert-howto.mp4?v=20260618c`, 57.22s, C1 (snap, Bodyguard card) and
+C2 (typing) both the regenerated matching-cast clips.
+**TODO (David):** renew the Cloudflare cache-purge API token, put CF_ZONE_ID/CF_CACHE_TOKEN
+into the service environment (or load .env in the unit), so auto-purge works again.
+
+
+## 2026-06-18 (later) — Collectables audio: the ACTUAL root cause was Flow's VOICE, not the cache
+**What I kept getting wrong:** I "regenerated C1/C2 in Flow" ~10 times. Flow gave new
+VISUALS each time but re-rolled the SAME garbled SPEECH. Proven by transcribing the clips:
+  - C1 audio: "...writes your advert DONE DONE" (the stutter)
+  - C2 audio: "...my CITY AREA ... currency CZAR" (= the mangled "city, Pretoria / ZAR" = "Citoria")
+Regenerating in Flow can NEVER reliably fix this — the AI voice is non-deterministic garbage.
+**Real fix:** dub clean TTS over C1 and C2 (video kept frame-for-frame, Flow audio replaced).
+Lines: C1 "Selling rare cards? Just snap them. AI checks real market prices, then writes your
+advert. Done." / C2 "Next I type a short description of my card, my asking price, my city,
+Pretoria, and my currency, ZAR." TTS via gTTS en-GB, tempo-fit to 8s. VERIFIED by re-transcribing
+the stitched FINAL: C1 ends single "done", C2 says "city pretoria ... ZAR" — clean.
+**Deployed:** collectables FINAL md5 213c3206..., versioned `?v=20260618d`, ms.js v=183.
+**LESSON:** never trust AI-generated speech in Flow clips. For any spoken line, dub TTS (or human
+VO) and TRANSCRIBE the final to verify before deploying. Claude cannot hear — transcription IS
+the audio check.
+
+
+## 2026-06-18 (3) — Payoff VO cutoff fixed; hook card checked
+- ISSUE 1 (end VO cut mid-sentence): c4-payoff Flow audio was truncated in-source
+  ("...list the card automatically WITH"). Dubbed clean TTS "Wow! It lists my card
+  automatically. One tap, and it is live." Verified full-FINAL transcript end-to-end clean.
+  Deployed video ?v=20260618e, ms.js v=184, FINAL md5 01ebbb9b...
+- ISSUE 2 (wrong card in hook): inspected the hook clip (c3-hook / Flow 'Man holding trading
+  card' 3c7b5bf7) frame-by-frame + zoom. Card shown is white-bordered warrior/figure =
+  consistent with Veteran Bodyguard, NOT an obviously-wrong card. Could not find a separate
+  'regenerated hook' that never landed. ASKED DAVID to point at the exact clip/timestamp of the
+  wrong card so we fix the right one rather than guessing.
+
+---
+
+## DEMO-FIX-18JUN · Demo property heritage links + international amenities (David-reported)
+**Stage:** 8/8 DONE — built, deployed, live-verified through Cloudflare 18 Jun 2026. Data-only (demo listings); no pricing / ledger / auth / KYC touched.
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David-reported in chat) · **Source:** David screenshots — demo properties missing Heritage links; NY listing showing only one amenity.
+
+**Two issues, both root-caused:**
+1. **Heritage links lost on demo properties.** All 41 demo Property listings carried zero `linked_wonders`. An earlier ruling had deliberately *excluded* Property from World Heritage and stripped `linked_wonders` from the demo Property listings; S138 (WONDER-AUTOLINK-CAT-1) then re-allowlisted Property at the BEA publish hook — but that only affects newly-published live listings, never the static demo JSON, which stayed stripped. Adventures kept theirs (50 listings), which made it look selective.
+2. **NY amenities thin, not broken.** The Long Island City listing genuinely had only 1 entry per amenity category, so the app rendered correctly. Root cause: the 30 international demo properties (NY/London/Sydney) were seeded ~1-per-category while the 10 Pretoria listings got the full 5-per-category. Not a bug — lopsided seed data.
+
+**Fix (data + deploy script):**
+- `demo_listings.json`: re-populated `linked_wonders` on all 40 demo Property listings via the same haversine + affinity + per-country-radius match the BEA `auto_link_wonders()` uses (NY→Met Museum/Statue of Liberty; London→British Museum/Westminster; Sydney→Opera House/Blue Mountains; Pretoria→Pilanesberg/Kruger). All IDs resolve to wonders with photos. Enriched the 30 international properties to 18 amenities each (5 schools / 2 unis / 4 shopping / 4 hospitals / 3 transit), matching Pretoria's depth, with real local landmark names per suburb.
+- `deploy_marketsquare.bat`: **root-cause fix for the drift** — added Step 3e shipping `demo_listings.json` + `demo_sellers.json` to the box before the BEA restart. These were NOT previously auto-deployed, so all demo-data edits silently never reached production. Now they ship + the in-process demo cache reloads on every deploy.
+
+**Deploy/verify:** server-side backup `demo_listings.json.bak-20260618-034659`; scp md5 parity `e871f4cc…` both sides; `systemctl restart marketsquare` → active; `/health` ok v1.3.1; Cloudflare purged `{purged:true}`; public `https://trustsquare.co/demo-listings` confirms 40 properties w/ heritage links + all 10 NY listings at 18 amenities. Local backup `demo_listings.json.bak-heritageamenities-20260618-034122`.
+**Cost model impact:** none — demo content only.
+
+---
+
+## FEA-DRIFT-FIX-18JUN · Deploy-time auto-commit (permanent root-cause fix; David-directed)
+**Stage:** DONE (script patched + validated 18 Jun 2026). Closes the recurring FEA-DRIFT ticket (open under serial IDs FEA-DRIFT-1/-2/-3 since 2 Jun).
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David-directed: "fix every problem every time it appears, don't let it become a human-to-remember issue").
+
+**The recurring problem (correctly diagnosed):** Source files (`ms.js`, `ms.css`, `marketsquare.html`, `support.html`) were repeatedly edited and pushed LIVE but never committed to git, so each session re-discovers uncommitted drift. NOT the same as yesterday's fix — 17 Jun (`1d6e83f`) fixed *backup-file clutter* (`.gitignore *.bak-*` + untrack 33 backups), which held. FEA-DRIFT is a separate, older issue.
+
+**Root cause of the recurrence (two compounding):**
+1. The deploy script pushed to the server (which is what makes a change "done" in practice) but **never committed** — commit was a separate manual step a human had to remember, so it was skipped.
+2. Commits **cannot be made reliably from the Cowork sandbox**: its `.git` lives on a FUSE mount that blocks `unlink` (`Operation not permitted`), so git's lock/index handling fails (this is the long-standing GIT-INDEX-1 caveat). So commits were always deferred to "later on David's machine" — and forgotten.
+
+**Permanent fix:** Added **Step 7 to `deploy_marketsquare.bat`** — after a successful deploy + live verify, a PowerShell block runs `git add -A` + `git commit` (timestamped message) and `git push` if an upstream exists. The deploy script runs on Windows (native git, no FUSE limit), which is the only place commits work reliably. **Deploying now == committing**, so the drift is structurally impossible rather than memory-dependent. Non-fatal by design (every branch `exit 0`): a git hiccup never fails an already-successful deploy. Backup `*.bak-*` files stay out via the existing `.gitignore *.bak-*` rules (verified with `git check-ignore`). PowerShell command reconstructed + validated; `*> $null` (PS3+) and `$LASTEXITCODE` guards confirmed.
+**Backups:** `deploy_marketsquare.bat.bak-demodata-*` + `deploy_marketsquare.bat.bak-autocommit-*`.
+**Cost model impact:** none — process/tooling only.
+
+---
+
+## DEPLOY-VERIFY-PAREN-18JUN · ssh verify line syntax error (recurring; David-reported again)
+**Stage:** DONE (fixed + scanned for siblings 18 Jun 2026). Cosmetic/verification-only — never affected the actual deploy, only the post-deploy check output.
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David-reported: "this looks like a problem and I have reported it before").
+
+**Symptom (recurring):** During deploy verification the console showed `bash: -c: line 1: syntax error near unexpected token '('` followed by a garbled `[OK]…||…[FAIL]` line, and the next check (`[FAIL] Admin: old admin.html still on server`) looked wrong because the broken command's output bled into it.
+
+**Root cause:** `deploy_marketsquare.bat` line 310 — the backend-modules presence check — put literal parentheses in the remote echo text: `echo [OK] BEA: backend modules (auth/database/storage/payments) present`. Sent through `ssh` to the server's bash *unquoted*, `(` is a subshell metacharacter → `syntax error near unexpected token '('`, which also mis-parsed the `&& … || …` chain. It was the ONLY ssh verify line carrying literal `( )`, which is why it was the only one failing.
+
+**Why it kept coming back:** it never had actually been fixed. The broken parens are present in every deploy-script backup back to `bak-20260611` and in the committed history — prior reports were acknowledged but the paren text itself was never changed. This is the first edit that removes it.
+
+**Fix:** removed the parentheses from the remote echo text (`backend modules auth,database,storage,payments present` — plain comma list, no shell metacharacters). Then scanned ALL `ssh %SERVER%` lines for risky remote metacharacters (`()`, backticks, `$()`, redirects): zero parens remain; the only other flags were legitimate `2>&1` redirections. Backup `deploy_marketsquare.bat.bak-sshparen-20260618-041235`.
+**Note (separate, not fixed — cosmetic):** L293/L308 send Windows `>nul` inside the ssh quotes to remote Linux bash (should be `/dev/null`); harmless (creates a stray file named `nul` server-side), left as-is unless flagged.
+**Cost model impact:** none — verification output only; the deploy steps themselves were always fine.
