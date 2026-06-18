@@ -51,6 +51,10 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Change size:** Maximum one feature or one bug fix per task. If a change touches more than one file section, split it and complete each part fully before starting the next.
 
+**Sandbox mount is NOT authoritative — the file-tools and Windows/git are (MOUNT-READ-1 root cause, fixed S140):** The bash sandbox reaches the Projects folder over a virtiofs/FUSE mount that can serve a **persistently torn (truncated-mid-file) copy** of a large file for an entire session — bash `wc -l`/`cat` show a short prefix while the true Windows file is complete. This is the recurring MOUNT-TEAR / MOUNT-READ fault. Rules: (1) **Never treat a bash read of a project file as ground truth** — the Read tool and `git show HEAD:<file>` read the real Windows file; bash may not. (2) **Never report git/file state from the bash mount as authoritative.** When a sandbox check disagrees with Windows `git status` or the Read tool, the sandbox is the suspect — re-check via Read/`git show`, and trust *that*, not the bash mount. (3) **Never Python-write a large project file from bash** (`open(path,'w')`) — a torn in-memory copy will overwrite the good Windows file. Use the Read→Edit file-tools for doc/code edits (they hit the true file), reserving bash-Python writes for the big HTML/JS files per the HTML WRITE RULE, and always verify the tail after. (4) **Run `python3 mount_guard.py` (see orchestration)** at session start and before any write-back to detect a torn mount before it can corrupt anything.
+
+**Self-verification — a checker that disagrees with the authority must suspect itself first (S140):** Any monitoring/verification step (git state, file state, a live-site check) must validate against the *authoritative source for that layer* — for git: Windows working tree / `origin`; for files: the Read tool / `git show`; for the live site: the CDN-served page. When my check and the authority disagree, that disagreement is first evidence that **my checker is stale or torn**, not that the human/authority is wrong. Re-sync from the authority and re-check; only a disagreement that survives a re-sync is a real finding. Never report a phantom diff as a real one (the S140 false-RED loop).
+
 **Git commits:** Always ask David to run git add/commit/push from PowerShell — never commit from the sandbox. The sandbox and Windows share the same folder mount under different OS users; sandbox-created index.lock files block Windows git and vice versa, and neither side can remove the other's lock. At session end, sweep the whole working tree into a commit (see **Session end checklist** step 6) so commits never drift behind the live server — deploys and the overnight loop write files without committing, so the catch-up must be comprehensive (`git add -A`), not scoped to the session's files.
 
 **Definition of done:** Code works AND a one-paragraph summary has been appended to `CHANGELOG.md`. Only update `CLAUDE.md` for major structural changes, not routine tasks.
@@ -88,6 +92,14 @@ The sandbox does not persist SSH keys between sessions. At the start of every se
 bash /sessions/quirky-brave-galileo/mnt/MarketSquare/load_sandbox_ssh.sh
 ```
 If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from PowerShell — it copies `~/.ssh/id_ed25519` into the project folder as `ssh_hetzner_key` (gitignored, never committed).
+
+## Torn-mount check (run at session start AND before any doc write-back — MOUNT-READ-1)
+The bash mount can serve a torn (truncated) copy of large files all session (see the Sandbox-mount rule under Operating principles). Detect it before trusting any bash read or writing anything back. Copy the detector OFF the mount first (so its own code can't be torn), then run it:
+```bash
+cp /sessions/<session>/mnt/MarketSquare/mount_check.sh /tmp/ && chmod +x /tmp/mount_check.sh
+/tmp/mount_check.sh /sessions/<session>/mnt/MarketSquare
+```
+Exit 0 = mount whole. Exit 1 = torn file(s) listed — do NOT Python-write those from bash; edit via the Read/Edit file-tools (they hit the true Windows file) or pull the authoritative copy from the server. A `[TORN]` on a file you were about to write-back means a bash write would overwrite the good Windows copy with a truncated one.
 
 ## Local environment
 - **David's working directory:** `C:\Users\David\Projects\MarketSquare` — always cd here before any scp/git command

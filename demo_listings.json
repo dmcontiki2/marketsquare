@@ -50,105 +50,98 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Waterkloof House Preparatory",
-      "dist_km": 1.1,
-      "type": "Private · Primary"
+      "name": "Monument Park",
+      "dist_km": 2.31
      },
      {
-      "name": "St Mary's DSG",
-      "dist_km": 1.8,
-      "type": "Private · Secondary"
+      "name": "M Park creche",
+      "dist_km": 2.65
      },
      {
-      "name": "Afrikaanse Hoër Meisieskool",
-      "dist_km": 2.4,
-      "type": "Public · Secondary"
+      "name": "MSC Business College",
+      "dist_km": 4.96,
+      "type": "Secondary"
      },
      {
-      "name": "Hoërskool Waterkloof",
-      "dist_km": 2.9,
-      "type": "Public · Secondary"
+      "name": "Laerskool Fleur",
+      "dist_km": 5.36,
+      "type": "Primary"
      },
      {
-      "name": "St Albans College",
-      "dist_km": 3.5,
-      "type": "Private · Combined"
+      "name": "Pure Hope School",
+      "dist_km": 7.02
      }
     ],
     "universities": [
      {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 4.2
-     },
-     {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 5.1
+      "name": "STADIO Higher Education",
+      "dist_km": 4.72
      }
     ],
     "shopping": [
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 3.8
+      "name": "Woolworths",
+      "dist_km": 1.36
      },
      {
-      "name": "Irene Village Mall",
-      "dist_km": 6.1
+      "name": "Yat Kee",
+      "dist_km": 1.51
      },
      {
-      "name": "Woodlands Boulevard",
-      "dist_km": 5.2
+      "name": "Pick n Pay Express",
+      "dist_km": 1.54
      },
      {
-      "name": "Kolonnade Retail Park",
-      "dist_km": 7.1
+      "name": "Spar",
+      "dist_km": 1.8
      },
      {
-      "name": "Atterbury Value Mart",
-      "dist_km": 4.4
+      "name": "Spar",
+      "dist_km": 2.07
      }
     ],
     "hospitals": [
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 2.9
+      "name": "Life Brooklyn Day Hospital",
+      "dist_km": 2.55
      },
      {
-      "name": "Zuid-Afrikaans Hospital",
-      "dist_km": 3.4
+      "name": "Cintocare",
+      "dist_km": 3.13
      },
      {
-      "name": "Wilgers Hospital",
-      "dist_km": 4.1
+      "name": "Carecross Health",
+      "dist_km": 3.28
      },
      {
-      "name": "Netcare Femina Hospital",
-      "dist_km": 5.3
+      "name": "Advanced Groenkloof Day Hospital",
+      "dist_km": 3.81
      },
      {
-      "name": "Mediclinic Kloof",
-      "dist_km": 6.2
+      "name": "Life Groenkloof Hospital",
+      "dist_km": 3.89
      }
     ],
     "police": [
      {
-      "name": "Erasmuskloof Police Station",
-      "dist_km": 2.2
+      "name": "Sunnyside",
+      "dist_km": 5.69
      },
      {
-      "name": "Lyttelton Police Station",
-      "dist_km": 4.8
+      "name": "Lyttleton Polisiestasie",
+      "dist_km": 7.56
      },
      {
-      "name": "Garsfontein Police Station",
-      "dist_km": 5.4
+      "name": "SAPS Silverton",
+      "dist_km": 7.73
      },
      {
-      "name": "Pretoria East SAPS",
-      "dist_km": 6.8
+      "name": "Villiers",
+      "dist_km": 7.85
      },
      {
-      "name": "Rietgat Police Station",
-      "dist_km": 7.2
+      "name": "Pretoria Central Police Station",
+      "dist_km": 7.85
      }
     ]
    },
@@ -213,93 +206,97 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Laerskool Erasmuskloof",
-      "dist_km": 0.8,
-      "type": "Public · Primary"
+      "name": "Laerskool Fleur",
+      "dist_km": 2.12,
+      "type": "Primary"
      },
      {
-      "name": "Hoërskool Erasmus",
-      "dist_km": 1.2,
-      "type": "Public · Secondary"
+      "name": "Monument Park",
+      "dist_km": 2.37
      },
      {
-      "name": "St Martin de Porres School",
-      "dist_km": 2.6,
-      "type": "Private · Primary"
+      "name": "M Park creche",
+      "dist_km": 2.46
      },
      {
-      "name": "Centurion Academy",
-      "dist_km": 2.1,
-      "type": "Private · Combined"
+      "name": "Pierre's Kitchen an dSchool of Cookery",
+      "dist_km": 6.03
      },
      {
-      "name": "Cornwall Hill College",
-      "dist_km": 3.8,
-      "type": "Private · Combined"
+      "name": "Speelkas Kleuterskool",
+      "dist_km": 7.08
      }
     ],
     "universities": [
      {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 3.6
-     },
-     {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 6.2
+      "name": "STADIO Higher Education",
+      "dist_km": 8.13
      }
     ],
     "shopping": [
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 4.5
+      "name": "Woolworths Food",
+      "dist_km": 1.31
      },
      {
-      "name": "Centurion Mall",
-      "dist_km": 5.2
+      "name": "Checkers",
+      "dist_km": 1.36
      },
      {
-      "name": "Centurion Mall",
-      "dist_km": 2.8
+      "name": "Spar Monument Park",
+      "dist_km": 2.19
      },
      {
-      "name": "Atterbury Value Mart",
-      "dist_km": 4.1
+      "name": "Designer Physique",
+      "dist_km": 2.49
      },
      {
-      "name": "Menlyn Park",
-      "dist_km": 5.6
+      "name": "Shoprite",
+      "dist_km": 2.71
      }
     ],
     "hospitals": [
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 3.1
+      "name": "Netcare Unitas Hospital",
+      "dist_km": 3.81
      },
      {
-      "name": "Zuid-Afrikaans Hospital",
-      "dist_km": 4
+      "name": "Southlake Medical Centre",
+      "dist_km": 5.01
      },
      {
-      "name": "Mediclinic Kloof",
-      "dist_km": 3.4
+      "name": "Life Brooklyn Day Hospital",
+      "dist_km": 5.78
      },
      {
       "name": "Life Groenkloof Hospital",
-      "dist_km": 5.1
+      "dist_km": 5.82
      },
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 6.2
+      "name": "Health Worx Medical Centre Centurion Mall",
+      "dist_km": 5.87
      }
     ],
     "police": [
      {
-      "name": "Erasmuskloof Police Station",
-      "dist_km": 0.9
+      "name": "Lyttleton Polisiestasie",
+      "dist_km": 3.77
      },
      {
-      "name": "Lyttelton Police Station",
-      "dist_km": 3.8
+      "name": "Tshwane Metro Police Satellite station",
+      "dist_km": 7.51
+     },
+     {
+      "name": "Sunnyside",
+      "dist_km": 7.82
+     },
+     {
+      "name": "Pretoria Central Police Station",
+      "dist_km": 9.33
+     },
+     {
+      "name": "Villiers",
+      "dist_km": 11.57
      }
     ]
    },
@@ -364,85 +361,98 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Laerskool Menlopark",
-      "dist_km": 1.4,
-      "type": "Public · Primary"
+      "name": "Monument Park",
+      "dist_km": 4.72
      },
      {
-      "name": "Hoërskool Menlo Park",
-      "dist_km": 1.7,
-      "type": "Public · Primary"
+      "name": "M Park creche",
+      "dist_km": 5.09
      },
      {
-      "name": "Bryneven Primary School",
-      "dist_km": 2.1,
-      "type": "Public · Primary"
+      "name": "MSC Business College",
+      "dist_km": 5.78,
+      "type": "Secondary"
      },
      {
-      "name": "Laerskool Garsfontein",
-      "dist_km": 1.9,
-      "type": "Public · Primary"
+      "name": "Pure Hope School",
+      "dist_km": 5.85
      },
      {
-      "name": "Hatfield Christian School",
-      "dist_km": 3.2,
-      "type": "Private · Combined"
+      "name": "La Montagne Primary",
+      "dist_km": 6.57,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 3.2
-     },
-     {
-      "name": "CTI Education Group Pretoria",
-      "dist_km": 3.8
+      "name": "STADIO Higher Education",
+      "dist_km": 5.51
      }
     ],
     "shopping": [
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 0.4
+      "name": "Checkers Hyper",
+      "dist_km": 0.09
      },
      {
-      "name": "Menlyn Maine Retail",
+      "name": "Menlyn Retail Park",
       "dist_km": 0.6
      },
      {
-      "name": "Lynnwood Bridge Office Park Retail",
-      "dist_km": 2.3
+      "name": "Shell Select",
+      "dist_km": 0.91
      },
      {
-      "name": "Woodlands Boulevard",
-      "dist_km": 3.1
+      "name": "Woolworth Foodstop",
+      "dist_km": 0.98
      },
      {
-      "name": "Menlyn Park",
-      "dist_km": 3.9
+      "name": "Pick n Pay Express",
+      "dist_km": 1.0
      }
     ],
     "hospitals": [
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 1.8
+      "name": "Life Brooklyn Day Hospital",
+      "dist_km": 4.11
      },
      {
-      "name": "Zuid-Afrikaans Hospital",
-      "dist_km": 3.1
+      "name": "Carecross Health",
+      "dist_km": 4.13
      },
      {
-      "name": "Little Company of Mary Hospital",
-      "dist_km": 4.7
+      "name": "Advanced Groenkloof Day Hospital",
+      "dist_km": 5.59
+     },
+     {
+      "name": "Life Groenkloof Hospital",
+      "dist_km": 5.92
+     },
+     {
+      "name": "Akeso Behavioral Healthcare group",
+      "dist_km": 6.4
      }
     ],
     "police": [
      {
-      "name": "Garsfontein Police Station",
-      "dist_km": 2.4
+      "name": "SAPS Silverton",
+      "dist_km": 6.01
      },
      {
-      "name": "Erasmuskloof Police Station",
-      "dist_km": 3.9
+      "name": "Sunnyside",
+      "dist_km": 7.36
+     },
+     {
+      "name": "Villiers",
+      "dist_km": 7.77
+     },
+     {
+      "name": "Pretoria Central Police Station",
+      "dist_km": 9.66
+     },
+     {
+      "name": "Lyttleton Polisiestasie",
+      "dist_km": 9.72
      }
     ]
    },
@@ -507,85 +517,97 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Brooklyn Primary School",
-      "dist_km": 0.7,
-      "type": "Public · Primary"
+      "name": "MSC Business College",
+      "dist_km": 2.62,
+      "type": "Secondary"
      },
      {
-      "name": "Pretoria Boys High School",
-      "dist_km": 1.6,
-      "type": "Public · Primary"
+      "name": "Monument Park",
+      "dist_km": 3.4
      },
      {
-      "name": "Afrikaanse Hoër Seunskool (AHS)",
-      "dist_km": 2,
-      "type": "Public · Primary"
+      "name": "M Park creche",
+      "dist_km": 3.46
      },
      {
-      "name": "Laerskool Lynnwood",
-      "dist_km": 2.3,
-      "type": "Public · Primary"
+      "name": "Damelin City Campus Pretoria",
+      "dist_km": 5.19
      },
      {
-      "name": "Pretoria Boys High",
-      "dist_km": 3.1,
-      "type": "Public · Secondary"
+      "name": "Iona Convent School",
+      "dist_km": 5.7
      }
     ],
     "universities": [
      {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 2.1
-     },
-     {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 3.8
+      "name": "STADIO Higher Education",
+      "dist_km": 2.41
      }
     ],
     "shopping": [
      {
-      "name": "Brooklyn Mall",
-      "dist_km": 0.5
+      "name": "Checkers",
+      "dist_km": 0.2
      },
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 4.6
+      "name": "Shell Select",
+      "dist_km": 0.59
      },
      {
-      "name": "Kolonnade Retail Park",
-      "dist_km": 2.6
+      "name": "Spar",
+      "dist_km": 0.66
      },
      {
-      "name": "Brooklyn Mall",
-      "dist_km": 3.8
+      "name": "Fresh Stop",
+      "dist_km": 1.39
      },
      {
-      "name": "Menlyn Park",
-      "dist_km": 5.2
+      "name": "Pick n Pay",
+      "dist_km": 1.43
      }
     ],
     "hospitals": [
      {
-      "name": "Wilgers Hospital",
-      "dist_km": 3.4
+      "name": "Life Brooklyn Day Hospital",
+      "dist_km": 0.1
      },
      {
-      "name": "Zuid-Afrikaans Hospital",
-      "dist_km": 3.8
+      "name": "Carecross Health",
+      "dist_km": 1.22
      },
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 4.2
+      "name": "Advanced Groenkloof Day Hospital",
+      "dist_km": 1.57
+     },
+     {
+      "name": "Life Groenkloof Hospital",
+      "dist_km": 2.02
+     },
+     {
+      "name": "Akeso Behavioral Healthcare group",
+      "dist_km": 2.83
      }
     ],
     "police": [
      {
-      "name": "Brooklyn Police Station",
-      "dist_km": 0.9
+      "name": "Sunnyside",
+      "dist_km": 3.37
      },
      {
-      "name": "Sunnyside Police Station",
-      "dist_km": 3.1
+      "name": "Pretoria Central Police Station",
+      "dist_km": 5.65
+     },
+     {
+      "name": "Villiers",
+      "dist_km": 5.84
+     },
+     {
+      "name": "SAPS Moot",
+      "dist_km": 6.68
+     },
+     {
+      "name": "SAPS Silverton",
+      "dist_km": 7.26
      }
     ]
    },
@@ -650,81 +672,95 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Centurion High School",
-      "dist_km": 0.9,
-      "type": "Public · Primary"
+      "name": "Abbots College",
+      "dist_km": 2.02,
+      "type": "Secondary"
      },
      {
-      "name": "Laerskool Die Wilgers",
-      "dist_km": 1.4,
-      "type": "Public · Primary"
+      "name": "Speelkas Kleuterskool",
+      "dist_km": 2.06
      },
      {
-      "name": "Hoërskool Centurion",
-      "dist_km": 1.9,
-      "type": "Public · Primary"
+      "name": "Höerskool Zwartkop",
+      "dist_km": 2.69
      },
      {
-      "name": "Hoërskool Garsfontein",
-      "dist_km": 2.0,
-      "type": "Public · Secondary"
+      "name": "Hoërskool Eldoraigne",
+      "dist_km": 4.71,
+      "type": "Secondary"
      },
      {
-      "name": "St Peter's Preparatory",
-      "dist_km": 3.4,
-      "type": "Private · Primary"
+      "name": "Wierdapark Laerskool",
+      "dist_km": 4.86,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 7.2
-     },
-     {
-      "name": "Varsity College Pretoria",
-      "dist_km": 8.1
+      "name": "STADIO Higher Education",
+      "dist_km": 13.44
      }
     ],
     "shopping": [
      {
-      "name": "Centurion Mall",
-      "dist_km": 1.1
+      "name": "Angling Africa",
+      "dist_km": 0.23
      },
      {
-      "name": "Irene Village Mall",
-      "dist_km": 4.3
+      "name": "ABC Sweets",
+      "dist_km": 0.46
      },
      {
-      "name": "The Club Shopping Centre",
-      "dist_km": 2.8
+      "name": "Pick n Pay",
+      "dist_km": 0.52
      },
      {
-      "name": "Atterbury Value Mart",
-      "dist_km": 2.9
+      "name": "Game",
+      "dist_km": 0.61
      },
      {
-      "name": "Menlyn Park",
-      "dist_km": 3.5
+      "name": "Pick n Pay",
+      "dist_km": 1.07
      }
     ],
     "hospitals": [
      {
-      "name": "Unitas Hospital",
-      "dist_km": 2.3
+      "name": "Health Worx Medical Centre Centurion Mall",
+      "dist_km": 0.53
      },
      {
-      "name": "Netcare Moot Hospital",
-      "dist_km": 5.8
+      "name": "Southlake Medical Centre",
+      "dist_km": 1.22
+     },
+     {
+      "name": "Netcare Unitas Hospital",
+      "dist_km": 3.38
+     },
+     {
+      "name": "N.H.C Health Centre",
+      "dist_km": 5.94
+     },
+     {
+      "name": "Doctor's Surgery",
+      "dist_km": 7.69
      }
     ],
     "police": [
      {
-      "name": "Lyttelton Police Station",
-      "dist_km": 2.1
+      "name": "Lyttleton Polisiestasie",
+      "dist_km": 2.77
      },
      {
-      "name": "Centurion Police Station",
-      "dist_km": 3.4
+      "name": "Sunnyside",
+      "dist_km": 12.11
+     },
+     {
+      "name": "Pretoria Central Police Station",
+      "dist_km": 12.64
+     },
+     {
+      "name": "Tshwane Metro Police Satellite station",
+      "dist_km": 12.94
      }
     ]
    },
@@ -788,72 +824,91 @@
     "schools": [
      {
       "name": "Irene Primary School",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "dist_km": 1.52,
+      "type": "Primary"
      },
      {
-      "name": "Laerskool Irene",
-      "dist_km": 0.9,
-      "type": "Public · Primary"
+      "name": "Speelkas Kleuterskool",
+      "dist_km": 1.71
      },
      {
-      "name": "Doringkloof High School",
-      "dist_km": 3.1,
-      "type": "Public · Primary"
+      "name": "Abbots College",
+      "dist_km": 3.72,
+      "type": "Secondary"
      },
      {
-      "name": "Afrikaanse Hoër Seunskool",
-      "dist_km": 2.5,
-      "type": "Public · Secondary"
+      "name": "Midstream Ridge Primary",
+      "dist_km": 4.01,
+      "type": "Primary"
      },
      {
-      "name": "Laerskool Constantiapark",
-      "dist_km": 3.7,
-      "type": "Public · Primary"
+      "name": "Laerskool Hennopspark",
+      "dist_km": 5.56,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 8.4
-     },
-     {
-      "name": "Varsity College Pretoria",
-      "dist_km": 9.2
+      "name": "UNISA Sunnyside Campus",
+      "dist_km": 14.06
      }
     ],
     "shopping": [
      {
-      "name": "Irene Village Mall",
-      "dist_km": 1.2
+      "name": "Southdowns Shopping Centre",
+      "dist_km": 1.02
      },
      {
-      "name": "Centurion Mall",
-      "dist_km": 3.8
+      "name": "Main Road Deli",
+      "dist_km": 1.19
      },
      {
-      "name": "Doringkloof Mall",
-      "dist_km": 2.4
+      "name": "Freedom Village",
+      "dist_km": 1.3
+     },
+     {
+      "name": "Quickshop",
+      "dist_km": 1.8
+     },
+     {
+      "name": "Quickshop",
+      "dist_km": 2.26
      }
     ],
     "hospitals": [
      {
-      "name": "Unitas Hospital",
-      "dist_km": 3.7
+      "name": "Health Worx Medical Centre Centurion Mall",
+      "dist_km": 3.99
      },
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 8.4
+      "name": "Southlake Medical Centre",
+      "dist_km": 4.01
+     },
+     {
+      "name": "N.H.C Health Centre",
+      "dist_km": 5.92
+     },
+     {
+      "name": "Netcare Unitas Hospital",
+      "dist_km": 6.08
+     },
+     {
+      "name": "Dr Minette",
+      "dist_km": 7.85
      }
     ],
     "police": [
      {
-      "name": "Lyttelton Police Station",
-      "dist_km": 4.6
+      "name": "Lyttleton Polisiestasie",
+      "dist_km": 5.29
      },
      {
-      "name": "Midstream Police Station",
-      "dist_km": 5.8
+      "name": "Tshwane Metro Police Satellite station",
+      "dist_km": 12.13
+     },
+     {
+      "name": "Sunnyside",
+      "dist_km": 14.45
      }
     ]
    },
@@ -916,81 +971,98 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Hatfield Christian School",
-      "dist_km": 0.8,
-      "type": "Private · Combined"
+      "name": "MSC Business College",
+      "dist_km": 0.32,
+      "type": "Secondary"
      },
      {
-      "name": "Pretoria High School for Girls",
-      "dist_km": 1.9,
-      "type": "Public · Primary"
+      "name": "Iona Convent School",
+      "dist_km": 3.26
      },
      {
-      "name": "Clapham High School",
-      "dist_km": 2.3,
-      "type": "Public · Primary"
+      "name": "Damelin City Campus Pretoria",
+      "dist_km": 3.95
      },
      {
-      "name": "Laerskool Rietvlei",
-      "dist_km": 1.6,
-      "type": "Public · Primary"
+      "name": "Prince's Park College",
+      "dist_km": 4.24,
+      "type": "Secondary"
      },
      {
-      "name": "Centurion Academy",
-      "dist_km": 2.8,
-      "type": "Private · Combined"
+      "name": "CVO Moot",
+      "dist_km": 4.6
      }
     ],
     "universities": [
      {
-      "name": "University of Pretoria (UP/TUKS)",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Tshwane University of Technology (TUT)",
-      "dist_km": 3.4
-     },
-     {
-      "name": "University of South Africa (UNISA)",
-      "dist_km": 5.1
+      "name": "STADIO Higher Education",
+      "dist_km": 0.57
      }
     ],
     "shopping": [
      {
-      "name": "Hatfield Plaza",
-      "dist_km": 0.4
+      "name": "Shell Select",
+      "dist_km": 0.56
      },
      {
-      "name": "The Fields Shopping Centre",
-      "dist_km": 1.6
+      "name": "Woolworths Food",
+      "dist_km": 0.69
      },
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 5.3
+      "name": "Pick n Pay",
+      "dist_km": 0.77
+     },
+     {
+      "name": "Woolworths",
+      "dist_km": 0.84
+     },
+     {
+      "name": "shop@duncan",
+      "dist_km": 1.07
      }
     ],
     "hospitals": [
      {
-      "name": "Netcare Jacaranda Hospital",
-      "dist_km": 2.1
+      "name": "Akeso Behavioral Healthcare group",
+      "dist_km": 0.61
      },
      {
-      "name": "Steve Biko Academic Hospital",
-      "dist_km": 3.3
+      "name": "Sediba Hope Medical Centre",
+      "dist_km": 1.95
      },
      {
-      "name": "Mediclinic Muelmed",
-      "dist_km": 3.8
+      "name": "Carecross Health",
+      "dist_km": 1.98
+     },
+     {
+      "name": "Advanced Groenkloof Day Hospital",
+      "dist_km": 2.36
+     },
+     {
+      "name": "Life Brooklyn Day Hospital",
+      "dist_km": 2.72
      }
     ],
     "police": [
      {
-      "name": "Hatfield Police Station",
-      "dist_km": 0.6
+      "name": "Sunnyside",
+      "dist_km": 2.42
      },
      {
-      "name": "Brooklyn Police Station",
-      "dist_km": 3.2
+      "name": "Villiers",
+      "dist_km": 3.45
+     },
+     {
+      "name": "SAPS Moot",
+      "dist_km": 3.91
+     },
+     {
+      "name": "Pretoria Central Police Station",
+      "dist_km": 4.44
+     },
+     {
+      "name": "Wonderboompoort",
+      "dist_km": 6.39
      }
     ]
    },
@@ -1053,73 +1125,99 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Silver Lakes Preparatory",
-      "dist_km": 1.1,
-      "type": "Public · Primary"
+      "name": "Laerskool Tygerpoort",
+      "dist_km": 2.29,
+      "type": "Primary"
      },
      {
-      "name": "Laerskool Silverton",
-      "dist_km": 3.2,
-      "type": "Public · Primary"
+      "name": "Germany International School Pretoria",
+      "dist_km": 3.52
      },
      {
-      "name": "Silver Oaks Independent School",
-      "dist_km": 1.8,
-      "type": "Public · Primary"
+      "name": "Tyger Valley",
+      "dist_km": 3.74
      },
      {
-      "name": "Hatfield Christian School",
-      "dist_km": 2.2,
-      "type": "Private · Combined"
+      "name": "La Montagne Primary",
+      "dist_km": 3.98,
+      "type": "Primary"
      },
      {
-      "name": "Hoërskool Drie Riviere",
-      "dist_km": 3.5,
-      "type": "Public · Secondary"
+      "name": "Saint Albans College",
+      "dist_km": 5.84,
+      "type": "Secondary"
      }
     ],
     "universities": [
      {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 8.6
-     },
-     {
-      "name": "CTI Education Group Pretoria",
-      "dist_km": 9.1
+      "name": "STADIO Higher Education",
+      "dist_km": 11.39
      }
     ],
     "shopping": [
      {
-      "name": "Woodlands Boulevard",
-      "dist_km": 2.8
+      "name": "Quickshop",
+      "dist_km": 0.26
      },
      {
-      "name": "Faerie Glen Mall",
-      "dist_km": 4.1
+      "name": "Kwikspar",
+      "dist_km": 0.83
      },
      {
-      "name": "Menlyn Park Shopping Centre",
-      "dist_km": 5.9
+      "name": "Checkers",
+      "dist_km": 1.09
+     },
+     {
+      "name": "Pick n Pay",
+      "dist_km": 1.21
+     },
+     {
+      "name": "Quickshop",
+      "dist_km": 1.47
      }
     ],
     "hospitals": [
      {
-      "name": "Pretoria East Hospital",
-      "dist_km": 4.7
+      "name": "Cintocare",
+      "dist_km": 6.43
      },
      {
-      "name": "Wilgers Hospital",
-      "dist_km": 5.2
+      "name": "Mamelodi Hospital",
+      "dist_km": 6.75
+     },
+     {
+      "name": "Mamelodi Pharmacy",
+      "dist_km": 7.11
+     },
+     {
+      "name": "Cure Day Clinics Erasmuskloof",
+      "dist_km": 8.88
+     },
+     {
+      "name": "Dr Minette",
+      "dist_km": 10.14
      }
     ],
     "police": [
      {
-      "name": "Garsfontein Police Station",
-      "dist_km": 3.9
+      "name": "Tshwane Metro Police Satellite station",
+      "dist_km": 5.56
      },
      {
-      "name": "Silverton Police Station",
-      "dist_km": 5.3
+      "name": "SAPS Silverton",
+      "dist_km": 6.77
+     },
+     {
+      "name": "Villiers",
+      "dist_km": 11.8
+     },
+     {
+      "name": "Sunnyside",
+      "dist_km": 13.89
+     },
+     {
+      "name": "Kameeldrif",
+      "dist_km": 14.45
      }
     ]
    },
@@ -1178,105 +1276,80 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Roodeplaat Primary School",
-      "dist_km": 1.3,
-      "type": "Public · Primary"
+      "name": "Sonitus Skool Vir Hardhorendes",
+      "dist_km": 7.33
      },
      {
-      "name": "Laerskool Dalmada",
-      "dist_km": 4.2,
-      "type": "Public · Primary"
+      "name": "F.H. Odendaal High School",
+      "dist_km": 7.4,
+      "type": "Secondary"
      },
      {
-      "name": "Laerskool Erasmuskloof",
-      "dist_km": 1.4,
-      "type": "Public · Primary"
+      "name": "Derdepoort Primary School",
+      "dist_km": 7.74,
+      "type": "Primary"
      },
      {
-      "name": "Hoërskool Erasmus",
-      "dist_km": 2.1,
-      "type": "Public · Secondary"
+      "name": "Balebogeng Higher Primary School",
+      "dist_km": 7.98,
+      "type": "Primary"
      },
      {
-      "name": "Cornwall Hill College",
-      "dist_km": 3.2,
-      "type": "Private · Combined"
+      "name": "Pula Difate Primary School",
+      "dist_km": 7.99,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "Agricultural Research Council ARC",
-      "dist_km": 2.1
-     },
-     {
-      "name": "University of Pretoria (Hatfield)",
-      "dist_km": 14.8
+      "name": "STADIO Higher Education",
+      "dist_km": 15.0
      }
     ],
     "shopping": [
      {
-      "name": "Kolonnade Retail Park",
-      "dist_km": 8.3
-     },
-     {
-      "name": "Montana Crossing",
-      "dist_km": 9.7
-     },
-     {
-      "name": "Centurion Mall",
-      "dist_km": 3.2
-     },
-     {
-      "name": "Irene Village Mall",
-      "dist_km": 4.4
-     },
-     {
-      "name": "Atterbury Value Mart",
-      "dist_km": 5.1
+      "name": "Spar",
+      "dist_km": 2.2
      }
     ],
     "hospitals": [
      {
-      "name": "Themba Hospital",
-      "dist_km": 5.6
+      "name": "Mamelodi Pharmacy",
+      "dist_km": 6.99
      },
      {
-      "name": "Zithobeni Hospital",
-      "dist_km": 7.4
+      "name": "Mamelodi Hospital",
+      "dist_km": 8.36
      },
      {
-      "name": "Unitas Hospital",
-      "dist_km": 2.8
+      "name": "Ali is siek",
+      "dist_km": 13.94
      },
      {
-      "name": "Life Groenkloof Hospital",
-      "dist_km": 4.9
-     },
-     {
-      "name": "Netcare Femina Hospital",
-      "dist_km": 6.3
+      "name": "Pretoria Urology Hospital",
+      "dist_km": 14.43
      }
     ],
     "police": [
      {
-      "name": "Roodeplaat Police Station",
-      "dist_km": 1.8
+      "name": "Kameeldrif",
+      "dist_km": 2.92
      },
      {
-      "name": "Mabopane Police Station",
-      "dist_km": 9.2
+      "name": "SAPS Silverton",
+      "dist_km": 10.11
      },
      {
-      "name": "Centurion Police Station",
-      "dist_km": 3.5
+      "name": "Sinoville Police Department",
+      "dist_km": 11.51
      },
      {
-      "name": "Wierdabrug SAPS",
-      "dist_km": 4.9
+      "name": "Villiers",
+      "dist_km": 11.9
      },
      {
-      "name": "Rietgat Police Station",
-      "dist_km": 6.1
+      "name": "SAPS Moot",
+      "dist_km": 13.99
      }
     ]
    },
@@ -1335,97 +1408,59 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Laerskool Warmbad",
-      "dist_km": 1.2,
-      "type": "Public · Primary"
+      "name": "Eden Christian School",
+      "dist_km": 0.41
      },
      {
-      "name": "Bela-Bela High School",
-      "dist_km": 1.8,
-      "type": "Public · Primary"
+      "name": "Hoërskool Warmbad",
+      "dist_km": 0.55,
+      "type": "Secondary"
      },
      {
-      "name": "Laerskool Garsfontein",
-      "dist_km": 1.8,
-      "type": "Public · Primary"
+      "name": "Spa Park Primary School",
+      "dist_km": 1.52,
+      "type": "Primary"
      },
      {
-      "name": "Hoërskool Garsfontein",
-      "dist_km": 2.3,
-      "type": "Public · Secondary"
+      "name": "Mmamakwa Full Service Primary School",
+      "dist_km": 2.66,
+      "type": "Primary"
      },
      {
-      "name": "St Albans College",
-      "dist_km": 3.9,
-      "type": "Private · Combined"
-     }
-    ],
-    "universities": [
-     {
-      "name": "UNISA Polokwane Centre",
-      "dist_km": 98.4
+      "name": "Thusanang School for the Handicapped",
+      "dist_km": 2.84
      }
     ],
     "shopping": [
      {
-      "name": "Bela-Bela Town Centre",
-      "dist_km": 0.9
+      "name": "SuperSPAR",
+      "dist_km": 0.86
      },
      {
-      "name": "Checkpoint Shopping Centre",
-      "dist_km": 1.4
+      "name": "Shoprite",
+      "dist_km": 0.97
      },
      {
-      "name": "Woodlands Boulevard",
-      "dist_km": 2.7
+      "name": "Pick n Pay",
+      "dist_km": 1.07
      },
      {
-      "name": "Menlyn Park",
-      "dist_km": 4.3
+      "name": "Smart Center",
+      "dist_km": 1.22
      },
      {
-      "name": "Kolonnade Retail Park",
-      "dist_km": 5.8
+      "name": "Shell Select",
+      "dist_km": 1.43
      }
     ],
     "hospitals": [
      {
-      "name": "Bela-Bela Hospital",
-      "dist_km": 1.6
+      "name": "Bela Bela Hospital",
+      "dist_km": 0.47
      },
      {
-      "name": "Netcare Waterberg Mediclinic",
-      "dist_km": 2.1
-     },
-     {
-      "name": "Wilgers Hospital",
-      "dist_km": 3.1
-     },
-     {
-      "name": "Mediclinic Kloof",
-      "dist_km": 4.7
-     },
-     {
-      "name": "Unitas Hospital",
-      "dist_km": 5.9
-     }
-    ],
-    "police": [
-     {
-      "name": "Bela-Bela Police Station",
-      "dist_km": 1.1
-     },
-     {
-      "name": "Garsfontein Police Station",
-      "dist_km": 3.8
-     },
-     {
-      "name": "Pretoria East SAPS",
-      "dist_km": 5.2
-     },
-     {
-      "name": "Rietgat Police Station",
-      "dist_km": 6.7
+      "name": "Bele Bela Saint Vincent's Hospital",
+      "dist_km": 0.63
      }
     ]
    },
@@ -1484,89 +1519,37 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 199 Jessie Isidor Straus",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "Pharmacy College",
+      "dist_km": 0.64,
+      "type": "Secondary"
      },
      {
-      "name": "Trinity School",
-      "dist_km": 0.7,
-      "type": "Private · Combined"
+      "name": "Public School 37",
+      "dist_km": 2.21
      },
      {
-      "name": "Collegiate School",
-      "dist_km": 0.9,
-      "type": "Private · Combined"
+      "name": "Public School 190",
+      "dist_km": 2.59
      },
      {
-      "name": "PS 87 William Sherman",
-      "dist_km": 1.1,
-      "type": "Public · Primary"
+      "name": "Public School 198",
+      "dist_km": 2.74
      },
      {
-      "name": "The Calhoun School",
-      "dist_km": 1.3,
-      "type": "Private · Combined"
+      "name": "Public School 18",
+      "dist_km": 2.83
      }
     ],
     "universities": [
      {
-      "name": "Columbia University",
-      "dist_km": 1.8
-     },
-     {
-      "name": "Fordham (Lincoln Center)",
-      "dist_km": 1.5
-     }
-    ],
-    "shopping": [
-     {
-      "name": "The Shops at Columbus Circle",
-      "dist_km": 1.2
-     },
-     {
-      "name": "Trader Joe's UWS",
-      "dist_km": 0.5
-     },
-     {
-      "name": "Citarella Broadway",
-      "dist_km": 0.6
-     },
-     {
-      "name": "Whole Foods Columbus",
-      "dist_km": 1.0
+      "name": "Weill Cornell Medical College",
+      "dist_km": 2.94
      }
     ],
     "hospitals": [
      {
-      "name": "Mount Sinai West",
-      "dist_km": 1.4
-     },
-     {
-      "name": "NewYork-Presbyterian/Allen",
-      "dist_km": 2.1
-     },
-     {
-      "name": "Lenox Hill Hospital",
-      "dist_km": 2.8
-     },
-     {
-      "name": "NYU Langone Cobble Hill",
-      "dist_km": 3.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "72nd St (1/2/3)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "81st St–Museum (B/C)",
-      "dist_km": 0.5
-     },
-     {
-      "name": "66th St–Lincoln Center (1)",
-      "dist_km": 0.6
+      "name": "Montefiore Medical Center West Campus Moses Division Hospital",
+      "dist_km": 13.99
      }
     ]
    },
@@ -1629,89 +1612,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 234 Independence",
-      "dist_km": 0.3,
-      "type": "Public · Primary"
+      "name": "Public School 23",
+      "dist_km": 0.91
      },
      {
-      "name": "Washington Market School",
-      "dist_km": 0.5,
-      "type": "Private · Primary"
+      "name": "Yung Wing Elementary",
+      "dist_km": 1.23
      },
      {
-      "name": "Stuyvesant High School",
-      "dist_km": 0.6,
-      "type": "Public · Secondary"
+      "name": "Twelfth Street Academy",
+      "dist_km": 2.48
      },
      {
-      "name": "BMCC Early Childhood",
-      "dist_km": 0.8,
-      "type": "Public · Primary"
+      "name": "Public School M188 The Island School",
+      "dist_km": 2.64
      },
      {
-      "name": "Léman Manhattan Prep",
-      "dist_km": 1.0,
-      "type": "Private · Combined"
+      "name": "High School for Health Professions and Human Services",
+      "dist_km": 2.66,
+      "type": "Secondary"
      }
     ],
     "universities": [
      {
-      "name": "Borough of Manhattan CC",
-      "dist_km": 0.7
-     },
-     {
-      "name": "NYU (Washington Sq)",
-      "dist_km": 2.0
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Westfield WTC",
-      "dist_km": 0.9
-     },
-     {
-      "name": "Whole Foods Tribeca",
-      "dist_km": 0.4
-     },
-     {
-      "name": "Brookfield Place",
-      "dist_km": 1.0
-     },
-     {
-      "name": "Soho Shopping District",
-      "dist_km": 1.3
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "NYU Langone–Lower Manhattan",
-      "dist_km": 0.8
-     },
-     {
-      "name": "NewYork-Presbyterian Lower Manhattan",
-      "dist_km": 0.9
-     },
-     {
-      "name": "Mount Sinai Beth Israel",
-      "dist_km": 2.4
-     },
-     {
-      "name": "Bellevue Hospital",
-      "dist_km": 3.1
-     }
-    ],
-    "transit": [
-     {
-      "name": "Chambers St (1/2/3/A/C)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Canal St (N/Q/R/W)",
-      "dist_km": 0.6
-     },
-     {
-      "name": "World Trade Center (E)",
-      "dist_km": 0.9
+      "name": "Weill Cornell Medical College",
+      "dist_km": 6.79
      }
     ]
    },
@@ -1774,89 +1699,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 321 William Penn",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "MS 447",
+      "dist_km": 1.9
      },
      {
-      "name": "Berkeley Carroll School",
-      "dist_km": 0.6,
-      "type": "Private · Combined"
+      "name": "Public School 92",
+      "dist_km": 2.48
      },
      {
-      "name": "PS 107 John W. Kimball",
-      "dist_km": 0.8,
-      "type": "Public · Primary"
+      "name": "Saint Francis of Assisi Elementary School",
+      "dist_km": 2.67
      },
      {
-      "name": "MS 51 William Alexander",
-      "dist_km": 1.0,
-      "type": "Public · Secondary"
+      "name": "Erasmus Hall High School",
+      "dist_km": 2.78,
+      "type": "Secondary"
      },
      {
-      "name": "Poly Prep Lower School",
-      "dist_km": 1.4,
-      "type": "Private · Primary"
+      "name": "Holy Cross School",
+      "dist_km": 2.88
      }
     ],
     "universities": [
      {
-      "name": "Long Island University–Brooklyn",
-      "dist_km": 2.2
-     },
-     {
-      "name": "Pratt Institute",
-      "dist_km": 3.0
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Fifth Avenue (Park Slope)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Atlantic Terminal Mall",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Whole Foods Gowanus",
-      "dist_km": 1.2
-     },
-     {
-      "name": "Trader Joe's Court St",
-      "dist_km": 2.0
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "NewYork-Presbyterian Methodist",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Brooklyn Hospital Center",
-      "dist_km": 2.1
-     },
-     {
-      "name": "Maimonides Medical Center",
-      "dist_km": 3.4
-     },
-     {
-      "name": "Kings County Hospital",
-      "dist_km": 4.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "7th Ave (F/G)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Grand Army Plaza (2/3)",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Atlantic Av–Barclays (multiple)",
-      "dist_km": 1.5
+      "name": "Weill Cornell Medical College",
+      "dist_km": 11.09
      }
     ]
    },
@@ -1919,89 +1786,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 19 Asher Levy",
-      "dist_km": 0.3,
-      "type": "Public · Primary"
+      "name": "Twelfth Street Academy",
+      "dist_km": 0.33
      },
      {
-      "name": "Girls Prep Lower East Side",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "name": "High School for Health Professions and Human Services",
+      "dist_km": 0.67,
+      "type": "Secondary"
      },
      {
-      "name": "Tompkins Square MS",
-      "dist_km": 0.5,
-      "type": "Public · Secondary"
+      "name": "Public School M188 The Island School",
+      "dist_km": 0.84
      },
      {
-      "name": "PS 63 STAR Academy",
-      "dist_km": 0.8,
-      "type": "Public · Primary"
+      "name": "Public School 14",
+      "dist_km": 1.62
      },
      {
-      "name": "Children's Workshop School",
-      "dist_km": 0.7,
-      "type": "Public · Primary"
+      "name": "Yung Wing Elementary",
+      "dist_km": 1.82
      }
     ],
     "universities": [
      {
-      "name": "New York University",
-      "dist_km": 0.9
-     },
-     {
-      "name": "Cooper Union",
-      "dist_km": 0.7
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Trader Joe's 14th St",
-      "dist_km": 0.6
-     },
-     {
-      "name": "Union Square Greenmarket",
-      "dist_km": 1.0
-     },
-     {
-      "name": "Whole Foods Bowery",
-      "dist_km": 0.8
-     },
-     {
-      "name": "St. Marks Place",
-      "dist_km": 0.4
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "Mount Sinai Beth Israel",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Bellevue Hospital",
-      "dist_km": 1.2
-     },
-     {
-      "name": "NYU Langone Tisch",
-      "dist_km": 1.4
-     },
-     {
-      "name": "NewYork-Presbyterian Lower Manhattan",
-      "dist_km": 2.6
-     }
-    ],
-    "transit": [
-     {
-      "name": "1st Av (L)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Astor Pl (6)",
-      "dist_km": 0.6
-     },
-     {
-      "name": "2nd Av (F)",
-      "dist_km": 0.5
+      "name": "Weill Cornell Medical College",
+      "dist_km": 4.79
      }
     ]
    },
@@ -2064,89 +1873,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 111 Jacob Blackwell",
-      "dist_km": 0.5,
-      "type": "Public · Primary"
+      "name": "United Nations School",
+      "dist_km": 2.05
      },
      {
-      "name": "PS 78Q Robert F. Wagner",
-      "dist_km": 0.7,
-      "type": "Public · Primary"
+      "name": "Holy Family School",
+      "dist_km": 2.38
      },
      {
-      "name": "Academy of American Studies",
-      "dist_km": 1.0,
-      "type": "Public · Secondary"
+      "name": "Public School 18",
+      "dist_km": 2.59
      },
      {
-      "name": "MS 204 Oliver W. Holmes",
-      "dist_km": 1.2,
-      "type": "Public · Secondary"
+      "name": "Public School 14",
+      "dist_km": 2.85
      },
      {
-      "name": "Aaron Copland School Prep",
-      "dist_km": 1.4,
-      "type": "Public · Combined"
+      "name": "High School for Health Professions and Human Services",
+      "dist_km": 3.29,
+      "type": "Secondary"
      }
     ],
     "universities": [
      {
-      "name": "Cornell Tech (Roosevelt Is.)",
-      "dist_km": 1.2
-     },
-     {
-      "name": "LaGuardia Community College",
-      "dist_km": 1.5
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Costco LIC",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Center Boulevard Retail",
-      "dist_km": 0.6
-     },
-     {
-      "name": "Queens Plaza Shops",
-      "dist_km": 1.0
-     },
-     {
-      "name": "Trader Joe's LIC",
-      "dist_km": 0.9
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "Mount Sinai Queens",
-      "dist_km": 0.8
-     },
-     {
-      "name": "NYC Health–Elmhurst",
-      "dist_km": 3.2
-     },
-     {
-      "name": "NewYork-Presbyterian Queens",
-      "dist_km": 4.1
-     },
-     {
-      "name": "NYU Langone–Long Island",
-      "dist_km": 4.4
-     }
-    ],
-    "transit": [
-     {
-      "name": "Court Sq (7/E/M/G)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Vernon Blvd–Jackson Av (7)",
-      "dist_km": 0.5
-     },
-     {
-      "name": "Queensboro Plaza (N/W/7)",
-      "dist_km": 0.8
+      "name": "Weill Cornell Medical College",
+      "dist_km": 2.4
      }
     ]
    },
@@ -2205,89 +1956,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 59 Beekman Hill",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "United Nations School",
+      "dist_km": 0.55
      },
      {
-      "name": "The Beekman School",
-      "dist_km": 0.6,
-      "type": "Private · Secondary"
+      "name": "Public School 18",
+      "dist_km": 1.07
      },
      {
-      "name": "Cathedral High School",
-      "dist_km": 0.8,
-      "type": "Private · Secondary"
+      "name": "Public School 190",
+      "dist_km": 2.15
      },
      {
-      "name": "PS 116 Mary Lindley Murray",
-      "dist_km": 1.0,
-      "type": "Public · Primary"
+      "name": "Public School 14",
+      "dist_km": 2.42
      },
      {
-      "name": "UN International School",
-      "dist_km": 1.2,
-      "type": "Private · Combined"
+      "name": "Pharmacy College",
+      "dist_km": 2.78,
+      "type": "Secondary"
      }
     ],
     "universities": [
      {
-      "name": "Hunter College (CUNY)",
-      "dist_km": 1.4
-     },
-     {
-      "name": "Weill Cornell Medicine",
-      "dist_km": 2.3
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Bloomingdale's 59th St",
-      "dist_km": 0.9
-     },
-     {
-      "name": "Whole Foods 57th St",
-      "dist_km": 0.8
-     },
-     {
-      "name": "The Plaza Retail",
-      "dist_km": 1.4
-     },
-     {
-      "name": "Trader Joe's 3rd Ave",
+      "name": "Weill Cornell Medical College",
       "dist_km": 1.0
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "NewYork-Presbyterian/Weill Cornell",
-      "dist_km": 2.2
-     },
-     {
-      "name": "Lenox Hill Hospital",
-      "dist_km": 2.0
-     },
-     {
-      "name": "Mount Sinai West",
-      "dist_km": 2.6
-     },
-     {
-      "name": "NYU Langone Tisch",
-      "dist_km": 2.8
-     }
-    ],
-    "transit": [
-     {
-      "name": "Lexington Av/59 St (4/5/6/N/R/W)",
-      "dist_km": 0.6
-     },
-     {
-      "name": "51st St (6)",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Roosevelt Island Tram",
-      "dist_km": 0.8
      }
     ]
    },
@@ -2346,89 +2039,37 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 122 Mamie Fay",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "Junior High School 99",
+      "dist_km": 1.88,
+      "type": "Secondary"
      },
      {
-      "name": "PS 17 Henry David Thoreau",
-      "dist_km": 0.7,
-      "type": "Public · Primary"
+      "name": "Public School 190",
+      "dist_km": 1.99
      },
      {
-      "name": "IS 126 Albert Shanker",
-      "dist_km": 0.9,
-      "type": "Public · Secondary"
+      "name": "Public School 168",
+      "dist_km": 2.25
      },
      {
-      "name": "Frank Sinatra School of the Arts",
-      "dist_km": 1.1,
-      "type": "Public · Secondary"
+      "name": "Public School 198",
+      "dist_km": 2.32
      },
      {
-      "name": "Astoria Christian Academy",
-      "dist_km": 1.3,
-      "type": "Private · Primary"
+      "name": "Public School 185 Early Childhood Discovery and Design",
+      "dist_km": 3.46
      }
     ],
     "universities": [
      {
-      "name": "LaGuardia Community College",
-      "dist_km": 2.0
-     },
-     {
-      "name": "CUNY Queens College",
-      "dist_km": 4.5
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Steinway Street Shops",
-      "dist_km": 0.6
-     },
-     {
-      "name": "30th Avenue Strip",
-      "dist_km": 0.4
-     },
-     {
-      "name": "Costco LIC",
-      "dist_km": 2.4
-     },
-     {
-      "name": "Trader Joe's Astoria",
-      "dist_km": 0.8
+      "name": "Weill Cornell Medical College",
+      "dist_km": 2.24
      }
     ],
     "hospitals": [
      {
-      "name": "Mount Sinai Queens",
-      "dist_km": 1.4
-     },
-     {
-      "name": "NYC Health–Elmhurst",
-      "dist_km": 3.8
-     },
-     {
-      "name": "NewYork-Presbyterian Queens",
-      "dist_km": 5.0
-     },
-     {
-      "name": "Astoria Center Urgent Care",
-      "dist_km": 0.5
-     }
-    ],
-    "transit": [
-     {
-      "name": "Astoria Blvd (N/W)",
-      "dist_km": 0.4
-     },
-     {
-      "name": "30th Av (N/W)",
-      "dist_km": 0.5
-     },
-     {
-      "name": "Broadway (N/W)",
-      "dist_km": 0.7
+      "name": "Montefiore Medical Center West Campus Moses Division Hospital",
+      "dist_km": 12.82
      }
     ]
    },
@@ -2487,89 +2128,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 139 Alexine A. Fenty",
-      "dist_km": 0.3,
-      "type": "Public · Primary"
+      "name": "Public School 152",
+      "dist_km": 1.24
      },
      {
-      "name": "Brooklyn Explore Academy",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "name": "Erasmus Hall High School",
+      "dist_km": 1.75,
+      "type": "Secondary"
      },
      {
-      "name": "Midwood High School",
-      "dist_km": 1.0,
-      "type": "Public · Secondary"
+      "name": "Hebrew Academy",
+      "dist_km": 1.79
      },
      {
-      "name": "PS 217 Colonel David Marcus",
-      "dist_km": 0.9,
-      "type": "Public · Primary"
+      "name": "Public School 246",
+      "dist_km": 1.8
      },
      {
-      "name": "Yeshivah of Flatbush",
-      "dist_km": 1.4,
-      "type": "Private · Combined"
+      "name": "Holy Cross School",
+      "dist_km": 1.91
      }
     ],
     "universities": [
      {
-      "name": "Brooklyn College (CUNY)",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Kingsborough CC",
-      "dist_km": 6.0
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Cortelyou Road Shops",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Flatbush Junction",
-      "dist_km": 1.5
-     },
-     {
-      "name": "Target Flatbush",
-      "dist_km": 1.8
-     },
-     {
-      "name": "Cortelyou Greenmarket",
-      "dist_km": 0.4
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "Kings County Hospital",
-      "dist_km": 2.6
-     },
-     {
-      "name": "NewYork-Presbyterian Brooklyn Methodist",
-      "dist_km": 3.0
-     },
-     {
-      "name": "Maimonides Medical Center",
-      "dist_km": 3.5
-     },
-     {
-      "name": "SUNY Downstate",
-      "dist_km": 2.9
-     }
-    ],
-    "transit": [
-     {
-      "name": "Cortelyou Rd (Q)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Newkirk Plaza (B/Q)",
-      "dist_km": 0.6
-     },
-     {
-      "name": "Beverley Rd (Q)",
-      "dist_km": 0.5
+      "name": "Weill Cornell Medical College",
+      "dist_km": 14.27
      }
     ]
    },
@@ -2632,89 +2215,32 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 17 Henry D. Woodworth",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "Beth Jacob Seminary",
+      "dist_km": 0.83
      },
      {
-      "name": "Williamsburg Charter HS",
-      "dist_km": 0.6,
-      "type": "Public · Secondary"
+      "name": "Holy Family School",
+      "dist_km": 1.01
      },
      {
-      "name": "PS 84 Jose de Diego",
-      "dist_km": 0.8,
-      "type": "Public · Primary"
+      "name": "All Saints High School",
+      "dist_km": 1.76,
+      "type": "Secondary"
      },
      {
-      "name": "Saint Joseph Patron School",
-      "dist_km": 1.0,
-      "type": "Private · Primary"
+      "name": "New York Community College of Applied Arts and Sciences",
+      "dist_km": 1.81,
+      "type": "Secondary"
      },
      {
-      "name": "Beginning with Children Charter",
-      "dist_km": 1.2,
-      "type": "Public · Combined"
+      "name": "Public School M188 The Island School",
+      "dist_km": 1.91
      }
     ],
     "universities": [
      {
-      "name": "Pratt Institute",
-      "dist_km": 2.8
-     },
-     {
-      "name": "NYU Tandon",
-      "dist_km": 3.2
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Bedford Avenue Shops",
-      "dist_km": 0.3
-     },
-     {
-      "name": "City Point (Downtown BK)",
-      "dist_km": 3.5
-     },
-     {
-      "name": "Whole Foods Williamsburg",
-      "dist_km": 0.7
-     },
-     {
-      "name": "Trader Joe's Metropolitan",
-      "dist_km": 0.9
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "NYC Health–Woodhull",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Brooklyn Hospital Center",
-      "dist_km": 3.0
-     },
-     {
-      "name": "NewYork-Presbyterian Brooklyn Methodist",
-      "dist_km": 4.5
-     },
-     {
-      "name": "Bellevue (Manhattan)",
-      "dist_km": 4.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "Bedford Av (L)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Marcy Av (J/M/Z)",
-      "dist_km": 0.8
-     },
-     {
-      "name": "Metropolitan Av (G)",
-      "dist_km": 0.6
+      "name": "Weill Cornell Medical College",
+      "dist_km": 5.59
      }
     ]
    },
@@ -2773,89 +2299,31 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "PS 11 William T. Harris",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "Public School 11",
+      "dist_km": 0.15
      },
      {
-      "name": "Avenues: The World School",
-      "dist_km": 0.6,
-      "type": "Private · Combined"
+      "name": "General Theological Seminary",
+      "dist_km": 0.25
      },
      {
-      "name": "Liberty High School",
-      "dist_km": 0.8,
-      "type": "Public · Secondary"
+      "name": "Public School 14",
+      "dist_km": 1.88
      },
      {
-      "name": "PS 33 Chelsea Prep",
-      "dist_km": 0.7,
-      "type": "Public · Primary"
+      "name": "High School for Health Professions and Human Services",
+      "dist_km": 2.12,
+      "type": "Secondary"
      },
      {
-      "name": "Clinton School",
-      "dist_km": 1.0,
-      "type": "Public · Secondary"
+      "name": "Twelfth Street Academy",
+      "dist_km": 2.37
      }
     ],
     "universities": [
      {
-      "name": "Fashion Institute of Technology",
-      "dist_km": 0.7
-     },
-     {
-      "name": "The New School",
-      "dist_km": 1.6
-     }
-    ],
-    "shopping": [
-     {
-      "name": "Chelsea Market",
-      "dist_km": 0.5
-     },
-     {
-      "name": "Whole Foods Chelsea",
-      "dist_km": 0.4
-     },
-     {
-      "name": "Trader Joe's Chelsea",
-      "dist_km": 0.8
-     },
-     {
-      "name": "The High Line Shops",
-      "dist_km": 0.6
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "Mount Sinai Beth Israel",
-      "dist_km": 1.2
-     },
-     {
-      "name": "NYU Langone Tisch",
-      "dist_km": 2.0
-     },
-     {
-      "name": "Lenox Health Greenwich Village",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Bellevue Hospital",
-      "dist_km": 2.6
-     }
-    ],
-    "transit": [
-     {
-      "name": "23rd St (C/E)",
-      "dist_km": 0.3
-     },
-     {
-      "name": "14th St / 8 Av (A/C/E/L)",
-      "dist_km": 0.6
-     },
-     {
-      "name": "23rd St (1)",
-      "dist_km": 0.5
+      "name": "Weill Cornell Medical College",
+      "dist_km": 4.51
      }
     ]
    },
@@ -2918,89 +2386,104 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Fox Primary School",
-      "dist_km": 0.4,
-      "type": "State · Primary"
+      "name": "Brent Adult and Community Education Service",
+      "dist_km": 2.1
      },
      {
-      "name": "Notting Hill Prep",
-      "dist_km": 0.6,
-      "type": "Independent · Primary"
+      "name": "South Hampstead Education and Life-long Learning Centre",
+      "dist_km": 3.11
      },
      {
-      "name": "Holland Park School",
-      "dist_km": 1.1,
-      "type": "State · Secondary"
+      "name": "Montessori Center International",
+      "dist_km": 3.36
      },
      {
-      "name": "Chepstow House School",
-      "dist_km": 0.8,
-      "type": "Independent · Primary"
+      "name": "The Belsize Centre",
+      "dist_km": 4.3
      },
      {
-      "name": "Wetherby School",
-      "dist_km": 1.0,
-      "type": "Independent · Primary"
+      "name": "London Study Centre",
+      "dist_km": 4.33
      }
     ],
     "universities": [
      {
-      "name": "Imperial College London",
-      "dist_km": 2.4
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 5.78
      },
      {
-      "name": "Royal College of Art",
-      "dist_km": 2.0
+      "name": "University of the Arts London",
+      "dist_km": 5.83
+     },
+     {
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 7.07
+     },
+     {
+      "name": "University of Chicago Booth School of Business",
+      "dist_km": 7.65
+     },
+     {
+      "name": "University of Greenwich",
+      "dist_km": 13.89
      }
     ],
     "shopping": [
      {
-      "name": "Portobello Road Market",
-      "dist_km": 0.3
+      "name": "Chepstow Food & Wine",
+      "dist_km": 0.52
      },
      {
-      "name": "Westfield London",
-      "dist_km": 1.8
+      "name": "Z.Punjani Newsagents and American Food Store",
+      "dist_km": 0.66
      },
      {
-      "name": "Whiteleys (The Whiteley)",
-      "dist_km": 1.2
+      "name": "Planet Organic",
+      "dist_km": 0.7
      },
      {
-      "name": "Notting Hill Gate Shops",
-      "dist_km": 0.5
+      "name": "Notting Hill Farmers' Market",
+      "dist_km": 0.7
+     },
+     {
+      "name": "Shan Store",
+      "dist_km": 0.76
      }
     ],
     "hospitals": [
      {
-      "name": "St Mary's Hospital, Paddington",
-      "dist_km": 1.5
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 5.11
      },
      {
-      "name": "Chelsea & Westminster",
-      "dist_km": 2.6
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 12.01
      },
      {
-      "name": "Charing Cross Hospital",
-      "dist_km": 2.9
-     },
-     {
-      "name": "The Portland Hospital",
-      "dist_km": 2.4
+      "name": "Priory Hospital",
+      "dist_km": 14.33
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Notting Hill Gate (Central/District)",
-      "dist_km": 0.4
+      "name": "Parks Police",
+      "dist_km": 1.4
      },
      {
-      "name": "Ladbroke Grove (H&C)",
-      "dist_km": 0.6
+      "name": "Albany Street Police Station",
+      "dist_km": 4.18
      },
      {
-      "name": "Westbourne Park (H&C)",
-      "dist_km": 0.9
+      "name": "Park Police",
+      "dist_km": 4.5
+     },
+     {
+      "name": "British Transport Police",
+      "dist_km": 4.84
+     },
+     {
+      "name": "British Transport Police",
+      "dist_km": 6.36
      }
     ]
    },
@@ -3063,89 +2546,106 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Canary Wharf College",
-      "dist_km": 0.5,
-      "type": "State · Primary"
+      "name": "ICON College",
+      "dist_km": 3.65,
+      "type": "Secondary"
      },
      {
-      "name": "St Anne's Primary",
-      "dist_km": 0.7,
-      "type": "State · Primary"
+      "name": "Christ the King Sixth Form College",
+      "dist_km": 4.66,
+      "type": "Secondary"
      },
      {
-      "name": "George Green's School",
-      "dist_km": 0.9,
-      "type": "State · Secondary"
+      "name": "Alphabet House",
+      "dist_km": 5.36
      },
      {
-      "name": "Cubitt Town Primary",
-      "dist_km": 0.8,
-      "type": "State · Primary"
+      "name": "The British School of Osteopathy",
+      "dist_km": 5.67
      },
      {
-      "name": "Bishop Challoner School",
-      "dist_km": 1.4,
-      "type": "Independent · Combined"
+      "name": "Islington Music Workshop",
+      "dist_km": 5.97
      }
     ],
     "universities": [
      {
-      "name": "Queen Mary University (Mile End)",
-      "dist_km": 2.5
+      "name": "University of Greenwich",
+      "dist_km": 2.65
      },
      {
-      "name": "University of Greenwich",
-      "dist_km": 2.8
+      "name": "University of Chicago Booth School of Business",
+      "dist_km": 5.2
+     },
+     {
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 6.01
+     },
+     {
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 6.96
+     },
+     {
+      "name": "University of the Arts London",
+      "dist_km": 7.14
      }
     ],
     "shopping": [
      {
-      "name": "Canary Wharf Shopping Centre",
-      "dist_km": 0.2
+      "name": "Tesco Express",
+      "dist_km": 0.54
      },
      {
-      "name": "Crossrail Place Retail",
-      "dist_km": 0.3
+      "name": "Docklands Halal Grocers",
+      "dist_km": 0.92
      },
      {
-      "name": "Billingsgate Market",
-      "dist_km": 1.0
+      "name": "Tesco Express",
+      "dist_km": 1.03
      },
      {
-      "name": "Waitrose Canary Wharf",
-      "dist_km": 0.3
+      "name": "Nisa Local",
+      "dist_km": 1.14
+     },
+     {
+      "name": "Docklands Trader",
+      "dist_km": 1.17
      }
     ],
     "hospitals": [
      {
-      "name": "The Royal London Hospital",
-      "dist_km": 2.6
+      "name": "Sloane Hospital",
+      "dist_km": 10.84
      },
      {
-      "name": "Mile End Hospital",
-      "dist_km": 3.0
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 10.91
      },
      {
-      "name": "St Andrew's (Bow)",
-      "dist_km": 2.2
-     },
-     {
-      "name": "Newham University Hospital",
-      "dist_km": 4.1
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 11.06
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Canary Wharf (Jubilee)",
-      "dist_km": 0.2
+      "name": "British Transport Police",
+      "dist_km": 6.47
      },
      {
-      "name": "Canary Wharf (Elizabeth)",
-      "dist_km": 0.3
+      "name": "British Transport Police",
+      "dist_km": 8.48
      },
      {
-      "name": "West India Quay (DLR)",
-      "dist_km": 0.4
+      "name": "Albany Street Police Station",
+      "dist_km": 9.07
+     },
+     {
+      "name": "Ilford Police Station",
+      "dist_km": 9.09
+     },
+     {
+      "name": "Park Police",
+      "dist_km": 10.48
      }
     ]
    },
@@ -3204,89 +2704,93 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "William Tyndale Primary",
-      "dist_km": 0.4,
-      "type": "State · Primary"
+      "name": "White Lion Centre",
+      "dist_km": 0.74
      },
      {
-      "name": "City of London Academy Islington",
-      "dist_km": 0.9,
-      "type": "State · Secondary"
+      "name": "St. Aloysius' School Nursery",
+      "dist_km": 1.83
      },
      {
-      "name": "St Mary Magdalene Academy",
-      "dist_km": 1.0,
-      "type": "State · Combined"
+      "name": "EC",
+      "dist_km": 2.77
      },
      {
-      "name": "Thornhill Primary",
-      "dist_km": 0.7,
-      "type": "State · Primary"
+      "name": "Scott's College",
+      "dist_km": 3.07,
+      "type": "Secondary"
      },
      {
-      "name": "Dallington School",
-      "dist_km": 0.8,
-      "type": "Independent · Primary"
+      "name": "Montessori Center International",
+      "dist_km": 4.22
      }
     ],
     "universities": [
      {
-      "name": "City, University of London",
-      "dist_km": 1.6
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 1.88
      },
      {
-      "name": "London Metropolitan University",
-      "dist_km": 1.2
+      "name": "University of Greenwich",
+      "dist_km": 9.38
      }
     ],
     "shopping": [
      {
-      "name": "Angel Central",
-      "dist_km": 0.5
+      "name": "Londis",
+      "dist_km": 0.06
      },
      {
-      "name": "Camden Passage Market",
-      "dist_km": 0.4
+      "name": "S & S Stores",
+      "dist_km": 0.26
      },
      {
-      "name": "Chapel Market",
-      "dist_km": 0.6
+      "name": "Sainsbury's Local",
+      "dist_km": 0.37
      },
      {
-      "name": "Sainsbury's Liverpool Rd",
-      "dist_km": 0.7
+      "name": "Arcrose Newsagent",
+      "dist_km": 0.42
+     },
+     {
+      "name": "Planet Organic",
+      "dist_km": 0.56
      }
     ],
     "hospitals": [
      {
-      "name": "Whittington Hospital",
-      "dist_km": 2.6
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 8.37
      },
      {
-      "name": "Moorfields Eye Hospital",
-      "dist_km": 1.8
+      "name": "Priory Hospital",
+      "dist_km": 10.38
      },
      {
-      "name": "UCLH",
-      "dist_km": 2.4
-     },
-     {
-      "name": "Royal Free Hospital",
-      "dist_km": 3.6
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 12.89
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Angel (Northern)",
-      "dist_km": 0.4
+      "name": "Albany Street Police Station",
+      "dist_km": 2.89
      },
      {
-      "name": "Highbury & Islington (Victoria)",
-      "dist_km": 0.9
+      "name": "British Transport Police",
+      "dist_km": 4.07
      },
      {
-      "name": "Essex Road (Overground)",
-      "dist_km": 0.6
+      "name": "Parks Police",
+      "dist_km": 7.86
+     },
+     {
+      "name": "Woodford Police Station",
+      "dist_km": 12.11
+     },
+     {
+      "name": "Streatham Police Station",
+      "dist_km": 12.18
      }
     ]
    },
@@ -3345,89 +2849,92 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Virginia Primary School",
-      "dist_km": 0.4,
-      "type": "State · Primary"
+      "name": "White Lion Centre",
+      "dist_km": 2.41
      },
      {
-      "name": "Columbia Primary School",
-      "dist_km": 0.6,
-      "type": "State · Primary"
+      "name": "EF International Language Center",
+      "dist_km": 2.98
      },
      {
-      "name": "Bethnal Green Academy",
-      "dist_km": 1.0,
-      "type": "State · Secondary"
+      "name": "The British School of Osteopathy",
+      "dist_km": 3.0
      },
      {
-      "name": "St Paul's with St Michael's",
-      "dist_km": 0.8,
-      "type": "State · Primary"
+      "name": "EC",
+      "dist_km": 3.26
      },
      {
-      "name": "The Bridge Academy",
-      "dist_km": 1.3,
-      "type": "State · Secondary"
+      "name": "St. Aloysius' School Nursery",
+      "dist_km": 3.83
      }
     ],
     "universities": [
      {
-      "name": "Queen Mary University (Mile End)",
-      "dist_km": 1.8
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 1.49
      },
      {
-      "name": "London College of Fashion (Shoreditch)",
-      "dist_km": 0.5
+      "name": "University of Greenwich",
+      "dist_km": 6.81
      }
     ],
     "shopping": [
      {
-      "name": "Old Spitalfields Market",
-      "dist_km": 0.6
+      "name": "Food & Wine",
+      "dist_km": 0.24
      },
      {
-      "name": "Boxpark Shoreditch",
-      "dist_km": 0.3
+      "name": "Virginia Supermarket",
+      "dist_km": 0.45
      },
      {
-      "name": "Brick Lane Market",
-      "dist_km": 0.5
+      "name": "VB Stores",
+      "dist_km": 0.47
      },
      {
-      "name": "Broadway Market",
-      "dist_km": 1.0
+      "name": "Mags & Fags",
+      "dist_km": 0.7
+     },
+     {
+      "name": "Co-op Food",
+      "dist_km": 0.86
      }
     ],
     "hospitals": [
      {
-      "name": "The Royal London Hospital",
-      "dist_km": 1.2
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 8.34
      },
      {
-      "name": "St Leonard's Hospital",
-      "dist_km": 0.7
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 11.45
      },
      {
-      "name": "Moorfields Eye Hospital",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Homerton University Hospital",
-      "dist_km": 2.8
+      "name": "Priory Hospital",
+      "dist_km": 12.28
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Shoreditch High St (Overground)",
-      "dist_km": 0.3
+      "name": "British Transport Police",
+      "dist_km": 3.33
      },
      {
-      "name": "Old Street (Northern)",
-      "dist_km": 0.7
+      "name": "British Transport Police",
+      "dist_km": 3.91
      },
      {
-      "name": "Liverpool Street (multiple)",
-      "dist_km": 0.8
+      "name": "Albany Street Police Station",
+      "dist_km": 4.55
+     },
+     {
+      "name": "Parks Police",
+      "dist_km": 9.04
+     },
+     {
+      "name": "Streatham Police Station",
+      "dist_km": 11.06
      }
     ]
    },
@@ -3486,89 +2993,112 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Wimbledon Park Primary",
-      "dist_km": 0.6,
-      "type": "State · Primary"
+      "name": "Christian Education Centre",
+      "dist_km": 3.63
      },
      {
-      "name": "King's College School",
-      "dist_km": 1.0,
-      "type": "Independent · Combined"
+      "name": "London Study Centre",
+      "dist_km": 6.11
      },
      {
-      "name": "Wimbledon High School (GDST)",
-      "dist_km": 0.8,
-      "type": "Independent · Combined"
+      "name": "Little Gems Nursery",
+      "dist_km": 6.67
      },
      {
-      "name": "Ricards Lodge High School",
-      "dist_km": 1.2,
-      "type": "State · Secondary"
+      "name": "Tolworth Junior School",
+      "dist_km": 7.39
      },
      {
-      "name": "The Study Prep",
-      "dist_km": 0.9,
-      "type": "Independent · Primary"
+      "name": "St Andrew's and St Mark's CofE Junior School",
+      "dist_km": 7.58
      }
     ],
     "universities": [
      {
-      "name": "University of Roehampton",
-      "dist_km": 3.4
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 11.84
      },
      {
-      "name": "Kingston University",
-      "dist_km": 5.0
+      "name": "Department of Geography",
+      "dist_km": 12.6
+     },
+     {
+      "name": "University of the Arts London",
+      "dist_km": 12.75
+     },
+     {
+      "name": "University of Chicago Booth School of Business",
+      "dist_km": 13.3
+     },
+     {
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 13.54
      }
     ],
     "shopping": [
      {
-      "name": "Centre Court Shopping",
-      "dist_km": 0.4
+      "name": "Sainsbury's Local",
+      "dist_km": 0.95
      },
      {
-      "name": "Wimbledon Village High St",
-      "dist_km": 0.5
+      "name": "Co-op Food",
+      "dist_km": 1.32
      },
      {
-      "name": "Sainsbury's Wimbledon",
-      "dist_km": 0.7
+      "name": "Costcutter",
+      "dist_km": 1.9
      },
      {
-      "name": "Morrisons Wimbledon",
-      "dist_km": 1.0
+      "name": "Sainsbury's",
+      "dist_km": 2.08
+     },
+     {
+      "name": "Wimbledon Farmers' Market",
+      "dist_km": 2.12
      }
     ],
     "hospitals": [
      {
-      "name": "St George's Hospital, Tooting",
-      "dist_km": 2.8
+      "name": "Chapel Orchard Day Surgery",
+      "dist_km": 3.07
      },
      {
-      "name": "Nelson Health Centre",
-      "dist_km": 0.9
+      "name": "Queen Mary's Childrens' Hospital",
+      "dist_km": 4.7
      },
      {
-      "name": "New Victoria Hospital",
-      "dist_km": 2.5
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 6.48
      },
      {
-      "name": "Kingston Hospital",
-      "dist_km": 5.2
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 6.79
+     },
+     {
+      "name": "Sloane Hospital",
+      "dist_km": 13.96
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Wimbledon (District/SWR)",
-      "dist_km": 0.5
+      "name": "West Putney Ward Metropolitain Police",
+      "dist_km": 4.26
      },
      {
-      "name": "Wimbledon Park (District)",
-      "dist_km": 0.8
+      "name": "Streatham Police Station",
+      "dist_km": 5.34
      },
      {
-      "name": "South Wimbledon (Northern)",
-      "dist_km": 1.2
+      "name": "Park Police",
+      "dist_km": 7.32
+     },
+     {
+      "name": "Parks Police",
+      "dist_km": 9.03
+     },
+     {
+      "name": "British Transport Police",
+      "dist_km": 11.23
      }
     ]
    },
@@ -3631,89 +3161,104 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Honeywell Primary",
-      "dist_km": 0.6,
-      "type": "State · Primary"
+      "name": "City & Guilds Of London Art School",
+      "dist_km": 3.21
      },
      {
-      "name": "Thomas's Battersea",
-      "dist_km": 0.5,
-      "type": "Independent · Primary"
+      "name": "Little Gems Nursery",
+      "dist_km": 3.62
      },
      {
-      "name": "Newton Prep",
-      "dist_km": 0.7,
-      "type": "Independent · Primary"
+      "name": "London Study Centre",
+      "dist_km": 3.93
      },
      {
-      "name": "Harris Academy Battersea",
-      "dist_km": 1.0,
-      "type": "State · Secondary"
+      "name": "Montessori Center International",
+      "dist_km": 4.21
      },
      {
-      "name": "Belleville Primary",
-      "dist_km": 0.9,
-      "type": "State · Primary"
+      "name": "EF International Language Center",
+      "dist_km": 4.38
      }
     ],
     "universities": [
      {
-      "name": "Royal College of Art (Battersea)",
-      "dist_km": 0.8
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 4.6
      },
      {
-      "name": "Imperial College London",
-      "dist_km": 2.6
+      "name": "University of the Arts London",
+      "dist_km": 5.54
+     },
+     {
+      "name": "University of Chicago Booth School of Business",
+      "dist_km": 6.11
+     },
+     {
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 6.3
+     },
+     {
+      "name": "University of Greenwich",
+      "dist_km": 9.94
      }
     ],
     "shopping": [
      {
-      "name": "Battersea Power Station",
-      "dist_km": 0.4
+      "name": "Quick Stop Supermarket",
+      "dist_km": 0.9
      },
      {
-      "name": "Northcote Road Shops",
-      "dist_km": 1.0
+      "name": "AVN Convenience Store",
+      "dist_km": 0.98
      },
      {
-      "name": "Clapham Junction Retail",
-      "dist_km": 1.4
+      "name": "Sainsbury's Local",
+      "dist_km": 1.01
      },
      {
-      "name": "Waitrose Battersea",
-      "dist_km": 0.6
+      "name": "Tesco Express",
+      "dist_km": 1.18
+     },
+     {
+      "name": "Raj News",
+      "dist_km": 1.21
      }
     ],
     "hospitals": [
      {
-      "name": "Chelsea & Westminster",
-      "dist_km": 2.0
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 1.18
      },
      {
-      "name": "St Thomas' Hospital",
-      "dist_km": 2.8
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 6.53
      },
      {
-      "name": "Royal Brompton",
-      "dist_km": 2.4
-     },
-     {
-      "name": "St George's, Tooting",
-      "dist_km": 3.6
+      "name": "Sloane Hospital",
+      "dist_km": 12.54
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Battersea Power Station (Northern)",
-      "dist_km": 0.4
+      "name": "Park Police",
+      "dist_km": 1.12
      },
      {
-      "name": "Queenstown Road (SWR)",
-      "dist_km": 0.7
+      "name": "British Transport Police",
+      "dist_km": 4.03
      },
      {
-      "name": "Clapham Junction (multiple)",
-      "dist_km": 1.4
+      "name": "Parks Police",
+      "dist_km": 4.71
+     },
+     {
+      "name": "Streatham Police Station",
+      "dist_km": 5.21
+     },
+     {
+      "name": "Albany Street Police Station",
+      "dist_km": 5.69
      }
     ]
    },
@@ -3776,89 +3321,93 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Gayhurst Community School",
-      "dist_km": 0.5,
-      "type": "State · Primary"
+      "name": "White Lion Centre",
+      "dist_km": 3.4
      },
      {
-      "name": "Sebright Primary",
-      "dist_km": 0.7,
-      "type": "State · Primary"
+      "name": "St. Aloysius' School Nursery",
+      "dist_km": 4.82
      },
      {
-      "name": "The Petchey Academy",
-      "dist_km": 1.0,
-      "type": "State · Secondary"
+      "name": "EC",
+      "dist_km": 5.03
      },
      {
-      "name": "London Fields Primary",
-      "dist_km": 0.4,
-      "type": "State · Primary"
+      "name": "Scott's College",
+      "dist_km": 5.54,
+      "type": "Secondary"
      },
      {
-      "name": "Hackney New School",
-      "dist_km": 1.2,
-      "type": "State · Secondary"
+      "name": "Montessori Center International",
+      "dist_km": 6.91
      }
     ],
     "universities": [
      {
-      "name": "Queen Mary University (Mile End)",
-      "dist_km": 2.4
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 3.27
      },
      {
-      "name": "UEL (Stratford)",
-      "dist_km": 3.0
+      "name": "University of Greenwich",
+      "dist_km": 7.7
      }
     ],
     "shopping": [
      {
-      "name": "Broadway Market",
-      "dist_km": 0.4
+      "name": "Prestige Supermarket",
+      "dist_km": 0.48
      },
      {
-      "name": "Mare Street Shops",
-      "dist_km": 0.6
+      "name": "Dalston Local Store",
+      "dist_km": 0.72
      },
      {
-      "name": "Westfield Stratford City",
-      "dist_km": 3.4
+      "name": "Tesco Express",
+      "dist_km": 0.96
      },
      {
-      "name": "Tesco Hackney",
-      "dist_km": 0.8
+      "name": "Lidl",
+      "dist_km": 1.52
+     },
+     {
+      "name": "Mags & Fags",
+      "dist_km": 1.69
      }
     ],
     "hospitals": [
      {
-      "name": "Homerton University Hospital",
-      "dist_km": 1.6
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 10.43
      },
      {
-      "name": "St Leonard's Hospital",
-      "dist_km": 1.0
+      "name": "Priory Hospital",
+      "dist_km": 10.7
      },
      {
-      "name": "The Royal London Hospital",
-      "dist_km": 2.8
-     },
-     {
-      "name": "Moorfields Eye Hospital",
-      "dist_km": 2.2
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 13.56
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "London Fields (Overground)",
-      "dist_km": 0.4
+      "name": "British Transport Police",
+      "dist_km": 5.47
      },
      {
-      "name": "Hackney Central (Overground)",
-      "dist_km": 0.6
+      "name": "Albany Street Police Station",
+      "dist_km": 5.81
      },
      {
-      "name": "Hackney Downs (Overground)",
-      "dist_km": 0.8
+      "name": "Woodford Police Station",
+      "dist_km": 9.81
+     },
+     {
+      "name": "Ilford Police Station",
+      "dist_km": 10.16
+     },
+     {
+      "name": "Parks Police",
+      "dist_km": 10.67
      }
     ]
    },
@@ -3921,89 +3470,97 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Griffin Primary School",
-      "dist_km": 0.6,
-      "type": "State · Primary"
+      "name": "City & Guilds Of London Art School",
+      "dist_km": 1.69
      },
      {
-      "name": "St Mary's RC Primary",
-      "dist_km": 0.8,
-      "type": "State · Primary"
+      "name": "EF International Language Center",
+      "dist_km": 2.74
      },
      {
-      "name": "Ark Putney Academy",
-      "dist_km": 2.0,
-      "type": "State · Secondary"
+      "name": "The British School of Osteopathy",
+      "dist_km": 2.84
      },
      {
-      "name": "Wix Primary School",
-      "dist_km": 1.2,
-      "type": "State · Primary"
+      "name": "UK College of English",
+      "dist_km": 3.42,
+      "type": "Secondary"
      },
      {
-      "name": "Newton Prep",
-      "dist_km": 1.0,
-      "type": "Independent · Primary"
+      "name": "Montessori Center International",
+      "dist_km": 3.42
      }
     ],
     "universities": [
      {
-      "name": "Royal College of Art (Battersea)",
-      "dist_km": 1.0
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 3.09
      },
      {
-      "name": "University of the Arts London",
-      "dist_km": 3.0
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 4.71
+     },
+     {
+      "name": "University of Greenwich",
+      "dist_km": 8.66
      }
     ],
     "shopping": [
      {
-      "name": "Battersea Power Station",
-      "dist_km": 0.7
-     },
-     {
-      "name": "New Covent Garden Market",
+      "name": "Tesco Express",
       "dist_km": 0.4
      },
      {
-      "name": "Sainsbury's Nine Elms",
-      "dist_km": 0.5
+      "name": "Pimlico Grocery",
+      "dist_km": 0.64
      },
      {
-      "name": "Waitrose Nine Elms",
-      "dist_km": 0.6
+      "name": "Nisa Local",
+      "dist_km": 0.77
+     },
+     {
+      "name": "Friends Supermarket",
+      "dist_km": 0.77
+     },
+     {
+      "name": "Day 1",
+      "dist_km": 0.99
      }
     ],
     "hospitals": [
      {
-      "name": "St Thomas' Hospital",
-      "dist_km": 2.0
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 2.75
      },
      {
-      "name": "Chelsea & Westminster",
-      "dist_km": 2.6
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 7.14
      },
      {
-      "name": "Guy's Hospital",
-      "dist_km": 3.0
-     },
-     {
-      "name": "St George's, Tooting",
-      "dist_km": 3.8
+      "name": "Sloane Hospital",
+      "dist_km": 12.3
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Nine Elms (Northern)",
-      "dist_km": 0.3
+      "name": "British Transport Police",
+      "dist_km": 2.38
      },
      {
-      "name": "Battersea Power Station (Northern)",
-      "dist_km": 0.7
+      "name": "Albany Street Police Station",
+      "dist_km": 4.65
      },
      {
-      "name": "Vauxhall (Victoria/SWR)",
-      "dist_km": 1.0
+      "name": "British Transport Police",
+      "dist_km": 4.71
+     },
+     {
+      "name": "Parks Police",
+      "dist_km": 5.28
+     },
+     {
+      "name": "Streatham Police Station",
+      "dist_km": 6.12
      }
     ]
    },
@@ -4062,89 +3619,113 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "The Vineyard School",
-      "dist_km": 0.5,
-      "type": "State · Primary"
+      "name": "Hounslow Heath Junior School",
+      "dist_km": 5.68
      },
      {
-      "name": "Old Vicarage School",
-      "dist_km": 0.7,
-      "type": "Independent · Primary"
+      "name": "London Study Centre",
+      "dist_km": 6.81
      },
      {
-      "name": "Christ's School Richmond",
-      "dist_km": 1.0,
-      "type": "State · Secondary"
+      "name": "St Andrew's and St Mark's CofE Junior School",
+      "dist_km": 7.34
      },
      {
-      "name": "Marshgate Primary",
-      "dist_km": 0.9,
-      "type": "State · Primary"
+      "name": "Alexander Cromwell College",
+      "dist_km": 8.8,
+      "type": "Secondary"
      },
      {
-      "name": "The German School London",
-      "dist_km": 2.4,
-      "type": "Independent · Combined"
+      "name": "Tolworth Junior School",
+      "dist_km": 8.84
      }
     ],
     "universities": [
      {
-      "name": "University of Roehampton",
-      "dist_km": 3.2
+      "name": "University of Wales Trinity Saint David London Campus",
+      "dist_km": 13.51
      },
      {
-      "name": "St Mary's University, Twickenham",
-      "dist_km": 2.6
+      "name": "Department of Geography",
+      "dist_km": 13.57
+     },
+     {
+      "name": "UCL Centre for Medical Image Computing",
+      "dist_km": 13.62
+     },
+     {
+      "name": "The Courtauld Institute of Art",
+      "dist_km": 13.97
+     },
+     {
+      "name": "University of the Arts London",
+      "dist_km": 14.41
      }
     ],
     "shopping": [
      {
-      "name": "Richmond High Street",
-      "dist_km": 0.4
+      "name": "Sainsbury's Local",
+      "dist_km": 0.18
      },
      {
-      "name": "The Quadrant Shops",
-      "dist_km": 0.5
+      "name": "Co-op Food",
+      "dist_km": 1.94
      },
      {
-      "name": "Whole Foods Richmond",
-      "dist_km": 0.6
+      "name": "Tesco Express",
+      "dist_km": 2.08
      },
      {
-      "name": "Waitrose Richmond",
-      "dist_km": 0.7
+      "name": "Waitrose & Partners",
+      "dist_km": 2.34
+     },
+     {
+      "name": "Twickenham Farmers' Market",
+      "dist_km": 2.61
      }
     ],
     "hospitals": [
      {
-      "name": "Richmond Royal (community)",
-      "dist_km": 0.8
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 9.51
      },
      {
-      "name": "West Middlesex Hospital",
-      "dist_km": 2.4
+      "name": "Chapel Orchard Day Surgery",
+      "dist_km": 11.2
      },
      {
-      "name": "Kingston Hospital",
-      "dist_km": 3.2
+      "name": "Queen Mary's Childrens' Hospital",
+      "dist_km": 12.18
      },
      {
-      "name": "Teddington Memorial",
-      "dist_km": 3.0
+      "name": "The Portland Hospital",
+      "dist_km": 12.92
+     },
+     {
+      "name": "British Home & Hospital for Incurables",
+      "dist_km": 14.18
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Richmond (District/Overground/SWR)",
-      "dist_km": 0.5
+      "name": "West Putney Ward Metropolitain Police",
+      "dist_km": 5.08
      },
      {
-      "name": "North Sheen (SWR)",
-      "dist_km": 1.2
+      "name": "Parks Police",
+      "dist_km": 8.16
      },
      {
-      "name": "St Margarets (SWR)",
-      "dist_km": 1.6
+      "name": "Metropolitan Police",
+      "dist_km": 9.23
+     },
+     {
+      "name": "Park Police",
+      "dist_km": 9.85
+     },
+     {
+      "name": "Metropolitan Police ward office",
+      "dist_km": 10.74
      }
     ]
    },
@@ -4207,89 +3788,89 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "William Patten Primary",
-      "dist_km": 0.4,
-      "type": "State · Primary"
+      "name": "White Lion Centre",
+      "dist_km": 3.52
      },
      {
-      "name": "Grasmere Primary",
-      "dist_km": 0.7,
-      "type": "State · Primary"
+      "name": "St. Aloysius' School Nursery",
+      "dist_km": 4.43
      },
      {
-      "name": "Stoke Newington School",
-      "dist_km": 0.9,
-      "type": "State · Secondary"
+      "name": "EC",
+      "dist_km": 5.55
      },
      {
-      "name": "Grazebrook Primary",
-      "dist_km": 0.6,
-      "type": "State · Primary"
+      "name": "Scott's College",
+      "dist_km": 5.87,
+      "type": "Secondary"
      },
      {
-      "name": "Skinners' Academy",
-      "dist_km": 1.3,
-      "type": "State · Secondary"
+      "name": "EF International Language Center",
+      "dist_km": 6.32
      }
     ],
     "universities": [
      {
-      "name": "London Metropolitan University",
-      "dist_km": 1.8
+      "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
+      "dist_km": 4.27
      },
      {
-      "name": "City, University of London",
-      "dist_km": 3.4
+      "name": "University of Greenwich",
+      "dist_km": 10.2
      }
     ],
     "shopping": [
      {
-      "name": "Church Street Shops",
-      "dist_km": 0.3
+      "name": "Düzce Supermarket",
+      "dist_km": 0.51
      },
      {
-      "name": "Stoke Newington High St",
-      "dist_km": 0.5
+      "name": "5 Sapphires",
+      "dist_km": 0.52
      },
      {
-      "name": "Sainsbury's Stamford Hill",
-      "dist_km": 1.2
+      "name": "Whole Foods Market",
+      "dist_km": 0.73
      },
      {
-      "name": "Dalston Eastern Curve Market",
-      "dist_km": 1.4
+      "name": "Costcutter",
+      "dist_km": 0.74
+     },
+     {
+      "name": "Tesco Express",
+      "dist_km": 0.76
      }
     ],
     "hospitals": [
      {
-      "name": "Homerton University Hospital",
-      "dist_km": 2.6
+      "name": "Priory Hospital",
+      "dist_km": 8.32
      },
      {
-      "name": "Whittington Hospital",
-      "dist_km": 3.4
-     },
-     {
-      "name": "St Leonard's Hospital",
-      "dist_km": 2.0
-     },
-     {
-      "name": "Moorfields Eye Hospital",
-      "dist_km": 3.0
+      "name": "Bridge Lane Health Centre",
+      "dist_km": 11.16
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Stoke Newington (Overground)",
-      "dist_km": 0.5
+      "name": "British Transport Police",
+      "dist_km": 4.96
      },
      {
-      "name": "Rectory Road (Overground)",
-      "dist_km": 0.7
+      "name": "Albany Street Police Station",
+      "dist_km": 5.51
      },
      {
-      "name": "Dalston Kingsland (Overground)",
-      "dist_km": 1.2
+      "name": "British Transport Police",
+      "dist_km": 6.65
+     },
+     {
+      "name": "Woodford Police Station",
+      "dist_km": 9.43
+     },
+     {
+      "name": "Parks Police",
+      "dist_km": 10.46
      }
     ]
    },
@@ -4352,89 +3933,93 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "North Sydney Demonstration School",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "name": "Langports",
+      "dist_km": 3.14
      },
      {
-      "name": "Loreto Kirribilli",
-      "dist_km": 0.4,
-      "type": "Private · Combined"
+      "name": "English Language Company",
+      "dist_km": 3.22
      },
      {
-      "name": "Wenona School",
-      "dist_km": 1.0,
-      "type": "Private · Combined"
+      "name": "Royal North Shore Hospital School",
+      "dist_km": 3.3
      },
      {
-      "name": "St Aloysius' College",
-      "dist_km": 0.8,
-      "type": "Private · Combined"
+      "name": "Australasia Academy",
+      "dist_km": 3.45
      },
      {
-      "name": "Monte Sant' Angelo Mercy College",
-      "dist_km": 1.2,
-      "type": "Private · Secondary"
+      "name": "Bradfield College",
+      "dist_km": 3.51,
+      "type": "Secondary"
      }
     ],
     "universities": [
      {
-      "name": "University of Technology Sydney",
-      "dist_km": 2.6
-     },
-     {
-      "name": "University of Sydney",
-      "dist_km": 3.4
+      "name": "University of Notre Dame Australia",
+      "dist_km": 4.59
      }
     ],
     "shopping": [
      {
-      "name": "Milsons Point Shops",
-      "dist_km": 0.5
+      "name": "EzyMart",
+      "dist_km": 0.24
      },
      {
-      "name": "North Sydney CBD Retail",
-      "dist_km": 1.0
+      "name": "Kay Corner",
+      "dist_km": 0.34
      },
      {
-      "name": "Greenwood Plaza",
-      "dist_km": 1.2
+      "name": "IGA",
+      "dist_km": 0.62
      },
      {
-      "name": "Woolworths Neutral Bay",
-      "dist_km": 1.6
+      "name": "General Store",
+      "dist_km": 0.8
+     },
+     {
+      "name": "Woolworths Metro",
+      "dist_km": 0.9
      }
     ],
     "hospitals": [
      {
-      "name": "Mater Hospital North Sydney",
-      "dist_km": 1.0
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 3.54
      },
      {
-      "name": "Royal North Shore Hospital",
-      "dist_km": 4.0
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 5.75
      },
      {
-      "name": "North Shore Private",
-      "dist_km": 4.1
+      "name": "Bondi Junction Private Hospital",
+      "dist_km": 6.15
      },
      {
-      "name": "Sydney Adventist (San)",
-      "dist_km": 8.0
+      "name": "Thomas Walker Hospital",
+      "dist_km": 10.58
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Milsons Point (T1)",
-      "dist_km": 0.5
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 3.14
      },
      {
-      "name": "North Sydney (T1)",
-      "dist_km": 1.0
+      "name": "Mosman Police Station",
+      "dist_km": 3.34
      },
      {
-      "name": "Kirribilli Ferry Wharf",
-      "dist_km": 0.4
+      "name": "Balmain Police Station",
+      "dist_km": 3.4
+     },
+     {
+      "name": "Day Street Police Station",
+      "dist_km": 3.45
+     },
+     {
+      "name": "Rose Bay Police Station",
+      "dist_km": 4.71
      }
     ]
    },
@@ -4485,89 +4070,71 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Paddington Public School",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "St Andrews Cathedral School",
+      "dist_km": 2.29
      },
      {
-      "name": "Glenmore Road Public",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "name": "School of Mathematics & Statistics",
+      "dist_km": 3.74
      },
      {
-      "name": "Sydney Grammar (Edgecliff Prep)",
-      "dist_km": 0.9,
-      "type": "Private · Primary"
+      "name": "La Fiesta Dance Factory",
+      "dist_km": 5.27
      },
      {
-      "name": "Scots College (Bellevue Hill)",
-      "dist_km": 2.0,
-      "type": "Private · Combined"
-     },
-     {
-      "name": "Reddam House Woollahra",
-      "dist_km": 1.4,
-      "type": "Private · Combined"
+      "name": "Saint Patrick’s Catholic Primary School",
+      "dist_km": 12.54,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "University of Sydney",
-      "dist_km": 3.2
-     },
-     {
-      "name": "UNSW Sydney (Paddington Art)",
-      "dist_km": 1.0
+      "name": "University of Notre Dame Australia",
+      "dist_km": 2.76
      }
     ],
     "shopping": [
      {
-      "name": "Oxford Street Shops",
-      "dist_km": 0.3
+      "name": "Woolworths Metro",
+      "dist_km": 0.27
      },
      {
-      "name": "Westfield Bondi Junction",
-      "dist_km": 1.6
+      "name": "Aldi",
+      "dist_km": 0.98
      },
      {
-      "name": "Five Ways Paddington",
-      "dist_km": 0.5
+      "name": "Woolworths Metro",
+      "dist_km": 1.02
      },
      {
-      "name": "Woolworths Edgecliff",
-      "dist_km": 1.2
+      "name": "Coles",
+      "dist_km": 1.12
+     },
+     {
+      "name": "Harris Farm Markets",
+      "dist_km": 1.29
      }
     ],
-    "hospitals": [
+    "police": [
      {
-      "name": "St Vincent's Hospital",
-      "dist_km": 1.4
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 1.51
      },
      {
-      "name": "The Sydney Eye Hospital",
-      "dist_km": 2.4
+      "name": "Day Street Police Station",
+      "dist_km": 2.35
      },
      {
-      "name": "Prince of Wales Hospital",
-      "dist_km": 3.6
+      "name": "Rose Bay Police Station",
+      "dist_km": 2.88
      },
      {
-      "name": "St Luke's Private",
-      "dist_km": 2.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "Edgecliff (T4)",
-      "dist_km": 1.1
+      "name": "Randwick Police Station",
+      "dist_km": 3.42
      },
      {
-      "name": "Bondi Junction (T4)",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Kings Cross (T4)",
-      "dist_km": 1.8
+      "name": "Mascot Police Station",
+      "dist_km": 5.3
      }
     ]
    },
@@ -4618,89 +4185,110 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Manly Village Public School",
-      "dist_km": 0.5,
-      "type": "Public · Primary"
+      "name": "Northern Beaches Secondary College Freshwater Senior Campus",
+      "dist_km": 3.34,
+      "type": "Secondary"
      },
      {
-      "name": "St Paul's Catholic College",
-      "dist_km": 0.8,
-      "type": "Private · Secondary"
+      "name": "Northern Beaches Secondary College Manly Campus",
+      "dist_km": 3.9,
+      "type": "Secondary"
      },
      {
-      "name": "Stella Maris College",
-      "dist_km": 1.0,
-      "type": "Private · Secondary"
+      "name": "Dee Why Public School",
+      "dist_km": 5.42
      },
      {
-      "name": "Manly West Public",
-      "dist_km": 1.6,
-      "type": "Public · Primary"
+      "name": "Narraweena Public School",
+      "dist_km": 5.47
      },
      {
-      "name": "Mackellar Girls Campus",
-      "dist_km": 1.4,
-      "type": "Public · Secondary"
+      "name": "Pittwater House",
+      "dist_km": 6.33
      }
     ],
     "universities": [
      {
-      "name": "Macquarie University",
-      "dist_km": 14.0
+      "name": "International College of Management",
+      "dist_km": 1.04
      },
      {
-      "name": "University of Sydney",
-      "dist_km": 16.0
+      "name": "Charles Stuart University - Student Central",
+      "dist_km": 8.44
+     },
+     {
+      "name": "Swinburne Open Education",
+      "dist_km": 11.93
+     },
+     {
+      "name": "University of Notre Dame Australia",
+      "dist_km": 12.71
      }
     ],
     "shopping": [
      {
-      "name": "Manly Corso",
-      "dist_km": 0.3
+      "name": "Manly Arts & Craft Market",
+      "dist_km": 0.11
      },
      {
-      "name": "Manly Wharf Retail",
-      "dist_km": 0.6
+      "name": "Coles Local",
+      "dist_km": 0.19
      },
      {
-      "name": "Warringah Mall",
-      "dist_km": 6.0
+      "name": "Stillitano's Corner",
+      "dist_km": 0.73
      },
      {
-      "name": "Woolworths Manly",
-      "dist_km": 0.5
+      "name": "Foodworks Fairlight",
+      "dist_km": 0.87
+     },
+     {
+      "name": "Coles",
+      "dist_km": 2.03
      }
     ],
     "hospitals": [
      {
-      "name": "Northern Beaches Hospital",
-      "dist_km": 5.4
+      "name": "Double Bay Day Hospital",
+      "dist_km": 9.74
      },
      {
-      "name": "Royal North Shore Hospital",
-      "dist_km": 13.0
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 10.19
      },
      {
-      "name": "Mater Hospital North Sydney",
-      "dist_km": 11.0
+      "name": "Bondi Junction Private Hospital",
+      "dist_km": 11.21
      },
      {
-      "name": "Manly Medical Centre",
-      "dist_km": 0.4
+      "name": "Mona Vale Hospital",
+      "dist_km": 12.57
+     },
+     {
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 13.23
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Manly Ferry Wharf",
-      "dist_km": 0.5
+      "name": "Mosman Police Station",
+      "dist_km": 5.51
      },
      {
-      "name": "B-Line Manly (bus rapid)",
-      "dist_km": 0.4
+      "name": "Rose Bay Police Station",
+      "dist_km": 8.63
      },
      {
-      "name": "Balgowlah B-Line",
-      "dist_km": 2.4
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 10.41
+     },
+     {
+      "name": "Surry Hills Police Centre",
+      "dist_km": 11.34
+     },
+     {
+      "name": "Day Street Police Station",
+      "dist_km": 11.52
      }
     ]
    },
@@ -4755,89 +4343,85 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Parramatta Public School",
-      "dist_km": 0.5,
-      "type": "Public · Primary"
+      "name": "EDU-Kingdom School",
+      "dist_km": 0.76
      },
      {
-      "name": "Arthur Phillip High School",
-      "dist_km": 0.7,
-      "type": "Public · Secondary"
+      "name": "The Childrens Hospital School",
+      "dist_km": 1.65
      },
      {
-      "name": "Our Lady of Mercy College",
-      "dist_km": 0.9,
-      "type": "Private · Secondary"
+      "name": "Parramatta Marist High School",
+      "dist_km": 1.93,
+      "type": "Secondary"
      },
      {
-      "name": "The King's School (North Parramatta)",
-      "dist_km": 2.4,
-      "type": "Private · Combined"
+      "name": "Karningul School",
+      "dist_km": 8.15
      },
      {
-      "name": "Parramatta Marist High",
-      "dist_km": 1.6,
-      "type": "Private · Secondary"
+      "name": "Victoria Ave community precinct",
+      "dist_km": 8.3
      }
     ],
     "universities": [
      {
-      "name": "Western Sydney University (Parramatta)",
-      "dist_km": 0.8
-     },
-     {
-      "name": "UNE Parramatta Campus",
-      "dist_km": 1.2
+      "name": "University of Wollongong, Liverpool Campus",
+      "dist_km": 14.08
      }
     ],
     "shopping": [
      {
-      "name": "Westfield Parramatta",
-      "dist_km": 0.4
+      "name": "EzyMart",
+      "dist_km": 0.31
      },
      {
-      "name": "Church Street Mall",
-      "dist_km": 0.5
+      "name": "Woolworths Parramatta Station (Metro)",
+      "dist_km": 0.45
      },
      {
-      "name": "Parramatta Square Retail",
-      "dist_km": 0.6
+      "name": "Coles",
+      "dist_km": 0.56
      },
      {
-      "name": "Woolworths Parramatta",
-      "dist_km": 0.7
+      "name": "Coles Parramatta North",
+      "dist_km": 0.65
+     },
+     {
+      "name": "Day Day Market",
+      "dist_km": 1.22
      }
     ],
     "hospitals": [
      {
-      "name": "Westmead Hospital",
-      "dist_km": 2.8
+      "name": "Thomas Walker Hospital",
+      "dist_km": 8.96
      },
      {
-      "name": "Children's Hospital at Westmead",
-      "dist_km": 3.0
-     },
-     {
-      "name": "Cumberland Hospital",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Norwest Private",
-      "dist_km": 10.0
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 13.77
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Parramatta (T1/T5)",
-      "dist_km": 0.4
+      "name": "Granville Police Station",
+      "dist_km": 2.13
      },
      {
-      "name": "Parramatta Light Rail",
-      "dist_km": 0.5
+      "name": "Wentworth Police Station",
+      "dist_km": 2.98
      },
      {
-      "name": "Harris Park (T1)",
-      "dist_km": 1.0
+      "name": "Merrylands Police Station",
+      "dist_km": 2.98
+     },
+     {
+      "name": "Ermington Police Station",
+      "dist_km": 4.58
+     },
+     {
+      "name": "Auburn Police Station",
+      "dist_km": 5.18
      }
     ]
    },
@@ -4888,89 +4472,101 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Chatswood Public School",
-      "dist_km": 0.5,
-      "type": "Public · Primary"
+      "name": "Bradfield College",
+      "dist_km": 2.69,
+      "type": "Secondary"
      },
      {
-      "name": "Chatswood High School",
-      "dist_km": 0.8,
-      "type": "Public · Secondary"
+      "name": "Royal North Shore Hospital School",
+      "dist_km": 2.73
      },
      {
-      "name": "Mercy Catholic College",
-      "dist_km": 1.0,
-      "type": "Private · Secondary"
+      "name": "Arndell School",
+      "dist_km": 5.23
      },
      {
-      "name": "Pacific Hills Christian",
-      "dist_km": 6.0,
-      "type": "Private · Combined"
+      "name": "Faculty of Business & Economics",
+      "dist_km": 6.53
      },
      {
-      "name": "Willoughby Public School",
-      "dist_km": 1.4,
-      "type": "Public · Primary"
+      "name": "Northern Sydney IEC",
+      "dist_km": 6.65
      }
     ],
     "universities": [
      {
-      "name": "University of Technology Sydney",
-      "dist_km": 8.0
+      "name": "University of Notre Dame Australia",
+      "dist_km": 9.81
      },
      {
-      "name": "Macquarie University",
-      "dist_km": 6.5
+      "name": "Swinburne Open Education",
+      "dist_km": 9.94
      }
     ],
     "shopping": [
      {
-      "name": "Chatswood Chase Sydney",
-      "dist_km": 0.4
+      "name": "Miracle Supermarket Mandarin Center",
+      "dist_km": 0.07
      },
      {
-      "name": "Westfield Chatswood",
-      "dist_km": 0.5
+      "name": "Cheong Kwan Jiang Chatswood Brand Store",
+      "dist_km": 0.16
      },
      {
-      "name": "The Concourse Retail",
-      "dist_km": 0.6
+      "name": "EzyMart",
+      "dist_km": 0.19
      },
      {
-      "name": "Mandarin Centre",
-      "dist_km": 0.5
+      "name": "Yonghui Supermarket",
+      "dist_km": 0.27
+     },
+     {
+      "name": "Asian City",
+      "dist_km": 0.43
      }
     ],
     "hospitals": [
      {
-      "name": "Royal North Shore Hospital",
-      "dist_km": 4.5
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 5.13
      },
      {
-      "name": "North Shore Private",
-      "dist_km": 4.6
+      "name": "Thomas Walker Hospital",
+      "dist_km": 8.69
      },
      {
-      "name": "Hornsby Ku-ring-gai Hospital",
-      "dist_km": 10.0
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 9.5
      },
      {
-      "name": "Mater Hospital North Sydney",
-      "dist_km": 6.0
+      "name": "Women and Babies Services",
+      "dist_km": 10.16
+     },
+     {
+      "name": "Double Bay Day Hospital",
+      "dist_km": 10.61
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Chatswood (T1/Metro)",
-      "dist_km": 0.3
+      "name": "Gordon Police Station",
+      "dist_km": 5.51
      },
      {
-      "name": "Chatswood Metro",
-      "dist_km": 0.3
+      "name": "Gladesville Police Station",
+      "dist_km": 6.55
      },
      {
-      "name": "Artarmon (T1)",
-      "dist_km": 1.6
+      "name": "Balmain Police Station",
+      "dist_km": 6.59
+     },
+     {
+      "name": "Campus Security",
+      "dist_km": 6.75
+     },
+     {
+      "name": "Mosman Police Station",
+      "dist_km": 7.0
      }
     ]
    },
@@ -5021,89 +4617,93 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Newtown Public School",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "La Fiesta Dance Factory",
+      "dist_km": 1.3
      },
      {
-      "name": "Newtown High School of Performing Arts",
-      "dist_km": 0.6,
-      "type": "Public · Secondary"
+      "name": "English Language Company",
+      "dist_km": 3.56
      },
      {
-      "name": "St Joseph's Newtown",
-      "dist_km": 0.7,
-      "type": "Private · Primary"
+      "name": "School of Mathematics & Statistics",
+      "dist_km": 5.31
      },
      {
-      "name": "Camdenville Public",
-      "dist_km": 1.0,
-      "type": "Public · Primary"
+      "name": "Saint Patrick’s Catholic Primary School",
+      "dist_km": 8.83,
+      "type": "Primary"
      },
      {
-      "name": "Sydney Secondary College (Balmain)",
-      "dist_km": 2.4,
-      "type": "Public · Secondary"
+      "name": "Victoria Ave community precinct",
+      "dist_km": 10.39
      }
     ],
     "universities": [
      {
-      "name": "University of Sydney",
-      "dist_km": 1.2
-     },
-     {
-      "name": "University of Technology Sydney",
-      "dist_km": 2.6
+      "name": "University of Notre Dame Australia",
+      "dist_km": 2.18
      }
     ],
     "shopping": [
      {
-      "name": "King Street Newtown",
-      "dist_km": 0.3
+      "name": "IGA",
+      "dist_km": 0.2
      },
      {
-      "name": "Marrickville Metro",
-      "dist_km": 2.4
+      "name": "QE Foodstores",
+      "dist_km": 0.32
      },
      {
-      "name": "Broadway Sydney",
-      "dist_km": 1.8
+      "name": "4 Ways Mixed Business",
+      "dist_km": 0.33
      },
      {
-      "name": "Woolworths Newtown",
-      "dist_km": 0.5
+      "name": "Family Mart",
+      "dist_km": 0.4
+     },
+     {
+      "name": "The Deli Erskineville",
+      "dist_km": 0.55
      }
     ],
     "hospitals": [
      {
-      "name": "Royal Prince Alfred Hospital",
-      "dist_km": 1.4
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 5.04
      },
      {
-      "name": "St Vincent's Hospital",
-      "dist_km": 3.6
+      "name": "Bondi Junction Private Hospital",
+      "dist_km": 6.19
      },
      {
-      "name": "Concord Repatriation General",
-      "dist_km": 6.0
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 7.38
      },
      {
-      "name": "Sydney Dental Hospital",
-      "dist_km": 2.4
+      "name": "Thomas Walker Hospital",
+      "dist_km": 10.38
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Newtown (T2/T3)",
-      "dist_km": 0.3
+      "name": "Day Street Police Station",
+      "dist_km": 3.34
      },
      {
-      "name": "Macdonaldtown (T2/T3)",
-      "dist_km": 0.7
+      "name": "Mascot Police Station",
+      "dist_km": 3.43
      },
      {
-      "name": "Erskineville (T2/T3)",
-      "dist_km": 1.0
+      "name": "Australian Federal Police (Sydney Airport)",
+      "dist_km": 4.44
+     },
+     {
+      "name": "Balmain Police Station",
+      "dist_km": 4.52
+     },
+     {
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 4.58
      }
     ]
    },
@@ -5154,89 +4754,89 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Bondi Junction Public School",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "Sydney Childrens Hospital School",
+      "dist_km": 3.01
      },
      {
-      "name": "Waverley College",
-      "dist_km": 0.8,
-      "type": "Private · Secondary"
+      "name": "School of Mathematics & Statistics",
+      "dist_km": 3.33
      },
      {
-      "name": "St Catherine's School",
-      "dist_km": 1.2,
-      "type": "Private · Combined"
+      "name": "Taylors College",
+      "dist_km": 3.94,
+      "type": "Secondary"
      },
      {
-      "name": "Bellevue Hill Public",
-      "dist_km": 1.6,
-      "type": "Public · Primary"
+      "name": "Australasia Academy",
+      "dist_km": 4.04
      },
      {
-      "name": "Moriah College",
-      "dist_km": 2.4,
-      "type": "Private · Combined"
+      "name": "ABILITY Education",
+      "dist_km": 4.24
      }
     ],
     "universities": [
      {
-      "name": "UNSW Sydney",
-      "dist_km": 3.4
-     },
-     {
-      "name": "University of Sydney",
-      "dist_km": 6.0
+      "name": "University of Notre Dame Australia",
+      "dist_km": 4.78
      }
     ],
     "shopping": [
      {
-      "name": "Westfield Bondi Junction",
-      "dist_km": 0.3
+      "name": "Coles",
+      "dist_km": 0.15
      },
      {
-      "name": "Eastgate Bondi Junction",
-      "dist_km": 0.4
+      "name": "Coles",
+      "dist_km": 0.29
      },
      {
-      "name": "Oxford Street Mall",
-      "dist_km": 0.5
+      "name": "Just Organics Fruit & Veg",
+      "dist_km": 0.41
      },
      {
-      "name": "Woolworths Bondi Junction",
-      "dist_km": 0.4
+      "name": "Simon Johnson Providore",
+      "dist_km": 1.22
+     },
+     {
+      "name": "Food Store",
+      "dist_km": 1.33
      }
     ],
     "hospitals": [
      {
-      "name": "Prince of Wales Hospital",
-      "dist_km": 3.0
+      "name": "Bondi Junction Private Hospital",
+      "dist_km": 0.23
      },
      {
-      "name": "St Vincent's Hospital",
-      "dist_km": 3.2
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 2.8
      },
      {
-      "name": "The Sydney Eye Hospital",
-      "dist_km": 4.2
-     },
-     {
-      "name": "Wolper Jewish Hospital",
-      "dist_km": 1.0
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 11.01
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "Bondi Junction (T4)",
-      "dist_km": 0.3
+      "name": "Randwick Police Station",
+      "dist_km": 2.44
      },
      {
-      "name": "Edgecliff (T4)",
-      "dist_km": 1.6
+      "name": "Rose Bay Police Station",
+      "dist_km": 2.47
      },
      {
-      "name": "Bondi Junction Bus Interchange",
-      "dist_km": 0.3
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 3.44
+     },
+     {
+      "name": "Day Street Police Station",
+      "dist_km": 4.46
+     },
+     {
+      "name": "Mascot Police Station",
+      "dist_km": 6.04
      }
     ]
    },
@@ -5287,89 +4887,92 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Ryde Public School",
-      "dist_km": 0.5,
-      "type": "Public · Primary"
+      "name": "Ryde Swim School",
+      "dist_km": 1.17
      },
      {
-      "name": "Marist Catholic College Eastwood",
-      "dist_km": 2.0,
-      "type": "Private · Secondary"
+      "name": "Rivendell School",
+      "dist_km": 1.76
      },
      {
-      "name": "Holy Cross College Ryde",
-      "dist_km": 1.4,
-      "type": "Private · Secondary"
+      "name": "Arndell School",
+      "dist_km": 2.6
      },
      {
-      "name": "Ryde Secondary College",
-      "dist_km": 1.0,
-      "type": "Public · Secondary"
+      "name": "Victoria Ave community precinct",
+      "dist_km": 3.88
      },
      {
-      "name": "Truscott Street Public",
-      "dist_km": 1.6,
-      "type": "Public · Primary"
+      "name": "Faculty of Arts",
+      "dist_km": 4.73
      }
     ],
     "universities": [
      {
-      "name": "Macquarie University",
-      "dist_km": 4.0
-     },
-     {
-      "name": "Western Sydney University (Rydalmere)",
-      "dist_km": 3.2
+      "name": "University of Notre Dame Australia",
+      "dist_km": 11.56
      }
     ],
     "shopping": [
      {
-      "name": "Top Ryde City",
-      "dist_km": 0.5
+      "name": "Aldi",
+      "dist_km": 0.55
      },
      {
-      "name": "Eastwood Shopping",
-      "dist_km": 2.4
+      "name": "Daily Life Asian Market",
+      "dist_km": 0.87
      },
      {
-      "name": "Macquarie Centre",
-      "dist_km": 4.2
+      "name": "IGA",
+      "dist_km": 1.11
      },
      {
-      "name": "Coles Top Ryde",
-      "dist_km": 0.5
+      "name": "Manila Mart",
+      "dist_km": 1.47
+     },
+     {
+      "name": "Rhodes Mini-Mart and Café",
+      "dist_km": 1.53
      }
     ],
     "hospitals": [
      {
-      "name": "Ryde Hospital",
-      "dist_km": 1.2
-     },
-     {
-      "name": "Macquarie University Hospital",
-      "dist_km": 4.0
-     },
-     {
-      "name": "Royal North Shore Hospital",
-      "dist_km": 8.0
-     },
-     {
-      "name": "Westmead Hospital",
-      "dist_km": 10.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "Meadowbank (T9)",
+      "name": "Thomas Walker Hospital",
       "dist_km": 1.8
      },
      {
-      "name": "West Ryde (T9)",
-      "dist_km": 1.6
+      "name": "Hunters Hill Private Hospital",
+      "dist_km": 4.89
      },
      {
-      "name": "Top Ryde Bus Interchange",
-      "dist_km": 0.5
+      "name": "Saint Luke's Private Hospital",
+      "dist_km": 13.12
+     },
+     {
+      "name": "Mount Wilga Private Hospital",
+      "dist_km": 13.9
+     }
+    ],
+    "police": [
+     {
+      "name": "Gladesville Police Station",
+      "dist_km": 3.34
+     },
+     {
+      "name": "Eastwood Police Station",
+      "dist_km": 3.42
+     },
+     {
+      "name": "Ermington Police Station",
+      "dist_km": 4.54
+     },
+     {
+      "name": "Campus Security",
+      "dist_km": 4.63
+     },
+     {
+      "name": "Strathfield Police Station",
+      "dist_km": 6.28
      }
     ]
    },
@@ -5420,89 +5023,82 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Newport Public School",
-      "dist_km": 1.2,
-      "type": "Public · Primary"
-     },
-     {
-      "name": "Pittwater High School",
-      "dist_km": 2.0,
-      "type": "Public · Secondary"
+      "name": "Maria Regina Primary School",
+      "dist_km": 2.29,
+      "type": "Primary"
      },
      {
       "name": "Barrenjoey High School",
-      "dist_km": 2.4,
-      "type": "Public · Secondary"
+      "dist_km": 2.44,
+      "type": "Secondary"
      },
      {
       "name": "Avalon Public School",
-      "dist_km": 3.0,
-      "type": "Public · Primary"
+      "dist_km": 2.57
      },
      {
-      "name": "Mater Maria Catholic College",
-      "dist_km": 4.0,
-      "type": "Private · Secondary"
+      "name": "Bilgola Plateau Public School",
+      "dist_km": 2.64
+     },
+     {
+      "name": "St Luke's Grammar School Bayview Campus",
+      "dist_km": 4.42
      }
     ],
     "universities": [
      {
-      "name": "Macquarie University",
-      "dist_km": 24.0
-     },
-     {
-      "name": "University of Sydney",
-      "dist_km": 30.0
+      "name": "UNSW Cowan Field Station",
+      "dist_km": 14.69
      }
     ],
     "shopping": [
      {
-      "name": "Newport Village Shops",
-      "dist_km": 1.0
+      "name": "Friendly Grocer",
+      "dist_km": 2.32
      },
      {
-      "name": "Mona Vale Village",
-      "dist_km": 3.2
+      "name": "Village Plaza",
+      "dist_km": 2.38
      },
      {
-      "name": "Warringah Mall",
-      "dist_km": 10.0
+      "name": "Lolly Beach",
+      "dist_km": 2.51
      },
      {
-      "name": "Woolworths Mona Vale",
-      "dist_km": 3.4
+      "name": "IGA Local Grocer",
+      "dist_km": 2.93
      }
     ],
     "hospitals": [
      {
+      "name": "Arcadia Pittwater Private Hospital",
+      "dist_km": 6.69
+     },
+     {
       "name": "Mona Vale Hospital",
-      "dist_km": 3.6
+      "dist_km": 7.26
      },
      {
-      "name": "Northern Beaches Hospital",
-      "dist_km": 9.0
-     },
-     {
-      "name": "Royal North Shore Hospital",
-      "dist_km": 24.0
-     },
-     {
-      "name": "Sydney Adventist (San)",
-      "dist_km": 26.0
+      "name": "Wyvern Private Hospital",
+      "dist_km": 11.21
      }
     ],
-    "transit": [
+    "police": [
      {
-      "name": "B-Line Mona Vale",
-      "dist_km": 3.2
+      "name": "Broken Bay Water Police",
+      "dist_km": 3.99
      },
      {
-      "name": "Newport Bus Interchange",
-      "dist_km": 1.0
+      "name": "Mona Vale Police Station",
+      "dist_km": 6.83
      },
      {
-      "name": "Church Point Ferry",
-      "dist_km": 4.0
+      "name": "Dee Why Police Station",
+      "dist_km": 14.87
+     },
+     {
+      "name": "Woy Woy Police Station",
+      "dist_km": 14.93
      }
     ]
    },
@@ -5553,89 +5149,71 @@
    "nearby_pois": {
     "schools": [
      {
-      "name": "Bourke Street Public School",
-      "dist_km": 0.4,
-      "type": "Public · Primary"
+      "name": "St Andrews Cathedral School",
+      "dist_km": 1.58
      },
      {
-      "name": "Crown Street Public",
-      "dist_km": 0.6,
-      "type": "Public · Primary"
+      "name": "La Fiesta Dance Factory",
+      "dist_km": 3.79
      },
      {
-      "name": "Sydney Grammar School",
-      "dist_km": 1.2,
-      "type": "Private · Combined"
+      "name": "School of Mathematics & Statistics",
+      "dist_km": 3.85
      },
      {
-      "name": "SCEGGS Darlinghurst",
-      "dist_km": 1.0,
-      "type": "Private · Combined"
-     },
-     {
-      "name": "Cleveland Street Intensive English",
-      "dist_km": 0.8,
-      "type": "Public · Secondary"
+      "name": "Saint Patrick’s Catholic Primary School",
+      "dist_km": 11.36,
+      "type": "Primary"
      }
     ],
     "universities": [
      {
-      "name": "University of Technology Sydney",
-      "dist_km": 1.0
-     },
-     {
-      "name": "University of Sydney",
-      "dist_km": 2.2
+      "name": "University of Notre Dame Australia",
+      "dist_km": 1.33
      }
     ],
     "shopping": [
      {
-      "name": "Crown Street Shops",
-      "dist_km": 0.3
-     },
-     {
-      "name": "Central Park Mall",
-      "dist_km": 1.0
-     },
-     {
-      "name": "Westfield Sydney (CBD)",
-      "dist_km": 1.8
-     },
-     {
-      "name": "Woolworths Town Hall",
-      "dist_km": 1.6
-     }
-    ],
-    "hospitals": [
-     {
-      "name": "St Vincent's Hospital",
-      "dist_km": 1.6
-     },
-     {
-      "name": "Sydney Eye Hospital",
-      "dist_km": 1.8
-     },
-     {
-      "name": "Royal Prince Alfred Hospital",
-      "dist_km": 2.6
-     },
-     {
-      "name": "Sydney Dental Hospital",
-      "dist_km": 1.0
-     }
-    ],
-    "transit": [
-     {
-      "name": "Central (multiple lines)",
-      "dist_km": 0.8
-     },
-     {
-      "name": "Surry Hills Light Rail",
+      "name": "Chalmers Convenience Store",
       "dist_km": 0.5
      },
      {
-      "name": "Museum (T2/T3)",
+      "name": "Woolworths Metro",
+      "dist_km": 0.63
+     },
+     {
+      "name": "EzyMart",
+      "dist_km": 0.84
+     },
+     {
+      "name": "Woolworths",
+      "dist_km": 0.99
+     },
+     {
+      "name": "7-Eleven",
       "dist_km": 1.0
+     }
+    ],
+    "police": [
+     {
+      "name": "Day Street Police Station",
+      "dist_km": 1.48
+     },
+     {
+      "name": "Woolloomooloo Police Station",
+      "dist_km": 1.78
+     },
+     {
+      "name": "Randwick Police Station",
+      "dist_km": 3.97
+     },
+     {
+      "name": "Rose Bay Police Station",
+      "dist_km": 4.3
+     },
+     {
+      "name": "Mascot Police Station",
+      "dist_km": 4.37
      }
     ]
    },

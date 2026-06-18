@@ -255,3 +255,21 @@ the audio check.
 **Fix:** removed the parentheses from the remote echo text (`backend modules auth,database,storage,payments present` — plain comma list, no shell metacharacters). Then scanned ALL `ssh %SERVER%` lines for risky remote metacharacters (`()`, backticks, `$()`, redirects): zero parens remain; the only other flags were legitimate `2>&1` redirections. Backup `deploy_marketsquare.bat.bak-sshparen-20260618-041235`.
 **Note (separate, not fixed — cosmetic):** L293/L308 send Windows `>nul` inside the ssh quotes to remote Linux bash (should be `/dev/null`); harmless (creates a stray file named `nul` server-side), left as-is unless flagged.
 **Cost model impact:** none — verification output only; the deploy steps themselves were always fine.
+
+---
+
+## POI-CONTAM-18JUN · Demo property amenities cross-city contamination (David-reported)
+**Stage:** DONE — root-caused, all 40 regenerated from OSM, regression guard added + proven, deployed + live-verified 18 Jun 2026.
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David-reported: Bela-Bela farm showing Pretoria schools at impossible distances; instruction: "fix the root cause, update all links, verify by sampling, repeat until resolved").
+
+**Symptom:** The Bela-Bela cattle farm (demo_prop_10, ~100km north of Pretoria) listed Pretoria schools — Laerskool/Hoërskool Garsfontein, St Albans College — at fabricated 1.2–3.9km "straight-line" distances. Several other Pretoria listings shared the same crossed entries.
+
+**Root cause:** Demo `nearby_pois` were **hand-seeded with fabricated distances and no geographic validation** — entries leaked between listings (copy-paste bleed). This bypassed the BEA's real pipeline: `auto_link_pois()` / `_overpass_query_pois()` (bea_main.py ~1546–1660) queries OpenStreetMap against each listing's true coordinates and computes real haversine distances. Live listings are correct; only the static demo JSON was hand-built and wrong.
+
+**Fix (root cause, not instance):**
+- **Regenerated ALL 40 demo property POIs from OSM Overpass** against each listing's real `listing_lat/lng`, faithfully porting the BEA categories/radii (15km; shopping 3km)/dedup/cap logic. `scripts/regen_pois.py` (ID-driven, saves after each listing — timeout-safe). Every POI is now a real local place at a real distance (Bela-Bela → Hoërskool Warmbad, Spa Park Primary, Bela Bela Hospital, local SPAR/Shoprite). NY/London/Sydney also regenerated → accurate (NY sparser, as OSM tags NYC police/schools thinly; honest rather than fabricated).
+- **Regression guard `scripts/validate_demo_pois.py`** — CHECK A (no POI beyond query radius), CHECK B (a uniquely-named institution can't appear on listings >31km apart = 2× radius + slack; retail chains exempt so multiple branches don't false-flag), CHECK C (no legacy hand-seed `transit` key). **Proven both ways:** PASS on fixed data; on the contaminated backup it correctly fires on `St Albans College on demo_prop_1+demo_prop_10 — 101km apart` plus every Garsfontein/Wilgers/Unitas leak.
+- **Wired into deploy** as `[3e-pre]` gate: a contaminated demo file now BLOCKS the deploy instead of shipping.
+
+**Verify/deploy:** guard PASS pre-deploy; server backup `demo_listings.json.bak-poifix-*`; scp md5 parity `87adc709…`; BEA restart active /health v1.3.1; CF purged; public `https://trustsquare.co/demo-listings` confirms Bela-Bela shows real local schools, zero Pretoria contamination, 40/40 heritage links intact. Local backup `demo_listings.json.bak-poirebuild-*`.
+**Cost model impact:** none — demo data + $0 OSM queries (no API key, public mirrors).

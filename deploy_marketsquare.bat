@@ -191,6 +191,14 @@ echo.
 :: never reached production (the demo-property heritage-link + NY-amenities drift,
 :: fixed 18 Jun, traced to exactly this gap). They land BEFORE the BEA restart so the
 :: in-process demo cache reloads atomically with the restart.
+echo  [3e-pre] Validating demo POIs (cross-city contamination guard)...
+python "%PROJECT%\scripts\validate_demo_pois.py"
+if %errorlevel% neq 0 (
+    echo  ERROR: demo POI validation FAILED - a listing has wrong-city/implausible amenities.
+    echo         Fix demo_listings.json ^(regenerate via scripts\regen_pois^) before deploying.
+    pause
+    exit /b 1
+)
 echo  [3e] Deploying demo data (demo_listings.json, demo_sellers.json)...
 scp "%PROJECT%\demo_listings.json" %SERVER%:%REMOTE%/demo_listings.json
 if %errorlevel% neq 0 (

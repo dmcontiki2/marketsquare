@@ -11,6 +11,7 @@
 | Added | Item | Why deferred | Reversible? |
 |-------|------|--------------|-------------|
 | 18 Jun (S140) | **Tier-2 render check for video faults** — `human_view_verify.py` has the render hook stubbed; wiring true render verification needs David's Chrome (Claude-in-Chrome extension) live, which can't run headless in the sandbox. | Needs David's browser session; not sandbox-doable | Yes |
+| 18 Jun (S140) | **Commit the S140 fix set** — `git add -A` + commit + push from PowerShell (sandbox can't commit; MOUNT/index.lock rule). Covers: human-view verify gate, approvals/blockers + mount/self-verify rules, deferred-items list, `mount_check.sh`, `.gitignore` `.bak-*` fix, CHANGELOG MOUNT-READ-1 entry. | Commit must run Windows-side, not sandbox | Yes |
 
 ---
 
