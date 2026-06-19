@@ -545,3 +545,5 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 - **World Heritage / Wonders layer expanded 120 → 332 sites** (+212; clears ≥320 target). UNESCO-led: 142 UNESCO, 97 National Park, 47 National Museum, 46 Archaeological. South Africa 5 → **30 sites**; 91 countries total.
 - **Photos all royalty-free (Wikimedia Commons)** with photographer attribution: 228/231 new scenic photos credit a named author; all 332 photo URLs verified HTTP-200 before deploy. `photo_author`/`photo_licence`/`photo_source` populated from Commons extmetadata.
 - **Path fix**: canonical `wonders.json` moved to project root (matche
+## Attended change 2026-06-19 (David in chat)
+- WONDER-DUP: 4/10 true coord-dups merged (wonders 304→300, keep canonical/lowest id); 6 distinct co-located groups left intact + flagged. BRAND-DRIFT-1 verified already-live (closed). CUTOVER-1 parity met (15 nights), staged — root cron --live flip pending David.
