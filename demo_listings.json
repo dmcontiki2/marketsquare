@@ -51,97 +51,139 @@
     "schools": [
      {
       "name": "Monument Park",
-      "dist_km": 2.31
+      "dist_km": 2.31,
+      "lat": -25.80022,
+      "lon": 28.23056
      },
      {
       "name": "M Park creche",
-      "dist_km": 2.65
+      "dist_km": 2.65,
+      "lat": -25.79983,
+      "lon": 28.22643
      },
      {
       "name": "MSC Business College",
       "dist_km": 4.96,
+      "lat": -25.74678,
+      "lon": 28.23276,
       "type": "Secondary"
      },
      {
       "name": "Laerskool Fleur",
       "dist_km": 5.36,
+      "lat": -25.82103,
+      "lon": 28.21002,
       "type": "Primary"
      },
      {
       "name": "Pure Hope School",
-      "dist_km": 7.02
+      "dist_km": 7.02,
+      "lat": -25.8279,
+      "lon": 28.30476
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 4.72
+      "dist_km": 4.72,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Woolworths",
-      "dist_km": 1.36
+      "dist_km": 1.36,
+      "lat": -25.77843,
+      "lon": 28.25712
      },
      {
       "name": "Yat Kee",
-      "dist_km": 1.51
+      "dist_km": 1.51,
+      "lat": -25.77906,
+      "lon": 28.26039
      },
      {
       "name": "Pick n Pay Express",
-      "dist_km": 1.54
+      "dist_km": 1.54,
+      "lat": -25.78313,
+      "lon": 28.26383
      },
      {
       "name": "Spar",
-      "dist_km": 1.8
+      "dist_km": 1.8,
+      "lat": -25.77498,
+      "lon": 28.24019
      },
      {
       "name": "Spar",
-      "dist_km": 2.07
+      "dist_km": 2.07,
+      "lat": -25.7943,
+      "lon": 28.26956
      }
     ],
     "hospitals": [
      {
       "name": "Life Brooklyn Day Hospital",
-      "dist_km": 2.55
+      "dist_km": 2.55,
+      "lat": -25.76968,
+      "lon": 28.23563
      },
      {
       "name": "Cintocare",
-      "dist_km": 3.13
+      "dist_km": 3.13,
+      "lat": -25.78469,
+      "lon": 28.28071
      },
      {
       "name": "Carecross Health",
-      "dist_km": 3.28
+      "dist_km": 3.28,
+      "lat": -25.76013,
+      "lon": 28.24161
      },
      {
       "name": "Advanced Groenkloof Day Hospital",
-      "dist_km": 3.81
+      "dist_km": 3.81,
+      "lat": -25.76572,
+      "lon": 28.22155
      },
      {
       "name": "Life Groenkloof Hospital",
-      "dist_km": 3.89
+      "dist_km": 3.89,
+      "lat": -25.77079,
+      "lon": 28.21637
      }
     ],
     "police": [
      {
       "name": "Sunnyside",
-      "dist_km": 5.69
+      "dist_km": 5.69,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Lyttleton Polisiestasie",
-      "dist_km": 7.56
+      "dist_km": 7.56,
+      "lat": -25.83879,
+      "lon": 28.19875
      },
      {
       "name": "SAPS Silverton",
-      "dist_km": 7.73
+      "dist_km": 7.73,
+      "lat": -25.73323,
+      "lon": 28.29628
      },
      {
       "name": "Villiers",
-      "dist_km": 7.85
+      "dist_km": 7.85,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 7.85
+      "dist_km": 7.85,
+      "lat": -25.74832,
+      "lon": 28.18552
      }
     ]
    },
@@ -208,95 +250,137 @@
      {
       "name": "Laerskool Fleur",
       "dist_km": 2.12,
+      "lat": -25.82103,
+      "lon": 28.21002,
       "type": "Primary"
      },
      {
       "name": "Monument Park",
-      "dist_km": 2.37
+      "dist_km": 2.37,
+      "lat": -25.80022,
+      "lon": 28.23056
      },
      {
       "name": "M Park creche",
-      "dist_km": 2.46
+      "dist_km": 2.46,
+      "lat": -25.79983,
+      "lon": 28.22643
      },
      {
       "name": "Pierre's Kitchen an dSchool of Cookery",
-      "dist_km": 6.03
+      "dist_km": 6.03,
+      "lat": -25.77034,
+      "lon": 28.25123
      },
      {
       "name": "Speelkas Kleuterskool",
-      "dist_km": 7.08
+      "dist_km": 7.08,
+      "lat": -25.87814,
+      "lon": 28.19879
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 8.13
+      "dist_km": 8.13,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Woolworths Food",
-      "dist_km": 1.31
+      "dist_km": 1.31,
+      "lat": -25.81455,
+      "lon": 28.24182
      },
      {
       "name": "Checkers",
-      "dist_km": 1.36
+      "dist_km": 1.36,
+      "lat": -25.81845,
+      "lon": 28.24432
      },
      {
       "name": "Spar Monument Park",
-      "dist_km": 2.19
+      "dist_km": 2.19,
+      "lat": -25.80186,
+      "lon": 28.23328
      },
      {
       "name": "Designer Physique",
-      "dist_km": 2.49
+      "dist_km": 2.49,
+      "lat": -25.84145,
+      "lon": 28.24255
      },
      {
       "name": "Shoprite",
-      "dist_km": 2.71
+      "dist_km": 2.71,
+      "lat": -25.82875,
+      "lon": 28.20537
      }
     ],
     "hospitals": [
      {
       "name": "Netcare Unitas Hospital",
-      "dist_km": 3.81
+      "dist_km": 3.81,
+      "lat": -25.83209,
+      "lon": 28.19499
      },
      {
       "name": "Southlake Medical Centre",
-      "dist_km": 5.01
+      "dist_km": 5.01,
+      "lat": -25.85266,
+      "lon": 28.19504
      },
      {
       "name": "Life Brooklyn Day Hospital",
-      "dist_km": 5.78
+      "dist_km": 5.78,
+      "lat": -25.76968,
+      "lon": 28.23563
      },
      {
       "name": "Life Groenkloof Hospital",
-      "dist_km": 5.82
+      "dist_km": 5.82,
+      "lat": -25.77108,
+      "lon": 28.21574
      },
      {
       "name": "Health Worx Medical Centre Centurion Mall",
-      "dist_km": 5.87
+      "dist_km": 5.87,
+      "lat": -25.85731,
+      "lon": 28.18806
      }
     ],
     "police": [
      {
       "name": "Lyttleton Polisiestasie",
-      "dist_km": 3.77
+      "dist_km": 3.77,
+      "lat": -25.83879,
+      "lon": 28.19875
      },
      {
       "name": "Tshwane Metro Police Satellite station",
-      "dist_km": 7.51
+      "dist_km": 7.51,
+      "lat": -25.81201,
+      "lon": 28.30545
      },
      {
       "name": "Sunnyside",
-      "dist_km": 7.82
+      "dist_km": 7.82,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 9.33
+      "dist_km": 9.33,
+      "lat": -25.74832,
+      "lon": 28.18552
      },
      {
       "name": "Villiers",
-      "dist_km": 11.57
+      "dist_km": 11.57,
+      "lat": -25.71822,
+      "lon": 28.24548
      }
     ]
    },
@@ -362,97 +446,139 @@
     "schools": [
      {
       "name": "Monument Park",
-      "dist_km": 4.72
+      "dist_km": 4.72,
+      "lat": -25.80022,
+      "lon": 28.23056
      },
      {
       "name": "M Park creche",
-      "dist_km": 5.09
+      "dist_km": 5.09,
+      "lat": -25.79983,
+      "lon": 28.22643
      },
      {
       "name": "MSC Business College",
       "dist_km": 5.78,
+      "lat": -25.74678,
+      "lon": 28.23276,
       "type": "Secondary"
      },
      {
       "name": "Pure Hope School",
-      "dist_km": 5.85
+      "dist_km": 5.85,
+      "lat": -25.8279,
+      "lon": 28.30476
      },
      {
       "name": "La Montagne Primary",
       "dist_km": 6.57,
+      "lat": -25.74537,
+      "lon": 28.32405,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 5.51
+      "dist_km": 5.51,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Checkers Hyper",
-      "dist_km": 0.09
+      "dist_km": 0.09,
+      "lat": -25.78317,
+      "lon": 28.27465
      },
      {
       "name": "Menlyn Retail Park",
-      "dist_km": 0.6
+      "dist_km": 0.6,
+      "lat": -25.78764,
+      "lon": 28.27732
      },
      {
       "name": "Shell Select",
-      "dist_km": 0.91
+      "dist_km": 0.91,
+      "lat": -25.77589,
+      "lon": 28.26982
      },
      {
       "name": "Woolworth Foodstop",
-      "dist_km": 0.98
+      "dist_km": 0.98,
+      "lat": -25.78262,
+      "lon": 28.28352
      },
      {
       "name": "Pick n Pay Express",
-      "dist_km": 1.0
+      "dist_km": 1.0,
+      "lat": -25.78313,
+      "lon": 28.26383
      }
     ],
     "hospitals": [
      {
       "name": "Life Brooklyn Day Hospital",
-      "dist_km": 4.11
+      "dist_km": 4.11,
+      "lat": -25.76968,
+      "lon": 28.23563
      },
      {
       "name": "Carecross Health",
-      "dist_km": 4.13
+      "dist_km": 4.13,
+      "lat": -25.76013,
+      "lon": 28.24161
      },
      {
       "name": "Advanced Groenkloof Day Hospital",
-      "dist_km": 5.59
+      "dist_km": 5.59,
+      "lat": -25.76572,
+      "lon": 28.22155
      },
      {
       "name": "Life Groenkloof Hospital",
-      "dist_km": 5.92
+      "dist_km": 5.92,
+      "lat": -25.77079,
+      "lon": 28.21637
      },
      {
       "name": "Akeso Behavioral Healthcare group",
-      "dist_km": 6.4
+      "dist_km": 6.4,
+      "lat": -25.74728,
+      "lon": 28.22392
      }
     ],
     "police": [
      {
       "name": "SAPS Silverton",
-      "dist_km": 6.01
+      "dist_km": 6.01,
+      "lat": -25.73323,
+      "lon": 28.29628
      },
      {
       "name": "Sunnyside",
-      "dist_km": 7.36
+      "dist_km": 7.36,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Villiers",
-      "dist_km": 7.77
+      "dist_km": 7.77,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 9.66
+      "dist_km": 9.66,
+      "lat": -25.74832,
+      "lon": 28.18552
      },
      {
       "name": "Lyttleton Polisiestasie",
-      "dist_km": 9.72
+      "dist_km": 9.72,
+      "lat": -25.83879,
+      "lon": 28.19875
      }
     ]
    },
@@ -519,95 +645,137 @@
      {
       "name": "MSC Business College",
       "dist_km": 2.62,
+      "lat": -25.74678,
+      "lon": 28.23276,
       "type": "Secondary"
      },
      {
       "name": "Monument Park",
-      "dist_km": 3.4
+      "dist_km": 3.4,
+      "lat": -25.80022,
+      "lon": 28.23056
      },
      {
       "name": "M Park creche",
-      "dist_km": 3.46
+      "dist_km": 3.46,
+      "lat": -25.79983,
+      "lon": 28.22643
      },
      {
       "name": "Damelin City Campus Pretoria",
-      "dist_km": 5.19
+      "dist_km": 5.19,
+      "lat": -25.7485,
+      "lon": 28.19052
      },
      {
       "name": "Iona Convent School",
-      "dist_km": 5.7
+      "dist_km": 5.7,
+      "lat": -25.72816,
+      "lon": 28.20385
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 2.41
+      "dist_km": 2.41,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Checkers",
-      "dist_km": 0.2
+      "dist_km": 0.2,
+      "lat": -25.77086,
+      "lon": 28.2347
      },
      {
       "name": "Shell Select",
-      "dist_km": 0.59
+      "dist_km": 0.59,
+      "lat": -25.77188,
+      "lon": 28.23099
      },
      {
       "name": "Spar",
-      "dist_km": 0.66
+      "dist_km": 0.66,
+      "lat": -25.77498,
+      "lon": 28.24019
      },
      {
       "name": "Fresh Stop",
-      "dist_km": 1.39
+      "dist_km": 1.39,
+      "lat": -25.76038,
+      "lon": 28.24524
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 1.43
+      "dist_km": 1.43,
+      "lat": -25.7588,
+      "lon": 28.24329
      }
     ],
     "hospitals": [
      {
       "name": "Life Brooklyn Day Hospital",
-      "dist_km": 0.1
+      "dist_km": 0.1,
+      "lat": -25.76968,
+      "lon": 28.23563
      },
      {
       "name": "Carecross Health",
-      "dist_km": 1.22
+      "dist_km": 1.22,
+      "lat": -25.76013,
+      "lon": 28.24161
      },
      {
       "name": "Advanced Groenkloof Day Hospital",
-      "dist_km": 1.57
+      "dist_km": 1.57,
+      "lat": -25.76572,
+      "lon": 28.22155
      },
      {
       "name": "Life Groenkloof Hospital",
-      "dist_km": 2.02
+      "dist_km": 2.02,
+      "lat": -25.77079,
+      "lon": 28.21637
      },
      {
       "name": "Akeso Behavioral Healthcare group",
-      "dist_km": 2.83
+      "dist_km": 2.83,
+      "lat": -25.74728,
+      "lon": 28.22392
      }
     ],
     "police": [
      {
       "name": "Sunnyside",
-      "dist_km": 3.37
+      "dist_km": 3.37,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 5.65
+      "dist_km": 5.65,
+      "lat": -25.74832,
+      "lon": 28.18552
      },
      {
       "name": "Villiers",
-      "dist_km": 5.84
+      "dist_km": 5.84,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "SAPS Moot",
-      "dist_km": 6.68
+      "dist_km": 6.68,
+      "lat": -25.71291,
+      "lon": 28.21609
      },
      {
       "name": "SAPS Silverton",
-      "dist_km": 7.26
+      "dist_km": 7.26,
+      "lat": -25.73323,
+      "lon": 28.29628
      }
     ]
    },
@@ -674,93 +842,133 @@
      {
       "name": "Abbots College",
       "dist_km": 2.02,
+      "lat": -25.87746,
+      "lon": 28.17808,
       "type": "Secondary"
      },
      {
       "name": "Speelkas Kleuterskool",
-      "dist_km": 2.06
+      "dist_km": 2.06,
+      "lat": -25.87814,
+      "lon": 28.19879
      },
      {
       "name": "Höerskool Zwartkop",
-      "dist_km": 2.69
+      "dist_km": 2.69,
+      "lat": -25.84853,
+      "lon": 28.16632
      },
      {
       "name": "Hoërskool Eldoraigne",
       "dist_km": 4.71,
+      "lat": -25.84237,
+      "lon": 28.14697,
       "type": "Secondary"
      },
      {
       "name": "Wierdapark Laerskool",
       "dist_km": 4.86,
+      "lat": -25.85485,
+      "lon": 28.14076,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 13.44
+      "dist_km": 13.44,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Angling Africa",
-      "dist_km": 0.23
+      "dist_km": 0.23,
+      "lat": -25.86176,
+      "lon": 28.19097
      },
      {
       "name": "ABC Sweets",
-      "dist_km": 0.46
+      "dist_km": 0.46,
+      "lat": -25.86398,
+      "lon": 28.18467
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 0.52
+      "dist_km": 0.52,
+      "lat": -25.8574,
+      "lon": 28.18764
      },
      {
       "name": "Game",
-      "dist_km": 0.61
+      "dist_km": 0.61,
+      "lat": -25.85748,
+      "lon": 28.18534
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 1.07
+      "dist_km": 1.07,
+      "lat": -25.8677,
+      "lon": 28.19737
      }
     ],
     "hospitals": [
      {
       "name": "Health Worx Medical Centre Centurion Mall",
-      "dist_km": 0.53
+      "dist_km": 0.53,
+      "lat": -25.85731,
+      "lon": 28.18806
      },
      {
       "name": "Southlake Medical Centre",
-      "dist_km": 1.22
+      "dist_km": 1.22,
+      "lat": -25.85266,
+      "lon": 28.19504
      },
      {
       "name": "Netcare Unitas Hospital",
-      "dist_km": 3.38
+      "dist_km": 3.38,
+      "lat": -25.83209,
+      "lon": 28.19499
      },
      {
       "name": "N.H.C Health Centre",
-      "dist_km": 5.94
+      "dist_km": 5.94,
+      "lat": -25.91006,
+      "lon": 28.16275
      },
      {
       "name": "Doctor's Surgery",
-      "dist_km": 7.69
+      "dist_km": 7.69,
+      "lat": -25.87648,
+      "lon": 28.11358
      }
     ],
     "police": [
      {
       "name": "Lyttleton Polisiestasie",
-      "dist_km": 2.77
+      "dist_km": 2.77,
+      "lat": -25.83879,
+      "lon": 28.19875
      },
      {
       "name": "Sunnyside",
-      "dist_km": 12.11
+      "dist_km": 12.11,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 12.64
+      "dist_km": 12.64,
+      "lat": -25.74832,
+      "lon": 28.18552
      },
      {
       "name": "Tshwane Metro Police Satellite station",
-      "dist_km": 12.94
+      "dist_km": 12.94,
+      "lat": -25.81201,
+      "lon": 28.30545
      }
     ]
    },
@@ -825,90 +1033,128 @@
      {
       "name": "Irene Primary School",
       "dist_km": 1.52,
+      "lat": -25.87225,
+      "lon": 28.22187,
       "type": "Primary"
      },
      {
       "name": "Speelkas Kleuterskool",
-      "dist_km": 1.71
+      "dist_km": 1.71,
+      "lat": -25.87814,
+      "lon": 28.19879
      },
      {
       "name": "Abbots College",
       "dist_km": 3.72,
+      "lat": -25.87746,
+      "lon": 28.17808,
       "type": "Secondary"
      },
      {
       "name": "Midstream Ridge Primary",
       "dist_km": 4.01,
+      "lat": -25.91995,
+      "lon": 28.20896,
       "type": "Primary"
      },
      {
       "name": "Laerskool Hennopspark",
       "dist_km": 5.56,
+      "lat": -25.85325,
+      "lon": 28.17083,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "UNISA Sunnyside Campus",
-      "dist_km": 14.06
+      "dist_km": 14.06,
+      "lat": -25.75859,
+      "lon": 28.19817
      }
     ],
     "shopping": [
      {
       "name": "Southdowns Shopping Centre",
-      "dist_km": 1.02
+      "dist_km": 1.02,
+      "lat": -25.88501,
+      "lon": 28.20439
      },
      {
       "name": "Main Road Deli",
-      "dist_km": 1.19
+      "dist_km": 1.19,
+      "lat": -25.87767,
+      "lon": 28.22388
      },
      {
       "name": "Freedom Village",
-      "dist_km": 1.3
+      "dist_km": 1.3,
+      "lat": -25.8759,
+      "lon": 28.22365
      },
      {
       "name": "Quickshop",
-      "dist_km": 1.8
+      "dist_km": 1.8,
+      "lat": -25.87647,
+      "lon": 28.19872
      },
      {
       "name": "Quickshop",
-      "dist_km": 2.26
+      "dist_km": 2.26,
+      "lat": -25.87318,
+      "lon": 28.19548
      }
     ],
     "hospitals": [
      {
       "name": "Health Worx Medical Centre Centurion Mall",
-      "dist_km": 3.99
+      "dist_km": 3.99,
+      "lat": -25.85731,
+      "lon": 28.18806
      },
      {
       "name": "Southlake Medical Centre",
-      "dist_km": 4.01
+      "dist_km": 4.01,
+      "lat": -25.85266,
+      "lon": 28.19504
      },
      {
       "name": "N.H.C Health Centre",
-      "dist_km": 5.92
+      "dist_km": 5.92,
+      "lat": -25.91006,
+      "lon": 28.16275
      },
      {
       "name": "Netcare Unitas Hospital",
-      "dist_km": 6.08
+      "dist_km": 6.08,
+      "lat": -25.83215,
+      "lon": 28.19584
      },
      {
       "name": "Dr Minette",
-      "dist_km": 7.85
+      "dist_km": 7.85,
+      "lat": -25.8264,
+      "lon": 28.25961
      }
     ],
     "police": [
      {
       "name": "Lyttleton Polisiestasie",
-      "dist_km": 5.29
+      "dist_km": 5.29,
+      "lat": -25.83879,
+      "lon": 28.19875
      },
      {
       "name": "Tshwane Metro Police Satellite station",
-      "dist_km": 12.13
+      "dist_km": 12.13,
+      "lat": -25.81201,
+      "lon": 28.30545
      },
      {
       "name": "Sunnyside",
-      "dist_km": 14.45
+      "dist_km": 14.45,
+      "lat": -25.75443,
+      "lon": 28.20765
      }
     ]
    },
@@ -973,96 +1219,138 @@
      {
       "name": "MSC Business College",
       "dist_km": 0.32,
+      "lat": -25.74678,
+      "lon": 28.23276,
       "type": "Secondary"
      },
      {
       "name": "Iona Convent School",
-      "dist_km": 3.26
+      "dist_km": 3.26,
+      "lat": -25.72816,
+      "lon": 28.20385
      },
      {
       "name": "Damelin City Campus Pretoria",
-      "dist_km": 3.95
+      "dist_km": 3.95,
+      "lat": -25.7485,
+      "lon": 28.19052
      },
      {
       "name": "Prince's Park College",
       "dist_km": 4.24,
+      "lat": -25.74297,
+      "lon": 28.18757,
       "type": "Secondary"
      },
      {
       "name": "CVO Moot",
-      "dist_km": 4.6
+      "dist_km": 4.6,
+      "lat": -25.70974,
+      "lon": 28.25229
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 0.57
+      "dist_km": 0.57,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Shell Select",
-      "dist_km": 0.56
+      "dist_km": 0.56,
+      "lat": -25.75025,
+      "lon": 28.23234
      },
      {
       "name": "Woolworths Food",
-      "dist_km": 0.69
+      "dist_km": 0.69,
+      "lat": -25.74489,
+      "lon": 28.22301
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 0.77
+      "dist_km": 0.77,
+      "lat": -25.74967,
+      "lon": 28.23616
      },
      {
       "name": "Woolworths",
-      "dist_km": 0.84
+      "dist_km": 0.84,
+      "lat": -25.75093,
+      "lon": 28.22363
      },
      {
       "name": "shop@duncan",
-      "dist_km": 1.07
+      "dist_km": 1.07,
+      "lat": -25.74983,
+      "lon": 28.23946
      }
     ],
     "hospitals": [
      {
       "name": "Akeso Behavioral Healthcare group",
-      "dist_km": 0.61
+      "dist_km": 0.61,
+      "lat": -25.74728,
+      "lon": 28.22392
      },
      {
       "name": "Sediba Hope Medical Centre",
-      "dist_km": 1.95
+      "dist_km": 1.95,
+      "lat": -25.75235,
+      "lon": 28.21169
      },
      {
       "name": "Carecross Health",
-      "dist_km": 1.98
+      "dist_km": 1.98,
+      "lat": -25.76013,
+      "lon": 28.24161
      },
      {
       "name": "Advanced Groenkloof Day Hospital",
-      "dist_km": 2.36
+      "dist_km": 2.36,
+      "lat": -25.76572,
+      "lon": 28.22155
      },
      {
       "name": "Life Brooklyn Day Hospital",
-      "dist_km": 2.72
+      "dist_km": 2.72,
+      "lat": -25.76968,
+      "lon": 28.23563
      }
     ],
     "police": [
      {
       "name": "Sunnyside",
-      "dist_km": 2.42
+      "dist_km": 2.42,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Villiers",
-      "dist_km": 3.45
+      "dist_km": 3.45,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "SAPS Moot",
-      "dist_km": 3.91
+      "dist_km": 3.91,
+      "lat": -25.71291,
+      "lon": 28.21609
      },
      {
       "name": "Pretoria Central Police Station",
-      "dist_km": 4.44
+      "dist_km": 4.44,
+      "lat": -25.74832,
+      "lon": 28.18552
      },
      {
       "name": "Wonderboompoort",
-      "dist_km": 6.39
+      "dist_km": 6.39,
+      "lat": -25.70422,
+      "lon": 28.18582
      }
     ]
    },
@@ -1127,97 +1415,139 @@
      {
       "name": "Laerskool Tygerpoort",
       "dist_km": 2.29,
+      "lat": -25.79505,
+      "lon": 28.35347,
       "type": "Primary"
      },
      {
       "name": "Germany International School Pretoria",
-      "dist_km": 3.52
+      "dist_km": 3.52,
+      "lat": -25.748,
+      "lon": 28.3283
      },
      {
       "name": "Tyger Valley",
-      "dist_km": 3.74
+      "dist_km": 3.74,
+      "lat": -25.80093,
+      "lon": 28.36947
      },
      {
       "name": "La Montagne Primary",
       "dist_km": 3.98,
+      "lat": -25.74537,
+      "lon": 28.32405,
       "type": "Primary"
      },
      {
       "name": "Saint Albans College",
       "dist_km": 5.84,
+      "lat": -25.77369,
+      "lon": 28.28591,
       "type": "Secondary"
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 11.39
+      "dist_km": 11.39,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Quickshop",
-      "dist_km": 0.26
+      "dist_km": 0.26,
+      "lat": -25.77833,
+      "lon": 28.34529
      },
      {
       "name": "Kwikspar",
-      "dist_km": 0.83
+      "dist_km": 0.83,
+      "lat": -25.77517,
+      "lon": 28.33599
      },
      {
       "name": "Checkers",
-      "dist_km": 1.09
+      "dist_km": 1.09,
+      "lat": -25.77259,
+      "lon": 28.35428
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 1.21
+      "dist_km": 1.21,
+      "lat": -25.78415,
+      "lon": 28.35241
      },
      {
       "name": "Quickshop",
-      "dist_km": 1.47
+      "dist_km": 1.47,
+      "lat": -25.78436,
+      "lon": 28.3557
      }
     ],
     "hospitals": [
      {
       "name": "Cintocare",
-      "dist_km": 6.43
+      "dist_km": 6.43,
+      "lat": -25.78469,
+      "lon": 28.28071
      },
      {
       "name": "Mamelodi Hospital",
-      "dist_km": 6.75
+      "dist_km": 6.75,
+      "lat": -25.71974,
+      "lon": 28.36901
      },
      {
       "name": "Mamelodi Pharmacy",
-      "dist_km": 7.11
+      "dist_km": 7.11,
+      "lat": -25.71232,
+      "lon": 28.34698
      },
      {
       "name": "Cure Day Clinics Erasmuskloof",
-      "dist_km": 8.88
+      "dist_km": 8.88,
+      "lat": -25.81014,
+      "lon": 28.26388
      },
      {
       "name": "Dr Minette",
-      "dist_km": 10.14
+      "dist_km": 10.14,
+      "lat": -25.8264,
+      "lon": 28.25961
      }
     ],
     "police": [
      {
       "name": "Tshwane Metro Police Satellite station",
-      "dist_km": 5.56
+      "dist_km": 5.56,
+      "lat": -25.81201,
+      "lon": 28.30545
      },
      {
       "name": "SAPS Silverton",
-      "dist_km": 6.77
+      "dist_km": 6.77,
+      "lat": -25.73323,
+      "lon": 28.29628
      },
      {
       "name": "Villiers",
-      "dist_km": 11.8
+      "dist_km": 11.8,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "Sunnyside",
-      "dist_km": 13.89
+      "dist_km": 13.89,
+      "lat": -25.75443,
+      "lon": 28.20765
      },
      {
       "name": "Kameeldrif",
-      "dist_km": 14.45
+      "dist_km": 14.45,
+      "lat": -25.65039,
+      "lon": 28.30794
      }
     ]
    },
@@ -1277,79 +1607,111 @@
     "schools": [
      {
       "name": "Sonitus Skool Vir Hardhorendes",
-      "dist_km": 7.33
+      "dist_km": 7.33,
+      "lat": -25.70156,
+      "lon": 28.29144
      },
      {
       "name": "F.H. Odendaal High School",
       "dist_km": 7.4,
+      "lat": -25.69809,
+      "lon": 28.28598,
       "type": "Secondary"
      },
      {
       "name": "Derdepoort Primary School",
       "dist_km": 7.74,
+      "lat": -25.70338,
+      "lon": 28.28736,
       "type": "Primary"
      },
      {
       "name": "Balebogeng Higher Primary School",
       "dist_km": 7.98,
+      "lat": -25.70689,
+      "lon": 28.38585,
       "type": "Primary"
      },
      {
       "name": "Pula Difate Primary School",
       "dist_km": 7.99,
+      "lat": -25.71256,
+      "lon": 28.37655,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "STADIO Higher Education",
-      "dist_km": 15.0
+      "dist_km": 15.0,
+      "lat": -25.74845,
+      "lon": 28.23467
      }
     ],
     "shopping": [
      {
       "name": "Spar",
-      "dist_km": 2.2
+      "dist_km": 2.2,
+      "lat": -25.63479,
+      "lon": 28.32324
      }
     ],
     "hospitals": [
      {
       "name": "Mamelodi Pharmacy",
-      "dist_km": 6.99
+      "dist_km": 6.99,
+      "lat": -25.71232,
+      "lon": 28.34698
      },
      {
       "name": "Mamelodi Hospital",
-      "dist_km": 8.36
+      "dist_km": 8.36,
+      "lat": -25.7196,
+      "lon": 28.36894
      },
      {
       "name": "Ali is siek",
-      "dist_km": 13.94
+      "dist_km": 13.94,
+      "lat": -25.6868,
+      "lon": 28.20414
      },
      {
       "name": "Pretoria Urology Hospital",
-      "dist_km": 14.43
+      "dist_km": 14.43,
+      "lat": -25.74409,
+      "lon": 28.23778
      }
     ],
     "police": [
      {
       "name": "Kameeldrif",
-      "dist_km": 2.92
+      "dist_km": 2.92,
+      "lat": -25.65039,
+      "lon": 28.30794
      },
      {
       "name": "SAPS Silverton",
-      "dist_km": 10.11
+      "dist_km": 10.11,
+      "lat": -25.73323,
+      "lon": 28.29628
      },
      {
       "name": "Sinoville Police Department",
-      "dist_km": 11.51
+      "dist_km": 11.51,
+      "lat": -25.67611,
+      "lon": 28.22593
      },
      {
       "name": "Villiers",
-      "dist_km": 11.9
+      "dist_km": 11.9,
+      "lat": -25.71822,
+      "lon": 28.24548
      },
      {
       "name": "SAPS Moot",
-      "dist_km": 13.99
+      "dist_km": 13.99,
+      "lat": -25.71291,
+      "lon": 28.21609
      }
     ]
    },
@@ -1409,58 +1771,82 @@
     "schools": [
      {
       "name": "Eden Christian School",
-      "dist_km": 0.41
+      "dist_km": 0.41,
+      "lat": -24.88306,
+      "lon": 28.28072
      },
      {
       "name": "Hoërskool Warmbad",
       "dist_km": 0.55,
+      "lat": -24.88932,
+      "lon": 28.2812,
       "type": "Secondary"
      },
      {
       "name": "Spa Park Primary School",
       "dist_km": 1.52,
+      "lat": -24.87712,
+      "lon": 28.27188,
       "type": "Primary"
      },
      {
       "name": "Mmamakwa Full Service Primary School",
       "dist_km": 2.66,
+      "lat": -24.88931,
+      "lon": 28.31007,
       "type": "Primary"
      },
      {
       "name": "Thusanang School for the Handicapped",
-      "dist_km": 2.84
+      "dist_km": 2.84,
+      "lat": -24.88096,
+      "lon": 28.31189
      }
     ],
     "shopping": [
      {
       "name": "SuperSPAR",
-      "dist_km": 0.86
+      "dist_km": 0.86,
+      "lat": -24.88434,
+      "lon": 28.29256
      },
      {
       "name": "Shoprite",
-      "dist_km": 0.97
+      "dist_km": 0.97,
+      "lat": -24.88688,
+      "lon": 28.29348
      },
      {
       "name": "Pick n Pay",
-      "dist_km": 1.07
+      "dist_km": 1.07,
+      "lat": -24.88895,
+      "lon": 28.2938
      },
      {
       "name": "Smart Center",
-      "dist_km": 1.22
+      "dist_km": 1.22,
+      "lat": -24.88453,
+      "lon": 28.29616
      },
      {
       "name": "Shell Select",
-      "dist_km": 1.43
+      "dist_km": 1.43,
+      "lat": -24.8849,
+      "lon": 28.29827
      }
     ],
     "hospitals": [
      {
       "name": "Bela Bela Hospital",
-      "dist_km": 0.47
+      "dist_km": 0.47,
+      "lat": -24.8868,
+      "lon": 28.28839
      },
      {
       "name": "Bele Bela Saint Vincent's Hospital",
-      "dist_km": 0.63
+      "dist_km": 0.63,
+      "lat": -24.88129,
+      "lon": 28.27947
      }
     ]
    },
@@ -1521,35 +1907,49 @@
      {
       "name": "Pharmacy College",
       "dist_km": 0.64,
+      "lat": 40.77538,
+      "lon": -73.98125,
       "type": "Secondary"
      },
      {
       "name": "Public School 37",
-      "dist_km": 2.21
+      "dist_km": 2.21,
+      "lat": 40.77927,
+      "lon": -73.95625
      },
      {
       "name": "Public School 190",
-      "dist_km": 2.59
+      "dist_km": 2.59,
+      "lat": 40.77511,
+      "lon": -73.9527
      },
      {
       "name": "Public School 198",
-      "dist_km": 2.74
+      "dist_km": 2.74,
+      "lat": 40.785,
+      "lon": -73.9503
      },
      {
       "name": "Public School 18",
-      "dist_km": 2.83
+      "dist_km": 2.83,
+      "lat": 40.75677,
+      "lon": -73.97236
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 2.94
+      "dist_km": 2.94,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ],
     "hospitals": [
      {
       "name": "Montefiore Medical Center West Campus Moses Division Hospital",
-      "dist_km": 13.99
+      "dist_km": 13.99,
+      "lat": 40.88009,
+      "lon": -73.87984
      }
     ]
    },
@@ -1613,30 +2013,42 @@
     "schools": [
      {
       "name": "Public School 23",
-      "dist_km": 0.91
+      "dist_km": 0.91,
+      "lat": 40.71621,
+      "lon": -73.99875
      },
      {
       "name": "Yung Wing Elementary",
-      "dist_km": 1.23
+      "dist_km": 1.23,
+      "lat": 40.71438,
+      "lon": -73.99568
      },
      {
       "name": "Twelfth Street Academy",
-      "dist_km": 2.48
+      "dist_km": 2.48,
+      "lat": 40.72955,
+      "lon": -73.98264
      },
      {
       "name": "Public School M188 The Island School",
-      "dist_km": 2.64
+      "dist_km": 2.64,
+      "lat": 40.7198,
+      "lon": -73.97749
      },
      {
       "name": "High School for Health Professions and Human Services",
       "dist_km": 2.66,
+      "lat": 40.73271,
+      "lon": -73.9826,
       "type": "Secondary"
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 6.79
+      "dist_km": 6.79,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -1700,30 +2112,42 @@
     "schools": [
      {
       "name": "MS 447",
-      "dist_km": 1.9
+      "dist_km": 1.9,
+      "lat": 40.68384,
+      "lon": -73.98057
      },
      {
       "name": "Public School 92",
-      "dist_km": 2.48
+      "dist_km": 2.48,
+      "lat": 40.65621,
+      "lon": -73.95403
      },
      {
       "name": "Saint Francis of Assisi Elementary School",
-      "dist_km": 2.67
+      "dist_km": 2.67,
+      "lat": 40.66147,
+      "lon": -73.94909
      },
      {
       "name": "Erasmus Hall High School",
       "dist_km": 2.78,
+      "lat": 40.64955,
+      "lon": -73.95597,
       "type": "Secondary"
      },
      {
       "name": "Holy Cross School",
-      "dist_km": 2.88
+      "dist_km": 2.88,
+      "lat": 40.6501,
+      "lon": -73.95375
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 11.09
+      "dist_km": 11.09,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -1787,30 +2211,42 @@
     "schools": [
      {
       "name": "Twelfth Street Academy",
-      "dist_km": 0.33
+      "dist_km": 0.33,
+      "lat": 40.72955,
+      "lon": -73.98264
      },
      {
       "name": "High School for Health Professions and Human Services",
       "dist_km": 0.67,
+      "lat": 40.73271,
+      "lon": -73.9826,
       "type": "Secondary"
      },
      {
       "name": "Public School M188 The Island School",
-      "dist_km": 0.84
+      "dist_km": 0.84,
+      "lat": 40.7198,
+      "lon": -73.97749
      },
      {
       "name": "Public School 14",
-      "dist_km": 1.62
+      "dist_km": 1.62,
+      "lat": 40.74121,
+      "lon": -73.98014
      },
      {
       "name": "Yung Wing Elementary",
-      "dist_km": 1.82
+      "dist_km": 1.82,
+      "lat": 40.71438,
+      "lon": -73.99568
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 4.79
+      "dist_km": 4.79,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -1874,30 +2310,42 @@
     "schools": [
      {
       "name": "United Nations School",
-      "dist_km": 2.05
+      "dist_km": 2.05,
+      "lat": 40.7551,
+      "lon": -73.96597
      },
      {
       "name": "Holy Family School",
-      "dist_km": 2.38
+      "dist_km": 2.38,
+      "lat": 40.72344,
+      "lon": -73.95403
      },
      {
       "name": "Public School 18",
-      "dist_km": 2.59
+      "dist_km": 2.59,
+      "lat": 40.75677,
+      "lon": -73.97236
      },
      {
       "name": "Public School 14",
-      "dist_km": 2.85
+      "dist_km": 2.85,
+      "lat": 40.74121,
+      "lon": -73.98014
      },
      {
       "name": "High School for Health Professions and Human Services",
       "dist_km": 3.29,
+      "lat": 40.73271,
+      "lon": -73.9826,
       "type": "Secondary"
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 2.4
+      "dist_km": 2.4,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -1957,30 +2405,42 @@
     "schools": [
      {
       "name": "United Nations School",
-      "dist_km": 0.55
+      "dist_km": 0.55,
+      "lat": 40.7551,
+      "lon": -73.96597
      },
      {
       "name": "Public School 18",
-      "dist_km": 1.07
+      "dist_km": 1.07,
+      "lat": 40.75677,
+      "lon": -73.97236
      },
      {
       "name": "Public School 190",
-      "dist_km": 2.15
+      "dist_km": 2.15,
+      "lat": 40.77511,
+      "lon": -73.9527
      },
      {
       "name": "Public School 14",
-      "dist_km": 2.42
+      "dist_km": 2.42,
+      "lat": 40.74121,
+      "lon": -73.98014
      },
      {
       "name": "Pharmacy College",
       "dist_km": 2.78,
+      "lat": 40.77538,
+      "lon": -73.98125,
       "type": "Secondary"
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 1.0
+      "dist_km": 1.0,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -2041,35 +2501,49 @@
      {
       "name": "Junior High School 99",
       "dist_km": 1.88,
+      "lat": 40.78518,
+      "lon": -73.94202,
       "type": "Secondary"
      },
      {
       "name": "Public School 190",
-      "dist_km": 1.99
+      "dist_km": 1.99,
+      "lat": 40.77511,
+      "lon": -73.9527
      },
      {
       "name": "Public School 168",
-      "dist_km": 2.25
+      "dist_km": 2.25,
+      "lat": 40.78909,
+      "lon": -73.94195
      },
      {
       "name": "Public School 198",
-      "dist_km": 2.32
+      "dist_km": 2.32,
+      "lat": 40.785,
+      "lon": -73.9503
      },
      {
       "name": "Public School 185 Early Childhood Discovery and Design",
-      "dist_km": 3.46
+      "dist_km": 3.46,
+      "lat": 40.79836,
+      "lon": -73.94945
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 2.24
+      "dist_km": 2.24,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ],
     "hospitals": [
      {
       "name": "Montefiore Medical Center West Campus Moses Division Hospital",
-      "dist_km": 12.82
+      "dist_km": 12.82,
+      "lat": 40.88009,
+      "lon": -73.87984
      }
     ]
    },
@@ -2129,30 +2603,42 @@
     "schools": [
      {
       "name": "Public School 152",
-      "dist_km": 1.24
+      "dist_km": 1.24,
+      "lat": 40.63256,
+      "lon": -73.95455
      },
      {
       "name": "Erasmus Hall High School",
       "dist_km": 1.75,
+      "lat": 40.64955,
+      "lon": -73.95597,
       "type": "Secondary"
      },
      {
       "name": "Hebrew Academy",
-      "dist_km": 1.79
+      "dist_km": 1.79,
+      "lat": 40.63316,
+      "lon": -73.98875
      },
      {
       "name": "Public School 246",
-      "dist_km": 1.8
+      "dist_km": 1.8,
+      "lat": 40.64816,
+      "lon": -73.95292
      },
      {
       "name": "Holy Cross School",
-      "dist_km": 1.91
+      "dist_km": 1.91,
+      "lat": 40.6501,
+      "lon": -73.95375
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 14.27
+      "dist_km": 14.27,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -2216,31 +2702,43 @@
     "schools": [
      {
       "name": "Beth Jacob Seminary",
-      "dist_km": 0.83
+      "dist_km": 0.83,
+      "lat": 40.70979,
+      "lon": -73.96348
      },
      {
       "name": "Holy Family School",
-      "dist_km": 1.01
+      "dist_km": 1.01,
+      "lat": 40.72344,
+      "lon": -73.95403
      },
      {
       "name": "All Saints High School",
       "dist_km": 1.76,
+      "lat": 40.70122,
+      "lon": -73.94451,
       "type": "Secondary"
      },
      {
       "name": "New York Community College of Applied Arts and Sciences",
       "dist_km": 1.81,
+      "lat": 40.69844,
+      "lon": -73.95958,
       "type": "Secondary"
      },
      {
       "name": "Public School M188 The Island School",
-      "dist_km": 1.91
+      "dist_km": 1.91,
+      "lat": 40.7198,
+      "lon": -73.97749
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 5.59
+      "dist_km": 5.59,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -2300,30 +2798,42 @@
     "schools": [
      {
       "name": "Public School 11",
-      "dist_km": 0.15
+      "dist_km": 0.15,
+      "lat": 40.74427,
+      "lon": -74.00042
      },
      {
       "name": "General Theological Seminary",
-      "dist_km": 0.25
+      "dist_km": 0.25,
+      "lat": 40.74528,
+      "lon": -74.00472
      },
      {
       "name": "Public School 14",
-      "dist_km": 1.88
+      "dist_km": 1.88,
+      "lat": 40.74121,
+      "lon": -73.98014
      },
      {
       "name": "High School for Health Professions and Human Services",
       "dist_km": 2.12,
+      "lat": 40.73271,
+      "lon": -73.9826,
       "type": "Secondary"
      },
      {
       "name": "Twelfth Street Academy",
-      "dist_km": 2.37
+      "dist_km": 2.37,
+      "lat": 40.72955,
+      "lon": -73.98264
      }
     ],
     "universities": [
      {
       "name": "Weill Cornell Medical College",
-      "dist_km": 4.51
+      "dist_km": 4.51,
+      "lat": 40.76475,
+      "lon": -73.95491
      }
     ]
    },
@@ -2387,103 +2897,149 @@
     "schools": [
      {
       "name": "Brent Adult and Community Education Service",
-      "dist_km": 2.1
+      "dist_km": 2.1,
+      "lat": 51.5327,
+      "lon": -0.19836
      },
      {
       "name": "South Hampstead Education and Life-long Learning Centre",
-      "dist_km": 3.11
+      "dist_km": 3.11,
+      "lat": 51.53933,
+      "lon": -0.18225
      },
      {
       "name": "Montessori Center International",
-      "dist_km": 3.36
+      "dist_km": 3.36,
+      "lat": 51.51336,
+      "lon": -0.15238
      },
      {
       "name": "The Belsize Centre",
-      "dist_km": 4.3
+      "dist_km": 4.3,
+      "lat": 51.54847,
+      "lon": -0.17304
      },
      {
       "name": "London Study Centre",
-      "dist_km": 4.33
+      "dist_km": 4.33,
+      "lat": 51.47515,
+      "lon": -0.20647
      }
     ],
     "universities": [
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 5.78
+      "dist_km": 5.78,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "University of the Arts London",
-      "dist_km": 5.83
+      "dist_km": 5.83,
+      "lat": 51.52109,
+      "lon": -0.11748
      },
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 7.07
+      "dist_km": 7.07,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Chicago Booth School of Business",
-      "dist_km": 7.65
+      "dist_km": 7.65,
+      "lat": 51.51626,
+      "lon": -0.09042
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 13.89
+      "dist_km": 13.89,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Chepstow Food & Wine",
-      "dist_km": 0.52
+      "dist_km": 0.52,
+      "lat": 51.51721,
+      "lon": -0.1956
      },
      {
       "name": "Z.Punjani Newsagents and American Food Store",
-      "dist_km": 0.66
+      "dist_km": 0.66,
+      "lat": 51.50816,
+      "lon": -0.20305
      },
      {
       "name": "Planet Organic",
-      "dist_km": 0.7
+      "dist_km": 0.7,
+      "lat": 51.51555,
+      "lon": -0.19115
      },
      {
       "name": "Notting Hill Farmers' Market",
-      "dist_km": 0.7
+      "dist_km": 0.7,
+      "lat": 51.50849,
+      "lon": -0.19563
      },
      {
       "name": "Shan Store",
-      "dist_km": 0.76
+      "dist_km": 0.76,
+      "lat": 51.52077,
+      "lon": -0.20066
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 5.11
+      "dist_km": 5.11,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 12.01
+      "dist_km": 12.01,
+      "lat": 51.42309,
+      "lon": -0.10707
      },
      {
       "name": "Priory Hospital",
-      "dist_km": 14.33
+      "dist_km": 14.33,
+      "lat": 51.63206,
+      "lon": -0.1183
      }
     ],
     "police": [
      {
       "name": "Parks Police",
-      "dist_km": 1.4
+      "dist_km": 1.4,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 4.18
+      "dist_km": 4.18,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "Park Police",
-      "dist_km": 4.5
+      "dist_km": 4.5,
+      "lat": 51.48077,
+      "lon": -0.16345
      },
      {
       "name": "British Transport Police",
-      "dist_km": 4.84
+      "dist_km": 4.84,
+      "lat": 51.52771,
+      "lon": -0.13457
      },
      {
       "name": "British Transport Police",
-      "dist_km": 6.36
+      "dist_km": 6.36,
+      "lat": 51.50245,
+      "lon": -0.1108
      }
     ]
    },
@@ -2548,104 +3104,150 @@
      {
       "name": "ICON College",
       "dist_km": 3.65,
+      "lat": 51.51552,
+      "lon": -0.06753,
       "type": "Secondary"
      },
      {
       "name": "Christ the King Sixth Form College",
       "dist_km": 4.66,
+      "lat": 51.46455,
+      "lon": -0.00251,
       "type": "Secondary"
      },
      {
       "name": "Alphabet House",
-      "dist_km": 5.36
+      "dist_km": 5.36,
+      "lat": 51.51097,
+      "lon": 0.05946
      },
      {
       "name": "The British School of Osteopathy",
-      "dist_km": 5.67
+      "dist_km": 5.67,
+      "lat": 51.50078,
+      "lon": -0.09892
      },
      {
       "name": "Islington Music Workshop",
-      "dist_km": 5.97
+      "dist_km": 5.97,
+      "lat": 51.52534,
+      "lon": -0.09748
      }
     ],
     "universities": [
      {
       "name": "University of Greenwich",
-      "dist_km": 2.65
+      "dist_km": 2.65,
+      "lat": 51.48254,
+      "lon": -0.00665
      },
      {
       "name": "University of Chicago Booth School of Business",
-      "dist_km": 5.2
+      "dist_km": 5.2,
+      "lat": 51.51626,
+      "lon": -0.09042
      },
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 6.01
+      "dist_km": 6.01,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 6.96
+      "dist_km": 6.96,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "University of the Arts London",
-      "dist_km": 7.14
+      "dist_km": 7.14,
+      "lat": 51.52109,
+      "lon": -0.11748
      }
     ],
     "shopping": [
      {
       "name": "Tesco Express",
-      "dist_km": 0.54
+      "dist_km": 0.54,
+      "lat": 51.5005,
+      "lon": -0.01732
      },
      {
       "name": "Docklands Halal Grocers",
-      "dist_km": 0.92
+      "dist_km": 0.92,
+      "lat": 51.49812,
+      "lon": -0.01098
      },
      {
       "name": "Tesco Express",
-      "dist_km": 1.03
+      "dist_km": 1.03,
+      "lat": 51.49628,
+      "lon": -0.01522
      },
      {
       "name": "Nisa Local",
-      "dist_km": 1.14
+      "dist_km": 1.14,
+      "lat": 51.49656,
+      "lon": -0.00915
      },
      {
       "name": "Docklands Trader",
-      "dist_km": 1.17
+      "dist_km": 1.17,
+      "lat": 51.50308,
+      "lon": -0.03382
      }
     ],
     "hospitals": [
      {
       "name": "Sloane Hospital",
-      "dist_km": 10.84
+      "dist_km": 10.84,
+      "lat": 51.4082,
+      "lon": -0.00454
      },
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 10.91
+      "dist_km": 10.91,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 11.06
+      "dist_km": 11.06,
+      "lat": 51.42309,
+      "lon": -0.10707
      }
     ],
     "police": [
      {
       "name": "British Transport Police",
-      "dist_km": 6.47
+      "dist_km": 6.47,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "British Transport Police",
-      "dist_km": 8.48
+      "dist_km": 8.48,
+      "lat": 51.52771,
+      "lon": -0.13457
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 9.07
+      "dist_km": 9.07,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "Ilford Police Station",
-      "dist_km": 9.09
+      "dist_km": 9.09,
+      "lat": 51.56014,
+      "lon": 0.08017
      },
      {
       "name": "Park Police",
-      "dist_km": 10.48
+      "dist_km": 10.48,
+      "lat": 51.48077,
+      "lon": -0.16345
      }
     ]
    },
@@ -2705,92 +3307,132 @@
     "schools": [
      {
       "name": "White Lion Centre",
-      "dist_km": 0.74
+      "dist_km": 0.74,
+      "lat": 51.53262,
+      "lon": -0.11053
      },
      {
       "name": "St. Aloysius' School Nursery",
-      "dist_km": 1.83
+      "dist_km": 1.83,
+      "lat": 51.53282,
+      "lon": -0.13196
      },
      {
       "name": "EC",
-      "dist_km": 2.77
+      "dist_km": 2.77,
+      "lat": 51.51619,
+      "lon": -0.12343
      },
      {
       "name": "Scott's College",
       "dist_km": 3.07,
+      "lat": 51.51615,
+      "lon": -0.13227,
       "type": "Secondary"
      },
      {
       "name": "Montessori Center International",
-      "dist_km": 4.22
+      "dist_km": 4.22,
+      "lat": 51.51336,
+      "lon": -0.15238
      }
     ],
     "universities": [
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 1.88
+      "dist_km": 1.88,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 9.38
+      "dist_km": 9.38,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Londis",
-      "dist_km": 0.06
+      "dist_km": 0.06,
+      "lat": 51.53889,
+      "lon": -0.10662
      },
      {
       "name": "S & S Stores",
-      "dist_km": 0.26
+      "dist_km": 0.26,
+      "lat": 51.54101,
+      "lon": -0.10546
      },
      {
       "name": "Sainsbury's Local",
-      "dist_km": 0.37
+      "dist_km": 0.37,
+      "lat": 51.53736,
+      "lon": -0.10268
      },
      {
       "name": "Arcrose Newsagent",
-      "dist_km": 0.42
+      "dist_km": 0.42,
+      "lat": 51.53554,
+      "lon": -0.10971
      },
      {
       "name": "Planet Organic",
-      "dist_km": 0.56
+      "dist_km": 0.56,
+      "lat": 51.53787,
+      "lon": -0.09948
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 8.37
+      "dist_km": 8.37,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "Priory Hospital",
-      "dist_km": 10.38
+      "dist_km": 10.38,
+      "lat": 51.63206,
+      "lon": -0.1183
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 12.89
+      "dist_km": 12.89,
+      "lat": 51.42309,
+      "lon": -0.10707
      }
     ],
     "police": [
      {
+      "name": "British Transport Police",
+      "dist_km": 2.26,
+      "lat": 51.52771,
+      "lon": -0.13457
+     },
+     {
       "name": "Albany Street Police Station",
-      "dist_km": 2.89
+      "dist_km": 2.89,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "British Transport Police",
-      "dist_km": 4.07
+      "dist_km": 4.07,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "Parks Police",
-      "dist_km": 7.86
+      "dist_km": 7.86,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Woodford Police Station",
-      "dist_km": 12.11
-     },
-     {
-      "name": "Streatham Police Station",
-      "dist_km": 12.18
+      "dist_km": 12.11,
+      "lat": 51.61184,
+      "lon": 0.02287
      }
     ]
    },
@@ -2850,91 +3492,131 @@
     "schools": [
      {
       "name": "White Lion Centre",
-      "dist_km": 2.41
+      "dist_km": 2.41,
+      "lat": 51.53262,
+      "lon": -0.11053
      },
      {
       "name": "EF International Language Center",
-      "dist_km": 2.98
+      "dist_km": 2.98,
+      "lat": 51.50504,
+      "lon": -0.10786
      },
      {
       "name": "The British School of Osteopathy",
-      "dist_km": 3.0
+      "dist_km": 3.0,
+      "lat": 51.50078,
+      "lon": -0.09892
      },
      {
       "name": "EC",
-      "dist_km": 3.26
+      "dist_km": 3.26,
+      "lat": 51.51619,
+      "lon": -0.12343
      },
      {
       "name": "St. Aloysius' School Nursery",
-      "dist_km": 3.83
+      "dist_km": 3.83,
+      "lat": 51.53282,
+      "lon": -0.13196
      }
     ],
     "universities": [
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 1.49
+      "dist_km": 1.49,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 6.81
+      "dist_km": 6.81,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Food & Wine",
-      "dist_km": 0.24
+      "dist_km": 0.24,
+      "lat": 51.52237,
+      "lon": -0.07818
      },
      {
       "name": "Virginia Supermarket",
-      "dist_km": 0.45
+      "dist_km": 0.45,
+      "lat": 51.52738,
+      "lon": -0.0738
      },
      {
       "name": "VB Stores",
-      "dist_km": 0.47
+      "dist_km": 0.47,
+      "lat": 51.52725,
+      "lon": -0.08347
      },
      {
       "name": "Mags & Fags",
-      "dist_km": 0.7
+      "dist_km": 0.7,
+      "lat": 51.53069,
+      "lon": -0.08005
      },
      {
       "name": "Co-op Food",
-      "dist_km": 0.86
+      "dist_km": 0.86,
+      "lat": 51.52561,
+      "lon": -0.09053
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 8.34
+      "dist_km": 8.34,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 11.45
+      "dist_km": 11.45,
+      "lat": 51.42309,
+      "lon": -0.10707
      },
      {
       "name": "Priory Hospital",
-      "dist_km": 12.28
+      "dist_km": 12.28,
+      "lat": 51.63206,
+      "lon": -0.1183
      }
     ],
     "police": [
      {
       "name": "British Transport Police",
-      "dist_km": 3.33
+      "dist_km": 3.33,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "British Transport Police",
-      "dist_km": 3.91
+      "dist_km": 3.91,
+      "lat": 51.52771,
+      "lon": -0.13457
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 4.55
+      "dist_km": 4.55,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "Parks Police",
-      "dist_km": 9.04
+      "dist_km": 9.04,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Streatham Police Station",
-      "dist_km": 11.06
+      "dist_km": 11.06,
+      "lat": 51.43034,
+      "lon": -0.12963
      }
     ]
    },
@@ -2994,111 +3676,161 @@
     "schools": [
      {
       "name": "Christian Education Centre",
-      "dist_km": 3.63
+      "dist_km": 3.63,
+      "lat": 51.43556,
+      "lon": -0.15873
      },
      {
       "name": "London Study Centre",
-      "dist_km": 6.11
+      "dist_km": 6.11,
+      "lat": 51.47515,
+      "lon": -0.20647
      },
      {
       "name": "Little Gems Nursery",
-      "dist_km": 6.67
+      "dist_km": 6.67,
+      "lat": 51.44864,
+      "lon": -0.12017
      },
      {
       "name": "Tolworth Junior School",
-      "dist_km": 7.39
+      "dist_km": 7.39,
+      "lat": 51.38207,
+      "lon": -0.29212
      },
      {
       "name": "St Andrew's and St Mark's CofE Junior School",
-      "dist_km": 7.58
+      "dist_km": 7.58,
+      "lat": 51.39536,
+      "lon": -0.30669
      }
     ],
     "universities": [
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 11.84
+      "dist_km": 11.84,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "Department of Geography",
-      "dist_km": 12.6
+      "dist_km": 12.6,
+      "lat": 51.52476,
+      "lon": -0.13479
      },
      {
       "name": "University of the Arts London",
-      "dist_km": 12.75
+      "dist_km": 12.75,
+      "lat": 51.52109,
+      "lon": -0.11748
      },
      {
       "name": "University of Chicago Booth School of Business",
-      "dist_km": 13.3
+      "dist_km": 13.3,
+      "lat": 51.51626,
+      "lon": -0.09042
      },
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 13.54
+      "dist_km": 13.54,
+      "lat": 51.52279,
+      "lon": -0.09968
      }
     ],
     "shopping": [
      {
       "name": "Sainsbury's Local",
-      "dist_km": 0.95
+      "dist_km": 0.95,
+      "lat": 51.41569,
+      "lon": -0.19319
      },
      {
       "name": "Co-op Food",
-      "dist_km": 1.32
+      "dist_km": 1.32,
+      "lat": 51.4094,
+      "lon": -0.21278
      },
      {
       "name": "Costcutter",
-      "dist_km": 1.9
+      "dist_km": 1.9,
+      "lat": 51.41782,
+      "lon": -0.17782
      },
      {
       "name": "Sainsbury's",
-      "dist_km": 2.08
+      "dist_km": 2.08,
+      "lat": 51.40294,
+      "lon": -0.19319
      },
      {
       "name": "Wimbledon Farmers' Market",
-      "dist_km": 2.12
+      "dist_km": 2.12,
+      "lat": 51.4384,
+      "lon": -0.19562
      }
     ],
     "hospitals": [
      {
       "name": "Chapel Orchard Day Surgery",
-      "dist_km": 3.07
+      "dist_km": 3.07,
+      "lat": 51.40205,
+      "lon": -0.17154
      },
      {
       "name": "Queen Mary's Childrens' Hospital",
-      "dist_km": 4.7
+      "dist_km": 4.7,
+      "lat": 51.3798,
+      "lon": -0.18484
      },
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 6.48
+      "dist_km": 6.48,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 6.79
+      "dist_km": 6.79,
+      "lat": 51.42309,
+      "lon": -0.10707
      },
      {
       "name": "Sloane Hospital",
-      "dist_km": 13.96
+      "dist_km": 13.96,
+      "lat": 51.4082,
+      "lon": -0.00454
      }
     ],
     "police": [
      {
       "name": "West Putney Ward Metropolitain Police",
-      "dist_km": 4.26
+      "dist_km": 4.26,
+      "lat": 51.45529,
+      "lon": -0.22958
      },
      {
       "name": "Streatham Police Station",
-      "dist_km": 5.34
+      "dist_km": 5.34,
+      "lat": 51.43034,
+      "lon": -0.12963
      },
      {
       "name": "Park Police",
-      "dist_km": 7.32
+      "dist_km": 7.32,
+      "lat": 51.48077,
+      "lon": -0.16345
      },
      {
       "name": "Parks Police",
-      "dist_km": 9.03
+      "dist_km": 9.03,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "British Transport Police",
-      "dist_km": 11.23
+      "dist_km": 11.23,
+      "lat": 51.50245,
+      "lon": -0.1108
      }
     ]
    },
@@ -3162,103 +3894,149 @@
     "schools": [
      {
       "name": "City & Guilds Of London Art School",
-      "dist_km": 3.21
+      "dist_km": 3.21,
+      "lat": 51.48735,
+      "lon": -0.10745
      },
      {
       "name": "Little Gems Nursery",
-      "dist_km": 3.62
+      "dist_km": 3.62,
+      "lat": 51.44864,
+      "lon": -0.12017
      },
      {
       "name": "London Study Centre",
-      "dist_km": 3.93
+      "dist_km": 3.93,
+      "lat": 51.47515,
+      "lon": -0.20647
      },
      {
       "name": "Montessori Center International",
-      "dist_km": 4.21
+      "dist_km": 4.21,
+      "lat": 51.51336,
+      "lon": -0.15238
      },
      {
       "name": "EF International Language Center",
-      "dist_km": 4.38
+      "dist_km": 4.38,
+      "lat": 51.50504,
+      "lon": -0.10786
      }
     ],
     "universities": [
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 4.6
+      "dist_km": 4.6,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "University of the Arts London",
-      "dist_km": 5.54
+      "dist_km": 5.54,
+      "lat": 51.52109,
+      "lon": -0.11748
      },
      {
       "name": "University of Chicago Booth School of Business",
-      "dist_km": 6.11
+      "dist_km": 6.11,
+      "lat": 51.51626,
+      "lon": -0.09042
      },
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 6.3
+      "dist_km": 6.3,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 9.94
+      "dist_km": 9.94,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Quick Stop Supermarket",
-      "dist_km": 0.9
+      "dist_km": 0.9,
+      "lat": 51.46936,
+      "lon": -0.14122
      },
      {
       "name": "AVN Convenience Store",
-      "dist_km": 0.98
+      "dist_km": 0.98,
+      "lat": 51.47081,
+      "lon": -0.13772
      },
      {
       "name": "Sainsbury's Local",
-      "dist_km": 1.01
+      "dist_km": 1.01,
+      "lat": 51.46643,
+      "lon": -0.15034
      },
      {
       "name": "Tesco Express",
-      "dist_km": 1.18
+      "dist_km": 1.18,
+      "lat": 51.47469,
+      "lon": -0.16669
      },
      {
       "name": "Raj News",
-      "dist_km": 1.21
+      "dist_km": 1.21,
+      "lat": 51.47477,
+      "lon": -0.13227
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 1.18
+      "dist_km": 1.18,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 6.53
+      "dist_km": 6.53,
+      "lat": 51.42309,
+      "lon": -0.10707
      },
      {
       "name": "Sloane Hospital",
-      "dist_km": 12.54
+      "dist_km": 12.54,
+      "lat": 51.4082,
+      "lon": -0.00454
      }
     ],
     "police": [
      {
       "name": "Park Police",
-      "dist_km": 1.12
+      "dist_km": 1.12,
+      "lat": 51.48077,
+      "lon": -0.16345
      },
      {
       "name": "British Transport Police",
-      "dist_km": 4.03
+      "dist_km": 4.03,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "Parks Police",
-      "dist_km": 4.71
+      "dist_km": 4.71,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Streatham Police Station",
-      "dist_km": 5.21
+      "dist_km": 5.21,
+      "lat": 51.43034,
+      "lon": -0.12963
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 5.69
+      "dist_km": 5.69,
+      "lat": 51.52655,
+      "lon": -0.14401
      }
     ]
    },
@@ -3322,92 +4100,132 @@
     "schools": [
      {
       "name": "White Lion Centre",
-      "dist_km": 3.4
+      "dist_km": 3.4,
+      "lat": 51.53262,
+      "lon": -0.11053
      },
      {
       "name": "St. Aloysius' School Nursery",
-      "dist_km": 4.82
+      "dist_km": 4.82,
+      "lat": 51.53282,
+      "lon": -0.13196
      },
      {
       "name": "EC",
-      "dist_km": 5.03
+      "dist_km": 5.03,
+      "lat": 51.51619,
+      "lon": -0.12343
      },
      {
       "name": "Scott's College",
       "dist_km": 5.54,
+      "lat": 51.51615,
+      "lon": -0.13227,
       "type": "Secondary"
      },
      {
       "name": "Montessori Center International",
-      "dist_km": 6.91
+      "dist_km": 6.91,
+      "lat": 51.51336,
+      "lon": -0.15238
      }
     ],
     "universities": [
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 3.27
+      "dist_km": 3.27,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 7.7
+      "dist_km": 7.7,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Prestige Supermarket",
-      "dist_km": 0.48
+      "dist_km": 0.48,
+      "lat": 51.54422,
+      "lon": -0.0697
      },
      {
       "name": "Dalston Local Store",
-      "dist_km": 0.72
+      "dist_km": 0.72,
+      "lat": 51.54611,
+      "lon": -0.07192
      },
      {
       "name": "Tesco Express",
-      "dist_km": 0.96
+      "dist_km": 0.96,
+      "lat": 51.53833,
+      "lon": -0.07642
      },
      {
       "name": "Lidl",
-      "dist_km": 1.52
+      "dist_km": 1.52,
+      "lat": 51.53298,
+      "lon": -0.08024
      },
      {
       "name": "Mags & Fags",
-      "dist_km": 1.69
+      "dist_km": 1.69,
+      "lat": 51.53069,
+      "lon": -0.08005
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 10.43
+      "dist_km": 10.43,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "Priory Hospital",
-      "dist_km": 10.7
+      "dist_km": 10.7,
+      "lat": 51.63206,
+      "lon": -0.1183
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 13.56
+      "dist_km": 13.56,
+      "lat": 51.42309,
+      "lon": -0.10707
      }
     ],
     "police": [
      {
       "name": "British Transport Police",
-      "dist_km": 5.47
+      "dist_km": 5.47,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 5.81
+      "dist_km": 5.81,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "Woodford Police Station",
-      "dist_km": 9.81
+      "dist_km": 9.81,
+      "lat": 51.61184,
+      "lon": 0.02287
      },
      {
       "name": "Ilford Police Station",
-      "dist_km": 10.16
+      "dist_km": 10.16,
+      "lat": 51.56014,
+      "lon": 0.08017
      },
      {
       "name": "Parks Police",
-      "dist_km": 10.67
+      "dist_km": 10.67,
+      "lat": 51.50142,
+      "lon": -0.20355
      }
     ]
    },
@@ -3471,96 +4289,138 @@
     "schools": [
      {
       "name": "City & Guilds Of London Art School",
-      "dist_km": 1.69
+      "dist_km": 1.69,
+      "lat": 51.48735,
+      "lon": -0.10745
      },
      {
       "name": "EF International Language Center",
-      "dist_km": 2.74
+      "dist_km": 2.74,
+      "lat": 51.50504,
+      "lon": -0.10786
      },
      {
       "name": "The British School of Osteopathy",
-      "dist_km": 2.84
+      "dist_km": 2.84,
+      "lat": 51.50078,
+      "lon": -0.09892
      },
      {
       "name": "UK College of English",
       "dist_km": 3.42,
+      "lat": 51.51611,
+      "lon": -0.13259,
       "type": "Secondary"
      },
      {
       "name": "Montessori Center International",
-      "dist_km": 3.42
+      "dist_km": 3.42,
+      "lat": 51.51336,
+      "lon": -0.15238
      }
     ],
     "universities": [
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 3.09
+      "dist_km": 3.09,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 4.71
+      "dist_km": 4.71,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 8.66
+      "dist_km": 8.66,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Tesco Express",
-      "dist_km": 0.4
+      "dist_km": 0.4,
+      "lat": 51.48499,
+      "lon": -0.12598
      },
      {
       "name": "Pimlico Grocery",
-      "dist_km": 0.64
+      "dist_km": 0.64,
+      "lat": 51.49096,
+      "lon": -0.13395
      },
      {
       "name": "Nisa Local",
-      "dist_km": 0.77
+      "dist_km": 0.77,
+      "lat": 51.49127,
+      "lon": -0.13754
      },
      {
       "name": "Friends Supermarket",
-      "dist_km": 0.77
+      "dist_km": 0.77,
+      "lat": 51.48777,
+      "lon": -0.14212
      },
      {
       "name": "Day 1",
-      "dist_km": 0.99
+      "dist_km": 0.99,
+      "lat": 51.47656,
+      "lon": -0.13057
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 2.75
+      "dist_km": 2.75,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 7.14
+      "dist_km": 7.14,
+      "lat": 51.42309,
+      "lon": -0.10707
      },
      {
       "name": "Sloane Hospital",
-      "dist_km": 12.3
+      "dist_km": 12.3,
+      "lat": 51.4082,
+      "lon": -0.00454
      }
     ],
     "police": [
      {
       "name": "British Transport Police",
-      "dist_km": 2.38
+      "dist_km": 2.38,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 4.65
+      "dist_km": 4.65,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "British Transport Police",
-      "dist_km": 4.71
+      "dist_km": 4.71,
+      "lat": 51.52771,
+      "lon": -0.13457
      },
      {
       "name": "Parks Police",
-      "dist_km": 5.28
+      "dist_km": 5.28,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Streatham Police Station",
-      "dist_km": 6.12
+      "dist_km": 6.12,
+      "lat": 51.43034,
+      "lon": -0.12963
      }
     ]
    },
@@ -3620,112 +4480,162 @@
     "schools": [
      {
       "name": "Hounslow Heath Junior School",
-      "dist_km": 5.68
+      "dist_km": 5.68,
+      "lat": 51.46733,
+      "lon": -0.38362
      },
      {
       "name": "London Study Centre",
-      "dist_km": 6.81
+      "dist_km": 6.81,
+      "lat": 51.47515,
+      "lon": -0.20647
      },
      {
       "name": "St Andrew's and St Mark's CofE Junior School",
-      "dist_km": 7.34
+      "dist_km": 7.34,
+      "lat": 51.39536,
+      "lon": -0.30669
      },
      {
       "name": "Alexander Cromwell College",
       "dist_km": 8.8,
+      "lat": 51.54042,
+      "lon": -0.30179,
       "type": "Secondary"
      },
      {
       "name": "Tolworth Junior School",
-      "dist_km": 8.84
+      "dist_km": 8.84,
+      "lat": 51.38207,
+      "lon": -0.29212
      }
     ],
     "universities": [
      {
       "name": "University of Wales Trinity Saint David London Campus",
-      "dist_km": 13.51
+      "dist_km": 13.51,
+      "lat": 51.47973,
+      "lon": -0.10939
      },
      {
       "name": "Department of Geography",
-      "dist_km": 13.57
+      "dist_km": 13.57,
+      "lat": 51.52476,
+      "lon": -0.13479
      },
      {
       "name": "UCL Centre for Medical Image Computing",
-      "dist_km": 13.62
+      "dist_km": 13.62,
+      "lat": 51.52278,
+      "lon": -0.13213
      },
      {
       "name": "The Courtauld Institute of Art",
-      "dist_km": 13.97
+      "dist_km": 13.97,
+      "lat": 51.51169,
+      "lon": -0.11744
      },
      {
       "name": "University of the Arts London",
-      "dist_km": 14.41
+      "dist_km": 14.41,
+      "lat": 51.52109,
+      "lon": -0.11748
      }
     ],
     "shopping": [
      {
       "name": "Sainsbury's Local",
-      "dist_km": 0.18
+      "dist_km": 0.18,
+      "lat": 51.46288,
+      "lon": -0.30219
      },
      {
       "name": "Co-op Food",
-      "dist_km": 1.94
+      "dist_km": 1.94,
+      "lat": 51.44958,
+      "lon": -0.32303
      },
      {
       "name": "Tesco Express",
-      "dist_km": 2.08
+      "dist_km": 2.08,
+      "lat": 51.47708,
+      "lon": -0.28608
      },
      {
       "name": "Waitrose & Partners",
-      "dist_km": 2.34
+      "dist_km": 2.34,
+      "lat": 51.44848,
+      "lon": -0.32896
      },
      {
       "name": "Twickenham Farmers' Market",
-      "dist_km": 2.61
+      "dist_km": 2.61,
+      "lat": 51.44635,
+      "lon": -0.33114
      }
     ],
     "hospitals": [
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 9.51
+      "dist_km": 9.51,
+      "lat": 51.47327,
+      "lon": -0.16632
      },
      {
       "name": "Chapel Orchard Day Surgery",
-      "dist_km": 11.2
+      "dist_km": 11.2,
+      "lat": 51.40205,
+      "lon": -0.17154
      },
      {
       "name": "Queen Mary's Childrens' Hospital",
-      "dist_km": 12.18
+      "dist_km": 12.18,
+      "lat": 51.3798,
+      "lon": -0.18484
      },
      {
       "name": "The Portland Hospital",
-      "dist_km": 12.92
+      "dist_km": 12.92,
+      "lat": 51.52247,
+      "lon": -0.14359
      },
      {
       "name": "British Home & Hospital for Incurables",
-      "dist_km": 14.18
+      "dist_km": 14.18,
+      "lat": 51.42309,
+      "lon": -0.10707
      }
     ],
     "police": [
      {
       "name": "West Putney Ward Metropolitain Police",
-      "dist_km": 5.08
+      "dist_km": 5.08,
+      "lat": 51.45529,
+      "lon": -0.22958
      },
      {
       "name": "Parks Police",
-      "dist_km": 8.16
+      "dist_km": 8.16,
+      "lat": 51.50142,
+      "lon": -0.20355
      },
      {
       "name": "Metropolitan Police",
-      "dist_km": 9.23
+      "dist_km": 9.23,
+      "lat": 51.5297,
+      "lon": -0.37768
      },
      {
       "name": "Park Police",
-      "dist_km": 9.85
+      "dist_km": 9.85,
+      "lat": 51.48077,
+      "lon": -0.16345
      },
      {
       "name": "Metropolitan Police ward office",
-      "dist_km": 10.74
+      "dist_km": 10.74,
+      "lat": 51.5489,
+      "lon": -0.36747
      }
     ]
    },
@@ -3789,88 +4699,126 @@
     "schools": [
      {
       "name": "White Lion Centre",
-      "dist_km": 3.52
+      "dist_km": 3.52,
+      "lat": 51.53262,
+      "lon": -0.11053
      },
      {
       "name": "St. Aloysius' School Nursery",
-      "dist_km": 4.43
+      "dist_km": 4.43,
+      "lat": 51.53282,
+      "lon": -0.13196
      },
      {
       "name": "EC",
-      "dist_km": 5.55
+      "dist_km": 5.55,
+      "lat": 51.51619,
+      "lon": -0.12343
      },
      {
       "name": "Scott's College",
       "dist_km": 5.87,
+      "lat": 51.51615,
+      "lon": -0.13227,
       "type": "Secondary"
      },
      {
       "name": "EF International Language Center",
-      "dist_km": 6.32
+      "dist_km": 6.32,
+      "lat": 51.50504,
+      "lon": -0.10786
      }
     ],
     "universities": [
      {
       "name": "St Bartholomew's and the Royal London School of Medicine and Dentistry",
-      "dist_km": 4.27
+      "dist_km": 4.27,
+      "lat": 51.52279,
+      "lon": -0.09968
      },
      {
       "name": "University of Greenwich",
-      "dist_km": 10.2
+      "dist_km": 10.2,
+      "lat": 51.48254,
+      "lon": -0.00665
      }
     ],
     "shopping": [
      {
       "name": "Düzce Supermarket",
-      "dist_km": 0.51
+      "dist_km": 0.51,
+      "lat": 51.55774,
+      "lon": -0.07903
      },
      {
       "name": "5 Sapphires",
-      "dist_km": 0.52
+      "dist_km": 0.52,
+      "lat": 51.56014,
+      "lon": -0.07782
      },
      {
       "name": "Whole Foods Market",
-      "dist_km": 0.73
+      "dist_km": 0.73,
+      "lat": 51.5622,
+      "lon": -0.07526
      },
      {
       "name": "Costcutter",
-      "dist_km": 0.74
+      "dist_km": 0.74,
+      "lat": 51.56284,
+      "lon": -0.09506
      },
      {
       "name": "Tesco Express",
-      "dist_km": 0.76
+      "dist_km": 0.76,
+      "lat": 51.55827,
+      "lon": -0.07468
      }
     ],
     "hospitals": [
      {
       "name": "Priory Hospital",
-      "dist_km": 8.32
+      "dist_km": 8.32,
+      "lat": 51.63206,
+      "lon": -0.1183
      },
      {
       "name": "Bridge Lane Health Centre",
-      "dist_km": 11.16
+      "dist_km": 11.16,
+      "lat": 51.47327,
+      "lon": -0.16632
      }
     ],
     "police": [
      {
       "name": "British Transport Police",
-      "dist_km": 4.96
+      "dist_km": 4.96,
+      "lat": 51.52771,
+      "lon": -0.13457
      },
      {
       "name": "Albany Street Police Station",
-      "dist_km": 5.51
+      "dist_km": 5.51,
+      "lat": 51.52655,
+      "lon": -0.14401
      },
      {
       "name": "British Transport Police",
-      "dist_km": 6.65
+      "dist_km": 6.65,
+      "lat": 51.50245,
+      "lon": -0.1108
      },
      {
       "name": "Woodford Police Station",
-      "dist_km": 9.43
+      "dist_km": 9.43,
+      "lat": 51.61184,
+      "lon": 0.02287
      },
      {
       "name": "Parks Police",
-      "dist_km": 10.46
+      "dist_km": 10.46,
+      "lat": 51.50142,
+      "lon": -0.20355
      }
     ]
    },
@@ -3934,92 +4882,132 @@
     "schools": [
      {
       "name": "Langports",
-      "dist_km": 3.14
+      "dist_km": 3.14,
+      "lat": -33.87081,
+      "lon": 151.19744
      },
      {
       "name": "English Language Company",
-      "dist_km": 3.22
+      "dist_km": 3.22,
+      "lat": -33.8735,
+      "lon": 151.20504
      },
      {
       "name": "Royal North Shore Hospital School",
-      "dist_km": 3.3
+      "dist_km": 3.3,
+      "lat": -33.82068,
+      "lon": 151.19079
      },
      {
       "name": "Australasia Academy",
-      "dist_km": 3.45
+      "dist_km": 3.45,
+      "lat": -33.87595,
+      "lon": 151.20863
      },
      {
       "name": "Bradfield College",
       "dist_km": 3.51,
+      "lat": -33.82117,
+      "lon": 151.18642,
       "type": "Secondary"
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 4.59
+      "dist_km": 4.59,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "EzyMart",
-      "dist_km": 0.24
+      "dist_km": 0.24,
+      "lat": -33.84346,
+      "lon": 151.21312
      },
      {
       "name": "Kay Corner",
-      "dist_km": 0.34
+      "dist_km": 0.34,
+      "lat": -33.84743,
+      "lon": 151.21356
      },
      {
       "name": "IGA",
-      "dist_km": 0.62
+      "dist_km": 0.62,
+      "lat": -33.84018,
+      "lon": 151.20783
      },
      {
       "name": "General Store",
-      "dist_km": 0.8
+      "dist_km": 0.8,
+      "lat": -33.84166,
+      "lon": 151.21898
      },
      {
       "name": "Woolworths Metro",
-      "dist_km": 0.9
+      "dist_km": 0.9,
+      "lat": -33.83773,
+      "lon": 151.20695
      }
     ],
     "hospitals": [
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 3.54
+      "dist_km": 3.54,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 5.75
+      "dist_km": 5.75,
+      "lat": -33.83521,
+      "lon": 151.15013
      },
      {
       "name": "Bondi Junction Private Hospital",
-      "dist_km": 6.15
+      "dist_km": 6.15,
+      "lat": -33.89239,
+      "lon": 151.24573
      },
      {
       "name": "Thomas Walker Hospital",
-      "dist_km": 10.58
+      "dist_km": 10.58,
+      "lat": -33.83253,
+      "lon": 151.0977
      }
     ],
     "police": [
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 3.14
+      "dist_km": 3.14,
+      "lat": -33.87258,
+      "lon": 151.21881
      },
      {
       "name": "Mosman Police Station",
-      "dist_km": 3.34
+      "dist_km": 3.34,
+      "lat": -33.83274,
+      "lon": 151.24427
      },
      {
       "name": "Balmain Police Station",
-      "dist_km": 3.4
+      "dist_km": 3.4,
+      "lat": -33.85647,
+      "lon": 151.17721
      },
      {
       "name": "Day Street Police Station",
-      "dist_km": 3.45
+      "dist_km": 3.45,
+      "lat": -33.8754,
+      "lon": 151.2039
      },
      {
       "name": "Rose Bay Police Station",
-      "dist_km": 4.71
+      "dist_km": 4.71,
+      "lat": -33.86982,
+      "lon": 151.25268
      }
     ]
    },
@@ -4071,70 +5059,100 @@
     "schools": [
      {
       "name": "St Andrews Cathedral School",
-      "dist_km": 2.29
+      "dist_km": 2.29,
+      "lat": -33.8738,
+      "lon": 151.20559
      },
      {
       "name": "School of Mathematics & Statistics",
-      "dist_km": 3.74
+      "dist_km": 3.74,
+      "lat": -33.91793,
+      "lon": 151.23064
      },
      {
       "name": "La Fiesta Dance Factory",
-      "dist_km": 5.27
+      "dist_km": 5.27,
+      "lat": -33.88803,
+      "lon": 151.17002
      },
      {
       "name": "Saint Patrick’s Catholic Primary School",
       "dist_km": 12.54,
+      "lat": -33.96791,
+      "lon": 151.13554,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 2.76
+      "dist_km": 2.76,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "Woolworths Metro",
-      "dist_km": 0.27
+      "dist_km": 0.27,
+      "lat": -33.88212,
+      "lon": 151.22784
      },
      {
       "name": "Aldi",
-      "dist_km": 0.98
+      "dist_km": 0.98,
+      "lat": -33.87926,
+      "lon": 151.23551
      },
      {
       "name": "Woolworths Metro",
-      "dist_km": 1.02
+      "dist_km": 1.02,
+      "lat": -33.88331,
+      "lon": 151.21594
      },
      {
       "name": "Coles",
-      "dist_km": 1.12
+      "dist_km": 1.12,
+      "lat": -33.87506,
+      "lon": 151.22243
      },
      {
       "name": "Harris Farm Markets",
-      "dist_km": 1.29
+      "dist_km": 1.29,
+      "lat": -33.87305,
+      "lon": 151.22391
      }
     ],
     "police": [
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 1.51
+      "dist_km": 1.51,
+      "lat": -33.87258,
+      "lon": 151.21881
      },
      {
       "name": "Day Street Police Station",
-      "dist_km": 2.35
+      "dist_km": 2.35,
+      "lat": -33.8754,
+      "lon": 151.2039
      },
      {
       "name": "Rose Bay Police Station",
-      "dist_km": 2.88
+      "dist_km": 2.88,
+      "lat": -33.86982,
+      "lon": 151.25268
      },
      {
       "name": "Randwick Police Station",
-      "dist_km": 3.42
+      "dist_km": 3.42,
+      "lat": -33.91286,
+      "lon": 151.24106
      },
      {
       "name": "Mascot Police Station",
-      "dist_km": 5.3
+      "dist_km": 5.3,
+      "lat": -33.92455,
+      "lon": 151.19595
      }
     ]
    },
@@ -4187,108 +5205,156 @@
      {
       "name": "Northern Beaches Secondary College Freshwater Senior Campus",
       "dist_km": 3.34,
+      "lat": -33.76767,
+      "lon": 151.27992,
       "type": "Secondary"
      },
      {
       "name": "Northern Beaches Secondary College Manly Campus",
       "dist_km": 3.9,
+      "lat": -33.7624,
+      "lon": 151.28136,
       "type": "Secondary"
      },
      {
       "name": "Dee Why Public School",
-      "dist_km": 5.42
+      "dist_km": 5.42,
+      "lat": -33.74855,
+      "lon": 151.28677
      },
      {
       "name": "Narraweena Public School",
-      "dist_km": 5.47
+      "dist_km": 5.47,
+      "lat": -33.74919,
+      "lon": 151.27364
      },
      {
       "name": "Pittwater House",
-      "dist_km": 6.33
+      "dist_km": 6.33,
+      "lat": -33.74055,
+      "lon": 151.29146
      }
     ],
     "universities": [
      {
       "name": "International College of Management",
-      "dist_km": 1.04
+      "dist_km": 1.04,
+      "lat": -33.80389,
+      "lon": 151.29396
      },
      {
       "name": "Charles Stuart University - Student Central",
-      "dist_km": 8.44
+      "dist_km": 8.44,
+      "lat": -33.83729,
+      "lon": 151.20822
      },
      {
       "name": "Swinburne Open Education",
-      "dist_km": 11.93
+      "dist_km": 11.93,
+      "lat": -33.88369,
+      "lon": 151.20923
      },
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 12.71
+      "dist_km": 12.71,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "Manly Arts & Craft Market",
-      "dist_km": 0.11
+      "dist_km": 0.11,
+      "lat": -33.79725,
+      "lon": 151.28714
      },
      {
       "name": "Coles Local",
-      "dist_km": 0.19
+      "dist_km": 0.19,
+      "lat": -33.79896,
+      "lon": 151.28528
      },
      {
       "name": "Stillitano's Corner",
-      "dist_km": 0.73
+      "dist_km": 0.73,
+      "lat": -33.79074,
+      "lon": 151.28504
      },
      {
       "name": "Foodworks Fairlight",
-      "dist_km": 0.87
+      "dist_km": 0.87,
+      "lat": -33.79585,
+      "lon": 151.27667
      },
      {
       "name": "Coles",
-      "dist_km": 2.03
+      "dist_km": 2.03,
+      "lat": -33.79352,
+      "lon": 151.26446
      }
     ],
     "hospitals": [
      {
       "name": "Double Bay Day Hospital",
-      "dist_km": 9.74
+      "dist_km": 9.74,
+      "lat": -33.8776,
+      "lon": 151.2438
      },
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 10.19
+      "dist_km": 10.19,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Bondi Junction Private Hospital",
-      "dist_km": 11.21
+      "dist_km": 11.21,
+      "lat": -33.89239,
+      "lon": 151.24573
      },
      {
       "name": "Mona Vale Hospital",
-      "dist_km": 12.57
+      "dist_km": 12.57,
+      "lat": -33.68564,
+      "lon": 151.30698
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 13.23
+      "dist_km": 13.23,
+      "lat": -33.83521,
+      "lon": 151.15013
      }
     ],
     "police": [
      {
       "name": "Mosman Police Station",
-      "dist_km": 5.51
+      "dist_km": 5.51,
+      "lat": -33.83274,
+      "lon": 151.24427
      },
      {
       "name": "Rose Bay Police Station",
-      "dist_km": 8.63
+      "dist_km": 8.63,
+      "lat": -33.86982,
+      "lon": 151.25268
      },
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 10.41
+      "dist_km": 10.41,
+      "lat": -33.87258,
+      "lon": 151.21881
      },
      {
       "name": "Surry Hills Police Centre",
-      "dist_km": 11.34
+      "dist_km": 11.34,
+      "lat": -33.87972,
+      "lon": 151.21358
      },
      {
       "name": "Day Street Police Station",
-      "dist_km": 11.52
+      "dist_km": 11.52,
+      "lat": -33.8754,
+      "lon": 151.2039
      }
     ]
    },
@@ -4344,84 +5410,120 @@
     "schools": [
      {
       "name": "EDU-Kingdom School",
-      "dist_km": 0.76
+      "dist_km": 0.76,
+      "lat": -33.80746,
+      "lon": 151.00709
      },
      {
       "name": "The Childrens Hospital School",
-      "dist_km": 1.65
+      "dist_km": 1.65,
+      "lat": -33.80224,
+      "lon": 150.99183
      },
      {
       "name": "Parramatta Marist High School",
       "dist_km": 1.93,
+      "lat": -33.8055,
+      "lon": 150.98487,
       "type": "Secondary"
      },
      {
       "name": "Karningul School",
-      "dist_km": 8.15
+      "dist_km": 8.15,
+      "lat": -33.88489,
+      "lon": 151.02376
      },
      {
       "name": "Victoria Ave community precinct",
-      "dist_km": 8.3
+      "dist_km": 8.3,
+      "lat": -33.84797,
+      "lon": 151.08322
      }
     ],
     "universities": [
      {
       "name": "University of Wollongong, Liverpool Campus",
-      "dist_km": 14.08
+      "dist_km": 14.08,
+      "lat": -33.92244,
+      "lon": 150.9255
      }
     ],
     "shopping": [
      {
       "name": "EzyMart",
-      "dist_km": 0.31
+      "dist_km": 0.31,
+      "lat": -33.815,
+      "lon": 151.00626
      },
      {
       "name": "Woolworths Parramatta Station (Metro)",
-      "dist_km": 0.45
+      "dist_km": 0.45,
+      "lat": -33.81758,
+      "lon": 151.00448
      },
      {
       "name": "Coles",
-      "dist_km": 0.56
+      "dist_km": 0.56,
+      "lat": -33.8177,
+      "lon": 150.9999
      },
      {
       "name": "Coles Parramatta North",
-      "dist_km": 0.65
+      "dist_km": 0.65,
+      "lat": -33.80837,
+      "lon": 151.00645
      },
      {
       "name": "Day Day Market",
-      "dist_km": 1.22
+      "dist_km": 1.22,
+      "lat": -33.81181,
+      "lon": 151.01642
      }
     ],
     "hospitals": [
      {
       "name": "Thomas Walker Hospital",
-      "dist_km": 8.96
+      "dist_km": 8.96,
+      "lat": -33.83253,
+      "lon": 151.0977
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 13.77
+      "dist_km": 13.77,
+      "lat": -33.83521,
+      "lon": 151.15013
      }
     ],
     "police": [
      {
       "name": "Granville Police Station",
-      "dist_km": 2.13
+      "dist_km": 2.13,
+      "lat": -33.83214,
+      "lon": 151.00939
      },
      {
       "name": "Wentworth Police Station",
-      "dist_km": 2.98
+      "dist_km": 2.98,
+      "lat": -33.80645,
+      "lon": 150.97235
      },
      {
       "name": "Merrylands Police Station",
-      "dist_km": 2.98
+      "dist_km": 2.98,
+      "lat": -33.83742,
+      "lon": 150.98865
      },
      {
       "name": "Ermington Police Station",
-      "dist_km": 4.58
+      "dist_km": 4.58,
+      "lat": -33.81527,
+      "lon": 151.05299
      },
      {
       "name": "Auburn Police Station",
-      "dist_km": 5.18
+      "dist_km": 5.18,
+      "lat": -33.85288,
+      "lon": 151.03357
      }
     ]
    },
@@ -4474,99 +5576,143 @@
      {
       "name": "Bradfield College",
       "dist_km": 2.69,
+      "lat": -33.82117,
+      "lon": 151.18642,
       "type": "Secondary"
      },
      {
       "name": "Royal North Shore Hospital School",
-      "dist_km": 2.73
+      "dist_km": 2.73,
+      "lat": -33.82068,
+      "lon": 151.19079
      },
      {
       "name": "Arndell School",
-      "dist_km": 5.23
+      "dist_km": 5.23,
+      "lat": -33.80391,
+      "lon": 151.12561
      },
      {
       "name": "Faculty of Business & Economics",
-      "dist_km": 6.53
+      "dist_km": 6.53,
+      "lat": -33.77581,
+      "lon": 151.11594
      },
      {
       "name": "Northern Sydney IEC",
-      "dist_km": 6.65
+      "dist_km": 6.65,
+      "lat": -33.73895,
+      "lon": 151.16618
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 9.81
+      "dist_km": 9.81,
+      "lat": -33.88457,
+      "lon": 151.19705
      },
      {
       "name": "Swinburne Open Education",
-      "dist_km": 9.94
+      "dist_km": 9.94,
+      "lat": -33.88369,
+      "lon": 151.20923
      }
     ],
     "shopping": [
      {
       "name": "Miracle Supermarket Mandarin Center",
-      "dist_km": 0.07
+      "dist_km": 0.07,
+      "lat": -33.79785,
+      "lon": 151.18217
      },
      {
       "name": "Cheong Kwan Jiang Chatswood Brand Store",
-      "dist_km": 0.16
+      "dist_km": 0.16,
+      "lat": -33.79595,
+      "lon": 151.18223
      },
      {
       "name": "EzyMart",
-      "dist_km": 0.19
+      "dist_km": 0.19,
+      "lat": -33.79745,
+      "lon": 151.17971
      },
      {
       "name": "Yonghui Supermarket",
-      "dist_km": 0.27
+      "dist_km": 0.27,
+      "lat": -33.79688,
+      "lon": 151.18454
      },
      {
       "name": "Asian City",
-      "dist_km": 0.43
+      "dist_km": 0.43,
+      "lat": -33.79535,
+      "lon": 151.18571
      }
     ],
     "hospitals": [
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 5.13
+      "dist_km": 5.13,
+      "lat": -33.83521,
+      "lon": 151.15013
      },
      {
       "name": "Thomas Walker Hospital",
-      "dist_km": 8.69
+      "dist_km": 8.69,
+      "lat": -33.83253,
+      "lon": 151.0977
      },
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 9.5
+      "dist_km": 9.5,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Women and Babies Services",
-      "dist_km": 10.16
+      "dist_km": 10.16,
+      "lat": -33.88868,
+      "lon": 151.18335
      },
      {
       "name": "Double Bay Day Hospital",
-      "dist_km": 10.61
+      "dist_km": 10.61,
+      "lat": -33.8776,
+      "lon": 151.2438
      }
     ],
     "police": [
      {
       "name": "Gordon Police Station",
-      "dist_km": 5.51
+      "dist_km": 5.51,
+      "lat": -33.75407,
+      "lon": 151.15246
      },
      {
       "name": "Gladesville Police Station",
-      "dist_km": 6.55
+      "dist_km": 6.55,
+      "lat": -33.83676,
+      "lon": 151.12906
      },
      {
       "name": "Balmain Police Station",
-      "dist_km": 6.59
+      "dist_km": 6.59,
+      "lat": -33.85647,
+      "lon": 151.17721
      },
      {
       "name": "Campus Security",
-      "dist_km": 6.75
+      "dist_km": 6.75,
+      "lat": -33.77622,
+      "lon": 151.11316
      },
      {
       "name": "Mosman Police Station",
-      "dist_km": 7.0
+      "dist_km": 7.0,
+      "lat": -33.83274,
+      "lon": 151.24427
      }
     ]
    },
@@ -4618,92 +5764,132 @@
     "schools": [
      {
       "name": "La Fiesta Dance Factory",
-      "dist_km": 1.3
+      "dist_km": 1.3,
+      "lat": -33.88803,
+      "lon": 151.17002
      },
      {
       "name": "English Language Company",
-      "dist_km": 3.56
+      "dist_km": 3.56,
+      "lat": -33.8735,
+      "lon": 151.20504
      },
      {
       "name": "School of Mathematics & Statistics",
-      "dist_km": 5.31
+      "dist_km": 5.31,
+      "lat": -33.91793,
+      "lon": 151.23064
      },
      {
       "name": "Saint Patrick’s Catholic Primary School",
       "dist_km": 8.83,
+      "lat": -33.96791,
+      "lon": 151.13554,
       "type": "Primary"
      },
      {
       "name": "Victoria Ave community precinct",
-      "dist_km": 10.39
+      "dist_km": 10.39,
+      "lat": -33.84797,
+      "lon": 151.08322
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 2.18
+      "dist_km": 2.18,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "IGA",
-      "dist_km": 0.2
+      "dist_km": 0.2,
+      "lat": -33.89597,
+      "lon": 151.18057
      },
      {
       "name": "QE Foodstores",
-      "dist_km": 0.32
+      "dist_km": 0.32,
+      "lat": -33.89995,
+      "lon": 151.17824
      },
      {
       "name": "4 Ways Mixed Business",
-      "dist_km": 0.33
+      "dist_km": 0.33,
+      "lat": -33.89565,
+      "lon": 151.17575
      },
      {
       "name": "Family Mart",
-      "dist_km": 0.4
+      "dist_km": 0.4,
+      "lat": -33.89488,
+      "lon": 151.18231
      },
      {
       "name": "The Deli Erskineville",
-      "dist_km": 0.55
+      "dist_km": 0.55,
+      "lat": -33.89955,
+      "lon": 151.18413
      }
     ],
     "hospitals": [
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 5.04
+      "dist_km": 5.04,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Bondi Junction Private Hospital",
-      "dist_km": 6.19
+      "dist_km": 6.19,
+      "lat": -33.89239,
+      "lon": 151.24573
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 7.38
+      "dist_km": 7.38,
+      "lat": -33.83521,
+      "lon": 151.15013
      },
      {
       "name": "Thomas Walker Hospital",
-      "dist_km": 10.38
+      "dist_km": 10.38,
+      "lat": -33.83253,
+      "lon": 151.0977
      }
     ],
     "police": [
      {
       "name": "Day Street Police Station",
-      "dist_km": 3.34
+      "dist_km": 3.34,
+      "lat": -33.8754,
+      "lon": 151.2039
      },
      {
       "name": "Mascot Police Station",
-      "dist_km": 3.43
+      "dist_km": 3.43,
+      "lat": -33.92455,
+      "lon": 151.19595
      },
      {
       "name": "Australian Federal Police (Sydney Airport)",
-      "dist_km": 4.44
+      "dist_km": 4.44,
+      "lat": -33.93538,
+      "lon": 151.16529
      },
      {
       "name": "Balmain Police Station",
-      "dist_km": 4.52
+      "dist_km": 4.52,
+      "lat": -33.85647,
+      "lon": 151.17721
      },
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 4.58
+      "dist_km": 4.58,
+      "lat": -33.87258,
+      "lon": 151.21881
      }
     ]
    },
@@ -4755,88 +5941,126 @@
     "schools": [
      {
       "name": "Sydney Childrens Hospital School",
-      "dist_km": 3.01
+      "dist_km": 3.01,
+      "lat": -33.91762,
+      "lon": 151.23866
      },
      {
       "name": "School of Mathematics & Statistics",
-      "dist_km": 3.33
+      "dist_km": 3.33,
+      "lat": -33.91793,
+      "lon": 151.23064
      },
      {
       "name": "Taylors College",
       "dist_km": 3.94,
+      "lat": -33.90268,
+      "lon": 151.20749,
       "type": "Secondary"
      },
      {
       "name": "Australasia Academy",
-      "dist_km": 4.04
+      "dist_km": 4.04,
+      "lat": -33.87595,
+      "lon": 151.20863
      },
      {
       "name": "ABILITY Education",
-      "dist_km": 4.24
+      "dist_km": 4.24,
+      "lat": -33.88196,
+      "lon": 151.20367
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 4.78
+      "dist_km": 4.78,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "Coles",
-      "dist_km": 0.15
+      "dist_km": 0.15,
+      "lat": -33.893,
+      "lon": 151.24824
      },
      {
       "name": "Coles",
-      "dist_km": 0.29
+      "dist_km": 0.29,
+      "lat": -33.89298,
+      "lon": 151.25083
      },
      {
       "name": "Just Organics Fruit & Veg",
-      "dist_km": 0.41
+      "dist_km": 0.41,
+      "lat": -33.89063,
+      "lon": 151.24384
      },
      {
       "name": "Simon Johnson Providore",
-      "dist_km": 1.22
+      "dist_km": 1.22,
+      "lat": -33.88894,
+      "lon": 151.23527
      },
      {
       "name": "Food Store",
-      "dist_km": 1.33
+      "dist_km": 1.33,
+      "lat": -33.89383,
+      "lon": 151.26228
      }
     ],
     "hospitals": [
      {
       "name": "Bondi Junction Private Hospital",
-      "dist_km": 0.23
+      "dist_km": 0.23,
+      "lat": -33.89239,
+      "lon": 151.24573
      },
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 2.8
+      "dist_km": 2.8,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 11.01
+      "dist_km": 11.01,
+      "lat": -33.83521,
+      "lon": 151.15013
      }
     ],
     "police": [
      {
       "name": "Randwick Police Station",
-      "dist_km": 2.44
+      "dist_km": 2.44,
+      "lat": -33.91286,
+      "lon": 151.24106
      },
      {
       "name": "Rose Bay Police Station",
-      "dist_km": 2.47
+      "dist_km": 2.47,
+      "lat": -33.86982,
+      "lon": 151.25268
      },
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 3.44
+      "dist_km": 3.44,
+      "lat": -33.87258,
+      "lon": 151.21881
      },
      {
       "name": "Day Street Police Station",
-      "dist_km": 4.46
+      "dist_km": 4.46,
+      "lat": -33.8754,
+      "lon": 151.2039
      },
      {
       "name": "Mascot Police Station",
-      "dist_km": 6.04
+      "dist_km": 6.04,
+      "lat": -33.92455,
+      "lon": 151.19595
      }
     ]
    },
@@ -4888,91 +6112,131 @@
     "schools": [
      {
       "name": "Ryde Swim School",
-      "dist_km": 1.17
+      "dist_km": 1.17,
+      "lat": -33.80698,
+      "lon": 151.10676
      },
      {
       "name": "Rivendell School",
-      "dist_km": 1.76
+      "dist_km": 1.76,
+      "lat": -33.83224,
+      "lon": 151.09805
      },
      {
       "name": "Arndell School",
-      "dist_km": 2.6
+      "dist_km": 2.6,
+      "lat": -33.80391,
+      "lon": 151.12561
      },
      {
       "name": "Victoria Ave community precinct",
-      "dist_km": 3.88
+      "dist_km": 3.88,
+      "lat": -33.84797,
+      "lon": 151.08322
      },
      {
       "name": "Faculty of Arts",
-      "dist_km": 4.73
+      "dist_km": 4.73,
+      "lat": -33.7749,
+      "lon": 151.11089
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 11.56
+      "dist_km": 11.56,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "Aldi",
-      "dist_km": 0.55
+      "dist_km": 0.55,
+      "lat": -33.81307,
+      "lon": 151.10603
      },
      {
       "name": "Daily Life Asian Market",
-      "dist_km": 0.87
+      "dist_km": 0.87,
+      "lat": -33.81682,
+      "lon": 151.09269
      },
      {
       "name": "IGA",
-      "dist_km": 1.11
+      "dist_km": 1.11,
+      "lat": -33.81839,
+      "lon": 151.09026
      },
      {
       "name": "Manila Mart",
-      "dist_km": 1.47
+      "dist_km": 1.47,
+      "lat": -33.80739,
+      "lon": 151.09089
      },
      {
       "name": "Rhodes Mini-Mart and Café",
-      "dist_km": 1.53
+      "dist_km": 1.53,
+      "lat": -33.82399,
+      "lon": 151.08798
      }
     ],
     "hospitals": [
      {
       "name": "Thomas Walker Hospital",
-      "dist_km": 1.8
+      "dist_km": 1.8,
+      "lat": -33.83253,
+      "lon": 151.0977
      },
      {
       "name": "Hunters Hill Private Hospital",
-      "dist_km": 4.89
+      "dist_km": 4.89,
+      "lat": -33.83521,
+      "lon": 151.15013
      },
      {
       "name": "Saint Luke's Private Hospital",
-      "dist_km": 13.12
+      "dist_km": 13.12,
+      "lat": -33.87436,
+      "lon": 151.22612
      },
      {
       "name": "Mount Wilga Private Hospital",
-      "dist_km": 13.9
+      "dist_km": 13.9,
+      "lat": -33.69201,
+      "lon": 151.0929
      }
     ],
     "police": [
      {
       "name": "Gladesville Police Station",
-      "dist_km": 3.34
+      "dist_km": 3.34,
+      "lat": -33.83676,
+      "lon": 151.12906
      },
      {
       "name": "Eastwood Police Station",
-      "dist_km": 3.42
+      "dist_km": 3.42,
+      "lat": -33.79007,
+      "lon": 151.08374
      },
      {
       "name": "Ermington Police Station",
-      "dist_km": 4.54
+      "dist_km": 4.54,
+      "lat": -33.81527,
+      "lon": 151.05299
      },
      {
       "name": "Campus Security",
-      "dist_km": 4.63
+      "dist_km": 4.63,
+      "lat": -33.77622,
+      "lon": 151.11316
      },
      {
       "name": "Strathfield Police Station",
-      "dist_km": 6.28
+      "dist_km": 6.28,
+      "lat": -33.87285,
+      "lon": 151.09383
      }
     ]
    },
@@ -5025,80 +6289,114 @@
      {
       "name": "Maria Regina Primary School",
       "dist_km": 2.29,
+      "lat": -33.63339,
+      "lon": 151.33003,
       "type": "Primary"
      },
      {
       "name": "Barrenjoey High School",
       "dist_km": 2.44,
+      "lat": -33.63117,
+      "lon": 151.33391,
       "type": "Secondary"
      },
      {
       "name": "Avalon Public School",
-      "dist_km": 2.57
+      "dist_km": 2.57,
+      "lat": -33.63938,
+      "lon": 151.32672
      },
      {
       "name": "Bilgola Plateau Public School",
-      "dist_km": 2.64
+      "dist_km": 2.64,
+      "lat": -33.64402,
+      "lon": 151.31339
      },
      {
       "name": "St Luke's Grammar School Bayview Campus",
-      "dist_km": 4.42
+      "dist_km": 4.42,
+      "lat": -33.65792,
+      "lon": 151.29529
      }
     ],
     "universities": [
      {
       "name": "UNSW Cowan Field Station",
-      "dist_km": 14.69
+      "dist_km": 14.69,
+      "lat": -33.59098,
+      "lon": 151.15628
      }
     ],
     "shopping": [
      {
       "name": "Friendly Grocer",
-      "dist_km": 2.32
+      "dist_km": 2.32,
+      "lat": -33.62743,
+      "lon": 151.33452
      },
      {
       "name": "Village Plaza",
-      "dist_km": 2.38
+      "dist_km": 2.38,
+      "lat": -33.63579,
+      "lon": 151.32869
      },
      {
       "name": "Lolly Beach",
-      "dist_km": 2.51
+      "dist_km": 2.51,
+      "lat": -33.64251,
+      "lon": 151.31632
      },
      {
       "name": "IGA Local Grocer",
-      "dist_km": 2.93
+      "dist_km": 2.93,
+      "lat": -33.64668,
+      "lon": 151.31336
      }
     ],
     "hospitals": [
      {
       "name": "Arcadia Pittwater Private Hospital",
-      "dist_km": 6.69
+      "dist_km": 6.69,
+      "lat": -33.677,
+      "lon": 151.28633
      },
      {
       "name": "Mona Vale Hospital",
-      "dist_km": 7.26
+      "dist_km": 7.26,
+      "lat": -33.68564,
+      "lon": 151.30698
      },
      {
       "name": "Wyvern Private Hospital",
-      "dist_km": 11.21
+      "dist_km": 11.21,
+      "lat": -33.68785,
+      "lon": 151.22095
      }
     ],
     "police": [
      {
       "name": "Broken Bay Water Police",
-      "dist_km": 3.99
+      "dist_km": 3.99,
+      "lat": -33.64587,
+      "lon": 151.28049
      },
      {
       "name": "Mona Vale Police Station",
-      "dist_km": 6.83
+      "dist_km": 6.83,
+      "lat": -33.68145,
+      "lon": 151.30261
      },
      {
       "name": "Dee Why Police Station",
-      "dist_km": 14.87
+      "dist_km": 14.87,
+      "lat": -33.75244,
+      "lon": 151.28537
      },
      {
       "name": "Woy Woy Police Station",
-      "dist_km": 14.93
+      "dist_km": 14.93,
+      "lat": -33.48661,
+      "lon": 151.32491
      }
     ]
    },
@@ -5150,70 +6448,100 @@
     "schools": [
      {
       "name": "St Andrews Cathedral School",
-      "dist_km": 1.58
+      "dist_km": 1.58,
+      "lat": -33.8738,
+      "lon": 151.20559
      },
      {
       "name": "La Fiesta Dance Factory",
-      "dist_km": 3.79
+      "dist_km": 3.79,
+      "lat": -33.88803,
+      "lon": 151.17002
      },
      {
       "name": "School of Mathematics & Statistics",
-      "dist_km": 3.85
+      "dist_km": 3.85,
+      "lat": -33.91793,
+      "lon": 151.23064
      },
      {
       "name": "Saint Patrick’s Catholic Primary School",
       "dist_km": 11.36,
+      "lat": -33.96791,
+      "lon": 151.13554,
       "type": "Primary"
      }
     ],
     "universities": [
      {
       "name": "University of Notre Dame Australia",
-      "dist_km": 1.33
+      "dist_km": 1.33,
+      "lat": -33.88457,
+      "lon": 151.19705
      }
     ],
     "shopping": [
      {
       "name": "Chalmers Convenience Store",
-      "dist_km": 0.5
+      "dist_km": 0.5,
+      "lat": -33.88938,
+      "lon": 151.20631
      },
      {
       "name": "Woolworths Metro",
-      "dist_km": 0.63
+      "dist_km": 0.63,
+      "lat": -33.88331,
+      "lon": 151.21594
      },
      {
       "name": "EzyMart",
-      "dist_km": 0.84
+      "dist_km": 0.84,
+      "lat": -33.88153,
+      "lon": 151.20521
      },
      {
       "name": "Woolworths",
-      "dist_km": 0.99
+      "dist_km": 0.99,
+      "lat": -33.8946,
+      "lon": 151.20491
      },
      {
       "name": "7-Eleven",
-      "dist_km": 1.0
+      "dist_km": 1.0,
+      "lat": -33.87956,
+      "lon": 151.20557
      }
     ],
     "police": [
      {
       "name": "Day Street Police Station",
-      "dist_km": 1.48
+      "dist_km": 1.48,
+      "lat": -33.8754,
+      "lon": 151.2039
      },
      {
       "name": "Woolloomooloo Police Station",
-      "dist_km": 1.78
+      "dist_km": 1.78,
+      "lat": -33.87258,
+      "lon": 151.21881
      },
      {
       "name": "Randwick Police Station",
-      "dist_km": 3.97
+      "dist_km": 3.97,
+      "lat": -33.91286,
+      "lon": 151.24106
      },
      {
       "name": "Rose Bay Police Station",
-      "dist_km": 4.3
+      "dist_km": 4.3,
+      "lat": -33.86982,
+      "lon": 151.25268
      },
      {
       "name": "Mascot Police Station",
-      "dist_km": 4.37
+      "dist_km": 4.37,
+      "lat": -33.92455,
+      "lon": 151.19595
      }
     ]
    },

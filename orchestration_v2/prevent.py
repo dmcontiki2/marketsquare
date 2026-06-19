@@ -88,6 +88,47 @@ def guards(ms):
     return out
 
 
+def guard_demo_pois(demo):
+    """G-POI: every demo property amenity must be geographically real.
+    Recomputes haversine(listing, poi.lat/lon) and checks it is within the OSM query
+    radius and that the stored dist_km matches the truth. Catches the POI-CONTAM bug
+    (wrong-city POIs / fabricated distances) automatically on every nightly run.
+    Demo POIs carry lat/lon precisely so this check is possible; if they don't, the
+    data is a legacy hand-seed and is failed as unverifiable."""
+    import math as _m
+    def _hav(a,b,c,d):
+        R=6371.0;p1,p2=_m.radians(a),_m.radians(c);dp,dl=_m.radians(c-a),_m.radians(d-b)
+        x=_m.sin(dp/2)**2+_m.cos(p1)*_m.cos(p2)*_m.sin(dl/2)**2
+        return R*2*_m.atan2(_m.sqrt(x),_m.sqrt(1-x))
+    if not demo or demo.get("_err"):
+        return {"id":"G-POI","kind":"guard","protects":"POI-CONTAM-18JUN","fixed_in":"S140",
+                "desc":"demo amenities are geographically real (true-distance verified)",
+                "status":"SKIP","detail":"demo-listings unavailable: %s"%(demo.get("_err") if demo else "no source")}
+    RAD=16.0; TOL=0.35; bad=[]; npoi=0
+    for l in demo.get("listings",[]):
+        if (l.get("cat") or "").lower()!="property" or l.get("id")=="ph_property": continue
+        llat,llon=l.get("listing_lat"),l.get("listing_lng")
+        p=l.get("nearby_pois") or {}
+        if isinstance(p,str):
+            try: p=json.loads(p)
+            except Exception: p={}
+        if "transit" in p: bad.append("%s legacy 'transit' key"%l.get("id"))
+        for cat,items in p.items():
+            for it in items:
+                npoi+=1
+                if "lat" not in it or "lon" not in it: bad.append("%s/%s %r no coords"%(l.get("id"),cat,it.get("name"))); continue
+                if not(llat and llon): continue
+                t=_hav(llat,llon,it["lat"],it["lon"])
+                if t>RAD: bad.append("%s/%s %r %.0fkm away"%(l.get("id"),cat,it.get("name"),t))
+                elif it.get("dist_km") is not None and abs(it["dist_km"]-t)>TOL:
+                    bad.append("%s/%s %r dist %s!=%.1f"%(l.get("id"),cat,it.get("name"),it["dist_km"],t))
+    ok=not bad
+    return {"id":"G-POI","kind":"guard","protects":"POI-CONTAM-18JUN","fixed_in":"S140",
+            "desc":"demo amenities are geographically real (true-distance verified)",
+            "status":"PASS" if ok else "FAIL",
+            "detail":("%d POIs verified, all real"%npoi) if ok else ("%d issue(s): "%len(bad))+"; ".join(bad[:6])}
+
+
 def monitor_images(demo, limit):
     if not demo or demo.get("_err"):
         return {"id": "M-IMG", "kind": "monitor", "status": "SKIP",
@@ -121,7 +162,9 @@ def main():
 
     ms = open(a.ms, encoding="utf-8", errors="replace").read()
     checks = guards(ms)
-    checks.append(monitor_images(load_demo(a.demo_listings), a.img_limit))
+    _demo = load_demo(a.demo_listings)
+    checks.append(guard_demo_pois(_demo))
+    checks.append(monitor_images(_demo, a.img_limit))
     fails = [c for c in checks if c["status"] == "FAIL"]
 
     report = {"schema": "prevent-v1", "generated_at": now(), "ms": a.ms,

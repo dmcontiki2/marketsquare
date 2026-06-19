@@ -273,3 +273,58 @@ the audio check.
 
 **Verify/deploy:** guard PASS pre-deploy; server backup `demo_listings.json.bak-poifix-*`; scp md5 parity `87adc709…`; BEA restart active /health v1.3.1; CF purged; public `https://trustsquare.co/demo-listings` confirms Bela-Bela shows real local schools, zero Pretoria contamination, 40/40 heritage links intact. Local backup `demo_listings.json.bak-poirebuild-*`.
 **Cost model impact:** none — demo data + $0 OSM queries (no API key, public mirrors).
+
+---
+
+## POI-AIRTIGHT-18JUN · Demo POI integrity made fully automated (David-directed hardening)
+**Stage:** DONE — coords retained, guard upgraded to true-distance, wired into 3 layers, proven both ways, deployed + live-verified 18 Jun 2026.
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David: "I want the fully automated method"). Follow-on to POI-CONTAM-18JUN.
+
+**Why the earlier guard wasn't enough:** the first guard only caught GROSS impossibilities (>16/31km) because POI coords were stripped — it could miss a plausible-but-wrong entry (a real-sounding school typed at a fabricated short distance). And it only ran at deploy time, on David's machine.
+
+**Hardening (3 independent layers, no money cost — OSM is free/$0):**
+1. **Coords retained.** `scripts/regen_pois.py` (now the documented CANONICAL generator — "never hand-edit POIs, run this") keeps each POI's `lat/lon` (rounded 5dp). FEA ignores them (renders name/type/dist_km only — verified in `renderCards`), so invisible to users. All 40 properties regenerated; 664 POIs now carry coords. File 348KB→416KB.
+2. **Guard upgraded to ground-truth.** `scripts/validate_demo_pois.py` now recomputes haversine(listing, poi) for EVERY POI: CHECK A (within 16km), CHECK B (stored dist_km matches truth ±0.35km), CHECK C (coords present, else unverifiable→fail), CHECK D (no legacy 'transit'). Proven: PASS on fixed data (664 verified); on the contaminated backup FAILs with 747 issues; on a synthetic SUBTLE injection it catches both a wrong-coord "1.0km" school (true 99.6km) AND a distance-typo (stored 0.3 vs true 2.31) — the exact gap the old guard missed.
+3. **Automated runs.** (a) Deploy gate `[3e-pre]` blocks a bad file from shipping. (b) New **G-POI guard in the nightly Prevent harness** (`orchestration_v2/prevent.py guard_demo_pois()`) re-verifies all POIs every night with zero tokens; a FAIL is written as a Detect-schema finding that re-enters the orchestration loop. Tested end-to-end: PASS on good data, FAIL (with offender list) on contaminated.
+
+**Verify/deploy:** guard PASS; server backup `demo_listings.json.bak-poicoords-*`; scp md5 parity `b8830350…`; BEA restart active /health v1.3.1; CF purged; public endpoint confirms Bela-Bela real schools with stored==true distances (0.4/0.41, 0.6/0.55, 1.5/1.52…), coords present live.
+**Answer to "is the code now fixed to not have this in future":** yes — the data is generated-not-hand-typed, every entry is truth-verified, and three independent layers (deploy gate + nightly guard + canonical generator) keep it that way.
+**Cost model impact:** none — OSM Overpass is free (no key, public mirrors); guard is zero-token deterministic Python.
+
+
+## 2026-06-18 (4) — Dub voice corrected: female -> South African MALE
+The TTS dub used a female en-GB voice (gTTS), wrong for the male on-camera seller — most
+obvious on the payoff line. Re-dubbed C1/C2/payoff with edge-tts en-ZA-LukeNeural (SA male).
+Lines verified present (small Vosk model mis-hears connected speech e.g. 'card'->'god',
+'writes your advert'->'right sir edward'; confirmed phonetically correct at 0.8x).
+Deployed video ?v=20260618f, ms.js v=185, FINAL md5 5494a1de... Public ms.js?v=185 confirmed
+serving ?v=20260618f. NOTE: a browser may hold the prior ms.js in local HTTP cache for one
+load — hard refresh (Ctrl+Shift+R) clears it; new visitors are unaffected.
+
+
+## 2026-06-18 (5) — Wrong card FIXED by compositing the real card (Flow can't render it)
+ROOT CAUSE of the persistent 'wrong card': Flow NEVER renders the real Veteran Bodyguard —
+every snap generation invents a fake look-alike card (garbled art/text). No amount of
+regenerating fixes this. FIX: composited the real production-kit/cast/card_bodyguard.jpg as an
+overlay onto the snap clip (auto-cropped, rounded corners, ~162x228, +4deg tilt, pinned at
+x=92 y=520 for the full 8s while he holds it up). Kept the male SA-voice dub. Re-stitched,
+deployed ?v=20260618g / ms.js v=186 / FINAL md5 6efb7666. Verified IN-APP at 0:14: real
+Bodyguard card visible in hand.
+LESSON: for any specific real object/card/logo that must appear exactly, do NOT rely on Flow —
+composite the real asset over the clip.
+Re the female voice at this moment: confirmed it's the on-screen girlfriend's 'Try TrustSquare'
+in the HOOK (kept by David's choice); the snap clip itself is 100% the male voice.
+
+---
+
+## VIDEO-VOICE-18JUN · Collectables tutor — revert to original voice (David-requested)
+**Stage:** DONE — original voice restored, card overlay preserved, deployed + live-verified 18 Jun 2026.
+**Opened+closed:** 18 Jun 2026 · **Owner:** Claude (David: the afternoon female dub's accent was wrong — "1970s poor-Afrikaner-hillbilly"; restore the original).
+
+**Clarification first:** Claude does not generate or hear audio — the voice was never Claude's. It came from the AI video generator's spoken track plus dubbed audio layers spliced onto the clips. So this was a track-swap, not a re-recording.
+
+**What happened:** clip audio history (collectables clips c1-snap/c2-typing/c4-payoff): original AI voice (02:37 .bak) → a morning dub (03:33 .predub) → an afternoon **female dub** (13:44 .femdub) which became the live voice. David wanted the original back.
+
+**Fix (surgical — preserved the visual card):** A 17:02 "card" overlay had been burned into the served video AFTER the plain FINAL, so a naive rebuild from original clips would have dropped it. Instead: rebuilt an ORIGINAL-voice audio track from the restored clips (c1/c2 ← 02:37 .bak; c4 ← earliest 03:46 .predub, pre-female-dub; c3-hook never dubbed) in the exact 9-segment assembly order, then **muxed that audio onto the SERVED carded video with `-c:v copy`** — video stream verified byte-identical (card kept), audio swapped to original. 57.2s preserved.
+**Deploy:** video → `/var/www/marketsquare/static/videos/collectables-advert-howto.mp4` (md5 `d77b9be5…` local==server==live-through-CDN); ms.js video cache-key bumped `v=20260618g→h`; ms.js shipped (md5 parity); CF purged. Backups: clips `*.femdub-current-*`, served `videos/*.femdub-*` + server `*.femdub-bak`, FINAL `*.femdub-*`.
+**Cost model impact:** none — media asset swap.

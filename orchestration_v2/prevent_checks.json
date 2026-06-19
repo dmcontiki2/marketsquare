@@ -1,10 +1,10 @@
 {
   "schema": "prevent-v1",
-  "generated_at": "2026-06-05T09:07:12Z",
-  "ms": "/var/www/marketsquare/static/ms.js",
+  "generated_at": "2026-06-18T05:01:36Z",
+  "ms": "ms.js",
   "summary": {
-    "guards": 3,
-    "guards_pass": 3,
+    "guards": 5,
+    "guards_pass": 5,
     "guards_fail": 0,
     "monitors": 1
   },
@@ -37,15 +37,33 @@
       "detail": "9 card-site poka-yokes present (floor 4)"
     },
     {
+      "id": "G-PUBLISH",
+      "kind": "guard",
+      "protects": "GUIDED-PUBLISH-1",
+      "fixed_in": "S138/S139",
+      "desc": "guided listings can reach live (publish wiring + go-live-before-exit guard)",
+      "status": "PASS",
+      "detail": "dashPublish wiring + go-live-before-exit handoff present"
+    },
+    {
+      "id": "G-POI",
+      "kind": "guard",
+      "protects": "POI-CONTAM-18JUN",
+      "fixed_in": "S140",
+      "desc": "demo amenities are geographically real (true-distance verified)",
+      "status": "PASS",
+      "detail": "664 POIs verified, all real"
+    },
+    {
       "id": "M-IMG",
       "kind": "monitor",
       "status": "ALERT",
-      "checked": 30,
+      "checked": 498,
       "total_gallery_urls": 498,
-      "dead": 3,
+      "dead": 39,
       "transient": 0,
-      "ok": 27,
-      "detail": "3/30 sampled gallery URLs DEAD (gentle); 27 ok, 0 transient; 498 gallery URLs total"
+      "ok": 459,
+      "detail": "39/498 sampled gallery URLs DEAD (gentle); 459 ok, 0 transient; 498 gallery URLs total"
     }
   ]
 }
