@@ -3617,14 +3617,28 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div style="color:var(--text-3);font-size:13px;padding:8px 0;">Loading…</div>
       </div>
 
-      <!-- Transaction history -->
-      <div class="ms-section-lbl" style="margin-top:4px;">Transaction history</div>
-      <div id="billing-tx-list" style="margin-bottom:8px;">
-        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
-      </div>
-      <div id="billing-tx-more" style="display:none;text-align:center;padding:4px 0 16px;">
-        <button onclick="loadBillingTxMore()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:'Syne',sans-serif;">Load more</button>
-      </div>
+      <!-- Transaction history (collapsible — collapsed by default) -->
+      <style>
+        details#billing-tx-details{margin:0 0 8px;}
+        details#billing-tx-details > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 6px 2px;-webkit-tap-highlight-color:transparent;}
+        details#billing-tx-details > summary::-webkit-details-marker{display:none;}
+        details#billing-tx-details > summary::marker{content:"";}
+        details#billing-tx-details > summary .ms-section-lbl{margin:0;}
+        details#billing-tx-details .ms-tx-chev{flex-shrink:0;color:var(--text-3);transition:transform .18s ease;}
+        details#billing-tx-details[open] .ms-tx-chev{transform:rotate(180deg);}
+      </style>
+      <details id="billing-tx-details">
+        <summary>
+          <div class="ms-section-lbl">Transaction history</div>
+          <svg class="ms-tx-chev" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div id="billing-tx-list" style="margin-bottom:8px;">
+          <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading…</div>
+        </div>
+        <div id="billing-tx-more" style="display:none;text-align:center;padding:4px 0 16px;">
+          <button onclick="loadBillingTxMore()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:'Syne',sans-serif;">Load more</button>
+        </div>
+      </details>
 
       <!-- Divider -->
       <div style="border-top:1px solid var(--border);margin:4px 0 20px;"></div>
