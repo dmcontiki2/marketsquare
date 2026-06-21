@@ -202,15 +202,34 @@ def test_surfaces(root: Path):
                     f"AI dry-run toggle default: {'ON — replays fixtures, $0' if checked else 'OFF — every run bills tokens + Tuppence!'}"))
     gm = root / "CityLauncher" / "scraper" / "sources" / "google_maps.py"
     if gm.exists():
-        out.append((WARN, "CityLauncher google_maps.py: Places API is PAID when GOOGLE_MAPS_API_KEY is set "
-                          "— unset the key for test runs; the Playwright fallback is $0 (the incident path)"))
+        # COST risk only when a LIVE key is actually present (Places API bills per call).
+        # Unset or commented => $0 Playwright fallback, i.e. the incident path is closed.
+        # Static + $0: check the process env and any committed .env under CityLauncher.
+        key_re = re.compile(r"^[ \t]*GOOGLE_MAPS_API_KEY[ \t]*=[ \t]*(\S+)", re.M)
+        live = "process env" if os.getenv("GOOGLE_MAPS_API_KEY") else ""
+        if not live:
+            for envf in (root / "CityLauncher").rglob(".env*"):
+                if any(d in envf.parts for d in SKIP_DIRS):
+                    continue
+                mk = key_re.search(read(envf))
+                if mk and mk.group(1).strip(' "\'') not in ("", "''", '""'):
+                    live = str(envf.relative_to(root))
+                    break
+        if live:
+            out.append((WARN, f"CityLauncher google_maps.py: GOOGLE_MAPS_API_KEY is SET ({live}) — paid Places "
+                              "API will BILL. Unset it for test runs; the Playwright fallback is $0 (the incident path)."))
+        else:
+            out.append((OK, "CityLauncher google_maps.py: GOOGLE_MAPS_API_KEY unset — $0 Playwright fallback "
+                            "active; paid Places API not reachable (the incident path is closed)."))
     out.append((INFO, "Cost-bearing surfaces for live testing: /ai/run (Tuppence + Sonnet tokens), "
                       "/advert-agent/market-note (Haiku), /listings/draft-from-photo (Haiku, template-fallback), "
                       "/listings/photo orientation (Haiku vision), Paystack init (test keys = $0)"))
     out.append((INFO, "Qualifying rule: ONE paid live run per feature; scenario testing uses dry-run "
                       "fixtures or unset ANTHROPIC_API_KEY (all flows fail open to $0 paths)"))
-    out.append((WARN, "Ceilings live in DB (ai_spend_config); ceiling 0 = OFF. Before any test day: "
-                      "set daily_user/platform ceilings low (e.g. $1/$5) — verify via /admin/ai-spend/summary"))
+    out.append((INFO, "Ceilings live in DB (ai_spend_config); ceiling 0 = OFF. Before any test day set "
+                      "daily_user/platform ceilings low (e.g. $1/$5) and verify via /admin/ai-spend/summary. "
+                      "Authoritative check: live_spend() flags CRITICAL if the platform ceiling is 0/unset when "
+                      "MS_BEA_URL+MS_API_KEY are set — a static $0 sweep cannot read the DB itself."))
     return out
 
 # ── 6 · cost-workbook drift (P2) ─────────────────────────────────────────────

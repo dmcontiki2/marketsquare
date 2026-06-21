@@ -11,6 +11,7 @@ MUTED=HexColor('#5B6470'); WHITE=HexColor('#FFFFFF'); LINEC=HexColor('#E2E5EA')
 DARKSUB=HexColor('#C7D2E3'); BODY=HexColor('#374151'); GREEN=HexColor('#065F46')
 BLEED=3*mm
 A1W,A1H=594*mm,841*mm; A2W,A2H=420*mm,594*mm
+SAMPLE_RUN_MODEL = "claude-sonnet-4-6"  # cost-ok: marketing copy names the model that produced the published sample reports; not a runtime call site
 P='/tmp/pitch/photos/'; OUT='/tmp/pitch/out/'
 import os; os.makedirs(OUT,exist_ok=True)
 import qrcode
@@ -291,7 +292,7 @@ REPORTS=[
   body='“Vintage MTG Lot: 12 Old-School Rares — Revised, Alliances & More.”\nCalling all old-school Magic collectors and Vintage/Legacy players — a curated batch of 12 genuine MTG rares from the most beloved sets of the 1990s: white-bordered Revised Edition (1994), Homelands (1995), Alliances and Visions (1996–97), into Urza’s Destiny (1999). Every card English-language and sleeve-stored, most showing only light play wear consistent with age.',
   body_lines=8,
   highlight=('The AI caught a pricing-data error','One source listed Veteran Bodyguard at $300; the report flagged it as a data anomaly and priced honestly at R46–R93 — evidence-based by canon, even when a bigger number was available.'),
-  honesty='REAL RUN · claude-sonnet-4-6 · 104k input tokens · 12 web searches · $0.5514 actual cost · delivered 7 Jun 2026.'),
+  honesty=f'REAL RUN · {SAMPLE_RUN_MODEL} · 104k input tokens · 12 web searches · $0.5514 actual cost · delivered 7 Jun 2026.'),
  dict(file='TrustSquare_A2_Report_Heritage_Tour_DRAFT.pdf',accent=HexColor('#0F6E56'),
   title='Heritage Site Tour Planner',params='Kruger National Park road trip · Pretoria · 5 days · 2 adults · 5T ($10)',
   price='5T · $10',srcchip=('REPLAY OF A REAL DELIVERY',(NAVY,GOLDBG)),
@@ -306,7 +307,7 @@ REPORTS=[
   body='Fuel ~R1,800 · N4 tolls ~R600 · Night 1 Graskop escarpment R4,000–R6,500 · Nights 2–4 Hazyview lodge R9,000–R21,000 · Kruger conservation fees R536 (SA citizens) or R2,408 (international) · Meals R2,100–R4,200 · Panorama Route entries R500–R1,000 · Optional guided game drive R1,500–R4,000.\nEvery figure marked (est.) and sourced; the in-app version renders the full interactive route map with waypoints.',
   body_lines=8,
   highlight=('Map-first by contract','The v1.2 delivery contract requires waypoints with every tour — the app renders the live route map; a map-less delivery is treated as a failed run and never charges.'),
-  honesty='Replayed from the last REAL delivery (API $0 replay) · model claude-sonnet-4-6 · original run server-side with live web search.'),
+  honesty=f'Replayed from the last REAL delivery (API $0 replay) · model {SAMPLE_RUN_MODEL} · original run server-side with live web search.'),
  dict(file='TrustSquare_A2_Report_Retirement_Planner_DRAFT.pdf',accent=HexColor('#1E3A5F'),
   title='Retirement Relocation Planner',params='UK couple, late 60s → Muizenberg, Cape Town · 5T ($10)',
   price='5T · $10',srcchip=('AUTHORED SAMPLE',(MUTED,ICE)),

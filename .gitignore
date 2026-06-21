@@ -127,3 +127,5 @@ Kronberg/
 *.bak-2*
 *.bak-*
 *.s*bak
+# Funnycard auto-backups (e.g. video.mp4.funnycard-bak-<timestamp>) — transient, often large media
+*funnycard-bak*

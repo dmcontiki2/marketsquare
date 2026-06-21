@@ -40,11 +40,16 @@ FAST_VISION = "fast_vision"      # Haiku-class vision
 REASON = "reason"                # Sonnet-class reasoning (text)
 REASON_VISION = "reason_vision"  # Sonnet-class vision
 
+# Sonnet-class model ids, named so the cost sweep records them as justified
+# constants (P1: same Sonnet the metered bea_main endpoints use; not a new tier).
+REASON_MODEL = "claude-sonnet-4-6"         # cost-ok: failover REASON tier, metered endpoints only
+REASON_VISION_MODEL = "claude-sonnet-4-6"  # cost-ok: failover REASON_VISION tier, metered endpoints only
+
 PRIMARY_MODEL = {
     FAST: "claude-haiku-4-5-20251001",
     FAST_VISION: "claude-haiku-4-5-20251001",
-    REASON: "claude-sonnet-4-6",
-    REASON_VISION: "claude-sonnet-4-6",
+    REASON: REASON_MODEL,
+    REASON_VISION: REASON_VISION_MODEL,
 }
 
 # Failover defaults (open-weight, served via an OpenAI-compatible endpoint).
@@ -81,6 +86,52 @@ def _to_anthropic(messages):
     return system, msgs
 
 
+def _block_to_openai(b):
+    """Translate one Anthropic content block to its OpenAI-compatible form."""
+    if isinstance(b, dict) and b.get("type") == "image":
+        s = b.get("source", {}) or {}
+        if s.get("type") == "base64":
+            url = "data:%s;base64,%s" % (s.get("media_type", "image/jpeg"), s.get("data", ""))
+            return {"type": "image_url", "image_url": {"url": url}}
+    return b  # text blocks share the same {"type":"text","text":...} shape
+
+
+def _to_openai(messages):
+    """Return messages with Anthropic image blocks converted for an OpenAI-compatible endpoint."""
+    out = []
+    for m in messages:
+        c = m.get("content")
+        if isinstance(c, list):
+            out.append({**m, "content": [_block_to_openai(b) for b in c]})
+        else:
+            out.append(m)
+    return out
+
+
+def _inject_images(messages, images):
+    """Append base64 image blocks (Anthropic shape) to the last user message.
+
+    `images` = iterable of {"media_type": "...", "data": "<base64>"}; callers that
+    already embed image blocks in `messages` don't need this.
+    """
+    blocks = [{"type": "image", "source": {"type": "base64",
+              "media_type": im.get("media_type", "image/jpeg"), "data": im.get("data", "")}}
+              for im in images]
+    msgs = [dict(m) for m in messages]
+    for m in reversed(msgs):
+        if m.get("role") == "user":
+            c = m.get("content")
+            if isinstance(c, str):
+                m["content"] = [{"type": "text", "text": c}] + blocks
+            elif isinstance(c, list):
+                m["content"] = list(c) + blocks
+            else:
+                m["content"] = blocks
+            return msgs
+    msgs.append({"role": "user", "content": blocks})
+    return msgs
+
+
 def _call_primary(tier, messages, max_tokens):
     key = os.environ["ANTHROPIC_API_KEY"]
     system, msgs = _to_anthropic(messages)
@@ -101,7 +152,7 @@ def _call_primary(tier, messages, max_tokens):
 def _call_failover(tier, messages, max_tokens):
     base = os.environ["FAILOVER_BASE_URL"].rstrip("/")
     key = os.getenv("FAILOVER_API_KEY", "-")
-    payload = {"model": FAILOVER_MODEL[tier], "max_tokens": max_tokens, "messages": messages}
+    payload = {"model": FAILOVER_MODEL[tier], "max_tokens": max_tokens, "messages": _to_openai(messages)}
     out = _post(
         base + "/v1/chat/completions", payload,
         {"content-type": "application/json", "authorization": "Bearer " + key},
@@ -121,6 +172,9 @@ def ai_call(endpoint, tier, messages, max_tokens=512, *, images=None,
     """
     if tier not in PRIMARY_MODEL:
         raise ValueError("unknown tier: %r" % (tier,))
+
+    if images:
+        messages = _inject_images(messages, images)
 
     if dry_run or os.getenv("AI_DRYRUN") == "1":
         body = dry_run_payload if dry_run_payload is not None else {"ok": True}
