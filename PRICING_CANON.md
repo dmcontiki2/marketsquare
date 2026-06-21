@@ -27,7 +27,6 @@ This doc mirrors these constants for humans; the **code is the final word**, and
 | Pro | $20 | R360 | 30 | 10T |
 | Agency | free + verified | R0 | 10 base (grows with Trust Score) | 0 |
 
-**Legacy (existing users only — never offered to new sellers):** Standard $12 · Professional $20 · Business $40 · Elite $100.
 
 ## 2 · Buyer subscription tiers — the wishlist/search reach axis
 | Tier | USD/mo | ZAR/mo | Reach |
@@ -35,7 +34,7 @@ This doc mirrors these constants for humans; the **code is the final word**, and
 | Free | $0 | R0 | Local city |
 | Global | $5 | R90 | National + global |
 
-Two tiers only (`_buyer_tier` returns `free` | `global`). The old 3-tier **$0/$5/$15 "introduction sessions per day"** model is **retired** — it never existed in code.
+Two tiers only (`_buyer_tier` returns `free` | `global`). An earlier per-day “introduction sessions” buyer model was retired — it never existed in code.
 
 ## 3 · Introduction fee (independent of subscription)
 **1 Tuppence = USD $2, fixed.** Buyers pay **1T per Introduction** regardless of tier. Subscriptions buy *slots* (sellers) and *reach* (buyers) — never introductions.
@@ -73,8 +72,6 @@ Exit 0 = code <-> canon <-> key docs agree. Non-zero = drift, with the exact mis
 ---
 
 ### Retired history (NEVER treat as current)
-- April 2026 buyer 3-tier **$0/$5/$15** + "sessions per day".
-- The 5-tier **$0/$12/$20/$40/$100** "one subscription family" (Standard/Professional/Business/Elite).
-- Founders Badge on **$40 Business / $100 Elite**.
+- Earlier multi-tier seller/buyer subscription models and the per-day “introduction sessions” scheme were **fully retired — no grandfathering** (no existing users carried over).
 
 All superseded by the **Simpler Model (9-10 Jun 2026)** and pinned here on 15 Jun 2026. These appear only in changelogs/timelines/`_CCP_STAGED` as historical record.

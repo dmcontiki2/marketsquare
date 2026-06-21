@@ -5,7 +5,7 @@ A **mobile-first local marketplace** connecting buyers with trusted, anonymous s
 - `marketsquare.html` — buyer-facing marketplace app (FEA) · served as index.html
 - `marketsquare_admin.html` — seller onboarding admin dashboard · served as admin.html
 - `bea_main.py` — FastAPI backend (BEA) · served as main.py on server
-- `Solar_Council_Codex_v4_7.docx` — canonical product rules (controlling); `Solar_Council_Codex_v4_8_DRAFT.docx` — staged next version, pending CC-001/CC-002 landing
+- `Solar_Council_Codex_v4_8.docx` — canonical product rules (CANON, adopted 21 Jun 2026). CC-002 pricing/AI canon parked → the §3/§11 tier tables defer to `PRICING_CANON.md`
 - `Cost_Breakdown_GlobalLaunch.xlsx` — live cost model · updated in Claude Chat when assumptions change
 
 **This is a marketplace app, not a game.**
