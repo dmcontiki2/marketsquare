@@ -1324,9 +1324,22 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
     </details>
 
-    <!-- AI TUPPENCE SERVICES (moved below transactions) -->
-    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
-      <h2>&#9889; Use your Tuppence &mdash; AI Services</h2>
+    <!-- AI TUPPENCE SERVICES (collapsible blue bar — collapsed by default) -->
+    <style>
+      details#ai-services-details{margin-bottom:24px;}
+      details#ai-services-details>summary{list-style:none;width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#13234a;border:1px solid #24407c;border-radius:12px;padding:13px 14px;color:#eaf0fb;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+      details#ai-services-details>summary::-webkit-details-marker{display:none;}
+      details#ai-services-details>summary::marker{content:"";}
+      details#ai-services-details .ai-svc-chev{flex-shrink:0;color:#eaf0fb;transition:transform .18s ease;}
+      details#ai-services-details[open] .ai-svc-chev{transform:rotate(180deg);}
+      details#ai-services-details .ai-svc-body{padding-top:16px;}
+    </style>
+    <details id="ai-services-details" class="tn-sec">
+      <summary>
+        <span><b>&#9889; AI Services</b><br><span style="font-size:11px;opacity:.8">In-app helpers &middot; rewrites &middot; audits &middot; price &amp; yield checks</span></span>
+        <svg class="ai-svc-chev" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="ai-svc-body">
       <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each AI service is charged from your Tuppence balance and is non-refundable. Most cost 1T; batch tools are priced per run.</p>
       <!-- Seller AI services -->
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers &middot; in your listing edit screen</div>
@@ -1384,7 +1397,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="font-size:11px;color:var(--text-3);margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:8px;">
         <strong>Non-refundable policy:</strong> AI services are charged on use. If the AI call fails due to a server error, no Tuppence is deducted. Results are provided as-is for guidance only.
       </div>
-    </div>
+      </div>
+    </details>
 
   </div>
 </div>
