@@ -3687,10 +3687,25 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
       </div>
 
-      <div class="ms-section-lbl">Browse history</div>
-      <div class="ms-card" id="ms-history-list">
-        <div class="ms-empty">No browsing history yet</div>
-      </div>
+      <!-- BROWSE HISTORY (collapsible — collapsed by default) -->
+      <style>
+        details#ms-history-details{margin:0;}
+        details#ms-history-details > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px 2px;-webkit-tap-highlight-color:transparent;}
+        details#ms-history-details > summary::-webkit-details-marker{display:none;}
+        details#ms-history-details > summary::marker{content:"";}
+        details#ms-history-details > summary .ms-section-lbl{margin:0;}
+        details#ms-history-details .ms-hist-chev{flex-shrink:0;color:var(--text-3);transition:transform .18s ease;}
+        details#ms-history-details[open] .ms-hist-chev{transform:rotate(180deg);}
+      </style>
+      <details id="ms-history-details">
+        <summary>
+          <div class="ms-section-lbl">Browse history</div>
+          <svg class="ms-hist-chev" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ms-card" id="ms-history-list">
+          <div class="ms-empty">No browsing history yet</div>
+        </div>
+      </details>
 
       <div class="ms-section-lbl">Seller hub</div>
       <!-- Inline seller sign-in — visible when ms_aa_email not set; collapses once signed in -->
