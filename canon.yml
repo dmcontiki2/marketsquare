@@ -1,0 +1,61 @@
+# canon.yml — TrustSquare single machine-readable source of canon facts.
+# Docs restate these for humans; scripts/check_canon_pointers.py asserts the docs match THIS.
+# If a value changes: update here first, then run the checker. (P3 of the prevention plan.)
+meta:
+  updated: "2026-06-21"
+  owner: David
+
+versions:                       # the one place version pointers are declared
+  codex: "Solar_Council_Codex_v4_8.docx"   # CANON, adopted 21 Jun 2026
+  codex_status: "CANON"
+  requirements: "v1.4"          # 21 Jun 2026 — single canonical + 4 mirrors
+  agent_briefing: "v1.9"        # 18 Jun 2026
+  eula: "v1.7"                  # baselined; counsel finalization pending (A6)
+  ip_brief: "v6"               # DRAFT; counsel pending (A1)
+  whitepaper: "v3.5"           # latest draft (v2 is the published prior-art defensive pub)
+
+pricing:                        # authority = PRICING_CANON.md §1 + bea_main.py _SELLER_SUB_TIERS
+  tuppence_usd: 2
+  seller_tiers:                 # tier: [usd, slots, monthly_tuppence]
+    Free:    [0, 2, 0]
+    Starter: [5, 10, 2]
+    Pro:     [20, 30, 10]
+    Agency:  [0, 10, 0]         # free + verified; base 10, grows with Trust Score
+  buyer_tiers:
+    Free:   [0, "local city"]
+    Global: [5, "national + global"]
+  founders_badge: {tier: Pro, bonus_pct: 20, example: "Pro 10 -> 12T", rev: 3, deadline: "2026-08-01"}
+  legacy_tiers_exist: false     # NO grandfathering; no existing users
+
+launch:                         # CC-003 (David ruling, 12 Jun 2026)
+  model: "wave-trigger"
+  wave_trigger_prospects_per_city: 60
+  public_seller_gate: false
+  launch_city: "Pretoria"
+  wave1_cities: ["New York", "London", "Sydney"]
+
+infra:
+  server: "Hetzner CPX32"
+  server_specs: "4 vCPU / 8 GB / 160 GB NVMe"
+  server_eur_month: 15.49
+  hetzner_volume: {gb: 100, eur_month: 5.20, use: "disk/DB headroom"}
+  hetzner_object_storage: {eur_month: 5.99, use: "daily DB backups"}
+  photo_cdn: "Cloudflare R2 (marketsquare-media, $0 egress)"
+  total_fixed_eur_month: 28
+
+requirements_canonical: "PRINCIPLE_REQUIREMENTS.md"   # in MarketSquare root
+requirements_mirrors:                                 # must be md5-identical to canonical
+  - "docs/PRINCIPLE_REQUIREMENTS.md"
+  - "../AdvertAgent/PRINCIPLE_REQUIREMENTS.md"
+  - "../CityLauncher/PRINCIPLE_REQUIREMENTS.md"
+  - "../Codices/PRINCIPLE_REQUIREMENTS.md"
+
+drift_markers:                  # these strings must NOT appear in the live docs (= drift)
+  - "Solar_Council_Codex_v4_5.docx"
+  - "v4_7 controlling"
+  - "60 sellers / 20 per category"
+  - "public launch threshold | 60 sellers"
+  - "existing users only"
+  - "$12/mo"
+  - "$40/mo"
+  - "$100/mo"

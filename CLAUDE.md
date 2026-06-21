@@ -76,6 +76,18 @@ After any change to `LISTINGS` or `SELLERS`, run the audit script `/tmp/full_aud
 
 **Conflict resolution:** The Architect agent arbitrates all conflicts between agents using the Codex as source of truth. Only escalate to the user if the Codex cannot resolve the conflict.
 
+## Canon & documentation integrity (AI-enforced — prevention measures P1–P10, adopted 21 Jun 2026)
+The 21 Jun audit found the canon had drifted from the running system. These rules stop it recurring. **`canon.yml` is the single machine-readable source of canon facts**; docs restate it for humans; `LEGAL_VERSIONS.md` is the version/landing register.
+
+- **One source, generated mirrors (P1).** `PRINCIPLE_REQUIREMENTS.md` (MarketSquare root) is the ONLY editable copy. Never hand-edit a mirror (docs/, AdvertAgent/, CityLauncher/, Codices/). After editing the canonical, run `python scripts/propagate_requirements.py`.
+- **Pointer check is a session-end gate (P2).** Any session that touched a canon/requirements/pricing/version doc must end with `python scripts/check_canon_pointers.py` AND `python scripts/check_pricing_canon.py` both exiting 0. Non-zero = drift; fix the source to match `canon.yml`, never override the check.
+- **Rules-changed → canon-updated, same session (P4).** If a change touches pricing, tiers, thresholds, intro-model, infra/cost, endpoints, categories, or any versioned doc, update `canon.yml` + the affected canon docs (or open a CC) in the SAME task — never let canon trail the code (same spirit as the demo-mode rule).
+- **"Land" is atomic (P5).** Landing a CC = (a) canon docs updated, (b) ALL mirrors regenerated via propagate, (c) `check_canon_pointers.py` passes, (d) `canon.yml` + `LEGAL_VERSIONS.md` versions bumped. A partial propagation (the CC-003 failure mode) is NOT done.
+- **Generate status, don't type it (P7).** CLAUDE.md "Current development status" + Codex §4/§6/§9 point at STATUS.md / `GET /dashboard/summary`, never hand-maintained live numbers (F3).
+- **Reference values, don't restate (P8).** Cite `PRICING_CANON.md` / `canon.yml` rather than repeating numbers; where a value must be restated, tag it "(derived — see canon)".
+- **Version register (P10).** `LEGAL_VERSIONS.md` records EULA/IP/WhitePaper/Codex/requirements versions + landing + counsel-gated status; keep it in step with `canon.yml`.
+- **Ageing + weekly audit (P6/P9).** The daily brief surfaces aged change-control via `scripts/cc_age_check.py`; a weekly scheduled task re-runs all three checks and reports drift.
+
 ## Scale-shape invariants (design for it, don't plan for it)
 These are not future work. They are how code is written *now* so that scaling later is a config change, not a rewrite. Each costs ~nothing today and saves a rip-out at traffic. Hold to them every session; if a change would violate one, flag it rather than silently breaking it. **We are NOT building shards, replicas, queues, or multi-region now — do not add that infrastructure on spec.** These rules only keep the door open.
 

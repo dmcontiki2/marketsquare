@@ -3987,3 +3987,14 @@ Cost model impact: none — auth/UX/data hygiene; no AI calls, pricing, or concu
 - Codex §6 cost table + Cost_Breakdown_GlobalLaunch.xlsx now include the previously-missing Hetzner storage: **100 GB Volume ~€5.20/mo** (disk/DB headroom) + **Hetzner Object Storage bucket ~€5.99/mo** (daily DB backups). Codex §6 total fixed €16→**~€28/mo**; R2 line corrected to photos-only (backups moved to the Hetzner bucket). Requirements B4/B6 + Quick Ref reconciled (Volume "on standby"→active; backups→Hetzner bucket).
 - xlsx: 2 lines added to Assumptions INFRASTRUCTURE; Year-1 Monthly Infra +$11/mo (Mo1 37→48), Net −$11/mo; YEAR-1 infra 1545→1677; 3-Year Infra 1545/2358/3108→1677/2490/3240, TOTAL COSTS +132/yr, NET −132/yr. Operating-margin / cost-per-seller unchanged (rounding-stable).
 - **Cost model impact:** +~$11/mo (~$134/yr) fixed infra — immaterial to margins (~0.06% of Yr1 revenue); now correctly counted rather than omitted.
+
+## 2026-06-21 · Prevention measures P1–P10 built (David-approved — anti-drift QA backbone)
+- **canon.yml** (P3) — single machine-readable source of canon facts (versions, pricing, launch, infra, drift-markers). **LEGAL_VERSIONS.md** (P10) — version/landing register (EULA/IP/WhitePaper/Codex/requirements + counsel-gated flags).
+- **scripts/check_canon_pointers.py** (P2) — drift gate: 5 requirements copies md5-identical, version pointers match canon.yml, no drift-marker strings, register agrees. Exits non-zero on drift; green on current baseline.
+- **scripts/propagate_requirements.py** (P1) — regenerates the 4 mirrors from the one canonical copy (mirrors generated, never hand-edited).
+- **scripts/cc_age_check.py** (P6) — flags change-control packages staged > 7 days (currently surfaces CC-002, parked 11d).
+- **scripts/check_pricing_canon.py** — §3 hardened to be punctuation-insensitive (the v1.4 convergence tripped its exact-string match; now passes).
+- **CLAUDE.md** — new "Canon & documentation integrity (AI-enforced)" section (P1/P2/P4/P5/P7/P8 + session-end check gate). **AGENT_BRIEFING.md** — daily brief surfaces aged CCs (P6). **CHANGE_REGISTER.md** — CC-001 ACCEPTED (A1), CC-003 LANDED (A4); CC-002 stays parked.
+- **Scheduled task** `trustsquare-canon-qa-weekly` (P9) — runs all three checks every Monday and reports drift.
+- Documentation/QA only; no code or live-state change.
+- Cost model impact: none.

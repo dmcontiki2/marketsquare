@@ -65,7 +65,7 @@ a7 = [os.path.join(ROOT, "docs/PRINCIPLE_REQUIREMENTS.md"),
 for p in a7:
     s = read(p)
     if s is None: print(f"  [skip] {os.path.relpath(p, PROJ)} (not found)"); continue
-    check(f"A7 {os.path.relpath(p, PROJ)}", "Global: $5/mo" in s and "$15/mo · 50/day" not in s)
+    check(f"A7 {os.path.relpath(p, PROJ)}", ("Global" in s) and ("$5/mo" in s) and ("$15/mo" not in s) and ("sessions per day" not in s))
 for p in [os.path.join(ROOT, "eula_clean.html"), os.path.join(ROOT, "eula_raw.html")]:
     s = read(p)
     if s is None: print(f"  [skip] {os.path.basename(p)}"); continue

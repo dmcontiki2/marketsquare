@@ -45,7 +45,7 @@
 ---
 
 ## CC-003 · Launch-threshold canon correction (60 prospects = wave trigger, not 60 sellers = public gate)
-**Stage:** 0/5 OPENED (attended, 12 Jun 2026) — David ruling in chat: the design has ALWAYS been *60 staged prospects per city fires the auto-email founding wave; cities launch day-one with zero native listings* (WHCL 332 sites + demos carry browse; density via waves at ~5–7% conversion + direct agency onboarding on the free Agency tier). The "public launch threshold: 60 founding sellers (20/category)" wording in docs is an AI transcription error, never council intent. **Opened:** 12 Jun 2026 · **Owner:** David (council) · **Hot lines already corrected attended:** AGENT_BRIEFING.md:14, CLAUDE.md:139.
+**Stage:** LANDED 21 Jun 2026 (A4 — wave-trigger wording swept into Codex + all PRINCIPLE_REQUIREMENTS copies). [orig 0/5 OPENED 12 Jun] — David ruling in chat: the design has ALWAYS been *60 staged prospects per city fires the auto-email founding wave; cities launch day-one with zero native listings* (WHCL 332 sites + demos carry browse; density via waves at ~5–7% conversion + direct agency onboarding on the free Agency tier). The "public launch threshold: 60 founding sellers (20/category)" wording in docs is an AI transcription error, never council intent. **Opened:** 12 Jun 2026 · **Owner:** David (council) · **Hot lines already corrected attended:** AGENT_BRIEFING.md:14, CLAUDE.md:139.
 
 **Term map (initial, to be evidenced by the CCP run):**
 
@@ -59,7 +59,7 @@
 **Interlock:** Gate-8 of the launch-gate checklist (to be drafted) must state the corrected model. EULA/marketing copy scan for "founding"/threshold phrasing = part of the CCP evidence run. Ladder rows (map #3) are autonomy-policy, not launch canon — they survive reworded.
 
 ## CC-001 · Tuppence HOLD model
-**Stage:** 4/5 STAGED (Fable run 10 Jun) — baseline ✓ · term map evidence-based (PROVISIONAL — David verifies) · matrix built (37 rows) · staged edits + drafts complete · zero-token proof PASS on staged set · NOTHING LIVE. Awaiting David: term-map verify → canon landing (Codex v4.8 / IP v6 / EULA v1.7) → INTRO_HOLD BEA build (Gate 2). See `REPORT_CC-001.md` + `AWAITING_DAVID.md`. · **Opened:** 10 Jun 2026
+**Stage:** ACCEPTED 21 Jun 2026 as current canon version (A1 — Codex v4.8 §2/§12 HOLD accepted; EXTERNAL pending: counsel EULA v1.7 + IP Brief v6). [was 4/5 STAGED 10 Jun] · baseline ✓ · term map (PROVISIONAL — David verifies) · matrix built (37 rows) · staged edits + drafts complete · zero-token proof PASS on staged set · NOTHING LIVE. Awaiting David: term-map verify → canon landing (Codex v4.8 / IP v6 / EULA v1.7) → INTRO_HOLD BEA build (Gate 2). See `REPORT_CC-001.md` + `AWAITING_DAVID.md`. · **Opened:** 10 Jun 2026
 **One-paragraph change:** The Tuppence charge model is corrected to a **HOLD**:
 **commit-on-request → burn-on-delivery → release-on-decline**, with the **payer = the service consumer**
 (the party requesting the introduction). Canonicalised in Codex (→ v4.8), IP Brief (→ v6) and the

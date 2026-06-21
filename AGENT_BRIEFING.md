@@ -2,7 +2,7 @@
 **Version 1.9 · 18 June 2026**
 *Read this document at the start of every Claude Code session. It is the single source of truth for all three agents.*
 
-> **📌 Daily brief — always surface the Deferred items list.** At the start of every session and in the morning/daily-loop brief, read the **`📌 Deferred items`** section at the top of `BACKLOG.md` and surface any open rows to David. Do-it-now is the default (per the Approvals & blockers principle in CLAUDE.md); anything that genuinely can't be done in the moment lives on that one list and is shown every morning until done or dropped. Never leave a "later" item floating in a chat thread — it goes on that list or it gets done now.
+> **📌 Daily brief — always surface the Deferred items list.** At the start of every session and in the morning/daily-loop brief, read the **`📌 Deferred items`** section at the top of `BACKLOG.md` and surface any open rows to David. Do-it-now is the default (per the Approvals & blockers principle in CLAUDE.md); anything that genuinely can't be done in the moment lives on that one list and is shown every morning until done or dropped. Never leave a "later" item floating in a chat thread — it goes on that list or it gets done now. **Also run `python scripts/cc_age_check.py` and surface any ⏳ aged change-control packages (staged > 7 days) — e.g. a parked CC that is sitting too long (P6).**
 
 ---
 
