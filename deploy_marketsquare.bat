@@ -199,20 +199,29 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo  [3e] Deploying demo data (demo_listings.json, demo_sellers.json)...
+echo  [3e] Deploying demo data (demo_listings.json; demo_sellers.json is server-managed)...
 scp "%PROJECT%\demo_listings.json" %SERVER%:%REMOTE%/demo_listings.json
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for demo_listings.json. Check SSH connection.
     pause
     exit /b 1
 )
+:: demo_sellers.json is intentionally SERVER-MANAGED - the single source of truth lives
+:: ONLY on the box, on purpose. It was de-bloated out of the FEA (it used to be hardcoded
+:: there), and keeping a local + server copy caused constant drift, so by deliberate
+:: decision it is NOT kept in the repo for now. Demo data is purged at launch and may later
+:: be promoted to permanent repo-tracked data. Do NOT "fix" the absence by committing a
+:: local copy - that reintroduces the exact drift this decision removed.
 if exist "%PROJECT%\demo_sellers.json" (
+    echo  [INFO] Local demo_sellers.json found - deploying it to the server.
     scp "%PROJECT%\demo_sellers.json" %SERVER%:%REMOTE%/demo_sellers.json
     if %errorlevel% neq 0 (
         echo  ERROR: SCP failed for demo_sellers.json. Check SSH connection.
         pause
         exit /b 1
     )
+) else (
+    echo  [INFO] demo_sellers.json is server-managed - not in local repo by design, nothing to deploy.
 )
 echo  Done.
 echo.
@@ -315,9 +324,20 @@ ssh %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishl
 
 ssh %SERVER% "systemctl is-active marketsquare >nul 2>&1 && echo   [OK] BEA service is active || echo   [FAIL] BEA service is NOT active - check journalctl"
 
-ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && echo   [OK] BEA: backend modules auth,database,storage,payments present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
+ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && test -f %REMOTE%/ai_service_tiers.py && test -f %REMOTE%/launch_redemption.py && echo   [OK] BEA: backend modules auth,database,storage,payments,ai_service_tiers,launch_redemption present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'dev-tools\|devtools' %REMOTE%/admin.html && echo   [OK] Admin: new admin.html confirmed on server || echo   [FAIL] Admin: old admin.html still on server"
+ssh %SERVER% "test -f %REMOTE%/demo_listings.json && echo   [OK] Demo: demo_listings.json present on server || echo   [FAIL] Demo: demo_listings.json missing - redeploy needed"
+ssh %SERVER% "test -f %REMOTE%/demo_sellers.json && echo   [OK] Demo: demo_sellers.json present on server - server-managed single source || echo   [WARN] Demo: demo_sellers.json MISSING on server - this is the ONLY copy, /demo-sellers will be empty"
+
+:: -- Admin freshness check (21 Jun): hash-compare the deployed admin.html to the LOCAL
+:: -- build instead of grepping for a feature marker. The old check grepped admin.html
+:: -- for 'dev-tools' - a tab that was later removed - so it false-FAILED ("old admin.html
+:: -- still on server") on every deploy even though the file was perfectly up to date.
+:: -- An md5 match proves byte-for-byte that the live file IS exactly what you just built,
+:: -- and never goes stale. (Mirrors the 6b live-ms.js hash check.)
+set ADMIN_MD5=HASH_CAPTURE_FAILED
+for /f "usebackq delims=" %%H in (`powershell -NoProfile -Command "(Get-FileHash -Algorithm MD5 -LiteralPath '%PROJECT%\marketsquare_admin.html').Hash.ToLower()"`) do set ADMIN_MD5=%%H
+ssh %SERVER% "md5sum %REMOTE%/admin.html | grep -q '%ADMIN_MD5%' && echo   [OK] Admin: live admin.html matches local build || echo   [FAIL] Admin: deployed admin.html does NOT match local build - redeploy needed"
 
 ssh %SERVER% "grep -q 'view-showcase' %REMOTE%/admin.html && echo   [OK] Admin: showcase tab confirmed || echo   [FAIL] Admin: showcase tab missing - redeploy needed"
 

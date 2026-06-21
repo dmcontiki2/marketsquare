@@ -152,6 +152,7 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 - Profile photo: uploaded via `POST /users/{email}/photo` → R2 → stored in users.photo_url; restored on login via GET /users/{email}
 - Tuppence balance synced from `GET /tuppence/balance?email=` on buyer app load (server wins if greater than local)
 - ⚠️ Dev-only: `POST /dev/credit` endpoint and Dev Tools nav in admin app — **REMOVE BEFORE LAUNCH**
+- ⚠️ DEMO DATA SOURCING: `demo_listings.json` is repo-tracked and deployed from local; **`demo_sellers.json` is server-only by deliberate design** — the single source of truth lives ONLY on the box (`/var/www/marketsquare/demo_sellers.json`, served by `GET /demo-sellers`, ~40 sellers). It was de-bloated out of the FEA and a local+server copy kept drifting, so it is intentionally NOT in the repo. Do NOT "fix" its local absence by pulling it down or committing a local copy — that reintroduces the drift. It is purged at launch (may later be promoted to permanent repo-tracked data). Deploy `[3e]` treats its local absence as `[INFO] by design`; the verify step still guards the sole server copy.
 
 ## Current development status
 - Launch city: Pretoria, South Africa (+ Johannesburg twin under consideration) · 60 staged prospects/city = wave trigger, NOT a 60-seller public threshold (CC-003 corrects old docs; day-one launch carries WHCL + demos + agency onboarding)
