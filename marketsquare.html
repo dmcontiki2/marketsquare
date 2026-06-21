@@ -1285,29 +1285,44 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
     </div>
 
-    <!-- TRANSACTION HISTORY -->
-    <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
-      <h2>Transaction history</h2>
-      <div class="tx-filter">
-        <select class="tx-filter-sel" id="tx-filter-type" onchange="txApplyFilter()" aria-label="Filter by type">
-          <option value="all">All types</option>
-          <option value="topup">Top-ups</option>
-          <option value="ai_service">AI services</option>
-          <option value="intro">Introductions</option>
-          <option value="subscription">Subscriptions</option>
-        </select>
-        <select class="tx-filter-sel" id="tx-filter-range" onchange="txApplyFilter()" aria-label="Filter by date">
-          <option value="all">All time</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+    <!-- TRANSACTION HISTORY (collapsible — collapsed by default) -->
+    <style>
+      details#tn-details{border-top:2px solid var(--border);padding-top:20px;}
+      details#tn-details > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0;-webkit-tap-highlight-color:transparent;}
+      details#tn-details > summary::-webkit-details-marker{display:none;}
+      details#tn-details > summary::marker{content:"";}
+      details#tn-details > summary h2{font-size:15px;font-weight:700;margin:0;}
+      details#tn-details .tn-chev{flex-shrink:0;color:var(--text-3);transition:transform .18s ease;}
+      details#tn-details[open] .tn-chev{transform:rotate(180deg);}
+      details#tn-details .tn-body{margin-top:12px;}
+    </style>
+    <details id="tn-details" class="tn-sec">
+      <summary>
+        <h2>Transaction history</h2>
+        <svg class="tn-chev" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="tn-body">
+        <div class="tx-filter">
+          <select class="tx-filter-sel" id="tx-filter-type" onchange="txApplyFilter()" aria-label="Filter by type">
+            <option value="all">All types</option>
+            <option value="topup">Top-ups</option>
+            <option value="ai_service">AI services</option>
+            <option value="intro">Introductions</option>
+            <option value="subscription">Subscriptions</option>
+          </select>
+          <select class="tx-filter-sel" id="tx-filter-range" onchange="txApplyFilter()" aria-label="Filter by date">
+            <option value="all">All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+        <div class="tn-table tx-scroll" id="tn-history">
+          <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading&hellip;</div>
+        </div>
+        <button type="button" class="tx-more" id="tn-load-more" style="display:none;" onclick="loadMoreTransactions()">Load more</button>
       </div>
-      <div class="tn-table tx-scroll" id="tn-history">
-        <div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px;">Loading&hellip;</div>
-      </div>
-      <button type="button" class="tx-more" id="tn-load-more" style="display:none;" onclick="loadMoreTransactions()">Load more</button>
-    </div>
+    </details>
 
     <!-- AI TUPPENCE SERVICES (moved below transactions) -->
     <div class="tn-sec" style="border-top:2px solid var(--border);padding-top:20px;">
