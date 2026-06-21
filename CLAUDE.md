@@ -5,7 +5,7 @@ A **mobile-first local marketplace** connecting buyers with trusted, anonymous s
 - `marketsquare.html` — buyer-facing marketplace app (FEA) · served as index.html
 - `marketsquare_admin.html` — seller onboarding admin dashboard · served as admin.html
 - `bea_main.py` — FastAPI backend (BEA) · served as main.py on server
-- `Solar_Council_Codex_v4_5.docx` — canonical product rules, design principles, and version history
+- `Solar_Council_Codex_v4_7.docx` — canonical product rules (controlling); `Solar_Council_Codex_v4_8_DRAFT.docx` — staged next version, pending CC-001/CC-002 landing
 - `Cost_Breakdown_GlobalLaunch.xlsx` — live cost model · updated in Claude Chat when assumptions change
 
 **This is a marketplace app, not a game.**
@@ -89,7 +89,7 @@ These are not future work. They are how code is written *now* so that scaling la
 ## Sandbox SSH setup (run at the start of every session before any SSH/SCP)
 The sandbox does not persist SSH keys between sessions. At the start of every session, run this before any SSH or SCP command:
 ```bash
-bash /sessions/quirky-brave-galileo/mnt/MarketSquare/load_sandbox_ssh.sh
+bash /sessions/<session>/mnt/MarketSquare/load_sandbox_ssh.sh
 ```
 If it says "key not found", ask David to run `setup_sandbox_ssh.ps1` once from PowerShell — it copies `~/.ssh/id_ed25519` into the project folder as `ssh_hetzner_key` (gitignored, never committed).
 
@@ -144,7 +144,7 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 - activeCountry is {iso2, name}, activeRegion is {id, name} or null
 - Geo API query param is `country` (not `country_iso2`) — e.g. /geo/regions?country=ZA
 - Location badge is 2-line: top=country+region (dim), bottom=city+suburb
-- Tier gating: free→suburb panel, starter→city panel, premium→country panel
+- Tier gating: free→suburb panel, starter→city panel, pro→country panel
 - Admin sellerData includes geo_city_id (int) for suburb lookups
 - Edit-after-publish: sellers use `PUT /listings/{id}?email=` — email-auth, no API key; NULL seller_email accepts first caller and stamps it
 - listing_versions table archives full JSON snapshot before every PUT — version_num increments per listing
@@ -156,12 +156,12 @@ BEA dependencies must be installed into the BEA venv, not system Python. Always 
 
 ## Current development status
 - Launch city: Pretoria, South Africa (+ Johannesburg twin under consideration) · 60 staged prospects/city = wave trigger, NOT a 60-seller public threshold (CC-003 corrects old docs; day-one launch carries WHCL + demos + agency onboarding)
-- BEA v1.2.0 live at trustsquare.co · FastAPI + SQLite (9 tables) + Redis on Hetzner CPX22
+- **Live state is authoritative in `STATUS.md` (read first) + `GET /dashboard/summary` — do not hand-maintain version/infra numbers here (F3).** Server: Hetzner CPX32 (4 vCPU · 8 GB) since 25 May 2026; stack FastAPI + SQLite + Redis.
 - GitHub backup: github.com/dmcontiki2/marketsquare
 - Paystack: test mode (live mode pending CIPC registration)
 - 4-level geo hierarchy live: Country → Region → City → Suburb (ZA seeded: 9 provinces, 54 cities, 11,679 suburbs)
 - Edit-after-publish with version control live in both apps (Session 20)
-- Next milestone: Deploy Session 20 changes · Paystack live mode · n8n email notifications
+- Next milestones: see `STATUS.md` "Next Session" block + `BACKLOG.md` 📌 Deferred items.
 
 ## David's document preferences (added 11 Jun 2026)
 **Always deliver reports/documents to David as formatted Word (.docx) files, never raw .md/.txt** — he reads them in MS Word and plain markdown opens as an unreadable encoding dialog. Generate the .docx with real styling (headings, tables, colour for CRITICAL/WARN) alongside any machine-readable .md. This applies to audit reports, sweeps, deliberations — anything he will read.
