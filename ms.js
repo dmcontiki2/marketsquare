@@ -12808,12 +12808,14 @@ async function aiPoll(jobId){
     }
     const wm = txt.match(/```json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*```/);
     if(wm){ try{ wps=JSON.parse(wm[1]).waypoints; txt=txt.replace(wm[0],''); }catch(e){} }
+    let aiOpts=null; const om=txt.match(/```json\s*(\{[\s\S]*?"options"[\s\S]*?\})\s*```/); if(om){ try{ aiOpts=JSON.parse(om[1]).options; txt=txt.replace(om[0],''); }catch(e){} }
     const sm = txt.match(/##\s*\d*\s*[·]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
     if(sm){ aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[·]?\s*/,'## ⚠️ '))); txt=txt.replace(sm[0],''); }
     else aiSafety(null);
     txt = aiStripJson(txt);
     document.getElementById('ai-result').innerHTML = aiMd(txt);
     document.getElementById('ai-result').style.display='block';
+    if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
     document.getElementById('ai-meta').textContent =
       j.cost_usd>0 ? `model ${j.model} · ${j.searches} web searches` : 'sample preview — superseded by the first real run';
@@ -13053,4 +13055,23 @@ async function aiListEach(){
   }
   showToast(AI_ITEMS.length+' drafts created — review & publish each');
   aaRenderHome(); goTo('aa-home');
+}
+
+
+/* -- Verified-tier card renderer (gated by window.FEATURES; dormant until the AI run emits an "options" JSON block; real photos arrive via signed-operator/Places later) -- */
+var AI_VERIFIED_MAP={heritage_tour:'heritage_verified',expedition_dossier:'expedition_verified',weekend_itinerary:'weekend_verified'};
+function aiVerifiedOn(){ try{ var k=AI_VERIFIED_MAP[AI_SEL&&AI_SEL.id]; return !!(window.FEATURES && window.FEATURES.verified_visible && (!k || window.FEATURES[k])); }catch(e){ return false; } }
+function aiVStars(r){ var x=''; for(var i=1;i<=5;i++) x+=(i<=Math.round(r)?'\u2605':'\u2606'); return x; }
+function aiVCard(o){
+  var g=o.grad||'linear-gradient(135deg,#1e3a5f,#0f2742)';
+  if(o.local){ return '<div class="vcard local"><div class="vib" style="background:'+g+'"><span class="vlocal">\u2605 TrustSquare local</span><span class="vem">'+(o.emoji||'\uD83D\uDCCD')+'</span><span class="vcap">'+aiEsc(o.name||'')+'</span></div><div class="vbody"><div class="vname">'+aiEsc(o.name||'')+'</div><div class="vmeta">'+(o.trust?'<span class="vprice">Trust '+aiEsc(String(o.trust))+'</span>':'')+(o.price?'<span class="vprice">'+aiEsc(o.price)+'</span>':'')+'</div><div class="vwhy">'+aiEsc(o.why||'')+'</div><div class="vacts"><button class="vbtn">'+aiEsc(o.action||'Request introduction \u00b7 1T')+'</button></div></div></div>'; }
+  var rate=o.rating?'<span class="vrate">\u2605 '+aiEsc(String(o.rating))+'</span>':'';
+  var meta=(o.rating?'<span>'+aiVStars(o.rating)+'</span> <span>'+aiEsc(String(o.rating))+(o.reviews?' ('+aiEsc(String(o.reviews))+')':'')+'</span> ':'')+(o.price?'<span class="vprice">'+aiEsc(o.price)+'</span>':'');
+  return '<div class="vcard"><div class="vib" style="background:'+g+'"><span class="vbadge">\u2713 Verified</span>'+rate+'<span class="vem">'+(o.emoji||'\uD83C\uDFE8')+'</span><span class="vcap">'+aiEsc(o.name||'')+'</span></div><div class="vbody"><div class="vname">'+aiEsc(o.name||'')+'</div><div class="vmeta">'+meta+'</div><div class="vwhy">'+aiEsc(o.why||'')+'</div><div class="vacts"><button class="vbtn">'+aiEsc(o.action||'View')+'</button></div></div></div>';
+}
+function renderVerifiedCards(opts){
+  if(!opts) return '';
+  var out=''; var secs=[['Where to stay',opts.stay],['Where to eat',opts.eat],['Things to do',opts.do],['Flights & routing',opts.flights],['Local on TrustSquare \u00b7 introductions',opts.local]];
+  secs.forEach(function(s){ var arr=s[1]; if(arr&&arr.length){ var isLocal=s[0].indexOf('Local')>=0; out+='<div class="vsec-h">'+s[0]+'</div><div class="vcards">'+arr.map(function(o){ if(isLocal)o.local=true; return aiVCard(o); }).join('')+'</div>'; } });
+  return out;
 }

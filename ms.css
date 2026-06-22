@@ -1290,3 +1290,22 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .st-withdrawn{background:#f3f4f6;color:#4b5563;}
 .st-blocked{background:#fee2e2;color:#991b1b;}
 .st-archived{background:#eef2f7;color:#64748b;}
+
+/* -- Verified-tier option cards (rendered into #ai-result when verified flag on) -- */
+#ai-result .vsec-h{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#1e3a5f;margin:14px 0 8px}
+#ai-result .vcards{display:flex;flex-direction:column;gap:10px;margin:0 0 14px}
+#ai-result .vcard{background:#fff;border:1px solid #e2e5ea;border-radius:10px;overflow:hidden}
+#ai-result .vcard.local{border:1.5px solid #1e3a5f;box-shadow:0 0 0 3px #eef2f8}
+#ai-result .vcard .vib{height:118px;position:relative;display:flex;align-items:center;justify-content:center}
+#ai-result .vcard .vem{font-size:38px;opacity:.92;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+#ai-result .vcard .vcap{position:absolute;left:9px;bottom:8px;color:#fff;font-weight:700;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:78%}
+#ai-result .vcard .vbadge{position:absolute;top:8px;left:8px;background:rgba(6,95,70,.92);color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+#ai-result .vcard .vlocal{position:absolute;top:8px;left:8px;background:#1e3a5f;color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+#ai-result .vcard .vrate{position:absolute;top:8px;right:8px;background:rgba(17,24,39,.78);color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px}
+#ai-result .vcard .vbody{padding:10px 12px 12px}
+#ai-result .vcard .vname{font-weight:700;font-size:14px;color:#111827}
+#ai-result .vcard .vmeta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:5px 0 6px;font-size:11.5px;color:#6b7280}
+#ai-result .vcard .vmeta .vprice{background:#ecfdf5;color:#047857;font-weight:700;padding:2px 8px;border-radius:50px}
+#ai-result .vcard .vwhy{font-size:12px;color:#4b5563;line-height:1.45;margin-bottom:9px}
+#ai-result .vcard .vacts{display:flex;gap:8px;flex-wrap:wrap}
+#ai-result .vcard .vbtn{flex:1;min-width:0;border:none;border-radius:50px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;background:#1e3a5f;color:#fff}
