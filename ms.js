@@ -12992,6 +12992,7 @@ async function aiExample(){
     let txt=d.result||'', wps=null;
     const wm=txt.match(/\u0060\u0060\u0060json\s*(\{[\s\S]*?"waypoints"[\s\S]*?\})\s*\u0060\u0060\u0060/);
     if(wm){try{wps=JSON.parse(wm[1]).waypoints;txt=txt.replace(wm[0],'');}catch(e){}}
+    let aiOpts=null; const om=txt.match(/```json\s*(\{[\s\S]*?"options"[\s\S]*?\})\s*```/); if(om){try{aiOpts=JSON.parse(om[1]).options;txt=txt.replace(om[0],'');}catch(e){}}
     const sm=txt.match(/##\s*\d*\s*[\u00b7]?\s*Safety awareness[\s\S]*?(?=\n##\s|$)/);
     if(sm){aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[\u00b7]?\s*/,'## \u26a0\ufe0f ')));txt=txt.replace(sm[0],'');}
     st.innerHTML='<span class="ai-ok">\u2713 Example \u2014 this is a sample of what you receive (free, no Tuppence used)</span>';
@@ -13000,6 +13001,7 @@ async function aiExample(){
       ? '<div class="ai-exbanner" style="margin-top:6px">On a real run, buttons appear below the report to turn it into listings \u2014 \u{1F4E6} one consolidated lot, or \u{1F5C2} each item separately.</div>' : '';
     document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt)+exNote;
     document.getElementById('ai-result').style.display='block';
+    if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
   }catch(e){ st.innerHTML='<span class="ai-bad">No example available yet for this one.</span>'; }
 }
