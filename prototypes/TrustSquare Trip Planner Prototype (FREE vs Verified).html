@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>TrustSquare — AI Planner prototype (FREE vs Verified)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+ --bg:#f4f5f7;--surface:#fff;--surface-2:#eef0f3;--border:#e2e5ea;
+ --text:#111827;--text-2:#4b5563;--text-3:#6b7280;
+ --accent:#1e3a5f;--accent-light:#eef2f8;--navy:#111827;
+ --green:#065f46;--green-bg:#d1fae5;--gold:#b45309;--gold-bg:#fef3c7;
+ --blue:#1d4ed8;--blue-bg:#dbeafe;--star:#f59e0b;
+ --r:10px;--r-sm:6px;--sh:0 1px 2px rgba(0,0,0,.04),0 3px 10px rgba(0,0,0,.05);--sh-md:0 2px 6px rgba(0,0,0,.06),0 8px 26px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe3e8;font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;padding:18px 10px 40px;}
+.phone{max-width:430px;margin:0 auto;background:var(--bg);border-radius:26px;box-shadow:var(--sh-md);overflow:hidden;border:1px solid #d1d5db;}
+h1,h2,h3,.brand,.rep-name,.price-t,.reqbox{font-family:'Syne',sans-serif;}
+.hdr{background:linear-gradient(135deg,#16243a,#1e3a5f);color:#fff;padding:14px 16px 12px;}
+.brand{font-size:18px;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.brand small{font-family:'Inter';font-weight:600;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:3px}
+.controls{padding:12px 14px 0;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:9}
+.tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:7px 13px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text-2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg{display:flex;background:var(--surface-2);border-radius:50px;padding:4px;margin:0 0 12px;gap:4px}
+.seg button{flex:1;border:none;background:none;padding:9px 8px;border-radius:50px;font-family:'Inter';font-size:12.5px;font-weight:700;color:var(--text-2);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);box-shadow:var(--sh)}
+.seg button.on.paid{color:var(--green)}
+.hint{font-size:11px;color:var(--text-3);text-align:center;padding:0 14px 11px}
+.rep{padding:14px 14px 26px}
+.rep-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.rep-name{font-size:19px;font-weight:800;line-height:1.15}
+.price-t{flex:0 0 auto;background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:6px 11px;border-radius:50px;white-space:nowrap}
+/* REQUEST card */
+.reqcard{background:linear-gradient(160deg,#eef2f8,#e7edf6);border:1px solid #d6e0ee;border-radius:var(--r);padding:13px 14px;position:relative}
+.reqlabel{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.reqbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;font-size:14.5px;font-weight:600;color:var(--navy);line-height:1.4}
+.reqbox .q{color:#9aa6b6;font-weight:800}
+.reqchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 11px}
+.reqchip{font-size:10.5px;font-weight:600;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:3px 9px}
+.reqbtn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:12px;font-family:'Syne';font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.reqsub{font-size:10.5px;color:var(--text-3);text-align:center;margin-top:7px}
+.gen{display:flex;align-items:center;gap:8px;color:var(--text-3);font-size:11px;font-weight:600;margin:14px 2px 2px}
+.gen::before,.gen::after{content:"";flex:1;height:1px;background:var(--border)}
+.banner{display:flex;align-items:center;gap:8px;border-radius:var(--r-sm);padding:9px 11px;font-size:11.5px;font-weight:600;margin:11px 0 4px;line-height:1.35}
+.banner.free{background:var(--gold-bg);color:#7c4a06;border:1px solid #f5d99a}
+.banner.paid{background:var(--green-bg);color:#065f46;border:1px solid #9ae6c4}
+.banner b{font-weight:800}
+.delta{background:var(--accent-light);border:1px solid #d6e0ee;border-radius:var(--r-sm);padding:9px 11px;font-size:11.5px;color:var(--accent);margin:8px 0 2px;line-height:1.4}
+.delta b{font-weight:800}
+.sec{margin-top:18px}
+.sec-h{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--accent);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.sec-h .n{width:18px;height:18px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.flagrib{font-size:12px;color:var(--text-2);margin-bottom:8px;font-weight:600}
+.flagrib .fl{font-size:15px;vertical-align:-1px}
+.txt{font-size:13px;color:var(--text-2);line-height:1.5}
+.frow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border)}
+.frow:last-child{border-bottom:none}
+.frow .nm{font-weight:600;color:var(--text);font-size:13.5px}
+.frow .mt{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.frow .rt{text-align:right;flex:0 0 auto}
+.est{display:inline-block;font-size:9px;font-weight:700;color:#7c4a06;background:var(--gold-bg);padding:1px 5px;border-radius:4px;letter-spacing:.3px}
+.unver{font-style:italic;color:#9ca3af}
+.cards{display:flex;flex-direction:column;gap:11px}
+.ocard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.ocard.local{border:1.5px solid var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+.ibox{height:122px;position:relative;display:flex;align-items:center;justify-content:center}
+.ibox .em{font-size:40px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25));opacity:.92}
+.ibox .cap{position:absolute;left:9px;bottom:8px;color:#fff;font-size:12px;font-weight:700;font-family:'Syne';text-shadow:0 1px 4px rgba(0,0,0,.5);max-width:78%}
+.vbadge{position:absolute;top:8px;left:8px;background:rgba(6,95,70,.92);color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+.ratechip{position:absolute;top:8px;right:8px;background:rgba(17,24,39,.78);color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px}
+.localrib{position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-size:8.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+.obody{padding:11px 12px 12px}
+.oname{font-weight:700;font-size:14.5px;font-family:'Syne';line-height:1.2}
+.ometa{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:6px 0 7px}
+.stars{color:var(--star);font-size:12px;letter-spacing:1px}
+.mut{color:var(--text-3);font-size:11.5px}
+.pchip{background:var(--surface-2);color:var(--navy);font-weight:700;font-size:11.5px;padding:3px 8px;border-radius:50px}
+.pchip.live{background:#ecfdf5;color:#047857}
+.trust{background:var(--green-bg);color:#065f46;font-weight:800;font-size:11px;padding:3px 8px;border-radius:50px}
+.odesc{font-size:12px;color:var(--text-2);line-height:1.45;margin-bottom:10px}
+.oacts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:none;border-radius:50px;padding:9px 13px;font-family:'Syne';font-size:12px;font-weight:700;cursor:pointer;flex:1;min-width:0;white-space:nowrap}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-out{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+.mapwrap{border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+#lmap{height:212px;width:100%}
+.maplabel{font-size:10px;color:var(--text-3);text-align:center;padding:6px;background:var(--surface)}
+.flagpin .fp{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #1e3a5f;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 1px 5px rgba(0,0,0,.35)}
+.cost{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.cost td{padding:8px 11px;border-bottom:1px solid var(--border)}
+.cost tr:last-child td{border-bottom:none;font-weight:800;background:var(--surface-2)}
+.cost td:last-child{text-align:right;white-space:nowrap}
+.note{font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.45}
+.foot{font-size:10.5px;color:var(--text-3);text-align:center;padding:16px 18px 4px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="phone">
+ <div class="hdr">
+   <div class="brand">🧭 TrustSquare <small>AI Planner · prototype</small></div>
+   <div class="sub">One simple request → a full report. Flip FREE ↔ Verified to see what paid data adds.</div>
+ </div>
+ <div class="controls">
+   <div class="tabs" id="tabs"></div>
+   <div class="seg" id="seg">
+     <button data-m="free" class="on" onclick="setMode('free')">◦ FREE plan</button>
+     <button data-m="paid" class="paid" onclick="setMode('paid')">✓ Verified (paid data)</button>
+   </div>
+ </div>
+ <div class="hint" id="hint"></div>
+ <div class="rep" id="rep"></div>
+ <div class="foot">Prototype · Pretoria-area sample content. Maps are live OpenStreetMap with flag pins. Image tiles are placeholders — real licensed photos arrive with the first paid run. Prices indicative.</div>
+</div>
+<script>
+const G={site:'linear-gradient(135deg,#b45309,#78350f)',stay:'linear-gradient(135deg,#1e3a5f,#0f2742)',eat:'linear-gradient(135deg,#9d174d,#831843)',nature:'linear-gradient(135deg,#047857,#064e3b)',flight:'linear-gradient(135deg,#1d4ed8,#1e3a8a)',water:'linear-gradient(135deg,#0891b2,#0e7490)',snow:'linear-gradient(135deg,#0e7490,#155e75)'};
+function stars(r){let s='';for(let i=1;i<=5;i++)s+=(i<=Math.round(r)?'★':'☆');return s;}
+
+const PLAN={
+ heritage:{name:'Heritage Site Tour Planner',emoji:'🗺️',priceT:'5T',cta:'Plan my tour',
+  prompt:'Plan a 2-day heritage trip to the Cradle of Humankind from Pretoria — 2 of us, by car.',
+  in:'Cradle of Humankind · from Pretoria · 2 days · 2 adults · own car',
+  flags:'🇿🇦 South Africa',
+  geo:[['Pretoria (start)',-25.7479,28.2293,'🇿🇦'],['Maropeng · Cradle of Humankind',-25.9019,27.6786,'🏛️'],['Sterkfontein Caves',-26.0167,27.7333,'🦴']],
+  stayH:'Where to stay',eatH:'Where to eat',doH:'Sites & tickets',
+  stay:[
+   {nm:'Maropeng Boutique Hotel',g:G.stay,em:'🏨',r:4.6,rev:214,free:'mid-range · ~R1,800–2,400/night',price:'R1,980/night',why:'On-site at the Cradle visitor centre — walk to the exhibition.',act:'Book'},
+   {nm:'Forever Resorts Cradle',g:G.stay,em:'🏨',r:4.2,rev:97,free:'budget–mid · ~R1,300–1,600/night',price:'R1,450/night',why:'Self-catering chalets, good for an early cave start.',act:'Book'}],
+  local:[{nm:"Thandi's Cradle Guesthouse",g:G.stay,em:'🏡',trust:92,price:'R1,150/night',why:'Family-run B&B, 8 min from Sterkfontein — a TrustSquare seller.',act:'Request introduction · 1T'}],
+  eat:[
+   {nm:'Tournesol @ Maropeng',g:G.eat,em:'🍽️',r:4.4,rev:160,free:'lunch · ~R180–260pp · menu not verifiable',price:'$$ · R180–260pp',why:'Buffet with valley views; vegetarian options.',act:'View menu'},
+   {nm:'The Carnivore, Muldersdrift',g:G.eat,em:'🍖',r:4.3,rev:540,free:'dinner · ~R350pp · menu not verifiable',price:'$$$ · R350pp',why:'Pan-African grill — a Highveld institution.',act:'View menu'}],
+  do:[
+   {nm:'Maropeng Visitor Centre',g:G.site,em:'🏛️',r:4.5,rev:1200,free:'~R190pp · hours unverified',price:'R190pp',why:'The award-winning origins-of-humankind exhibition.',act:'Get tickets'},
+   {nm:'Sterkfontein Caves',g:G.site,em:'🦴',r:4.6,rev:980,free:'~R190pp · hours unverified',price:'R190pp',why:'Guided tour of the fossil caves (Mrs Ples).',act:'Get tickets'}],
+  route:'Pretoria → Maropeng ≈ 1 h 20 (95 km) via N14.',
+  cost:[['Lodging (1 night, 2)','R1,980'],['Meals (2 lunches, 1 dinner)','R1,420'],['Site tickets (2 sites, 2)','R760'],['Fuel + toll','R420'],['Total (2 adults)','R4,580']]},
+
+ expedition:{name:'Once-in-a-Lifetime Expedition Dossier',emoji:'🧭',priceT:'5T',cta:'Build my dossier',
+  prompt:'I want to experience Lake Baikal, Siberia in winter — 14 days, 2 adults, leaving from South Africa.',
+  in:'Lake Baikal (winter) · from South Africa · 14 days · 2 adults · SA passport',
+  flags:'🇿🇦 South Africa → 🇷🇺 Russia',
+  flightMode:true,
+  geo:[['Johannesburg · OR Tambo',-26.1392,28.2460,'🇿🇦'],['Istanbul',41.2753,28.7519,'🇹🇷'],['Irkutsk',52.2978,104.2964,'🇷🇺'],['Lake Baikal · Listvyanka',51.8480,104.8680,'🏔️']],
+  stayH:'Lodge on the lake',eatH:'Flights & routing',doH:'Vetted operators',
+  stay:[{nm:'Hotel Mayak, Listvyanka',g:G.snow,em:'🏨',r:4.3,rev:410,free:'~R1,300–1,700/night',price:'R1,520/night',why:'Lakeside base for the first and last nights.',act:'Book'}],
+  local:[{nm:'SA→Russia travel fixer (Joburg)',g:G.stay,em:'🤝',trust:88,price:'fee on enquiry',why:'SA-based specialist handles visa + winter logistics — a TrustSquare seller.',act:'Request introduction · 1T'}],
+  eat:[
+   {nm:'JNB → Istanbul → Irkutsk',g:G.flight,em:'✈️',r:0,rev:0,free:'return ~R18,000–26,000 · Turkish + S7',price:'R21,400 return',why:'1 stop · ~17 h · best winter availability.',act:'Book flight'},
+   {nm:'JNB → Dubai → Irkutsk',g:G.flight,em:'✈️',r:0,rev:0,free:'return ~R22,000–30,000 · Emirates + S7',price:'R24,900 return',why:'Smoother connection, slightly pricier.',act:'Book flight'}],
+  do:[
+   {nm:'BaikalNature — 12-day Winter',g:G.snow,em:'🛷',r:4.8,rev:120,free:'from ~R34,000pp · operator vetting needed',price:'from R34,000pp',why:'Ice trekking, hovercraft, Olkhon Island — small groups.',act:'Enquire / book'},
+   {nm:'Baikaler day tours',g:G.water,em:'🧊',r:4.6,rev:86,free:'from ~R12,000pp · day trips',price:'from R12,000pp',why:'Flexible independent day excursions on the lake.',act:'Enquire / book'}],
+  route:'OR Tambo → Istanbul → Irkutsk → Listvyanka (road).',
+  visaFree:'SA passport: Russian visa required. e-visa suitability varies — confirm with the Russian Consulate (Pretoria). Passport valid 6+ months.',
+  visaPaid:'SA passport → Russian e-visa eligible for tourism (verified, official portal). Apply ≥ 4 days ahead; passport valid 6+ months.',
+  cost:[['Return flights (2)','R42,800'],['12-day operator (2)','R68,000'],['Extra lodging (2 nights, 2)','R6,080'],['Visas + insurance (2)','R9,400'],['Total (2 adults)','R126,280']]},
+
+ weekend:{name:'Weekend Adventure Itinerary',emoji:'🎒',priceT:'3T',cta:'Plan my weekend',
+  prompt:'Sort us an outdoorsy weekend in Pretoria — 2 adults, under R1,000.',
+  in:'Pretoria · outdoors · 2 adults · under R1,000',
+  flags:'🇿🇦 South Africa',
+  geo:[['Groenkloof Reserve',-25.7870,28.2110,'🥾'],['Hazel Food Market',-25.7686,28.2789,'🥗'],['Rietvlei Reserve',-25.8740,28.2980,'🌅'],['Pretoria Botanical Garden',-25.7339,28.2792,'🌿']],
+  stayH:'Saturday',eatH:'Eat & refuel',doH:'Sunday',
+  local:[{nm:'Pretoria Trail Guides',g:G.nature,em:'🥾',trust:90,price:'R150pp',why:'Guided Groenkloof morning hike — a TrustSquare Adventures seller.',act:'Request introduction · 1T'}],
+  stay:[
+   {nm:'Groenkloof Nature Reserve hike',g:G.nature,em:'🥾',r:4.6,rev:430,free:'08:00 · ~R44pp · hours unverified',price:'R44pp · open Sat 06:00–18:00',why:'Zebra & giraffe on an easy 5 km loop close to town.',act:'Book entry'},
+   {nm:'Rietvlei sunset game drive',g:G.nature,em:'🌅',r:4.7,rev:260,free:'16:30 · ~R47pp · hours unverified',price:'R47pp · sunset slot verified',why:'Self-drive Big-5-lite reserve, 20 min out.',act:'Book'}],
+  eat:[{nm:'Hazel Food Market',g:G.eat,em:'🥗',r:4.5,rev:1500,free:'12:30 · ~R120pp · menu not verifiable',price:'$$ · ~R120pp',why:'Saturday artisanal food market — 60+ stalls.',act:'View stalls'}],
+  do:[
+   {nm:'Pretoria Botanical Garden',g:G.nature,em:'🌿',r:4.5,rev:720,free:'09:00 · ~R45pp · hours unverified',price:'R45pp · open Sun 08:00–18:00',why:'76 ha of indigenous gardens for a slow Sunday.',act:'Book entry'},
+   {nm:'Brunch — Salvation Café',g:G.eat,em:'☕',r:4.4,rev:330,free:'11:00 · ~R140pp · menu not verifiable',price:'$$ · ~R140pp',why:'Garden brunch spot in Lynnwood.',act:'View menu'}],
+  route:'All stops within 25 km of central Pretoria.',
+  weather:'If it rains: swap Groenkloof for the Ditsong Natural History Museum (indoor, same budget).',
+  cost:[['Groenkloof + Rietvlei (2)','R182'],['Botanical Garden (2)','R90'],['Market lunch + brunch (2)','R520'],['Fuel','R150'],['Total (2 adults)','R942']]}
+};
+
+let cur='heritage',mode='free';
+const HINTS={free:'FREE = today\'s AI plan: text, estimates, “verify before booking”.',paid:'Verified = photo option cards with live ratings, prices, menus, booking + local seller introductions.'};
+function tabsHTML(){return Object.entries(PLAN).map(([k,p])=>`<button class="tab ${k==cur?'on':''}" onclick="setTab('${k}')">${p.emoji} ${k[0].toUpperCase()+k.slice(1)}</button>`).join('');}
+function setTab(k){cur=k;draw();}
+function setMode(m){mode=m;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));document.querySelector('#seg button[data-m=paid]').classList.add('paid');draw();}
+
+function buildMap(p){
+ if(window._lmap){try{window._lmap.remove();}catch(e){}window._lmap=null;}
+ if(!window.L||!document.getElementById('lmap'))return;
+ const m=L.map('lmap',{zoomControl:true,scrollWheelZoom:false});
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap'}).addTo(m);
+ const pts=[];
+ p.geo.forEach(g=>{
+  const icon=L.divIcon({className:'flagpin',html:`<div class="fp">${g[3]}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+  L.marker([g[1],g[2]],{icon}).addTo(m).bindPopup(`<b>${g[0]}</b>`);
+  pts.push([g[1],g[2]]);
+ });
+ if(pts.length>1)L.polyline(pts,{color:'#1e3a5f',weight:3,opacity:.55,dashArray:'6 7'}).addTo(m);
+ try{m.fitBounds(pts,{padding:[30,30]});}catch(e){m.setView(pts[0],11);}
+ if(pts.length===1)m.setView(pts[0],12);
+ window._lmap=m;setTimeout(()=>{try{m.invalidateSize();}catch(e){}},150);
+}
+function cardHTML(it,local){
+ if(local) return `<div class="ocard local"><div class="ibox" style="background:${it.g}"><span class="localrib">★ TrustSquare local</span><span class="em">${it.em}</span><span class="cap">${it.nm}</span></div>
+  <div class="obody"><div class="oname">${it.nm}</div><div class="ometa"><span class="trust">Trust ${it.trust}</span><span class="pchip live">${it.price}</span></div>
+  <div class="odesc">${it.why}</div><div class="oacts"><button class="btn btn-pri">${it.act}</button></div></div></div>`;
+ const rate=it.r>0?`<span class="stars">${stars(it.r)}</span><span class="mut">${it.r} (${it.rev})</span>`:'';
+ return `<div class="ocard"><div class="ibox" style="background:${it.g}"><span class="vbadge">✓ Verified</span>${it.r>0?`<span class="ratechip">★ ${it.r}</span>`:''}<span class="em">${it.em}</span><span class="cap">${it.nm}</span></div>
+  <div class="obody"><div class="oname">${it.nm}</div><div class="ometa">${rate}<span class="pchip live">${it.price}</span></div>
+  <div class="odesc">${it.why}</div><div class="oacts"><button class="btn btn-pri">${it.act}</button><button class="btn btn-out">Save</button></div></div></div>`;
+}
+function freeList(items){return items.map(it=>`<div class="frow"><div><div class="nm">${it.nm}</div><div class="mt ${it.free.includes('not verifiable')||it.free.includes('unverified')?'unver':''}">${it.free}</div></div><div class="rt"><span class="est">EST</span></div></div>`).join('');}
+
+function draw(){
+ document.getElementById('tabs').innerHTML=tabsHTML();
+ document.getElementById('hint').textContent=HINTS[mode];
+ const p=PLAN[cur];const free=mode=='free';
+ const chips=p.in.split('·').map(c=>`<span class="reqchip">${c.trim()}</span>`).join('');
+ let h=`<div class="rep-top"><div class="rep-name">${p.emoji} ${p.name}</div><div class="price-t">${p.priceT}</div></div>`;
+ // REQUEST PROMPT
+ h+=`<div class="reqcard"><div class="reqlabel">✦ Your request</div>
+   <div class="reqbox"><span class="q">“</span>${p.prompt}<span class="q">”</span></div>
+   <div class="reqchips">${chips}</div>
+   <button class="reqbtn">${p.cta} · ${p.priceT}</button>
+   <div class="reqsub">That's the whole ask. See a free sample first — pay only on a real run.</div></div>`;
+ h+=`<div class="gen">↓ generated in ~10 seconds</div>`;
+ h+=free?`<div class="banner free">⚠️ <span><b>AI plan</b> — figures indicative, verify before booking · Sample preview · $0</span></div>`
+        :`<div class="banner paid">✓ <span><b>Verified plan</b> — live ratings, prices, photos & booking · powered by trusted data feeds</span></div>`;
+ h+=`<div class="delta">${free?'<b>Free:</b> a complete, current plan from AI web search — text, estimated prices, honest “not verifiable” notes.':'<b>Paid data adds:</b> real photos, star ratings, live prices, working menu/booking links, “Verified” badges — and your local TrustSquare sellers ranked first.'}</div>`;
+ // MAP (real, flags)
+ h+=`<div class="sec"><div class="sec-h"><span class="n">1</span>Route &amp; map</div>
+   <div class="flagrib"><span class="fl">${p.flags}</span> &nbsp;·&nbsp; ${p.route}</div>
+   <div class="mapwrap"><div id="lmap"></div><div class="maplabel">${free?'Real route map — your stops, pinned with flags':'📍 Live POI map — every flag pin opens its card'}</div></div></div>`;
+ let n=2;
+ if(p.visaFree){h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>Visas &amp; documents</div>`;
+   h+= free?`<div class="txt">${p.visaFree}</div>`:`<div class="txt" style="margin-bottom:8px">${p.visaPaid}</div><div class="cards">${cardHTML({nm:'Russian e-visa portal',g:G.flight,em:'🛂',r:0,price:'Verified · official',why:'Direct link to the official application — checked for SA passport holders.',act:'Open official portal'},false)}</div>`;
+   h+=`</div>`;}
+ const secs=p.flightMode?[['Flights &amp; routing',p.eat],['Vetted operators',p.do],['Lodge',p.stay]]:[[p.stayH,p.stay],[p.eatH,p.eat],[p.doH,p.do]];
+ if(!free && p.local){h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>Local on TrustSquare · introductions</div><div class="cards">${p.local.map(it=>cardHTML(it,true)).join('')}</div><div class="note">Ranked first. A report can point you to a listing; the introduction itself is always a separate 1T charge.</div></div>`;}
+ secs.forEach(([title,items])=>{h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>${title}</div>`+(free?freeList(items):`<div class="cards">${items.map(it=>cardHTML(it,false)).join('')}</div>`)+`</div>`;});
+ if(free && p.local){h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>Matching TrustSquare listings</div><div class="txt">${p.local.length} local seller${p.local.length>1?'s':''} match this trip — request an introduction (1T each) to connect.</div></div>`;}
+ if(p.weather){h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>If the weather turns</div><div class="txt">${p.weather}</div></div>`;}
+ h+=`<div class="sec"><div class="sec-h"><span class="n">${n++}</span>Cost estimate</div><table class="cost"><tbody>${p.cost.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table><div class="note">${free?'All figures are AI estimates (EST) — confirm before you commit.':'Built from live prices where available; affiliate bookings may earn TrustSquare a commission at no cost to you.'}</div></div>`;
+ document.getElementById('rep').innerHTML=h;
+ buildMap(p);
+}
+if(window.L){draw();}else{window.addEventListener('load',draw);}
+</script>
+</body>
+</html>

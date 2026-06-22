@@ -6,6 +6,18 @@
 const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
 
+// ── Launch Switch: read server feature flags on load (safe default = free-only) ──
+window.FEATURES = { verified_visible:false, videos_visible:false, heritage_verified:false, expedition_verified:false, weekend_verified:false, _loaded:false };
+function loadFeatureFlags(){
+  try{
+    fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){
+      if(f && f.effective){ window.FEATURES = Object.assign(window.FEATURES, f.effective, {_loaded:true, _raw:f});
+        try{ document.documentElement.setAttribute('data-verified', window.FEATURES.verified_visible ? '1':'0'); }catch(e){} }
+    }).catch(function(e){ console.warn('feature flags load failed (default: free-only)', e); });
+  }catch(e){ console.warn('feature flags load error', e); }
+}
+loadFeatureFlags();
+
 // ── Photo resilience: R2 primary → local Hetzner mirror fallback ─────────
 // If R2 is unreachable, swap src to /media/<key> served from Hetzner disk.
 // R2 pattern: https://pub-xxx.r2.dev/path/file.jpg → /media/path/file.jpg
@@ -12667,7 +12679,7 @@ async function aiBoot(){
           ${f.has_glimpse?'<span class="ai-tag free">FREE GLIMPSE</span>':''}
           <span class="ai-tag price">${f.has_glimpse?'Level 2 \u00b7 ':''}${f.price_t}T per use</span>
           <span class="ai-tag ${f.status==='live'?'live':'stub'}">${f.status==='live'?'LIVE':'PREVIEW'}</span>
-          ${AI_VIDEOS[f.id]?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}
+          ${(AI_VIDEOS[f.id] && window.FEATURES && window.FEATURES.videos_visible)?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}
         </div>
         <h3><span class="ai-ico">${f.icon||'\u2728'}</span> <span class="ai-name">${f.name}</span></h3><p>${f.blurb}</p>
       </div>`).join('');

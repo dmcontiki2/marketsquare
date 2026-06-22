@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "report_type": "weekly_discovery_scan",
-  "generated_at": "2026-06-15T04:46:03Z",
-  "generated_by": "daily-loop sensor (Monday deep scan, merged loop v1.2)",
+  "generated_at": "2026-06-22T04:37:34Z",
+  "generated_by": "merged-daily-loop Monday scan (2026-06-22)",
   "scan_scope": [
     "bea_main.py",
     "auth.py",
@@ -21,9 +21,9 @@
   ],
   "totals": {
     "found_this_week": 1,
-    "fixed_this_week": 6,
+    "fixed_this_week": 1,
     "still_open": 1,
-    "note": "Delta vs 2026-06-08 report. ALL 6 prior-open closed since last scan: SCAN-13/14/15/16 shipped S137 (12 Jun) and HTML-1/HTML-2 dead locals removed (no longer flagged by eslint no-unused-vars). 1 NEW: SCAN-17 (F811 duplicate function name admin_ai_spend_summary at bea_main.py:3452 + :8980, introduced by the 12 Jun cost-sweep / BASELINE-12JUN-1). Both routes (/admin/ai-spend/summary and /admin/ai-spend) verified registered+reachable on live (HTTP 401 each, auth-gated) so the collision is cosmetic at runtime (OpenAPI operation_id duplicate + module name shadow), no routing break. pylint 10.00/10, no cyclic imports, ZERO F821 undefined-name. Detection-only; no code changed, no deploy."
+    "note": "Delta vs 2026-06-15. Prior 1 open (SCAN-17 F811 dup admin_ai_spend_summary) was resolved S137 (17 Jun, David-approved rename) and no longer flagged. 1 NEW: SCAN-18 (B904 raise-without-from-err at bea_main.py:1318 in _validate_rental_fields, introduced by the S139 rental-availability feature). Non-ledger, behaviour-neutral, auto-shippable. Pylint 10.00/10, no cyclic imports, ZERO F821. ESLint 0 structural errors on ms.js v189. Detection-only; no code changed."
   },
   "severity_breakdown": {
     "CRIT": 0,
@@ -33,80 +33,42 @@
   },
   "open_issues": [
     {
-      "id": "SCAN-17",
+      "id": "SCAN-18",
       "sev": "LOW",
-      "file": "bea_main.py",
-      "line": 3452,
-      "summary": "NEW (ruff F811): function name `admin_ai_spend_summary` defined twice \u2014 line 3452 (route GET /admin/ai-spend/summary, added by 12-Jun cost-sweep) and line 8980 (route GET /admin/ai-spend, Session 90). Distinct paths so both routes register+serve (live 401 each); module-level name resolves to the 2nd def, and FastAPI emits duplicate OpenAPI operation_id. Behaviour-neutral. Fix: rename the newer handler (3452) e.g. admin_ai_spend_daily_summary; no path/logic change. GATE: sits in AI-spend/cost reporting area -> default-to-stage (Gate 2 vicinity)."
+      "file": "bea_main.py:1318",
+      "rule": "B904",
+      "summary": "raise HTTPException inside except (ValueError,TypeError) without 'from err'/'from None' in _validate_rental_fields. Fix: add 'from None'. Non-ledger; auto-ship eligible."
     }
   ],
   "fixed_issues": [
     {
-      "id": "SCAN-13",
-      "summary": "unused Query import (F401) \u2014 shipped S135 (10 Jun)"
-    },
-    {
-      "id": "SCAN-14",
-      "summary": "unused sessions param on retired aa_buy_pack 410 stub \u2014 shipped S136 (11 Jun)"
-    },
-    {
-      "id": "SCAN-15",
-      "summary": "dead locals e@1552 + photo_entry@2565 \u2014 shipped S137 (12 Jun)"
-    },
-    {
-      "id": "SCAN-16",
-      "summary": "22x B904 raise-without-from (non-ledger) + ledger sites (ai-commit/ai-settle, approved) + B905 \u2014 shipped S137 (12 Jun); flake8 B904/B905=0"
-    },
-    {
-      "id": "HTML-1",
-      "summary": "dead currentView in marketsquare_admin.html \u2014 removed (8 Jun); no longer flagged"
-    },
-    {
-      "id": "HTML-2",
-      "summary": "dead editingIdx/photoFile/tier/ur/status in marketsquare_admin.html \u2014 removed; eslint no longer flags any of them (status FP residue also clear)"
+      "id": "SCAN-17",
+      "note": "F811 duplicate admin_ai_spend_summary - resolved S137 (rename to admin_ai_spend_daily_summary); no longer flagged this scan."
     }
   ],
   "false_positives_reconfirmed": [
     {
-      "id": "FP-family",
-      "file": "bea_main.py",
-      "line": "1527,1628",
-      "reason": "vulture 'family' (100%) \u2014 signature-mandated params of the socket.getaddrinfo IPv4-only monkeypatch wrappers; renaming breaks keyword callers. IGNORE (re-confirmed)"
+      "rule": "B008 x7",
+      "files": "bea_main.py vision/upload endpoints",
+      "note": "FastAPI File()/Form() in arg defaults - required idiom, not a bug"
     },
     {
-      "id": "FP-tshLoad",
-      "file": "marketsquare_admin.html",
-      "line": "~3595 (admin inline)",
-      "reason": "eslint no-func-assign 'tshLoad' \u2014 intentional decorator/wrapper (const _origTshLoad = tshLoad; tshLoad = async function...). Works as written. IGNORE (re-confirmed)"
+      "rule": "vulture 'family' x2",
+      "file": "bea_main.py:1579,1680",
+      "note": "getaddrinfo family params intentionally kept (SCAN-11 ruling)"
     },
     {
-      "id": "FP-B008",
-      "file": "bea_main.py",
-      "line": "2372,2500,2816,2872,4172,7412,9476",
-      "reason": "ruff B008 x7 function-call-in-default-argument \u2014 FastAPI File()/Depends()/Query() in defaults is the required framework idiom, not a bug. IGNORE (re-confirmed)"
-    },
-    {
-      "id": "FP-loadDashboard",
+      "rule": "eslint no-unused-vars x372",
       "file": "ms.js",
-      "line": 4806,
-      "reason": "NEW FP: eslint no-undef 'loadDashboard' \u2014 but the call is typeof-guarded (`if (typeof loadDashboard === 'function') loadDashboard()`); typeof on an undeclared name never throws, so the optional call is safe defensive code (loadDashboard lives on the dashboard page, not the buyer bundle). IGNORE."
-    },
-    {
-      "id": "FP-eslint-unused-vars",
-      "file": "ms.js + admin inline",
-      "line": "various (~460)",
-      "reason": "eslint no-unused-vars mass-flags onclick handler functions (called from inline HTML attributes eslint can't see), ms-data demo globals used cross-file by ms.js, intentional `_` throwaways, and cosmetic catch(e) bindings. Not dead code. IGNORE as a class."
+      "note": "global onclick handlers + catch 'e' bindings; 0 structural errors"
     }
   ],
   "health_at_scan": {
-    "bea_health": "ok",
     "bea_version": "1.3.1",
-    "smoke": "39/39 (0 fail)",
-    "pylint_rating": "10.00/10",
-    "cyclic_imports": 0,
+    "smoke": "40/40",
+    "health": "ok",
     "today_spend_usd": 0.0,
-    "platform_ceiling_usd": 100.0,
-    "real_token_pct": 100.0
+    "platform_ceiling_usd": 100.0
   },
   "history": [
     {
@@ -132,6 +94,13 @@
       "found": 1,
       "fixed": 6,
       "open": 1
+    },
+    {
+      "week_of": "2026-06-22",
+      "found": 1,
+      "fixed": 1,
+      "open": 1
     }
-  ]
+  ],
+  "week_of": "2026-06-22"
 }

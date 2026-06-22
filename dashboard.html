@@ -409,6 +409,7 @@
     <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
     <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
     <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
+    <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 Launch Switch</button>
     <a id="orch-cockpit-link" href="/orchestrator/v2/cockpit.html" title="Orchestration v2 — Control Room" style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:linear-gradient(135deg,#0f6e56,#1d9e75);color:#fff;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;">🛰️ Orchestration</a>
   </div>
 </div>
@@ -527,6 +528,108 @@
   <svg id="graph-svg"></svg>
 </div>
 
+<!-- ── LAUNCH SWITCH VIEW (page 5 / the +1) ── -->
+<div id="launch-switch-view" style="display:none;padding:24px 20px;max-width:760px;margin:0 auto;">
+ <style>
+  #launch-switch-view .ls-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:16px}
+  #launch-switch-view .ls-h{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  #launch-switch-view .ls-seg{display:flex;background:var(--surface2);border-radius:50px;padding:4px;gap:4px}
+  #launch-switch-view .ls-seg button{flex:1;border:none;background:none;padding:11px;border-radius:50px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+  #launch-switch-view .ls-seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  #launch-switch-view .ls-seg button.on.live{color:var(--green)}
+  #launch-switch-view .ls-status{border-radius:8px;padding:11px 13px;font-size:13px;font-weight:600;margin-top:13px;line-height:1.45}
+  #launch-switch-view .ls-status.launch{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.35)}
+  #launch-switch-view .ls-status.live{background:rgba(16,185,129,.12);color:#6ee7b7;border:1px solid rgba(16,185,129,.35)}
+  #launch-switch-view .ls-grp-h{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:2px 0 8px}
+  #launch-switch-view .ls-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  #launch-switch-view .ls-row:last-child{border-bottom:none}
+  #launch-switch-view .ls-nm{font-size:13.5px;font-weight:600;color:var(--text)}
+  #launch-switch-view .ls-ds{font-size:11px;color:var(--muted);margin-top:1px}
+  #launch-switch-view .ls-sw{position:relative;width:44px;height:25px;flex:0 0 auto}
+  #launch-switch-view .ls-sw input{opacity:0;width:0;height:0;position:absolute}
+  #launch-switch-view .ls-sl{position:absolute;inset:0;background:#33415a;border-radius:50px;transition:.2s;cursor:pointer}
+  #launch-switch-view .ls-sl::before{content:"";position:absolute;height:19px;width:19px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  #launch-switch-view .ls-sw input:checked + .ls-sl{background:var(--accent)}
+  #launch-switch-view .ls-sw input:checked + .ls-sl::before{transform:translateX(19px)}
+  #launch-switch-view .ls-sw input:disabled + .ls-sl{opacity:.4;cursor:not-allowed}
+  #launch-switch-view .ls-grp.locked{opacity:.5}
+  #launch-switch-view .ls-prev{background:#0b1322;border:1px solid var(--border);border-radius:8px;padding:13px 15px;font-size:13px;line-height:1.5;color:var(--text)}
+  #launch-switch-view .ls-pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;margin:3px 4px 0 0}
+  #launch-switch-view .ls-pill.on{background:rgba(16,185,129,.18);color:#6ee7b7}
+  #launch-switch-view .ls-pill.off{background:#26303f;color:#7c8aa0}
+  #launch-switch-view .ls-note{font-size:11px;color:var(--muted);margin-top:13px;line-height:1.5}
+ </style>
+ <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+   <div style="font-size:22px;font-weight:800;color:var(--text)">🚀 Launch Switch</div>
+   <div style="font-size:11px;color:var(--muted)">one flag, flipped live — saved to the server</div>
+ </div>
+ <div class="ls-card">
+   <div class="ls-h">Marketplace mode</div>
+   <div class="ls-seg" id="ls-seg">
+     <button class="on" data-m="launch" onclick="lsSet('launch')">🚀 Launch — Free only</button>
+     <button class="live" data-m="live" onclick="lsSet('live')">✓ Verified — live</button>
+   </div>
+   <div id="ls-status" class="ls-status launch"></div>
+ </div>
+ <div class="ls-card ls-grp" id="ls-gVis">
+   <div class="ls-grp-h">Visibility (front-end)</div>
+   <div class="ls-row"><div><div class="ls-nm">Show Verified (paid-data) tier in planners</div><div class="ls-ds">the FREE / Verified toggle &amp; verified cards</div></div><label class="ls-sw"><input type="checkbox" id="ls_v_tier" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Show feature demo videos</div><div class="ls-ds">the planner advert / how-to videos</div></div><label class="ls-sw"><input type="checkbox" id="ls_v_video" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+ </div>
+ <div class="ls-card ls-grp" id="ls-gData">
+   <div class="ls-grp-h">Data &amp; partners (back-end rollout)</div>
+   <div class="ls-row"><div><div class="ls-nm">Signed-operator photos</div><div class="ls-ds">keepable images from showcase agreements</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_ops" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Google Places — live data</div><div class="ls-ds">ratings, prices, hours, live photos</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_places" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Flights (Amadeus)</div><div class="ls-ds">Expedition tier — real fares</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_flights" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Mapbox upgrade <span style="color:var(--muted);font-weight:600">(optional)</span></div><div class="ls-ds">OSM/Leaflet already free</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_mapbox" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+ </div>
+ <div class="ls-card ls-grp" id="ls-gPlan">
+   <div class="ls-grp-h">Per-planner verified (granular)</div>
+   <div class="ls-row"><div class="ls-nm">🗺️ Heritage</div><label class="ls-sw"><input type="checkbox" id="ls_p_her" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div class="ls-nm">🧭 Expedition</div><label class="ls-sw"><input type="checkbox" id="ls_p_exp" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div class="ls-nm">🎒 Weekend</div><label class="ls-sw"><input type="checkbox" id="ls_p_wk" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+ </div>
+ <div class="ls-card">
+   <div class="ls-h">What buyers see right now</div>
+   <div class="ls-prev" id="ls-prev"></div>
+   <div class="ls-note">Saved to the server (one flag) the buyer app reads on load — switching is instant for everyone, no redeploy. The back-end paid-feed gate still blocks any charge if a tier is off.</div>
+ </div>
+</div>
+<script>
+(function(){
+ var B=(location.protocol==='file:'?'https://trustsquare.co':'');
+ var S={mode:'launch',verified_tier:0,videos:0,data_ops:0,data_places:0,data_flights:0,data_mapbox:0,p_heritage:0,p_expedition:0,p_weekend:0};
+ var M={ls_v_tier:'verified_tier',ls_v_video:'videos',ls_d_ops:'data_ops',ls_d_places:'data_places',ls_d_flights:'data_flights',ls_d_mapbox:'data_mapbox',ls_p_her:'p_heritage',ls_p_exp:'p_expedition',ls_p_wk:'p_weekend'};
+ function tok(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}}
+ function applyDom(){
+   var seg=document.getElementById('ls-seg'); if(seg){[].forEach.call(seg.querySelectorAll('button'),function(b){b.classList.toggle('on',b.dataset.m===S.mode);}); var lv=seg.querySelector('button[data-m=live]'); if(lv)lv.classList.add('live');}
+   Object.keys(M).forEach(function(id){var e=document.getElementById(id); if(!e)return; e.checked=!!S[M[id]]; e.disabled=(S.mode==='launch');});
+ }
+ function readDom(){ Object.keys(M).forEach(function(id){var e=document.getElementById(id); if(e)S[M[id]]=e.checked?1:0;}); }
+ function visual(){
+   ['ls-gVis','ls-gData','ls-gPlan'].forEach(function(x){var e=document.getElementById(x); if(e)e.classList.toggle('locked',S.mode==='launch');});
+   var st=document.getElementById('ls-status'), pv=document.getElementById('ls-prev'); if(!st||!pv)return;
+   if(S.mode==='launch'){st.className='ls-status launch'; st.innerHTML='🚀 <b>Launch mode.</b> Free AI plans only — Verified tier, demo videos and all paid feeds hidden. Buyers never see them.'; pv.innerHTML='<b>Free AI plans only.</b><br><span class="ls-pill off">Verified hidden</span><span class="ls-pill off">Videos hidden</span><span class="ls-pill off">No paid feeds</span>'; return;}
+   st.className='ls-status live'; st.innerHTML='✓ <b>Verified live.</b> Stage features below as operators sign and feeds come on.';
+   var pill=function(on,t){return '<span class="ls-pill '+(on?'on':'off')+'">'+t+'</span>';};
+   var pls=[S.p_heritage&&'Heritage',S.p_expedition&&'Expedition',S.p_weekend&&'Weekend'].filter(Boolean);
+   pv.innerHTML='<b>'+(S.verified_tier?'Verified tier visible':'Verified tier still hidden')+'.</b><br>'+pill(S.verified_tier,'Verified toggle')+pill(S.videos,'Videos')+pill(S.data_ops,'Operator photos')+pill(S.data_places,'Places live')+pill(S.data_flights,'Flights')+'<br><span style="color:var(--muted);font-size:11px">Verified planners: '+(pls.length?pls.join(" · "):'none yet')+'</span>';
+ }
+ function fromServer(f){ if(!f)return; S.mode=f.mode||'launch'; S.verified_tier=f.verified_tier?1:0; S.videos=f.videos?1:0;
+   if(f.data){S.data_ops=f.data.ops?1:0;S.data_places=f.data.places?1:0;S.data_flights=f.data.flights?1:0;S.data_mapbox=f.data.mapbox?1:0;}
+   if(f.planners){S.p_heritage=f.planners.heritage?1:0;S.p_expedition=f.planners.expedition?1:0;S.p_weekend=f.planners.weekend?1:0;} }
+ window.lsLoad=function(){ fetch(B+'/flags').then(function(r){return r.json();}).then(function(f){fromServer(f);applyDom();visual();}).catch(function(e){applyDom();visual();}); };
+ window.lsSave=function(){ var body={mode:S.mode,verified_tier:!!S.verified_tier,videos:!!S.videos,data_ops:!!S.data_ops,data_places:!!S.data_places,data_flights:!!S.data_flights,data_mapbox:!!S.data_mapbox,p_heritage:!!S.p_heritage,p_expedition:!!S.p_expedition,p_weekend:!!S.p_weekend};
+   fetch(B+'/admin/flags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':tok()},body:JSON.stringify(body)}).then(function(r){ if(r.status===401){alert('Admin session expired — reload and log in to save.');return null;} return r.json();}).then(function(f){ if(f){fromServer(f);applyDom();visual();} }).catch(function(e){console.warn('flags save failed',e);}); };
+ window.lsSet=function(m){ S.mode=m; applyDom(); visual(); lsSave(); };
+ window.lsRender=function(){ readDom(); visual(); lsSave(); };
+ applyDom(); visual();
+})();
+</script>
+<!-- ── END LAUNCH SWITCH VIEW ── -->
+
+
+
 <script>
 // ── Live data: fetched from BEA on every load ────────────────────────────
 let DATA = {};
@@ -556,6 +659,9 @@ function switchView(view) {
   const dash = document.querySelector('.main');
   const graph = document.getElementById('graph-view');
   const ops = document.getElementById('ops-view');
+  var _ls=document.getElementById('launch-switch-view');
+  if(view==='launch'){ dash.style.display='none'; var _g=document.getElementById('graph-view'); if(_g)_g.classList.remove('visible'); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
+  if(_ls)_ls.style.display='none'; var _lb2=document.getElementById('vtab-launch'); if(_lb2)_lb2.classList.remove('active');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
   document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
   document.getElementById('vtab-ops').classList.toggle('active', view === 'ops');

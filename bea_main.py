@@ -453,6 +453,23 @@ def run_migrations(conn):
     conn.execute("""INSERT OR IGNORE INTO ai_spend_config
         (id, monthly_income_usd, alert_threshold_pct, alert_email)
         VALUES (1, 0.0, 20.0, 'dmcontiki2@gmail.com')""")
+
+    # Launch Switch (free-only <-> verified) — singleton flag row; default = launch/free-only
+    conn.execute("""CREATE TABLE IF NOT EXISTS launch_switches (
+        id            INTEGER PRIMARY KEY CHECK (id = 1),
+        mode          TEXT    NOT NULL DEFAULT 'launch',
+        verified_tier INTEGER NOT NULL DEFAULT 0,
+        videos        INTEGER NOT NULL DEFAULT 0,
+        data_ops      INTEGER NOT NULL DEFAULT 0,
+        data_places   INTEGER NOT NULL DEFAULT 0,
+        data_flights  INTEGER NOT NULL DEFAULT 0,
+        data_mapbox   INTEGER NOT NULL DEFAULT 0,
+        p_heritage    INTEGER NOT NULL DEFAULT 0,
+        p_expedition  INTEGER NOT NULL DEFAULT 0,
+        p_weekend     INTEGER NOT NULL DEFAULT 0,
+        updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
     # C1 (Session 97) — HARD daily cost ceilings (USD), per-user + platform. 0 = off.
     # When the day's spend reaches the cap, the next paid AI call is REFUSED (429).
     for _col, _ddl in (
@@ -8973,6 +8990,85 @@ def admin_verify(x_admin_token: str = Header(default=None)):
     except _pyjwt.InvalidTokenError as exc:
         raise HTTPException(status_code=401, detail="Invalid token.") from exc
     return {"valid": True, "sub": payload.get("sub", "unknown")}
+
+
+# -- Launch Switch flags (free-only <-> verified) --------------------------------
+def _require_admin(x_admin_token: str = Header(default=None)):
+    """Admin-token guard — same JWT the dashboard already holds."""
+    if not x_admin_token:
+        raise HTTPException(status_code=401, detail="No admin token.")
+    try:
+        return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except _pyjwt.ExpiredSignatureError as exc:
+        raise HTTPException(status_code=401, detail="Token expired.") from exc
+    except _pyjwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token.") from exc
+
+class _FlagsUpdate(BaseModel):
+    mode:          Optional[str]  = None
+    verified_tier: Optional[bool] = None
+    videos:        Optional[bool] = None
+    data_ops:      Optional[bool] = None
+    data_places:   Optional[bool] = None
+    data_flights:  Optional[bool] = None
+    data_mapbox:   Optional[bool] = None
+    p_heritage:    Optional[bool] = None
+    p_expedition:  Optional[bool] = None
+    p_weekend:     Optional[bool] = None
+
+def _flags_payload(d):
+    def b(k): return bool(d.get(k, 0))
+    live = (d.get("mode", "launch") == "live")
+    return {
+        "mode": d.get("mode", "launch"),
+        "verified_tier": b("verified_tier"), "videos": b("videos"),
+        "data": {"ops": b("data_ops"), "places": b("data_places"),
+                 "flights": b("data_flights"), "mapbox": b("data_mapbox")},
+        "planners": {"heritage": b("p_heritage"), "expedition": b("p_expedition"),
+                     "weekend": b("p_weekend")},
+        "effective": {
+            "verified_visible":    live and b("verified_tier"),
+            "videos_visible":      live and b("videos"),
+            "heritage_verified":   live and b("verified_tier") and b("p_heritage"),
+            "expedition_verified": live and b("verified_tier") and b("p_expedition"),
+            "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
+        },
+        "updated_at": d.get("updated_at", ""),
+    }
+
+@app.get("/flags")
+def get_flags():
+    """Public — buyer app + dashboard read launch-switch state. Safe default = launch/free-only."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+    finally:
+        conn.close()
+    return _flags_payload(dict(row) if row else {})
+
+@app.post("/admin/flags")
+def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
+    """Admin (JWT) — flip the launch switch. Writes the singleton row, returns full state."""
+    data = upd.dict(exclude_unset=True)
+    sets, vals = [], []
+    for k, v in data.items():
+        if k == "mode":
+            if v not in ("launch", "live"):
+                raise HTTPException(status_code=400, detail="mode must be 'launch' or 'live'")
+            sets.append("mode = ?"); vals.append(v)
+        else:
+            sets.append(k + " = ?"); vals.append(1 if v else 0)
+    conn = database.get_db()
+    try:
+        if sets:
+            sets.append("updated_at = datetime('now')")
+            conn.execute("UPDATE launch_switches SET " + ", ".join(sets) + " WHERE id = 1", vals)
+            conn.commit()
+        row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+    finally:
+        conn.close()
+    return _flags_payload(dict(row) if row else {})
+
 
 @app.post("/admin/users")
 def admin_add_user(user: _AdminUserCreate, _key: str = Depends(auth.require_api_key)):

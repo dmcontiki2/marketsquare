@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare Dashboard · +1 · Launch Switch (prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--surface:#fff;--surface-2:#eef0f3;--border:#e2e5ea;--text:#111827;--text-2:#4b5563;--text-3:#6b7280;--accent:#1e3a5f;--accent-light:#eef2f8;--green:#065f46;--green-bg:#d1fae5;--gold:#b45309;--gold-bg:#fef3c7;--r:10px;--r-sm:6px;--sh:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.06);}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe3e8;font-family:'Inter',system-ui,sans-serif;color:var(--text);padding:20px 12px 48px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:600px;margin:0 auto}
+h1,h2,.t{font-family:'Syne',sans-serif}
+.hdr{background:linear-gradient(135deg,#16243a,#1e3a5f);color:#fff;border-radius:14px 14px 0 0;padding:16px 20px}
+.crumb{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:600}
+.hdr h1{font-size:20px;margin:4px 0 0;font-weight:800}
+.hdr p{font-size:12px;color:rgba(255,255,255,.72);margin:4px 0 0}
+.panel{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;box-shadow:var(--sh);padding:18px 20px 22px}
+.card{border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;margin-bottom:16px}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.seg{display:flex;background:var(--surface-2);border-radius:50px;padding:4px;gap:4px}
+.seg button{flex:1;border:none;background:none;padding:11px;border-radius:50px;font-family:'Syne';font-size:14px;font-weight:700;color:var(--text-2);cursor:pointer}
+.seg button.on{background:var(--surface);box-shadow:var(--sh);color:var(--accent)}
+.seg button.on.live{color:var(--green)}
+.status{display:flex;gap:9px;align-items:flex-start;border-radius:var(--r-sm);padding:11px 13px;font-size:12.5px;font-weight:600;margin-top:13px;line-height:1.4}
+.status.launch{background:var(--gold-bg);color:#7c4a06;border:1px solid #f0d292}
+.status.live{background:var(--green-bg);color:#065f46;border:1px solid #9ae6c4}
+.grp-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);margin:4px 2px 8px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px dashed var(--border)}
+.row:last-child{border-bottom:none}
+.row .nm{font-size:13.5px;font-weight:600}
+.row .ds{font-size:11px;color:var(--text-3);margin-top:1px}
+.sw{position:relative;width:44px;height:25px;flex:0 0 auto}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sl{position:absolute;inset:0;background:#cbd2da;border-radius:50px;transition:.2s;cursor:pointer}
+.sl::before{content:"";position:absolute;height:19px;width:19px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked + .sl{background:var(--accent)}
+.sw input:checked + .sl::before{transform:translateX(19px)}
+.sw input:disabled + .sl{opacity:.4;cursor:not-allowed}
+.grp.locked{opacity:.55}
+.preview{background:#0f1b2d;color:#dbe6f4;border-radius:var(--r);padding:13px 15px;font-size:12.5px;line-height:1.5;margin-top:6px}
+.preview b{color:#fff;font-family:'Syne'}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;margin:3px 4px 0 0}
+.pill.on{background:#16361f;color:#86efac}.pill.off{background:#2a2f37;color:#9aa6b6}
+.note{font-size:11px;color:var(--text-3);margin-top:14px;line-height:1.5}
+.foot{font-size:10.5px;color:var(--text-3);text-align:center;margin-top:14px}
+</style></head>
+<body><div class="wrap">
+ <div class="hdr"><div class="crumb">Dashboard · page 4 · the +1</div><h1>Launch Switch</h1><p>One flag, flipped live — no redeploy. Controls what buyers can see.</p></div>
+ <div class="panel">
+  <div class="card">
+   <div class="lbl">Marketplace mode</div>
+   <div class="seg" id="seg">
+     <button class="on" data-m="launch" onclick="setMode('launch')">🚀 Launch — Free only</button>
+     <button data-m="live" class="live" onclick="setMode('live')">✓ Verified — live</button>
+   </div>
+   <div id="status" class="status launch"></div>
+  </div>
+
+  <div class="card grp" id="grpVis">
+   <div class="grp-h">Visibility (front-end)</div>
+   <div class="row"><div><div class="nm">Show Verified (paid-data) tier in planners</div><div class="ds">the FREE ↔ Verified toggle &amp; verified cards</div></div><label class="sw"><input type="checkbox" id="v_tier" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div><div class="nm">Show feature demo videos</div><div class="ds">the planner advert / how-to videos</div></div><label class="sw"><input type="checkbox" id="v_video" onchange="render()"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="card grp" id="grpData">
+   <div class="grp-h">Data &amp; partners (back-end rollout)</div>
+   <div class="row"><div><div class="nm">Signed-operator photos</div><div class="ds">keepable images from showcase agreements</div></div><label class="sw"><input type="checkbox" id="d_ops" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div><div class="nm">Google Places — live data</div><div class="ds">ratings, prices, hours, live photos</div></div><label class="sw"><input type="checkbox" id="d_places" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div><div class="nm">Flights (Amadeus)</div><div class="ds">Expedition tier — real fares</div></div><label class="sw"><input type="checkbox" id="d_flights" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div><div class="nm">Mapbox upgrade <span style="color:var(--text-3);font-weight:600">(optional)</span></div><div class="ds">OSM/Leaflet already free</div></div><label class="sw"><input type="checkbox" id="d_mapbox" onchange="render()"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="card grp" id="grpPlan">
+   <div class="grp-h">Per-planner verified (granular)</div>
+   <div class="row"><div class="nm">🗺️ Heritage</div><label class="sw"><input type="checkbox" id="p_her" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div class="nm">🧭 Expedition</div><label class="sw"><input type="checkbox" id="p_exp" onchange="render()"><span class="sl"></span></label></div>
+   <div class="row"><div class="nm">🎒 Weekend</div><label class="sw"><input type="checkbox" id="p_wk" onchange="render()"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="lbl">What buyers see right now</div>
+  <div class="preview" id="preview"></div>
+  <div class="note">Source of truth is one server flag read by the buyer app on load — flipping a switch here updates every device instantly, with no deploy. The back-end paid-feed gate still blocks any charge if a tier is off, so this is safe by design.</div>
+  <div class="foot">Prototype of the dashboard +1 page · not wired to production yet.</div>
+ </div>
+</div>
+<script>
+let mode='launch';
+const subs=['v_tier','v_video','d_ops','d_places','d_flights','d_mapbox','p_her','p_exp','p_wk'];
+function setMode(m){mode=m;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));document.querySelector('#seg button[data-m=live]').classList.add('live');
+ if(m==='launch'){subs.forEach(id=>{const e=document.getElementById(id);e.checked=false;e.disabled=true;});}
+ else{subs.forEach(id=>{document.getElementById(id).disabled=false;});
+   // sensible default when first going live: reveal nothing until you stage it
+ }
+ render();}
+function render(){
+ const g=id=>document.getElementById(id).checked;
+ ['grpVis','grpData','grpPlan'].forEach(x=>document.getElementById(x).classList.toggle('locked',mode==='launch'));
+ const st=document.getElementById('status');const pv=document.getElementById('preview');
+ if(mode==='launch'){
+   st.className='status launch';st.innerHTML='🚀 <span><b>Launch mode.</b> Free AI plans only. Verified tier, demo videos and all paid feeds are hidden — buyers never see them. Sign operators after launch, then switch over.</span>';
+   pv.innerHTML='<b>Free AI plans only.</b><br><span class="pill off">Verified tier hidden</span><span class="pill off">Videos hidden</span><span class="pill off">No paid feeds</span>';
+   return;
+ }
+ st.className='status live';st.innerHTML='✓ <span><b>Verified live.</b> Stage features below — reveal them as operators sign and feeds come on.</span>';
+ const pill=(on,t)=>`<span class="pill ${on?'on':'off'}">${t}</span>`;
+ let planners=[g('p_her')&&'Heritage',g('p_exp')&&'Expedition',g('p_wk')&&'Weekend'].filter(Boolean);
+ pv.innerHTML=`<b>${g('v_tier')?'Verified tier visible':'Verified tier still hidden'}.</b><br>`+
+  pill(g('v_tier'),'Verified toggle')+pill(g('v_video'),'Videos')+pill(g('d_ops'),'Operator photos')+pill(g('d_places'),'Places live')+pill(g('d_flights'),'Flights')+
+  `<br><span style="color:#9aa6b6;font-size:11px">Verified planners: ${planners.length?planners.join(' · '):'none yet'}</span>`;
+}
+setMode('launch');
+</script>
+</body></html>
