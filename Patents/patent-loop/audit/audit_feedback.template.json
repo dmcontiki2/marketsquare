@@ -1,0 +1,18 @@
+{
+  "loop": 0,
+  "verdict": "CHANGES_REQUIRED",
+  "violations": [
+    {
+      "id": "AUD-0-000",
+      "category": "alignment",
+      "severity": "blocker",
+      "doc": "both",
+      "location": "<section / claim id>",
+      "finding": "<what is wrong>",
+      "corrective_action": "<explicit instruction for the Maker>",
+      "source": "internal-consistency"
+    }
+  ],
+  "alignment_conflicts": [],
+  "unresolved_for_human": []
+}

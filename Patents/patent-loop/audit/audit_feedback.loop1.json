@@ -1,0 +1,162 @@
+{
+  "loop": 1,
+  "verdict": "CHANGES_REQUIRED",
+  "violations": [
+    {
+      "id": "AUD-1-001",
+      "category": "alignment",
+      "severity": "blocker",
+      "doc": "both",
+      "location": "patent §Detailed Description (line 28) vs whitepaper §3.4, §3.2, assembly notes, Version History rev 2",
+      "finding": "The patent's Detailed Description asserts 'All described methods and schemas are implemented and live in production (trustsquare.co, BEA v1.3.x).' The annexed whitepaper (its own Detailed Description by reference) and the patent's own assembly notes contradict this: §3.4 admits the fixed-weight composite trust score 'was never implemented'; the EULA dormancy term carries an admitted internal inconsistency and a ≥36-month CPA change that is 'staged / not yet in force'; the founders-cohort qualifying mechanism is 'under canon revision.' An unqualified 'all implemented and live' statement that the specification's own annex contradicts is a classic 'lying to the patent office' inutility/misrepresentation defect.",
+      "corrective_action": "Soften the Detailed Description sentence from an absolute 'all implemented and live' to scope it to the implemented embodiments, OR explicitly carve out the items the whitepaper marks as staged/never-implemented/under-revision so the spec and its annex cannot be read as mutually contradictory. Do not assert production-live status for any element the whitepaper flags as future/staged/never-built.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-002",
+      "category": "alignment",
+      "severity": "blocker",
+      "doc": "whitepaper",
+      "location": "whitepaper §5 narrative (line 71) vs §5 revenue table (lines 111-114)",
+      "finding": "Direct internal contradiction in the revenue model. The §5 prose states the mix is '~86% introductions + paid AI usage, ~14% subscriptions.' The revenue table immediately below states 'Subscriptions ~68%, Introductions ~18%, AI Services ~14%.' These are mutually exclusive (subscriptions cannot be both ~14% and ~68%). Because the whitepaper is the patent's Detailed Description by reference and is also the investor-facing prior-art disclosure, a self-contradicting headline financial metric is both a credibility defect to investors and a definiteness defect in the annexed description.",
+      "corrective_action": "Reconcile the two figures to a single mix. The narrative says the Simpler Model is transaction-weighted (~86% transactional / ~14% subscriptions); update the §5 table rows to match the transaction-weighted Simpler Model, or delete the stale 68/18/14 table. Do not ship two conflicting revenue splits.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-003",
+      "category": "alignment",
+      "severity": "major",
+      "doc": "whitepaper",
+      "location": "whitepaper §4 claims table, Claim 4 (line 104) vs whitepaper §3.4 (line 48) and patent C4/Summary/Abstract",
+      "finding": "The §4 claims table still titles Claim 4 'Trust Score Composite' and summarises it as 'Server-computed from verifiable data only.' This retains the superseded 'composite' framing that §3.4, the patent Summary, Abstract and C4 were all explicitly realigned away from (to the evidence-based signal-points architecture). A residual 'Composite' label in the claims table re-introduces the very drift the loop-1 alignment edits were meant to remove, and Patent Figure 5 ('Trust-score composition') echoes it.",
+      "corrective_action": "Rename Claim 4 in the whitepaper §4 table from 'Trust Score Composite' to 'Trust Score (evidence-based signal-points)' and align its one-line summary to the signal-points + time-decaying complaint-penalty architecture used in §3.4/C4. Consider relabelling Patent Figure 5 from 'Trust-score composition' to 'Trust-score signal-points computation' for consistency.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-004",
+      "category": "alignment",
+      "severity": "major",
+      "doc": "both",
+      "location": "patent Applicant/Inventor (line 17) vs whitepaper §9 PCT note (line 85) and §1/§3.5 (Trustsquare Pty Ltd authorship)",
+      "finding": "Applicant-identity contradiction. The patent states it is filed in the inventor's PERSONAL name (David Maurice Conradie, natural person) to keep IP portable. The whitepaper §9 PCT fee note states 'the applicant is a corporate entity' as the reason no PCT small-entity reduction applies, and §1/§3.5/footer assert the methods were 'conceived, designed and implemented by Trustsquare (Pty) Ltd.' Natural-person vs corporate applicant is a material inconsistency: it changes the PCT/USPTO small-entity basis, the ownership chain, and could create an inventorship/ownership defect if the corporate-authorship statements imply the company, not the named inventor, owns the conception.",
+      "corrective_action": "Make applicant identity consistent across both documents. If the natural-person filing is correct, fix whitepaper §9 to say the applicant is a natural person (and re-examine whether the PCT reduction analysis changes — note SA is still not on the listed-economies list, so the conclusion may hold for a different reason), and reconcile the 'conceived/designed/implemented by Trustsquare (Pty) Ltd' authorship statements with a clear assignment/licence chain. Counsel must confirm the inventor-to-applicant ownership path. Do not auto-rewrite the inventorship statements without counsel sign-off.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-005",
+      "category": "CPA",
+      "severity": "blocker",
+      "doc": "both",
+      "location": "patent Independent Claim B (line 33), Claim A (line 31), Abstract (line 47); whitepaper §3.2 (line 39)",
+      "finding": "The independent claims recite the value unit as 'non-refundable in cash under any circumstance' and 'comprising no restitution logic' / 'the release returning only the un-burned hold and comprising no restitution logic.' CPA 68/2008 s63(3) (as both documents now flag) provides that money paid for a prepaid credit 'remains the property of the bearer' to the extent unredeemed. The patent's own assembly note concedes this is in tension with the absolute recital and is 'CLAIM-TEXT-TOUCHING.' An independent claim whose central distinguishing limitation ('non-refundable under any circumstance', 'no restitution') is unlawful as applied to the un-burned float in the primary jurisdiction is both a validity/utility risk and a consumer-law exposure. This is the most load-bearing limitation in Claim B, so it cannot be left contradicting the statute.",
+      "corrective_action": "DO NOT auto-edit claim text. Park for counsel. The reconciliation both docs propose (distinguish the BURNED quantum = service-rendered = non-refundable, from the UN-BURNED held/float = subject to s63(3) reclaim) must be drafted by the registered patent attorney into Claim B's quantum/release limitations. Flag that 'under any circumstance' and 'no restitution logic' as currently worded are sub-statutory for the un-burned float.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-1-006",
+      "category": "CPA",
+      "severity": "major",
+      "doc": "whitepaper",
+      "location": "whitepaper §3.2 (line 39), EULA §6.3 referenced; patent assembly notes (line 48)",
+      "finding": "Dormancy/expiry term is sub-statutory and internally inconsistent. The whitepaper states unused balances expire after 24 months of inactivity (EULA §6.3); the patent assembly note records an internal EULA inconsistency (§5.3 'no expiry' vs §6.3 '24 months') AND confirms CPA s63 sets a 3-year (36-month) statutory minimum. The 24-month term is therefore unlawful until extended, and the EULA self-contradicts. Both documents correctly mark the ≥36-month extension as a pre-launch blocker 'not yet in force,' meaning the spec describes a non-compliant live state.",
+      "corrective_action": "Resolve the EULA §5.3 vs §6.3 contradiction and move the dormancy term to >=36 months before filing/launch, as both documents already commit. In the meantime ensure neither document asserts the 24-month term as a compliant or final value. Counsel to confirm the exact CPA s63 mechanics. The grant-sweep (non-rolling granted Tuppence) should be checked separately against s63 since it is also a time-based forfeiture of credit.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-1-007",
+      "category": "inventive-step",
+      "severity": "major",
+      "doc": "patent",
+      "location": "patent Dependent Claim C3 (line 36), header note (line 13), Figure 3",
+      "finding": "C3 is expressly marked 'CONDITIONAL on Pingsby clearance' and the header concedes the Pingsby read 'narrows but does not by itself clear the C3 anonymous-disclosure-protocol read.' A dependent claim left in a CONDITIONAL/unresolved prior-art state is an admission on the face of the specification that the applicant is unsure of its novelty over a known reference. While provisional, carrying an openly-flagged prior-art collision into a claim invites an obviousness/anticipation attack and signals weak inventive step on the bilateral-disclosure protocol specifically.",
+      "corrective_action": "Counsel call — do not auto-resolve. Either (a) obtain the Pingsby field-of-use clearance and remove the CONDITIONAL tag, or (b) narrow C3's limitations (e.g. tie the atomic leak-free disclosure tightly to the goods/services marketplace + commitment-gate context that distinguishes it from a dating-intro service) so it stands independent of the Pingsby read, or (c) drop C3 to a described-but-unclaimed embodiment. Articulate the non-obvious synergy: atomic bilateral disclosure gated by a forfeitable pre-commitment in a goods/services marketplace, distinct from consent-based reveal in dating apps.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-008",
+      "category": "investment-language",
+      "severity": "major",
+      "doc": "whitepaper",
+      "location": "whitepaper §3.2 (line 41-42), Banks Act note (line 42)",
+      "finding": "Two coupled risks. (1) Investment/financial-instrument framing: §3.2 states 'Seller trust score is partially derived from introduction acceptance rate, creating a quality feedback loop' and elsewhere the currency is described as a 'seller quality metric' and that strict non-refundability is 'load-bearing for the platform's novelty' — combined with a unilateral self-classification 'no regulatory classification as a financial instrument in ZA (Banks Act 94 of 1990: NO RISK).' A bare 'NO RISK' legal self-conclusion in an investor-facing prior-art document is an over-statement; regulatory classification is a counsel determination, not a whitepaper assertion. (2) The instruction set warns against OVER-adding MiCA/crypto scaffolding; the document is correctly framed as non-transferable closed-loop credit, so the fix is NOT to add crypto disclosures but to downgrade the absolute 'NO RISK' self-classification to a reasoned, counsel-gated position.",
+      "corrective_action": "Replace the 'NO RISK' absolute with a hedged, counsel-attributed statement (e.g. 'analysed as a non-refundable closed-loop service credit; classification confirmed by counsel under the SARB Draft Payment Activities Exemption Notice'). Do NOT add MiCA/Howey crypto-asset disclosures — Tuppence is non-transferable credit and over-scaffolding it as a crypto asset is itself a defect. Keep the non-transferability + no-transfer-endpoint language, which is the correct distinguishing fact.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-1-009",
+      "category": "alignment",
+      "severity": "minor",
+      "doc": "whitepaper",
+      "location": "whitepaper header (line 13) vs version frontmatter (line 4) and §title (line 14)",
+      "finding": "Version-label inconsistency on the face of the document: line 13 reads 'Technical Whitepaper v3.4 — Provisional Patent Document' while the frontmatter is v3.6, the subtitle (line 14) is 'Version 3.5 DRAFT', and the version history runs to v3.6. A document whose own masthead cites three different version numbers (3.4 / 3.5 / 3.6) undermines its evidentiary value as a dated prior-art disclosure, where version/date provenance matters.",
+      "corrective_action": "Set the masthead (line 13) to the current working version (v3.6 DRAFT) consistent with the frontmatter and version history, or clearly state which single version is authoritative. Ensure the dated prior-art disclosure carries one unambiguous version stamp.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-010",
+      "category": "investment-language",
+      "severity": "minor",
+      "doc": "whitepaper",
+      "location": "whitepaper §1 (line 20), §5 (line 71)",
+      "finding": "Overselling-to-investors risk vs claim/code support. §1 says listing/user counts 'grow continuously and are recorded in the platform dashboard at filing date' (vague, unverifiable as written); §5 projects 'Year 1 revenue $235,154 at ~96% operating margin; Year 3 $3.88M.' A ~96% operating margin and specific multi-year projections in a document that doubles as the patent's Detailed Description risk being read as capability/metric assertions the independent claims and production code do not support. Projections are permissible in a whitepaper but should be clearly labelled forward-looking and kept out of any text relied on as enabling disclosure.",
+      "corrective_action": "Label the Year 1/Year 3 revenue and margin figures explicitly as forward-looking projections/estimates (the §5 prose already says 'projected' — make the margin and the dashboard-count claims equally hedged and dated). Ensure no financial projection is positioned as part of the technical/enabling disclosure the patent incorporates by reference.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-011",
+      "category": "enablement",
+      "severity": "minor",
+      "doc": "patent",
+      "location": "patent Claim A (line 31), C13 (line 45); whitepaper §3.2 (line 43)",
+      "finding": "Functional-language / structure check. Claim A recites 'atomically committing a hold of a fixed quantum,' 'verified delivery,' and 'daily cost-ceiling pre-flight,' and C13 recites 'single atomic database transactions under immediate-mode locking.' The whitepaper supports the atomic-transaction and idempotency-key structure (§3.2 line 43) and the ceiling pre-flight (§3.7, §3.10), so enablement is largely met. However 'verified delivery' for machine-inference services is defined only as 'verified delivery for AI runs' without describing the verification mechanism (what constitutes a verified vs failed AI run). This is the weakest-supported functional term and a definiteness target.",
+      "corrective_action": "Add to whitepaper §3.2 or §3.6 a one-to-two sentence description of what constitutes 'verified delivery' / 'AI run failure' for machine-inference settlement (e.g. successful model response persisted vs API error/timeout triggers release), so the Claim A 'burning solely on verified delivery' limitation has explicit structural support for the machine-service branch as it does for the human-introduction branch (acceptance/decline/expiry).",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-012",
+      "category": "AI-Act",
+      "severity": "minor",
+      "doc": "whitepaper",
+      "location": "whitepaper §3.7 (line 57), §3.9 (line 62-63), §7 (line 79)",
+      "finding": "AI human-oversight and capability statements are largely well-described (conjunctive auto-send gate; legal/compliance/disputes/ambiguous always held as drafts; draft-only default; existence gate; ceiling pre-flight; spend logging; safe fallback on parse failure). This is adequate human-in-the-loop description for the inbound-triage use. Two residual points: (a) the document does not explicitly map these controls to any EU AI Act risk tier or transparency obligation (acceptable for a SA-first filing, but worth a one-line note since secondary EPO/EU routes are listed); (b) §3.9's own disclosure note correctly concedes conjunctive auto-send guardrails 'are increasingly common' — good honesty, but it slightly undercuts inventive-step weight for Claim 9, which counsel should keep framed strictly as part of the combination, not standalone.",
+      "corrective_action": "Optional: add one sentence noting the inbound-triage system operates draft-first with human oversight and limited automated decisioning, consistent with EU AI Act transparency expectations, given the EU/EPO secondary route. Keep Claim 9 explicitly dependent within the combination (it already is via dep. C7) and do not overstate its standalone novelty.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-1-013",
+      "category": "prior-art",
+      "severity": "minor",
+      "doc": "patent",
+      "location": "patent Background (line 21) cited references US20120030054A1, US20090076967A1, US 11,107,154",
+      "finding": "The Background cites three specific prior-art references as design-arounds. These appear in inline comments as 'retrieved 2026-06-23' from Google Patents. Per audit rules I cannot verify these patent numbers from the document text alone. If any cited number is misquoted or mischaracterised, the Background's distinguishing argument weakens and could be turned against the applicant. This is a verification task, not a confirmed defect.",
+      "corrective_action": "Counsel/searcher to independently confirm each cited US patent number actually recites what the Background attributes to it (seller-side charge / buyer-concealment / buyer-seller-both user record respectively) before filing. Treat the distinctions as drafting hypotheses pending a professional novelty search, not settled facts.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-1-014",
+      "category": "alignment",
+      "severity": "minor",
+      "doc": "patent",
+      "location": "patent Summary (vi)/(vii) and Claim A 'existence check executed before any external call' (line 31) vs whitepaper §3.7 (line 57)",
+      "finding": "Claim A reads 'each value-metered external machine-inference invocation being conditioned on an indexed registered-user existence check executed before any external call.' The whitepaper §3.7 correctly narrows this: the existence gate applies to METERED endpoints, while FREE $0-first listing-assist endpoints serve not-yet-registered users and are governed instead by the ceiling pre-flight (not the existence gate). Claim A's loop-1 narrowing to 'value-metered' invocations matches this — alignment is largely achieved. Residual nit: the Summary element (vi) phrasing 'each invocation is gated by a registered-user existence check' (line 24) reads more absolutely than Claim A and §3.7, which both carve out free assists.",
+      "corrective_action": "Tighten Summary element (vi) (line 24) to say the existence check gates each VALUE-METERED invocation (mirroring Claim A and §3.7), so the Summary does not overstate the gate as applying to every invocation including the free onboarding assists.",
+      "source": "internal-consistency"
+    }
+  ],
+  "alignment_conflicts": [
+    "Patent §Detailed Description 'all methods and schemas implemented and live in production' vs whitepaper §3.4 ('composite never implemented'), §3.2 (>=36mo CPA change staged/not in force), assembly notes (founders mechanism under canon revision) [AUD-1-001]",
+    "Whitepaper §5 prose '~86% introductions+AI / ~14% subscriptions' vs whitepaper §5 table 'Subscriptions ~68% / Introductions ~18% / AI ~14%' [AUD-1-002]",
+    "Whitepaper §4 claims table 'Claim 4 Trust Score Composite' vs whitepaper §3.4 + patent C4/Summary/Abstract (signal-points, composite superseded) [AUD-1-003]",
+    "Patent Applicant 'natural person (David Conradie)' vs whitepaper §9 PCT note 'the applicant is a corporate entity' and §1/footer 'conceived/implemented by Trustsquare (Pty) Ltd' [AUD-1-004]",
+    "Patent Claim B 'non-refundable in cash under any circumstance / no restitution logic' vs CPA s63(3) consumer property right in un-burned float, flagged in both docs [AUD-1-005]",
+    "Whitepaper masthead 'v3.4' vs frontmatter 'v3.6' vs subtitle 'v3.5 DRAFT' [AUD-1-009]",
+    "Patent Summary (vi) 'each invocation gated by existence check' vs Claim A + whitepaper §3.7 'value-metered invocations only; free assists ceiling-gated' [AUD-1-014]"
+  ],
+  "unresolved_for_human": [
+    "AUD-1-005 / AUD-1-006: CPA s63 + s63(3) reconciliation of 'non-refundable under any circumstance' / 'no restitution logic' against the un-burned float consumer property right — CLAIM-TEXT-TOUCHING, registered patent attorney must redraft Claim B's quantum/release limitations and the EULA dormancy term (>=36 months, fix §5.3 vs §6.3). Do NOT auto-edit.",
+    "AUD-1-007: C3 'CONDITIONAL on Pingsby clearance' — counsel to obtain the field-of-use clearance, narrow, or drop the claim. Do not auto-resolve the prior-art read.",
+    "AUD-1-004: Applicant identity (natural person vs corporate) and the inventor-to-applicant assignment/licence chain — counsel determination affecting PCT/USPTO small-entity basis and ownership; do not auto-rewrite inventorship statements.",
+    "AUD-1-008: Banks Act 94/1990 'NO RISK' self-classification and SARB Payment Activities Exemption reliance — financial-regulatory classification is a counsel call, not a whitepaper assertion. Note: do NOT add MiCA/crypto-asset scaffolding; Tuppence is non-transferable closed-loop credit.",
+    "AUD-1-013: Independent professional novelty search to confirm the three cited US prior-art references (US20120030054A1, US20090076967A1, US 11,107,154) actually recite what the Background attributes, before relying on the distinctions at filing."
+  ]
+}

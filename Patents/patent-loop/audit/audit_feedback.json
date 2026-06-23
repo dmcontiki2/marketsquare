@@ -1,0 +1,18 @@
+{
+  "loop": 6,
+  "verdict": "CONVERGED_FOR_AUTO_ITEMS",
+  "audit_method": "inline via authoritative file tool (mount-safe). Convergence rule: counsel-gated items in unresolved_for_human do NOT block convergence (per David, 2026-06-23).",
+  "convergence_note": "Loops 4, 5 and 6 produced no NEW auto-fixable defect. Loop 5 added one closest-prior-art design-around (US 8,095,377) and parked POPIA s71; loop 6's fresh search surfaced no new prior art and required zero document edits. Delta on auto-fixable items = 0. The only open items are counsel-gated and parked. This is effective convergence under the agreed rule.",
+  "violations": [],
+  "alignment_conflicts": [],
+  "auto_fixable_status": "ALL RESOLVED across loops 1-5: AUD-1-001 (all-implemented absolute scoped), AUD-1-002 (revenue table reconciled to Simpler Model), AUD-1-003 (Composite label -> signal-points + Figure 5 relabel), AUD-1-009 (masthead version unified), AUD-1-010 (projections labelled forward-looking), AUD-1-011 (verified-delivery defined for AI branch), AUD-1-014 (Summary vi narrowed), AUD-2-003 (5-tier -> tier-agnostic), AUD-3-001 (annex version pointer), plus loop-2/3/4/5 additive de-risking (POPIA s69 scope-out, EU AI Act Art.50 transparency, escrow design-around, 101/COMVIK framing note, US8095377 closest-ref design-around).",
+  "unresolved_for_human": [
+    "CPA s63 / s63(3): reconcile 'non-refundable under any circumstance' / 'no restitution' against the un-burned-float consumer property right; move EULA dormancy to >=36 months and fix EULA 5.3 vs 6.3. CLAIM-TEXT-TOUCHING.",
+    "Applicant identity: natural-person patent vs corporate whitepaper authorship/footer; inventor-to-applicant assignment/licence chain; PCT/USPTO small-entity basis.",
+    "C3 / Pingsby: C3 still CONDITIONAL; Pingsby narrowed to a dating field-of-use but not cleared. Clear, narrow, or drop C3.",
+    "Banks Act / SARB closed-loop exemption (Draft Notice 14 Nov 2025, comment period closed 5 Dec 2025): confirm Tuppence's non-financial-product / closed-loop classification. Do NOT add MiCA/crypto scaffolding.",
+    "POPIA s71 (automated decision-making): confirm the trust score never becomes a solely-automated consequential decision without human involvement / explanation path.",
+    "Independent professional novelty search: confirm ALL cited references (US20120030054A1, US20090076967A1, US 11,107,154, US 6,865,559, US20060253339A1, US 8,095,377, US 8,494,867) recite what the Background attributes. US 8,095,377 is the closest reference to distinguish in the complete spec.",
+    "101/COMVIK framing: at complete-spec/PCT drafting, frame claims as a specific technical improvement (hold state machine, existence gate, ceiling pre-flight), per Alice/Recentive (US) and COMVIK (EPO)."
+  ]
+}

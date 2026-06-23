@@ -1,0 +1,85 @@
+{
+  "loop": 2,
+  "verdict": "CHANGES_REQUIRED",
+  "violations": [
+    {
+      "id": "AUD-2-001",
+      "category": "cross-document divergence / definiteness (USPTO §112; SA Act 57/1978 enablement)",
+      "severity": "blocker",
+      "doc": "patent",
+      "location": "# Abstract (final line of patent.md)",
+      "finding": "The Abstract is truncated mid-word: it ends '...through a single hold-settled ledg' with no sentence completion and no period. This is the actual content of the working copy, not a read artifact (file ends at line 47). A provisional filed with an incomplete Abstract is a facial filing defect and undermines completeness of the description.",
+      "corrective_action": "Complete the Abstract sentence (e.g. '...through a single hold-settled ledger, with user role derived from transaction state, identity disclosed only on bilateral consent, and external machine-inference invocations existence-gated and daily-cost-ceiling-bounded by the same ledger.') and verify it terminates cleanly with a period.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-2-002",
+      "category": "cross-document divergence / version-register integrity",
+      "severity": "major",
+      "doc": "whitepaper",
+      "location": "frontmatter (version: 3.7 / title 'v3.7') vs body masthead line 14 ('v3.6 DRAFT') vs Version History line 89 ('v3.5 DRAFT')",
+      "finding": "The loop-1 AUD-1-009 fix claims the version stamp was 'unified to v3.6', but the document now carries THREE different version numbers: frontmatter and title say v3.7, the body masthead says v3.6 DRAFT, and the Version History latest entry still reads 'v3.5 DRAFT' with a note 'no version-number bump'. Because the whitepaper is the patent's Detailed Description by reference and is the dated prior-art disclosure, a self-inconsistent version stamp re-opens the exact defect the prior loop closed and creates ambiguity about which artifact is incorporated.",
+      "corrective_action": "Pick ONE authoritative version number and make frontmatter, title, body masthead, and the Version History latest-entry header all agree. If the substantive content is v3.6, set frontmatter version:3.6 and add a matching v3.6 history entry; if genuinely 3.7, bump masthead and history to 3.7. Do not leave 3.5/3.6/3.7 co-existing.",
+      "source": "internal-consistency"
+    },
+    {
+      "id": "AUD-2-003",
+      "category": "cross-document divergence / live-vs-staged blur (COMVIK + §112 antecedent consistency)",
+      "severity": "major",
+      "doc": "whitepaper",
+      "location": "§4 Claim 7 summary table (line 109) vs §3.5 (line 53) and §8",
+      "finding": "The Claim 7 combination-claim row states the platform is 'extended by 5-tier slot enforcement', but §3.5 expressly describes 'a simplified three-tier individual subscription model' (Free/Starter/Pro) plus a free Agency class, and §8 and the tier table likewise enumerate three paid tiers + Agency. The residual '5-tier' wording is stale (tracks the retired five-tier pricing model) and now contradicts the current three-tier description in the same document. Patent Claim A deliberately makes tier count 'implementation detail', so the cure is to delete the hard number, not reconcile to 5.",
+      "corrective_action": "In the Claim 7 table row, replace '5-tier slot enforcement' with count-agnostic phrasing consistent with Claim A and §3.5, e.g. 'subscription-tier slot enforcement (server-side at publish time; tier count is implementation detail)'. Sweep for any other surviving 'five-tier'/'5-tier' references.",
+      "source": "internal-consistency"
+    }
+  ],
+  "alignment_conflicts": [
+    {
+      "id": "AUD-2-004",
+      "category": "claim-vs-whitepaper slot-count consistency",
+      "doc": "patent + whitepaper",
+      "location": "patent Claim A 'number and pricing of tiers being implementation detail' vs whitepaper §4 Claim-7 row '5-tier'",
+      "finding": "The patent correctly abstracts away tier count; the whitepaper (its Detailed Description) still recites a specific, now-wrong '5-tier'. This is a claim-vs-description divergence: the description should not assert a tier count the claim has abstracted and which the rest of the description contradicts (three-tier). Cured by AUD-2-003; logged here as the cross-document facet so the fix is verified on both sides.",
+      "corrective_action": "After applying AUD-2-003, confirm no tier-count number in the whitepaper conflicts with Claim A's 'implementation detail' abstraction.",
+      "source": "internal-consistency"
+    }
+  ],
+  "unresolved_for_human": [
+    {
+      "id": "AUD-2-H01",
+      "category": "CPA s63(3) prepaid-credit refundability vs claim 'no restitution' recital",
+      "doc": "patent + whitepaper",
+      "location": "Claim B 'non-refundable in cash under any circumstance' / 'no restitution logic' vs whitepaper §3.2 CPA s63(3) note",
+      "finding": "Whitepaper §3.2 already flags that under CPA s63(3) the un-burned (un-redeemed) held/float quantum 'remains the property of the bearer', so absolute non-refundability can only be asserted of the BURNED quantum. Claim B still recites non-refundable 'under any circumstance' and 'no restitution logic'. Reconciling the claim's non-refundability limitation against s63(3) is a registered-attorney judgement. Parked per loop rules; the document visibly flags it for counsel.",
+      "corrective_action": "Counsel to narrow the Claim B non-refundability limitation to the burned/service-rendered quantum (or otherwise reconcile with s63(3)). Not auto-edited.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-2-H02",
+      "category": "applicant identity / assignment chain",
+      "doc": "patent + whitepaper",
+      "location": "patent Applicant (personal name) vs whitepaper footer/§1 ('implemented by Trustsquare (Pty) Ltd')",
+      "finding": "Patent is filed in the inventor's personal name with an operating licence to Trustsquare (Pty) Ltd 'to be executed separately'; the whitepaper repeatedly attributes conception/implementation to the company. The inventor-vs-assignee chain is a counsel determination. Already flagged in-doc (AUD-1-004 PARKED). Parked.",
+      "corrective_action": "Counsel to confirm assignment/licence chain and reconcile authorship attributions. Not auto-edited.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-2-H03",
+      "category": "Pingsby / C3 prior-art clearance",
+      "doc": "patent",
+      "location": "masthead + Claim C3 (CONDITIONAL on Pingsby clearance)",
+      "finding": "C3 (atomic leak-free bilateral-disclosure protocol) remains expressly conditional on a Pingsby clearance read. The 2026-06-23 market check narrows the risk (Pingsby = dating intro app, different field of use) but the doc defers final clearance to counsel. Parked.",
+      "corrective_action": "Counsel to confirm C3 clearance against Pingsby and any anonymous-disclosure-protocol art before relying on C3. Not auto-edited.",
+      "source": "needs-external-verification"
+    },
+    {
+      "id": "AUD-2-H04",
+      "category": "financial-regulatory classification of Tuppence",
+      "doc": "whitepaper",
+      "location": "§3.2 Banks Act / SARB exemption note",
+      "finding": "Tuppence's closed-loop, non-transferable, non-cash-withdrawable non-instrument classification under the Banks Act 94/1990 is now correctly hedged and counsel-gated against the SARB Draft Payment Activities Exemption Notice (14 Nov 2025). Final classification is a regulatory-counsel call. Parked; already hedged in-doc (AUD-1-008).",
+      "corrective_action": "Counsel/regulatory advisor to confirm non-instrument classification under the SARB exemption framework. Not auto-edited.",
+      "source": "needs-external-verification"
+    }
+  ]
+}

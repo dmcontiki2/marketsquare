@@ -13071,9 +13071,10 @@ function aiVCard(o){
   var meta=(o.rating?'<span>'+aiVStars(o.rating)+'</span> <span>'+aiEsc(String(o.rating))+(o.reviews?' ('+aiEsc(String(o.reviews))+')':'')+'</span> ':'')+(o.price?'<span class="vprice">'+aiEsc(o.price)+'</span>':'');
   return '<div class="vcard"><div class="vib" style="background:'+g+'"><span class="vbadge">\u2713 Verified</span>'+rate+'<span class="vem">'+(o.emoji||'\uD83C\uDFE8')+'</span><span class="vcap">'+aiEsc(o.name||'')+'</span></div><div class="vbody"><div class="vname">'+aiEsc(o.name||'')+'</div><div class="vmeta">'+meta+'</div><div class="vwhy">'+aiEsc(o.why||'')+'</div><div class="vacts"><button class="vbtn">'+aiEsc(o.action||'View')+'</button></div></div></div>';
 }
+function vValid(o){ if(!o) return false; var n=(o.name||'').toString().trim(); if(!n) return false; return !!((o.price&&String(o.price).trim())||(o.why&&String(o.why).trim())||o.rating); }
 function renderVerifiedCards(opts){
   if(!opts) return '';
   var out=''; var secs=[['Where to stay',opts.stay],['Where to eat',opts.eat],['Things to do',opts.do],['Flights & routing',opts.flights],['Local on TrustSquare \u00b7 introductions',opts.local]];
-  secs.forEach(function(s){ var arr=s[1]; if(arr&&arr.length){ var isLocal=s[0].indexOf('Local')>=0; out+='<div class="vsec-h">'+s[0]+'</div><div class="vcards">'+arr.map(function(o){ if(isLocal)o.local=true; return aiVCard(o); }).join('')+'</div>'; } });
+  secs.forEach(function(s){ var arr=(s[1]||[]).filter(vValid); if(arr.length){ var isLocal=s[0].indexOf('Local')>=0; out+='<div class="vsec-h">'+s[0]+'</div><div class="vcards">'+arr.map(function(o){ if(isLocal)o.local=true; return aiVCard(o); }).join('')+'</div>'; } });
   return out;
 }

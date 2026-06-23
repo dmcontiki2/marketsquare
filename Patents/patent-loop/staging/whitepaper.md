@@ -1,0 +1,136 @@
+---
+doc: whitepaper
+title: TrustSquare Technical Whitepaper (working copy)
+version: 3.6
+source_docx: TrustSquare_WhitePaper_v3_5_DRAFT.docx
+extracted: 2026-06-23
+status: DRAFT working copy. v2 published = prior-art defensive publication (never edited). The authoritative v3.5 .docx is frozen.
+note: This whitepaper is the patent's Detailed Description by reference (spec §Detailed Description).
+---
+
+TrustSquare
+Unified Participation Marketplace
+Technical Whitepaper v3.4  —  Provisional Patent Document
+Version 3.5 DRAFT — Updated: June 2026 (Simpler Model + Hold canon)  |  Trustsquare (Pty) Ltd  |  Reg 2026/340128/07
+CONFIDENTIAL — Prior Art Disclosure
+
+# 1. Executive Summary
+TrustSquare is a mobile-first, privacy-preserving marketplace that enables buyers and sellers to transact anonymously until both parties consent to introduction. The platform introduces a novel participation currency (Tuppence) that functions simultaneously as a buyer commitment signal, a spam filter, and a seller quality metric. The Unified Participation Model — wherein every user is both a potential buyer and a potential seller — together with the commitment-gated anonymous introduction is the core patentable contribution; the strongest protection sits in the COMBINATION of these elements with the platform’s subscription, AI-services and guardrail layers (see §4).
+This document constitutes a prior-art disclosure and supports a CIPC provisional patent application. All described methods, systems, and database schemas were conceived, designed and implemented by Trustsquare (Pty) Ltd.
+The platform is live at trustsquare.co (BEA v1.3.x) with live listings across the Pretoria pilot, on a Hetzner CPX32 server; listing and user counts grow continuously and are recorded in the platform dashboard at filing date.
+# 2. Problem Statement
+Existing marketplace platforms suffer from three structural deficiencies:
+Asymmetric trust: buyers know who they are contacting; sellers receive cold inquiries with no quality signal.
+Advertising dependency: seller visibility is proportional to advertising spend, not competence or reputation.
+Identity exposure: sellers must publish personal contact details to be discoverable, creating phishing and spam surface.
+No existing platform addresses all three simultaneously without reducing either buyer reach or seller discoverability. Notably, the dominant pay-to-contact marketplaces (e.g. Bark.com, Thumbtack) place the charge on the SELLER to receive a buyer lead; TrustSquare inverts this — the BUYER commits value to initiate contact — which realigns the spam-economic incentive and is reflected in the data model (the spending key is the buyer, not the seller).
+# 3. Technical Innovation
+## 3.1 Unified Participation Model — Database Implementation
+The core innovation is a single-table user model where role is not a column — it is a state derived from the user’s activity:
+A user with no listings and Tuppence balance > 0 is operating as a buyer.
+A user with at least one published listing is a seller.
+The same user may be both simultaneously.
+Schema (illustrative):
+
+Implementation note: role-derivation is most defensibly characterised by its technical effect — a user transitions between buyer and seller affordances with no schema-migration and no write to the user record. (Single-account, multi-role marketplaces are otherwise known art; the protected contribution is the runtime authorisation derivation and its place in the combination of §4.)
+## 3.2 Tuppence Micro-Currency
+Tuppence is a non-transferable platform credit (1T = USD $2) with the following properties:
+Purchased in bundles by buyers; cannot be withdrawn as cash; non-transferable between users (no transfer endpoint exists).
+Committed as an atomic HOLD on introduction request (commit-on-request); burned only on delivery of the service (seller acceptance for introductions; verified delivery for AI runs); released in full to the requester on non-delivery (seller decline, response-window expiry, or AI run failure). Strictly non-refundable in cash under all circumstances; no inter-user transfer endpoint exists; release is not restitution — it returns only the un-burned hold. The buyer commitment signal is the price of contact. Unused balances currently expire after 24 consecutive months of account inactivity (EULA §6.3); extension of this term to ≥36 months is a committed pre-launch change per Consumer Protection Act s63 analysis (June 2026 Supplement) and is recorded as a launch blocker, not yet in force. <!-- CPA s63 confirmed (CPA 68/2008, retrieved 2026-06-23): statutory minimum validity is 3 years (36 months); the 24-month term is sub-statutory until extended. -->  Note (CPA s63(3)): money paid for a prepaid credit "remains the property of the bearer" to the extent unredeemed; accordingly the "non-refundable in cash" property is asserted of the BURNED (service-rendered) quantum, while the UN-BURNED held/float quantum is subject to the consumer's statutory property right — counsel to reconcile the patent's "no restitution" recital with s63(3) for the un-burned float. <!-- alignment with patent assembly-note CPA flag; do not overstate absolute non-refundability of un-burned float -->.
+Granted (non-purchased) Tuppence — monthly subscription allocations and Founders bonuses — is non-rolling: any unspent grant is swept to zero at the next monthly allocation (a grant_expiry ledger entry), so allowances cannot be banked. Purchased and earned Tuppence is never swept. This is the same time-based expiry-of-unspent-float property recited for dormant balances, applied to grants.
+Seller trust score is partially derived from introduction acceptance rate, creating a quality feedback loop.
+Zero marginal cost to issue; no regulatory classification as a financial instrument in ZA (Banks Act 94 of 1990: NO RISK — non-refundable closed-loop service credit; see Erratum 2026-05-12 and the SARB Draft Payment Activities Exemption Notice, 14 Nov 2025).
+The Tuppence hold is committed as consideration for the matching/introduction service initiated at request time; the burn settles only on delivery. On a seller decline the hold is released in full — the buyer surrenders value only when the introduction is actually delivered. The hold ledger executes as single atomic database transactions (immediate-mode locking) with per-request idempotency keys, and the typed transaction set {hold, burn, hold_released, release} is the sole mutation path for committed value (Claims C10–C13).
+The introduction charge is categorically distinct from a referral fee, finder’s fee, or sales commission, and is the structural inverse of one on every axis: it is buyer-paid (not seller-paid); a fixed unit of value, never a percentage of price or transaction value; consumed before any introduction occurs; owed regardless of outcome (non-refundable even where no transaction results); and paid blind, into a state of mutual anonymity, before the buyer knows the seller’s identity. The anonymity (3.3) and the non-refundable pre-introduction commitment are mutually reinforcing and inseparable — the charge is novel because it is spent blind, and the anonymity carries commercial force because it is gated by an irreversible commitment. Strict non-refundability and the fixed character of the charge are load-bearing for the platform’s novelty.
+## 3.3 Anonymous Introduction Protocol
+The introduction flow: (1) buyer browses anonymised seller profiles (no email, phone, or surname visible); (2) buyer spends Tuppence to request introduction; (3) seller receives a pseudonymised buyer summary; (4) seller accepts or declines; (5) on acceptance, both parties receive each other’s contact details simultaneously, as a single atomic disclosure event. Neither party’s contact information is ever stored on the other’s device prior to mutual consent; on decline, the introduction record terminates and no contact data is disclosed to either party.
+## 3.4 Trust Score Architecture
+The Trust Score (0–100) is computed server-side from an evidence-based signal-points architecture: a catalogue of verifiable signals (verified credentials, certifications, permits with expiry dates, identity verification, platform history), each carrying a defined point value and earned only on evidence upload or platform-recorded behaviour; offset by a complaint-penalty subsystem applying a diminishing penalty scale per upheld complaint with time decay (penalties older than 24 months reduce by 50%). No user-facing endpoint can write the score; it mutates only through the server-side recompute path on signal or complaint events. This evidence-based, tamper-resistant architecture supersedes the earlier fixed-weight composite (30/25/25/10/10) described in versions ≤3.4.
+## 3.5 Subscription Tier Architecture
+Access to the paid-feed AI services class (external machine-inference combined with a contracted data feed) is gated to the Pro tier; lower tiers retain free and low-cost AI. This tier-conditioned service access is part of the protected combination of subscription, AI-services and guardrail layers (the cost-integrity guardrail that keeps granted micro-currency from funding the platform's most expensive service class).
+TrustSquare operates a simplified three-tier individual subscription model — Free ($0, 2 listing slots), Starter ($5/month, 10 slots), Pro ($20/month, 30 slots) — plus a FREE verified Agency class whose listing allowance is trust-graduated rather than purchased (the "no toll on supply" model: agencies are monetised on transactions and AI usage, never on access). Slot limits are enforced server-side at publish time by the BEA (HTTP 402 on breach); the enforcement mechanism is tier-count-agnostic and unchanged across pricing models.
+
+Downgrades are queued to end-of-billing-period; a seller cannot downgrade below their active listing count. Slot enforcement is server-side at publish time (HTTP 402 on breach). Tuppence per-introduction cost is architecturally separate from listing slot cost.
+## 3.6 AI Services Layer
+A suite of AI-powered services accessible via Tuppence micro-payments — a third revenue stream alongside subscriptions and introductions. Ten advanced functions (including the Retirement Relocation Planner added June 2026), priced on a simplified ladder capped at Free / 2T / 3T / 5T per use. Every research function is split into a free Level-1 glimpse (statically served, zero marginal cost, no model invocation, no hold) and a paid Level-2 deep dive (hold-gated, web-research-grounded, source-cited). Listing-assist AI (rewrite, audit, batch vision drafts) is Tuppence-metered per call; listing creation itself is free and $0-first: a template draft engine requires no AI at all, with a single budget-capped vision call used only where it adds value.
+## 3.7 AI Guardrail Architecture
+All Tuppence-METERED AI endpoints are protected by an existence gate: an indexed database lookup confirms the requesting email corresponds to a registered user before any external model call is made; unknown emails are refused without any external invocation. The free, $0-first listing-assist endpoints (one-photo draft; batched photo captioning), which by design serve not-yet-registered sellers during onboarding, are instead governed by the platform-wide daily cost-ceiling pre-flight, per-call spend logging, strict payload caps, and template fallback (no external call when unconfigured or over ceiling). Every external model invocation on the platform therefore passes EITHER the existence gate (metered services) OR the ceiling pre-flight (free assists) — and all are spend-logged.
+## 3.8 World Heritage Content Layer
+The protectable concept is the METHOD: seller-linked structured place-metadata surfaced to buyers as a non-transactional informational overlay on an anonymous listing, together with an automatic proximity-and-category linker. The corpus size, data source and link cap are current implementation details, not limitations of the method. As implemented, a structured content layer holds heritage/place sites (a Wikimedia-sourced corpus — UNESCO World Heritage, national parks, museums, archaeological sites); sellers may link relevant sites, and an automatic linker (auto_link_wonders) suggests contextually relevant sites by location and category while preserving seller-set links. Imagery is served from Wikimedia Commons under CC/Public-Domain licence with per-record attribution. No heritage content is transactional.
+## 3.9 AI-Mediated Inbound Communication Triage
+TrustSquare operates an autonomous inbound-email triage and conditional-response system for its customer-facing mailboxes, extending the AI-services and AI-guardrail architecture to customer communication. Inbound mail is received by a Cloudflare Email Worker, parsed (postal-mime), and POSTed to a backend endpoint (POST /email/inbound) authenticated by a shared secret header (X-Inbound-Secret); unauthenticated requests receive HTTP 401, and the endpoint refuses all calls (HTTP 503) when the secret is unconfigured. A safety-net copy is forwarded to a human inbox; the worker never bounces mail.
+The backend invokes Claude Haiku under a constrained system prompt returning strict JSON {category, urgency, draft_reply, auto_safe}. The prompt encodes platform invariants directly — never reveal seller identities or internal data, and never promise refunds because Tuppence is strictly non-refundable. Any parse/API failure falls back to a safe default (category ‘other’, auto_safe false) and never raises. A reply is auto-sent only when ALL hold conjunctively: operator flag EMAIL_AUTO_SEND=1; a configured sending credential; model auto_safe=true; category within the allow-list {support, billing}; and a non-empty draft. Default is draft-only. Legal, compliance, disputes, threats and ambiguous mail are always held as drafts; spam is skipped. Every message is persisted to an email_triage audit table.
+Disclosure note: conjunctive AI-auto-send guardrails of this kind are increasingly common in customer-support tooling. TrustSquare’s specific contribution within the combination is the encoding of the platform’s anonymity and strict-non-refundability invariants directly into the model response constraints, behind a secret-authenticated ingestion gate consistent with the existence-gate design of 3.7.
+
+3.10 Photo-First Listing Creation ($0-first). Listing creation is collapsed to one photo plus one sentence of intent: a server-side template engine (regex price extraction incl. k/m suffixes, keyword category resolution, title normalisation) produces a complete draft listing with zero AI cost; where configured and under the daily cost ceiling, a single budget-capped vision call refines it, failing open to the template. A guided capture mode walks the seller through a category-specific shot list (Property generates per-bedroom slots from the stated bed count), captures an SA-specific amenities schema (security, power backup, fibre, levies, typical utilities), and submits ALL photos in ONE batched vision call returning per-slot captions and a walkthrough description. Every AI call on the platform is wrapped in a daily cost-ceiling pre-flight and a spend-logging post-condition; free surfaces are $0 by construction.
+# 4. Patent Claims
+
+Claim hierarchy: the controlling claim language is in IP Brief v5. Claims 1, 4, 5, 8 and 9 are presented as dependent features of the combination (Claim 7); Claims 2 and 7 carry the independent inventive weight. See IP Brief v5 §6. Claims C10–C13 (IP Brief v6) recite the hold ledger: hold-gated service commitment (C10), decline-release (C11), dual-trigger settlement across human and machine services (C12), and atomic/idempotent technical enforcement (C13) — folded under the Claim 7 family as the charging-mechanism spine.
+# 5. Three-Stream Revenue Model
+
+Projected Year 1 revenue: $235,154 at ~96% operating margin; Year 3 projection: $3.88M. AI services are structurally high-margin — model cost averages $0.015–$0.04 per call for the Haiku-class listing assists, and a measured $0.20–$0.80 per run for the Sonnet-class Level-2 research dossiers against $4–$10 revenue per run (2T–5T). AI email triage adds ~$0.0023 per inbound email classified (Haiku); negligible at pre-launch volumes. Under the June 2026 Simpler Model the revenue mix is structurally transaction-weighted: ~86% introductions + paid AI usage, ~14% subscriptions (Revenue Bridge, June 2026) — cheaper plans and free agencies widen the funnel that feeds the transaction layer.
+# 6. Competitive Differentiation
+No existing marketplace platform combines: (i) permanent seller anonymity until mutual agreement; (ii) structurally non-refundable buyer commitment prior to identity disclosure; (iii) a platform-computed trust signal as the primary pre-commitment evaluation mechanism; (iv) seller discretion to accept or decline each introduction individually; (v) AI-powered listing services gated by the same commitment currency; and (vi) an AI-mediated inbound communication triage that enforces those same invariants on its own customer-support replies.
+The introduction charge is categorically distinct from the referral/commission models used by lead-generation and brokerage platforms (Bark.com, Thumbtack and the like): those fees are SELLER-paid, transaction-contingent, and typically proportional to deal value, paid between known parties on or after a concluded transaction. TrustSquare’s charge is the inverse — buyer-paid, fixed, pre-introduction, outcome-independent, non-refundable, and paid blind into mutual anonymity. This inversion of the pay-to-contact direction is the basis on which the platform is differentiated from, and not anticipated by, referral/commission prior art.
+Initial target: South Africa (property agents, domestic services, professional services). Expansion: city-by-city rollout via the CityLauncher recruitment tool. Wave 1 cities: New York, London, Sydney.
+
+# 7. Infrastructure & Security Architecture
+
+Security: magic-link auth (no password storage); existence gate on all AI endpoints; shared-secret header on POST /email/inbound (401 on bad secret, 503 when unconfigured); conservative auto-send gate holding legal/compliance/ambiguous mail; non-blocking spend register with income-linked alerts; rate limiting; DMARC+DKIM+SPF on sending domains; no PII transmitted until bilateral consent; seller email never exposed in API responses. POPIA: magic-link email and the 500-char triage body_preview are processed on a legitimate-interest/contract basis with data-minimisation and retention limits.
+# 8. Business Model Summary
+Buyer revenue: Tuppence bundle purchases (1T = $2) for introductions and AI services. Seller revenue: individual subscription tiers (Free $0 / Starter $5 / Pro $20 per month, slot-limited at 2/10/30), with verified agencies FREE (trust-graduated allowance; monetised on transactions and AI usage, not access). AI-services revenue: per-call Tuppence micro-payments. No advertising revenue. No commission on transactions. No data sales. Merchant of Record (Paddle/Stripe) for international buyers; SA buyers via Paystack.
+# 9. Trademark & Provisional Patent
+Trademark: TRUSTSQUARE to be filed at CIPC under Nice Classes 35 (advertising; business management; online marketplace services), 36 (financial services; electronic payment services), and 42 (software as a service; platform as a service). Madrid Protocol filing to follow within 12 months (UK, EU, USA, Kenya, Nigeria). The TUPPENCE word mark (the platform currency brand) is recommended as a fourth application, same classes.
+Provisional patent: file with CIPC on Day 0 (launch day). The 13 claims of §4 form the basis (controlling language in IP Brief v5; hold-ledger claims C10–C13 per IP Brief v6). Pre-filing consultation memorandum, erratum and June 2026 supplement completed — available for instructed attorney review. Counsel firms: Adams & Adams (Pretoria), Spoor & Fisher (Pretoria), Bowmans (Johannesburg).
+Note on PCT fee reductions: WIPO’s 90% PCT fee reduction is available only to natural-person applicants from listed lower-income economies; South Africa is not listed and the applicant is a corporate entity. The provisional should therefore be budgeted at full fees (no small-entity reduction). (Corrects an earlier strategy note.)
+# Version History
+v3.5 DRAFT (17 Jun 2026): added §3.2 non-rolling grant property and §3.5 paid-feed AI-class tier gate (S3 cost-integrity guardrail; PRICING_CANON §5). Editorial within the v3.5 draft — no version-number bump pending counsel landing.
+
+Trustsquare (Pty) Ltd  |  Reg 2026/340128/07  |  trustsquare.co  |  Director: David Maurice Conradie
+CONFIDENTIAL — Prior Art Disclosure  |  Not for public distribution until after provisional patent filing
+
+| users(id, email, name, tuppence_balance, trust_score, subscription_tier, slot_limit, photo_url, created_at) · listings(id, seller_email, category, city_id, suburb_id, status, trust_score) · introductions(id, buyer_email, listing_id, tuppence_cost, status, created_at) · tuppence_ledger(id, user_email, delta, reason, ref_id, created_at) · ai_spend_log(id, email, endpoint, model, est_cost_usd, logged_at) · ai_spend_config(id, monthly_income_usd, alert_threshold_pct, alert_email, last_alerted_at) · email_triage(id, from_addr, to_addr, subject, body_preview, category, urgency, draft_reply, status, message_id, received_at) |
+
+| Tier | Price/mo | Slots | Notes |
+| Free | $0 | 2 | Pay-as-you-go Tuppence · card verified, never charged |
+| Starter | $5/mo | 10 | 2T monthly allocation · the regular individual seller |
+| Pro | $20/mo | 30 | 10T monthly allocation · the power seller |
+| Agency | FREE (verified) | Trust-graduated (base 10 → 100 → 500) | Monetised on transactions + AI, not access |
+
+| Claim | Title | Summary |
+| Claim 1 | Unified Participation Model | Role derived from transaction state, not a database column. Single user table; buyer/seller status emerges from activity. (Protected within the combination of Claim 7.) |
+| Claim 2 | Tuppence Introduction Currency | Non-transferable, non-refundable commitment signal. Buyer-paid, fixed (not a % of price/value), pre-introduction, outcome-independent, paid blind into anonymity — the structural inverse of a referral/commission fee. Spam filter + commitment signal + seller-quality input. |
+| Claim 3 | Anonymous Introduction Protocol | No PII transmitted until bilateral consent; identity unlocks simultaneously, atomically, on mutual acceptance. |
+| Claim 4 | Trust Score Composite | Server-computed from verifiable data only; no self-reporting. |
+| Claim 5 | Geo-Hierarchical Visibility | 4-level hierarchy gated by subscription tier. |
+| Claim 6 | Founding Seller Cohort | Cold-start priority placement for the initial per-city cohort. |
+| Claim 7 | Combination Claim | Claims 1–6 as one platform, extended by 5-tier slot enforcement, Tuppence-gated AI Services, and the AI Guardrail (existence gate + spend register). One non-refundable currency spans human introductions AND AI services. The combination is the core protectable contribution. |
+| Claim 8 | Heritage Content Linking (dep. C1) | Method: seller-linked place-metadata as a non-transactional overlay, with automatic proximity/category linking. Catalogue size/link cap are non-limiting. |
+| Claim 9 | AI Inbound Triage (dep. C7) | Secret-auth ingestion + structured LLM classification + conjunctive auto-send gate, with platform invariants encoded into the model constraints. |
+
+| Stream | Y1 mix (est.) | Notes |
+| Subscriptions | ~68% | Three individual tiers (Free/$5/$20) + free verified agencies. Recurring, slot-limited (2/10/30; agency trust-graduated). |
+| Introductions | ~18% | 1 Tuppence ($2) per accepted introduction. Buyer-paid. |
+| AI Services | ~14% | Tuppence-gated per-call micro-payments. Grows with seller adoption. |
+
+| Component | Detail |
+| Application | FastAPI (Python) · Hetzner CPX32 (8GB, 4 vCPU, 160GB NVMe) · Ubuntu 24.04 |
+| Database | SQLite WAL mode · daily R2 backups · 14-day retention |
+| Media storage | Cloudflare R2 (EU) · zero egress · local mirror on Hetzner disk |
+| Volume | 100GB Hetzner block storage · Overpass OSM DB (39GB) |
+| AI provider | Anthropic API · claude-haiku-4-5 + claude-sonnet-4-6 · existence-gated · spend-logged |
+| Email | Cloudflare Email Routing + Worker → POST /email/inbound (secret-auth) → Claude Haiku triage → optional Gmail SMTP reply |
+| Automation | n8n (Docker) · email workflows · spend alert webhooks |
+| DNS/CDN | Cloudflare · DDoS protection · cache purge API |
+| SSL | Let’s Encrypt · auto-renew |
+| Payments | Paystack (ZA) · test mode · live mode pending CIPC registration |
+
+| Version | Change |
+| v3.0 (Apr 2026) | Initial provisional patent document. |
+| v3.1 (May 2026) | Heritage layer, Claim 8. |
+| v3.2 (May 2026) | 5-tier subscription redesign; AI Services revenue stream; AI guardrail architecture; spend register; CPX32 upgrade. |
+| v3.3 (May 2026) | §3.9 AI inbound triage + Claim 9; referral/commission distinction; Claim 8 method framing; email_triage schema. |
+| v3.4 (Jun 2026) | Corrected CIPRO → CIPC throughout. Added buyer-paid pay-to-contact INVERSION narrative (vs seller-paid Bark/Thumbtack) in §2 and §6. Reframed Tuppence burn as service-rendered-at-request and clarified float (unspent credit) does not expire before the CPA minimum validity — preserving strict cash non-refundability (§3.2). Claim hierarchy clarified (Claims 2+7 independent; 1/4/5/8/9 dependent) per IP Brief v5. Corrected the PCT small-entity fee-reduction note (§9). BEA v1.3.4. |
+| v3.5 DRAFT (11 Jun 2026) | Simpler Model: 3-tier + free agencies (slot enforcement unchanged); AI ladder capped Free/2/3/5T; Level-1 glimpse / Level-2 split; 10th function (Retirement Relocation Planner); Tuppence HOLD canon (C10–C13); §3.10 photo-first listing + guided capture + batched vision; revenue mix ~86% transactional. |
+| v3.5 DRAFT rev 2 (11 Jun 2026, ground-truth audit) | Code-verified corrections: §3.4 Trust Score rewritten to the implemented evidence-based signal-points + complaint-penalty architecture (supersedes the never-implemented 30/25/25/10/10 composite); §3.7 existence gate narrowed to metered AI (free $0-first assists ceiling-gated by design); §3.2 dormancy stated truthfully (24-month current, ≥36 staged per CPA s63); §5 AI costs split Haiku assists vs measured Sonnet L2; founders qualifying mechanism marked under canon revision; tier table + §8 + §9 relics removed (13 hits → 0). |
+| v3.6 (auto-loop iteration 1, 2026-06-23) | §3.2: CPA s63 statutory minimum confirmed at 3 years (24-mo term sub-statutory until extended); added s63(3) consumer-property-right note distinguishing burned (non-refundable) vs un-burned float (statutory reclaim) — keeps the whitepaper aligned with the patent's CPA counsel-flag. No technical/claim changes. Counsel-gated. Source .docx frozen. |
