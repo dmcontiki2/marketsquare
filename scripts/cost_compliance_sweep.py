@@ -31,6 +31,10 @@ PAID_PATTERNS = {
     "Paid data feeds":    re.compile(r"pricecharting\.com/api|lightstone|rentcast\.io|attomdata|corelogic", re.I),
 }
 MODEL_RE = re.compile(r"claude-([a-z]+)[-0-9a-z.]*")
+# "claude-*" tokens that are NOT model families (tools/plugins/filenames that merely start
+# with "claude-"). Skipped in model_discipline() so they don't raise spurious "unknown model
+# family" warnings. e.g. claude-mem (the memory plugin) and its claude-mem.db data file.
+KNOWN_NON_MODELS = {"mem"}
 SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
              ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
 SKIP_FILE = re.compile(r"\.bak[-.]|\.bak$|~\$|cost_compliance_sweep\.py$")
@@ -132,6 +136,8 @@ def model_discipline(root: Path):
             fam = m.group(1)
             line = text.count("\n", 0, m.start()) + 1
             rel = str(p.relative_to(root))
+            if fam in KNOWN_NON_MODELS:
+                continue   # e.g. claude-mem / claude-mem.db — a plugin name, not a model
             if fam == "haiku":
                 continue
             ltxt = tlines[line - 1].lstrip() if line <= len(tlines) else ""
