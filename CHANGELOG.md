@@ -3998,3 +3998,6 @@ Cost model impact: none — auth/UX/data hygiene; no AI calls, pricing, or concu
 - **Scheduled task** `trustsquare-canon-qa-weekly` (P9) — runs all three checks every Monday and reports drift.
 - Documentation/QA only; no code or live-state change.
 - Cost model impact: none.
+
+## Daily loop · 2026-06-25 — SCAN-18 shipped (B904 in _validate_rental_fields)
+Phase 2 Fixer shipped SCAN-18: added `from None` to the `raise HTTPException(400, "available_from must be an ISO date")` inside the `except (ValueError, TypeError)` block of `_validate_rental_fields` (main.py:1335, introduced by the S139 rental-availability feature). Behaviour-neutral exception-chaining cleanup (flake8 B904) — suppresses the spurious chained-exception context on a deliberate 400. Non-ledger / non-payments / non-KYC / non-EULA → cleared Gate 1 + Gate 2 with positive confidence, auto-shipped. Server backup `main.py.bak-*-scan18`; py_compile + ast.parse clean; `systemctl restart marketsquare` active; /health ok v1.3.1; smoke 40/40 green. No CDN purge (backend-only change). Cost model impact: none.
