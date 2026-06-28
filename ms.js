@@ -12628,7 +12628,7 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
-  collectables_advert: '/static/videos/collectables-advert-howto.mp4?v=20260618h',
+  collectables_advert: '/static/videos/collectables-advert-howto.mp4?v=20260628final',
   heritage_tour:       '/static/videos/heritage-tour-howto.mp4?v=20260618c',
   introductions:       '/static/videos/introduction.mp4?v=20260618c'
 };

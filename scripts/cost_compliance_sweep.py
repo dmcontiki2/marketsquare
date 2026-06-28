@@ -96,7 +96,18 @@ def wrapper_compliance(root: Path):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
             seg = "\n".join(lines[node.lineno - 1: node.end_lineno])
-            if "api.anthropic.com" not in seg and "ANTHROPIC_URL" not in seg:
+            # The inference URL/headers now live in single-source helpers
+            # (_ts_ai_url / _ts_ai_headers, added Jun 2026). An endpoint that
+            # POSTs to _ts_ai_url() IS an Anthropic call site even though the
+            # literal "api.anthropic.com" no longer appears in its body.
+            INDIRECT = ("_ts_ai_url(" in seg) or ("_ts_ai_headers(" in seg)
+            DIRECT   = ("api.anthropic.com" in seg) or ("ANTHROPIC_URL" in seg)
+            # ...but the helpers themselves are resolvers, not call sites:
+            # skip their own defs so the URL dict isn't mis-flagged as unmetered.
+            if node.name in ("_ts_ai_url", "_ts_ai_headers", "_ts_active_provider",
+                             "_ts_models_for"):
+                continue
+            if not (DIRECT or INDIRECT):
                 continue
             ceil = "_check_cost_ceiling" in seg
             log  = "_log_ai_spend" in seg
@@ -149,6 +160,14 @@ def model_discipline(root: Path):
                 continue   # match sits inside a trailing comment
             if re.match(r"[A-Z_]*MODEL\s*=", ltxt):
                 findings.append((INFO, f"{rel}:{line} model constant `{ltxt.split('=')[0].strip()}` = {m.group(0)} — used by Tuppence-metered endpoints; keep justified"))
+                continue
+            # Provider-model registry rows map an abstract tier -> a vendor model
+            # string, e.g.  "anthropic": {"haiku":..,"sonnet":"claude-sonnet-4-6"}.
+            # This is the single-source TASK_MODEL table (ai_provider.py) plus the
+            # in-process fallback dict in bea_main.py — the metered registry, not a
+            # loose call site. Treat a tier-keyed Sonnet entry as justified.
+            if re.search(r'"(?:sonnet|vision|reason|triage)"\s*:', ltxt):
+                findings.append((INFO, f"{rel}:{line} Sonnet in the provider-model registry (TASK_MODEL/fallback) — single-source, Tuppence-metered; keep justified"))
                 continue
             if re.search(r"\(\s*\d+\.\d+\s*,\s*\d+\.\d+\s*\)", ltxt) or \
                re.search(r"_AI_COST|_MODEL_PRICE|MODEL_RATES|AA_MODEL_FALLBACK", ltxt):
