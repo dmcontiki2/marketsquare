@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "version": 1,
+    "updated": "2026-06-27",
+    "note": "Append-only BIT catalogue. Every real incident should add >=1 BIT (preferably negative). See BIT_ARCHITECTURE.md.",
+    "base_url": "https://trustsquare.co"
+  },
+  "bits": [
+    {"id":"B-BEA-HEALTH","layer":"BEA","type":"functional","severity":"S1",
+     "desc":"/health returns status ok","check":"http_json","path":"/health",
+     "expect":{"json_key":"status","equals":"ok"},"confirm":2},
+
+    {"id":"B-BEA-DEMODATA","layer":"BEA","type":"functional","severity":"S2",
+     "desc":"/demo-listings serves >=200 entries","check":"http_json_count","path":"/demo-listings",
+     "expect":{"min_count":200},"confirm":2},
+
+    {"id":"B-BEA-WONDERS","layer":"BEA","type":"functional","severity":"S2",
+     "desc":"/wonders serves >=100 sites","check":"http_json_count","path":"/wonders",
+     "expect":{"min_count":100},"confirm":2},
+
+    {"id":"B-FEA-SHELL","layer":"FEA","type":"functional","severity":"S2",
+     "desc":"HTML shell 100-600KB, ends </html>, links external ms.js","check":"http_shell","path":"/",
+     "expect":{"min_bytes":100000,"max_bytes":600000,"contains":["/static/ms.js","</html>"]},"confirm":2},
+
+    {"id":"B-FEA-EXAMPLE","layer":"FEA","type":"functional","severity":"S2",
+     "desc":"Every advertised AI feature resolves /ai/example/<id> to a non-error sample (YESTERDAY'S FAILURE)",
+     "check":"ai_example_contract","path":"/ai/example/","expect":{"non_error_each":true},"confirm":2},
+
+    {"id":"B-FEA-CONTRACT","layer":"FEA","type":"negative","severity":"S2",
+     "desc":"Every feature id the FEA advertises has a live BEA route (no UI button without a backend)",
+     "check":"ai_example_contract","path":"/ai/example/","expect":{"route_exists_each":true},"confirm":2},
+
+    {"id":"B-NEG-AUTH","layer":"BEA","type":"negative","severity":"S1",
+     "desc":"Admin route with bad/empty API key must 401, never 200 (auth fail-closed)",
+     "check":"http_status","path":"/admin/users","headers":{"X-API-Key":"___bit_known_bad_key___"},
+     "expect":{"status_in":[401,403]},"canary":true,"confirm":2},
+
+    {"id":"B-NEG-DEMOBLEED","layer":"BEA","type":"negative","severity":"S2",
+     "desc":"Live /listings must contain zero demo_* ids (demo bleed guard)","check":"no_demo_bleed","path":"/listings",
+     "expect":{"no_id_prefix":"demo_"},"confirm":2}
+  ]
+}

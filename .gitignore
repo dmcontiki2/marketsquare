@@ -129,3 +129,8 @@ Kronberg/
 *.s*bak
 # Funnycard auto-backups (e.g. video.mp4.funnycard-bak-<timestamp>) — transient, often large media
 *funnycard-bak*
+
+# Daily-loop 2026-06-28: render/build artifacts that block Windows `git add`
+# (_render_libs holds Linux .so symlinks git can't index on Windows; cast/ holds large source media)
+feature-videos/production-kit/_render_libs/
+feature-videos/production-kit/cast/

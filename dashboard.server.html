@@ -569,8 +569,6 @@
       <button type="button" data-prov="openai" onclick="aiProvPick('openai')">OpenAI</button>
     </div>
     <div id="ai-prov-note" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-    <button type="button" id="ai-prov-test" onclick="aiProvTest()" style="margin-top:10px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;cursor:pointer;font-family:inherit">▶ Test active provider</button>
-    <div id="ai-prov-test-out" style="font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-wrap"></div>
   </div>
 
  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
@@ -664,13 +662,6 @@ function aiProvPick(p){
   }).then(function(f){ if(f&&f.ai_provider){window._aiProv=f.ai_provider; aiProvRender();} }).catch(function(e){console.warn('ai provider switch failed',e);});
 }
 
-function aiProvTest(){
-  var out=document.getElementById('ai-prov-test-out'); if(out) out.textContent='Testing '+window._aiProv.active+'…';
-  fetch(B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':tok()},body:JSON.stringify({})})
-   .then(function(r){ if(r.status===401){if(out)out.textContent='Admin session expired — reload.';return null;} return r.json(); })
-   .then(function(d){ if(!d)return; if(out) out.textContent = (d.ok?'✓ ':'✗ ')+d.provider+' ('+d.model+'): '+(d.text||'(no text)')+(d.in_tokens?('  ['+d.in_tokens+'+'+d.out_tokens+' tok]'):''); })
-   .catch(function(e){ if(out) out.textContent='Test failed: '+e; });
-}
 window.lsSave=function(){ var body={mode:S.mode,verified_tier:!!S.verified_tier,videos:!!S.videos,data_ops:!!S.data_ops,data_places:!!S.data_places,data_flights:!!S.data_flights,data_mapbox:!!S.data_mapbox,p_heritage:!!S.p_heritage,p_expedition:!!S.p_expedition,p_weekend:!!S.p_weekend};
    fetch(B+'/admin/flags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':tok()},body:JSON.stringify(body)}).then(function(r){ if(r.status===401){alert('Admin session expired — reload and log in to save.');return null;} return r.json();}).then(function(f){ if(f){fromServer(f);applyDom();visual();} }).catch(function(e){console.warn('flags save failed',e);}); };
  window.lsSet=function(m){ S.mode=m; applyDom(); visual(); lsSave(); };
@@ -698,7 +689,7 @@ async function loadDashboard() {
     DATA = await res.json();
     populate();
     loadHealth(); // Start health polling
-    loadBIT(); // BIT self-test status (health panel + ops panel)
+    loadBIT();
     if(!window._bitTimer) window._bitTimer=setInterval(loadBIT, 60000);
   } catch (err) {
     if (genTimeEl) genTimeEl.textContent = 'Error loading data — ' + err.message;
@@ -1308,47 +1299,22 @@ function closeLevel3(event) {
 // ── Server Health ────────────────────────────────────────────
 let _healthTimer = null;
 
-function _bitColor(state){ return state==='pass' ? '#10b981' : (state==='critical' ? '#ef4444' : (state==='degraded' ? '#f59e0b' : '#94a3b8')); }
-function _bitWord(state){ return state==='pass' ? 'healthy' : (state==='critical' ? 'CRITICAL' : (state==='degraded' ? 'degraded' : 'unknown')); }
-
+function _bitColor(st){return st==='pass'?'#10b981':(st==='critical'?'#ef4444':(st==='degraded'?'#f59e0b':'#94a3b8'));}
+function _bitWord(st){return st==='pass'?'healthy':(st==='critical'?'CRITICAL':(st==='degraded'?'degraded':'unknown'));}
 function renderBIT(b){
   var c=_bitColor(b.state||'unknown'), ran=(b.ran_at||'').replace('T',' ').replace('Z',' UTC');
-  // summary line in the Server Health panel
   var sum=document.getElementById('bit-summary');
-  if(sum){
-    var fails=(b.failing&&b.failing.length)?(' · failing: '+b.failing.join(', ')):'';
-    sum.innerHTML='<span style="color:'+c+';">●</span> <b>BIT '+(b.pass||0)+'/'+(b.total||0)+' PASS</b>'
-      +' <span style="color:#94a3b8;">('+_bitWord(b.state)+')</span>'
-      +'<span style="color:#ef4444;">'+fails+'</span>'
-      +' <span style="color:#94a3b8;font-size:11px;">'+(ran?('· '+ran):'')+'</span>';
-  }
-  // full panel in Ops view
-  var dot=document.getElementById('bit-ops-dot'); if(dot) dot.style.color=c;
-  var upd=document.getElementById('bit-ops-updated'); if(upd) upd.textContent=ran||'';
-  var osum=document.getElementById('bit-ops-summary');
-  if(osum) osum.innerHTML='<b style="color:'+c+';">'+(b.pass||0)+'/'+(b.total||0)+' PASS — '+_bitWord(b.state)+'</b>';
+  if(sum){var f=(b.failing&&b.failing.length)?(' · failing: '+b.failing.join(', ')):'';
+    sum.innerHTML='<span style="color:'+c+';">●</span> <b>BIT '+(b.pass||0)+'/'+(b.total||0)+' PASS</b> <span style="color:#94a3b8;">('+_bitWord(b.state)+')</span><span style="color:#ef4444;">'+f+'</span> <span style="color:#94a3b8;font-size:11px;">'+(ran?('· '+ran):'')+'</span>';}
+  var dot=document.getElementById('bit-ops-dot'); if(dot)dot.style.color=c;
+  var upd=document.getElementById('bit-ops-updated'); if(upd)upd.textContent=ran||'';
+  var osum=document.getElementById('bit-ops-summary'); if(osum)osum.innerHTML='<b style="color:'+c+';">'+(b.pass||0)+'/'+(b.total||0)+' PASS — '+_bitWord(b.state)+'</b>';
   var list=document.getElementById('bit-ops-list');
-  if(list){
-    var rows=(b.results||[]).map(function(r){
-      var rc = r.state==='PASS' ? '#10b981' : (r.sev==='S1' ? '#ef4444' : '#f59e0b');
-      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid rgba(148,163,184,.15);font-size:12px;">'
-        +'<span><span style="color:'+rc+';">●</span> <b>'+r.id+'</b> <span style="color:#94a3b8;">['+r.sev+' '+r.type+']</span></span>'
-        +'<span style="color:'+(r.state==='PASS'?'#10b981':'#ef4444')+';">'+r.state+'</span></div>'
-        +'<div style="font-size:11px;color:#94a3b8;margin:-2px 0 4px;">'+(r.detail||'')+'</div>';
-    }).join('');
-    list.innerHTML = rows || '<div style="color:#94a3b8;font-size:12px;">No BIT run recorded yet.</div>';
-  }
+  if(list){var rows=(b.results||[]).map(function(r){var rc=r.state==='PASS'?'#10b981':(r.sev==='S1'?'#ef4444':'#f59e0b');
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid rgba(148,163,184,.15);font-size:12px;"><span><span style="color:'+rc+';">●</span> <b>'+r.id+'</b> <span style="color:#94a3b8;">['+r.sev+' '+r.type+']</span></span><span style="color:'+(r.state==='PASS'?'#10b981':'#ef4444')+';">'+r.state+'</span></div><div style="font-size:11px;color:#94a3b8;margin:-2px 0 4px;">'+(r.detail||'')+'</div>';}).join('');
+    list.innerHTML=rows||'<div style="color:#94a3b8;font-size:12px;">No BIT run recorded yet.</div>';}
 }
-
-function loadBIT(){
-  fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/dashboard/bit')
-    .then(function(r){ return r.json(); })
-    .then(function(b){ renderBIT(b); })
-    .catch(function(){
-      var s=document.getElementById('bit-summary');
-      if(s) s.innerHTML='<span style="color:#94a3b8;">● BIT status unavailable</span>';
-    });
-}
+function loadBIT(){fetch((window.location.protocol==='file:'?'https://trustsquare.co':'')+'/dashboard/bit').then(function(r){return r.json();}).then(function(b){renderBIT(b);}).catch(function(){var s=document.getElementById('bit-summary');if(s)s.innerHTML='<span style="color:#94a3b8;">● BIT status unavailable</span>';});}
 
 function loadHealth() {
   fetch((window.location.protocol === 'file:' ? 'https://trustsquare.co' : '') + '/health/resources')

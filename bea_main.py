@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -467,9 +467,27 @@ def run_migrations(conn):
         p_heritage    INTEGER NOT NULL DEFAULT 0,
         p_expedition  INTEGER NOT NULL DEFAULT 0,
         p_weekend     INTEGER NOT NULL DEFAULT 0,
+        -- BIT safe-state flags (Mitigator flips these to a SAFE value on a confirmed BIT failure).
+        -- Defaults = NORMAL/healthy state; the Mitigator only ever moves them toward safe.
+        ai_example_enabled     INTEGER NOT NULL DEFAULT 1,
+        auth_fail_closed       INTEGER NOT NULL DEFAULT 0,
+        tuppence_burn_enabled  INTEGER NOT NULL DEFAULT 1,
+        -- AI provider seam (D1): live-switchable inference vendor (Page-4 control). Default = anthropic.
+        ai_active     TEXT    NOT NULL DEFAULT 'anthropic',
         updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
+    # BIT safe-state flags — add to pre-existing launch_switches rows (idempotent).
+    for _ddl in (
+        "ALTER TABLE launch_switches ADD COLUMN ai_example_enabled    INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE launch_switches ADD COLUMN auth_fail_closed      INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE launch_switches ADD COLUMN tuppence_burn_enabled INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE launch_switches ADD COLUMN ai_active TEXT NOT NULL DEFAULT 'anthropic'",
+    ):
+        try:
+            conn.execute(_ddl)
+        except Exception:
+            pass
     # C1 (Session 97) — HARD daily cost ceilings (USD), per-user + platform. 0 = off.
     # When the day's spend reaches the cap, the next paid AI call is REFUSED (429).
     for _col, _ddl in (
@@ -937,11 +955,23 @@ else:
     _log.warning("Object Storage not configured — using local /media fallback")
 
 # Anthropic — Advert Agent AI Coach
+# ── AI provider seam (D1-FIX): vendor chosen in ONE place via ai_provider ──
+# Swapping Claude -> another LLM = set AI_ACTIVE env (+ that provider's key). No call-site edits.
+try:
+    import ai_provider as _ts_ai
+    _TS_AI_PROVIDER = _ts_ai.AI_ACTIVE
+    _TS_AI_MODELS   = _ts_ai.TASK_MODEL.get(_TS_AI_PROVIDER, _ts_ai.TASK_MODEL["anthropic"])
+except Exception:
+    _TS_AI_PROVIDER = "anthropic"
+    _TS_AI_MODELS   = {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
+                       "vision":"claude-sonnet-4-6","triage":"claude-haiku-4-5-20251001"}
+# Endpoint + key resolve from the active provider (today = Anthropic; the URL/headers helper
+# below is the single place the wire protocol lives, so a swap changes it here, not in 15 bodies).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-AA_MODEL = "claude-haiku-4-5-20251001"
+AA_MODEL = _TS_AI_MODELS["haiku"]
 # KYC / SA-ID verification model (SCAN-1 fix — was referenced undefined in the
 # ID-verification path at ~7541/7568/7572). Matches VISION_MODEL standard.
-SONNET_MODEL = "claude-sonnet-4-6"
+SONNET_MODEL = _TS_AI_MODELS["sonnet"]
 
 # AI EMAIL TRIAGE (Session 94) — inbound @trustsquare.co mail forwarded by a
 # Cloudflare Email Worker to POST /email/inbound (auth: EMAIL_INBOUND_SECRET).
@@ -950,7 +980,48 @@ EMAIL_INBOUND_SECRET = os.getenv("EMAIL_INBOUND_SECRET")
 GMAIL_ADDRESS        = os.getenv("GMAIL_ADDRESS", "dmcontiki2@gmail.com")
 GMAIL_APP_PASSWORD   = os.getenv("GMAIL_APP_PASSWORD")
 EMAIL_AUTO_SEND      = os.getenv("EMAIL_AUTO_SEND", "0") == "1"
-TRIAGE_MODEL = "claude-haiku-4-5-20251001"
+TRIAGE_MODEL = _TS_AI_MODELS["triage"]
+
+_TS_AI_CACHE = {"prov": None, "ts": 0.0}
+def _ts_active_provider():
+    """The LIVE active provider — DB-backed (Page-4 switchable, no restart). Falls back to the
+    startup env value if the DB is unreachable. Cached ~10s so we never hammer the DB per call."""
+    import time as _t
+    now=_t.time()
+    if _TS_AI_CACHE["prov"] and (now-_TS_AI_CACHE["ts"])<10:
+        return _TS_AI_CACHE["prov"]
+    prov=_TS_AI_PROVIDER  # startup default
+    try:
+        conn=database.get_db()
+        try:
+            row=conn.execute("SELECT ai_active FROM launch_switches WHERE id=1").fetchone()
+            if row and row["ai_active"]: prov=row["ai_active"]
+        finally:
+            conn.close()
+    except Exception:
+        pass
+    _TS_AI_CACHE.update(prov=prov, ts=now)
+    return prov
+
+def _ts_models_for(prov):
+    try:
+        return _ts_ai.TASK_MODEL.get(prov, _ts_ai.TASK_MODEL["anthropic"])
+    except Exception:
+        return _TS_AI_MODELS
+
+def _ts_ai_url():
+    """The active provider's chat endpoint — the ONE place the inference URL lives."""
+    _u = {"anthropic": "https://api.anthropic.com/v1/messages",
+          "openai":    "https://api.openai.com/v1/chat/completions"}
+    return _u.get(_ts_active_provider(), _u["anthropic"])
+
+def _ts_ai_headers():
+    """The active provider's auth headers — the ONE place the wire auth lives.
+    Swap provider via AI_ACTIVE; this changes here, not in 15 call bodies."""
+    if _ts_active_provider()=="openai":
+        return {"Authorization":"Bearer "+(os.getenv("OPENAI_API_KEY") or ""),
+                "content-type":"application/json"}
+    return {"x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","content-type":"application/json"}
 if not EMAIL_INBOUND_SECRET:
     _log.warning("EMAIL_INBOUND_SECRET not set — /email/inbound will reject all calls")
 if not GMAIL_APP_PASSWORD:
@@ -2414,10 +2485,8 @@ def _vision_orient_image(img):
         )
         with httpx.Client(timeout=20) as client:
             resp = client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={"x-api-key": ANTHROPIC_API_KEY,
-                         "anthropic-version": "2023-06-01",
-                         "content-type": "application/json"},
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 8,
@@ -3652,30 +3721,21 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
     _check_cost_ceiling(_email)   # C1 — refuse if daily cost ceiling reached
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 120,
-                    "system": (
-                        "You are a concise local market expert for TrustSquare, a South African marketplace. "
-                        "Respond in exactly 1 sentence. Be specific, factual, and brief. "
-                        "Mention real price ranges where relevant. No fluff, no caveats."
-                    ),
-                    "messages": [{"role": "user", "content": prompt}],
-                },
-            )
-        _mn_json = resp.json()
-        text = _mn_json["content"][0]["text"].strip()
-        _mn_in, _mn_out = _usage_tokens(_mn_json)   # C2
-        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku", _mn_in, _mn_out)
-        return {"response": text}
+        # SEAM-ROUTED (D1): runs on whichever provider is active (Anthropic or OpenAI) — invisible to this feature.
+        # ai_provider.complete() translates the message + parses the response per provider; AIResult normalises tokens.
+        import ai_provider as _ap, asyncio as _aio
+        _sys = ("You are a concise local market expert for TrustSquare, a South African marketplace. "
+                "Respond in exactly 1 sentence. Be specific, factual, and brief. "
+                "Mention real price ranges where relevant. No fluff, no caveats.")
+        _res = await _aio.to_thread(
+            _ap.complete, [{"role": "user", "content": prompt}],
+            task="haiku", max_tokens=120, system=_sys, provider=_ts_active_provider())
+        if not _res.ok:
+            raise RuntimeError("active AI provider returned no result")
+        text = (_res.text or "").strip()
+        background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku",
+                                  _res.in_tokens, _res.out_tokens)
+        return {"response": text, "_provider": _res.provider, "_model": _res.model, **_report_stamp()}
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
         raise HTTPException(status_code=500, detail="AI call failed") from exc
@@ -3798,10 +3858,8 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
         )})
         async with httpx.AsyncClient(timeout=40) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={"x-api-key": ANTHROPIC_API_KEY,
-                         "anthropic-version": "2023-06-01",
-                         "content-type": "application/json"},
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={"model": AA_MODEL, "max_tokens": 700,
                       "messages": [{"role": "user", "content": content}]},
             )
@@ -3873,10 +3931,8 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
         )})
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={"x-api-key": ANTHROPIC_API_KEY,
-                         "anthropic-version": "2023-06-01",
-                         "content-type": "application/json"},
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={"model": AA_MODEL, "max_tokens": 350,
                       "messages": [{"role": "user", "content": content}]},
             )
@@ -4177,12 +4233,8 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 1800,
@@ -7213,12 +7265,8 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model":      AA_MODEL,
                     "max_tokens": 600,
@@ -7419,12 +7467,8 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 120,
@@ -7933,6 +7977,9 @@ async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
         elif doc_url.lower().endswith(".webp"):
             media_type = "image/webp"
 
+        # D1-SEAM NOTE: this KYC path uses the Anthropic SDK directly (not the httpx seam).
+        # It is the ONE remaining vendor-coupled call site; migrate to ai_provider.complete()
+        # when the seam grows a vision adapter. Left intact now (KYC path, change = gated).
         import anthropic as _anthropic
         client = _anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         prompt = f"""You are a document verification assistant for TrustSquare marketplace.
@@ -8629,6 +8676,38 @@ def _load_wonders():
     except Exception:
         return []
 
+@app.post("/dashboard/bit")
+def dashboard_bit_post(payload: dict = Body(...)):
+    """BIT Self-Test posts its latest board here (no auth — obscure URL, same posture as /dashboard/summary).
+    Stores the JSON board to bit_status.json; the dashboard reads it via GET /dashboard/bit.
+    The BIT Agent is a separate read-only article; this is its ONE write surface, and it only
+    records a status snapshot (no app state is changed here)."""
+    import json as _json, os as _os, datetime as _dt
+    try:
+        payload = dict(payload or {})
+        payload["received_at"] = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "bit_status.json")
+        with open(p, "w", encoding="utf-8") as fh:
+            _json.dump(payload, fh)
+        return {"ok": True, "stored": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="bad bit payload: " + str(e)[:120])
+
+
+@app.get("/dashboard/bit")
+def dashboard_bit_get():
+    """Live BIT Self-Test status for the dashboard health panel + Ops view. No auth (obscure URL)."""
+    import json as _json, os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "bit_status.json")
+    if not _os.path.exists(p):
+        return {"state": "unknown", "results": [], "worst": 0, "note": "no BIT run recorded yet"}
+    try:
+        with open(p, encoding="utf-8") as fh:
+            return _json.load(fh)
+    except Exception:
+        return {"state": "unknown", "results": [], "worst": 0, "note": "bit_status.json unreadable"}
+
+
 @app.get("/wonders")
 def list_wonders(type: str = None, country: str = None, q: str = None):
     """Return all wonders, optionally filtered by type, country, or search query."""
@@ -9004,6 +9083,23 @@ def _require_admin(x_admin_token: str = Header(default=None)):
     except _pyjwt.InvalidTokenError as exc:
         raise HTTPException(status_code=401, detail="Invalid token.") from exc
 
+
+@app.post("/admin/ai-test")
+def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
+    """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
+    (full translate+call+parse path). Lets the Page-4 switch be tested live against either
+    provider without touching the 15 production call sites. Returns the text + which provider/model answered."""
+    try:
+        import ai_provider as _ap
+        prov=_ts_active_provider()
+        prompt=((payload or {}).get("prompt") or "Reply with exactly: TrustSquare AI provider test OK.").strip()
+        r=_ap.complete([{"role":"user","content":prompt}], task="haiku", max_tokens=40, provider=prov)
+        return {"ok": bool(r.ok), "provider": r.provider, "model": r.model,
+                "text": (r.text or "")[:400], "in_tokens": r.in_tokens, "out_tokens": r.out_tokens}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="ai-test failed: "+str(e)[:160])
+
+
 class _FlagsUpdate(BaseModel):
     mode:          Optional[str]  = None
     verified_tier: Optional[bool] = None
@@ -9015,6 +9111,11 @@ class _FlagsUpdate(BaseModel):
     p_heritage:    Optional[bool] = None
     p_expedition:  Optional[bool] = None
     p_weekend:     Optional[bool] = None
+    # BIT safe-state flags (Mitigator-writable; see §13.1)
+    ai_example_enabled:    Optional[bool] = None
+    auth_fail_closed:      Optional[bool] = None
+    tuppence_burn_enabled: Optional[bool] = None
+    ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' (Page-4 switch)
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -9032,6 +9133,16 @@ def _flags_payload(d):
             "heritage_verified":   live and b("verified_tier") and b("p_heritage"),
             "expedition_verified": live and b("verified_tier") and b("p_expedition"),
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
+        },
+        "bit_flags": {
+            "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
+            "auth_fail_closed":      bool(d.get("auth_fail_closed", 0)),
+            "tuppence_burn_enabled": bool(d.get("tuppence_burn_enabled", 1)),
+        },
+        "ai_provider": {
+            "active": d.get("ai_active", "anthropic"),
+            # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
+            "available": {"anthropic": True, "openai": bool(os.getenv("OPENAI_API_KEY"))},
         },
         "updated_at": d.get("updated_at", ""),
     }
@@ -9056,6 +9167,11 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
             if v not in ("launch", "live"):
                 raise HTTPException(status_code=400, detail="mode must be 'launch' or 'live'")
             sets.append("mode = ?"); vals.append(v)
+        elif k == "ai_active":
+            if v not in ("anthropic", "openai"):
+                raise HTTPException(status_code=400, detail="ai_active must be 'anthropic' or 'openai'")
+            sets.append("ai_active = ?"); vals.append(v)
+            _TS_AI_CACHE["prov"] = None  # bust the seam cache so the switch is instant
         else:
             sets.append(k + " = ?"); vals.append(1 if v else 0)
     conn = database.get_db()
@@ -9729,12 +9845,8 @@ async def vision_draft(
     try:
         async with httpx.AsyncClient(timeout=45) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": VISION_MODEL,
                     "max_tokens": 900,
@@ -10123,12 +10235,8 @@ async def ai_listing_rewrite(listing_id: int, email: str):
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 350,
@@ -10232,12 +10340,8 @@ async def ai_seller_audit(listing_id: int, email: str):
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 400,
@@ -10342,6 +10446,79 @@ def _resolver_ready(service: str, tierkey: str, country: str = "ZA") -> dict:
     return tier_resolvers.served_tiers(
         service, tierkey, country, creds=tier_resolvers.creds_from_env())
 
+# ── FREE worked examples for the AI feature panel ("See an example" button) ──────────────
+# Fixes the long-standing bug: the FEA calls GET /ai/example/<id> but no route existed, so every
+# example button errored. This route ALWAYS returns a valid {result} (real sample for known ids,
+# graceful generic sample otherwise) so it can never error regardless of the feature id served by
+# /ai/functions. Free, no Tuppence, no auth. Carries the standard date stamp.
+_AI_EXAMPLE_SAMPLES = {
+    "collectables_advert": (
+        "## Collectables Advert + Market Report (sample)\n\n"
+        "**Item identified:** 1968 Krugerrand, 1oz gold, circulated (VF).\n\n"
+        "**Suggested title:** 1968 Krugerrand 1oz Gold Coin — Circulated, Authenticated\n\n"
+        "**Market read:** Bullion 1oz Krugerrands trade close to gold spot plus a small premium. "
+        "As a live-market item the price moves intraday — always confirm against spot at the moment of sale.\n\n"
+        "**Suggested asking band:** spot + 3–6% premium for circulated grade.\n\n"
+        "## Safety awareness\nMeet in a safe public place; for bullion, verify weight and authenticity before payment.\n"
+    ),
+    "collection_liquidation": (
+        "## Collection Liquidation Plan (sample)\n\n"
+        "**Collection:** ~40 mixed trading cards + 6 silver coins.\n\n"
+        "**Recommended approach:** list the 6 coins individually (higher per-item value, live-market priced), "
+        "bundle common cards into themed lots. Estimated total indicative range provided on a real run.\n\n"
+        "## Safety awareness\nFor precious-metal items, re-check spot price immediately before any sale.\n"
+    ),
+    "property_dossier": (
+        "## Property Dossier (sample)\n\n"
+        "**Subject:** 3-bed townhouse, suburb X.\n\n"
+        "**Indicative area band:** R1.45m–R1.78m based on recent comparable listings. "
+        "Not a formal valuation — verify with a registered property practitioner.\n"
+    ),
+    "car_dossier": (
+        "## Vehicle Dossier (sample)\n\n"
+        "**Subject:** 2018 hatchback, ~78,000 km.\n\n"
+        "**Indicative asking band:** R182k–R205k based on comparable listings; condition and service "
+        "history shift this materially.\n"
+    ),
+    "heritage_tour": (
+        "## Heritage Tour (sample)\n\n"
+        "A half-day route taking in three nearby heritage sites with timing and context for each. "
+        "On a real run this includes a map and waypoints.\n"
+    ),
+    "expedition_dossier": (
+        "## Expedition Dossier (sample)\n\nKit list, route notes, seasonal cautions and a difficulty read "
+        "for your chosen destination.\n\n## Safety awareness\nCheck current conditions before departure.\n"
+    ),
+    "weekend_itinerary": (
+        "## Weekend Itinerary (sample)\n\nA two-day plan balancing must-sees with downtime, with rough "
+        "costs and travel times. On a real run this includes a map.\n"
+    ),
+    "offer_advisor": (
+        "## Offer Advisor (sample)\n\n**Listing asking:** R12,500.\n\n**Suggested opening offer:** R10,800, "
+        "with reasoning you can paste into your message to the seller.\n"
+    ),
+    "study_plan": (
+        "## Study Plan (sample)\n\nA 4-week plan for your subject with weekly goals, resources and a "
+        "self-check at the end of each week.\n"
+    ),
+}
+
+def _ai_example_generic(function_id: str) -> str:
+    nice = (function_id or "this feature").replace("_", " ").title()
+    return ("## " + nice + " — sample\n\n"
+            "This is an illustrative preview of what " + nice + " produces. On a real run you receive a "
+            "full, item-specific report. Run the feature to see your own result (free preview available "
+            "where supported).\n")
+
+@app.get("/ai/example/{function_id}")
+def ai_example(function_id: str):
+    """Free worked example for the AI feature panel. ALWAYS returns a valid {result} so the
+    'See an example' button can never error, for any feature id. No Tuppence, no auth."""
+    fid = (function_id or "").strip()[:64]
+    body = _AI_EXAMPLE_SAMPLES.get(fid) or _ai_example_generic(fid)
+    return {"result": body, "example": True, "function_id": fid, **_report_stamp()}
+
+
 @app.get("/listings/{listing_id}/value-tiers")
 async def listing_value_tiers(listing_id: int, service: str = "fair_price"):
     """Tiered Value Selector: returns the colour-coded chips the FEA should show
@@ -10372,12 +10549,49 @@ async def listing_value_tiers(listing_id: int, service: str = "fair_price"):
         "category": tierkey,
         "paid_tiers_enabled": _paid_tiers_enabled(),
         "chips": chips,
+        **_report_stamp(volatile=_is_volatile_item(tierkey, service)),
     }
 
 
 # -- Tiered Value Selector STEP 3: FREE/owned fair-price + comps helpers -------
 _INDICATIVE_LABEL = ("Indicative only - information, not financial advice or a "
                      "formal valuation.")
+
+# ── Report date-stamp + accuracy disclaimer (liability: a price/market figure with no date
+# reads as 'true forever'. Every AI report carries WHEN it was generated and that it is only
+# accurate as of that date. One helper, spread into every report return, so no feature omits it.) ──
+_VOLATILE_TERMS = ("coin", "coins", "numismat", "bullion", "krugerrand", "gold", "silver",
+                   "platinum", "precious metal", "sovereign", "spot price", "ounce", "oz ")
+def _is_volatile_item(*parts) -> bool:
+    """True if any provided string (category/subject/title/source) names a spot/market-priced item
+    (gold, bullion coins, precious metals) whose price moves intraday -> needs the minute-level warning."""
+    blob = " ".join(str(p or "").lower() for p in parts)
+    return any(t in blob for t in _VOLATILE_TERMS)
+
+def _report_stamp(extra: str = "", *, volatile: bool = False):
+    """Date/time-accuracy fields every AI report must carry. Time is to the MINUTE in UTC —
+    spot-priced items (gold, bullion coins, FX) move intraday, so a date alone understates the risk.
+    `extra` appends feature-specific wording. `volatile=True` adds an intraday-movement warning
+    for fast-moving / market-priced items (precious metals, coins, anything tracking a live exchange)."""
+    import datetime as _dt
+    _now = _dt.datetime.now(_dt.timezone.utc)
+    _human = _now.strftime("%d %B %Y, %H:%M UTC")          # minute precision, explicitly UTC
+    base = (f"This report is accurate as of {_human}. AI estimates, prices and market figures "
+            f"change continuously — the figure shown may be materially higher or lower if this "
+            f"feature is run even minutes later. It is a snapshot for the exact time above, not a "
+            f"guarantee of current or future value.")
+    vol = (" For precious metals, bullion coins and other items priced off a live market, the spot "
+           "price can move by significant amounts within minutes; this snapshot is not a dealing "
+           "price and must be re-checked against the live market before any transaction.")
+    txt = base + (vol if volatile else "") + ((" " + extra) if extra else "")
+    return {
+        "as_of": _now.strftime("%Y-%m-%d"),
+        "as_of_time_utc": _now.strftime("%H:%M"),
+        "as_of_iso": _now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "as_of_human": _human,                              # e.g. "27 June 2026, 11:34 UTC"
+        "volatile": bool(volatile),
+        "date_disclaimer": txt,
+    }
 
 def _parse_money(v):
     """Parse a price string ('R1 200 000', '$1,700/mo') to a float, or None."""
@@ -10694,12 +10908,8 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": PRICE_CHECK_MODEL,
                     "max_tokens": 700,
@@ -10762,6 +10972,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
         # Legacy fields — kept for backward compat
         "context":          assessment,
         "suggested_range":  sa_range,
+        **_report_stamp("Price reflects feeds/market data available at the time above; re-run for a current figure.", volatile=_is_volatile_item(source, verdict, locals().get("subject"), locals().get("_cat"))),
     }
 
 # ── END AI TUPPENCE SERVICES (Session 73) ────────────────────────────────────
@@ -10987,12 +11198,8 @@ async def ai_yield_calc(listing_id: int, email: str,
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": AA_MODEL,
                     "max_tokens": 250,
@@ -11063,6 +11270,7 @@ async def ai_yield_calc(listing_id: int, email: str,
                                    "estimated from area benchmarks it is not property-specific; "
                                    "verify with a registered property practitioner."),
         "tuppence_remaining":     remaining,
+        **_report_stamp("This yield estimate uses rent/cost benchmarks current at the date above."),
     }
 
 
@@ -11156,12 +11364,8 @@ async def ai_batch_card_listings(req: BatchCardRequest):
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": VISION_MODEL,   # Vision-capable; Haiku lacks vision depth for cards
                     "max_tokens": 2000,
@@ -11361,12 +11565,8 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={
                     "model": TRIAGE_MODEL,
                     "max_tokens": 400,
@@ -11835,10 +12035,8 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
     try:
         with httpx.Client(timeout=timeout) as client:
             resp = client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={"x-api-key": ANTHROPIC_API_KEY,
-                         "anthropic-version": "2023-06-01",
-                         "content-type": "application/json"},
+                _ts_ai_url(),
+                headers=_ts_ai_headers(),
                 json={"model": VISION_MODEL, "max_tokens": 300,
                       "system": system_prompt,
                       "messages": [{"role": "user", "content": content_blocks}]},

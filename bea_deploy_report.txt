@@ -1,0 +1,26 @@
+============================================================
+ SELF-PROTECTING BEA DEPLOY
+============================================================
+[1] Back up the CURRENT working main.py on the server (timestamped)...
+backed-up-to-main.py.lastgood
+
+[2] Push the new bea_main.py -> main.py...
+
+[3] BOOT TEST before committing: does the new main.py import cleanly under the venv+env?
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/var/www/marketsquare/main.py", line 7, in <module>
+    import auth
+  File "/var/www/marketsquare/auth.py", line 13, in <module>
+    raise RuntimeError(
+RuntimeError: MS_API_KEY environment variable is not set. Refusing to start without an API key — set it in the server environment before launching the BEA.
+
+[4] Restart + health-check (retry over ~12s)...
+HEALTH-OK
+
+[5] AUTO-ROLLBACK if the service is not active OR health failed...
+   [OK] New BEA is live and healthy.
+
+============================================================
+ Saved to C:\Users\David\Projects\MarketSquare\bea_deploy_report.txt
+============================================================

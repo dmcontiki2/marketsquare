@@ -260,6 +260,10 @@ if %errorlevel% neq 0 (
 :: S3 (CC-004) — AI paid-feed tier-gate + non-rolling grant modules. Imported by
 :: main.py; must land BEFORE the BEA restart so the gate + sweep ship atomically.
 scp "%PROJECT%\ai_service_tiers.py" %SERVER%:%REMOTE%/ai_service_tiers.py
+scp "%PROJECT%\ai_provider.py" %SERVER%:%REMOTE%/ai_provider.py
+if errorlevel 1 (
+    echo  ERROR: SCP failed for ai_provider.py ^(AI provider seam^). Check SSH connection.
+)
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for ai_service_tiers.py. Check SSH connection.
     pause
@@ -357,7 +361,11 @@ ssh %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: 
 
 ssh %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
 
-ssh %SERVER% "curl -s http://localhost:8000/health | grep -qE 'status.*ok' && echo   [OK] BEA /health reports status ok || echo   [FAIL] BEA /health not ok - check service restart"
+ssh %SERVER% "for i in 1 2 3 4 5; do curl -s http://localhost:8000/health | grep -qE 'status.*ok' && { echo '   [OK] BEA /health reports status ok'; break; }; [ $i -eq 5 ] && echo '   [FAIL] BEA /health not ok - check service restart'; sleep 2; done"
+
+ssh %SERVER% "test -f %REMOTE%/ai_provider.py && echo   [OK] BEA: ai_provider.py AI-swap-seam present || echo   [FAIL] BEA: ai_provider.py MISSING - AI_ACTIVE swap falls back to Anthropic"
+
+ssh %SERVER% "grep -q 'ai/example/{function_id}' %REMOTE%/main.py && echo   [OK] BEA: /ai/example route present - free example buttons fixed || echo   [FAIL] BEA: /ai/example route MISSING - example buttons still broken"
 
 ssh %SERVER% "test -f %REMOTE%/static/ms.js && echo   [OK] static/ms.js present on server || echo   [FAIL] static/ms.js missing - redeploy needed"
 ssh %SERVER% "grep -oE 'ms\.js\?v=[0-9]+' %REMOTE%/index.html | head -1 | sed 's/^/   [INFO] served buyer app references /'"
@@ -375,6 +383,19 @@ powershell -NoProfile -Command ^
   "try { Invoke-WebRequest -UseBasicParsing -Headers @{ 'Accept-Encoding' = 'identity' } -Uri ('https://trustsquare.co/static/ms.js?v=' + $jsv) -OutFile $tmp } catch {};" ^
   "if (Test-Path $tmp) { $live = (Get-FileHash -Algorithm MD5 -LiteralPath $tmp).Hash } else { $live = 'FETCH_FAILED' };" ^
   "if ($local -eq $live) { Write-Host ('   [OK] LIVE ms.js matches your build  md5=' + $local.Substring(0,8)) } else { Write-Host ('   [FAIL] LIVE ms.js does NOT match  local=' + $local.Substring(0,8) + '  live=' + $live); Write-Host '          Cloudflare is serving stale - just re-run this script; the auto ?v bump fixes it.' }"
+echo.
+
+:: -- Step 6c: BIT self-test (the full functional + negative health check) --
+echo.
+echo  [6c] Running BIT self-test against the live site...
+python "%PROJECT%\..\trustsquare-bit-agent\bit_cycle.py"
+if errorlevel 2 (
+  echo   [FAIL] BIT: a CRITICAL ^(S1^) marker failed - see the failing ids above. Investigate before relying on this deploy.
+) else if errorlevel 1 (
+  echo   [WARN] BIT: a major ^(S2^) marker failed - a feature/guardrail is down. See ids above; dashboard shows amber.
+) else (
+  echo   [OK] BIT: all self-test markers PASS - dashboard updated green.
+)
 echo.
 
 :: ── Step 7: Auto-commit the deployed working tree ─────────

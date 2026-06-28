@@ -1,0 +1,88 @@
+<svg viewBox="0 0 1200 980" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+<defs>
+<marker id="g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#5b6472"/></marker>
+<marker id="gb" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#b4801f"/></marker>
+<marker id="gg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0f8a6a"/></marker>
+</defs>
+<rect x="0" y="0" width="1200" height="980" fill="#ffffff"/>
+<rect x="20" y="50" width="470" height="430" rx="14" fill="#eef4fb" stroke="#cfe0f2"/>
+<text x="34" y="72" font-size="11" font-weight="700" fill="#3a6ea5">TRUSTSQUARE · CORE APP (Hetzner)</text>
+<rect x="40" y="90" width="200" height="60" rx="9" fill="#fff" stroke="#3a6ea5"/><text x="140" y="115" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">Customer → FEA</text><text x="140" y="134" text-anchor="middle" font-size="10.5" fill="#5b6472">front-end app</text>
+<rect x="40" y="180" width="200" height="72" rx="9" fill="#fff" stroke="#3a6ea5" stroke-width="2.2"/><text x="140" y="208" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="14">BEA</text><text x="140" y="228" text-anchor="middle" font-size="10.5" fill="#5b6472">~130 routes · AI · metering</text>
+<rect x="40" y="290" width="200" height="62" rx="9" fill="#fff" stroke="#3a6ea5"/><text x="140" y="316" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">dBase</text><text x="140" y="334" text-anchor="middle" font-size="10.5" fill="#5b6472">SQLite · 23 tables</text>
+<rect x="270" y="180" width="200" height="60" rx="9" fill="#fff" stroke="#3a6ea5"/><text x="370" y="205" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">Dashboard +1</text><text x="370" y="223" text-anchor="middle" font-size="10.5" fill="#5b6472">Live Health</text>
+<rect x="270" y="90" width="200" height="60" rx="9" fill="#fff" stroke="#3a6ea5"/><text x="370" y="115" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">Auto-Emailer</text><text x="370" y="133" text-anchor="middle" font-size="10.5" fill="#5b6472">triage · alerts</text>
+<rect x="270" y="290" width="200" height="62" rx="9" fill="#fff" stroke="#0f8a6a"/><text x="370" y="314" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="12">Business domains</text><text x="370" y="332" text-anchor="middle" font-size="10.5" fill="#5b6472">Finances·Taxes·Countries·Profits</text>
+<line x1="140" y1="150" x2="140" y2="178" stroke="#5b6472" stroke-width="1.6" marker-end="url(#g)"/>
+<line x1="140" y1="252" x2="140" y2="288" stroke="#5b6472" stroke-width="1.6" marker-end="url(#g)"/>
+<line x1="240" y1="205" x2="268" y2="120" stroke="#5b6472" stroke-width="1.4" marker-end="url(#g)"/>
+<line x1="240" y1="215" x2="268" y2="210" stroke="#5b6472" stroke-width="1.4" marker-end="url(#g)"/>
+<line x1="240" y1="320" x2="268" y2="320" stroke="#0f8a6a" stroke-width="1.4" marker-end="url(#gg)"/>
+<rect x="40" y="390" width="430" height="74" rx="10" fill="#fff" stroke="#b4801f" stroke-width="2.4"/>
+<text x="255" y="416" text-anchor="middle" font-weight="700" fill="#8a5e10" font-size="14">BIT Agent — detect + confirm (read-only, &lt;2%)</text>
+<text x="255" y="436" text-anchor="middle" font-size="10.5" fill="#5b6472">functional + negative BITs · N-of-M confirm · severity S1–S4</text>
+<text x="255" y="452" text-anchor="middle" font-size="10.5" fill="#5b6472">never fixes · emits a Detect-schema finding on FAIL</text>
+<line x1="120" y1="390" x2="120" y2="354" stroke="#b4801f" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#gb)"/>
+<line x1="160" y1="390" x2="160" y2="254" stroke="#b4801f" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#gb)"/>
+<line x1="300" y1="390" x2="300" y2="242" stroke="#b4801f" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#gb)"/>
+<text x="330" y="375" font-size="10" fill="#b4801f" font-style="italic">read-only probes</text>
+<rect x="520" y="50" width="660" height="700" rx="14" fill="#fbf6ec" stroke="#efe2c6"/>
+<text x="536" y="72" font-size="11" font-weight="700" fill="#b4801f">FIX PIPELINE — fail → detect → report → fix → pass  (3 of 4 actors already built)</text>
+<rect x="900" y="92" width="250" height="48" rx="24" fill="#e8f6ef" stroke="#0f8a6a" stroke-width="2"/>
+<text x="1025" y="121" text-anchor="middle" font-weight="700" fill="#0f7a5c" font-size="14">✓ PASS — healthy (quiet)</text>
+<rect x="560" y="160" width="250" height="64" rx="9" fill="#6b7480"/>
+<text x="685" y="186" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">① REPORT  (always, first)</text>
+<text x="685" y="206" text-anchor="middle" font-size="10.5" fill="#eef1f4">email · dashboard · per severity</text>
+<rect x="560" y="252" width="250" height="78" rx="9" fill="#fff" stroke="#b4801f" stroke-width="2.4"/>
+<text x="685" y="278" text-anchor="middle" font-weight="700" fill="#8a5e10" font-size="13">② MITIGATOR  (new · seconds)</text>
+<text x="685" y="296" text-anchor="middle" font-size="10.5" fill="#5b6472">reversible flag-flip → safe state</text>
+<text x="685" y="312" text-anchor="middle" font-size="10.5" fill="#5b6472">NO code change · allow-list only</text>
+<text x="685" y="326" text-anchor="middle" font-size="10.5" fill="#5b6472">hide feature / fail-closed / freeze burn</text>
+<rect x="540" y="360" width="290" height="120" rx="9" fill="#fff" stroke="#5b6472"/>
+<text x="685" y="384" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">③ TRIAGE — lane by risk</text>
+<rect x="556" y="398" width="84" height="66" rx="7" fill="#e8f6ef" stroke="#0f8a6a"/><text x="598" y="424" text-anchor="middle" font-size="10.5" fill="#0f7a5c" font-weight="700">GREEN</text><text x="598" y="440" text-anchor="middle" font-size="10.5" fill="#5b6472">auto-fix</text><text x="598" y="454" text-anchor="middle" font-size="10.5" fill="#5b6472">reversible</text>
+<rect x="643" y="398" width="84" height="66" rx="7" fill="#fdf3e0" stroke="#b4801f"/><text x="685" y="424" text-anchor="middle" font-size="10.5" fill="#8a5e10" font-weight="700">AMBER</text><text x="685" y="440" text-anchor="middle" font-size="10.5" fill="#5b6472">staged for</text><text x="685" y="454" text-anchor="middle" font-size="10.5" fill="#5b6472">review</text>
+<rect x="730" y="398" width="84" height="66" rx="7" fill="#fbe9e9" stroke="#c0392b"/><text x="772" y="424" text-anchor="middle" font-size="10.5" fill="#a3271b" font-weight="700">RED</text><text x="772" y="440" text-anchor="middle" font-size="10.5" fill="#5b6472">David only</text><text x="772" y="454" text-anchor="middle" font-size="10.5" fill="#5b6472">never auto</text>
+<rect x="560" y="512" width="250" height="78" rx="9" fill="#fff" stroke="#5b6472" stroke-width="2"/>
+<text x="685" y="538" text-anchor="middle" font-weight="700" fill="#1c2530" font-size="13">④ FIX ORCHESTRATOR (built)</text>
+<text x="685" y="556" text-anchor="middle" font-size="10.5" fill="#5b6472">ships GREEN under verify-or-revert</text>
+<text x="685" y="572" text-anchor="middle" font-size="10.5" fill="#5b6472">Sonnet edit · bash str-replace · smoke</text>
+<text x="685" y="586" text-anchor="middle" font-size="10.5" fill="#5b6472">amber→David · red→David</text>
+<rect x="560" y="620" width="250" height="64" rx="9" fill="#fff" stroke="#0f8a6a" stroke-width="2"/>
+<text x="685" y="646" text-anchor="middle" font-weight="700" fill="#0f7a5c" font-size="13">⑤ PREVENT (built)</text>
+<text x="685" y="664" text-anchor="middle" font-size="10.5" fill="#5b6472">add regression guard + deploy-gate test</text>
+<rect x="900" y="380" width="250" height="120" rx="10" fill="#fff" stroke="#c0392b" stroke-dasharray="4 3"/>
+<text x="1025" y="406" text-anchor="middle" font-weight="700" fill="#a3271b" font-size="13">David (human)</text>
+<text x="1025" y="426" text-anchor="middle" font-size="10.5" fill="#5b6472">amber review · red decisions</text>
+<text x="1025" y="442" text-anchor="middle" font-size="10.5" fill="#5b6472">money / auth / DB / BEA logic</text>
+<text x="1025" y="458" text-anchor="middle" font-size="10.5" fill="#5b6472">diff prepared, not auto-shipped</text>
+<text x="1025" y="476" text-anchor="middle" font-size="10.5" fill="#5b6472">S1 resolution is human-led</text>
+<path d="M470,427 Q520,290 558,200" fill="none" stroke="#b4801f" stroke-width="2" marker-end="url(#gb)"/>
+<text x="486" y="300" font-size="10" fill="#b4801f" font-style="italic">FAIL → finding</text>
+<line x1="685" y1="224" x2="685" y2="250" stroke="#5b6472" stroke-width="1.8" marker-end="url(#g)"/>
+<line x1="685" y1="330" x2="685" y2="358" stroke="#5b6472" stroke-width="1.8" marker-end="url(#g)"/>
+<text x="695" y="348" font-size="10" fill="#7a828e" font-style="italic">root finding</text>
+<path d="M598,464 Q600,490 660,512" fill="none" stroke="#0f8a6a" stroke-width="1.8" marker-end="url(#gg)"/>
+<path d="M814,430 Q860,430 898,430" fill="none" stroke="#c0392b" stroke-width="1.6" marker-end="url(#g)"/>
+<line x1="685" y1="590" x2="685" y2="618" stroke="#5b6472" stroke-width="1.8" marker-end="url(#g)"/>
+<path d="M980,500 Q900,560 812,556" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#g)"/>
+<path d="M810,650 Q1000,650 1060,560" fill="none" stroke="#5b6472" stroke-width="1.6" marker-end="url(#g)"/>
+<path d="M1060,520 Q1120,330 1075,142" fill="none" stroke="#0f8a6a" stroke-width="2" marker-end="url(#gg)"/>
+<text x="1085" y="440" font-size="10" fill="#0f8a6a" font-style="italic">BIT re-tests</text>
+<text x="1085" y="455" font-size="10" fill="#0f8a6a" font-style="italic">→ confirms PASS</text>
+<path d="M560,300 Q360,300 255,392" fill="none" stroke="#b4801f" stroke-width="1.2" stroke-dasharray="2 3" marker-end="url(#gb)"/>
+<text x="300" y="290" font-size="10" fill="#b4801f" font-style="italic">safe-state flips back on fix</text>
+<path d="M560,551 Q300,560 245,464" fill="none" stroke="#0f8a6a" stroke-width="2.2" stroke-dasharray="1 0" marker-end="url(#gg)"/>
+<text x="300" y="600" font-size="10.5" fill="#0f8a6a" font-weight="700" font-style="italic">deploy fix → Core App (closes the loop)</text>
+<rect x="40" y="500" width="430" height="230" rx="10" fill="#fff" stroke="#dfe4ea"/>
+<text x="56" y="524" font-size="11" font-weight="700" fill="#6b7480">THE FULL CYCLE</text>
+<text x="56" y="548" font-size="10.5" fill="#5b6472">1 · BIT detects + confirms a FAIL (read-only)</text>
+<text x="56" y="568" font-size="10.5" fill="#5b6472">2 · REPORT fires first — human always sees it</text>
+<text x="56" y="588" font-size="10.5" fill="#5b6472">3 · MITIGATOR flips a reversible safe-state (seconds)</text>
+<text x="56" y="608" font-size="10.5" fill="#5b6472">4 · TRIAGE lanes it: green auto · amber/red → David</text>
+<text x="56" y="628" font-size="10.5" fill="#5b6472">5 · FIX ships green under verify-or-revert</text>
+<text x="56" y="648" font-size="10.5" fill="#5b6472">6 · PREVENT adds a guard + deploy-gate test</text>
+<text x="56" y="668" font-size="10.5" fill="#5b6472">7 · FIX deploys to Core App → BIT re-tests → PASS</text>
+<text x="56" y="694" font-size="10.5" fill="#5b6472" font-style="italic">Mitigation is reversible and is never the fix.</text>
+<text x="56" y="712" font-size="10.5" fill="#5b6472" font-style="italic">Auto-fix gated by severity + allow-list, not judgement.</text>
+</svg>

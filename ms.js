@@ -12813,7 +12813,7 @@ async function aiPoll(jobId){
     if(sm){ aiSafety(aiMd(sm[0].replace(/##\s*\d*\s*[·]?\s*/,'## ⚠️ '))); txt=txt.replace(sm[0],''); }
     else aiSafety(null);
     txt = aiStripJson(txt);
-    document.getElementById('ai-result').innerHTML = aiMd(txt);
+    document.getElementById('ai-result').innerHTML = aiMd(txt) + aiDateFooter(j);
     document.getElementById('ai-result').style.display='block';
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
@@ -12843,6 +12843,20 @@ async function aiPoll(jobId){
 // Machine-readable appendices (listing fields, items, waypoints) are for the app,
 // not the reader: parse what we need first, then strip ALL leftover fenced JSON
 // and the emptied 'Listing fields' heading from the rendered report.
+function aiDateFooter(j){
+  // Date/time-accuracy stamp — every AI report shows WHEN (to the minute, UTC) it was generated.
+  if(!j) return '';
+  var when = j.as_of_human || j.as_of || '';   // e.g. "27 June 2026, 11:34 UTC"
+  var disc = j.date_disclaimer || '';
+  if(!when && !disc) return '';
+  var head = when ? ('<b>Priced as of:</b> '+when) : '';
+  // Fast-moving items (gold, bullion coins, FX): show a prominent amber snapshot warning, not just fine print.
+  var volBanner = j.volatile
+    ? '<div style="margin:8px 0;padding:7px 10px;border-radius:7px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.45);color:#b45309;font-size:11px;font-weight:600;">⏱ Live-market item — this is a snapshot for '+(when||'the time shown')+'. The spot price can move within minutes; re-check the live market before transacting.</div>'
+    : '';
+  return volBanner + '<div class="ai-datestamp" style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.25);font-size:11px;color:#9ca3af;line-height:1.5;">'
+    + (head?(head+'<br>'):'') + (disc||'') + '</div>';
+}
 function aiStripJson(txt){
   txt = txt.replace(/```json[\s\S]*?```/g, '');
   txt = txt.replace(/\n##\s*\d*\s*[\u00b7.]?\s*Listing fields[^\n]*\n(?=\s*(\n|##|$))/gi, '\n');
@@ -12999,7 +13013,7 @@ async function aiExample(){
     txt = aiStripJson(txt);
     const exNote = (AI_SEL && AI_SEL.id==='collectables_advert')
       ? '<div class="ai-exbanner" style="margin-top:6px">On a real run, buttons appear below the report to turn it into listings \u2014 \u{1F4E6} one consolidated lot, or \u{1F5C2} each item separately.</div>' : '';
-    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt)+exNote;
+    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt)+exNote+aiDateFooter(d);
     document.getElementById('ai-result').style.display='block';
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);

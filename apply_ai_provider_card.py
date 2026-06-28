@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Add the Page-4 (Launch Switch) AI Provider card (with live Test button) to a dashboard.html
+IN PLACE (idempotent). Run on the SERVER's pulled-down copy. Exit 0 = applied/already there."""
+import sys
+f=sys.argv[1] if len(sys.argv)>1 else "dashboard.html"
+s=open(f,encoding="utf-8").read()
+if 'id="ai-prov-card"' in s and 'function aiProvPick' in s:
+    print("AI Provider card already present — no change"); sys.exit(0)
+orig=len(s)
+CARD='\n  <!-- AI PROVIDER SWAP (D1 seam) — David-only operational control: swap inference vendor live, no restart -->\n  <div class="ls-card" id="ai-prov-card">\n    <div class="ls-h">🔌 AI Provider <span id="ai-prov-now" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">—</span></div>\n    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Swap the inference vendor live (no restart) if one goes down, or for testing. Detection/mitigation are unaffected.</div>\n    <div class="ls-seg" id="ai-prov-seg">\n      <button type="button" data-prov="anthropic" onclick="aiProvPick(\'anthropic\')">Anthropic (Claude)</button>\n      <button type="button" data-prov="openai" onclick="aiProvPick(\'openai\')">OpenAI</button>\n    </div>\n    <div id="ai-prov-note" style="font-size:11px;color:var(--muted);margin-top:8px"></div>\n    <button type="button" id="ai-prov-test" onclick="aiProvTest()" style="margin-top:10px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;cursor:pointer;font-family:inherit">▶ Test active provider</button>\n    <div id="ai-prov-test-out" style="font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-wrap"></div>\n  </div>\n'
+JS='window._aiProv = {active:"anthropic", available:{anthropic:true, openai:false}};\nfunction aiProvRender(){\n  var seg=document.getElementById(\'ai-prov-seg\'); if(!seg) return;\n  var now=document.getElementById(\'ai-prov-now\'); if(now) now.textContent=\'· active: \'+window._aiProv.active;\n  [].forEach.call(seg.querySelectorAll(\'button\'), function(b){\n    var p=b.getAttribute(\'data-prov\'); var avail=!!window._aiProv.available[p];\n    b.style.opacity = avail ? \'1\' : \'0.45\';\n    b.style.color = (p===window._aiProv.active) ? \'var(--text)\' : \'var(--muted)\';\n    b.style.background = (p===window._aiProv.active) ? \'var(--surface)\' : \'none\';\n    b.title = avail ? \'\' : \'adapter pending — not yet wired\';\n  });\n  var note=document.getElementById(\'ai-prov-note\');\n  if(note) note.textContent = window._aiProv.available.openai ? \'\' : \'OpenAI adapter pending — selectable once its call is wired. Anthropic is live.\';\n}\nfunction aiProvLoad(){\n  fetch(B+\'/flags\').then(function(r){return r.json();}).then(function(f){\n    if(f && f.ai_provider){ window._aiProv=f.ai_provider; aiProvRender(); }\n  }).catch(function(){});\n}\nfunction aiProvPick(p){\n  if(!window._aiProv.available[p]){ alert(p+\' adapter is not wired yet — Anthropic stays active.\'); return; }\n  if(p===window._aiProv.active) return;\n  if(!confirm(\'Switch live AI provider to \'+p+\'? This affects all AI features immediately.\')) return;\n  fetch(B+\'/admin/flags\',{method:\'POST\',headers:{\'Content-Type\':\'application/json\',\'X-Admin-Token\':tok()},\n    body:JSON.stringify({ai_active:p})}).then(function(r){\n    if(r.status===401){alert(\'Admin session expired — reload and log in.\');return null;}\n    if(r.status===400){alert(\'Provider rejected by server (not a known provider).\');return null;}\n    return r.json();\n  }).then(function(f){ if(f&&f.ai_provider){window._aiProv=f.ai_provider; aiProvRender();} }).catch(function(e){console.warn(\'ai provider switch failed\',e);});\n}\n\nfunction aiProvTest(){\n  var out=document.getElementById(\'ai-prov-test-out\'); if(out) out.textContent=\'Testing \'+window._aiProv.active+\'…\';\n  fetch(B+\'/admin/ai-test\',{method:\'POST\',headers:{\'Content-Type\':\'application/json\',\'X-Admin-Token\':tok()},body:JSON.stringify({})})\n   .then(function(r){ if(r.status===401){if(out)out.textContent=\'Admin session expired — reload.\';return null;} return r.json(); })\n   .then(function(d){ if(!d)return; if(out) out.textContent = (d.ok?\'✓ \':\'✗ \')+d.provider+\' (\'+d.model+\'): \'+(d.text||\'(no text)\')+(d.in_tokens?(\'  [\'+d.in_tokens+\'+\'+d.out_tokens+\' tok]\'):\'\'); })\n   .catch(function(e){ if(out) out.textContent=\'Test failed: \'+e; });\n}\n'
+vi=s.find('id="launch-switch-view"')
+if vi==-1: print("ANCHOR launch-switch-view missing"); sys.exit(2)
+sc=s.find("</style>", vi)
+if sc==-1: print("ANCHOR </style> missing"); sys.exit(2)
+at=sc+len("</style>")
+s=s[:at]+CARD+s[at:]
+if s.count("window.lsSave=function(){")!=1: print("ANCHOR window.lsSave not unique"); sys.exit(2)
+s=s.replace("window.lsSave=function(){", JS+"window.lsSave=function(){", 1)
+sv=s.find("if(view==='launch')")
+if sv!=-1:
+    brace=s.find("{", sv); s=s[:brace+1]+" try{aiProvLoad();}catch(e){} "+s[brace+1:]
+open(f,"w",encoding="utf-8").write(s)
+print(f"AI Provider card applied to {f}: {orig}->{len(s)}")
+sys.exit(0)
