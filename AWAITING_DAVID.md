@@ -110,3 +110,38 @@ David's rule: the **Features in Heritage, Tours, Experiences, and Adventures are
 4. Confirm the exact category KEYS first (normCat folds experiences→Adventures — decide if exemption keys on raw category or normalised family).
 
 **Open sub-question for David (minor):** since `experiences` normalises into the `Adventures` family in the FEA, confirm the exemption keys on the four raw category strings, or on the Adventures display-family as a whole.
+
+---
+
+# REACH EXEMPTION — key set resolved (David, 2026-06-28)
+
+David confirmed Adventures and Experiences are basically the same → exemption keys on the **Adventures family** (experiences already folds into it via normCat), plus **Heritage** and **Tours**.
+
+**Exact raw category strings the exemption must match (from ms.js normCat):**
+- Adventures family → `adventures`, `adventure`, `experiences`, `adventures_experiences`
+- Heritage → (World Heritage category key — confirm exact key in CATS)
+- Tours → `tours`
+
+⚠️ **ONE FLAG FOR DAVID:** the `Adventures` display-family in normCat ALSO folds in **`accommodation` / `adventures_accommodation`**. If the exemption keys on the whole Adventures family, **accommodation listings become visible-to-all too.** 
+- If that's intended → key on the family (simplest).
+- If accommodation should KEEP normal city+tier reach → exemption must key on the specific strings ONLY (`adventures`, `adventure`, `experiences`, `adventures_experiences`, `tours`, heritage), excluding `accommodation`. 
+- **Default assumed (pending David): EXCLUDE accommodation** — it's a paid/located service, not a "feature for all." Will implement exclusion unless David says otherwise.
+
+---
+
+# REACH EXEMPTION — FINAL key set (David, 2026-06-28)
+
+David: accommodation IS included. Rationale (David's words): "we want people to use our Features from anywhere to plan trips or experiences, and for that to not stop at a local barrier... even if a US user wants to plan a trip to the Aussie deserts." Trip-planning is inherently cross-location → the whole travel family is borderless.
+
+**FINAL exemption — visible-to-all (no city gate, no tier gate):**
+- **Full Adventures family** incl. accommodation → raw keys: `adventures`, `adventure`, `experiences`, `adventures_experiences`, `accommodation`, `adventures_accommodation`
+- **Tours** → `tours`
+- **Heritage** → (World Heritage category key — confirm exact CATS key at build time)
+
+Accommodation exclusion note (previous block) is SUPERSEDED — accommodation is IN.
+
+This is the trip-planning rule: any category that helps someone plan/book travel is reachable from anywhere by anyone, because the buyer is by definition not local to the destination. All NON-travel categories (Property, Tutors, Services, Collectors, Cars, LocalMarket, Food/Produce, Crafts/Artisan) keep standard reach: Free = home city; Global $5 = national + global.
+
+---
+# STATUS UPDATE 2026-06-28: Trip-planning reach exemption IMPLEMENTED (staged + verified, awaiting David's deploy)
+The Heritage/Experiences/Adventures/Tours/Accommodation visible-to-all rule is now CODED in bea_main.py GET /listings (Branch C, deduped) and PINNED in PRICING_CANON.md §2a. Verified end-to-end against a live-DB copy (no dupes, no leak). NOT yet deployed — David runs the scp + restart below. Backups: bea_main.py.bak-* , PRICING_CANON.md.bak-*.

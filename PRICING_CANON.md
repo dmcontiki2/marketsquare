@@ -36,6 +36,13 @@ This doc mirrors these constants for humans; the **code is the final word**, and
 
 Two tiers only (`_buyer_tier` returns `free` | `global`). An earlier per-day “introduction sessions” buyer model was retired — it never existed in code.
 
+### 2a · Trip-planning reach exemption (David, 28 Jun 2026)
+**Travel-planning categories are borderless — visible to EVERYONE from ANY city on ANY tier (no city gate, no tier gate).** Rationale: a buyer planning a trip is by definition not local to the destination (a US user planning the Aussie deserts must see those listings), so a local barrier would defeat the Feature. The standard reach in the table above (Free = home city, Global = national+global) applies to **all other** categories.
+
+Exempt categories (raw `l.category` keys): `adventures`, `adventure`, `experiences`, `adventures_experiences`, `accommodation`, `adventures_accommodation`, `tours`, `heritage` — i.e. the whole Adventures/travel family (experiences ≡ adventures) plus Tours and Heritage. Accommodation is **included** (trip lodging is part of planning).
+
+**Authority:** `bea_main.py` `GET /listings` → `TRIP_PLANNING_CATEGORIES` (Branch C unions these from all cities; result deduped `GROUP BY id`). Verified 28 Jun 2026: cross-city trip rows visible to a Pretoria buyer, no duplication, non-travel categories do not leak across cities.
+
 ## 3 · Introduction fee (independent of subscription)
 **1 Tuppence = USD $2, fixed.** Buyers pay **1T per Introduction** regardless of tier. Subscriptions buy *slots* (sellers) and *reach* (buyers) — never introductions.
 

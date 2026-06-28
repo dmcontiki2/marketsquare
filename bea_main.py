@@ -1446,6 +1446,19 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
 
     cat_param = category if category else LM_CATEGORY
 
+    # Trip-planning reach exemption (David, 28 Jun 2026): travel-planning categories are
+    # borderless — a buyer planning a trip is by definition not local to the destination,
+    # so these are visible to EVERYONE from ANY city and on ANY tier (no city gate, no
+    # tier gate). All other categories keep standard reach (home city + extended cities).
+    # Canon: PRICING_CANON.md §2 reach exemption. Keys match raw l.category values.
+    TRIP_PLANNING_CATEGORIES = (
+        "adventures", "adventure", "experiences", "adventures_experiences",
+        "accommodation", "adventures_accommodation", "tours", "heritage",
+    )
+    _tp_in = ",".join("?" for _ in TRIP_PLANNING_CATEGORIES)
+    # Whether the current request's category filter would already cover trip-planning rows.
+    _cat_is_trip = bool(category) and category.lower() in TRIP_PLANNING_CATEGORIES
+
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)
         branch_a = f"""
@@ -1462,6 +1475,22 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter}"""
         params_a = [city, cat_param]
 
+    # Branch C: trip-planning reach exemption — these categories show from ALL cities,
+    # for all buyers, regardless of tier. Included when the feed is the mixed/no-category
+    # feed (FEA default) OR when a trip-planning category is explicitly requested.
+    # Excluded when a specific NON-trip category is requested (so it can't pollute e.g. Cars).
+    include_branch_c = (not category) or _cat_is_trip
+    branch_c = ""
+    params_c = []
+    if include_branch_c:
+        branch_c = f"""
+            SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+            FROM listings l
+            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+            WHERE LOWER(l.category) IN ({_tp_in})
+              AND {suspension_filter} {demo_filter}"""
+        params_c = [c.lower() for c in TRIP_PLANNING_CATEGORIES]
+
     # Branch B: extended city reach (only runs when we have a valid city_id)
     if buyer_city_id:
         branch_b = f"""
@@ -1472,16 +1501,32 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             WHERE l.city != ? AND {suspension_filter} AND {lm_filter_b} {demo_filter}"""
         params_b = [buyer_city_id, city, cat_param]
 
+        # GROUP BY id dedupes across A/B/C (a trip-planning listing in the home city
+        # appears in both A and C; the suburb LEFT JOIN can also multiply rows). One row per listing.
+        _union_c = ("\n                    UNION ALL\n                    " + branch_c) if include_branch_c else ""
         sql = f"""
             SELECT * FROM (
-                {branch_a}
-                UNION
-                {branch_b}
+                SELECT * FROM (
+                    {branch_a}
+                    UNION ALL
+                    {branch_b}{_union_c}
+                ) GROUP BY id
             ) ORDER BY created_at DESC LIMIT ? OFFSET ?"""
-        params = params_a + params_b + [page_size, _offset]
+        params = params_a + params_b + params_c + [page_size, _offset]
     else:
-        sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT ? OFFSET ?"
-        params = params_a + [page_size, _offset]
+        if include_branch_c:
+            sql = f"""
+                SELECT * FROM (
+                    SELECT * FROM (
+                        {branch_a}
+                        UNION ALL
+                        {branch_c}
+                    ) GROUP BY id
+                ) ORDER BY created_at DESC LIMIT ? OFFSET ?"""
+            params = params_a + params_c + [page_size, _offset]
+        else:
+            sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT ? OFFSET ?"
+            params = params_a + [page_size, _offset]
 
     rows = conn.execute(sql, params).fetchall()
     _founders = launch_redemption.founders_email_set(conn)
