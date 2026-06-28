@@ -134,3 +134,5 @@ Kronberg/
 # (_render_libs holds Linux .so symlinks git can't index on Windows; cast/ holds large source media)
 feature-videos/production-kit/_render_libs/
 feature-videos/production-kit/cast/
+
+.~lock.*#
