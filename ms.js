@@ -7,7 +7,7 @@ const BEA_URL = 'https://trustsquare.co';
 const BEA_ENABLED = true;
 
 // ── Launch Switch: read server feature flags on load (safe default = free-only) ──
-window.FEATURES = { verified_visible:false, videos_visible:false, heritage_verified:false, expedition_verified:false, weekend_verified:false, _loaded:false };
+window.FEATURES = { verified_visible:false, videos_visible:true, heritage_verified:false, expedition_verified:false, weekend_verified:false, _loaded:false };
 function loadFeatureFlags(){
   try{
     fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){
@@ -12628,9 +12628,17 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
-  collectables_advert: '/static/videos/collectables-advert-howto.mp4?v=20260628final',
-  heritage_tour:       '/static/videos/heritage-tour-howto.mp4?v=20260618c',
-  introductions:       '/static/videos/introduction.mp4?v=20260618c'
+  collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260629b',
+  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260629c',
+  expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260629b',
+  property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260629b',
+  car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260629b',
+  retirement_planner:     '/static/videos/retirement-planner-howto.mp4?v=20260629b',
+  collection_liquidation: '/static/videos/collection-liquidation-howto.mp4?v=20260629b',
+  weekend_itinerary:      '/static/videos/weekend-itinerary-howto.mp4?v=20260629b',
+  study_plan:             '/static/videos/exam-study-plan-howto.mp4?v=20260629b',
+  offer_advisor:          '/static/videos/offer-strategy-howto.mp4?v=20260629b',
+  introductions:          '/static/videos/introduction.mp4?v=20260618c'
 };
 const AI_VIDEO_TITLES = { introductions: 'Introductions' };
 function aiVideoTutor(id){
@@ -13013,7 +13021,8 @@ async function aiExample(){
     txt = aiStripJson(txt);
     const exNote = (AI_SEL && AI_SEL.id==='collectables_advert')
       ? '<div class="ai-exbanner" style="margin-top:6px">On a real run, buttons appear below the report to turn it into listings \u2014 \u{1F4E6} one consolidated lot, or \u{1F5C2} each item separately.</div>' : '';
-    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+aiMd(txt)+exNote+aiDateFooter(d);
+    var _exFigs='';try{if(d.result_html){var _m=d.result_html.match(/<div class="fig">[\s\S]*?<\/div>\s*<\/div>/g)||d.result_html.match(/<div class="fig">[\s\S]*?<\/div>/g);if(_m)_exFigs=_m.join('');}}catch(e){}
+    document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+_exFigs+aiMd(txt)+exNote+aiDateFooter(d);
     document.getElementById('ai-result').style.display='block';
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
