@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "report_type": "weekly_discovery_scan",
-  "generated_at": "2026-06-22T04:37:34Z",
-  "generated_by": "merged-daily-loop Monday scan (2026-06-22)",
+  "generated_at": "2026-06-29T05:14:49Z",
+  "generated_by": "merged-daily-loop Monday scan (2026-06-29)",
   "scan_scope": [
     "bea_main.py",
     "auth.py",
@@ -20,47 +20,63 @@
     "eslint 9.39.4 (no-undef/no-dupe-keys/no-dupe-args/no-unreachable/no-const-assign/no-func-assign/no-redeclare/no-unused-vars)"
   ],
   "totals": {
-    "found_this_week": 1,
-    "fixed_this_week": 1,
-    "still_open": 1,
-    "note": "Delta vs 2026-06-15. Prior 1 open (SCAN-17 F811 dup admin_ai_spend_summary) was resolved S137 (17 Jun, David-approved rename) and no longer flagged. 1 NEW: SCAN-18 (B904 raise-without-from-err at bea_main.py:1318 in _validate_rental_fields, introduced by the S139 rental-availability feature). Non-ledger, behaviour-neutral, auto-shippable. Pylint 10.00/10, no cyclic imports, ZERO F821. ESLint 0 structural errors on ms.js v189. Detection-only; no code changed."
+    "found_this_week": 3,
+    "fixed_this_week": 0,
+    "still_open": 4,
+    "note": "Delta vs 2026-06-22. KEY: SCAN-18 (B904 _validate_rental_fields) re-OPENED - its 25-Jun claimed ship never landed (no 'from None' on repo OR live server; line drifted 1318->1406). 2 NEW B904: SCAN-19 (BIT writer 8739), SCAN-20 (admin_ai_test 9145). 1 NEW eslint no-func-assign: SCAN-21-JS (tshLoad intentional decorator, admin html). pylint 10.00/10, 0 cyclic, 0 F821. ESLint ms.js 0 structural. Detection-only; no code changed (Fixer phase ships SCAN-18)."
   },
   "severity_breakdown": {
     "CRIT": 0,
     "HIGH": 0,
     "MED": 0,
-    "LOW": 1
+    "LOW": 4
   },
   "open_issues": [
     {
       "id": "SCAN-18",
       "sev": "LOW",
-      "file": "bea_main.py:1318",
+      "file": "bea_main.py:1406",
       "rule": "B904",
-      "summary": "raise HTTPException inside except (ValueError,TypeError) without 'from err'/'from None' in _validate_rental_fields. Fix: add 'from None'. Non-ledger; auto-ship eligible."
-    }
-  ],
-  "fixed_issues": [
+      "summary": "raise HTTPException in except(ValueError,TypeError) without 'from None' in _validate_rental_fields. RE-OPENED: prior ship never landed. Non-ledger; auto-ship eligible."
+    },
     {
-      "id": "SCAN-17",
-      "note": "F811 duplicate admin_ai_spend_summary - resolved S137 (rename to admin_ai_spend_daily_summary); no longer flagged this scan."
+      "id": "SCAN-19",
+      "sev": "LOW",
+      "file": "bea_main.py:8739",
+      "rule": "B904",
+      "summary": "BIT status writer except Exception -> raise HTTPException 400 without 'from e'. Diagnostic write surface only. Non-ledger; auto-ship eligible. NEW."
+    },
+    {
+      "id": "SCAN-20",
+      "sev": "LOW",
+      "file": "bea_main.py:9145",
+      "rule": "B904",
+      "summary": "admin_ai_test except Exception -> raise HTTPException 500 without 'from e'. Admin-only provider test; no Tuppence. Non-ledger; auto-ship eligible. NEW."
+    },
+    {
+      "id": "SCAN-21-JS",
+      "sev": "LOW",
+      "file": "marketsquare_admin.html (tshLoad)",
+      "rule": "no-func-assign",
+      "summary": "tshLoad function declaration reassigned to install a doc-load decorator (_origTshLoad saved + wrapped). Intentional, behaviour-correct. Candidate IGNORE-with-reason or low FILE (decl->let). NEW."
     }
   ],
+  "fixed_issues": [],
   "false_positives_reconfirmed": [
     {
-      "rule": "B008 x7",
-      "files": "bea_main.py vision/upload endpoints",
-      "note": "FastAPI File()/Form() in arg defaults - required idiom, not a bug"
+      "rule": "B008 x11",
+      "files": "bea_main.py FastAPI Depends/File/Form arg defaults",
+      "note": "required FastAPI idiom, not a bug"
     },
     {
       "rule": "vulture 'family' x2",
-      "file": "bea_main.py:1579,1680",
+      "file": "bea_main.py:1712,1813",
       "note": "getaddrinfo family params intentionally kept (SCAN-11 ruling)"
     },
     {
-      "rule": "eslint no-unused-vars x372",
+      "rule": "eslint no-undef x156",
       "file": "ms.js",
-      "note": "global onclick handlers + catch 'e' bindings; 0 structural errors"
+      "note": "config-incomplete browser globals (confirm/prompt/URL/sessionStorage/Event/Notification/indexedDB/clearInterval) + cross-file globals (SELLERS/LISTINGS/CATS/SELLER_PHOTOS/acceptedIntros); 0 structural errors"
     }
   ],
   "health_at_scan": {
@@ -100,7 +116,13 @@
       "found": 1,
       "fixed": 1,
       "open": 1
+    },
+    {
+      "week_of": "2026-06-29",
+      "found": 3,
+      "fixed": 0,
+      "open": 4
     }
   ],
-  "week_of": "2026-06-22"
+  "week_of": "2026-06-29"
 }

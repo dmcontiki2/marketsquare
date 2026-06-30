@@ -318,6 +318,58 @@ def live_spend():
     except Exception as e:
         return [(WARN, f"Live spend pull failed: {e}")]
 
+# ── 8 · operator-only sanctioned paid scripts + reachability guard ───────────
+def operator_scripts(root: Path):
+    """Sanctioned OPERATOR-ONLY paid scripts (e.g. run_video_reports.py): allowed to
+    use the live API by design, run by hand off-app. Listed in
+    Records/cost_sweep_exceptions.json. Each is OK while it stays unreachable from app
+    code; flips to CRITICAL if any in-app file imports or invokes it."""
+    findings = []
+    exc_path = root / MAIN_REPO / "Records" / "cost_sweep_exceptions.json"
+    if not exc_path.exists():
+        return findings
+    try:
+        data = json.loads(read(exc_path))
+    except Exception as e:
+        return [(WARN, f"cost_sweep_exceptions.json unreadable: {e}")]
+    entries = data.get("operator_only_scripts") or []
+    if not entries:
+        return findings
+    sanctioned = {e["path"] for e in entries if e.get("path")}
+    for e in entries:
+        rel = e.get("path")
+        if not rel:
+            continue
+        target = root / rel
+        if not target.exists():
+            findings.append((INFO, f"sanctioned operator script `{rel}` listed but not found — prune the exception if retired"))
+            continue
+        stem = Path(rel).stem          # e.g. run_video_reports
+        fname = Path(rel).name         # e.g. run_video_reports.py
+        ref_rx = re.compile(rf"\bimport\s+{re.escape(stem)}\b|\bfrom\s+{re.escape(stem)}\s+import\b|{re.escape(fname)}")
+        reachable = []
+        for p in iter_files(root):
+            rp = str(p.relative_to(root))
+            if rp == rel:
+                continue               # the script referring to itself doesn't count
+            if "Records/" in rp or "scripts/" in rp:
+                continue               # records + ops scripts are not the app
+            if ref_rx.search(read(p)):
+                line = 0
+                txt = read(p)
+                mm = ref_rx.search(txt)
+                if mm:
+                    line = txt.count("\n", 0, mm.start()) + 1
+                reachable.append(f"{rp}:{line}")
+        if reachable:
+            findings.append((CRIT, f"sanctioned operator-only script `{rel}` is REACHABLE from app code "
+                                   f"({', '.join(reachable[:5])}{' …' if len(reachable) > 5 else ''}) — it must run by hand off-app only; "
+                                   f"remove the in-app reference or it can bill the live API inside the product"))
+        else:
+            findings.append((OK, f"`{rel}` — sanctioned operator-only paid script ({e.get('reason','live API by design')[:80]}); "
+                                 f"not reachable from any app code path"))
+    return findings
+
 # ── report ───────────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()
@@ -334,6 +386,7 @@ def main():
         ("BEFORE YOU TEST — live-cost surfaces & guards", test_surfaces(root)),
         ("Cost-workbook drift (P2)", workbook_drift(root)),
         ("Live spend", live_spend()),
+        ("Operator-only sanctioned paid scripts (P3)", operator_scripts(root)),
     ]
     inv = inventory(root)
 

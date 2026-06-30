@@ -1,0 +1,9 @@
+{
+  "function_id": "collection_liquidation",
+  "name": "Collection Liquidation Plan",
+  "price_t": 5,
+  "searches_used": 10,
+  "chars": 21608,
+  "elapsed_s": 167,
+  "generated_at": "2026-06-28T19:29:00.915369Z"
+}

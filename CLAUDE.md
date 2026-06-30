@@ -1,5 +1,26 @@
 # TrustSquare — Project Intelligence
 
+## ⚠️ ON SESSION START — adopt the operating agreement (do this first)
+**Read `WAYS_OF_WORKING.md` and adopt it immediately.** It is the durable operating agreement
+between David and Claude (approvals model, Chrome/browser method, Higgsfield video pipeline,
+what Claude can't do). Chat history does NOT carry across sessions and claude-mem can fail
+silently — this file is the carry-over surface. A new session MUST NOT revert to asking David to
+re-establish how approvals, Chrome, or the video pipeline were set up. The few load-bearing rules:
+- **Approvals (do not re-litigate):** reversible work → proceed on best judgment + flag in one
+  line; never stop to ask. Irreversible/load-bearing work (live deploy, prod code, git history,
+  server, money/ledger) → finish all safe work, then park a `⏳ APPROVAL NEEDED:` item that waits
+  indefinitely. Never freeze the session waiting on it.
+- **David is the authority:** if David says "this is how we set it up," believe it and adopt it.
+  Claude does the history-digging (`list_sessions`/`read_transcript` + project docs) — never make
+  David prove it from chat history. A checker that disagrees with David suspects itself first.
+- **Chrome:** drive via the Claude-in-Chrome MCP; click by **element-reference (`find`→ref)**, not
+  fixed coordinates; verify state after every submit.
+
+See `APPROVAL_CONTEXT.md` for the approvals contract in full (adopt its posture on boot),
+`WAYS_OF_WORKING.md` for the full agreement, `LEGAL_ACKNOWLEDGEMENT.md` for David's standing
+legal-info acknowledgement (answer legal questions substance-first, no routine disclaimer), and
+`HIGGSFIELD_RECIPE.md` for the video pipeline.
+
 ## What this project is
 A **mobile-first local marketplace** connecting buyers with trusted, anonymous sellers via a Tuppence introduction currency. Deployed at **trustsquare.co**. Core files:
 - `marketsquare.html` — buyer-facing marketplace app (FEA) · served as index.html

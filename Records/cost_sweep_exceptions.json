@@ -1,0 +1,11 @@
+{
+  "_comment": "Sanctioned paid call sites. Each entry is an OPERATOR-ONLY script that may use the live API by design, run by hand by David (and Claude) off-app. The sweep treats listed scripts as OK, but flags CRITICAL if any in-app code imports or invokes them (reachability guard). Do not add app endpoints here.",
+  "operator_only_scripts": [
+    {
+      "path": "AdvertAgent/run_video_reports.py",
+      "reason": "Generates live rich AdvertAgent feature reports for the feature videos; outputs become in-app demo content. Live Anthropic API + web_search by design. Operator-run only on the Hetzner box, never wired into any app code path.",
+      "sanctioned_by": "David",
+      "date": "2026-06-29"
+    }
+  ]
+}

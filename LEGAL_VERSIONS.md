@@ -13,7 +13,7 @@ _Updated: 21 June 2026 · Owner: David._
 | **PRICING_CANON** | pinned 15 Jun 2026 | **AUTHORITY** | No | The one place pricing is defined; code is the final word. |
 | **EULA** | v1.7 | DRAFT — **baselined** as accepted current (A6) | **Yes** | Last fully-Final = v1.4. Counsel to finalize v1.7 (incl. Session-77 AI-price clause + FAIS/NCA review). |
 | **IP Brief** | v6 | DRAFT | **Yes** | Recites Tuppence-HOLD claims C10–C13; counsel pending (A1). |
-| **WhitePaper** | v3.5 | DRAFT | No (v2 is the published prior-art defensive publication — never edited) | v3.5 draft is the working copy. |
+| **WhitePaper** | v3.11 | DRAFT (converged 23 Jun; alignment-corrected 29 Jun) | No (v2 is the published prior-art defensive publication — never edited) | v3.11 = current working/publication candidate. Frozen filing baseline: Patents/patent-loop/FILING_BASELINE_2026-06-29.md (docx pinned by sha256). |
 
 ## Landing dependencies (what must move together)
 - **CC-001 (Tuppence HOLD):** Codex v4.8 §2/§12 (✅ landed) + IP Brief v6 + EULA v1.7 → **counsel** finalizes the legal pair.

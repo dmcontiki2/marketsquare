@@ -2,7 +2,7 @@
 # Docs restate these for humans; scripts/check_canon_pointers.py asserts the docs match THIS.
 # If a value changes: update here first, then run the checker. (P3 of the prevention plan.)
 meta:
-  updated: "2026-06-21"
+  updated: "2026-06-29"
   owner: David
 
 versions:                       # the one place version pointers are declared
@@ -12,7 +12,7 @@ versions:                       # the one place version pointers are declared
   agent_briefing: "v1.9"        # 18 Jun 2026
   eula: "v1.7"                  # baselined; counsel finalization pending (A6)
   ip_brief: "v6"               # DRAFT; counsel pending (A1)
-  whitepaper: "v3.5"           # latest draft (v2 is the published prior-art defensive pub)
+  whitepaper: "v3.11"          # converged 23 Jun + alignment-corrected 29 Jun (v2 = published defensive pub)
 
 pricing:                        # authority = PRICING_CANON.md §1 + bea_main.py _SELLER_SUB_TIERS
   tuppence_usd: 2

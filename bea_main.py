@@ -1404,7 +1404,7 @@ def _validate_rental_fields(rental_status, available_from):
             _dt.date.fromisoformat(str(available_from)[:10])
         except (ValueError, TypeError):
             raise HTTPException(status_code=400,
-                detail="available_from must be an ISO date (YYYY-MM-DD)")
+                detail="available_from must be an ISO date (YYYY-MM-DD)") from None
 
 def _rental_availability(rental_status, available_from):
     """Renter-facing availability label derived from (rental_status, available_from)."""
