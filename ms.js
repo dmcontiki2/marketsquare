@@ -13002,16 +13002,16 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
-  collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260705r',
-  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260705r',
-  expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260705r',
-  property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260705r',
-  car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260705r',
-  retirement_planner:     '/static/videos/retirement-planner-howto.mp4?v=20260705r',
-  collection_liquidation: '/static/videos/collection-liquidation-howto.mp4?v=20260705r',
-  weekend_itinerary:      '/static/videos/weekend-itinerary-howto.mp4?v=20260705r',
-  study_plan:             '/static/videos/exam-study-plan-howto.mp4?v=20260705r',
-  offer_advisor:          '/static/videos/offer-strategy-howto.mp4?v=20260705r',
+  collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260705s',
+  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260705s',
+  expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260705s',
+  property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260705s',
+  car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260705s',
+  retirement_planner:     '/static/videos/retirement-planner-howto.mp4?v=20260705s',
+  collection_liquidation: '/static/videos/collection-liquidation-howto.mp4?v=20260705s',
+  weekend_itinerary:      '/static/videos/weekend-itinerary-howto.mp4?v=20260705s',
+  study_plan:             '/static/videos/exam-study-plan-howto.mp4?v=20260705s',
+  offer_advisor:          '/static/videos/offer-strategy-howto.mp4?v=20260705s',
   introductions:          '/static/videos/introduction.mp4?v=20260618c'
 };
 const AI_VIDEO_TITLES = { introductions: 'Introductions' };
