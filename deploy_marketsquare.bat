@@ -211,14 +211,15 @@ if %errorlevel% neq 0 (
 )
 
 echo  [3f] Deploying feature videos - the how-to set the app plays...
-ssh %SERVER% "mkdir -p %REMOTE%/videos"
-scp "%PROJECT%\videos\*.mp4" %SERVER%:%REMOTE%/videos/
+ssh %SERVER% "mkdir -p %REMOTE%/static/videos"
+scp "%PROJECT%\videos\*.mp4" %SERVER%:%REMOTE%/static/videos/
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for videos. Check SSH connection.
     pause
     exit /b 1
 )
-ssh %SERVER% "chmod 755 %REMOTE%/videos && chmod 644 %REMOTE%/videos/*.mp4"
+ssh %SERVER% "chmod 755 %REMOTE%/static/videos && chmod 644 %REMOTE%/static/videos/*.mp4"
+ssh %SERVER% "o=$(md5sum %REMOTE%/static/videos/expedition-dossier-howto.mp4 | cut -d\" \" -f1); s=$(curl -s https://trustsquare.co/static/videos/expedition-dossier-howto.mp4?vchk=$RANDOM | md5sum | cut -d\" \" -f1); if [ \"$o\" = \"$s\" ]; then echo \"   [OK] videos: served bytes match origin - CDN fresh\"; else echo \"   [FAIL] videos: served differs from origin - CDN stale or wrong path\"; fi"
 echo  Done.
 
 :: demo_sellers.json is intentionally SERVER-MANAGED - the single source of truth lives
