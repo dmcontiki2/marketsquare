@@ -20,7 +20,7 @@ AI_ACTIVE = os.getenv("AI_ACTIVE", "anthropic")   # one place to swap the vendor
 # abstract task tier -> per-provider model string (vendor names live HERE, not at call sites)
 TASK_MODEL = {
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
-                  "vision":"claude-sonnet-4-6","triage":"claude-haiku-4-5-20251001"},
+                  "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
     "openai":    {"haiku":"gpt-4o-mini","sonnet":"gpt-4o","vision":"gpt-4o","triage":"gpt-4o-mini"},
 }
 

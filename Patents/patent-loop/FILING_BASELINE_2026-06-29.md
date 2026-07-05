@@ -34,3 +34,20 @@ you file/publish from; they are git-ignored (`*.docx`), so they are pinned here 
 ## Out of scope of this freeze
 - **IP Brief v6** — counsel-gated, v5 controlling; unchanged.
 - The **7 counsel items** (CPA s63 claim text, §101/COMVIK framing, novelty search, etc.) → belong to the **complete** specification (≤12 months), not the provisional.
+
+## Upload-ready filing document (added 30 Jun)
+The provisional spec only *references* its Detailed Description; the whitepaper must be filed **with** it.
+Assembled single A4 PDF (spec + Annex A cover + whitepaper) = the document to upload behind Form P6:
+- `TrustSquare_Provisional_FILING_with_Annex_2026-06-29.pdf` (14 pp, A4) · sha256 `5c59fbe95deb6f6500430a41809cba2872e6187f4bd7ca649a95c1f6a97f2ac5`
+- Built from the frozen FILING + PUBLICATION docx (their sha256 unchanged); originals not modified.
+
+## Claims cleanup — superseding clean filing set (30 Jun)
+Removed working annotations from the provisional's **claims** section only (substance unchanged): "(DRAFT — two-anchor structure…)" → "(provisional — indicative scope…)", "(DRAFT)" dropped from Dependent claims, "CONDITIONAL on Pingsby clearance" note dropped from C3, internal IP-Brief cross-refs and the `▍` glyph removed. No claim limitation altered. (Rationale: a provisional needs no claims at all — these are illustrative — but should not be filed with visible working labels.)
+- The original `TrustSquare_Provisional_Specification_FILING.docx` was **open in Word (lock file present)** so it could not be overwritten; clean versions use new names and **supersede** it:
+- `TrustSquare_Provisional_Specification_FILING_clean_2026-06-30.docx` · sha256 `9b8cb5f03e3ab8554210fe086055bf23b1c29d88c823e5e6cc4571e006a0559f`
+- `TrustSquare_Provisional_FILING_with_Annex_2026-06-30.pdf` (14 pp, A4) · sha256 `5bde1613d60d1ced5b6014a6b7c50f9a645487b890c127a1ea1790e1394416a1` ← **the file to upload**
+
+## Claim 7 truncation fix (30 Jun)
+The whitepaper's §4 claims table had **Claim 7 dropped out of the table and truncated** mid-word at "(the number of t" — a write-truncation from when the .docx was originally generated (the source .md always held the full text, so nothing was lost). Fix: restored Claim 7 as a complete 8th table row ("…Tuppence-gated AI Services, and the AI Guardrail… the combination is the core protectable contribution."), deleted the stray truncated line. Verified by rendering page 14. Whitepaper §3 heading "▍" accents render as clean navy bars (not funny signs).
+- `TrustSquare_WhitePaper_PUBLICATION.docx` (fixed) · sha256 `a0fe9390c1867b43a684a7bbe1300de22b491a9478699c616696cb4b1eab4cef`
+- `TrustSquare_Provisional_FILING_with_Annex_2026-06-30.pdf` (rebuilt, 14 pp, A4) · sha256 `03bc5aa364b586e67c266b9b245432a3d7f02c0b86e640564b03b070ec4d112c` ← the file to upload

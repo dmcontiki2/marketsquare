@@ -145,3 +145,20 @@ This is the trip-planning rule: any category that helps someone plan/book travel
 ---
 # STATUS UPDATE 2026-06-28: Trip-planning reach exemption IMPLEMENTED (staged + verified, awaiting David's deploy)
 The Heritage/Experiences/Adventures/Tours/Accommodation visible-to-all rule is now CODED in bea_main.py GET /listings (Branch C, deduped) and PINNED in PRICING_CANON.md §2a. Verified end-to-end against a live-DB copy (no dupes, no leak). NOT yet deployed — David runs the scp + restart below. Backups: bea_main.py.bak-* , PRICING_CANON.md.bak-*.
+
+## Paystack go-live compliance (added 2 Jul 2026, pre-submission check)
+- URL submitted to Paystack: https://trustsquare.co (business site; whitepaper at /static/whitepaper.html as supporting doc if asked).
+- BEFORE payments go-live (counsel items, from the EULA's own gap register): publish a Privacy Policy page
+  (trustsquare.co/privacy); remove the internal draft markers ("[COUNSEL REQUIRED]", "must be reviewed by an
+  attorney before deployment", firm names, gap table) from the EULA text embedded in seller onboarding — a
+  compliance reviewer who opens signup sees them; add public footer links to Terms/Privacy/Contact.
+- STATUS 2 Jul (later): privacy page + terms page + footer links + EULA marker strip ALL STAGED locally (see CHANGE_REGISTER 2026-07-02 compliance entry) — live on next deploy_marketsquare.bat run.
+- Already in place and good: support@ + billing@ contact emails, explicit hold-then-burn no-refund wording
+  (CPA s16 reasoning), POPIA transparency bar, in-app pricing disclosure.
+
+## Paystack activation — resubmitted 2 Jul 2026, WAITING ON PAYSTACK
+- Compliance profile completed (industry: Digital services / Information retrieval; website → /static/preview.html;
+  documents 3/3; agreement done). Reply sent on ticket 1777715 thread; stale 4-Jun draft deleted.
+- Public pre-launch preview page live: trustsquare.co/static/preview.html (app stays PIN-gated until launch).
+- NEXT when they respond: if approved → Paystack integration + test (PATENT_PENDING launch step 4);
+  if reviewer wants hands-on access → provide reviewer PIN.

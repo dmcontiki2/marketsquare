@@ -1309,3 +1309,17 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 #ai-result .vcard .vwhy{font-size:12px;color:#4b5563;line-height:1.45;margin-bottom:9px}
 #ai-result .vcard .vacts{display:flex;gap:8px;flex-wrap:wrap}
 #ai-result .vcard .vbtn{flex:1;min-width:0;border:none;border-radius:50px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;background:#1e3a5f;color:#fff}
+
+/* ── Mobile fit safety net — added 2026-06-30 (reported: AI examples / report content cut off
+   sideways on iPhone). The app renders in a fixed ~430px column (body{max-width:430px;
+   overflow-x:hidden}), so anything wider than the column was clipped at the screen edges with
+   no way to scroll to it (only pinch-zoom). These rules keep wide content inside the column:
+   tables & code scroll within their own box, media is capped, long unbroken strings (URLs,
+   references) wrap. Pinch-zoom stays enabled — the viewport meta is unchanged. ── */
+table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ai-result table{width:max-content}
+pre,.ai-result pre,.ai-result code{max-width:100%;overflow-x:auto}
+.ai-result,.ai-result p,.ai-result li,.ai-result td,.ai-result th,.ai-result a,.ai-result span{overflow-wrap:anywhere}
+.lm-detail-desc,.lm-card-title,.mltitle,.lm-detail-title{overflow-wrap:anywhere}
+img,svg,video,canvas,iframe{max-width:100%}
+/* end mobile fit safety net */

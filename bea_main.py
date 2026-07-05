@@ -142,6 +142,23 @@ def run_migrations(conn):
         ("ai_grade_conf",    "REAL"),
         ("ai_grade_notes",   "TEXT"),
         ("grade_tier",       "INTEGER"),
+        # Vehicle spec columns (CARS-SPEC-1, cars brief Part B) — 10 filterable
+        # discrete + vehicle_specs JSON superset + spec_confirmed section map +
+        # attestation stamp (attested_* set ONLY by publish endpoints).
+        ("make",             "TEXT"),
+        ("model",            "TEXT"),
+        ("variant",          "TEXT"),
+        ("vehicle_year",     "INTEGER"),
+        ("mileage_km",       "INTEGER"),
+        ("transmission",     "TEXT"),
+        ("fuel_type",        "TEXT"),
+        ("body_type",        "TEXT"),
+        ("drivetrain",       "TEXT"),
+        ("colour",           "TEXT"),
+        ("vehicle_specs",    "TEXT"),
+        ("spec_confirmed",   "TEXT"),
+        ("attested_at",      "TEXT"),
+        ("attested_email",   "TEXT"),
     ]:
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
@@ -1298,6 +1315,22 @@ class Listing(BaseModel):
     street_address: Optional[str] = None   # e.g. "12 Oak Ave, Waterkloof Ridge" — used for geocoding only
     listing_lat: Optional[float] = None    # geocoded from street_address
     listing_lng: Optional[float] = None
+    # Vehicle spec fields (Cars — CARS-SPEC-1). Discrete = filterable columns;
+    # vehicle_specs = JSON object string (superset, keys in VEHICLE_SECTION_FIELDS);
+    # spec_confirmed = JSON section→ISO-ts map. attested_at / attested_email are
+    # deliberately NOT model fields — set only by publish endpoints, never generic writes.
+    make: Optional[str] = None
+    model: Optional[str] = None
+    variant: Optional[str] = None
+    vehicle_year: Optional[int] = None    # named to avoid the Collectors era_year clash
+    mileage_km: Optional[int] = None
+    transmission: Optional[str] = None
+    fuel_type: Optional[str] = None
+    body_type: Optional[str] = None
+    drivetrain: Optional[str] = None
+    colour: Optional[str] = None
+    vehicle_specs: Optional[str] = None
+    spec_confirmed: Optional[str] = None
     # Trust
     trust_score: Optional[int] = None
     seller_email: Optional[str] = None
@@ -1335,6 +1368,19 @@ class ListingUpdate(BaseModel):
     street_address: Optional[str] = None   # private — geocoded for POI accuracy, never shown to buyers
     listing_lat: Optional[float] = None
     listing_lng: Optional[float] = None
+    # Vehicle spec fields (Cars — CARS-SPEC-1); attested_* intentionally excluded
+    make: Optional[str] = None
+    model: Optional[str] = None
+    variant: Optional[str] = None
+    vehicle_year: Optional[int] = None
+    mileage_km: Optional[int] = None
+    transmission: Optional[str] = None
+    fuel_type: Optional[str] = None
+    body_type: Optional[str] = None
+    drivetrain: Optional[str] = None
+    colour: Optional[str] = None
+    vehicle_specs: Optional[str] = None
+    spec_confirmed: Optional[str] = None
 
 class IntroRequest(BaseModel):
     listing_id: int
@@ -1417,6 +1463,119 @@ def _rental_availability(rental_status, available_from):
     if status == "reserved":
         return "Under application"
     return ("Available from " + str(available_from)[:10]) if upcoming else "Available now"
+
+# ── Vehicle spec model (CARS-SPEC-1, cars brief Parts A/B/C) ────────────────
+# Canonical section map — drives the public scrub (visibility invariant D1),
+# the edit confirmation-reset, and is mirrored in ms.js. Section-level
+# confirmation ONLY (locked decision — never per-field ticks).
+# section → (discrete listing columns, vehicle_specs JSON keys)
+VEHICLE_SECTION_FIELDS = {
+    "details":     (("make", "model", "variant", "vehicle_year", "colour", "body_type"),
+                    ("seats", "doors")),
+    "performance": (("transmission", "fuel_type", "drivetrain"),
+                    ("engine_capacity_cc", "kilowatts_kw", "cylinder_layout", "cylinders",
+                     "aspiration", "fuel_consumption_l100", "fuel_tank_l", "gears",
+                     "tyre_front", "tyre_rear", "wheelbase_mm", "co2_gkm")),
+    "condition":   (("mileage_km",),
+                    ("service_history", "roadworthy_status", "spare_key",
+                     "maintenance_plan_until", "warranty_until", "condition_notes")),
+    "features":    ((), ("features",)),
+}
+
+def _validate_vehicle_fields(vehicle_specs, spec_confirmed):
+    """400 on malformed vehicle JSON blobs (mirrors _validate_rental_fields)."""
+    for _name, _val in (("vehicle_specs", vehicle_specs), ("spec_confirmed", spec_confirmed)):
+        if _val:
+            try:
+                if not isinstance(json.loads(_val), dict):
+                    raise ValueError("not an object")
+            except Exception:
+                raise HTTPException(status_code=400,
+                    detail=f"{_name} must be a JSON object string") from None
+
+def _scrub_vehicle_specs(d):
+    """Visibility invariant D1 (CARS-SPEC-1): on PUBLIC reads a vehicle spec value
+    is shown only when its section is seller-confirmed AND the listing carries
+    attested_at. Seller reads (/listings/mine) never call this. is_demo exempt.
+    attested_email is internal bookkeeping — always withheld from public payloads."""
+    if "attested_email" in d:
+        d["attested_email"] = None
+    if (d.get("category") or "").strip().lower() != "cars":
+        return d
+    if d.get("is_demo"):
+        return d
+    attested = bool(d.get("attested_at"))
+    try:
+        confirmed = json.loads(d.get("spec_confirmed") or "{}")
+    except Exception:
+        confirmed = {}
+    if not isinstance(confirmed, dict):
+        confirmed = {}
+    try:
+        specs = json.loads(d.get("vehicle_specs") or "{}")
+    except Exception:
+        specs = {}
+    if not isinstance(specs, dict):
+        specs = {}
+    specs.pop("_prov", None)   # per-field provenance is seller-side only
+    # Default-deny: rebuild the public blob from confirmed sections' KNOWN keys
+    # only — an unknown key belongs to no section, can never be confirmed, and
+    # must never reach a public payload.
+    public_specs = {}
+    for _section, (_cols, _keys) in VEHICLE_SECTION_FIELDS.items():
+        if attested and confirmed.get(_section):
+            for _k in _keys:
+                if _k in specs:
+                    public_specs[_k] = specs[_k]
+        else:
+            for _c in _cols:
+                if _c in d:
+                    d[_c] = None
+    d["vehicle_specs"] = json.dumps(public_specs) if public_specs else None
+    return d
+
+def _reset_vehicle_confirmations(existing, d):
+    """CARS-SPEC-1 edit hook: changing a vehicle section's data clears that
+    section's confirmation, unless the request itself sets spec_confirmed
+    (the FEA section-confirm flow does, and stays authoritative).
+    existing = current row as a plain dict; d = non-None update fields (mutated)."""
+    if (existing.get("category") or "").strip().lower() != "cars":
+        return
+    if "spec_confirmed" in d:
+        return
+    try:
+        conf = json.loads(existing.get("spec_confirmed") or "{}")
+    except Exception:
+        conf = {}
+    if not isinstance(conf, dict) or not any(conf.get(_s) for _s in VEHICLE_SECTION_FIELDS):
+        return
+    new_specs = old_specs = None
+    if "vehicle_specs" in d:
+        try:
+            new_specs = json.loads(d.get("vehicle_specs") or "{}")
+            if not isinstance(new_specs, dict):
+                new_specs = None
+        except Exception:
+            new_specs = None   # unparseable → conservative reset of confirmed sections
+        try:
+            old_specs = json.loads(existing.get("vehicle_specs") or "{}")
+        except Exception:
+            old_specs = {}
+        if not isinstance(old_specs, dict):
+            old_specs = {}
+    changed = False
+    for _section, (_cols, _keys) in VEHICLE_SECTION_FIELDS.items():
+        if not conf.get(_section):
+            continue
+        touched = any(_c in d for _c in _cols)
+        if not touched and "vehicle_specs" in d:
+            touched = True if new_specs is None else any(
+                old_specs.get(_k) != new_specs.get(_k) for _k in _keys)
+        if touched:
+            conf[_section] = None
+            changed = True
+    if changed:
+        d["spec_confirmed"] = json.dumps(conf)
 
 
 @app.get("/listings")
@@ -1538,6 +1697,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             _d["founders"] = True
         if (_d.get("category") or "").lower() == "property":
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
+        _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
         out.append(_d)
     return out
 
@@ -1553,21 +1713,27 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     ).fetchone()
     _geo_city_id = _gcity_row["id"] if _gcity_row else None
     _validate_rental_fields(listing.rental_status, listing.available_from)
+    _validate_vehicle_fields(listing.vehicle_specs, listing.spec_confirmed)
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
             service_class, prop_type, beds, baths, garages,
             subject, level, mode, service_type, availability, rental_status, available_from,
             trust_score, seller_email, listing_status, published_at,
-            street_address, listing_lat, listing_lng, geo_city_id)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?)""",
+            street_address, listing_lat, listing_lng, geo_city_id,
+            make, model, variant, vehicle_year, mileage_km, transmission,
+            fuel_type, body_type, drivetrain, colour, vehicle_specs, spec_confirmed)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
          (listing.rental_status or 'available'), listing.available_from,
          listing.trust_score, listing.seller_email, 'draft',
-         listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id)
+         listing.street_address, listing.listing_lat, listing.listing_lng, _geo_city_id,
+         listing.make, listing.model, listing.variant, listing.vehicle_year,
+         listing.mileage_km, listing.transmission, listing.fuel_type, listing.body_type,
+         listing.drivetrain, listing.colour, listing.vehicle_specs, listing.spec_confirmed)
     )
     conn.commit()
     new_id = cursor.lastrowid
@@ -1909,7 +2075,7 @@ def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
     return [wid for _, wid, _ in top]
 
 @app.put("/listings/{listing_id}/publish")
-def publish_listing(listing_id: int, email: str):
+def publish_listing(listing_id: int, email: str, attested: int = 0):
     """Transition a draft listing to live. Called by the seller onboarding flow
     once the seller has chosen a subscription tier and accepted the EULA.
     Auth: ?email= must match seller_email on the listing (or listing has no owner yet).
@@ -1943,6 +2109,31 @@ def publish_listing(listing_id: int, email: str):
         )
     user_trust = int(user_row["trust_score"] or 0) if user_row else 0
 
+    # ── CARS-SPEC-1 (D3): vehicle attestation gate ────────────────────────
+    # 409 ONLY for cars drafts that actually carry spec data and are not
+    # attested. Legacy spec-less cars drafts publish exactly as before
+    # (GUIDED-PUBLISH-1 safe). Superusers bypass (mirrors the EULA pattern).
+    _ex = dict(existing)
+    _is_cars = (_ex.get("category") or "").strip().lower() == "cars"
+    _has_spec = False
+    if _is_cars:
+        for _cols, _keys in VEHICLE_SECTION_FIELDS.values():
+            if any(_ex.get(_c) is not None for _c in _cols):
+                _has_spec = True
+                break
+        if not _has_spec:
+            try:
+                _vs = json.loads(_ex.get("vehicle_specs") or "{}")
+                _has_spec = isinstance(_vs, dict) and any(_k != "_prov" for _k in _vs)
+            except Exception:
+                _has_spec = False
+    if _is_cars and _has_spec and not int(attested or 0) and not is_super:
+        conn.close()
+        raise HTTPException(
+            status_code=409,
+            detail="Please confirm your vehicle details and accept the seller attestation before publishing."
+        )
+
     # Slot guard: enforce subscription slot limit (superusers exempt)
     if not is_super:
         slot_row = conn.execute(
@@ -1971,6 +2162,12 @@ def publish_listing(listing_id: int, email: str):
            WHERE id = ?""",
         (email, user_trust, listing_id)
     )
+    if _is_cars and int(attested or 0):
+        # CARS-SPEC-1: stamp the liability attestation (C4) — publish-only write
+        conn.execute(
+            "UPDATE listings SET attested_at = datetime('now'), attested_email = ? WHERE id = ?",
+            (email, listing_id)
+        )
     conn.commit()
     conn.close()
 
@@ -2078,6 +2275,7 @@ def get_listing(listing_id: int):
     _d = dict(row)
     if (_d.get("category") or "").lower() == "property":
         _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
+    _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
     return _d
 
 @app.put("/listings/{listing_id}")
@@ -2137,6 +2335,8 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
         return {"message": "No fields changed", "listing_id": listing_id}
 
     _validate_rental_fields(d.get("rental_status"), d.get("available_from"))
+    _validate_vehicle_fields(d.get("vehicle_specs"), d.get("spec_confirmed"))
+    _reset_vehicle_confirmations(dict(existing), d)   # CARS-SPEC-1: edits clear section confirmations
 
     # Preserve [photos:...] prefix if description is being updated without it
     if "description" in d:
@@ -4347,6 +4547,7 @@ async def aa_publish(
     fields: str = Form(...),        # JSON string
     coach_output: str = Form(""),
     city: str = Form("Pretoria"),
+    attested: int = Form(0),
     photos: list[UploadFile] = File(default=[]),
 ):
     """Receive draft + photos, upload to R2, create pending listing, return listing id."""
@@ -4362,6 +4563,50 @@ async def aa_publish(
     suburb        = field_data.get("suburb") or field_data.get("area", "")
     desc          = field_data.get("desc", "")
     service_class = field_data.get("service_class") or None
+
+    # ── CARS-SPEC-1: persist structured vehicle columns (Vehicles wizard) ────
+    # Seller typed these → provenance seller_entered. Populated sections are
+    # section-confirmed + the C4 attestation stamped ONLY when the wizard sent
+    # attested=1. Stamp-if-present: this endpoint NEVER blocks on attestation.
+    _veh_cols = {"make": None, "model": None, "variant": None, "vehicle_year": None,
+                 "mileage_km": None, "transmission": None, "fuel_type": None,
+                 "body_type": None, "colour": None, "vehicle_specs": None,
+                 "spec_confirmed": None, "attested_at": None, "attested_email": None}
+    if (category or "").strip().lower() == "cars":
+        def _fd(k):
+            _v = field_data.get(k)
+            return _v.strip() if isinstance(_v, str) and _v.strip() else None
+        def _fdint(k):
+            _v = _fd(k)
+            try:
+                return int(str(_v).replace(",", "").replace(" ", "")) if _v else None
+            except Exception:
+                return None
+        _veh_cols["make"] = _fd("make"); _veh_cols["model"] = _fd("model")
+        _veh_cols["variant"] = _fd("variant"); _veh_cols["colour"] = _fd("colour")
+        _veh_cols["transmission"] = _fd("transmission")
+        _veh_cols["fuel_type"] = _fd("fuel_type"); _veh_cols["body_type"] = _fd("body_type")
+        _veh_cols["vehicle_year"] = _fdint("year"); _veh_cols["mileage_km"] = _fdint("mileage")
+        _specs, _vprov = {}, {}
+        _cc = _fdint("cc")
+        if _cc and 600 <= _cc <= 9000:
+            _specs["engine_capacity_cc"] = _cc; _vprov["engine_capacity_cc"] = "seller_entered"
+        for _k in ("make", "model", "variant", "vehicle_year", "mileage_km",
+                   "transmission", "fuel_type", "body_type", "colour"):
+            if _veh_cols[_k] is not None:
+                _vprov[_k] = "seller_entered"
+        if _vprov:
+            _specs["_prov"] = _vprov
+            _veh_cols["vehicle_specs"] = _json.dumps(_specs)
+        if int(attested or 0) and _vprov:
+            _now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            _conf = {}
+            for _section, (_scols, _skeys) in VEHICLE_SECTION_FIELDS.items():
+                _has = any(_veh_cols.get(_c) is not None for _c in _scols) or any(_k2 in _specs for _k2 in _skeys)
+                _conf[_section] = _now if _has else None
+            _veh_cols["spec_confirmed"] = _json.dumps(_conf)
+            _veh_cols["attested_at"] = _now
+            _veh_cols["attested_email"] = email
 
     # Build structured description block from all category-specific fields
     structured_lines = []
@@ -4381,6 +4626,29 @@ async def aa_publish(
         "specialisation": "Specialisation",
         "tools":        "Tools / equipment",
         "payment":      "Payment",
+        # Vehicle sub-type fields (VEHICLES-SUBTYPE-1, 3 Jul 2026) — folded into
+        # the description until structured columns land (CARS-SPEC-1 Task 1)
+        "make":         "Make",
+        "model":        "Model",
+        "variant":      "Variant",
+        "year":         "Year",
+        "mileage":      "Mileage (km)",
+        "colour":       "Colour",
+        "transmission": "Transmission",
+        "fuel_type":    "Fuel type",
+        "body_type":    "Body type",
+        "cc":           "Engine (cc)",
+        "bike_type":    "Bike type",
+        "trailer_type": "Type",
+        "sleeps":       "Sleeps",
+        "braked":       "Braked",
+        "papers":       "Registration papers",
+        "boat_type":    "Boat type",
+        "engine_make":  "Engine",
+        "engine_hours": "Engine hours",
+        "trailer_included": "Trailer included",
+        "vehicle_type": "Vehicle type",
+        "capacity":     "Capacity",
     }
     for key, label in field_labels.items():
         val = field_data.get(key, "").strip() if isinstance(field_data.get(key), str) else ""
@@ -4462,9 +4730,14 @@ async def aa_publish(
         scryfall_id = None
     cursor = conn.execute(
         """INSERT INTO listings
-           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'))""",
-        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id),
+           (title, price, category, city, area, suburb, description, thumb_url, medium_url, service_class, seller_email, trust_score, ai_suggested_price, scryfall_id, published_at,
+            make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs, spec_confirmed, attested_at, attested_email)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, datetime('now'),?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (title, price, category, city, suburb, suburb, desc, thumb_url, medium_url, service_class, email, seller_trust, ai_price_anchor, scryfall_id,
+         _veh_cols["make"], _veh_cols["model"], _veh_cols["variant"], _veh_cols["vehicle_year"],
+         _veh_cols["mileage_km"], _veh_cols["transmission"], _veh_cols["fuel_type"], _veh_cols["body_type"],
+         _veh_cols["colour"], _veh_cols["vehicle_specs"], _veh_cols["spec_confirmed"],
+         _veh_cols["attested_at"], _veh_cols["attested_email"]),
     )
     listing_id = cursor.lastrowid
     # Upsert user record so seller can use AA coach going forward
@@ -8736,7 +9009,7 @@ def dashboard_bit_post(payload: dict = Body(...)):
             _json.dump(payload, fh)
         return {"ok": True, "stored": True}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="bad bit payload: " + str(e)[:120])
+        raise HTTPException(status_code=400, detail="bad bit payload: " + str(e)[:120]) from e
 
 
 @app.get("/dashboard/bit")
@@ -8982,6 +9255,17 @@ def health_resources():
     }
 
 # ── ADMIN AUTH v3 ──────────────────────────────────────────────────────────
+# ── Public legal pages (compliance: Paystack go-live checklist, 2 Jul 2026) ──
+@app.get("/privacy")
+def privacy_page():
+    from fastapi.responses import FileResponse
+    return FileResponse("/var/www/marketsquare/privacy.html", media_type="text/html")
+
+@app.get("/terms")
+def terms_page():
+    from fastapi.responses import FileResponse
+    return FileResponse("/var/www/marketsquare/terms.html", media_type="text/html")
+
 # Master password (alphanumeric) + team PIN (numeric, 6 digits) login system.
 # First-login forced PIN change: must_change_pin=1 blocks token until PIN set.
 # Master password: MS_ADMIN_PASSWORD env var — never in code.
@@ -9029,7 +9313,7 @@ def admin_login(req: _AdminLoginRequest):
         raise HTTPException(status_code=503, detail="Admin password not configured on server.")
 
     # 1. Master password — immediate token, no PIN change required
-    if req.password == _ADMIN_PASSWORD:
+    if req.password == _ADMIN_PASSWORD or req.password.strip() == _ADMIN_PASSWORD:
         return {"token": _make_token("master"), "expires_hours": _TOKEN_HOURS, "role": "master"}
 
     # 2. Team PIN — numeric only, 4-8 digits
@@ -9142,7 +9426,7 @@ def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_ad
         return {"ok": bool(r.ok), "provider": r.provider, "model": r.model,
                 "text": (r.text or "")[:400], "in_tokens": r.in_tokens, "out_tokens": r.out_tokens}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="ai-test failed: "+str(e)[:160])
+        raise HTTPException(status_code=500, detail="ai-test failed: "+str(e)[:160]) from e
 
 
 class _FlagsUpdate(BaseModel):
@@ -9174,7 +9458,7 @@ def _flags_payload(d):
                      "weekend": b("p_weekend")},
         "effective": {
             "verified_visible":    live and b("verified_tier"),
-            "videos_visible":      live and b("videos"),
+            "videos_visible":      b("videos"),  # decoupled from live mode (David 29 Jun): dashboard videos toggle controls it on its own; verified/paid-feed gates stay live-gated
             "heritage_verified":   live and b("verified_tier") and b("p_heritage"),
             "expedition_verified": live and b("verified_tier") and b("p_expedition"),
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
@@ -9584,9 +9868,11 @@ def get_demo_sellers():
 #       "availability":       str|null,  // e.g. "Weekdays" or "Flexible"
 #       "make":               str|null,  // For Cars
 #       "model":              str|null,
+#       "variant":            str|null,  // trim line, e.g. "2.8 GD-6 4x4 Legend" (CARS-SPEC-1)
 #       "year":               int|null,
 #       "mileage":            int|null,
 #       "condition":          str|null,  // "Excellent"|"Good"|"Fair"
+#       "vehicle_specs":      obj|null,  // Cars only: drafted deterministic spec sheet (CARS-SPEC-1)
 #       "missing_shots":      list       // [{label, reason}] — item-specific photo suggestions
 #     },
 #     "warnings": [],    // e.g. ["Low light in photo 3", "Price unusually high for category"]
@@ -9611,7 +9897,7 @@ def get_demo_sellers():
 import base64 as _b64
 
 # Vision model — use Sonnet for cost/quality balance on photo analysis
-VISION_MODEL = "claude-sonnet-4-6"
+VISION_MODEL = _TS_AI_MODELS.get("vision", "claude-haiku-4-5-20251001")  # Haiku-first (David, 3 Jul 2026): free draft = Haiku 4.5; Sonnet only for paid deep-dives. Revert = set "claude-sonnet-4-6".
 
 # Currency prefix by country ISO2
 _CURRENCY_MAP = {
@@ -9689,7 +9975,13 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "Count bedrooms, bathrooms, garages if visible. Identify property type "
             "(House, Flat, Room, Plot, Commercial). "
             "Set listing_type to 'For Sale' or 'To Rent'. "
-            "suggested_price should be the monthly rent OR sale price."
+            "suggested_price should be the monthly rent OR sale price. "
+            "ADVERT SHAPE (property-portal format; guidance, never enforcement): structure description_draft as "
+            "(1) opener — property type, beds/baths, character of the space; "
+            "(2) interior walk-through — kitchen, living areas, main bedroom highlights; "
+            "(3) outdoor and parking — garden, pool, garage if visible; "
+            "(4) one line on the area's general appeal. "
+            "Never include street names, complex/building names or anything identifying."
         ),
         "services": (
             "This is likely a SERVICES listing (skill, profession, or recurring service). "
@@ -9698,15 +9990,37 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "suggested_price is the per-session or per-visit rate in local currency."
         ),
         "adventures": (
-            "This is likely an ADVENTURES/EXPERIENCES listing (tour, workshop, activity, event). "
+            "This is likely an ADVENTURES/EXPERIENCES listing (tour, workshop, activity, event, stay). "
             "Identify what the experience involves and its approximate duration. "
-            "suggested_price is per-person for the experience."
+            "suggested_price is per-person for the experience. "
+            "ADVERT SHAPE (tour-operator format; guidance, never enforcement): structure description_draft as "
+            "(1) what you'll do or experience — lead with the highlight; "
+            "(2) duration and typical group size; "
+            "(3) what's included vs excluded — be explicit, this is the #1 buyer question; "
+            "(4) what to bring / fitness level if relevant; "
+            "(5) for multi-day trips, a short day-by-day itinerary. "
+            "Name the general area only — never an exact meeting address."
         ),
         "cars": (
             "This is likely a CARS/VEHICLES listing. "
             "Identify the make, model, approximate year, visible condition, and any notable features. "
+            "Also propose the variant / trim line if identifiable from badges or styling "
+            "(e.g. '2.8 GD-6 4x4 Legend', '2.0 TDI Highline') — variant is the biggest gap in private car adverts. "
+            "Return the proposed variant in the top-level \"variant\" field (null when uncertain). "
+            "From the identified make/model/variant, DRAFT the deterministic spec sheet into "
+            "\"vehicle_specs\" — a JSON object using only these keys, for values you can state "
+            "with confidence for that exact variant: engine_capacity_cc, kilowatts_kw, "
+            "cylinder_layout, cylinders, aspiration, fuel_consumption_l100, fuel_tank_l, gears, "
+            "seats, doors, wheelbase_mm, co2_gkm. These are DRAFTS the seller must personally "
+            "confirm — omit any key you are not confident of; never guess. If the variant itself "
+            "is uncertain, set vehicle_specs to null. "
             "Estimate mileage range if odometer is visible. "
-            "suggested_price is the asking price for the vehicle."
+            "suggested_price is the asking price for the vehicle. "
+            "ADVERT SHAPE (professional dealer format; guidance, never enforcement): structure description_draft as "
+            "(1) spec line — year make model variant, transmission, fuel type, mileage if known; "
+            "(2) condition and service history — only what is visible or evident; "
+            "(3) notable features and extras seen in the photos. "
+            "Never state a spec you cannot see or infer with confidence."
         ),
         "collectors": (
             "This is a COLLECTORS listing — a collectable item being sold or sought. "
@@ -9747,7 +10061,7 @@ TASK: Return a single JSON object with exactly these fields:
 {{
   "category": "property|services|adventures|cars|collectors|local_market",
   "title": "4–8 word title in Title Case, specific not generic",
-  "description_draft": "2–4 honest sentences describing what is visible. Be specific. No hype.",
+  "description_draft": "2–6 honest sentences describing what is visible, following the ADVERT SHAPE for the category if one is given above. Be specific. No hype.",
   "suggested_price": <number — monthly rent, per-session rate, per-person price, or sale price>,
   "currency_prefix": "{currency}",
   "tags": ["3 to 6 relevant keyword strings"],
@@ -9764,10 +10078,13 @@ TASK: Return a single JSON object with exactly these fields:
   "availability": null,
   "make": null,
   "model": null,
+  "variant": null,
   "year": null,
   "mileage": null,
   "condition": null,
+  "vehicle_specs": null,
   "missing_shots": [],
+  "coach_tips": [],
   "warnings": [],
   "anonymity_scrubbed": false,
   "violating_photo_indices": []
@@ -9784,10 +10101,18 @@ For "missing_shots": Based on the exact item you identified, list the most impor
 - Coin → [{{"label": "Reverse (tails)", "reason": "Buyers always want both sides"}}, {{"label": "Edge close-up", "reason": "Shows minting quality and wear"}}, {{"label": "Certificate of authenticity", "reason": "Essential for valuable coins"}}]
 - Signed memorabilia → [{{"label": "Signature close-up", "reason": "Must be legible and authentic-looking"}}, {{"label": "Authentication certificate", "reason": "Protects seller from disputes"}}]
 - Watch → [{{"label": "Caseback", "reason": "Serial number and movement details"}}, {{"label": "Dial straight-on", "reason": "Shows dial condition clearly"}}]
-- Vehicle → [{{"label": "Odometer", "reason": "Mileage is a key buyer decision factor"}}, {{"label": "Engine bay", "reason": "Shows mechanical condition"}}, {{"label": "Service book", "reason": "Full history adds significant value"}}]
+- Vehicle → [{{"label": "Odometer", "reason": "Mileage is a key buyer decision factor"}}, {{"label": "Engine bay", "reason": "Shows mechanical condition"}}, {{"label": "Service book", "reason": "Full history adds significant value"}}, {{"label": "Rear three-quarter", "reason": "Completes the walk-around buyers expect"}}]
 - Property → [{{"label": "Kitchen", "reason": "Most important room for most buyers"}}, {{"label": "Main bedroom", "reason": "Size and condition matter"}}, {{"label": "Bathroom", "reason": "Buyers always inspect bathrooms"}}]
+- Experience/tour → [{{"label": "Guests in action", "reason": "Shows the real experience, not just scenery"}}, {{"label": "Equipment provided", "reason": "Confirms what's included"}}, {{"label": "Setting/scenery", "reason": "Sells the location at a glance"}}]
 - Artwork → [{{"label": "Artist signature", "reason": "Authentication requirement"}}, {{"label": "Certificate of authenticity", "reason": "Protects both parties"}}]
 Only suggest shots genuinely missing from the uploaded photos. If all key shots are present, return []. Maximum 4 suggestions.
+
+For "coach_tips": up to 4 SOFT suggestions that would make this advert stronger, based on what the leading platforms in this category always state and this draft does not yet cover. Phrase each as friendly guidance ("Buyers respond well to…", "Consider adding…") — never commands, never requirements; the seller is free to ignore them. Category cues:
+- Cars → variant/trim line, service history status (full/partial/none), exact mileage, spare key, warranty or maintenance plan, reason for selling.
+- Property → erf and floor size (the portals' own quality fields — size-less listings vanish from filtered search), monthly levies and rates (for sale) or deposit and lease term (rental) ONLY if truly known — never estimated, pet policy, security features, fibre availability.
+- Adventures/tours/stays → included/excluded as plain nouns covering park fees, meals and transfers (write "Guide", not "a friendly knowledgeable guide"), a title with area + duration + group size, 7-10 authentic photos (the strongest conversion lever), general meeting area (suburb level only), seasonal availability, minimum age or fitness level, languages offered.
+- Other categories → the 2–3 facts buyers in that niche always ask about first.
+One sentence per tip, maximum 120 characters each. Return [] if the draft already covers the essentials.
 Return ONLY the JSON. No markdown. No explanation."""
 
 
@@ -9894,7 +10219,7 @@ async def vision_draft(
                 headers=_ts_ai_headers(),
                 json={
                     "model": VISION_MODEL,
-                    "max_tokens": 900,
+                    "max_tokens": 1200,
                     "system": _VISION_SYSTEM,
                     "messages": [{"role": "user", "content": user_content}],
                 },
@@ -9959,6 +10284,19 @@ async def vision_draft(
     # Validate category
     if draft.get("category") not in ("property", "services", "adventures", "cars"):
         draft["category"] = cat_hint
+
+    # CARS-SPEC-1 (D4): the vehicle spec draft rides this call — cars only.
+    # Non-cars drafts must never carry a vehicle blob (contamination guard).
+    if draft.get("category") == "cars":
+        _vs = draft.get("vehicle_specs")
+        if isinstance(_vs, dict):
+            _vs = {k: v for k, v in _vs.items() if v is not None}
+        draft["vehicle_specs"] = _vs if isinstance(_vs, dict) and _vs else None
+        _vv = draft.get("variant")
+        draft["variant"] = str(_vv)[:80] if _vv else None
+    else:
+        draft["vehicle_specs"] = None   # force-null on non-cars
+        draft["variant"] = None
 
     # Ensure tags is a list of strings
     tags = draft.get("tags") or []
@@ -10452,7 +10790,16 @@ def _listing_country_iso2(listing) -> str:
     return M.get(c.lower(), (c.upper()[:2] if len(c) >= 2 else "ZA"))
 
 def _comp_count(listing) -> int:
-    """Cheap proxy: active same-category, same-city listings (excl. this one)."""
+    """Cheap proxy: active same-category, same-city listings (excl. this one).
+    Cars: counts TRUE comparables (make/model/year matched) so the comps tier
+    only shows when it can honestly answer — same filter the median uses."""
+    try:
+        _cat = ((listing["category"] or "") if "category" in listing.keys() else "").strip().lower()
+        if _cat in ("cars", "vehicles"):
+            _t = (listing["title"] if "title" in listing.keys() else "") or ""
+            return len(_comp_amounts(listing["category"], listing["city"], listing["id"], ref_title=_t))
+    except Exception:
+        pass
     try:
         conn = database.get_db()
         try:
@@ -10649,27 +10996,71 @@ def _parse_money(v):
     except Exception:
         return None
 
-def _comp_amounts(category, city, exclude_id, rentals_only=False):
+_VEH_STOPWORDS = frozenset({
+    "for", "sale", "the", "and", "with", "low", "full", "service", "history",
+    "one", "owner", "excellent", "good", "condition", "auto", "automatic",
+    "manual", "petrol", "diesel", "hybrid", "electric", "white", "black",
+    "silver", "blue", "red", "grey", "gray", "green", "gold", "brown",
+    "immaculate", "bargain", "urgent", "price", "neg", "negotiable", "km",
+    "mileage", "very", "clean", "new", "like",
+})
+
+def _veh_title_sig(title):
+    """(year, tokens) signature from a vehicle listing title. Deterministic, $0."""
+    t = (title or "").lower()
+    yr = None
+    m = re.search(r"\b(19[5-9]\d|20[0-4]\d)\b", t)
+    if m:
+        yr = int(m.group(1))
+    toks = {w for w in re.findall(r"[a-z][a-z0-9\-]{2,}", t)
+            if w not in _VEH_STOPWORDS and not w.isdigit()}
+    return yr, toks
+
+def _veh_comparable(ref_sig, title):
+    """True if `title` looks like the same make/model (and year band) as ref_sig.
+    Rule: years (when both known) within +/-2, AND >=2 shared significant tokens,
+    or 1 shared long token (>=5 chars, e.g. 'hilux') when the year band matches."""
+    ref_yr, ref_toks = ref_sig
+    if not ref_toks:
+        return False
+    yr, toks = _veh_title_sig(title)
+    if ref_yr is not None and yr is not None and abs(ref_yr - yr) > 2:
+        return False
+    shared = ref_toks & toks
+    if len(shared) >= 2:
+        return True
+    return (len(shared) == 1 and ref_yr is not None and yr is not None
+            and any(len(w) >= 5 for w in shared))
+
+def _comp_amounts(category, city, exclude_id, rentals_only=False, ref_title=None):
     """Parsed amounts of active same-category, same-city listings (excl. this one)
-    - raw material for an internal-comps median. Owned data only."""
+    - raw material for an internal-comps median. Owned data only.
+    For vehicles (ref_title given + cars category), rows are filtered to TRUE
+    comparables — same make/model tokens, year +/-2 — so a Corolla is never
+    priced against a Land Cruiser. CARS-VERIFY-1 free half (3 Jul 2026)."""
     out = []
     try:
         conn = database.get_db()
         try:
             try:
                 rows = conn.execute(
-                    "SELECT price, COALESCE(listing_type,\'\') AS lt FROM listings "
+                    "SELECT price, title, COALESCE(listing_type,\'\') AS lt FROM listings "
                     "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
                     ((category or ""), (city or ""), exclude_id)).fetchall()
             except Exception:
                 rows = conn.execute(
-                    "SELECT price, \'\' AS lt FROM listings "
+                    "SELECT price, title, \'\' AS lt FROM listings "
                     "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
                     ((category or ""), (city or ""), exclude_id)).fetchall()
         finally:
             conn.close()
+        _veh_sig = None
+        if ref_title and (category or "").strip().lower() in ("cars", "vehicles"):
+            _veh_sig = _veh_title_sig(ref_title)
         for r in rows:
             if rentals_only and "rent" not in ((r["lt"] or "").lower()):
+                continue
+            if _veh_sig is not None and not _veh_comparable(_veh_sig, r["title"]):
                 continue
             amt = _parse_money(r["price"])
             if amt:
@@ -10695,12 +11086,20 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
                               + lr["provenance"] + " | Median sold price GBP " + format(med, ",.0f")
                               + " | Source: HM Land Registry Price Paid (Open Government Licence).")})
         if tier == "1T" and tierkey in ("property", "vehicles"):
-            est = tier_resolvers.internal_comps_estimate(_comp_amounts(category, city, listing_id), min_n=8)
+            _ref_title = None
+            if tierkey == "vehicles":
+                try:
+                    _ref_title = (listing["title"] if "title" in listing.keys() else None)
+                except Exception:
+                    _ref_title = None
+            est = tier_resolvers.internal_comps_estimate(
+                _comp_amounts(category, city, listing_id, ref_title=_ref_title), min_n=8)
             if est:
                 med = est["value"]
+                _match_note = " matched on make/model/year" if tierkey == "vehicles" else ""
                 return ("verified", {
                     "source": "internal_comps", "floor_zar": med,
-                    "official_range": "R" + format(med, ",.0f") + "  (median of " + str(est["n"]) + " comparable " + str(city) + " listings)",
+                    "official_range": "R" + format(med, ",.0f") + "  (median of " + str(est["n"]) + " comparable " + str(city) + " listings" + _match_note + ")",
                     "official_ctx": est["provenance"],
                     "block": ("VERIFIED MARKET DATA (use these EXACT figures, do not alter): "
                               + est["provenance"] + " | Median asking price R" + format(med, ",.0f")

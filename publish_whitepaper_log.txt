@@ -1,0 +1,11 @@
+============================================================ 
+TRUSTSQUARE PUBLISH LOG  Thu 07/02/2026  5:46:09.05 
+============================================================ 
+PREFLIGHT-OK 
+UPLOADED whitepaper.html 
+UPLOADED trustsquare_whitepaper_v3.12.pdf 
+UPLOADED trustsquare_claim_visuals_v4.html 
+-rw-r--r-- 1 root root  26335 Jul  2 03:46 /var/www/marketsquare/trustsquare_claim_visuals_v4.html
+-rw-r--r-- 1 root root 767137 Jul  2 03:46 /var/www/marketsquare/trustsquare_whitepaper_v3.12.pdf
+-rw-r--r-- 1 root root   3075 Jul  2 03:46 /var/www/marketsquare/whitepaper.html
+^C

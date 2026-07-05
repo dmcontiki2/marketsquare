@@ -328,3 +328,57 @@ in the HOOK (kept by David's choice); the snap clip itself is 100% the male voic
 **Fix (surgical — preserved the visual card):** A 17:02 "card" overlay had been burned into the served video AFTER the plain FINAL, so a naive rebuild from original clips would have dropped it. Instead: rebuilt an ORIGINAL-voice audio track from the restored clips (c1/c2 ← 02:37 .bak; c4 ← earliest 03:46 .predub, pre-female-dub; c3-hook never dubbed) in the exact 9-segment assembly order, then **muxed that audio onto the SERVED carded video with `-c:v copy`** — video stream verified byte-identical (card kept), audio swapped to original. 57.2s preserved.
 **Deploy:** video → `/var/www/marketsquare/static/videos/collectables-advert-howto.mp4` (md5 `d77b9be5…` local==server==live-through-CDN); ms.js video cache-key bumped `v=20260618g→h`; ms.js shipped (md5 parity); CF purged. Backups: clips `*.femdub-current-*`, served `videos/*.femdub-*` + server `*.femdub-bak`, FINAL `*.femdub-*`.
 **Cost model impact:** none — media asset swap.
+
+## 2026-07-02 — Whitepaper v3.12 Public Edition + Claim Visuals v4 (pre-publication fixes)
+- FAULT (registered): filed provisional PDF's claims section truncated mid-C4; C5–C13 + Abstract absent from
+  the CIPC upload (write-truncation class; present since 29-Jun freeze). Attorney item for complete spec.
+  See PATENT_PENDING addendum + TrustSquare_WhitePaper_PrePublication_Accuracy_Review_2026-07-02.docx.
+- NEW: patent-loop/TrustSquare_WhitePaper_PUBLIC_v3.12_2026-07-02.docx/.pdf — publication candidate
+  (fixes F2–F6 of the review; Figures 1–6 embedded; no new technical matter). Originals untouched.
+- NEW: Patents/TrustSquare_Claim_Visuals_PUBLIC_v4.html — public-safe visuals; v3 stays internal.
+- Snapshot: patent-loop/archive/whitepaper.v3.12-public-20260702.md (no-drift discipline).
+- 2026-07-02 (later): Claim-5 production-reach alignment — whitepaper v3.12 (row 6 + §3.8 + version history) and
+  Claim Visuals v4 (panel 5) corrected against bea_main.py/PRICING_CANON §2a; borderless travel-planning exemption
+  now disclosed; snapshot refreshed. Baks beside both files (.bak-claim5-*).
+- 2026-07-02 (later still): filing-status wording strengthened in whitepaper v3.12 + Visuals v4 (banner/title/§9/footer:
+  FILED + "priority date secured" + deterrent sentence; formal "patent pending" marking retained — a provisional is not a
+  granted patent and may not be marked as one, Patents Act s61). Figure 1 generalised (AdvertAgent codename and table
+  inventory removed; generic front-end / back-end API / service agents topology). Baks .bak-status-*; snapshot refreshed.
+- 2026-07-02: publication mechanics staged — whitepaper.html landing page, trustsquare_whitepaper_v3.12.pdf,
+  trustsquare_claim_visuals_v4.html copied to site root; publish_whitepaper.bat created (scp + verify + evidence
+  checklist). Nothing deployed — David runs the bat. Runbook + evidence slots appended to PATENT_PENDING.
+- 2026-07-02: §8 accuracy qualifier — "SA buyers via Paystack (integration in progress at publication date)";
+  Paystack submission decision recorded: filing (30 Jun) was the gate, so Paystack vendor review and whitepaper
+  publication are order-independent; publish first, Paystack in parallel. PDF re-exported; staged site copy +
+  landing-page sha256 + PATENT_PENDING sha reference updated in sync. Bak .bak-paystack-*.
+- 2026-07-02 ~06:00 SAST: WHITEPAPER PUBLISHED. Live at trustsquare.co/static/ (landing + PDF + visuals v4);
+  server sha256 = 3e9a7904… verified in publish run; Wayback snapshots 20260702035915 / 20260702040034 /
+  20260702040056 captured; evidence recorded in PATENT_PENDING. First (non-served) webroot upload noted for cleanup.
+  Zenodo DOI pending David. PATENT_PENDING "Do next" step 2 (publish whitepaper) = DONE.
+- 2026-07-02: Zenodo DOI skipped by decision; publication evidence file closed (live URLs + server sha + 3 Wayback snapshots).
+- 2026-07-02: Paystack activation resubmitted (profile complete, preview page live at /static/preview.html, reviewer pinged on ticket 1777715). Whitepaper publication + Paystack unblock both closed same day.
+- 2026-07-02: Video QC complete (2 agents, all 10 FINALs): insert-renderer bug family found (07/08/09/10/02), audio −26..−30dB uniform-quiet, presenter clips soft/720p, heritage 4K partials confirmed reusable. Report: feature-videos/VIDEO_CHECK_2026-07-02.md. Phase-2 plan staged.
+- 2026-07-02: Insert renderer rebuilt (inserts_fixed_02jul/renderer/render_insert.py, PIL path, 4K-capable --scale 3): tofu/markdown/doubled-header/black-void root-caused + fixed; 5 sample inserts re-rendered + frame-verified PASS (02/07/08/09/10). Upstream flags: heritage_tour.md + study_plan.md truncated (known max_tokens issue), weekend_itinerary.md line-1 leaked model preamble. No FINALs touched.
+- 2026-07-02 07:30: Phase-2 video upgrade SCHEDULED — main run 07:35, resume run 11:30 (one-time tasks). 6s drop-in inserts rendered (inserts_fixed_02jul/dropin_6s). Rules baked in: no FINAL overwrites, credit gate ~10 ops, no purchases, RUN_LOG + MORNING_REPORT_02JUL_VIDEOS.md, 06-retirement skipped, heritage 4K partials reused.
+2026-07-02 (scheduled run): Feature-video Phase-2 4K upgrade COMPLETE — 9/9 target masters produced (*-FINAL-4K-02jul.mp4 in each feature-videos/<nn>/ folder; 06 skipped per plan): ByteDance 4K upscale of 44 presenter clips (21 Higgsfield credits, 1988->1967), FIXED scroll inserts (tofu/void/md-leak) re-rendered at scale-3 for 02/07/08/09/10, loudnorm -16 LUFS on all, 10-offer Beats-logo blurred. Details: feature-videos/MORNING_REPORT_02JUL_VIDEOS.md + RUN_LOG_2026-07-02.md. Originals untouched; David to review playback/lip-sync.
+- 2026-07-02: David's phone rejected his TrustSquare admin password at work. Investigated: morning's Paystack work was activation-resubmission only (dashboard profile + static preview.html + ticket 1777715) — NO auth code or server password touched (auth.py unchanged since 2 Jun; scan20 diff was one-line exception chaining). Live probe of /admin/login returned proper 401 => MS_ADMIN_PASSWORD intact, endpoint healthy. Root-cause candidate: master-password compare was exact-match, no whitespace strip (phone keyboards append trailing space after autofill). FIX staged locally in bea_main.py (accept raw OR stripped match; strictly more permissive, cannot break existing logins; py_compile OK; bak: bea_main.py.bak-20260702-pwstrip). NOT deployed — deploy is David's gate.
+- 2026-07-02: COMPLIANCE GAPS CLOSED (staged, NOT deployed) — Paystack go-live checklist items from AWAITING_DAVID:
+  (1) privacy.html NEW (POPIA policy: Trustsquare (Pty) Ltd 2026/340128/07, deferred-KYC data, Paystack/Hetzner/R2 sharing+s72, TLS1.3/at-rest, 30-day breach, rights+Regulator, 5-day opt-out; drafted from EULA v1.3 clauses; counsel review pending per LEGAL-COUNTRY-1 best-advice posture).
+  (2) terms.html NEW — public page generated from sanitized eula_clean.html (regenerate on EULA change; reminder REM in deploy bat).
+  (3) EULA internal draft markers stripped from ALL deployed copies: marketsquare.html embed (13.4K front-matter cut: draft banner, firm names, 18-gap table, counsel-input list; 8 red marker boxes restyled to normal; FICA internal note deleted; NCC false registration claim replaced with sanctioned CPA compliance wording; v1.0->v1.3 trailer fix; div balance verified) + ms.js + eula_clean.html + eula_raw.html (front-matter replaced with clean provenance header; [Company Name]/[REG NO] filled with real entity facts; [COUNSEL REQUIRED]x12, [OPERATIONAL]x1, [subject to council confirmation], [Preliminary] markers swept; ZERO residuals asserted). NO substantive legal wording changed beyond removing false/unfillable claims (NCC registration, external audit provider) — AD-05 generation choice untouched.
+  (4) Footer added to app (Terms / Privacy / Contact / (c) + reg no) before LOGIC block.
+  (5) bea_main.py: GET /privacy + /terms FileResponse routes (py_compile OK). deploy_marketsquare.bat: +2 scp lines.
+  Baks: *.bak-20260702-cmpl / -legalroutes / deploy bat .bak-20260702. NOT deployed — goes live on David's next deploy_marketsquare.bat run. SKIPPED: APP_PREVIEW.html (not in deploy manifest, still has markers).
+- 2026-07-02 evening: v2 REBUILD complete — 9/9 4K v2 masters (crossfades 0.37s sample-locked, 1.5s end fades,
+  exam head trim, -g 60 + Level 5.2 = heritage stutter root-caused/fixed: v1 keyframes 5-8s at 98.9% of L5.1
+  decode ceiling) + 9-file delivery_1080/ set (app-ready). Audio finding: v1 floor already clean (afftdn moved
+  it 0.002dB) — "white noise" note likely ambience in generated clips or playback-side; parked to Maroushka R2.
+  06-RETIREMENT reworked: misnamed "hook-woman" clip was actually the man (4 of 5 slots = the repetition +
+  isolation); wt1 said its line twice in-clip (kept 2nd utterance); NEW couple connector shot generated
+  (1 try, identities held, 3/4-angle) via Seedream ref still + Kling i2v 6s + 4K upscale; new master 47.5s
+  (-8.9s repeats/dead air) + 1080 delivery. Credits: 15.72 (day total ~36.7); balance ~1,952. Originals + v1
+  masters untouched. Open: wife's scripted hook line dropped with the misnamed clip — voice-over option R2.
+- 2026-07-03 ~10:35: David decisions for round-2 Phase 2: credits "as required" — operational gate set at budget ≤300 / hard floor 1,650 (never unlimited); 07-liquidation canon lines = MULTI-CLIP in his own voice (2 consecutive clips per line, exact wording from FEEDBACK_DAVID_ROUND2). Phase 1 running since 09:20 (07+09 v3 done at 10:28).
+2026-07-03 | feature-videos ROUND-2 PHASE-1 (scheduled, 0 credits): all 10 v3 masters + 1080 deliveries built NEW (v2/v1 untouched) — Andrew scroll VO drafts on all 10 + 01 outro VO, 09 mom-pause to 2.05s, 02 both reframe-glitches spliced out, 07 payoff card re-rendered to positioning canon; loudness -16.0..-16.2, frame-verified; VO wordings await David approval; Phase-2 regens blocked on credit floor (~150-280cr est) — see feature-videos/MORNING_REPORT_03JUL_ROUND2.md + RUN_LOG_2026-07-03.md
+- 2026-07-03 ~14:30: feature-videos Round-2 PHASE 2 COMPLETE: 10 Kling regens (03 friend-in-room + payoff canon line [whisper pinned it to payoffA, not wt2]; 07 sister 7a + son 7c multi-clip 48w + 7e multi-clip 39w ending "thank you TrustSquare" on camera; 04 both lips-fixes; 09 syllabus; 10 girl standing) + 11 ByteDance 4K upscales -> v4 masters 03/04/07/09/10 (<name>-FINAL-4K-v4-03jul.mp4, 07 now 69.7s) + delivery_1080/<name>-1080-v4.mp4. 248.49 cr spent (budget 300; 60 wasted on wrong-reference fires, trap documented + procedure hardened), balance 1,702.51, floor 1,650 intact. 01b SSS deferred with options; 02 untouched. Hard-cut splices flat-logged (xfade re-splice available). Full: feature-videos/RUN_LOG_2026-07-03.md + MORNING_REPORT_03JUL_ROUND2.md.
+- 2026-07-04 ~15:30: feature-videos Round-3 v5 (David's same-day feedback on v4): 03/07/10 seam repairs (freeze-pads removed, cut words restored: 03 "start", 07 "worth", 10 buyer line; 10's 0.38s A/V drift -> 0ms) + 04 payoff regen with NEW canon line "We know more than we did — now we can approach an agent with real information. Thank you TrustSquare." (positioning: informative, not replacing agents; line whisper-verified verbatim in master). 4 v5 masters + 4 1080-v5 deliveries; 09 stays v4 (David: complete). 12.48 cr (12 Kling + 0.48 upscale), balance 1,690, floor 1,650 intact, 0 wasted. v4/v3 masters untouched beside v5. Full log: feature-videos/RUN_LOG_2026-07-04.md.

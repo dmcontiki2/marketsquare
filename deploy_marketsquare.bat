@@ -126,6 +126,9 @@ echo.
 
 echo  [1/6] Deploying buyer app (marketsquare.html -^> index.html)...
 scp "%PROJECT%\marketsquare.html" %SERVER%:%REMOTE%/index.html
+REM legal pages (terms.html is GENERATED from eula_clean.html - regenerate before deploy if EULA changed)
+scp "%PROJECT%\privacy.html" %SERVER%:%REMOTE%/privacy.html
+scp "%PROJECT%\terms.html" %SERVER%:%REMOTE%/terms.html
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for buyer app. Check SSH connection.
     pause
@@ -206,6 +209,18 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
+
+echo  [3f] Deploying feature videos - the how-to set the app plays...
+ssh %SERVER% "mkdir -p %REMOTE%/videos"
+scp "%PROJECT%\videos\*.mp4" %SERVER%:%REMOTE%/videos/
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for videos. Check SSH connection.
+    pause
+    exit /b 1
+)
+ssh %SERVER% "chmod 755 %REMOTE%/videos && chmod 644 %REMOTE%/videos/*.mp4"
+echo  Done.
+
 :: demo_sellers.json is intentionally SERVER-MANAGED - the single source of truth lives
 :: ONLY on the box, on purpose. It was de-bloated out of the FEA (it used to be hardcoded
 :: there), and keeping a local + server copy caused constant drift, so by deliberate
