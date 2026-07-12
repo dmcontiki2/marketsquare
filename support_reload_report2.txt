@@ -1,0 +1,23 @@
+============================================================ 
+ VERIFY SUPPORT BLOCKS + EXPLICIT nginx test and reload 
+============================================================ 
+    location = /support {
+        root /var/www/marketsquare;
+        try_files /support.html =404;
+    }
+    location = /support.html {
+        root /var/www/marketsquare;
+        try_files /support.html =404;
+    }
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "178.104.73.239" on 0.0.0.0:80, ignored
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "trustsquare.co" on 0.0.0.0:80, ignored
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "www.trustsquare.co" on 0.0.0.0:80, ignored
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "178.104.73.239" on 0.0.0.0:443, ignored
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "trustsquare.co" on 0.0.0.0:443, ignored
+2026/07/06 04:14:12 [warn] 3807288#3807288: conflicting server name "www.trustsquare.co" on 0.0.0.0:443, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+exit=0
+reload_exit=0
+active
+public /support: 200

@@ -1,0 +1,1350 @@
+{
+ "date": "2026-07-11",
+ "took_s": 16.5,
+ "findings": [
+  {
+   "sev": "HIGH",
+   "area": "demo",
+   "id": "DEMO-SELLER-SCHEMA",
+   "msg": "12/40 sellers have NO idx field (schema drift: credentials/ stats-object style) \u2014 position-based lookups mis-resolve; FEA v284 resolves by idx field, but the data should be repaired too"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_1",
+   "msg": "listing demo_prop_lon_1 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_2",
+   "msg": "listing demo_prop_lon_2 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_3",
+   "msg": "listing demo_prop_lon_3 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_4",
+   "msg": "listing demo_prop_lon_4 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_5",
+   "msg": "listing demo_prop_lon_5 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_6",
+   "msg": "listing demo_prop_lon_6 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_7",
+   "msg": "listing demo_prop_lon_7 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_8",
+   "msg": "listing demo_prop_lon_8 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_9",
+   "msg": "listing demo_prop_lon_9 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_lon_10",
+   "msg": "listing demo_prop_lon_10 cat=Property -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_1",
+   "msg": "listing demo_prop_syd_1 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_2",
+   "msg": "listing demo_prop_syd_2 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_3",
+   "msg": "listing demo_prop_syd_3 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_4",
+   "msg": "listing demo_prop_syd_4 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_5",
+   "msg": "listing demo_prop_syd_5 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_6",
+   "msg": "listing demo_prop_syd_6 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_7",
+   "msg": "listing demo_prop_syd_7 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_8",
+   "msg": "listing demo_prop_syd_8 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_9",
+   "msg": "listing demo_prop_syd_9 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_prop_syd_10",
+   "msg": "listing demo_prop_syd_10 cat=Property -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_1",
+   "msg": "listing demo_tut_ny_1 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_2",
+   "msg": "listing demo_tut_ny_2 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_3",
+   "msg": "listing demo_tut_ny_3 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_4",
+   "msg": "listing demo_tut_ny_4 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_5",
+   "msg": "listing demo_tut_ny_5 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_6",
+   "msg": "listing demo_tut_ny_6 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_7",
+   "msg": "listing demo_tut_ny_7 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_8",
+   "msg": "listing demo_tut_ny_8 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_9",
+   "msg": "listing demo_tut_ny_9 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_ny_10",
+   "msg": "listing demo_tut_ny_10 cat=Tutors -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_1",
+   "msg": "listing demo_tut_lon_1 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_2",
+   "msg": "listing demo_tut_lon_2 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_3",
+   "msg": "listing demo_tut_lon_3 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_4",
+   "msg": "listing demo_tut_lon_4 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_5",
+   "msg": "listing demo_tut_lon_5 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_6",
+   "msg": "listing demo_tut_lon_6 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_7",
+   "msg": "listing demo_tut_lon_7 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_8",
+   "msg": "listing demo_tut_lon_8 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_9",
+   "msg": "listing demo_tut_lon_9 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_lon_10",
+   "msg": "listing demo_tut_lon_10 cat=Tutors -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_1",
+   "msg": "listing demo_tut_syd_1 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_2",
+   "msg": "listing demo_tut_syd_2 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_3",
+   "msg": "listing demo_tut_syd_3 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_4",
+   "msg": "listing demo_tut_syd_4 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_5",
+   "msg": "listing demo_tut_syd_5 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_6",
+   "msg": "listing demo_tut_syd_6 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_7",
+   "msg": "listing demo_tut_syd_7 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_8",
+   "msg": "listing demo_tut_syd_8 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_9",
+   "msg": "listing demo_tut_syd_9 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_tut_syd_10",
+   "msg": "listing demo_tut_syd_10 cat=Tutors -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_1",
+   "msg": "listing demo_svc_ny_1 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_2",
+   "msg": "listing demo_svc_ny_2 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_3",
+   "msg": "listing demo_svc_ny_3 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_4",
+   "msg": "listing demo_svc_ny_4 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_5",
+   "msg": "listing demo_svc_ny_5 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_6",
+   "msg": "listing demo_svc_ny_6 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_7",
+   "msg": "listing demo_svc_ny_7 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_8",
+   "msg": "listing demo_svc_ny_8 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_9",
+   "msg": "listing demo_svc_ny_9 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_ny_10",
+   "msg": "listing demo_svc_ny_10 cat=Services -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_1",
+   "msg": "listing demo_svc_lon_1 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_2",
+   "msg": "listing demo_svc_lon_2 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_3",
+   "msg": "listing demo_svc_lon_3 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_4",
+   "msg": "listing demo_svc_lon_4 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_5",
+   "msg": "listing demo_svc_lon_5 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_6",
+   "msg": "listing demo_svc_lon_6 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_7",
+   "msg": "listing demo_svc_lon_7 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_8",
+   "msg": "listing demo_svc_lon_8 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_9",
+   "msg": "listing demo_svc_lon_9 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_lon_10",
+   "msg": "listing demo_svc_lon_10 cat=Services -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_1",
+   "msg": "listing demo_svc_syd_1 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_2",
+   "msg": "listing demo_svc_syd_2 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_3",
+   "msg": "listing demo_svc_syd_3 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_4",
+   "msg": "listing demo_svc_syd_4 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_5",
+   "msg": "listing demo_svc_syd_5 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_6",
+   "msg": "listing demo_svc_syd_6 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_7",
+   "msg": "listing demo_svc_syd_7 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_8",
+   "msg": "listing demo_svc_syd_8 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_9",
+   "msg": "listing demo_svc_syd_9 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_svc_syd_10",
+   "msg": "listing demo_svc_syd_10 cat=Services -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_1",
+   "msg": "listing demo_adv_1 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_2",
+   "msg": "listing demo_adv_2 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_3",
+   "msg": "listing demo_adv_3 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_4",
+   "msg": "listing demo_adv_4 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_5",
+   "msg": "listing demo_adv_5 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_6",
+   "msg": "listing demo_adv_6 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_7",
+   "msg": "listing demo_adv_7 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_8",
+   "msg": "listing demo_adv_8 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_9",
+   "msg": "listing demo_adv_9 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_10",
+   "msg": "listing demo_adv_10 cat=adventures_experiences -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_01",
+   "msg": "listing demo_adv_ny_01 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_02",
+   "msg": "listing demo_adv_ny_02 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_03",
+   "msg": "listing demo_adv_ny_03 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_04",
+   "msg": "listing demo_adv_ny_04 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_05",
+   "msg": "listing demo_adv_ny_05 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_06",
+   "msg": "listing demo_adv_ny_06 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_07",
+   "msg": "listing demo_adv_ny_07 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_08",
+   "msg": "listing demo_adv_ny_08 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_09",
+   "msg": "listing demo_adv_ny_09 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_ny_10",
+   "msg": "listing demo_adv_ny_10 cat=adventures_experiences -> seller idx 10 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_01",
+   "msg": "listing demo_adv_lon_01 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_02",
+   "msg": "listing demo_adv_lon_02 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_03",
+   "msg": "listing demo_adv_lon_03 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_04",
+   "msg": "listing demo_adv_lon_04 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_05",
+   "msg": "listing demo_adv_lon_05 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_06",
+   "msg": "listing demo_adv_lon_06 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_07",
+   "msg": "listing demo_adv_lon_07 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_08",
+   "msg": "listing demo_adv_lon_08 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_09",
+   "msg": "listing demo_adv_lon_09 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_lon_10",
+   "msg": "listing demo_adv_lon_10 cat=adventures_experiences -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_01",
+   "msg": "listing demo_adv_syd_01 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_02",
+   "msg": "listing demo_adv_syd_02 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_03",
+   "msg": "listing demo_adv_syd_03 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_04",
+   "msg": "listing demo_adv_syd_04 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_05",
+   "msg": "listing demo_adv_syd_05 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_06",
+   "msg": "listing demo_adv_syd_06 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_07",
+   "msg": "listing demo_adv_syd_07 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_08",
+   "msg": "listing demo_adv_syd_08 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_09",
+   "msg": "listing demo_adv_syd_09 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_adv_syd_10",
+   "msg": "listing demo_adv_syd_10 cat=adventures_experiences -> seller idx 24 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_1",
+   "msg": "listing demo_stay_1 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_2",
+   "msg": "listing demo_stay_2 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_3",
+   "msg": "listing demo_stay_3 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_4",
+   "msg": "listing demo_stay_4 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_5",
+   "msg": "listing demo_stay_5 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_6",
+   "msg": "listing demo_stay_6 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_7",
+   "msg": "listing demo_stay_7 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_8",
+   "msg": "listing demo_stay_8 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_9",
+   "msg": "listing demo_stay_9 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_10",
+   "msg": "listing demo_stay_10 cat=adventures_accommodation -> seller idx 3 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_1",
+   "msg": "listing demo_col_ny_1 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_2",
+   "msg": "listing demo_col_ny_2 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_3",
+   "msg": "listing demo_col_ny_3 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_4",
+   "msg": "listing demo_col_ny_4 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_5",
+   "msg": "listing demo_col_ny_5 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_6",
+   "msg": "listing demo_col_ny_6 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_7",
+   "msg": "listing demo_col_ny_7 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_8",
+   "msg": "listing demo_col_ny_8 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_9",
+   "msg": "listing demo_col_ny_9 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_ny_10",
+   "msg": "listing demo_col_ny_10 cat=Collectors -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_1",
+   "msg": "listing demo_car_ny_1 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_2",
+   "msg": "listing demo_car_ny_2 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_3",
+   "msg": "listing demo_car_ny_3 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_4",
+   "msg": "listing demo_car_ny_4 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_5",
+   "msg": "listing demo_car_ny_5 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_6",
+   "msg": "listing demo_car_ny_6 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_7",
+   "msg": "listing demo_car_ny_7 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_8",
+   "msg": "listing demo_car_ny_8 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_9",
+   "msg": "listing demo_car_ny_9 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_ny_10",
+   "msg": "listing demo_car_ny_10 cat=Cars -> seller idx 6 cat=local_market (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_1",
+   "msg": "listing demo_col_lon_1 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_2",
+   "msg": "listing demo_col_lon_2 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_3",
+   "msg": "listing demo_col_lon_3 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_4",
+   "msg": "listing demo_col_lon_4 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_5",
+   "msg": "listing demo_col_lon_5 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_6",
+   "msg": "listing demo_col_lon_6 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_7",
+   "msg": "listing demo_col_lon_7 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_8",
+   "msg": "listing demo_col_lon_8 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_9",
+   "msg": "listing demo_col_lon_9 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_lon_10",
+   "msg": "listing demo_col_lon_10 cat=Collectors -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_1",
+   "msg": "listing demo_car_lon_1 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_2",
+   "msg": "listing demo_car_lon_2 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_3",
+   "msg": "listing demo_car_lon_3 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_4",
+   "msg": "listing demo_car_lon_4 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_5",
+   "msg": "listing demo_car_lon_5 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_6",
+   "msg": "listing demo_car_lon_6 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_7",
+   "msg": "listing demo_car_lon_7 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_8",
+   "msg": "listing demo_car_lon_8 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_9",
+   "msg": "listing demo_car_lon_9 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_lon_10",
+   "msg": "listing demo_car_lon_10 cat=Cars -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_1",
+   "msg": "listing demo_lm_lon_1 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_2",
+   "msg": "listing demo_lm_lon_2 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_3",
+   "msg": "listing demo_lm_lon_3 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_4",
+   "msg": "listing demo_lm_lon_4 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_5",
+   "msg": "listing demo_lm_lon_5 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_6",
+   "msg": "listing demo_lm_lon_6 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_7",
+   "msg": "listing demo_lm_lon_7 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_8",
+   "msg": "listing demo_lm_lon_8 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_9",
+   "msg": "listing demo_lm_lon_9 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_lon_10",
+   "msg": "listing demo_lm_lon_10 cat=local_market -> seller idx 8 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_1",
+   "msg": "listing demo_col_syd_1 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_2",
+   "msg": "listing demo_col_syd_2 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_3",
+   "msg": "listing demo_col_syd_3 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_4",
+   "msg": "listing demo_col_syd_4 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_5",
+   "msg": "listing demo_col_syd_5 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_6",
+   "msg": "listing demo_col_syd_6 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_7",
+   "msg": "listing demo_col_syd_7 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_8",
+   "msg": "listing demo_col_syd_8 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_9",
+   "msg": "listing demo_col_syd_9 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_col_syd_10",
+   "msg": "listing demo_col_syd_10 cat=Collectors -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_1",
+   "msg": "listing demo_car_syd_1 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_2",
+   "msg": "listing demo_car_syd_2 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_3",
+   "msg": "listing demo_car_syd_3 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_4",
+   "msg": "listing demo_car_syd_4 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_5",
+   "msg": "listing demo_car_syd_5 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_6",
+   "msg": "listing demo_car_syd_6 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_7",
+   "msg": "listing demo_car_syd_7 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_8",
+   "msg": "listing demo_car_syd_8 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_9",
+   "msg": "listing demo_car_syd_9 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_car_syd_10",
+   "msg": "listing demo_car_syd_10 cat=Cars -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_1",
+   "msg": "listing demo_lm_syd_1 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_2",
+   "msg": "listing demo_lm_syd_2 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_3",
+   "msg": "listing demo_lm_syd_3 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_4",
+   "msg": "listing demo_lm_syd_4 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_5",
+   "msg": "listing demo_lm_syd_5 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_6",
+   "msg": "listing demo_lm_syd_6 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_7",
+   "msg": "listing demo_lm_syd_7 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_8",
+   "msg": "listing demo_lm_syd_8 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_9",
+   "msg": "listing demo_lm_syd_9 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_lm_syd_10",
+   "msg": "listing demo_lm_syd_10 cat=local_market -> seller idx 9 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_ny_1",
+   "msg": "listing demo_stay_ny_1 cat=adventures_accommodation -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_ny_2",
+   "msg": "listing demo_stay_ny_2 cat=adventures_accommodation -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_ny_3",
+   "msg": "listing demo_stay_ny_3 cat=adventures_accommodation -> seller idx 15 cat=Tutors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_lon_1",
+   "msg": "listing demo_stay_lon_1 cat=adventures_accommodation -> seller idx 12 cat=Cars (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_lon_2",
+   "msg": "listing demo_stay_lon_2 cat=adventures_accommodation -> seller idx 14 cat=Property (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_lon_3",
+   "msg": "listing demo_stay_lon_3 cat=adventures_accommodation -> seller idx 16 cat=Services (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_syd_1",
+   "msg": "listing demo_stay_syd_1 cat=adventures_accommodation -> seller idx 11 cat=Collectors (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_syd_2",
+   "msg": "listing demo_stay_syd_2 cat=adventures_accommodation -> seller idx 13 cat=LocalMarket (category cross-wire)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-CROSSWIRE-demo_stay_syd_3",
+   "msg": "listing demo_stay_syd_3 cat=adventures_accommodation -> seller idx 17 cat=Adventures (category cross-wire)"
+  },
+  {
+   "sev": "INFO",
+   "area": "demo",
+   "id": "DEMO-PLACEHOLDERS",
+   "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "demo",
+   "id": "DEMO-POIS-MISSING",
+   "msg": "1/41 property listings missing nearby_pois (e.g. ['ph_property'])"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "links",
+   "id": "LINKS-DEAD",
+   "msg": "1 hardcoded external links failing (checked 7): ['https://pub-xxx.r2.dev/path/file.jpg']"
+  },
+  {
+   "sev": "INFO",
+   "area": "drift",
+   "id": "MSJS-DRIFT",
+   "msg": "live ms.js (v285, 836088B) != repo ms.js (836292B) \u2014 expected while a deploy is staged; CRITICAL if it persists after deploying"
+  }
+ ]
+}

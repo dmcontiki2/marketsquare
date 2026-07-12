@@ -316,3 +316,24 @@ Score is never cached on the client. Every display reads from BEA.
 
 *End of TRUST_SCORE_CRITERIA.md v1.0*
 *Changes to tier thresholds require council review (Principle A5). Changes to signal weights require Architect agent sign-off. Append amendments as versioned sections — do not overwrite.*
+
+---
+
+## Amendment v1.1 — 40-point Established base (launch baseline)
+**Decision: David · 6 July 2026 · supersedes the v1.0 §1 "sum from 0" base only**
+
+**Change.** Every seller now starts from a **40-point base** (the bottom of the Established tier) instead of accumulating from 0. The Trust Score is computed as:
+
+> `score = min(100, 40 + Universal(≤30) + Category(≤40) + Track Record(≤30) + penalties)`
+
+Signal weights, group caps, tier thresholds (0–39 New / 40–69 Established / 70–89 Trusted / 90–100 Highly Trusted) and the penalty/anti-manipulation rules are **unchanged**.
+
+**Why.** Launch experience — a brand-new but legitimate seller should present as *Established*, not *New*, while still earning their way up to Trusted/Highly Trusted through verified ID, credentials and platform track record. This matches the deployed implementation (`bea_main.py` `/trust-score/breakdown` `base_score = 40`, `database.py` `users.trust_score DEFAULT 40`, and frontend `sbCalcScore()` base 40).
+
+**Worked example (private car seller).** Base 40 + verified ID 15 + NATIS 10 + RWC 6 + inspection 5 + service history 4 + finance clearance 4 = **84 (Trusted)**. ID only, no documents = **55 (Established)** — this is the "55" seen in the 6 Jul test; the documents were not persisting (fixed same day).
+
+**Consequence to ratify (council).** With a 40 base, the **New tier (0–39) is unreachable** for any live seller — it now only describes a theoretical pre-base state. If a visible "New / unverified" state is wanted for sellers who have verified nothing, that must be added deliberately (e.g. a separate "Unverified" label distinct from the score). Flagged for council review under Principle A5.
+
+**Related fix (same day).** Listing-flow document uploads (B7) now POST to `/users/{email}/documents` at publish so category credentials persist and auto-earn, and `/users/{email}/upload-id` new-user seed corrected 15 → 40 to match the base.
+
+*End Amendment v1.1*

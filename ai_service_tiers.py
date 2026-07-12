@@ -48,7 +48,13 @@ TIER_TUPPENCE = {FREE: 0, VERIFIED: 1, PREMIUM: 2}
 PAID_FEED_FUNCTIONS = frozenset({
     "heritage_tour", "expedition_dossier", "weekend_itinerary",
     "property_dossier", "car_dossier", "collection_liquidation",
-    "collectables_advert", "offer_advisor", "study_plan",
+    "collectables_advert", "study_plan",
+    # offer_advisor REMOVED from the class (David, 6 Jul 2026): lightest profile in the
+    # set (2 searches, $0.20 worst-case) — open to all tiers so Starter's monthly 2T
+    # grant buys exactly one Offer Strategy brief. The $5 tier's monthly ritual.
+    "retirement_planner",  # added 6 Jul 2026 (tier audit): Sonnet + 20 web searches — the
+                           # heaviest consumption profile of all; its absence was an oversight
+                           # from when the stub predated the class. Canon §5 logic decides it.
 })
 
 # Seller tiers permitted to fire the paid-feed class. Pro only (+ legacy paid tiers

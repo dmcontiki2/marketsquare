@@ -1,128 +1,49 @@
 {
-  "schema_version": 1,
-  "report_type": "weekly_discovery_scan",
-  "generated_at": "2026-06-29T05:14:49Z",
-  "generated_by": "merged-daily-loop Monday scan (2026-06-29)",
-  "scan_scope": [
-    "bea_main.py",
-    "auth.py",
-    "database.py",
-    "storage.py",
-    "payments.py",
-    "ms.js",
-    "marketsquare.html (inline)",
-    "marketsquare_admin.html (inline)"
-  ],
-  "tools": [
-    "ruff 0.15.17 (F,E9,B)",
-    "vulture 2.16 (min-confidence 80)",
-    "pylint 4.0.6 cyclic-import",
-    "eslint 9.39.4 (no-undef/no-dupe-keys/no-dupe-args/no-unreachable/no-const-assign/no-func-assign/no-redeclare/no-unused-vars)"
-  ],
-  "totals": {
-    "found_this_week": 3,
-    "fixed_this_week": 0,
-    "still_open": 4,
-    "note": "Delta vs 2026-06-22. KEY: SCAN-18 (B904 _validate_rental_fields) re-OPENED - its 25-Jun claimed ship never landed (no 'from None' on repo OR live server; line drifted 1318->1406). 2 NEW B904: SCAN-19 (BIT writer 8739), SCAN-20 (admin_ai_test 9145). 1 NEW eslint no-func-assign: SCAN-21-JS (tshLoad intentional decorator, admin html). pylint 10.00/10, 0 cyclic, 0 F821. ESLint ms.js 0 structural. Detection-only; no code changed (Fixer phase ships SCAN-18)."
-  },
-  "severity_breakdown": {
-    "CRIT": 0,
-    "HIGH": 0,
-    "MED": 0,
-    "LOW": 4
-  },
-  "open_issues": [
-    {
-      "id": "SCAN-18",
-      "sev": "LOW",
-      "file": "bea_main.py:1406",
-      "rule": "B904",
-      "summary": "raise HTTPException in except(ValueError,TypeError) without 'from None' in _validate_rental_fields. RE-OPENED: prior ship never landed. Non-ledger; auto-ship eligible."
-    },
-    {
-      "id": "SCAN-19",
-      "sev": "LOW",
-      "file": "bea_main.py:8739",
-      "rule": "B904",
-      "summary": "BIT status writer except Exception -> raise HTTPException 400 without 'from e'. Diagnostic write surface only. Non-ledger; auto-ship eligible. NEW."
-    },
-    {
-      "id": "SCAN-20",
-      "sev": "LOW",
-      "file": "bea_main.py:9145",
-      "rule": "B904",
-      "summary": "admin_ai_test except Exception -> raise HTTPException 500 without 'from e'. Admin-only provider test; no Tuppence. Non-ledger; auto-ship eligible. NEW."
-    },
-    {
-      "id": "SCAN-21-JS",
-      "sev": "LOW",
-      "file": "marketsquare_admin.html (tshLoad)",
-      "rule": "no-func-assign",
-      "summary": "tshLoad function declaration reassigned to install a doc-load decorator (_origTshLoad saved + wrapped). Intentional, behaviour-correct. Candidate IGNORE-with-reason or low FILE (decl->let). NEW."
-    }
-  ],
-  "fixed_issues": [],
-  "false_positives_reconfirmed": [
-    {
-      "rule": "B008 x11",
-      "files": "bea_main.py FastAPI Depends/File/Form arg defaults",
-      "note": "required FastAPI idiom, not a bug"
-    },
-    {
-      "rule": "vulture 'family' x2",
-      "file": "bea_main.py:1712,1813",
-      "note": "getaddrinfo family params intentionally kept (SCAN-11 ruling)"
-    },
-    {
-      "rule": "eslint no-undef x156",
-      "file": "ms.js",
-      "note": "config-incomplete browser globals (confirm/prompt/URL/sessionStorage/Event/Notification/indexedDB/clearInterval) + cross-file globals (SELLERS/LISTINGS/CATS/SELLER_PHOTOS/acceptedIntros); 0 structural errors"
-    }
-  ],
-  "health_at_scan": {
-    "bea_version": "1.3.1",
-    "smoke": "40/40",
-    "health": "ok",
-    "today_spend_usd": 0.0,
-    "platform_ceiling_usd": 100.0
-  },
-  "history": [
-    {
-      "week_of": "2026-06-01",
-      "found": 16,
-      "fixed": 0,
-      "open": 16
-    },
-    {
-      "week_of": "2026-06-01",
-      "found": 0,
-      "fixed": 5,
-      "open": 11
-    },
-    {
-      "week_of": "2026-06-08",
-      "found": 4,
-      "fixed": 9,
-      "open": 6
-    },
-    {
-      "week_of": "2026-06-15",
-      "found": 1,
-      "fixed": 6,
-      "open": 1
-    },
-    {
-      "week_of": "2026-06-22",
-      "found": 1,
-      "fixed": 1,
-      "open": 1
-    },
-    {
-      "week_of": "2026-06-29",
-      "found": 3,
-      "fixed": 0,
-      "open": 4
-    }
-  ],
-  "week_of": "2026-06-29"
+ "schema_version": 1,
+ "report_type": "weekly_discovery_scan",
+ "generated_at": "2026-07-06T04:38:45Z",
+ "generated_by": "merged-daily-loop Monday scan (2026-07-06)",
+ "scan_scope": [
+  "bea_main.py",
+  "auth.py",
+  "database.py",
+  "storage.py",
+  "payments.py",
+  "ms.js",
+  "marketsquare.html (inline)",
+  "marketsquare_admin.html (inline)"
+ ],
+ "tools": [
+  "ruff 0.15.20 (F,E9,B)",
+  "vulture 2.16 (min-confidence 80)",
+  "pylint 4.0.6 cyclic-import",
+  "eslint 9.39.4 (structural rules + no-undef/no-unused-vars as warn)"
+ ],
+ "totals": {
+  "found_this_week": 0,
+  "fixed_this_week": 3,
+  "still_open": 0,
+  "note": "Delta vs 2026-06-29. SCAN-18/19/20 (all B904) confirmed FIXED on this scan - ruff B904 count now ZERO across all 5 py files. SCAN-21-JS reconfirmed false positive (tshLoad intentional decorator, IGNORE ruling 2026-07-01 stands). ZERO new findings: ruff = 11x B008 FP idiom only; vulture = 2x family FP only; pylint 10.00/10, 0 cyclic imports, 0 F821; eslint 0 structural errors (618 warnings = known no-undef/no-unused-vars noise class). AST clean x5. Detection-only; no code changed."
+ },
+ "severity_breakdown": {
+  "CRIT": 0,
+  "HIGH": 0,
+  "MED": 0,
+  "LOW": 0
+ },
+ "open_issues": [],
+ "false_positives_reconfirmed": [
+  "ruff B008 x11 (FastAPI File/Body/Depends argument-default idiom)",
+  "vulture family x2 (getaddrinfo wrapper signature params - SCAN-11 ruling)",
+  "eslint no-func-assign x1 tshLoad (SCAN-21-JS - intentional doc-load decorator)",
+  "eslint no-undef/no-unused-vars warning class (browser/cross-file globals + onclick handlers)"
+ ],
+ "health_at_scan": {
+  "bea": "ok v1.3.1",
+  "smoke": "40/40",
+  "today_spend_usd": 0.0,
+  "platform_ceiling_usd": 100.0,
+  "real_token_pct": 100.0,
+  "fea_integrity": "ok, 0 alerts; baseline refreshed to live v229/v167 (attended 04-05 Jul deploys confirmed: local tree matches live)"
+ }
 }

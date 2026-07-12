@@ -1,0 +1,48 @@
+{
+  "_comment": "DEMAND-LOOP-1 realness filter config, read live by demand_loop.py (mtime-cached, fail-safe). 'enabled' is the ONE flip that lets the loop ACT (open tickets / later send invites). It stays false until David flips it, naturally when RM-5 outreach un-pauses. A missing/broken/empty file falls back to safe defaults with enabled=false, so it can only ever DISABLE the loop. Tune thresholds/weights/floors here against the --report output; no code edit, no redeploy.",
+  "_dryrun": "While enabled=false the filter still SCORES every miss so `python3 demand_loop.py --report` shows exactly what WOULD open a ticket — you see the loop's real volume before a single email is sent.",
+  "enabled": false,
+  "score_threshold": 5,
+  "require_miss": true,
+  "repeat_window_hours": 72,
+  "currency": "ZAR",
+  "default_price_floor": 500,
+  "weights": {
+    "tokens_2": 2,
+    "tokens_3": 3,
+    "tokens_4plus": 4,
+    "has_year": 2,
+    "model_code": 2,
+    "known_brand": 2,
+    "high_value_category": 1,
+    "repeat_each": 2,
+    "repeat_cap": 3,
+    "depth_each": 1,
+    "depth_cap": 2
+  },
+  "high_value_categories": ["cars", "property", "watches", "jewellery", "collectables", "art"],
+  "category_price_floors": {
+    "cars": 20000,
+    "property": 150000,
+    "property_rental": 3000,
+    "watches": 3000,
+    "jewellery": 2000,
+    "art": 1500,
+    "collectables": 250,
+    "electronics": 800,
+    "furniture": 800,
+    "appliances": 600,
+    "local_market": 150,
+    "services": 0,
+    "tutors": 0,
+    "other": 500
+  },
+  "known_brands": [
+    "bmw", "audi", "mercedes", "merc", "land rover", "landrover", "toyota",
+    "vw", "volkswagen", "porsche", "ferrari", "lamborghini", "jaguar", "lexus",
+    "tesla", "nissan", "ford", "mazda", "hyundai", "kia", "volvo", "isuzu",
+    "mitsubishi", "subaru", "rolex", "omega", "tag heuer", "tudor", "cartier",
+    "patek", "audemars", "seiko", "breitling", "pokemon", "charizard",
+    "krugerrand", "magic the gathering", "mtg", "lego"
+  ]
+}

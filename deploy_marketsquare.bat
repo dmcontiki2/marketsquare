@@ -29,6 +29,21 @@ echo  ============================================================
 echo.
 
 :: ── Pre-flight: check all three files exist ───────────────
+:: -- [0b] PRE-DEPLOY CHANGE SCAN (monitoring, added 9 Jul 2026) ----------------
+:: Detective control for the multi-session concurrency gap: reports what is about
+:: to go live + flags files another session may have changed since; logs every run
+:: to deploy_audit.log. NON-FATAL BY DESIGN (same rule as the Step 7 auto-commit):
+:: default warn mode never aborts. Set PREDEPLOY_MODE=strict to ABORT on a torn file.
+echo  [0b] Pre-deploy change scan (monitoring)...
+python "%PROJECT%\predeploy_check.py" || py "%PROJECT%\predeploy_check.py"
+set SCANRC=%errorlevel%
+if /I "%PREDEPLOY_MODE%"=="strict" if not "%SCANRC%"=="0" (
+    echo  ABORT: pre-deploy scan flagged a dangerous change ^(strict mode^). See deploy_audit.log + DEPLOY_REVIEW flag.
+    pause
+    exit /b 1
+)
+echo.
+
 echo  Checking local files...
 if not exist "%PROJECT%\marketsquare.html" (
     echo  ERROR: marketsquare.html not found in %PROJECT%
@@ -129,6 +144,7 @@ scp "%PROJECT%\marketsquare.html" %SERVER%:%REMOTE%/index.html
 REM legal pages (terms.html is GENERATED from eula_clean.html - regenerate before deploy if EULA changed)
 scp "%PROJECT%\privacy.html" %SERVER%:%REMOTE%/privacy.html
 scp "%PROJECT%\terms.html" %SERVER%:%REMOTE%/terms.html
+scp "%PROJECT%\support.html" %SERVER%:%REMOTE%/support.html
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for buyer app. Check SSH connection.
     pause
@@ -211,15 +227,15 @@ if %errorlevel% neq 0 (
 )
 
 echo  [3f] Deploying feature videos - the how-to set the app plays...
-ssh %SERVER% "mkdir -p %REMOTE%/static/videos"
+:: mkdir removed 5 Jul - dir exists and serves; the bare ssh line wedged a run for 7+ min
 scp "%PROJECT%\videos\*.mp4" %SERVER%:%REMOTE%/static/videos/
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for videos. Check SSH connection.
     pause
     exit /b 1
 )
-ssh %SERVER% "chmod 755 %REMOTE%/static/videos && chmod 644 %REMOTE%/static/videos/*.mp4"
-ssh %SERVER% "o=$(md5sum %REMOTE%/static/videos/expedition-dossier-howto.mp4 | cut -d\" \" -f1); s=$(curl -s https://trustsquare.co/static/videos/expedition-dossier-howto.mp4?vchk=$RANDOM | md5sum | cut -d\" \" -f1); if [ \"$o\" = \"$s\" ]; then echo \"   [OK] videos: served bytes match origin - CDN fresh\"; else echo \"   [FAIL] videos: served differs from origin - CDN stale or wrong path\"; fi"
+ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %SERVER% "mkdir -p %REMOTE%/static/videos && chmod 755 %REMOTE%/static/videos && chmod 644 %REMOTE%/static/videos/*.mp4"
+ssh -n %SERVER% "o=$(md5sum %REMOTE%/static/videos/expedition-dossier-howto.mp4 | cut -d\" \" -f1); s=$(curl -s --max-time 25 https://trustsquare.co/static/videos/expedition-dossier-howto.mp4?vchk=$RANDOM | md5sum | cut -d\" \" -f1); if [ \"$o\" = \"$s\" ]; then echo \"   [OK] videos: served bytes match origin - CDN fresh\"; else echo \"   [FAIL] videos: served differs from origin - CDN stale or wrong path\"; fi"
 echo  Done.
 
 :: demo_sellers.json is intentionally SERVER-MANAGED - the single source of truth lives
@@ -295,6 +311,16 @@ echo  Done.
 echo.
 
 :: ── Step 4: Deploy BEA + restart ──────────────────────────
+echo  [3g] Ensuring SEARCH-AI env drop-in (idempotent)...
+ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %SERVER% "mkdir -p /etc/systemd/system/marketsquare.service.d && printf '[Service]\nEnvironment=SEARCH_AI_ENABLED=1\nEnvironment=SEARCH_AI_DRYRUN=0\nEnvironment=SEARCH_AI_DAILY_USD=1.0\n' > /etc/systemd/system/marketsquare.service.d/search-ai.conf && systemctl daemon-reload && echo SEARCH-AI-ENV-OK"
+echo  Done.
+echo.
+
+echo  [3h] Demand-loop flip: dry-run ON, import RM-5 pool (idempotent)...
+ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %SERVER% "mkdir -p /etc/systemd/system/marketsquare.service.d && printf '[Service]\nEnvironment=DEMAND_LOOP_ENABLED=1\nEnvironment=DEMAND_LOOP_DRYRUN=1\nEnvironment=DEMAND_RM5_DB=/var/www/citylauncher/data/prospects.db\nEnvironment=DEMAND_FROM_EMAIL=TrustSquare <hello@mail.trustsquare.co>\nEnvironment=DEMAND_SWEEP_ON_BOOT=1\n' > /etc/systemd/system/marketsquare.service.d/demand.conf && systemctl daemon-reload && echo DEMAND-ENV-OK"
+echo  Done.
+echo.
+
 echo  [4/6] Deploying BEA backend (bea_main.py -^> main.py)...
 scp "%PROJECT%\bea_main.py" %SERVER%:%REMOTE%/main.py
 if %errorlevel% neq 0 (
@@ -303,7 +329,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 echo  SCP done. Restarting BEA service...
-ssh %SERVER% "systemctl restart marketsquare"
+ssh -n %SERVER% "systemctl restart marketsquare"
 if %errorlevel% neq 0 (
     echo  ERROR: BEA service restart failed. Check server with:
     echo    ssh root@178.104.73.239 "journalctl -u marketsquare -n 30"
@@ -317,7 +343,7 @@ echo.
 
 :: ── Step 5: Reload nginx ──────────────────────────────────
 echo  [5/6] Reloading nginx...
-ssh %SERVER% "nginx -s reload"
+ssh -n %SERVER% "nginx -s reload"
 if %errorlevel% neq 0 (
     echo  WARNING: nginx reload may have failed. Check server manually.
 ) else (
@@ -327,27 +353,29 @@ echo.
 
 :: ── Step 5b: Purge Cloudflare edge cache ──
 echo  [5b] Purging Cloudflare cache...
-ssh %SERVER% "curl -sf -m 20 -X POST http://localhost:8000/admin/purge-cache >nul 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+ssh -n %SERVER% "curl -sf -m 20 -X POST http://localhost:8000/admin/purge-cache >nul 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
 echo.
 
 :: ── Step 6: Verify deploy on server ──────────────────────
 echo  [6/6] Verifying deploy on server...
+ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %SERVER% "journalctl -u marketsquare --since '90 seconds ago' --no-pager | grep 'DEMAND' | tail -3"
+
 echo.
 
-ssh %SERVER% "grep -q 'listings/mine' %REMOTE%/main.py && echo   [OK] BEA: new routes confirmed in main.py || echo   [FAIL] BEA: old main.py still on server - SCP may have failed"
+ssh -n %SERVER% "grep -q 'listings/mine' %REMOTE%/main.py && echo   [OK] BEA: new routes confirmed in main.py || echo   [FAIL] BEA: old main.py still on server - SCP may have failed"
 
-ssh %SERVER% "grep -q 'tuppence/balance' %REMOTE%/main.py && echo   [OK] BEA: tuppence/balance endpoint confirmed || echo   [FAIL] BEA: missing endpoint - redeploy needed"
-ssh %SERVER% "grep -q 'requires_paid_feed' %REMOTE%/ai_service_tiers.py && echo   [OK] BEA: S3 paid-feed gate present || echo   [FAIL] BEA: ai_service_tiers.py stale - redeploy needed"
-ssh %SERVER% "grep -q 'grant_expiry' %REMOTE%/launch_redemption.py && echo   [OK] BEA: non-rolling grant sweep present || echo   [FAIL] BEA: launch_redemption.py stale - redeploy needed"
+ssh -n %SERVER% "grep -q 'tuppence/balance' %REMOTE%/main.py && echo   [OK] BEA: tuppence/balance endpoint confirmed || echo   [FAIL] BEA: missing endpoint - redeploy needed"
+ssh -n %SERVER% "grep -q 'requires_paid_feed' %REMOTE%/ai_service_tiers.py && echo   [OK] BEA: S3 paid-feed gate present || echo   [FAIL] BEA: ai_service_tiers.py stale - redeploy needed"
+ssh -n %SERVER% "grep -q 'grant_expiry' %REMOTE%/launch_redemption.py && echo   [OK] BEA: non-rolling grant sweep present || echo   [FAIL] BEA: launch_redemption.py stale - redeploy needed"
 
-ssh %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishlist feed endpoints confirmed || echo   [FAIL] BEA: wishlist endpoints missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'wishlist/feed' %REMOTE%/main.py && echo   [OK] BEA: wishlist feed endpoints confirmed || echo   [FAIL] BEA: wishlist endpoints missing - redeploy needed"
 
-ssh %SERVER% "systemctl is-active marketsquare >nul 2>&1 && echo   [OK] BEA service is active || echo   [FAIL] BEA service is NOT active - check journalctl"
+ssh -n %SERVER% "systemctl is-active marketsquare >nul 2>&1 && echo   [OK] BEA service is active || echo   [FAIL] BEA service is NOT active - check journalctl"
 
-ssh %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && test -f %REMOTE%/ai_service_tiers.py && test -f %REMOTE%/launch_redemption.py && echo   [OK] BEA: backend modules auth,database,storage,payments,ai_service_tiers,launch_redemption present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
+ssh -n %SERVER% "test -f %REMOTE%/auth.py && test -f %REMOTE%/database.py && test -f %REMOTE%/storage.py && test -f %REMOTE%/payments.py && test -f %REMOTE%/ai_service_tiers.py && test -f %REMOTE%/launch_redemption.py && echo   [OK] BEA: backend modules auth,database,storage,payments,ai_service_tiers,launch_redemption present || echo   [FAIL] BEA: one or more backend modules missing - redeploy needed"
 
-ssh %SERVER% "test -f %REMOTE%/demo_listings.json && echo   [OK] Demo: demo_listings.json present on server || echo   [FAIL] Demo: demo_listings.json missing - redeploy needed"
-ssh %SERVER% "test -f %REMOTE%/demo_sellers.json && echo   [OK] Demo: demo_sellers.json present on server - server-managed single source || echo   [WARN] Demo: demo_sellers.json MISSING on server - this is the ONLY copy, /demo-sellers will be empty"
+ssh -n %SERVER% "test -f %REMOTE%/demo_listings.json && echo   [OK] Demo: demo_listings.json present on server || echo   [FAIL] Demo: demo_listings.json missing - redeploy needed"
+ssh -n %SERVER% "test -f %REMOTE%/demo_sellers.json && echo   [OK] Demo: demo_sellers.json present on server - server-managed single source || echo   [WARN] Demo: demo_sellers.json MISSING on server - this is the ONLY copy, /demo-sellers will be empty"
 
 :: -- Admin freshness check (21 Jun): hash-compare the deployed admin.html to the LOCAL
 :: -- build instead of grepping for a feature marker. The old check grepped admin.html
@@ -357,34 +385,34 @@ ssh %SERVER% "test -f %REMOTE%/demo_sellers.json && echo   [OK] Demo: demo_selle
 :: -- and never goes stale. (Mirrors the 6b live-ms.js hash check.)
 set ADMIN_MD5=HASH_CAPTURE_FAILED
 for /f "usebackq delims=" %%H in (`powershell -NoProfile -Command "(Get-FileHash -Algorithm MD5 -LiteralPath '%PROJECT%\marketsquare_admin.html').Hash.ToLower()"`) do set ADMIN_MD5=%%H
-ssh %SERVER% "md5sum %REMOTE%/admin.html | grep -q '%ADMIN_MD5%' && echo   [OK] Admin: live admin.html matches local build || echo   [FAIL] Admin: deployed admin.html does NOT match local build - redeploy needed"
+ssh -n %SERVER% "md5sum %REMOTE%/admin.html | grep -q '%ADMIN_MD5%' && echo   [OK] Admin: live admin.html matches local build || echo   [FAIL] Admin: deployed admin.html does NOT match local build - redeploy needed"
 
-ssh %SERVER% "grep -q 'view-showcase' %REMOTE%/admin.html && echo   [OK] Admin: showcase tab confirmed || echo   [FAIL] Admin: showcase tab missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'view-showcase' %REMOTE%/admin.html && echo   [OK] Admin: showcase tab confirmed || echo   [FAIL] Admin: showcase tab missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'screen-edit-listing' %REMOTE%/index.html && echo   [OK] Buyer app: new index.html confirmed on server || echo   [FAIL] Buyer app: old index.html still on server"
+ssh -n %SERVER% "grep -q 'screen-edit-listing' %REMOTE%/index.html && echo   [OK] Buyer app: new index.html confirmed on server || echo   [FAIL] Buyer app: old index.html still on server"
 
-ssh %SERVER% "grep -q 'wlBootToken\|wishlist-feed' %REMOTE%/index.html && echo   [OK] Buyer app: wishlist feed UI confirmed || echo   [FAIL] Buyer app: wishlist UI missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'wlBootToken\|wishlist-feed' %REMOTE%/index.html && echo   [OK] Buyer app: wishlist feed UI confirmed || echo   [FAIL] Buyer app: wishlist UI missing - redeploy needed"
 
-ssh %SERVER% "test -f %REMOTE%/service-worker.js && echo   [OK] Service worker confirmed on server || echo   [FAIL] service-worker.js missing - redeploy needed"
+ssh -n %SERVER% "test -f %REMOTE%/service-worker.js && echo   [OK] Service worker confirmed on server || echo   [FAIL] service-worker.js missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'local-market/listings' %REMOTE%/main.py && echo   [OK] BEA: Local Market endpoints confirmed || echo   [FAIL] BEA: Local Market endpoints missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'local-market/listings' %REMOTE%/main.py && echo   [OK] BEA: Local Market endpoints confirmed || echo   [FAIL] BEA: Local Market endpoints missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'trust-score/breakdown' %REMOTE%/main.py && echo   [OK] BEA: Trust Score Hub endpoint confirmed || echo   [FAIL] BEA: Trust Score Hub endpoint missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'trust-score/breakdown' %REMOTE%/main.py && echo   [OK] BEA: Trust Score Hub endpoint confirmed || echo   [FAIL] BEA: Trust Score Hub endpoint missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'screen-local-market' %REMOTE%/index.html && echo   [OK] Buyer app: Local Market page confirmed || echo   [FAIL] Buyer app: Local Market page missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'screen-local-market' %REMOTE%/index.html && echo   [OK] Buyer app: Local Market page confirmed || echo   [FAIL] Buyer app: Local Market page missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: Local Market form + EULA modal confirmed || echo   [FAIL] Admin: Local Market form missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'lm-eula-modal' %REMOTE%/admin.html && echo   [OK] Admin: Local Market form + EULA modal confirmed || echo   [FAIL] Admin: Local Market form missing - redeploy needed"
 
-ssh %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
+ssh -n %SERVER% "grep -q 'tsh-panel' %REMOTE%/admin.html && echo   [OK] Admin: Trust Score Hub UI confirmed || echo   [FAIL] Admin: Trust Score Hub missing - redeploy needed"
 
-ssh %SERVER% "for i in 1 2 3 4 5; do curl -s http://localhost:8000/health | grep -qE 'status.*ok' && { echo '   [OK] BEA /health reports status ok'; break; }; [ $i -eq 5 ] && echo '   [FAIL] BEA /health not ok - check service restart'; sleep 2; done"
+ssh -n %SERVER% "for i in 1 2 3 4 5; do curl -s http://localhost:8000/health | grep -qE 'status.*ok' && { echo '   [OK] BEA /health reports status ok'; break; }; [ $i -eq 5 ] && echo '   [FAIL] BEA /health not ok - check service restart'; sleep 2; done"
 
-ssh %SERVER% "test -f %REMOTE%/ai_provider.py && echo   [OK] BEA: ai_provider.py AI-swap-seam present || echo   [FAIL] BEA: ai_provider.py MISSING - AI_ACTIVE swap falls back to Anthropic"
+ssh -n %SERVER% "test -f %REMOTE%/ai_provider.py && echo   [OK] BEA: ai_provider.py AI-swap-seam present || echo   [FAIL] BEA: ai_provider.py MISSING - AI_ACTIVE swap falls back to Anthropic"
 
-ssh %SERVER% "grep -q 'ai/example/{function_id}' %REMOTE%/main.py && echo   [OK] BEA: /ai/example route present - free example buttons fixed || echo   [FAIL] BEA: /ai/example route MISSING - example buttons still broken"
+ssh -n %SERVER% "grep -q 'ai/example/{function_id}' %REMOTE%/main.py && echo   [OK] BEA: /ai/example route present - free example buttons fixed || echo   [FAIL] BEA: /ai/example route MISSING - example buttons still broken"
 
-ssh %SERVER% "test -f %REMOTE%/static/ms.js && echo   [OK] static/ms.js present on server || echo   [FAIL] static/ms.js missing - redeploy needed"
-ssh %SERVER% "grep -oE 'ms\.js\?v=[0-9]+' %REMOTE%/index.html | head -1 | sed 's/^/   [INFO] served buyer app references /'"
+ssh -n %SERVER% "test -f %REMOTE%/static/ms.js && echo   [OK] static/ms.js present on server || echo   [FAIL] static/ms.js missing - redeploy needed"
+ssh -n %SERVER% "grep -oE 'ms\.js\?v=[0-9]+' %REMOTE%/index.html | head -1 | sed 's/^/   [INFO] served buyer app references /'"
 
 :: -- Step 6b: CDN content check - catch stale Cloudflare BEFORE the browser does
 echo.

@@ -1,0 +1,98 @@
+============================================================ 
+ READ-ONLY INSPECT: why /support is 401 + public surfaces 
+============================================================ 
+323-    }
+324-
+325-
+326:    location = /support {
+327-        include snippets/internal_auth.conf;
+328-        root /var/www/marketsquare;
+329:        try_files /support.html =404;
+330-    }
+331-
+332:    location = /support.html {
+333-        include snippets/internal_auth.conf;
+334-        root /var/www/marketsquare;
+335:        try_files /support.html =404;
+336-    }
+337-
+338-    location = /command.html {
+339-        include snippets/internal_auth.conf;
+340-        root /var/www/marketsquare;
+341-        add_header Cache-Control 'no-store, no-cache, must-revalidate';
+--
+343-    }
+344-    # ── CityLauncher dashboard ───────────────────────
+345-    location = /ai/test {
+346:        auth_basic "AdvertAgent dev";
+347:        auth_basic_user_file /etc/nginx/.htpasswd_orch;
+348-        proxy_pass http://127.0.0.1:8002;
+349-        proxy_set_header Host $host;
+350-        proxy_read_timeout 900;
+351-    }
+352-
+353-    location /ai/ {
+--
+410-    location = /orchestrator {
+411-        root /var/www/marketsquare;
+412-        try_files /orchestrator.html =404;
+413:        auth_basic "TrustSquare Orchestrator";
+414:        auth_basic_user_file /etc/nginx/.htpasswd_orch;
+415-    }
+416-    location = /orchestrator.html {
+417-        root /var/www/marketsquare;
+418:        auth_basic "TrustSquare Orchestrator";
+419:        auth_basic_user_file /etc/nginx/.htpasswd_orch;
+420-        add_header Cache-Control "no-store, no-cache, must-revalidate";
+421-        expires -1;
+422-    }
+423-    location = /orchestrator/approve {
+424:        auth_basic "TrustSquare Orchestrator";
+425:        auth_basic_user_file /etc/nginx/.htpasswd_orch;
+426-        proxy_pass http://127.0.0.1:8000;
+427-        proxy_set_header Host $host;
+428-        proxy_set_header X-Real-IP $remote_addr;
+429-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+430-    }
+431-
+432-    location /orchestrator/ {
+433-        root /var/www/marketsquare;
+434:        auth_basic "TrustSquare Orchestrator";
+435:        auth_basic_user_file /etc/nginx/.htpasswd_orch;
+436-        add_header Cache-Control "no-store";
+437-        expires -1;
+438-    }
+439-
+440-    # ── Auctions & Offers concept (Basic Auth — dedicated secret) ──
+441-    location = /auctions {
+442-        root /var/www/marketsquare;
+443-        try_files /auctions.html =404;
+444:        auth_basic "TrustSquare Auctions (secret)";
+445:        auth_basic_user_file /etc/nginx/.htpasswd_auctions;
+446-    }
+447-    location = /auctions.html {
+448-        root /var/www/marketsquare;
+449:        auth_basic "TrustSquare Auctions (secret)";
+450:        auth_basic_user_file /etc/nginx/.htpasswd_auctions;
+451-        add_header Cache-Control "no-store, no-cache, must-revalidate";
+452-        expires -1;
+453-    }
+454-    location / {
+455-        proxy_pass http://127.0.0.1:8000;
+456-        proxy_set_header Host $host;
+--
+490-satisfy any;
+491-allow 127.0.0.1;
+492-deny all;
+493:auth_basic "TrustSquare Orchestrator";
+494:auth_basic_user_file /etc/nginx/.htpasswd_orch;
+495-add_header Cache-Control "no-store" always;
+496-
+497-# configuration file /etc/letsencrypt/options-ssl-nginx.conf:
+498-# This file contains important security parameters. If you modify this file
+499-# manually, Certbot will be unable to automatically provide future security
+500-# updates. Instead, Certbot will print and log an error message with a path to
+-rw-r--r-- 1 msdeploy msdeploy 25369 May 26 03:54 /var/www/marketsquare/support.html
+-rw-r--r-- 1 msdeploy msdeploy 25369 May 26 03:54 /var/www/marketsquare/support.html
+direct /support: 404
+direct /terms: 404

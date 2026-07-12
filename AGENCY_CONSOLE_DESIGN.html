@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustSquare — Agency Console (design)</title>
+<style>
+:root{--navy:#0c1a2e;--navy2:#16294a;--gold:#C8873A;--green:#16a34a;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;--bg:#f4f6fa;--surf:#fff;}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+h1,h2,h3,.syne{font-family:'Syne',Inter,sans-serif;font-weight:800;letter-spacing:-.01em}
+.wrap{max-width:1080px;margin:0 auto;padding:26px 22px 60px}
+.top{background:var(--navy);color:#fff;border-radius:16px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.brandrow{display:flex;align-items:center;gap:14px}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px}.logo span{color:var(--gold)}
+.agname{font-size:19px;font-weight:800;font-family:'Syne',sans-serif}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700}
+.planpill{background:var(--gold);color:#1b1205;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.stat{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat .n{font-size:24px;font-weight:800;font-family:'Syne',sans-serif;color:var(--navy)}
+.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 4px}.sub{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5}
+.keyrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.key{font-family:ui-monospace,Menlo,monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:9px 12px;font-size:13px;letter-spacing:.5px}
+.btn{border:none;border-radius:22px;padding:9px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.btn.navy{background:var(--navy);color:#fff}.btn.gold{background:var(--gold);color:#1b1205}.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid #f1f3f7;vertical-align:middle}
+.who{font-weight:700}.eml{font-size:12px;color:var(--muted)}
+.cap{display:inline-flex;align-items:center;gap:8px}
+.bar{width:78px;height:7px;background:#eef1f6;border-radius:6px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--gold)}
+.ts{display:inline-block;min-width:34px;text-align:center;font-weight:800;border-radius:7px;padding:3px 8px;font-size:12.5px}
+.ts.hi{background:rgba(22,163,74,.12);color:#166534}.ts.mid{background:rgba(37,99,235,.12);color:#1e40af}.ts.low{background:#f3f4f6;color:#6b7280}
+.pill{font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px}
+.pill.g{background:rgba(22,163,74,.12);color:#166534}.pill.a{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+.note{background:#f0f4ff;border:1px solid #dbe4ff;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6}
+.note b{color:var(--navy)}
+.decisions{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;margin-top:6px}
+.decisions h3{margin:0 0 8px;font-size:14px;color:#92400e}
+.opt{font-size:13px;line-height:1.6;margin:0 0 6px}
+.plancard{border:1.5px solid var(--line);border-radius:14px;padding:18px 20px;max-width:340px}
+.plancard .price{font-size:26px;font-weight:800;font-family:'Syne',sans-serif;color:var(--navy)}
+.strike{color:#b91c1c;text-decoration:line-through;font-size:13px}
+small{color:var(--muted)}
+</style></head>
+<body><div class="wrap">
+
+<div class="top">
+  <div class="brandrow">
+    <div class="logo">Trust<span>Square</span></div>
+    <div>
+      <div class="agname">Kronberg Estates</div>
+      <div style="display:flex;gap:8px;margin-top:5px"><span class="badge">✓ Verified Agency</span><span class="planpill">TEAM · by application</span></div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:12px;opacity:.7">Agency admin</div>
+    <div style="font-weight:700">david@kronberg.co.za</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="n">6 / 8</div><div class="l">Agent seats used</div></div>
+  <div class="stat"><div class="n">71 / 90</div><div class="l">Listings live (pooled)</div></div>
+  <div class="stat"><div class="n">23</div><div class="l">Intros to agents (30d)</div></div>
+  <div class="stat"><div class="n">✓</div><div class="l">Agency verified</div></div>
+</div>
+
+<div class="card">
+  <h2>Import your current adverts</h2>
+  <p class="sub">Pipe your existing portfolio straight in via API — no manual re-entry. Each advert is matched to an agent by email and lands as a draft under that agent (counting against their cap). Supports JSON / CSV feed and common property-portal exports.</p>
+  <div class="keyrow">
+    <span class="key">tsq_agency_live_••••••••••7f3a</span>
+    <button class="btn ghost">Copy</button><button class="btn ghost">Rotate key</button>
+    <button class="btn gold">Connect feed &amp; import →</button>
+  </div>
+  <div style="font-size:12px;color:var(--muted);margin-top:10px">POST → <code>/agency/kronberg/import</code> · last import: 34 adverts mapped to 5 agents · 2 unmatched (no agent email)</div>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <h2 style="margin:0">Agents</h2>
+    <button class="btn navy">+ Invite agent (email link)</button>
+  </div>
+  <p class="sub">Each agent manages their own listings, holds their own Trust Score, and receives their own buyer intros. You set each agent's listing cap so the team stays selective. Invites use a one-tap magic link — no passwords.</p>
+  <table>
+    <thead><tr><th>Agent</th><th>Listings (cap)</th><th>Trust score</th><th>Intros 30d</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr><td><div class="who">Maroushka N.</div><div class="eml">maroushka@kronberg.co.za</div></td>
+        <td><span class="cap"><span class="bar"><i style="width:80%"></i></span>12 / 15</span></td>
+        <td><span class="ts hi">78</span></td><td>9</td><td><span class="pill g">Active</span></td>
+        <td><button class="btn ghost">Edit cap</button></td></tr>
+      <tr><td><div class="who">David jnr</div><div class="eml">djnr@kronberg.co.za</div></td>
+        <td><span class="cap"><span class="bar"><i style="width:47%"></i></span>7 / 15</span></td>
+        <td><span class="ts mid">55</span></td><td>4</td><td><span class="pill g">Active</span></td>
+        <td><button class="btn ghost">Edit cap</button></td></tr>
+      <tr><td><div class="who">Thabo M.</div><div class="eml">thabo@kronberg.co.za</div></td>
+        <td><span class="cap"><span class="bar"><i style="width:100%"></i></span>15 / 15</span></td>
+        <td><span class="ts hi">82</span></td><td>7</td><td><span class="pill g">Active · full</span></td>
+        <td><button class="btn ghost">Edit cap</button></td></tr>
+      <tr><td><div class="who">Aisha K.</div><div class="eml">aisha@kronberg.co.za</div></td>
+        <td><span class="cap"><span class="bar"><i style="width:20%"></i></span>3 / 15</span></td>
+        <td><span class="ts low">40</span></td><td>1</td><td><span class="pill a">Invited · not signed in</span></td>
+        <td><button class="btn ghost">Resend link</button></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note">
+  <b>Who benefits (your rule):</b> the agency is the umbrella and gets the verified brand + roll-up, but the <b>agent is the first-class seller</b> — the buyer introduction goes to the agent who owns the listing, the Trust Score is the agent's own and travels with them, and the agent uploads / edits / removes their own properties. TrustSquare shows "Agent at Kronberg Estates" on each card. Nothing routes solely to the agency.
+</div>
+
+<div class="decisions">
+  <h3>3 calls that are yours (they shape the build)</h3>
+  <p class="opt"><b>1 · The word instead of "Free."</b> Recommend <b>"Team · by application"</b> (or "Custom"). It reads vetted/tailored and stops it colliding with the $0 Free tier.</p>
+  <p class="opt"><b>2 · Billing model.</b> (a) <b>No monthly fee — earn on intros</b> (agents keep 100%, TrustSquare monetises the introduction); or (b) <b>per-seat</b> (e.g. R90/agent/mo incl. their listing cap); or (c) <b>hybrid</b> (small verification/platform fee + earn on intros). This is the "not sole beneficiary" lever.</p>
+  <p class="opt"><b>3 · Agency-level Trust.</b> Keep each agent's own score as primary (recommended) and add a "Verified Agency" badge — vs a single blended agency score. Recommend the former.</p>
+</div>
+
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:16px">
+  <div class="plancard">
+    <div style="font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--gold)">AGENCY — TEAM</div>
+    <div class="price">by application <small style="font-weight:600">· <span class="strike">Free</span></small></div>
+    <div style="font-size:12px;color:var(--muted);margin:2px 0 12px">Estate agencies · car dealers · schools · travel &amp; tour · collector shops</div>
+    <div style="font-size:13px;line-height:1.9">
+      ✓ Multiple agents under one verified umbrella<br>
+      ✓ Fixed listing cap per agent — stay selective<br>
+      ✓ Each agent: own Trust Score &amp; own intros<br>
+      ✓ Bulk-import your current adverts via API<br>
+      ✓ Commission-free — we earn on introductions
+    </div>
+    <button class="btn navy" style="width:100%;margin-top:14px">Apply as an agency</button>
+  </div>
+  <div style="flex:1;min-width:240px;font-size:12.5px;color:var(--muted);line-height:1.7">
+    <b style="color:var(--ink)">What already exists in your code</b> (reused, low build): per-agent listings, per-agent Trust Score, per-agent intro routing, per-user listing cap (<code>slot_limit</code>), magic-link onboarding.<br><br>
+    <b style="color:var(--ink)">What's new to build:</b> the agency entity + agent membership, the admin console (this screen), per-agent cap allocation from a pooled allowance, and the API-key import endpoint.
+  </div>
+</div>
+
+<p style="text-align:center;color:#9aa3b2;font-size:11px;margin-top:30px">TrustSquare · Agency Console — design mockup, not live. Example data.</p>
+</div></body></html>

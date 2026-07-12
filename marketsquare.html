@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=165">
+<link rel="stylesheet" href="/static/ms.css?v=208">
   <!-- TrustSquare brand -->
   <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
@@ -254,18 +254,42 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     setTimeout(function(){ document.getElementById('gate-new-pin').focus(); }, 100);
   }
 
+  function _verifyReviewToken(){
+    var rt = sessionStorage.getItem('ms_review_token');
+    if(!rt){ showGate(); return; }
+    fetch(BEA + '/review/verify', {headers:{'X-Review-Token': rt}})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_review_token'); showGate(); } })
+      .catch(function(){ showGate(); });   /* fail-closed */
+  }
   var stored = sessionStorage.getItem('ms_admin_token');
   if(stored){
     fetch(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}})
-      .then(function(r){ return r.json(); })
-      .then(function(d){ if(d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); showGate(); }})
-      .catch(function(){ showGate(); });
-  } else { showGate(); }
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); _verifyReviewToken(); } })
+      .catch(function(){ showGate(); });   /* fail-closed */
+  } else { _verifyReviewToken(); } /* pre-launch gate RE-LOCKED — SERVER-validated review code or admin login required */
 
   window.adminGateSubmit = function(){
     var pw = inp.value.trim();
     if(!pw) return;
     err.style.display = 'none';
+    // View-only reviewer code first — validated SERVER-SIDE at /review/login; the code is
+    // never stored in this page. Success stores only an opaque scoped token that grants the
+    // browse view ONLY — never an admin token, identity, or superuser/ops access.
+    fetch(BEA + '/review/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({code: pw})
+    })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(d && d.token){ sessionStorage.setItem('ms_review_token', d.token); hideGate(); return; }
+      _adminLogin(pw);   /* not a reviewer code — fall through to team/master admin login */
+    })
+    .catch(function(){ _adminLogin(pw); });
+  };
+
+  function _adminLogin(pw){
     fetch(BEA + '/admin/login', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({password: pw})
@@ -281,7 +305,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       else { showLoginError(d.detail || 'Incorrect password or PIN.'); }
     })
     .catch(function(){ showLoginError('Connection error. Please try again.'); });
-  };
+  }
 
   window.adminGateChangePIN = function(){
     var newPin  = document.getElementById('gate-new-pin').value.trim();
@@ -344,7 +368,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <button id="dmt-live" onclick="devSetMode(false)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:rgba(255,255,255,.45);">LIVE</button>
       </div>
       <!-- END TODO -->
-      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div>
+      <div class="city-badge" id="home-city-badge" onclick="handleCityBadgeClick()"><div class="badge-geo"><span class="cdot"></span>South Africa</div><div class="badge-loc">Pretoria</div></div><button id="hdr-auth-btn" onclick="headerAuthClick()" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign in</button>
     </div>
     <div class="hero-body"></div>
   </div>
@@ -503,6 +527,11 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="chip" onclick="setFilter(this,'Adventures')">🌿 Adventures</div>
     <div class="chip" onclick="setFilter(this,'Collectors')">🏺 Collectors</div>
     <div class="chip" onclick="setFilter(this,'Cars')">🚗 Cars</div>
+  </div>
+
+  <!-- SEARCH-HMI-1 phase A: typed search across every category (server FTS via q=) -->
+  <div class="lm-search" style="margin-top:2px;">
+    <input type="text" id="ms-search-input" placeholder="Search — e.g. BMW 1996, rental under R20 000, chess…" oninput="msDebouncedSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();msEnterSearch(this);}">
   </div>
 
   <!-- Context-specific filter pills (shown when category selected) -->
@@ -1455,12 +1484,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- Agency -->
     <div class="plan-card" id="plan-card-agency">
       <div class="plan-name">Agency</div>
-      <div class="plan-price">Free<span class="plan-period"> · verified</span></div>
+      <div class="plan-price">Team<span class="plan-period"> · by application</span></div>
       <div class="plan-zar">Estate agencies · car dealers · schools &amp; varsities · travel &amp; tour · collector shops</div>
       <div class="plan-features">
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Listing allowance set on review of your agency size — grows with Trust Score</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Buy Tuppence &amp; AI only as you need</div>
-        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>No subscription — we earn on introductions, not access</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multiple agents under one verified umbrella</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Free seat = Starter tools (10 listings) · $5 seat = Pro AI suite (20)</div>
+        <div class="plan-feat yes"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Each agent keeps their own Trust Score, intros &amp; bulk-import via API</div>
       </div>
       <button class="plan-btn secondary" id="plan-btn-agency" onclick="setPlan('agency','Agency')">Apply as an agency</button>
     </div>
@@ -1513,6 +1542,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   </div>
 
   <div id="adv-results-count" style="font-size:12px;color:#6b7280;padding:6px 16px 4px;"></div>
+  <div class="lm-search" style="margin-top:10px;">
+    <input type="text" id="adv-search-input" placeholder="Search everywhere - e.g. safari weekend, bmw 1996..." oninput="advSearchInput()" onkeydown="if(event.key===&quot;Enter&quot;){event.preventDefault();advSearchEnter(this);}">
+  </div>
+
   <div id="adv-grid" style="padding:8px 16px 100px;display:flex;flex-direction:column;gap:12px;min-height:200px;"></div>
 </div>
 
@@ -2578,6 +2611,30 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
 </div>
 
+<div id="screen-signin" class="screen">
+  <div style="max-width:420px;margin:0 auto;padding:52px 22px;">
+    <div style="text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--navy);margin-bottom:8px;">Trust<span style="color:#C8873A;">Square</span></div>
+    <h2 style="text-align:center;font-family:'Syne',sans-serif;font-size:18px;margin:6px 0 4px;">Sign in or create your account</h2>
+    <p style="text-align:center;color:var(--text-3);font-size:13px;margin:0 0 22px;line-height:1.5;">No password. We email you a one-tap sign-in link — the same box works whether you're new or returning.</p>
+    <input type="email" id="si-email" placeholder="you@email.com" autocomplete="email" inputmode="email"
+      style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:14px 15px;font-size:15px;font-family:'Inter',sans-serif;outline:none;"
+      onkeydown="if(event.key==='Enter')requestSignInLink('si-email','si-msg')">
+    <button onclick="requestSignInLink('si-email','si-msg')"
+      style="width:100%;box-sizing:border-box;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Email me a sign-in link</button>
+    <div id="si-msg" style="font-size:12.5px;margin-top:12px;display:none;text-align:center;line-height:1.5;"></div>
+    <div style="text-align:center;margin-top:24px;">
+      <a onclick="goTo('home')" style="color:var(--text-3);font-size:13px;cursor:pointer;">or just browse for now →</a>
+    </div>
+  </div>
+</div>
+
+<div id="screen-agency" class="screen">
+  <div style="padding:18px 14px 50px;max-width:920px;margin:0 auto;">
+    <button onclick="goTo('home')" style="background:none;border:none;color:var(--text-3);font-size:13px;cursor:pointer;margin-bottom:12px;padding:0;">&lsaquo; Back to home</button>
+    <div id="agency-body"></div>
+  </div>
+</div>
+
 <div id="screen-onboard" class="screen">
   <div class="ob-page">
     <div class="ob-hero">
@@ -3162,8 +3219,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
 <!-- DASHBOARD -->
 <div id="screen-dashboard" class="screen">
-  <div class="dash-hdr">
-    <h1>My Seller Hub</h1><p>Manage listings &amp; profile · Pretoria</p>
+  <div class="dash-hdr" style="position:relative;">
+    <h1>My Seller Hub</h1><p>Manage listings &amp; profile · Pretoria</p><button onclick="signOut()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;">Sign out</button>
     <div class="dash-stats">
       <div class="dstat"><div class="dstat-val" id="dash-active">0</div><div class="dstat-label">Active</div></div>
       <div class="dstat"><div class="dstat-val" id="dash-pending">0</div><div class="dstat-label">Pending</div></div>
@@ -3692,6 +3749,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
         <div id="ms-seller-signin-msg" style="font-size:12px;margin-top:6px;display:none;"></div>
       </div>
+      <div class="ms-card ms-seller-link" id="ms-ops-console-card" onclick="openAgencyConsole()" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:14px;font-weight:700;color:var(--navy);">Agency &amp; Operator console</div>
+          <span style="font-size:10px;background:#0c1a2e;color:#fff;border-radius:16px;padding:2px 8px;letter-spacing:.5px;">OPS</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Superuser only — switch orgs, estate or tour view, imports</div>
+      </div>
       <div class="ms-card ms-seller-link" id="ms-seller-hub-card" onclick="goTo('dashboard')" style="display:none;">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--navy);">My listings &amp; requests</div>
@@ -4056,7 +4120,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=226"></script>
+<script src="/static/ms.js?v=286"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

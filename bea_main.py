@@ -47,6 +47,27 @@ app.add_middleware(
 database.init_db()
 
 
+# CityLauncher scrapes AGENCY vocabulary ("Estate Agents", "Car Dealers", ...); the app
+# speaks 6 category names. This maps a scraped label to the app category the demand loop
+# matches on. Keyword-based so it survives new agency labels; None = leave unmatched.
+def _demand_norm_category(raw):
+    t = (raw or "").strip().lower()
+    if not t:
+        return None
+    _M = (("estate", "Property"), ("propert", "Property"), ("realt", "Property"), ("home", "Property"), ("letting", "Property"),
+          ("car ", "Cars"), ("cars", "Cars"), ("dealer", "Cars"), ("vehicle", "Cars"), ("auto", "Cars"), ("motor", "Cars"), ("bakkie", "Cars"),
+          ("tutor", "Tutors"), ("school", "Tutors"), ("universit", "Tutors"), ("educat", "Tutors"), ("college", "Tutors"), ("teach", "Tutors"), ("tuition", "Tutors"),
+          ("collect", "Collectors"), ("card", "Collectors"), ("hobby", "Collectors"), ("antique", "Collectors"), ("coin", "Collectors"), ("stamp", "Collectors"), ("memorabil", "Collectors"),
+          ("travel", "Adventures"), ("tour", "Adventures"), ("adventure", "Adventures"), ("safari", "Adventures"), ("lodge", "Adventures"), ("experience", "Adventures"), ("guide", "Adventures"),
+          ("service", "Services"), ("trade", "Services"), ("compan", "Services"), ("contractor", "Services"), ("plumb", "Services"), ("electric", "Services"), ("casual", "Services"), ("technical", "Services"))
+    for kw, cat in _M:
+        if kw in t:
+            return cat
+    if t.title() in {"Property","Cars","Tutors","Services","Collectors","Adventures"}:
+        return t.title()
+    return None
+
+
 def run_migrations(conn):
     """Add suburbs table and suburb column to listings if not present."""
     conn.execute("""
@@ -163,6 +184,54 @@ def run_migrations(conn):
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
 
+    # ── SEARCH ENGINE Step 1 (FILTER_ENGINE_DESIGN, built 6 Jul 2026) ─────────
+    # price_num: numeric mirror of the TEXT price for honest server-side filtering.
+    if "price_num" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN price_num REAL")
+    # Backfill any unparsed rows (idempotent, cheap at current scale).
+    try:
+        import re as _re_pm
+        _rows = conn.execute("SELECT id, price FROM listings WHERE price_num IS NULL AND price IS NOT NULL").fetchall()
+        for _r in _rows:
+            _c = _re_pm.sub(r"[^0-9.]", "", str(_r["price"]).replace(",", "").replace(" ", ""))
+            try:
+                _v = float(_c)
+                if _v > 0:
+                    conn.execute("UPDATE listings SET price_num=? WHERE id=?", (_v, _r["id"]))
+            except Exception:
+                pass
+    except Exception:
+        pass
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_price_num ON listings(price_num)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_trust ON listings(trust_score)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_cat_city ON listings(category, city)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_listings_make_year ON listings(make, vehicle_year)")
+    # FTS5: one text index across the fields a human types ("BMW 1996 E36").
+    conn.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS listings_fts USING fts5(
+        title, description, make, model, variant, subject, service_type, prop_type,
+        content='listings', content_rowid='rowid')""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS listings_fts_ai AFTER INSERT ON listings BEGIN
+        INSERT INTO listings_fts(rowid,title,description,make,model,variant,subject,service_type,prop_type)
+        VALUES (new.rowid,new.title,new.description,new.make,new.model,new.variant,new.subject,new.service_type,new.prop_type); END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS listings_fts_ad AFTER DELETE ON listings BEGIN
+        INSERT INTO listings_fts(listings_fts,rowid,title,description,make,model,variant,subject,service_type,prop_type)
+        VALUES ('delete',old.rowid,old.title,old.description,old.make,old.model,old.variant,old.subject,old.service_type,old.prop_type); END""")
+    conn.execute("""CREATE TRIGGER IF NOT EXISTS listings_fts_au AFTER UPDATE ON listings BEGIN
+        INSERT INTO listings_fts(listings_fts,rowid,title,description,make,model,variant,subject,service_type,prop_type)
+        VALUES ('delete',old.rowid,old.title,old.description,old.make,old.model,old.variant,old.subject,old.service_type,old.prop_type);
+        INSERT INTO listings_fts(rowid,title,description,make,model,variant,subject,service_type,prop_type)
+        VALUES (new.rowid,new.title,new.description,new.make,new.model,new.variant,new.subject,new.service_type,new.prop_type); END""")
+    # One-time (idempotent) FTS backfill: rebuild if the index is empty but listings exist.
+    # NB: on an external-content FTS5 table, count(*) on the fts table proxies to the
+    # CONTENT table (never 0) — the real index size lives in the _docsize shadow table.
+    try:
+        _n_fts = conn.execute("SELECT count(*) AS n FROM listings_fts_docsize").fetchone()["n"]
+        _n_l   = conn.execute("SELECT count(*) AS n FROM listings").fetchone()["n"]
+        if _n_l > 0 and _n_fts == 0:
+            conn.execute("INSERT INTO listings_fts(listings_fts) VALUES ('rebuild')")
+    except Exception:
+        pass
+
     # ── Listing version history (audit trail for edits) ──────────
     # KYC columns added Session 34 — ALTER TABLE safely (idempotent)
     for col_def in [
@@ -271,7 +340,123 @@ def run_migrations(conn):
         created_at      TEXT NOT NULL DEFAULT (datetime('now')),
         expires_at      TEXT NOT NULL
     )""")
+    # DEMAND-LOOP-1 groundwork (6 Jul 2026): how many results the search returned
+    # at capture time. 0 = a MISS — the raw material for demand-driven seller
+    # acquisition (match miss -> prospect pool -> coded invite -> wishlist ping).
+    _ws_cols = {r[1] for r in conn.execute("PRAGMA table_info(wishlist_signals)").fetchall()}
+    if "result_count" not in _ws_cols:
+        conn.execute("ALTER TABLE wishlist_signals ADD COLUMN result_count INTEGER")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_buyer ON wishlist_signals(buyer_token)")
+    # SEARCH-AI-1 (6 Jul 2026): cache for AI-interpreted search sentences — a repeated
+    # sentence costs $0. Keyed on the normalised query, city-agnostic by design.
+    conn.execute("""CREATE TABLE IF NOT EXISTS search_interpret_cache (
+        query_norm  TEXT PRIMARY KEY,
+        params_json TEXT NOT NULL,
+        model       TEXT,
+        cost_usd    REAL NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    # DEMAND-LOOP-1 (David ruling 6 Jul 2026): the demand loop is a STANDARD automated
+    # BEA process (CityLauncher stays manual campaign artillery). Capture/score/ticket
+    # always on ($0, internal); match/invite stages env-gated + dry-run.
+    if "seen_count" not in _ws_cols:
+        conn.execute("ALTER TABLE wishlist_signals ADD COLUMN seen_count INTEGER NOT NULL DEFAULT 1")
+    conn.execute("""CREATE TABLE IF NOT EXISTS demand_tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        signal_id INTEGER, buyer_token TEXT NOT NULL,
+        query_norm TEXT NOT NULL, category TEXT, city_id INTEGER,
+        score INTEGER NOT NULL DEFAULT 0,
+        state TEXT NOT NULL DEFAULT 'open',
+        matched_prospect TEXT, matched_item TEXT, invite_code TEXT,
+        priority_expires_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_demand_state ON demand_tickets(state, score DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_demand_query ON demand_tickets(query_norm, city_id)")
+    # Shared suppression ledger — ONE outreach touch per address across ALL channels
+    # (RM-5 waves + demand invites). Checked before ANY send; seed from CityLauncher at flip-on.
+    conn.execute("""CREATE TABLE IF NOT EXISTS outreach_ledger (
+        email_hash TEXT NOT NULL, channel TEXT NOT NULL, campaign TEXT,
+        sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+        suppressed INTEGER NOT NULL DEFAULT 0
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_outreach_email ON outreach_ledger(email_hash, sent_at DESC)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS demand_prospects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email_hash TEXT NOT NULL, email_enc TEXT,
+        category TEXT, city_id INTEGER, scraped_item TEXT, source TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    _dp_cols = {r[1] for r in conn.execute("PRAGMA table_info(demand_prospects)").fetchall()}
+    if "app_category" not in _dp_cols:
+        conn.execute("ALTER TABLE demand_prospects ADD COLUMN app_category TEXT")
+    if "city_name" not in _dp_cols:
+        conn.execute("ALTER TABLE demand_prospects ADD COLUMN city_name TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_dp_appcat ON demand_prospects(app_category, city_id)")
+    # One-time backfill: normalise agency labels already imported (idempotent — only NULLs).
+    for _pr in conn.execute("SELECT id, category FROM demand_prospects WHERE app_category IS NULL").fetchall():
+        conn.execute("UPDATE demand_prospects SET app_category=? WHERE id=?",
+                     (_demand_norm_category(_pr["category"]), _pr["id"]))
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_prospects_cat ON demand_prospects(category, city_id)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS demand_invites_outbox (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticket_id INTEGER NOT NULL, email_hash TEXT,
+        subject TEXT, body TEXT, dry_run INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    # RM-5 pool auto-import (one-time, idempotent): set DEMAND_RM5_DB=/path/to/prospects.db
+    # on the server and restart - runs only while demand_prospects is EMPTY. Copies the
+    # CityLauncher pool + seeds the shared suppression ledger from emailed_at history and
+    # bounce/complaint/stop events. Opens the source READ-ONLY; never writes to it.
+    try:
+        _rm5 = os.getenv("DEMAND_RM5_DB", "")
+        # If prospects were imported before city_name existed (city_id may be unresolved),
+        # clear them once so the import re-runs WITH the raw city name preserved.
+        if _rm5 and conn.execute("SELECT COUNT(*) FROM demand_prospects").fetchone()[0] > 0 \
+           and conn.execute("SELECT COUNT(*) FROM demand_prospects WHERE city_name IS NOT NULL").fetchone()[0] == 0:
+            conn.execute("DELETE FROM demand_prospects")
+            conn.execute("DELETE FROM outreach_ledger WHERE channel IN ('rm5_wave','rm5_events')")
+            print("DEMAND-RM5 re-import: cleared pre-city_name prospects")
+        if _rm5 and os.path.exists(_rm5) and \
+           conn.execute("SELECT COUNT(*) AS n FROM demand_prospects").fetchone()[0] == 0:
+            import sqlite3 as _sq3, hashlib as _hl
+            _src = _sq3.connect("file:" + _rm5 + "?mode=ro", uri=True)
+            _src.row_factory = _sq3.Row
+            _cities = {(r[1] or "").strip().lower(): r[0] for r in conn.execute(
+                "SELECT id, name FROM geo_cities").fetchall()}
+            _n_p = _n_l = _n_s = 0
+            for r in _src.execute("SELECT * FROM prospects WHERE email IS NOT NULL"):
+                _em = (r["email"] or "").strip().lower()
+                if "@" not in _em:
+                    continue
+                _h = _hl.sha256(_em.encode()).hexdigest()[:32]
+                _cid = _cities.get((r["city"] or "").strip().lower())
+                _raw_cat = (r["category"] or "").strip() or None
+                _raw_city = (r["city"] or "").strip() or None
+                conn.execute(
+                    "INSERT INTO demand_prospects (email_hash, email_enc, category, app_category, city_id, city_name, scraped_item, source) "
+                    "VALUES (?,?,?,?,?,?,?,?)",
+                    (_h, _em, _raw_cat, _demand_norm_category(_raw_cat), _cid, _raw_city, None, "rm5"))
+                _n_p += 1
+                if r["emailed_at"]:
+                    conn.execute(
+                        "INSERT INTO outreach_ledger (email_hash, channel, campaign, sent_at) VALUES (?,?,?,?)",
+                        (_h, "rm5_wave", (r["city"] or ""), r["emailed_at"]))
+                    _n_l += 1
+            for r in _src.execute(
+                    "SELECT p.email AS email FROM email_events e JOIN prospects p ON p.id = e.prospect_id "
+                    "WHERE LOWER(e.event) IN ('bounce','bounced','complaint','complained','unsubscribe','unsubscribed','stop')"):
+                _em = (r["email"] or "").strip().lower()
+                if "@" in _em:
+                    conn.execute(
+                        "INSERT INTO outreach_ledger (email_hash, channel, campaign, suppressed) VALUES (?,?,?,1)",
+                        (_hl.sha256(_em.encode()).hexdigest()[:32], "rm5_events", "suppression-seed"))
+                    _n_s += 1
+            _src.close()
+            print("DEMAND-RM5 import: %d prospects, %d ledger rows, %d suppressions" % (_n_p, _n_l, _n_s))
+    except Exception as _rm5e:
+        print("DEMAND-RM5 import skipped: %s" % _rm5e)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_category ON wishlist_signals(category)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_ws_expires ON wishlist_signals(expires_at)")
 
@@ -578,6 +763,36 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sc_seller ON seller_complaints(seller_email, filed_at DESC)")
 
+    # ── AGENCY (Team plan): umbrella over agent-seller emails ──────────
+    # Each agent is a normal seller (own listings/trust/intros). The agency
+    # adds membership, a per-agent listing cap (mirrored into users.slot_limit),
+    # an import API key, and the countries it is licensed/operating in (gates
+    # the Phase-2 recruit-agents listings to existing-presence markets only).
+    conn.execute("""CREATE TABLE IF NOT EXISTS agencies (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT NOT NULL,
+        admin_email  TEXT NOT NULL,
+        api_key      TEXT NOT NULL,
+        countries    TEXT NOT NULL DEFAULT '',
+        plan         TEXT NOT NULL DEFAULT 'team',
+        verified     INTEGER NOT NULL DEFAULT 0,
+        created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_agencies_admin ON agencies(admin_email)")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_agencies_apikey ON agencies(api_key)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS agency_members (
+        agency_id    INTEGER NOT NULL,
+        agent_email  TEXT NOT NULL,
+        listing_cap  INTEGER NOT NULL DEFAULT 10,
+        seat_paid    INTEGER NOT NULL DEFAULT 0,
+        role         TEXT NOT NULL DEFAULT 'agent',
+        status       TEXT NOT NULL DEFAULT 'invited',
+        invited_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+        joined_at    TEXT,
+        PRIMARY KEY (agency_id, agent_email)
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_agency_members_email ON agency_members(agent_email)")
+
     # ── Listing State Machine columns (Session 37) ───────────────
     # listing_status drives the 7-state machine: DRAFT, LIVE, PAUSED,
     # FADE_OUT, WITHDRAWN, BLOCKED, ARCHIVED. Default 'live' so all
@@ -842,6 +1057,26 @@ _log = logging.getLogger("bea")
 _startup_conn = database.get_db()
 run_migrations(_startup_conn)
 seed_geo_za(_startup_conn)
+# DEMAND-LOOP-1 city-resolution fix (7 Jul): geo_cities is guaranteed seeded HERE, so
+# resolve prospect city_id from the preserved city_name against CURRENT ids. Self-healing —
+# runs every startup, cheap, corrects the import-ran-before-geo-seed ordering issue.
+try:
+    _dp_has = {r[1] for r in _startup_conn.execute("PRAGMA table_info(demand_prospects)").fetchall()}
+    if "city_name" in _dp_has:
+        _geo = {(r[1] or "").strip().lower(): r[0] for r in
+                _startup_conn.execute("SELECT id, name FROM geo_cities").fetchall()}
+        _fixed = 0
+        for _p in _startup_conn.execute(
+                "SELECT id, city_name FROM demand_prospects WHERE city_name IS NOT NULL").fetchall():
+            _rid = _geo.get((_p[1] or "").strip().lower())
+            if _rid is not None:
+                _startup_conn.execute("UPDATE demand_prospects SET city_id=? WHERE id=? AND (city_id IS NULL OR city_id!=?)",
+                                      (_rid, _p[0], _rid))
+                _fixed += 1
+        _startup_conn.commit()
+        print("DEMAND-CITY-RESOLVE: %d prospects mapped to geo_cities ids" % _fixed)
+except Exception as _cre:
+    print("DEMAND-CITY-RESOLVE skipped: %s" % _cre)
 migrate_listings_to_geo_city(_startup_conn)
 _backfill_geo_coords(_startup_conn)
 # Backfill slot_limit for existing users based on their current seller_tier
@@ -1581,7 +1816,13 @@ def _reset_vehicle_confirmations(existing, d):
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                  suburb: Optional[str] = None, demo: int = 0,
-                 page: int = 1, page_size: int = 200):
+                 page: int = 1, page_size: int = 200,
+                 q: Optional[str] = None, sort: Optional[str] = None,
+                 price_min: Optional[float] = None, price_max: Optional[float] = None,
+                 trust_min: Optional[int] = None,
+                 make: Optional[str] = None, model: Optional[str] = None,
+                 year_min: Optional[int] = None, year_max: Optional[int] = None,
+                 facets: int = 0):
     conn = database.get_db()
     # M0 pagination: default page_size=200 preserves prior behaviour; FEA passes page/page_size for infinite scroll
     page = max(1, page)
@@ -1618,6 +1859,43 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
     # Whether the current request's category filter would already cover trip-planning rows.
     _cat_is_trip = bool(category) and category.lower() in TRIP_PLANNING_CATEGORIES
 
+    # ── SEARCH ENGINE Step 1 (6 Jul 2026): honest server-side dial-in ─────────
+    # All new filters compose at the OUTER wrapper so every reach branch (home city,
+    # extended, trips, online) inherits them identically. FTS gives typed search
+    # ("bmw 1996 e36"), structured params give exact facets, sort gives the three-dial
+    # order from FILTER_ENGINE_DESIGN (Trust + Freshness; Closeness = branch order).
+    _xw, _xp = [], []
+    if q and q.strip():
+        _terms = [t for t in re.findall(r"[A-Za-z0-9]{2,}", q)][:8]
+        if _terms:
+            _match = " ".join(t + "*" for t in _terms)
+            _xw.append("id IN (SELECT l2.id FROM listings l2 JOIN listings_fts f ON f.rowid = l2.rowid WHERE listings_fts MATCH ?)")
+            _xp.append(_match)
+    if price_min is not None:
+        _xw.append("price_num >= ?"); _xp.append(price_min)
+    if price_max is not None:
+        _xw.append("price_num <= ?"); _xp.append(price_max)
+    if trust_min is not None:
+        _xw.append("COALESCE(trust_score,0) >= ?"); _xp.append(trust_min)
+    if make:
+        _xw.append("LOWER(COALESCE(make,'')) = ?"); _xp.append(make.strip().lower())
+    if model:
+        _xw.append("LOWER(COALESCE(model,'')) LIKE ?"); _xp.append("%" + model.strip().lower() + "%")
+    if year_min is not None:
+        _xw.append("vehicle_year >= ?"); _xp.append(year_min)
+    if year_max is not None:
+        _xw.append("vehicle_year <= ?"); _xp.append(year_max)
+    _extra_where = (" WHERE " + " AND ".join(_xw)) if _xw else ""
+    _sort_map = {
+        "newest":     "ORDER BY created_at DESC",
+        "price_asc":  "ORDER BY (price_num IS NULL), price_num ASC",
+        "price_desc": "ORDER BY (price_num IS NULL), price_num DESC",
+        "trust":      "ORDER BY COALESCE(trust_score,0) DESC, created_at DESC",
+        # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
+        "smart":      "ORDER BY (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+    }
+    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY created_at DESC")
+
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)
         branch_a = f"""
@@ -1650,6 +1928,24 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
               AND {suspension_filter} {demo_filter}"""
         params_c = [c.lower() for c in TRIP_PLANNING_CATEGORIES]
 
+    # Branch D: ONLINE-MODE reach exemption (David, 6 Jul 2026) — same principle as the
+    # trip exemption (canon 2a): reach follows whether the buyer can USE the thing from
+    # where they are. mode Online/Both (tutors + online-capable services — the chess
+    # trainer) is consumable from anywhere -> borderless for ALL buyers on ALL tiers.
+    # Physical listings untouched: city reach for Free, everywhere for Global $5 — the
+    # Global tier keeps its value as reach-for-the-physical-world. Included on the mixed
+    # feed and for services/tutors requests; never pollutes physical categories.
+    include_branch_d = (not category) or (category.lower() in ("services", "tutors"))
+    branch_d = ""
+    params_d = []
+    if include_branch_d:
+        branch_d = f"""
+            SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
+            FROM listings l
+            LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
+            WHERE LOWER(COALESCE(l.mode,'')) IN ('online','both')
+              AND {suspension_filter} {demo_filter}"""
+
     # Branch B: extended city reach (only runs when we have a valid city_id)
     if buyer_city_id:
         branch_b = f"""
@@ -1663,29 +1959,49 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         # GROUP BY id dedupes across A/B/C (a trip-planning listing in the home city
         # appears in both A and C; the suburb LEFT JOIN can also multiply rows). One row per listing.
         _union_c = ("\n                    UNION ALL\n                    " + branch_c) if include_branch_c else ""
+        _union_d = ("\n                    UNION ALL\n                    " + branch_d) if include_branch_d else ""
         sql = f"""
             SELECT * FROM (
                 SELECT * FROM (
                     {branch_a}
                     UNION ALL
-                    {branch_b}{_union_c}
+                    {branch_b}{_union_c}{_union_d}
                 ) GROUP BY id
-            ) ORDER BY created_at DESC LIMIT ? OFFSET ?"""
-        params = params_a + params_b + params_c + [page_size, _offset]
+            ){_extra_where} {_order_clause} LIMIT ? OFFSET ?"""
+        params = params_a + params_b + params_c + params_d + _xp + [page_size, _offset]
+        _facet_inner = f"""SELECT * FROM (SELECT * FROM ({branch_a} UNION ALL {branch_b}{_union_c}{_union_d}) GROUP BY id){_extra_where}"""
+        _facet_params = params_a + params_b + params_c + params_d + _xp
     else:
+        _union_d2 = ("\n                        UNION ALL\n                        " + branch_d) if include_branch_d else ""
         if include_branch_c:
             sql = f"""
                 SELECT * FROM (
                     SELECT * FROM (
                         {branch_a}
                         UNION ALL
-                        {branch_c}
+                        {branch_c}{_union_d2}
                     ) GROUP BY id
-                ) ORDER BY created_at DESC LIMIT ? OFFSET ?"""
-            params = params_a + params_c + [page_size, _offset]
+                ){_extra_where} {_order_clause} LIMIT ? OFFSET ?"""
+            params = params_a + params_c + params_d + _xp + [page_size, _offset]
+            _facet_inner = f"""SELECT * FROM (SELECT * FROM ({branch_a} UNION ALL {branch_c}{_union_d2}) GROUP BY id){_extra_where}"""
+            _facet_params = params_a + params_c + params_d + _xp
+        elif include_branch_d:
+            sql = f"""
+                SELECT * FROM (
+                    SELECT * FROM (
+                        {branch_a}
+                        UNION ALL
+                        {branch_d}
+                    ) GROUP BY id
+                ){_extra_where} {_order_clause} LIMIT ? OFFSET ?"""
+            params = params_a + params_d + _xp + [page_size, _offset]
+            _facet_inner = f"""SELECT * FROM (SELECT * FROM ({branch_a} UNION ALL {branch_d}) GROUP BY id){_extra_where}"""
+            _facet_params = params_a + params_d + _xp
         else:
-            sql = f"{branch_a} ORDER BY l.created_at DESC LIMIT ? OFFSET ?"
-            params = params_a + [page_size, _offset]
+            sql = f"""SELECT * FROM ({branch_a}) {_extra_where} {_order_clause} LIMIT ? OFFSET ?"""
+            params = params_a + _xp + [page_size, _offset]
+            _facet_inner = f"""SELECT * FROM ({branch_a}) {_extra_where}"""
+            _facet_params = params_a + _xp
 
     rows = conn.execute(sql, params).fetchall()
     _founders = launch_redemption.founders_email_set(conn)
@@ -1699,6 +2015,26 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
         out.append(_d)
+    if facets:
+        # Counts computed from the SAME filtered set as the list — they can never lie.
+        fc = {}
+        conn2 = database.get_db()
+        try:
+            r = conn2.execute(f"SELECT COUNT(*) AS n, MIN(price_num) AS pmin, MAX(price_num) AS pmax FROM ({_facet_inner})", _facet_params).fetchone()
+            fc["total"] = r["n"]; fc["price"] = {"min": r["pmin"], "max": r["pmax"]}
+            fc["makes"] = [{"v": x["make"], "n": x["n"]} for x in conn2.execute(
+                f"SELECT make, COUNT(*) AS n FROM ({_facet_inner}) WHERE make IS NOT NULL AND make != '' GROUP BY LOWER(make) ORDER BY n DESC LIMIT 15", _facet_params)]
+            yr = conn2.execute(f"SELECT MIN(vehicle_year) AS y0, MAX(vehicle_year) AS y1 FROM ({_facet_inner}) WHERE vehicle_year IS NOT NULL", _facet_params).fetchone()
+            fc["years"] = {"min": yr["y0"], "max": yr["y1"]}
+            fc["trust_bands"] = [{"v": x["band"], "n": x["n"]} for x in conn2.execute(
+                f"SELECT CASE WHEN COALESCE(trust_score,0)>=80 THEN '80+' WHEN COALESCE(trust_score,0)>=60 THEN '60-79' ELSE '<60' END AS band, COUNT(*) AS n FROM ({_facet_inner}) GROUP BY band", _facet_params)]
+            fc["service_types"] = [{"v": x["service_type"], "n": x["n"]} for x in conn2.execute(
+                f"SELECT service_type, COUNT(*) AS n FROM ({_facet_inner}) WHERE service_type IS NOT NULL AND service_type != '' GROUP BY LOWER(service_type) ORDER BY n DESC LIMIT 12", _facet_params)]
+        except Exception as _fe:
+            fc["error"] = "facets unavailable"
+        finally:
+            conn2.close()
+        return {"items": out, "facets": fc}
     return out
 
 @app.post("/listings")
@@ -2761,6 +3097,60 @@ def _vision_orient_image(img):
         return (img, False, None, None)
 
 
+# ── SELLER-PHOTO ANON GATE (11 Jul 2026) ─────────────────────────────────────
+# Root cause of the cars-category plate slip (David Jnr's advert, 11 Jul 2026):
+# the fail-closed vision anonymiser (_anon_photo_scan/_anon_photo_redact, prompt
+# explicitly lists "vehicle number plates") was wired ONLY into
+# /agencies/{id}/import — normal seller uploads stored photos with NO anonymity
+# check at all, and the Advert Coach anonymity_warning is text-only (never sees
+# photos). This gate runs the SAME fail-closed pass on every seller photo:
+#   clean → store · redact → blur regions on the full-size image, then store ·
+#   reject / low-confidence / scan-failure → HTTP 422/503, photo NEVER stored.
+# Kill-switch: PHOTO_ANON_SCAN=off (env) skips the gate (keyless dev boxes only).
+
+PHOTO_ANON_SCAN = os.getenv("PHOTO_ANON_SCAN", "on").strip().lower()
+
+def _seller_photo_anon_gate(img, category: str, spend_who: str):
+    """Fail-closed anonymity gate for ONE seller-uploaded photo. PIL image in,
+    PIL image out (blurred where needed). Raises HTTPException when the photo
+    must not be stored. Returns (img, note): note "" = clean, "redacted:<labels>"
+    = blurred (surface to the seller), "scan-off" = gate disabled by env."""
+    if PHOTO_ANON_SCAN == "off":
+        return img, "scan-off"
+    _check_cost_ceiling(spend_who)   # C1 rail — 429 over the daily ceiling
+    import base64 as _b64
+    probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
+    pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+    scan, _it, _ot = _anon_photo_scan(
+        _b64.b64encode(pbuf.getvalue()).decode(), _ts_active_provider(), category or "")
+    if _it is not None or _ot is not None:
+        _log_ai_spend(spend_who, "/listings/photo#anon-scan", "sonnet_vision", _it, _ot)
+    if not scan:   # no key / provider down / unparseable verdict — FAIL CLOSED
+        raise HTTPException(status_code=503,
+            detail="Photo safety check unavailable — please try again in a minute")
+    labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
+    _retake = ("TrustSquare adverts are anonymous — please retake the photo "
+               "avoiding number plates, signage and contact details.")
+    if scan["verdict"] == "reject":
+        raise HTTPException(status_code=422,
+            detail="Photo blocked to protect your anonymity"
+                   + (" (%s)" % labels if labels else "") + ". " + _retake)
+    if scan["confidence"] < _ANON_PHOTO_CONF:
+        raise HTTPException(status_code=422,
+            detail="Could not confirm this photo is anonymous. " + _retake)
+    if scan["verdict"] == "redact":
+        if not scan["regions"]:
+            raise HTTPException(status_code=422,
+                detail="Photo blocked to protect your anonymity. " + _retake)
+        img2, _lbls = _anon_blur_until_clean(
+            img, scan, _ts_active_provider(), category or "", spend_who,
+            "/listings/photo#anon-verify")
+        if img2 is None:
+            raise HTTPException(status_code=422,
+                detail="Could not verifiably blur the identifying content. " + _retake)
+        return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4])
+    return img, ""
+
 @app.post("/listings/photo")
 async def upload_listing_photo(
     file: UploadFile = File(...),
@@ -2792,6 +3182,19 @@ async def upload_listing_photo(
         if _oriented:
             _log.info("photo upload: vision re-oriented collectible image (listing=%s)", listing_id)
         # spend logging lives inside _vision_orient_image (P2 sweep, 12 Jun 2026)
+
+    # SELLER-ANON GATE (11 Jul 2026) — scan BEFORE thumb/medium so blurs propagate.
+    _anon_who = "photo-upload"
+    if listing_id:
+        try:
+            _c0 = database.get_db()
+            _r0 = _c0.execute("SELECT seller_email FROM listings WHERE id=?", (listing_id,)).fetchone()
+            _c0.close()
+            if _r0 and _r0["seller_email"]:
+                _anon_who = _r0["seller_email"]
+        except Exception:
+            pass
+    img, _anon_note = _seller_photo_anon_gate(img, category or "", _anon_who)
 
     # ── Thumbnail (~100KB) ──────────────────────────────────
     thumb = img.copy()
@@ -2885,6 +3288,7 @@ async def upload_listing_photo(
         "medium_url": medium_url,
         "thumb_kb":   round(len(thumb_bytes)  / 1024, 1),
         "medium_kb":  round(len(medium_bytes) / 1024, 1),
+        "anon": _anon_note,
     }
 
 @app.post("/listings/{listing_id}/photo/draft")
@@ -2918,7 +3322,7 @@ async def upload_draft_listing_photo(
     # Auth + draft guard
     conn = database.get_db()
     row = conn.execute(
-        "SELECT seller_email, listing_status, thumb_url, description FROM listings WHERE id = ?",
+        "SELECT seller_email, listing_status, thumb_url, description, category FROM listings WHERE id = ?",
         (listing_id,)
     ).fetchone()
     if not row:
@@ -2930,6 +3334,13 @@ async def upload_draft_listing_photo(
     if row["seller_email"] and row["seller_email"] != email:
         conn.close()
         raise HTTPException(status_code=403, detail="Not authorised to edit this listing")
+
+    # SELLER-ANON GATE (11 Jul 2026) — same fail-closed scan as /listings/photo.
+    try:
+        img, _anon_note = _seller_photo_anon_gate(img, row["category"] or "", email)
+    except HTTPException:
+        conn.close()
+        raise
 
     # Compress to thumb + medium (same pipeline as /listings/photo)
     thumb = img.copy()
@@ -3008,6 +3419,7 @@ async def upload_draft_listing_photo(
         "medium_url": medium_url,
         "thumb_kb":   round(len(thumb_bytes)  / 1024, 1),
         "medium_kb":  round(len(medium_bytes) / 1024, 1),
+        "anon": _anon_note,
     }
 
 
@@ -3301,7 +3713,7 @@ async def upload_user_id(email: str, file: UploadFile = File(...)):
     try:
         # Upsert user row if needed
         conn.execute(
-            "INSERT OR IGNORE INTO users (email, trust_score) VALUES (?, 15)",
+            "INSERT OR IGNORE INTO users (email, trust_score) VALUES (?, 40)",
             (email,)
         )
         # Check if already verified — don't double-award points
@@ -3309,7 +3721,7 @@ async def upload_user_id(email: str, file: UploadFile = File(...)):
             "SELECT trust_score, id_verified_at FROM users WHERE email=?", (email,)
         ).fetchone()
         already_verified = bool(row and row["id_verified_at"])
-        current_score    = int(row["trust_score"] or 0) if row else 15
+        current_score    = int(row["trust_score"] or 0) if row else 40
 
         if not already_verified:
             new_score = min(100, current_score + 15)
@@ -5148,6 +5560,7 @@ class WishlistSignalIn(BaseModel):
     price_max: Optional[float] = None
     min_trust_score: int = 0
     ping_enabled: int = 1
+    result_count: Optional[int] = None   # results shown at capture; 0 = demand MISS
 
 class WishlistSignalUpdate(BaseModel):
     raw_text: Optional[str] = None
@@ -5209,6 +5622,319 @@ def mint_buyer_token(req: BuyerTokenRequest):
     return {"buyer_token": new_token, "linked": False}
 
 
+# ── SEARCH-AI-1: sentence → dial-in params on the cheap tier (David, 6 Jul 2026) ──
+# The deterministic FEA parser handles common shapes for $0; this endpoint is the
+# LAST-RESORT fallback for sentence-shaped total misses. Independence doctrine:
+# one thin layer (ai_provider seam, task="haiku" → Haiku 4.5 / gpt-4o-mini by config);
+# deterministic parser IS the degradation path, so switching this off loses nothing.
+SEARCH_AI_ENABLED   = os.getenv("SEARCH_AI_ENABLED", "0") == "1"      # dark until David flips
+SEARCH_AI_DRYRUN    = os.getenv("SEARCH_AI_DRYRUN", "1") == "1"       # $0 mock until validated
+SEARCH_AI_DAILY_USD = float(os.getenv("SEARCH_AI_DAILY_USD", "1.0")) # micro-cap; over → degrade
+
+_SI_CATS = {"Property", "Cars", "Tutors", "Services", "Collectors", "Adventures"}
+
+
+# Demand invite email — house style (matches the n8n outreach set: navy #1a1a2e,
+# gold #d4a853). RULINGS BAKED IN: no buyer details ever; {item_line} is class-only
+# unless it names the prospect's OWN scraped product; one-email-ever + STOP is
+# prominent; priority window stated plainly. Preview copy:
+# n8n/email_templates/demand_invite.html (generated from this string — edit HERE).
+_DEMAND_INVITE_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Buyer demand on TrustSquare</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f5f5f0;color:#1a1a1a}
+.wrapper{max-width:600px;margin:0 auto;background:#fff}.header{background:#1a1a2e;padding:32px 40px;text-align:center}
+.header-logo{font-size:24px;font-weight:700;color:#fff;letter-spacing:-.5px}.header-logo span{color:#d4a853}
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);padding:44px 40px;text-align:center}
+.hero-icon{font-size:44px;margin-bottom:14px}.hero-title{font-size:26px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:10px}
+.hero-subtitle{font-size:15px;color:#a0b0c8;line-height:1.6}.body{padding:36px 40px}
+.demand-box{background:#f8f6f0;border-left:4px solid #d4a853;border-radius:0 8px 8px 0;padding:20px 24px;margin:22px 0}
+.demand-box p{font-size:15px;color:#444;line-height:1.7}
+.window{background:#fff8e8;border:1px solid #e8c96a;border-radius:8px;padding:18px 22px;margin:22px 0;text-align:center}
+.window p{font-size:14px;color:#7a5c00;line-height:1.6}.window strong{color:#5a3e00;font-size:16px}
+.cta-section{text-align:center;padding:26px 0 8px}
+.cta-button{display:inline-block;background:#d4a853;color:#1a1a2e;font-size:17px;font-weight:700;padding:15px 38px;border-radius:8px;text-decoration:none;letter-spacing:.3px}
+.code{font-size:13px;color:#666;margin-top:14px}.code b{color:#1a1a2e;font-size:15px;letter-spacing:1px}
+.quiet{background:#f0f0ea;border-radius:8px;padding:16px 22px;margin:26px 0 6px}
+.quiet p{font-size:13px;color:#666;line-height:1.6}
+.footer{background:#f0f0ea;padding:24px 40px;text-align:center}.footer p{font-size:12px;color:#888;line-height:1.7}.footer a{color:#666}</style></head>
+<body><div class="wrapper">
+<div class="header"><div class="header-logo">Trust<span>Square</span></div></div>
+<div class="hero"><div class="hero-icon">&#128276;</div>
+<div class="hero-title">A verified buyer is looking for {item_short}</div>
+<div class="hero-subtitle">Real demand, waiting on TrustSquare in {city_name} &mdash; anonymous introductions, and we never charge commission on your sale.</div></div>
+<div class="body">
+<p style="font-size:16px;color:#333;line-height:1.6;margin-bottom:20px;">Hi{greeting_name},</p>
+<div class="demand-box"><p>A verified buyer on TrustSquare is actively looking for <strong>{item_line}</strong>. The buyer stays anonymous &mdash; and so do you &mdash; until you both choose to be introduced.</p></div>
+<div class="window"><p>Your priority window is open for the next</p><p><strong>{hours} hours</strong></p><p>List first and the introduction is exclusively yours.</p></div>
+<div class="cta-section"><a class="cta-button" href="{cta_url}">List it free &rarr;</a>
+<div class="code">Your personal invitation code: <b>{code}</b></div></div>
+<div class="quiet"><p><strong>One email, ever.</strong> This is the only unprompted email you will receive from us. Reply <strong>STOP</strong> and we will never write to you again &mdash; no follow-ups, no reminders.</p></div>
+</div>
+<div class="footer"><p>TrustSquare (Pty) Ltd &middot; Reg No. 2026/340128/07<br>
+You received this once-off note because your business publicly offers items in this category in {city_name}.<br>
+<a href="mailto:{stop_email}?subject=STOP">Unsubscribe permanently</a></p></div>
+</div></body></html>"""
+
+def _demand_render_invite(ticket, prospect, code):
+    """Render the invite. item_line: prospect's OWN scraped item when specifically
+    matched (David's personalization exception), else the item CLASS. Never the buyer."""
+    item = prospect["scraped_item"] if (prospect and prospect["scraped_item"]) else None
+    item_line = ("exactly what you're offering &mdash; your " + item) if item \
+                else ("a " + ((ticket["category"] or "listing").lower()) + " like the ones you offer")
+    item_short = item if item else ("a " + (ticket["category"] or "listing").lower())
+    name = (prospect["email_enc"] or "").split("@")[0] if prospect else ""
+    greeting = ""   # no scraped personal names in v1 — keep it clean, not creepy
+    # NB: literal .replace(), never str.format() — the template's CSS braces
+    # ({margin:0}) would read as placeholders and KeyError (caught in scratch test).
+    h = _DEMAND_INVITE_HTML
+    for k, v in (("{item_short}", item_short[:80]), ("{item_line}", item_line[:160]),
+                 ("{city_name}", "your city"), ("{greeting_name}", greeting),
+                 ("{hours}", str(int(DEMAND_PRIORITY_HOURS))), ("{code}", code or "FOUNDING-INVITE"),
+                 ("{cta_url}", "https://trustsquare.co/?invite=" + (code or "")),
+                 ("{stop_email}", "hello@trustsquare.co")):
+        h = h.replace(k, v)
+    return h
+
+def _demand_send_invite(ticket_id, to_email, subject, html):
+    """The ONLY send path. Triple-gated: env ON + dry-run OFF + RESEND_API_KEY present.
+    Writes the outreach ledger AT send (one touch per address, enforced upstream)."""
+    key = os.getenv("RESEND_API_KEY", "")
+    if not (DEMAND_LOOP_ENABLED and not DEMAND_LOOP_DRYRUN and key):
+        return ("dry", None)
+    try:
+        import httpx
+        r = httpx.post("https://api.resend.com/emails",
+            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+            json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+                  "to": [to_email], "subject": subject, "html": html},
+            timeout=20)
+        if r.status_code in (200, 201):
+            return ("sent", (r.json() or {}).get("id"))
+        _log.error("demand send failed %s: %s", r.status_code, r.text[:200])
+        return ("failed", None)
+    except Exception as exc:
+        _log.error("demand send error: %s", exc)
+        return ("failed", None)
+
+def _si_validate(d):
+    """Whitelist-validate the model's JSON. Anything off-contract → None (fallback)."""
+    if not isinstance(d, dict):
+        return None
+    out = {}
+    t = d.get("terms")
+    out["terms"] = [str(w).lower()[:30] for w in t if str(w).strip()][:5] if isinstance(t, list) else []
+    for k in ("price_min", "price_max"):
+        v = d.get(k)
+        if v is None:
+            out[k] = None
+        else:
+            try:
+                v = float(v)
+                out[k] = v if 0 <= v <= 1e9 else None
+            except Exception:
+                out[k] = None
+    c = d.get("category")
+    out["category"] = c if c in _SI_CATS else None
+    lt = d.get("listingType")
+    out["listingType"] = lt if lt in ("rent", "sale") else None
+    tm = d.get("trust_min")
+    try:
+        tm = int(tm) if tm is not None else None
+        out["trust_min"] = tm if (tm is None or 0 <= tm <= 100) else None
+    except Exception:
+        out["trust_min"] = None
+    return out
+
+def _si_mock(q):
+    """$0 dry-run stand-in: crude but shape-true, proves the whole pipeline."""
+    terms, pmax = [], None
+    for w in str(q).lower().replace(",", "").split():
+        if w.isdigit():
+            v = int(w)
+            if v >= 500 and pmax is None:
+                pmax = v
+                continue
+        if w.isalpha() and len(w) > 2 and len(terms) < 5:
+            terms.append(w)
+    return {"terms": terms, "price_min": None, "price_max": pmax,
+            "category": None, "listingType": None, "trust_min": None}
+
+_SI_SYSTEM = (
+    'You translate ONE marketplace search sentence into JSON dial-in filters. '
+    'Reply with ONLY minified JSON, no prose: {"terms":[],"price_min":null,"price_max":null,'
+    '"category":null,"listingType":null,"trust_min":null}. '
+    'terms: essential keywords only (brands, models, item nouns), lowercase, max 5. '
+    'Prices: plain numbers (R means ZAR, k means thousands). '
+    'category: one of Property,Cars,Tutors,Services,Collectors,Adventures or null. '
+    'listingType: "rent" or "sale" or null. '
+    'trust_min: 0-100 only if seller trust/reliability is explicitly requested, else null.'
+)
+
+# ── DEMAND-LOOP-1 core (standard automated process; David rulings 6 Jul locked) ──
+DEMAND_LOOP_ENABLED = os.getenv("DEMAND_LOOP_ENABLED", "0") == "1"    # match/invite stages dark
+DEMAND_LOOP_DRYRUN  = os.getenv("DEMAND_LOOP_DRYRUN", "1") == "1"     # compose-only, ZERO sends
+DEMAND_PRIORITY_HOURS = float(os.getenv("DEMAND_PRIORITY_HOURS", "8"))
+_DEMAND_PRICE_FLOORS = {"Property": 2000.0, "Cars": 20000.0, "Tutors": 300.0,
+                        "Services": 300.0, "Collectors": 300.0, "Adventures": 500.0}
+_DEMAND_DEFAULT_FLOOR = 500.0
+
+def _demand_score(sig, seen_count):
+    """Deterministic realness score, no AI. >=3 opens a ticket.
+    Structure (category/price/terms) reads intent; repetition reads seriousness."""
+    score = 0
+    txt = (sig.raw_text or "").strip()
+    if sig.category: score += 2
+    if sig.price_min is not None or sig.price_max is not None: score += 1
+    if len([w for w in txt.split() if len(w) > 2]) >= 2: score += 1
+    if len(txt.split()) >= 3: score += 1
+    if (seen_count or 1) >= 2: score += 2
+    return score
+
+def _demand_price_ok(sig):
+    """David's 'more than small change': an explicit ceiling under the category floor never triggers outreach."""
+    floor = _DEMAND_PRICE_FLOORS.get(sig.category or "", _DEMAND_DEFAULT_FLOOR)
+    return not (sig.price_max is not None and sig.price_max < floor)
+
+def _demand_open_ticket(conn, sig, signal_id, seen_count):
+    """Open (or strengthen) a demand ticket for a real-scored MISS. Always on, $0, internal."""
+    try:
+        if sig.result_count is None or int(sig.result_count) != 0:
+            return None
+        if not _demand_price_ok(sig):
+            return None
+        score = _demand_score(sig, seen_count)
+        if score < 3:
+            return None
+        qn = " ".join((sig.raw_text or "").lower().split())[:240]
+        if len(qn) < 4:
+            return None
+        row = conn.execute(
+            "SELECT id FROM demand_tickets WHERE query_norm=? AND COALESCE(city_id,0)=COALESCE(?,0) "
+            "AND state IN ('open','matched','invited') LIMIT 1",
+            (qn, sig.city_id)).fetchone()
+        if row:
+            conn.execute("UPDATE demand_tickets SET score=MAX(score,?), updated_at=datetime('now') WHERE id=?",
+                         (score, row["id"]))
+            return row["id"]
+        cur = conn.execute(
+            """INSERT INTO demand_tickets
+               (signal_id, buyer_token, query_norm, category, city_id, score, state)
+               VALUES (?,?,?,?,?,?, 'open')""",
+            (signal_id, sig.buyer_token, qn, sig.category, sig.city_id, score))
+        return cur.lastrowid
+    except Exception as exc:
+        _log.error("demand ticket failed: %s", exc)
+        return None
+
+def _demand_match_and_compose(conn, limit=20):
+    """GATED stage: match open tickets to prospects, compose anonymity-safe invites.
+    Rulings enforced here: class-only wording (exception = the prospect's OWN scraped
+    item); shared suppression ledger, 90-day cool-down, permanent on suppressed=1.
+    DRY-RUN composes to the outbox and sends NOTHING."""
+    out = {"matched": 0, "composed": 0}
+    if not DEMAND_LOOP_ENABLED:
+        return out
+    rows = conn.execute("SELECT * FROM demand_tickets WHERE state='open' ORDER BY score DESC, id LIMIT ?",
+                        (limit,)).fetchall()
+    for t in rows:
+        # Match city by NAME, not id: geo_cities can hold duplicate rows for the same
+        # city (e.g. two "Pretoria" ids), so the ticket's city_id and the prospect's
+        # resolved city_id may differ even for the same place. Comparing the resolved
+        # NAMES sidesteps that entirely. NULL ticket city = any city.
+        p = conn.execute(
+            """SELECT p.* FROM demand_prospects p
+               WHERE (? IS NULL OR COALESCE(p.app_category, p.category) = ?)
+                 AND ( ? IS NULL
+                       OR LOWER(TRIM(COALESCE(p.city_name,'')))
+                          = LOWER(TRIM(COALESCE((SELECT name FROM geo_cities WHERE id = ?), '__nocity__'))) )
+                 AND NOT EXISTS (SELECT 1 FROM outreach_ledger o WHERE o.email_hash = p.email_hash
+                                 AND (o.suppressed = 1 OR o.sent_at >= datetime('now','-90 days')))
+               LIMIT 1""",
+            (t["category"], t["category"], t["city_id"], t["city_id"])).fetchone()
+        if not p:
+            continue
+        out["matched"] += 1
+        subject = "Verified buyer demand on TrustSquare - your priority window"
+        html = _demand_render_invite(t, p, None)   # code allocation joins at flip-on (launch_codes)
+        conn.execute("INSERT INTO demand_invites_outbox (ticket_id, email_hash, subject, body, dry_run) VALUES (?,?,?,?,?)",
+                     (t["id"], p["email_hash"], subject, html, 1 if DEMAND_LOOP_DRYRUN else 0))
+        conn.execute("UPDATE demand_tickets SET state='matched', matched_prospect=?, matched_item=?, "
+                     "priority_expires_at=datetime('now', ?), updated_at=datetime('now') WHERE id=?",
+                     (p["email_hash"], p["scraped_item"], "+" + str(DEMAND_PRIORITY_HOURS) + " hours", t["id"]))
+        out["composed"] += 1
+        # The ONLY send path - triple-gated inside; dry-run returns ("dry", None) untouched.
+        status, _mid = _demand_send_invite(t["id"], p["email_enc"] or "", subject, html)
+        if status == "sent":
+            conn.execute("INSERT INTO outreach_ledger (email_hash, channel, campaign) VALUES (?,?,?)",
+                         (p["email_hash"], "demand_invite", "ticket:" + str(t["id"])))
+            conn.execute("UPDATE demand_tickets SET state='invited', "
+                         "priority_expires_at=datetime('now', ?), updated_at=datetime('now') WHERE id=?",
+                         ("+" + str(DEMAND_PRIORITY_HOURS) + " hours", t["id"]))
+            out["sent"] = out.get("sent", 0) + 1
+    return out
+
+class SearchInterpretIn(BaseModel):
+    q: str
+
+@app.post("/search/interpret")
+def search_interpret(req: SearchInterpretIn):
+    """Public, heavily gated. Returns {"enabled":false} when dark — the FEA's
+    deterministic parser simply remains the whole story."""
+    if not SEARCH_AI_ENABLED:
+        return {"enabled": False}
+    qn = " ".join(str(req.q or "").lower().split())[:300]
+    if len(qn) < 8 or len(qn.split()) < 3:
+        return {"enabled": True, "fallback": True}   # not sentence-shaped; not worth tokens
+    import ai_provider as _si_ai
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT params_json FROM search_interpret_cache WHERE query_norm = ?", (qn,)).fetchone()
+        if row:
+            return {"enabled": True, "params": json.loads(row["params_json"]), "cached": True}
+        spent = conn.execute(
+            "SELECT COALESCE(SUM(est_cost_usd),0) AS c FROM ai_spend_log "
+            "WHERE endpoint = '/search/interpret' AND logged_at >= date('now')"
+        ).fetchone()["c"]
+        if spent >= SEARCH_AI_DAILY_USD:
+            return {"enabled": True, "fallback": True}   # cap reached — degrade, never overspend
+        if SEARCH_AI_DRYRUN:
+            params, model_used, it, ot = _si_mock(qn), "dryrun", 0, 0
+        else:
+            r = _si_ai.complete(
+                [{"role": "user", "content": qn}],
+                task="haiku", max_tokens=120, system=_SI_SYSTEM)
+            if not r.ok:
+                # One spaced retry — validation batch showed burst-pace transients recover.
+                import time as _si_t
+                _si_t.sleep(1.2)
+                r = _si_ai.complete(
+                    [{"role": "user", "content": qn}],
+                    task="haiku", max_tokens=120, system=_SI_SYSTEM)
+            if not r.ok:
+                return {"enabled": True, "fallback": True}
+            txt = (r.text or "").strip()
+            if txt.startswith("```"):
+                txt = txt.strip("`").lstrip("json").strip()
+            try:
+                params = _si_validate(json.loads(txt))
+            except Exception:
+                params = None
+            if params is None:
+                return {"enabled": True, "fallback": True}
+            model_used, it, ot = r.model, r.in_tokens, r.out_tokens
+        conn.execute(
+            "INSERT OR REPLACE INTO search_interpret_cache (query_norm, params_json, model, cost_usd) VALUES (?,?,?,?)",
+            (qn, json.dumps(params), model_used, _token_cost("haiku", it or 0, ot or 0) if not SEARCH_AI_DRYRUN else 0.0))
+        conn.commit()
+        if not SEARCH_AI_DRYRUN:
+            _log_ai_spend("", "/search/interpret", "haiku", it, ot)
+        return {"enabled": True, "params": params, "cached": False}
+    except Exception:
+        return {"enabled": True, "fallback": True}
+    finally:
+        conn.close()
+
+
 @app.post("/wishlist/signal")
 def create_wishlist_signal(sig: WishlistSignalIn):
     """Capture a wishlist signal. Public — no API key required.
@@ -5241,29 +5967,35 @@ def create_wishlist_signal(sig: WishlistSignalIn):
                  price_min = COALESCE(?, price_min),
                  price_max = COALESCE(?, price_max),
                  min_trust_score = ?,
-                 ping_enabled = ?
+                 ping_enabled = ?,
+                 result_count = COALESCE(?, result_count),
+                 seen_count = seen_count + 1
                WHERE id = ?""",
             (_signal_expiry_iso(), sig.suburb_id, sig.city_id, sig.country_iso2,
              sig.price_min, sig.price_max, sig.min_trust_score, sig.ping_enabled,
-             existing["id"])
+             sig.result_count, existing["id"])
         )
+        _seen = conn.execute("SELECT seen_count FROM wishlist_signals WHERE id = ?",
+                             (existing["id"],)).fetchone()
+        _tid = _demand_open_ticket(conn, sig, existing["id"], _seen["seen_count"] if _seen else 2)
         conn.commit()
         conn.close()
-        return {"id": existing["id"], "refreshed": True}
+        return {"id": existing["id"], "refreshed": True, "demand_ticket": _tid}
     cur = conn.execute(
         """INSERT INTO wishlist_signals
            (buyer_token, signal_type, raw_text, category, suburb_id, city_id, country_iso2,
-            price_min, price_max, min_trust_score, weight, ping_enabled, expires_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            price_min, price_max, min_trust_score, weight, ping_enabled, expires_at, result_count)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (sig.buyer_token, sig.signal_type, sig.raw_text, sig.category,
          sig.suburb_id, sig.city_id, sig.country_iso2,
          sig.price_min, sig.price_max, sig.min_trust_score, weight,
-         sig.ping_enabled, _signal_expiry_iso())
+         sig.ping_enabled, _signal_expiry_iso(), sig.result_count)
     )
-    conn.commit()
     new_id = cur.lastrowid
+    _tid = _demand_open_ticket(conn, sig, new_id, 1)
+    conn.commit()
     conn.close()
-    return {"id": new_id, "refreshed": False}
+    return {"id": new_id, "refreshed": False, "demand_ticket": _tid}
 
 
 @app.get("/wishlist/signals")
@@ -5276,7 +6008,7 @@ def list_wishlist_signals(buyer_token: str):
     rows = conn.execute(
         """SELECT id, signal_type, raw_text, category, suburb_id, city_id, country_iso2,
                   price_min, price_max, min_trust_score, weight, ping_enabled,
-                  created_at, expires_at
+                  created_at, expires_at, result_count
            FROM wishlist_signals
            WHERE buyer_token = ?
            ORDER BY created_at DESC""",
@@ -7287,8 +8019,8 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
             "Adventures": "Adventures-Experiences",
             "Adventures-Experiences": "Adventures-Experiences",
             "Adventures-Accommodation": "Adventures-Accommodation",
-            "Collectors": "Collectors", "Cars": "Cars",
-            "Cars_dealer": "Cars", "Cars_private": "Cars_private",
+            "Collectors": "Collectors", "Cars": "Cars_private",
+            "Cars_dealer": "Cars_private", "Cars_private": "Cars_private",
         }
         cat_key = _cat_norm.get(category, category)
     else:
@@ -9306,6 +10038,967 @@ def _make_token(sub: str) -> str:
     }
     return _pyjwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGO)
 
+# ── VIEW-ONLY REVIEWER ACCESS (Paystack compliance) ───────────────────────────
+# A pre-launch "reviewer" credential that unlocks ONLY the public browse view.
+# Security properties (deliberate):
+#   * The code is NEVER shipped to the browser. The browser POSTs the typed code
+#     to /review/login over HTTPS; we bcrypt-check it against a hash held on the
+#     server only (env MS_REVIEW_CODE_HASH, else /var/www/marketsquare/review_code.hash).
+#   * Success returns a short-lived JWT signed with a SEPARATE secret (_REVIEW_SECRET),
+#     so a review token can NEVER validate as an admin token: _require_admin and
+#     /admin/verify decode with _JWT_SECRET and will reject it. No admin/superuser/ops.
+#   * Revoke instantly: delete/replace the hash file (re-read on every attempt).
+#   * Brute-force resistant: high-entropy code + bcrypt cost + per-IP rate limit.
+_REVIEW_SECRET     = os.environ.get("MS_REVIEW_SECRET") or hashlib.sha256(
+                        ("trustsquare-review-scope|" + _JWT_SECRET).encode()).hexdigest()
+_REVIEW_TOKEN_DAYS = 14
+_REVIEW_HASH_FILE  = "/var/www/marketsquare/review_code.hash"
+_review_attempts   = {}   # ip -> [count, window_start_epoch]
+
+def _review_code_hash():
+    """bcrypt hash of the reviewer code (env first, then file). Re-read every call so
+    deleting/replacing the file revokes/rotates access with no restart."""
+    h = os.environ.get("MS_REVIEW_CODE_HASH", "").strip()
+    if h:
+        return h.encode()
+    try:
+        with open(_REVIEW_HASH_FILE, "r") as _f:
+            v = _f.read().strip()
+            return v.encode() if v else None
+    except FileNotFoundError:
+        return None
+    except Exception:
+        return None
+
+def _review_rate_ok(ip: str) -> bool:
+    import time as _t
+    now = _t.time()
+    rec = _review_attempts.get(ip)
+    if not rec or now - rec[1] > 600:        # 10-minute window
+        _review_attempts[ip] = [1, now]
+        return True
+    rec[0] += 1
+    return rec[0] <= 8                        # max 8 attempts / 10 min / IP
+
+class _ReviewLoginRequest(_BaseModel):
+    code: str
+
+@app.post("/review/login")
+def review_login(req: _ReviewLoginRequest, request: Request):
+    """Validate a reviewer code server-side; return a scoped view-only token. Grants
+    NOTHING but passage past the pre-launch gate (browse view). Never admin/superuser."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _review_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    stored = _review_code_hash()
+    if not stored:
+        raise HTTPException(status_code=503, detail="Reviewer access is not currently enabled.")
+    code = (req.code or "").strip()
+    try:
+        ok = bool(code) and _bcrypt.checkpw(code.encode(), stored)
+    except Exception:
+        ok = False
+    if not ok:
+        _log.warning("review-login FAILED from %s", ip)
+        raise HTTPException(status_code=401, detail="Incorrect reviewer code.")
+    _log.info("review-login OK from %s", ip)
+    payload = {
+        "scope": "review",
+        "exp": datetime.now(timezone.utc) + timedelta(days=_REVIEW_TOKEN_DAYS),
+        "iat": datetime.now(timezone.utc),
+    }
+    token = _pyjwt.encode(payload, _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    return {"token": token, "expires_days": _REVIEW_TOKEN_DAYS}
+
+@app.get("/review/verify")
+def review_verify(x_review_token: str = Header(default=None)):
+    """Verify a view-only review token (separate secret). 200 if valid, 401 otherwise."""
+    if not x_review_token:
+        raise HTTPException(status_code=401, detail="No token.")
+    try:
+        payload = _pyjwt.decode(x_review_token, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+    except _pyjwt.ExpiredSignatureError as exc:
+        raise HTTPException(status_code=401, detail="Token expired.") from exc
+    except _pyjwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token.") from exc
+    if payload.get("scope") != "review":
+        raise HTTPException(status_code=401, detail="Wrong scope.")
+    return {"valid": True, "scope": "review"}
+
+# ── SELF-SERVE MAGIC-LINK SIGN-IN (buyers + returning users) ───────────────
+# One email box, no passwords. We email a signed, short-lived link; clicking it
+# proves inbox ownership and signs the person in — creating the account on first
+# use, so "register" and "log in" are the same act.
+APP_URL = os.getenv("APP_URL", "https://trustsquare.co")
+
+class _SignInRequest(_BaseModel):
+    email: str
+
+class _SignInVerify(_BaseModel):
+    token: str
+
+def _send_login_email(to_email: str, link: str) -> str:
+    """Email the sign-in link. Resend if configured, else Gmail SMTP. Returns
+    'sent' | 'failed' | 'dry' (no email transport configured)."""
+    subject = "Your TrustSquare sign-in link"
+    html = (
+        "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+        "<h2 style='color:#0c1a2e'>Sign in to TrustSquare</h2>"
+        "<p>Tap the button to sign in. This link works once and expires in 20 minutes.</p>"
+        "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+        "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Sign in &rarr;</a></p>"
+        "<p style='color:#6b7280;font-size:12px'>If you didn't request this, you can ignore this email.</p>"
+        "</div>"
+    )
+    key = os.getenv("RESEND_API_KEY", "")
+    if key:
+        try:
+            import httpx
+            r = httpx.post("https://api.resend.com/emails",
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+                      "to": [to_email], "subject": subject, "html": html},
+                timeout=20)
+            return "sent" if r.status_code in (200, 201) else "failed"
+        except Exception as exc:
+            _log.error("login email (resend) failed: %s", exc)
+            return "failed"
+    if GMAIL_APP_PASSWORD:
+        try:
+            msg = EmailMessage()
+            msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.set_content("Sign in to TrustSquare: " + link + "  (expires in 20 minutes)")
+            msg.add_alternative(html, subtype="html")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+                server.starttls()
+                server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                server.send_message(msg)
+            return "sent"
+        except Exception as exc:
+            _log.error("login email (smtp) failed: %s", exc)
+            return "failed"
+    return "dry"
+
+@app.post("/auth/request-link")
+def auth_request_link(req: _SignInRequest):
+    """Email a signed sign-in link. Always returns ok (no account enumeration)."""
+    email = (req.email or "").strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    token = _pyjwt.encode(
+        {"email": email, "purpose": "signin",
+         "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
+         "iat": datetime.now(timezone.utc)},
+        _JWT_SECRET, algorithm=_JWT_ALGO)
+    status = _send_login_email(email, APP_URL + "/?signin=" + token)
+    return {"ok": True, "sent": status}
+
+@app.post("/auth/verify")
+def auth_verify(req: _SignInVerify):
+    """Verify a sign-in token; create the account on first use. Returns email+name."""
+    try:
+        payload = _pyjwt.decode(req.token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except _pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="This sign-in link has expired — request a new one.")
+    except _pyjwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
+    if payload.get("purpose") != "signin":
+        raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
+    email = (payload.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
+        conn.commit()
+        row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
+        name = row["name"] if row and row["name"] else email.split("@")[0]
+    finally:
+        conn.close()
+    return {"ok": True, "email": email, "name": name}
+
+# ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
+class _AgencyCreate(_BaseModel):
+    name: str
+    admin_email: str
+    countries: list = []
+
+class _AgentInvite(_BaseModel):
+    email: str
+    listing_cap: int = 10
+
+class _AgentCapUpdate(_BaseModel):
+    listing_cap: Optional[int] = None
+    seat_paid: Optional[bool] = None
+
+def _agency_agent_rollup(conn, email):
+    """Reuse the per-seller model: live listings, trust score, intros."""
+    email = (email or "").lower().strip()
+    u = conn.execute("SELECT trust_score, slot_limit, name, seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+    live = conn.execute("SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (email,)).fetchone()["c"]
+    try:
+        intros_n = conn.execute("SELECT COUNT(*) c FROM intro_requests WHERE LOWER(seller_email)=?", (email,)).fetchone()["c"]
+    except Exception:
+        intros_n = 0
+    return {"email": email,
+            "name": (u["name"] if u and u["name"] else email.split("@")[0]),
+            "trust_score": int(u["trust_score"]) if u and u["trust_score"] is not None else 40,
+            "listings_live": live,
+            "intros": intros_n,
+            "tier": (u["seller_tier"] if u and u["seller_tier"] else "free")}
+
+@app.post("/agencies")
+def create_agency(req: _AgencyCreate, _key: str = Depends(auth.require_api_key)):
+    """Create a verified agency (ops, after application/verification)."""
+    name = (req.name or "").strip()
+    admin = (req.admin_email or "").strip().lower()
+    if not name or "@" not in admin:
+        raise HTTPException(status_code=400, detail="name and a valid admin_email are required")
+    api_key = "tsq_agency_" + uuid.uuid4().hex
+    countries = ",".join([str(c).strip().upper() for c in (req.countries or []) if str(c).strip()])
+    conn = database.get_db()
+    try:
+        cur = conn.execute("INSERT INTO agencies (name, admin_email, api_key, countries, verified) VALUES (?,?,?,?,1)",
+                           (name, admin, api_key, countries))
+        aid = cur.lastrowid
+        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (admin,))
+        conn.execute("INSERT OR IGNORE INTO agency_members (agency_id, agent_email, role, status, joined_at) "
+                     "VALUES (?,?, 'admin','active', strftime('%Y-%m-%dT%H:%M:%SZ','now'))", (aid, admin))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "id": aid, "name": name, "admin_email": admin, "api_key": api_key, "countries": countries}
+
+@app.get("/agencies/{agency_id}")
+def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):
+    conn = database.get_db()
+    try:
+        a = conn.execute("SELECT id, name, admin_email, api_key, countries, plan, verified FROM agencies WHERE id=?", (agency_id,)).fetchone()
+        if not a:
+            raise HTTPException(status_code=404, detail="Agency not found")
+        members = conn.execute("SELECT agent_email, listing_cap, seat_paid, role, status FROM agency_members "
+                               "WHERE agency_id=? AND status!='removed' ORDER BY role DESC, agent_email", (agency_id,)).fetchall()
+        agents = []; used = 0; allowance = 0
+        for m in members:
+            r = _agency_agent_rollup(conn, m["agent_email"])
+            r.update({"listing_cap": m["listing_cap"], "seat_paid": bool(m["seat_paid"]), "role": m["role"], "status": m["status"]})
+            used += r["listings_live"]; allowance += m["listing_cap"]
+            agents.append(r)
+        return {"id": a["id"], "name": a["name"], "admin_email": a["admin_email"],
+                "countries": a["countries"], "plan": a["plan"], "verified": bool(a["verified"]),
+                "api_key": a["api_key"], "agents": agents,
+                "rollup": {"agents": len(agents), "listings_used": used, "listings_allowance": allowance}}
+    finally:
+        conn.close()
+
+@app.post("/agencies/{agency_id}/agents")
+def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.require_api_key)):
+    """Add an agent: membership + cap mirrored into slot_limit + magic sign-in link."""
+    email = (req.email or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="valid email required")
+    cap = int(req.listing_cap) if req.listing_cap else 10
+    conn = database.get_db()
+    try:
+        if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="Agency not found")
+        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
+        conn.execute("UPDATE users SET slot_limit=?, seller_tier='starter' WHERE LOWER(email)=?", (cap, email))
+        conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status) VALUES (?,?,?, 'invited') "
+                     "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap", (agency_id, email, cap))
+        conn.commit()
+    finally:
+        conn.close()
+    try:
+        token = _pyjwt.encode({"email": email, "purpose": "signin",
+                               "exp": datetime.now(timezone.utc) + timedelta(hours=72),
+                               "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+        _send_login_email(email, APP_URL + "/?signin=" + token)
+    except Exception as exc:
+        _log.error("agency invite email failed: %s", exc)
+    return {"ok": True, "email": email, "listing_cap": cap, "status": "invited"}
+
+@app.put("/agencies/{agency_id}/agents/{email}")
+def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate, _key: str = Depends(auth.require_api_key)):
+    email = (email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        m = conn.execute("SELECT listing_cap, seat_paid FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=?", (agency_id, email)).fetchone()
+        if not m:
+            raise HTTPException(status_code=404, detail="Agent not in this agency")
+        cap = m["listing_cap"]; paid = m["seat_paid"]
+        if req.seat_paid is not None:
+            paid = 1 if req.seat_paid else 0
+            cap = 20 if paid else 10
+        if req.listing_cap is not None:
+            cap = int(req.listing_cap)
+        conn.execute("UPDATE agency_members SET listing_cap=?, seat_paid=? WHERE agency_id=? AND LOWER(agent_email)=?", (cap, paid, agency_id, email))
+        conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, ('pro' if paid else 'starter'), email))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "email": email, "listing_cap": cap, "seat_paid": bool(paid)}
+
+@app.delete("/agencies/{agency_id}/agents/{email}")
+def remove_agent(agency_id: int, email: str, _key: str = Depends(auth.require_api_key)):
+    email = (email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE agency_members SET status='removed' WHERE agency_id=? AND LOWER(agent_email)=?", (agency_id, email))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "email": email, "status": "removed"}
+
+@app.get("/agencies/by-admin/{email}")
+def agency_by_admin(email: str, _key: str = Depends(auth.require_api_key)):
+    """Resolve the agency an admin manages (for the console entry). 404 if none."""
+    email = (email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        a = conn.execute("SELECT id FROM agencies WHERE LOWER(admin_email)=? ORDER BY id LIMIT 1", (email,)).fetchone()
+        if not a:
+            m = conn.execute("SELECT agency_id FROM agency_members WHERE LOWER(agent_email)=? AND role='admin' AND status!='removed' LIMIT 1", (email,)).fetchone()
+            if not m:
+                raise HTTPException(status_code=404, detail="No agency for this admin")
+            return {"agency_id": m["agency_id"]}
+        return {"agency_id": a["id"]}
+    finally:
+        conn.close()
+
+class _AgencyRename(_BaseModel):
+    name: str
+
+@app.put("/agencies/{agency_id}")
+def rename_agency(agency_id: int, req: _AgencyRename, _key: str = Depends(auth.require_api_key)):
+    """Rename an agency/operator (ops/superuser). Added 7 Jul 2026 so demo/test
+    orgs can be branded before a prospect pitch (the console shows the name to
+    whoever holds the link). Name only — nothing else is touchable here."""
+    name = (req.name or "").strip()
+    if not (2 <= len(name) <= 80):
+        raise HTTPException(status_code=400, detail="Name must be 2-80 characters")
+    conn = database.get_db()
+    try:
+        if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="Agency not found")
+        conn.execute("UPDATE agencies SET name=? WHERE id=?", (name, agency_id))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "id": agency_id, "name": name}
+
+@app.get("/agencies")
+def list_agencies(_key: str = Depends(auth.require_api_key)):
+    """All agencies/operators — feeds the superuser ops org-picker (7 Jul 2026).
+    Light rows only; api-key gated like every /agencies sibling. No path clash:
+    bare /agencies is one segment, /agencies/{agency_id} needs two."""
+    conn = database.get_db()
+    try:
+        rows = conn.execute("SELECT id, name, verified, admin_email FROM agencies ORDER BY name").fetchall()
+        return {"agencies": [{"id": r["id"], "name": r["name"], "verified": bool(r["verified"]),
+                              "admin_email": r["admin_email"]} for r in rows]}
+    finally:
+        conn.close()
+
+# ── ANON-TEXT · Agency-import text anonymisation (spec §1 "Text pass") ────────
+# AGENCY_IMPORT_ANONYMISATION_SPEC.md Phase A. Two legs, in order:
+#   1) _anon_regex_clean — hard strip: phones (SA + intl), emails, URLs/social
+#      handles, street number + street name (suburb/area kept). ALWAYS runs.
+#   2) _anon_ai_rewrite  — title+description through the existing ai_provider
+#      seam (same as /advert-agent/market-note) to remove agent names, agency
+#      branding, contact CTAs and identifying phrasing while KEEPING price,
+#      beds/baths/erf, condition, suburb and the genuine selling points.
+# Fail-safe: any AI-leg failure → store the regex-only clean and flag that row
+# needs_review in the import response. Every advert still lands as
+# listing_status='draft' — nothing auto-publishes. Agency brand fully hidden
+# (spec decision #3 default). No schema changes. Used by agency_import AND every seller photo upload via _seller_photo_anon_gate (11 Jul 2026).
+
+_ANON_PATTERNS = [
+    ("email",  re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")),
+    ("url",    re.compile(r"(?:https?://|www\.)[^\s,;)]+", re.I)),
+    ("url",    re.compile(r"\b[A-Za-z0-9][A-Za-z0-9-]{1,60}\.(?:co\.za|org\.za|net\.za|web\.za|com|net|org|io|biz|info|online|site|properties|estate|homes|agency)(?:/[^\s,;)]*)?\b", re.I)),
+    ("handle", re.compile(r"(?<![A-Za-z0-9._%+-])@[A-Za-z0-9_.]{2,30}\b")),
+    # phones: intl (+27/0027 …) then SA local (082 123 4567, (012) 345-6789).
+    # Prefix shape (0 / + / 00) keeps prices like R2 450 000 and erf sizes safe.
+    ("phone",  re.compile(r"(?:\+|\b00)\d{1,3}[\s\-.]?\(?\d{1,4}\)?(?:[\s\-.]?\d{2,4}){2,4}\b")),
+    ("phone",  re.compile(r"\(?\b0\d{1,2}\)?[\s\-.]?\d{3}[\s\-.]?\d{4}\b")),
+    # street number + Title-Cased street name + street type (EN + AF types).
+    # Lookahead stops "…Bedrooms Close to schools" false-positives; lowercase
+    # addresses are left for the AI leg (fallback rows are needs_review anyway).
+    ("address", re.compile(
+        r"(?:(?:[Uu]nit|[Ff]lat|[Aa]pt\.?|[Aa]partment|[Nn]o\.?)\s*\d+[A-Za-z]?\s*,?\s*)?"
+        r"\b\d{1,5}[A-Za-z]?\s+(?:[A-Z][A-Za-z'-]+\s+){0,3}"
+        r"(?:[Ss]treet|[Ss]traat|[Ss]tr|[Ss]t|[Rr]oad|[Rr]d|[Aa]venue|[Aa]ve|[Dd]rive|[Dd]r|"
+        r"[Ll]ane|[Ll]n|[Cc]rescent|[Cc]res|[Cc]lose|[Bb]oulevard|[Bb]lvd|[Ww]ay|[Pp]lace|[Pp]l|"
+        r"[Tt]errace|[Cc]ourt|[Cc]t|[Ll]aan|[Ww]eg|[Rr]ylaan|[Ss]ingel)\b\.?(?!\s+(?:to|and|with|by)\b)")),
+]
+
+# ── ANON-TOURS (7 Jul 2026) · category-aware prompts ─────────────────────────
+# Tour operators onboard through the SAME agency machinery; only the AI
+# instructions differ. For travel-family adverts (canon PRICING_CANON.md §2a
+# list) the text rewrite must KEEP the product facts (duration, group size,
+# itinerary stops/landmarks, inclusions, difficulty, season, departure AREA)
+# and the photo scan must target branded vehicles/flags/kit rather than
+# for-sale boards. Everything else — regex strip, fail-closed photo pipeline,
+# drafts, needs_review — is identical and shared.
+
+_ANON_TRAVEL_CATS = {"adventures","adventure","experiences","adventures_experiences",
+                     "accommodation","adventures_accommodation","tours","heritage","travel"}
+
+def _anon_is_travel(category):
+    return str(category or "").strip().lower() in _ANON_TRAVEL_CATS
+
+_ANON_AI_SYSTEM_TOURS = (
+    "You anonymise tour and experience adverts for TrustSquare, an anonymity-first South "
+    "African marketplace where operators stay anonymous until a paid introduction is "
+    "accepted. Rewrite the advert title and description to REMOVE all identifying detail: "
+    "operator/company names, guide or owner names, booking instructions (book now, call, "
+    "WhatsApp, email, 'reserve via our website/office'), depot/office/pickup street "
+    "addresses (keep the town, area, park or landmark), website and social references, "
+    "vehicle registration numbers, and any branding phrases. KEEP everything a traveller "
+    "needs to want this trip: price per person, duration, group size, the itinerary stops "
+    "and landmarks (parks, peaks, routes ARE the product — never remove them), inclusions "
+    "and exclusions, difficulty level, season, and the departure town/area. Do not invent "
+    "details. Do not name or hint at the operator. Return EXACTLY this format and nothing "
+    "else:\nTITLE: <clean title>\nDESCRIPTION: <clean description>"
+)
+
+_ANON_SCAN_PROMPT_TOURS = (
+    "You are the photo anonymiser for TrustSquare, an anonymity-first marketplace: tour "
+    "operators must be unidentifiable from listing photos. Inspect this tour/experience "
+    "photo for ANY identifying content: operator logos or company names on vehicles, "
+    "trailers, boats or aircraft; phone numbers or web addresses painted/wrapped on "
+    "vehicles; branded flags, banners, gazebos, uniforms or kit; booking-desk or office "
+    "signage; vehicle number plates; watermarks or contact overlays; branded flyers or "
+    "collages. Scenery, wildlife, guests and unbranded equipment are FINE and must not be "
+    "flagged. Already-blurred or pixelated patches are already-redacted content — "
+    "never flag them. Reply with ONLY a JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", "
+    "\"confidence\": 0.0-1.0, \"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,"
+    "\"y1\":0-1000,\"label\":\"what\"}]}. Coordinates: 0-1000 scale of THIS image, origin "
+    "top-left; make every box GENEROUS (cover the item fully plus margin). Rules: clean = "
+    "you are certain there is NO identifying content anywhere. redact = identifying content "
+    "is small and localised and every instance is boxed in regions. reject = the image is "
+    "substantially a branded flyer/advert/collage, or identifying content is large or "
+    "scattered (e.g. a fully-wrapped branded vehicle dominating the frame), or you are not "
+    "certain your boxes cover everything. confidence = how certain you are that your verdict "
+    "and boxes handle ALL identifying content. If in ANY doubt, reject."
+)
+
+def _anon_scan_prompt_for(category):
+    return _ANON_SCAN_PROMPT_TOURS if _anon_is_travel(category) else _ANON_SCAN_PROMPT
+
+def _anon_regex_clean(text: str):
+    """Hard-strip identifying strings from advert text. Returns (clean, hit_labels).
+    Conservative by design — prices (R2 450 000), erf sizes and bed/bath counts do
+    not match the phone shapes; suburbs/areas are never touched."""
+    if not text:
+        return "", []
+    hits = []
+    out = str(text)
+    for label, pat in _ANON_PATTERNS:
+        out, n = pat.subn(" ", out)
+        if n:
+            hits.append(label)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    out = re.sub(r"\s+([,.;:!?])", r"\1", out)
+    out = re.sub(r"\n{3,}", "\n\n", out).strip()
+    return out, sorted(set(hits))
+
+_ANON_AI_SYSTEM = (
+    "You anonymise classified adverts for TrustSquare, an anonymity-first South African "
+    "marketplace where sellers stay anonymous until a paid introduction is accepted. "
+    "Rewrite the advert title and description to REMOVE all identifying detail: agent names, "
+    "agency/brand names, contact instructions (call, WhatsApp, SMS, email, 'viewing by "
+    "appointment', 'contact our office'), office/branch references, website or social-media "
+    "references, and street addresses (keep suburb/area only). KEEP the facts a buyer needs: "
+    "price, beds, baths, garages, erf/floor size, condition, suburb/area, and the genuine "
+    "selling points. Do not invent details. Do not name or hint at the agency. "
+    "Return EXACTLY this format and nothing else:\n"
+    "TITLE: <clean title>\nDESCRIPTION: <clean description>"
+)
+
+def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = ""):
+    """AI leg of the anonymise pass — SEAM-ROUTED via ai_provider.complete (D1),
+    exactly like /advert-agent/market-note. Returns (ok, title, desc, in_tok, out_tok).
+    ok=False on ANY failure (no key, provider down, unparseable output) so the
+    caller falls back to regex-only + needs_review. Never raises."""
+    try:
+        import ai_provider as _ap
+        res = _ap.complete(
+            [{"role": "user", "content": "TITLE: %s\nDESCRIPTION: %s" % (title, desc)}],
+            task="haiku", max_tokens=1000,
+            system=(_ANON_AI_SYSTEM_TOURS if _anon_is_travel(category) else _ANON_AI_SYSTEM),
+            provider=provider)
+        if not res.ok:
+            return False, title, desc, None, None
+        m = re.search(r"TITLE:\s*(.*?)\s*DESCRIPTION:\s*(.*)", (res.text or ""), re.S | re.I)
+        if not m:
+            return False, title, desc, None, None
+        t = m.group(1).strip().strip("*").strip()
+        d = m.group(2).strip().strip("*").strip()
+        if desc.strip() and not d:   # model dropped the body — distrust it
+            return False, title, desc, None, None
+        return True, (t or title), d, res.in_tokens, res.out_tokens
+    except Exception:
+        return False, title, desc, None, None
+
+# ── ANON-PHOTO · Agency-import photo anonymisation (spec §2 "Photo pass") ─────
+# Phase B. FAIL-CLOSED by design (David, 7 Jul 2026: "no slips"): a photo is
+# attached to the draft ONLY when the vision scan says clean, or says redact and
+# the blur was actually applied, at/above the confidence gate. EVERY other path
+# (fetch error, blocked host, unreadable file, no key, ceiling hit, scan error,
+# unparseable verdict, reject/flyer, low confidence, no usable regions, upload
+# error) holds the photo back — it is never stored. Originals are never stored
+# either: attached images are re-encoded (EXIF/GPS stripped) thumb+medium like
+# the normal upload path. Spec defaults: redact-if-localised, reject-if-flyer;
+# first-N ops spot-check flag; agency brand fully hidden. Vision goes through
+# the ai_provider seam (task="sonnet" → claude-sonnet — upgraded from Haiku for
+# detection quality, David 7 Jul 2026; ~3.75x cost, logged as sonnet_vision). Used by agency_import AND every seller photo upload via _seller_photo_anon_gate (11 Jul 2026).
+
+_ANON_PHOTO_MAX = 6        # photos scanned per advert (cost bound)
+_ANON_PHOTO_CONF = 0.75    # confidence gate — below this the photo is held
+_ANON_SPOTCHECK_N = 10     # first N adverts per agency flagged spot_check
+
+_ANON_SCAN_PROMPT = (
+    "You are the photo anonymiser for TrustSquare, an anonymity-first marketplace: "
+    "sellers and agents must be unidentifiable from listing photos. Inspect this "
+    "photo for ANY identifying content: phone numbers or contact-detail text/overlay "
+    "bars, agency logos or watermarks, estate-agent boards or For-Sale signage, "
+    "branded flyers/collages, agent portrait/headshot promo overlays, vehicle number "
+    "plates AND their dealer plate-surrounds/frames (the strip above/below the "
+    "plate often prints a dealership website and PHONE NUMBER — box the WHOLE "
+    "plate unit including that strip), visible house or street numbers, "
+    "street-name signs. Scan the WHOLE frame: number plates on BACKGROUND or "
+    "neighbouring vehicles count exactly like the main subject's — box every one. "
+    "Already-blurred or pixelated patches are ALREADY-redacted "
+    "content — treat them as anonymous, never flag them. A plate or text strip counts as "
+    "redacted ONLY when EVERY character is unreadable — if even ONE character or "
+    "digit is readable anywhere, including at the EDGE of a blurred patch, it is "
+    "NOT redacted: box the ENTIRE plate unit including the readable part. Box ONLY items actually "
+    "visible/readable: a view of the car where no plate or text is visible is "
+    "clean — do not box bare body panels 'just in case'. Reply with ONLY a "
+    "JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", \"confidence\": 0.0-1.0, "
+    "\"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,\"y1\":0-1000,\"label\":\"what\"}]}. Labels: 2-4 words, NEVER transcribe plate "
+    "characters or phone digits into the label. "
+    "Coordinates: 0-1000 scale of THIS image, origin top-left; make every box GENEROUS "
+    "(cover the item fully plus margin). Rules: clean = you are certain there is NO "
+    "identifying content anywhere. redact = identifying content is small and localised "
+    "and every instance is boxed in regions. reject = the image is substantially a "
+    "branded flyer/advert/collage, or identifying content is large or scattered, or "
+    "you are not certain your boxes cover everything. confidence = how certain you are "
+    "that your verdict and boxes handle ALL identifying content. If in ANY doubt, reject."
+)
+
+def _anon_photo_fetch(src):
+    """Fetch one advert photo (https/http URL or data:image URI). Returns (bytes|None,
+    note). Fail-closed: any oddity returns None. Redirects re-checked hop by hop;
+    private/loopback/link-local hosts refused."""
+    try:
+        src = str(src or "").strip()
+        if src.startswith("data:image/"):
+            import base64 as _b64
+            raw = _b64.b64decode(src.split(",", 1)[-1])
+            return (raw, "") if 100 < len(raw) <= 12 * 1024 * 1024 else (None, "bad-data-uri")
+        if not (src.startswith("https://") or src.startswith("http://")):
+            return None, "unsupported-scheme"
+        from urllib.parse import urlparse
+        import socket, ipaddress
+        url = src
+        with httpx.Client(timeout=12) as c:
+            for _hop in range(4):
+                host = urlparse(url).hostname or ""
+                try:
+                    infos = socket.getaddrinfo(host, None)
+                except Exception:
+                    return None, "dns-failed"
+                for ai in infos:
+                    ip = ipaddress.ip_address(ai[4][0])
+                    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                        return None, "blocked-host"
+                r = c.get(url, follow_redirects=False)
+                if r.status_code in (301, 302, 303, 307, 308):
+                    nxt = r.headers.get("location")
+                    if not nxt:
+                        return None, "redirect-broken"
+                    url = str(httpx.URL(url).join(nxt))
+                    continue
+                break
+            else:
+                return None, "too-many-redirects"
+        if r.status_code != 200:
+            return None, "http-%s" % r.status_code
+        if not (r.headers.get("content-type") or "").lower().startswith("image/"):
+            return None, "not-an-image"
+        raw = r.content
+        return (raw, "") if 100 < len(raw) <= 12 * 1024 * 1024 else (None, "bad-size")
+    except Exception:
+        return None, "fetch-failed"
+
+def _anon_photo_scan(jpeg_b64, provider, category=""):
+    """ONE seam-routed vision call → verdict dict or None (None = hold the photo).
+    Returns (scan|None, in_tokens, out_tokens). Never raises."""
+    try:
+        import ai_provider as _ap
+        res = _ap.complete(
+            [{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64",
+                 "media_type": "image/jpeg", "data": jpeg_b64}},
+                {"type": "text", "text": _anon_scan_prompt_for(category)}]}],
+            task="sonnet", max_tokens=1400, provider=provider)   # Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
+        if not res.ok:
+            _log.warning("anon photo scan: provider returned not-ok (provider=%s)", provider)
+            return None, None, None
+        text = (res.text or "").strip()
+        if text.startswith("```"):
+            text = text.strip("`").lstrip("json").strip()
+        try:
+            v = json.loads(text)
+        except Exception:
+            # 11 Jul 2026: model sometimes wraps the JSON in prose or emits TWO
+            # objects back-to-back — parse the FIRST valid object, ignore the rest.
+            try:
+                v = json.JSONDecoder().raw_decode(text[text.index("{"):])[0]
+            except Exception:
+                _log.warning("anon photo scan unparseable (first 120): %r", text[:120])
+                return None, res.in_tokens, res.out_tokens
+        verdict = str(v.get("verdict", "")).lower().strip()
+        if verdict not in ("clean", "redact", "reject"):
+            return None, res.in_tokens, res.out_tokens
+        regs = []
+        for rg in (v.get("regions") or [])[:12]:
+            try:
+                x0, y0, x1, y1 = (int(rg.get(k, -1)) for k in ("x0", "y0", "x1", "y1"))
+            except Exception:
+                continue
+            if 0 <= x0 < x1 <= 1000 and 0 <= y0 < y1 <= 1000:
+                regs.append((x0, y0, x1, y1, str(rg.get("label", ""))[:40]))
+        try:
+            conf = float(v.get("confidence", 0) or 0)
+        except Exception:
+            conf = 0.0
+        return ({"verdict": verdict, "regions": regs, "confidence": conf,
+                 "labels": [r[4] for r in regs if r[4]]}, res.in_tokens, res.out_tokens)
+    except Exception as _sexc:
+        _log.warning("anon photo scan failed: %r", _sexc)
+        return None, None, None
+
+def _anon_photo_redact(img, regions):
+    """Gaussian-blur each region on the FULL-SIZE image. Padding is BOX-relative
+    (12%/18% of the box + ≥8px) — 11 Jul 2026, David: blur ONLY the plate/strip,
+    not a chunk of the photo. Image-relative padding (was 5%+16px) swallowed
+    small boxes; accuracy now comes from _anon_refine_regions and the leak
+    guarantee from the verify pass in _anon_blur_until_clean.
+    Regions are 0-1000 normalized. Returns (img, boxes_applied)."""
+    from PIL import ImageFilter
+    w, h = img.size
+    n = 0
+    for (x0, y0, x1, y1, _lbl) in regions:
+        _bw = w * (x1 - x0) / 1000.0; _bh = h * (y1 - y0) / 1000.0
+        px = max(8, int(_bw * 0.12)); py = max(8, int(_bh * 0.22))
+        X0 = max(0, int(w * x0 / 1000) - px); Y0 = max(0, int(h * y0 / 1000) - py)
+        X1 = min(w, int(w * x1 / 1000) + px); Y1 = min(h, int(h * y1 / 1000) + py)
+        if X1 - X0 < 4 or Y1 - Y0 < 4:
+            continue
+        box = img.crop((X0, Y0, X1, Y1))
+        rad = max(28, min(X1 - X0, Y1 - Y0) // 3)   # stronger: tight boxes must leave characters unreadable (11 Jul 2026)
+        img.paste(box.filter(ImageFilter.GaussianBlur(rad)), (X0, Y0))
+        n += 1
+    return img, n
+
+def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
+    """Second-stage ZOOM-IN pass (11 Jul 2026, David: blur ONLY the plate and the
+    small dealer/phone strip). Full-frame box coords from the scanner are sloppy;
+    coords inside a small crop are accurate. For each rough region: crop ~2.5x
+    context around it, ask the model to box the item EXACTLY within the crop,
+    map back to full-image coords. Sanity rails: refined box must intersect the
+    rough box and be no larger — any failure keeps the rough box (safety beats
+    aesthetics; _anon_blur_until_clean's verify pass still gates the result)."""
+    import base64 as _b64
+    W, H = img.size
+    out = []
+    for (x0, y0, x1, y1, lbl) in list(regions)[:8]:
+        rough = (x0, y0, x1, y1, lbl)
+        try:
+            px0, py0 = W * x0 / 1000.0, H * y0 / 1000.0
+            px1, py1 = W * x1 / 1000.0, H * y1 / 1000.0
+            bw, bh = px1 - px0, py1 - py0
+            cx0 = max(0, int(px0 - 0.75 * bw)); cy0 = max(0, int(py0 - 0.75 * bh))
+            cx1 = min(W, int(px1 + 0.75 * bw)); cy1 = min(H, int(py1 + 0.75 * bh))
+            cw, ch = cx1 - cx0, cy1 - cy0
+            if cw < 24 or ch < 24:
+                out.append(rough); continue
+            crop = img.crop((cx0, cy0, cx1, cy1))
+            if max(crop.size) > 1024:
+                _s = 1024.0 / max(crop.size)
+                crop = crop.resize((max(1, int(crop.size[0] * _s)),
+                                    max(1, int(crop.size[1] * _s))), Image.LANCZOS)
+            cbuf = io.BytesIO(); crop.save(cbuf, format="JPEG", quality=85)
+            import ai_provider as _ap
+            res = _ap.complete(
+                [{"role": "user", "content": [
+                    {"type": "image", "source": {"type": "base64",
+                     "media_type": "image/jpeg",
+                     "data": _b64.b64encode(cbuf.getvalue()).decode()}},
+                    {"type": "text", "text": (
+                        "This crop is from a marketplace photo. It should contain: %s. "
+                        "Reply with ONLY a JSON object {\"found\": true|false, \"x0\": 0-1000, "
+                        "\"y0\": 0-1000, \"x1\": 0-1000, \"y1\": 0-1000} boxing EXACTLY that "
+                        "item — the plate / text strip / sign FACE itself plus a tiny margin, NOT "
+                        "the surrounding bumper, car, wall or paving. Coordinates are 0-1000 of "
+                        "THIS crop, origin top-left. If the item is not visible, found=false."
+                        % (lbl or "an identifying item"))}]}],
+                task="sonnet", max_tokens=120, provider=provider)
+            if res.in_tokens is not None or res.out_tokens is not None:
+                _log_ai_spend(spend_who, endpoint + "#refine", "sonnet_vision",
+                              res.in_tokens, res.out_tokens)
+            if not res.ok:
+                out.append(rough); continue
+            _t = (res.text or "").strip()
+            if _t.startswith("```"):
+                _t = _t.strip("`").lstrip("json").strip()
+            try:
+                v = json.loads(_t)
+            except Exception:
+                try:
+                    v = json.JSONDecoder().raw_decode(_t[_t.index("{"):])[0]
+                except Exception:
+                    out.append(rough); continue
+            if not v.get("found"):
+                # Explicit "not visible" from the zoom-in pass DROPS the region —
+                # cure for needless patches on plate-less side views (David,
+                # 11 Jul 2026). Only an explicit found=false drops; any refine
+                # FAILURE still keeps the rough box. The caller's verify pass
+                # remains the no-slips gate on the final image.
+                continue
+            rx0, ry0, rx1, ry1 = (float(v.get(k, -1)) for k in ("x0", "y0", "x1", "y1"))
+            if not (0 <= rx0 < rx1 <= 1000 and 0 <= ry0 < ry1 <= 1000):
+                out.append(rough); continue
+            fx0 = (cx0 + rx0 / 1000.0 * cw) / W * 1000.0
+            fy0 = (cy0 + ry0 / 1000.0 * ch) / H * 1000.0
+            fx1 = (cx0 + rx1 / 1000.0 * cw) / W * 1000.0
+            fy1 = (cy0 + ry1 / 1000.0 * ch) / H * 1000.0
+            # rails: must intersect the rough box, be no larger, and be non-trivial
+            if fx1 <= x0 or fx0 >= x1 or fy1 <= y0 or fy0 >= y1:
+                out.append(rough); continue
+            if (fx1 - fx0) * (fy1 - fy0) > (x1 - x0) * (y1 - y0) * 1.1:
+                out.append(rough); continue
+            if (fx1 - fx0) * W / 1000.0 < 6 or (fy1 - fy0) * H / 1000.0 < 6:
+                out.append(rough); continue
+            out.append((int(fx0), int(fy0), int(round(fx1 + 0.5)), int(round(fy1 + 0.5)), lbl))
+        except Exception:
+            out.append(rough)
+    return out
+
+def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
+    """Apply redaction, then VERIFY by re-scanning the blurred output; accumulate
+    any newly-boxed regions for up to 2 correction rounds. Added 11 Jul 2026 after
+    the live rescan of listing 246 proved model box coords can land BELOW the plate
+    (plate stayed readable while paving got blurred) — never trust claimed boxes,
+    verify the actual output. Returns (img, labels) only when a re-scan of the
+    blurred image comes back clean at/above the confidence gate; (None, labels)
+    otherwise (caller holds/rejects — fail-closed)."""
+    import base64 as _b64
+    labels = list(scan.get("labels") or [])
+    regions = list(scan.get("regions") or [])
+    for _round in range(4):   # refine+blur+verify: initial + up to 3 corrections
+        if regions:
+            regions = _anon_refine_regions(img, regions, provider, category,
+                                           spend_who, endpoint)   # tighten; may DROP not-found
+        if regions:
+            img, _n = _anon_photo_redact(img, regions)
+        # ALWAYS verify the current image — the VERIFIER, not the boxes, is the
+        # no-slips guarantee. If refinement dropped every region (over-flagged
+        # side view, no plate actually visible) a clean verify returns the photo
+        # UNBLURRED (David, 11 Jul 2026: no needless patches).
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        v, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                       provider, category)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot)
+        if not v:
+            return None, labels
+        if v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
+            return img, labels
+        if v["verdict"] == "reject":
+            return None, labels + list(v.get("labels") or [])
+        regions = list(v.get("regions") or [])
+        labels += list(v.get("labels") or [])
+    return None, labels
+
+def _anon_photo_pass(photo_srcs, agent, provider, category=""):
+    """Run the fail-closed photo pipeline for one advert. Returns
+    (attached [(thumb_url, medium_url)], held count, notes [str])."""
+    import base64 as _b64
+    attached = []; held = 0; notes = []
+    for src in list(photo_srcs)[:_ANON_PHOTO_MAX]:
+        raw, why = _anon_photo_fetch(src)
+        if raw is None:
+            held += 1; notes.append("held:" + why); continue
+        try:
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
+        except Exception:
+            held += 1; notes.append("held:unreadable"); continue
+        try:
+            _check_cost_ceiling(agent)   # C1 rail per paid call
+        except Exception:
+            held += 1; notes.append("held:ai-ceiling"); continue
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        scan, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(agent, "/agencies/import#photo-scan", "sonnet_vision", _it, _ot)
+        if not scan:
+            held += 1; notes.append("held:scan-failed"); continue
+        if scan["verdict"] == "reject":
+            held += 1; notes.append("held:flyer-or-unsafe"); continue
+        if scan["confidence"] < _ANON_PHOTO_CONF:
+            held += 1; notes.append("held:low-confidence"); continue
+        if scan["verdict"] == "redact":
+            if not scan["regions"]:
+                held += 1; notes.append("held:redact-no-regions"); continue
+            img2, _lbls = _anon_blur_until_clean(
+                img, scan, provider, category, agent, "/agencies/import#photo-verify")
+            if img2 is None:
+                held += 1; notes.append("held:redact-unverified"); continue
+            img = img2
+            notes.append("redacted:" + ",".join(sorted(set(_lbls))[:4]))
+        # Re-encode (EXIF/GPS stripped) → thumb + medium, same as the upload path.
+        thumb = img.copy(); thumb.thumbnail(THUMB_SIZE, Image.LANCZOS)
+        tb = io.BytesIO(); thumb.save(tb, format="JPEG", quality=JPEG_QUALITY_THUMB, optimize=True)
+        medium = img.copy(); medium.thumbnail(MEDIUM_SIZE, Image.LANCZOS)
+        mb = io.BytesIO(); medium.save(mb, format="JPEG", quality=JPEG_QUALITY_MEDIUM, optimize=True)
+        try:
+            if _S3_CONFIGURED:
+                murl = _s3_upload(mb.getvalue(), "media/%s_import.jpg" % uuid.uuid4().hex, "image/jpeg")
+                turl = murl
+            else:
+                base = storage.generate_filename("listing")
+                turl = storage.upload_photo(tb.getvalue(), base.replace(".jpg", "_thumb.jpg"), "image/jpeg")
+                murl = storage.upload_photo(mb.getvalue(), base.replace(".jpg", "_medium.jpg"), "image/jpeg")
+        except Exception as _uexc:
+            _log.warning("agency_import photo upload failed (%s): %s", agent, _uexc)
+            held += 1; notes.append("held:upload-failed"); continue
+        attached.append((turl, murl))
+    return attached, held, notes
+
+class _AgencyImport(_BaseModel):
+    api_key: str
+    adverts: list = []
+
+@app.post("/agencies/{agency_id}/import")
+def agency_import(agency_id: int, req: _AgencyImport):
+    """Bulk-import an agency's current adverts. Auth = the agency's own api_key.
+    Each advert must carry agent_email; it lands as a DRAFT under that agent,
+    counting against their cap. ANON-TEXT (spec §1): title+description are
+    regex-stripped then AI-rewritten before storage; if the AI leg fails the
+    row stores regex-only and is flagged needs_review in the response.
+    ANON-PHOTO (spec §2, FAIL-CLOSED): advert photos (urls/data-URIs) are vision-
+    scanned; clean → attached, localised branding → blurred then attached, flyers/
+    low-confidence/any failure → HELD (never stored). Returns a per-advert summary."""
+    conn = database.get_db()
+    try:
+        a = conn.execute("SELECT id, api_key FROM agencies WHERE id=?", (agency_id,)).fetchone()
+        if not a:
+            raise HTTPException(status_code=404, detail="Agency not found")
+        if not req.api_key or req.api_key != a["api_key"]:
+            raise HTTPException(status_code=401, detail="Invalid agency API key")
+        members = {r["agent_email"].lower() for r in conn.execute(
+            "SELECT agent_email FROM agency_members WHERE agency_id=? AND status!='removed'", (agency_id,)).fetchall()}
+        imported = 0; unmatched = 0; capped = 0; needs_rev = 0; rows = []
+        ph_att_total = 0; ph_held_total = 0
+        prior_listed = conn.execute(
+            "SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email) IN "
+            "(SELECT LOWER(agent_email) FROM agency_members WHERE agency_id=? AND status!='removed')",
+            (agency_id,)).fetchone()["c"]   # spot-check-first-N baseline
+        for ad in (req.adverts or []):
+            if not isinstance(ad, dict):
+                unmatched += 1; continue
+            agent = str(ad.get("agent_email") or "").strip().lower()
+            if not agent or agent not in members:
+                unmatched += 1; continue
+            u = conn.execute("SELECT slot_limit FROM users WHERE LOWER(email)=?", (agent,)).fetchone()
+            cap = int(u["slot_limit"]) if u and u["slot_limit"] is not None else 10
+            used = conn.execute("SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status IN ('live','draft'))", (agent,)).fetchone()["c"]
+            if used >= cap:
+                capped += 1; continue
+            city = str(ad.get("city") or "").strip()
+            raw_title = str(ad.get("title") or "Imported listing")
+            raw_desc = str(ad.get("description") or "")
+            # ANON-TEXT leg 1 (spec §1): hard regex strip ALWAYS runs — the raw
+            # imported text is never stored.
+            t_clean, t_hits = _anon_regex_clean(raw_title)
+            d_clean, d_hits = _anon_regex_clean(raw_desc)
+            removed = sorted(set(t_hits) | set(d_hits))
+            # ANON-TEXT leg 2: AI rewrite via the existing seam. Fail-safe: any
+            # failure (no key, ceiling hit, bad output) → regex-only + needs_review.
+            row_needs_review = False
+            has_text = bool(d_clean.strip()) or bool(t_clean.strip() and raw_title != "Imported listing")
+            if has_text:
+                ai_ok = False
+                try:
+                    _check_cost_ceiling(agent)   # C1 rail — same guard as every paid AI call
+                    ai_ok, ai_t, ai_d, _it, _ot = _anon_ai_rewrite(
+                        t_clean, d_clean, _ts_active_provider(), str(ad.get("category") or "Property"))
+                    if ai_ok:
+                        # Belt-and-braces: re-strip the AI output so a model echo
+                        # of a phone/email can never reach the stored draft.
+                        t_clean = _anon_regex_clean(ai_t)[0]
+                        d_clean = _anon_regex_clean(ai_d)[0]
+                        _log_ai_spend(agent, "/agencies/import#anonymise", "haiku", _it, _ot)
+                except Exception as _aexc:
+                    _log.warning("agency_import anonymise AI leg failed (%s): %s", agent, _aexc)
+                if not ai_ok:
+                    row_needs_review = True
+            if not t_clean.strip():
+                t_clean = "Imported listing"
+            # ANON-PHOTO (spec §2): fail-closed photo pipeline. Held photos are
+            # simply not attached — the draft stores only clean/redacted images.
+            photo_srcs = ad.get("photos") or ad.get("images") or []
+            ph_attached = []; ph_held = 0; ph_notes = []
+            if isinstance(photo_srcs, list) and photo_srcs:
+                try:
+                    ph_attached, ph_held, ph_notes = _anon_photo_pass(
+                        photo_srcs, agent, _ts_active_provider(), str(ad.get("category") or "Property"))
+                except Exception as _pexc:
+                    ph_attached = []; ph_held = len(photo_srcs); ph_notes = ["held:photo-pass-error"]
+                    _log.warning("agency_import photo pass failed hard (%s): %s", agent, _pexc)
+                if ph_held:
+                    row_needs_review = True
+            ph_att_total += len(ph_attached); ph_held_total += ph_held
+            final_desc = d_clean
+            if ph_attached:
+                # [photos:...] prefix AFTER text cleaning — never regex-cleaned,
+                # or the strip would eat our own R2 URLs.
+                final_desc = "[photos:" + "|".join(m for (_t, m) in ph_attached) + "]\n" + d_clean
+            if row_needs_review:
+                needs_rev += 1
+            conn.execute(
+                "INSERT INTO listings (title, price, category, city, area, suburb, description, seller_email, listing_status, thumb_url, medium_url) "
+                "VALUES (?,?,?,?,?,?,?,?, 'draft', ?, ?)",
+                (t_clean, str(ad.get("price") or "POA"),
+                 str(ad.get("category") or "Property"), city,
+                 str(ad.get("area") or city), str(ad.get("suburb") or city),
+                 final_desc, agent,
+                 (ph_attached[0][0] if ph_attached else None),
+                 (ph_attached[0][1] if ph_attached else None)))
+            imported += 1
+            rows.append({"title": t_clean[:80], "agent_email": agent,
+                         "needs_review": row_needs_review, "removed": removed,
+                         "photos": {"received": (len(photo_srcs) if isinstance(photo_srcs, list) else 0),
+                                    "attached": len(ph_attached), "held": ph_held,
+                                    "notes": ph_notes[:8]},
+                         "spot_check": bool((prior_listed + imported) <= _ANON_SPOTCHECK_N)})
+        conn.commit()
+        return {"ok": True, "imported": imported, "unmatched_no_agent": unmatched, "skipped_at_cap": capped,
+                "anonymised": imported - needs_rev, "needs_review": needs_rev,
+                "photos_attached": ph_att_total, "photos_held": ph_held_total, "rows": rows}
+    finally:
+        conn.close()
+
 @app.post("/admin/login")
 def admin_login(req: _AdminLoginRequest):
     """Check master password OR team PIN. Returns JWT or must_change_pin signal."""
@@ -9413,7 +11106,113 @@ def _require_admin(x_admin_token: str = Header(default=None)):
         raise HTTPException(status_code=401, detail="Invalid token.") from exc
 
 
+@app.post("/admin/anon-rescan-listing")
+def admin_anon_rescan_listing(listing_id: int, apply: int = 1, _admin=Depends(_require_admin)):
+    """Re-run the fail-closed anon photo pass over an EXISTING listing's photos
+    (remediation for adverts published before the seller-upload gate, 11 Jul 2026
+    — e.g. cars listed with visible number plates). Each stored photo is fetched,
+    vision-scanned, blurred where needed and re-uploaded; photos that cannot be
+    cleared are REMOVED from the listing. apply=0 = scan/report only, no row write
+    (scanned copies are still uploaded, just not referenced). NOTE: replaced /
+    removed R2+/media objects are NOT deleted here and Cloudflare cache is NOT
+    purged — old public URLs stay reachable until purged manually."""
+    import re as _re, json as _json
+    conn = database.get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, seller_email, category, thumb_url, medium_url, description, photo_urls "
+            "FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        desc = row["description"] or ""
+        entries = []; seen = set()          # (url, caption), display order, primary first
+        def _add(u, cap=""):
+            u = (u or "").strip()
+            if u and u not in seen:
+                seen.add(u); entries.append((u, cap))
+        m = _re.match(r'^\[photos:([^\]]*)\]', desc)
+        for p in (m.group(1).split("|") if m else []):
+            if p:
+                u, _sep, cap = p.partition("::")
+                _add(u, cap)
+        _add(row["medium_url"] or row["thumb_url"] or "")
+        try:
+            for u in _json.loads(row["photo_urls"] or "[]"):
+                _add(str(u))
+        except Exception:
+            pass
+        if not entries:
+            return {"listing_id": listing_id, "photos_in": 0, "kept": 0, "removed": 0,
+                    "notes": ["no-photos"], "applied": False}
+        who = row["seller_email"] or "admin-rescan"
+        kept = []; removed = []; notes = []
+        for (u, cap) in entries:
+            att, _held, nts = _anon_photo_pass([u], who, _ts_active_provider(),
+                                               str(row["category"] or ""))
+            notes.append({"old": u, "notes": nts})
+            if att:
+                kept.append((att[0][1], cap, u))     # (new_medium, caption, old)
+            else:
+                removed.append(u)
+        applied = False
+        if apply:
+            new_primary = kept[0][0] if kept else None
+            new_strip = "|".join(("%s::%s" % (nu, cap) if cap else nu) for (nu, cap, _o) in kept)
+            if m:
+                new_desc = desc[m.end():].lstrip("\n")
+                if new_strip:
+                    new_desc = "[photos:%s]\n%s" % (new_strip, new_desc)
+            else:
+                new_desc = ("[photos:%s]\n%s" % (new_strip, desc)) if new_strip else desc
+            conn.execute(
+                "UPDATE listings SET thumb_url=?, medium_url=?, photo_urls=?, description=? WHERE id=?",
+                (new_primary, new_primary,
+                 _json.dumps([nu for (nu, _c, _o) in kept]), new_desc, listing_id))
+            conn.commit()
+            applied = True
+        return {"listing_id": listing_id, "photos_in": len(entries), "kept": len(kept),
+                "removed": len(removed), "removed_urls": removed,
+                "map": [{"old": o, "new": nu} for (nu, _c, o) in kept],
+                "notes": notes, "applied": applied,
+                "old_media_note": "old R2//media objects NOT deleted; purge CF cache + delete old keys manually"}
+    finally:
+        conn.close()
+
+
 @app.post("/admin/ai-test")
+def demand_sweep(_admin=Depends(_require_admin)):
+    """DEMAND-LOOP-1 housekeeping: stale-expire old tickets, run the gated match/compose
+    pass. Wire to the nightly conductor at flip-on; safe to call any time (idempotent)."""
+    conn = database.get_db()
+    try:
+        expired = conn.execute(
+            "UPDATE demand_tickets SET state='expired', updated_at=datetime('now') "
+            "WHERE state='open' AND created_at < datetime('now','-30 days')").rowcount
+        res = _demand_match_and_compose(conn)
+        conn.commit()
+        counts = {r["state"]: r["n"] for r in conn.execute(
+            "SELECT state, COUNT(*) AS n FROM demand_tickets GROUP BY state")}
+        return {"expired": expired, **res, "tickets": counts,
+                "enabled": DEMAND_LOOP_ENABLED, "dry_run": DEMAND_LOOP_DRYRUN}
+    finally:
+        conn.close()
+demand_sweep = app.post("/demand/sweep")(demand_sweep)
+
+def demand_tickets_view(_admin=Depends(_require_admin)):
+    """Inspection: counts by state + the newest 50 tickets (buyer tokens withheld)."""
+    conn = database.get_db()
+    try:
+        counts = {r["state"]: r["n"] for r in conn.execute(
+            "SELECT state, COUNT(*) AS n FROM demand_tickets GROUP BY state")}
+        rows = [dict(r) for r in conn.execute(
+            "SELECT id, query_norm, category, city_id, score, state, matched_item, "
+            "priority_expires_at, created_at FROM demand_tickets ORDER BY id DESC LIMIT 50")]
+        outbox = conn.execute("SELECT COUNT(*) AS n FROM demand_invites_outbox").fetchone()["n"]
+        return {"counts": counts, "outbox_would_send": outbox, "latest": rows}
+    finally:
+        conn.close()
+demand_tickets_view = app.get("/demand/tickets")(demand_tickets_view)
+
 def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
     """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
     (full translate+call+parse path). Lets the Page-4 switch be tested live against either
@@ -12651,6 +14450,15 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
     conn.isolation_level = None
     try:
         conn.execute("BEGIN IMMEDIATE")
+        # ── PRE-LAUNCH CLOSED-TESTING GUARD (David, 6 Jul 2026) ──
+        # Gates are OFF for Paystack review; until launch auth ships (LAUNCH-AUTH-1
+        # magic-link, lands with Paystack), Tuppence SPENDING stays restricted to the
+        # 4 family test accounts (is_superuser=1). Public keeps every FREE feature.
+        _su = conn.execute("SELECT is_superuser FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if not (_su and int(_su["is_superuser"] or 0) == 1):
+            conn.execute("ROLLBACK")
+            raise HTTPException(status_code=403,
+                detail="Paid AI features are in closed testing until launch — the free examples and free tools remain fully available.")
         # ── S3 paid-feed tier-gate (Free-Tier AI Cost Risk Report, 16 Jun 2026) ──
         # The expensive paid-feed AI class is reserved for $20 Pro, whose 5T=$10 charge
         # covers Sonnet-plus-feed cost. Block Free/Starter/Agency BEFORE placing the hold,
@@ -12737,3 +14545,29 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
 # real-token spend logging on grade_card_condition, _vision_orient_image,
 # _classify_email, ai-rewrite, ai-audit, batch-cards. See CHANGELOG.
 
+
+# ── DEMAND-LOOP-1: one-time boot sweep (EOF — all names now defined) ──────────
+# Set DEMAND_SWEEP_ON_BOOT=1 to run one match/compose pass at startup and log the
+# outbox size, so a dry-run flip is visible in the boot log. Dry-run composes to the
+# outbox but never sends. Idempotent-safe; own connection.
+if os.getenv("DEMAND_SWEEP_ON_BOOT", "0") == "1" and DEMAND_LOOP_ENABLED:
+    try:
+        _bsc = database.get_db()
+        # DIAG: why does/doesn't a ticket match? print open tickets + available prospects.
+        try:
+            for _t in _bsc.execute("SELECT category, city_id, COUNT(*) AS n FROM demand_tickets WHERE state='open' GROUP BY category, city_id").fetchall():
+                _av = _bsc.execute("SELECT COUNT(*) AS n FROM demand_prospects WHERE COALESCE(app_category,category)=? AND COALESCE(city_id,0)=COALESCE(?,0)",
+                                   (_t["category"], _t["city_id"])).fetchone()["n"]
+                print("DEMAND-DIAG: open ticket cat=%s city=%s x%s -> %s available prospects" % (_t["category"], _t["city_id"], _t["n"], _av))
+            _pc = _bsc.execute("SELECT app_category, COUNT(*) AS n FROM demand_prospects WHERE city_id IS NOT NULL GROUP BY app_category ORDER BY n DESC LIMIT 6").fetchall()
+            print("DEMAND-DIAG: prospects-with-city by app_category: " + ", ".join("%s=%s" % (r["app_category"], r["n"]) for r in _pc))
+        except Exception as _de:
+            print("DEMAND-DIAG error: %s" % _de)
+        _bs = _demand_match_and_compose(_bsc)
+        _bsc.commit()
+        _ob = _bsc.execute("SELECT COUNT(*) AS n FROM demand_invites_outbox").fetchone()["n"]
+        _bsc.close()
+        print("DEMAND-BOOT-SWEEP: matched=%s composed=%s sent=%s | outbox_total=%s | dry_run=%s"
+              % (_bs.get("matched"), _bs.get("composed"), _bs.get("sent", 0), _ob, DEMAND_LOOP_DRYRUN))
+    except Exception as _dse:
+        print("DEMAND-BOOT-SWEEP error: %s" % _dse)

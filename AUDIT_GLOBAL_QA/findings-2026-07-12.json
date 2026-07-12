@@ -1,0 +1,18 @@
+{
+ "date": "2026-07-12",
+ "took_s": 13.2,
+ "findings": [
+  {
+   "sev": "INFO",
+   "area": "demo",
+   "id": "DEMO-PLACEHOLDERS",
+   "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
+  },
+  {
+   "sev": "MEDIUM",
+   "area": "links",
+   "id": "LINKS-DEAD",
+   "msg": "1 hardcoded external links failing (checked 6): ['https://www.openstreetmap.org/copyright']"
+  }
+ ]
+}
