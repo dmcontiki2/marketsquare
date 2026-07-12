@@ -45,7 +45,7 @@ One full loop per day. Discovery→report-of-fix latency is ~26h by design; that
 ## 3 · Components
 **Sensor — read-only, never edits, never deploys.** Consolidates the three old read-only jobs into
 one pass: smoke test vs the live server, health + security + spend check, and (Mondays only) the
-deep static scan (ruff/vulture/pylint/eslint) with a delta vs last week. Writes `findings.json`.
+deep static scan (ruff/vulture/pylint/eslint) with a delta vs last week. Writes `findings.json`. It also runs the deterministic **subscription/dependency monitor** (`subscription_monitor.py`, §13).
 
 **Fixer — the one hands-on worker.** Takes the single top item from `queue.json`, makes a surgical
 in-place fix, verifies (`ast.parse` / `node --check` + smoke 30/30), then **auto-ships or stages**
@@ -138,6 +138,8 @@ from the page is a later enhancement.
 | `staged.json` | Orchestrator | live page | items awaiting David (Regulatory / Financial) |
 | `report.json` | Orchestrator | live page | the daily brief |
 | `log.md` | all three | — | append-only audit trail of the loop |
+| `subscription_status.json` | Sensor | live page | per-provider dependency board + rolling uptime |
+| `subscription_history.json` | Sensor | Sensor | daily up/down samples (uptime accrual) |
 
 **Live page:** `trustsquare.co/orchestrator.html` (code-gated, same as `/support`). Reads
 `/orchestrator/report.json` + the existing `/dashboard/summary` + `/dashboard/cost` (all same-origin).
@@ -179,3 +181,12 @@ Autonomy is trustworthy only if its silence is informative: **no call means noth
 **Never automated — at any rung, by principle:** movement of money in any direction (refunds do not exist, by canon) · credentials, secrets, access permissions · legal filings & regulatory correspondence (CIPC, Paystack live, patents) · Codex amendments / WhitePaper lineage (supersede via Addendum, never edit) · pricing, tiers, Tuppence allocations.
 
 This section is enforced in conjunction with the two-gate policy (§6) — it does not widen any auto-ship lane; it defines the alarm wire that lets the lanes widen safely as the Autonomy Ladder climbs (BACKLOG → 🪜 track).
+
+---
+
+## 13 · Subscription / dependency monitor (added 12 Jul 2026 · David-requested)
+The Sensor phase runs `subscription_monitor.py` on the box each day — a deterministic, zero-token, **zero-paid-call** health board over EVERY external dependency, grouped into David's categories (AI, Cars, Coins, Stamps, Cards/Collectibles, Properties, Maps, Regulations, Forex, Servers, Payments, Email, CDN, Storage). It **reads `feature_flags.json`** (the app's own provider registry) so it never drifts, unauthenticated-pings each endpoint (a 401/403/404 proves reachability without burning paid quota), and checks the app services, keys, TLS-cert days and disk.
+
+Per item it records: status (**UP / DEGRADED / DOWN / HELD / STANDBY / PLANNED**), reachability, key state, enabled, billing class, rolling daily **uptime** and last-downtime date. It writes `orchestrator/subscription_status.json` (full board) and appends `subscription_history.json` (uptime accrual); the Sensor folds `{counts, issues, keys_unverified, by_category}` into `findings.json`, the Orchestrator into `report.json` (a `subscriptions` block the live page can render), and the brief carries a one-line roll-up.
+
+**What is / isn't an alarm:** a **DOWN or DEGRADED** provider or service is a real anomaly → **SEV-2** if it is a live-critical dependency (Anthropic · Paystack · Resend · Cloudflare/R2 · a core service marketsquare/citylauncher/advertagent/nginx/redis · TLS <14 days · disk <10% free), **SEV-3** otherwise. **HELD** (paid providers switched off in `feature_flags.json` until B7 sign-off), **STANDBY** (dormant AI failover / optional key) and **PLANNED** (no subscription yet) are INTENTIONAL states — never alarms. Keys that live in root-only systemd drop-ins msdeploy cannot read show **unverified**, never "missing" — also not an alarm.
