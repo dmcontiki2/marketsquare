@@ -1,0 +1,1739 @@
+{
+ "sellers": [
+  {
+   "idx": 0,
+   "cat": "Property",
+   "trustScore": 44,
+   "headline": "Verified Private Property Seller · Pretoria",
+   "tagline": "Selling privately. Identity protected until you're matched.",
+   "about": "Demo property seller profile. Real sellers will have their full property history, motivation for selling, preferred timeline, and any inclusions listed here. All identities are protected until a Tuppence introduction is accepted.",
+   "stats": [
+    {
+     "label": "Properties sold",
+     "val": "2"
+    },
+    {
+     "label": "Avg days to sell",
+     "val": "34"
+    },
+    {
+     "label": "Member since",
+     "val": "2024"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "🏡 Private seller declaration",
+    "📜 Compliance docs ready",
+    "⚡ Motivated seller"
+   ],
+   "tags": [
+    "Waterkloof",
+    "Menlyn",
+    "Centurion",
+    "Investment",
+    "Family homes",
+    "Vacant land"
+   ],
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Flexible on timing"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80"
+  },
+  {
+   "idx": 1,
+   "cat": "Tutors",
+   "trustScore": 81,
+   "headline": "Verified Tutor · Pretoria · Maths & Sciences Specialist",
+   "tagline": "Results-focused tutoring. Identity protected until you're ready.",
+   "about": "Demo tutor profile. Real tutors will have their full academic background, subjects, teaching methodology, availability, and past student results listed here. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Students tutored",
+     "val": "120+"
+    },
+    {
+     "label": "Pass rate",
+     "val": "96%"
+    },
+    {
+     "label": "Years teaching",
+     "val": "12"
+    }
+   ],
+   "creds": [
+    "🎓 B.Sc Honours (NQF8)",
+    "💻 SACE registered",
+    "✅ SAPS police clearance",
+    "📋 Subject specialisation cert",
+    "⭐ 5+ years' teaching experience"
+   ],
+   "tags": [
+    "Mathematics",
+    "Physical Science",
+    "Accounting",
+    "English",
+    "Afrikaans",
+    "Life Sciences"
+   ],
+   "avail": [
+    {
+     "day": "Weekdays",
+     "time": "14:00–19:00"
+    },
+    {
+     "day": "Saturdays",
+     "time": "08:00–13:00"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80"
+  },
+  {
+   "idx": 2,
+   "cat": "Services",
+   "trustScore": 88,
+   "headline": "Verified Service Provider · Pretoria · Technical & Home Services",
+   "tagline": "Qualified, insured, and vetted. Identity protected until matched.",
+   "about": "Demo service provider profile. Real providers will have their full credentials, registration numbers, insurance details, service areas, and client references listed here. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Jobs completed",
+     "val": "340+"
+    },
+    {
+     "label": "Repeat clients",
+     "val": "78%"
+    },
+    {
+     "label": "Years active",
+     "val": "14"
+    }
+   ],
+   "creds": [
+    "🔧 Red Seal trade certificate",
+    "🛡️ Public liability insured",
+    "✅ SAPS police clearance",
+    "📝 ECSA / PIRB registered",
+    "💼 14 years in trade"
+   ],
+   "tags": [
+    "Electrical",
+    "Plumbing",
+    "Painting",
+    "Cleaning",
+    "Gardening",
+    "Accounting",
+    "IT & Web"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Emergency call-outs available"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
+  },
+  {
+   "idx": 3,
+   "cat": "Adventures",
+   "trustScore": 76,
+   "headline": "Certified Wilderness Guide & Guesthouse Host · Pretoria",
+   "tagline": "Authentic experiences. Curated accommodation. Always anonymous until you're ready.",
+   "about": "Demo adventure operator profile. Real operators will have full credentials, photos, safety certifications, and guest reviews listed here.",
+   "stats": [
+    {
+     "label": "Trips led",
+     "val": "200+"
+    },
+    {
+     "label": "Avg group",
+     "val": "6 pax"
+    },
+    {
+     "label": "Years active",
+     "val": "8"
+    }
+   ],
+   "creds": [
+    "🏅 FGASA Level 2 Guide",
+    "🚑 Wilderness First Aid cert",
+    "🛡️ Fully insured",
+    "⭐ TGCSA 4-star rated",
+    "✅ ID verified"
+   ],
+   "tags": [
+    "Hiking",
+    "Abseil",
+    "Gorge walks",
+    "City tours",
+    "B&B",
+    "Boutique accommodation"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sun",
+     "time": "Book 48hrs in advance"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80"
+  },
+  {
+   "idx": 4,
+   "cat": "Collectors",
+   "trustScore": 54,
+   "headline": "Verified Collector & Dealer · South African Art, Coins & Vintage",
+   "tagline": "Every item authenticated. Provenance documented. Identity protected.",
+   "about": "Demo collector profile. Real sellers will have authentication certificates, appraisal documents, SA Numismatic Society membership, and transaction history listed here.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "47"
+    },
+    {
+     "label": "Avg value",
+     "val": "R 12k"
+    },
+    {
+     "label": "Member since",
+     "val": "2019"
+    }
+   ],
+   "creds": [
+    "📜 SA Numismatic Society member",
+    "🎨 Registered art dealer",
+    "✅ Authentication certs on all items",
+    "🔍 Independent appraisals available"
+   ],
+   "tags": [
+    "Pierneef",
+    "Coins & Medals",
+    "Vintage cameras",
+    "SA art",
+    "Antiques"
+   ],
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Pretoria & Joburg"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&q=80"
+  },
+  {
+   "idx": 5,
+   "cat": "Cars",
+   "trustScore": 49,
+   "headline": "Verified Performance Cars Seller · Pretoria",
+   "tagline": "Exotic & performance cars. Identity protected until match confirmed.",
+   "about": "Demo Cars seller profile. Verified private seller specialising in performance and exotic vehicles. Full service histories, two keys, and roadworthy certificates on all cars.",
+   "stats": [
+    {
+     "label": "Cars sold",
+     "val": "12"
+    },
+    {
+     "label": "Avg value",
+     "val": "R 1.2m"
+    },
+    {
+     "label": "Response time",
+     "val": "< 24hrs"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "🚗 Roadworthy certificate",
+    "📝 Full service histories",
+    "📰 NATIS ownership docs",
+    "💳 Private seller declaration"
+   ],
+   "tags": [
+    "Porsche",
+    "BMW M",
+    "AMG",
+    "Lamborghini",
+    "Classic cars",
+    "Tesla"
+   ],
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Pretoria & Centurion"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1560250097-0dc05a977835?w=400&q=80"
+  },
+  {
+   "idx": 6,
+   "cat": "local_market",
+   "trustScore": 62,
+   "headline": "Verified Collector & Private Seller · Pretoria",
+   "tagline": "Authenticated, documented, and valued. Identity protected until introduction.",
+   "about": "Demo local market seller. Real sellers will have their authentication certificates, provenance documents, condition reports, and verified payment history listed here. All identities are protected until a Tuppence introduction is accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "23"
+    },
+    {
+     "label": "Avg value",
+     "val": "R 28k"
+    },
+    {
+     "label": "Member since",
+     "val": "2022"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "📜 Authentication certs on all items",
+    "🔍 Independent appraisals available",
+    "🏆 SA Numismatic Society member"
+   ],
+   "tags": [
+    "Coins & Medals",
+    "Watches",
+    "Vinyl",
+    "Trading cards",
+    "Sports memorabilia",
+    "Antiques"
+   ],
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Pretoria area"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&q=80"
+  },
+  {
+   "emoji": "🏙️",
+   "trustScore": 87,
+   "headline": "Licensed NYC Real Estate Broker",
+   "tagline": "Manhattan & Brooklyn specialist · 14 years",
+   "about": "NY State-licensed broker (License #10401231847). I cover Manhattan co-ops, Brooklyn brownstones, and Queens multi-family. Straight-talking, no padding — I tell you what the market is actually doing.",
+   "stats": {
+    "intros_accepted": 34,
+    "intros_total": 41,
+    "member_since": "Jan 2025"
+   },
+   "credentials": [
+    "🏛️ NY State Licensed Broker #10401231847",
+    "✅ REBNY Member (Real Estate Board of New York)",
+    "🏆 Top 100 NYC Brokers 2024 — RealTrends",
+    "📋 CIE Certified Investment Expert"
+   ],
+   "tags": [
+    "Manhattan",
+    "Brooklyn",
+    "Co-op",
+    "Brownstone",
+    "Investment"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "9am–6pm ET"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+   "idx": 28,
+   "cat": "Property"
+  },
+  {
+   "emoji": "🏡",
+   "trustScore": 91,
+   "headline": "RICS-Accredited Estate Agent",
+   "tagline": "Prime Central London & Outer Boroughs · 18 years",
+   "about": "RICS Chartered Surveyor and NAEA-registered estate agent. I cover Kensington, Chelsea, Fulham, and Battersea. Known for honest valuations and low days-on-market. No glossy nonsense.",
+   "stats": {
+    "intros_accepted": 58,
+    "intros_total": 63,
+    "member_since": "Nov 2024"
+   },
+   "credentials": [
+    "📐 RICS Chartered Surveyor (MRICS)",
+    "🏅 NAEA Propertymark Member",
+    "⚖️ TPO (The Property Ombudsman) Registered",
+    "🏆 Best Estate Agent London — Negotiator Awards 2023"
+   ],
+   "tags": [
+    "Kensington",
+    "Chelsea",
+    "Flats",
+    "Period Property",
+    "RICS"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "8:30am–5:30pm GMT"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
+   "idx": 29,
+   "cat": "Property"
+  },
+  {
+   "emoji": "🌊",
+   "trustScore": 89,
+   "headline": "Licensed Real Estate Agent — NSW",
+   "tagline": "Eastern Suburbs & Northern Beaches · 11 years",
+   "about": "NSW Class 1 Licence holder (CPD current). I specialise in the Eastern Suburbs, Northern Beaches, and Lower North Shore. Auction clearance rates consistently above Sydney median.",
+   "stats": {
+    "intros_accepted": 47,
+    "intros_total": 54,
+    "member_since": "Feb 2025"
+   },
+   "credentials": [
+    "📋 NSW Class 1 Real Estate Licence",
+    "🏅 REINSW Member (Real Estate Institute of NSW)",
+    "🏆 Domain Agent of the Year — Eastern Suburbs 2024",
+    "✅ CPD Compliant (2026)"
+   ],
+   "tags": [
+    "Eastern Suburbs",
+    "Bondi",
+    "Auction",
+    "Northern Beaches",
+    "NSW"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "9am–5pm AEST"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
+   "idx": 30,
+   "cat": "Property"
+  },
+  {
+   "emoji": "📚",
+   "trustScore": 86,
+   "headline": "NYC Private Tutor — SAT · AP · Regents",
+   "tagline": "Columbia MA · 9 years exam prep",
+   "about": "Columbia University MA Education. I specialise in SAT/ACT, AP exams, and New York State Regents prep. Average student improvement: +240 SAT points. Upper West Side and online.",
+   "stats": {
+    "intros_accepted": 72,
+    "intros_total": 81,
+    "member_since": "Mar 2025"
+   },
+   "credentials": [
+    "🎓 MA Education — Columbia University",
+    "📊 Avg SAT improvement +240 pts (verified)",
+    "✅ NYSED Certified Teacher (Grades 7–12)",
+    "🏆 Tutor.com Top Rated 2024"
+   ],
+   "tags": [
+    "SAT",
+    "ACT",
+    "AP",
+    "Regents",
+    "Columbia"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "3pm–9pm ET"
+    },
+    {
+     "day": "Sat",
+     "time": "9am–5pm ET"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
+   "idx": 31,
+   "cat": "Tutors"
+  },
+  {
+   "emoji": "🎓",
+   "trustScore": 88,
+   "headline": "London Private Tutor — 11+ · A-Level · Oxbridge",
+   "tagline": "Oxford MA · 12 years prep",
+   "about": "Oxford University MA (First Class). Specialist in 11+ selective school entry, A-Level Maths/Physics, and Oxbridge personal statement coaching. DBS checked, Kensington & Chelsea.",
+   "stats": {
+    "intros_accepted": 65,
+    "intros_total": 72,
+    "member_since": "Dec 2024"
+   },
+   "credentials": [
+    "🎓 MA (First Class) — Oxford University",
+    "📋 Enhanced DBS Checked (2025)",
+    "✅ Qualified Teacher Status (QTS)",
+    "🏆 IST (Independent Schools Tutor) Accredited"
+   ],
+   "tags": [
+    "11+",
+    "A-Level",
+    "Oxbridge",
+    "Maths",
+    "Physics"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "4pm–8pm GMT"
+    },
+    {
+     "day": "Sat",
+     "time": "9am–1pm GMT"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",
+   "idx": 32,
+   "cat": "Tutors"
+  },
+  {
+   "emoji": "📐",
+   "trustScore": 83,
+   "headline": "Sydney HSC & OC Tutor — Maths · Science",
+   "tagline": "UNSW BE · 7 years HSC prep",
+   "about": "UNSW Bachelor of Engineering (Hons). Expert in HSC Maths Advanced/Extension 1&2, Physics, Chemistry, and OC placement. ATAR Maths students average 93.5. Parramatta & online.",
+   "stats": {
+    "intros_accepted": 88,
+    "intros_total": 99,
+    "member_since": "Jan 2025"
+   },
+   "credentials": [
+    "🎓 BE (Hons) — UNSW Sydney",
+    "✅ WWCC (NSW) Current — WWC1234567E",
+    "📊 Avg ATAR Maths score 93.5 (verified)",
+    "🏆 CSSA Top Tutor Award 2024"
+   ],
+   "tags": [
+    "HSC",
+    "Maths Extension",
+    "OC Test",
+    "Physics",
+    "UNSW"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "4pm–9pm AEST"
+    },
+    {
+     "day": "Sat",
+     "time": "9am–4pm AEST"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",
+   "idx": 33,
+   "cat": "Tutors"
+  },
+  {
+   "emoji": "🔧",
+   "trustScore": 85,
+   "headline": "NYC Licensed Master Electrician & Contractor",
+   "tagline": "Serving Manhattan & The Bronx · 16 years",
+   "about": "NYC Licensed Master Electrician (License #12345-ME). Full-service residential and light commercial. Panel upgrades, EV charger installation, smart home wiring. Insured to $2M. IBEW Local 3.",
+   "stats": {
+    "intros_accepted": 43,
+    "intros_total": 49,
+    "member_since": "Feb 2025"
+   },
+   "credentials": [
+    "⚡ NYC Licensed Master Electrician #12345-ME",
+    "🏛️ IBEW Local 3 Member",
+    "🛡️ $2M General Liability Insurance",
+    "✅ NYC DOB Registered Contractor"
+   ],
+   "tags": [
+    "Electrician",
+    "Master Licensed",
+    "Manhattan",
+    "EV Charger",
+    "Smart Home"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "7am–6pm ET"
+    },
+    {
+     "day": "Sat",
+     "time": "Emergency only"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1612833609832-35e35c60b57b?w=400&q=80",
+   "idx": 34,
+   "cat": "Services"
+  },
+  {
+   "emoji": "🔌",
+   "trustScore": 90,
+   "headline": "NICEIC Approved Electrician — London",
+   "tagline": "Part P Certified · Islington & Camden · 14 years",
+   "about": "NICEIC Approved Contractor and Part P certified. I handle full rewires, consumer unit upgrades, EV charger installation, and EICR certificates. City & Guilds 2382-18 17th Edition.",
+   "stats": {
+    "intros_accepted": 61,
+    "intros_total": 68,
+    "member_since": "Oct 2024"
+   },
+   "credentials": [
+    "✅ NICEIC Approved Contractor",
+    "📋 Part P Building Regulations Certified",
+    "⚡ City & Guilds 2382-22 (18th Edition)",
+    "🏅 EICR Inspection Specialist"
+   ],
+   "tags": [
+    "NICEIC",
+    "Part P",
+    "EICR",
+    "Camden",
+    "Consumer Unit"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "8am–6pm GMT"
+    },
+    {
+     "day": "Sat",
+     "time": "9am–1pm GMT"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?w=400&q=80",
+   "idx": 35,
+   "cat": "Services"
+  },
+  {
+   "emoji": "⚡",
+   "trustScore": 87,
+   "headline": "NSW Licensed Electrician — Sydney",
+   "tagline": "A-Grade Licence · Inner West & South Sydney · 13 years",
+   "about": "NSW A-Grade Electrical Contractor Licence (ECL12345). Domestic and commercial — switchboard upgrades, solar grid connections, EV charger installs, safety switch testing. $5M PI cover.",
+   "stats": {
+    "intros_accepted": 55,
+    "intros_total": 62,
+    "member_since": "Mar 2025"
+   },
+   "credentials": [
+    "✅ NSW A-Grade Electrical Contractor Licence ECL12345",
+    "☀️ CEC Grid-Connected PV Accredited",
+    "🏛️ NECA NSW Member",
+    "🛡️ $5M Professional Indemnity Insurance"
+   ],
+   "tags": [
+    "A-Grade Licence",
+    "NSW",
+    "Solar",
+    "EV Charger",
+    "NECA"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Fri",
+     "time": "7am–5pm AEST"
+    },
+    {
+     "day": "Sat",
+     "time": "By arrangement"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&q=80",
+   "idx": 36,
+   "cat": "Services"
+  },
+  {
+   "emoji": "🗽",
+   "trustScore": 88,
+   "headline": "Licensed NYC Tour Guide & Experience Curator",
+   "tagline": "Manhattan insider · 10 years curating local experiences",
+   "about": "NYC Licensed Sightseeing Guide (Dept of Consumer Affairs #TG-2847). I design and lead bespoke urban experiences — from Met private tours to Harlem jazz nights. TimeOut New York featured.",
+   "stats": {
+    "intros_accepted": 116,
+    "intros_total": 128,
+    "member_since": "Nov 2024"
+   },
+   "credentials": [
+    "🏛️ NYC Licensed Sightseeing Guide #TG-2847",
+    "📰 Featured: TimeOut New York 2024",
+    "✅ First Aid & CPR Certified",
+    "🏆 TripAdvisor Travellers Choice 2024"
+   ],
+   "tags": [
+    "NYC Guide",
+    "Tours",
+    "Food Walk",
+    "Museum",
+    "Kayak"
+   ],
+   "avail": [
+    {
+     "day": "Wed–Sun",
+     "time": "7am–9pm ET"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
+   "idx": 37,
+   "cat": "Adventures"
+  },
+  {
+   "emoji": "🇬🇧",
+   "trustScore": 92,
+   "headline": "Blue Badge Tourist Guide — London",
+   "tagline": "Institute of Tourist Guiding · 22 years",
+   "about": "Blue Badge Guide (the highest qualification in UK guiding, issued by the Institute of Tourist Guiding). Specialisms: Tudor history, WWII, and art history. Winner of the British Guild of Tourist Guides Award.",
+   "stats": {
+    "intros_accepted": 94,
+    "intros_total": 101,
+    "member_since": "Sep 2024"
+   },
+   "credentials": [
+    "🔵 Blue Badge Tourist Guide (ITG)",
+    "🏛️ British Guild of Tourist Guides Member",
+    "🏆 BGTG Award for Excellence 2023",
+    "✅ Enhanced DBS Checked (2025)"
+   ],
+   "tags": [
+    "Blue Badge",
+    "London",
+    "History",
+    "Museum",
+    "Canterbury"
+   ],
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "8am–7pm GMT"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&q=80",
+   "idx": 38,
+   "cat": "Adventures"
+  },
+  {
+   "emoji": "🦘",
+   "trustScore": 90,
+   "headline": "NSW Accredited Tour Operator & Guide",
+   "tagline": "Eco-adventures · Harbour to Outback · 15 years",
+   "about": "NSW Tourism Accredited operator (ATAP member). I lead experiences from Harbour kayaking to Uluru cultural tours and GBR dives. Wilderness First Responder certified. Leave No Trace practitioner.",
+   "stats": {
+    "intros_accepted": 83,
+    "intros_total": 92,
+    "member_since": "Jan 2025"
+   },
+   "credentials": [
+    "✅ NSW Tourism Accreditation (ATAP)",
+    "🤿 PADI Divemaster Certified",
+    "🌿 Leave No Trace Trainer",
+    "🏥 Wilderness First Responder (WFR)"
+   ],
+   "tags": [
+    "Sydney",
+    "Great Barrier Reef",
+    "Uluru",
+    "Kayak",
+    "Eco"
+   ],
+   "avail": [
+    {
+     "day": "Tue–Sun",
+     "time": "5am–8pm AEST"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+   "idx": 39,
+   "cat": "Adventures"
+  },
+  {
+   "idx": 7,
+   "cat": "Property",
+   "trustScore": 91,
+   "headline": "Licensed Real Estate Broker · New York City",
+   "tagline": "Manhattan and Brooklyn specialist. Identity protected until matched.",
+   "about": "Demo NYC property broker profile. Licensed NY State broker with 18 years in Manhattan and Brooklyn residential. Specialists in co-ops, condos and brownstones. All identities protected until a Tuppence introduction is accepted.",
+   "stats": [
+    {
+     "label": "Properties sold",
+     "val": "280+"
+    },
+    {
+     "label": "Avg days on market",
+     "val": "21"
+    },
+    {
+     "label": "Member since",
+     "val": "2023"
+    }
+   ],
+   "creds": [
+    "🏙️ NY State Licensed Broker",
+    "✅ ID verified",
+    "📜 NAR member",
+    "🔑 Co-op board experience",
+    "⭐ 18 years NYC market"
+   ],
+   "tags": [
+    "Manhattan",
+    "Brooklyn",
+    "Co-ops",
+    "Condos",
+    "Brownstones",
+    "Investment"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
+  },
+  {
+   "idx": 8,
+   "cat": "Tutors",
+   "trustScore": 87,
+   "headline": "NYC Private Tutor · SAT · AP · College Prep",
+   "tagline": "Columbia-trained educator. Identity protected until matched.",
+   "about": "Demo NYC tutor profile. Columbia-trained educator specialising in SAT/ACT prep, AP sciences and Ivy League application coaching. 10 years of verified results. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Students tutored",
+     "val": "200+"
+    },
+    {
+     "label": "Avg SAT score lift",
+     "val": "+180pts"
+    },
+    {
+     "label": "Years teaching",
+     "val": "10"
+    }
+   ],
+   "creds": [
+    "🎓 M.Ed Columbia University",
+    "✅ NYC DOE fingerprinted",
+    "📋 SAT/ACT certified coach",
+    "⭐ 10 years private tutoring"
+   ],
+   "tags": [
+    "SAT",
+    "ACT",
+    "AP Physics",
+    "AP Calculus",
+    "College Prep",
+    "STEM"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "Weekdays",
+     "time": "15:00–20:00"
+    },
+    {
+     "day": "Saturdays",
+     "time": "09:00–14:00"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
+  },
+  {
+   "idx": 9,
+   "cat": "Services",
+   "trustScore": 88,
+   "headline": "NYC Licensed Master Electrician & Contractor",
+   "tagline": "NYC-licensed, insured and vetted. Identity protected until matched.",
+   "about": "Demo NYC service provider profile. Licensed, insured and vetted professionals covering electrical, plumbing, HVAC and home renovation across Manhattan, Brooklyn and Queens. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Jobs completed",
+     "val": "500+"
+    },
+    {
+     "label": "Repeat clients",
+     "val": "72%"
+    },
+    {
+     "label": "Years active",
+     "val": "16"
+    }
+   ],
+   "creds": [
+    "🔧 NYC DOB licensed",
+    "🛡️ $2M liability insured",
+    "✅ Background checked",
+    "📝 IBEW / UA member",
+    "💼 16 years NYC trade"
+   ],
+   "tags": [
+    "Electrical",
+    "Plumbing",
+    "HVAC",
+    "Renovation",
+    "Manhattan",
+    "Brooklyn"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Emergency call-outs available"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&q=80"
+  },
+  {
+   "idx": 10,
+   "cat": "Adventures",
+   "trustScore": 90,
+   "headline": "Licensed NYC Guide · Private Tours & Unique Experiences",
+   "tagline": "Off-the-beaten-track New York. Identity protected until matched.",
+   "about": "Demo NYC guide profile. Licensed NYC tour guide with deep knowledge of hidden neighbourhoods, rooftop access, underground history and private dining experiences. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Tours led",
+     "val": "1 200+"
+    },
+    {
+     "label": "Repeat guests",
+     "val": "61%"
+    },
+    {
+     "label": "Languages",
+     "val": "3"
+    }
+   ],
+   "creds": [
+    "🗽 NYC Licensed Tour Guide",
+    "✅ ID verified",
+    "🚁 FAA drone certified",
+    "🌆 Secret NYC specialist",
+    "⭐ 4.9 avg rating"
+   ],
+   "tags": [
+    "Hidden NYC",
+    "Rooftop Access",
+    "Food Tours",
+    "Photography",
+    "Brooklyn",
+    "History"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "Daily",
+     "time": "Sunrise to sunset"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80"
+  },
+  {
+   "idx": 11,
+   "cat": "Collectors",
+   "trustScore": 85,
+   "headline": "Verified Collector & Dealer · New York · Rare Books & Americana",
+   "tagline": "Estate-sourced Americana and first editions. Identity protected until matched.",
+   "about": "Demo NYC collector profile. Third-generation dealer in rare books, Americana, sporting memorabilia and vintage photography sourced from New York estates. Full provenance on all items. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "1 400+"
+    },
+    {
+     "label": "Provenance rate",
+     "val": "98%"
+    },
+    {
+     "label": "Years collecting",
+     "val": "22"
+    }
+   ],
+   "creds": [
+    "📚 ABAA member",
+    "✅ ID verified",
+    "🏆 Auction house consignor",
+    "🔍 Independently appraised",
+    "📜 Full provenance docs"
+   ],
+   "tags": [
+    "Rare Books",
+    "Americana",
+    "First Editions",
+    "Sporting Memorabilia",
+    "Vintage Photos",
+    "Maps"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "By appointment",
+     "time": "Flexible"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80"
+  },
+  {
+   "idx": 12,
+   "cat": "Cars",
+   "trustScore": 89,
+   "headline": "Verified Private Seller · New York · Classic & Collector Cars",
+   "tagline": "Documented classics from Long Island and Connecticut. Identity protected.",
+   "about": "Demo NYC cars profile. Private seller of documented American and European classics, muscle cars and investment-grade collectibles. All vehicles independently inspected with full service history. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Cars sold",
+     "val": "85"
+    },
+    {
+     "label": "Avg listing age",
+     "val": "38 days"
+    },
+    {
+     "label": "Years active",
+     "val": "12"
+    }
+   ],
+   "creds": [
+    "🚗 NY DMV verified",
+    "✅ ID verified",
+    "🔍 3rd-party inspected",
+    "📋 Full service history",
+    "🏆 Collector car specialist"
+   ],
+   "tags": [
+    "American Muscle",
+    "Classic Cars",
+    "Investment Grade",
+    "Long Island",
+    "Connecticut",
+    "European"
+   ],
+   "region": "New York & Tri-State",
+   "avail": [
+    {
+     "day": "Weekends",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80"
+  },
+  {
+   "idx": 13,
+   "cat": "LocalMarket",
+   "trustScore": 82,
+   "headline": "Verified Private Seller · New York · Vintage Furniture & Homewares",
+   "tagline": "Curated vintage finds from NYC estates. Identity protected until matched.",
+   "about": "Demo NYC local market profile. Private seller specialising in mid-century modern furniture, vintage lighting and estate homewares sourced from Manhattan and Brooklyn estates. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "320+"
+    },
+    {
+     "label": "Repeat buyers",
+     "val": "45%"
+    },
+    {
+     "label": "Member since",
+     "val": "2023"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "🛋️ Estate sourced",
+    "📦 White-glove delivery available",
+    "🔍 Authenticated pieces"
+   ],
+   "tags": [
+    "Mid-Century Modern",
+    "Vintage Lighting",
+    "Estate Sales",
+    "Manhattan",
+    "Brooklyn",
+    "Homewares"
+   ],
+   "region": "New York City",
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Brooklyn studio"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80"
+  },
+  {
+   "idx": 14,
+   "cat": "Property",
+   "trustScore": 93,
+   "headline": "RICS Registered Surveyor & Estate Agent · London",
+   "tagline": "Prime Central London specialist. Identity protected until matched.",
+   "about": "Demo London property profile. RICS-registered with 20 years in Prime Central London residential — Kensington, Chelsea, Notting Hill and Mayfair. All identities protected until a Tuppence introduction is accepted.",
+   "stats": [
+    {
+     "label": "Properties sold",
+     "val": "410+"
+    },
+    {
+     "label": "Avg days to sell",
+     "val": "18"
+    },
+    {
+     "label": "Member since",
+     "val": "2023"
+    }
+   ],
+   "creds": [
+    "🏛️ RICS registered",
+    "✅ ID verified",
+    "📜 NAEA Propertymark",
+    "🔑 Prime Central London",
+    "⭐ 20 years London market"
+   ],
+   "tags": [
+    "Kensington",
+    "Chelsea",
+    "Notting Hill",
+    "Mayfair",
+    "Period conversion",
+    "Mews"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80"
+  },
+  {
+   "idx": 15,
+   "cat": "Tutors",
+   "trustScore": 86,
+   "headline": "London Private Tutor · 11+ · A-Level · Oxbridge Prep",
+   "tagline": "Oxford-trained educator. Identity protected until matched.",
+   "about": "Demo London tutor profile. Oxford-trained educator specialising in 11+ preparation, GCSE, A-Level and Oxbridge entrance coaching across all core subjects. DBS checked. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Students tutored",
+     "val": "180+"
+    },
+    {
+     "label": "Oxbridge success rate",
+     "val": "74%"
+    },
+    {
+     "label": "Years teaching",
+     "val": "14"
+    }
+   ],
+   "creds": [
+    "🎓 MA Oxon",
+    "✅ Enhanced DBS checked",
+    "📋 QTS qualified",
+    "⭐ 14 years private tutoring"
+   ],
+   "tags": [
+    "11+",
+    "GCSE",
+    "A-Level",
+    "Oxbridge",
+    "Common Entrance",
+    "Maths & Sciences"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "Weekdays",
+     "time": "14:00–19:30"
+    },
+    {
+     "day": "Saturdays",
+     "time": "09:00–13:00"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&q=80"
+  },
+  {
+   "idx": 16,
+   "cat": "Services",
+   "trustScore": 87,
+   "headline": "NICEIC Approved Electrician · London · Gas Safe Registered",
+   "tagline": "Fully accredited London trades. Identity protected until matched.",
+   "about": "Demo London service provider profile. NICEIC-certified electricians, Gas Safe registered plumbers and CORGI heating engineers covering all 32 London boroughs. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Jobs completed",
+     "val": "620+"
+    },
+    {
+     "label": "Repeat clients",
+     "val": "80%"
+    },
+    {
+     "label": "Years active",
+     "val": "18"
+    }
+   ],
+   "creds": [
+    "⚡ NICEIC certified",
+    "🔥 Gas Safe registered",
+    "🛡️ £2M public liability",
+    "✅ DBS checked",
+    "📝 APHC member"
+   ],
+   "tags": [
+    "Electrical",
+    "Plumbing",
+    "Gas",
+    "Heating",
+    "All London boroughs",
+    "Period properties"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Emergency call-outs available"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1615813967515-e1838c1c5116?w=400&q=80"
+  },
+  {
+   "idx": 17,
+   "cat": "Adventures",
+   "trustScore": 91,
+   "headline": "London Blue Badge Guide · Private Tours & Hidden City",
+   "tagline": "The London tourists never see. Identity protected until matched.",
+   "about": "Demo London guide profile. Blue Badge qualified guide with 15 years revealing the hidden, forgotten and extraordinary corners of London. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Tours led",
+     "val": "2 100+"
+    },
+    {
+     "label": "Repeat guests",
+     "val": "58%"
+    },
+    {
+     "label": "Languages",
+     "val": "4"
+    }
+   ],
+   "creds": [
+    "🏛️ London Blue Badge Guide",
+    "✅ ID verified",
+    "🔒 DBS checked",
+    "🌍 4 languages",
+    "⭐ 4.97 avg rating"
+   ],
+   "tags": [
+    "Hidden London",
+    "Georgian History",
+    "Rooftop Access",
+    "Food & Drink",
+    "Photography",
+    "History"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "Daily",
+     "time": "Dawn to dusk"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80"
+  },
+  {
+   "idx": 18,
+   "cat": "Collectors",
+   "trustScore": 94,
+   "headline": "Verified Collector & Dealer · London · Fine Art & Antiques",
+   "tagline": "Mayfair-sourced fine art and antiques. Identity protected until matched.",
+   "about": "Demo London collector profile. Specialist dealer in British and European fine art, silver, porcelain and period furniture. Major London auction house experience. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "1 800+"
+    },
+    {
+     "label": "Provenance rate",
+     "val": "99%"
+    },
+    {
+     "label": "Years collecting",
+     "val": "28"
+    }
+   ],
+   "creds": [
+    "🏛️ LAPADA member",
+    "✅ ID verified",
+    "🏆 Major auction house consignor",
+    "🔍 Independently appraised",
+    "📜 Full provenance"
+   ],
+   "tags": [
+    "British Art",
+    "Silver",
+    "Porcelain",
+    "Period Furniture",
+    "Mayfair",
+    "Auction House"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "By appointment",
+     "time": "Mayfair gallery"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80"
+  },
+  {
+   "idx": 19,
+   "cat": "Cars",
+   "trustScore": 92,
+   "headline": "Verified Private Seller · London · Classic British & European Cars",
+   "tagline": "Documented British classics and continental sportscars. Identity protected.",
+   "about": "Demo London cars profile. Private seller of documented British classics and continental sportscars with full histories. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Cars sold",
+     "val": "110"
+    },
+    {
+     "label": "Avg listing age",
+     "val": "28 days"
+    },
+    {
+     "label": "Years active",
+     "val": "15"
+    }
+   ],
+   "creds": [
+    "🚗 DVLA verified",
+    "✅ ID verified",
+    "🔍 HPI cleared",
+    "📋 Full service history",
+    "🏆 Classic car specialist"
+   ],
+   "tags": [
+    "Jaguar",
+    "Aston Martin",
+    "Bentley",
+    "Classic British",
+    "Continental",
+    "Investment Grade"
+   ],
+   "region": "London & Home Counties",
+   "avail": [
+    {
+     "day": "Weekends",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&q=80"
+  },
+  {
+   "idx": 20,
+   "cat": "LocalMarket",
+   "trustScore": 83,
+   "headline": "Verified Private Seller · London · Vintage & Period Homewares",
+   "tagline": "Georgian to Art Deco — curated London estate finds. Identity protected.",
+   "about": "Demo London local market profile. Private seller of period homewares — Georgian silver, Victorian ceramics, Art Deco lighting sourced from London estates. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "480+"
+    },
+    {
+     "label": "Repeat buyers",
+     "val": "52%"
+    },
+    {
+     "label": "Member since",
+     "val": "2023"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "🏛️ Estate sourced",
+    "📦 UK-wide delivery",
+    "🔍 Period authenticated"
+   ],
+   "tags": [
+    "Georgian",
+    "Victorian",
+    "Art Deco",
+    "Mid-Century",
+    "Silver",
+    "Ceramics",
+    "Lighting"
+   ],
+   "region": "London",
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "East London studio"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80"
+  },
+  {
+   "idx": 21,
+   "cat": "Property",
+   "trustScore": 90,
+   "headline": "Licensed Real Estate Agent · Sydney · Eastern Suburbs Specialist",
+   "tagline": "Harbourside and Eastern Suburbs expertise. Identity protected until matched.",
+   "about": "Demo Sydney property profile. Licensed NSW agent with 16 years in Sydney Eastern Suburbs, North Shore and Inner West. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Properties sold",
+     "val": "320+"
+    },
+    {
+     "label": "Avg days on market",
+     "val": "19"
+    },
+    {
+     "label": "Member since",
+     "val": "2023"
+    }
+   ],
+   "creds": [
+    "🏠 NSW Licensed Agent",
+    "✅ ID verified",
+    "📜 REIA member",
+    "🔑 Eastern Suburbs specialist",
+    "⭐ 16 years Sydney market"
+   ],
+   "tags": [
+    "Eastern Suburbs",
+    "North Shore",
+    "Harbourside",
+    "Inner West",
+    "Investment",
+    "Apartments"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80"
+  },
+  {
+   "idx": 22,
+   "cat": "Tutors",
+   "trustScore": 84,
+   "headline": "Sydney HSC & Selective School Tutor · Maths · Science",
+   "tagline": "UNSW-trained HSC specialist. Identity protected until matched.",
+   "about": "Demo Sydney tutor profile. UNSW-trained educator specialising in HSC preparation, selective school entrance and scholarship coaching. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Students tutored",
+     "val": "150+"
+    },
+    {
+     "label": "Selective school pass rate",
+     "val": "81%"
+    },
+    {
+     "label": "Years teaching",
+     "val": "9"
+    }
+   ],
+   "creds": [
+    "🎓 B.Sc UNSW",
+    "✅ Working with Children Check",
+    "📋 HSC specialist",
+    "⭐ 9 years private tutoring"
+   ],
+   "tags": [
+    "HSC",
+    "Selective Schools",
+    "Scholarship",
+    "Maths",
+    "English",
+    "Sciences"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "Weekdays",
+     "time": "15:00–19:00"
+    },
+    {
+     "day": "Saturdays",
+     "time": "08:00–13:00"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"
+  },
+  {
+   "idx": 23,
+   "cat": "Services",
+   "trustScore": 86,
+   "headline": "NSW Licensed Electrician · Sydney · Fully Insured",
+   "tagline": "NSW-licensed trades across Greater Sydney. Identity protected.",
+   "about": "Demo Sydney service provider profile. NSW-licensed electricians, plumbers and builders. Fully insured and NSW Fair Trading accredited across Greater Sydney. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Jobs completed",
+     "val": "450+"
+    },
+    {
+     "label": "Repeat clients",
+     "val": "75%"
+    },
+    {
+     "label": "Years active",
+     "val": "13"
+    }
+   ],
+   "creds": [
+    "⚡ NSW Licensed Electrician",
+    "🔧 NSW Fair Trading licensed",
+    "🛡️ $5M liability insured",
+    "✅ Police checked",
+    "📝 Master Builders member"
+   ],
+   "tags": [
+    "Electrical",
+    "Plumbing",
+    "Building",
+    "Northern Beaches",
+    "Inner West",
+    "Eastern Suburbs"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "Mon–Sat",
+     "time": "Emergency call-outs available"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&q=80"
+  },
+  {
+   "idx": 24,
+   "cat": "Adventures",
+   "trustScore": 89,
+   "headline": "NSW Accredited Tour Operator · Sydney Harbour & Blue Mountains",
+   "tagline": "Dawn to dusk Sydney experiences. Identity protected until matched.",
+   "about": "Demo Sydney guide profile. Tourism Australia accredited guide with 12 years leading private experiences — harbour kayaks, Blue Mountains abseiling and wildlife photography tours. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Tours led",
+     "val": "900+"
+    },
+    {
+     "label": "Repeat guests",
+     "val": "54%"
+    },
+    {
+     "label": "Accreditations",
+     "val": "4"
+    }
+   ],
+   "creds": [
+    "🦘 Tourism Australia accredited",
+    "✅ ID verified",
+    "🏄 SLSA qualified",
+    "🌿 Eco-certified",
+    "⭐ 4.95 avg rating"
+   ],
+   "tags": [
+    "Sydney Harbour",
+    "Blue Mountains",
+    "Wildlife",
+    "Kayaking",
+    "Abseiling",
+    "Photography"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "Daily",
+     "time": "Dawn to dusk AEST"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80"
+  },
+  {
+   "idx": 25,
+   "cat": "Collectors",
+   "trustScore": 88,
+   "headline": "Verified Collector & Dealer · Sydney · Australian Art & Antiques",
+   "tagline": "Toorak estate collections and Australian art. Identity protected.",
+   "about": "Demo Sydney collector profile. Specialist in Australian colonial and contemporary art, Indigenous works, silver and colonial furniture. Major Sydney auction house experience. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "950+"
+    },
+    {
+     "label": "Provenance rate",
+     "val": "97%"
+    },
+    {
+     "label": "Years collecting",
+     "val": "19"
+    }
+   ],
+   "creds": [
+    "🎨 AAADA member",
+    "✅ ID verified",
+    "🏆 Major auction house consignor",
+    "🔍 Independently appraised",
+    "📜 Full provenance"
+   ],
+   "tags": [
+    "Australian Art",
+    "Indigenous",
+    "Colonial",
+    "Silver",
+    "Furniture",
+    "Contemporary"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "By appointment",
+     "time": "Paddington gallery"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
+  },
+  {
+   "idx": 26,
+   "cat": "Cars",
+   "trustScore": 87,
+   "headline": "Verified Private Seller · Sydney · Classic & Prestige Vehicles",
+   "tagline": "Documented Australiana and prestige imports. Identity protected.",
+   "about": "Demo Sydney cars profile. Private seller of classic Australian muscle — Holden, Ford Falcon — and prestige European imports with full service histories. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Cars sold",
+     "val": "70"
+    },
+    {
+     "label": "Avg listing age",
+     "val": "32 days"
+    },
+    {
+     "label": "Years active",
+     "val": "11"
+    }
+   ],
+   "creds": [
+    "🚗 NSW RMS verified",
+    "✅ ID verified",
+    "🔍 NRMA inspected",
+    "📋 Full service history",
+    "🏆 Collector car specialist"
+   ],
+   "tags": [
+    "Holden",
+    "Ford Falcon",
+    "Australian Muscle",
+    "Prestige European",
+    "NSW",
+    "Investment Grade"
+   ],
+   "region": "Sydney & NSW",
+   "avail": [
+    {
+     "day": "Weekends",
+     "time": "Viewings by appointment"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80"
+  },
+  {
+   "idx": 27,
+   "cat": "LocalMarket",
+   "trustScore": 81,
+   "headline": "Verified Private Seller · Sydney · Vintage & Retro Homewares",
+   "tagline": "Mid-century and retro finds from Sydney estates. Identity protected.",
+   "about": "Demo Sydney local market profile. Private seller of mid-century Australian furniture, retro kitchenware and vintage surf and beach culture items sourced from Sydney estates. All identities protected until introduction accepted.",
+   "stats": [
+    {
+     "label": "Items sold",
+     "val": "260+"
+    },
+    {
+     "label": "Repeat buyers",
+     "val": "41%"
+    },
+    {
+     "label": "Member since",
+     "val": "2024"
+    }
+   ],
+   "creds": [
+    "✅ ID verified",
+    "🏄 Estate sourced",
+    "📦 Sydney metro delivery",
+    "🔍 Period authenticated"
+   ],
+   "tags": [
+    "Mid-Century",
+    "Retro",
+    "Surf Culture",
+    "Australian Pottery",
+    "Vintage Kitchenware",
+    "Newtown"
+   ],
+   "region": "Sydney",
+   "avail": [
+    {
+     "day": "Viewings by appointment",
+     "time": "Newtown studio"
+    }
+   ],
+   "portfolio": [],
+   "sellerPhoto": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80"
+  }
+ ],
+ "count": 40,
+ "_repair_note": "idx 28-39 + cat added to 12 unindexed specialist profiles (DEMO-SELLER-SCHEMA fix, 11 Jul 2026, attended session). File is server-managed; this local copy is a one-shot push via deploy_marketsquare.bat step 3e — DELETE locally after deploy."
+}

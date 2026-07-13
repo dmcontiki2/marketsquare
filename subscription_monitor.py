@@ -31,7 +31,7 @@ HISTORY = os.path.join(ORCH, "subscription_history.json")
 TODAY = datetime.date.today().isoformat()
 NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 UA = {"User-Agent": "trustsquare-submon/1.0"}
-OPTIONAL_IDS = {"openai", "wonder_ai"}   # dormant failover / optional - unverified key => STANDBY not red
+OPTIONAL_IDS = {"openai"}   # dormant failover (AI_ACTIVE=anthropic) - unverified key => STANDBY, not red
 
 def ping(url, timeout=6):
     if not url:
@@ -121,7 +121,6 @@ def load_flags():
 CATALOG = [
   ("anthropic","AI","Anthropic (Claude)","Primary LLM - every AI feature (coach, vision, dossiers)","https://api.anthropic.com/v1/models","ANTHROPIC_API_KEY","paid-metered",None),
   ("openai","AI","OpenAI (failover)","LLM failover seam (ai_provider AI_ACTIVE)","https://api.openai.com/v1/models","OPENAI_API_KEY","paid-metered",None),
-  ("wonder_ai","AI","Wonder/Heritage AI","Optional heritage-enrichment AI key","","WONDER_AI_KEY","paid-metered",None),
   ("transunion_auto","Cars","TransUnion Auto (ZA)","Vehicle valuation/verification data","https://www.transunion.co.za/","","paid-contract","transunion_auto"),
   ("redbook","Cars","RedBook","Vehicle price guide","","","paid-contract","redbook"),
   ("numista","Coins","Numista","Coin & banknote catalogue","https://api.numista.com/","NUMISTA_API_KEY","free-key","numista"),
