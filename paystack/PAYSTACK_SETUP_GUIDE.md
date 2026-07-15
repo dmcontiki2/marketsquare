@@ -58,7 +58,7 @@ Set webhook URL to:
 https://trustsquare.co/payment/webhook
 ```
 
-Paystack will show you a **Webhook Secret** — copy it. You'll need it in Step 6.
+Note: Paystack does NOT issue a separate webhook secret — it signs webhooks (HMAC-SHA512) with your **secret key itself**. So `PAYSTACK_WEBHOOK_SECRET` = your `sk_live_...` key (Step 6).
 
 ---
 
@@ -73,7 +73,7 @@ Once live mode is activated, you'll see:
 
 ---
 
-## Step 6 — Update the Server .env
+## Step 6 — Update the server env (NOTE: live box keeps this in /etc/environment, not .env — or just run: bash /root/go_live_paystack.sh)
 
 SSH into the server and edit the .env file:
 
@@ -85,7 +85,7 @@ nano /var/www/marketsquare/.env
 Update these two lines:
 ```
 PAYSTACK_SECRET_KEY=sk_live_YOUR_LIVE_KEY_HERE
-PAYSTACK_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET_HERE
+PAYSTACK_WEBHOOK_SECRET=sk_live_YOUR_LIVE_KEY_HERE   # same key — Paystack signs webhooks with it
 ```
 
 Then restart the BEA:

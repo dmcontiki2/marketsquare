@@ -13743,20 +13743,41 @@ class InboundEmail(BaseModel):
 
 def _smtp_send_reply(to_addr: str, subject: str, body: str,
                      in_reply_to: Optional[str] = None) -> bool:
-    """Send a plain-text reply via Gmail SMTP. Returns True on success.
-    Never raises. Requires GMAIL_APP_PASSWORD; returns False if unset."""
-    if not GMAIL_APP_PASSWORD:
-        _log.warning("_smtp_send_reply skipped — GMAIL_APP_PASSWORD not set")
-        return False
+    """Send a plain-text support reply. Prefers Resend (domain-aligned From =
+    SUPPORT_FROM_EMAIL, Reply-To = SUPPORT_REPLY_TO) — the L3a launch path.
+    Falls back to Gmail SMTP if Resend is unset/fails. Never raises."""
     to_clean = parseaddr(to_addr)[1]
     if not to_clean:
         _log.warning("_smtp_send_reply skipped — no valid recipient in %r", to_addr)
+        return False
+    subj = subject if subject.lower().startswith("re:") else f"Re: {subject}"
+    # ── Path 1: Resend (L3a — replies from the trustsquare.co brand, not personal Gmail)
+    resend_key = os.getenv("RESEND_API_KEY", "")
+    support_from = os.getenv("SUPPORT_FROM_EMAIL", "TrustSquare Support <support@mail.trustsquare.co>")
+    if resend_key:
+        try:
+            import requests as _rq
+            payload = {"from": support_from, "to": [to_clean], "subject": subj, "text": body,
+                       "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")}
+            if in_reply_to:
+                payload["headers"] = {"In-Reply-To": in_reply_to, "References": in_reply_to}
+            r = _rq.post("https://api.resend.com/emails", json=payload,
+                         headers={"Authorization": f"Bearer {resend_key}"}, timeout=15)
+            if r.status_code in (200, 201):
+                _log.info("Triage reply sent to %s via Resend (from %s)", to_clean, support_from)
+                return True
+            _log.error("Resend reply failed (%s): %s — falling back to Gmail SMTP", r.status_code, r.text[:200])
+        except Exception as exc:
+            _log.error("Resend reply exception: %s — falling back to Gmail SMTP", exc)
+    # ── Path 2: legacy Gmail SMTP fallback
+    if not GMAIL_APP_PASSWORD:
+        _log.warning("_smtp_send_reply skipped — no Resend success and GMAIL_APP_PASSWORD not set")
         return False
     try:
         msg = EmailMessage()
         msg["From"] = formataddr(("TrustSquare Support", GMAIL_ADDRESS))
         msg["To"] = to_clean
-        msg["Subject"] = subject if subject.lower().startswith("re:") else f"Re: {subject}"
+        msg["Subject"] = subj
         if in_reply_to:
             msg["In-Reply-To"] = in_reply_to
             msg["References"] = in_reply_to
