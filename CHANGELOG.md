@@ -1,4 +1,19 @@
 
+## Session 141 — P1 BUILT: provider registry (Scaleway EU joins the seam)
+- ai_provider.py: _scaleway adapter (OpenAI-compatible, SCALEWAY_API_KEY/FAILOVER_API_KEY,
+  reasoning-field fallback for Qwen); TASK_MODEL scaleway row (mistral-small fast,
+  qwen3-235b-instruct reason, qwen3.6-vl vision) — live-probed green through complete().
+- bea_main: flags accept ai_active=scaleway; /flags ai_provider payload gains ordered
+  providers[] (label/family/jurisdiction/available/models); /admin/ai-test accepts
+  {provider} to test ANY adapter; ai_spend_log gains provider column (attributed inside
+  _log_ai_spend, no call-site churn); _ts_ai_url guard: unknown provider -> anthropic
+  (protects the unmigrated vision-draft site).
+- apply_ai_provider_card.py v2: registry card (status lights, per-provider Test,
+  Activate w/ eval-pending warning); DASH-AIPROV-1 fixed structurally — JS ships as its
+  own body-end <script>, self-contained globals; depth-walk excision of any v1 card
+  variant. Dry-run verified on both local + server-pull copies; v2 JS node-syntax-OK.
+- Dashboard ships via deploy_bit_monitoring.bat (server-source-of-truth flow, David-run).
+
 ## Session 141 — P0 SHIPPED: all AI call sites on the provider seam
 - 14 of 15 raw httpx sites + the KYC SDK site migrated to ai_provider.complete()
   (tiers by model const: haiku/sonnet/triage; VISION_MODEL sites on task="vision" —

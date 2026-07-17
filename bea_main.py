@@ -647,6 +647,11 @@ def run_migrations(conn):
         except Exception:
             pass
 
+    # P1 — provider attribution on spend rows (same PRAGMA pattern as listings columns)
+    _asl_cols = [r[1] for r in conn.execute("PRAGMA table_info(ai_spend_log)").fetchall()]
+    if "provider" not in _asl_cols:
+        conn.execute("ALTER TABLE ai_spend_log ADD COLUMN provider TEXT")
+
     conn.execute("""CREATE TABLE IF NOT EXISTS ai_spend_config (
         id                  INTEGER PRIMARY KEY CHECK (id = 1),
         monthly_income_usd  REAL    NOT NULL DEFAULT 0.0,
@@ -1273,6 +1278,7 @@ def _ts_ai_url():
     """The active provider's chat endpoint — the ONE place the inference URL lives."""
     _u = {"anthropic": "https://api.anthropic.com/v1/messages",
           "openai":    "https://api.openai.com/v1/chat/completions"}
+    # scaleway/unknown -> anthropic: the one unmigrated raw site (vision-draft) speaks Anthropic wire format only (P1 guard)
     return _u.get(_ts_active_provider(), _u["anthropic"])
 
 def _ts_ai_headers():
@@ -1281,6 +1287,7 @@ def _ts_ai_headers():
     if _ts_active_provider()=="openai":
         return {"Authorization":"Bearer "+(os.getenv("OPENAI_API_KEY") or ""),
                 "content-type":"application/json"}
+    # scaleway/unknown -> anthropic: the one unmigrated raw site (vision-draft) speaks Anthropic wire format only (P1 guard)
     return {"x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","content-type":"application/json"}
 if not EMAIL_INBOUND_SECRET:
     _log.warning("EMAIL_INBOUND_SECRET not set — /email/inbound will reject all calls")
@@ -1378,13 +1385,17 @@ def _log_ai_spend(email: str, endpoint: str, model_key: str,
             it, ot = 0, 0
             cost = _AI_COST.get(model_key, 0.0023)
             is_real = 0
+        try:
+            _prov = _ts_active_provider()   # P1: provider attribution — signature & call sites unchanged
+        except Exception:
+            _prov = 'anthropic'
         conn = database.get_db()
         try:
             conn.execute(
                 "INSERT INTO ai_spend_log "
-                "(email, endpoint, model, est_cost_usd, input_tokens, output_tokens, cost_is_real) "
-                "VALUES (?,?,?,?,?,?,?)",
-                (email or '', endpoint, model_key, cost, it, ot, is_real)
+                "(email, endpoint, model, est_cost_usd, input_tokens, output_tokens, cost_is_real, provider) "
+                "VALUES (?,?,?,?,?,?,?,?)",
+                (email or '', endpoint, model_key, cost, it, ot, is_real, _prov)
             )
             conn.commit()
             _maybe_fire_spend_alert(conn)
@@ -11605,9 +11616,12 @@ def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_ad
     """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
     (full translate+call+parse path). Lets the Page-4 switch be tested live against either
     provider without touching the 15 production call sites. Returns the text + which provider/model answered."""
+    _req_prov=((payload or {}).get("provider") or "").strip()   # P1: optional explicit provider
+    if _req_prov and _req_prov not in ai_provider.ADAPTERS:
+        raise HTTPException(status_code=400, detail="unknown provider: "+_req_prov[:40])
     try:
         import ai_provider as _ap
-        prov=_ts_active_provider()
+        prov=_req_prov or _ts_active_provider()
         prompt=((payload or {}).get("prompt") or "Reply with exactly: TrustSquare AI provider test OK.").strip()
         r=_ap.complete([{"role":"user","content":prompt}], task="haiku", max_tokens=40, provider=prov)
         return {"ok": bool(r.ok), "provider": r.provider, "model": r.model,
@@ -11631,7 +11645,7 @@ class _FlagsUpdate(BaseModel):
     ai_example_enabled:    Optional[bool] = None
     auth_fail_closed:      Optional[bool] = None
     tuppence_burn_enabled: Optional[bool] = None
-    ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' (Page-4 switch)
+    ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' | 'scaleway' (Page-4 switch)
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -11658,7 +11672,20 @@ def _flags_payload(d):
         "ai_provider": {
             "active": d.get("ai_active", "anthropic"),
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
-            "available": {"anthropic": True, "openai": bool(os.getenv("OPENAI_API_KEY"))},
+            "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(os.getenv("OPENAI_API_KEY")),
+                          "scaleway": bool(os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY"))},
+            # P1: ordered provider cards for the NEW dashboard UI (old card keeps reading active/available above)
+            "providers": [
+                {"id": "anthropic", "label": "Anthropic (Claude)", "family": "us", "jurisdiction": "US",
+                 "available": bool(ANTHROPIC_API_KEY),
+                 "models": ai_provider.TASK_MODEL.get("anthropic", {})},
+                {"id": "scaleway", "label": "Scaleway EU", "family": "open", "jurisdiction": "EU · Paris",
+                 "available": bool(os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY")),
+                 "models": ai_provider.TASK_MODEL.get("scaleway", {})},
+                {"id": "openai", "label": "OpenAI", "family": "us", "jurisdiction": "US",
+                 "available": bool(os.getenv("OPENAI_API_KEY")),
+                 "models": ai_provider.TASK_MODEL.get("openai", {})},
+            ],
         },
         "updated_at": d.get("updated_at", ""),
     }
@@ -11684,8 +11711,8 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
                 raise HTTPException(status_code=400, detail="mode must be 'launch' or 'live'")
             sets.append("mode = ?"); vals.append(v)
         elif k == "ai_active":
-            if v not in ("anthropic", "openai"):
-                raise HTTPException(status_code=400, detail="ai_active must be 'anthropic' or 'openai'")
+            if v not in ("anthropic", "openai", "scaleway"):
+                raise HTTPException(status_code=400, detail="ai_active must be 'anthropic', 'openai' or 'scaleway'")
             sets.append("ai_active = ?"); vals.append(v)
             _TS_AI_CACHE["prov"] = None  # bust the seam cache so the switch is instant
         else:

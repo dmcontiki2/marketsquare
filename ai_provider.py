@@ -23,6 +23,11 @@ TASK_MODEL = {
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
     # STALE 2024-era ids — VERIFY against current OpenAI catalog when OPENAI_API_KEY is provisioned (vendor doc gate: golden-set eval before production traffic)
     "openai":    {"haiku":"gpt-4o-mini","sonnet":"gpt-4o","vision":"gpt-4o","triage":"gpt-4o-mini"},
+    # Scaleway EU (P1) — canon lives HERE per seam philosophy; deliberately ignores FAILOVER_MODEL_* env
+    # (those belong to failover/ai_backends.py). Reasoning tier uses the non-thinking instruct variant
+    # (qwen3.5-397b overthinks short tasks — live demo finding 17 Jul).
+    "scaleway":  {"haiku":"mistral-small-3.2-24b-instruct-2506","sonnet":"qwen3-235b-a22b-instruct-2507",
+                  "vision":"qwen3.6-35b-a3b","triage":"mistral-small-3.2-24b-instruct-2506"},
 }
 
 @dataclass
@@ -88,7 +93,33 @@ def _openai(messages, model, max_tokens, system, timeout=30):
     except Exception:
         return AIResult("",None,None,"openai",model,ok=False)
 
-ADAPTERS={"anthropic":_anthropic,"openai":_openai}
+def _scaleway(messages, model, max_tokens, system, timeout=30):
+    """Scaleway EU adapter (P1) — OpenAI-compatible chat/completions at api.scaleway.ai.
+    Key: SCALEWAY_API_KEY or FAILOVER_API_KEY (either name). Qwen reasoning models may return
+    content=null with the text in message.reasoning when the thinking budget runs out —
+    fall back to that field before declaring the reply empty."""
+    import httpx
+    key=os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY")
+    if not key: return AIResult("",None,None,"scaleway",model,ok=False)
+    body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
+    try:
+        with httpx.Client(timeout=timeout) as c:
+            r=c.post("https://api.scaleway.ai/v1/chat/completions",
+                     headers={"Authorization":"Bearer "+key,"content-type":"application/json"},
+                     json=body)
+        j=r.json()
+        msg=(j.get("choices",[{}])[0].get("message",{}) or {})
+        text=(msg.get("content") or "")
+        if not text:  # Qwen reasoning models put the text here when the thinking budget runs out
+            text=(msg.get("reasoning") or "")
+        u=j.get("usage",{}) or {}
+        return AIResult(text, u.get("prompt_tokens"), u.get("completion_tokens"), "scaleway", model,
+                        ok=(r.status_code==200 and bool(text)))
+    except Exception:
+        return AIResult("",None,None,"scaleway",model,ok=False)
+
+# Fallback chain order = dict order: anthropic -> openai -> scaleway
+ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway}
 
 def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None, timeout=30):
     prov = provider or AI_ACTIVE
