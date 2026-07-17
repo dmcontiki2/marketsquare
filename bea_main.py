@@ -11374,12 +11374,14 @@ def agency_import(agency_id: int, req: _AgencyImport):
             _lt = _imp_s("listing_type")
             _rs, _af = _imp_s("rental_status"), _imp_s("available_from")
             if not (_lt and re.search(r"rent|let", _lt, re.I)):
-                _rs, _af = None, None          # RENT-GATE-1 parity: no rental axis on sales
+                _rs, _af = "available", None   # RENT-GATE-1 parity: no rental axis on sales
+                                               # (column is NOT NULL DEFAULT 'available')
             else:
                 try:
                     _validate_rental_fields(_rs, _af)
+                    _rs = _rs or "available"
                 except HTTPException:
-                    _rs, _af = None, None      # bad values dropped; import continues
+                    _rs, _af = "available", None   # bad values dropped; import continues
             _vspecs = ad.get("vehicle_specs")
             if isinstance(_vspecs, dict): _vspecs = json.dumps(_vspecs)
             elif _vspecs is not None: _vspecs = str(_vspecs)[:4000]
