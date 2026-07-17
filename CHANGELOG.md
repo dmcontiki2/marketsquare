@@ -5,6 +5,7 @@
   mistral-small 1.3s / qwen3.5-397b 19.1s / qwen3.6-35b 4.9s — all clean. <1 cent total.
 - Vendor Addendum 1 recorded (business ruling: EU-hosted open weights first-class).
 - add_scaleway_key.bat created (gitignored) to stage credentials into the server .env.
+- Credentials STAGED ON SERVER (David ran add_scaleway_key.bat v2: 6/6 env lines verified, BEA restarted healthy).
 - Next: P0 call-site migration, then P1 registry wires this lane into production chains.
 
 ## Session 141 · 17 July 2026 — attended (David): legal cards, Step 6/6, agency import sync, AI swap architecture
