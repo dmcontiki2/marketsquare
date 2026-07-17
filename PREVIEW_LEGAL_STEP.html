@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview — Step 6/6 legal card (phone)</title>
+<script src="assets/legal-must-haves/legal-cards.js"></script>
+<style>
+body{background:#0b0f17;color:#e8ecf4;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;padding:18px;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:420px;}
+select{background:#161c28;color:#e8ecf4;border:1px solid #2a3346;border-radius:8px;padding:8px 10px;font-size:14px;}
+.phone{width:390px;max-width:96vw;background:#0d1420;border:1px solid #232c40;border-radius:22px;padding:16px 14px;}
+.step{color:#e8a33d;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;}
+h2{margin:4px 0 12px;font-size:21px;}
+.coach{background:#131a29;border:1px solid #232c40;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.45;margin-bottom:12px;color:#cdd5e4;}
+.coach b{color:#fff;}
+.card{background:#111827;border:1px solid #232c40;border-radius:12px;overflow:hidden;}
+.foot{display:flex;gap:10px;margin-top:14px;}
+.btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;}
+.gho{background:#161c28;color:#e8ecf4;border:1px solid #2a3346;flex:0 0 52px;}
+.pri{background:#e8a33d;color:#14213d;}
+</style></head><body>
+<div class="bar">
+ <select id="cc"><option>ZA</option><option>US</option><option>UK</option><option>AU</option></select>
+ <select id="cat"><option value="property">Property</option><option value="cars">Cars</option><option value="tutors">Tutors</option><option value="services">Services</option><option value="adventures_accommodation">Adventures — Accommodation</option><option value="adventures_experiences">Adventures — Experiences</option><option value="collectors">Collectors</option></select>
+</div>
+<div class="phone" id="ph"></div>
+<script>
+var NOTES={property:'<b>Why sellers use an estate agent:</b> an agent manages the sale end-to-end and facilitates the legal steps with the conveyancer — certificates, clearances, bond cancellation — while pricing your home against real sales, vetting buyers before they reach your door, and negotiating on your behalf. Selling privately saves commission; a good agent saves months and mistakes.',cars:'<b>Why sellers use a dealer or sales agency:</b> they handle the ownership and registration paperwork, settle outstanding finance correctly, screen out payment-day fraud, and give buyers the confidence that closes the sale.',tutors:'<b>Why tutors join an agency:</b> agencies carry the vetting, clearances and contracts above, match you with the right learners, chase the invoices, and lend you their reputation while you build your own.',services:'<b>Why providers work through an agency:</b> an agency proves your licences and insurance to cautious clients, keeps the paperwork compliant, brings a steady pipeline of work, and stands behind the job if a dispute flares.',adventures_accommodation:'<b>Why hosts use a travel agent or booking agency:</b> they keep you on the right side of zoning, insurance and safety rules, handle guest screening and payments, and fill your calendar in seasons you can\'t reach alone.',adventures_experiences:'<b>Why operators use a travel agent:</b> agents package and sell your experience to audiences you can\'t reach, keep waivers and permits watertight, and handle bookings, deposits and cancellations.',collectors:'<b>Why collectors use an auction house or specialist dealer:</b> they authenticate and document provenance, know the permit traps, reach serious buyers worldwide, and turn a private guess into a market price.'};
+function render(){
+  var cc=document.getElementById('cc').value, cat=document.getElementById('cat').value;
+  var d=SF_LEGAL_CARDS[cc].cats[cat], a=d.accent, mut='#8b93a7';
+  var h='<div class="step">Step 6 of 6 · '+d.label+'</div><h2>The legal side — and who can carry it</h2>'+
+  '<div class="coach">'+NOTES[cat]+'</div><div class="card">'+
+  '<div style="background:'+a+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
+  '<div style="font-weight:800;letter-spacing:.06em;font-size:11.5px;color:#fff;">ABSOLUTE MUST-HAVES · '+d.label+'</div>'+
+  '<div style="flex:0 0 auto;background:rgba(255,255,255,.2);border-radius:6px;padding:2px 9px;font-weight:800;font-size:12px;color:#fff;">'+cc+'</div></div>'+
+  '<div style="padding:2px 14px 14px;">';
+  d.rows.forEach(function(r,i){
+    h+='<div style="display:flex;gap:11px;padding:12px 0;'+(i<d.rows.length-1?'border-bottom:1px solid rgba(255,255,255,.07);':'')+'">'+
+    '<div style="flex:0 0 26px;height:26px;border-radius:50%;background:'+a+';color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px;">'+(i+1)+'</div>'+
+    '<div style="min-width:0;flex:1;"><div style="font-weight:700;font-size:14px;line-height:1.3;">'+r[0]+'</div>'+
+    '<div style="font-size:12px;color:'+mut+';margin-top:2px;line-height:1.35;">'+r[1]+'</div>'+
+    '<div style="font-size:12.5px;margin-top:6px;line-height:1.4;"><span style="color:'+a+';font-weight:800;">→</span> '+r[2]+'</div>'+
+    '<div style="display:inline-block;margin-top:7px;background:'+a+'30;border:1px solid '+a+'55;border-radius:5px;padding:3px 8px;font-size:10.5px;font-weight:800;letter-spacing:.04em;">'+r[3]+'</div></div></div>';
+  });
+  h+='<div style="background:#14213d;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px 12px;margin-top:12px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.4;">'+d.foot+'</div>'+
+  '<div style="font-size:10.5px;color:'+mut+';margin-top:8px;line-height:1.4;">'+d.note+'</div>'+
+  '<div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;color:'+a+';">Accredited agencies on MarketSquare manage what they may, and facilitate the rest with the right professionals.</div>'+
+  '</div></div>'+
+  '<div style="font-size:11px;color:'+mut+';margin:8px 2px 0;">Shown for '+SF_LEGAL_CARDS[cc].name+' — this swaps automatically to the listing\'s country. General guidance, not legal advice.</div>'+
+  '<div class="foot"><button class="btn gho">←</button><button class="btn pri">See my score →</button></div>';
+  document.getElementById('ph').innerHTML=h;
+}
+document.getElementById('cc').onchange=render; document.getElementById('cat').onchange=render; render();
+</script></body></html>

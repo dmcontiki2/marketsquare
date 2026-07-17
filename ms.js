@@ -689,8 +689,10 @@ async function _msInit(){
     if(sp.get('drafted')==='1'){
       goTo('seller-onboard');
     } else {
-      // Route to guided onboarding (3-step photo-first screen → seller-onboard funnel)
-      goTo('guided-onboard');
+      // SELL-FLOW-REDO-2 (15 Jul 2026): ALL individual sellers get the new
+      // AI-guided flow — invited arrivals included (category pre-selected
+      // from the invite inside sfInit).
+      goTo(SF_ENABLED ? 'sell-flow' : 'guided-onboard');
     }
   }
   // ── END MAGIC LINK PARSER ─────────────────────────────────
@@ -1017,9 +1019,10 @@ function topUp(n){
   if(isOffline()){ showToast("You're offline - top-up needs a connection"); return; }
   pendingTopUpAmount=n; pendingAIPackSessions=0;
   const usd=n*2, lp=localPrice(usd);
-  document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence ('+n+' introductions).';
-  document.getElementById('topup-bundle-label').textContent=n+'T · '+n+' intros';
-  document.getElementById('topup-zar-label').textContent='R'+(n*36);
+  document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence ('+n+(n===1?' introduction).':' introductions).');
+  document.getElementById('topup-bundle-label').textContent=n+'T · '+n+(n===1?' intro':' intros');
+  var _tuIso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
+  document.getElementById('topup-zar-label').textContent=(_tuIso==='ZA')?('R'+(n*36)):'';
   document.getElementById('topup-usd-label').textContent='$'+usd;
   document.getElementById('topup-modal').classList.add('open');
 }
@@ -1034,6 +1037,29 @@ function aaBuyAIPack(t, sessions){
   document.getElementById('topup-modal').classList.add('open');
 }
 function aaBuyPackFromWallet(){ aaBuyAIPack(5,40); }
+// ── TQTY-1 (15 Jul 2026): quantity picker — flat $2/T, buy exactly N ──
+function tqVal(){ var el=document.getElementById('tq-qty'); var n=parseInt((el&&el.value||'1').replace(/\D/g,''),10); return (isNaN(n)||n<1)?1:Math.min(n,999); }
+// Locale-aware Tuppence price line (David, 15 Jul 2026): Tuppence is priced
+// in USD ($2 flat). ZA viewers also see rand; US viewers see just '$X' (never
+// a doubled dollar); other countries see USD only until live forex is wired.
+function tqPriceLine(n){
+  var usd=n*2, iso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
+  if(iso==='ZA') return n+'T = $'+usd+' \u00b7 R'+(n*36).toLocaleString('en-ZA');
+  return n+'T = $'+usd;
+}
+function tqPaint(){ var n=tqVal(); var el=document.getElementById('tq-qty'); if(el) el.value=n;
+  var p=document.getElementById('tq-price'); if(p) p.textContent=tqPriceLine(n); }
+function tqAdjust(d){ var el=document.getElementById('tq-qty'); if(el) el.value=String(tqVal()+d); tqPaint(); }
+function tqSet(n){ var el=document.getElementById('tq-qty'); if(el) el.value=String(n); tqPaint(); }
+function tqInput(el){ tqPaint(); }
+function tqBuy(){ topUp(tqVal()); }
+// Opens the payment modal pre-set to the exact shortfall — for the 'one
+// Tuppence short of an intro or a feature' moment (David, 15 Jul 2026).
+function topUpShort(need){
+  var n=Math.max(1, parseInt(need,10)||1);
+  showToast('You need '+n+'T more — quick top-up open');
+  topUp(n);
+}
 async function confirmTopUp(){
   const n=pendingTopUpAmount;
   if(!n) return;
@@ -1315,7 +1341,7 @@ function openSellNav() {
     if (emailEl) emailEl.textContent = email;
     document.getElementById('sell-account-sheet').classList.add('open');
   } else {
-    goTo('guided-onboard');   // Route 2 — new seller, guided screen
+    goTo(SF_ENABLED ? 'sell-flow' : 'guided-onboard');   // Route 2 — new seller (SELL-FLOW-REDO-2, 15 Jul 2026)
   }
 }
 function closeSellSheet(e) {
@@ -1323,9 +1349,11 @@ function closeSellSheet(e) {
     document.getElementById('sell-account-sheet').classList.remove('open');
 }
 function sellSheetContinue() {
-  // Returning seller → Path B (full AI-guided flow)
+  // SELL-FLOW-REDO-2 (15 Jul 2026): ONE method for individuals — the AI-guided
+  // quality-score flow. The old chooser (sell-b B1) is retired but its code
+  // stays dormant for legacy draft resume + rollback.
   document.getElementById('sell-account-sheet').classList.remove('open');
-  goTo('sell-b');
+  goTo(SF_ENABLED ? 'sell-flow' : 'sell-b');
 }
 function sellSheetNewAccount() {
   document.getElementById('sell-account-sheet').classList.remove('open');
@@ -1337,7 +1365,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='ai-features'||name.startsWith('aa-'))) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='sell-flow'||name==='ai-features'||name.startsWith('aa-'))) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -1375,6 +1403,7 @@ function goTo(name){
   if(name==='tuppence'){aaLoadWalletSessions();hiwInit();txSyncFilterUI();loadTransactionHistory('tn-history','tn-load-more');}
   if(name==='myspace')msInit();
   if(name==='guided-onboard') goInit();
+  if(name==='sell-flow') sfInit();   // SELL-FLOW-REDO-2
   if(name==='seller-onboard') sobInit();
   window.scrollTo(0,0);
 }
@@ -3668,7 +3697,7 @@ async function tvsPriceCheck(id, tier){
   if(tier!=='0T'){
     let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email)); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
     const need=tier==='2T'?2:1;
-    if(bal<need){ showToast('Insufficient Tuppence - top up to use this check'); return; }
+    if(bal<need){ topUpShort(need-bal); return; }
     const msg=tier==='2T'
       ? 'This premium check uses a licensed data partner and costs 2T. You are charged only if we return a real, property-specific figure. Proceed?'
       : 'This checks the price against a verified source. 1T is charged ONLY if we verify a real price - never for a guess. Proceed?';
@@ -3772,7 +3801,7 @@ async function buyerPriceCheck(id) {
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
-    showToast('Insufficient Tuppence — top up to use AI price check');
+    topUpShort(1);
     return;
   }
 
@@ -3926,7 +3955,7 @@ async function buyerYieldCalc(id) {
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
-    showToast('Insufficient Tuppence — top up to use AI yield calculator');
+    topUpShort(1);
     return;
   }
 
@@ -4096,7 +4125,7 @@ async function sbRunBatchAnalysis() {
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
-    showToast('Need at least 2T — top up in your Wallet');
+    topUpShort(2 - bal);
     return;
   }
   if (!confirm('This will use 2T to analyse ' + _sbBatchPhotos.length + ' card photo(s) with AI. Proceed?')) return;
@@ -5045,7 +5074,10 @@ function sobCheckEula() {
   const btn = document.getElementById('sob-p3-next');
   // CARS-SPEC-1: cars drafts with spec data also need section-confirms + attestation
   const attestOk = (typeof sobAttestSatisfied === 'function') ? sobAttestSatisfied() : true;
-  if (btn) btn.disabled = !(eula && eula.checked && content && content.checked && attestOk);
+  // EULA-ONCE-1 (16 Jul 2026, David): a seller who has already accepted the
+  // EULA (users.eula_accepted_at) doesn't tick again — attestation still applies.
+  const signedAlready = !!sobState._eulaSigned;
+  if (btn) btn.disabled = !(((eula && eula.checked && content && content.checked) || signedAlready) && attestOk);
 }
 
 function sobEulaScroll() {
@@ -5075,7 +5107,37 @@ function sobResetEulaGate() {
     const el = document.getElementById(id);
     if (el) el.checked = false;
   });
+  // EULA-ONCE-1 (16 Jul 2026, David: "why is the EULA every time necessary?"):
+  // already-accepted sellers get a one-line confirmation instead of the
+  // scroll-and-tick ritual. "Read them again" restores the full text.
+  const _ebox = document.getElementById('sob-eula-scroll');
+  const _egate = document.getElementById('sob-eula-gate');
+  let _enote = document.getElementById('sob-eula-signed-note');
+  if (sobState._eulaSigned) {
+    if (_ebox)  _ebox.style.display  = 'none';
+    if (_egate) _egate.style.display = 'none';
+    if (!_enote && _ebox && _ebox.parentNode) {
+      _enote = document.createElement('div');
+      _enote.id = 'sob-eula-signed-note';
+      _enote.style.cssText = 'background:rgba(52,211,153,.08);border:1.5px solid rgba(52,211,153,.3);border-radius:10px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;';
+      _enote.innerHTML = '<strong style="color:#34d399;">\u2713 Terms already accepted.</strong> You accepted the TrustSquare Seller Terms on this account \u2014 no need to read them again. <a href="#" onclick="event.preventDefault();sobShowEulaAgain()" style="color:rgba(200,135,58,.9);">Read them again</a>';
+      _ebox.parentNode.insertBefore(_enote, _ebox);
+    }
+    if (_enote) _enote.style.display = 'block';
+  } else {
+    if (_ebox)  _ebox.style.display  = '';
+    if (_egate) _egate.style.display = '';
+    if (_enote) _enote.style.display = 'none';
+  }
   sobCheckEula();
+}
+
+function sobShowEulaAgain() {
+  // EULA-ONCE-1: optional re-read for already-signed sellers (no re-tick required)
+  const _ebox = document.getElementById('sob-eula-scroll');
+  const _enote = document.getElementById('sob-eula-signed-note');
+  if (_ebox)  _ebox.style.display = '';
+  if (_enote) _enote.style.display = 'none';
 }
 
 async function sobInit() {
@@ -5143,7 +5205,7 @@ async function sobInit() {
         sobState._hasBanking    = !!uData.banking_added_at;
         // If EULA not yet signed, jump straight to phase 3 (EULA)
         // and add a note explaining why
-        if (!sobState._eulaSigned) {
+        if (!sobState._eulaSigned && !sobState._cameFromGuided) {
           const noteEl = document.getElementById('sob-returning-eula-note');
           if (noteEl) noteEl.style.display = 'block';
           sobGoPhase(3);
@@ -5389,6 +5451,19 @@ async function sobGoLive() {
       if (!res.ok) {
         let _msg = resText.slice(0, 160);
         try { const _j = JSON.parse(resText); if (_j.detail) _msg = _j.detail; } catch(e) {}
+        // SLOT-402-1 (16 Jul 2026): slot limit is NOT a dead end — route the
+        // seller to plan selection (David hit this raw error on every 3rd+
+        // listing per test account: free tier = 2 slots).
+        if (res.status === 402) {
+          if (errEl) {
+            errEl.style.display = 'block';
+            errEl.style.color = '#fca5a5';
+            errEl.innerHTML = '<strong>Your plan is full.</strong> ' + _msg.replace(/</g, '&lt;')
+              + '<br><a href="#" onclick="event.preventDefault();sobGoPhase(2)" style="font-size:12px;color:#fbbf24;font-weight:700;margin-top:6px;display:inline-block;">Choose a bigger plan &rarr;</a>';
+          }
+          if (btn) { btn.disabled = false; btn.textContent = 'Go live →'; }
+          return;
+        }
         // 409 = attestation gate — surface the server detail verbatim
         throw new Error(res.status === 409 ? _msg : ('HTTP ' + res.status + ': ' + _msg));
       }
@@ -5456,7 +5531,7 @@ function sobStartOver() {
   // Guided arrivals: clear flags and go back to Step 1 cleanly
   sobState._cameFromGuided = false;
   sobState._skipPreview = false;
-  goTo('guided-onboard');
+  goTo(SF_ENABLED ? 'sell-flow' : 'guided-onboard');   // SELL-FLOW-REDO-2
 }
 
 function sobViewMyListing() {
@@ -6604,10 +6679,14 @@ async function goHandoff() {
         for (let pi = 0; pi < filesToUpload.length; pi++) {
           const fd = new FormData();
           fd.append('file', filesToUpload[pi]);
-          await fetch(
+          const _pr = await fetch(
             BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
             { method: 'POST', body: fd }
-          ).catch(() => {});
+          ).catch(() => null);
+          // WRONG-TYPE-1 / anon gate: a 422 means the photo was refused — tell the seller instead of swallowing it
+          if (_pr && _pr.status === 422) {
+            try { const _pj = await _pr.json(); if (typeof showToast === 'function') showToast('⚠ Photo ' + (pi + 1) + ' was not accepted: ' + (_pj.detail || 'not suitable for this advert')); } catch (e) {}
+          }
         }
         if (filesToUpload.length) goState.photoUploaded = true;
       }
@@ -6781,7 +6860,7 @@ function sbStartPhotoFirst() {
     cat:    '',
     area:   activeCity.name || ''
   };
-  goTo('guided-onboard');
+  goTo(SF_ENABLED ? 'sell-flow' : 'guided-onboard');   // SELL-FLOW-REDO-2: returning sellers get the new flow too (15 Jul 2026)
 }
 
 // Haiko guidance strip (zero API cost)
@@ -7872,7 +7951,9 @@ async function sbDoPublish(){
         // Pass caption so BEA can encode it into the [photos:url::caption|...] prefix
         const cap=(sbState.photos[pi].caption||'').replace(/[|\[\]]/g,' ').trim();
         if(cap) pfd.append('caption',cap);
-        await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:pfd}).catch(()=>{});
+        const _spr=await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:pfd}).catch(()=>null);
+        // WRONG-TYPE-1 / anon gate: surface a 422 refusal instead of swallowing it
+        if(_spr && _spr.status===422){ try{ const _sj=await _spr.json(); if(typeof showToast==='function') showToast('⚠ Photo '+(pi+1)+' was not accepted: '+(_sj.detail||'not suitable for this advert')); }catch(e){} }
       }
     }
     // Upload trust documents (B7 signals) — persist to seller profile + auto-earn credentials
@@ -9440,6 +9521,7 @@ async function feaLmSubmit() {
       }
       const fd = new FormData();
       fd.append('file', blob, 'photo.jpg');
+      fd.append('is_primary', 'true');   // WRONG-TYPE-1: this photo becomes the advert cover
       const pr = await fetch(BEA_URL + '/listings/photo', {
         method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
       });
@@ -12850,12 +12932,17 @@ async function msUploadIdDoc(e){
     const fd = new FormData();
     fd.append('file', file);
     const r = await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/upload-id', {
-      method: 'POST', body: fd
+      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
     });
     const data = await r.json();
     if(!r.ok) throw new Error(data.detail || 'Upload failed');
 
-    if(data.already_verified){
+    if(data.status === 'pending'){
+      // C2 (audit 16 Jul 2026): upload no longer self-grants trust — it is queued
+      // for the vision-checked verify-identity path. Show an honest pending state.
+      showToast('ID received — we\'ll verify it shortly.');
+      if(btn){ btn.textContent = 'ID under review'; btn.disabled = true; }
+    } else if(data.already_verified){
       showToast('Your ID is already verified ✓');
     } else {
       // Update cached trust score and re-render
@@ -14002,3 +14089,857 @@ function renderVerifiedCards(opts){
   secs.forEach(function(s){ var arr=(s[1]||[]).filter(vValid); if(arr.length){ var isLocal=s[0].indexOf('Local')>=0; out+='<div class="vsec-h">'+s[0]+'</div><div class="vcards">'+arr.map(function(o){ if(isLocal)o.local=true; return aiVCard(o); }).join('')+'</div>'; } });
   return out;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SELL-FLOW-REDO-2 (15 Jul 2026) — David's new guided sell flow.
+   Additive module: renders into #screen-sell-flow / #sf-app. The old guided
+   flow stays intact; flip SF_ENABLED to false to route back instantly.
+   Tail reuse: sfFinish() populates goState and calls goHandoff(), so the
+   proven seller-onboard funnel (EULA, cars attest cards, publish, slots)
+   runs unchanged downstream.
+   Quality score = LISTING-QUALITY-1 rubric (client meter; server gate is a
+   logged follow-up). Score never shows on adverts, never touches Trust Score.
+   ═══════════════════════════════════════════════════════════════════════════ */
+var SF_ENABLED = true;
+// Coach avatar = the TrustSquare box mark (David, 16 Jul 2026 — replaces the
+// generic robot emoji; brands every AI touchpoint). Inline base64: no extra
+// request, no deploy-script dependency. ~4KB.
+var SF_COACH_AV = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABLCAYAAACP84LNAAAP/klEQVR4nO2de3AcxZnAv6+7Z3ZXb9v4ycvEuGzLYNkRr4Qja4HPUGDgDDVrH+Y46riYSx0E8oAjkGQ0SS4J1B2hQsLZnEmoozCgwTgH9hVwAXkugDEgg+NYFAT8Bhu/9FhZ2t3p7u/+WK29trXa3UGKVsg/lbTSaqanu7/+vu7v68firGXXbTJrymdpXxEgIQICAEDmBQhyQvkuOAE8+hN7b8U+Lsv1fq40s9Pq4146euXxWen72elXAgaAPnXILR1z37t/7SbbtpnjOLrQnBWCMCrDU3iFAcznAHhsOXJRcN30Q3/Pyff8oh9ULL3thACUWWPU6HB8GgBsWgfrGAAMrAAIMEWayknTkZrNl+eBqpxc6QxY5QclS2W0r0krf0ArPRuGQAPRoL+44IAofE7YkLe2EQ4DOimCoYQNdQaGAwrUoKXNTnYAQ8tJDRhiTgpgiGEn++ChRWCQToAACEDmd5kKiGcMKNnPO75gBAjAAQOVeNAQQTQAOYIoM0V2yCBoVeerjYERXVogOilBpyRAkTLgwAckF30hirqagEAg6h7VQ7valzHENkJApHQ9McZAHrm413vnAAwYaKWBZXU5GgAY6KIjKzpzQ4H3aa0BOUNGHP1KuMkcW/YlnZIaAEui/ytKAISgRUhw/7PE++/c3vTtwcrUYHHurxay8GlVP1RJqRELHYAMrsUqTgMAAACBgGS0OSrGjZ3L9u0f2Ojg4LBdAEyWnTve99O6WkylDm7/VbwAEEBEjDavwZNW0zjuxdzBcxMHiGizDV6DI+tXxIIlMHhdwMjyAwKr6iA2sRElgFKEBRoVI44o900NpgkK4geQ1gE676EnqLoPYv0H0AAC0N3+KAAA12oaBiOgo5RiZkfUjFhQDRjMYV6gPNFxr8OFoBowqCZoENP+wlByGjBcKcXClmKeBg1dgqUNNCecGTmVVGB9mFKCbWLwOBoOL53hQzBHbODz8RfhyFxCCenuiNKAUiTYnPBJioMAodFO17TjEGQZkQAaMFwNUDA+19pc22Y22QwQCBxHg+NoQCCryTri2wWaERtpcB7AF7ZtBo6jHQdg+p2XTITxYyYJLQ//6b41H7oxVwHZDNAJFtXEkwsa+8Vqsrgbc9TM78+vC08/5edo8ItRsEogUhc89Xet9Fni52+js9ImmwUQAJVmWLFESFe+q+r+9eqLzelj/kdUmVWyOwWgiIAhxzLjXDE68uT5y2+Y6aBz38jSAJbtBxRWhqK2r1jpyp953xVTzKmjXmBhXuV3JCQickBAIADVI5XiiszTyu89/+FFWwKFo0fanpqCZsRsYHZTLZ295IKqyIzRz/Mqc5RK+AoZiuyeHBE4KM0UKI3V5g9O+gEDA0bn2sxBR1ddeuZTxviKWtmVUojYp+gQkemUYmjgtBElAEaDo7vRZpt7DY6c/R/XPxA6Y9SVKp7wkfVd+RnSRpACLM+j9ArF4UiiLXFK+reBk0O0OSq8BkfWP3j934cn19wlu5KSCI1+byLSPCSAErR5RGkAInAgouKcSdK5/ACryeJegydn/XjBX4nJlf+pfaVAE+9XvgREghEmCdjB1F2s2JXCAFD06uJSwRR8HxocscCBNGkiNAQjRSc2VNtmbsxV0+6ITjanjnoWTWZoX2O+5e8EpELlJoe9ifvXf7fppUAaMNxWBXlzHQVEmNzW9dvUrvbdvCJkkqZ+ZxqJQIkKU9Deru2w8/DrQIReo5e+hwDtRoCJCyaWlddPWi1qwuNlUirE/k06ESlRYQq1O7E+9I2V37fI4sN1RF8cCASNjbjlwZd3HX7j00v1wZ6totLkRH0LgYgULzM47EvuVW/tvXzT8lc/gcbG3pE8QHSdzR109KSF0cdDkypny66kzDXiyUpUsxBHapOH+Ps9iz0E6TbW9qFaX1QcR1tNFn9/+f/9Oentukwd6NkqKkL8eE0gAsXLTI4HkgfkH/bMf/vXr3xoNVkceg/pqF++1PAaHDnnEcsxz6i2/I6kRIb9O7QERJxprhlj2ztuev1+d6f1TDpN1ntBcQxTtXFjrrKaLL5pube9o3nnPNrXtY1XhjhpkoAApEnziODsUOpg9+ufzm959Pebo3ZUuL0rwKPNUdFy66P+OQ8uXGKeWfVD2ZWQWEBAk4CUWW4KuSP+0/X3rF4bbbaPpBlMA4ZZH5BNRggfrvjDtjZv92XqwOFtotIUJHWSlRkMO9XB1NuH5v9x2SvvRu2o8BxPAhwd8cy0r/xq2Zk1v9FaK1B5RjwAQJqUURUSelf32rdvb7ov2mwLr8E5onUjxwRlkS2E5Gs756kDiY9DE6pCrEN2sD/Gr2h5aM3G7MoH22buIlfVfevSUyPTR6+CCDMppTDfwk4i0qzM5LDf3wqv77sJyGbeOtCQ1YRFIHsyHEyQbbPo3N4Gtm4deI2eynSiAEeF4MbcrVO1GT3lIv51f9PB51seWrOx9/105ROg5bbiu1PODhlzJjwnxoQnyHjuMMMRiAhNTqxHJflHh2OvPfbyIevyau46x25owfqVS9p4uVlDUlO+6R8CUCJi8NSnXS0bb3n6PKDeLXqlBdpko4MnnmyVCRUf86YNDJwsv6B3IiWTVibM8OUVsSdCk2tu9NsT+TtdACAkaYZDQre2/+Ob33EfO0ajsggWji5dy4UAQA46VPeTa2fzSWVRQj2KpeDD+AsfvezG3AMnCMEBDTaw6Nxe85B1JFn98qXCa3D8cx9ZeG/ojJobZTzpI8sTZgAAIpJmZUTQB+3L3vyO+1iv3T+h8gEAsP7JJW28ojgN8D/tbmm5ZWWpaQACEdQiGuWPLvolnhJZyirMtJHWGnSn3Kt2Hr7zne+6z6TjNye2xmwyLbbu369ZGJo25jmSJHs73Xx2XxkVYU57Em+Ebt4RHUfjyEX3GLufDRsW9jw/aJONMHOmUfbY4tXm2aNuJSSS8YT040npH05JKGcTjGmVT9c9uHCJ1+DJaHM0p/ZbTRb3HE/O/NFVdebkmieAQJPUeSs/7WwJBm2pz3RrfJGHnnQba49ZBXE8JWtLiiFqR7mDjp7zzXPuNs+quTLV3pMCDQwRBSIIRBSqR2qlSYcnV/9X3Y//Zr7X4Mmo3YcQbJu5VpOefs9lY8JTR69mEaNcJxVgvq0sBASCaaZAs209i996YPXujLPV323BYkGlpTXoOZ48+/YLqliVeYfsTmkgEse3VWTItFQABkNzerVb/y/Xnus5nsxeIgIAaDW2IiCy8PSxq80x4bNUj6+Q5Q/bE4IywqbAXYlvv/69Z9ZlO1v9UXQnTAAApBFsm4EbQ7ADumWNQNnDwsBYFgPXVcbECTN4RJxCKUW5IpKIyFRSal4hqtjsqhfq77z8K+4id49lWdx1XRVttrmLjpyzfPGKslNrLkl2dkvEAkY8mqRZHRFqa/eTG25b+cv+Ot3jEcCKnxZGBjKfauXFAbDJZg46/drIfFgWgOsCGAYvR4ZESlN/OooMmeqWSowOnym+PPaFWfNmRd2mpu7o4zeHvQYnMeeh6+6OTK66JdXV4yMWMuLpjZru6d4sX2hdajVZ3J3rFLynQ1BSlkOEAxTgXiEQktJAhjh96jcunHGwk+JhQyP6BQoxcvRV7U0lHXT2p0sBGFQb3C21BACQ7OreGuqp0BDiLD3pkrs8iMhlV1IaE8vqw4vPWWUhXuUCJGY9sOB686ya+1OJlEQNJ5ixE9BELMQRO3Wn+XHiuvVrWroX1C9gECu8LDjnt4vIGB0BklS4h8sQ9GFfEWn/6Dk1CIB0wiGMR61Bdp0gMYFJak+99NEjG/6pY9OOdrAsDm6wYw8yY/vzfrNojXF69VV+R4HOEoE0K0NC7o4/r1LSY2MiP8UQNymlCts/iiANwxD0foe1/i732VzOVn8E2++riXiFwSGfO56LtJAiYmrFoqm3X3TW/idqLt/huu3HeaEF426pJSBA9bPuO3ll6BIW5hWUUhryTJAggkjFE5pPKLvG5Owa2eMD+aqgbStpZyss6M8dD6y/y322GLt/TB4CaQDAAMzMExCSNCrLDLW7c8Nnv2u9Ysd/b2rPdIjFppbRgjm/uP660NTqVVIqiaoAMwJpBxMACAnyj/UhHeEUVWFOuw//fsM/PPnXvY6dggB9GQNkwTYB4uf9QkRght/ZI8WpFReOX3jOi3XX1tW4rqvAsorWLDfmqmizLd791qrnUtu7Gs2ykAAkv7CiAEeAYxZQ5SId4TQ4HEjuTL578AYgQm/d3Jyebj4YC/F4b9MfkpACIopUPCnFpPILwwtrX667NloDbjpSWWxaXoOjos222Hhbk5Pa3rnSqIwYRFS0WcgJEaHBiSd0irZ3xd57+MX9lhsLZDYzMJ3wq6H4U4wGlLQQEpJNqjw/dN2k5lrr/AmZcHGRSZHX4CiryeK09Omb5d4eT1SGRa6532Ihhso0DI67Ev+84d5VG6LN0YKcrf5gwHDgWsjnABGFH09IPrFydvnVU1+pu+nSU4MKwd1SSy0IfuqtfZY6kNgpIrkn4AtFE0mzIiz0zviyN+54akW60y1uxNMXjBmieyhNUDaIKPzOhOTjy2vNeRO9KTdedLYbc1WfMZv+cBxtPWPx9x5+cX/ig0MLqUv1MJMj6GCnpKYjnCGhP4m/cdqtT91mkcWzpxU/D0yn5JCboGyQoZBdScnHl00ZPX/KqzNu/dpUz8kROOuHjOA2O2s2Jra3L2GEDARTRY/eMhHO9tRnsKkj5iKofBHOYijJ4+sRUciupOLjyk6v/NoZr8y5Y96MPgJnefEcT9YvX2psunv16tSO+F0iYgjIPlkzH+ljOjX3CXFr9w1v/mLtJ4VEOIuBQQmYnr7oDRcoNjp0urhgYvP0bzbUuzFXgW0XFcFtufVRP9psi423u/+W2tG+wqgIFzwySkc4w0Jv77pn/ffcVwuNcBYDznliMYnqsE47Yr2yOP4Tdgr5VJ8BFOORD0NCANCgsMw06FDP/sTm9os2/2ztNmi0schWiBZZzEWXzn/8hpfEqRXz8oUrSJM0qkMCt3U//cbSJ/82qKebD8aSsIcLwThjTDDBOBNM8AK+Rf/vG338nf2dub6v67hI/825YNwwDEhICI2tHGuU868AAkXTn2ZUDOQ2ugRElGr+xNL7Eq2iIiRI960JRCR5pSlgT7LV+N/dX7eaLO4VEeEsBtG1ue2r1W3JLymNxBmhlAAib3eXuaCv/Gf/r7+EMveKvq/lmR/pcqfibf6+P+17ByBt2/Pl8AQc0FZrjLuu137exKuuZrPHrBejzHEynsrew0VEpFh5SGBHqoN/nFzouV6XXWsXFeEshpIY+fwlycSM6n907bnGtNGrsUZMkUkJoAiAIfCwAOjw9/gftMdafvC71/pcyjKAINg2s2a2DgtBuLHcqwuKIVOpF95y9Xh28WibymGB1jAJGR5kCfUyf/eQ/dpDa7cOduUDAPw//HqT7HosadsAAAAASUVORK5CYII=" alt="TrustSquare">';
+
+var SF_IMG = function(key, unsplashId){
+  // self-hosted first (upload sf_cat_<key>.jpg to /static to satisfy the
+  // no-hotlink production rule); Unsplash fallback until then; emoji under it
+  return {own:'/static/sf_cat_'+key+'.jpg',
+          fall:'https://images.unsplash.com/photo-'+unsplashId+'?q=70&w=640&auto=format&fit=crop'};
+};
+var SF_TILE_IMGS = {
+  Property:   SF_IMG('property','1613490493576-7fde63acd811'),
+  Tutors:     SF_IMG('tutors','1580894723150-0ff6e9b907ea'),
+  Services:   SF_IMG('services','1621905251189-08b45d6a269e'),
+  Cars:       SF_IMG('cars','1608319984133-1d0e5e20988e'),
+  Collectors: SF_IMG('collectors','1593814681464-eef5af2b0628'),
+  Adventures: SF_IMG('adventures','1672530928234-19fcdffd56b2'),
+  local_market: SF_IMG('localmarket','1703180505766-8a8d2588164c')
+};
+
+var SF_CATS = {
+Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Asking price (R)',
+  slots:[['main','Main photo','Front three-quarter — your advert cover','📸'],
+         ['side','Side view','Full profile, whole car','🚙'],
+         ['interior','Interior','Front seats and cabin','💺'],
+         ['dash','Dashboard','Ignition on — odometer visible','🎛️'],
+         ['rear','Rear view','Straight on from behind','🚗'],
+         ['engine','Engine bay','Bonnet open, well lit','🔧']],
+  sections:[
+   {key:'A',title:'Vehicle Details',pts:20,coach:'<b>The AI pre-fills what it can see</b> — make, model and variant come from your photos. Confirm or correct each one.',rows:[
+    ['make','Make','text','e.g. BMW'],['model','Model','text','e.g. X1'],['variant','Variant / trim','text','e.g. sDrive18i Auto'],
+    ['year','Year','number','e.g. 2016'],['colour','Colour','text','e.g. White'],
+    ['body','Body type','select','Sedan|Hatchback|SUV|Bakkie|Coupe|Convertible|MPV|Wagon|Crossover']]},
+   {key:'B',title:'Condition',pts:20,coach:'<b>Honesty sells.</b> Mileage and service history are the two things every buyer checks first.',rows:[
+    ['mileage','Mileage (km)','number','e.g. 27 896'],
+    ['service','Service history','select','Full service history|Partial|None|Complete but due'],
+    ['notes','Condition notes','textarea','Honest condition, extras, reason for selling…']]},
+   {key:'C',title:'Performance',pts:10,coach:'<b>Straight off the spec sheet.</b> Unsure? Skip — the AI drafts these from the identified variant and you confirm later.',rows:[
+    ['transmission','Transmission','select','Automatic|Manual'],['fuel','Fuel type','select','Petrol|Diesel|Hybrid|Electric'],
+    ['cc','Engine capacity (cc)','number','e.g. 1995'],['kw','Power (kW)','number','e.g. 110'],['gears','Gears','number','e.g. 8']]}],
+  feats:['Auto stop-start','Aircon','Leather seats','Cruise control','Park sensors','Reverse camera','Bluetooth','Nav','Sunroof','Tow bar','New tyres','Under warranty']},
+Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLabel:'Asking price / rent (R)',
+  slots:[['main','Front of the property','Whole facade, golden light if you can','🏡'],
+         ['lounge','Lounge','Curtains open, lights on','🛋️'],['kitchen','Kitchen','Counters clear','🍳'],
+         ['mainbed','Main bedroom','Bed made','🛏️'],['bath','Bathroom','Clean and bright','🛁'],
+         ['garden','Garden / pool','Best outdoor angle','🌳']],
+  sections:[
+   {key:'A',title:'Property Details',pts:20,coach:'<b>The essentials buyers filter by.</b> Get these right and you appear in every relevant search.',rows:[
+    ['ltype','Listing type','select','For Sale|To Rent'],
+    ['ptype','Property type','select','House|Townhouse|Apartment|Duet|Plot|Smallholding'],
+    ['beds','Bedrooms','number','e.g. 3'],['baths','Bathrooms','number','e.g. 2'],
+    ['parking','Covered parking','number','e.g. 2'],['erf','Erf size (m²)','number','e.g. 800']]},
+   {key:'B',title:'Condition & Occupancy',pts:20,coach:'<b>Occupancy matters</b> — buyers and agents plan viewings around it.',rows:[
+    ['floor','Floor size (m²)','number','e.g. 180'],['year','Year built','number','e.g. 2008'],
+    ['occupancy','Occupancy','select','Available now|Owner occupied|Tenanted|Reserved'],
+    ['notes','Condition & highlights','textarea','Renovations, what you love about living here…']]},
+   {key:'C',title:'Costs & Connectivity',pts:10,coach:'<b>The questions every serious buyer asks anyway</b> — answer them upfront.',rows:[
+    ['levies','Levies (R/month)','number','e.g. 1 850'],['rates','Rates (R/month)','number','e.g. 1 200'],
+    ['fibre','Fibre available','select','Yes|No'],['security','Security','select','None|Alarm|Security estate|Armed response']]}],
+  feats:['Pool','Solar / inverter','Borehole','Fibre','Pet friendly','Security estate','Double garage','Flatlet','Garden cottage','Sea / mountain view','Fireplace','Aircon']},
+Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact details", priceLabel:'Hourly rate (R)',
+  slots:[['main','You or your space','You at the board, or your teaching space','🎓'],
+         ['board','The board mid-lesson','Real working, not posed','🧮'],
+         ['materials','Books & materials','What learners work from','📚'],
+         ['setup','Online setup','If you teach online','💻']],
+  sections:[
+   {key:'A',title:'Tutoring Details',pts:20,coach:'<b>Parents search by subject and level first.</b> Be specific — "Maths & Physical Science, Gr 10–12" beats "all subjects".',rows:[
+    ['subjects','Subject(s)','text','e.g. Maths, Physical Science'],
+    ['levels','Level','select','Primary|High School|Matric|University|Adult'],
+    ['mode','Mode','select','In person|Online|Both'],['group','Format','select','1-on-1|Small groups|Both'],
+    ['travel','Areas covered','text','e.g. Centurion, or online nationwide']]},
+   {key:'B',title:'Experience & Credentials',pts:20,coach:'<b>Credentials build your Trust Score too</b> — upload certificates later from your dashboard for bonus points.',rows:[
+    ['years','Years tutoring','number','e.g. 6'],['qual','Highest qualification','text','e.g. BSc Mathematics, UP'],
+    ['results','Typical results','text','e.g. avg +15% improvement'],
+    ['notes','Your approach','textarea','How you teach, what makes your lessons work…']]},
+   {key:'C',title:'Availability',pts:10,coach:'<b>Availability up front saves ten back-and-forth messages.</b>',rows:[
+    ['days','Days','select','Weekdays|Weekends|Both'],['times','Times','text','e.g. 14:00–19:00'],
+    ['start','Can start','select','Immediately|Within a month']]}],
+  feats:['Exam prep','Homework help','Study skills','ADHD experience','First lesson free','Group discount','WhatsApp support','Progress reports']},
+Services: { label:'Services',
+  subPick:{title:'What kind of service?',subs:[
+    ['technical','⚡','Technical & Trades','Electrician, plumber, HVAC, builder — certified trade work'],
+    ['casual','🧹','Casual & In-home','Garden, cleaning, painting, moving — reliable hands']]},
+  sub:{
+  technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate (R)',
+    slots:[['main','You on the job','Working, in your gear','⚡'],['job1','Completed job 1','Your best recent work','🔧'],
+           ['job2','Completed job 2','Different job type if you can','🛠️'],['tools','Tools / workshop','Professional setup','🧰'],
+           ['cert','Certification','Trade cert — names are auto-blurred','📜']],
+    sections:[
+     {key:'A',title:'Trade Details',pts:20,coach:'<b>Buyers pick by trade and area.</b> Emergency availability is a big differentiator.',rows:[
+      ['trade','Trade','select','Electrician|Plumber|HVAC|Builder|Painter|Roofing|Appliance repair|Other'],
+      ['areas','Areas covered','text','e.g. Pretoria East, Centurion'],
+      ['emergency','Emergency call-outs','select','Yes|No'],['quote','Quotes','select','Free quotes|Quote fee applies']]},
+     {key:'B',title:'Credentials',pts:20,coach:'<b>Registration and insurance close deals</b> — they also feed your Trust Score when verified.',rows:[
+      ['years','Years in trade','number','e.g. 12'],['reg','Registration','text','e.g. ECB / PIRB number'],
+      ['insured','Insured','select','Yes|No'],['notes','Specialities & guarantees','textarea','Notable jobs, workmanship guarantee…']]},
+     {key:'C',title:'Availability',pts:10,coach:'<b>Response time is why people choose one pro over another.</b>',rows:[
+      ['hours','Working hours','text','e.g. 07:00–17:00'],['weekends','Weekends','select','Yes|No'],
+      ['response','Typical response','select','Same day|Within 24h|This week']]}],
+    feats:['COC certificates','Free quotes','Workmanship guarantee','Card payments','After-hours','Maintenance contracts']},
+  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate (R)',
+    slots:[['main','You at work','Honest and real beats posed','🧹'],
+           ['ex1','Work example 1','Before / after works well','🌿'],['ex2','Work example 2','Another job','🎨']],
+    sections:[
+     {key:'A',title:'Service Details',pts:20,coach:'<b>Say exactly what you do and where.</b> Clear scope gets serious enquiries.',rows:[
+      ['work','Type of work','select','Garden|Cleaning|Painting|Moving|Washing & ironing|Childminding|General'],
+      ['inhome','Where','select','I come to the client|Client comes to me|Both'],
+      ['areas','Areas','text','e.g. Moot, Gezina, Villieria'],['unit','Rate basis','select','Per hour|Per day|Per job']]},
+     {key:'B',title:'Experience',pts:20,coach:'<b>References and own transport</b> are the two questions everyone asks.',rows:[
+      ['years','Years experience','number','e.g. 8'],
+      ['refs','References','select','Available on request|Written references|None yet'],
+      ['transport','Transport','select','Own transport|Public transport'],
+      ['notes','About your work','textarea','What you take pride in, regular clients…']]},
+     {key:'C',title:'Availability',pts:10,coach:'<b>When can you start?</b> That is usually the deciding question.',rows:[
+      ['days','Days','select','Weekdays|Weekends|Both'],['start','Can start','select','This week|Within two weeks|Within a month']]}],
+    feats:['Own tools','Own transport','References','Same-week start','Weekend work']}}},
+Collectors: { label:'Collectors', aiCap:'names and addresses on certificates and documents', priceLabel:'Asking price (R)',
+  slots:[['main','The item, straight on','Neutral background, natural light','🏺'],
+         ['back','Back / reverse','Condition tells the truth here','🔄'],
+         ['detail','Close-up of markings',"Maker's marks, signatures, serials",'🔍'],
+         ['cert','Certificate / provenance','Names auto-blurred','📜'],['scale','Scale shot','Next to a coin or ruler','📏']],
+  sections:[
+   {key:'A',title:'Item Details',pts:20,coach:'<b>Collectors search precisely.</b> Era, maker and set name matter more than adjectives.',rows:[
+    ['icat','Category','select','Coins|Trading cards|Stamps|Art|Militaria|Wine|Books|Toys|Watches|Other'],
+    ['name','Item name','text','e.g. 1892 ZAR Kruger 2½ Shillings'],['era','Year / era','text','e.g. 1892, Victorian'],
+    ['maker','Maker / artist / mint','text','e.g. Pretoria Mint'],['qty','Quantity','select','Single item|Set|Collection']]},
+   {key:'B',title:'Condition & Authentication',pts:20,coach:'<b>Authentication is where value lives.</b> Third-party certs can add Trust Score points when uploaded.',rows:[
+    ['cond','Condition','select','Mint|Excellent|Good|Fair|As-is'],
+    ['auth','Authentication','select','Third-party certificate|Self-certified|Not authenticated'],
+    ['prov','Provenance & history','textarea','Where it came from, chain of ownership…']]},
+   {key:'C',title:'Grading & Extras',pts:10,coach:'<b>Grades and original packaging</b> move serious collectors.',rows:[
+    ['grade','Grading (if any)','text','e.g. PSA 9, NGC MS64'],['box','Original packaging','select','Yes|No'],
+    ['docs','Documentation','select','Yes|No']]}],
+  feats:['Certificate included','Original box','Insured shipping','Trade considered','More from this collection','Appraisal available']},
+Adventures: { label:'Adventures',
+  subPick:{title:'What are you offering?',subs:[
+    ['experiences','🧗','Experiences','Hikes, tours, water, wildlife — things people do'],
+    ['accommodation','🛖','Accommodation','Guest houses, bush camps, self-catering — places people stay']]},
+  sub:{
+  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person (R)',
+    slots:[['main','The experience in action','Your money shot — people doing the thing','🧗'],
+           ['view','The view / setting',"Why they'll remember it",'🏔️'],
+           ['group','Guests enjoying it','Real moments beat staged ones','😄'],
+           ['gear','Guide & equipment','Shows professionalism','🎒']],
+    sections:[
+     {key:'A',title:'Experience Details',pts:20,coach:'<b>Duration and group size</b> are the first two filters buyers apply.',rows:[
+      ['atype','Activity','text','e.g. Guided Magaliesberg day hike'],['dur','Duration','text','e.g. Full day, 6–8 hrs'],
+      ['gmin','Min group','number','e.g. 2'],['gmax','Max group','number','e.g. 12'],
+      ['area','General area','text','e.g. Magaliesberg — exact meeting point stays private']]},
+     {key:'B',title:'Included & Level',pts:20,coach:'<b>Included vs excluded is the #1 buyer question.</b> Be explicit and disputes disappear.',rows:[
+      ['incl',"What's included",'text','e.g. Guide, permits, lunch'],['excl','Not included','text','e.g. Transport to start point'],
+      ['fit','Fitness level','select','Easy|Moderate|Challenging'],
+      ['notes','Describe the day','textarea','Hour by hour, what makes it special…']]},
+     {key:'C',title:'Safety & Credentials',pts:10,coach:'<b>Registered guides earn Trust Score bonuses</b> — declare now, upload proof later.',rows:[
+      ['guide','Registered guide','select','Yes — provincial registration|In process|No'],
+      ['firstaid','First aid','select','Current|Expired|None'],['insurance','Liability insurance','select','Yes|No']]}],
+    feats:['Transport included','Meals included','Kid friendly','Photos included','Private groups','Sunset option','Beginner friendly']},
+  accommodation:{ label:'Adventures · Accommodation', aiCap:'signage and street numbers — the exact location stays private', priceLabel:'Nightly rate (R)',
+    slots:[['main','Hero shot','Exterior or the view — your best single image','🛖'],
+           ['room','Room','Beds made, warm light','🛏️'],['bath','Bathroom','Clean, towels out','🚿'],
+           ['common','Common area / deck','Where guests live','🔥'],['view','The view','What they wake up to','🌄']],
+    sections:[
+     {key:'A',title:'Property Details',pts:20,coach:'<b>Sleeps-count and type</b> drive every search. TGCSA grading earns Trust Score bonuses when verified.',rows:[
+      ['ptype','Type','select','Guest house|B&B|Bush camp|Self-catering|Boutique hotel|Cottage'],
+      ['units','Rooms / units','number','e.g. 5'],['sleeps','Sleeps (total)','number','e.g. 12'],
+      ['grading','TGCSA grading','select','None|1-star|2-star|3-star|4-star|5-star']]},
+     {key:'B',title:'Amenities & Rules',pts:20,coach:'<b>Pets and kids policies</b> — answer once here instead of in every enquiry.',rows:[
+      ['cater','Catering','select','Self-catering|Breakfast included|Full board'],
+      ['pets','Pets','select','Yes|No|By arrangement'],['kids','Children','select','Yes|No|Over 12 only'],
+      ['notes','What makes a stay special','textarea','The fire at night, the birdlife, the silence…']]},
+     {key:'C',title:'Location & Access',pts:10,coach:'<b>Access honesty prevents 1-star reviews.</b> If it needs a bakkie, say so.',rows:[
+      ['area','General area','text','e.g. Waterberg, 2h from Pretoria'],
+      ['access','Road access','select','Sedan friendly|High clearance|4x4 only'],
+      ['dist','Distance to landmark','text','e.g. 20 min from park gate']]}],
+    feats:['Pool','Braai','WiFi','Off-grid solar','Game drives','Fireplace','Hot tub','Pet friendly','Fenced for kids']}}},
+local_market: { label:'Local Market', typePickTitle:'What are you selling?',
+  types:[['food','🍯','Food & Produce','Honey, preserves, eggs, baked goods'],
+         ['handmade','🧵','Handmade & Craft','Leather, wood, textiles, ceramics'],
+         ['furniture','🛋️','Furniture & Home','Couches, tables, décor'],
+         ['instruments','🎸','Instruments & Gear','Guitars, amps, cameras, tools'],
+         ['antiques','🏺','Antiques & Rare','Old, storied, one of a kind'],
+         ['general','📦','General','Everything else worth selling']],
+  aiCap:'labels with addresses or phone numbers', priceLabel:'Price (R)',
+  typeToasts:{food:'🍯 Local food sells fast — great choice',handmade:"🧵 Buyers love a maker's story",
+    furniture:'🛋️ Good photos double furniture enquiries',instruments:'🎸 Gear with cases sells quicker',
+    antiques:'🏺 Provenance is everything — photograph the marks',general:"📦 Clear photos, honest condition — that's the recipe"},
+  lmSlots:{
+   food:[['main','The product','Natural light, clean background','🍯'],['detail','Label / close-up','Show the real thing','🏷️'],['context','Batch / making of','Your kitchen, hives, oven — the story','👩‍🍳']],
+   handmade:[['main','The piece','Natural light, plain background','🧵'],['detail','Detail close-up','Stitching, grain, glaze — the craft','🔍'],['context','In use / being made','Workshop shots build trust','🛠️']],
+   furniture:[['main','The full piece','Straight on, whole item in frame','🛋️'],['detail','Fabric / wood close-up','Honest wear shots too','🔍'],['context','In the room','Helps buyers judge size','📐']],
+   instruments:[['main','The instrument','Front, full length','🎸'],['detail','Close-up','Headstock, serial, wear','🔍'],['context','With extras','Case, straps, pedals included','🎒']],
+   antiques:[['main','The item','Neutral background','🏺'],['detail',"Maker's marks / underside",'Where the truth lives','🔍'],['context','Scale & setting','Next to something familiar','📏'],['prov','Provenance papers','Names auto-blurred','📜']],
+   general:[['main','The item','Clean background, good light','📦'],['detail','Close-up','Condition honesty','🔍'],['context','Extras included','Everything in the deal','➕']]},
+  lmRowsA:{
+   food:[['title','What is it?','text','e.g. Raw wildflower honey'],['unit','Sold','select','Per jar|Per bottle|Per kg|Per dozen|Per box'],['origin','Made / harvested','text','e.g. Own hives, Rietfontein'],['shelf','Shelf life','text','e.g. 12 months']],
+   handmade:[['title','What is it?','text','e.g. Leather tote bag'],['materials','Materials','text','e.g. Full-grain leather, brass'],['madeto','Availability','select','In stock|Made to order|Both'],['lead','Lead time','text','e.g. 5 days']],
+   furniture:[['title','What is it?','text','e.g. Two-seater couch'],['dims','Dimensions','text','e.g. 160 × 90 × 85 cm'],['material','Material','text','e.g. Solid oak, linen'],['age','Age','text','e.g. 3 years']],
+   instruments:[['title','What is it?','text','e.g. Acoustic guitar'],['brand','Brand & model','text','e.g. Yamaha F310'],['year','Year','text','e.g. 2019'],['cond','Condition','select','Excellent|Good|Fair|Needs work']],
+   antiques:[['title','What is it?','text','e.g. Silver pocket watch'],['era','Era / period','text','e.g. Victorian, c. 1890'],['origin','Origin / maker','text','e.g. Birmingham, J.W. Benson'],['prov','Provenance','text','e.g. Family estate, receipts held']],
+   general:[['title','What is it?','text','e.g. Mountain bike'],['brand','Brand','text','e.g. Giant'],['cond','Condition','select','New|Like new|Good|Used'],['extras','Extras included','text','e.g. Helmet, pump']]},
+  lmFeats:{
+   food:['Organic','No preservatives','Halaal','Kosher','Bulk orders','Weekly batches'],
+   handmade:['Custom orders','Gift wrapping','Local materials','Repairs offered'],
+   furniture:['Solid wood','Delivery possible','Recently reupholstered','Smoke-free home'],
+   instruments:['Recently serviced','Case included','Extras included','Trade considered'],
+   antiques:['Documented provenance','Appraisal available','Trade considered','More from this estate'],
+   general:['Negotiable','Warranty remaining','Original packaging','Delivery possible']},
+  sections:[
+   {key:'A',title:'Item Details',pts:20,coach:'<b>The AI drafts a title from your photo</b> — make it yours. Specific beats generic every time.',rows:[]},
+   {key:'B',title:'The Story',pts:20,coach:"<b>This is your unfair advantage.</b> A jar of honey is R80; <i>your</i> honey from <i>your</i> hives has a queue. Tell it.",rows:[
+    ['story','What makes it special?','textarea',"How it's made, where it comes from, why it's different…"],
+    ['care','Care / usage tips','text','e.g. Store below 25°C'],['why','Why are you selling?','text','e.g. Hobby outgrew the house']]},
+   {key:'C',title:'Selling Details',pts:10,coach:'<b>Logistics up front = faster deals.</b>',rows:[
+    ['fulfil','Hand-over','select','Collect|Local delivery|Courier|All of these'],
+    ['stock','Stock','select','Once-off|Repeat batches|Made to order'],['qty','Quantity available','text','e.g. 24 jars']]}]}
+};
+
+var sfState = null;
+
+function sfInit(){
+  sfState = {screen:'home', cat:null, sub:null, lmType:null,
+    photos:{}, files:{}, previews:{}, mainPhase:0, mainMsg:'',
+    A:{}, B:{}, C:{}, features:[], price:'', area:'',
+    email: (typeof magicLink!=='undefined' && magicLink.email) || '',
+    name:  (typeof magicLink!=='undefined' && magicLink.name)  || '',
+    city:  (typeof activeCity!=='undefined' && activeCity.name) || 'Pretoria',
+    visionDraft:null, vehicle:null, _busy:false};
+  // Invited arrival with a category on the magic link → skip the tile screen
+  var _mlcat = (typeof magicLink!=='undefined' && magicLink.active && magicLink.cat) ? String(magicLink.cat) : '';
+  if(_mlcat){
+    var _map={cars:'Cars',property:'Property',tutors:'Tutors',services:'Services',
+              collectors:'Collectors',adventures:'Adventures',local_market:'local_market',localmarket:'local_market'};
+    var _k=_map[_mlcat.toLowerCase()] || (SF_CATS[_mlcat] ? _mlcat : null);
+    if(_k){ sfStartCat(_k); return; }
+  }
+  sfRender();
+}
+function sfGo(s){ sfState.screen=s; sfRender(); }
+function sfToast(t){ if(typeof showToast==='function') showToast(t); }
+
+/* AREA-SUGGEST-1 (16 Jul 2026, David): suburb suggestions for the area input,
+   from GET /suburbs?city= (118 seeded for Pretoria). Free text stays allowed. */
+var _sfSuburbs=[], _sfSuburbsCity='';
+function sfLoadSuburbs(){
+  var city=(sfState.city||((typeof activeCity!=='undefined'&&activeCity.name)||'Pretoria'));
+  if(_sfSuburbsCity===city && _sfSuburbs.length) return;
+  if(typeof BEA_ENABLED==='undefined'||!BEA_ENABLED) return;
+  fetch(BEA_URL+'/suburbs?city='+encodeURIComponent(city))
+    .then(function(r){return r.ok?r.json():[];})
+    .then(function(list){
+      if(Array.isArray(list)&&list.length){
+        _sfSuburbs=list; _sfSuburbsCity=city;
+        if(sfState.screen==='secA') sfRender();   // refresh so the datalist appears
+      }
+    }).catch(function(){});
+}
+
+function sfFlow(){
+  var c = SF_CATS[sfState.cat];
+  if(!c) return null;
+  if(c.sub && sfState.sub) return c.sub[sfState.sub];
+  if(sfState.cat==='local_market'){
+    var t = sfState.lmType || 'general', b = SF_CATS.local_market;
+    return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
+      sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
+                b.sections[1], b.sections[2]], feats:b.lmFeats[t]};
+  }
+  return c;
+}
+function sfMaxPhotos(){
+  // PHOTO-CAP-1 (15 Jul 2026, David-approved costing): photo-rich categories
+  // get 24 total (named slots + extras); everything else 12. Extras never
+  // affect the quality score — named slots stay the quality drivers.
+  if(sfState.cat==='Cars'||sfState.cat==='Property') return 24;
+  if(sfState.cat==='Adventures'&&sfState.sub==='accommodation') return 24;
+  return 12;
+}
+function sfPhotoCount(){
+  return Object.keys(sfState.files).length;
+}
+function sfStartCat(cat){
+  sfLoadSuburbs();   // AREA-SUGGEST-1: warm the suburb list for the area input
+  sfState.cat=cat; sfState.sub=null; sfState.lmType=null;
+  sfState.photos={}; sfState.files={}; sfState.previews={}; sfState.mainPhase=0; sfState.mainMsg='';
+  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.area='';
+  sfState.visionDraft=null; sfState.vehicle=null;
+  var c = SF_CATS[cat];
+  if(c.subPick){ sfGo('subpick'); return; }
+  if(cat==='local_market'){ sfGo('lmpick'); return; }
+  sfFlow().slots.forEach(function(s){sfState.photos[s[0]]=0;});
+  sfGo('photos');
+}
+function sfPickSub(s){ sfState.sub=s; sfFlow().slots.forEach(function(sl){sfState.photos[sl[0]]=0;}); sfGo('photos'); }
+function sfPickLmType(t){
+  sfState.lmType=t; sfFlow().slots.forEach(function(sl){sfState.photos[sl[0]]=0;});
+  sfToast(SF_CATS.local_market.typeToasts[t]); sfGo('photos');
+}
+
+/* ── quality score — LISTING-QUALITY-1 rubric, generic ── */
+function sfWords(s){ return String(s||'').trim().split(/\s+/).filter(Boolean).length; }
+function sfScore(){
+  var f=sfFlow(); if(!f) return {total:0,advice:[]};
+  var s=0, adv=[], slots=f.slots, others=slots.length-1;
+  if(sfState.photos.main===2) s+=10; else adv.push(['Add your main photo',10]);
+  var base = others>0?Math.floor(30/others):0, extra=30-base*others, oi=0;
+  slots.forEach(function(sl){
+    if(sl[0]==='main') return;
+    var per = base + (oi<extra?1:0); oi++;
+    if(sfState.photos[sl[0]]===2) s+=per; else adv.push(['Add the '+sl[1].toLowerCase()+' photo',per]);
+  });
+  f.sections.forEach(function(sec){
+    var rows=sec.rows, n=0;
+    rows.forEach(function(r){
+      var v=sfState[sec.key][r[0]];
+      if(r[2]==='textarea'){ if(sfWords(v)>=15) n++; } else if(String(v||'').trim()) n++;
+    });
+    var pts = rows.length?Math.round(sec.pts*n/rows.length):0; s+=pts;
+    if(n<rows.length){
+      var ta=rows.filter(function(r){return r[2]==='textarea'&&sfWords(sfState[sec.key][r[0]])<15;});
+      if(ta.length && n===rows.length-ta.length) adv.push(['Write "'+ta[0][1]+'" (15+ words)',sec.pts-pts]);
+      else adv.push(['Complete '+sec.title+' ('+(rows.length-n)+' left)',sec.pts-pts]);
+    }
+  });
+  if(String(sfState.price).trim()) s+=6; else adv.push(['Set your price',6]);
+  if(String(sfState.area).trim()) s+=4; else adv.push(['Add your suburb / area',4]);
+  adv.sort(function(a,b){return b[1]-a[1];});
+  return {total:Math.min(100,s), advice:adv};
+}
+function sfMeter(){
+  var sc=sfScore();
+  return '<div class="sf-meter"><div class="sf-mrow"><span>Listing quality</span><span class="sf-mval">'+sc.total+
+  '<span style="font-size:11px;opacity:.5;"> /100</span></span></div>'+
+  '<div class="sf-bar"><div class="sf-fill" style="width:'+sc.total+'%"></div></div>'+
+  '<div class="sf-mhint">'+(sc.total>=50?'Above the 50-point listing standard ✓':'Needs '+(50-sc.total)+' more points to list — drafts are saved')+'</div></div>';
+}
+
+/* ── render ── */
+function sfRender(){
+  var a=document.getElementById('sf-app'); if(!a) return;
+  var s=sfState.screen;
+  if(s==='home') a.innerHTML=sfHomeS();
+  else if(s==='subpick') a.innerHTML=sfSubpickS();
+  else if(s==='lmpick') a.innerHTML=sfLmpickS();
+  else if(s==='photos') a.innerHTML=sfPhotosS();
+  else if(s==='secA') a.innerHTML=sfSpecS('A');
+  else if(s==='secB') a.innerHTML=sfSpecS('B');
+  else if(s==='secC') a.innerHTML=sfSpecS('C');
+  else if(s==='features') a.innerHTML=sfFeatS();
+  else if(s==='legal') a.innerHTML=sfLegalS();
+  else if(s==='scorecard') a.innerHTML=sfScoreS();
+  window.scrollTo(0,0);
+}
+function sfHomeS(){
+  var tiles=[['Property','🏡'],['Tutors','🎓'],['Services','⚙️'],['Cars','🚗'],['Collectors','🏺'],['Adventures','🧭']];
+  var grads={Property:'linear-gradient(140deg,#1e3a5f,#2a5298)',Tutors:'linear-gradient(140deg,#14532d,#15803d)',
+    Services:'linear-gradient(140deg,#7c2d12,#b45309)',Cars:'linear-gradient(140deg,#0c1a2e,#1e3a5f)',
+    Collectors:'linear-gradient(140deg,#44403c,#78716c)',Adventures:'linear-gradient(140deg,#7c3d0a,#b45309)'};
+  var h='<div class="sf-hdr"><div class="sf-step">Sell on TrustSquare</div><h2>Sell</h2></div>'+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>What are you listing?</b> Pick a category — I\'ll guide you photo by photo and write the advert with you. Nothing is visible until you publish.</div></div>'+
+  '<div class="sf-tiles">';
+  tiles.forEach(function(t){
+    var im=SF_TILE_IMGS[t[0]];
+    h+='<div class="sf-tile" onclick="sfStartCat(\''+t[0]+'\')"><div class="sf-bg" style="background:'+grads[t[0]]+'">'+t[1]+'</div>'+
+       '<img class="sf-ph" src="'+im.own+'" onerror="if(this.src!==\''+im.fall+'\'){this.src=\''+im.fall+'\';}else{this.style.display=\'none\';}">'+
+       '<div class="sf-lab"><div class="sf-nm">'+t[0]+'</div><div class="sf-ct">Guided listing · AI writes with you</div></div></div>';
+  });
+  var lm=SF_TILE_IMGS.local_market;
+  h+='<div class="sf-tile sf-wide" onclick="sfStartCat(\'local_market\')"><div class="sf-bg" style="background:linear-gradient(140deg,#14532d,#166534)">🛍️</div>'+
+     '<img class="sf-ph" src="'+lm.own+'" onerror="if(this.src!==\''+lm.fall+'\'){this.src=\''+lm.fall+'\';}else{this.style.display=\'none\';}">'+
+     '<div class="sf-lab"><div class="sf-nm">Local Market</div><div class="sf-ct">Honey to guitars to rare finds</div></div></div>';
+  h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
+  return h;
+}
+function sfSubpickS(){
+  var c=SF_CATS[sfState.cat], p=c.subPick;
+  var h='<div class="sf-hdr"><div class="sf-step">Before we start · '+c.label+'</div><h2>'+p.title+'</h2></div>'+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Two different worlds, two different templates.</b> Pick the one that fits — the photos and questions change to match.</div></div><div class="sf-subgrid">';
+  p.subs.forEach(function(s){
+    h+='<div class="sf-subcard" onclick="sfPickSub(\''+s[0]+'\')"><div class="sf-ic">'+s[1]+'</div><div><div class="sf-nm">'+s[2]+'</div><div class="sf-ds">'+s[3]+'</div></div></div>';
+  });
+  h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button></div>';
+  return h;
+}
+function sfLmpickS(){
+  var c=SF_CATS.local_market;
+  var h='<div class="sf-hdr"><div class="sf-step">Before we start · Local Market</div><h2>'+c.typePickTitle+'</h2></div>'+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>From honey to guitars to grandma\'s dresser</b> — pick the closest fit and I\'ll shape the questions around it.</div></div><div class="sf-typegrid">';
+  c.types.forEach(function(t){
+    h+='<div class="sf-subcard" onclick="sfPickLmType(\''+t[0]+'\')"><div class="sf-ic">'+t[1]+'</div><div><div class="sf-nm">'+t[2]+'</div><div class="sf-ds">'+t[3]+'</div></div></div>';
+  });
+  h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button></div>';
+  return h;
+}
+function sfSlotHtml(sl){
+  var key=sl[0], st=sfState.photos[key];
+  var thumb = (st===2 && sfState.previews[key]) ? '<img src="'+sfState.previews[key]+'">' : sl[3];
+  var badge = st===2 ? '<span class="sf-st ok">✓ checked</span>' : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
+    (key==='main' ? '<span class="sf-st req">required</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));
+  return '<div class="sf-slot'+(st===2?' sf-done':'')+'" onclick="sfPickFile(\''+key+'\')"><div class="sf-thumb">'+thumb+
+  '</div><div class="sf-info"><div class="sf-nm">'+sl[1]+'</div><div class="sf-hint">'+sl[2]+'</div></div>'+badge+'</div>';
+}
+function sfPhotosS(){
+  var f=sfFlow();
+  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
+  if(sfState.mainPhase===1){
+    h+='<div class="sf-aipanel">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'">':'')+
+       '<div class="sf-cap"><span class="sf-spin"></span>AI is reading your photo — checking for '+f.aiCap+'…</div></div>';
+  } else if(sfState.mainPhase===2){
+    h+='<div class="sf-aipanel" style="border-color:rgba(52,211,153,.5);">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'">':'')+
+       '<div class="sf-cap ok">'+(sfState.mainMsg||'✓ Photo accepted')+'</div></div>';
+  } else if(sfState.mainPhase===3){
+    // WRONG-TYPE-1: main photo rejected — wrong kind of item for this advert
+    h+='<div class="sf-aipanel" style="border-color:rgba(239,68,68,.55);">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'" style="opacity:.45;">':'')+
+       '<div class="sf-cap" style="color:#fca5a5;">⚠ '+(sfState.mainMsg||'This photo doesn\'t match your advert type — please choose another.')+'</div></div>';
+  }
+  h+=sfSlotHtml(f.slots[0]);
+  if(sfState.photos.main===2){
+    f.slots.slice(1).forEach(function(sl){h+=sfSlotHtml(sl);});
+    // PHOTO-CAP-1: extra photos beyond the named slots, up to the category cap
+    var _max=sfMaxPhotos(), _cnt=sfPhotoCount(), _extras=Object.keys(sfState.files).filter(function(k){return k.indexOf('extra')===0;}).length;
+    if(_cnt<_max){
+      h+='<div class="sf-slot" onclick="sfPickExtra()"><div class="sf-thumb">➕</div><div class="sf-info">'+
+         '<div class="sf-nm">More photos</div><div class="sf-hint">Anything else that sells it — '+_cnt+' of '+_max+' used</div></div>'+
+         '<span class="sf-st" style="opacity:.5;">optional</span></div>';
+    } else {
+      h+='<div class="sf-slot sf-done"><div class="sf-thumb">✓</div><div class="sf-info"><div class="sf-nm">Photo limit reached</div>'+
+         '<div class="sf-hint">'+_max+' photos — a full house</div></div></div>';
+    }
+    if(_extras>0){
+      h+='<div style="display:flex;gap:6px;overflow-x:auto;margin:0 18px 10px;">';
+      Object.keys(sfState.files).forEach(function(k){
+        if(k.indexOf('extra')===0 && sfState.previews[k])
+          h+='<img src="'+sfState.previews[k]+'" style="width:56px;height:42px;object-fit:cover;border-radius:8px;flex-shrink:0;">';
+      });
+      h+='</div>';
+    }
+    h+='<div class="sf-skipline"><a onclick="sfSkip(\'photos\',\'secA\')">Skip the rest of the photos →</a></div>'+
+       '<div class="sf-skipwarn" id="sf-warn-photos">Skipping photos lowers your Quality Score — full photo sets get roughly 3× more buyer contact. You can add them later.</div>';
+  }
+  h+='<input type="file" id="sf-file" accept="image/*" style="display:none;" onchange="sfFileChosen(this)">';
+  h+='<input type="file" id="sf-file-extra" accept="image/*" multiple style="display:none;" onchange="sfExtraChosen(this)">';
+  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button><button class="sf-btn pri" '+
+     (sfState.photos.main===2?'':'disabled')+' onclick="sfGo(\'secA\')">'+f.sections[0].title+' →</button></div>';
+  return h;
+}
+var _sfPickKey = null;
+function sfPickFile(key){
+  if(sfState.photos[key]===2){ sfToast('Photo already added — it uploads when you finish'); return; }
+  _sfPickKey = key;
+  var el=document.getElementById('sf-file'); if(el){ el.value=''; el.click(); }
+}
+function sfFileChosen(input){
+  var file = input.files && input.files[0];
+  if(!file || !_sfPickKey) return;
+  var key=_sfPickKey; _sfPickKey=null;
+  sfState.files[key]=file;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    sfState.previews[key]=e.target.result;
+    sfState.photos[key]=1;
+    if(key==='main'){ sfState.mainPhase=1; sfRender(); sfRunVision(file); }
+    else { sfRender(); setTimeout(function(){ sfState.photos[key]=2; sfRender(); sfToast('✓ Added — the AI anonymity check runs on upload'); }, 500); }
+  };
+  rd.readAsDataURL(file);
+}
+function sfPickExtra(){
+  var el=document.getElementById('sf-file-extra'); if(el){ el.value=''; el.click(); }
+}
+function sfExtraChosen(input){
+  var room = sfMaxPhotos() - sfPhotoCount();
+  var files = Array.prototype.slice.call(input.files||[]).slice(0, Math.max(0,room));
+  if(!files.length) return;
+  var over = (input.files||[]).length - files.length;
+  var pending = files.length;
+  files.forEach(function(file,i){
+    var key='extra'+Date.now()+'_'+i;
+    sfState.files[key]=file;
+    var rd=new FileReader();
+    rd.onload=function(e){ sfState.previews[key]=e.target.result; if(--pending===0) sfRender(); };
+    rd.readAsDataURL(file);
+  });
+  sfToast('✓ '+files.length+' photo'+(files.length>1?'s':'')+' added — the anonymity check runs on upload'+(over>0?' · '+over+' over the limit were dropped':''));
+}
+async function sfRunVision(file){
+  var f=sfFlow(), done=false;
+  var finish=function(msg){
+    if(done) return; done=true;
+    sfState.photos.main=2; sfState.mainPhase=2; sfState.mainMsg=msg; sfRender();
+  };
+  var toGuard=setTimeout(function(){ finish('✓ Photo added. AI was slow to respond — fill in the details and I\'ll catch up.'); }, 40000);
+  try{
+    if(typeof BEA_ENABLED==='undefined' || !BEA_ENABLED) throw new Error('bea off');
+    var fd=new FormData();
+    fd.append('photos', file, file.name||'photo_0.jpg');
+    fd.append('category_hint', (sfState.cat==='local_market'?'local_market':String(sfState.cat||'').toLowerCase()));
+    fd.append('seller_email', sfState.email||'');
+    fd.append('city', sfState.city||'Pretoria');
+    fd.append('country_iso2','ZA');
+    var res=await fetch(BEA_URL+'/listings/vision-draft',{method:'POST',body:fd});
+    clearTimeout(toGuard);
+    if(!res.ok) throw new Error('vision '+res.status);
+    var data=await res.json();
+    var d=data.draft||{};
+    // WRONG-TYPE-1 (16 Jul 2026): main photo shows the wrong kind of item
+    // (David's boat on a Cars advert) — hard stop, pick another photo.
+    var _offc = data.off_category_photo_indices || [];
+    if(_offc.indexOf(0)>-1){
+      done=true;
+      delete sfState.files.main;
+      sfState.photos.main=0; sfState.mainPhase=3;
+      var _itm={Cars:'the vehicle',Property:'the property',Collectors:'the item'}[sfState.cat]||'what you\'re selling';
+      sfState.mainMsg='This doesn\'t look like a '+sfState.cat+' photo — your main photo must show '+_itm+'. Tap the photo slot to try another.';
+      sfRender(); return;
+    }
+    sfState.visionDraft=d;
+    sfApplyDraft(d);
+    var msg='✓ Photo read';
+    if(data.anonymity_scrubbed || (data.violating_photo_indices||[]).length){
+      msg='✓ Identifying details spotted — they\'ll be blurred automatically when your photos upload';
+    } else if(d.title){ msg='✓ Photo read — I\'ve drafted your listing details below'; }
+    finish(msg);
+  }catch(e){
+    clearTimeout(toGuard);
+    finish('✓ Photo added — fill in the details manually and the anonymity check runs on upload.');
+  }
+}
+function sfApplyDraft(d){
+  var A=sfState.A, B=sfState.B, C=sfState.C, cat=sfState.cat;
+  if(d.suggested_price && !String(sfState.price).trim()) sfState.price=String(d.suggested_price);
+  if(cat==='Cars'){
+    if(d.make && !A.make) A.make=String(d.make);
+    if(d.model && !A.model) A.model=String(d.model);
+    if(d.variant && !A.variant) A.variant=String(d.variant);
+    if(d.year && !A.year) A.year=String(d.year);
+    if(d.mileage && !B.mileage) B.mileage=String(d.mileage);
+    var vs=(d.vehicle_specs && typeof d.vehicle_specs==='object' && !Array.isArray(d.vehicle_specs))?d.vehicle_specs:{};
+    if(vs.engine_capacity_cc && !C.cc) C.cc=String(vs.engine_capacity_cc);
+    if(vs.kilowatts_kw && !C.kw) C.kw=String(vs.kilowatts_kw);
+    if(vs.gears && !C.gears) C.gears=String(vs.gears);
+    // CARS-SPEC-1 stash — same shape goApplyVisionToStep2 builds (prov ai_guess)
+    var v={};
+    if(d.make) v.make=String(d.make);
+    if(d.model) v.model=String(d.model);
+    if(d.variant) v.variant=String(d.variant);
+    if(d.year && parseInt(d.year,10)) v.vehicle_year=parseInt(d.year,10);
+    if(d.mileage && parseInt(d.mileage,10)) v.mileage_km=parseInt(d.mileage,10);
+    var specs={}; Object.keys(vs).forEach(function(k){ if(k!=='_prov') specs[k]=vs[k]; });
+    var prov={};
+    Object.keys(v).forEach(function(k){prov[k]='ai_guess';});
+    Object.keys(specs).forEach(function(k){prov[k]='ai_guess';});
+    if(Object.keys(prov).length) specs._prov=prov;
+    if(Object.keys(specs).some(function(k){return k!=='_prov';})) v.vehicle_specs=JSON.stringify(specs);
+    else if(Object.keys(prov).length) v.vehicle_specs=JSON.stringify({_prov:prov});
+    if(Object.keys(v).length) sfState.vehicle=v;
+  }
+  if(cat==='Property'){
+    if(d.beds && !A.beds) A.beds=String(d.beds);
+    if(d.baths && !A.baths) A.baths=String(d.baths);
+    if(d.listing_type && !A.ltype) A.ltype=d.listing_type;
+    if(d.prop_type && !A.ptype) A.ptype=d.prop_type;
+  }
+  if(cat==='Tutors'){
+    if(d.subject && !A.subjects) A.subjects=d.subject;
+    if(d.level && !A.levels) A.levels=d.level;
+  }
+  if(cat==='local_market' && d.title && !A.title) A.title=d.title;
+  if(cat==='Collectors' && d.title && !A.name) A.name=d.title;
+}
+function sfSkip(warnKey,next){
+  var w=document.getElementById('sf-warn-'+warnKey);
+  if(w && w.style.display!=='block'){ w.style.display='block'; setTimeout(function(){sfGo(next);},1600); }
+  else sfGo(next);
+}
+function sfSpecS(secKey){
+  var f=sfFlow();
+  var idx = secKey==='A'?0:secKey==='B'?1:2;
+  var sec=f.sections[idx], stepNo=2+idx;
+  var prev = idx===0?'photos':(idx===1?'secA':'secB');
+  var next = idx===0?'secB':(idx===1?'secC':'features');
+  var nextLabel = idx===0?f.sections[1].title:(idx===1?f.sections[2].title:'Features');
+  var h='<div class="sf-hdr"><div class="sf-step">Step '+stepNo+' of 6 · '+f.label+'</div><h2>'+sec.title+'</h2></div>'+sfMeter()+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+sec.coach+'</div></div><div class="sf-card"><div class="sf-title">'+sec.title+'</div>';
+  var rows=sec.rows.slice();
+  if(secKey==='A') rows=rows.concat([['__price',f.priceLabel,'number','e.g. 500','root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
+  rows.forEach(function(r){
+    var id=r[0], lbl=r[1], typ=r[2], ph=r[3], root=(r[4]==='root');
+    var val = root ? sfState[id==='__price'?'price':'area'] : (sfState[secKey][id]||'');
+    var oninp='sfUpd(\''+(root?'__root__':secKey)+'\',\''+(root?(id==='__price'?'price':'area'):id)+'\',this.value)';
+    if(typ==='select'){
+      var opts='<option value="">—</option>';
+      ph.split('|').forEach(function(o){opts+='<option'+(val===o?' selected':'')+'>'+o+'</option>';});
+      h+='<div class="sf-frow"><label>'+lbl+'</label><select onchange="'+oninp+'">'+opts+'</select></div>';
+    } else if(typ==='textarea'){
+      h+='<div class="sf-frow" style="flex-direction:column;align-items:stretch;"><label style="margin-bottom:6px;max-width:100%;">'+lbl+'</label><textarea rows="3" placeholder="'+ph+'" oninput="'+oninp+'">'+val+'</textarea></div>';
+    } else {
+      // AREA-SUGGEST-1: the suburb/area input offers the city's suburbs as
+      // datalist suggestions (tap shows the list, typing filters it)
+      var _dl=(root && id==='__area' && _sfSuburbs.length)?' list="sf-area-dl"':'';
+      h+='<div class="sf-frow"><label>'+lbl+'</label><input type="text"'+_dl+' inputmode="'+(typ==='number'?'numeric':'text')+'" placeholder="'+ph+'" value="'+String(val).replace(/"/g,'&quot;')+'" oninput="'+oninp+'"></div>';
+      if(_dl) h+='<datalist id="sf-area-dl">'+_sfSuburbs.map(function(s){return '<option value="'+String(s).replace(/"/g,'&quot;')+'">';}).join('')+'</datalist>';
+    }
+  });
+  h+='</div><div class="sf-skipline"><a onclick="sfSkip(\''+secKey+'\',\''+next+'\')">Skip for now — update later →</a></div>'+
+  '<div class="sf-skipwarn" id="sf-warn-'+secKey+'">Less data lowers your Quality Score and how buyers rank you — you can complete this any time from your dashboard.</div>'+
+  '<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\''+prev+'\')">←</button><button class="sf-btn pri" onclick="sfGo(\''+next+'\')">'+nextLabel+' →</button></div>';
+  return h;
+}
+function sfUpd(scope,id,v){
+  if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
+  var m=document.querySelector('#sf-app .sf-meter');
+  if(m){ var d=document.createElement('div'); d.innerHTML=sfMeter(); m.replaceWith(d.firstChild); }
+}
+function sfFeatS(){
+  var f=sfFlow();
+  var h='<div class="sf-hdr"><div class="sf-step">Step 5 of 6 · '+f.label+'</div><h2>Features</h2></div>'+sfMeter()+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Tap everything that applies.</b> Features don\'t affect the score — they just make your advert richer.</div></div>'+
+  '<div class="sf-card"><div class="sf-title">Features & extras</div><div class="sf-chips">';
+  f.feats.forEach(function(ft){
+    var on=sfState.features.indexOf(ft)>=0;
+    h+='<div class="sf-chip'+(on?' on':'')+'" onclick="sfTogFeat(\''+ft.replace(/'/g,"\\'")+'\')">'+ft+'</div>';
+  });
+  var _hasLegal = !!sfLegalCard();
+  h+='</div></div><div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'secC\')">←</button>'+
+  '<button class="sf-btn pri" onclick="sfGo(\''+(_hasLegal?'legal':'scorecard')+'\')">'+(_hasLegal?'One last thing →':'See my score →')+'</button></div>';
+  return h;
+}
+function sfTogFeat(ft){
+  var i=sfState.features.indexOf(ft);
+  if(i>=0) sfState.features.splice(i,1); else sfState.features.push(ft);
+  sfRender();
+}
+/* LEGAL-STEP-1 (17 Jul 2026, David): Step 6 of 6 — country-swappable legal
+   must-haves card + agency-value note. Card resolves off the LISTING's country
+   (same l.country||'ZA' convention as ADV_COUNTRY_CURRENCY), never viewer IP.
+   Assets: /static/legal-must-haves/{CC}/must-haves-{CC}-{cat}.png
+   (generated by scripts/gen_legal_must_haves.py; manifest.json has review status).
+   Fallback: country without cards -> note only, no image. local_market has no
+   card, so Features routes straight to the scorecard. */
+var SF_LEGAL_COUNTRIES = {ZA:'South Africa', US:'United States', UK:'United Kingdom', AU:'Australia'};
+var SF_LEGAL_LIVE = ['ZA'];  // countries whose cards passed legal review (manifest.json)
+var SF_LEGAL_NOTES = {
+  property: '<b>Why sellers use an estate agent:</b> an agent manages the sale end-to-end and facilitates the legal steps with the conveyancer — certificates, clearances, bond cancellation — while pricing your home against real sales, vetting buyers before they reach your door, and negotiating on your behalf. Selling privately saves commission; a good agent saves months and mistakes.',
+  cars: '<b>Why sellers use a dealer or sales agency:</b> they handle the ownership and registration paperwork, settle outstanding finance correctly, screen out payment-day fraud, and give buyers the confidence that closes the sale. Privately you keep the margin — an agency carries the admin and the risk.',
+  tutors: '<b>Why tutors join an agency:</b> agencies carry the vetting, clearances and contracts above, match you with the right learners, chase the invoices, and lend you their reputation while you build your own.',
+  services: '<b>Why providers work through an agency:</b> an agency proves your licences and insurance to cautious clients, keeps the paperwork compliant, brings a steady pipeline of work, and stands behind the job if a dispute flares.',
+  adventures_accommodation: '<b>Why hosts use a travel agent or booking agency:</b> they keep you on the right side of zoning, insurance and safety rules, handle guest screening and payments, and fill your calendar in seasons you can\'t reach alone.',
+  adventures_experiences: '<b>Why operators use a travel agent:</b> agents package and sell your experience to audiences you can\'t reach, keep waivers and permits watertight, and handle bookings, deposits and cancellations — you run the adventure, not the admin.',
+  collectors: '<b>Why collectors use an auction house or specialist dealer:</b> they authenticate and document provenance, know the permit traps, reach serious buyers worldwide, and turn a private guess into a market price.'
+};
+function sfLegalCat(){
+  var c = sfState.cat;
+  if(c==='Property') return 'property';
+  if(c==='Cars') return 'cars';
+  if(c==='Tutors') return 'tutors';
+  if(c==='Services') return 'services';
+  if(c==='Collectors') return 'collectors';
+  if(c==='Adventures') return sfState.sub==='accommodation' ? 'adventures_accommodation' : 'adventures_experiences';
+  return null;  // local_market etc: no legal card
+}
+function sfLegalCountry(){
+  return String(sfState.country || 'ZA').toUpperCase();
+}
+function sfLegalCard(){
+  var cat = sfLegalCat();
+  if(!cat) return null;
+  var cc = sfLegalCountry();
+  var live = SF_LEGAL_LIVE.indexOf(cc) >= 0;
+  var d = (live && typeof SF_LEGAL_CARDS !== 'undefined' && SF_LEGAL_CARDS[cc] && SF_LEGAL_CARDS[cc].cats[cat]) || null;
+  return {cat:cat, cc:cc, cname:SF_LEGAL_COUNTRIES[cc]||cc, note:SF_LEGAL_NOTES[cat], data:d};
+}
+/* LEGAL-STEP-2 (17 Jul 2026, David): phone-native render — stacked rows from
+   /static/legal-must-haves/legal-cards.js (window.SF_LEGAL_CARDS), no wide PNG
+   in-app. PNGs remain for sharing/marketing. Same gating via SF_LEGAL_LIVE. */
+function sfLegalS(){
+  var f=sfFlow(), L=sfLegalCard();
+  var mut='var(--text-3,#8b93a7)';
+  var h='<div class="sf-hdr"><div class="sf-step">Step 6 of 6 · '+f.label+'</div><h2>The legal side — and who can carry it</h2></div>'+sfMeter()+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+L.note+'</div></div>';
+  if(L.data){
+    var a=L.data.accent, d=L.data;
+    h+='<div class="sf-card" style="padding:0;overflow:hidden;">'+
+      '<div style="background:'+a+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
+        '<div style="font-weight:800;letter-spacing:.06em;font-size:11.5px;color:#fff;min-width:0;">ABSOLUTE MUST-HAVES · '+d.label+'</div>'+
+        '<div style="flex:0 0 auto;background:rgba(255,255,255,.2);border-radius:6px;padding:2px 9px;font-weight:800;font-size:12px;color:#fff;">'+L.cc+'</div></div>'+
+      '<div style="padding:2px 14px 14px;">';
+    d.rows.forEach(function(r,i){
+      h+='<div style="display:flex;gap:11px;padding:12px 0;'+(i<d.rows.length-1?'border-bottom:1px solid rgba(255,255,255,.07);':'')+'">'+
+        '<div style="flex:0 0 26px;height:26px;border-radius:50%;background:'+a+';color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px;">'+(i+1)+'</div>'+
+        '<div style="min-width:0;flex:1;">'+
+          '<div style="font-weight:700;font-size:14px;line-height:1.3;">'+r[0]+'</div>'+
+          '<div style="font-size:12px;color:'+mut+';margin-top:2px;line-height:1.35;">'+r[1]+'</div>'+
+          '<div style="font-size:12.5px;margin-top:6px;line-height:1.4;"><span style="color:'+a+';font-weight:800;">→</span> '+r[2]+'</div>'+
+          '<div style="display:inline-block;margin-top:7px;background:'+a+'30;border:1px solid '+a+'55;border-radius:5px;padding:3px 8px;font-size:10.5px;font-weight:800;letter-spacing:.04em;">'+r[3]+'</div>'+
+        '</div></div>';
+    });
+    h+='<div style="background:#14213d;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px 12px;margin-top:12px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.4;">'+d.foot+'</div>'+
+      '<div style="font-size:10.5px;color:'+mut+';margin-top:8px;line-height:1.4;">'+d.note+'</div>'+
+      '<div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;color:'+a+';">Accredited agencies on MarketSquare manage what they may, and facilitate the rest with the right professionals.</div>'+
+      '</div></div>'+
+      '<div style="font-size:11px;color:'+mut+';margin:8px 2px 0;">Shown for '+L.cname+' — this swaps automatically to the listing\'s country. General guidance, not legal advice.</div>';
+  } else {
+    h+='<div class="sf-card"><div class="sf-title">Legal requirements — '+L.cname+'</div>'+
+    '<div style="font-size:13px;line-height:1.5;">Private sales in '+L.cname+' carry their own legal steps. Our country guide for '+L.cname+' is being reviewed — meanwhile, an accredited agency can walk you through the requirements.</div></div>';
+  }
+  h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'features\')">←</button>'+
+  '<button class="sf-btn pri" onclick="sfGo(\'scorecard\')">See my score →</button></div>';
+  return h;
+}
+function sfScoreS(){
+  var f=sfFlow(), sc=sfScore();
+  var col = sc.total>=75?'#34d399':sc.total>=50?'#fbbf24':'#f87171';
+  var verdict = sc.total>=85?'Excellent listing':sc.total>=70?'Strong listing':sc.total>=50?'Good to go':'Below the listing standard';
+  var sub = sc.total>=50
+    ? 'Your advert meets the TrustSquare standard. The advice below lifts you higher in search — quality never hides anyone, it only rewards effort.'
+    : 'You need '+(50-sc.total)+' more points to publish. Your draft is saved — the quickest wins are below.';
+  var h='<div class="sf-hdr"><div class="sf-step">'+f.label+' · Quality check</div><h2>Your listing score</h2></div>'+
+  '<div class="sf-dial" style="--sfpct:'+sc.total+';--sfdialcol:'+col+';"><div class="sf-inner"><div class="sf-num" style="color:'+col+'">'+sc.total+'</div><div class="sf-of">out of 100</div></div></div>'+
+  '<div class="sf-verdict" style="color:'+col+'">'+verdict+'</div><div class="sf-verdict sub">'+sub+'</div>';
+  if(sc.advice.length){
+    h+='<div class="sf-advice"><div class="sf-at">What lifts your score</div>';
+    sc.advice.slice(0,5).forEach(function(a){h+='<div class="sf-ai"><span>'+a[0]+'</span><b>+'+a[1]+'</b></div>';});
+    h+='</div>';
+  }
+  if(sc.total>=50){
+    h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'photos\')">Improve first</button>'+
+       '<button class="sf-btn pri" id="sf-list-btn" onclick="sfFinish(false)">Continue to publish 🚀</button></div>';
+  } else {
+    h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfFinish(true)">Save draft & finish later</button>'+
+       '<button class="sf-btn pri" onclick="sfGo(\'photos\')">Add what\'s missing →</button></div>';
+  }
+  h+='<div style="text-align:center;"><span class="sf-pill">Score is never shown on the advert · never touches your Trust Score</span></div>';
+  return h;
+}
+
+/* ── finish: populate goState, reuse the proven goHandoff tail ── */
+function sfComposeDescription(){
+  var f=sfFlow(), out=[];
+  ['B','C'].forEach(function(k){
+    var idx=k==='B'?1:2, sec=f.sections[idx];
+    sec.rows.forEach(function(r){
+      var v=sfState[k][r[0]];
+      if(!String(v||'').trim()) return;
+      if(r[2]==='textarea') out.push(String(v).trim());
+      else out.push(r[1]+': '+String(v).trim());
+    });
+  });
+  // section A non-mapped fields fold in too (everything except the goState field map below)
+  var mapped={make:1,model:1,variant:1,year:1,beds:1,baths:1,ltype:1,subjects:1,levels:1,title:1,name:1,trade:1,work:1};
+  f.sections[0].rows.forEach(function(r){
+    var v=sfState.A[r[0]];
+    if(!String(v||'').trim() || mapped[r[0]]) return;
+    out.push(r[1]+': '+String(v).trim());
+  });
+  if(sfState.features.length) out.push('Features: '+sfState.features.join(', '));
+  return out.join('\n');
+}
+function sfBuildTitle(){
+  var A=sfState.A, cat=sfState.cat;
+  if(cat==='Cars'){
+    var t=[A.year,A.make,A.model,A.variant].filter(function(x){return String(x||'').trim();}).join(' ');
+    return t||'My car';
+  }
+  if(A.title) return A.title;
+  if(A.name) return A.name;
+  if(cat==='Property'){ return [A.beds?A.beds+'-bed':'',A.ptype||'Property',sfState.area?('— '+sfState.area):''].join(' ').trim(); }
+  if(cat==='Tutors'){ return (A.subjects?A.subjects+' tutoring':'Tutoring')+(A.levels?' — '+A.levels:''); }
+  if(cat==='Services'){ return (A.trade||A.work||'Service')+(sfState.area?' — '+sfState.area:''); }
+  if(cat==='Adventures'){ return A.atype||A.ptype||'Adventure listing'; }
+  return 'My listing';
+}
+async function sfFinish(draftOnly){
+  if(sfState._busy) return; sfState._busy=true;
+  var btn=document.getElementById('sf-list-btn'); if(btn){btn.disabled=true;btn.textContent='Preparing…';}
+  try{
+    var files=[]; var f=sfFlow();
+    f.slots.forEach(function(sl){ if(sfState.files[sl[0]]) files.push(sfState.files[sl[0]]); });
+    Object.keys(sfState.files).forEach(function(k){ if(k.indexOf('extra')===0) files.push(sfState.files[k]); });   // PHOTO-CAP-1
+    // populate goState — goHandoff reads exactly these
+    goState.email=sfState.email; goState.name=sfState.name;
+    goState.cat = sfState.cat;
+    goState.city = sfState.city;
+    goState.listingId = null;
+    goState.photoUploaded = false;
+    goState.photoFiles = files;
+    goState.photoFile = files[0]||null;
+    goState.visionDraft = sfState.visionDraft;
+    goState.visionSkipped = !sfState.visionDraft;
+    goState.vehicle = sfState.vehicle||null;
+    // seller-entered structured fields override / extend the AI stash (Cars)
+    if(sfState.cat==='Cars'){
+      var v=goState.vehicle||{}; var A=sfState.A,B=sfState.B,C=sfState.C;
+      var specs={}; try{ specs=JSON.parse(v.vehicle_specs||'{}'); }catch(e){ specs={}; }
+      var prov=specs._prov||{};
+      if(A.make){v.make=A.make;prov.make='seller_entered';}
+      if(A.model){v.model=A.model;prov.model='seller_entered';}
+      if(A.variant){v.variant=A.variant;prov.variant='seller_entered';}
+      if(A.year&&parseInt(A.year,10)){v.vehicle_year=parseInt(A.year,10);prov.vehicle_year='seller_entered';}
+      if(A.colour){v.colour=A.colour;prov.colour='seller_entered';}
+      if(A.body){v.body_type=A.body;prov.body_type='seller_entered';}
+      if(B.mileage&&parseInt(String(B.mileage).replace(/\D/g,''),10)){v.mileage_km=parseInt(String(B.mileage).replace(/\D/g,''),10);prov.mileage_km='seller_entered';}
+      if(C.transmission){v.transmission=C.transmission;prov.transmission='seller_entered';}
+      if(C.fuel){v.fuel_type=C.fuel;prov.fuel_type='seller_entered';}
+      if(C.cc&&parseInt(C.cc,10)){specs.engine_capacity_cc=parseInt(C.cc,10);prov.engine_capacity_cc='seller_entered';}
+      if(C.kw&&parseInt(C.kw,10)){specs.kilowatts_kw=parseInt(C.kw,10);prov.kilowatts_kw='seller_entered';}
+      if(C.gears&&parseInt(C.gears,10)){specs.gears=parseInt(C.gears,10);prov.gears='seller_entered';}
+      specs._prov=prov;
+      v.vehicle_specs=JSON.stringify(specs);
+      goState.vehicle=v;
+    }
+    var fields={
+      title: sfBuildTitle(),
+      price: String(sfState.price||'').trim()||'POA',
+      suburb: sfState.area||'',
+      description: sfComposeDescription()
+    };
+    var A=sfState.A;
+    if(A.beds) fields.beds=A.beds;
+    if(A.baths) fields.baths=A.baths;
+    if(A.ltype) fields.listing_type=A.ltype;
+    if(A.subjects) fields.subject=A.subjects;
+    if(A.levels) fields.level=A.levels;
+    if(A.trade) fields.service_type=A.trade;
+    if(A.work) fields.service_type=A.work;
+    goState.fields=fields;
+    if(draftOnly){
+      // save the draft via the same tail, but tell the seller what happened
+      await goHandoff();
+      var sc=sfScore();
+      sfToast('Draft saved — '+(50-sc.total>0?(50-sc.total)+' points to go before it can publish.':'finish any time.'));
+    } else {
+      await goHandoff();   // routes to seller-onboard (EULA → cars attest → publish)
+    }
+  }catch(e){
+    console.warn('sfFinish failed', e);
+    sfToast('Something went wrong saving your listing — nothing was lost. Try again.');
+    if(btn){btn.disabled=false;btn.textContent='Continue to publish 🚀';}
+  }
+  sfState._busy=false;
+}
+/* ═══ end SELL-FLOW-REDO-2 ═══ */

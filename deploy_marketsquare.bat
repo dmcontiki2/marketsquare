@@ -235,6 +235,16 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %SERVER% "mkdir -p %REMOTE%/static/videos && chmod 755 %REMOTE%/static/videos && chmod 644 %REMOTE%/static/videos/*.mp4"
+
+:: -- LEGAL-STEP-1: legal must-have cards (country/category, Step 6 of 6 in SELL flow)
+echo  [3d] Deploying legal must-have cards (assets\legal-must-haves -^> /static/legal-must-haves/)...
+ssh -n %SERVER% "mkdir -p %REMOTE%/static/legal-must-haves/ZA %REMOTE%/static/legal-must-haves/US %REMOTE%/static/legal-must-haves/UK %REMOTE%/static/legal-must-haves/AU"
+scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
+scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
+scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/
+scp "%PROJECT%\assets\legal-must-haves\UK\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/UK/
+scp "%PROJECT%\assets\legal-must-haves\AU\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/AU/
+ssh -n %SERVER% "chmod 755 %REMOTE%/static/legal-must-haves %REMOTE%/static/legal-must-haves/* && chmod 644 %REMOTE%/static/legal-must-haves/*/*.png"
 ssh -n %SERVER% "o=$(md5sum %REMOTE%/static/videos/expedition-dossier-howto.mp4 | cut -d\" \" -f1); s=$(curl -s --max-time 25 https://trustsquare.co/static/videos/expedition-dossier-howto.mp4?vchk=$RANDOM | md5sum | cut -d\" \" -f1); if [ \"$o\" = \"$s\" ]; then echo \"   [OK] videos: served bytes match origin - CDN fresh\"; else echo \"   [FAIL] videos: served differs from origin - CDN stale or wrong path\"; fi"
 echo  Done.
 

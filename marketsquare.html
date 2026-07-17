@@ -142,7 +142,89 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=208">
+<link rel="stylesheet" href="/static/ms.css?v=213">
+<style id="sf-styles">
+/* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
+#screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
+#screen-sell-flow h2{font-family:'Syne',sans-serif;}
+.sf-hdr{padding:20px 18px 6px;}
+.sf-hdr .sf-step{font-size:10px;font-weight:700;letter-spacing:1.4px;color:#f2b035;text-transform:uppercase;}
+.sf-hdr h2{font-size:24px;margin:4px 0 0;letter-spacing:.3px;color:#f2f5f9;}
+.sf-coach{display:flex;gap:10px;margin:12px 18px;background:rgba(242,176,53,.07);border:1px solid rgba(242,176,53,.25);border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.55;color:rgba(255,255,255,.62);}
+.sf-coach .sf-av{font-size:20px;}
+.sf-coach .sf-av img{width:28px;height:28px;object-fit:contain;vertical-align:-6px;}
+.sf-coach b{color:#f2f5f9;}
+.sf-meter{margin:10px 18px 4px;background:#141f33;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:10px 13px;}
+.sf-meter .sf-mrow{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;font-weight:700;}
+.sf-meter .sf-mval{font-family:'Syne',sans-serif;font-size:19px;color:#f2f5f9;}
+.sf-meter .sf-bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:7px;overflow:hidden;}
+.sf-meter .sf-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f87171,#fbbf24 45%,#34d399 75%);transition:width .4s;}
+.sf-meter .sf-mhint{font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;}
+.sf-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px;}
+.sf-tile{position:relative;height:110px;border-radius:14px;overflow:hidden;cursor:pointer;border:1.5px solid rgba(255,255,255,.09);display:flex;align-items:flex-end;transition:.15s;}
+.sf-tile:hover{transform:translateY(-2px);border-color:#f2b035;}
+.sf-tile .sf-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;opacity:.9;}
+.sf-tile img.sf-ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.sf-tile .sf-lab{position:relative;width:100%;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,.72));}
+.sf-tile .sf-lab .sf-nm{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;}
+.sf-tile .sf-lab .sf-ct{font-size:10.5px;color:rgba(255,255,255,.75);}
+.sf-tile.sf-wide{grid-column:1/-1;height:84px;}
+.sf-subgrid{display:grid;grid-template-columns:1fr;gap:10px;padding:6px 18px;}
+.sf-typegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 18px;}
+.sf-subcard{background:#141f33;border:1.5px solid rgba(255,255,255,.09);border-radius:14px;padding:14px;cursor:pointer;display:flex;gap:12px;align-items:center;transition:.15s;}
+.sf-subcard:hover{border-color:#f2b035;}
+.sf-subcard .sf-ic{font-size:28px;}
+.sf-subcard .sf-nm{font-family:'Syne',sans-serif;font-weight:700;font-size:14.5px;color:#f2f5f9;}
+.sf-subcard .sf-ds{font-size:11.5px;color:rgba(255,255,255,.4);margin-top:2px;line-height:1.4;}
+.sf-typegrid .sf-subcard{flex-direction:column;text-align:center;gap:6px;padding:16px 10px;}
+.sf-slot{display:flex;align-items:center;gap:12px;background:#141f33;border:1.5px solid rgba(255,255,255,.09);border-radius:14px;padding:11px 13px;margin:0 18px 10px;cursor:pointer;transition:.15s;}
+.sf-slot:hover{border-color:rgba(242,176,53,.5);}
+.sf-slot.sf-done{border-color:rgba(52,211,153,.45);}
+.sf-slot .sf-thumb{width:74px;height:52px;border-radius:9px;background:#1a2740;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.sf-slot .sf-thumb img{width:100%;height:100%;object-fit:cover;}
+.sf-slot .sf-info{flex:1;}
+.sf-slot .sf-nm{font-weight:700;font-size:13.5px;color:#f2f5f9;}
+.sf-slot .sf-hint{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.sf-slot .sf-st{font-size:11px;font-weight:700;flex-shrink:0;}
+.sf-slot .sf-st.ok{color:#34d399;}.sf-slot .sf-st.req{color:#f2b035;}.sf-slot .sf-st.chk{color:#8b5cf6;}
+.sf-aipanel{margin:0 18px 12px;background:#141f33;border:1.5px solid rgba(139,92,246,.4);border-radius:16px;overflow:hidden;}
+.sf-aipanel img{width:100%;display:block;}
+.sf-aipanel .sf-cap{padding:10px 13px;font-size:12px;line-height:1.5;color:rgba(255,255,255,.62);}
+.sf-aipanel .sf-cap.ok{color:#34d399;font-weight:600;}
+.sf-spin{width:16px;height:16px;border:2.5px solid rgba(139,92,246,.3);border-top-color:#8b5cf6;border-radius:50%;display:inline-block;vertical-align:-3px;margin-right:7px;animation:sfsp .8s linear infinite;}
+@keyframes sfsp{to{transform:rotate(360deg)}}
+.sf-card{margin:12px 18px;background:#141f33;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:15px;}
+.sf-card .sf-title{font-size:11px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#f2b035;margin-bottom:10px;font-family:'Syne',sans-serif;}
+.sf-frow{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);padding:8px 0;gap:10px;}
+.sf-frow:last-child{border-bottom:none;}
+.sf-frow label{font-size:12.5px;color:rgba(255,255,255,.62);flex-shrink:0;max-width:42%;}
+.sf-frow input,.sf-frow select,.sf-frow textarea{background:#101a2c;border:1px solid rgba(255,255,255,.09);border-radius:8px;color:#f2f5f9;font-size:13px;padding:7px 10px;width:56%;font-family:'Inter',sans-serif;}
+.sf-frow textarea{width:100%;resize:vertical;}
+.sf-frow input:focus,.sf-frow select:focus,.sf-frow textarea:focus{outline:none;border-color:#f2b035;}
+.sf-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.sf-chip{padding:7px 13px;border-radius:50px;border:1.5px solid rgba(255,255,255,.09);background:#1a2740;font-size:12px;cursor:pointer;color:rgba(255,255,255,.62);}
+.sf-chip.on{border-color:#f2b035;color:#f2b035;background:rgba(242,176,53,.1);font-weight:700;}
+.sf-skipline{text-align:center;margin:6px 18px 0;}
+.sf-skipline a{color:rgba(255,255,255,.4);font-size:12px;text-decoration:underline;cursor:pointer;}
+.sf-skipwarn{margin:8px 18px 0;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:11.5px;color:#fbbf24;line-height:1.5;display:none;}
+.sf-foot{display:flex;gap:10px;padding:16px 18px 8px;}
+.sf-btn{flex:1;border:none;border-radius:50px;padding:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.sf-btn.pri{background:#f2b035;color:#1a1205;}
+.sf-btn.pri:disabled{background:rgba(255,255,255,.12);color:rgba(255,255,255,.4);cursor:not-allowed;}
+.sf-btn.gho{background:transparent;border:1.5px solid rgba(255,255,255,.09);color:rgba(255,255,255,.62);flex:0 0 auto;padding:14px 18px;}
+.sf-dial{width:150px;height:150px;border-radius:50%;margin:18px auto 8px;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--sfdialcol,#34d399) calc(var(--sfpct,0)*1%), rgba(255,255,255,.08) 0);}
+.sf-dial .sf-inner{width:122px;height:122px;border-radius:50%;background:#0b1220;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.sf-dial .sf-num{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;}
+.sf-dial .sf-of{font-size:11px;color:rgba(255,255,255,.4);}
+.sf-verdict{text-align:center;font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:2px;}
+.sf-verdict.sub{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.62);font-weight:400;margin:0 30px 8px;line-height:1.5;}
+.sf-advice{margin:10px 18px;background:#141f33;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:13px 15px;}
+.sf-advice .sf-at{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#f2b035;margin-bottom:8px;font-family:'Syne',sans-serif;}
+.sf-advice .sf-ai{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.62);}
+.sf-advice .sf-ai:last-child{border-bottom:none;}
+.sf-advice .sf-ai b{color:#34d399;}
+.sf-pill{display:inline-block;background:rgba(255,255,255,.08);border-radius:50px;padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.62);margin:14px 18px 0;}
+</style>
   <!-- TrustSquare brand -->
   <link rel="icon" href="/static/brand/favicon.ico?v=3" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png?v=3">
@@ -363,7 +445,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="hero-top">
       <div class="hero-logo"><img src="/static/brand/logo-white-400.png" alt="TrustSquare" style="height:30px;width:auto;display:block;"></div>
       <!-- TODO: REMOVE BEFORE LAUNCH — dev-only DEMO/LIVE toggle -->
-      <div id="dev-mode-toggle" style="display:flex;align-items:center;background:rgba(0,0,0,.35);border-radius:20px;padding:2px;gap:1px;border:1px solid rgba(255,255,255,.12);">
+      <div id="dev-mode-toggle" style="display:none;align-items:center;background:rgba(0,0,0,.35);border-radius:20px;padding:2px;gap:1px;border:1px solid rgba(255,255,255,.12);">
         <button id="dmt-demo" onclick="devSetMode(true)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:#e63946;color:#fff;">DEMO</button>
         <button id="dmt-live" onclick="devSetMode(false)" style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:18px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:rgba(255,255,255,.45);">LIVE</button>
       </div>
@@ -1083,6 +1165,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- SELLER CV -->
 <div id="screen-seller-cv" class="screen"></div>
 
+<!-- SELL-FLOW-REDO-2 (15 Jul 2026) — new guided sell flow. Rendered entirely by ms.js sfInit(). -->
+<div id="screen-sell-flow" class="screen"><div id="sf-app"></div></div>
+
 <!-- SAVED -->
 <div id="screen-saved" class="screen">
   <div class="page-hdr"><button class="back-btn" onclick="goTo('browse')" aria-label="Back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><h1>Saved</h1><div class="sub">Your shortlisted listings</div></div>
@@ -1342,28 +1427,26 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <!-- TOP UP INTRODUCTIONS -->
     <div class="tn-sec">
       <h2>Top up Tuppence</h2>
-      <div class="topup-btns">
-        <div class="topup-btn" onclick="topUp(20)">
-          <div class="tb-val">20T</div>
-          <div class="tb-mid">20 Tuppence</div>
-          <div class="tb-price">$40 · R720</div>
+      <!-- TQTY-1 (15 Jul 2026, David): flat $2/T means bundles were theatre —
+           buy exactly what you need, from 1T up. -->
+      <div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:14px;padding:16px;">
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">1 Tuppence = 1 introduction = $2 (R36). Same price at any quantity — buy exactly what you need.</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;">
+          <button onclick="tqAdjust(-1)" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">−</button>
+          <input type="text" id="tq-qty" inputmode="numeric" value="1" oninput="tqInput(this)"
+            style="width:90px;text-align:center;font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:28px;font-weight:800;letter-spacing:.5px;background:transparent;border:none;border-bottom:2px solid var(--border);color:var(--text);outline:none;">
+          <button onclick="tqAdjust(1)" style="width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;">+</button>
         </div>
-        <div class="topup-btn" onclick="topUp(50)" style="border-color:var(--accent);position:relative;">
-          <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;border-radius:50px;padding:2px 7px;white-space:nowrap;">BEST VALUE</div>
-          <div class="tb-val">50T</div>
-          <div class="tb-mid">50 Tuppence</div>
-          <div class="tb-price">$100 · R1,800</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
+          <span class="tq-chip" onclick="tqSet(1)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">1</span>
+          <span class="tq-chip" onclick="tqSet(2)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">2</span>
+          <span class="tq-chip" onclick="tqSet(5)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">5</span>
+          <span class="tq-chip" onclick="tqSet(10)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">10</span>
+          <span class="tq-chip" onclick="tqSet(20)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">20</span>
+          <span class="tq-chip" onclick="tqSet(50)" style="cursor:pointer;border:1.5px solid var(--border);border-radius:50px;padding:5px 13px;font-size:12px;color:var(--text-2);">50</span>
         </div>
-        <div class="topup-btn" onclick="topUp(100)">
-          <div class="tb-val">100T</div>
-          <div class="tb-mid">100 Tuppence</div>
-          <div class="tb-price">$200 · R3,600</div>
-        </div>
-        <div class="topup-btn" onclick="topUp(250)">
-          <div class="tb-val">250T</div>
-          <div class="tb-mid">250 Tuppence</div>
-          <div class="tb-price">$500 · R9,000</div>
-        </div>
+        <div id="tq-price" style="text-align:center;font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">1T = $2 · R36</div>
+        <button onclick="tqBuy()" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Buy Tuppence →</button>
       </div>
     </div>
 
@@ -4120,7 +4203,8 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- ════════════════════════════════════════════════════════════
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
-<script src="/static/ms.js?v=286"></script>
+<script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
+<script src="/static/ms.js?v=297"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

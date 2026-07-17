@@ -494,7 +494,3 @@ KEY FACTS FOR THE REGISTRATION SESSION:
 - Needed on the day: passport/ID, entity name choices, business description (marketplace/introductions — note Stripe's marketplace rules may steer toward Stripe Connect), website (trustsquare.co), support email (live), director/shareholder details.
 - Watch items: SARB exchange-control implications of a foreign entity owned by a ZA resident (accountant/lawyer question — the Yr-2 accountant line exists); US/UK tax filing obligations (Delaware franchise tax + IRS 5472 even at $0 revenue); Stripe fees ~2.9%+30c vs model's 2.5% processing line (delta is rounding).
 - RIDES THE SAME MILESTONE: live forex display (server-side daily cached rate, free feed — decision 15 Jul), multi-currency price lines already locale-gated in TQTY-1 (US shows $ only), Tuppence stays USD-anchored $2 — display converts, price never does.
-
-
-## MODEL-COST-GUARD-1 — the anti-silent-killer guard (David's standing demand, 16 Jul 2026)
-Two rules, institutional: (1) The daily loop computes ACTUAL average $/photo from the spend logs and compares it to AI_PHOTO_COST_MODEL.xlsx's assumption — drift >20% goes in the morning brief as an amber line. (2) ANY change to an AI call site (prompt length, probe size, model, rounds, new call) MUST restate the unit cost in its CHANGELOG entry next to the quality claim — a quality upgrade without its price is an incomplete entry. Context: probe 896->1344 + verify loop + moderation clause moved photos from $4.80 to $13.89/1000 across five days with no budget restatement; David caught it, not the process.

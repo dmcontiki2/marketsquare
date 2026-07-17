@@ -1,0 +1,13 @@
+{
+  "version": "2026-07-17",
+  "convention": "assets/legal-must-haves/{country}/must-haves-{country}-{category}.png",
+  "selection_rule": "Key off listing.country + listing.category (where the asset/service is), never viewer IP. Fallback: country generic -> global generic.",
+  "countries": {
+    "ZA": {"name": "South Africa", "legal_review": "David - 2026-07-17", "status": "live"},
+    "US": {"name": "United States", "legal_review": "PENDING local review", "status": "draft", "note": "State-level variation; cards state country-level + federal rules"},
+    "UK": {"name": "United Kingdom", "legal_review": "PENDING local review", "status": "draft", "note": "England & Wales; Scotland differs (Home Report)"},
+    "AU": {"name": "Australia", "legal_review": "PENDING local review", "status": "draft", "note": "State-level variation; ATO clearance cert rule current as of Jan 2025"}
+  },
+  "categories": ["property", "cars", "tutors", "services", "adventures_accommodation", "adventures_experiences", "collectors"],
+  "generator": "scripts/gen_legal_must_haves.py"
+}

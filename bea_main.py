@@ -2485,8 +2485,10 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
             conn.close()
             raise HTTPException(
                 status_code=402,
-                detail=f"Listing slot limit reached ({live_count}/{slot_limit}). "
-                       f"Upgrade your subscription at trustsquare.co/admin.html to publish more listings."
+                # SLOT-402-1 (16 Jul 2026): seller-facing wording — the app routes
+                # the seller to plan selection; don't point at admin.html.
+                detail=f"Listing slot limit reached ({live_count}/{slot_limit}) — your current "
+                       f"plan allows {slot_limit} live listings. Choose a bigger plan to publish more."
             )
 
     conn.execute(
@@ -2975,23 +2977,32 @@ async def _seed_country_from_geonames(iso2: str, name: str, region_label: str):
 
 @app.get("/suburbs")
 def get_suburbs(city: str = "Pretoria"):
+    # AREA-SUGGEST-1 (16 Jul 2026): GeoNames misses newer suburbs (Elarduspark,
+    # found by David) — merge in suburb names actually used by this city's
+    # listings so the list self-heals as sellers type new areas.
     conn = database.get_db()
+    names = []
     city_row = conn.execute(
         "SELECT id FROM geo_cities WHERE name=? AND active=1 LIMIT 1", (city,)
     ).fetchone()
     if city_row:
-        rows = conn.execute(
+        names = [r["name"] for r in conn.execute(
             "SELECT name FROM geo_suburbs WHERE city_id=? AND active=1 ORDER BY name",
             (city_row["id"],)
-        ).fetchall()
-        conn.close()
-        return [r["name"] for r in rows]
-    # Fallback: old suburbs table
-    rows = conn.execute(
-        "SELECT name FROM suburbs WHERE city=? AND active=1 ORDER BY name ASC", (city,)
-    ).fetchall()
+        ).fetchall()]
+    else:
+        # Fallback: old suburbs table
+        names = [r["name"] for r in conn.execute(
+            "SELECT name FROM suburbs WHERE city=? AND active=1 ORDER BY name ASC", (city,)
+        ).fetchall()]
+    used = [str(r["suburb"]).strip() for r in conn.execute(
+        "SELECT DISTINCT suburb FROM listings WHERE city=? AND suburb IS NOT NULL "
+        "AND TRIM(suburb)<>''", (city,)
+    ).fetchall()]
     conn.close()
-    return [r["name"] for r in rows]
+    seen = {x.lower() for x in names}
+    extra = [u for u in used if u.lower() not in seen and u.lower() != city.lower()]
+    return sorted(names + extra, key=str.lower)
 
 @app.get("/cities")
 def get_cities(country: Optional[str] = None):
@@ -3110,7 +3121,26 @@ def _vision_orient_image(img):
 
 PHOTO_ANON_SCAN = os.getenv("PHOTO_ANON_SCAN", "on").strip().lower()
 
-def _seller_photo_anon_gate(img, category: str, spend_who: str):
+# SUBJECT-MATCH-1: per-category keyword hints — a photo whose AI-read subject
+# shares none of these tokens gets a note (never a block). Detail shots are
+# covered (engine, dashboard, kitchen, markings...).
+_SUBJECT_HINTS = {
+    "cars": ("car", "vehicle", "bakkie", "suv", "sedan", "hatch", "coupe", "van",
+             "engine", "dashboard", "odometer", "interior", "seat", "wheel",
+             "tyre", "boot", "bonnet", "motor"),
+    "property": ("house", "home", "building", "apartment", "flat", "room",
+                 "kitchen", "bedroom", "bathroom", "lounge", "living", "garden",
+                 "pool", "yard", "garage", "exterior", "interior", "patio"),
+    "collectors": ("coin", "card", "stamp", "art", "painting", "antique", "toy",
+                   "book", "bottle", "watch", "medal", "banknote", "figurine",
+                   "collect", "vinyl", "record", "certificate", "item"),
+    "local_market": (),   # anything goes — honey to guitars
+    "services": (),       # people at work, tools, premises — too varied to hint
+    "tutors": (),
+    "adventures": (),
+}
+
+def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool = False):
     """Fail-closed anonymity gate for ONE seller-uploaded photo. PIL image in,
     PIL image out (blurred where needed). Raises HTTPException when the photo
     must not be stored. Returns (img, note): note "" = clean, "redacted:<labels>"
@@ -3129,6 +3159,35 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str):
         raise HTTPException(status_code=503,
             detail="Photo safety check unavailable — please try again in a minute")
     labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
+    # MODERATION-1 (15 Jul 2026, David): photos of people in degrading states,
+    # nudity, violence etc. are rejected outright — listings are for items.
+    if scan.get("flag") == "inappropriate":
+        raise HTTPException(status_code=422,
+            detail="This photo isn't appropriate for a listing — please use "
+                   "photos of what you are selling.")
+    # WRONG-TYPE-1 (16 Jul 2026, David: a boat listed as a Cars main photo was
+    # never flagged): the scan model now judges category fit itself
+    # ("fits_category"). A PRIMARY photo that clearly shows the wrong kind of
+    # item is BLOCKED - the advert cover must show what is being sold.
+    # Non-primary photos keep SUBJECT-MATCH-1's note-only behaviour (detail
+    # shots are legitimate); keyword hints remain the fallback when the model
+    # omits the field. The note rides the upload response ("anon" field) and
+    # feeds the coming LISTING-CONSISTENCY-1 same-item check.
+    _subj = str(scan.get("subject") or "").lower()
+    _fits = scan.get("fits")
+    _mismatch = ""
+    if _fits is False:
+        if is_primary:
+            raise HTTPException(status_code=422,
+                detail="This photo doesn't look like what this advert is selling"
+                       + (" (it shows: %s)" % _subj if _subj else "")
+                       + ". The main advert photo must show the item itself - "
+                         "please use a photo of it.")
+        _mismatch = "|subject-mismatch:" + (_subj[:40] if _subj else "wrong-type")
+    elif _fits is None and _subj:
+        _hints = _SUBJECT_HINTS.get((category or "").strip().lower())
+        if _hints and not any(hh in _subj for hh in _hints):
+            _mismatch = "|subject-mismatch:" + _subj[:40]
     _retake = ("TrustSquare adverts are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
     if scan["verdict"] == "reject":
@@ -3148,8 +3207,8 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str):
         if img2 is None:
             raise HTTPException(status_code=422,
                 detail="Could not verifiably blur the identifying content. " + _retake)
-        return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4])
-    return img, ""
+        return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
+    return img, ("" if not _mismatch else _mismatch.lstrip("|"))
 
 @app.post("/listings/photo")
 async def upload_listing_photo(
@@ -3185,16 +3244,25 @@ async def upload_listing_photo(
 
     # SELLER-ANON GATE (11 Jul 2026) — scan BEFORE thumb/medium so blurs propagate.
     _anon_who = "photo-upload"
+    # WRONG-TYPE-1: the advert cover is the primary photo - explicit flag, or
+    # first photo of a listing that has no cover yet. Category falls back to
+    # the listing row when the caller didn't send one (the gate needs it).
+    _gate_primary = (is_primary == "true")
+    _gate_cat = category or ""
     if listing_id:
         try:
             _c0 = database.get_db()
-            _r0 = _c0.execute("SELECT seller_email FROM listings WHERE id=?", (listing_id,)).fetchone()
+            _r0 = _c0.execute("SELECT seller_email, thumb_url, category FROM listings WHERE id=?", (listing_id,)).fetchone()
             _c0.close()
             if _r0 and _r0["seller_email"]:
                 _anon_who = _r0["seller_email"]
+            if _r0 and not _r0["thumb_url"]:
+                _gate_primary = True
+            if _r0 and not _gate_cat:
+                _gate_cat = _r0["category"] or ""
         except Exception:
             pass
-    img, _anon_note = _seller_photo_anon_gate(img, category or "", _anon_who)
+    img, _anon_note = _seller_photo_anon_gate(img, _gate_cat, _anon_who, is_primary=_gate_primary)
 
     # ── Thumbnail (~100KB) ──────────────────────────────────
     thumb = img.copy()
@@ -3337,7 +3405,9 @@ async def upload_draft_listing_photo(
 
     # SELLER-ANON GATE (11 Jul 2026) — same fail-closed scan as /listings/photo.
     try:
-        img, _anon_note = _seller_photo_anon_gate(img, row["category"] or "", email)
+        img, _anon_note = _seller_photo_anon_gate(
+            img, row["category"] or "", email,
+            is_primary=not (row["thumb_url"] or ""))   # WRONG-TYPE-1: first photo = advert cover
     except HTTPException:
         conn.close()
         raise
@@ -3453,7 +3523,13 @@ def get_user(email: str):
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="User not found")
-    return dict(row)
+    data = dict(row)
+    # C1/H2 (audit 16 Jul 2026): never expose identity-document internals over this
+    # public-by-email read. Hashed ID number, legal ID name and the AI match score
+    # are PII; verified STATUS still travels via id_verified_at.
+    for _sensitive in ("id_number_hash", "id_name", "id_ai_score"):
+        data.pop(_sensitive, None)
+    return data
 
 @app.get("/users/{email}/subscription")
 def get_user_subscription(email: str):
@@ -3675,12 +3751,12 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
 
 
 @app.post("/users/{email}/upload-id")
-async def upload_user_id(email: str, file: UploadFile = File(...)):
-    """Self-serve ID upload for buyers. No API key required.
+async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = Depends(auth.require_api_key)):
+    """Self-serve ID upload. Requires the app key (parity with all writes).
     Accepts photo of SA ID / passport / drivers licence.
-    Test mode: auto-approves immediately (sets id_verified_at).
-    Production: same auto-approve — manual admin review is a future layer.
-    Stores image to R2/local, bumps trust_score +15, returns new score."""
+    C2 fix (audit 16 Jul 2026): stores the document as PENDING and grants NO
+    trust — identity is only awarded by the vision-checked verify-identity path
+    (or admin review). This closes the instant self-grant of +15 trust."""
     allowed = {"image/jpeg", "image/png", "image/webp"}
     content_type = file.content_type or "image/jpeg"
     if content_type not in allowed:
@@ -3723,34 +3799,24 @@ async def upload_user_id(email: str, file: UploadFile = File(...)):
         already_verified = bool(row and row["id_verified_at"])
         current_score    = int(row["trust_score"] or 0) if row else 40
 
-        if not already_verified:
-            new_score = min(100, current_score + 15)
-            conn.execute(
-                """UPDATE users
-                   SET id_verified_at = strftime('%Y-%m-%dT%H:%M:%SZ','now'),
-                       id_doc_type    = 'uploaded',
-                       trust_score    = ?
-                   WHERE email = ?""",
-                (new_score, email)
-            )
-            # Record in seller_documents table for admin visibility
-            conn.execute(
-                """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
-                   VALUES (?, 'id_doc', 'Government-issued ID', ?, 'private', 'category.lm.id_uploaded')""",
-                (email, id_url)
-            )
-            # Propagate new trust_score to all live listings owned by this seller
-            conn.execute(
-                "UPDATE listings SET trust_score = ? WHERE seller_email = ? AND (listing_status IS NULL OR listing_status = 'live')",
-                (new_score, email)
-            )
-            # Mark id_verified signal as earned in user_credentials so AI coach sees it
-            _upsert_credential(conn, email, "universal.id_verified", "earned")
+        # C2 fix (audit 16 Jul 2026): NO trust is granted here. Store the ID as a
+        # pending document; the vision-checked /users/{email}/verify-identity path
+        # (or admin review) is the only route that sets id_verified_at / awards points.
+        if already_verified:
             conn.commit()
-            return {"verified": True, "trust_score": new_score, "points_awarded": 15, "already_verified": False}
-        else:
-            conn.commit()
-            return {"verified": True, "trust_score": current_score, "points_awarded": 0, "already_verified": True}
+            return {"verified": True, "status": "verified", "trust_score": current_score,
+                    "points_awarded": 0, "already_verified": True}
+
+        conn.execute(
+            """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
+               VALUES (?, 'id_doc', 'Government-issued ID', ?, 'private', 'category.lm.id_uploaded')""",
+            (email, id_url)
+        )
+        _upsert_credential(conn, email, "universal.id_verified", "pending")
+        conn.commit()
+        return {"verified": False, "status": "pending", "trust_score": current_score,
+                "points_awarded": 0, "already_verified": False,
+                "message": "ID received \u2014 verification in progress."}
     finally:
         conn.close()
 
@@ -5077,11 +5143,24 @@ async def aa_publish(
     # Upload photos to R2 (or local fallback) — EXIF-rotate before storage
     thumb_url  = None
     medium_url = None
+    _anon_notes = []
     for idx, photo in enumerate(photos):
         raw_data = await photo.read()
         # Apply EXIF orientation fix and compress to JPEG
         try:
             img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw_data))).convert("RGB")
+            # AA-GATE-1 (15 Jul 2026): this path stored photos with NO anonymity
+            # check — David's test listing published an unblurred car photo
+            # through it. Same gate as the two seller endpoints; a photo that
+            # cannot be cleared is SKIPPED (batch path: skip-and-note, never
+            # fail the whole publish).
+            try:
+                img, _anote = _seller_photo_anon_gate(img, category or "", email)
+                if _anote:
+                    _anon_notes.append("photo%d:%s" % (idx + 1, _anote))
+            except HTTPException as _aexc:
+                _anon_notes.append("photo%d:held:%s" % (idx + 1, str(_aexc.detail)[:60]))
+                continue
             medium = img.copy()
             medium.thumbnail(MEDIUM_SIZE, Image.LANCZOS)
             buf = io.BytesIO()
@@ -5126,8 +5205,10 @@ async def aa_publish(
             conn.close()
             raise HTTPException(
                 status_code=402,
-                detail=f"Listing slot limit reached ({live_count}/{slot_limit}). "
-                       f"Upgrade your subscription at trustsquare.co/admin.html to publish more listings."
+                # SLOT-402-1 (16 Jul 2026): seller-facing wording — the app routes
+                # the seller to plan selection; don't point at admin.html.
+                detail=f"Listing slot limit reached ({live_count}/{slot_limit}) — your current "
+                       f"plan allows {slot_limit} live listings. Choose a bigger plan to publish more."
             )
     # Store AI-suggested price as anchor for AI3 price-check
     try:
@@ -5682,7 +5763,6 @@ def _demand_render_invite(ticket, prospect, code):
     item_line = ("exactly what you're offering &mdash; your " + item) if item \
                 else ("a " + ((ticket["category"] or "listing").lower()) + " like the ones you offer")
     item_short = item if item else ("a " + (ticket["category"] or "listing").lower())
-    name = (prospect["email_enc"] or "").split("@")[0] if prospect else ""
     greeting = ""   # no scraped personal names in v1 — keep it clean, not creepy
     # NB: literal .replace(), never str.format() — the template's CSS braces
     # ({margin:0}) would read as placeholders and KeyError (caught in scratch test).
@@ -5695,7 +5775,7 @@ def _demand_render_invite(ticket, prospect, code):
         h = h.replace(k, v)
     return h
 
-def _demand_send_invite(ticket_id, to_email, subject, html):
+def _demand_send_invite(to_email, subject, html):
     """The ONLY send path. Triple-gated: env ON + dry-run OFF + RESEND_API_KEY present.
     Writes the outreach ledger AT send (one touch per address, enforced upstream)."""
     key = os.getenv("RESEND_API_KEY", "")
@@ -5863,7 +5943,7 @@ def _demand_match_and_compose(conn, limit=20):
                      (p["email_hash"], p["scraped_item"], "+" + str(DEMAND_PRIORITY_HOURS) + " hours", t["id"]))
         out["composed"] += 1
         # The ONLY send path - triple-gated inside; dry-run returns ("dry", None) untouched.
-        status, _mid = _demand_send_invite(t["id"], p["email_enc"] or "", subject, html)
+        status, _mid = _demand_send_invite(p["email_enc"] or "", subject, html)
         if status == "sent":
             conn.execute("INSERT INTO outreach_ledger (email_hash, channel, campaign) VALUES (?,?,?)",
                          (p["email_hash"], "demand_invite", "ticket:" + str(t["id"])))
@@ -10202,9 +10282,9 @@ def auth_verify(req: _SignInVerify):
     try:
         payload = _pyjwt.decode(req.token, _JWT_SECRET, algorithms=[_JWT_ALGO])
     except _pyjwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="This sign-in link has expired — request a new one.")
+        raise HTTPException(status_code=401, detail="This sign-in link has expired — request a new one.") from None
     except _pyjwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
+        raise HTTPException(status_code=401, detail="This sign-in link is not valid.") from None
     if payload.get("purpose") != "signin":
         raise HTTPException(status_code=401, detail="This sign-in link is not valid.")
     email = (payload.get("email") or "").strip().lower()
@@ -10476,7 +10556,7 @@ _ANON_SCAN_PROMPT_TOURS = (
     "collages. Scenery, wildlife, guests and unbranded equipment are FINE and must not be "
     "flagged. Already-blurred or pixelated patches are already-redacted content — "
     "never flag them. Reply with ONLY a JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", "
-    "\"confidence\": 0.0-1.0, \"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,"
+    "\"confidence\": 0.0-1.0, \"subject\": \"2-4 words - what the photo mainly shows\", \"flag\": \"none\"|\"inappropriate\" (inappropriate ONLY for nudity or sexual content, graphic violence or injury, weapons brandished at people, people in clearly degrading or intoxicated states, or hate symbols - ordinary people, parties and drinks in hand are none), \"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,"
     "\"y1\":0-1000,\"label\":\"what\"}]}. Coordinates: 0-1000 scale of THIS image, origin "
     "top-left; make every box GENEROUS (cover the item fully plus margin). Rules: clean = "
     "you are certain there is NO identifying content anywhere. redact = identifying content "
@@ -10487,8 +10567,34 @@ _ANON_SCAN_PROMPT_TOURS = (
     "and boxes handle ALL identifying content. If in ANY doubt, reject."
 )
 
+# WRONG-TYPE-1 (16 Jul 2026): what each hinted category's photos must show,
+# fed to the scan model so it judges fit itself ("fits_category") instead of
+# the keyword hints. David's test: a boat listed as a Cars main photo was
+# never flagged - SUBJECT-MATCH-1 was note-only and the note surfaced nowhere.
+_CATEGORY_EXPECTS = {
+    "cars": ("a road vehicle for sale (car, bakkie, SUV, van, truck or "
+             "motorbike) or a detail of it (engine bay, dashboard, odometer, "
+             "interior, seats, wheels, tyres, boot, service book)"),
+    "property": ("a property (house, building, apartment, flat, room, kitchen, "
+                 "bathroom, garden, pool, garage, view or grounds)"),
+    "collectors": ("a collectible item (coin, banknote, trading card, stamp, "
+                   "artwork, antique, watch, toy, book, vinyl, memorabilia or "
+                   "similar) or its packaging, grading slab or certificate"),
+}
+
 def _anon_scan_prompt_for(category):
-    return _ANON_SCAN_PROMPT_TOURS if _anon_is_travel(category) else _ANON_SCAN_PROMPT
+    base = _ANON_SCAN_PROMPT_TOURS if _anon_is_travel(category) else _ANON_SCAN_PROMPT
+    exp = _CATEGORY_EXPECTS.get((category or "").strip().lower())
+    if exp:
+        base += (
+            ' ALSO include "fits_category" in your JSON: this photo is for an '
+            "advert selling %s. fits_category=true when the photo mainly shows "
+            "that (any angle, partial or detail shot counts), false when it "
+            "clearly shows a different KIND of thing entirely (for example a "
+            "boat or a house on a car advert). Judge the subject TYPE only - "
+            "condition or quality never makes it false. Omit the field if "
+            "unsure." % exp)
+    return base
 
 def _anon_regex_clean(text: str):
     """Hard-strip identifying strings from advert text. Returns (clean, hit_labels).
@@ -10581,7 +10687,7 @@ _ANON_SCAN_PROMPT = (
     "visible/readable: a view of the car where no plate or text is visible is "
     "clean — do not box bare body panels 'just in case'. Reply with ONLY a "
     "JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", \"confidence\": 0.0-1.0, "
-    "\"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,\"y1\":0-1000,\"label\":\"what\"}]}. Labels: 2-4 words, NEVER transcribe plate "
+    " \"subject\": \"2-4 words - what the photo mainly shows\", \"flag\": \"none\"|\"inappropriate\" (inappropriate ONLY for nudity or sexual content, graphic violence or injury, weapons brandished at people, people in clearly degrading or intoxicated states, or hate symbols - ordinary people, parties and drinks in hand are none), \"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,\"y1\":0-1000,\"label\":\"what\"}]}. Labels: 2-4 words, NEVER transcribe plate "
     "characters or phone digits into the label. "
     "Coordinates: 0-1000 scale of THIS image, origin top-left; make every box GENEROUS "
     "(cover the item fully plus margin). Rules: clean = you are certain there is NO "
@@ -10679,11 +10785,112 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
             conf = float(v.get("confidence", 0) or 0)
         except Exception:
             conf = 0.0
+        _flag = str(v.get("flag", "none")).lower().strip()
         return ({"verdict": verdict, "regions": regs, "confidence": conf,
-                 "labels": [r[4] for r in regs if r[4]]}, res.in_tokens, res.out_tokens)
+                 "labels": [r[4] for r in regs if r[4]],
+                 "subject": str(v.get("subject", ""))[:60],
+                 "fits": (v.get("fits_category")
+                          if isinstance(v.get("fits_category"), bool) else None),
+                 "flag": _flag if _flag == "inappropriate" else "none"},
+                res.in_tokens, res.out_tokens)
     except Exception as _sexc:
         _log.warning("anon photo scan failed: %r", _sexc)
         return None, None, None
+
+def _anon_capsule_geom(gray, bx0, by0, bx1, by1):
+    """Estimate the printed-text strip inside an axis-aligned character box.
+    Returns (cx, cy, half_len, half_ht, angle_rad) in the same coord space, or
+    None when the pixel evidence is too weak (caller falls back to the
+    axis-aligned box). Deterministic, zero AI cost. 15 Jul 2026 (David: a
+    skewed main-photo plate must get a capsule that FOLLOWS the characters,
+    not the tall axis-aligned bounding box of the tilted strip).
+    Method: minority high-contrast pixels are the character candidates, but on
+    a tilted plate the bounding box also contains background clutter — so a
+    seeded RANSAC line fit finds the dense collinear character band first, and
+    the capsule is fitted to the inliers only (naive PCA proved polluted by
+    corner clutter in offline tests)."""
+    import math, random
+    w, h = gray.size
+    bx0 = max(0, int(bx0)); by0 = max(0, int(by0))
+    bx1 = min(w, int(bx1)); by1 = min(h, int(by1))
+    bw = bx1 - bx0; bh = by1 - by0
+    if bw < 12 or bh < 6:
+        return None
+    step = max(1, max(bw, bh) // 160)
+    px = gray.load()
+    vals = []
+    for y in range(by0, by1, step):
+        for x in range(bx0, bx1, step):
+            vals.append((x, y, px[x, y]))
+    if len(vals) < 60:
+        return None
+    vs = sorted(v for (_x, _y, v) in vals)
+    med = vs[len(vs) // 2]
+    dark = [(x, y) for (x, y, v) in vals if v < med - 36]
+    lite = [(x, y) for (x, y, v) in vals if v > med + 36]
+    cands = [s for s in (dark, lite) if len(s) >= 30]
+    if not cands:
+        return None
+    pts = min(cands, key=len)      # characters are the minority pixels
+    # ── RANSAC: find the dense collinear band ──
+    rng = random.Random(0)          # seeded — fully deterministic
+    band = max(4.0, bh * 0.10)
+    best_in = []
+    for _try in range(60):
+        p = pts[rng.randrange(len(pts))]; q = pts[rng.randrange(len(pts))]
+        dx = q[0] - p[0]; dy = q[1] - p[1]
+        L = math.hypot(dx, dy)
+        if L < bw * 0.30:
+            continue
+        ux, uy = dx / L, dy / L
+        inl = [t for t in pts
+               if abs((t[0] - p[0]) * (-uy) + (t[1] - p[1]) * ux) <= band]
+        if len(inl) > len(best_in):
+            best_in = inl
+    if len(best_in) < max(30, int(0.25 * len(pts))):
+        return None
+    pts = best_in
+    pts_full = best_in            # extents come from the FULL inlier set —
+                                  # the trim below is for the angle only
+                                  # (offline test: trimming collapsed the
+                                  # measured strip height 21 -> 9 and the blur
+                                  # went ghost-weak)
+    # ── PCA on the inliers, with trim-refit rounds: drop points far from the
+    # fitted axis and refit, so frame/clutter pixels inside the band stop
+    # dragging the angle (offline test: -19.4° -> -18.7° toward true -13°,
+    # characters stay covered by the padded capsule height) ──
+    ang = 0.0
+    for _round in range(3):
+        mx = sum(p[0] for p in pts) / len(pts); my = sum(p[1] for p in pts) / len(pts)
+        sxx = syy = sxy = 0.0
+        for (x, y) in pts:
+            dx = x - mx; dy = y - my
+            sxx += dx * dx; syy += dy * dy; sxy += dx * dy
+        ang = 0.5 * math.atan2(2.0 * sxy, sxx - syy)
+        _ca = math.cos(ang); _sa = math.sin(ang)
+        _aw = sorted(abs(-(x - mx) * _sa + (y - my) * _ca) for (x, y) in pts)
+        _w50 = _aw[len(_aw) // 2]
+        keep = [p for p in pts
+                if abs(-(p[0] - mx) * _sa + (p[1] - my) * _ca) <= max(3.0, 2.0 * _w50)]
+        if len(keep) < 30 or len(keep) == len(pts):
+            break
+        pts = keep
+    if abs(math.degrees(ang)) > 35.0:
+        return None                # implausible for a mounted plate — fall back
+    ca = math.cos(ang); sa = math.sin(ang)
+    mx = sum(p[0] for p in pts_full) / len(pts_full)
+    my = sum(p[1] for p in pts_full) / len(pts_full)
+    us = []; ws = []
+    for (x, y) in pts_full:
+        dx = x - mx; dy = y - my
+        us.append(dx * ca + dy * sa); ws.append(-dx * sa + dy * ca)
+    us.sort(); ws.sort()
+    k = max(1, len(us) // 100)     # trim outliers
+    half_len = max(abs(us[k]), abs(us[-k]))
+    half_ht = max(abs(ws[k]), abs(ws[-k]))
+    if half_len < 6 or half_ht < 3 or half_len < 1.6 * half_ht:
+        return None                # not an elongated text strip — fall back
+    return (mx, my, half_len, half_ht, ang)
 
 def _anon_photo_redact(img, regions):
     """Gaussian-blur each region on the FULL-SIZE image. Padding is BOX-relative
@@ -10692,19 +10899,97 @@ def _anon_photo_redact(img, regions):
     small boxes; accuracy now comes from _anon_refine_regions and the leak
     guarantee from the verify pass in _anon_blur_until_clean.
     Regions are 0-1000 normalized. Returns (img, boxes_applied)."""
-    from PIL import ImageFilter
+    from PIL import ImageFilter, ImageDraw
     w, h = img.size
     n = 0
-    for (x0, y0, x1, y1, _lbl) in regions:
+    for _reg in regions:
+        x0, y0, x1, y1, _lbl = _reg[:5]
+        _model_deg = _reg[5] if len(_reg) > 5 else None   # refine-pass text tilt
         _bw = w * (x1 - x0) / 1000.0; _bh = h * (y1 - y0) / 1000.0
-        px = max(8, int(_bw * 0.12)); py = max(8, int(_bh * 0.22))
+        px = max(4, int(_bw * 0.04)); py = max(4, int(_bh * 0.10))
         X0 = max(0, int(w * x0 / 1000) - px); Y0 = max(0, int(h * y0 / 1000) - py)
         X1 = min(w, int(w * x1 / 1000) + px); Y1 = min(h, int(h * y1 / 1000) + py)
         if X1 - X0 < 4 or Y1 - Y0 < 4:
             continue
-        box = img.crop((X0, Y0, X1, Y1))
-        rad = max(28, min(X1 - X0, Y1 - Y0) // 3)   # stronger: tight boxes must leave characters unreadable (11 Jul 2026)
-        img.paste(box.filter(ImageFilter.GaussianBlur(rad)), (X0, Y0))
+        # 15 Jul 2026, David: "only the numbers and no blocks" — feathered blur.
+        # The region interior is 100% blurred (leak-safe: characters inside the
+        # box can never ghost through); the soft falloff happens OUTSIDE the
+        # box, in an extra outward margin, so there is no hard rectangle edge.
+        # The verify pass in _anon_blur_until_clean remains the leak guarantee.
+        feather = max(3, min(X1 - X0, Y1 - Y0) // 10)
+        m = feather * 2 + 8                  # outward room for the falloff
+        CX0 = max(0, X0 - m); CY0 = max(0, Y0 - m)
+        CX1 = min(w, X1 + m); CY1 = min(h, Y1 + m)
+        crop = img.crop((CX0, CY0, CX1, CY1))
+        # Angle-aware capsule (15 Jul 2026): on a skewed plate the tilted
+        # character strip has a tall axis-aligned bounding box — estimate the
+        # strip's own axis from pixel evidence and mask ALONG it. Any doubt →
+        # None → the safe axis-aligned core. The verify pass in
+        # _anon_blur_until_clean remains the leak guarantee either way.
+        import math as _math
+        geom = None
+        try:
+            geom = _anon_capsule_geom(crop.convert("L"),
+                                      X0 - CX0, Y0 - CY0, X1 - CX0, Y1 - CY0)
+        except Exception:
+            geom = None
+        mask = Image.new("L", crop.size, 0)
+        _d = ImageDraw.Draw(mask)
+        # Tilted capsule (15 Jul 2026): pixel evidence supplies ONLY the
+        # strip angle — the strip's true length/thickness solve analytically
+        # from the model's axis-aligned box (BW = L*cos0 + T*sin0,
+        # BH = L*sin0 + T*cos0), so the capsule is tied to the verified box,
+        # not to fragile pixel extents (offline tests: pixel extents collapsed
+        # and ghost-leaked). Small angles use the plain axis-aligned core —
+        # for a straight plate the box IS the strip.
+        # Angle source of truth: the refine MODEL read the text and reported
+        # its baseline tilt — textured backgrounds (checkered studio floors,
+        # brick) flipped the pixel fit's sign in offline tests, so pixels are
+        # only a fallback when the model gave no angle.
+        _use_capsule = False
+        _ang = None
+        if _model_deg is not None and 4.0 <= abs(_model_deg) <= 30.0:
+            _ang = _math.radians(_model_deg)
+        elif _model_deg is None and geom:
+            _ang = geom[4]
+        if _ang is not None:
+            _deg = abs(_math.degrees(_ang))
+            if 4.0 <= _deg <= 30.0:
+                _BW = float(X1 - X0); _BH = float(Y1 - Y0)
+                _c2 = _math.cos(2.0 * _ang)
+                _caa = _math.cos(abs(_ang)); _saa = _math.sin(abs(_ang))
+                _L = (_BW * _caa - _BH * _saa) / _c2
+                _T = (_BH * _caa - _BW * _saa) / _c2
+                if _L > 8 and _T > 2 and _L > _T:
+                    _use_capsule = True
+        if _use_capsule:
+            rad = max(14, int(_T * 0.6))
+            _hl = _L / 2.0 * 1.03 + feather + 3
+            # small allowances only — the angle comes from the model reading
+            # the text; oversized safety padding re-created the block look
+            _hh = _T / 2.0 * 1.18 + 0.025 * (_L / 2.0) + feather + 3
+            _hh = min(_hh, (Y1 - Y0) / 2.0 * 0.85)   # never re-cover the whole box
+            _cx = (X0 + X1) / 2.0 - CX0; _cy = (Y0 + Y1) / 2.0 - CY0
+            _ca = _math.cos(_ang); _sa = _math.sin(_ang)
+            _d.polygon([(_cx + u * _ca - v * _sa, _cy + u * _sa + v * _ca)
+                        for (u, v) in ((-_hl, -_hh), (_hl, -_hh),
+                                       (_hl, _hh), (-_hl, _hh))], fill=255)
+        else:
+            # solid core = the detected box expanded by one feather width, so
+            # after the mask blur the box interior stays fully opaque
+            _sx0 = (X0 - CX0) - feather; _sy0 = (Y0 - CY0) - feather
+            _sx1 = (X1 - CX0) + feather; _sy1 = (Y1 - CY0) + feather
+            try:
+                _d.rounded_rectangle([max(0, _sx0), max(0, _sy0),
+                                      min(crop.size[0] - 1, _sx1), min(crop.size[1] - 1, _sy1)],
+                                     radius=max(4, min(X1 - X0, Y1 - Y0) // 4), fill=255)
+            except Exception:
+                _d.rectangle([max(0, _sx0), max(0, _sy0),
+                              min(crop.size[0] - 1, _sx1), min(crop.size[1] - 1, _sy1)], fill=255)
+            rad = max(14, min(X1 - X0, Y1 - Y0) // 2)
+        blurred = crop.filter(ImageFilter.GaussianBlur(rad))
+        mask = mask.filter(ImageFilter.GaussianBlur(feather))
+        img.paste(blurred, (CX0, CY0), mask)
         n += 1
     return img, n
 
@@ -10745,10 +11030,18 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
                     {"type": "text", "text": (
                         "This crop is from a marketplace photo. It should contain: %s. "
                         "Reply with ONLY a JSON object {\"found\": true|false, \"x0\": 0-1000, "
-                        "\"y0\": 0-1000, \"x1\": 0-1000, \"y1\": 0-1000} boxing EXACTLY that "
-                        "item — the plate / text strip / sign FACE itself plus a tiny margin, NOT "
-                        "the surrounding bumper, car, wall or paving. Coordinates are 0-1000 of "
-                        "THIS crop, origin top-left. If the item is not visible, found=false."
+                        "\"y0\": 0-1000, \"x1\": 0-1000, \"y1\": 0-1000, "
+                        "\"angle_deg\": <number>} boxing EXACTLY the "
+                        "printed CHARACTERS of that item — the registration letters/digits on a "
+                        "plate, or the text line(s) on a sign or dealer strip — edge-to-edge of "
+                        "the characters plus a tiny margin, NOT the plate frame, surround, bumper, "
+                        "car, wall or paving. If several text lines are present, box the block "
+                        "spanning ALL of them. Coordinates are 0-1000 of "
+                        "THIS crop, origin top-left. angle_deg = the tilt of the text "
+                        "baseline: 0 when level, positive when the text runs DOWNHILL "
+                        "to the right, negative when uphill (e.g. a plate photographed "
+                        "from the front-left corner usually tilts a few degrees). "
+                        "If the item is not visible, found=false."
                         % (lbl or "an identifying item"))}]}],
                 task="sonnet", max_tokens=120, provider=provider)
             if res.in_tokens is not None or res.out_tokens is not None:
@@ -10787,7 +11080,13 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
                 out.append(rough); continue
             if (fx1 - fx0) * W / 1000.0 < 6 or (fy1 - fy0) * H / 1000.0 < 6:
                 out.append(rough); continue
-            out.append((int(fx0), int(fy0), int(round(fx1 + 0.5)), int(round(fy1 + 0.5)), lbl))
+            try:
+                _adeg = float(v.get("angle_deg", 0) or 0)
+            except Exception:
+                _adeg = 0.0
+            if not (-45.0 <= _adeg <= 45.0):
+                _adeg = 0.0
+            out.append((int(fx0), int(fy0), int(round(fx1 + 0.5)), int(round(fy1 + 0.5)), lbl, _adeg))
         except Exception:
             out.append(rough)
     return out
@@ -10803,11 +11102,13 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     import base64 as _b64
     labels = list(scan.get("labels") or [])
     regions = list(scan.get("regions") or [])
+    _acc = []                 # every region ever boxed — feeds the last-resort rung
     for _round in range(4):   # refine+blur+verify: initial + up to 3 corrections
         if regions:
             regions = _anon_refine_regions(img, regions, provider, category,
                                            spend_who, endpoint)   # tighten; may DROP not-found
         if regions:
+            _acc.extend(regions)
             img, _n = _anon_photo_redact(img, regions)
         # ALWAYS verify the current image — the VERIFIER, not the boxes, is the
         # no-slips guarantee. If refinement dropped every region (over-flagged
@@ -10827,6 +11128,29 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
             return None, labels + list(v.get("labels") or [])
         regions = list(v.get("regions") or [])
         labels += list(v.get("labels") or [])
+        _acc.extend(regions)
+    # ── LAST-RESORT RUNG (15 Jul 2026, David: a seller photo must NEVER be
+    # held because the pretty blur could not be verified — ugly-but-anonymous
+    # beats rejected). Blur EVERY region this photo ever accumulated,
+    # axis-aligned with generous expansion, then verify ONE more time. Only a
+    # scanner failure or an explicit "reject" verdict still holds the photo. ──
+    if _acc:
+        _big = []
+        for _r in _acc:
+            _x0, _y0, _x1, _y1 = _r[0], _r[1], _r[2], _r[3]
+            _dx = (_x1 - _x0) * 0.30 + 8; _dy = (_y1 - _y0) * 0.60 + 8
+            _big.append((max(0, _x0 - _dx), max(0, _y0 - _dy),
+                         min(1000, _x1 + _dx), min(1000, _y1 + _dy),
+                         "last-resort"))
+        img, _n = _anon_photo_redact(img, _big)
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        v, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                       provider, category)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot)
+        if v and v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
+            return img, labels + ["last-resort blur"]
     return None, labels
 
 def _anon_photo_pass(photo_srcs, agent, provider, category=""):
@@ -11886,13 +12210,16 @@ TASK: Return a single JSON object with exactly these fields:
   "coach_tips": [],
   "warnings": [],
   "anonymity_scrubbed": false,
-  "violating_photo_indices": []
+  "violating_photo_indices": [],
+  "off_category_photo_indices": []
 }}
 
 Fill in ONLY the fields relevant to the detected category. Leave others as null.
 For warnings: add a brief string if a photo is dark/blurry, or if the price is unusually high/low, OR if a photo contains identifying information (business signage, contact details, documents) that you had to suppress.
 
 ANONYMITY ENFORCEMENT (mandatory): Before writing any text, scan all photos for visible identifying information: street addresses, complex/building names, business names, phone numbers, email addresses, agent names, QR codes, URLs, social media handles. Do NOT include any of these in title, description_draft, tags, or any other field. Describe only physical, observable features of the item or property. Set "anonymity_scrubbed": true if any photo contains identifying information. In "violating_photo_indices", list the 0-based index of EVERY photo that contains identifying information (e.g. [0, 2] if photos 0 and 2 are violations). Photos without violations must NOT be listed. Set to [] if no violations found.
+
+CATEGORY FIT (mandatory): In "off_category_photo_indices", list the 0-based index of EVERY photo whose main subject is clearly NOT the kind of thing a '{category_hint}' advert sells (e.g. a boat or a house on a cars advert). Detail or partial shots of the right kind of item always fit. For services, tutors, local_market, adventures or unknown categories, or whenever unsure, use [].
 
 For "missing_shots": Based on the exact item you identified, list the most important additional photos the seller should add. Be item-specific and practical. Each entry: {{"label": "<short name>", "reason": "<one line why>"}}. Examples:
 - Magic: the Gathering card → [{{"label": "Card back", "reason": "Shows set symbol and condition"}}, {{"label": "Edge close-up", "reason": "Reveals wear grade"}}, {{"label": "Three red dots (magnified)", "reason": "Distinguishes original print from reprint — critical for authenticity"}}]
@@ -12142,6 +12469,17 @@ async def vision_draft(
         vpi = []
     vpi = [int(x) for x in vpi if isinstance(x, (int, float)) and 0 <= int(x) < 50]
     draft["violating_photo_indices"] = vpi
+    # WRONG-TYPE-1 (16 Jul 2026): photos whose subject is clearly not what this
+    # category sells (David's boat-on-a-Cars-advert test). Sanitised like vpi.
+    ocpi = draft.get("off_category_photo_indices", [])
+    if not isinstance(ocpi, list):
+        ocpi = []
+    ocpi = [int(x) for x in ocpi if isinstance(x, (int, float)) and 0 <= int(x) < 50]
+    draft["off_category_photo_indices"] = ocpi
+    if ocpi:
+        all_warnings.append(
+            "%d photo(s) do not appear to show the kind of item this advert "
+            "sells - the main photo must show the item itself." % len(ocpi))
     if draft["anonymity_scrubbed"]:
         n_violating = len(vpi)
         all_warnings.append(
@@ -12158,6 +12496,7 @@ async def vision_draft(
         "model_used": VISION_MODEL,
         "anonymity_scrubbed": draft["anonymity_scrubbed"],
         "violating_photo_indices": vpi,
+        "off_category_photo_indices": ocpi,
     }
 
 

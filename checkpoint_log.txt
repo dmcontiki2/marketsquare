@@ -24,3 +24,19 @@ Mon 07/13/2026  5:30:03.70  committed 8 change(s)
  create mode 100644 feature-videos/11-tutor-spotlight/clips/concat_list.txt
  create mode 100644 feature-videos/11-tutor-spotlight/tutor-spotlight-script-and-prompts.md
 Tue 07/14/2026  5:30:03.92  committed 5 change(s)
+[main a8c4a5a] Nightly checkpoint Wed 07/15/2026  5:30:03.18 (auto, no deploy)
+ 13 files changed, 253 insertions(+), 32 deletions(-)
+ create mode 100644 AUDIT_GLOBAL_QA/findings-2026-07-14.json
+ create mode 100644 Records/COST_SWEEP_2026-07-15.md
+ create mode 100644 backups/marketsquare.db
+ create mode 100644 backups/ziAV5PlL
+ create mode 100644 feature-videos/11-tutor-spotlight/clips/concat_all.txt
+Wed 07/15/2026  5:30:03.36  committed 12 change(s)
+fatal: Unable to create 'C:/Users/David/Projects/MarketSquare/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+Thu 07/16/2026  5:30:03.57  committed 17 change(s)

@@ -1,6 +1,7 @@
-# Global QA audit — 2026-07-14 (37.8s)
+# Global QA audit — 2026-07-17 (13.1s)
 
-**2 findings** (1 new vs previous run)
+**3 findings** (1 new vs previous run)
 
-- **MEDIUM** [links] 🆕 `LINKS-DEAD` — 1 hardcoded external links failing (checked 6): ['https://commons.wikimedia.org']
 - **INFO** [demo] `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
+- **INFO** [drift] `MSJS-DRIFT` — live ms.js (v294, 901984B) != repo ms.js (906850B) — expected while a deploy is staged; CRITICAL if it persists after deploying
+- **INFO** [drift] 🆕 `VERSION-KEY` — repo html pins ms.js v295, live pins v294 (deploy pending)

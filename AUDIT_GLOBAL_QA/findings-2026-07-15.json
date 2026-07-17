@@ -1,0 +1,12 @@
+{
+ "date": "2026-07-15",
+ "took_s": 9.3,
+ "findings": [
+  {
+   "sev": "INFO",
+   "area": "demo",
+   "id": "DEMO-PLACEHOLDERS",
+   "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
+  }
+ ]
+}

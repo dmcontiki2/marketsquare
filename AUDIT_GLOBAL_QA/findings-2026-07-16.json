@@ -1,0 +1,18 @@
+{
+ "date": "2026-07-16",
+ "took_s": 11.4,
+ "findings": [
+  {
+   "sev": "INFO",
+   "area": "demo",
+   "id": "DEMO-PLACEHOLDERS",
+   "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
+  },
+  {
+   "sev": "INFO",
+   "area": "drift",
+   "id": "MSJS-DRIFT",
+   "msg": "live ms.js (v291, 889208B) != repo ms.js (889754B) \u2014 expected while a deploy is staged; CRITICAL if it persists after deploying"
+  }
+ ]
+}

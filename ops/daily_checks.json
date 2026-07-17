@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "note": "Read-only daily checks the TrustSquare loop runs after Phase-1 sensing. THIS file is the mutable layer: future automation adds/edits checks HERE (agent-writable) and never touches the read-only SKILL.md. SAFETY CONTRACT: only entries with type=='read-only' are ever executed, and the runner NEVER deploys/pushes — it only senses and reports. A check command MUST accept --json and print one JSON object with at least a 'status' and a 'line' field.",
+  "checks": [
+    {
+      "id": "deploy_drift",
+      "enabled": true,
+      "type": "read-only",
+      "cmd": ["python3", "check_deploy_drift.py", "--json"],
+      "fold_key": "deploy_drift",
+      "brief_section": "Anything needing David",
+      "flag_statuses": ["drift", "unreachable"],
+      "severity_when_flagged": "SEV-3",
+      "desc": "Local build files ahead of what is served live (run /ship)."
+    }
+  ]
+}
