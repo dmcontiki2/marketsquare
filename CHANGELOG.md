@@ -1,4 +1,14 @@
 
+## Session 141 (cont.) — David's live dashboard demo found & fixed 2 real bugs
+- AITEST-ROUTE-1 SHIPPED: /admin/ai-test decorator had been pasted onto demand_sweep;
+  the real provider tester was never registered. Fixed, deployed, live-verified from
+  David's own cockpit: '(claude-haiku-4-5) TrustSquare AI provider test OK [21+13 tok]'.
+- DASH-AIPROV-1 FILED (open): served dashboard.html lacks the global aiProvTest wiring
+  (closure-scoped B/tok; button onclick can't reach it). Demoed via in-tab shim —
+  permanent fix must ship via deploy_bit_monitoring.bat (server-source-of-truth flow).
+- Sequence proven end-to-end today: cockpit test button -> seam -> live provider ->
+  result on dashboard; EU lane (Scaleway) verified separately at module level.
+
 ## Session 141 (cont.) — EU AI lane provisioned + live-verified (Scaleway, Paris)
 - David provisioned Scaleway (org/app/policy/key, ~15 min guided); Claude live-probed all
   three chain models through failover/ai_backends.py with the primary simulated dead:
