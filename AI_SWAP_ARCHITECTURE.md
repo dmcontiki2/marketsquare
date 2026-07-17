@@ -119,6 +119,31 @@ mid-size weights the failover module already defaults to (Qwen3-32B/VL, DeepSeek
 refreshed as better small weights ship. K3's real significance is confirmation that the
 open-weight frontier keeps closing the gap — the self-reliance strategy compounds.
 
+### 5b. The ban scenario and the cost argument (David, 17 Jul 2026)
+
+David's stress test: *if the US government bans Claude and ChatGPT exports, the rest of
+the world has only Chinese models — EU/UK/Canada/AUS customers must not be disadvantaged.
+And cost: if the options are $50 vs $5, everything else fades until EU/UK/AUS have viable
+alternatives.* Ruling that follows:
+
+- **Models vs endpoints is the load-bearing distinction.** A US export ban removes US
+  *endpoints*; it cannot remove open *weights* already published — Kimi/DeepSeek/Qwen run
+  on EU/neutral hosts or on Karoo, under Western jurisdiction, GDPR/POPIA intact. The ban
+  scenario therefore makes the open-weight lane MORE important, not Chinese APIs more
+  acceptable. Weights already pulled and hash-pinned are un-bannable: **download before
+  the ban, not after.**
+- **The cheap lane and the safe lane are the same lane.** Open weights create a
+  competitive serving market → cents-per-million pricing on neutral infra. The $5 option
+  never requires Beijing endpoints. (Kimi K3's own API at $3/$15 is frontier-priced —
+  the cheap form of Chinese capability is the weights.)
+- **Consequence for priorities:** the hosted-open registry entry (P3) is promoted to
+  P1 scope — a standby cheap open-weight endpoint should exist from day one of the
+  registry, golden-set-evaluated, so both the ban trigger (T5) and the cost trigger (T4)
+  have a live landing zone. Mistral remains the EU hedge alongside, not instead.
+- Red line restated precisely: **no customer PII/KYC content to Chinese-jurisdiction
+  endpoints. Chinese models themselves: yes — as weights, anywhere we or our hosts run
+  them.** Non-PII, non-listing workloads may use any endpoint the registry marks eligible.
+
 ## 6. Build plan (phased, each phase shippable)
 
 - **P0 — Finish the wiring (prerequisite, ~1 session):** migrate the 15 raw call sites to
