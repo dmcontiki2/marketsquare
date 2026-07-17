@@ -77,3 +77,31 @@ David's words in substance: this is a BUSINESS decision, not a political one. Ru
 
 *Recorded by Claude from David's in-session ruling; supersedes conflicting lines above
 for the startup phase.*
+
+
+## Addendum 2 — Launch sequencing: cheap first, luxury later (David's ruling, 17 Jul 2026)
+
+David's sequencing, in substance: make the launch as cheap as possible on in-app AI.
+When funds arrive and we are profitable, first fund the operating stack
+(server/AI/subscriptions/bank). Only then do we have the LUXURY of weighing safety,
+security and best-capability model selection — and by safety/security he means the
+luxury of worrying about politics/jurisdiction, not app security (which stays).
+
+Operational meaning — this INVERTS Addendum 1's default for the launch phase:
+- **Phase A (launch → first profits): cheapest capable model wins by default.**
+  The EU open-weight lane (Scaleway: mistral-small / qwen3.6 / qwen3.5) is the
+  PRIMARY route for every task that passes its golden-set eval. Anthropic is the
+  quality rung, reserved for tasks the cheap lane measurably fails (expected:
+  KYC-grade vision, possibly card grading) and as the failover in the other direction.
+- The golden-set eval is the ONLY gate — a task moves to the cheap lane on eval pass,
+  not on ideology; it moves back on eval fail, not on brand loyalty.
+- Existing cost rails stay (ceilings, deliver-then-charge, spend log per provider).
+- **Phase B (profitable):** operating stack funded first; revisit model mix.
+- **Phase C (funded):** capability/jurisdiction selection becomes a choice, not a
+  constraint — the standing trip-wires and validator/Karoo plans resume their weight.
+- App security, POPIA/GDPR compliance and the anonymisation pipeline are NOT part of
+  the deferred "politics" — they remain non-negotiable in all phases (and cost nothing
+  extra under the EU lane).
+
+Consequence for the build: P0 (call-site migration) is now the single highest-leverage
+task in the project — it is what makes per-task cheap routing possible at all.
