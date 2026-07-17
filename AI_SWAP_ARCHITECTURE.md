@@ -181,3 +181,12 @@ Integration findings for P1: FAILOVER_BASE_URL must EXCLUDE /v1 (module appends 
 Qwen tiers need max_tokens budgets sized for reasoning overhead; parser should fall back
 to the `reasoning` field when `content` is null. Credentials: server .env via
 add_scaleway_key.bat (gitignored). Cost of full verification: <€0.01.
+
+### 8b. Live demo findings (17 Jul, David's 'prove it' run — all real Scaleway inference)
+- Anon-rewrite (production task, PII-laden listing): mistral-small — 2.1s, €0.000026, clean.
+- Price check (Sonnet-class): qwen3.5-397b FAILED usefully (900 tok all consumed by
+  reasoning, empty answer) → REASON tier default changes to qwen3-235b-a22b-instruct-2507
+  (non-thinking): 5.2s, €0.00059, genuinely good SA property analysis (~50x under Sonnet).
+- T3 ban trip + total-blackout graceful-fail both demonstrated.
+- P1 must update FAILOVER_MODEL_REASON on the server .env to qwen3-235b-a22b-instruct-2507.
+- Billing evidence: Scaleway console → Cost & Impact Management shows the demo's real usage.
