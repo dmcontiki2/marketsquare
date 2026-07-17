@@ -1,5 +1,5 @@
 @echo off
-title TrustSquare - Refresh Ops Dashboard (Session 139)
+title TrustSquare - Refresh Ops Dashboard
 cd /d C:\Users\David\Projects\MarketSquare
 echo Pushing the 4 dashboard docs to the server (refreshes /dashboard/summary)...
 scp STATUS.md root@178.104.73.239:/var/www/marketsquare/STATUS.md
@@ -11,8 +11,8 @@ echo Purging Cloudflare so the dashboard page picks it up...
 curl.exe -s -X POST https://trustsquare.co/admin/purge-cache
 echo.
 echo.
-echo Confirming the server now reports Session 139:
+echo Confirming the server session counter:
 ssh root@178.104.73.239 "curl -s http://localhost:8000/dashboard/summary | grep -oE 'currentSession[^,]*'"
 echo.
-echo If that shows currentSession:139 the dashboard is current. Window closes in 25s.
+echo If that matches STATUS.md the dashboard is current. Window closes in 25s.
 timeout /t 25 /nobreak >nul

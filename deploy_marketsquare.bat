@@ -246,6 +246,15 @@ scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-
 scp "%PROJECT%\assets\legal-must-haves\UK\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/UK/
 scp "%PROJECT%\assets\legal-must-haves\AU\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/AU/
 ssh -n %SERVER% "chmod 755 %REMOTE%/static/legal-must-haves %REMOTE%/static/legal-must-haves/* && chmod 644 %REMOTE%/static/legal-must-haves/*/*.png"
+
+:: -- DOC-SYNC-1 (17 Jul 2026, David/Session-141 counter drift): dashboard docs ship with EVERY deploy.
+:: -- /dashboard/summary parses currentSession from the SERVER copy of STATUS.md; when these
+:: -- four docs lag, the cockpit lies (it showed 139 for a month after 140 was consumed).
+echo  [3e] Syncing dashboard docs (STATUS/CHANGELOG/BACKLOG/AUDIT_PROGRESS -^> server)...
+scp "%PROJECT%\STATUS.md" %SERVER%:%REMOTE%/STATUS.md
+scp "%PROJECT%\CHANGELOG.md" %SERVER%:%REMOTE%/CHANGELOG.md
+scp "%PROJECT%\BACKLOG.md" %SERVER%:%REMOTE%/BACKLOG.md
+scp "%PROJECT%\AUDIT_PROGRESS.md" %SERVER%:%REMOTE%/AUDIT_PROGRESS.md
 ssh -n %SERVER% "o=$(md5sum %REMOTE%/static/videos/expedition-dossier-howto.mp4 | cut -d\" \" -f1); s=$(curl -s --max-time 25 https://trustsquare.co/static/videos/expedition-dossier-howto.mp4?vchk=$RANDOM | md5sum | cut -d\" \" -f1); if [ \"$o\" = \"$s\" ]; then echo \"   [OK] videos: served bytes match origin - CDN fresh\"; else echo \"   [FAIL] videos: served differs from origin - CDN stale or wrong path\"; fi"
 echo  Done.
 
