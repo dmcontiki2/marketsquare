@@ -14700,7 +14700,16 @@ function sfSpecS(secKey){
   var h='<div class="sf-hdr"><div class="sf-step">Step '+stepNo+' of 6 · '+f.label+'</div><h2>'+sec.title+'</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+sec.coach+'</div></div><div class="sf-card"><div class="sf-title">'+sec.title+'</div>';
   var rows=sec.rows.slice();
-  if(secKey==='A') rows=rows.concat([['__price',f.priceLabel,'number','e.g. 500','root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
+  if(secKey==='A'){
+    // PRICE-LABEL-1 (17 Jul 2026, David): 'Asking price / rent (R)' reads as ambiguous
+    // once a type is chosen — label follows the seller's Listing type selection.
+    var _pl=f.priceLabel, _lt=String(sfState.A.ltype||'');
+    if(sfState.cat==='Property'){
+      if(/rent|let/i.test(_lt)) _pl='Monthly rent (R)';
+      else if(/sale/i.test(_lt)) _pl='Asking price (R)';
+    }
+    rows=rows.concat([['__price',_pl,'number','e.g. 500','root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
+  }
   rows.forEach(function(r){
     var id=r[0], lbl=r[1], typ=r[2], ph=r[3], root=(r[4]==='root');
     var val = root ? sfState[id==='__price'?'price':'area'] : (sfState[secKey][id]||'');
@@ -14726,6 +14735,7 @@ function sfSpecS(secKey){
 }
 function sfUpd(scope,id,v){
   if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
+  if(id==='ltype' && sfState.cat==='Property'){ sfRender(); return; }  // PRICE-LABEL-1: refresh price label
   var m=document.querySelector('#sf-app .sf-meter');
   if(m){ var d=document.createElement('div'); d.innerHTML=sfMeter(); m.replaceWith(d.firstChild); }
 }
