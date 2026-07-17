@@ -1,4 +1,11 @@
 
+## Session 141 · 17 July 2026 — attended (David): legal cards, Step 6/6, agency import sync, AI swap architecture
+- Wraps today's dated entries below (LEGAL-STEP-1..3, EMAIL-FALLBACK-1, RENT-GATE-1, PRICE-LABEL-1,
+  IMPORT-SYNC-1, IMPORT-QUALITY-1, AGENT-FILTER-1, DEALER-SKIN-1, AI_SWAP_ARCHITECTURE.md + test suite).
+- Session counter corrected 139 -> 141: Session 140 was used 17-18 Jun in this file but STATUS.md
+  was never bumped; a month of loop notes repeated the stale 139. David caught it via a frozen
+  local dashboard copy showing the brief 140 window.
+
 ## 2026-07-17 — IMPORT-SYNC-1 / IMPORT-QUALITY-1 / AGENT-FILTER-1 SHIPPED + E2E-verified
 - agency_import now persists the FULL guided-flow schema per category (property/
   cars/tutors/services fields, rental axis on rentals only, vehicle_specs JSON,

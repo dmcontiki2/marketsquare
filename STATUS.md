@@ -1,5 +1,8 @@
 # TrustSquare — Status
 
+## Current Session
+Session 141 · 17 July 2026 (attended, David) — legal must-have cards (28, 4 countries) + SELL Step 6/6 + agency import schema sync + server quality gate + agent filters + dealer skin + AI swap architecture + E2E dummy-agency test. COUNTER CORRECTION: CHANGELOG used Session 140 on 17-18 Jun 2026 (MOUNT-READ-1 + 5T paid-feed) but this counter was never bumped; every loop note since repeated "stays 139". 140 is consumed; today is 141. (Found by David via a stale local dashboard copy, 17 Jul.)
+
 ## Applicable article: BIT Agent (self-test) — added 27 Jun 2026
 - TrustSquare now has a **Built-In Test (BIT) self-test article**, kept SEPARATE from the app (not in bea_main.py). Budget: BIT source <=2% of core LOC (currently 0.84%), zero third-party deps, read-only HTTP coupling. On Hetzner same-box for now (own process), separate-host later.
 - Canon: **Codex v4.8 §13** (with system block diagram). Full schema: **BIT_ARCHITECTURE.md**. Article: **../trustsquare-bit-agent/** (runner + registry + bit_budget_check.py).
