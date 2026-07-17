@@ -712,6 +712,13 @@ async function _msInit(){
     window._tsOperatorMode = true;
     setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_opAid,_opNew); }, 150);
   }
+  // DEALER-SKIN-1: trustsquare.co/?dealer=1 (motor dealerships — same console, dealer labels)
+  if (sp.get('dealer') === '1') {
+    var _dlAid = parseInt(sp.get('aid')||'',10)||null; var _dlNew = sp.get('new')==='1';
+    window.history.replaceState({}, '', window.location.pathname);
+    window._tsSkin = 'dealer';
+    setTimeout(function(){ if(typeof openAgencyConsole==='function') openAgencyConsole(_dlAid,_dlNew); }, 150);
+  }
   if (sp.get('plans') === '1') {
     window.history.replaceState({}, '', window.location.pathname);
     setTimeout(() => openPlans('dashboard'), 100);
@@ -1175,7 +1182,16 @@ function _agL(key){
     setup:'Tour operators are set up by TrustSquare on application.',
     created:'Operator created',createTest:'Create a test operator',namePh:'Operator name',
     manualUrl:'/static/TrustSquare_Tour_Operator_Playbook.pdf'};
-  return (window._tsOperatorMode?O:A)[key]||key;
+  // DEALER-SKIN-1 (17 Jul 2026, David): motor dealerships — same console & endpoints, dealer labels
+  var D={title:'Dealership console',brand:'Dealership',people:'Sales agents',person:'Sales agent',
+    invite:'Invite sales agent',noPeople:'No sales agents yet — invite one above.',
+    ph:'sales@dealership.com',imports:'Import your current stock',
+    intros:'Intros to sales agents',stock:'Vehicles (pooled)',org:'dealership',
+    setup:'Dealerships are set up by TrustSquare on application.',
+    created:'Dealership created',createTest:'Create a test dealership',namePh:'Dealership name',
+    manualUrl:'/static/TrustSquare_Agency_Playbook.pdf'};
+  var _s = window._tsSkin || (window._tsOperatorMode ? 'operator' : 'agency');
+  return ({agency:A, operator:O, dealer:D}[_s]||A)[key]||key;
 }
 // ── AGENCY CONSOLE (Team plan admin) — reached via ?agency=1 or goTo('agency') ──
 async function openAgencyConsole(aidOverride, forceNew){
@@ -1257,8 +1273,10 @@ async function _renderAgency(agencyId){
       +'<span style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;">Ops</span>'
       +'<select id="ag-org-pick" onchange="agencyOpsSwitch(this.value)" style="flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:10px;padding:8px;">'+(_opts||'<option>Loading orgs…</option>')+'</select>'
       +'<select id="ag-skin-pick" onchange="agencyOpsSkin(this.value)" style="border:1.5px solid var(--border);border-radius:10px;padding:8px;">'
-        +'<option value="agency"'+(window._tsOperatorMode?'':' selected')+'>Estate agency</option>'
-        +'<option value="operator"'+(window._tsOperatorMode?' selected':'')+'>Tour operator</option>'
+        +(function(){ var s=window._tsSkin||(window._tsOperatorMode?'operator':'agency');
+          return '<option value="agency"'+(s==='agency'?' selected':'')+'>Estate agency</option>'
+          +'<option value="operator"'+(s==='operator'?' selected':'')+'>Tour operator</option>'
+          +'<option value="dealer"'+(s==='dealer'?' selected':'')+'>Car dealership</option>'; })()
       +'</select></div>';
   }
   el.innerHTML= opsBar
@@ -1348,7 +1366,7 @@ async function _agencyOrgList(){
   return window._tsOrgList||[];
 }
 function agencyOpsSwitch(id){ id=parseInt(id,10); if(!id) return; window._agencyId=id; _renderAgency(id); }
-function agencyOpsSkin(v){ window._tsOperatorMode=(v==='operator'); _renderAgency(window._agencyId); }
+function agencyOpsSkin(v){ window._tsSkin=v; window._tsOperatorMode=(v==='operator'); _renderAgency(window._agencyId); }
 
 function demoBannerJoin() {
   // Redirect prospect to the real onboarding app
