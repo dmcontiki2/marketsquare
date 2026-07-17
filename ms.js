@@ -5145,8 +5145,8 @@ async function sobInit() {
   // If _skipPreview is set (coming from guided-onboard), go straight to phase 2
   const skipPreview = !!sobState._skipPreview;
   const cameFromGuided = !!sobState._cameFromGuided; // preserve across init
-  sobState.email = sobState.email || magicLink.email || '';
-  sobState.name  = sobState.name  || magicLink.name  || '';
+  sobState.email = sobState.email || magicLink.email || localStorage.getItem('ms_aa_email') || '';
+  sobState.name  = sobState.name  || magicLink.name  || localStorage.getItem('ms_aa_name') || '';
   sobState.cat   = sobState.cat   || magicLink.cat   || '';
   sobState.city  = sobState.city  || magicLink.area  || activeCity.name || '';
   const _seededDrafts = sobState.drafts && sobState.drafts.length ? sobState.drafts : [];
@@ -14325,8 +14325,8 @@ function sfInit(){
   sfState = {screen:'home', cat:null, sub:null, lmType:null,
     photos:{}, files:{}, previews:{}, mainPhase:0, mainMsg:'',
     A:{}, B:{}, C:{}, features:[], price:'', area:'',
-    email: (typeof magicLink!=='undefined' && magicLink.email) || '',
-    name:  (typeof magicLink!=='undefined' && magicLink.name)  || '',
+    email: (typeof magicLink!=='undefined' && magicLink.email) || localStorage.getItem('ms_aa_email') || '',
+    name:  (typeof magicLink!=='undefined' && magicLink.name)  || localStorage.getItem('ms_aa_name') || '',
     city:  (typeof activeCity!=='undefined' && activeCity.name) || 'Pretoria',
     visionDraft:null, vehicle:null, _busy:false};
   // Invited arrival with a category on the magic link → skip the tile screen
