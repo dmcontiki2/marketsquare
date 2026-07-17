@@ -17,6 +17,29 @@ from dataclasses import dataclass
 
 AI_ACTIVE = os.getenv("AI_ACTIVE", "anthropic")   # one place to swap the vendor
 
+_ENVFILE_CACHE = None
+def envkey(*names):
+    """os.getenv first; fall back to the server .env file (the systemd unit does not
+    export it to this process — ENVKEY-1, 17 Jul 2026). Cached after first read."""
+    global _ENVFILE_CACHE
+    for n in names:
+        v = os.getenv(n)
+        if v: return v
+    if _ENVFILE_CACHE is None:
+        _ENVFILE_CACHE = {}
+        try:
+            with open("/var/www/marketsquare/.env", encoding="utf-8") as f:
+                for ln in f:
+                    ln = ln.strip()
+                    if ln and not ln.startswith("#") and "=" in ln:
+                        k, v = ln.split("=", 1)
+                        _ENVFILE_CACHE[k.strip()] = v.strip()
+        except Exception:
+            pass
+    for n in names:
+        if _ENVFILE_CACHE.get(n): return _ENVFILE_CACHE[n]
+    return None
+
 # abstract task tier -> per-provider model string (vendor names live HERE, not at call sites)
 TASK_MODEL = {
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
@@ -99,7 +122,7 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
     content=null with the text in message.reasoning when the thinking budget runs out —
     fall back to that field before declaring the reply empty."""
     import httpx
-    key=os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY")
+    key=envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY")
     if not key: return AIResult("",None,None,"scaleway",model,ok=False)
     body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
     try:

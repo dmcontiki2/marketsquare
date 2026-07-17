@@ -11673,14 +11673,14 @@ def _flags_payload(d):
             "active": d.get("ai_active", "anthropic"),
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
             "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(os.getenv("OPENAI_API_KEY")),
-                          "scaleway": bool(os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY"))},
+                          "scaleway": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY"))},
             # P1: ordered provider cards for the NEW dashboard UI (old card keeps reading active/available above)
             "providers": [
                 {"id": "anthropic", "label": "Anthropic (Claude)", "family": "us", "jurisdiction": "US",
                  "available": bool(ANTHROPIC_API_KEY),
                  "models": ai_provider.TASK_MODEL.get("anthropic", {})},
                 {"id": "scaleway", "label": "Scaleway EU", "family": "open", "jurisdiction": "EU · Paris",
-                 "available": bool(os.getenv("SCALEWAY_API_KEY") or os.getenv("FAILOVER_API_KEY")),
+                 "available": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY")),
                  "models": ai_provider.TASK_MODEL.get("scaleway", {})},
                 {"id": "openai", "label": "OpenAI", "family": "us", "jurisdiction": "US",
                  "available": bool(os.getenv("OPENAI_API_KEY")),
