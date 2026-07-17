@@ -11605,7 +11605,6 @@ def admin_anon_rescan_listing(listing_id: int, apply: int = 1, _admin=Depends(_r
         conn.close()
 
 
-@app.post("/admin/ai-test")
 def demand_sweep(_admin=Depends(_require_admin)):
     """DEMAND-LOOP-1 housekeeping: stale-expire old tickets, run the gated match/compose
     pass. Wire to the nightly conductor at flip-on; safe to call any time (idempotent)."""
@@ -11639,6 +11638,7 @@ def demand_tickets_view(_admin=Depends(_require_admin)):
         conn.close()
 demand_tickets_view = app.get("/demand/tickets")(demand_tickets_view)
 
+@app.post("/admin/ai-test")   # AITEST-ROUTE-1 (17 Jul, found live by David's demo): decorator was pasted onto demand_sweep; real tester was never registered
 def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
     """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
     (full translate+call+parse path). Lets the Page-4 switch be tested live against either
