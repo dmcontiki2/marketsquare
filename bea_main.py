@@ -10,6 +10,8 @@ import ai_service_tiers  # Tiered Value Selector: tier config + availability res
 import feature_flags     # TVS STEP 5: server-readable paid/provider flag store
 import tier_resolvers    # TVS STEP 3: FREE/owned data resolvers (no paid/consumption API)
 import launch_redemption  # Founders Badge + monthly Tuppence allocation + flood control (Canon Addendum 1)
+import ai_provider        # D1 seam: ALL LLM inference goes through ai_provider.complete() (P0, 17 Jul 2026)
+import asyncio
 import os
 import json
 import re
@@ -3128,23 +3130,16 @@ def _vision_orient_image(img):
             "none = already upright; cw = rotate 90 clockwise; ccw = rotate 90 counter-clockwise; "
             "flip = rotate 180."
         )
-        with httpx.Client(timeout=20) as client:
-            resp = client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 8,
-                    "messages": [{"role": "user", "content": [
-                        {"type": "image", "source": {"type": "base64",
-                         "media_type": "image/jpeg", "data": b64}},
-                        {"type": "text", "text": prompt},
-                    ]}],
-                },
-            )
-        rj = resp.json()
-        ans = (rj.get("content", [{}])[0].get("text", "") or "").strip().lower()
-        it, ot = _usage_tokens(rj)
+        _sr = ai_provider.complete(
+            [{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64",
+                 "media_type": "image/jpeg", "data": b64}},
+                {"type": "text", "text": prompt},
+            ]}],
+            task="haiku", max_tokens=8,
+            provider=_ts_active_provider(), timeout=20)
+        ans = (_sr.text or "").strip().lower()
+        it, ot = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE (moved from the caller): tokens are spent
         # even when the answer is 'none' and no rotation happens.
         _log_ai_spend("", "/listings/photo:orient", "haiku", it, ot)
@@ -4632,19 +4627,15 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
             "of the photos, anonymous seller voice, no contact details, no invented features - "
             "only what is visible or stated in the fields\"}"
         )})
-        async with httpx.AsyncClient(timeout=40) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={"model": AA_MODEL, "max_tokens": 700,
-                      "messages": [{"role": "user", "content": content}]},
-            )
-        rj = resp.json()
-        text = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": content}],
+            task="haiku", max_tokens=700,
+            provider=_ts_active_provider(), timeout=40)
+        text = (_sr.text or "").strip()
         if text.startswith("```"):
             text = text.strip("`").lstrip("json").strip()
         ai = json.loads(text)
-        _in, _out = _usage_tokens(rj)
+        _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, "", "/listings/draft-from-photos",
                                   "haiku", _in, _out)
         caps = [{"slot": str(c.get("slot",""))[:40], "caption": str(c.get("caption",""))[:90]}
@@ -4705,19 +4696,15 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
             "empty string if you cannot estimate honestly), "
             "\"description\": \"2-3 factual sentences, anonymous seller voice, no contact details\"}"
         )})
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={"model": AA_MODEL, "max_tokens": 350,
-                      "messages": [{"role": "user", "content": content}]},
-            )
-        rj = resp.json()
-        text = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": content}],
+            task="haiku", max_tokens=350,
+            provider=_ts_active_provider(), timeout=20)
+        text = (_sr.text or "").strip()
         if text.startswith("```"):
             text = text.strip("`").lstrip("json").strip()
         ai = json.loads(text)
-        _in, _out = _usage_tokens(rj)
+        _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, email, "/listings/draft-from-photo",
                                   "haiku", _in, _out)
         out = dict(draft)
@@ -5007,21 +4994,14 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     )
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 1800,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_message}],
-                },
-            )
-        resp.raise_for_status()
-        _coach_json = resp.json()
-        coaching_text = _coach_json["content"][0]["text"]
-        _co_in, _co_out = _usage_tokens(_coach_json)   # C2
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_message}],
+            task="haiku", max_tokens=1800, system=system_prompt,
+            provider=_ts_active_provider(), timeout=30)
+        if not _sr.text and _sr.in_tokens is None:
+            raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
+        coaching_text = _sr.text
+        _co_in, _co_out = _sr.in_tokens, _sr.out_tokens   # C2
     except Exception as exc:
         conn.close()
         _log.error("AA coach Claude call failed: %s", exc)
@@ -8446,21 +8426,14 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     )
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model":      AA_MODEL,
-                    "max_tokens": 600,
-                    "system":     system_prompt,
-                    "messages":   [{"role": "user", "content": user_message}],
-                },
-            )
-        resp.raise_for_status()
-        _g_json = resp.json()
-        raw = _g_json["content"][0]["text"]
-        _g_in, _g_out = _usage_tokens(_g_json)   # C2
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_message}],
+            task="haiku", max_tokens=600, system=system_prompt,
+            provider=_ts_active_provider(), timeout=20)
+        if not _sr.text and _sr.in_tokens is None:
+            raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
+        raw = _sr.text
+        _g_in, _g_out = _sr.in_tokens, _sr.out_tokens   # C2
     except Exception as exc:
         _log.warning("AI guidance Haiku call failed: %s", exc)
         return {
@@ -8648,21 +8621,14 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
     )
 
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 120,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_message}],
-                },
-            )
-        resp.raise_for_status()
-        _uc_json = resp.json()
-        comment = _uc_json["content"][0]["text"].strip()
-        _uc_in, _uc_out = _usage_tokens(_uc_json)   # C2
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_message}],
+            task="haiku", max_tokens=120, system=system_prompt,
+            provider=_ts_active_provider(), timeout=15)
+        if not _sr.text and _sr.in_tokens is None:
+            raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
+        comment = _sr.text.strip()
+        _uc_in, _uc_out = _sr.in_tokens, _sr.out_tokens   # C2
     except Exception as exc:
         _log.warning("upload-comment Haiku call failed: %s", exc)
         comment = (
@@ -9160,11 +9126,8 @@ async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
         elif doc_url.lower().endswith(".webp"):
             media_type = "image/webp"
 
-        # D1-SEAM NOTE: this KYC path uses the Anthropic SDK directly (not the httpx seam).
-        # It is the ONE remaining vendor-coupled call site; migrate to ai_provider.complete()
-        # when the seam grows a vision adapter. Left intact now (KYC path, change = gated).
-        import anthropic as _anthropic
-        client = _anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        # SEAM-ROUTED (P0, 17 Jul 2026): KYC vision call goes through ai_provider.complete()
+        # with task="sonnet" — same claude-sonnet-4-6 on the Anthropic path as the old SDK call.
         prompt = f"""You are a document verification assistant for TrustSquare marketplace.
 Examine this identity document image carefully.
 
@@ -9192,10 +9155,8 @@ Respond ONLY with valid JSON in this exact format:
 
 If you cannot read the document clearly, set confidence below 0.5 and explain in notes."""
 
-        message = client.messages.create(
-            model=SONNET_MODEL,
-            max_tokens=300,
-            messages=[{
+        _sr = ai_provider.complete(
+            [{
                 "role": "user",
                 "content": [
                     {"type": "image", "source": {
@@ -9203,9 +9164,10 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
                     }},
                     {"type": "text", "text": prompt}
                 ]
-            }]
-        )
-        raw = message.content[0].text.strip()
+            }],
+            task="sonnet", max_tokens=300,
+            provider=_ts_active_provider(), timeout=120)
+        raw = _sr.text.strip()
         # Parse JSON from response
         json_match = re.search(r'\{[\s\S]*\}', raw)
         if not json_match:
@@ -12856,23 +12818,15 @@ async def ai_listing_rewrite(listing_id: int, email: str):
     )
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 350,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_prompt}],
-                },
-            )
-        rj = resp.json()
-        _rw_in, _rw_out = _usage_tokens(rj)
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_prompt}],
+            task="haiku", max_tokens=350, system=system_prompt,
+            provider=_ts_active_provider(), timeout=20)
+        _rw_in, _rw_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
         _log_ai_spend(email, "/listings/ai-rewrite", "haiku", _rw_in, _rw_out)
-        raw = rj["content"][0]["text"].strip()
+        raw = _sr.text.strip()
         # Strip markdown fences if model adds them
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
@@ -12961,23 +12915,15 @@ async def ai_seller_audit(listing_id: int, email: str):
     )
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 400,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_prompt}],
-                },
-            )
-        rj = resp.json()
-        _au_in, _au_out = _usage_tokens(rj)
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_prompt}],
+            task="haiku", max_tokens=400, system=system_prompt,
+            provider=_ts_active_provider(), timeout=20)
+        _au_in, _au_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
         _log_ai_spend(email, "/listings/ai-audit", "haiku", _au_in, _au_out)
-        raw = rj["content"][0]["text"].strip()
+        raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -13590,20 +13536,12 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
         }
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": PRICE_CHECK_MODEL,
-                    "max_tokens": 700,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_prompt}],
-                },
-            )
-        _resp_json = resp.json()
-        raw = _resp_json["content"][0]["text"].strip()
-        _pc_in, _pc_out = _usage_tokens(_resp_json)   # C2/C3
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_prompt}],
+            task="sonnet", max_tokens=700, system=system_prompt,
+            provider=_ts_active_provider(), timeout=30)
+        raw = _sr.text.strip()
+        _pc_in, _pc_out = _sr.in_tokens, _sr.out_tokens   # C2/C3
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -13880,20 +13818,12 @@ async def ai_yield_calc(listing_id: int, email: str,
     )
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": AA_MODEL,
-                    "max_tokens": 250,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_prompt}],
-                },
-            )
-        _yc_json = resp.json()
-        raw = _yc_json["content"][0]["text"].strip()
-        _yc_in, _yc_out = _usage_tokens(_yc_json)   # C2/C3
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_prompt}],
+            task="haiku", max_tokens=250, system=system_prompt,
+            provider=_ts_active_provider(), timeout=20)
+        raw = _sr.text.strip()
+        _yc_in, _yc_out = _sr.in_tokens, _sr.out_tokens   # C2/C3
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -14046,23 +13976,17 @@ async def ai_batch_card_listings(req: BatchCardRequest):
         })
 
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": VISION_MODEL,   # Vision-capable; Haiku lacks vision depth for cards
-                    "max_tokens": 2000,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": content_blocks}],
-                },
-            )
-        rj = resp.json()
-        _bc_in, _bc_out = _usage_tokens(rj)
+        # SEAM-ROUTED (P0): task="vision" — resolves to the haiku id today (Haiku-first,
+        # 3 Jul 2026); flipping TASK_MODEL's vision row back to sonnet re-arms the documented revert.
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": content_blocks}],
+            task="vision", max_tokens=2000, system=system_prompt,
+            provider=_ts_active_provider(), timeout=60)
+        _bc_in, _bc_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
         _log_ai_spend(req.seller_email, "/listings/batch-cards", "sonnet_vision", _bc_in, _bc_out)
-        raw = rj["content"][0]["text"].strip()
+        raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -14268,23 +14192,15 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         "string and auto_safe=false. Keep replies under 120 words."
     )
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": TRIAGE_MODEL,
-                    "max_tokens": 400,
-                    "system": system,
-                    "messages": [{"role": "user", "content": user_payload}],
-                },
-            )
-        rj = resp.json()
-        _cl_in, _cl_out = _usage_tokens(rj)
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_payload}],
+            task="triage", max_tokens=400, system=system,
+            provider=_ts_active_provider(), timeout=20)
+        _cl_in, _cl_out = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE with real tokens (moved from the caller's
         # flat-estimate log; cost_is_real=1 on the dashboard).
         _log_ai_spend(from_addr, "/email/inbound", "haiku", _cl_in, _cl_out)
-        raw = rj["content"][0]["text"].strip()
+        raw = _sr.text.strip()
         if raw.startswith("```"):
             raw = raw.strip("`")
             if raw.startswith("json"):
@@ -14738,20 +14654,17 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
         "Be conservative; reply with the JSON only.")})
 
     try:
-        with httpx.Client(timeout=timeout) as client:
-            resp = client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={"model": VISION_MODEL, "max_tokens": 300,
-                      "system": system_prompt,
-                      "messages": [{"role": "user", "content": content_blocks}]},
-            )
-        rj = resp.json()
-        it, ot = _usage_tokens(rj)
+        # SEAM-ROUTED (P0): task="vision" — resolves to the haiku id today (Haiku-first,
+        # 3 Jul 2026); flipping TASK_MODEL's vision row back to sonnet re-arms the documented revert.
+        _sr = ai_provider.complete(
+            [{"role": "user", "content": content_blocks}],
+            task="vision", max_tokens=300, system=system_prompt,
+            provider=_ts_active_provider(), timeout=timeout)
+        it, ot = _sr.in_tokens, _sr.out_tokens
         result["in_tokens"], result["out_tokens"] = it, ot
         # P2 wrapper — log real token spend (platform attribution; batch grading).
         _log_ai_spend("", "grade_card_condition", "sonnet_vision", it, ot)
-        raw = (rj.get("content", [{}])[0].get("text", "") or "").strip()
+        raw = (_sr.text or "").strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
         parsed = json.loads(raw)

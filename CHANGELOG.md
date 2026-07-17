@@ -1,4 +1,19 @@
 
+## Session 141 — P0 SHIPPED: all AI call sites on the provider seam
+- 14 of 15 raw httpx sites + the KYC SDK site migrated to ai_provider.complete()
+  (tiers by model const: haiku/sonnet/triage; VISION_MODEL sites on task="vision" —
+  behaviour-identical today, keeps the documented sonnet-revert lever). Async sites
+  via asyncio.to_thread (existing in-file precedent). All _check_cost_ceiling /
+  _log_ai_spend calls + labels untouched.
+- Seam extended additively: complete(..., timeout=) threaded to both adapters;
+  stale-OpenAI-ids warning comment added (verify at key provisioning + golden set).
+- Deliberately unmigrated (documented): /listings/vision-draft — reads status_code +
+  error body + TimeoutException for 3 distinct user-facing error paths; P1 will add
+  an error surface to the seam first.
+- KYC timeout 60->120s (old SDK default was ~600s). anthropic SDK import: gone.
+- Verified: py_compile, boot test in sandbox (BOOT_OK), file 14948 lines tail-intact.
+- CONSEQUENCE: the cockpit provider switch now controls 21 of 22 AI features for real.
+
 ## Session 141 (cont.) — David's live dashboard demo found & fixed 2 real bugs
 - AITEST-ROUTE-1 SHIPPED: /admin/ai-test decorator had been pasted onto demand_sweep;
   the real provider tester was never registered. Fixed, deployed, live-verified from

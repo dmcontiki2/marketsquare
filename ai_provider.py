@@ -21,6 +21,7 @@ AI_ACTIVE = os.getenv("AI_ACTIVE", "anthropic")   # one place to swap the vendor
 TASK_MODEL = {
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
+    # STALE 2024-era ids — VERIFY against current OpenAI catalog when OPENAI_API_KEY is provisioned (vendor doc gate: golden-set eval before production traffic)
     "openai":    {"haiku":"gpt-4o-mini","sonnet":"gpt-4o","vision":"gpt-4o","triage":"gpt-4o-mini"},
 }
 
@@ -28,13 +29,13 @@ TASK_MODEL = {
 class AIResult:
     text: str; in_tokens: int|None; out_tokens: int|None; provider: str; model: str; ok: bool=True
 
-def _anthropic(messages, model, max_tokens, system):
+def _anthropic(messages, model, max_tokens, system, timeout=30):
     import httpx
     key=os.getenv("ANTHROPIC_API_KEY")
     if not key: return AIResult("",None,None,"anthropic",model,ok=False)
     body={"model":model,"max_tokens":max_tokens,"messages":messages}
     if system: body["system"]=system
-    with httpx.Client(timeout=30) as c:
+    with httpx.Client(timeout=timeout) as c:
         r=c.post("https://api.anthropic.com/v1/messages",
                  headers={"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json"},
                  json=body)
@@ -67,7 +68,7 @@ def _to_openai_messages(messages, system):
         out.append({"role":role,"content":parts or ""})
     return out
 
-def _openai(messages, model, max_tokens, system):
+def _openai(messages, model, max_tokens, system, timeout=30):
     """Real OpenAI adapter — chat/completions. Translates the app's content-block
     messages to OpenAI format, calls the API, parses text + token usage."""
     import httpx
@@ -75,7 +76,7 @@ def _openai(messages, model, max_tokens, system):
     if not key: return AIResult("",None,None,"openai",model,ok=False)
     body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
     try:
-        with httpx.Client(timeout=30) as c:
+        with httpx.Client(timeout=timeout) as c:
             r=c.post("https://api.openai.com/v1/chat/completions",
                      headers={"Authorization":"Bearer "+key,"content-type":"application/json"},
                      json=body)
@@ -89,17 +90,17 @@ def _openai(messages, model, max_tokens, system):
 
 ADAPTERS={"anthropic":_anthropic,"openai":_openai}
 
-def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None):
+def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None, timeout=30):
     prov = provider or AI_ACTIVE
     model = TASK_MODEL.get(prov,{}).get(task) or TASK_MODEL["anthropic"]["haiku"]
     fn = ADAPTERS.get(prov)
     if not fn: return AIResult("",None,None,prov,model,ok=False)
-    res = fn(messages, model, max_tokens, system)
+    res = fn(messages, model, max_tokens, system, timeout)
     # any-of fallback: if the active provider is unavailable, try the others in order (feeds-style)
     if not res.ok:
         for alt in [p for p in ADAPTERS if p!=prov]:
             m=TASK_MODEL.get(alt,{}).get(task)
             if not m: continue
-            r2=ADAPTERS[alt](messages,m,max_tokens,system)
+            r2=ADAPTERS[alt](messages,m,max_tokens,system,timeout)
             if r2.ok: return r2
     return res
