@@ -1,4 +1,17 @@
 
+## 2026-07-17 — Test-session fixes (David + testers, live QA after LEGAL-STEP ship)
+- EMAIL-FALLBACK-1 (v299): SELL flow + seller-onboard now read the signed-in
+  session (ms_aa_email/name) when no magic link — fixes 'No draft found
+  (drafts=0, email=none)' at Go live for all signed-in sellers.
+- RENT-GATE-1 (v300): Edit Listing rental availability inputs (Availability /
+  Available from) now only shown for Property RENTALS, toggle live with
+  Listing type, and are not saved for For Sale listings.
+- PRICE-LABEL-1 (v301): wizard price label follows Listing type — 'Asking
+  price (R)' vs 'Monthly rent (R)' (was ambiguous 'Asking price / rent (R)').
+- Each deployed via ms-deploy + curl smoke (homepage 200, sentinel grep on live js).
+- Known residual: sale listings saved before RENT-GATE-1 may carry a stray
+  rental_status in the DB — clean server-side if a badge ever shows.
+
 ## 2026-07-17 — LEGAL-STEP-3: agency wording corrected (David)
 - "can manage all of this for you" overclaimed — agents cannot legally perform
   conveyancing, rates clearance or bond cancellation; they facilitate those with
