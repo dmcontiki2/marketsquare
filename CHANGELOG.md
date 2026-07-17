@@ -1,4 +1,21 @@
 
+## 2026-07-17 — IMPORT-SYNC-1 / IMPORT-QUALITY-1 / AGENT-FILTER-1 SHIPPED + E2E-verified
+- agency_import now persists the FULL guided-flow schema per category (property/
+  cars/tutors/services fields, rental axis on rentals only, vehicle_specs JSON,
+  price_num, import_source stamp). List-driven INSERT with cols==vals assert.
+- publish_listing: 50-point server-side quality gate for agency-imported drafts
+  (photos ~40 + category fields ~50 + price 6 + area 4); 422 with fix list.
+- Agency console: agent search (name/email) + city/country filters (shows at 4+
+  agents); invite form captures name/city/country; agency_members gained those columns.
+- Two deploy-round hotfixes: (1) 35-placeholder/38-column INSERT mismatch,
+  (2) rental_status NOT NULL DEFAULT 'available' — NULL insert 500'd; sales now
+  store the default. Root-caused via full local BEA reproduction in sandbox.
+- E2E on LIVE server (dummy ZZ-TEST agency #3, 5 named agents): import 200 with
+  all fields verified stored; good property published 200; thin advert blocked
+  422 'quality 4/100' with actionable fixes. Test listings deleted; ZZ-TEST
+  agency + agents kept for console filter demo (delete when done).
+- Spec §4/§5 added to AGENCY_IMPORT_ANONYMISATION_SPEC.md. ms.js v304.
+
 ## 2026-07-17 — Test-session fixes (David + testers, live QA after LEGAL-STEP ship)
 - EMAIL-FALLBACK-1 (v299): SELL flow + seller-onboard now read the signed-in
   session (ms_aa_email/name) when no magic link — fixes 'No draft found
