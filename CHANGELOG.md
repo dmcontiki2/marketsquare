@@ -1,4 +1,12 @@
 
+## Session 141 (cont.) — EU AI lane provisioned + live-verified (Scaleway, Paris)
+- David provisioned Scaleway (org/app/policy/key, ~15 min guided); Claude live-probed all
+  three chain models through failover/ai_backends.py with the primary simulated dead:
+  mistral-small 1.3s / qwen3.5-397b 19.1s / qwen3.6-35b 4.9s — all clean. <1 cent total.
+- Vendor Addendum 1 recorded (business ruling: EU-hosted open weights first-class).
+- add_scaleway_key.bat created (gitignored) to stage credentials into the server .env.
+- Next: P0 call-site migration, then P1 registry wires this lane into production chains.
+
 ## Session 141 · 17 July 2026 — attended (David): legal cards, Step 6/6, agency import sync, AI swap architecture
 - Wraps today's dated entries below (LEGAL-STEP-1..3, EMAIL-FALLBACK-1, RENT-GATE-1, PRICE-LABEL-1,
   IMPORT-SYNC-1, IMPORT-QUALITY-1, AGENT-FILTER-1, DEALER-SKIN-1, AI_SWAP_ARCHITECTURE.md + test suite).

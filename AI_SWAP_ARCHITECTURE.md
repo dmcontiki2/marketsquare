@@ -167,3 +167,17 @@ alternatives.* Ruling that follows:
 - No Chinese-jurisdiction APIs for user content, ever — weights yes, endpoints no.
 - No swap without a golden-set pass — an available provider is not an *equivalent* provider.
 - Don't let the cost rail fail open silently after a swap — degraded-provider spend counts.
+
+## 8. EU lane — LIVE-VERIFIED 17 Jul 2026 (Session 141)
+Scaleway Generative APIs (Paris, GDPR-resident) provisioned by David: org TRUSTSQUARE
+(PTY) LTD, application `trustsquare-backend`, policy GenerativeApisFullAccess scoped to
+the TrustSquare project, key `trustsquare-failover` (expires Jul 2027 — renewal noted
+for /housekeep). Live probes through failover/ai_backends.py with primary dead:
+- FAST  mistral-small-3.2-24b-instruct-2506 — 1.3s, clean answer
+- REASON qwen3.5-397b-a17b — 19.1s (reasoning model: ~250 thinking tokens; needs token
+  headroom or thinking disabled for short tasks)
+- VISION qwen3.6-35b-a3b — 4.9s (text probe; vision golden-set still pending)
+Integration findings for P1: FAILOVER_BASE_URL must EXCLUDE /v1 (module appends it);
+Qwen tiers need max_tokens budgets sized for reasoning overhead; parser should fall back
+to the `reasoning` field when `content` is null. Credentials: server .env via
+add_scaleway_key.bat (gitignored). Cost of full verification: <€0.01.

@@ -136,3 +136,4 @@ feature-videos/production-kit/_render_libs/
 feature-videos/production-kit/cast/
 
 .~lock.*#
+add_scaleway_key.bat
