@@ -180,6 +180,7 @@ def run_migrations(conn):
         ("spec_confirmed",   "TEXT"),
         ("attested_at",      "TEXT"),
         ("attested_email",   "TEXT"),
+        ("import_source",    "TEXT"),   # IMPORT-SYNC-1: 'agency_import' rows face the publish quality gate
     ]:
         if _col not in listing_cols:
             conn.execute(f"ALTER TABLE listings ADD COLUMN {_col} {_type}")
@@ -792,6 +793,11 @@ def run_migrations(conn):
         PRIMARY KEY (agency_id, agent_email)
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_agency_members_email ON agency_members(agent_email)")
+    # AGENT-FILTER-1 (17 Jul 2026, David): searchable agent directory for large orgs
+    _am_cols = {r[1] for r in conn.execute("PRAGMA table_info(agency_members)").fetchall()}
+    for _c in ("agent_name", "city", "country"):
+        if _c not in _am_cols:
+            conn.execute(f"ALTER TABLE agency_members ADD COLUMN {_c} TEXT")
 
     # ── Listing State Machine columns (Session 37) ───────────────
     # listing_status drives the 7-state machine: DRAFT, LIVE, PAUSED,
@@ -2410,6 +2416,42 @@ def auto_link_wonders(listing_id: int, city_lat: float, city_lon: float,
     conn.close()
     return [wid for _, wid, _ in top]
 
+def _import_quality_score(row):
+    """IMPORT-QUALITY-1: server-side mirror of the wizard's 50-point publish bar,
+    scored from stored columns (the wizard gates client-side; imports gate here).
+    Returns (score, missing[]) — missing lists what to fix, biggest win first."""
+    d = dict(row)
+    score = 0; missing = []
+    # Photos ≈ 40 pts (wizard: main 10 + 30 across named slots): first 10, +8 each to cap
+    _m = re.match(r"\[photos:([^\]]*)\]", d.get("description") or "")
+    _n = len([p for p in (_m.group(1).split("|") if _m else []) if p.strip()])
+    _ph = min(40, (10 + 8 * (_n - 1)) if _n else 0)
+    score += _ph
+    if _ph < 40: missing.append(f"photos: {_n} attached — add {max(1, (40 - _ph) // 8)}+ more")
+    # Category structured fields ≈ 50 pts, equal weight per required field
+    _cat = (d.get("category") or "").strip().lower()
+    _req = {
+        "property": ["prop_type", "beds", "baths", "listing_type"],
+        "cars":     ["make", "model", "vehicle_year", "mileage_km", "transmission"],
+        "tutors":   ["subject", "level", "mode"],
+        "services": ["service_type"],
+    }.get(_cat, [])
+    _fields = list(_req) + ["_desc15"]
+    _per = 50.0 / len(_fields)
+    for _f in _req:
+        if d.get(_f) not in (None, ""): score += _per
+        else: missing.append(f"{_f} missing")
+    _words = len(re.findall(r"\S+", re.sub(r"^\[photos:[^\]]*\]", "", d.get("description") or "")))
+    if _words >= 15: score += _per
+    else: missing.append(f"description too thin ({_words} words, need 15+)")
+    # Price 6 + area 4 (wizard parity)
+    if (d.get("price") or "").strip() and (d.get("price") or "").strip().upper() != "POA": score += 6
+    else: missing.append("price missing (POA scores 0)")
+    if (d.get("suburb") or d.get("area") or "").strip(): score += 4
+    else: missing.append("suburb/area missing")
+    return int(round(score)), missing
+
+
 @app.put("/listings/{listing_id}/publish")
 def publish_listing(listing_id: int, email: str, attested: int = 0):
     """Transition a draft listing to live. Called by the seller onboarding flow
@@ -2469,6 +2511,17 @@ def publish_listing(listing_id: int, email: str, attested: int = 0):
             status_code=409,
             detail="Please confirm your vehicle details and accept the seller attestation before publishing."
         )
+
+    # IMPORT-QUALITY-1 (17 Jul 2026, David): agency-imported drafts must meet the
+    # SAME 50-point quality bar the guided wizard enforces client-side. No
+    # superuser bypass — this is a quality gate, not an auth gate.
+    if (_ex.get("import_source") or "") == "agency_import":
+        _q, _q_missing = _import_quality_score(_ex)
+        if _q < 50:
+            conn.close()
+            raise HTTPException(status_code=422, detail=(
+                f"Listing quality {_q}/100 — imported listings need 50+ to publish. "
+                "Fix: " + "; ".join(_q_missing[:5])))
 
     # Slot guard: enforce subscription slot limit (superusers exempt)
     if not is_super:
@@ -10309,6 +10362,9 @@ class _AgencyCreate(_BaseModel):
 class _AgentInvite(_BaseModel):
     email: str
     listing_cap: int = 10
+    name: Optional[str] = None      # AGENT-FILTER-1
+    city: Optional[str] = None
+    country: Optional[str] = None
 
 class _AgentCapUpdate(_BaseModel):
     listing_cap: Optional[int] = None
@@ -10359,12 +10415,13 @@ def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):
         a = conn.execute("SELECT id, name, admin_email, api_key, countries, plan, verified FROM agencies WHERE id=?", (agency_id,)).fetchone()
         if not a:
             raise HTTPException(status_code=404, detail="Agency not found")
-        members = conn.execute("SELECT agent_email, listing_cap, seat_paid, role, status FROM agency_members "
+        members = conn.execute("SELECT agent_email, listing_cap, seat_paid, role, status, agent_name, city, country FROM agency_members "
                                "WHERE agency_id=? AND status!='removed' ORDER BY role DESC, agent_email", (agency_id,)).fetchall()
         agents = []; used = 0; allowance = 0
         for m in members:
             r = _agency_agent_rollup(conn, m["agent_email"])
-            r.update({"listing_cap": m["listing_cap"], "seat_paid": bool(m["seat_paid"]), "role": m["role"], "status": m["status"]})
+            r.update({"listing_cap": m["listing_cap"], "seat_paid": bool(m["seat_paid"]), "role": m["role"], "status": m["status"],
+                      "agent_name": m["agent_name"], "city": m["city"], "country": m["country"]})   # AGENT-FILTER-1
             used += r["listings_live"]; allowance += m["listing_cap"]
             agents.append(r)
         return {"id": a["id"], "name": a["name"], "admin_email": a["admin_email"],
@@ -10387,8 +10444,11 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
             raise HTTPException(status_code=404, detail="Agency not found")
         conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
         conn.execute("UPDATE users SET slot_limit=?, seller_tier='starter' WHERE LOWER(email)=?", (cap, email))
-        conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status) VALUES (?,?,?, 'invited') "
-                     "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap", (agency_id, email, cap))
+        conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status, agent_name, city, country) VALUES (?,?,?, 'invited', ?,?,?) "
+                     "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap, "
+                     "agent_name=COALESCE(excluded.agent_name, agent_name), city=COALESCE(excluded.city, city), country=COALESCE(excluded.country, country)",
+                     (agency_id, email, cap,
+                      (req.name or "").strip() or None, (req.city or "").strip() or None, (req.country or "").strip().upper() or None))
         conn.commit()
     finally:
         conn.close()
@@ -11300,15 +11360,50 @@ def agency_import(agency_id: int, req: _AgencyImport):
                 final_desc = "[photos:" + "|".join(m for (_t, m) in ph_attached) + "]\n" + d_clean
             if row_needs_review:
                 needs_rev += 1
+            # IMPORT-SYNC-1 (17 Jul 2026, David): imports carry the SAME structured
+            # schema as the guided sell flow — nothing silently dropped.
+            def _imp_i(k):
+                v = ad.get(k)
+                if v in (None, ""): return None
+                try: return int(str(v).replace(" ", "").replace(",", ""))
+                except Exception: return None
+            def _imp_s(k, cap=160):
+                v = ad.get(k)
+                if v in (None, ""): return None
+                return str(v).strip()[:cap] or None
+            _lt = _imp_s("listing_type")
+            _rs, _af = _imp_s("rental_status"), _imp_s("available_from")
+            if not (_lt and re.search(r"rent|let", _lt, re.I)):
+                _rs, _af = None, None          # RENT-GATE-1 parity: no rental axis on sales
+            else:
+                try:
+                    _validate_rental_fields(_rs, _af)
+                except HTTPException:
+                    _rs, _af = None, None      # bad values dropped; import continues
+            _vspecs = ad.get("vehicle_specs")
+            if isinstance(_vspecs, dict): _vspecs = json.dumps(_vspecs)
+            elif _vspecs is not None: _vspecs = str(_vspecs)[:4000]
+            _price_txt = str(ad.get("price") or "POA")
+            _pn_digits = re.sub(r"[^0-9.]", "", _price_txt)
+            _price_num = float(_pn_digits) if _pn_digits else None
             conn.execute(
-                "INSERT INTO listings (title, price, category, city, area, suburb, description, seller_email, listing_status, thumb_url, medium_url) "
-                "VALUES (?,?,?,?,?,?,?,?, 'draft', ?, ?)",
-                (t_clean, str(ad.get("price") or "POA"),
+                "INSERT INTO listings (title, price, category, city, area, suburb, description, seller_email, listing_status, thumb_url, medium_url, "
+                "import_source, price_num, listing_type, prop_type, beds, baths, garages, floor_area, erf_size, rental_status, available_from, "
+                "subject, level, mode, service_class, service_type, availability, "
+                "make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs) "
+                "VALUES (?,?,?,?,?,?,?,?, 'draft', ?, ?, 'agency_import', ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (t_clean, _price_txt,
                  str(ad.get("category") or "Property"), city,
                  str(ad.get("area") or city), str(ad.get("suburb") or city),
                  final_desc, agent,
                  (ph_attached[0][0] if ph_attached else None),
-                 (ph_attached[0][1] if ph_attached else None)))
+                 (ph_attached[0][1] if ph_attached else None),
+                 _price_num, _lt, _imp_s("prop_type"), _imp_i("beds"), _imp_i("baths"), _imp_i("garages"),
+                 _imp_i("floor_area"), _imp_i("erf_size"), _rs, _af,
+                 _imp_s("subject"), _imp_s("level"), _imp_s("mode"),
+                 _imp_s("service_class"), _imp_s("service_type"), _imp_s("availability"),
+                 _imp_s("make"), _imp_s("model"), _imp_s("variant"), _imp_i("vehicle_year"), _imp_i("mileage_km"),
+                 _imp_s("transmission"), _imp_s("fuel_type"), _imp_s("body_type"), _imp_s("colour"), _vspecs))
             imported += 1
             rows.append({"title": t_clean[:80], "agent_email": agent,
                          "needs_review": row_needs_review, "removed": removed,

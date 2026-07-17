@@ -40,3 +40,30 @@ The new work is the **orchestration** (run each imported advert through both pas
 3. **Agency brand:** fully hidden for anonymity (recommend), or a generic non-identifying label like "Listed via a verified agency" with no name?
 
 *End spec.*
+
+
+## §4 — Structured field mapping (IMPORT-SYNC-1, 17 Jul 2026)
+
+Superseded: the §1 note "keep price, beds, baths, garages, floor/erf size, suburb,
+area, prop_type" — now implemented AND extended to the full guided-sell-flow schema.
+Each advert dict may carry, and agency_import now persists:
+
+- All categories: listing_type, price (+derived price_num), suburb, area
+- Property: prop_type, beds, baths, garages, floor_area, erf_size,
+  rental_status + available_from (rentals ONLY — dropped on sales, RENT-GATE-1 parity;
+  invalid values dropped, import continues)
+- Tutors: subject, level, mode
+- Services: service_class, service_type, availability
+- Cars: make, model, variant, vehicle_year, mileage_km, transmission, fuel_type,
+  body_type, colour, vehicle_specs (dict or JSON string)
+
+Rows are stamped import_source='agency_import'.
+
+## §5 — Publish quality gate (IMPORT-QUALITY-1, 17 Jul 2026)
+
+Imported drafts face the same 50-point bar the wizard enforces client-side,
+scored server-side in publish_listing from stored columns: photos ≈40
+(10 first + 8 each), category required fields + 15-word description ≈50,
+price 6 (POA scores 0), suburb/area 4. Below 50 → HTTP 422 with a fix list.
+No superuser bypass (quality gate, not auth gate). Wizard-created listings
+are unaffected (already gated in-app).

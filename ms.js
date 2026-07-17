@@ -1233,7 +1233,8 @@ async function _renderAgency(agencyId){
   try{ const r=await fetch(BEA_URL+'/agencies/'+agencyId,{headers:{'X-Api-Key':API_KEY}}); if(r.ok) a=await r.json(); }catch(e){}
   if(!a){ el.innerHTML='<div style="padding:30px;text-align:center;color:#ef4444;">Could not load agency.</div>'; return; }
   window._agencyName=a.name||'';   // rename prompt names its target (7 Jul 2026)
-  const rows=(a.agents||[]).map(function(m){
+  window._agAgents=(a.agents||[]);   // AGENT-FILTER-1
+  const _agRowFn=function(m){
     const cap=m.listing_cap||10; const pct=Math.min(100,Math.round((m.listings_live/cap)*100));
     const tc=m.trust_score>=70?'#166534':(m.trust_score>=40?'#1e40af':'#6b7280');
     const acts=m.role==='admin'?'':('<button onclick="agencySeat(\''+m.email+'\','+(m.seat_paid?0:1)+')" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">'+(m.seat_paid?'↓ Starter (10)':'↑ Pro (20) · $5')+'</button> '
@@ -1245,7 +1246,8 @@ async function _renderAgency(agencyId){
       +'<td style="padding:10px;">'+m.intros+'</td>'
       +'<td style="padding:10px;font-size:11px;">'+(m.role==='admin'?'admin':((m.tier==='pro'?'Pro':'Starter')+' · '+m.status))+'</td>'
       +'<td style="padding:10px;white-space:nowrap;">'+acts+'</td></tr>';
-  }).join('');
+  }; window._agRowFn=_agRowFn;
+  const rows=window._agAgents.map(_agRowFn).join('');
   const introsTotal=(a.agents||[]).reduce(function(s,m){return s+(m.intros||0);},0);
   var opsBar='';
   if(localStorage.getItem('ms_superuser')==='1'){
@@ -1274,17 +1276,48 @@ async function _renderAgency(agencyId){
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">'
       +'<div style="font-weight:700;font-size:14px;margin-bottom:8px;">'+_agL('people')+'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">'
-        +'<input id="ag-inv-email" placeholder="'+_agL('ph')+'" style="flex:1;min-width:170px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
+        +'<input id="ag-inv-email" placeholder="'+_agL('ph')+'" style="flex:1;min-width:150px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
+        +'<input id="ag-inv-name" placeholder="Name (optional)" style="flex:1;min-width:110px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
+        +'<input id="ag-inv-city" placeholder="City" style="width:96px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
+        +'<input id="ag-inv-country" placeholder="CC" title="Country code e.g. ZA" maxlength="2" style="width:52px;border:1.5px solid var(--border);border-radius:10px;padding:10px;text-transform:uppercase;">'
         +'<input id="ag-inv-cap" type="number" value="10" style="width:66px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
         +'<button onclick="agencyInvite()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">'+_agL('invite')+'</button></div>'
+      +(function(){   // AGENT-FILTER-1 (17 Jul 2026, David): 200-agent orgs need search
+        var ags=window._agAgents||[]; if(ags.length<4) return '';
+        var uniq=function(k){ var s={}; ags.forEach(function(m){ var v=(m[k]||'').trim(); if(v) s[v]=1; }); return Object.keys(s).sort(); };
+        var opts=function(list,lbl){ return '<option value="">'+lbl+'</option>'+list.map(function(v){ return '<option>'+v.replace(/</g,'&lt;')+'</option>'; }).join(''); };
+        return '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
+          +'<input id="ag-flt-q" placeholder="Search name or email…" oninput="agencyAgentFilter()" style="flex:2;min-width:150px;border:1.5px solid var(--border);border-radius:10px;padding:9px;">'
+          +'<select id="ag-flt-city" onchange="agencyAgentFilter()" style="border:1.5px solid var(--border);border-radius:10px;padding:9px;">'+opts(uniq('city'),'All cities')+'</select>'
+          +'<select id="ag-flt-country" onchange="agencyAgentFilter()" style="border:1.5px solid var(--border);border-radius:10px;padding:9px;">'+opts(uniq('country'),'All countries')+'</select>'
+          +'<span id="ag-flt-count" style="align-self:center;font-size:11px;color:var(--text-3);">'+ags.length+' agents</span></div>';
+      })()
       +'<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:var(--text-3);font-size:11px;text-transform:uppercase;"><th style="padding:8px 10px;">'+_agL('person')+'</th><th style="padding:8px 10px;">Listings</th><th style="padding:8px 10px;">Trust</th><th style="padding:8px 10px;">Intros</th><th style="padding:8px 10px;">Status</th><th></th></tr></thead>'
-      +'<tbody>'+(rows||'<tr><td colspan="6" style="padding:16px;color:var(--text-3);">'+_agL('noPeople')+'</td></tr>')+'</tbody></table></div>';
+      +'<tbody id="ag-agents-tb">'+(rows||'<tr><td colspan="6" style="padding:16px;color:var(--text-3);">'+_agL('noPeople')+'</td></tr>')+'</tbody></table></div>';
+}
+function agencyAgentFilter(){   // AGENT-FILTER-1: client-side, instant, no server round-trip
+  var q=((document.getElementById('ag-flt-q')||{}).value||'').toLowerCase();
+  var fc=((document.getElementById('ag-flt-city')||{}).value||'');
+  var fn=((document.getElementById('ag-flt-country')||{}).value||'');
+  var list=(window._agAgents||[]).filter(function(m){
+    if(q && ((m.agent_name||m.name||'')+' '+(m.email||'')).toLowerCase().indexOf(q)<0) return false;
+    if(fc && (m.city||'')!==fc) return false;
+    if(fn && (m.country||'')!==fn) return false;
+    return true;
+  });
+  var tb=document.getElementById('ag-agents-tb');
+  if(tb) tb.innerHTML=list.map(window._agRowFn).join('')||'<tr><td colspan="6" style="padding:16px;color:var(--text-3);">No agents match this filter.</td></tr>';
+  var c=document.getElementById('ag-flt-count');
+  if(c) c.textContent=list.length+' of '+(window._agAgents||[]).length+' agents';
 }
 async function agencyInvite(){
   const email=(document.getElementById('ag-inv-email')||{}).value||'';
   const cap=parseInt((document.getElementById('ag-inv-cap')||{}).value||'10')||10;
   if(email.indexOf('@')<0){ showToast('Enter a valid agent email'); return; }
-  try{ const r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},body:JSON.stringify({email:email,listing_cap:cap})});
+  try{ const r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},body:JSON.stringify({email:email,listing_cap:cap,
+      name:((document.getElementById('ag-inv-name')||{}).value||'').trim()||null,
+      city:((document.getElementById('ag-inv-city')||{}).value||'').trim()||null,
+      country:((document.getElementById('ag-inv-country')||{}).value||'').trim().toUpperCase()||null})});
     const d=await r.json(); if(!r.ok){ showToast(d.detail||'Could not invite'); return; }
     showToast('Invited '+email+' — magic link sent'); _renderAgency(window._agencyId);
   }catch(e){ showToast('Could not reach server'); }
