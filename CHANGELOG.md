@@ -7,7 +7,7 @@
 - Property agency note reworded to manage-the-sale / facilitate-the-legal-steps.
 - Applied to: generator (all 28 PNGs+SVGs regenerated), ms.js Step 6 render,
   PREVIEW_LEGAL_STEP.html. legal-cards.js re-exported (data unchanged).
-- ms.js key v296 -> v297. Backups: .bak-20260717-074623. Not yet deployed.
+- ms.js key v296 -> v297. Backups: .bak-20260717-074623. SHIPPED 17 Jul (ship-20260717-0755), smoke green.
 
 ## 2026-07-17 — LEGAL-STEP-2: Step 6/6 repackaged phone-native
 - In-app legal card no longer a wide PNG: Step 6 now renders stacked, dark-theme
