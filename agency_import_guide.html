@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Agency Import Guide</title>
+<style>
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;max-width:760px;margin:0 auto;padding:28px 18px 60px;color:#1a2233;line-height:1.55;}
+h1{font-size:26px;color:#0c1a2e;border-bottom:3px solid #C8873A;padding-bottom:10px;}
+h2{font-size:18px;color:#0c1a2e;margin-top:28px;}
+code{background:#eef1f6;border-radius:4px;padding:1px 5px;font-size:13px;}
+pre{background:#0f172a;color:#a7f3d0;border-radius:10px;padding:14px;overflow-x:auto;font-size:12.5px;line-height:1.45;}
+pre code{background:none;color:inherit;padding:0;}
+em{color:#5b6577;} li{margin:4px 0;}
+.top{background:#0c1a2e;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;}
+</style></head><body>
+<div class="top"><b>TrustSquare / MarketSquare</b> — hand this page to your systems administrator together with your agency API key.</div>
+<h1>MarketSquare Agency Import Guide</h1>
+<p><em>Give this to the agency's IT person or systems administrator. One-time setup: ±1 hour.</em></p>
+<h2>How it works</h2>
+<ol>
+<li>TrustSquare invites your agents (each gets a sign-in link). Every advert you send
+   must carry the <code>agent_email</code> of an invited agent — unmatched emails are skipped.</li>
+<li>You map your system's export to the JSON below (once).</li>
+<li>POST it to <code>https://trustsquare.co/agencies/{your_id}/import</code> with your API key.</li>
+<li>You get a per-advert report back: imported / skipped / needs_review, with reasons.</li>
+<li>Adverts land as DRAFTS under each agent. Publishing requires a 50/100 quality
+   score (photos + complete fields) — thin rows are blocked with a fix list, so a
+   bad mapping can never put a weak advert in front of buyers.</li>
+</ol>
+<h2>Payload</h2>
+<pre><code class="language-json">{
+  &quot;api_key&quot;: &quot;tsq_agency_...&quot;,
+  &quot;adverts&quot;: [{
+    &quot;agent_email&quot;: &quot;agent@youragency.co.za&quot;,     // REQUIRED, must be invited
+    &quot;category&quot;: &quot;Property&quot;,                       // Property | Cars | Tutors | Services | Collectors | Adventures
+    &quot;title&quot;: &quot;...&quot;, &quot;description&quot;: &quot;...&quot;,         // will be anonymised (phones/emails stripped, AI-rewritten)
+    &quot;price&quot;: &quot;R 2 450 000&quot;,                       // free text; digits are parsed for filtering
+    &quot;city&quot;: &quot;Pretoria&quot;, &quot;suburb&quot;: &quot;Elarduspark&quot;, &quot;area&quot;: &quot;Pretoria East&quot;,
+    &quot;photos&quot;: [&quot;https://...jpg&quot;],                 // scanned; branded/flyer images are held, never stored
+
+    // Property
+    &quot;listing_type&quot;: &quot;For Sale&quot;,                   // or &quot;To Rent&quot;
+    &quot;prop_type&quot;: &quot;House&quot;, &quot;beds&quot;: 3, &quot;baths&quot;: 2, &quot;garages&quot;: 2,
+    &quot;floor_area&quot;: 180, &quot;erf_size&quot;: 800,
+    &quot;rental_status&quot;: &quot;available&quot;,                 // rentals only: available | reserved | occupied
+    &quot;available_from&quot;: &quot;2026-09-01&quot;,               // rentals only, ISO date
+
+    // Cars
+    &quot;make&quot;: &quot;Toyota&quot;, &quot;model&quot;: &quot;Hilux&quot;, &quot;variant&quot;: &quot;2.8 GD-6&quot;,
+    &quot;vehicle_year&quot;: 2019, &quot;mileage_km&quot;: 98500,
+    &quot;transmission&quot;: &quot;Automatic&quot;, &quot;fuel_type&quot;: &quot;Diesel&quot;,
+    &quot;body_type&quot;: &quot;Double cab&quot;, &quot;colour&quot;: &quot;White&quot;,
+    &quot;vehicle_specs&quot;: {&quot;engine_capacity_cc&quot;: 2755, &quot;kilowatts_kw&quot;: 150},
+
+    // Tutors: &quot;subject&quot;, &quot;level&quot;, &quot;mode&quot;
+    // Services: &quot;service_class&quot;, &quot;service_type&quot;, &quot;availability&quot;
+  }]
+}
+</code></pre>
+<h2>Rules worth knowing</h2>
+<ul>
+<li>Send only the fields that apply — missing optional fields are fine (but lower the
+  quality score; the publish gate needs 50/100).</li>
+<li>Sale listings: rental fields are ignored by design.</li>
+<li>Contact details in titles/descriptions are stripped — MarketSquare introductions
+  replace direct contact by design.</li>
+<li>Each agent has a listing cap; adverts over cap are skipped and reported.</li>
+<li>Re-running an import creates duplicates — send each advert once, or delete drafts first.</li>
+</ul>
+<p><em>Questions: support@trustsquare.co</em></p>
+</body></html>

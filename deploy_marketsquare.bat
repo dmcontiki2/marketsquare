@@ -239,6 +239,7 @@ ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %
 :: -- LEGAL-STEP-1: legal must-have cards (country/category, Step 6 of 6 in SELL flow)
 echo  [3d] Deploying legal must-have cards (assets\legal-must-haves -^> /static/legal-must-haves/)...
 ssh -n %SERVER% "mkdir -p %REMOTE%/static/legal-must-haves/ZA %REMOTE%/static/legal-must-haves/US %REMOTE%/static/legal-must-haves/UK %REMOTE%/static/legal-must-haves/AU"
+scp "%PROJECT%\agency_import_guide.html" %SERVER%:%REMOTE%/static/agency-import-guide.html
 scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
 scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
 scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/
