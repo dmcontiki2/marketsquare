@@ -11386,24 +11386,29 @@ def agency_import(agency_id: int, req: _AgencyImport):
             _price_txt = str(ad.get("price") or "POA")
             _pn_digits = re.sub(r"[^0-9.]", "", _price_txt)
             _price_num = float(_pn_digits) if _pn_digits else None
-            conn.execute(
-                "INSERT INTO listings (title, price, category, city, area, suburb, description, seller_email, listing_status, thumb_url, medium_url, "
-                "import_source, price_num, listing_type, prop_type, beds, baths, garages, floor_area, erf_size, rental_status, available_from, "
-                "subject, level, mode, service_class, service_type, availability, "
-                "make, model, variant, vehicle_year, mileage_km, transmission, fuel_type, body_type, colour, vehicle_specs) "
-                "VALUES (?,?,?,?,?,?,?,?, 'draft', ?, ?, 'agency_import', ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (t_clean, _price_txt,
-                 str(ad.get("category") or "Property"), city,
-                 str(ad.get("area") or city), str(ad.get("suburb") or city),
-                 final_desc, agent,
-                 (ph_attached[0][0] if ph_attached else None),
-                 (ph_attached[0][1] if ph_attached else None),
-                 _price_num, _lt, _imp_s("prop_type"), _imp_i("beds"), _imp_i("baths"), _imp_i("garages"),
-                 _imp_i("floor_area"), _imp_i("erf_size"), _rs, _af,
-                 _imp_s("subject"), _imp_s("level"), _imp_s("mode"),
-                 _imp_s("service_class"), _imp_s("service_type"), _imp_s("availability"),
-                 _imp_s("make"), _imp_s("model"), _imp_s("variant"), _imp_i("vehicle_year"), _imp_i("mileage_km"),
-                 _imp_s("transmission"), _imp_s("fuel_type"), _imp_s("body_type"), _imp_s("colour"), _vspecs))
+            _imp_cols = ["title","price","category","city","area","suburb","description","seller_email",
+                         "listing_status","thumb_url","medium_url","import_source","price_num",
+                         "listing_type","prop_type","beds","baths","garages","floor_area","erf_size",
+                         "rental_status","available_from","subject","level","mode","service_class",
+                         "service_type","availability","make","model","variant","vehicle_year",
+                         "mileage_km","transmission","fuel_type","body_type","colour","vehicle_specs"]
+            _imp_vals = [t_clean, _price_txt,
+                         str(ad.get("category") or "Property"), city,
+                         str(ad.get("area") or city), str(ad.get("suburb") or city),
+                         final_desc, agent,
+                         "draft",
+                         (ph_attached[0][0] if ph_attached else None),
+                         (ph_attached[0][1] if ph_attached else None),
+                         "agency_import", _price_num,
+                         _lt, _imp_s("prop_type"), _imp_i("beds"), _imp_i("baths"), _imp_i("garages"),
+                         _imp_i("floor_area"), _imp_i("erf_size"), _rs, _af,
+                         _imp_s("subject"), _imp_s("level"), _imp_s("mode"),
+                         _imp_s("service_class"), _imp_s("service_type"), _imp_s("availability"),
+                         _imp_s("make"), _imp_s("model"), _imp_s("variant"), _imp_i("vehicle_year"),
+                         _imp_i("mileage_km"), _imp_s("transmission"), _imp_s("fuel_type"),
+                         _imp_s("body_type"), _imp_s("colour"), _vspecs]
+            assert len(_imp_cols) == len(_imp_vals)   # poka-yoke: lists move together
+            conn.execute("INSERT INTO listings (" + ",".join(_imp_cols) + ") VALUES (" + ",".join("?" * len(_imp_cols)) + ")", _imp_vals)
             imported += 1
             rows.append({"title": t_clean[:80], "agent_email": agent,
                          "needs_review": row_needs_review, "removed": removed,
