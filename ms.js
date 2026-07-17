@@ -8520,17 +8520,29 @@ function renderEditForm(raw) {
       ${sugHtml}</div>`;
   }).join('');
 
-  // -- Rental availability control (Property only) -- seller flips this as the unit fills/frees --
+  // -- Rental availability control (Property RENTALS only; RENT-GATE-1 17 Jul 2026, David:
+  // sale listings were shown rental inputs) -- seller flips this as the unit fills/frees --
   if ((elCurrentCat||'').toLowerCase().indexOf('property')===0) {
     var _rs = (raw.rental_status || 'available');
     var _af = (raw.available_from ? String(raw.available_from).slice(0,10) : '');
     var _mk = function(v,l){ return '<option value="'+v+'"'+(_rs===v?' selected':'')+'>'+l+'</option>'; };
+    var _isRentLt = function(lt){ return /rent|to let|to-let|rental/i.test(String(lt||'')); };
+    var _rentNow = _isRentLt(raw.listing_type) ||
+      (!raw.listing_type && /for rent|per month|monthly rent|to let|to-let|rental/i.test(String(raw.description||'')));
     container.innerHTML +=
-      '<div class="el-field"><label>Availability</label>'
+      '<div id="el-rental-avail" style="display:'+(_rentNow?'block':'none')+';">'
+      + '<div class="el-field"><label>Availability</label>'
       + '<select id="elf-rental_status">' + _mk('available','Available') + _mk('reserved','Under application / Reserved') + _mk('occupied','Occupied') + '</select>'
       + '<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Change this as your rental fills or frees up. Occupied stays listed but is badged and ranked lower; buyers can still register interest.</div></div>'
       + '<div class="el-field"><label>Available from <span style="font-weight:400;text-transform:none;font-size:10px;">(optional - blank means available now)</span></label>'
-      + '<input type="date" id="elf-available_from" value="' + _af + '"></div>';
+      + '<input type="date" id="elf-available_from" value="' + _af + '"></div>'
+      + '</div>';
+    // Live toggle when the seller changes Listing type on this same form
+    var _ltSel = document.getElementById('elf-listing_type');
+    if (_ltSel) _ltSel.addEventListener('change', function(){
+      var w = document.getElementById('el-rental-avail');
+      if (w) w.style.display = _isRentLt(this.value) ? 'block' : 'none';
+    });
   }
 }
 
@@ -9035,8 +9047,10 @@ async function saveEditedListing() {
   // Rental availability (Property only -- these controls render for Property listings)
   var _elRs = document.getElementById('elf-rental_status');
   var _elAf = document.getElementById('elf-available_from');
-  if (_elRs) payload.rental_status  = _elRs.value;
-  if (_elAf) payload.available_from = _elAf.value;  // '' clears the date (renders as Available now)
+  var _elRw = document.getElementById('el-rental-avail');
+  var _elRentVisible = _elRw ? _elRw.style.display !== 'none' : true;  // RENT-GATE-1
+  if (_elRs && _elRentVisible) payload.rental_status  = _elRs.value;
+  if (_elAf && _elRentVisible) payload.available_from = _elAf.value;  // '' clears the date (renders as Available now)
   // Include updated photo_urls and always sync thumb/medium to position 0
   if (_elPhotoUrls && _elPhotoUrls.length) {
     payload.photo_urls  = JSON.stringify(_elPhotoUrls);
