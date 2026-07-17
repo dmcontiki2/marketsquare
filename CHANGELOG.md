@@ -1,4 +1,15 @@
 
+## Session 141 — P1 LIVE-VERIFIED on the cockpit
+- Registry card live on Page-4 (David-run deploy_bit_monitoring + 2 backend deploys):
+  Anthropic ACTIVE / Scaleway EU STANDBY (mistral-small, qwen3-235b-instruct, qwen3.6-vl)
+  / OpenAI DISABLED-no-key; per-provider Test; Activate with eval-pending warning.
+- Live proof on the dashboard: '✓ scaleway (mistral-small-3.2-24b-instruct-2506):
+  TrustSquare AI provider test OK. [14+8 tok]' — Paris inference from the cockpit button.
+- ENVKEY-1 en route: systemd does not export the .env to the process; seam now reads
+  the .env directly as fallback (fixed scaleway available:false).
+- Remaining for P2: breaker + heartbeat feeding live status/latency onto this card;
+  golden-set eval run gates the Addendum-2 cheap-lane inversion.
+
 ## Session 141 — P1 BUILT: provider registry (Scaleway EU joins the seam)
 - ai_provider.py: _scaleway adapter (OpenAI-compatible, SCALEWAY_API_KEY/FAILOVER_API_KEY,
   reasoning-field fallback for Qwen); TASK_MODEL scaleway row (mistral-small fast,
