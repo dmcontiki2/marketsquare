@@ -46,3 +46,34 @@
   on long unsupervised runs costs more in David's verification time than tokens saved).
 - Vendor swap as jurisdiction hedge (posture note stands: only open-weight self-hosted
   insulates).
+
+
+---
+
+## Addendum 1 — Startup-phase cost posture (David's ruling, 17 Jul 2026, in-session)
+
+David's words in substance: this is a BUSINESS decision, not a political one. Ruling:
+
+1. **Cost leads in the startup phase.** While we operate outside the US (Stripe gap;
+   launch focus ZA + EU/UK/AUS), the cheap open-weight lane (Kimi, DeepSeek, Qwen,
+   Mistral) is a first-class vendor option, not a contingency shelf.
+2. **The route is EU-hosted open weights** — which happens to be BOTH the cheapest and
+   the GDPR/POPIA-clean route, so there is no cost-vs-compliance trade to argue about:
+   - EU-resident inference hosts (all OpenAI-compatible, EU datacenters, no training on
+     prompts): Scaleway (FR), OVHcloud AI Endpoints (FR), Nebius Token Factory (NL);
+     EU routing layer: eurouter.ai (EU-residency OpenRouter equivalent).
+   - OpenRouter itself is a US company routing globally — fine as a catalog/testing key,
+     NOT an EU-residency answer.
+3. **Kimi K3 path:** weights release ~27 Jul 2026 → wait for an EU host / eurouter to
+   serve them → golden-set eval → into the per-task chains. Until then the open lane
+   runs on DeepSeek/Qwen-class weights (available on EU hosts today). Moonshot's direct
+   API is not needed for any of this.
+4. **OpenAI key demoted to optional** (auditor-role purity only); the priority keys are:
+   ONE EU open-weights host (Scaleway or OVH — David picks) + optionally eurouter/
+   OpenRouter for breadth. The 11-Jul "ChatGPT second vendor" clause is amended
+   accordingly for the startup phase; revisit at US market entry.
+5. PII handling is unchanged and costs nothing under this route: EU hosts hold the data
+   under EU law. Recorded as a compliance line-item, not a political position.
+
+*Recorded by Claude from David's in-session ruling; supersedes conflicting lines above
+for the startup phase.*
