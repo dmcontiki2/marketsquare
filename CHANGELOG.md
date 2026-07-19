@@ -17,8 +17,15 @@
   + playbook PDF, + showcase page.
 - Tests: test_estate_agents.py — 52 functional checks green (all three verticals: gates, NQF chain,
   anonymisation, rank maths, vertical separation, banding, intro lifecycle, 1T ledger, guards, reveals).
-- Deploy: via sandbox SSH mirroring the bat (Windows bat not runnable in sandbox); server backups taken;
-  smoke + /agents/template live checks below.
+- Deploy: via sandbox SSH mirroring the bat (Windows bat not runnable in sandbox); server backups
+  main.py/index.html/ms.js .bak-agentsvc-20260719-133459; md5 parity x4 (ms.js 49fa3e7, main.py 706f247,
+  estate_agents.py 95cee5c, index.html d65c584); server AST OK; restart active; /health ok v1.3.1.
+- Smoke (LIVE, 19 Jul ~13:37 SAST): homepage 200 in 182ms, ms.js?v=319 served (200), no error strings,
+  agent-suite screen + tour-agent pill present in served HTML; /agents/template live (v2.0, 3 verticals);
+  /agents/pitch?vertical=travel live; showcase + guide + playbook PDF all 200 after chmod 644 fix
+  (scp had carried sandbox 700 perms -> initial 403 on the NEW showcase file, caught by smoke, fixed);
+  showcase content sentinel found; nginx reloaded; CF purge OK. Rollback: tag ship-20260719-agentsvc +
+  server .bak-agentsvc-* files. VERDICT: GREEN.
 
 ## Session 142 (cont.) — HMI-2 SHIPPED: detail layout reordered to the WeBuyCars structure (ms.js v314)
 - openDetail order now: title/location -> PRICE block -> summary tiles (catSummary / vehQuickSpec)
