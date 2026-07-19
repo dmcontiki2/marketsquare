@@ -1,9 +1,25 @@
 # Cost-Compliance Sweep — 2026-07-18
-_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `.`._
+_Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sweep is static + $0; scanned 7 repos under `.`. Wrapper-compliance detection updated 18 Jul 2026 to also recognize ai_provider.complete() call sites (previously missed 12 refactored endpoints)._
 
 ## Wrapper compliance — every AI call ceiling-checked + spend-logged (P2)
 
+- ✅ **OK** — bea_main.py:3098 `_vision_orient_image` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:4483 `aa_market_note` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:4595 `listing_draft_from_photos` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:4663 `listing_draft_from_photo` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:4758 `aa_coach` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8323 `trust_score_guidance` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:8573 `trust_score_upload_comment` — ceiling ✓ spend-log ✓
+- 🟠 **WARN** — bea_main.py:9117 `_sonnet_verify_identity` — helper; caller logs spend, but add a ceiling check
+- 🟠 **WARN** — bea_main.py:10662 `_anon_ai_rewrite` — helper; caller logs spend, but add a ceiling check
 - ✅ **OK** — bea_main.py:12337 `vision_draft` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:12796 `ai_listing_rewrite` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:12878 `ai_seller_audit` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:13387 `ai_price_check` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:13698 `ai_yield_calc` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:13928 `ai_batch_card_listings` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:14188 `_classify_email` — ceiling ✓ spend-log ✓
+- ✅ **OK** — bea_main.py:14616 `grade_card_condition` — ceiling ✓ spend-log ✓
 - ✅ **OK** — advert_agent.py:785 `run_model` — metered via Tuppence hold/settle
 
 ## Model discipline — Haiku unless paid + metered (P1)
@@ -66,4 +82,4 @@ _Principles: P1 $0-first · P2 budget every call · P3 independence/hot-swap. Sw
 - **Paid data feeds** (66): `MarketSquare/ai_service_tiers.py:19`, `MarketSquare/ai_service_tiers.py:110`, `MarketSquare/ai_service_tiers.py:111`, `MarketSquare/ai_service_tiers.py:113`, `MarketSquare/ai_service_tiers.py:198`, `MarketSquare/ai_service_tiers.py:199`, `MarketSquare/ai_service_tiers.py:206`, `MarketSquare/ai_service_tiers.py:207`, `MarketSquare/ai_service_tiers.py:238`, `MarketSquare/ai_service_tiers.py:239`, `MarketSquare/ai_service_tiers.py:243`, `MarketSquare/ai_service_tiers.py:244` …
 - **Paystack (txn)** (2): `MarketSquare/payments.py:32`, `MarketSquare/subscription_monitor.py:157`
 
-**Totals:** 0 critical · 0 warnings · 8 ok · 27 info
+**Totals:** 0 critical · 2 warnings · 22 ok · 27 info

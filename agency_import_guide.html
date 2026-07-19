@@ -14,6 +14,11 @@ em{color:#5b6577;} li{margin:4px 0;}
 <div class="top"><b>TrustSquare / MarketSquare</b> — hand this page to your systems administrator together with your agency API key.</div>
 <h1>MarketSquare Agency Import Guide</h1>
 <p><em>Give this to the agency's IT person or systems administrator. One-time setup: ±1 hour.</em></p>
+<div style="background:#eaf0fa;border:1.5px solid #2F5496;border-radius:10px;padding:11px 14px;font-size:13.5px;line-height:1.5;margin:12px 0;">
+🎯 <b>Selling the idea first?</b> Open the visual buy-in page — all three categories, the three screens each
+prospect and agent sees, the scores and the 1-Tuppence lead deal:
+<a href="/static/agents-as-a-service.html" style="font-weight:700;">Agents as a Service — the showcase</a>
+</div>
 <h2>How it works</h2>
 <ol>
 <li>TrustSquare invites your agents (each gets a sign-in link). Every advert you send
@@ -25,6 +30,65 @@ em{color:#5b6577;} li{margin:4px 0;}
    score (photos + complete fields) — thin rows are blocked with a fix list, so a
    bad mapping can never put a weak advert in front of buyers.</li>
 </ol>
+<h2>Step 0 — Bulk-onboard your agents (the roster)</h2>
+<p>Before adverts, send your people. One POST creates every agent's account, listing cap
+<b>and</b> their anonymous professional service profile — the profile MarketSquare shows to
+private sellers and holiday searchers choosing an agent, ranked by <b>Best Match</b>
+(50% listing quality + 50% trust score).</p>
+<pre><code>POST https://trustsquare.co/agencies/{your_id}/agents/bulk
+{
+  "vertical": "property",            // property | cars | travel — or per-agent
+  "agents": [{
+    "email": "ann@youragency.co.za", "name": "Ann Smith",
+    "city": "Pretoria", "country": "ZA", "suburbs": "Waterkloof, Brooklyn",
+    "years_experience": 12, "properties_sold": 240, "listing_cap": 10,
+    "headline": "Waterkloof specialist — sectional title expert",
+    "bio": "30+ words, anonymous — no names, no agency brand",
+    // property: "ppra_number", "ffc_year", "nqf_level" (4|5|6), "body_memberships"
+    // cars:     "mira_number", "inspection_partner"
+    // travel:   "asata_number", "iata_code", "cipc_number", "bonding_proof"
+  }]
+}</code></pre>
+<p>Credential claims land as <b>pending</b> — ops verifies each against the issuing register
+before a single trust point is awarded. Until the gate credential is verified the agent's
+service profile cannot go live. That verification <em>is</em> the selling point: your agents
+appear to prospects as proven professionals — ranked, badged, anonymous until introduced.</p>
+
+<h2>One system, three categories — how your agents get leads</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:14px 0;">
+  <div style="border:1px solid #dbe2ec;border-radius:12px;overflow:hidden;">
+    <div style="background:#0c1a2e;color:#fff;padding:9px 12px;font-weight:700;font-size:14px;">🏡 Properties</div>
+    <div style="padding:10px 12px;font-size:12.5px;line-height:1.5;">
+      <b>Prospect:</b> private seller in the sell flow<br>
+      <b>Gate:</b> <span style="background:#e7f3ec;color:#1e7d4f;border-radius:8px;padding:1px 7px;font-weight:700;">FFC verified</span> + PPRA, NQF, body<br>
+      <b>Pitch to seller:</b> pricing · legal compliance · qualified buyers · negotiation<br>
+      <b>Agent sees:</b> seller trust score + property summary, seller anonymous</div>
+  </div>
+  <div style="border:1px solid #dbe2ec;border-radius:12px;overflow:hidden;">
+    <div style="background:#0c1a2e;color:#fff;padding:9px 12px;font-weight:700;font-size:14px;">🚗 Cars</div>
+    <div style="padding:10px 12px;font-size:12.5px;line-height:1.5;">
+      <b>Prospect:</b> private seller in the sell flow<br>
+      <b>Gate:</b> <span style="background:#e7f3ec;color:#1e7d4f;border-radius:8px;padding:1px 7px;font-weight:700;">MIRA verified</span> + inspection partner<br>
+      <b>Pitch to seller:</b> real market price · NATIS + RWC paperwork · finance settled · safe viewings<br>
+      <b>Agent sees:</b> seller trust score + vehicle, finance status, papers</div>
+  </div>
+  <div style="border:1px solid #dbe2ec;border-radius:12px;overflow:hidden;">
+    <div style="background:#0c1a2e;color:#fff;padding:9px 12px;font-weight:700;font-size:14px;">🧳 Trips</div>
+    <div style="padding:10px 12px;font-size:12.5px;line-height:1.5;">
+      <b>Prospect:</b> holiday searcher on the Adventures page (a buyer!)<br>
+      <b>Gate:</b> <span style="background:#e7f3ec;color:#1e7d4f;border-radius:8px;padding:1px 7px;font-weight:700;">ASATA verified</span> + CIPC, IATA, bonding<br>
+      <b>Pitch to searcher:</b> package rates · vetted operators · bonded payments · rescue when it goes wrong<br>
+      <b>Agent sees:</b> traveller trust score + dream-trip request, no listing needed</div>
+  </div>
+</div>
+<div style="background:#eef4ec;border-left:4px solid #1e7d4f;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.55;">
+  <b>The deal — identical across all three:</b> the prospect picks from an anonymous ranked list, free.
+  Your agent accepts the lead at <b>1 Tuppence</b> or declines free. Contact is revealed both ways on
+  accept only. Three scores do three jobs: <b>Trust Score</b> = the person (verified credentials only) ·
+  <b>Listing Quality</b> = the advert (0–100, publish bar 50) · <b>Best Match Rank</b> = 50/50 blend that
+  orders the list. No lead brokers, no bought leads, no cold calls — prospects choose your agents.
+</div>
+
 <h2>Payload</h2>
 <pre><code class="language-json">{
   &quot;api_key&quot;: &quot;tsq_agency_...&quot;,

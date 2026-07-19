@@ -49,8 +49,11 @@ TASK_MODEL = {
     # Scaleway EU (P1) — canon lives HERE per seam philosophy; deliberately ignores FAILOVER_MODEL_* env
     # (those belong to failover/ai_backends.py). Reasoning tier uses the non-thinking instruct variant
     # (qwen3.5-397b overthinks short tasks — live demo finding 17 Jul).
-    "scaleway":  {"haiku":"mistral-small-3.2-24b-instruct-2506","sonnet":"qwen3-235b-a22b-instruct-2507",
-                  "vision":"qwen3.6-35b-a3b","triage":"mistral-small-3.2-24b-instruct-2506"},
+    "scaleway":  {"haiku":"mistral-medium-3.5-128b","sonnet":"mistral-medium-3.5-128b",
+                  "vision":"mistral-medium-3.5-128b","triage":"mistral-medium-3.5-128b"},
+    # ONE-MODEL STANDBY (David's ruling, 18 Jul 2026): whole row = mistral-medium-3.5-128b.
+    # Golden-set basis same day: 7/7 text + 2/2 vision (qwen3.6 failed vision JSON; qwen3-235b
+    # failed 1/7 adverts). One standby = one behaviour to know. Prior row ids in CHANGELOG.
 }
 
 @dataclass
@@ -63,14 +66,21 @@ def _anthropic(messages, model, max_tokens, system, timeout=30):
     if not key: return AIResult("",None,None,"anthropic",model,ok=False)
     body={"model":model,"max_tokens":max_tokens,"messages":messages}
     if system: body["system"]=system
-    with httpx.Client(timeout=timeout) as c:
-        r=c.post("https://api.anthropic.com/v1/messages",
-                 headers={"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json"},
-                 json=body)
-    j=r.json()
-    text=(j.get("content",[{}])[0].get("text","") or "")
-    u=j.get("usage",{}) or {}
-    return AIResult(text, u.get("input_tokens"), u.get("output_tokens"), "anthropic", model)
+    # FAILOVER-PARITY-1 (18 Jul 2026): try/except + status/text ok-check, same rule as _scaleway.
+    # Without this, an outage RAISED out of complete() and a ban/429 returned ok=True with empty
+    # text — neither triggered the any-of fallback. Now both degrade to the standby lane per call.
+    try:
+        with httpx.Client(timeout=timeout) as c:
+            r=c.post("https://api.anthropic.com/v1/messages",
+                     headers={"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json"},
+                     json=body)
+        j=r.json()
+        text=(j.get("content",[{}])[0].get("text","") or "")
+        u=j.get("usage",{}) or {}
+        return AIResult(text, u.get("input_tokens"), u.get("output_tokens"), "anthropic", model,
+                        ok=(r.status_code==200 and bool(text)))
+    except Exception:
+        return AIResult("",None,None,"anthropic",model,ok=False)
 
 def _to_openai_messages(messages, system):
     """Translate the app's Anthropic-style content-block messages -> OpenAI chat format.

@@ -105,3 +105,49 @@ Operational meaning — this INVERTS Addendum 1's default for the launch phase:
 
 Consequence for the build: P0 (call-site migration) is now the single highest-leverage
 task in the project — it is what makes per-task cheap routing possible at all.
+
+
+## Addendum 3 (18 Jul 2026) — Stability over price-chasing; bans are the exception
+
+David's ruling: cheapest-model churn is a hidden cost, not a saving. If the app
+re-picks its models every month as vendors compete on price, every swap costs
+prompt re-tuning, golden-set re-runs, and behavior drift that users feel.
+Stability outranks cost.
+
+- Switch models on MEASURED FAILURE or FORCED EXIT only — never because a rival
+  got cheaper this month. Price movements elsewhere are noted (at /housekeep) as
+  fallback intelligence, not acted on.
+- The one thing that legitimately breaks stability is a BAN (vendor account,
+  geopolitical, export rule) — it forces a switch at a random moment. Therefore
+  stability = a tested switching path, not an unchanging vendor: the standby
+  lane stays warm and probed (seam architecture, T3 ban trip demonstrated
+  17 Jul), so a ban degrades to a switch-flip on the +1 Executive page.
+
+## Addendum 4 (18 Jul 2026) — Don't change tools mid-design (David's ruling, in-session)
+
+- **Haiku 4.5 STAYS the production model for the app's haiku-class calls.**
+  Not on cost grounds — the 18 Jul golden-set evals showed Mistral-Medium
+  3.5-128B at quality parity (11/11 JSON incl. 2/2 vision on real photos) at
+  ~40% of Haiku's cost with better latency from the box. The ruling is an
+  aviation-electronics discipline: **do not change a tested, working tool
+  mid-design.** Haiku has months of production history and prompts tuned to
+  its behaviour; Medium has 20 eval calls. Switch when forced (ban, vendor
+  exit, pricing shock, sustained outage) — then it is a different decision
+  and the answer is already staged.
+- **Mistral-Medium 3.5-128B is the DESIGNATED swap-out** in the "+1" registry
+  card (TASK_MODEL scaleway haiku slot, shipped Session 142, live-verified).
+  Triage stays mistral-small; vision slot pending (qwen3.6 failed the 18 Jul
+  vision gate; Medium passed 2/2 and is the candidate when revisited).
+- **Preconditions bound to ANY future flip** (carried from the evals, still
+  open): (1) verify Medium pricing on the Scaleway console, (2) ship the
+  Quality-Score >= 60 routing floor — sparse input makes EVERY cheap-lane
+  model fabricate, Medium included, (3) breaker/heartbeat (P2) + a shadow
+  period to build a track record.
+- **Update (18 Jul, later):** David collapsed the standby row to ONE model —
+  mistral-medium-3.5-128b for all four tiers (small + both qwens retired from
+  the row). Rationale: one standby = one tested behaviour; Medium passed every
+  gate the others failed. Preconditions above unchanged.
+- QA note (David): the Haiku -> Sonnet quality step observed in the evals is
+  valued; Sonnet 4.6 remains the quality-ceiling reference for advert copy
+  (with the caveat that even Sonnet fabricated once — the no-invention guard
+  lives in the prompt, not the model choice).

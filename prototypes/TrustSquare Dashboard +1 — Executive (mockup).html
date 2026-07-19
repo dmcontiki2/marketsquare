@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare Dashboard · +1 · Executive (mockup)</title>
+<style>
+  body { margin:0; background:#05070d; font-family: Inter, system-ui, sans-serif; padding:24px; display:flex; justify-content:center; }
+  .frame { max-width:900px; width:100%; }
+  a { color:#3b82f6; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="frame">
+<div style="background:#0b0f1a; border-radius:10px; border:1px solid #1e2d40; padding:18px; color:#e2e8f0;">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:15px; font-weight:600;">&#128274; +1 &middot; Executive</span>
+      <span style="font-size:11px; color:#64748b; border:1px solid #1e2d40; border-radius:99px; padding:2px 8px;">owner only</span>
+    </div>
+    <div style="display:flex; gap:6px; font-size:12px;">
+      <span style="background:#1a2232; border:1px solid #3b82f6; border-radius:6px; padding:4px 10px;">Command</span>
+      <span style="border:1px solid #1e2d40; color:#64748b; border-radius:6px; padding:4px 10px;">Money</span>
+      <span style="border:1px solid #1e2d40; color:#64748b; border-radius:6px; padding:4px 10px;">People</span>
+    </div>
+  </div>
+
+  <div style="font-size:11px; letter-spacing:0.08em; color:#64748b; margin:4px 0 8px;">COMMAND &mdash; MASTER OVERRIDES</div>
+  <div style="display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:10px;">
+    <div style="background:#111827; border:1px solid #1e2d40; border-radius:10px; padding:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:13px; font-weight:600;">AI provider &mdash; executive override</span>
+        <span style="font-size:11px; color:#f59e0b;">supersedes in-app redundancy</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 8px; background:#1a2232; border-radius:8px; margin-bottom:6px;">
+        <span style="font-size:13px;"><span style="color:#10b981;">&#9679;</span> Anthropic (Claude) <span style="color:#64748b; font-size:11px;">US &middot; 21/22 seams</span></span>
+        <span style="font-size:11px; color:#10b981; border:1px solid #10b981; border-radius:6px; padding:2px 8px;">ACTIVE</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 8px; margin-bottom:6px;">
+        <span style="font-size:13px; color:#94a3b8;"><span style="color:#f59e0b;">&#9679;</span> Scaleway EU <span style="color:#64748b; font-size:11px;">Paris &middot; tested 2d ago &#10003;</span></span>
+        <span style="font-size:11px; background:#1e2d40; border-radius:6px; padding:2px 10px;">Activate</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 8px;">
+        <span style="font-size:13px; color:#64748b;">&#9679; OpenAI US <span style="font-size:11px;">no key</span></span>
+        <span style="font-size:11px; color:#64748b;">disabled</span>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; min-width:0;">
+      <div style="background:#111827; border:1px solid #10b981; border-radius:10px; padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; font-weight:600;">&#128640; Launch switch</span>
+          <span style="font-size:11px; color:#10b981;">&#10003; Verified &mdash; live</span>
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">Flipped 17 Jul &middot; saved to server &middot; <span style="color:#94a3b8;">revert to Free-only</span></div>
+      </div>
+      <div style="background:#111827; border:1px solid #1e2d40; border-radius:10px; padding:12px;">
+        <div style="font-size:11px; color:#64748b; margin-bottom:6px;">Exec action log</div>
+        <div style="font-size:11px; color:#94a3b8; line-height:1.7;">17 Jul &middot; Launch &rarr; Verified<br>16 Jul &middot; Scaleway test pass<br>12 Jul &middot; Reward: +20 listings, M.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px; letter-spacing:0.08em; color:#64748b; margin:16px 0 8px;">MONEY &mdash; SUBSCRIPTIONS &amp; VENDORS</div>
+  <div style="background:#111827; border:1px solid #1e2d40; border-radius:10px; padding:4px 12px 8px;">
+    <table style="width:100%; font-size:12px; border-collapse:collapse; table-layout:fixed;">
+      <tr style="color:#64748b; text-align:left;">
+        <th style="font-weight:400; padding:8px 0; width:26%;">Service</th>
+        <th style="font-weight:400; width:12%;">Status</th>
+        <th style="font-weight:400; text-align:right; width:13%;">6m avg</th>
+        <th style="font-weight:400; text-align:right; width:13%;">3m avg</th>
+        <th style="font-weight:400; text-align:right; width:13%;">Last mo</th>
+        <th style="font-weight:400; text-align:right; width:23%;">Actions</th>
+      </tr>
+      <tr style="border-top:1px solid #1e2d40;"><td style="padding:8px 0;">Hetzner (server)</td><td><span style="color:#10b981;">&#9679; OK</span></td><td style="text-align:right; color:#94a3b8;">&euro;21.10</td><td style="text-align:right; color:#94a3b8;">&euro;21.10</td><td style="text-align:right;">&euro;21.10</td><td style="text-align:right;"><a href="#">receipt</a> &middot; <span style="color:#f59e0b;">manage</span></td></tr>
+      <tr style="border-top:1px solid #1e2d40;"><td style="padding:8px 0;">Anthropic API</td><td><span style="color:#10b981;">&#9679; OK</span></td><td style="text-align:right; color:#94a3b8;">$38.40</td><td style="text-align:right; color:#94a3b8;">$46.20</td><td style="text-align:right; color:#f59e0b;">$61.75 &uarr;</td><td style="text-align:right;"><a href="#">receipt</a> &middot; <span style="color:#f59e0b;">manage</span></td></tr>
+      <tr style="border-top:1px solid #1e2d40;"><td style="padding:8px 0;">Scaleway (standby)</td><td><span style="color:#f59e0b;">&#9679; Standby</span></td><td style="text-align:right; color:#94a3b8;">&euro;4.00</td><td style="text-align:right; color:#94a3b8;">&euro;4.00</td><td style="text-align:right;">&euro;4.00</td><td style="text-align:right;"><a href="#">receipt</a> &middot; <span style="color:#f59e0b;">manage</span></td></tr>
+      <tr style="border-top:1px solid #1e2d40;"><td style="padding:8px 0;">Paystack (fees)</td><td><span style="color:#ef4444;">&#9679; Incident</span></td><td style="text-align:right; color:#94a3b8;">R312</td><td style="text-align:right; color:#94a3b8;">R405</td><td style="text-align:right;">R488</td><td style="text-align:right;"><span style="color:#ef4444;">emergency swap</span></td></tr>
+      <tr style="border-top:1px solid #1e2d40;"><td style="padding:8px 0;">Domain + SSL</td><td><span style="color:#10b981;">&#9679; 64d</span></td><td style="text-align:right; color:#94a3b8;">$1.20</td><td style="text-align:right; color:#94a3b8;">$1.20</td><td style="text-align:right;">$1.20</td><td style="text-align:right;"><a href="#">receipt</a></td></tr>
+    </table>
+  </div>
+
+  <div style="font-size:11px; letter-spacing:0.08em; color:#64748b; margin:16px 0 8px;">MONEY &mdash; FINANCIAL DASHBOARD</div>
+  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px;">
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Bank balance</div><div style="font-size:18px; font-weight:600;">R14,280</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Cashflow (mo)</div><div style="font-size:18px; font-weight:600; color:#ef4444;">&minus;R2,140</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Overheads (mo)</div><div style="font-size:18px; font-weight:600;">R3,930</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Runway</div><div style="font-size:18px; font-weight:600; color:#f59e0b;">6.7 mo</div></div>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:8px;">
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Loss / free user</div><div style="font-size:15px; font-weight:600; color:#ef4444;">&minus;R4.10</div><div style="font-size:11px; color:#64748b;">211 users</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Income / $5 user</div><div style="font-size:15px; font-weight:600; color:#10b981;">+R61</div><div style="font-size:11px; color:#64748b;">18 users</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Income / $20 user</div><div style="font-size:15px; font-weight:600; color:#10b981;">+R270</div><div style="font-size:11px; color:#64748b;">4 users</div></div>
+    <div style="background:#111827; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">Income / features</div><div style="font-size:15px; font-weight:600; color:#10b981;">+R840</div><div style="font-size:11px; color:#64748b;">tokens, boosts</div></div>
+  </div>
+  <div style="background:#111827; border:1px solid #1e2d40; border-radius:8px; padding:8px 12px; margin-top:8px; display:flex; gap:18px; font-size:12px; color:#94a3b8; flex-wrap:wrap;">
+    <span>Lawyer <span style="color:#e2e8f0;">R1,800</span></span>
+    <span>Accountant <span style="color:#e2e8f0;">R950</span></span>
+    <span>Infra <span style="color:#e2e8f0;">R780</span></span>
+    <span>AI <span style="color:#e2e8f0;">R400</span></span>
+    <span style="margin-left:auto;"><a href="#">full statement &rarr;</a></span>
+  </div>
+
+  <div style="font-size:11px; letter-spacing:0.08em; color:#64748b; margin:16px 0 8px;">PEOPLE &mdash; USER CONSOLE</div>
+  <div style="background:#111827; border:1px solid #1e2d40; border-radius:10px; padding:12px;">
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <div style="flex:1; background:#0b0f1a; border:1px solid #1e2d40; border-radius:8px; padding:7px 10px; font-size:12px; color:#64748b;">&#128269; Search user by name, email or listing&hellip;</div>
+      <span style="font-size:12px; background:#1e2d40; border-radius:8px; padding:7px 12px;">Generate report</span>
+    </div>
+    <div style="display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:10px;">
+      <div style="background:#0b0f1a; border:1px solid #1e2d40; border-radius:8px; padding:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span style="font-size:13px; font-weight:600;">M. van Wyk <span style="color:#64748b; font-size:11px; font-weight:400;">&middot; $5 tier &middot; seller #014</span></span>
+          <span style="font-size:11px; color:#f59e0b;">3 complaints</span>
+        </div>
+        <div style="font-size:12px; color:#94a3b8; line-height:1.6;">31 listings &middot; joined Mar 2026 &middot; 9 sales &middot; last active 2d ago. Summary: reliable seller; complaints all relate to one delayed courier batch in June; buyer ratings otherwise 4.8.</div>
+        <div style="font-size:11px; margin-top:6px;"><a href="#">view complaints</a> &middot; <a href="#">full report (PDF)</a></div>
+      </div>
+      <div style="background:#0b0f1a; border:1px solid #1e2d40; border-radius:8px; padding:10px;">
+        <div style="font-size:11px; color:#64748b; margin-bottom:6px;">Executive action</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+          <span style="font-size:11px; border:1px solid #10b981; color:#10b981; border-radius:6px; padding:3px 8px;">Reward</span>
+          <span style="font-size:11px; border:1px solid #f59e0b; color:#f59e0b; border-radius:6px; padding:3px 8px;">Escalate</span>
+          <span style="font-size:11px; border:1px solid #ef4444; color:#ef4444; border-radius:6px; padding:3px 8px;">Remove / ban</span>
+        </div>
+        <div style="font-size:11px; color:#94a3b8; line-height:1.7;">Reward: tokens &middot; grace period &middot; +listings (max 50)<br>Duration: 1&ndash;3 months &middot; auto termination notice in final month</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</body>
+</html>

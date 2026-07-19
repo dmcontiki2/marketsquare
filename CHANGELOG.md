@@ -1,3 +1,97 @@
+## Session 143 — AGENT-SVC-1/2/3 SHIPPED: Professional Agents as a Service (property · cars · travel)
+- NEW module estate_agents.py (799 lines, router seam like launch_redemption; one anchored include in
+  bea_main.py): anonymised agent service profiles (Agent TS-XXXXXX), per-vertical credential slots mapped
+  1:1 onto the existing trust-signal catalog, bulk agency onboarding with PENDING credential claims
+  (score correct by construction), 50/50 quality-trust Best Match ranking, reverse INTRO at 1T
+  (agent pays on accept only; contact revealed on accept).
+- Verticals: property (FFC gate · PPRA/NQF/body), cars (MIRA gate · inspection), travel (ASATA gate +
+  CIPC submitted · IATA/bonding; leads from holiday SEARCHERS on the Adventures page — no listing needed).
+- FEA (ms.js v315->v319 + marketsquare.html): sell-flow 'agents' step for Property AND Cars between
+  legal and scorecard; Adventures 'Plan it with a tour agent' pill + panel; Agent Hub screen
+  (screen-agent-suite: profile editor with vertical toggle + leads inbox Accept-1T/Decline-free);
+  agency console Bulk add (CSV/JSON, skin -> vertical) + gold 'Agents as a Service' header link.
+- Onboarding assets: agents_as_a_service.html showcase (comparison + all three 3-screen flows) served
+  at /static/agents-as-a-service.html; Import Guide Step 0 (roster bulk onboarding) + showcase link box;
+  Playbook v3 Section 8 'Agents as a Service' + regenerated TrustSquare_Agency_Playbook.pdf.
+- deploy_marketsquare.bat: + estate_agents.py (bea_main imports it — BEA cannot boot without it),
+  + playbook PDF, + showcase page.
+- Tests: test_estate_agents.py — 52 functional checks green (all three verticals: gates, NQF chain,
+  anonymisation, rank maths, vertical separation, banding, intro lifecycle, 1T ledger, guards, reveals).
+- Deploy: via sandbox SSH mirroring the bat (Windows bat not runnable in sandbox); server backups taken;
+  smoke + /agents/template live checks below.
+
+## Session 142 (cont.) — HMI-2 SHIPPED: detail layout reordered to the WeBuyCars structure (ms.js v314)
+- openDetail order now: title/location -> PRICE block -> summary tiles (catSummary / vehQuickSpec)
+  -> trust block -> price-check/yield -> spec panel -> description (About demoted below specs).
+  Two block moves + one swap, anchor-asserted; all elements preserved, order only.
+- NOTE #246 (Figo): stays legacy-chips until specs are seller-confirmed — the D1 invariant
+  (_scrub_vehicle_specs) rightly nulls unconfirmed vehicle fields on public reads, so no DB
+  backfill was done. Seller path: Edit Listing -> confirm specs -> attest, then the full Cars
+  grid + attested badge appear.
+- Deploy: v313->v314, md5 parity 47f0f09d, CF purged, node --check OK, health ok. Live-verified
+  in Chrome (bea_192): DOM order price<tiles<trust correct, layout confirmed on screen.
+
+## Session 142 (cont.) — SELLER-CV-1 SHIPPED: seller profile shows SELLER data, not listing data (David-found)
+- Bug: openBEASellerProfile leaked the LISTING description onto the buyer-facing Seller CV
+  ("About this listing" on a seller profile) and had no seller-level data path at all.
+- BEA: new GET /sellers/summary/{listing_id} — anonymized aggregates only (active listing count,
+  categories, member-since month; status filter includes 'live'); no identity fields ever leave.
+- FEA (ms.js v313): desc block removed; "Seller overview" section async-fills from the endpoint;
+  trust-signal credentials + identity block unchanged.
+- Deployed both (backups *-sellercv), py_compile + node --check, restart, /health ok, CF purged,
+  md5 parity. Live-verified in Chrome on bea_192: '39 Active listings | May 2026 | Property',
+  listing-desc leak gone, ms.js?v=313 served.
+
+## Session 142 (cont.) — HMI-1 SHIPPED: WeBuyCars-style summary tiles + universal photo thumbs (ms.js v312)
+- catSummary(l)/catSummaryTiles/catSummaryHas added (additive): icon tile grid for
+  Property/Tutors/Services/Collectors from fields the DB stores TODAY; <3 tiles -> legacy
+  chips unchanged. Property keeps the rental pill under the grid. Cars untouched (CARS-SPEC-1).
+- Thumb strip now universal: (isAdv||isCars) condition dropped -> every multi-photo listing
+  gets showcase + selectable thumbs. Legacy chip blocks suppressed only when tiles render.
+- Deploy: ms.js v311->v312 (+2.4KB, node --check OK), static-before-html, md5 parity
+  local==origin==CDN (485f11ce), CF purged via /admin/purge-cache {purged:true}, /health ok.
+- Live-verified in Chrome on listing bea_192: 5 tiles (To Rent/apartment/1/1/0) + Available-now
+  pill + 10 thumbs + 0 console errors. Backups: ms.js/index.html *-hmi1 both sides.
+- Full HMI target (levies, qualification, guarantee tiles + dsummary price block) documented in
+  HMI_ADVERT_PROTOTYPE_2026-07-18.html — lights up as SELL-FLOW-REDO-2 data publishes.
+
+## Session 142 (cont.) — ONE-MODEL STANDBY: Scaleway row collapsed to Mistral-Medium 3.5 (David's ruling)
+- TASK_MODEL scaleway: ALL four tiers (haiku/sonnet/vision/triage) -> mistral-medium-3.5-128b.
+  Retired from the row: mistral-small (triage), qwen3-235b-instruct (sonnet — failed 1/7 adverts),
+  qwen3.6-35b-a3b (vision — failed 2/2 vision JSON). One standby model = one behaviour to know.
+- Live-verified all four tiers through the seam post-restart (haiku/sonnet/triage text OK,
+  vision answered on a real photo). Server bak-20260718-onemodel, py_compile, /health ok,
+  md5 parity local==server. Cost model impact: standby lane ~$0.4/$2 Mtok est (verify Scaleway
+  console — flip precondition). Dashboard +1 card reflects the row via /flags automatically.
+
+## Session 142 (cont.) — FAILOVER-PARITY-1: ban/outage now actually trips the auto-fallback
+- _anthropic adapter brought to parity with _scaleway: try/except around transport + ok=(status
+  200 AND non-empty text). Before: an Anthropic OUTAGE raised out of complete() (no fallback ran)
+  and a BAN/429 returned ok=True with empty text (fallback never triggered) — the two realistic
+  triggers were the two that slipped through. Now both degrade per-call to the standby lane.
+- Flip-back is inherent (stateless per-call: every call tries the active provider first), so
+  green-again = automatically back on Haiku, no agent action. Live-proven both ways: ban-sim
+  (poisoned key) -> 'scaleway mistral-medium-3.5-128b failover works'; green path -> anthropic.
+- Server: bak-20260718-anthfix, py_compile OK, restart, /health ok local+public. Local mirrored
+  from server copy, md5 parity. Remaining for the FULL expectation (P2, designed not built):
+  breaker so a sustained outage stops paying the 30-40s timeout per call + heartbeat/BIT flag on
+  the +1 card + half-open auto-close. Cost model impact: none (error-path only).
+
+## Session 142 — "+1" haiku swap: Scaleway lane upgraded to Mistral-Medium 3.5 128B (David-directed)
+- TASK_MODEL scaleway haiku: mistral-small-3.2-24b -> mistral-medium-3.5-128b (triage stays
+  mistral-small; vision slot unchanged — qwen3.6 FAILED the vision gate 18 Jul, Medium is the
+  pass candidate when that slot is revisited). AI_ACTIVE stays anthropic: standby row only.
+- Basis: golden-set evals 18 Jul (28 + 12 + 11 live calls through the seam) — Medium 11/11 JSON
+  incl. 2/2 vision on real listing photos (got Figo colour right where Haiku slipped); complete-
+  input text parity with Haiku; sparse-input fabrication SAME as Small -> QS>=60 routing floor
+  still required before any cheap-lane production flip. Eval pages: GOLDEN_EVAL_ADVERTS +
+  GOLDEN_EVAL_V2_QUALITY_TRUST (2026-07-18, MarketSquare folder).
+- Cost model impact: standby/failover fast lane now ~$0.4/$2 per Mtok (Mistral list — VERIFY on
+  Scaleway console before production flip) vs Small's $0.15/$0.35; both far under Haiku $1/$5.
+- Deployed: server ai_provider.py patched (bak-20260718-medswap), py_compile OK, BEA restarted,
+  /health ok 1.3.1 local+public, live seam test 'scaleway mistral-medium-3.5-128b OK [25+7 tok]'.
+  Local repo mirrored same anchor-asserted patch. Dashboard '+1' card reads TASK_MODEL via /flags.
+
 
 ## Session 141 — P1 LIVE-VERIFIED on the cockpit
 - Registry card live on Page-4 (David-run deploy_bit_monitoring + 2 backend deploys):

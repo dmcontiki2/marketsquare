@@ -2682,6 +2682,29 @@ def get_listing(listing_id: int):
     _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
     return _d
 
+@app.get("/sellers/summary/{listing_id}")
+def seller_summary_for_listing(listing_id: int):
+    """SELLER-CV-1: anonymized seller-level aggregates for the buyer-facing Seller CV.
+    Counts, categories and tenure ONLY - no identity fields ever leave this endpoint."""
+    conn = database.get_db()
+    row = conn.execute("SELECT seller_email FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if not row or not ((row["seller_email"] or "").strip()):
+        conn.close()
+        return {"found": False}
+    rows = conn.execute(
+        "SELECT category, COUNT(*) AS n, MIN(COALESCE(published_at, created_at)) AS first_seen "
+        "FROM listings WHERE seller_email = ? AND is_demo = 0 "
+        "AND (listing_status IS NULL OR listing_status IN ('active','live')) GROUP BY category",
+        (row["seller_email"],)).fetchall()
+    conn.close()
+    if not rows:
+        return {"found": False}
+    cats = {r["category"]: r["n"] for r in rows}
+    firsts = [r["first_seen"] for r in rows if r["first_seen"]]
+    return {"found": True, "active_listings": sum(cats.values()), "categories": cats,
+            "member_since": (min(firsts)[:7] if firsts else None)}
+
+
 @app.put("/listings/{listing_id}")
 def update_listing(listing_id: int, update: ListingUpdate, background_tasks: BackgroundTasks, email: Optional[str] = None):
     """Update a published listing.
@@ -14831,6 +14854,17 @@ def grading_review(request: Request):
 
 # ── Founders Badge / Launch Special routes (Canon Addendum 1) — env-gated OFF ──
 app.include_router(launch_redemption.router)
+
+# ── AGENT-SVC-1 (19 Jul 2026): Estate Agents as a Service ────────────────────
+# Agent listing template + anonymised profiles + agency bulk onboarding with
+# pending credential claims + local 50/50 quality-trust ranking + seller→agent
+# reverse INTRO at 1T. Module: estate_agents.py (router seam, like
+# launch_redemption). Anon + quality scoring injected from this file so both
+# sides always use the same passes.
+import estate_agents
+estate_agents.configure(anon_fn=_anon_regex_clean, quality_fn=_import_quality_score)
+estate_agents.init_schema()
+app.include_router(estate_agents.router)
 
 # ═══ AI FEATURE HOLD LEDGER (AdvertAgent service · commit→burn→release) ═══
 # Canonical Tuppence HOLD model (Codex v4.8 / C10–C13): commit-on-request,

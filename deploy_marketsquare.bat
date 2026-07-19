@@ -240,6 +240,9 @@ ssh -n -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 %
 echo  [3d] Deploying legal must-have cards (assets\legal-must-haves -^> /static/legal-must-haves/)...
 ssh -n %SERVER% "mkdir -p %REMOTE%/static/legal-must-haves/ZA %REMOTE%/static/legal-must-haves/US %REMOTE%/static/legal-must-haves/UK %REMOTE%/static/legal-must-haves/AU"
 scp "%PROJECT%\agency_import_guide.html" %SERVER%:%REMOTE%/static/agency-import-guide.html
+:: AGENT-SVC (19 Jul 2026): agency playbook PDF - console 'User manual' button links it; was uploaded manually before
+scp "%PROJECT%\TrustSquare_Agency_Playbook.pdf" %SERVER%:%REMOTE%/static/TrustSquare_Agency_Playbook.pdf
+scp "%PROJECT%\agents_as_a_service.html" %SERVER%:%REMOTE%/static/agents-as-a-service.html
 scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
 scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
 scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/
@@ -324,6 +327,14 @@ if %errorlevel% neq 0 (
 scp "%PROJECT%\launch_redemption.py" %SERVER%:%REMOTE%/launch_redemption.py
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for launch_redemption.py. Check SSH connection.
+    pause
+    exit /b 1
+)
+
+:: AGENT-SVC (19 Jul 2026): professional-agents module - bea_main imports it; BEA cannot boot without it
+scp "%PROJECT%\estate_agents.py" %SERVER%:%REMOTE%/estate_agents.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for estate_agents.py. Check SSH connection.
     pause
     exit /b 1
 )

@@ -100,7 +100,12 @@ def wrapper_compliance(root: Path):
             # (_ts_ai_url / _ts_ai_headers, added Jun 2026). An endpoint that
             # POSTs to _ts_ai_url() IS an Anthropic call site even though the
             # literal "api.anthropic.com" no longer appears in its body.
-            INDIRECT = ("_ts_ai_url(" in seg) or ("_ts_ai_headers(" in seg)
+            # ai_provider.complete is the shared multi-provider call helper
+            # (added mid-Jun 2026); functions that route through it no longer
+            # reference _ts_ai_url/_ts_ai_headers directly, so it must count too
+            # (sweep blind-spot found 18 Jul 2026 — 12 compliant endpoints had gone
+            # dark to this check even though ceiling+log were still present).
+            INDIRECT = ("_ts_ai_url(" in seg) or ("_ts_ai_headers(" in seg) or ("ai_provider.complete" in seg)
             DIRECT   = ("api.anthropic.com" in seg) or ("ANTHROPIC_URL" in seg)
             # ...but the helpers themselves are resolvers, not call sites:
             # skip their own defs so the URL dict isn't mis-flagged as unmetered.

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustSquare — Agent Service Flow (mockup, AGENT-SVC-1)</title>
+<style>
+  :root { --navy:#0e2a47; --navy2:#16395e; --gold:#c9a227; --bg:#f4f6f9; --ok:#1e7d4f; --amber:#b07a10; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:#20304a; padding:24px; }
+  h1 { color:var(--navy); font-size:1.3rem; margin-bottom:4px; }
+  .sub { color:#5b6b82; font-size:.85rem; margin-bottom:22px; }
+  .panes { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  .phone { width:340px; background:#fff; border-radius:18px; box-shadow:0 6px 24px rgba(14,42,71,.15); overflow:hidden; }
+  .phead { background:var(--navy); color:#fff; padding:12px 16px; font-weight:600; font-size:.95rem; }
+  .phead small { display:block; font-weight:400; opacity:.75; font-size:.72rem; }
+  .pbody { padding:14px 16px 18px; }
+  .adv { list-style:none; }
+  .adv li { padding:7px 0 7px 26px; position:relative; font-size:.84rem; line-height:1.35; border-bottom:1px dashed #e3e8ef; }
+  .adv li::before { content:"✓"; position:absolute; left:2px; color:var(--ok); font-weight:700; }
+  .legal { background:#fdf6e3; border-left:4px solid var(--gold); padding:10px 12px; border-radius:6px; font-size:.78rem; margin:12px 0; line-height:1.4; }
+  .cta { display:block; width:100%; background:var(--navy); color:#fff; border:0; padding:12px; border-radius:10px; font-size:.9rem; font-weight:600; cursor:pointer; }
+  .cta.ghost { background:#fff; color:var(--navy); border:1.5px solid var(--navy); margin-top:8px; }
+  .agent { border:1px solid #e0e6ee; border-radius:12px; padding:12px; margin-bottom:12px; }
+  .agent.top { border:2px solid var(--gold); position:relative; }
+  .agent.top::after { content:"BEST MATCH"; position:absolute; top:-9px; right:10px; background:var(--gold); color:#fff; font-size:.6rem; font-weight:700; padding:2px 8px; border-radius:8px; letter-spacing:.05em; }
+  .arow { display:flex; justify-content:space-between; align-items:center; }
+  .aref { font-weight:700; color:var(--navy); font-size:.9rem; }
+  .chip { display:inline-block; background:#eef2f7; border-radius:10px; padding:2px 8px; font-size:.66rem; margin:3px 3px 0 0; color:#3a4c66; }
+  .chip.cert { background:#e7f3ec; color:var(--ok); font-weight:600; }
+  .score { text-align:center; }
+  .score b { display:block; font-size:1.15rem; color:var(--navy); }
+  .score small { font-size:.6rem; color:#7a8aa0; }
+  .meta { font-size:.75rem; color:#51617a; margin-top:6px; line-height:1.45; }
+  .bars { display:flex; gap:10px; margin-top:8px; }
+  .bar { flex:1; }
+  .bar small{ font-size:.62rem; color:#7a8aa0; }
+  .track { height:6px; background:#e8edf3; border-radius:3px; margin-top:2px; }
+  .fill { height:6px; border-radius:3px; background:linear-gradient(90deg,var(--navy2),var(--gold)); }
+  .pick { margin-top:10px; width:100%; background:var(--navy); color:#fff; border:0; padding:9px; border-radius:8px; font-size:.8rem; font-weight:600; cursor:pointer; }
+  .lead { background:#f7f9fc; border:1px solid #e0e6ee; border-radius:12px; padding:12px; }
+  .trustbig { display:flex; align-items:center; gap:10px; margin:10px 0; }
+  .ring { width:54px; height:54px; border-radius:50%; border:5px solid var(--ok); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--navy); background:#fff; }
+  .accept { display:flex; gap:8px; margin-top:12px; }
+  .accept .yes { flex:2; background:var(--ok); color:#fff; border:0; padding:11px; border-radius:9px; font-weight:700; font-size:.85rem; cursor:pointer; }
+  .accept .no { flex:1; background:#fff; color:#8a2b2b; border:1.5px solid #d6b1b1; padding:11px; border-radius:9px; font-size:.85rem; cursor:pointer; }
+  .fee { text-align:center; font-size:.7rem; color:#7a8aa0; margin-top:8px; }
+  .anon-note { font-size:.7rem; color:#7a8aa0; font-style:italic; margin-top:6px; }
+</style>
+</head>
+<body>
+<h1>Agent-as-a-Service — the three screens</h1>
+<div class="sub">AGENT-SVC-1 mockup · backend live in estate_agents.py (/agents/pitch · /agents/nearby · /agents/intro) · ms.js wiring to follow</div>
+<div class="panes">
+
+  <div class="phone">
+    <div class="phead">Boost your sale? <small>Sell flow · shown to private property sellers after Step 6 (legal)</small></div>
+    <div class="pbody">
+      <ul class="adv">
+        <li>Correct market pricing — priced against live comparable sales, not hope.</li>
+        <li>Legal compliance handled — disclosure forms, FICA, compliance certificates, offer to purchase.</li>
+        <li>Qualified buyers only — bond affordability checked before viewings.</li>
+        <li>Negotiation &amp; closing — a good agent typically recovers their commission in the price.</li>
+        <li>Your time back — viewings, calls and paperwork off your plate.</li>
+      </ul>
+      <div class="legal"><b>The legal side stays yours.</b> Even as a private seller you carry mandatory disclosure, FICA and compliance-certificate obligations (see the legal must-haves card above). An agent manages what they may, and facilitates the rest.</div>
+      <button class="cta">Show me 4 trusted agents near Waterkloof</button>
+      <button class="cta ghost">No thanks — continue selling privately</button>
+      <div class="anon-note">Your listing publishes either way. This is optional.</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phead">Agents near you — ranked by trust <small>50% listing quality · 50% trust score · anonymous until introduced</small></div>
+    <div class="pbody">
+      <div class="agent top">
+        <div class="arow"><span class="aref">Agent TS-4F2A9C</span>
+          <span class="score"><b>79</b><small>RANK</small></span></div>
+        <div class="meta">Waterkloof &amp; Brooklyn specialist · <b>10+ years</b> · <b>200+ properties sold</b> <i>(agency-declared)</i></div>
+        <div><span class="chip cert">✔ PPRA</span><span class="chip cert">✔ FFC 2026</span><span class="chip cert">✔ NQF5</span><span class="chip">IEASA</span><span class="chip">Residential · Sectional title</span></div>
+        <div class="bars">
+          <div class="bar"><small>Listing quality 80</small><div class="track"><div class="fill" style="width:80%"></div></div></div>
+          <div class="bar"><small>Trust score 78</small><div class="track"><div class="fill" style="width:78%"></div></div></div>
+        </div>
+        <button class="pick">Introduce me — free for you</button>
+      </div>
+      <div class="agent">
+        <div class="arow"><span class="aref">Agent TS-B81E02</span>
+          <span class="score"><b>71</b><small>RANK</small></span></div>
+        <div class="meta">Pretoria East · <b>5–10 years</b> · <b>50–199 properties sold</b></div>
+        <div><span class="chip cert">✔ PPRA</span><span class="chip cert">✔ FFC 2026</span><span class="chip">Rentals · Residential</span></div>
+        <div class="bars">
+          <div class="bar"><small>Listing quality 74</small><div class="track"><div class="fill" style="width:74%"></div></div></div>
+          <div class="bar"><small>Trust score 68</small><div class="track"><div class="fill" style="width:68%"></div></div></div>
+        </div>
+        <button class="pick">Introduce me — free for you</button>
+      </div>
+      <div class="anon-note">No names, no agency brands, no phone numbers — the agent's identity is shared only if they accept your introduction. No lead brokers, no cold calls.</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phead">New seller lead — Waterkloof <small>Agent side · seller anonymous until you accept</small></div>
+    <div class="pbody">
+      <div class="lead">
+        <b style="font-size:.9rem; color:var(--navy)">3-bed house · Waterkloof, Pretoria</b>
+        <div class="meta">3 bed · 2 bath · R2 450 000 · listing quality 74/100</div>
+        <div class="trustbig">
+          <div class="ring">62</div>
+          <div style="font-size:.78rem; line-height:1.4"><b>Seller trust score 62 — Established</b><br>ID verified · EULA accepted · 1 live listing</div>
+        </div>
+        <div class="meta" style="font-style:italic">“Help me get the best price — I can do viewings on weekends.”</div>
+      </div>
+      <div class="accept">
+        <button class="yes">Accept lead — 1T</button>
+        <button class="no">Decline (free)</button>
+      </div>
+      <div class="fee">1 Tuppence only on accept. This replaces bought leads, portal fees and cold calling — the seller chose <b>you</b>, in your area.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

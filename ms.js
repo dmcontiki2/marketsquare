@@ -988,6 +988,42 @@ function vehSpecPanel(l){
   return '<div class="dsec veh-spec-panel"><h3>Vehicle Specs</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+cards.join('')+'</div>'+attest+'</div>';
 }
 
+
+// ── HMI-1 (18 Jul 2026): category summary tile grid — the WeBuyCars-style block for non-Cars
+// categories, driven by fields the DB stores today. Falls back to legacy chips when <3 tiles.
+function catSummaryTiles(l){
+  const T=[]; const c=(l.cat||'');
+  const add=(ic,lb,vl)=>{ if(vl!==undefined&&vl!==null&&String(vl).trim()!=='') T.push([ic,lb,String(vl)]); };
+  if(c==='Property'){
+    const lt=(l.listingType||l.listing_type); add('\ud83c\udff7','Listing', lt==='rent'?'To Rent':(lt==='sale'?'For Sale':lt));
+    add('\ud83c\udfe0','Type', l.propType||l.prop_type);
+    add('\ud83d\udecf','Bedrooms', l.beds); add('\ud83d\udebf','Bathrooms', l.baths);
+    add('\ud83d\udcd0','Floor', l.floor_area?l.floor_area+' m\u00b2':null);
+    add('\ud83c\udf33','Erf', l.erf_size?l.erf_size+' m\u00b2':null);
+    add('\ud83d\ude97','Garages', l.garages);
+  } else if(c==='Tutors'){
+    add('\ud83d\udcda','Subjects', l.subject); add('\ud83c\udf93','Level', l.level); add('\ud83d\udccd','Mode', l.mode);
+  } else if(c==='Services'){
+    add('\u2699\ufe0f','Class', l.service_class); add('\ud83d\udd27','Service', l.service_type); add('\ud83d\udd50','Availability', l.availability);
+  } else if(c==='Collectors'){
+    add('\ud83c\udffa','Type', l.collectible_type); add('\u2b50','Condition', l.condition);
+    add('\ud83d\udcc5','Era', l.era_year); add('\ud83c\udfc5','Grade', l.grade_tier||l.ai_grade);
+  }
+  return T;
+}
+function catSummaryHas(l){ return catSummaryTiles(l).length>=3; }
+function catSummary(l){
+  const T=catSummaryTiles(l);
+  if(T.length<3) return '';
+  const esc=(v)=>String(v).replace(/</g,'&lt;');
+  const grid='<div class="veh-qspec" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">'
+    + T.slice(0,6).map(t=>'<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;"><div style="font-size:16px;">'+t[0]+'</div><div style="font-size:10.5px;color:var(--text-3);margin-top:1px;">'+esc(t[1])+'</div><div style="font-size:13px;font-weight:800;margin-top:2px;">'+esc(t[2])+'</div></div>').join('')
+    + '</div>';
+  let pill='';
+  if(l.cat==='Property'&&typeof rentalPill==='function'){ const rp=rentalPill(l); if(rp) pill='<div style="margin:-8px 0 14px;">'+rp+'</div>'; }
+  return grid+pill;
+}
+
 function trustTier(s){
   if(s<40)return{label:'New',c:'#6b7280',bg:'#f3f4f6'};
   if(s<70)return{label:'Established',c:'var(--blue)',bg:'var(--blue-bg)'};
@@ -1281,7 +1317,7 @@ async function _renderAgency(agencyId){
   }
   el.innerHTML= opsBar
     +'<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;">'
-      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your adverts: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a>'+'</div>'
+      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your adverts: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
       +'<div style="font-size:12px;opacity:.7;margin-top:4px;">Admin '+a.admin_email+' · operating in '+(a.countries||'—')+'</div></div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
       +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:800;font-family:Syne,sans-serif;">'+a.rollup.agents+'</div><div style="font-size:11px;color:var(--text-3);">'+_agL('people')+'</div></div>'
@@ -1299,7 +1335,7 @@ async function _renderAgency(agencyId){
         +'<input id="ag-inv-city" placeholder="City" style="width:96px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
         +'<input id="ag-inv-country" placeholder="CC" title="Country code e.g. ZA" maxlength="2" style="width:52px;border:1.5px solid var(--border);border-radius:10px;padding:10px;text-transform:uppercase;">'
         +'<input id="ag-inv-cap" type="number" value="10" style="width:66px;border:1.5px solid var(--border);border-radius:10px;padding:10px;">'
-        +'<button onclick="agencyInvite()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">'+_agL('invite')+'</button></div>'
+        +'<button onclick="agencyInvite()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">'+_agL('invite')+'</button><button onclick="agencyBulkOpen()" title="Bulk add agents from CSV/JSON — same template as the solo agent form" style="background:#fff;color:var(--navy,#0c1a2e);border:1.5px solid var(--navy,#0c1a2e);border-radius:50px;padding:10px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">⇪ Bulk add</button></div>'
       +(function(){   // AGENT-FILTER-1 (17 Jul 2026, David): 200-agent orgs need search
         var ags=window._agAgents||[]; if(ags.length<4) return '';
         var uniq=function(k){ var s={}; ags.forEach(function(m){ var v=(m[k]||'').trim(); if(v) s[v]=1; }); return Object.keys(s).sort(); };
@@ -1416,7 +1452,7 @@ function sellSheetNewAccount() {
 
 function goTo(name){
   // In demo mode block seller-only screens
-  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='sell-flow'||name==='ai-features'||name.startsWith('aa-'))) {
+  if (DEMO_MODE && (name==='tuppence'||name==='dashboard'||name==='onboard'||name==='publish'||name==='sell-b'||name==='plans'||name==='myspace'||name==='wishlist'||name==='guided-onboard'||name==='sell-flow'||name==='ai-features'||name==='agent-suite'||name.startsWith('aa-'))) {
     showToast('This is a demo. Visit trustsquare.co to join as a founding seller.');
     return;
   }
@@ -1456,6 +1492,7 @@ function goTo(name){
   if(name==='guided-onboard') goInit();
   if(name==='sell-flow') sfInit();   // SELL-FLOW-REDO-2
   if(name==='seller-onboard') sobInit();
+  if(name==='agent-suite') agentSuiteInit();   // AGENT-SVC-1
   window.scrollTo(0,0);
 }
 // ── SUBSCRIPTION SCREEN ──────────────────────────────────────
@@ -3370,7 +3407,7 @@ function openBEASellerProfile(l) {
       </div>
     </div>
     <div class="cv-body">
-      ${l.desc ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${maskContactInfo(formatDesc(l.desc), false)}</p></div>` : ''}
+      <div class="cv-sec"><div class="cv-sec-title">Seller overview</div><div id="bea-sellersum-${l.id}" style="font-size:12.5px;color:var(--text-3);">Loading seller overview\u2026</div></div>
       <div class="cv-sec">
         <div class="cv-sec-title">Credentials &amp; qualifications</div>
         <div id="bea-creds-${l.id}">${(()=>{
@@ -3390,6 +3427,23 @@ function openBEASellerProfile(l) {
         Request Introduction · 1T on acceptance
       </button>
     </div>`;
+  // SELLER-CV-1 (18 Jul 2026): seller-level overview (anonymized aggregates), async
+  (function(){
+    const bid=String(l.id).replace(/^bea_/,'');
+    fetch(BEA_URL+'/sellers/summary/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(s){
+      const el=document.getElementById('bea-sellersum-'+l.id); if(!el) return;
+      if(!s||!s.found){ el.textContent='This seller\u2019s overview builds as they trade on TrustSquare.'; return; }
+      const MO={'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'};
+      let since=''; const ms=String(s.member_since||'');
+      if(ms.length>=7){ since=(MO[ms.slice(5,7)]||'')+' '+ms.slice(0,4); }
+      const cats=Object.keys(s.categories||{});
+      el.style.color=''; el.innerHTML='<div class="cv-stats">'
+        +'<div class="cv-stat"><div class="cv-stat-val">'+(s.active_listings||0)+'</div><div class="cv-stat-label">Active listing'+((s.active_listings||0)===1?'':'s')+'</div></div>'
+        +(since?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:15px;">'+since+'</div><div class="cv-stat-label">Listing since</div></div>':'')
+        +(cats.length?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:14px;">'+cats.map(function(c){return String(c).replace(/</g,'&lt;');}).join(', ')+'</div><div class="cv-stat-label">Categor'+(cats.length===1?'y':'ies')+'</div></div>':'')
+        +'</div>';
+    }).catch(function(){ const el=document.getElementById('bea-sellersum-'+l.id); if(el) el.textContent='Seller overview unavailable right now.'; });
+  })();
   goTo('seller-cv');
 }
 
@@ -3511,7 +3565,7 @@ function openDetail(id){
       </div>
       ${dotsHtml}
       ${photos.length>1?`<button class="strip-arrow strip-arrow-left" onclick="stripNav('${id}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" onclick="stripNav('${id}',1)">&#8250;</button>`:''}
-      ${(isAdv||isCars) && photos.length > 1 ? '<div class="adv-thumbs" id="adv-thumbs-'+id+'">' + photos.map(function(u,ti){ return '<div class="adv-thumb'+(ti===0?' active':'')+'" id="adv-thumb-'+id+'-'+ti+'" onclick="advThumbClick(\'' + id + '\',' + ti + ')"><img src="' + u + '" loading="lazy"></div>'; }).join('') + '</div>' : ''}
+      ${photos.length > 1 ? '<div class="adv-thumbs" id="adv-thumbs-'+id+'">' + photos.map(function(u,ti){ return '<div class="adv-thumb'+(ti===0?' active':'')+'" id="adv-thumb-'+id+'-'+ti+'" onclick="advThumbClick(\'' + id + '\',' + ti + ')"><img src="' + u + '" loading="lazy"></div>'; }).join('') + '</div>' : ''}
       <div class="dnav">
         <button class="dib" onclick="goTo('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <button class="dib" onclick="toggleWishDetail('${id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has(id)?'#c8873a':'none'}" stroke="${wishlist.has(id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
@@ -3553,10 +3607,6 @@ function openDetail(id){
       </div>
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
-      <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
-        <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
-        <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
-      </div>
       <div class="price-block">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
@@ -3567,6 +3617,12 @@ function openDetail(id){
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
+      ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
+      <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
+        <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
+        <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
+      </div>
+
       <div id="detail-price-check-${id}" style="margin-bottom:14px;display:none;">
         <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:2px;font-family:'Syne',sans-serif;">💡 Is this a fair price?</div>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Choose how precise you need it — you only pay if we return a real figure.</div>
@@ -3596,19 +3652,19 @@ function openDetail(id){
           if(countryCode && countryCode !== 'ZA') parts.push('<span class="adv-stat country-stat">'+flag+' '+countryCode+'</span>');
           return parts.join('');
         })() + '</div>' : ''}
-      ${l.cat==='Tutors' && (l.subject||l.level||l.mode) ? `
+      ${!catSummaryHas(l) && l.cat==='Tutors' && (l.subject||l.level||l.mode) ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         ${l.subject ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📚 ${l.subject}</span>` : ''}
         ${l.level   ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🎓 ${l.level}</span>` : ''}
         ${l.mode    ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.mode}</span>` : ''}
       </div>` : ''}
-      ${l.cat==='Services' && (l.service_type||l.availability||l.service_class) ? `
+      ${!catSummaryHas(l) && l.cat==='Services' && (l.service_type||l.availability||l.service_class) ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         ${l.service_class ? `<span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">⚙️ ${l.service_class}</span>` : ''}
         ${l.service_type  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🔧 ${l.service_type}</span>` : ''}
         ${l.availability  ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📅 ${l.availability}</span>` : ''}
       </div>` : ''}
-      ${l.cat==='Property' && (l.propType||l.beds||l.baths||l.garages||l.listingType) ? `
+      ${!catSummaryHas(l) && l.cat==='Property' && (l.propType||l.beds||l.baths||l.garages||l.listingType) ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         ${l.listingType ? `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">${l.listingType==='rent'?'🔑 For Rent':'🏦 For Sale'}</span>` : ''}
         ${l.propType ? `<span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🏠 ${l.propType}</span>` : ''}
@@ -3624,14 +3680,13 @@ function openDetail(id){
         <span style="background:#faf5ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🛒 Local Market</span>
         ${(l.suburb||l.area) ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
       </div>` : ''}
-      ${l.cat==='Collectors' && l.desc ? `
+      ${!catSummaryHas(l) && l.cat==='Collectors' && l.desc ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">🏺 Collectors item</span>
         ${l.area||l.suburb ? `<span style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">📍 ${l.suburb||l.area}</span>` : ''}
       </div>` : ''}
-      ${l.cat==='Cars' ? vehQuickSpec(l) : ''}
-      <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
+      <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
       <div style="margin-bottom:16px;">
         ${(function(){var sidStr=l.sellerIdx!=null?l.sellerIdx:'null';var ci=catCfg(l);var onclk='openSellerCV('+sidStr+','+'\''+(id)+'\''+')';return '<button onclick="'+onclk+'" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">'+'<div style="width:40px;height:40px;border-radius:50%;background:'+ci.bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ci.icon+'</div>'+'<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>'+'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';})()}
       </div>
@@ -14516,6 +14571,7 @@ function sfRender(){
   else if(s==='secC') a.innerHTML=sfSpecS('C');
   else if(s==='features') a.innerHTML=sfFeatS();
   else if(s==='legal') a.innerHTML=sfLegalS();
+  else if(s==='agents') a.innerHTML=sfAgentsS();   // AGENT-SVC-1
   else if(s==='scorecard') a.innerHTML=sfScoreS();
   window.scrollTo(0,0);
 }
@@ -14883,7 +14939,7 @@ function sfLegalS(){
     '<div style="font-size:13px;line-height:1.5;">Private sales in '+L.cname+' carry their own legal steps. Our country guide for '+L.cname+' is being reviewed — meanwhile, an accredited agency can walk you through the requirements.</div></div>';
   }
   h+='<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'features\')">←</button>'+
-  '<button class="sf-btn pri" onclick="sfGo(\'scorecard\')">See my score →</button></div>';
+  '<button class="sf-btn pri" onclick="sfGo((sfState.cat===\'Property\'||sfState.cat===\'Cars\')?\'agents\':\'scorecard\')">'+((sfState.cat==='Property'||sfState.cat==='Cars')?'Next →':'See my score →')+'</button></div>';   // AGENT-SVC-1
   return h;
 }
 function sfScoreS(){
@@ -15018,3 +15074,357 @@ async function sfFinish(draftOnly){
   sfState._busy=false;
 }
 /* ═══ end SELL-FLOW-REDO-2 ═══ */
+
+/* ═══ AGENT-SVC-1 FRONTEND (19 Jul 2026, David) — Estate Agents as a Service.
+   One process, two doors: the solo agent profile form and the agency bulk
+   uploader are BOTH generated from GET /agents/template, and both land in the
+   same backend pipeline (profile + pending credentials). Seller side: sell-flow
+   step 'agents' (Property only, between legal and scorecard) renders the local
+   ranked anonymised list from /agents/nearby and requests intros at no cost to
+   the seller; the agent accepts at 1T in the Agent Hub (screen-agent-suite). ═══ */
+
+/* ── Sell-flow step: Boost your sale? (property + cars verticals) ── */
+function sfAgentVertical(){ return sfState.cat==='Cars' ? 'cars' : 'property'; }
+function sfAgentNoun(){ return sfAgentVertical()==='cars' ? 'car sales agent' : 'agent'; }
+function sfAgentsS(){
+  var f=sfFlow();
+  var h='<div class="sf-hdr"><div class="sf-step">Optional · '+f.label+'</div><h2>Boost your sale?</h2></div>'+sfMeter()+
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>You can sell privately — or let a vetted local '+sfAgentNoun()+' carry it.</b> Either way your listing publishes. This is optional, and free for you.</div></div>'+
+  '<div id="sf-agents-body"><div style="padding:26px;text-align:center;color:var(--text-3,#8b93a7);">Finding trusted '+sfAgentNoun()+'s near '+(sfState.area||sfState.city)+'…</div></div>'+
+  '<div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'legal\')">←</button>'+
+  '<button class="sf-btn pri" onclick="sfGo(\'scorecard\')">No thanks — see my score →</button></div>';
+  setTimeout(sfAgentsLoad,30);
+  return h;
+}
+async function sfAgentsLoad(){
+  var el=document.getElementById('sf-agents-body'); if(!el) return;
+  var city=sfState.city||'', suburb=String(sfState.area||'').trim();
+  var pitch=null, near=null;
+  try{
+    var r1=await fetch(BEA_URL+'/agents/pitch?city='+encodeURIComponent(city)+'&suburb='+encodeURIComponent(suburb)+'&vertical='+sfAgentVertical());
+    if(r1.ok) pitch=await r1.json();
+    var r2=await fetch(BEA_URL+'/agents/nearby?city='+encodeURIComponent(city)+'&suburb='+encodeURIComponent(suburb)+'&limit=6&vertical='+sfAgentVertical());
+    if(r2.ok) near=await r2.json();
+  }catch(e){}
+  if(!el.isConnected) return;
+  var mut='var(--text-3,#8b93a7)';
+  var h='';
+  if(pitch && pitch.advantages){
+    h+='<div class="sf-card"><div class="sf-title">Why sellers use a '+((pitch&&pitch.label)?pitch.label.toLowerCase():'local '+sfAgentNoun())+'</div>';
+    pitch.advantages.forEach(function(a){
+      h+='<div style="display:flex;gap:9px;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:13px;line-height:1.4;"><span style="color:#34d399;font-weight:800;">✓</span><span>'+a+'</span></div>';
+    });
+    h+='<div style="font-size:11.5px;color:'+mut+';margin-top:9px;line-height:1.45;">'+pitch.legal_note+'</div></div>';
+  }
+  var ags=(near&&near.agents)||[];
+  if(!ags.length){
+    h+='<div class="sf-card" style="text-align:center;"><div class="sf-title">No listed '+sfAgentNoun()+'s near '+city+' yet</div>'+
+       '<div style="font-size:12.5px;color:'+mut+';">Vetted '+sfAgentNoun()+'s join weekly — you can continue privately.</div></div>';
+  } else {
+    h+='<div class="sf-card" style="padding:12px 14px;"><div class="sf-title">'+(sfAgentVertical()==='cars'?'Car sales agents':'Agents')+' near you — ranked by trust</div>'+
+       '<div style="font-size:11px;color:'+mut+';margin-bottom:8px;">50% listing quality · 50% trust score · anonymous until introduced. No lead brokers, no cold calls.</div>';
+    ags.forEach(function(a,i){ h+=sfAgentCardHtml(a,i===0); });
+    h+='<div style="font-size:10.5px;color:'+mut+';margin-top:6px;font-style:italic;">The agent\'s identity is shared only if they accept your introduction — the agent pays 1T, you pay nothing.</div></div>';
+  }
+  el.innerHTML=h;
+}
+function sfAgentCardHtml(a,top){
+  var mut='var(--text-3,#8b93a7)';
+  var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);color:#34d399;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
+  var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="color:'+mut+';font-size:10px;">(agency-declared)</i>':'')):'';
+  return '<div id="sf-ag-'+a.anon_ref+'" style="border:'+(top?'2px solid #C8873A':'1px solid rgba(255,255,255,.12)')+';border-radius:12px;padding:11px 12px;margin-bottom:10px;position:relative;">'+
+    (top?'<div style="position:absolute;top:-9px;right:10px;background:#C8873A;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.05em;">BEST MATCH</div>':'')+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
+      '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
+      '<div style="text-align:center;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK</div></div></div>'+
+    '<div style="font-size:12px;color:'+mut+';margin-top:3px;">'+(a.suburbs||a.city)+' · <b style="color:inherit;">'+a.experience+'</b>'+sold+'</div>'+
+    '<div style="margin-top:5px;">'+badges+'</div>'+
+    '<div style="display:flex;gap:10px;margin-top:8px;">'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Trust score '+a.trust_score+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+    '<button class="sf-btn pri" style="width:100%;margin-top:9px;padding:9px;font-size:13px;" onclick="sfAgentIntro(\''+a.anon_ref+'\')">Introduce me — free for you</button></div>';
+}
+async function sfAgentIntro(ref){
+  var email=(sfState.email||'').trim();
+  if(!email){ sfToast('Add your email in the sign-in step first'); return; }
+  var card=document.getElementById('sf-ag-'+ref);
+  try{
+    var r=await fetch(BEA_URL+'/agents/intro',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({seller_email:email,agent_ref:ref,message:'Private '+(sfAgentVertical()==='cars'?'car ':'')+'seller from the sell flow — '+(sfState.area||sfState.city)})});
+    var d=await r.json();
+    if(!r.ok){ sfToast((d&&d.detail)||'Could not request the introduction'); return; }
+    if(card){ var b=card.querySelector('button'); if(b){ b.disabled=true; b.textContent='✓ Introduction requested'; b.style.opacity='.65'; } }
+    sfToast('Done — Agent '+ref+' will see your trust score and property summary, not your identity.');
+  }catch(e){ sfToast('Network hiccup — try again'); }
+}
+
+/* ── Agent Hub (screen-agent-suite): profile + seller leads, one template ── */
+var _asState={tab:'profile', template:null, profile:null, vertical:'property'};
+var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts) · FFC (10 pts, <b>required to go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'}};
+function agentSuiteInit(){
+  var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
+  _asState.email=email;
+  agentSuiteTab(_asState.tab||'profile');
+}
+function agentSuiteTab(t){
+  _asState.tab=t;
+  var el=document.getElementById('agent-suite-body'); if(!el) return;
+  var tabs='<div style="display:flex;gap:8px;margin-bottom:14px;">'+
+    ['profile','leads'].map(function(k){
+      var lab=k==='profile'?'My agent profile':'Seller leads';
+      return '<button onclick="agentSuiteTab(\''+k+'\')" style="flex:1;border-radius:10px;padding:10px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);'+(t===k?'background:var(--navy,#0c1a2e);color:#fff;':'background:var(--surface,#fff);')+'">'+lab+'</button>';
+    }).join('')+'</div>';
+  el.innerHTML=tabs+'<div id="as-pane"><div style="padding:26px;text-align:center;color:var(--text-3);">Loading…</div></div>';
+  if(t==='profile') _asProfileLoad(); else _asLeadsLoad();
+}
+async function _asProfileLoad(){
+  var pane=document.getElementById('as-pane'); if(!pane) return;
+  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first — your agent profile hangs off your seller account.</div>'; return; }
+  try{
+    if(!_asState.template){ var rt=await fetch(BEA_URL+'/agents/template'); if(rt.ok) _asState.template=await rt.json(); }
+    var rp=await fetch(BEA_URL+'/agents/profile?email='+encodeURIComponent(_asState.email));
+    _asState.profile = rp.ok ? await rp.json() : null;
+    if(_asState.profile && _asState.profile.vertical) _asState.vertical=_asState.profile.vertical;
+  }catch(e){}
+  pane.innerHTML=_asProfileHtml(_asState.profile,_asState.template);
+}
+function _asFld(id,label,val,ph,type){
+  return '<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--text-3);display:block;margin-bottom:3px;">'+label+'</label>'+
+    (type==='ta'?'<textarea id="'+id+'" rows="4" placeholder="'+(ph||'')+'" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-size:13px;">'+(val||'')+'</textarea>'
+    :'<input id="'+id+'" type="'+(type||'text')+'" value="'+String(val==null?'':val).replace(/"/g,'&quot;')+'" placeholder="'+(ph||'')+'" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-size:13px;">')+'</div>';
+}
+function _asProfileHtml(p,tpl){
+  p=p||{};
+  var gaps=(p.go_live_gaps||[]);
+  var live=p.profile_status==='live';
+  var badges=p.badges||{earned:[],pending:[]};
+  var h='<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:12px;">'+
+    '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:17px;">'+(p.anon_ref?('Agent '+p.anon_ref+' · '+AS_VERT[_asState.vertical].label):'List yourself as a professional agent')+
+    (live?' <span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">● LIVE</span>':' <span style="font-size:10px;background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;margin-left:6px;">DRAFT</span>')+'</div>'+
+    '<div style="font-size:11.5px;opacity:.75;margin-top:4px;">Anonymous to sellers until you accept an introduction. Your certificates drive your rank: 50% listing quality · 50% trust score.</div>'+
+    (p.anon_ref?'<div style="display:flex;gap:14px;margin-top:10px;font-size:12px;"><span>Trust <b>'+(p.trust_score||0)+'</b></span><span>Avg quality <b>'+(p.avg_listing_quality||0)+'</b></span><span>Live listings <b>'+(p.live_listings||0)+'</b></span></div>':'')+'</div>';
+  if(badges.earned.length||badges.pending.length){
+    h+='<div style="margin-bottom:12px;">'+
+      badges.earned.map(function(b){return '<span style="display:inline-block;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;margin:0 4px 4px 0;">✓ '+b+'</span>';}).join('')+
+      badges.pending.map(function(b){return '<span style="display:inline-block;background:#fff4e5;border:1px solid #c55a11;color:#8a4a10;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;margin:0 4px 4px 0;">⏳ '+b+' (verifying)</span>';}).join('')+'</div>';
+  }
+  h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">'+
+    '<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--text-3);display:block;margin-bottom:3px;">I am a…</label><div style="display:flex;gap:8px;">'+['property','cars','travel'].map(function(v){return '<button onclick="asSetVertical(\''+v+'\')" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);'+(_asState.vertical===v?'background:var(--navy,#0c1a2e);color:#fff;':'background:#fff;')+'">'+AS_VERT[v].label+'</button>';}).join('')+'</div></div>'+
+    _asFld('as-headline','Headline (no names, no agency brand)',p.headline,'e.g. Waterkloof & Brooklyn specialist — sectional title expert')+
+    _asFld('as-bio','About you — anonymous but comprehensive (30+ words)',p.bio_anon,'Track record, specialty, how you work…','ta')+
+    '<div style="display:flex;gap:10px;"><div style="flex:1;">'+_asFld('as-years','Years experience',p.years_experience,'e.g. 12','number')+'</div>'+
+    '<div style="flex:1;">'+_asFld('as-sold',(_asState.vertical==='cars'?'Cars':_asState.vertical==='travel'?'Trips':'Properties')+' sold (shown banded)',p.properties_sold,'e.g. 240','number')+'</div></div>'+
+    '<div style="display:flex;gap:10px;"><div style="flex:1;">'+_asFld('as-city','City',p.city||((typeof activeCity!=='undefined'&&activeCity.name)||''),'Pretoria')+'</div>'+
+    '<div style="flex:1;">'+_asFld('as-suburbs','Suburbs served (comma-separated)',p.suburbs,'Waterkloof, Brooklyn')+'</div></div>'+
+    _asFld('as-spec','Specialties',p.specialties,'residential, rentals, sectional title')+
+    _asFld('as-lang','Languages',p.languages,'English, Afrikaans')+
+    '<button onclick="asProfileSave()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Save profile</button></div>';
+  h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Certificates — upload under Trust Score</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">'+AS_VERT[_asState.vertical].certs+' Upload in <a href="#" onclick="goTo(\'myspace\');return false;" style="font-weight:700;">My Space → Trust Score</a>; ops verifies before points count.</div>'+
+    (gaps.length?'<div style="background:#fff4e5;border-left:3px solid #c55a11;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12px;"><b>Before you can go live:</b><br>'+gaps.map(function(g){return '· '+g;}).join('<br>')+'</div>':'')+
+    (!live?'<button onclick="asProfilePublish()" style="width:100%;margin-top:10px;background:'+(gaps.length?'#9aa3b5':'#166534')+';color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Go live as a listed agent</button>':'')+'</div>';
+  return h;
+}
+function asSetVertical(v){ _asState.vertical=v; var pane=document.getElementById('as-pane'); if(pane) pane.innerHTML=_asProfileHtml(_asState.profile,_asState.template); }
+async function asProfileSave(){
+  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
+  var body={email:_asState.email,headline:g('as-headline'),bio:g('as-bio'),
+    years_experience:g('as-years')?parseInt(g('as-years'),10):null,
+    properties_sold:g('as-sold')?parseInt(g('as-sold'),10):null,
+    city:g('as-city'),suburbs:g('as-suburbs'),specialties:g('as-spec'),languages:g('as-lang'),vertical:_asState.vertical};
+  try{
+    var r=await fetch(BEA_URL+'/agents/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(!r.ok){ showToast((d&&d.detail)||'Could not save'); return; }
+    showToast('Profile saved — '+(d.anon_ref||''));
+    _asProfileLoad();
+  }catch(e){ showToast('Network hiccup — try again'); }
+}
+async function asProfilePublish(){
+  try{
+    var r=await fetch(BEA_URL+'/agents/profile/publish?email='+encodeURIComponent(_asState.email),{method:'PUT'});
+    var d=await r.json();
+    if(!r.ok){
+      var fx=(d&&d.detail&&d.detail.fix)?('<br>· '+d.detail.fix.join('<br>· ')):'';
+      showToast('Not yet — see the checklist on your profile'); _asProfileLoad(); return;
+    }
+    showToast('You are live — sellers in your area can now find you'); _asProfileLoad();
+  }catch(e){ showToast('Network hiccup — try again'); }
+}
+async function _asLeadsLoad(){
+  var pane=document.getElementById('as-pane'); if(!pane) return;
+  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first.</div>'; return; }
+  var rows=[];
+  try{ var r=await fetch(BEA_URL+'/agents/intros?email='+encodeURIComponent(_asState.email)+'&status=all'); if(r.ok) rows=await r.json(); }catch(e){}
+  if(!rows.length){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">No seller leads yet. When a private seller picks you, the introduction lands here — you accept at 1T or decline free.</div>'; return; }
+  var h='';
+  rows.forEach(function(x){
+    var l=x.listing||{};
+    var tc=x.seller_trust_snapshot>=70?'#166534':(x.seller_trust_snapshot>=40?'#1e40af':'#6b7280');
+    var st=x.status;
+    h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:11px;">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">'+
+        '<div style="font-weight:800;font-size:14px;">'+(l.title||'Property lead')+'</div>'+
+        '<span style="font-size:10px;font-weight:800;border-radius:14px;padding:3px 10px;'+(st==='pending'?'background:#fff4e5;color:#8a4a10;':st==='accepted'?'background:#e7f2e3;color:#2f5d20;':'background:#f1f3f7;color:#6b7280;')+'">'+st.toUpperCase()+'</span></div>'+
+      '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">'+[(l.suburb||l.city||''),(l.beds?l.beds+' bed':''),(l.baths?l.baths+' bath':''),(l.price||'')].filter(Boolean).join(' · ')+(x.listing_quality_snapshot?' · listing quality '+x.listing_quality_snapshot+'/100':'')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin:9px 0;">'+
+        '<div style="width:44px;height:44px;border-radius:50%;border:4px solid '+tc+';display:flex;align-items:center;justify-content:center;font-weight:800;">'+x.seller_trust_snapshot+'</div>'+
+        '<div style="font-size:12px;line-height:1.4;"><b>Seller trust score '+x.seller_trust_snapshot+'</b><br><span style="color:var(--text-3);">'+(st==='accepted'?('Contact: '+(x.seller_email||'shared')):'Seller stays anonymous until you accept')+'</span></div></div>'+
+      (x.message?'<div style="font-size:12px;font-style:italic;color:var(--text-3);margin-bottom:8px;">“'+x.message+'”</div>':'')+
+      (st==='pending'?('<div style="display:flex;gap:8px;">'+
+        '<button onclick="asLeadAccept('+x.id+')" style="flex:2;background:#166534;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;">Accept lead — 1T</button>'+
+        '<button onclick="asLeadDecline('+x.id+')" style="flex:1;background:#fff;color:#8a2b2b;border:1.5px solid #d6b1b1;border-radius:10px;padding:11px;cursor:pointer;">Decline (free)</button></div>'+
+        '<div style="font-size:10.5px;color:var(--text-3);text-align:center;margin-top:6px;">1 Tuppence only on accept — this replaces bought leads and cold calling. The seller chose <b>you</b>.</div>'):'')+
+      '</div>';
+  });
+  pane.innerHTML=h;
+}
+async function asLeadAccept(id){
+  try{
+    var r=await fetch(BEA_URL+'/agents/intros/'+id+'/accept?email='+encodeURIComponent(_asState.email),{method:'PUT'});
+    var d=await r.json();
+    if(!r.ok){ showToast((d&&d.detail)||'Could not accept'); return; }
+    showToast('Lead accepted — 1T charged. Contact details are now shared.');
+    if(typeof updateTuppenceUI==='function') try{updateTuppenceUI();}catch(e){}
+    _asLeadsLoad();
+  }catch(e){ showToast('Network hiccup — try again'); }
+}
+async function asLeadDecline(id){
+  try{
+    var r=await fetch(BEA_URL+'/agents/intros/'+id+'/decline?email='+encodeURIComponent(_asState.email),{method:'PUT'});
+    if(!r.ok){ showToast('Could not decline'); return; }
+    showToast('Declined — no charge.'); _asLeadsLoad();
+  }catch(e){ showToast('Network hiccup — try again'); }
+}
+
+/* ── Agency console: bulk add agents (same template, same pipeline) ── */
+function agencyBulkOpen(){
+  var el=document.getElementById('agency-body'); if(!el) return;
+  var box=document.getElementById('ag-bulk-box');
+  if(box){ box.remove(); return; }
+  var d=document.createElement('div'); d.id='ag-bulk-box';
+  d.style.cssText='background:var(--surface,#fff);border:2px dashed var(--border);border-radius:12px;padding:14px 16px;margin:12px 0;';
+  d.innerHTML='<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Bulk add agents — one process, same template as the solo form</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:8px;">Vertical: <b>'+(window._tsSkin==='dealer'?'Car sales agents (MIRA gate)':window._tsSkin==='operator'?'Tour agents (ASATA gate)':'Estate agents (FFC gate)')+'</b> — set by the console skin. Paste <b>CSV</b> (header row required) or a <b>JSON array</b>. CSV columns: <code style="font-size:11px;">email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,mira_number,inspection_partner,asata_number,iata_code,cipc_number,bonding_proof,listing_cap</code> — use JSON for headline/bio (commas). Credentials land as <b>pending</b>; trust scores move only after ops verifies. Estate agents need a verified FFC, car sales agents a verified MIRA registration, before going live.</div>'+
+    '<textarea id="ag-bulk-text" rows="7" placeholder="email,name,city,country,suburbs,years_experience,properties_sold,ppra_number,ffc_year,nqf_level,body,listing_cap\nann@agency.co.za,Ann Smith,Pretoria,ZA,&quot;Waterkloof, Brooklyn&quot;,12,240,PPRA123,2026,5,IEASA,10" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;"></textarea>'+
+    '<div style="display:flex;gap:8px;margin-top:8px;"><button onclick="agencyBulkRun()" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Upload roster</button>'+
+    '<button onclick="document.getElementById(\'ag-bulk-box\').remove()" style="background:none;border:1px solid var(--border);border-radius:50px;padding:10px 18px;cursor:pointer;">Cancel</button></div>'+
+    '<div id="ag-bulk-report" style="margin-top:10px;"></div>';
+  var anchorEl=el.querySelector('#ag-inv-email');
+  if(anchorEl && anchorEl.parentElement && anchorEl.parentElement.parentElement){ anchorEl.parentElement.parentElement.insertBefore(d, anchorEl.parentElement.nextSibling); }
+  else el.appendChild(d);
+}
+function _agBulkParse(text){
+  text=String(text||'').trim();
+  if(!text) return null;
+  if(text[0]==='['){ try{ return JSON.parse(text); }catch(e){ return null; } }
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
+  if(lines.length<2) return null;
+  var split=function(line){  // minimal CSV: honours double-quoted fields
+    var out=[],cur='',q=false;
+    for(var i=0;i<line.length;i++){ var ch=line[i];
+      if(ch==='"'){ q=!q; continue; }
+      if(ch===','&&!q){ out.push(cur); cur=''; continue; }
+      cur+=ch; }
+    out.push(cur); return out.map(function(s){return s.trim();});
+  };
+  var hdr=split(lines[0]).map(function(h){return h.toLowerCase();});
+  return lines.slice(1).map(function(line){
+    var vals=split(line), o={};
+    hdr.forEach(function(h,i){ if(vals[i]!==undefined && vals[i]!=='') o[h]=vals[i]; });
+    ['years_experience','properties_sold','ffc_year','nqf_level','listing_cap'].forEach(function(k){ if(o[k]!==undefined) o[k]=parseInt(o[k],10)||null; });
+    if(o.body){ o.body_memberships=String(o.body).split(/[;|]/).map(function(s){return s.trim();}).filter(Boolean); delete o.body; }
+    return o;
+  });
+}
+async function agencyBulkRun(){
+  var rep=document.getElementById('ag-bulk-report');
+  var agents=_agBulkParse((document.getElementById('ag-bulk-text')||{}).value);
+  if(!agents||!agents.length){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not parse — check the header row (CSV) or JSON syntax.</div>'; return; }
+  if(rep) rep.innerHTML='<div style="font-size:12px;color:var(--text-3);">Uploading '+agents.length+' agents…</div>';
+  try{
+    var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents/bulk',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},body:JSON.stringify({agents:agents,vertical:(window._tsSkin==='dealer'?'cars':window._tsSkin==='operator'?'travel':'property')})});
+    var d=await r.json();
+    if(!r.ok){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">'+((d&&d.detail)||'Upload failed')+'</div>'; return; }
+    var h='<div style="font-size:12.5px;font-weight:700;margin-bottom:4px;">'+d.onboarded+' onboarded · '+d.failed+' failed</div>';
+    (d.agents||[]).forEach(function(a){
+      h+='<div style="font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);">'+
+        (a.ok?('✓ '+a.email+' → <b>Agent '+a.anon_ref+'</b>'+(a.credentials_pending&&a.credentials_pending.length?' · pending: '+a.credentials_pending.join(', '):'')):('✗ '+a.email+' — '+a.error))+'</div>';
+    });
+    h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">'+(d.next||'')+'</div>';
+    if(rep) rep.innerHTML=h;
+    showToast(d.onboarded+' agents onboarded — magic links & verification queued');
+    _renderAgency(window._agencyId);
+  }catch(e){ if(rep) rep.innerHTML='<div style="color:#b91c1c;font-size:12px;">Network hiccup — try again.</div>'; }
+}
+/* ── AGENT-SVC-3: Tour agents for holiday SEARCHERS (Adventures screen) ──
+   Buyer-side, not sell-flow: the searcher opens the panel, sees why a tour
+   agent, picks one anonymously, and the agent gets the lead (accepts at 1T). */
+var _advAgentsLoaded=false;
+function advAgentsToggle(){
+  if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to plan with a tour agent.'); return; }
+  var p=document.getElementById('adv-agents-panel'); if(!p) return;
+  var open=p.style.display!=='none';
+  p.style.display=open?'none':'block';
+  if(!open && !_advAgentsLoaded){ advAgentsLoad(); }
+}
+async function advAgentsLoad(){
+  var p=document.getElementById('adv-agents-panel'); if(!p) return;
+  p.innerHTML='<div style="padding:18px;text-align:center;color:rgba(255,255,255,.75);font-size:12.5px;">Finding accredited tour agents…</div>';
+  var city=(typeof activeCity!=='undefined'&&activeCity.name)||'';
+  var pitch=null, near=null;
+  try{
+    var r1=await fetch(BEA_URL+'/agents/pitch?city='+encodeURIComponent(city)+'&vertical=travel');
+    if(r1.ok) pitch=await r1.json();
+    var r2=await fetch(BEA_URL+'/agents/nearby?city='+encodeURIComponent(city)+'&limit=5&vertical=travel');
+    if(r2.ok) near=await r2.json();
+  }catch(e){}
+  _advAgentsLoaded=true;
+  var card='background:#fff;border-radius:12px;padding:12px 14px;margin-top:10px;color:#1c2434;';
+  var h='';
+  if(pitch&&pitch.advantages){
+    h+='<div style="'+card+'"><div style="font-weight:800;font-size:13.5px;margin-bottom:4px;">Why book through a tour agent?</div>';
+    pitch.advantages.forEach(function(a){ h+='<div style="display:flex;gap:8px;padding:5px 0;font-size:12px;line-height:1.4;border-bottom:1px dashed #e8ecf2;"><span style="color:#1e7d4f;font-weight:800;">✓</span><span>'+a+'</span></div>'; });
+    h+='<div style="font-size:11px;color:#68758c;margin-top:8px;line-height:1.45;">'+pitch.legal_note+'</div></div>';
+  }
+  var ags=(near&&near.agents)||[];
+  if(!ags.length){
+    h+='<div style="'+card+'text-align:center;"><b>No accredited tour agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:#68758c;margin-top:4px;">Accredited agents join weekly — browse and book directly meanwhile.</div></div>';
+  } else {
+    ags.forEach(function(a){ h+=advAgentCard(a,card); });
+    h+='<div style="font-size:10.5px;color:rgba(255,255,255,.65);font-style:italic;margin-top:8px;">Anonymous until introduced — the agent\'s identity is shared only if they accept. Free for you; the agent pays 1T.</div>';
+  }
+  p.innerHTML=h;
+}
+function advAgentCard(a,card){
+  var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:#e7f3ec;border:1px solid #b7dcc6;color:#1e7d4f;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
+  var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="font-size:10px;color:#68758c;">(agency-declared)</i>':'')):'';
+  return '<div id="adv-ag-'+a.anon_ref+'" style="'+card+'">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
+      '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
+      '<div style="text-align:center;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK</div></div></div>'+
+    '<div style="font-size:12px;color:#68758c;margin-top:2px;">'+(a.suburbs||a.city||'')+' · <b style="color:#1c2434;">'+a.experience+'</b>'+sold+'</div>'+
+    '<div style="margin-top:5px;">'+badges+'</div>'+
+    '<div style="display:flex;gap:10px;margin-top:7px;">'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Trust score '+a.trust_score+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+    '<button onclick="advAgentIntro(\''+a.anon_ref+'\')" style="width:100%;margin-top:9px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;">Plan my trip with this agent — free for you</button></div>';
+}
+async function advAgentIntro(ref){
+  var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
+  if(!email){ showToast('Sign in first so the agent can reach you if they accept'); return; }
+  var wish=prompt('What are you dreaming of? (destination, dates, people — no phone numbers needed)','');
+  if(wish===null) return;
+  try{
+    var r=await fetch(BEA_URL+'/agents/intro',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({seller_email:email,agent_ref:ref,message:(wish||'Holiday enquiry from the Adventures page')})});
+    var d=await r.json();
+    if(!r.ok){ showToast((d&&d.detail)||'Could not request the introduction'); return; }
+    var c=document.getElementById('adv-ag-'+ref);
+    if(c){ var b=c.querySelector('button'); if(b){ b.disabled=true; b.textContent='✓ Request sent — they reply if they accept'; b.style.opacity='.65'; } }
+    showToast('Done — Agent '+ref+' sees your request and trust score, not your identity.');
+  }catch(e){ showToast('Network hiccup — try again'); }
+}
+/* ═══ end AGENT-SVC-1 FRONTEND ═══ */
