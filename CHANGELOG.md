@@ -22,6 +22,14 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — ICON-PHOTO-1 SHIPPED (David-requested): identity icons -> photo chips, semantic icons kept
+- David: replace remaining icons with photo thumbnails except where icons should stay. Ruling applied:
+  PHOTOS where the icon does category-identity work — the 6 filter-sheet headers (small 34x24 photo
+  chip beside the title) + the Browse Local Market banner icon (56x40 honey scene). ICONS kept where
+  they do control/semantic work: bottom nav glyphs, trust ✓ badges, tiny category chip pills (photos
+  unreadable at that size), country flags, sell-flow per-slot shot hints, coach avatar.
+- index.html only, v334->v335, CF purged, 6 photo headers + LM banner verified in served HTML.
+
 ## Session 144 (cont.) — FILTER-DATA-2 SHIPPED: David's standing filter ruling — churny enumerations are a TEXT BOX
 - DAVID'S RULING (supersedes the interim data-chips idea, which he rightly rejected as still a moving
   part): any filter whose value-set a country/city churns every few months (vehicle makes, models,
