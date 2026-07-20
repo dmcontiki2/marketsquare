@@ -15459,15 +15459,15 @@ function agentDirRender(){
   var o=document.getElementById('agent-dir-body'); if(!o) return;
   var v=window._agentDirVert;
   var chips=[['property','🏡 Estate'],['cars','🚗 Car sales'],['travel','🧳 Tour']].map(function(c){
-    return '<button onclick="window._agentDirVert=\''+c[0]+'\';agentDirRender()" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid '+(v===c[0]?'#C8873A':'#c9d2df')+';'+(v===c[0]?'background:#C8873A;color:#1c1204;':'background:#fff;color:#0c1a2e;')+'">'+c[1]+'</button>';
+    return '<button onclick="window._agentDirVert=\''+c[0]+'\';agentDirRender()" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid '+(v===c[0]?'#C8873A':'var(--border,#c9d2df)')+';'+(v===c[0]?'background:#C8873A;color:#1c1204;':'background:var(--surface,#fff);color:var(--text,#0c1a2e);')+'">'+c[1]+'</button>';
   }).join('');
-  o.innerHTML='<div style="max-width:560px;margin:0 auto;padding:14px 14px 60px;">'+
-    '<button onclick="agentDirClose()" style="background:none;border:none;color:#51617a;font-size:13px;cursor:pointer;padding:0;margin-bottom:10px;">&lsaquo; Back to Services</button>'+
+  o.innerHTML='<div style="padding:18px 14px 80px;max-width:720px;margin:0 auto;">'+
+    '<button onclick="agentDirClose()" style="background:none;border:none;color:var(--text-3,#51617a);font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;">&lsaquo; Back to Services</button>'+
     '<div style="background:#0c1a2e;border-radius:14px;padding:14px 16px;margin-bottom:12px;">'+
       '<div style="color:#fff;font-family:Syne,sans-serif;font-weight:800;font-size:18px;">Professional Agents</div>'+
       '<div style="color:rgba(255,255,255,.7);font-size:12px;margin-top:3px;line-height:1.45;">Ranked by Best Match — 50% listing quality · 50% trust score. Anonymous until introduced; the generic scene stands in for every agent.</div></div>'+
     '<div style="display:flex;gap:8px;margin-bottom:12px;">'+chips+'</div>'+
-    '<div id="agent-dir-list"><div style="padding:22px;text-align:center;color:#68758c;font-size:12.5px;">Finding agents…</div></div>'+
+    '<div id="agent-dir-list"><div style="padding:22px;text-align:center;color:var(--text-3,#68758c);font-size:12.5px;">Finding agents…</div></div>'+
     '</div>';
   agentDirLoad();
 }
@@ -15478,14 +15478,14 @@ async function agentDirLoad(){
   try{ var r=await fetch(BEA_URL+'/agents/nearby?city='+encodeURIComponent(city)+'&limit=10&vertical='+v);
        if(r.ok) near=await r.json(); }catch(e){}
   if(!el.isConnected) return;
-  var card='background:#fff;border:1px solid #dde3ec;border-radius:12px;padding:12px 14px;margin-top:10px;color:#1c2434;';
+  var card='background:var(--surface,#fff);border:1px solid var(--border,#dde3ec);border-radius:12px;padding:12px 14px;margin-top:10px;color:var(--text,#1c2434);';
   var ags=(near&&near.agents)||[];
   if(!ags.length){
     el.innerHTML='<div style="'+card+'text-align:center;"><b>No listed agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:#68758c;margin-top:4px;">Credential-verified agents join weekly.</div></div>';
     return;
   }
   var h=''; ags.forEach(function(a){ h+=advAgentCard(a,card); });
-  h+='<div style="font-size:10.5px;color:#68758c;font-style:italic;margin-top:8px;">No names, no brands, no faces — identity and photos only after an accepted introduction. Free for you; the agent pays 1T.</div>';
+  h+='<div style="font-size:10.5px;color:var(--text-3,#68758c);font-style:italic;margin-top:8px;">No names, no brands, no faces — identity and photos only after an accepted introduction. Free for you; the agent pays 1T.</div>';
   el.innerHTML=h;
 }
 /* ═══ end AGENT-SVC-1 FRONTEND ═══ */

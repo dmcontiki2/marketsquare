@@ -1,3 +1,10 @@
+## Session 144 (cont.) — AGENT-DIR-WIDTH-1 SHIPPED (David live-QA ×4): directory matches the app template width
+- David-found: the directory column read thinner than sibling screens. Root cause: custom inner
+  max-width/padding + a gray band inside the app's standard 430px body column. Fix: exact
+  screen-agent-suite container pattern (padding 18/14/80, max-width 720, margin auto), no custom
+  background, all colors on theme tokens (var --surface/--border/--text/--text-3) so it is native
+  in both themes and both form factors. ms.js v323->v324 + index.html, parity be95f48f, CF purged.
+
 ## Session 144 (cont.) — AGENT-DIR-NAV-1 SHIPPED (David live-QA ×3): directory is a real screen, bottom nav stays
 - David-found: the fixed overlay covered the bottom tab bar — user trapped with only Back. Converted
   to a standard app screen (screen-agent-dir + agent-dir-body); goTo keeps the bottom nav visible and
