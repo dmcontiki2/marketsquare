@@ -22,6 +22,16 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — CV-EDIT-FIX-1 + SUBPICK-THUMB-1 SHIPPED (David live-QA)
+- CV-EDIT-FIX-1 (David-found: Edit My Seller Profile did nothing): openCVEdit read SELLERS[0] but the
+  live site ships SELLERS=[] (demo-era dependency) — silent throw. Now loads the saved ms_seller_profile
+  from localStorage, else a clean skeleton; saveCVEdit guarded the same way and persists the profile
+  object itself. Button works on live for the first time.
+- SUBPICK-THUMB-1: Services sub-pick swaps its 3 emoji icons for photo thumbnails — Technical uses the
+  electrician scene, Casual & In-home a NEW Higgsfield garden scene (svc_casual.jpg, gloved hands +
+  secateurs + roses, 2 credits), Professional Agents the estate-agent scene. Emoji fallback on error.
+- ms.js v329->v330 + index.html, parity verified, CF purged.
+
 ## Session 144 (cont.) — SLOT-THUMB-1 SHIPPED (David live-QA): brand photo as Main-photo thumbnail in Step 1/6
 - David: the Sell-tile photo should carry into the photo step instead of collapsing to an emoji box.
   Main slot now shows the category's sf_cat_*.jpg as a thumbnail (SF_TILE_IMGS continuity, slight dim,

@@ -4562,8 +4562,17 @@ let editingSeller = null;
 let editTags = [];
 
 function openCVEdit(){
-  // Edit seller 0 as the "claimed" seller
-  editingSeller = JSON.parse(JSON.stringify(SELLERS[0]));
+  // CV-EDIT-FIX-1 (20 Jul 2026, David-found): live site has SELLERS=[] (demo-era
+  // dependency) so SELLERS[0] threw and the button died silently. Load the saved
+  // profile from localStorage, else a clean skeleton.
+  var base = (typeof SELLERS!=='undefined' && SELLERS && SELLERS[0]) ? SELLERS[0] : null;
+  if(!base){ try{ base = JSON.parse(localStorage.getItem('ms_seller_profile')||'null'); }catch(e){ base=null; } }
+  if(!base) base = { headline:'', about:'', yearsExp:'', region:(typeof activeCity!=='undefined'&&activeCity.name)||'',
+                     tags:[], creds:[], avail:[] };
+  editingSeller = JSON.parse(JSON.stringify(base));
+  editingSeller.headline = editingSeller.headline||''; editingSeller.about = editingSeller.about||'';
+  editingSeller.tags = editingSeller.tags||[]; editingSeller.creds = editingSeller.creds||[];
+  editingSeller.avail = editingSeller.avail||[];
   editTags = [...editingSeller.tags];
   renderCVEditForm();
   goTo('cv-edit');
@@ -4821,9 +4830,9 @@ function saveCVEdit(){
     a.time = document.getElementById(`ce-avail-time-${i}`)?.value.trim() || a.time;
   });
 
-  // Write back to SELLERS array and persist
-  Object.assign(SELLERS[0], s);
-  localStorage.setItem('ms_seller_profile', JSON.stringify(SELLERS[0]));
+  // Write back to SELLERS array and persist (CV-EDIT-FIX-1: SELLERS may be empty on live)
+  if(typeof SELLERS!=='undefined' && SELLERS){ if(!SELLERS[0]) SELLERS[0]={}; Object.assign(SELLERS[0], s); }
+  localStorage.setItem('ms_seller_profile', JSON.stringify(s));
 
   showToast('✓ Profile saved');
   goTo('dashboard');
@@ -14603,8 +14612,12 @@ function sfSubpickS(){
   var c=SF_CATS[sfState.cat], p=c.subPick;
   var h='<div class="sf-hdr"><div class="sf-step">Before we start · '+c.label+'</div><h2>'+p.title+'</h2></div>'+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Different worlds, different templates.</b> Pick the one that fits — the photos and questions change to match. Professional agents get their own hub instead of an advert.</div></div><div class="sf-subgrid">';
+  var SUB_IMGS = { technical:'/static/brand-photos/cat_services.jpg', casual:'/static/brand-photos/svc_casual.jpg', agents:'/static/agent-stock/property.jpg' };
   p.subs.forEach(function(s){
-    h+='<div class="sf-subcard" onclick="sfPickSub(\''+s[0]+'\')"><div class="sf-ic">'+s[1]+'</div><div><div class="sf-nm">'+s[2]+'</div><div class="sf-ds">'+s[3]+'</div></div></div>';
+    var im = (sfState.cat==='Services') ? SUB_IMGS[s[0]] : null;   // SUBPICK-THUMB-1
+    var ic = im ? '<div class="sf-ic" style="width:74px;height:52px;padding:0;overflow:hidden;border-radius:9px;flex:0 0 74px;"><img src="'+im+'" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent=\''+s[1]+'\'"></div>'
+                : '<div class="sf-ic">'+s[1]+'</div>';
+    h+='<div class="sf-subcard" onclick="sfPickSub(\''+s[0]+'\')">'+ic+'<div><div class="sf-nm">'+s[2]+'</div><div class="sf-ds">'+s[3]+'</div></div></div>';
   });
   h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button></div>';
   return h;
