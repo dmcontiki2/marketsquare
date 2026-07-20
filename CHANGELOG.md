@@ -14,6 +14,12 @@
   agents-as-a-service, terms, privacy, support.
 - deploy_marketsquare.bat: + mkdir/scp/chmod for static/agent-stock. FEA v319->v320.
 - Tests: 56 green (52 prior + photo rule, stock-on-cards, match_rank maths, metrics note).
+- Deploy (LIVE, 20 Jul ~08:4x SAST): SSH mirror; server backups *.bak-photoanon-*; md5 parity x3;
+  first pass timed out BEFORE the restart — old process was still serving (caught by PHOTO-ANON-1
+  probe against the live template + ActiveEnterTimestamp from 19 Jul); restart completed, chmod 644,
+  nginx reload, CF purge. Smoke: homepage 200 in 170ms, v320 served, 3 stock SVGs 200, /terms 200
+  with back-bar, nearby cards carry stock photo, CDN ms.js?v=320 has the new module. Rollback:
+  tag ship-20260720-photoanon + server .bak-photoanon-*. VERDICT: GREEN.
 
 ## Session 143 — AGENT-SVC-1/2/3 SHIPPED: Professional Agents as a Service (property · cars · travel)
 - NEW module estate_agents.py (799 lines, router seam like launch_redemption; one anchored include in
