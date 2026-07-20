@@ -3426,7 +3426,7 @@ function openBEASellerProfile(l) {
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${l.area} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div>${fspark(l)}</div>
+        <div><div class="cv-trust-num" style="color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45);">${l.trust}</div><div class="cv-trust-label" style="display:inline-block;background:rgba(0,0,0,.28);color:#fff;border-radius:10px;padding:2px 9px;">${t.label}</div>${fspark(l)}</div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
@@ -3441,7 +3441,7 @@ function openBEASellerProfile(l) {
           const sigs=sf._signals||{};
           let html='';
           Object.keys(sigs).forEach(k=>{const st=sigs[k];if(!st||st.status==='skipped')return;const lbl=SIG_LABELS[k]||k;const ok=st.status==='uploaded';const icon=ok?'✓':'○';const col=ok?'var(--accent)':'var(--text-3)';html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);"><div style="width:22px;height:22px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};">${icon}</div><div style="font-size:13px;font-weight:600;color:var(--text);">${lbl}</div></div>`;});
-          return html||'<span style="font-size:12px;color:var(--text-3);">Seller credentials build over time as they complete their Trust Score checklist.</span>';
+          return html||'<span style="font-size:12px;color:var(--text-3);">Loading credential evidence\u2026</span>';
         })()}</div>
       </div>
       <div class="cv-sec"><div class="cv-identity-block"><div class="cv-identity-icon">🔒</div><div class="cv-identity-text"><h4>Identity protected until introduction</h4><p>Name, contact details and exact location are only revealed after both parties accept a mutual introduction.</p></div></div></div>
@@ -3455,6 +3455,26 @@ function openBEASellerProfile(l) {
   // SELLER-CV-1 (18 Jul 2026): seller-level overview (anonymized aggregates), async
   (function(){
     const bid=String(l.id).replace(/^bea_/,'');
+    fetch(BEA_URL+'/sellers/credentials/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      var el=document.getElementById('bea-creds-'+bid); if(!el||!d) return;
+      var h='';
+      (d.groups||[]).forEach(function(g){
+        if(!g.items||!g.items.length) return;
+        h+='<div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:10px 0 2px;">'+g.title+'</div>';
+        g.items.forEach(function(it){
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'+
+             '<div style="width:20px;height:20px;border-radius:50%;background:var(--accent-light,#e7f3ec);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent,#1e7d4f);">\u2713</div>'+
+             '<div style="flex:1;font-size:13px;font-weight:600;">'+it.name+'</div>'+
+             '<div style="font-size:12px;font-weight:800;color:var(--accent,#1e7d4f);">+'+it.points+'</div></div>';
+        });
+        h+='<div style="display:flex;justify-content:flex-end;gap:6px;font-size:11.5px;color:var(--text-3);padding:4px 0;">'+(g.note?g.note+' \u00b7 ':'')+'<b>'+g.subtotal+' pts</b></div>';
+      });
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--accent-light,#e7f3ec);border-radius:10px;padding:9px 12px;margin-top:8px;">'+
+         '<div style="font-size:12.5px;font-weight:700;">Evidence total = Trust Score</div>'+
+         '<div style="font-size:16px;font-weight:800;color:var(--accent,#1e7d4f);">'+d.computed_total+' / 100</div></div>';
+      if(d.next) h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.4;">\u2192 '+d.next+'</div>';
+      el.innerHTML=h;
+    }).catch(function(){});
     fetch(BEA_URL+'/sellers/summary/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(s){
       const el=document.getElementById('bea-sellersum-'+l.id); if(!el) return;
       if(!s||!s.found){ el.textContent='This seller\u2019s overview builds as they trade on TrustSquare.'; return; }
@@ -3496,7 +3516,7 @@ function openSellerCV(sellerIdx,listingId){
       <div class="cv-headline">${s.headline}</div>
       <div class="cv-cat">${s.cat} · ${regionLabel} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div style="color:${t.c};"><div class="cv-trust-num">${l.trust}</div><div class="cv-trust-label" style="color:${t.c};">${t.label}</div>${fspark(l)}</div>
+        <div><div class="cv-trust-num" style="color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45);">${l.trust}</div><div class="cv-trust-label" style="display:inline-block;background:rgba(0,0,0,.28);color:#fff;border-radius:10px;padding:2px 9px;">${t.label}</div>${fspark(l)}</div>
         <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>

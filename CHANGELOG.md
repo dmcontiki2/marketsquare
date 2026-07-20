@@ -22,6 +22,24 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-CRED-1 SHIPPED (David's ruling, live-QA x4): the visible list IS the score
+- DAVID'S RULING: every point of a trust score maps to a specific certificate/accreditation/experience/
+  result per the designed category checklists — and the buyer-facing seller profile must SHOW that
+  itemised list summing to the number. The old panel read a legacy structured_fields._signals blob
+  (pre-catalog) and rendered the empty placeholder under a 90 badge — the opposite of the trust story.
+- NEW public endpoint GET /sellers/credentials/{listing_id}: canonical evidence from the real catalog —
+  Identity & profile (ID verified 15, complete profile 5) + Platform track record (intro milestones,
+  zero-ignored 10, tenure 5, computed identically to get_user_trust, with accepted-intro count shown)
+  + Certificates & accreditations (earned user_credentials mapped to catalog names+points, sorted,
+  category cap 40 disclosed when exceeded). Names and points only — anonymity preserved.
+- FEA panel renders grouped checkmarked items with +points, group subtotals, and an 'Evidence total =
+  Trust Score' bar; closing line shows referrals as the visible path toward 100. Score-header contrast
+  fixed on BOTH profile surfaces (tier colour was vanishing on matching category gradients —
+  green-on-green Tutors, orange-on-orange Adventures; now white number + dark pill).
+- Alignment: showcase seller evidence computed 90 vs stored 89 -> evidence wins, stored score raised.
+  VERIFIED: all 9 exemplar listings return computed_total == trust_score (90/87/90...) — MATCH 9/9.
+- bea_main.py + ms.js v338->v339 + index.html; 56 tests green; restart healthy; CF purged.
+
 ## Session 144 (cont.) — SUPER-3 SHIPPED (David live-QA x3): honest evidence-backed scores + heritage/POI links + LM photos
 - DAVID'S SCORING RULING: the exemplar must MODEL the evidence path, not decree a number — near-100
   only with valid certificates, accreditations, experience and RESULTS visible. Implemented honestly:

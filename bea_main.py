@@ -3657,6 +3657,85 @@ def get_user_subscription(email: str):
         "usd_per_month": plan["usd"],
     }
 
+@app.get("/sellers/credentials/{listing_id}")
+def seller_public_credentials(listing_id: int):
+    """SUPER-CRED-1 (20 Jul 2026, David's ruling): the buyer-facing seller profile
+    must show the itemised evidence that SUMS to the trust score — signal names and
+    points from the canonical catalog, grouped, capped exactly like the scorer.
+    Anonymity-safe: signal names and points only, never documents or identity."""
+    conn = database.get_db()
+    try:
+        l = conn.execute("SELECT seller_email, category, service_class FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not l or not l["seller_email"]:
+            raise HTTPException(status_code=404, detail="Listing or seller not found")
+        email = l["seller_email"].lower()
+        u = conn.execute("SELECT * FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if not u:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        user = dict(u)
+
+        groups = []
+        # ── Universal ──
+        uni = []
+        if user.get("id_verified_at"):
+            uni.append({"name": _TRUST_SIGNALS["universal.id_verified"]["name"], "points": _TRUST_SIGNALS["universal.id_verified"]["points"]})
+        has_listing = conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (email,)).fetchone()
+        if user.get("name") and user.get("country") and user.get("photo_url") and has_listing:
+            uni.append({"name": _TRUST_SIGNALS["universal.profile_complete"]["name"], "points": _TRUST_SIGNALS["universal.profile_complete"]["points"]})
+        groups.append({"title": "Identity & profile", "items": uni, "subtotal": sum(i["points"] for i in uni)})
+
+        # ── Platform track record (computed like get_user_trust) ──
+        ic = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
+            (SELECT id FROM listings WHERE LOWER(seller_email)=?) AND status='accepted'""", (email,)).fetchone()[0]
+        ign = conn.execute("""SELECT COUNT(*) FROM intro_requests WHERE listing_id IN
+            (SELECT id FROM listings WHERE LOWER(seller_email)=?)
+            AND status='pending' AND created_at < datetime('now','-48 hours')
+            AND created_at > datetime('now','-90 days')""", (email,)).fetchone()[0]
+        tr = []
+        if ic >= 1:  tr.append({"name": _TRUST_SIGNALS["track_record.intro_1"]["name"], "points": 5})
+        if ic >= 5:  tr.append({"name": _TRUST_SIGNALS["track_record.intro_5"]["name"], "points": 5})
+        if ic >= 20: tr.append({"name": _TRUST_SIGNALS["track_record.intro_20"]["name"], "points": 5})
+        if ic > 0 and ign == 0:
+            tr.append({"name": _TRUST_SIGNALS["track_record.zero_ignored_90d"]["name"], "points": 10})
+        try:
+            created = str(user.get("created_at") or "")
+            import datetime as _dt
+            if created and (_dt.datetime.now() - _dt.datetime.fromisoformat(created.replace("Z","").split(".")[0])).days >= 180 and has_listing:
+                tr.append({"name": _TRUST_SIGNALS["track_record.tenure_6mo"]["name"], "points": 5})
+        except Exception:
+            pass
+        groups.append({"title": "Platform track record", "items": tr, "subtotal": sum(i["points"] for i in tr),
+                       "note": f"{ic} accepted introductions"})
+
+        # ── Category credentials (earned only, names+points from the catalog) ──
+        flat = {}
+        for _grp in _CATEGORY_SIGNALS.values():
+            for sid, d in _grp.items():
+                flat[sid] = {"name": d["name"], "points": int(d.get("points") or 0)}
+        cred_rows = conn.execute("SELECT signal_id FROM user_credentials WHERE LOWER(email)=? AND status='earned' AND signal_id LIKE 'category.%'", (email,)).fetchall()
+        cat = []
+        seen = set()
+        for r in cred_rows:
+            sid = r["signal_id"]
+            if sid in flat and sid not in seen:
+                seen.add(sid)
+                cat.append({"name": flat[sid]["name"], "points": flat[sid]["points"]})
+        cat.sort(key=lambda x: -x["points"])
+        raw_cat = sum(i["points"] for i in cat)
+        capped = min(40, raw_cat)
+        g = {"title": "Certificates & accreditations", "items": cat, "subtotal": capped}
+        if raw_cat > 40:
+            g["note"] = f"{raw_cat} pts earned — capped at the category maximum of 40"
+        groups.append(g)
+
+        total = sum(gr["subtotal"] for gr in groups)
+        return {"trust_score": int(user.get("trust_score") or 0), "computed_total": total,
+                "groups": groups,
+                "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
+    finally:
+        conn.close()
+
+
 @app.get("/users/{email}/trust")
 def get_user_trust(email: str):
     """Return trust score + per-signal breakdown for My Space dashboard.
