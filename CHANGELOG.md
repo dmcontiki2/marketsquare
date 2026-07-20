@@ -22,6 +22,22 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 145 (overnight, 21 Jul) — LAUNCH-READINESS AUDIT (adverts + docs + email waves)
+- SUPER-QA-4: Krugerrand copy corrected AGAIN after photo forensics — case includes impossible
+  years (1921, 193x; Krugerrands exist from 1967), so ALL specific years removed: title
+  "Krugerrand proof collection — 28 coins, authenticated", description "spanning decades of
+  mintings". Fixed live on id 269.
+- Full photo-vs-copy audit of all 10 exemplars: 8 PASS, 2 fixed live this session (269, 272),
+  2 regen candidates flagged (tutor whiteboard gibberish maths HIGH; property garden-shot pool
+  position MEDIUM).
+- Documentation currency audit: whitepaper v3.12 + provisional current-as-published; NEW-MATTER
+  counsel question raised (reverse intro accept-time commit + SPS/Rank publicly disclosed on
+  showcase since 18 Jul, post-filing). STALE: TRUST_SCORE_CRITERIA.md, AGENT_BRIEFING.md,
+  STATUS.md, Codex (needs v4.9 amendment), LaunchEmails_5Wave (fee claim vs agent 1T).
+- Email-wave readiness: Brevo DKIM b1/b2 + DMARC already wired on trustsquare.co (discovered);
+  suppression automation is the one missing build. Public links verified (showcase = hyphen URL).
+- Deliverable: TrustSquare_LaunchReadiness_Audit_2026-07-21 — nice.docx (6 tables, verified reopen).
+
 ## Session 144 (cont.) — SUPER-QA-3 (David's last catch of the night: badge overclaim)
 - Detail-view super badge said "what a 100-point listing looks like" next to a visible 90
   Trust Score — an overclaim, and some exemplars are not literal 100 listing-quality either
