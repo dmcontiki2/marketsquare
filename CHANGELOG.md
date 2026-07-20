@@ -22,6 +22,13 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-CRED-1b SHIPPED (David live-QA x5): evidence panel now actually renders
+- David-found: panel stuck on 'Loading credential evidence...' — the endpoint fired but the DOM lookup
+  used the stripped numeric id while the panel id carries the FEA bea_ prefix -> element null -> silent
+  return. One-line fix (lookup by l.id). ms.js v339->v340, parity bb2eec75, CF purged.
+- VERIFIED IN THE LIVE RENDERED DOM (browser JS, not assumption): 13 evidence items with +points,
+  group subtotals, Evidence-total bar present on the Property exemplar profile.
+
 ## Session 144 (cont.) — SUPER-CRED-1 SHIPPED (David's ruling, live-QA x4): the visible list IS the score
 - DAVID'S RULING: every point of a trust score maps to a specific certificate/accreditation/experience/
   result per the designed category checklists — and the buyer-facing seller profile must SHOW that

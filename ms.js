@@ -3456,7 +3456,7 @@ function openBEASellerProfile(l) {
   (function(){
     const bid=String(l.id).replace(/^bea_/,'');
     fetch(BEA_URL+'/sellers/credentials/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(d){
-      var el=document.getElementById('bea-creds-'+bid); if(!el||!d) return;
+      var el=document.getElementById('bea-creds-'+l.id); if(!el||!d) return;   // SUPER-CRED-1 fix: DOM id uses the prefixed app id
       var h='';
       (d.groups||[]).forEach(function(g){
         if(!g.items||!g.items.length) return;
