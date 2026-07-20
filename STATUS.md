@@ -1,9 +1,17 @@
 # TrustSquare — Status
 
 ## Current Session
-EVENING NOTE (17:25): SUPER exemplar generation 100% complete (32 reference-chained images safe in
-Higgsfield Assets, 14 downloaded). Assembly parked cleanly — see 20H00_STATUS.md + CHANGELOG pickup
-list. Site live+healthy (v338, pin-first + ribbon deployed, DB clean, wallets intact).
+2026-07-21 (Session 145, overnight): LAUNCH-READINESS AUDIT complete + all recommendations fixed.
+Site live+healthy at ms.js v347. Sessions 143-145 delivered: agents-as-a-service (3 verticals:
+property/cars/travel; reverse intro — agent pays 1T on accept; TS/SPS/Rank = 50/50 on all agent
+surfaces), evidence-true trust scores with buyer-visible itemised ledger (/sellers/credentials),
+10 SUPER exemplars live and photo-vs-copy audited (2 fixed live, 2 regen candidates queued),
+Bee Lady real 100-score listing, FILTER-DATA-2, brand photography throughout.
+EMAIL WAVES: Brevo DKIM+DMARC live; EMAIL-WAVE-1 signup-suppression hook in bea_main (needs
+BREVO_API_KEY + BREVO_SIGNUP_LIST_ID env to activate); LaunchEmails v2 (3 ZA tracks, fee claim
+corrected) in docs/. OPEN: counsel question on post-filing disclosure of reverse-intro + Rank
+(draft email in Patents/DRAFT_Counsel_Email_NewMatter_2026-07-21) — settle BEFORE Wave 1.
+Full detail: CHANGELOG Sessions 143-145 + TrustSquare_LaunchReadiness_Audit_2026-07-21.
 
 
 Session 144 · 20 July 2026 (attended, David) — AGENT-SVC-4 + PHOTO-ANON-1: dedicated Professional Agents surface in Services, generic per-vertical stock scenes (no persons pre-intro), agent-facing metrics trio (Trust · Avg Quality · Match Rank), back-bars on all served doc pages. ms.js v320 · 56 tests green.

@@ -337,3 +337,27 @@ Signal weights, group caps, tier thresholds (0–39 New / 40–69 Established / 
 **Related fix (same day).** Listing-flow document uploads (B7) now POST to `/users/{email}/documents` at publish so category credentials persist and auto-earn, and `/users/{email}/upload-id` new-user seed corrected 15 → 40 to match the base.
 
 *End Amendment v1.1*
+
+
+---
+
+## Addendum 2026-07-21 — evidence ledger, Local Market model, agent scores (Sessions 143-145)
+
+**Source of truth is the live catalog in `bea_main.py`** (`_TRUST_SIGNALS`, `_CATEGORY_SIGNALS`);
+this addendum records what changed since the 6 Jul revision.
+
+1. **Evidence-true principle (David's ruling, 20 Jul):** every point of a displayed trust score
+   must map to a specific certificate, accreditation, experience or platform-recorded result.
+   The buyer-visible itemised ledger at `GET /sellers/credentials/{listing_id}` renders the
+   groups (Identity & profile / Platform track record / Certificates & accreditations) and its
+   computed total MUST equal the stored trust score ("Evidence total = Trust Score" bar in-app).
+2. **Local Market model:** base foundation 40 + `category.lm.*` signals + universal + track
+   record, capped 100. New signal `category.lm.assoc_role_2` (+10, second named association
+   role, national + provincial structures). Association roles are ASSOCIATION appointments,
+   never government — the false 'government/regulatory appointment' credential class was
+   removed (Bee Lady correction, 20 Jul).
+3. **Honest V1 ceiling is 90** for most categories (referral signals not yet trackable);
+   100 is reachable where real evidence covers the full catalog (proven: Bee Lady, id 273).
+4. **Professional agents carry three named scores:** Trust Score (TS, this catalog),
+   Agent Score (SPS — avg listing quality; for agents it measures technical, regulatory,
+   legal and safety completeness of their adverts), and Rank = 50% TS + 50% SPS.

@@ -22,6 +22,24 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 145 (cont.) — ALL AUDIT RECOMMENDATIONS FIXED (David: "fix all")
+- P1 EMAIL-WAVE-1: signup-suppression hook live in bea_main POST /users — new signups POSTed to
+  Brevo contacts (daemon thread, inert until BREVO_API_KEY + BREVO_SIGNUP_LIST_ID set in
+  /etc/environment; campaigns must exclude that list). Deployed + health-verified.
+- P1 Counsel email DRAFTED: Patents/DRAFT_Counsel_Email_NewMatter_2026-07-21 — nice.docx
+  (reverse-intro + Rank disclosure questions a/b/c). Sending is David's hand.
+- P1 LaunchEmails v2: docs/TrustSquare_LaunchEmails_5Wave_v2 — nice.docx — fee claim corrected
+  (1T on accept, stated plainly), three ZA tracks (property/cars/travel) with Wave-1 copy,
+  Waves 2-5 substitution rules, founder-placement wording aligned, Brevo cadence + UTM.
+- P2 Docs refreshed with dated addenda: STATUS.md current block rewritten (was Session-94-era),
+  TRUST_SCORE_CRITERIA.md (+evidence ledger, LM model, assoc_role_2, ceiling-90, agent scores),
+  AGENT_BRIEFING.md (+estate_agents.py architecture, reverse intro, SUPER/FILTER rulings),
+  docs/CODEX_v4_9_AMENDMENT_DRAFT_ProfessionalAgents.md awaiting David's approval.
+- P2/P3 photo regens QUEUED, not run: HIGGSFIELD_REGEN_QUEUE.md holds exact reference-chained
+  prompts (tutor whiteboard HIGH, property garden, sideboard open, 5-photo top-ups). Reason:
+  Higgsfield browser runs proved flaky unattended; 10 minutes of David-at-keyboard beats an
+  overnight thrash. Everything else on the priority list is DONE.
+
 ## Session 145 (overnight, 21 Jul) — LAUNCH-READINESS AUDIT (adverts + docs + email waves)
 - SUPER-QA-4: Krugerrand copy corrected AGAIN after photo forensics — case includes impossible
   years (1921, 193x; Krugerrands exist from 1967), so ALL specific years removed: title

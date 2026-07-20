@@ -276,3 +276,29 @@ TrustSquare has a Built-In Test (BIT) self-test, governed by **Codex v4.8 §13**
 - **Budget (enforced by `trustsquare-bit-agent/bit_budget_check.py`):** BIT source ≤ **2%** of core LOC (bea_main.py + ms.js), **zero** third-party deps, read-only coupling. If a change pushes the BIT toward 2%, prune BITs — don't grow the agent.
 - BITs are **functional** (prove it works) + **negative** (prove the guardrail/blocked-thing holds → catches false-positive PASSes). Confirmed failures run Report→Mitigate→Resolve→Prevent by severity; auto-fix only on the reversible allow-list, never on money/auth/DB/BEA-logic.
 - Placement: Hetzner same-box for now (own process); separate host is the eventual target.
+
+
+---
+
+## Addendum 2026-07-21 — Agents-as-a-Service architecture (Sessions 143-145)
+
+A fourth code surface now exists beside the three core files:
+- **`estate_agents.py`** — APIRouter module (pattern: launch_redemption). `configure()` seam
+  injects `_anon_regex_clean` + `_import_quality_score` from bea_main (no circular import).
+  `VERTICALS` dict = {property, cars, travel}: gate signals (FFC/PPRA · MIRA · ASATA/IATA/CIPC),
+  seller-side advantages, legal notes. Tables: `agent_profiles` (vertical column), `agent_intros`.
+  **Deploy note: deploy_marketsquare.bat MUST ship estate_agents.py or BEA fails on import.**
+- **Reverse intro:** seller sends a lead free; the AGENT pays 1T at ACCEPT time (inverted payer
+  vs the C10 hold model — see Patents/ counsel question before marketing this mechanism).
+- **Three scores on every agent surface:** Trust Score (TS) · Agent Score (SPS = avg listing
+  quality; technical/regulatory/legal/safety completeness) · Rank = 50% TS + 50% SPS.
+- **Frontend:** screen-agent-dir (real screen, not overlay — bottom nav preserved), Agent Hub
+  (screen-agent-suite: profile editor, leads inbox accept/decline, bulk agency import),
+  sell-flow agent step for all three verticals, Services CLASS filter third option
+  'Professional Agents' routes to the directory (AGENT-CLASS-1).
+- **SUPER exemplars (SUPER-PIN-1):** every backend sort variant prefixes
+  `COALESCE(super_example,0) DESC`; exemplar listings + 3 super agents are LIVE LAUNCH FIXTURES,
+  always first, red ★ SUPER ADVERT ribbon. Exemplar copy must survive buyer-grade scrutiny
+  against its photos (SUPER-QA rulings, CHANGELOG Session 144-145).
+- **Standing filter ruling FILTER-DATA-2:** churny enumerations (vehicle makes, per-city lists)
+  are a single free-text box — never chips/lists. Stable ontologies stay chips.

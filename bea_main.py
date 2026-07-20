@@ -3581,6 +3581,31 @@ async def upload_draft_listing_photo(
 
 # ── USERS (protected write) ──────────────────────────────────
 
+def _brevo_mark_signed_up(email: str):
+    """EMAIL-WAVE-1 (21 Jul 2026, launch-readiness audit): signup-suppression automation.
+    When a contact signs up, add them to the Brevo 'signed up' list so wave campaigns
+    (which exclude that list) stop mailing them — the 5-Wave doc's own suppression rule.
+    Fire-and-forget: inert unless BREVO_API_KEY + BREVO_SIGNUP_LIST_ID are set; failures
+    are logged, never raised; runs on a daemon thread so signup latency is untouched."""
+    import os, json as _json, urllib.request, threading
+    key = os.environ.get("BREVO_API_KEY", "").strip()
+    list_id = os.environ.get("BREVO_SIGNUP_LIST_ID", "").strip()
+    if not key or not list_id:
+        return
+    def _post():
+        try:
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/contacts",
+                data=_json.dumps({"email": email, "listIds": [int(list_id)],
+                                  "updateEnabled": True}).encode(),
+                headers={"api-key": key, "Content-Type": "application/json"},
+                method="POST")
+            urllib.request.urlopen(req, timeout=10)
+        except Exception as e:
+            try: print(f"[brevo-suppress] non-fatal: {e}")
+            except Exception: pass
+    threading.Thread(target=_post, daemon=True).start()
+
 @app.post("/users")
 def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
@@ -3600,6 +3625,8 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
         )
         conn.commit()
     conn.close()
+    if is_new:
+        _brevo_mark_signed_up(user.email)   # EMAIL-WAVE-1: wave suppression on signup
     return {"message": "User created successfully"}
 
 @app.get("/users/{email}")
