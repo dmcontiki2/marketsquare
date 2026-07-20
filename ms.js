@@ -12314,7 +12314,7 @@ async function lmOpenDetail(listingId) {
           `<div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${trust}%;background:${tColor};"></div></div><div class="tscale" style="color:${tColor};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>` +
         `</div>` +
         `<div class="price-block"><div><div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>${priceHtml}</div></div>` +
-        `<div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc(c.description || '')}</p></div>` +
+        `<div class="dsec"><h3>About this listing</h3><p style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc((c.description || '').replace(/^\[photos:[^\]]*\]\n?/, ''))}</p></div>` +
         `<div style="margin-bottom:16px;">` +
           `<button onclick="openLMSellerProfile()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">` +
             `<div style="width:40px;height:40px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🛍️</div>` +
@@ -12392,7 +12392,7 @@ async function openLMSellerProfile() {
       `</div>` +
     `</div>` +
     `<div class="cv-body">` +
-      (c.description ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${_lmEsc(c.description)}</p></div>` : '') +
+      (c.description ? `<div class="cv-sec"><div class="cv-sec-title">About this listing</div><p class="cv-about">${_lmEsc(c.description.replace(/^\[photos:[^\]]*\]\n?/, ''))}</p></div>` : '') +
       `<div class="cv-sec" id="lm-cv-docs-section"><div class="cv-sec-title">Seller credentials &amp; documents</div>` +
         `<div style="font-size:12px;color:var(--text-3);">⏳ Loading…</div>` +
       `</div>` +
@@ -12406,6 +12406,29 @@ async function openLMSellerProfile() {
     `</div>`;
   goTo('seller-cv');
 
+  // SUPER-CRED-2: itemised evidence ledger on the LM profile too (same canonical endpoint)
+  try {
+    fetch(BEA_URL+'/sellers/credentials/'+c.id).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      var host=document.getElementById('lm-cv-docs-section'); if(!host||!d) return;
+      var h='<div class="cv-sec-title">Credentials &amp; qualifications</div>';
+      (d.groups||[]).forEach(function(g){
+        if(!g.items||!g.items.length) return;
+        h+='<div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:10px 0 2px;">'+g.title+'</div>';
+        g.items.forEach(function(it){
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'+
+             '<div style="width:20px;height:20px;border-radius:50%;background:var(--accent-light,#e7f3ec);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent,#1e7d4f);">\u2713</div>'+
+             '<div style="flex:1;font-size:13px;font-weight:600;">'+it.name+'</div>'+
+             '<div style="font-size:12px;font-weight:800;color:var(--accent,#1e7d4f);">+'+it.points+'</div></div>';
+        });
+        h+='<div style="display:flex;justify-content:flex-end;gap:6px;font-size:11.5px;color:var(--text-3);padding:4px 0;">'+(g.note?g.note+' \u00b7 ':'')+'<b>'+g.subtotal+' pts</b></div>';
+      });
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--accent-light,#e7f3ec);border-radius:10px;padding:9px 12px;margin-top:8px;">'+
+         '<div style="font-size:12.5px;font-weight:700;">Evidence total = Trust Score</div>'+
+         '<div style="font-size:16px;font-weight:800;color:var(--accent,#1e7d4f);">'+d.computed_total+' / 100</div></div>';
+      var pre=document.createElement('div'); pre.innerHTML=h;
+      host.parentNode.insertBefore(pre, host);
+    }).catch(function(){});
+  } catch(_e) {}
   // Async: fetch post-intro documents and render into credentials section
   const docSection = document.getElementById('lm-cv-docs-section');
   if (!docSection) return;

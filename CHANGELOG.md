@@ -22,6 +22,22 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — BEE-LADY-1 SHIPPED (David-directed): the real 100-score exemplar + LM model + LM surface fixes
+- DAVID'S SECOND EXEMPLAR: the Bee Lady (Misty Forest) — a REAL seller whose documents live in
+  OneDrive/Documents/Marietjie: Bee Removal Certificate, DALRRD Certificate 2025, beekeeping training
+  certificate, CV (6+ yrs breeding), two authored product guides, national SABIO secretary + Gauteng
+  Bee Association government appointment (the lm.assoc_role catalog comment literally cites her role).
+  Every seeded credential maps to a real document or verifiable public role; listing uses her REAL
+  product photos (honey, propolis tincture, healing balm, hand-rolled candles).
+- VERIFIED LIVE: her ledger = Foundation 40 + Identity 20 + Track record 30 (24 accepted intros) +
+  84 credential pts (174 pts of evidence, capped at 100 WITH the cap disclosed) = 100 MATCH. She
+  proves the ceiling is reachable — with evidence, exactly as designed.
+- Credentials endpoint now implements the designed LOCAL MARKET model (base 40 + lm.* signals, total
+  cap 100, non-LM certs excluded from LM views); sideboard recomputes 90 MATCH under it.
+- LM surfaces fixed (David-found): raw [photos:] block stripped from About on both LM detail + LM
+  seller profile; the LM profile now renders the same itemised evidence ledger as other categories.
+- bea_main.py + ms.js v340->v341 + index.html; 56 tests green; restart healthy; CF purged.
+
 ## Session 144 (cont.) — SUPER-CRED-1b SHIPPED (David live-QA x5): evidence panel now actually renders
 - David-found: panel stuck on 'Loading credential evidence...' — the endpoint fired but the DOM lookup
   used the stripped numeric id while the panel id carries the FEA bea_ prefix -> element null -> silent

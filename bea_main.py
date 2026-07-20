@@ -3707,12 +3707,22 @@ def seller_public_credentials(listing_id: int):
         groups.append({"title": "Platform track record", "items": tr, "subtotal": sum(i["points"] for i in tr),
                        "note": f"{ic} accepted introductions"})
 
+        # ── Local Market model (design: base 40 + signals, capped 100) ──
+        _is_lm = (l["category"] or "").strip().lower() in ("local_market", "local market")
+        if _is_lm:
+            groups.insert(0, {"title": "Local Market foundation", "items":
+                [{"name": "Verified Local Market seller baseline", "points": 40}], "subtotal": 40,
+                "note": "every Local Market seller starts here"})
+
         # ── Category credentials (earned only, names+points from the catalog) ──
         flat = {}
         for _grp in _CATEGORY_SIGNALS.values():
             for sid, d in _grp.items():
                 flat[sid] = {"name": d["name"], "points": int(d.get("points") or 0)}
-        cred_rows = conn.execute("SELECT signal_id FROM user_credentials WHERE LOWER(email)=? AND status='earned' AND signal_id LIKE 'category.%'", (email,)).fetchall()
+        _like = "category.lm.%" if _is_lm else "category.%"
+        cred_rows = conn.execute("SELECT signal_id FROM user_credentials WHERE LOWER(email)=? AND status='earned' AND signal_id LIKE ?", (email, _like)).fetchall()
+        if not _is_lm:
+            cred_rows = [r for r in cred_rows if not r["signal_id"].startswith("category.lm.")]
         cat = []
         seen = set()
         for r in cred_rows:
@@ -3728,7 +3738,16 @@ def seller_public_credentials(listing_id: int):
             g["note"] = f"{raw_cat} pts earned — capped at the category maximum of 40"
         groups.append(g)
 
-        total = sum(gr["subtotal"] for gr in groups)
+        if _is_lm:
+            # LM: no 40-cap on the credential group; the TOTAL caps at 100 instead
+            g["subtotal"] = raw_cat
+            g.pop("note", None)
+            raw_total = sum(gr["subtotal"] for gr in groups)
+            if raw_total > 100:
+                g["note"] = f"{raw_total} pts of evidence — Trust Score caps at 100"
+            total = min(100, raw_total)
+        else:
+            total = sum(gr["subtotal"] for gr in groups)
         return {"trust_score": int(user.get("trust_score") or 0), "computed_total": total,
                 "groups": groups,
                 "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
