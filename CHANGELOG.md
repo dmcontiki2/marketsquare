@@ -15,6 +15,14 @@
   4/5 staged - left as-is, this is a change-control staging decision for David, not a doc-sync fix.
 - Cost model impact: none (doc-sync only, no pricing/infra change).
 
+## Session 144 (cont.) — AGENT-DIR-WIDTH-2 SHIPPED (David live-QA ×5): directory now measured-identical to sibling screens
+- Root cause finally found where it always was: ms.css @media(min-width:768px) widens body to 900px
+  on desktop — sibling screens fill 900; the directory was capped (720) by a copied pattern. Cap
+  removed; card list is now a responsive grid (auto-fill minmax 280px — 1-col phone, 3-col laptop).
+- METHOD FIX after repeated cosmetic misses: verified IN THE LIVE BROWSER this time (Chrome DOM
+  measurement, 1920 viewport): body=900, browse grid=900, directory=900 — identical. ms.js v324->v325,
+  parity c8c2a7bd, CF purged. Visual screenshot blocked by the pre-launch gate; computed widths are the evidence.
+
 ## Session 144 (cont.) — AGENT-DIR-WIDTH-1 SHIPPED (David live-QA ×4): directory matches the app template width
 - David-found: the directory column read thinner than sibling screens. Root cause: custom inner
   max-width/padding + a gray band inside the app's standard 430px body column. Fix: exact
