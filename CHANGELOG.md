@@ -1,3 +1,8 @@
+## Session 144 (cont.) — AGENT-DIR-NAV-1 SHIPPED (David live-QA ×3): directory is a real screen, bottom nav stays
+- David-found: the fixed overlay covered the bottom tab bar — user trapped with only Back. Converted
+  to a standard app screen (screen-agent-dir + agent-dir-body); goTo keeps the bottom nav visible and
+  every tab live; demo-mode guarded; Back returns to browse. ms.js v322->v323 + index.html, parity, CF purged.
+
 ## Session 144 (cont.) — AGENT-DIR-STYLE-1 SHIPPED (David live-QA ×2): directory overlay light-theme + width fix
 - David-found: directory overlay assumed a dark theme (--bg fallback) -> white-on-white header on the
   live light theme, and no width constraint -> stretched full desktop width. Fix: explicit #eef1f6

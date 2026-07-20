@@ -15449,19 +15449,14 @@ function svcAgentsBannerHtml(){
     '<div style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>';
 }
 function agentDirOpen(v){
+  if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to browse professional agents.'); return; }
   window._agentDirVert=v||'property';
-  var o=document.getElementById('agent-dir-overlay');
-  if(!o){
-    o=document.createElement('div'); o.id='agent-dir-overlay';
-    o.style.cssText='position:fixed;inset:0;z-index:9000;background:#eef1f6;overflow-y:auto;';
-    document.body.appendChild(o);
-  }
-  o.style.display='block';
+  goTo('agent-dir');
   agentDirRender();
 }
-function agentDirClose(){ var o=document.getElementById('agent-dir-overlay'); if(o) o.style.display='none'; }
+function agentDirClose(){ goTo('browse'); }
 function agentDirRender(){
-  var o=document.getElementById('agent-dir-overlay'); if(!o) return;
+  var o=document.getElementById('agent-dir-body'); if(!o) return;
   var v=window._agentDirVert;
   var chips=[['property','🏡 Estate'],['cars','🚗 Car sales'],['travel','🧳 Tour']].map(function(c){
     return '<button onclick="window._agentDirVert=\''+c[0]+'\';agentDirRender()" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid '+(v===c[0]?'#C8873A':'#c9d2df')+';'+(v===c[0]?'background:#C8873A;color:#1c1204;':'background:#fff;color:#0c1a2e;')+'">'+c[1]+'</button>';
