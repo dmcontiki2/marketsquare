@@ -1073,19 +1073,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
     <div class="fs-section">
       <div class="fs-label">Make</div>
-      <div class="fs-options">
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Any</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Porsche</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">BMW</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Mercedes-AMG</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Ford</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Lamborghini</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Toyota</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Volkswagen</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Mustang</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Tesla</div>
-        <div class="fs-opt" onclick="toggleOpt(this,'fcar-make')">Jeep</div>
-      </div>
+      <!-- FILTER-DATA-2 (20 Jul 2026, David's ruling): enumerable-but-CHURNY fields
+           (makes, models, brands) are a SINGLE TEXT BOX — never chips, never a list,
+           computed or otherwise. Zero change management, valid in every city/country.
+           The datalist is typing-aid only (auto-derived from live stock). -->
+      <input id="fcar-make-input" list="fcar-make-dl" placeholder="Any make — e.g. Toyota, BYD, Volkswagen…" autocomplete="off"
+             style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);">
+      <datalist id="fcar-make-dl"></datalist>
     </div>
 
     <div class="fs-section">
@@ -4229,7 +4223,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
-<script src="/static/ms.js?v=332"></script>
+<script src="/static/ms.js?v=334"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

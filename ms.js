@@ -1768,9 +1768,30 @@ function renderFilterBar(){
 
 function openFilterSheet(cat){
   _ensureUniversalBlocks();
+  if(cat==='cars') _fillMakeDatalist();   // FILTER-DATA-2
   const _s = document.getElementById('fs-'+cat);
   if(_s) _s.classList.add('open');
   syncAllUniPills();
+}
+
+/* FILTER-DATA-2 (20 Jul 2026, David's standing ruling): churny enumerations
+   (vehicle makes, models, brands — anything a country/city changes every few
+   months) get a SINGLE TEXT BOX, never chips or lists, curated OR computed.
+   Zero change management; born valid in every city and country. The datalist
+   is autocomplete sugar derived from live stock — deleting it changes nothing. */
+function _fillMakeDatalist(){
+  var dl=document.getElementById('fcar-make-dl'), inp=document.getElementById('fcar-make-input');
+  if(inp) inp.value=(filterState.cars&&filterState.cars.make)||'';
+  if(!dl) return;
+  var seen={}, opts=[];
+  (typeof LISTINGS!=='undefined'?LISTINGS:[]).forEach(function(l){
+    if(normCat(l.cat)!=='Cars' || l.paused) return;
+    if(!DEMO_MODE && String(l.id).startsWith('demo_')) return;
+    var m=String(l.make||'').trim(); if(!m) return;
+    var k=m.toLowerCase(); if(seen[k]) return; seen[k]=1; opts.push(m);
+  });
+  opts.sort();
+  dl.innerHTML=opts.map(function(m){return '<option value="'+m.replace(/"/g,'&quot;')+'">';}).join('');
 }
 function closeFsBg(e, id){
   if(e.target.id===id) document.getElementById(id).classList.remove('open');
@@ -1929,7 +1950,7 @@ function applyFilters(cat){
     filterState.collectors.era             = getSelOptInSection('Era','fs-collectors');
     filterState.collectors.area            = getSelOptInSection('Area','fs-collectors');
   } else if(cat==='cars'){
-    filterState.cars.make         = getSelOptInSection('Make','fs-cars');
+    filterState.cars.make         = (document.getElementById('fcar-make-input')?.value||'').trim();   // FILTER-DATA-2: the text box IS the filter
     filterState.cars.maxPrice     = document.getElementById('fcar-max')?.value || '';
     filterState.cars.yearFrom     = getSelOptInSection('Year From','fs-cars');
     filterState.cars.transmission = getSelOptInSection('Transmission','fs-cars');
@@ -3183,7 +3204,7 @@ function renderGrid(){
 
     if(l.cat==='Cars'){
       const fcar = filterState.cars;
-      if(fcar.make && fcar.make!=='' && l.make && l.make!==fcar.make) return false;
+      if(fcar.make && fcar.make!=='' && l.make && String(l.make).toLowerCase().indexOf(fcar.make.toLowerCase())===-1) return false;   // FILTER-DATA-2: case-insensitive contains
       if(fcar.maxPrice && l.priceNum > parseInt(fcar.maxPrice)) return false;
       if(fcar.yearFrom && fcar.yearFrom!==''){
         const yrMatch = fcar.yearFrom.match(/(\d{4})/);

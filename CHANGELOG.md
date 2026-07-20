@@ -22,6 +22,19 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — FILTER-DATA-2 SHIPPED: David's standing filter ruling — churny enumerations are a TEXT BOX
+- DAVID'S RULING (supersedes the interim data-chips idea, which he rightly rejected as still a moving
+  part): any filter whose value-set a country/city churns every few months (vehicle makes, models,
+  brands) is a SINGLE FREE-TEXT BOX — never chips or lists, curated OR computed. Zero change
+  management; born valid in every city/country. Stable ontologies (beds, transmission, prop types,
+  trust bands) stay as chips.
+- Cars 'Make' converted as the reference implementation: 11 hardcoded chips (Porsche/Lamborghini/
+  Mustang demo relics) deleted for one text input; matching is case-insensitive contains ('volks'
+  finds Volkswagen); invisible datalist autocomplete derived from live stock (typing aid only).
+- First edit pass sliced a brace and broke ms.js — caught by node --check pre-deploy, restored from
+  backup, reapplied clean. ms.js v332->v334 + index.html, parity d96d4a20, CF purged, live-verified
+  (box present, zero old chips in served HTML).
+
 ## Session 144 (cont.) — ADV-THUMB-1 SHIPPED (David live-QA): Adventures sub-pick thumbnails + coach-copy fix
 - Adventures Experiences/Accommodation cards get photos: Experiences reuses the Drakensberg scene,
   Accommodation is a NEW thatched-lodge-suite scene (deck, lantern, bushveld — 2 credits).
