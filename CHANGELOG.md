@@ -22,6 +22,13 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — LM-SUPER-RIBBON-2 (the real reason the ribbon was missing)
+- Frontend fix alone was not enough: /local-market/listings SELECTs explicit columns and
+  super_example was not among them — the card always received undefined. Column added to the
+  SELECT, and the LM sort gains SUPER-PIN (COALESCE(super_example,0) DESC first) like every
+  BEA sort variant. Restarted, verified: endpoint now returns 272=1, 273=0, teak first.
+- Lesson repeated from this project: verify the DATA path, not just the render path.
+
 ## Session 144 (cont.) — LM-SUPER-RIBBON-1 (David's sign-off pass on the Superior Examples)
 - David approved the full super-exemplar set live. Two corrections from his review:
   1. Teak sideboard (id 272) was missing its red ★ SUPER ADVERT ribbon — the Local Market card

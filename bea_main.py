@@ -7279,12 +7279,12 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
     rows = conn.execute(
         f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
                    l.thumb_url, l.medium_url, l.description, l.published_at,
-                   l.view_count, l.boost_until,
+                   l.view_count, l.boost_until, l.super_example,
                    COALESCE(u.trust_score, 0) AS trust_score
             FROM listings l
             LEFT JOIN users u ON u.email = l.seller_email
             WHERE {where}
-            ORDER BY l.published_at DESC LIMIT ?""",
+            ORDER BY COALESCE(l.super_example,0) DESC, l.published_at DESC LIMIT ?""",
         params + [limit]
     ).fetchall()
     conn.close()
