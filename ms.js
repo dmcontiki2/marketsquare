@@ -15461,7 +15461,7 @@ function agentDirRender(){
   var chips=[['property','🏡 Estate'],['cars','🚗 Car sales'],['travel','🧳 Tour']].map(function(c){
     return '<button onclick="window._agentDirVert=\''+c[0]+'\';agentDirRender()" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid '+(v===c[0]?'#C8873A':'var(--border,#c9d2df)')+';'+(v===c[0]?'background:#C8873A;color:#1c1204;':'background:var(--surface,#fff);color:var(--text,#0c1a2e);')+'">'+c[1]+'</button>';
   }).join('');
-  o.innerHTML='<div style="padding:18px 14px 80px;">'+
+  o.innerHTML='<div style="padding:16px 20px 80px;">'+   // gutters aligned to .lgrid (16px 20px) — measured, not guessed
     '<button onclick="agentDirClose()" style="background:none;border:none;color:var(--text-3,#51617a);font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;">&lsaquo; Back to Services</button>'+
     '<div style="background:#0c1a2e;border-radius:14px;padding:14px 16px;margin-bottom:12px;">'+
       '<div style="color:#fff;font-family:Syne,sans-serif;font-weight:800;font-size:18px;">Professional Agents</div>'+

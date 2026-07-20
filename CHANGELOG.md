@@ -15,6 +15,13 @@
   4/5 staged - left as-is, this is a change-control staging decision for David, not a doc-sync fix.
 - Cost model impact: none (doc-sync only, no pricing/infra change).
 
+## Session 144 (cont.) — AGENT-DIR-WIDTH-3 SHIPPED (David live-QA ×6, bookmark-ruler method): content edges pixel-identical
+- David used the browser bookmarks as a fixed ruler and was right again: containers matched (both 900)
+  but CONTENT gutters differed — .lgrid indents 16px/20px, the directory had 18px/14px, so its text
+  started 6px wider each side. Padding aligned to the measured .lgrid values.
+- Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
+  edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
+
 ## Session 144 (cont.) — AGENT-DIR-WIDTH-2 SHIPPED (David live-QA ×5): directory now measured-identical to sibling screens
 - Root cause finally found where it always was: ms.css @media(min-width:768px) widens body to 900px
   on desktop — sibling screens fill 900; the directory was capped (720) by a copied pattern. Cap
