@@ -1,3 +1,9 @@
+## Session 144 (cont.) — AGENT-SVC-4b SHIPPED (David live-QA): Professional Agents card in the SELL Services sub-pick
+- David tested live and rightly expected the new surface on the sell path too: the Services
+  sub-pick showed only Technical/Casuals. Third card added — Professional Agents — routing to
+  the Agent Hub (profiles are not adverts, so it leaves the wizard); coach line updated.
+- ms.js v320->v321, md5 parity d242cb6, CF purged, live sub-card verified at the edge.
+
 ## Session 144 — AGENT-SVC-4 + PHOTO-ANON-1 SHIPPED: dedicated agent surface, stock scenes, metrics, doc back-bars
 - PHOTO-ANON-1: agent service cards NEVER show a person pre-intro. Three flat-SVG generic scenes
   (royalty-free by construction) at /static/agent-stock/{property,cars,travel}.svg on every card

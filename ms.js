@@ -14304,6 +14304,7 @@ Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact deta
 Services: { label:'Services',
   subPick:{title:'What kind of service?',subs:[
     ['technical','⚡','Technical & Trades','Electrician, plumber, HVAC, builder — certified trade work'],
+      ['agents','🤝','Professional Agents','Estate, car sales & tour agents — your ranked service profile + seller leads'],
     ['casual','🧹','Casual & In-home','Garden, cleaning, painting, moving — reliable hands']]},
   sub:{
   technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate (R)',
@@ -14514,7 +14515,9 @@ function sfStartCat(cat){
   sfFlow().slots.forEach(function(s){sfState.photos[s[0]]=0;});
   sfGo('photos');
 }
-function sfPickSub(s){ sfState.sub=s; sfFlow().slots.forEach(function(sl){sfState.photos[sl[0]]=0;}); sfGo('photos'); }
+function sfPickSub(s){
+  if(sfState.cat==='Services'&&s==='agents'){ sfToast('Professional agents have their own hub — profile, credentials and leads.'); goTo('agent-suite'); return; }   // AGENT-SVC-4b
+  sfState.sub=s; sfFlow().slots.forEach(function(sl){sfState.photos[sl[0]]=0;}); sfGo('photos'); }
 function sfPickLmType(t){
   sfState.lmType=t; sfFlow().slots.forEach(function(sl){sfState.photos[sl[0]]=0;});
   sfToast(SF_CATS.local_market.typeToasts[t]); sfGo('photos');
@@ -14599,7 +14602,7 @@ function sfHomeS(){
 function sfSubpickS(){
   var c=SF_CATS[sfState.cat], p=c.subPick;
   var h='<div class="sf-hdr"><div class="sf-step">Before we start · '+c.label+'</div><h2>'+p.title+'</h2></div>'+
-  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Two different worlds, two different templates.</b> Pick the one that fits — the photos and questions change to match.</div></div><div class="sf-subgrid">';
+  '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Different worlds, different templates.</b> Pick the one that fits — the photos and questions change to match. Professional agents get their own hub instead of an advert.</div></div><div class="sf-subgrid">';
   p.subs.forEach(function(s){
     h+='<div class="sf-subcard" onclick="sfPickSub(\''+s[0]+'\')"><div class="sf-ic">'+s[1]+'</div><div><div class="sf-nm">'+s[2]+'</div><div class="sf-ds">'+s[3]+'</div></div></div>';
   });
