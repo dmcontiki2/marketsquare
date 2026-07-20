@@ -22,6 +22,21 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-3 SHIPPED (David live-QA x3): honest evidence-backed scores + heritage/POI links + LM photos
+- DAVID'S SCORING RULING: the exemplar must MODEL the evidence path, not decree a number — near-100
+  only with valid certificates, accreditations, experience and RESULTS visible. Implemented honestly:
+  the code's own V1 ceiling is 90 (universal 20 [ID verified 15 + complete profile 5; referrals not
+  trackable yet] + track record 30 [22 accepted intros seeded per seller, spread over 7 months, zero
+  ignored, 8-month tenure] + category 40 [full earned credential sets, extended per vertical]).
+  Scores now: property 90, travel 90, showcase 89, cars 87 — every point traceable in the breakdown,
+  referrals visibly remaining as the path toward 100. 88 accepted intros total as displayed results.
+- Heritage + amenities restored (David-found: exemplars lacked them): real coords set for Waterkloof
+  house + 2 Dinokeng adventures -> auto_link_pois ran live OSM Overpass queries (3 listings with real
+  nearby schools/shops/amenities); relink_wonders.py relinked heritage across 9/9 listings (avg 5).
+- LM multi-photo fixed (David-found): photo_urls JSON now populated on all 9 exemplars (LM surface
+  reads that column; sideboard shows its 3 photos).
+- Verified live: trust API returns 90/22 intros/7 signals for the property agent; CF purged.
+
 ## Session 144 (cont.) — SUPER-2 COMPLETE & LIVE (19:0x): the launch fixtures are standing
 - David broke the download logjam himself (Assets select-all -> archive zip, all 61 files) — human
   hands beat automation in that grid, as predicted. 31 exemplar photos mapped by contact sheet,
