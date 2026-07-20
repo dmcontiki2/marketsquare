@@ -8,7 +8,7 @@ _Updated: 21 June 2026 · Owner: David._
 | Document | Current version | Status | Counsel-gated | Notes |
 |---|---|---|---|---|
 | **Codex** | `Solar_Council_Codex_v4_8.docx` | **CANON** (adopted 21 Jun 2026) | No | Supersedes v4.7. CC-002 pricing parked → §3/§11 defer to PRICING_CANON. |
-| **PRINCIPLE_REQUIREMENTS** | v1.4 | **CURRENT** (21 Jun 2026) | No | One canonical copy + 4 md5-identical mirrors. |
+| **PRINCIPLE_REQUIREMENTS** | v1.5 | **CURRENT** (18 Jul 2026) | No | One canonical copy + 4 md5-identical mirrors. v1.5 adds PART H — The Third Pillar (AI sovereignty/access equity, H1–H6). |
 | **AGENT_BRIEFING** | v1.9 | CURRENT (18 Jun 2026) | No | Single source for the three agents. |
 | **PRICING_CANON** | pinned 15 Jun 2026 | **AUTHORITY** | No | The one place pricing is defined; code is the final word. |
 | **EULA** | v1.7 | DRAFT — **baselined** as accepted current (A6) | **Yes** | Last fully-Final = v1.4. Counsel to finalize v1.7 (incl. Session-77 AI-price clause + FAIS/NCA review). |

@@ -1,7 +1,7 @@
 # PRINCIPLE_REQUIREMENTS.md
 **Solar Council · TrustSquare Platform**
-Version 1.4 — CURRENT (21 June 2026). Single canonical copy; identical mirrors live in MarketSquare/docs, AdvertAgent/, CityLauncher/, Codices/. Supersedes v1.3 DRAFT and all earlier per-folder copies.
-Source of truth: Solar_Council_Codex_v4_8.docx (CANON, adopted 21 Jun 2026) · AGENT_BRIEFING.md v1.9 (18 Jun 2026) · PRICING_CANON.md (pricing authority). CC-001 HOLD accepted; CC-002 pricing/AI PARKED (A7 follows PRICING_CANON); CC-003 launch threshold applied; EULA v1.7 baselined (A6).
+Version 1.5 — CURRENT (18 July 2026). Single canonical copy; identical mirrors live in MarketSquare/docs, AdvertAgent/, CityLauncher/, Codices/. Supersedes v1.4 (21 Jun 2026) and all earlier per-folder copies.
+Source of truth: Solar_Council_Codex_v4_8.docx (CANON, adopted 21 Jun 2026) · AGENT_BRIEFING.md v1.9 (18 Jun 2026) · PRICING_CANON.md (pricing authority). Third Pillar principle (H1–H6, adopted 18 Jul 2026) · CC-001 HOLD accepted; CC-002 pricing/AI PARKED (A7 follows PRICING_CANON); CC-003 launch threshold applied; EULA v1.7 baselined (A6).
 
 This file is read-only. No agent or Cowork task may modify it.
 Place a copy in the root of every project folder (MarketApp, AdminApp, CityLauncher, AdvertAgent).
@@ -242,6 +242,55 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 
 ---
 
+## PART H · The Third Pillar — AI Sovereignty and Access Equity (Core — adopted 18 July 2026)
+
+**Context:** MarketSquare is built and deployed from South Africa, a region structurally excluded from the select group of users who have early or reliable access to frontier AI. US export controls, geopolitical restrictions, and commercial gatekeeping create a fundamental inequity: builders and founders in Africa, Asia, Latin America, and other underserved regions cannot reliably build on the same AI infrastructure as Silicon Valley. Restrictions like the June 2026 Claude Fable 5 / Mythos 5 suspension (temporary) and the ongoing Mythos 5 US-only limitation illustrate the risk.
+
+The Third Pillar is MarketSquare's answer: a resilient, self-hosted AI inference layer that cannot be banned, restricted, or gatekept based on geography, geopolitics, or regulatory fiat. It is built on principles of access equity and sovereignty.
+
+### H1 · The Third Pillar is open-weight model fallback, not API dependency
+- Primary inference: Claude Haiku / Sonnet (Anthropic API) — cost-optimal, fast, best-in-class.
+- Third Pillar fallback: open-weight frontier model (currently Kimi K3, 2.8T parameters, released 27 Jul 2026) — self-hosted on EU/US-neutral infrastructure.
+- Never depend solely on a single closed-source API provider (Anthropic, OpenAI, or otherwise). If export controls block Claude or Mythos, or OpenAI faces regional restrictions, Kimi K3 remains accessible.
+- The model weights are downloaded and owned by MarketSquare. No API routing through China or any single provider.
+- Applies to: MarketSquare's AI inference strategy · AdvertAgent AI backend · any future agent feature.
+
+### H2 · Self-hosted infrastructure must be EU or neutral ground
+- Host Kimi K3 (and any future open-weight fallback) on European infrastructure: Latitude.sh, Nebius, OVHcloud, or equivalent.
+- These providers are subject to EU regulatory framework and are less likely to discriminate by geography.
+- Never host on US-controlled infrastructure (which is vulnerable to US export controls).
+- Never host on Chinese infrastructure (to avoid dependency on or routing through Chinese state entities).
+- Applies to: GPU infrastructure procurement · vendor selection · cost modeling.
+
+### H3 · Availability is the measure — cost efficiency is secondary
+- The Third Pillar exists to ensure that MarketSquare can always serve its users, especially in regions outside the Silicon Valley/US commercial ecosystem.
+- Cost must be managed but never at the expense of availability.
+- Target: access a frontier-class open-weight model within 5 seconds of inference request, with 99.5% uptime.
+- If open-weight hosting becomes expensive, that is a cost of sovereignty — it is justified.
+- Applies to: SLA targets · infrastructure budgeting · feature availability decisions.
+
+### H4 · This principle serves global equity, not just MarketSquare's margin
+- The Third Pillar is a hedge against AI being weaponized as a tool of selective access, where "selected" means the wealthy, connected, geographically privileged few.
+- By proving that a frontier model can be self-hosted and reliably accessed by founders in South Africa, we prove that access is possible for anyone with the infrastructure.
+- This is not altruism; it is a direct response to structural inequality.
+- Applies to: product strategy · infrastructure investment · public narrative about MarketSquare's role.
+
+### H5 · Open-weight model adoption follows this sequence
+1. **Wait for provider adoption** (Jul–Aug 2026): Major cloud providers (Latitude.sh, Nebius, OVHcloud) will announce hosted Kimi K3 inference.
+2. **Vet providers** (Aug–Sep 2026): Select 1–2 providers with strong uptime SLAs, transparent pricing, and neutral jurisdiction.
+3. **Integrate fallback** (Sep–Oct 2026): Wire Kimi K3 as inference fallback in AdvertAgent + any AI-dependent feature. Primary stays on Claude Sonnet.
+4. **Self-host if needed** (Q4 2026+): If provider options are insufficient or unstable, evaluate self-hosting Kimi K3 on dedicated GPU infrastructure.
+- Applies to: MarketSquare AI roadmap · AdvertAgent inference strategy · quarterly architecture reviews.
+
+### H6 · Export control and geopolitical monitoring is ongoing
+- Kimi K3 is Chinese-developed (Moonshot AI), but the open-weight release is not subject to US export controls.
+- However, export control regimes change quickly (demonstrated June 2026).
+- Every monthly AI-Watch (automated monitoring, weekly digest) includes a section on frontier model availability and geopolitical risk.
+- If China restricts open-weight model exports or US designates Kimi K3 as a dual-use technology, the Third Pillar pivots to the next available model (likely GLM or Qwen from Alibaba, or DeepSeek from China, or any model that can be legally hosted).
+- Applies to: MarketSquare AI-Watch task · quarterly security/sovereignty reviews.
+
+---
+
 ## PART G · Advert Agent Project Principles (New — April 2026)
 
 *The Advert Agent is a new, separate project. It is a paid-subscription AI support function embedded inside the TrustSquare app. Core principles are established here as the project foundation. Full AGENT_BRIEFING.md to be written at project kickoff.*
@@ -291,9 +340,10 @@ Zero recurring SaaS costs. Sovereignty stack only. Any exception requires David'
 
 ---
 
-*End of PRINCIPLE_REQUIREMENTS.md v1.4 — CURRENT (21 June 2026)*
+*End of PRINCIPLE_REQUIREMENTS.md v1.5 — CURRENT (18 July 2026)*
 *Next update: when Codex version increments or a new project is added.*
 *v1.4 changes: header→CURRENT/v1.4; source→Codex v4.8 CANON + briefing v1.9; launch threshold (A6 + Quick Ref)→CC-003 wave-trigger; C5→v4.8; EULA v1.7 baselined (A6). CC-002 pricing PARKED — A7 follows PRICING_CANON.*
+*v1.5 changes: added PART H — The Third Pillar (AI Sovereignty and Access Equity, H1–H6, adopted 18 Jul 2026), merged forward from the Codices mirror where it had been added without propagation (canon QA 2026-07-20 catch); header→v1.5/18 Jul 2026.*
 
 ---
 ## [A6 · 21 Jun 2026] EULA v1.7 baselined as the accepted current version; counsel finalization (the clause below + FAIS/NCA review) is the remaining external action.

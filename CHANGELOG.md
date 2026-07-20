@@ -1,3 +1,20 @@
+## Session (canon QA fix) 2026-07-20 — PRINCIPLE_REQUIREMENTS drift fixed: PART H merged forward
+- Weekly canon QA (scheduled) caught check_canon_pointers.py FAIL: Codices/PRINCIPLE_REQUIREMENTS.md
+  had been hand-edited to v1.5 (18 Jul) with a new section, PART H - The Third Pillar (AI Sovereignty
+  and Access Equity, H1-H6 - open-weight/Kimi K3 fallback, EU-only hosting, availability-over-cost,
+  export-control monitoring), that was never propagated to the canonical file or the other three
+  mirrors (P1 violation). Confirmed the content is real decided strategy (matches
+  AI_VENDOR_STRATEGY_DECISION_2026-07-11.md / AI_SWAP_ARCHITECTURE.md), not a stray edit.
+- Fix: merged PART H into the canonical MarketSquare/PRINCIPLE_REQUIREMENTS.md (same position as the
+  Codices copy, before PART G), bumped the version line/footer to v1.5 (18 Jul 2026), bumped
+  canon.yml `requirements` and LEGAL_VERSIONS.md to match (P10), then ran
+  `scripts/propagate_requirements.py` to sync all 4 mirrors. Backups of all three edited files kept
+  alongside originals (`.bak-20260720-085940`).
+- Re-ran both gates clean: `check_canon_pointers.py` exit 0 (was exit 1), `check_pricing_canon.py`
+  exit 0 (no change, was already clean). `cc_age_check.py` still flags CC-002 open 40d/7d threshold,
+  4/5 staged - left as-is, this is a change-control staging decision for David, not a doc-sync fix.
+- Cost model impact: none (doc-sync only, no pricing/infra change).
+
 ## Session 144 (cont.) — AGENT-DIR-WIDTH-1 SHIPPED (David live-QA ×4): directory matches the app template width
 - David-found: the directory column read thinner than sibling screens. Root cause: custom inner
   max-width/padding + a gray band inside the app's standard 430px body column. Fix: exact

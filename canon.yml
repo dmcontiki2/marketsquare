@@ -8,7 +8,7 @@ meta:
 versions:                       # the one place version pointers are declared
   codex: "Solar_Council_Codex_v4_8.docx"   # CANON, adopted 21 Jun 2026
   codex_status: "CANON"
-  requirements: "v1.4"          # 21 Jun 2026 — single canonical + 4 mirrors
+  requirements: "v1.5"          # 18 Jul 2026 — added PART H (Third Pillar); single canonical + 4 mirrors
   agent_briefing: "v1.9"        # 18 Jun 2026
   eula: "v1.7"                  # baselined; counsel finalization pending (A6)
   ip_brief: "v6"               # DRAFT; counsel pending (A1)

@@ -49,16 +49,23 @@ REPOS = [MAIN_REPO, "AdvertAgent", "CityLauncher", "SellerScraper",
 CRIT, WARN, INFO, OK = "CRITICAL", "WARN", "INFO", "OK"
 
 def iter_files(root: Path):
+    # os.walk with in-place dirnames pruning, NOT Path.rglob("*") + post-hoc filtering.
+    # rglob lists every entry (including inside .git/archive/Kronberg/etc.) before
+    # SKIP_DIRS discards them; over a FUSE-mounted repo with thousands of .git objects
+    # that made the sweep take 60s+ and time out. Pruning dirnames during the walk means
+    # skipped directories are never descended into at all. Same filtering semantics
+    # (a SKIP_DIRS name at any depth is excluded), just without the wasted traversal.
     for repo in REPOS:
         base = root / repo
         if not base.exists():
             continue
-        for p in base.rglob("*"):
-            if p.is_dir() or p.suffix.lower() not in SCAN_EXT:
-                continue
-            if any(d in p.parts for d in SKIP_DIRS) or SKIP_FILE.search(p.name):
-                continue
-            yield p
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+            for fname in filenames:
+                p = Path(dirpath) / fname
+                if p.suffix.lower() not in SCAN_EXT or SKIP_FILE.search(p.name):
+                    continue
+                yield p
 
 def read(p: Path) -> str:
     try:
