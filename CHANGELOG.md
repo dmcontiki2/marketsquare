@@ -22,6 +22,21 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-2 COMPLETE & LIVE (19:0x): the launch fixtures are standing
+- David broke the download logjam himself (Assets select-all -> archive zip, all 61 files) — human
+  hands beat automation in that grid, as predicted. 31 exemplar photos mapped by contact sheet,
+  compressed, uploaded to /static/super/ (probe 200).
+- BUILT AND VERIFIED LIVE: 9 super_example listings (house/Hilux/tutor/electrician/garden/Krugerrands/
+  game drive/lodge/sideboard) with full category fields, 15+ word copy, price_num, published, claimed,
+  under 4 trust-100 sellers with earned credentials; 3 super agents LIVE with real computed metrics —
+  property TS-BED408 rank 100.0 (trust 100 x quality 100: the house IS a perfect listing),
+  cars TS-0A74DF rank 97 (94q: 4 photos), travel TS-79E664 rank 93 (86q: 3-photo sets) — the rank
+  spread itself demonstrates the metric honestly.
+- /listings Pretoria: 8 exemplars, all super=1, pinned first; LM sideboard serving via its category
+  feed; site 200 in 116ms. Every category now opens on a red-ribbon measuring stick.
+- OPTIONAL POLISH (tomorrow, ~26 credits): top up the six 3-photo sets to 5 photos each via reference
+  chains -> literal 100/100 on all nine. Structural work: DONE.
+
 ## Session 144 (cont.) — SUPER-PIN-1 SHIPPED (David's clarification): exemplars are LIVE LAUNCH fixtures, always first
 - DAVID'S INTENT SHARPENED: the super exemplars are NOT demo-world content — they live on the LIVE site
   from launch, permanently pinned as the FIRST listing in every category: the perfect example every
