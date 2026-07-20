@@ -22,6 +22,15 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-PIN-1 SHIPPED (David's clarification): exemplars are LIVE LAUNCH fixtures, always first
+- DAVID'S INTENT SHARPENED: the super exemplars are NOT demo-world content — they live on the LIVE site
+  from launch, permanently pinned as the FIRST listing in every category: the perfect example every
+  lister checks against and measures themselves against (advert quality AND the trust credentials
+  behind it). The old ?demo=1 prospect-city world is a separate thing, untouched.
+- SUPER-PIN-1: every backend sort variant (newest/price/trust/smart/default) now pins
+  super_example DESC first; FEA grid comparator pins exemplars ahead of everything (placeholders
+  still last). bea_main.py + ms.js v337->v338 + index.html, restart healthy, parity 750127c3, CF purged.
+
 ## Session 144 (cont.) — SUPER-2 IN PROGRESS: all exemplar photos GENERATED; assembly parked for next session
 - GENERATION COMPLETE (~32 clean images + 4 text-overlay rejects, ~70 credits): all 9 exemplar photo
   sets shot with David-approved reference-chaining — every companion generated FROM its hero, so the

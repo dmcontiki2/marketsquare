@@ -1907,14 +1907,17 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         _xw.append("vehicle_year <= ?"); _xp.append(year_max)
     _extra_where = (" WHERE " + " AND ".join(_xw)) if _xw else ""
     _sort_map = {
-        "newest":     "ORDER BY created_at DESC",
-        "price_asc":  "ORDER BY (price_num IS NULL), price_num ASC",
-        "price_desc": "ORDER BY (price_num IS NULL), price_num DESC",
-        "trust":      "ORDER BY COALESCE(trust_score,0) DESC, created_at DESC",
+        # SUPER-PIN-1 (20 Jul 2026, David): super_example exemplars are LIVE LAUNCH
+        # fixtures — always the first listing in every view, the measuring stick
+        # every lister checks against. Every sort variant pins them first.
+        "newest":     "ORDER BY COALESCE(super_example,0) DESC, created_at DESC",
+        "price_asc":  "ORDER BY COALESCE(super_example,0) DESC, (price_num IS NULL), price_num ASC",
+        "price_desc": "ORDER BY COALESCE(super_example,0) DESC, (price_num IS NULL), price_num DESC",
+        "trust":      "ORDER BY COALESCE(super_example,0) DESC, COALESCE(trust_score,0) DESC, created_at DESC",
         # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
-        "smart":      "ORDER BY (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+        "smart":      "ORDER BY COALESCE(super_example,0) DESC, (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
     }
-    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY created_at DESC")
+    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY COALESCE(super_example,0) DESC, created_at DESC")
 
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)

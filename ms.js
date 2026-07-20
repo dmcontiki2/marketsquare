@@ -3232,6 +3232,8 @@ function renderGrid(){
   }
   // Placeholders always go last — push "Coming soon" cards to the end
   filtered.sort((a,b)=>{
+    const asup=a.super_example?0:1, bsup=b.super_example?0:1;   // SUPER-PIN-1: exemplars always first
+    if(asup!==bsup) return asup-bsup;
     const aph=String(a.id).startsWith('ph_')?1:0;
     const bph=String(b.id).startsWith('ph_')?1:0;
     return aph-bph;
