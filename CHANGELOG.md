@@ -1,3 +1,9 @@
+## Session 144 (cont.) — AGENT-DIR-STYLE-1 SHIPPED (David live-QA ×2): directory overlay light-theme + width fix
+- David-found: directory overlay assumed a dark theme (--bg fallback) -> white-on-white header on the
+  live light theme, and no width constraint -> stretched full desktop width. Fix: explicit #eef1f6
+  overlay, centered max-width:560px column, navy header CARD (white text only on navy), light-bg
+  chips, muted footer text, bordered cards. ms.js v321->v322, md5 2866d26f parity, CF purged.
+
 ## Session 144 (cont.) — AGENT-SVC-4b SHIPPED (David live-QA): Professional Agents card in the SELL Services sub-pick
 - David tested live and rightly expected the new surface on the sell path too: the Services
   sub-pick showed only Technical/Casuals. Third card added — Professional Agents — routing to
