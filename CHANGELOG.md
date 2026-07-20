@@ -22,6 +22,16 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — HOME-TILES-1 SHIPPED (David-found): home Categories grid was still Unsplash
+- David asked 'what happened to the demo data?' — screenshot showed the HOME Categories tiles with the
+  old stock photos (American colonial, Bugatti). Diagnosis: demo data was fine (live-mode counts were
+  real: 39/28/2, tutors/services/adventures genuinely 0, Featured correctly awaiting sellers) — but the
+  home grid tiles carry their OWN hardcoded imgs in index.html, missed by BRAND-PHOTO-1 which only
+  converted CATS.catPhoto.
+- All 6 home tiles -> brand photos; PROP_PHOTOS demo placeholder pool also repointed at own scenes.
+  index.html now serves ZERO images.unsplash references (verified in served HTML) — hotlink-free app.
+- index.html v335->v336, CF purged.
+
 ## Session 144 (cont.) — ICON-PHOTO-1 SHIPPED (David-requested): identity icons -> photo chips, semantic icons kept
 - David: replace remaining icons with photo thumbnails except where icons should stay. Ruling applied:
   PHOTOS where the icon does category-identity work — the 6 filter-sheet headers (small 34x24 photo

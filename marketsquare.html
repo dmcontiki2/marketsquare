@@ -61,10 +61,10 @@ const CATS = {
 // ── PROPERTY PHOTOS ────────────────────────────────────────
 // Replace with real Pretoria property photos when available.
 const PROP_PHOTOS = [
-  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80',
-  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80',
-  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80',
-  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&q=80',
+  '/static/brand-photos/cat_property.jpg',
+  '/static/brand-photos/lm_5_dresser.jpg',
+  '/static/brand-photos/adv_accommodation.jpg',
+  '/static/sf_cat_property.jpg',
 ];
 
 // ── LISTINGS / SELLERS ─────────────────────────────────────────────────────
@@ -458,12 +458,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <!-- LM-19: stats-row permanently removed — bottom-half real estate now belongs to the "For You" wishlist feed below -->
   <div class="sec-head"><h2>Categories</h2><a onclick="goTo('browse')">All →</a></div>
   <div class="cat-grid" id="home-cat-grid">
-    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:#1e3a5f"><img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80" alt="Property" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count" id="cat-count-Property">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:#14532d"><img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80" alt="Tutors" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count" id="cat-count-Tutors">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:#7c2d12"><img src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&q=80" alt="Services" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count" id="cat-count-Services">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Adventures')"><div class="cat-bg" style="background:#064e3b"><img src="https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=80" alt="Adventures" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count" id="cat-count-Adventures">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Collectors')"><div class="cat-bg" style="background:#44403c"><img src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&q=80" alt="Collectors" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count" id="cat-count-Collectors">0 listings</div></div></div>
-    <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" alt="Cars" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Property')"><div class="cat-bg" style="background:#1e3a5f"><img src="/static/brand-photos/cat_property.jpg" alt="Property" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Property</div><div class="cat-count" id="cat-count-Property">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Tutors')"><div class="cat-bg" style="background:#14532d"><img src="/static/brand-photos/cat_tutors.jpg" alt="Tutors" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Tutors</div><div class="cat-count" id="cat-count-Tutors">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Services')"><div class="cat-bg" style="background:#7c2d12"><img src="/static/brand-photos/cat_services.jpg" alt="Services" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Services</div><div class="cat-count" id="cat-count-Services">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Adventures')"><div class="cat-bg" style="background:#064e3b"><img src="/static/brand-photos/cat_adventures.jpg" alt="Adventures" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count" id="cat-count-Adventures">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Collectors')"><div class="cat-bg" style="background:#44403c"><img src="/static/brand-photos/cat_collectors.jpg" alt="Collectors" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count" id="cat-count-Collectors">0 listings</div></div></div>
+    <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="/static/brand-photos/cat_cars.jpg" alt="Cars" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
     <div class="cat-tile" onclick="goTo('local-market')" style="grid-column:1/-1;aspect-ratio:6/1;" id="lm-home-tile"><div class="cat-bg" style="background:linear-gradient(135deg,#1f2937,#111827)"><img id="lm-home-bg-img" src="/static/brand-photos/lm_1_honey.jpg" alt="Local Market" loading="lazy" referrerpolicy="no-referrer" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}" style="transition:opacity 0.6s ease;"></div><div class="cat-overlay" style="justify-content:center;flex-direction:row;align-items:center;gap:10px;"><div class="cat-name" style="font-size:16px;">🛍️ Local Market</div><div class="cat-count" id="lm-home-count" style="opacity:.8;">Loading…</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
@@ -4223,7 +4223,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
-<script src="/static/ms.js?v=335"></script>
+<script src="/static/ms.js?v=336"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->
