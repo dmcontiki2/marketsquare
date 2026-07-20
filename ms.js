@@ -338,6 +338,7 @@ async function loadLiveListings(retryCount) {
           sellerIdx: null,
           isLive: true,
           service_class: l.service_class || null,
+          super_example: l.super_example || 0,   // SUPER-1: red-corner exemplar flag
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
           propType, beds, baths, garages, listingType, furnished, pets, features,
@@ -3287,6 +3288,7 @@ function cardHtml(l){
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
     <div class="ibox${_isCollectors?' collectors-thumb':''}" style="background:${catCfg(l).bg}">
       ${imgHtml}
+      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>':''}
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ Pending</div>':''}
@@ -3626,6 +3628,7 @@ function openDetail(id){
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
+      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;margin-bottom:6px;">★ SUPER ADVERT — what a 100-point listing looks like</div>':''}
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
       <div class="price-block">

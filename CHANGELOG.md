@@ -22,6 +22,19 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-1 SHIPPED (David-directed): live data cleared for clean re-entry + SUPER ADVERT flag
+- DAVID'S CALL after inventory review: live listings were entered wrong pre-streams; start from scratch
+  and re-enter through the new guided flows. DB backed up TWICE first (server .backup + local copy,
+  byte-identical, backups/marketsquare.db.bak-preclear-20260720-151602) — restore = copy back.
+- Cleared: 70 listings (incl. the 39 legacy-entry units) + 3 intros + agent_intros. PRESERVED: 16 users,
+  188 transactions / 1,516T wallets, credentials (money and identity are not 'data entered wrong').
+- SUPER-1 flag: listings.super_example column (server ALTER + canonical bea_main migration), FEA mapper
+  carries it, cards render a red top-left ★ SUPER ADVERT corner ribbon, detail shows the explainer pill
+  ('what a 100-point listing looks like'). ms.js v336->v337 + index.html + main.py, restart healthy,
+  parity 30a20c09, /listings returns [] clean.
+- Next: SUPER-2 — 9 exemplar listings (reference-chained consistent photo sets) + 3 super agents; then
+  super demo sellers phase.
+
 ## Session 144 (cont.) — HOME-TILES-1 SHIPPED (David-found): home Categories grid was still Unsplash
 - David asked 'what happened to the demo data?' — screenshot showed the HOME Categories tiles with the
   old stock photos (American colonial, Bugatti). Diagnosis: demo data was fine (live-mode counts were

@@ -157,6 +157,7 @@ def run_migrations(conn):
         ("level",        "TEXT"),
         ("mode",         "TEXT"),
         ("service_type", "TEXT"),
+        ("super_example", "INTEGER"),   # SUPER-1 (20 Jul 2026): red-corner exemplar flag
         ("availability", "TEXT"),
         ("collectible_type", "TEXT"),
         ("condition",        "TEXT"),
