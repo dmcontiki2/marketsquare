@@ -1941,6 +1941,17 @@ function applyFilters(cat){
     filterState.services.area          = getSelOptInSection('Area','fs-services');
   } else if(cat==='adventures'){
     filterState.adventures.adventureType = getSelOptInSection('Adventure Type','fs-adventures');
+    (function(){   // ADV-SYNC-1: sheet choice drives the top pills too
+      var t=filterState.adventures.adventureType;
+      var sc = t==='Experiences' ? 'adventures_experiences' : t==='Accommodation' ? 'adventures_accommodation' : 'all';
+      if(sc!==advSubcat){
+        advSubcat=sc;
+        document.querySelectorAll('.adv-subcat-btn').forEach(function(b){b.classList.remove('active');});
+        var id = sc==='all' ? 'adv-btn-all' : sc==='adventures_accommodation' ? 'adv-btn-accommodation' : 'adv-btn-experiences';
+        var b=document.getElementById(id); if(b) b.classList.add('active');
+        var catRow=document.getElementById('adv-cat-row'); if(catRow) catRow.style.display=(sc==='all')?'none':'flex';
+      }
+    })();
     filterState.adventures.environment   = getSelOptInSection('Environment','fs-adventures');
     filterState.adventures.maxPrice      = document.getElementById('fa-max')?.value || '';
     filterState.adventures.duration      = getSelOptInSection('Duration','fs-adventures');
@@ -2075,6 +2086,11 @@ const ADV_SUBCAT_LABELS = {
 function setAdvSubcat(sc, btn){
   advSubcat = sc;
   advCat = 'all';
+  // ADV-SYNC-1: the sheet's Adventure Type mirrors the pills — one dimension, one state
+  if(typeof filterState!=='undefined' && filterState.adventures){
+    filterState.adventures.adventureType = (sc==='adventures_experiences') ? 'Experiences'
+      : (sc==='adventures_accommodation') ? 'Accommodation' : '';
+  }
   document.querySelectorAll('.adv-subcat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   // Only show category chip row when a specific subcat is selected
@@ -2269,8 +2285,9 @@ function renderAdvGrid(){
     // Filtered Search (fs-adventures) — applies to both Stays & Experiences
     const fa = filterState.adventures;
     if(fa){
-      if(fa.adventureType==='Experiences'   && !cat.includes('experien')) return false;
-      if(fa.adventureType==='Accommodation' && !cat.includes('accommodation')) return false;
+      const _tcat = (l.advType && l.advType.startsWith('adventures_')) ? l.advType : cat;   // ADV-SYNC-1
+      if(fa.adventureType==='Experiences'   && !_tcat.includes('experien')) return false;
+      if(fa.adventureType==='Accommodation' && !_tcat.includes('accommodation')) return false;
       if(fa.environment && fa.environment!=='' && (l.environment_type||'')!==fa.environment) return false;
       if(fa.maxPrice && Number(l.priceNum||l.price||0) > parseInt(fa.maxPrice)) return false;
       if(fa.area && fa.area!=='' && (l.suburb||'')!==fa.area) return false;

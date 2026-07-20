@@ -22,6 +22,21 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — ADV-SYNC-1 + BEE-ACCURACY-1 SHIPPED (David live-QA): one filter state, one truth
+- ADV-SYNC-1 (David-found): the Adventures top pills and the filter sheet's Adventure Type governed
+  the SAME dimension independently -> contradictory selections (Stays pill + Experiences sheet chip)
+  = zero results. Now one synced state: picking a pill aligns the sheet value; applying the sheet
+  drives the pills (incl. active classes + chip row); the sheet's type filter also honours the raw
+  advType subtype. Contradictions are structurally impossible.
+- BEE-ACCURACY-1 (David's correction — truthfulness of the exemplar): she holds ASSOCIATION
+  appointments (national SABIO secretary + provincial structure), NOT a government appointment —
+  the provincial_role (+10 'Official government/regulatory appointment') credential was inaccurate
+  and is removed. Catalog extended design-consistently with category.lm.assoc_role_2 (+10, Second
+  named association role, additional_to assoc_role — same stacking pattern as certs/bodies/guides);
+  her ledger now reads assoc_role +15 and assoc_role_2 +10, verified regulatory-appointment ABSENT,
+  TOTAL still 100 MATCH (evidence overflow absorbs the same points honestly).
+- bea_main.py (catalog) + ms.js v343->v344 + index.html; 56 tests green; restart healthy; CF purged.
+
 ## Session 144 (cont.) — ADV-FIX-1..4 + AGENT-PILL-1 SHIPPED (David live-QA): Adventures filters healed, agent pills everywhere
 - David-found: Adventures pill sequences dead-ended at zero results (hard reset only) + RNaN prices.
   Root causes: (1) subtype lives IN the category string (adventures_experiences) but exemplars carried
