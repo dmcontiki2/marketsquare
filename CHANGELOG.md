@@ -22,6 +22,13 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — ADV-THUMB-1 SHIPPED (David live-QA): Adventures sub-pick thumbnails + coach-copy fix
+- Adventures Experiences/Accommodation cards get photos: Experiences reuses the Drakensberg scene,
+  Accommodation is a NEW thatched-lodge-suite scene (deck, lantern, bushveld — 2 credits).
+- Coach-copy leak fixed: the Services-only sentence (professional agents get their own hub) had bled
+  onto every sub-pick screen via the shared renderer — now conditional on Services.
+- ms.js v331->v332 + index.html, parity edad10c2, CF purged, URL 200. All sub-pick screens now photo-dressed.
+
 ## Session 144 (cont.) — LMTYPE-THUMB-1 SHIPPED (David live-QA): Local Market type-pick + step-1 photo thumbnails
 - LM 'What are you selling?' six type cards now carry photo thumbnails: food=produce crates,
   handmade=beadwork, furniture=dresser, instruments=guitar (reused scroll scenes) + 2 NEW scenes
