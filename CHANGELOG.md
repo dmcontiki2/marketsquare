@@ -22,6 +22,15 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — LM-SUPER-RIBBON-1 (David's sign-off pass on the Superior Examples)
+- David approved the full super-exemplar set live. Two corrections from his review:
+  1. Teak sideboard (id 272) was missing its red ★ SUPER ADVERT ribbon — the Local Market card
+     renderer never drew the badge (BEA cards had it, LM did not). Ribbon added to the LM card template.
+  2. Bee Lady honey (id 273) is now a REAL live listing, not a super exemplar — super_example
+     flag cleared per David: she is a genuine founding seller; her 100 Trust Score stands on real
+     evidence and needs no exemplar framing. Teak keeps the flag (and LM first-pin).
+- ms.js v345->v346; verified live: ribbon code at edge, /listings returns 272=1, 273=0.
+
 ## Session 144 (cont.) — AGENT-CLASS-1 + SPS-VOCAB-1 SHIPPED (David's closing ruling): the third class and the three named scores
 - Services CLASS filter gains its third option — Professional Agents — which routes to the ranked
   agent directory (agents are profiles, not grid listings). Any/Technical/Casuals unchanged.

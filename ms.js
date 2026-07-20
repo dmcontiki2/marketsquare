@@ -12269,6 +12269,7 @@ async function lmLoadGrid() {
         `<div class="lcard" onclick="lmOpenDetail(${c.id})">` +
         `<div class="ibox" style="background:#1f2937">` +
           imgHtml +
+          (c.super_example ? '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">\u2605 SUPER ADVERT</div>' : '') +
           (isFeat ? '<div class="feat-badge">Featured</div>' : '') +
           `<div class="model-badge queue">🛍️ Queue</div>` +
           `<button class="wish-btn ${svLM?'saved':''}" onclick="event.stopPropagation();lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${svLM?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +
