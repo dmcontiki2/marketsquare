@@ -320,6 +320,7 @@ async function loadLiveListings(retryCount) {
         return {
           id: 'bea_' + l.id,
           cat: normCat(l.category),
+          advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
           feat: false,
           title: l.title,
           city:   l.city || activeCity.name,
@@ -417,6 +418,7 @@ async function loadLiveDash() {
               beaListingId: l.id,
               title: l.title,
               cat: normCat(l.category),
+          advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
               status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
               listing_status: (l.listing_status || 'live').toLowerCase(),
               photo: l.thumb_url || null,
@@ -2224,6 +2226,16 @@ function refreshAdvFilterBadge(){
     if(pill){ pill.style.background='rgba(255,255,255,.14)'; pill.style.borderColor='rgba(255,255,255,.28)'; } }
 }
 
+function advResetAll(){   // ADV-FIX-2: one-tap escape from any filter combination
+  try{ advSubcat='all'; }catch(e){}
+  try{ if(typeof advCat!=='undefined') advCat='all'; }catch(e){}
+  try{ if(typeof filterState!=='undefined' && filterState.adventures) filterState.adventures={}; }catch(e){}
+  try{ if(typeof _msSearchIds!=='undefined') _msSearchIds=null; }catch(e){}
+  document.querySelectorAll('.adv-subcat-btn').forEach(function(b){b.classList.remove('active');});
+  var all=document.getElementById('adv-btn-all'); if(all) all.classList.add('active');
+  refreshAdvCatChips && refreshAdvCatChips();
+  renderAdvGrid();
+}
 function renderAdvGrid(){
   const grid = document.getElementById('adv-grid');
   const countEl = document.getElementById('adv-results-count');
@@ -2237,8 +2249,9 @@ function renderAdvGrid(){
     const cat = (l.cat||'').toLowerCase();
     if(!cat.startsWith('adventures')) return false;
 
-    // Subcategory filter
-    if(advSubcat !== 'all' && cat !== advSubcat) return false;
+    // Subcategory filter (ADV-FIX-4: raw subtype for live rows, cat string for demo rows)
+    const _sub = (l.advType && l.advType.startsWith('adventures_')) ? l.advType : cat;
+    if(advSubcat !== 'all' && _sub !== advSubcat) return false;
 
     // Country filter
     if(advCountry !== 'ALL'){
@@ -2277,20 +2290,25 @@ function renderAdvGrid(){
       <div class="adv-empty-icon">🧭</div>
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">No Adventures yet</div>
       <div style="font-size:13px;line-height:1.6;">Operators are being onboarded — check back soon, or try a different country or environment filter.</div>
+      <button onclick="advResetAll()" style="margin-top:10px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:10px 22px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Clear all filters</button>
     </div>`;
     return;
   }
 
   grid.innerHTML = items.map(l => {
-    const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
+    const isAccom = ((l.advType||l.cat||'')+'').toLowerCase().includes('accommodation');
     const catLabel = advCatLabel(l);
     const badgeBg  = isAccom ? '#dbeafe' : '#d1fae5';
     const badgeCol = isAccom ? '#1e3a5f' : '#065f46';
     const envLabel = l.environment_type || '';
     const cur = ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()] || 'R';
     const _advPer = l.per ? l.per : (isAccom ? '/night' : '/person');  // DEMO-6: honour the data's per field
+    const _pn = (typeof l.priceNum==='number' && isFinite(l.priceNum)) ? l.priceNum
+               : Number(String(l.price||'').replace(/[^0-9.]/g,''));
     const priceLabel = l.price
-      ? `${isAccom ? 'From ' : ''}${cur}${Number(l.price).toLocaleString()}${_advPer}`
+      ? (isFinite(_pn) && _pn > 0
+          ? `${isAccom ? 'From ' : ''}${cur}${_pn.toLocaleString()}${_advPer}`
+          : `${l.price}`)   // ADV-FIX-1: never RNaN — fall back to the seller's own string
       : '';
     const countryCode = (l.country||'ZA').toUpperCase();
     const flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
@@ -3248,10 +3266,10 @@ function renderGrid(){
       grid.innerHTML='<div class="no-res">No matches for \u201C'+_wlEsc(_msSearchQ)+'\u201D — try fewer or different words.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msClearSearch()">Clear search</span></div>';
       return;
     }
-    grid.innerHTML=(activeFilter==='Services'&&typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+'<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
+    grid.innerHTML=(typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+'<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
     return;
   }
-  grid.innerHTML = (activeFilter==='Services'&&typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'') + filtered.map(cardHtml).join('');
+  grid.innerHTML = (typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'') + filtered.map(cardHtml).join('');
 }
 
 
@@ -15540,11 +15558,20 @@ async function advAgentIntro(ref){
 /* ── AGENT-SVC-4 (20 Jul 2026): dedicated Professional Agents surface in Services
    + PHOTO-ANON-1 stock scenes. Technical and Casuals stay untouched; agents get
    their own pinned banner + full directory overlay with vertical chips. ── */
-function svcAgentsBannerHtml(){
-  return '<div onclick="agentDirOpen(\'property\')" style="grid-column:1/-1;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;">'+
-    '<div style="font-size:26px;">🤝</div>'+
-    '<div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:14px;">Professional Agents — a service of their own</div>'+
-    '<div style="font-size:11.5px;opacity:.78;">Estate · Car sales · Tour agents — credential-verified, ranked by trust, anonymous until introduced. Free intro; the agent pays 1T.</div></div>'+
+function svcAgentsBannerHtml(){   // AGENT-PILL-1: category-tailored (David, 20 Jul)
+  var cfg = {
+    Services: {v:'property', ic:'🤝', t:'Professional Agents — a service of their own',
+      s:'Estate · Car sales · Tour agents — credential-verified, ranked by trust, anonymous until introduced. Free intro; the agent pays 1T.'},
+    Property: {v:'property', ic:'🏡', t:'Plan it with a Real Estate Agent',
+      s:'Credential-verified local agents, ranked by trust — free introduction; the agent pays 1T.'},
+    Cars: {v:'cars', ic:'🚗', t:'Plan it with a Cars Buy/Sell Agent',
+      s:'MIRA-registered sales agents, ranked by trust — free introduction; the agent pays 1T.'}
+  }[activeFilter];
+  if(!cfg) return '';
+  return '<div onclick="agentDirOpen(\''+cfg.v+'\')" style="grid-column:1/-1;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;">'+
+    '<div style="font-size:26px;">'+cfg.ic+'</div>'+
+    '<div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:14px;">'+cfg.t+'</div>'+
+    '<div style="font-size:11.5px;opacity:.78;">'+cfg.s+'</div></div>'+
     '<div style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>';
 }
 function agentDirOpen(v){

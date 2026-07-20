@@ -22,6 +22,27 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — ADV-FIX-1..4 + AGENT-PILL-1 SHIPPED (David live-QA): Adventures filters healed, agent pills everywhere
+- David-found: Adventures pill sequences dead-ended at zero results (hard reset only) + RNaN prices.
+  Root causes: (1) subtype lives IN the category string (adventures_experiences) but exemplars carried
+  plain Adventures AND the FEA mapper normCats the subtype away -> pills excluded everything;
+  (2) Number('R 1 850 pp') = NaN. Fixes: exemplar categories set to proper subtypes; mapper now
+  carries advType (raw subtype) used by the pill filter + card badge (lodge correctly badges Stays);
+  price parser uses priceNum/digit-strip with graceful fallback to the seller's string — never NaN;
+  advResetAll() one-tap escape on every empty state. VERIFIED IN LIVE BROWSER: Stays->lodge,
+  Experiences->safari, reset->2, no NaN. estate_agents listing-category match LIKE'd for subtypes
+  (travel agent rank intact).
+- AGENT-PILL-1 (David-requested): the browse agent banner is now category-tailored — Property: 'Plan
+  it with a Real Estate Agent', Cars: 'Plan it with a Cars Buy/Sell Agent', Services keeps the
+  three-vertical directory banner. Verified rendering live in both categories.
+- BEE price fix (David mid-turn): 'R 60 - R 350' was digit-mashed to R60,350.00 by the LM price
+  formatter -> price now 'Product-specific — price list on request', price_num NULL.
+- OPEN QUESTION recorded for David (Adventures unification): the dedicated Adventures screen exists
+  for the World Heritage layer, country switcher + multi-currency (the international/demo showcase) —
+  Services-style unification would fold Stays/Experiences into the normal browse grid + filter sheet
+  and retire the special pills. Doable (~half-day) but touches the heritage strip; David to decide.
+- ms.js v341->v343 + index.html + estate_agents.py; 56 tests green; CF purged.
+
 ## Session 144 (cont.) — BEE-LADY-1 SHIPPED (David-directed): the real 100-score exemplar + LM model + LM surface fixes
 - DAVID'S SECOND EXEMPLAR: the Bee Lady (Misty Forest) — a REAL seller whose documents live in
   OneDrive/Documents/Marietjie: Bee Removal Certificate, DALRRD Certificate 2025, beekeeping training

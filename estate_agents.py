@@ -401,8 +401,8 @@ def _agent_listing_stats(conn, email: str, vertical: str = "property"):
     as the import gate)."""
     cat = VERTICALS[_vert(vertical)]["listing_category"]
     rows = conn.execute("""SELECT * FROM listings WHERE LOWER(seller_email)=?
-                           AND LOWER(category)=? AND COALESCE(listing_status,'live')='live'""",
-                        (email, cat)).fetchall()
+                           AND LOWER(category) LIKE ? AND COALESCE(listing_status,'live')='live'""",
+                        (email, cat + '%')).fetchall()   # ADV-FIX-3: adventures subtypes (adventures_experiences etc.)
     n = len(rows)
     if not n:
         return 0, 0
