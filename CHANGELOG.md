@@ -22,6 +22,16 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — LMTYPE-THUMB-1 SHIPPED (David live-QA): Local Market type-pick + step-1 photo thumbnails
+- LM 'What are you selling?' six type cards now carry photo thumbnails: food=produce crates,
+  handmade=beadwork, furniture=dresser, instruments=guitar (reused scroll scenes) + 2 NEW scenes
+  (antiques: silver teapot/clock/books on velvet · general: flea-market table with vinyl, camera and
+  Table Mountain behind — 4 credits). Emoji fallbacks intact.
+- Step 1/6 main slot for LM now shows the CHOSEN TYPE's photo (type-specific continuity); LM also got
+  its missing sf_cat_localmarket.jpg (honey scene) killing the Sell-tile Unsplash fallback — the last
+  sell-surface hotlink. Mapping visually verified before ship (B5/C4 lesson applied).
+- ms.js v330->v331 + index.html, parity verified, CF purged, all three new URLs 200.
+
 ## Session 144 (cont.) — CV-EDIT-FIX-1 + SUBPICK-THUMB-1 SHIPPED (David live-QA)
 - CV-EDIT-FIX-1 (David-found: Edit My Seller Profile did nothing): openCVEdit read SELLERS[0] but the
   live site ships SELLERS=[] (demo-era dependency) — silent throw. Now loads the saved ms_seller_profile

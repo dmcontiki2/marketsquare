@@ -14626,8 +14626,15 @@ function sfLmpickS(){
   var c=SF_CATS.local_market;
   var h='<div class="sf-hdr"><div class="sf-step">Before we start · Local Market</div><h2>'+c.typePickTitle+'</h2></div>'+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>From honey to guitars to grandma\'s dresser</b> — pick the closest fit and I\'ll shape the questions around it.</div></div><div class="sf-typegrid">';
+  var LM_TYPE_IMGS = { food:'/static/brand-photos/lm_4_produce.jpg', handmade:'/static/brand-photos/lm_3_beadwork.jpg',
+    furniture:'/static/brand-photos/lm_5_dresser.jpg', instruments:'/static/brand-photos/lm_2_guitar.jpg',
+    antiques:'/static/brand-photos/lm_t_antiques.jpg', general:'/static/brand-photos/lm_t_general.jpg' };
+  window.LM_TYPE_IMGS = LM_TYPE_IMGS;   // LMTYPE-THUMB-1 — also used by the step-1 main slot
   c.types.forEach(function(t){
-    h+='<div class="sf-subcard" onclick="sfPickLmType(\''+t[0]+'\')"><div class="sf-ic">'+t[1]+'</div><div><div class="sf-nm">'+t[2]+'</div><div class="sf-ds">'+t[3]+'</div></div></div>';
+    var im = LM_TYPE_IMGS[t[0]];
+    var ic = im ? '<div class="sf-ic" style="width:74px;height:52px;padding:0;overflow:hidden;border-radius:9px;flex:0 0 74px;"><img src="'+im+'" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent=\''+t[1]+'\'"></div>'
+                : '<div class="sf-ic">'+t[1]+'</div>';
+    h+='<div class="sf-subcard" onclick="sfPickLmType(\''+t[0]+'\')">'+ic+'<div><div class="sf-nm">'+t[2]+'</div><div class="sf-ds">'+t[3]+'</div></div></div>';
   });
   h+='</div><div class="sf-foot"><button class="sf-btn gho" onclick="sfGo(\'home\')">←</button></div>';
   return h;
@@ -14639,6 +14646,8 @@ function sfSlotHtml(sl){
   // photo replaces it. Other slots keep their specific emoji hints.
   var thumb;
   if (st===2 && sfState.previews[key]) thumb = '<img src="'+sfState.previews[key]+'">';
+  else if (key==='main' && sfState.cat==='local_market' && sfState.lmType && window.LM_TYPE_IMGS && window.LM_TYPE_IMGS[sfState.lmType])
+    thumb = '<img src="'+window.LM_TYPE_IMGS[sfState.lmType]+'" alt="" style="opacity:.9;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'\'+this.dataset.em" data-em="'+sl[3]+'">';
   else if (key==='main' && typeof SF_TILE_IMGS!=='undefined' && SF_TILE_IMGS[sfState.cat])
     thumb = '<img src="'+SF_TILE_IMGS[sfState.cat].own+'" alt="" style="opacity:.9;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'\'+this.dataset.em" data-em="'+sl[3]+'">';
   else thumb = sl[3];
