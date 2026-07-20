@@ -22,6 +22,27 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-2 IN PROGRESS: all exemplar photos GENERATED; assembly parked for next session
+- GENERATION COMPLETE (~32 clean images + 4 text-overlay rejects, ~70 credits): all 9 exemplar photo
+  sets shot with David-approved reference-chaining — every companion generated FROM its hero, so the
+  house, Hilux, garden, safari vehicle, lodge, sideboard, coin case, study and DB board each stay THE
+  SAME item across their whole set (David's consistency requirement — proven, he approved the technique
+  on the house hero+lounge pair).
+- Sets: House (hero/lounge/kitchen/bedroom/bathroom/garden x2) · Hilux 2.8 GD-6 (hero/interior/rear/
+  engine) · Tutor study (hero/desk/bookshelf) · Electrician (hero/covered-board/toolkit) · Garden
+  service (hero/edging/patio-after) · Krugerrand set (hero/coin-closeup/closed-case) · Safari
+  (hero/in-vehicle/sundowner) · Lodge (hero/bedroom/deck-dinner) · Teak sideboard (hero/detail/open).
+- Learned: prompts containing label phrases (THE ADVERT COVER) get typeset INTO the image by Nano
+  Banana — 4 rejects regenerated with explicit no-text clause. One failed gen auto-refunded.
+- STATE: all images safe in Higgsfield Assets (persistent); 14/32 downloaded to Downloads +
+  assets/super-exemplars/; Higgsfield bulk download only part-delivers (known quirk, twice now) and
+  the Assets grid fell into a sticky selection state — remaining 18 downloads parked.
+- NEXT SESSION PICKUP (SUPER-2 continuation): 1) fresh Assets page, download remaining 18 via
+  detail-view Download; 2) contact-sheet map -> upload all to server /static/super/; 3) INSERT 9
+  listings (100-pt fields, super_example=1) under showcase seller; 4) seed seller creds trust 100;
+  5) create 3 live agent profiles (FFC/MIRA/ASATA earned); 6) verify red-ribbon cards + directory in
+  app; 7) super demo sellers phase.
+
 ## Session 144 (cont.) — SUPER-1 SHIPPED (David-directed): live data cleared for clean re-entry + SUPER ADVERT flag
 - DAVID'S CALL after inventory review: live listings were entered wrong pre-streams; start from scratch
   and re-enter through the new guided flows. DB backed up TWICE first (server .backup + local copy,
