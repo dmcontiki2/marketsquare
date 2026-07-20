@@ -55,7 +55,7 @@ const CATS = {
   Cars:       { icon: '🚗', bg: 'linear-gradient(140deg,#0c1a2e,#1e3a5f)', model: 'queue',
                 catPhoto: '/static/brand-photos/cat_cars.jpg' },
   LocalMarket: { icon: '🛒', bg: 'linear-gradient(140deg,#14532d,#166534)', model: 'queue',
-                catPhoto: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' }
+                catPhoto: '/static/brand-photos/lm_1_honey.jpg' }
 };
 
 // ── PROPERTY PHOTOS ────────────────────────────────────────
@@ -464,7 +464,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="cat-tile" onclick="filterBrowse('Adventures')"><div class="cat-bg" style="background:#064e3b"><img src="https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=80" alt="Adventures" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Adventures</div><div class="cat-count" id="cat-count-Adventures">0 listings</div></div></div>
     <div class="cat-tile" onclick="filterBrowse('Collectors')"><div class="cat-bg" style="background:#44403c"><img src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&q=80" alt="Collectors" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Collectors</div><div class="cat-count" id="cat-count-Collectors">0 listings</div></div></div>
     <div class="cat-tile" onclick="filterBrowse('Cars')"><div class="cat-bg" style="background:#0c1a2e"><img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80" alt="Cars" loading="lazy" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}"></div><div class="cat-overlay"><div class="cat-name">Cars</div><div class="cat-count" id="cat-count-Cars">0 listings</div></div></div>
-    <div class="cat-tile" onclick="goTo('local-market')" style="grid-column:1/-1;aspect-ratio:6/1;" id="lm-home-tile"><div class="cat-bg" style="background:linear-gradient(135deg,#1f2937,#111827)"><img id="lm-home-bg-img" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80" alt="Local Market" loading="lazy" referrerpolicy="no-referrer" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}" style="transition:opacity 0.6s ease;"></div><div class="cat-overlay" style="justify-content:center;flex-direction:row;align-items:center;gap:10px;"><div class="cat-name" style="font-size:16px;">🛍️ Local Market</div><div class="cat-count" id="lm-home-count" style="opacity:.8;">Loading…</div></div></div>
+    <div class="cat-tile" onclick="goTo('local-market')" style="grid-column:1/-1;aspect-ratio:6/1;" id="lm-home-tile"><div class="cat-bg" style="background:linear-gradient(135deg,#1f2937,#111827)"><img id="lm-home-bg-img" src="/static/brand-photos/lm_1_honey.jpg" alt="Local Market" loading="lazy" referrerpolicy="no-referrer" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}" style="transition:opacity 0.6s ease;"></div><div class="cat-overlay" style="justify-content:center;flex-direction:row;align-items:center;gap:10px;"><div class="cat-name" style="font-size:16px;">🛍️ Local Market</div><div class="cat-count" id="lm-home-count" style="opacity:.8;">Loading…</div></div></div>
   </div>
   <div class="sec-head" style="margin-top:4px"><h2>Featured</h2></div>
   <div class="featured-wrap">
@@ -4229,7 +4229,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
-<script src="/static/ms.js?v=327"></script>
+<script src="/static/ms.js?v=328"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

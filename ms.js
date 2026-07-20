@@ -15488,4 +15488,23 @@ async function agentDirLoad(){
   h+='<div style="grid-column:1/-1;font-size:10.5px;color:var(--text-3,#68758c);font-style:italic;">No names, no brands, no faces — identity and photos only after an accepted introduction. Free for you; the agent pays 1T.</div>';
   el.innerHTML=h;
 }
+/* ── LM-SCROLL-1 (20 Jul 2026, David): Local Market live scroll — the home tile
+   gently rotates through the five Higgsfield market scenes (crossfade, 4s).
+   Pauses when the tab is hidden. Will later rotate REAL listing photos. ── */
+var LM_SCROLL_IMGS = ['/static/brand-photos/lm_1_honey.jpg','/static/brand-photos/lm_2_guitar.jpg',
+  '/static/brand-photos/lm_3_beadwork.jpg','/static/brand-photos/lm_4_produce.jpg','/static/brand-photos/lm_5_dresser.jpg'];
+var _lmScrollIdx = 0;
+setInterval(function(){
+  if (document.hidden) return;
+  var img = document.getElementById('lm-home-bg-img');
+  if (!img || !img.isConnected) return;
+  _lmScrollIdx = (_lmScrollIdx + 1) % LM_SCROLL_IMGS.length;
+  var next = LM_SCROLL_IMGS[_lmScrollIdx];
+  var pre = new Image();
+  pre.onload = function(){
+    img.style.opacity = '0';
+    setTimeout(function(){ img.src = next; img.style.opacity = '1'; }, 320);
+  };
+  pre.src = next;
+}, 4000);
 /* ═══ end AGENT-SVC-1 FRONTEND ═══ */

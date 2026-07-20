@@ -22,6 +22,17 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — LM-SCROLL-1 SHIPPED: Local Market live-scroll tile (5 Higgsfield scenes)
+- David-requested follow-on: 5 market scenes generated in the locked style (honey/preserves stall,
+  guitar+amp with FOR SALE tag, beadwork+baskets+ceramics, MARKET DAY produce crates, vintage
+  dresser+radio — ~10 credits; distant figures only, no identifiable faces).
+- Home LM tile (#lm-home-bg-img) now crossfades through the five every 4s (preloaded, pauses when
+  tab hidden) — the interim live-scroll; later rotates REAL listing photos. CATS.LocalMarket
+  hotlink also replaced (last category Unsplash gone from CATS). ms.js v327->v328 + index.html.
+- BRAND-PHOTO-1 addendum (David-found): photos WERE live; his device showed a cached copy —
+  verified in-browser (69 brand-photo tags at v327, CATS pointing at brand-photos). Hard refresh resolves.
+- Live smoke: 5 lm_*.jpg 200, scroll module at CDN edge, tile wired, md5 parity b7f265f3, CF purged.
+
 ## Session 144 (cont.) — BRAND-PHOTO-1 SHIPPED: 16 Higgsfield brand photos live (agents, home tiles, sell tiles)
 - David's idea: own the dream photos via his Higgsfield credits instead of stock/hotlinks. Claude drove
   the generation in Chrome (Nano Banana Pro, 3:2, locked style block: SA golden hour, navy/amber accents,
