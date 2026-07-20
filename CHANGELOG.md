@@ -22,6 +22,20 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — BRAND-PHOTO-1 SHIPPED: 16 Higgsfield brand photos live (agents, home tiles, sell tiles)
+- David's idea: own the dream photos via his Higgsfield credits instead of stock/hotlinks. Claude drove
+  the generation in Chrome (Nano Banana Pro, 3:2, locked style block: SA golden hour, navy/amber accents,
+  everything crisp, David-approved posture principle — side profile, head cropped at jaw, NO identifiable
+  faces anywhere = PHOTO-ANON as brand signature).
+- 16 finals filed + web-compressed (88-247KB): 3 agent scenes (agent-stock/*.jpg, backend svg->jpg),
+  6 home category tiles (brand-photos/cat_*.jpg replacing Unsplash hotlinks — no-hotlink rule satisfied;
+  LocalMarket kept for the live-scroll rework), 6 sell-flow tiles (sf_cat_*.jpg — closes the open
+  STATUS item; SF_IMG picks them up with zero code), + 2 alternates kept.
+- Journey notes: one generation failed server-side (credits auto-refunded) and was regenerated; a
+  premature newest-file grab briefly filed B5 as the cars sell tile — caught by timestamp check, corrected.
+  ~34 credits used, 966 left. deploy bat ships all three photo sets. index.html v327 + estate_agents.py.
+- Live smoke: all 6 probed photo URLs 200, template API returns jpg paths, health ok, CF purged. 56 tests green.
+
 ## Session 144 (cont.) — AGENT-DIR-WIDTH-2 SHIPPED (David live-QA ×5): directory now measured-identical to sibling screens
 - Root cause finally found where it always was: ms.css @media(min-width:768px) widens body to 900px
   on desktop — sibling screens fill 900; the directory was capped (720) by a copied pattern. Cap

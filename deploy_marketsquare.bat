@@ -248,7 +248,14 @@ ssh -n %SERVER% "mkdir -p %REMOTE%/static/agent-stock"
 scp "%PROJECT%\assets\agent-stock\property.svg" %SERVER%:%REMOTE%/static/agent-stock/property.svg
 scp "%PROJECT%\assets\agent-stock\cars.svg" %SERVER%:%REMOTE%/static/agent-stock/cars.svg
 scp "%PROJECT%\assets\agent-stock\travel.svg" %SERVER%:%REMOTE%/static/agent-stock/travel.svg
-ssh -n %SERVER% "chmod 644 %REMOTE%/static/agent-stock/*.svg"
+scp "%PROJECT%\assets\agent-stock\property.jpg" %SERVER%:%REMOTE%/static/agent-stock/property.jpg
+scp "%PROJECT%\assets\agent-stock\cars.jpg" %SERVER%:%REMOTE%/static/agent-stock/cars.jpg
+scp "%PROJECT%\assets\agent-stock\travel.jpg" %SERVER%:%REMOTE%/static/agent-stock/travel.jpg
+:: BRAND-PHOTO-1 (20 Jul 2026): Higgsfield brand photos - home category tiles + sell-flow tiles (self-hosted, no hotlinks)
+ssh -n %SERVER% "mkdir -p %REMOTE%/static/brand-photos"
+scp "%PROJECT%\assets\brand-photos\*.jpg" %SERVER%:%REMOTE%/static/brand-photos/
+scp "%PROJECT%\assets\sf-tiles\*.jpg" %SERVER%:%REMOTE%/static/
+ssh -n %SERVER% "chmod 644 %REMOTE%/static/agent-stock/* %REMOTE%/static/brand-photos/*.jpg %REMOTE%/static/sf_cat_*.jpg"
 scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
 scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
 scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/
