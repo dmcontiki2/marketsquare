@@ -1936,6 +1936,12 @@ function applyFilters(cat){
   } else if(cat==='services'){
     filterState.services.maxRate       = document.getElementById('fv-max')?.value || '';
     filterState.services.serviceClass  = getSelOptInSection('Class','fs-services');
+    if(filterState.services.serviceClass==='Professional Agents'){   // AGENT-CLASS-1: agents live in the ranked directory, not the listing grid
+      filterState.services.serviceClass='';
+      document.getElementById('fs-services').classList.remove('open');
+      agentDirOpen('property');
+      return;
+    }
     filterState.services.serviceType   = getSelOptInSection('Service Type','fs-services');
     filterState.services.availability  = getSelOptInSection('Availability','fs-services');
     filterState.services.area          = getSelOptInSection('Area','fs-services');
@@ -15278,8 +15284,9 @@ function sfAgentCardHtml(a,top){
     '<div style="font-size:12px;color:'+mut+';margin-top:3px;">'+(a.suburbs||a.city)+' · <b style="color:inherit;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:8px;">'+
-      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
-      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Trust score '+a.trust_score+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Trust Score (TS) '+a.trust_score+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Agent Score (SPS) '+a.avg_listing_quality+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+      '<div style="font-size:9px;color:'+mut+';margin-top:3px;text-align:right;">Rank = 50% TS + 50% SPS \u00b7 SPS = technical, regulatory &amp; safety completeness</div>'+
     '<button class="sf-btn pri" style="width:100%;margin-top:9px;padding:9px;font-size:13px;" onclick="sfAgentIntro(\''+a.anon_ref+'\')">Introduce me — free for you</button></div>';
 }
 async function sfAgentIntro(ref){
@@ -15341,7 +15348,7 @@ function _asProfileHtml(p,tpl){
     (live?' <span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">● LIVE</span>':' <span style="font-size:10px;background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;margin-left:6px;">DRAFT</span>')+'</div>'+
     '<div style="font-size:11.5px;opacity:.75;margin-top:4px;">Anonymous to sellers until you accept an introduction. Your certificates drive your rank: 50% listing quality · 50% trust score.</div>'+
     (p.anon_ref?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">'+
-      [['Trust Score',p.trust_score||0,'verified credentials'],['Avg Listing Quality',p.avg_listing_quality||0,'your live adverts'],['Match Rank',(p.match_rank!=null?p.match_rank:Math.round((( p.avg_listing_quality||0)+(p.trust_score||0))/2)),'50/50 — your position in the list']].map(function(m){
+      [['Trust Score (TS)',p.trust_score||0,'verified credentials'],['Agent Score (SPS)',p.avg_listing_quality||0,'technical, regulatory & safety completeness of your adverts'],['Rank',(p.match_rank!=null?p.match_rank:Math.round((( p.avg_listing_quality||0)+(p.trust_score||0))/2)),'50% TS + 50% SPS — your list position']].map(function(m){
         return '<div style="flex:1;min-width:96px;background:rgba(255,255,255,.10);border-radius:10px;padding:8px 10px;text-align:center;"><div style="font-size:18px;font-weight:800;">'+m[1]+'</div><div style="font-size:9.5px;opacity:.8;line-height:1.3;">'+m[0]+'<br>'+m[2]+'</div></div>';
       }).join('')+'</div>'+
       '<div style="font-size:10.5px;opacity:.65;margin-top:8px;line-height:1.4;">Prospects see the generic '+(_asState.vertical==='cars'?'car sales agent':_asState.vertical==='travel'?'tour agent':'property agent')+' scene — never a person — until an introduction is accepted. Lift Match Rank by improving advert quality and verifying credentials.</div>':'')+'</div>';
@@ -15552,8 +15559,9 @@ function advAgentCard(a,card){
     '<div style="font-size:12px;color:#68758c;margin-top:2px;">'+(a.suburbs||a.city||'')+' · <b style="color:#1c2434;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:7px;">'+
-      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
-      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Trust score '+a.trust_score+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Trust Score (TS) '+a.trust_score+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
+      '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Agent Score (SPS) '+a.avg_listing_quality+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
+      '<div style="font-size:9px;color:#8a96a8;margin-top:3px;text-align:right;">Rank = 50% TS + 50% SPS \u00b7 SPS = technical, regulatory &amp; safety completeness of their adverts</div>'+
     '<button onclick="advAgentIntro(\''+a.anon_ref+'\')" style="width:100%;margin-top:9px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;">'+((window._agentDirVert||'travel')==='travel'?'Plan my trip with this agent — free for you':'Introduce me — free for you')+'</button></div>';
 }
 async function advAgentIntro(ref){

@@ -22,6 +22,18 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — AGENT-CLASS-1 + SPS-VOCAB-1 SHIPPED (David's closing ruling): the third class and the three named scores
+- Services CLASS filter gains its third option — Professional Agents — which routes to the ranked
+  agent directory (agents are profiles, not grid listings). Any/Technical/Casuals unchanged.
+- DAVID'S SCORE VOCABULARY canonised on every agent surface (directory cards, sell-flow cards, Agent
+  Hub tiles): Trust Score (TS) · Agent Score (SPS — Seller Profile Score) · Rank = 50% TS + 50% SPS.
+  Per David: SPS carries special weight for agents because it measures the technical, regulatory,
+  legal and safety completeness of their adverts — the caption now says exactly that.
+- The three super agents already embody the teaching example with true computed values:
+  property TS 90 / SPS 100 / Rank 95 · travel TS 90 / SPS 86 / Rank 88 · cars TS 87 / SPS 94 / Rank 90.5 —
+  all evidence-backed via the itemised ledger.
+- ms.js v344->v345 + index.html; verified at edge (route + chip live); CF purged.
+
 ## Session 144 (cont.) — ADV-SYNC-1 + BEE-ACCURACY-1 SHIPPED (David live-QA): one filter state, one truth
 - ADV-SYNC-1 (David-found): the Adventures top pills and the filter sheet's Adventure Type governed
   the SAME dimension independently -> contradictory selections (Stays pill + Experiences sheet chip)
