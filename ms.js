@@ -14621,7 +14621,14 @@ function sfLmpickS(){
 }
 function sfSlotHtml(sl){
   var key=sl[0], st=sfState.photos[key];
-  var thumb = (st===2 && sfState.previews[key]) ? '<img src="'+sfState.previews[key]+'">' : sl[3];
+  // SLOT-THUMB-1 (20 Jul 2026, David): the main slot shows the category's brand
+  // photo as a thumbnail (continuity from the Sell tile) until the seller's own
+  // photo replaces it. Other slots keep their specific emoji hints.
+  var thumb;
+  if (st===2 && sfState.previews[key]) thumb = '<img src="'+sfState.previews[key]+'">';
+  else if (key==='main' && typeof SF_TILE_IMGS!=='undefined' && SF_TILE_IMGS[sfState.cat])
+    thumb = '<img src="'+SF_TILE_IMGS[sfState.cat].own+'" alt="" style="opacity:.9;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'\'+this.dataset.em" data-em="'+sl[3]+'">';
+  else thumb = sl[3];
   var badge = st===2 ? '<span class="sf-st ok">✓ checked</span>' : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
     (key==='main' ? '<span class="sf-st req">required</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));
   return '<div class="sf-slot'+(st===2?' sf-done':'')+'" onclick="sfPickFile(\''+key+'\')"><div class="sf-thumb">'+thumb+

@@ -22,6 +22,13 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SLOT-THUMB-1 SHIPPED (David live-QA): brand photo as Main-photo thumbnail in Step 1/6
+- David: the Sell-tile photo should carry into the photo step instead of collapsing to an emoji box.
+  Main slot now shows the category's sf_cat_*.jpg as a thumbnail (SF_TILE_IMGS continuity, slight dim,
+  emoji fallback on error) until the seller's own photo replaces it; the other slots keep their
+  specific emoji hints (kitchen/bedroom/etc — repeating one photo would be noise). ms.js v328->v329,
+  parity e060bfaf, CF purged, module verified at edge.
+
 ## Session 144 (cont.) — LM-SCROLL-1 SHIPPED: Local Market live-scroll tile (5 Higgsfield scenes)
 - David-requested follow-on: 5 market scenes generated in the locked style (honey/preserves stall,
   guitar+amp with FOR SALE tag, beadwork+baskets+ceramics, MARKET DAY produce crates, vintage
