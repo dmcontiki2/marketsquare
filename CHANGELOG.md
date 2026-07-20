@@ -22,6 +22,15 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-QA-3 (David's last catch of the night: badge overclaim)
+- Detail-view super badge said "what a 100-point listing looks like" next to a visible 90
+  Trust Score — an overclaim, and some exemplars are not literal 100 listing-quality either
+  (the 3-photo sets). Single shared template in ms.js, so one fix covers all exemplars:
+  badge now reads "★ SUPER ADVERT — the benchmark listing for this category" — always true.
+- ms.js v346->v347, verified at edge, CF purged.
+- QA session principle proven three times tonight: exemplar surfaces must never claim a number
+  the same screen can contradict.
+
 ## Session 144 (cont.) — SUPER-QA-2 (full copy-vs-photo sweep of all exemplars)
 - Prompted by David's Krugerrand catch, every exemplar's countable/visual claims were checked
   against its actual images. PASS: house (double-storey, pool, jacaranda), lodge (four-poster,
