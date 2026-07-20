@@ -1,6 +1,11 @@
 # TrustSquare — Status
 
 ## Current Session
+EVENING NOTE (17:25): SUPER exemplar generation 100% complete (32 reference-chained images safe in
+Higgsfield Assets, 14 downloaded). Assembly parked cleanly — see 20H00_STATUS.md + CHANGELOG pickup
+list. Site live+healthy (v338, pin-first + ribbon deployed, DB clean, wallets intact).
+
+
 Session 144 · 20 July 2026 (attended, David) — AGENT-SVC-4 + PHOTO-ANON-1: dedicated Professional Agents surface in Services, generic per-vertical stock scenes (no persons pre-intro), agent-facing metrics trio (Trust · Avg Quality · Match Rank), back-bars on all served doc pages. ms.js v320 · 56 tests green.
 
 Previous: Session 143 · 19 July 2026 (attended, David) — AGENT-SVC-1/2/3 shipped: Professional Agents as a Service, three verticals (property FFC · cars MIRA · travel ASATA), estate_agents.py + ms.js v319 + onboarding assets (showcase page, Import Guide Step 0, Playbook v3 PDF). 52 tests green. Counter: 142 was the HMI/SELLER-CV attended block (17-18 Jul); today is 143.
