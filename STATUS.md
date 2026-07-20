@@ -1,7 +1,9 @@
 # TrustSquare — Status
 
 ## Current Session
-Session 143 · 19 July 2026 (attended, David) — AGENT-SVC-1/2/3 shipped: Professional Agents as a Service, three verticals (property FFC · cars MIRA · travel ASATA), estate_agents.py + ms.js v319 + onboarding assets (showcase page, Import Guide Step 0, Playbook v3 PDF). 52 tests green. Counter: 142 was the HMI/SELLER-CV attended block (17-18 Jul); today is 143.
+Session 144 · 20 July 2026 (attended, David) — AGENT-SVC-4 + PHOTO-ANON-1: dedicated Professional Agents surface in Services, generic per-vertical stock scenes (no persons pre-intro), agent-facing metrics trio (Trust · Avg Quality · Match Rank), back-bars on all served doc pages. ms.js v320 · 56 tests green.
+
+Previous: Session 143 · 19 July 2026 (attended, David) — AGENT-SVC-1/2/3 shipped: Professional Agents as a Service, three verticals (property FFC · cars MIRA · travel ASATA), estate_agents.py + ms.js v319 + onboarding assets (showcase page, Import Guide Step 0, Playbook v3 PDF). 52 tests green. Counter: 142 was the HMI/SELLER-CV attended block (17-18 Jul); today is 143.
 
 Previous: Session 141 · 17 July 2026 (attended, David) — legal must-have cards (28, 4 countries) + SELL Step 6/6 + agency import schema sync + server quality gate + agent filters + dealer skin + AI swap architecture + E2E dummy-agency test. COUNTER CORRECTION: CHANGELOG used Session 140 on 17-18 Jun 2026 (MOUNT-READ-1 + 5T paid-feed) but this counter was never bumped; every loop note since repeated "stays 139". 140 is consumed; today is 141. (Found by David via a stale local dashboard copy, 17 Jul.)
 

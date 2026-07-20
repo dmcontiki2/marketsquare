@@ -1,3 +1,20 @@
+## Session 144 — AGENT-SVC-4 + PHOTO-ANON-1 SHIPPED: dedicated agent surface, stock scenes, metrics, doc back-bars
+- PHOTO-ANON-1: agent service cards NEVER show a person pre-intro. Three flat-SVG generic scenes
+  (royalty-free by construction) at /static/agent-stock/{property,cars,travel}.svg on every card
+  (sell flow, Adventures panel, directory), captioned 'identity revealed on accepted introduction'.
+  Rule exposed in /agents/template (photo_rule) so agencies see it at onboarding.
+- AGENT-SVC-4: Services category keeps Technical/Casuals untouched; new pinned 'Professional Agents'
+  banner in the Services grid opens a full directory overlay (Estate/Car sales/Tour chips, ranked
+  cards, generalized intro prompt + labels per vertical).
+- Agent metrics: /agents/profile now returns match_rank (50/50) + stock_photo + metrics_note;
+  Agent Hub header shows three tiles — Trust Score · Avg Listing Quality · Match Rank — with a
+  coaching line (David: the agent must see and improve all three).
+- DOC-BACKBAR-1 (David-found): served doc pages dead-ended the app webview (no way back). Sticky
+  navy '← Back to TrustSquare' bar (history.back, fallback /) added to agency-import-guide,
+  agents-as-a-service, terms, privacy, support.
+- deploy_marketsquare.bat: + mkdir/scp/chmod for static/agent-stock. FEA v319->v320.
+- Tests: 56 green (52 prior + photo rule, stock-on-cards, match_rank maths, metrics note).
+
 ## Session 143 — AGENT-SVC-1/2/3 SHIPPED: Professional Agents as a Service (property · cars · travel)
 - NEW module estate_agents.py (799 lines, router seam like launch_redemption; one anchored include in
   bea_main.py): anonymised agent service profiles (Agent TS-XXXXXX), per-vertical credential slots mapped

@@ -3224,10 +3224,10 @@ function renderGrid(){
       grid.innerHTML='<div class="no-res">No matches for \u201C'+_wlEsc(_msSearchQ)+'\u201D — try fewer or different words.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msClearSearch()">Clear search</span></div>';
       return;
     }
-    grid.innerHTML='<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
+    grid.innerHTML=(activeFilter==='Services'&&typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+'<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
     return;
   }
-  grid.innerHTML = filtered.map(cardHtml).join('');
+  grid.innerHTML = (activeFilter==='Services'&&typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'') + filtered.map(cardHtml).join('');
 }
 
 
@@ -15132,7 +15132,8 @@ function sfAgentCardHtml(a,top){
   var mut='var(--text-3,#8b93a7)';
   var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);color:#34d399;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
   var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="color:'+mut+';font-size:10px;">(agency-declared)</i>':'')):'';
-  return '<div id="sf-ag-'+a.anon_ref+'" style="border:'+(top?'2px solid #C8873A':'1px solid rgba(255,255,255,.12)')+';border-radius:12px;padding:11px 12px;margin-bottom:10px;position:relative;">'+
+  return '<div id="sf-ag-'+a.anon_ref+'" style="border:'+(top?'2px solid #C8873A':'1px solid rgba(255,255,255,.12)')+';border-radius:12px;padding:11px 12px;margin-bottom:10px;position:relative;overflow:hidden;">'+
+    (a.photo?'<img src="'+a.photo+'" alt="" style="width:calc(100% + 24px);margin:-11px -12px 8px;display:block;">':'')+
     (top?'<div style="position:absolute;top:-9px;right:10px;background:#C8873A;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.05em;">BEST MATCH</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
@@ -15202,7 +15203,11 @@ function _asProfileHtml(p,tpl){
     '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:17px;">'+(p.anon_ref?('Agent '+p.anon_ref+' · '+AS_VERT[_asState.vertical].label):'List yourself as a professional agent')+
     (live?' <span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">● LIVE</span>':' <span style="font-size:10px;background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;margin-left:6px;">DRAFT</span>')+'</div>'+
     '<div style="font-size:11.5px;opacity:.75;margin-top:4px;">Anonymous to sellers until you accept an introduction. Your certificates drive your rank: 50% listing quality · 50% trust score.</div>'+
-    (p.anon_ref?'<div style="display:flex;gap:14px;margin-top:10px;font-size:12px;"><span>Trust <b>'+(p.trust_score||0)+'</b></span><span>Avg quality <b>'+(p.avg_listing_quality||0)+'</b></span><span>Live listings <b>'+(p.live_listings||0)+'</b></span></div>':'')+'</div>';
+    (p.anon_ref?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">'+
+      [['Trust Score',p.trust_score||0,'verified credentials'],['Avg Listing Quality',p.avg_listing_quality||0,'your live adverts'],['Match Rank',(p.match_rank!=null?p.match_rank:Math.round((( p.avg_listing_quality||0)+(p.trust_score||0))/2)),'50/50 — your position in the list']].map(function(m){
+        return '<div style="flex:1;min-width:96px;background:rgba(255,255,255,.10);border-radius:10px;padding:8px 10px;text-align:center;"><div style="font-size:18px;font-weight:800;">'+m[1]+'</div><div style="font-size:9.5px;opacity:.8;line-height:1.3;">'+m[0]+'<br>'+m[2]+'</div></div>';
+      }).join('')+'</div>'+
+      '<div style="font-size:10.5px;opacity:.65;margin-top:8px;line-height:1.4;">Prospects see the generic '+(_asState.vertical==='cars'?'car sales agent':_asState.vertical==='travel'?'tour agent':'property agent')+' scene — never a person — until an introduction is accepted. Lift Match Rank by improving advert quality and verifying credentials.</div>':'')+'</div>';
   if(badges.earned.length||badges.pending.length){
     h+='<div style="margin-bottom:12px;">'+
       badges.earned.map(function(b){return '<span style="display:inline-block;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;margin:0 4px 4px 0;">✓ '+b+'</span>';}).join('')+
@@ -15371,6 +15376,7 @@ function advAgentsToggle(){
   if(!open && !_advAgentsLoaded){ advAgentsLoad(); }
 }
 async function advAgentsLoad(){
+  window._agentDirVert='travel';   // keep intro prompt + card labels vertical-correct
   var p=document.getElementById('adv-agents-panel'); if(!p) return;
   p.innerHTML='<div style="padding:18px;text-align:center;color:rgba(255,255,255,.75);font-size:12.5px;">Finding accredited tour agents…</div>';
   var city=(typeof activeCity!=='undefined'&&activeCity.name)||'';
@@ -15401,7 +15407,8 @@ async function advAgentsLoad(){
 function advAgentCard(a,card){
   var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:#e7f3ec;border:1px solid #b7dcc6;color:#1e7d4f;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
   var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="font-size:10px;color:#68758c;">(agency-declared)</i>':'')):'';
-  return '<div id="adv-ag-'+a.anon_ref+'" style="'+card+'">'+
+  return '<div id="adv-ag-'+a.anon_ref+'" style="'+card+'overflow:hidden;">'+
+    (a.photo?'<img src="'+a.photo+'" alt="" style="width:calc(100% + 28px);margin:-12px -14px 8px;display:block;">':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
       '<div style="text-align:center;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK</div></div></div>'+
@@ -15410,12 +15417,13 @@ function advAgentCard(a,card){
     '<div style="display:flex;gap:10px;margin-top:7px;">'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Trust score '+a.trust_score+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
-    '<button onclick="advAgentIntro(\''+a.anon_ref+'\')" style="width:100%;margin-top:9px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;">Plan my trip with this agent — free for you</button></div>';
+    '<button onclick="advAgentIntro(\''+a.anon_ref+'\')" style="width:100%;margin-top:9px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;">'+((window._agentDirVert||'travel')==='travel'?'Plan my trip with this agent — free for you':'Introduce me — free for you')+'</button></div>';
 }
 async function advAgentIntro(ref){
   var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
   if(!email){ showToast('Sign in first so the agent can reach you if they accept'); return; }
-  var wish=prompt('What are you dreaming of? (destination, dates, people — no phone numbers needed)','');
+  var _v=(window._agentDirVert||'travel');
+  var wish=prompt(_v==='travel'?'What are you dreaming of? (destination, dates, people — no phone numbers needed)':'What do you need? (what you are selling, area, timing — no phone numbers needed)','');
   if(wish===null) return;
   try{
     var r=await fetch(BEA_URL+'/agents/intro',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -15426,5 +15434,57 @@ async function advAgentIntro(ref){
     if(c){ var b=c.querySelector('button'); if(b){ b.disabled=true; b.textContent='✓ Request sent — they reply if they accept'; b.style.opacity='.65'; } }
     showToast('Done — Agent '+ref+' sees your request and trust score, not your identity.');
   }catch(e){ showToast('Network hiccup — try again'); }
+}
+/* ── AGENT-SVC-4 (20 Jul 2026): dedicated Professional Agents surface in Services
+   + PHOTO-ANON-1 stock scenes. Technical and Casuals stay untouched; agents get
+   their own pinned banner + full directory overlay with vertical chips. ── */
+function svcAgentsBannerHtml(){
+  return '<div onclick="agentDirOpen(\'property\')" style="grid-column:1/-1;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;">'+
+    '<div style="font-size:26px;">🤝</div>'+
+    '<div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:14px;">Professional Agents — a service of their own</div>'+
+    '<div style="font-size:11.5px;opacity:.78;">Estate · Car sales · Tour agents — credential-verified, ranked by trust, anonymous until introduced. Free intro; the agent pays 1T.</div></div>'+
+    '<div style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>';
+}
+function agentDirOpen(v){
+  window._agentDirVert=v||'property';
+  var o=document.getElementById('agent-dir-overlay');
+  if(!o){
+    o=document.createElement('div'); o.id='agent-dir-overlay';
+    o.style.cssText='position:fixed;inset:0;z-index:9000;background:var(--bg,#0c1220);overflow-y:auto;padding:14px 14px 60px;';
+    document.body.appendChild(o);
+  }
+  o.style.display='block';
+  agentDirRender();
+}
+function agentDirClose(){ var o=document.getElementById('agent-dir-overlay'); if(o) o.style.display='none'; }
+function agentDirRender(){
+  var o=document.getElementById('agent-dir-overlay'); if(!o) return;
+  var v=window._agentDirVert;
+  var chips=[['property','🏡 Estate'],['cars','🚗 Car sales'],['travel','🧳 Tour']].map(function(c){
+    return '<button onclick="window._agentDirVert=\''+c[0]+'\';agentDirRender()" style="flex:1;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,.2);'+(v===c[0]?'background:#C8873A;color:#1c1204;border-color:#C8873A;':'background:transparent;color:#fff;')+'">'+c[1]+'</button>';
+  }).join('');
+  o.innerHTML='<button onclick="agentDirClose()" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:13px;cursor:pointer;padding:0;margin-bottom:10px;">&lsaquo; Back to Services</button>'+
+    '<div style="color:#fff;font-family:Syne,sans-serif;font-weight:800;font-size:18px;margin-bottom:4px;">Professional Agents</div>'+
+    '<div style="color:rgba(255,255,255,.65);font-size:12px;margin-bottom:10px;">Ranked by Best Match — 50% listing quality · 50% trust score. Anonymous until introduced; the generic scene stands in for every agent.</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:12px;">'+chips+'</div>'+
+    '<div id="agent-dir-list"><div style="padding:22px;text-align:center;color:rgba(255,255,255,.6);font-size:12.5px;">Finding agents…</div></div>';
+  agentDirLoad();
+}
+async function agentDirLoad(){
+  var el=document.getElementById('agent-dir-list'); if(!el) return;
+  var v=window._agentDirVert, city=(typeof activeCity!=='undefined'&&activeCity.name)||'';
+  var near=null;
+  try{ var r=await fetch(BEA_URL+'/agents/nearby?city='+encodeURIComponent(city)+'&limit=10&vertical='+v);
+       if(r.ok) near=await r.json(); }catch(e){}
+  if(!el.isConnected) return;
+  var card='background:#fff;border-radius:12px;padding:12px 14px;margin-top:10px;color:#1c2434;';
+  var ags=(near&&near.agents)||[];
+  if(!ags.length){
+    el.innerHTML='<div style="'+card+'text-align:center;"><b>No listed agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:#68758c;margin-top:4px;">Credential-verified agents join weekly.</div></div>';
+    return;
+  }
+  var h=''; ags.forEach(function(a){ h+=advAgentCard(a,card); });
+  h+='<div style="font-size:10.5px;color:rgba(255,255,255,.6);font-style:italic;margin-top:8px;">No names, no brands, no faces — identity and photos only after an accepted introduction. Free for you; the agent pays 1T.</div>';
+  el.innerHTML=h;
 }
 /* ═══ end AGENT-SVC-1 FRONTEND ═══ */

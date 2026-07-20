@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs>
+<rect width="400" height="260" fill="url(#sky)"/>
+<circle cx="330" cy="52" r="24" fill="#f6c445"/>
+<path d="M0,210 Q100,186 200,204 Q300,220 400,200 L400,260 L0,260 Z" fill="#e8d3a2"/>
+<path d="M258,206 L262,150 Q263,142 270,142 Q277,142 278,150 L282,206 Z" fill="#7a5b3a"/>
+<path d="M240,150 Q270,108 300,150 Q285,144 270,146 Q255,144 240,150 Z" fill="#3e7a4e"/>
+<path d="M20,120 L86,84 L92,96 L26,132 Z" fill="#dbe6f4" stroke="#8fa8c8" stroke-width="2"/>
+<path d="M50,96 L74,88 L96,108 L70,112 Z" fill="#fff" stroke="#8fa8c8" stroke-width="2"/>
+<rect x="120" y="170" width="46" height="34" rx="5" fill="#C8873A"/>
+<rect x="120" y="182" width="46" height="4" fill="#a76e2c"/>
+<rect x="136" y="162" width="14" height="10" rx="3" fill="none" stroke="#a76e2c" stroke-width="4"/>
+<g transform="translate(345,202)">
+<circle cx="0" cy="-54" r="11" fill="#e7b98a"/>
+<path d="M-13,-42 Q0,-50 13,-42 L15,0 Q0,6 -15,0 Z" fill="#0c1a2e"/>
+<rect x="-15" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="7" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="-10" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="2" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="12" y="-26" width="16" height="12" rx="2" fill="#C8873A"/>
+</g>
+<text x="200" y="246" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#0c1a2e" opacity=".55">TOUR AGENT · identity revealed on accepted introduction</text>
+</svg>

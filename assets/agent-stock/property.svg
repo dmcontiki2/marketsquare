@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs>
+<rect width="400" height="260" fill="url(#sky)"/>
+<rect y="200" width="400" height="60" fill="#b7d4a8"/>
+<rect x="120" y="96" width="190" height="104" fill="#f5efe4" stroke="#d9cfbc" stroke-width="2"/>
+<path d="M105,100 L215,40 L325,100 Z" fill="#8a5a3b"/>
+<rect x="150" y="130" width="34" height="34" fill="#9cc3e5" stroke="#fff" stroke-width="3"/>
+<rect x="246" y="130" width="34" height="34" fill="#9cc3e5" stroke="#fff" stroke-width="3"/>
+<rect x="198" y="146" width="36" height="54" fill="#0c1a2e"/><circle cx="228" cy="174" r="2.5" fill="#C8873A"/>
+<rect x="40" y="150" width="4" height="60" fill="#7a5b3a"/>
+<rect x="12" y="128" width="86" height="42" rx="4" fill="#ffffff" stroke="#0c1a2e" stroke-width="3"/>
+<text x="55" y="146" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#0c1a2e">FOR</text>
+<text x="55" y="162" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#C8873A">SALE</text>
+<g transform="translate(345,200)">
+<circle cx="0" cy="-54" r="11" fill="#e7b98a"/>
+<path d="M-13,-42 Q0,-50 13,-42 L15,0 Q0,6 -15,0 Z" fill="#0c1a2e"/>
+<rect x="-15" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="7" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="-10" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="2" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="12" y="-26" width="16" height="12" rx="2" fill="#C8873A"/>
+</g>
+<text x="200" y="246" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#0c1a2e" opacity=".55">PROPERTY AGENT · identity revealed on accepted introduction</text>
+</svg>

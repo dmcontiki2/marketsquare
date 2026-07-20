@@ -1,29 +1,31 @@
 {
  "schema_version": 1,
  "report_type": "weekly_discovery_scan",
- "generated_at": "2026-07-13T04:42:12Z",
- "generated_by": "merged-daily-loop Monday scan (2026-07-13)",
+ "generated_at": "2026-07-20T06:15:00Z",
+ "generated_by": "merged-daily-loop Monday scan (2026-07-20)",
  "scan_scope": [
   "bea_main.py",
   "auth.py",
   "database.py",
   "storage.py",
   "payments.py",
+  "estate_agents.py",
+  "launch_redemption.py",
   "ms.js",
   "marketsquare.html (inline)",
   "marketsquare_admin.html (inline)"
  ],
  "tools": [
-  "ruff (F,E9,B)",
+  "ruff 0.15.22 (F,E9,B)",
   "vulture 2.x (min-confidence 80)",
   "pylint cyclic-import",
-  "eslint 9.39 (structural rules=error / no-undef+no-unused-vars=warn)"
+  "eslint 9 (structural rules=error / no-undef+no-unused-vars=warn)"
  ],
  "totals": {
   "found_this_week": 3,
-  "fixed_this_week": 0,
+  "fixed_this_week": 3,
   "still_open": 3,
-  "note": "Delta vs 2026-07-06 (prior open set EMPTY). 3 NEW LOW findings in bea_main.py, introduced by attended deploys since last Monday (the _demand_* outreach block + auth_verify magic-link except handlers): SCAN-22 F841 dead local 'name' @5685; SCAN-23 2x B904 @10205/10207 (auth_verify JWT except); SCAN-24 vulture unused param 'ticket_id' @5698 (1 caller @5866). All LOW, behaviour-neutral, non-gated -> auto-ship class, queued for the next Fixer (one-item-per-run; NOT actioned this run). ZERO crash-class: pylint 10.00/10, 0 cyclic imports, 0 F821; all 5 py compile; eslint 0 new structural errors. FP idioms unchanged: ruff B008 x14, vulture family x2, eslint tshLoad x1."
+  "note": "Delta vs 2026-07-13: prior open set SCAN-22/23/24 all CONFIRMED FIXED (absent this scan). 3 NEW LOW findings, all introduced by attended Session 139-143 work: SCAN-25 B023 x2 @bea_main.py:11362/11367 (IMPORT-SYNC-1 nested helpers close over loop var 'ad'); SCAN-26 B904 @launch_redemption.py:436 (registry-sync sqlite3.Error raise lacks 'from e') -> STAGED, Gate 2 (Founders allocation module); SCAN-27-JS no-redeclare 'A' @ms.js:15052 (sfFinish declares var A twice). Zero crash-class: pylint 10.00/10, 0 cyclic imports, 0 F821, all 7 py compile, eslint 0 NEW structural errors beyond the known tshLoad FP. NEW scope this week: estate_agents.py (S143, 799 lines) - CLEAN under ruff+vulture. FP idioms unchanged: ruff B008 x16 (was 14; +2 from new S143 endpoints), vulture family x2, eslint tshLoad x1."
  },
  "severity_breakdown": {
   "CRIT": 0,
@@ -33,38 +35,38 @@
  },
  "open_issues": [
   {
-   "id": "SCAN-22",
+   "id": "SCAN-25",
    "sev": "LOW",
-   "file": "bea_main.py:5685",
-   "rule": "F841",
-   "summary": "dead local 'name' in _demand_render_invite (greeting hardcoded ''); drop the line",
-   "gate": "clear (outreach render, dead var)",
+   "file": "bea_main.py:11362,11367",
+   "rule": "B023",
+   "summary": "agency-import IMPORT-SYNC-1 helpers _imp_i/_imp_s defined inside the per-ad loop close over loop var 'ad'; called synchronously in-iteration so behaviour is correct today. Fix: bind explicitly (def _imp_i(k, ad=ad)) to make it structurally safe.",
+   "gate": "clear (agency bulk-import field mapping; no payments/ledger/EULA/KYC)",
    "verdict": "auto-ship"
   },
   {
-   "id": "SCAN-23",
+   "id": "SCAN-26",
    "sev": "LOW",
-   "file": "bea_main.py:10205,10207",
+   "file": "launch_redemption.py:436",
    "rule": "B904",
-   "summary": "auth_verify: 2x raise HTTPException(401) inside except _pyjwt.* lack 'from'; add 'from None'",
-   "gate": "clear (magic-link sign-in, security-class \u00a75)",
-   "verdict": "auto-ship"
+   "summary": "raise HTTPException(502) inside 'except sqlite3.Error as e' in the registry-sync reader lacks 'from e'. Behaviour-neutral chaining fix.",
+   "gate": "GATE 2 - Founders Badge redemption module carries the x1.2 Tuppence ALLOCATION hook; POLICY 12 lists Tuppence allocations as never-automated. Default-to-stage.",
+   "verdict": "stage"
   },
   {
-   "id": "SCAN-24",
+   "id": "SCAN-27-JS",
    "sev": "LOW",
-   "file": "bea_main.py:5698",
-   "rule": "vulture-unused-arg",
-   "summary": "_demand_send_invite unused param 'ticket_id'; drop param + update caller @5866",
-   "gate": "clear (outreach send path, non-gated; 2-site)",
+   "file": "ms.js:15052",
+   "rule": "no-redeclare",
+   "summary": "sfFinish() declares 'var A=sfState.A' twice (also @15027 inside the Cars branch alongside B,C). Both assign the same value so behaviour is unchanged today, but a future edit to the 15027 branch could bite. Fix: drop the redundant declaration at 15052 (var hoists) or rename the branch-local.",
+   "gate": "clear (sell-flow publish field assembly; no payments/ledger/EULA/KYC)",
    "verdict": "auto-ship"
   }
  ],
  "false_positives_reconfirmed": [
-  "ruff B008 x14 (FastAPI File/Body/Depends argument-default idiom)",
-  "vulture family x2 @2214/2315 (getaddrinfo IPv4 monkeypatch wrapper signature params - SCAN-11 ruling)",
+  "ruff B008 x16 (FastAPI File/Body/Depends argument-default idiom; count rose 14->16 with the S143 agent-service endpoints)",
+  "vulture family x2 @2233/2334 (getaddrinfo IPv4 monkeypatch wrapper signature params - SCAN-11 ruling; line numbers shifted from 2214/2315)",
   "eslint no-func-assign x1 tshLoad @admin inline (SCAN-21-JS - intentional doc-load decorator, IGNORE 2026-07-01)",
-  "eslint no-undef/no-unused-vars warning class (2648 warns across ms.js + 2 HTML inline blocks = browser/cross-file globals + onclick handlers)"
+  "eslint no-undef/no-unused-vars warning class (575 warns under this run's config = browser/cross-file globals + onclick handlers)"
  ],
  "history": [
   {
@@ -78,14 +80,20 @@
    "found": 3,
    "fixed": 0,
    "open": 3
+  },
+  {
+   "week_of": "2026-07-20",
+   "found": 3,
+   "fixed": 3,
+   "open": 3
   }
  ],
  "health_at_scan": {
   "bea": "ok v1.3.1",
   "smoke": "40/40",
-  "today_spend_usd": 0.0,
+  "today_spend_usd": 0.029245,
   "platform_ceiling_usd": 100.0,
   "real_token_pct": 100.0,
-  "fea_integrity": "ok, 0 alerts (live ms.js v286 / css v208; version notes = benign attended baseline-lag)"
+  "fea_integrity": "alert - index bytes 382540->384270 (+1730) alongside ms.js v315->v319; matched to the Session 143 AGENT-SVC deploy in CHANGELOG (marketsquare.html changed with ms.js), baseline refreshed"
  }
 }

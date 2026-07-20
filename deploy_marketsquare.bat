@@ -243,6 +243,12 @@ scp "%PROJECT%\agency_import_guide.html" %SERVER%:%REMOTE%/static/agency-import-
 :: AGENT-SVC (19 Jul 2026): agency playbook PDF - console 'User manual' button links it; was uploaded manually before
 scp "%PROJECT%\TrustSquare_Agency_Playbook.pdf" %SERVER%:%REMOTE%/static/TrustSquare_Agency_Playbook.pdf
 scp "%PROJECT%\agents_as_a_service.html" %SERVER%:%REMOTE%/static/agents-as-a-service.html
+:: PHOTO-ANON-1 (20 Jul 2026): generic per-vertical agent scenes - cards never show a person pre-intro
+ssh -n %SERVER% "mkdir -p %REMOTE%/static/agent-stock"
+scp "%PROJECT%\assets\agent-stock\property.svg" %SERVER%:%REMOTE%/static/agent-stock/property.svg
+scp "%PROJECT%\assets\agent-stock\cars.svg" %SERVER%:%REMOTE%/static/agent-stock/cars.svg
+scp "%PROJECT%\assets\agent-stock\travel.svg" %SERVER%:%REMOTE%/static/agent-stock/travel.svg
+ssh -n %SERVER% "chmod 644 %REMOTE%/static/agent-stock/*.svg"
 scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
 scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
 scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/

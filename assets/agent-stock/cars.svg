@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs>
+<rect width="400" height="260" fill="url(#sky)"/>
+<rect y="196" width="400" height="64" fill="#c9ced6"/>
+<path d="M70,196 L92,152 Q98,142 112,142 L228,142 Q240,142 250,152 L276,178 L296,182 Q312,186 312,196 Z" fill="#1e3a5f"/>
+<path d="M104,152 L118,166 L196,166 L196,150 Q150,146 112,150 Z" fill="#9cc3e5"/>
+<path d="M204,166 L204,150 L226,152 L242,166 Z" fill="#9cc3e5"/>
+<circle cx="120" cy="196" r="18" fill="#20242b"/><circle cx="120" cy="196" r="8" fill="#aeb6c2"/>
+<circle cx="262" cy="196" r="18" fill="#20242b"/><circle cx="262" cy="196" r="8" fill="#aeb6c2"/>
+<rect x="20" y="120" width="64" height="34" rx="4" fill="#fff" stroke="#0c1a2e" stroke-width="3"/>
+<rect x="48" y="154" width="4" height="42" fill="#7a5b3a"/>
+<text x="52" y="134" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#0c1a2e">FOR</text>
+<text x="52" y="148" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#C8873A">SALE</text>
+<g transform="translate(345,196)">
+<circle cx="0" cy="-54" r="11" fill="#e7b98a"/>
+<path d="M-13,-42 Q0,-50 13,-42 L15,0 Q0,6 -15,0 Z" fill="#0c1a2e"/>
+<rect x="-15" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="7" y="-40" width="8" height="34" rx="4" fill="#0c1a2e"/>
+<rect x="-10" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="2" y="0" width="8" height="30" rx="4" fill="#1e293b"/>
+<rect x="12" y="-26" width="16" height="12" rx="2" fill="#C8873A"/>
+</g>
+<text x="200" y="246" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#0c1a2e" opacity=".55">CAR SALES AGENT · identity revealed on accepted introduction</text>
+</svg>

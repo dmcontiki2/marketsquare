@@ -229,6 +229,7 @@ VERTICALS = {
             "category.property.nqf6_plus": "NQF6+ / Professional designation",
             "category.property.body":      "Professional body member",
         },
+        "stock_photo": "/static/agent-stock/property.svg",
         "gate_signal": "category.property.ffc",
         "gate_label": "FFC",
         "gate_desc": "legal minimum to trade",
@@ -245,6 +246,7 @@ VERTICALS = {
             "category.cars.dealer_reg": "MIRA Registered Dealer",
             "category.cars.inspection": "Independent inspection partner",
         },
+        "stock_photo": "/static/agent-stock/cars.svg",
         "gate_signal": "category.cars.dealer_reg",
         "gate_label": "MIRA dealer registration",
         "gate_desc": "professional minimum to trade",
@@ -264,6 +266,7 @@ VERTICALS = {
             "category.travel.financial_bonding": "Client payments bonded",
             "category.travel.client_insurance":  "Travel insurance facility",
         },
+        "stock_photo": "/static/agent-stock/travel.svg",
         "gate_signal": "category.travel.asata_member",
         "gate_label": "ASATA membership",
         "gate_desc": "professional minimum to trade",
@@ -317,6 +320,8 @@ def agent_template(vertical: str = "property"):
         "go_live_gate": V["gate_label"] + " verified (earned) — the " + V["gate_desc"] + ". Everything else raises the score but does not block.",
         "ranking": "0.5 x avg live-listing quality (0-100) + 0.5 x trust score (0-100). Listing quality never weighs less than half.",
         "anonymisation": "Name, agency, contact details and links are stripped (regex + AI pass). Agents appear as 'Agent TS-XXXXXX' until an introduction is accepted.",
+        "photo_rule": "PHOTO-ANON-1: agent service cards NEVER show a person. Every agent in a vertical carries the same generic stock scene (stock_photo). The agent's own listing photos become visible only through their live listings and on accepted introduction.",
+        "stock_photo": V["stock_photo"],
     }
 
 # ── Profile create / read / publish ─────────────────────────────────────────
@@ -435,9 +440,13 @@ def get_agent_profile(email: str):
         n_live, avg_q = _agent_listing_stats(conn, email, _v)
         badges = _badges(conn, email, _v)
         gate = _go_live_gaps(conn, dict(prof))
+        trust = int(user["trust_score"] or 0) if user else 0
         return {**{k: prof[k] for k in prof.keys()},
-                "trust_score": int(user["trust_score"] or 0) if user else 0,
+                "trust_score": trust,
                 "live_listings": n_live, "avg_listing_quality": avg_q,
+                "match_rank": round(0.5 * avg_q + 0.5 * trust, 1),
+                "stock_photo": VERTICALS[_v]["stock_photo"],
+                "metrics_note": "Trust Score = verified credentials (upload under Trust Score). Avg Listing Quality = your live adverts, coached toward 100. Match Rank = 50/50 blend — this is your position in the list prospects choose from.",
                 "badges": badges, "go_live_gaps": gate}
     finally:
         conn.close()
@@ -607,6 +616,7 @@ def _rank_agents(conn, city: str, suburb: str = "", limit: int = 10, vertical: s
         badges = _badges(conn, email, v)
         out.append({
             "anon_ref": prof["anon_ref"],
+            "photo": VERTICALS[v]["stock_photo"],   # PHOTO-ANON-1: same scene for every agent in the vertical
             "headline": prof["headline"],
             "bio": prof["bio_anon"],
             "city": prof["city"],

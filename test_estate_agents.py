@@ -265,6 +265,16 @@ check("travel lead: anon + phone stripped + no listing", "seller_email" not in j
 r = c.put(f"/agents/intros/{j[0]['id']}/accept", params={"email": "tina@safaris.co"})
 check("travel lead accept 1T + reveal", r.status_code == 200 and r.json()["seller_email"] == "dreamer@x.co")
 
+# ══ AGENT-SVC-4 / PHOTO-ANON-1 ══════════════════════════════
+r = c.get("/agents/template", params={"vertical": "cars"})
+check("template carries photo rule + stock", "PHOTO-ANON-1" in r.json()["photo_rule"] and r.json()["stock_photo"].endswith("cars.svg"))
+r = c.get("/agents/nearby", params={"city": "Pretoria", "vertical": "property"})
+check("nearby cards: stock photo, never personal", all(a2["photo"] == "/static/agent-stock/property.svg" for a2 in r.json()["agents"]))
+r = c.get("/agents/profile", params={"email": "ann@tr.co"})
+j = r.json()
+check("profile: match_rank = 50/50", abs(j["match_rank"] - (0.5*j["avg_listing_quality"] + 0.5*j["trust_score"])) < 0.01)
+check("profile: metrics note + stock photo", "Match Rank" in j["metrics_note"] and j["stock_photo"].endswith("property.svg"))
+
 os.unlink(_tmp)
-print("\n%d checks, %d failed" % (23 + 15 + 14, len(FAIL)))
+print("\n%d checks, %d failed" % (23 + 15 + 14 + 4, len(FAIL)))
 sys.exit(1 if FAIL else 0)
