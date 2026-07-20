@@ -22,6 +22,14 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-QA-1 (David's photo/copy consistency catch)
+- Krugerrand exemplar (id 269): description claimed 34 consecutive years but the photo shows a
+  28-slot case (4x7) with duplicate and out-of-sequence years. Copy corrected to match the photo:
+  title now "Krugerrand proof collection 1966-2000 — 28 coins, authenticated"; description says
+  28 coins spanning 1966-2000 incl. duplicate-year proof strikings. Photos prefix preserved.
+- QA principle for exemplars: the super adverts teach listers the standard — their copy must
+  survive the same scrutiny a buyer would apply to a R1.25m item.
+
 ## Session 144 (cont.) — LM-SUPER-RIBBON-2 (the real reason the ribbon was missing)
 - Frontend fix alone was not enough: /local-market/listings SELECTs explicit columns and
   super_example was not among them — the card always received undefined. Column added to the
