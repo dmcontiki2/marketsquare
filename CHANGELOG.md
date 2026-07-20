@@ -22,6 +22,18 @@
 - Verified live in Chrome, before-and-after: browse content edges [628,1488]; directory content
   edges [628,1488] — pixel-identical. ms.js v325->v326, parity 50b05d42, CF purged.
 
+## Session 144 (cont.) — SUPER-QA-2 (full copy-vs-photo sweep of all exemplars)
+- Prompted by David's Krugerrand catch, every exemplar's countable/visual claims were checked
+  against its actual images. PASS: house (double-storey, pool, jacaranda), lodge (four-poster,
+  plunge pool, thatch), Hilux (white, unmarked black interior), garden (striped finish visible
+  in after-shot), game drive (open vehicle), sideboard handles (brass confirmed).
+- FAIL found and fixed: teak sideboard photo 3 (open shot) was a DIFFERENT unit — 2 doors +
+  3 drawers with cut-out pulls vs the 4-door brass-handled item in photos 1-2. Violates the
+  same-item rule for multi-photo sets. Photo 3 removed from photo_urls + [photos:] prefix;
+  description phrase "dovetail drawers waxed to glide" -> "doors re-hung to close true".
+- Optional later: regenerate a matching open-doors shot in Higgsfield (~2 credits, reference
+  photo 1) to restore the 3-photo set.
+
 ## Session 144 (cont.) — SUPER-QA-1 (David's photo/copy consistency catch)
 - Krugerrand exemplar (id 269): description claimed 34 consecutive years but the photo shows a
   28-slot case (4x7) with duplicate and out-of-sequence years. Copy corrected to match the photo:
