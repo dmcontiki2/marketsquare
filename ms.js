@@ -3315,9 +3315,11 @@ function renderGrid(){
       return;
     }
     grid.innerHTML=(typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+'<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
+    if(typeof catAgentsRestore==='function') catAgentsRestore();
     return;
   }
   grid.innerHTML = (typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'') + filtered.map(cardHtml).join('');
+  if(typeof catAgentsRestore==='function') catAgentsRestore();
 }
 
 
@@ -15670,7 +15672,7 @@ function svcAgentsBannerHtml(){   // AGENT-PILL-1: category-tailored (David, 20 
     '<div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:14px;">'+cfg.t+'</div>'+
     '<div style="font-size:11.5px;opacity:.78;">'+cfg.s+'</div></div>'+
     '<div onclick="event.stopPropagation();agentDirOpen(\''+cfg.v+'\')" style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>'+
-    (inlinePanel?'<div id="cat-agents-panel" data-vert="'+cfg.v+'" style="grid-column:1/-1;display:none;"></div>':'');
+    (inlinePanel?'<div id="cat-agents-panel" data-vert="'+cfg.v+'" style="grid-column:1/-1;display:'+(window._catAgentsOpen===cfg.v?'block':'none')+';"></div>':'');
 }
 function agentDirOpen(v){
   if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to browse professional agents.'); return; }
@@ -15686,8 +15688,17 @@ function catAgentsToggle(v){
   if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to plan with a professional agent.'); return; }
   var p=document.getElementById('cat-agents-panel'); if(!p) return;
   var open=p.style.display!=='none';
+  window._catAgentsOpen = open ? null : v;   // survives grid re-renders (JNR-CAT-AGENTS-2)
   p.style.display=open?'none':'block';
-  if(!open && _catAgentsLoadedFor!==v){ catAgentsLoad(v); }
+  if(!open){ catAgentsLoad(v); }
+}
+function catAgentsRestore(){   // called after every browse-grid render
+  var p=document.getElementById('cat-agents-panel'); if(!p) return;
+  var v=p.getAttribute('data-vert');
+  if(window._catAgentsOpen===v){
+    if(window._catAgentsHtml && window._catAgentsHtmlFor===v){ p.innerHTML=window._catAgentsHtml; }
+    else { catAgentsLoad(v); }
+  }
 }
 async function catAgentsLoad(v){
   window._agentDirVert=v; window._agentDirSide='buy';
@@ -15717,7 +15728,9 @@ async function catAgentsLoad(v){
     ags.forEach(function(a){ h+=advAgentCard(a,card); });
     h+='<div style="font-size:10.5px;color:var(--text-3,#68758c);font-style:italic;margin-top:8px;">Anonymous until introduced — the agent\'s identity is shared only if they accept. Free for you; the agent pays 1T.</div>';
   }
-  p.innerHTML=h;
+  window._catAgentsHtml=h; window._catAgentsHtmlFor=v;   // re-render cache
+  var p2=document.getElementById('cat-agents-panel');     // re-resolve: grid may have re-rendered mid-fetch
+  if(p2){ p2.innerHTML=h; if(window._catAgentsOpen===v) p2.style.display='block'; }
 }
 function agentDirRender(){
   var o=document.getElementById('agent-dir-body'); if(!o) return;

@@ -33,6 +33,13 @@
   pattern as the Adventures tour-agent panel: pitch card + top-5 ranked anonymous agents +
   intro buttons); the gold "Browse →" pill still opens the full directory (stopPropagation).
   Intro prompt gains buyer framing ("What are you looking for?") via _agentDirSide.
+- JNR-CAT-AGENTS-2: the browse grid re-renders wiped the panel (Adventures' div lives in static
+  screen HTML; this one lives inside the grid) — panel open-state now persists in
+  window._catAgentsOpen, content cached in _catAgentsHtml, catAgentsRestore() re-applies after
+  both grid render paths, and the loader re-resolves its node post-fetch. Verified LIVE on
+  trustsquare.co: Property and Cars panels render pitch + ranked agent card, RNaN gone, units
+  live (tutor R 450/hr · electrician R650 / call-out · garden R 480/visit), Adventures Seller
+  specialist account confirmed.
 - Verify: py_compile clean (estate_agents.py 809→843), node --check clean (ms.js →983153B),
   anchored drivers + timestamped .baks, never Edit/Write on the mount.
 
