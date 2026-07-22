@@ -524,6 +524,15 @@ function formatZAR(value) {
   return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
 }
 
+function _priceBasisSuffix(p){
+  // JNR-FIX-5C (22 Jul 2026): formatZAR ate the basis ("R 50 per person" -> "R50").
+  // Recover the textual basis after the amount so cards/detail never show a bare rate.
+  var m=String(p||'').match(/^[^0-9]*[\d\s.,]+(.*)$/);
+  var suf=(m&&m[1])?m[1].trim():'';
+  if(!suf) return '';
+  if(/^(\/|per\b|once|p\.?p\b|each\b|pm\b|hr\b|hour\b)/i.test(suf)) return suf.replace(/^\/\s*/,'/ ');
+  return '';
+}
 function _priceLabel(l){
   if(l.price===null||l.price===undefined||l.price==='') return null;
   const isAdv=(String(l.cat||'').toLowerCase().indexOf('adventures')===0)||l.cat==='Adventures';
@@ -532,7 +541,9 @@ function _priceLabel(l){
     const n=Number(String(l.price).replace(/[^0-9.]/g,''));
     if(!isNaN(n)) return cur+n.toLocaleString();
   }
-  return formatZAR(l.price)||l.price;
+  var _base=formatZAR(l.price)||l.price;
+  var _suf=(!l.per)?_priceBasisSuffix(l.price):'';   // l.per renders separately — no doubling
+  return _suf?(_base+' <span class="per">'+_suf+'</span>'):_base;
 }
 
 function formatDescLegacy(desc) {
@@ -2784,7 +2795,7 @@ function renderMap(){
       `<div style="min-width:160px;">
         <strong>${l.title}</strong><br>
         <span style="font-size:12px;color:#666;">${cat.icon} ${l.cat} · ${l.suburb||l.area}${dist}</span><br>
-        <span style="font-size:13px;font-weight:600;">${l.price?(formatZAR(l.price)||l.price):'Negotiable'}</span><br>
+        <span style="font-size:13px;font-weight:600;">${l.price?((formatZAR(l.price)||l.price)+((!l.per&&_priceBasisSuffix(l.price))?' '+_priceBasisSuffix(l.price):'')):'Negotiable'}</span><br>
         <a href="#" onclick="event.preventDefault();openDetail('${l.id}')" style="font-size:12px;color:var(--accent);">View listing →</a>
       </div>`
     );
@@ -3735,7 +3746,7 @@ function openDetail(id){
           ${isAdv && advPriceDisplay
             ? `<div class="pamount">${advPriceDisplay}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`
             : l.price
-              ? `<div class="pamount">${formatZAR(l.price)||l.price}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`
+              ? `<div class="pamount">${(formatZAR(l.price)||l.price)}${(!l.per&&_priceBasisSuffix(l.price))?` <span style="font-size:.55em;font-weight:600;color:var(--text-3);">${_priceBasisSuffix(l.price)}</span>`:''}</div>${l.per?`<div class="pper">${l.per}</div>`:''}`
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>

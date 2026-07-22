@@ -48,6 +48,17 @@
 - bea_main.py deployed via the deploy_bea_safe pattern: main.py.lastgood saved, boot-import OK,
   restart HEALTH-OK. Local backup bea_main.py.bak-20260722-credpanel.
 
+## Session 147 (cont.) — JNR-FIX-5C: the renderer was eating the basis David saw missing
+- David (on his way out): app still showed "R50" without "per person". Diagnosis: the DATA was
+  right ("R 50 per person") — formatZAR() strips everything non-numeric, so cards, the compact
+  summary row and the detail amount all rendered the bare number whenever the basis lived inside
+  the price string and l.per was empty (exactly the Bee Lady rows).
+- Fix: _priceBasisSuffix() recovers the textual basis after the amount (per X, /unit, once-off,
+  pp, each); _priceLabel + detail pamount + summary row append it (skipped when l.per exists —
+  no doubling). Plain totals (R489,900) unaffected: suffix must match a known basis form.
+- Verify: node --check clean; suffix regex table-tested against all nine live price formats
+  (bases recovered, totals untouched). Deployed + confirmed on the live Tutors card.
+
 ## Session 147 (cont.) — JNR-FIX-5B: price basis now STRUCTURAL (David: "make it fault free so the lister don't forget or catch it on the app side")
 - Trigger: Bee Lady talk (created today via API by another session) showed bare "R50" — proof the
   app-side unit selector only guards the app path. Root fix at the chokepoint: POST /listings and
