@@ -1,3 +1,27 @@
+## Session 148 (cont.) · 22 Jul 2026 — MARIETJIE UNBLOCKED: gate code + account relink + MAIL-FALLBACK-1 SHIPPED
+- Marietjie could not get in ("which password?"). Journal confirms: failed /review/login 401s from
+  03:23–04:47 this morning (plus one /admin/login attempt). THREE compounding causes found and fixed:
+  1. **No code in hand:** the gate needs the reviewer code. David's recollection "123456" tested FALSE
+     against the server bcrypt hash; recovered the current code **TSR-86HV-ZR33** from the 9 Jul
+     Paystack email in Gmail (plaintext-never-in-repo design held). Old client PIN 874467 confirmed dead.
+  2. **Unreachable account email:** her seller account was beelady@trustsquare.co — no real inbox, so a
+     magic sign-in link could never reach her. RELINKED to marietjie.marais59@gmail.com across users (1),
+     listings.seller_email (3), user_credentials (20); zero old refs remain; evidence panels re-verified
+     100==100 on 273/274/275. DB backup marketsquare.db.bak-20260722-045615-beelady-relink.
+  3. **MAIL-FALLBACK-1 (launch-critical, everyone affected):** _send_login_email returned "failed" on any
+     Resend error WITHOUT trying the configured Gmail SMTP fallback — and Resend rejects everything
+     (key not authorized for trustsquare.co + DEMAND_FROM_EMAIL="TrustSquare" is malformed, 422) — so NO
+     sign-in link has ever been delivered to anyone. Fix: Resend failure now logs and falls through to
+     Gmail SMTP. Deployed (lastgood saved, boot-import OK, HEALTH-OK). VERIFIED END-TO-END live:
+     POST /auth/request-link → {"ok":true,"sent":"sent"} with the fallback log line present; real magic
+     link delivered to dmcontiki2@gmail.com.
+- Instruction email SENT to marietjie.marais59@gmail.com from David's Gmail (server SMTP, David's voice,
+  house style): gate code, sign-in steps with her exact email, and her three adverts + Trust 100.
+- FOLLOW-UPS flagged: verify trustsquare.co domain in Resend (or fix DEMAND_FROM_EMAIL to a real
+  "Name <addr>" the key may use); rotating the reviewer code post-Paystack-review now also locks out
+  founding sellers who hold it.
+- bea_main.py (local backup .bak-20260722-mailfallback); no frontend change.
+
 ## Session 148 · 22 Jul 2026 — BEE-LADY-2 SHIPPED: two real Tutors adverts + SUPER-CRED-2 panel fix
 - DAVID-DIRECTED: two more REAL adverts for the Bee Lady (Marietjie), both category=Tutors, both live:
   * #274 "Basic Beekeeping Course — hands-on training by the Bee Lady" — R 1 200 per person
@@ -23,6 +47,18 @@
   Candidate for /fix: seed catalog credentials for the super-* sellers or recompute their stored scores.
 - bea_main.py deployed via the deploy_bea_safe pattern: main.py.lastgood saved, boot-import OK,
   restart HEALTH-OK. Local backup bea_main.py.bak-20260722-credpanel.
+
+## Session 147 (cont.) — JNR-FIX-5B: price basis now STRUCTURAL (David: "make it fault free so the lister don't forget or catch it on the app side")
+- Trigger: Bee Lady talk (created today via API by another session) showed bare "R50" — proof the
+  app-side unit selector only guards the app path. Root fix at the chokepoint: POST /listings and
+  PUT /listings now reject rate-category prices (Tutors, Services, adventures_*) that carry a bare
+  amount with no basis — accepted forms: "/unit", "per X", "once-off", "POA", "negotiable",
+  "from X", quote/flat-fee/package. 422 with a message that tells the lister exactly what to write.
+  Every path (app, admin, agents, agency import, scripts) goes through these endpoints.
+- Data: one-shot re-armed — Bee Lady talk "R50" -> "R50 / person" + a lint pass that reports any
+  other unit-less rate listing at deploy time.
+- Verify: py_compile clean (bea_main.py 15163→15194), guard asserted at :2099 (create) and :2752
+  (update); anchored drivers + .bak, never Edit/Write on the mount.
 
 ## Session 147 (cont.) — JNR-CAT-AGENTS: "why use an agent" panel replicated on Property + Cars (David: "i love what you did with the adventures")
 - Server: estate_agents.py gains buyer-side pitch content — AGENT_ADVANTAGES_PROPERTY_BUY /

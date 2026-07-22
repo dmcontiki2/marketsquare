@@ -1737,6 +1737,29 @@ VEHICLE_SECTION_FIELDS = {
     "features":    ((), ("features",)),
 }
 
+# ── JNR-FIX-5B (22 Jul 2026, David: "make it fault free so the lister don't forget") ──
+# Rate-based categories must carry a price BASIS. Bare amounts ("R50") slipped through
+# every non-app creation path (admin, API, agent sessions — the Bee Lady talk). Enforced
+# HERE because every creation/edit path goes through POST/PUT /listings.
+RATE_UNIT_CATEGORIES = {"tutors", "services", "adventures_experiences", "adventures_accommodation"}
+_PRICE_BASIS_TOKENS = ("/", " per ", "per ", "once-off", "once off", "poa", "negotiable",
+                       "quote", "flat fee", "flat-fee", "package", "from ")
+
+def _validate_price_unit(category, price):
+    c = (category or "").strip().lower()
+    if c not in RATE_UNIT_CATEGORIES:
+        return
+    p = (price or "").strip().lower()
+    if not p or not any(ch.isdigit() for ch in p):
+        return  # empty / POA-style renders as negotiable — fine
+    if any(t in p for t in _PRICE_BASIS_TOKENS):
+        return
+    raise HTTPException(
+        status_code=422,
+        detail=('Rate-based listings must state the price basis — e.g. "R50 / person", '
+                '"R450 / hour", "R480 / day" — or mark it "once-off" / "POA". '
+                'A bare amount leaves buyers guessing what it covers.'))
+
 def _validate_vehicle_fields(vehicle_specs, spec_confirmed):
     """400 on malformed vehicle JSON blobs (mirrors _validate_rental_fields)."""
     for _name, _val in (("vehicle_specs", vehicle_specs), ("spec_confirmed", spec_confirmed)):
@@ -2073,6 +2096,7 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     _geo_city_id = _gcity_row["id"] if _gcity_row else None
     _validate_rental_fields(listing.rental_status, listing.available_from)
     _validate_vehicle_fields(listing.vehicle_specs, listing.spec_confirmed)
+    _validate_price_unit(listing.category, listing.price)   # JNR-FIX-5B
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
@@ -2724,6 +2748,13 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     if not existing:
         conn.close()
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    if update.price is not None:   # JNR-FIX-5B: same basis guard on edits
+        try:
+            _validate_price_unit((update.category or existing["category"]), update.price)
+        except HTTPException:
+            conn.close()
+            raise
 
     if not email:
         conn.close()
@@ -10436,10 +10467,16 @@ def _send_login_email(to_email: str, link: str) -> str:
                 json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
                       "to": [to_email], "subject": subject, "html": html},
                 timeout=20)
-            return "sent" if r.status_code in (200, 201) else "failed"
+            if r.status_code in (200, 201):
+                return "sent"
+            # MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
+            # (403 "not authorized to send from trustsquare.co") was short-circuiting
+            # here with "failed", so the Gmail SMTP fallback below NEVER ran and no
+            # sign-in link reached any user. Fall through to Gmail instead.
+            _log.error("login email (resend) HTTP %s: %s -- falling back to Gmail SMTP",
+                       r.status_code, r.text[:200])
         except Exception as exc:
-            _log.error("login email (resend) failed: %s", exc)
-            return "failed"
+            _log.error("login email (resend) failed: %s -- falling back to Gmail SMTP", exc)
     if GMAIL_APP_PASSWORD:
         try:
             msg = EmailMessage()
