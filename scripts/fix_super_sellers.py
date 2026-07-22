@@ -90,6 +90,21 @@ for kw, unit, pnum in UNIT_MAP:
         newp = f"R{amount:,} {unit}".replace(",", " ") if amount >= 1000 else f"R{amount} {unit}"
         conn.execute("UPDATE listings SET price=?, price_num=? WHERE id=?", (newp, amount, r2["id"]))
         print(f"  listing {r2['id']} price: {r2['price']!r} -> {newp!r}")
+# JNR-FIX-5B data pass (22 Jul, round 2): Bee Lady talk showed bare "R50" — fix it and
+# any other unit-less rate-category listing we can classify; report the rest.
+r_bee = conn.execute("SELECT id,title,price FROM listings WHERE LOWER(category)='tutors' "
+                     "AND LOWER(title) LIKE '%talk%' AND REPLACE(price,' ','') IN ('R50','R50.00')").fetchone()
+if r_bee:
+    conn.execute("UPDATE listings SET price='R50 / person', price_num=50 WHERE id=?", (r_bee["id"],))
+    print(f"  listing {r_bee['id']} ({r_bee['title'][:40]!r}) price: {r_bee['price']!r} -> 'R50 / person'")
+for r_lint in conn.execute("SELECT id,title,category,price FROM listings WHERE "
+        "LOWER(category) IN ('tutors','services','adventures_experiences','adventures_accommodation') "
+        "AND price IS NOT NULL AND TRIM(price)<>'' AND price NOT LIKE '%/%' "
+        "AND LOWER(price) NOT LIKE '%per %' AND LOWER(price) NOT LIKE '%once%' "
+        "AND LOWER(price) NOT LIKE '%poa%' AND LOWER(price) NOT LIKE '%negotiable%' "
+        "AND LOWER(price) NOT LIKE '%from %'").fetchall():
+    print(f"  LINT: {r_lint['id']} [{r_lint['category']}] {r_lint['title'][:40]!r}: {r_lint['price']!r} — needs a basis, decide unit")
+
 # safety net: report any remaining Tutors/Services exemplar without a visible unit
 for r3 in conn.execute("SELECT id,title,price FROM listings WHERE COALESCE(super_example,0)=1 "
                        "AND LOWER(category) IN ('tutors','services') AND price NOT LIKE '%/%'").fetchall():

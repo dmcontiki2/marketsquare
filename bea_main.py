@@ -2751,7 +2751,7 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
 
     if update.price is not None:   # JNR-FIX-5B: same basis guard on edits
         try:
-            _validate_price_unit((update.category or existing["category"]), update.price)
+            _validate_price_unit(existing["category"], update.price)   # category not editable via ListingUpdate
         except HTTPException:
             conn.close()
             raise
