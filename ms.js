@@ -8,6 +8,31 @@ const BEA_ENABLED = true;
 
 // ── Launch Switch: read server feature flags on load (safe default = free-only) ──
 window.FEATURES = { verified_visible:false, videos_visible:true, heritage_verified:false, expedition_verified:false, weekend_verified:false, _loaded:false };
+
+// ── In-app update check (22 Jul 2026) — home-screen PWA has no reload button, so
+// the app checks itself: on launch/resume it fetches the live HTML (no-store) and
+// compares its ms.js version to the one THIS app booted with. If a newer build is
+// live, it offers a one-tap Refresh. Self-discovering: no version file to maintain. ──
+async function tsCheckUpdate(){
+  try{
+    var cur = (document.querySelector('script[src*="/static/ms.js"]')||{}).src||'';
+    var curV = (cur.match(/ms\.js\?v=(\d+)/)||[])[1];
+    if(!curV) return;
+    var res = await fetch('/?_ts='+Date.now(), {cache:'no-store'});
+    if(!res.ok) return;
+    var html = await res.text();
+    var liveV = (html.match(/ms\.js\?v=(\d+)/)||[])[1];
+    if(!liveV || liveV===curV) return;
+    if(document.getElementById('ts-update-bar')) return;
+    var b=document.createElement('div'); b.id='ts-update-bar';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:100000;background:#22c55e;color:#03210f;font:600 13px/1.4 system-ui,-apple-system,sans-serif;padding:14px 16px calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,.35)';
+    b.innerHTML='<span>\u2728 A new version of TrustSquare is ready.</span><button id="ts-upd-btn" style="background:#03210f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;white-space:nowrap">Refresh</button>';
+    document.body.appendChild(b);
+    document.getElementById('ts-upd-btn').onclick=function(){ location.reload(); };
+  }catch(e){}
+}
+window.addEventListener('load', function(){ setTimeout(tsCheckUpdate, 1800); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) tsCheckUpdate(); });
 function loadFeatureFlags(){
   try{
     fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){
@@ -328,7 +353,7 @@ async function loadLiveListings(retryCount) {
           suburb: l.suburb || l.area || activeCity.name,
           trust: l.trust_score || 40,
           price: l.price || 'POA',
-          per: '',
+          per: (function(){var p=String(l.price||'');if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
           priceNum: parseInt((l.price||'0').replace(/[^0-9]/g,'')) || 0,
           desc: desc,
           photo: l.thumb_url || (photos[0] || null),
@@ -496,7 +521,7 @@ function formatZAR(value) {
   if (isNaN(n)) return null;
   const parts = n.toFixed(2).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return 'R' + parts[0] + '.' + parts[1];
+  return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
 }
 
 function _priceLabel(l){
@@ -3526,7 +3551,7 @@ function openBEASellerProfile(l) {
       el.style.color=''; el.innerHTML='<div class="cv-stats">'
         +'<div class="cv-stat"><div class="cv-stat-val">'+(s.active_listings||0)+'</div><div class="cv-stat-label">Active listing'+((s.active_listings||0)===1?'':'s')+'</div></div>'
         +(since?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:15px;">'+since+'</div><div class="cv-stat-label">Listing since</div></div>':'')
-        +(cats.length?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:14px;">'+cats.map(function(c){return String(c).replace(/</g,'&lt;');}).join(', ')+'</div><div class="cv-stat-label">Categor'+(cats.length===1?'y':'ies')+'</div></div>':'')
+        +(cats.length?'<div class="cv-stat"><div class="cv-stat-val" style="font-size:14px;">'+cats.map(function(c){var M={'adventures_accommodation':'Adventures · Stays','adventures_experiences':'Adventures · Experiences','local_market':'Local Market'};var k=String(c);var lbl=M[k.toLowerCase()]||k.replace(/_/g,' ').replace(/\w/g,function(ch){return ch.toUpperCase();});return lbl.replace(/</g,'&lt;');}).join(', ')+'</div><div class="cv-stat-label">Categor'+(cats.length===1?'y':'ies')+'</div></div>':'')
         +'</div>';
     }).catch(function(){ const el=document.getElementById('bea-sellersum-'+l.id); if(el) el.textContent='Seller overview unavailable right now.'; });
   })();
@@ -3640,8 +3665,16 @@ function openDetail(id){
     : l.cat;
   const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
   const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
+  // JNR-FIX-3 (22 Jul 2026, David Jnr feedback): never RNaN on the detail page.
+  // Same treatment as the card's ADV-FIX-1 — numeric parse with fallback to the seller's own string.
+  const _isAccomDetail = ((l.advType||l.cat||'')+'').toLowerCase().includes('accommodation');
+  const _advPnDetail = (typeof l.priceNum==='number' && isFinite(l.priceNum) && l.priceNum>0) ? l.priceNum
+                     : Number(String(l.price||'').replace(/[^0-9.]/g,''));
+  const _advPerDetail = l.per ? '' : (_isAccomDetail ? ' /night' : ' /person');  // JNR-FIX-5: unit always visible; l.per (if set) renders below
   const advPriceDisplay = isAdv && l.price
-    ? `${advCur}${Number(l.price).toLocaleString()}`
+    ? (isFinite(_advPnDetail) && _advPnDetail>0
+        ? `${_isAccomDetail?'From ':''}${advCur}${_advPnDetail.toLocaleString()}${_advPerDetail}`
+        : `${l.price}`)
     : null;
   const _isCollectorsCat = (l.cat||'').toLowerCase()==='collectors';
   const heroHtml = `
@@ -13844,17 +13877,17 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // ── Video Tutor · per-feature how-to video, played in-app (FEA v169) ──
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
-  collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260705t',
-  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260705t',
-  expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260705t',
-  property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260705t',
-  car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260705t',
-  retirement_planner:     '/static/videos/retirement-planner-howto.mp4?v=20260705t',
-  collection_liquidation: '/static/videos/collection-liquidation-howto.mp4?v=20260705t',
-  weekend_itinerary:      '/static/videos/weekend-itinerary-howto.mp4?v=20260705t',
-  study_plan:             '/static/videos/exam-study-plan-howto.mp4?v=20260705t',
-  offer_advisor:          '/static/videos/offer-strategy-howto.mp4?v=20260705t',
-  introductions:          '/static/videos/introduction.mp4?v=20260618c'
+  collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260722t',
+  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260722t',
+  expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260722t',
+  property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260722t',
+  car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260722t',
+  retirement_planner:     '/static/videos/retirement-planner-howto.mp4?v=20260722t',
+  collection_liquidation: '/static/videos/collection-liquidation-howto.mp4?v=20260722t',
+  weekend_itinerary:      '/static/videos/weekend-itinerary-howto.mp4?v=20260722t',
+  study_plan:             '/static/videos/exam-study-plan-howto.mp4?v=20260722t',
+  offer_advisor:          '/static/videos/offer-strategy-howto.mp4?v=20260722t',
+  introductions:          '/static/videos/introduction.mp4?v=20260722c'
 };
 const AI_VIDEO_TITLES = { introductions: 'Introductions' };
 function aiVideoTutor(id){
@@ -13906,6 +13939,7 @@ async function aiBoot(){
           ${(AI_VIDEOS[f.id] && window.FEATURES && window.FEATURES.videos_visible)?`<button class="ai-vtutor" onclick="event.stopPropagation();aiVideoTutor('${f.id}')" aria-label="Watch the video tutor">\u25B6 Video Tutor</button>`:''}
         </div>
         <h3><span class="ai-ico">${f.icon||'\u2728'}</span> <span class="ai-name">${f.name}</span></h3><p>${f.blurb}</p>
+        ${f.status==='live'?`<div class="ai-cardfoot"><button class="ai-exminibtn" onclick="event.stopPropagation();aiExampleFrom('${f.id}')">\u{1F441}\uFE0F See example (free)</button></div>`:''}
       </div>`).join('');
   }catch(e){
     document.getElementById('ai-grid').innerHTML =
@@ -13913,6 +13947,12 @@ async function aiBoot(){
   }
 }
 
+function aiExampleFrom(id){
+  try{ aiSel(id); }catch(e){}
+  var p=document.getElementById('ai-runpanel');
+  if(p&&p.scrollIntoView){ try{ p.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
+  aiExample();
+}
 function aiSel(id){
   AI_SEL = AI_FNS.find(f=>f.id===id);
   AI_PHOTOS = [];
@@ -14062,6 +14102,7 @@ async function aiPoll(jobId){
                 html: document.getElementById('ai-result').innerHTML,
                 safety: (sb && sb.style.display!=='none') ? sb.innerHTML : '',
                 link: ml ? ml.href : '' };
+    aiWrapTables();
     document.getElementById('ai-savebtn').style.display='block';
     var _shb2=document.getElementById('ai-sharebtn'); if(_shb2)_shb2.style.display='block';
     const lb=document.getElementById('ai-listbtns');
@@ -14225,6 +14266,30 @@ function aiPrint(){
   setTimeout(function(){ try{ w.print(); }catch(e){} }, 500);
 }
 
+function aiWrapTables(){
+  try{ document.querySelectorAll('#ai-result table').forEach(function(t){
+    if(t.parentElement && t.parentElement.classList.contains('ai-tscroll')) return;
+    var w=document.createElement('div'); w.className='ai-tscroll';
+    t.parentNode.insertBefore(w,t); w.appendChild(t);
+  }); }catch(e){}
+}
+function aiExamplePDF(){
+  var el=document.getElementById('ai-result'); if(!el) return;
+  var w=window.open('','_blank'); if(!w){ showToast('Allow pop-ups to save the PDF'); return; }
+  var name=(AI_SEL&&AI_SEL.name)||'TrustSquare example';
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+name+' \u2014 example</title><style>'
+   +'body{font:13px/1.5 Segoe UI,Arial,sans-serif;color:#111;margin:22px;max-width:820px}'
+   +'h1{font-size:19px;color:#1f3864;margin:0 0 10px;border-bottom:2px solid #1f3864;padding-bottom:6px}'
+   +'h2{font-size:15px;color:#1f3864;margin:14px 0 5px}h3{font-size:13px;color:#2e4b8f;margin:10px 0 4px}'
+   +'table{border-collapse:collapse;width:100%;font-size:11.5px;margin:8px 0}th,td{border:1px solid #999;padding:4px 7px;text-align:left}th{background:#eef2fa}'
+   +'a{color:#1f3864}.ai-exbanner{background:#fff8e1;border:1px solid #d4b106;padding:6px 10px;border-radius:6px;font-size:11px;margin:0 0 12px}'
+   +'@media print{.noprint{display:none}}</style></head><body>'
+   +'<h1>'+name+' \u2014 example</h1>'+el.innerHTML
+   +'<button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 18px;font-size:14px">Save as PDF</button>'
+   +'</body></html>');
+  w.document.close();
+  setTimeout(function(){ try{ w.print(); }catch(e){} }, 400);
+}
 // Free worked example — no Tuppence, no sign-in; shows what a report looks like before buying.
 async function aiExample(){
   if(!AI_SEL) return;
@@ -14253,6 +14318,8 @@ async function aiExample(){
     document.getElementById('ai-result').innerHTML='<div class="ai-exbanner">EXAMPLE \u2014 illustrative sample, not a live run</div>'+_exFigs+aiMd(txt)+exNote+aiDateFooter(d);
     document.getElementById('ai-result').style.display='block';
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
+    aiWrapTables();
+    document.getElementById('ai-result').insertAdjacentHTML('beforeend', '<div class="ai-exfoot noprint" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="ai-vtutor" onclick="aiExamplePDF()">\u2b07\ufe0f Save as PDF</button><span style="font-size:11px;color:#9db4d8">Pinch to zoom \u00b7 turn your phone sideways for wide tables</span></div>');
     aiDrawMap(wps);
   }catch(e){ st.innerHTML='<span class="ai-bad">No example available yet for this one.</span>'; }
 }

@@ -37,7 +37,13 @@ MODEL_RE = re.compile(r"claude-([a-z]+)[-0-9a-z.]*")
 KNOWN_NON_MODELS = {"mem"}
 SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
              ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
-SKIP_FILE = re.compile(r"\.bak[-.]|\.bak$|~\$|cost_compliance_sweep\.py$")
+# GOLDEN_EVAL_*.json/.html (produced by failover/eval_golden_set.py, 18 Jul 2026) are
+# frozen one-off benchmark snapshots — a "reference ceiling" Sonnet lane exists ONLY to
+# score candidate cheap-lane models against, never called from live app code (verified
+# 22 Jul 2026: no .py/.js/.html in any REPO imports or reads these filenames). Scanning
+# them as call sites produced 14 false-positive "Sonnet outside the metered registry"
+# WARNs against static comparison data, not code.
+SKIP_FILE = re.compile(r"\.bak[-.]|\.bak$|~\$|cost_compliance_sweep\.py$|^GOLDEN_EVAL_")
 SCAN_EXT = {".py", ".js", ".html", ".json", ".sh", ".bat"}
 # Primary app repo = the parent of this script's dir (.../<repo>/scripts/). Derive its
 # name from the filesystem so a brand/folder rename (MarketSquare -> TrustSquare) cannot
@@ -303,9 +309,26 @@ def workbook_drift(root: Path):
     try:
         wb_m = datetime.date.fromtimestamp(wb_path.stat().st_mtime)
         chl = read(ms / "CHANGELOG.md")
-        mc = re.search(r"## Session [\w·\s]*?(\d{1,2} \w+ 20\d\d).{0,4000}?Cost model impact", chl, re.S)
+        # FIXED 22 Jul 2026: the old regex required a spelled-out "D Month YYYY" date
+        # immediately after "## Session " AND "Cost model impact" within the next 4000
+        # chars in ONE match — both conditions are fragile (some headers use ISO dates,
+        # some entries run long) so it silently skipped past the true newest entry and
+        # locked onto a stale mid-file match (was reporting "17 June 2026" when the real
+        # latest entry, 22 Jul verified, was 20 July 2026 — 5 weeks newer). CHANGELOG is
+        # newest-first, so: find the FIRST "Cost model impact" line in the file, then walk
+        # BACKWARD to the nearest preceding "## Session" header and pull whatever date is
+        # in it (ISO or spelled), independent of entry length or header punctuation.
+        m_impact = re.search(r"Cost model impact", chl)
+        impact_date = None
+        if m_impact:
+            head = chl[:m_impact.start()]
+            headers = list(re.finditer(r"^## Session.*$", head, re.M))
+            if headers:
+                htext = headers[-1].group(0)
+                dm = re.search(r"\d{4}-\d{2}-\d{2}|\d{1,2} \w+ 20\d\d", htext)
+                impact_date = dm.group(0) if dm else htext.strip()
         findings.append((INFO, f"Workbook last modified {wb_m}; latest CHANGELOG cost-impact entry: "
-                               f"{mc.group(1) if mc else 'not found'} — reconcile if the code moved later"))
+                               f"{impact_date or 'not found'} — reconcile if the code moved later"))
     except Exception:
         pass
     return findings

@@ -192,6 +192,45 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3d: Deploy SUPER exemplar photos (assets/super -> /static/super/) ──
+:: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
+:: Permanent step so listing photo sets always ship with the site.
+echo  [3d] Deploying SUPER exemplar photos (assets\super -^> /static/super/)...
+ssh -n -o ConnectTimeout=15 %SERVER% "mkdir -p %REMOTE%/static/super"
+scp "%PROJECT%\assets\super\*.jpg" %SERVER%:%REMOTE%/static/super/
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for assets\super photos. Check SSH connection.
+    pause
+    exit /b 1
+)
+ssh -n %SERVER% "chmod 644 %REMOTE%/static/super/*.jpg"
+echo  Done.
+echo.
+
+:: ── Step 3e: ONE-SHOT super-seller data fix (runs only while flag file exists) ──
+:: JNR-FIX-1/5 (22 Jul 2026, David-approved): specialist seller per category +
+:: price units on rate-based exemplars. Guarded by RUN_SUPER_FIX_ONCE.flag;
+:: deletes the flag after a successful apply so this NEVER re-runs.
+if exist "%PROJECT%\RUN_SUPER_FIX_ONCE.flag" (
+    echo  [3e] ONE-SHOT: super-seller/category + price-unit fix...
+    scp "%PROJECT%\scripts\fix_super_sellers.py" %SERVER%:%REMOTE%/fix_super_sellers.py
+    if %errorlevel% neq 0 (
+        echo  ERROR: SCP failed for fix_super_sellers.py - fix NOT run, flag kept.
+    ) else (
+        echo  --- dry run ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 fix_super_sellers.py"
+        echo  --- apply ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 fix_super_sellers.py --apply"
+        if %errorlevel% equ 0 (
+            del "%PROJECT%\RUN_SUPER_FIX_ONCE.flag"
+            echo  [OK] Super-seller fix applied - one-shot flag removed.
+        ) else (
+            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
+        )
+    )
+    echo.
+)
+
 :: ── Step 3b: Deploy World Heritage data (wonders.json) ────
 echo  [3b] Deploying Wonders data (wonders.json -^> wonders.json)...
 scp "%PROJECT%\wonders.json" %SERVER%:%REMOTE%/wonders.json
@@ -398,6 +437,12 @@ echo.
 :: ── Step 5b: Purge Cloudflare edge cache ──
 echo  [5b] Purging Cloudflare cache...
 ssh -n %SERVER% "curl -sf -m 20 -X POST http://localhost:8000/admin/purge-cache >nul 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+
+:: -- Step 5c: Re-warm the tutor-video edge cache (purge above evicted them) --
+:: The tutor .mp4s are large; on a COLD Cloudflare cache the first mobile viewer
+:: pulls the whole file from origin and the video just spins (the 22-Jul tester bug).
+echo  [5c] Warming tutor-video edge cache so first view is instant...
+ssh -n %SERVER% "bash %REMOTE%/warm_videos.sh" && echo   [OK] tutor videos warmed (all HIT) || echo   [WARN] video warm failed - run warm_video_cache.sh manually
 echo.
 
 :: ── Step 6: Verify deploy on server ──────────────────────
@@ -497,6 +542,23 @@ echo.
 :: Driven by PowerShell (not batch if/!var!) so it needs no delayed expansion and
 :: is non-fatal by design: a git hiccup must never fail an already-successful deploy.
 echo.
+:: ── Step 6b: Purge Cloudflare edge cache (added 22 Jul 2026, David-approved) ──
+:: New bytes under same filenames (photos, ms.js) otherwise serve stale from the
+:: edge until TTL. The endpoint exists for exactly this moment; now it is called
+:: automatically, every deploy, as the docstring always claimed.
+echo  [6b] Purging Cloudflare edge cache...
+curl -s -m 25 -X POST "https://trustsquare.co/admin/purge-cache"
+echo.
+echo  Done.
+echo.
+
+:: Stale-lock sweep (22 Jul 2026): a leftover .git\index.lock from a crashed git op
+:: made step 7 no-op silently (SilentlyContinue swallowed it). No git runs during
+:: this script, so any lock here is stale by definition - safe to remove.
+if exist "%PROJECT%\.git\index.lock" (
+    echo    [WARN] Stale .git\index.lock found - removing so auto-commit can run.
+    del /f "%PROJECT%\.git\index.lock"
+)
 echo  [7/7] Auto-committing the deployed working tree (FEA-DRIFT guard)...
 powershell -NoProfile -Command ^
   "$ErrorActionPreference='SilentlyContinue';" ^

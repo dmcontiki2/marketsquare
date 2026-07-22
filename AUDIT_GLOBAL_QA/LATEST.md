@@ -1,4 +1,4 @@
-# Global QA audit — 2026-07-20 (10.5s)
+# Global QA audit — 2026-07-21 (14.3s)
 
 **1 findings** (0 new vs previous run)
 

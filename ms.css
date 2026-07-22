@@ -1202,6 +1202,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-card.sel{border-color:#f0b429;box-shadow:0 0 0 1px #f0b429}
 .ai-card h3{font-size:14.5px;margin:6px 0 4px;color:#fff}
 .ai-card p{font-size:12px;color:#b9c6e2;margin:0}
+.ai-cardfoot{margin-top:10px}
+.ai-exminibtn{background:#1b2f5c;color:#cfe2ff;border:1px solid #2f52a0;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.ai-exminibtn:active{background:#24407c}
 .ai-row{display:flex;gap:6px;flex-wrap:wrap}
 .ai-tag{font-size:10px;letter-spacing:.4px;padding:2px 8px;border-radius:12px;font-weight:700}
 .ai-tag.buyer{background:#10324f;color:#7cc4ff}.ai-tag.seller{background:#3a2c10;color:#f0b429}
@@ -1236,8 +1239,9 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-result{margin-top:12px;background:#0d1a38;border:1px solid #24407c;border-radius:10px;padding:14px;overflow-x:auto;font-size:13px}
 .ai-result h2{font-size:15px;margin:12px 0 6px;color:#cfe2ff}.ai-result h2:first-child{margin-top:0}
 .ai-result h3{font-size:13.5px;margin:10px 0 5px;color:#b9d2f7}
-.ai-result table{border-collapse:collapse;width:100%;font-size:12px;margin:8px 0}
-.ai-result th,.ai-result td{border:1px solid #24407c;padding:5px 8px;text-align:left}
+.ai-result table{border-collapse:collapse;width:auto;min-width:100%;font-size:12px;margin:0}
+.ai-result th,.ai-result td{border:1px solid #24407c;padding:5px 8px;text-align:left;white-space:nowrap}
+.ai-tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0;border:1px solid #24407c;border-radius:8px}
 .ai-result th{background:#15243d;color:#cfe2ff}
 .ai-result a{color:#7cc4ff}.ai-result ul{margin:6px 0 6px 18px}
 .ai-result pre{background:#08101e;padding:9px;border-radius:8px;font-size:11px;overflow-x:auto}

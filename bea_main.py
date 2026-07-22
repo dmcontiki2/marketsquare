@@ -3736,6 +3736,15 @@ def seller_public_credentials(listing_id: int):
 
         # ── Local Market model (design: base 40 + signals, capped 100) ──
         _is_lm = (l["category"] or "").strip().lower() in ("local_market", "local market")
+        if not _is_lm:
+            # SUPER-CRED-2 (22 Jul 2026): mirror _category_key_for_user — a seller with ANY
+            # LM listing is scored under the LM model, so the buyer-facing evidence panel
+            # must use the SAME model on ALL their listings. (Bee Lady's new Tutors adverts
+            # were summing to 50 under her 100 badge — the exact mismatch this panel exists
+            # to prevent. The visible list IS the score, on every surface.)
+            _is_lm = bool(conn.execute(
+                "SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND category='local_market' LIMIT 1",
+                (email,)).fetchone())
         if _is_lm:
             groups.insert(0, {"title": "Local Market foundation", "items":
                 [{"name": "Verified Local Market seller baseline", "points": 40}], "subtotal": 40,
@@ -9268,15 +9277,19 @@ def _names_match(name_a: str, name_b: str) -> float:
 
 
 async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
-                                   claimed_id: str, doc_type: str) -> dict:
+                                   claimed_id: str, doc_type: str, email: str = "") -> dict:
     """Call Sonnet vision to verify identity document.
     SWAP POINT: replace this function with PaddleOCR/PassportEye for zero-token operation.
+    Self-contained cost guard (P2, 22 Jul 2026): checks the daily ceiling BEFORE the call
+    (raises HTTPException 429, same as every other paid endpoint) and logs spend itself
+    so this helper stays metered even if a future caller forgets to.
     Returns: {verified(bool), confidence(float), extracted_name(str),
               extracted_id(str), notes(str), model(str)}"""
     if not ANTHROPIC_API_KEY:
         return {"verified": False, "confidence": 0.0, "extracted_name": "",
                 "extracted_id": "", "notes": "AI verification unavailable — API key not set",
                 "model": "none"}
+    _check_cost_ceiling(email)   # C1 — refuse if daily cost ceiling reached
     try:
         # Fetch the document image
         req = urllib.request.Request(doc_url, headers={"User-Agent": "TrustSquare-KYC/1.0"})
@@ -9340,6 +9353,8 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
         verified = (result.get("name_match") and result.get("id_match") and
                     result.get("confidence", 0) >= 0.75 and
                     result.get("document_appears_genuine", True))
+        _log_ai_spend(email, "/users/verify-identity", "sonnet_vision",
+                      getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None))
         return {
             "verified": bool(verified),
             "confidence": float(result.get("confidence", 0)),
@@ -9348,6 +9363,8 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
             "notes": result.get("notes", ""),
             "model": SONNET_MODEL,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         return {"verified": False, "confidence": 0.0, "extracted_name": "",
                 "extracted_id": "", "notes": f"Verification error: {str(e)}", "model": SONNET_MODEL}
@@ -9421,7 +9438,7 @@ async def verify_identity(
 
     # ── Step 2: Sonnet vision verification ───────────────────────────────
     ai = await _sonnet_verify_identity(
-        payload.doc_url, payload.full_name, payload.id_number, doc_type
+        payload.doc_url, payload.full_name, payload.id_number, doc_type, email=email
     )
     result["ai_verified"]    = ai["verified"]
     result["confidence"]     = ai["confidence"]
@@ -10812,12 +10829,17 @@ _ANON_AI_SYSTEM = (
     "TITLE: <clean title>\nDESCRIPTION: <clean description>"
 )
 
-def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = ""):
+def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", who: str = ""):
     """AI leg of the anonymise pass — SEAM-ROUTED via ai_provider.complete (D1),
     exactly like /advert-agent/market-note. Returns (ok, title, desc, in_tok, out_tok).
-    ok=False on ANY failure (no key, provider down, unparseable output) so the
-    caller falls back to regex-only + needs_review. Never raises."""
+    ok=False on ANY failure (no key, ceiling hit, provider down, unparseable output) so the
+    caller falls back to regex-only + needs_review. Never raises.
+    Self-contained cost guard (P2, 22 Jul 2026): checks the daily ceiling and logs spend
+    itself so this helper stays metered even if a future caller forgets to — the ceiling
+    check is inside this try/except, so a 429 here degrades to the regex-only fallback
+    exactly like any other failure mode, never raises out to the caller."""
     try:
+        _check_cost_ceiling(who)   # C1 rail — same guard as every paid AI call
         import ai_provider as _ap
         res = _ap.complete(
             [{"role": "user", "content": "TITLE: %s\nDESCRIPTION: %s" % (title, desc)}],
@@ -10833,6 +10855,7 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = ""):
         d = m.group(2).strip().strip("*").strip()
         if desc.strip() and not d:   # model dropped the body — distrust it
             return False, title, desc, None, None
+        _log_ai_spend(who, "/agencies/import#anonymise", "haiku", res.in_tokens, res.out_tokens)
         return True, (t or title), d, res.in_tokens, res.out_tokens
     except Exception:
         return False, title, desc, None, None
@@ -11450,15 +11473,16 @@ def agency_import(agency_id: int, req: _AgencyImport):
             if has_text:
                 ai_ok = False
                 try:
-                    _check_cost_ceiling(agent)   # C1 rail — same guard as every paid AI call
+                    # Ceiling check + spend log now live INSIDE _anon_ai_rewrite (P2,
+                    # 22 Jul 2026) so the helper is self-metering; do not duplicate here.
                     ai_ok, ai_t, ai_d, _it, _ot = _anon_ai_rewrite(
-                        t_clean, d_clean, _ts_active_provider(), str(ad.get("category") or "Property"))
+                        t_clean, d_clean, _ts_active_provider(), str(ad.get("category") or "Property"),
+                        who=agent)
                     if ai_ok:
                         # Belt-and-braces: re-strip the AI output so a model echo
                         # of a phone/email can never reach the stored draft.
                         t_clean = _anon_regex_clean(ai_t)[0]
                         d_clean = _anon_regex_clean(ai_d)[0]
-                        _log_ai_spend(agent, "/agencies/import#anonymise", "haiku", _it, _ot)
                 except Exception as _aexc:
                     _log.warning("agency_import anonymise AI leg failed (%s): %s", agent, _aexc)
                 if not ai_ok:
@@ -11488,12 +11512,12 @@ def agency_import(agency_id: int, req: _AgencyImport):
                 needs_rev += 1
             # IMPORT-SYNC-1 (17 Jul 2026, David): imports carry the SAME structured
             # schema as the guided sell flow — nothing silently dropped.
-            def _imp_i(k):
+            def _imp_i(k, ad=ad):
                 v = ad.get(k)
                 if v in (None, ""): return None
                 try: return int(str(v).replace(" ", "").replace(",", ""))
                 except Exception: return None
-            def _imp_s(k, cap=160):
+            def _imp_s(k, cap=160, ad=ad):
                 v = ad.get(k)
                 if v in (None, ""): return None
                 return str(v).strip()[:cap] or None
