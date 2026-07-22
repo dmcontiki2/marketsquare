@@ -11825,6 +11825,132 @@ def demand_tickets_view(_admin=Depends(_require_admin)):
         conn.close()
 demand_tickets_view = app.get("/demand/tickets")(demand_tickets_view)
 
+
+# ── INFRA-PANEL-1 (22 Jul 2026): external-service health for the ops dashboard ──
+# Live checks of every third-party dependency; returns status + MASKED key tails
+# only — raw secrets never leave the process. Born of the stale-CF_ZONE_ID saga
+# (CHANGE_REGISTER 2026-07-22): a dead key must turn red on Page 4, not be
+# discovered a month later behind a {"purged": true} that lied.
+
+def _infra_mask(v):
+    if not v:
+        return None
+    return ("…" + v[-4:]) if len(v) >= 8 else "set"
+
+async def _infra_cloudflare():
+    tok = os.getenv("CF_CACHE_TOKEN"); zone = os.getenv("CF_ZONE_ID")
+    if not tok or not zone:
+        return {"status": "nokey", "detail": "CF_CACHE_TOKEN / CF_ZONE_ID not set"}
+    try:
+        async with httpx.AsyncClient(timeout=8) as cl:
+            v = await cl.get("https://api.cloudflare.com/client/v4/user/tokens/verify",
+                             headers={"Authorization": "Bearer " + tok})
+            if not v.json().get("success"):
+                return {"status": "fail", "detail": "token INVALID — cache purge broken (roll token in CF dash)"}
+            r = await cl.get("https://api.cloudflare.com/client/v4/zones/%s/rulesets/phases/http_request_cache_settings/entrypoint" % zone,
+                             headers={"Authorization": "Bearer " + tok})
+            rd = r.json()
+            if not rd.get("success"):
+                return {"status": "fail", "detail": "token ok but ZONE access failed — wrong CF_ZONE_ID?"}
+            n = len((rd.get("result") or {}).get("rules") or [])
+            return {"status": "ok", "detail": "token active · zone ok · %d cache rule(s) · purge-on-deploy armed" % n}
+    except Exception as e:
+        return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
+
+async def _infra_resend():
+    key = os.getenv("RESEND_API_KEY")
+    if not key:
+        return {"status": "nokey", "detail": "RESEND_API_KEY not set"}
+    try:
+        async with httpx.AsyncClient(timeout=8) as cl:
+            # Empty-body send probe (INFRA-RESEND-1, 22 Jul 2026): 422 = auth passed,
+            # payload rejected, NOTHING sent; 401/403 = key dead. Chosen because the
+            # production key is sending-scoped and gets 401 on /domains even when
+            # perfectly able to send (proven same day: /domains 401 while the pulse
+            # alert email delivered fine).
+            r = await cl.post("https://api.resend.com/emails",
+                              headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                              json={})
+            if r.status_code == 422:
+                return {"status": "ok", "detail": "key valid (send-scope probe, nothing sent)"}
+            if r.status_code in (401, 403):
+                return {"status": "fail", "detail": "key REJECTED — alert + support emails will NOT send"}
+            return {"status": "warn", "detail": "HTTP %d" % r.status_code}
+    except Exception as e:
+        return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
+
+async def _infra_paystack():
+    key = os.getenv("PAYSTACK_SECRET_KEY")
+    if not key:
+        return {"status": "nokey", "detail": "PAYSTACK_SECRET_KEY not set"}
+    try:
+        async with httpx.AsyncClient(timeout=8) as cl:
+            r = await cl.get("https://api.paystack.co/bank?currency=ZAR&perPage=1",
+                             headers={"Authorization": "Bearer " + key})
+            if r.status_code == 200:
+                return {"status": "ok", "detail": "key valid · %s mode" % ("LIVE" if key.startswith("sk_live") else "TEST")}
+            if r.status_code == 401:
+                return {"status": "fail", "detail": "key REJECTED — payments down"}
+            return {"status": "warn", "detail": "HTTP %d" % r.status_code}
+    except Exception as e:
+        return {"status": "warn", "detail": "unreachable: " + type(e).__name__}
+
+async def _infra_hetzner_s3():
+    ep = os.getenv("HETZNER_S3_ENDPOINT"); ak = os.getenv("HETZNER_S3_ACCESS_KEY"); sk = os.getenv("HETZNER_S3_SECRET_KEY")
+    if not (ep and ak and sk):
+        return {"status": "nokey", "detail": "S3 credentials incomplete"}
+    try:
+        async with httpx.AsyncClient(timeout=8) as cl:
+            r = await cl.get(ep)
+            return {"status": "ok", "detail": "endpoint alive (HTTP %d) · creds set · bucket %s" % (r.status_code, os.getenv("HETZNER_S3_BUCKET") or "?")}
+    except Exception as e:
+        return {"status": "warn", "detail": "endpoint unreachable: " + type(e).__name__}
+
+async def _infra_ssl():
+    try:
+        import ssl as _ssl, socket as _socket
+        def _days():
+            ctx = _ssl.create_default_context()
+            with _socket.create_connection(("trustsquare.co", 443), timeout=8) as s:
+                with ctx.wrap_socket(s, server_hostname="trustsquare.co") as w:
+                    exp = datetime.strptime(w.getpeercert()["notAfter"], "%b %d %H:%M:%S %Y %Z")
+                    return (exp - datetime.utcnow()).days
+        days = await asyncio.to_thread(_days)
+        st = "ok" if days > 21 else ("warn" if days > 7 else "fail")
+        return {"status": st, "detail": "%d days remaining" % days}
+    except Exception as e:
+        return {"status": "warn", "detail": "check failed: " + type(e).__name__}
+
+_INFRA_CHECKS = {
+    "cloudflare":  ("Cloudflare",      "CDN · cache · DNS",   _infra_cloudflare,  "CF_CACHE_TOKEN"),
+    "resend":      ("Resend",          "transactional email",           _infra_resend,      "RESEND_API_KEY"),
+    "paystack":    ("Paystack",        "payments (ZAR)",                _infra_paystack,    "PAYSTACK_SECRET_KEY"),
+    "hetzner_s3":  ("Hetzner S3",      "object storage · backups", _infra_hetzner_s3,  "HETZNER_S3_ACCESS_KEY"),
+    "ssl":         ("TLS certificate", "trustsquare.co",                _infra_ssl,         None),
+}
+
+@app.get("/admin/services-status")
+async def admin_services_status(service: str = None, _admin=Depends(_require_admin)):
+    """INFRA-PANEL-1: live health of external dependencies for the ops dashboard.
+    ?service=<id> re-tests one. Key tails masked; raw secrets never returned."""
+    ids = [service] if service in _INFRA_CHECKS else list(_INFRA_CHECKS.keys())
+    results = await asyncio.gather(*[_INFRA_CHECKS[i][2]() for i in ids], return_exceptions=True)
+    out = []
+    for i, res in zip(ids, results):
+        label, kind, _fn, envk = _INFRA_CHECKS[i]
+        if isinstance(res, Exception):
+            res = {"status": "warn", "detail": "check crashed: " + type(res).__name__}
+        res.update({"id": i, "label": label, "kind": kind,
+                    "key": _infra_mask(os.getenv(envk)) if envk else None})
+        out.append(res)
+    if service in (None, "justtcg"):
+        jt = os.getenv("JUSTTCG_API_KEY")
+        out.append({"id": "justtcg", "label": "JustTCG", "kind": "card pricing data",
+                    "status": "ok" if jt else "nokey",
+                    "detail": "key set (presence only — no cheap live probe)" if jt else "JUSTTCG_API_KEY not set",
+                    "key": _infra_mask(jt)})
+    return {"services": out, "checked_at": datetime.utcnow().isoformat() + "Z"}
+
 @app.post("/admin/ai-test")   # AITEST-ROUTE-1 (17 Jul, found live by David's demo): decorator was pasted onto demand_sweep; real tester was never registered
 def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
     """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
