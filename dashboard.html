@@ -409,7 +409,7 @@
     <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
     <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
     <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
-    <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 +1 Executive</button>
+    <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 Launch Switch</button>
     <a id="orch-cockpit-link" href="/orchestrator/v2/cockpit.html" title="Orchestration v2 — Control Room" style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:linear-gradient(135deg,#0f6e56,#1d9e75);color:#fff;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;">🛰️ Orchestration</a>
   </div>
 </div>
@@ -530,7 +530,7 @@
 </div>
 
 <!-- ── LAUNCH SWITCH VIEW (page 5 / the +1) ── -->
-<div id="launch-switch-view" style="display:none;padding:24px 20px;max-width:900px;margin:0 auto;">
+<div id="launch-switch-view" style="display:none;padding:24px 20px;max-width:760px;margin:0 auto;">
  <style>
   #launch-switch-view .ls-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:16px}
   #launch-switch-view .ls-h{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
@@ -559,36 +559,24 @@
   #launch-switch-view .ls-pill.on{background:rgba(16,185,129,.18);color:#6ee7b7}
   #launch-switch-view .ls-pill.off{background:#26303f;color:#7c8aa0}
   #launch-switch-view .ls-note{font-size:11px;color:var(--muted);margin-top:13px;line-height:1.5}
-   #launch-switch-view .exec-tab{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-  #launch-switch-view .exec-tab.on{color:var(--text);border-color:var(--accent);background:var(--surface2)}
-  #launch-switch-view .xm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-  #launch-switch-view .xm div.t{background:var(--surface2);border-radius:8px;padding:10px}
-  #launch-switch-view .xm .l{font-size:11px;color:var(--muted)}
-  #launch-switch-view .xm .v{font-size:17px;font-weight:700;margin-top:2px}
-  #launch-switch-view table.xs{width:100%;font-size:12.5px;border-collapse:collapse;table-layout:fixed}
-  #launch-switch-view table.xs th{font-weight:400;color:var(--muted);text-align:left;padding:7px 0}
-  #launch-switch-view table.xs td{padding:8px 0;border-top:1px solid var(--border)}
-  #launch-switch-view .xr{text-align:right}
-  #launch-switch-view .mock-note{font-size:11px;color:#fcd34d;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:5px 9px;margin-bottom:10px}
-</style>
-  <div style="display:flex;gap:6px;margin-bottom:16px" id="exec-tabs">
-    <button type="button" class="exec-tab on" data-tab="command" onclick="execTab('command')">🎛 Command</button>
-    <button type="button" class="exec-tab" data-tab="money" onclick="execTab('money')">💰 Money</button>
-    <button type="button" class="exec-tab" data-tab="people" onclick="execTab('people')">👤 People</button>
+ </style>
+  <!-- AI PROVIDER REGISTRY v2 (P1) — per-provider status, per-task chains, test-any-provider -->
+  <div class="ls-card" id="ai-prov-card-v2">
+    <div class="ls-h">&#128268; AI Providers <span id="apv2-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Per-provider status and live test. Activate swaps the vendor for all seam-routed features (21 of 22), no restart.</div>
+    <div id="apv2-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading registry&hellip;</div></div>
+    <div id="apv2-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
-  <div id="exec-tab-command">
-  <!-- AI PROVIDER SWAP (D1 seam) — David-only operational control: swap inference vendor live, no restart -->
-  <div class="ls-card" id="ai-prov-card">
-    <div class="ls-h">🔌 AI Provider <span id="ai-prov-now" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">—</span></div>
-    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Swap the inference vendor live (no restart) if one goes down, or for testing. Detection/mitigation are unaffected.</div>
-    <div class="ls-seg" id="ai-prov-seg">
-      <button type="button" data-prov="anthropic" onclick="aiProvPick('anthropic')">Anthropic (Claude)</button>
-      <button type="button" data-prov="openai" onclick="aiProvPick('openai')">OpenAI</button>
-    </div>
-    <div id="ai-prov-note" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-    <button type="button" id="ai-prov-test" onclick="aiProvTest()" style="margin-top:10px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;cursor:pointer;font-family:inherit">▶ Test active provider</button>
-    <div id="ai-prov-test-out" style="font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-wrap"></div>
+
+  <!-- INFRA-PANEL-1 (22 Jul 2026) — external services health; mirrors AI Providers card -->
+  <div class="ls-card" id="infra-card">
+    <div class="ls-h">&#128736;&#65039; Infrastructure <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— external services</span></div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Live key + endpoint checks, keys shown masked. A dead key turns red here instead of failing silently for a month.</div>
+    <div id="infra-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading checks&hellip;</div></div>
+    <div id="infra-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
+
+  
 
  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
    <div style="font-size:22px;font-weight:800;color:var(--text)">🚀 Launch Switch</div>
@@ -625,72 +613,7 @@
    <div class="ls-prev" id="ls-prev"></div>
    <div class="ls-note">Saved to the server (one flag) the buyer app reads on load — switching is instant for everyone, no redeploy. The back-end paid-feed gate still blocks any charge if a tier is off.</div>
  </div>
- </div>
- <div id="exec-tab-money" style="display:none">
-  <div class="ls-card">
-   <div class="ls-h">💳 Subscriptions &amp; vendors</div>
-   <div class="mock-note">Mock data — live cost feeds and receipts not wired yet. Figures are placeholders.</div>
-   <table class="xs">
-    <tr><th style="width:26%">Service</th><th style="width:13%">Status</th><th class="xr" style="width:13%">6m avg</th><th class="xr" style="width:13%">3m avg</th><th class="xr" style="width:13%">Last mo</th><th class="xr" style="width:22%">Actions</th></tr>
-    <tr><td>Hetzner (server)</td><td style="color:var(--green)">● OK</td><td class="xr">€21.10</td><td class="xr">€21.10</td><td class="xr">€21.10</td><td class="xr"><a href="#" onclick="return false" style="color:var(--accent)">receipt</a> · <a href="#" onclick="return false" style="color:var(--amber)">manage</a></td></tr>
-    <tr><td>Anthropic API</td><td style="color:var(--green)">● OK</td><td class="xr">$38.40</td><td class="xr">$46.20</td><td class="xr" style="color:var(--amber)">$61.75 ↑</td><td class="xr"><a href="#" onclick="return false" style="color:var(--accent)">receipt</a> · <a href="#" onclick="return false" style="color:var(--amber)">manage</a></td></tr>
-    <tr><td>Scaleway (standby)</td><td style="color:var(--amber)">● Standby</td><td class="xr">€4.00</td><td class="xr">€4.00</td><td class="xr">€4.00</td><td class="xr"><a href="#" onclick="return false" style="color:var(--accent)">receipt</a> · <a href="#" onclick="return false" style="color:var(--amber)">manage</a></td></tr>
-    <tr><td>Paystack (fees)</td><td style="color:var(--green)">● OK</td><td class="xr">R312</td><td class="xr">R405</td><td class="xr">R488</td><td class="xr"><a href="#" onclick="return false" style="color:var(--red)">emergency swap</a></td></tr>
-    <tr><td>Domain + SSL</td><td style="color:var(--green)">● 64d</td><td class="xr">$1.20</td><td class="xr">$1.20</td><td class="xr">$1.20</td><td class="xr"><a href="#" onclick="return false" style="color:var(--accent)">receipt</a></td></tr>
-   </table>
-  </div>
-  <div class="ls-card">
-   <div class="ls-h">📊 Financial dashboard</div>
-   <div class="mock-note">Mock data — banking, Paystack and accounting feeds to be wired. Expands as the app grows.</div>
-   <div class="xm">
-    <div class="t"><div class="l">Bank balance</div><div class="v">R14,280</div></div>
-    <div class="t"><div class="l">Cashflow (mo)</div><div class="v" style="color:var(--red)">−R2,140</div></div>
-    <div class="t"><div class="l">Overheads (mo)</div><div class="v">R3,930</div></div>
-    <div class="t"><div class="l">Runway</div><div class="v" style="color:var(--amber)">6.7 mo</div></div>
-   </div>
-   <div class="xm" style="margin-top:8px">
-    <div class="t"><div class="l">Loss / free user</div><div class="v" style="font-size:15px;color:var(--red)">−R4.10</div><div class="l">211 users</div></div>
-    <div class="t"><div class="l">Income / $5 user</div><div class="v" style="font-size:15px;color:var(--green)">+R61</div><div class="l">18 users</div></div>
-    <div class="t"><div class="l">Income / $20 user</div><div class="v" style="font-size:15px;color:var(--green)">+R270</div><div class="l">4 users</div></div>
-    <div class="t"><div class="l">Income / features</div><div class="v" style="font-size:15px;color:var(--green)">+R840</div><div class="l">tokens, boosts</div></div>
-   </div>
-   <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:8px 12px;margin-top:8px">
-    <span>Lawyer <span style="color:var(--text)">R1,800</span></span>
-    <span>Accountant <span style="color:var(--text)">R950</span></span>
-    <span>Infra <span style="color:var(--text)">R780</span></span>
-    <span>AI <span style="color:var(--text)">R400</span></span>
-   </div>
-  </div>
- </div>
- <div id="exec-tab-people" style="display:none">
-  <div class="ls-card">
-   <div class="ls-h">👤 User console</div>
-   <div class="mock-note">Mock data — user search, report generation and actions to be wired to the server API.</div>
-   <div style="display:flex;gap:8px;margin-bottom:12px">
-    <input type="text" placeholder="Search user by name, email or listing…" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;color:var(--text);font-family:inherit">
-    <button type="button" onclick="alert('Report generation — to be wired')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 13px;font-size:12px;color:var(--text);cursor:pointer;font-family:inherit">Generate report</button>
-   </div>
-   <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:10px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-     <span style="font-size:13px;font-weight:600">M. van Wyk <span style="color:var(--muted);font-size:11px;font-weight:400">· $5 tier · seller #014</span></span>
-     <span style="font-size:11px;color:var(--amber)">3 complaints</span>
-    </div>
-    <div style="font-size:12px;color:#94a3b8;line-height:1.6">31 listings · joined Mar 2026 · 9 sales · last active 2d ago. Summary: reliable seller; complaints relate to one delayed courier batch in June; buyer ratings otherwise 4.8.</div>
-    <div style="font-size:11px;margin-top:6px"><a href="#" onclick="return false" style="color:var(--accent)">view complaints</a> · <a href="#" onclick="return false" style="color:var(--accent)">full report (PDF)</a></div>
-   </div>
-   <div class="ls-grp-h">Executive action</div>
-   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-    <button type="button" onclick="alert('Reward composer — to be wired')" style="border:1px solid var(--green);color:var(--green);background:none;border-radius:6px;padding:5px 11px;font-size:11.5px;cursor:pointer;font-family:inherit">Reward</button>
-    <button type="button" onclick="alert('Escalation — to be wired')" style="border:1px solid var(--amber);color:var(--amber);background:none;border-radius:6px;padding:5px 11px;font-size:11.5px;cursor:pointer;font-family:inherit">Escalate</button>
-    <button type="button" onclick="alert('Remove / ban — to be wired')" style="border:1px solid var(--red);color:var(--red);background:none;border-radius:6px;padding:5px 11px;font-size:11.5px;cursor:pointer;font-family:inherit">Remove / ban</button>
-   </div>
-   <div style="font-size:11.5px;color:var(--muted);line-height:1.7">Reward policy: tokens · subscription grace period · up to +50 listing capacity · duration 1–3 months · automatic termination notice in the final month.</div>
-  </div>
- </div>
 </div>
-<script>
-window.execTab=function(t){['command','money','people'].forEach(function(n){var d=document.getElementById('exec-tab-'+n);if(d)d.style.display=(n===t?'block':'none');});document.querySelectorAll('#exec-tabs .exec-tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===t);});};
-</script>
 <script>
 (function(){
  var B=(location.protocol==='file:'?'https://trustsquare.co':'');
@@ -796,7 +719,7 @@ function switchView(view) {
   const graph = document.getElementById('graph-view');
   const ops = document.getElementById('ops-view');
   var _ls=document.getElementById('launch-switch-view');
-  if(view==='launch'){ try{aiProvLoad();}catch(e){}  dash.style.display='none'; var _g=document.getElementById('graph-view'); if(_g)_g.classList.remove('visible'); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
+  if(view==='launch'){  dash.style.display='none'; var _g=document.getElementById('graph-view'); if(_g)_g.classList.remove('visible'); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
   if(_ls)_ls.style.display='none'; var _lb2=document.getElementById('vtab-launch'); if(_lb2)_lb2.classList.remove('active');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
   document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
@@ -833,7 +756,7 @@ function getGalaxyData() {
     { id: 'trust',    label: 'Trust Score', sub: 'Metric',       group: 'Concept', size: 13, detail: 'Seller credibility score · Stamped on publish' },
     { id: 'geo',      label: 'Geo',         sub: '4-level',      group: 'Concept', size: 12, detail: 'Country → Region → City → Suburb\nZA: 9 provinces · 54 cities' },
     { id: 'codex',    label: 'Solar Codex', sub: 'Rules v4.8',   group: 'Concept', size: 15, detail: 'Canonical product rules (§13 BIT block diagram) · All agents check before business logic' },
-    { id: 'pretoria', label: 'Pretoria',    sub: 'Launch city',  group: 'CityLauncher', size: 13, detail: '65 live listings\nWorld Heritage layer 332 sites' },
+    { id: 'pretoria', label: 'Pretoria',    sub: 'Launch city',  group: 'CityLauncher', size: 13, detail: `${(DATA.stats&&DATA.stats.liveListings)||0} live listings\nWorld Heritage layer 332 sites` },
     { id: 'github',   label: 'GitHub',      sub: 'Backup',       group: 'Infrastructure', size: 12, detail: 'github.com/dmcontiki2/marketsquare' },
     { id: 'risks',    label: 'Risk Register', sub: 'Live risks',  group: 'RiskRegister',   size: 20, drilldown: 'risks', detail: 'Live risk register — security, legal, operational & technical risks' },
   ];
@@ -916,7 +839,7 @@ function getDrilldownData(projectId) {
         { label: 'Resend Emailer',   sub: 'Tool',    color: '#8b5cf6', size: 12, type:'tool',    detail: 'Email outreach via Resend API · 4 category templates · halted at AWAITING_APPROVAL' },
         { label: 'Engine LIVE',      sub: 'Status',  color: '#10b981', size: 16, type:'metric',  detail: '✅ Strategist (claude-sonnet-4-8) + saturation scraper deployed on server (S130)' },
         { label: 'No Email Scrape',  sub: 'Risk',    color: '#ef4444', size: 13, type:'risk',    detail: '⚠ Gumtree scraper finds phone only — emails not in DOM · blocked source' },
-        { label: 'Pretoria',         sub: 'City',    color: '#8b5cf6', size: 14, type:'metric',  detail: 'Launch city · 23/60 founding sellers · Property24 estate agents scraped' },
+        { label: 'Pretoria',         sub: 'City',    color: '#8b5cf6', size: 14, type:'metric',  detail: `Launch city · ${(DATA.stats&&DATA.stats.sellers)||0}/60 founding sellers · Property24 estate agents scraped` },
         { label: 'Founders codes',   sub: 'Priority',color: '#06b6d4', size: 14, type:'priority', detail: 'Launch-code issuing side deployed env-gated OFF · BEA /launch/sync-registry wired green' },
       ]
     },
@@ -1820,5 +1743,108 @@ function loadCodeScan() {
 }
 </script>
 
+
+<script>
+/* AI Provider Registry v2 (P1) — all-global, self-contained (DASH-AIPROV-1 fix) */
+window._apv2B = (location.protocol==='file:' ? 'https://trustsquare.co' : '');
+window._apv2Tok = function(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } };
+window._apv2 = {active:'anthropic', providers:[]};
+window.apv2Render = function(){
+  var box=document.getElementById('apv2-rows'); if(!box) return;
+  var d=window._apv2, h='';
+  (d.providers||[]).forEach(function(p){
+    var active=(p.id===d.active), avail=!!p.available;
+    var st = active?['#22c55e','ACTIVE']:(avail?['#22c55e','STANDBY']:['#6b7280','DISABLED — no key']);
+    var models=p.models?('fast '+ (p.models.haiku||'—').split('-20')[0] +' &middot; reason '+ (p.models.sonnet||'—') +' &middot; vision '+ (p.models.vision||'—')):'';
+    h+='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
+      +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';opacity:'+(active?'1':(avail?'.55':'.6'))+';flex:0 0 auto;"></span>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+p.label+' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(p.jurisdiction||'')+'</span></div>'
+      +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+models+'</div></div>'
+      +'<span style="font-size:10.5px;font-weight:700;color:'+(active?'#22c55e':(avail?'var(--text)':'var(--muted)'))+';flex:0 0 auto">'+st[1]+'</span>'
+      +'<button type="button" onclick="apv2Test(\''+p.id+'\')" '+(avail?'':'disabled ')+'style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:'+(avail?'pointer':'not-allowed')+';font-family:inherit;opacity:'+(avail?'1':'.4')+'">Test</button>'
+      +(!active&&avail?('<button type="button" onclick="apv2Activate(\''+p.id+'\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">Activate</button>'):'')
+      +'</div>';
+  });
+  box.innerHTML=h||'<div style="color:var(--muted);font-size:12px">Registry unavailable.</div>';
+  var sub=document.getElementById('apv2-sub'); if(sub) sub.textContent='— active: '+d.active;
+};
+window.apv2Load = function(){
+  fetch(window._apv2B+'/flags').then(function(r){return r.json();}).then(function(f){
+    if(f&&f.ai_provider){ window._apv2={active:f.ai_provider.active, providers:(f.ai_provider.providers||[])}; window.apv2Render(); }
+  }).catch(function(){});
+};
+window.apv2Test = function(p){
+  var out=document.getElementById('apv2-out'); if(out) out.textContent='Testing '+p+'\u2026';
+  fetch(window._apv2B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv2Tok()},body:JSON.stringify({provider:p})})
+   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired \u2014 reload + PIN.'; return null; } return r.json(); })
+   .then(function(d){ if(!d) return; if(out) out.textContent=(d.ok?'\u2713 ':'\u2717 ')+d.provider+' ('+d.model+'): '+(d.text||d.detail||'(no text)')+(d.in_tokens?('  ['+d.in_tokens+'+'+d.out_tokens+' tok]'):''); })
+   .catch(function(e){ if(out) out.textContent='Test failed: '+e; });
+};
+window.apv2Activate = function(p){
+  if(!confirm('Switch the LIVE AI vendor to '+p+'? All seam-routed features swap immediately (no restart). Note: golden-set eval for non-Anthropic lanes is still pending \u2014 outage use only until evals pass.')) return;
+  fetch(window._apv2B+'/admin/flags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv2Tok()},body:JSON.stringify({ai_active:p})})
+   .then(function(r){ if(r.status===401){ alert('Admin session expired \u2014 reload and log in.'); return null; } if(r.status===400){ alert('Server rejected provider.'); return null; } return r.json(); })
+   .then(function(f){ if(f&&f.ai_provider){ window._apv2={active:f.ai_provider.active, providers:(f.ai_provider.providers||[])}; window.apv2Render(); } })
+   .catch(function(e){ console.warn('activate failed', e); });
+};
+try{ window.apv2Load(); setInterval(window.apv2Load, 60000); }catch(e){}
+</script>
+
+<script>
+/* INFRA-PANEL-1 (22 Jul 2026) — external services health, mirrors the apv2 pattern */
+window._infraD = null;
+window.infraRender = function(d){
+  var box=document.getElementById('infra-rows'); if(!box) return;
+  var C={ok:['#22c55e','OK'],warn:['#eab308','WARN'],fail:['#ef4444','FAIL'],nokey:['#6b7280','NO KEY']};
+  box.innerHTML=(d.services||[]).map(function(s){
+    var st=C[s.status]||C.warn;
+    return '<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
+      +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';flex:0 0 auto;"></span>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+s.label+' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(s.kind||'')+(s.key?(' &middot; key '+s.key):'')+'</span></div>'
+      +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.detail||'')+'</div></div>'
+      +'<span style="font-size:10.5px;font-weight:700;color:'+st[0]+';flex:0 0 auto">'+st[1]+'</span>'
+      +'<button type="button" onclick="infraLoad(&quot;'+s.id+'&quot;)" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit">Test</button>'
+      +'</div>';
+  }).join('')||'<div style="color:var(--muted);font-size:12px">No checks returned.</div>';
+};
+window.infraLoad = function(one){
+  var out=document.getElementById('infra-out'); if(out&&one) out.textContent='Re-testing '+one+'…';
+  fetch(window._apv2B+'/admin/services-status'+(one?('?service='+encodeURIComponent(one)):''),{headers:{'X-Admin-Token':window._apv2Tok()}})
+   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired — reload + PIN.'; return null; } return r.json(); })
+   .then(function(d){ if(!d) return;
+     if(one&&window._infraD){
+       var cur=window._infraD;
+       (d.services||[]).forEach(function(ns){ var f=false; cur.services=cur.services.map(function(s){ if(s.id===ns.id){f=true;return ns;} return s; }); if(!f) cur.services.push(ns); });
+       cur.checked_at=d.checked_at; d=cur;
+     }
+     window._infraD=d; window.infraRender(d);
+     if(out) out.textContent='Checked '+(d.checked_at||'now');
+   })
+   .catch(function(e){ if(out) out.textContent='Check failed: '+e; });
+};
+/* APV2-TESTALL-1 (22 Jul 2026): one-click sweep of every available AI provider */
+window.apv2TestAll = function(){
+  var ps=((window._apv2||{}).providers||[]).filter(function(p){return p.available;});
+  var out=document.getElementById('apv2-out'); if(out) out.textContent='Testing all ('+ps.length+' providers)…';
+  var lines=[];
+  (function next(i){
+    if(i>=ps.length) return;
+    var p=ps[i];
+    fetch(window._apv2B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv2Tok()},body:JSON.stringify({provider:p.id})})
+      .then(function(r){ return r.status===401?{ok:false,detail:'admin session expired'}:r.json(); })
+      .then(function(d){ d=d||{}; lines.push((d.ok?'✓ ':'✗ ')+p.id+(d.model?(' ('+d.model+')'):'')+(d.in_tokens?(' ['+d.in_tokens+'+'+d.out_tokens+' tok]'):'')+(d.ok?'':(': '+(d.detail||'failed'))));
+        if(out) out.textContent=lines.join('\n'); next(i+1); })
+      .catch(function(e){ lines.push('✗ '+p.id+': '+e); if(out) out.textContent=lines.join('\n'); next(i+1); });
+  })(0);
+};
+(function(){ var o=document.getElementById('apv2-out');
+  if(o && !document.getElementById('apv2-testall')){
+    var b=document.createElement('button'); b.id='apv2-testall'; b.type='button'; b.textContent='Test all providers';
+    b.setAttribute('style','margin-top:8px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit');
+    b.onclick=window.apv2TestAll; o.parentNode.insertBefore(b, o.nextSibling);
+  }
+})();
+try{ window.infraLoad(); setInterval(function(){window.infraLoad();}, 300000); }catch(e){}
+</script>
 </body>
 </html>

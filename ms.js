@@ -15448,6 +15448,11 @@ function _asProfileHtml(p,tpl){
     '<div style="flex:1;">'+_asFld('as-suburbs','Suburbs served (comma-separated)',p.suburbs,'Waterkloof, Brooklyn')+'</div></div>'+
     _asFld('as-spec','Specialties',p.specialties,'residential, rentals, sectional title')+
     _asFld('as-lang','Languages',p.languages,'English, Afrikaans')+
+    '<div style="margin:10px 0 12px;padding:10px 12px;background:var(--bg,#f6f8fb);border:1px dashed var(--border,#c9d2df);border-radius:10px;">'+
+      '<div style="font-weight:700;font-size:12.5px;margin-bottom:4px;">Profile photo</div>'+
+      '<div style="font-size:11.5px;color:var(--text-3);line-height:1.45;margin-bottom:8px;">Counts toward your Complete Profile trust points. Buyers see it only after an accepted introduction — before that your card shows the generic scene (anonymity by design).</div>'+
+      '<input type="file" accept="image/*" onchange="asPhotoUpload(event)" style="font-size:12px;">'+
+      '<span id="as-photo-status" style="font-size:11.5px;color:var(--text-3);margin-left:8px;"></span></div>'+
     '<button onclick="asProfileSave()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Save profile</button></div>';
   h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Certificates — upload under Trust Score</div>'+
@@ -15457,6 +15462,23 @@ function _asProfileHtml(p,tpl){
   return h;
 }
 function asSetVertical(v){ _asState.vertical=v; var pane=document.getElementById('as-pane'); if(pane) pane.innerHTML=_asProfileHtml(_asState.profile,_asState.template); }
+// MAROUSHKA-1: agent-hub profile photo — same endpoint as the My Space CV photo.
+async function asPhotoUpload(e){
+  var file=e.target.files&&e.target.files[0]; if(!file) return;
+  var st=document.getElementById('as-photo-status'); if(st) st.textContent='Uploading\u2026';
+  try{
+    var dataUrl = (file.size>2*1024*1024 && typeof aaCompressImage==='function')
+      ? await aaCompressImage(file,800,0.7)
+      : await new Promise(function(r){var fr=new FileReader();fr.onload=function(ev){r(ev.target.result);};fr.readAsDataURL(file);});
+    var blob=await (await fetch(dataUrl)).blob();
+    var fd=new FormData(); fd.append('file',blob,'profile.jpg');
+    var email=(_asState&&_asState.email)||localStorage.getItem('ms_aa_email')||'';
+    if(!email){ if(st) st.textContent=''; showToast('Sign in first'); return; }
+    var up=await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/photo',{method:'POST',body:fd});
+    if(up.ok){ if(st) st.textContent='\u2713 Saved'; showToast('Profile photo saved \u2014 shown after an accepted introduction'); }
+    else { if(st) st.textContent=''; showToast('Upload failed \u2014 try again'); }
+  }catch(err){ if(st) st.textContent=''; showToast('Upload failed \u2014 try again'); }
+}
 async function asProfileSave(){
   var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
   var body={email:_asState.email,headline:g('as-headline'),bio:g('as-bio'),

@@ -142,7 +142,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=239">
+<link rel="stylesheet" href="/static/ms.css?v=240">
 <style id="sf-styles">
 /* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
 #screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
@@ -3343,7 +3343,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   <div id="dash-panel-listings" class="dash-sec">
     <div id="my-listings" style="margin-top:4px;"></div>
     <button onclick="goTo('aa-home')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:8px;">✨ List with AI Coach</button>
-    <button onclick="goTo('publish')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--border);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">+ Quick Add Listing</button>
+    <!-- MAROUSHKA-1 (22 Jul 2026): "+ Quick Add Listing" retired — the legacy pa flow took 1 photo,
+         no sale/rent, no property fields, no coach, and create_listing files it as an invisible draft.
+         All listing creation now goes through the AI Coach flow above. Screen-publish kept but unreachable. -->
     <button onclick="openPlans('dashboard')" style="width:100%;background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:50px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px;">📋 View Plans &amp; Upgrade</button>
   </div>
 
@@ -4224,7 +4226,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ LOGIC — Claude edits this section
      ════════════════════════════════════════════════════════════ -->
 <script src="/static/legal-must-haves/legal-cards.js?v=1"></script>
-<script src="/static/ms.js?v=361"></script>
+<script src="/static/ms.js?v=362"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

@@ -48,6 +48,24 @@
 - bea_main.py deployed via the deploy_bea_safe pattern: main.py.lastgood saved, boot-import OK,
   restart HEALTH-OK. Local backup bea_main.py.bak-20260722-credpanel.
 
+## Session 147 (cont.) — MAROUSHKA-1: Quick-Add trap retired + agent-hub profile photo (David: "fix it where you agree")
+- Maroushka's 6 points, all agreed. Root cause of 1-5: she used the Dashboard's legacy
+  "+ Quick Add Listing" (pa flow) — 1 photo, no For Sale/To Rent, no property fields, no coach —
+  and create_listing hardcodes listing_status='draft' with no publish step, so the listing is
+  invisible in browse by design of the wrong path. The AI Coach flow already collects the full
+  set (listing_type, prop_type, beds/baths/garages, floor/erf, 8 photos, quality score).
+- Fix 1-5: Quick-Add button removed from the dashboard (marketsquare.html:3346, HTML comment
+  explains why; screen-publish kept but unreachable). All creation now routes through the Coach.
+- Fix 6: agent hub profile editor gains a Profile photo upload (asPhotoUpload → existing
+  POST /users/{email}/photo, compress >2MB via aaCompressImage) with copy stating the
+  PHOTO-ANON-1 rule: photo counts toward Complete Profile trust points, buyers see it only
+  after an accepted introduction.
+- Her stuck draft (1-photo property) remains in the DB as draft — harmless, invisible; sweep at
+  next /housekeep or she re-lists via the Coach.
+- Anchor lesson recorded: "function asProfileSave(){" matched inside "async function ..." —
+  first write broke node --check, restored from .bak, redone with the async-inclusive anchor.
+- Verify: node --check clean, quick-add references now 0 in served HTML, tail checks pass.
+
 ## Session 147 (cont.) — JNR-FIX-5C: the renderer was eating the basis David saw missing
 - David (on his way out): app still showed "R50" without "per person". Diagnosis: the DATA was
   right ("R 50 per person") — formatZAR() strips everything non-numeric, so cards, the compact
