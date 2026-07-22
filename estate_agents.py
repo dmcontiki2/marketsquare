@@ -203,6 +203,34 @@ LEGAL_NOTE_PROPERTY = ("Selling property carries legal obligations you keep even
               "and a legally sound offer to purchase. See the legal must-haves card for your country "
               "in the sell flow (Step 6) — an agent manages what they may, and facilitates the rest.")
 
+# ── Buyer-side pitch (JNR round: David asked the Adventures "why book through a
+# tour agent" panel be replicated on Property and Cars BROWSE — buyer framing,
+# not the sell-flow copy above) ─────────────────────────────────────────────
+AGENT_ADVANTAGES_PROPERTY_BUY = [
+    "Priced against real sales — agents know what comparable homes actually sold for, so you do not overpay on hope.",
+    "Paperwork that protects you — a legally sound offer to purchase, mandatory disclosure forms and compliance certificates checked before you sign.",
+    "Your deposit protected — PPRA-registered agents hold a Fidelity Fund Certificate; trust monies are covered by law.",
+    "The full picture — defects, servitudes, levies, rates clearance and transfer costs surfaced before they become your problem.",
+    "A guided transfer — bond approval, conveyancer and occupation dates coordinated by someone who closes sales every month.",
+]
+
+LEGAL_NOTE_PROPERTY_BUY = ("Buying property directly carries real risks you keep: hidden defects, unsigned "
+              "mandatory disclosures, deposits paid without trust protection, and offers drafted from "
+              "templates. A PPRA-registered agent with a Fidelity Fund Certificate carries what they may, "
+              "and facilitates the rest.")
+
+AGENT_ADVANTAGES_CARS_BUY = [
+    "Right price, real market — priced against live trade and retail data, not a stranger's asking price.",
+    "The car is what it claims — NATIS history, outstanding finance and accident checks done before you commit.",
+    "Roadworthy and registration handled — RWC, licence and change of ownership done properly, within the legal 21 days.",
+    "Safe payment — money and transfer through proper channels, not cash handovers or EFT-and-hope.",
+    "Recourse if it goes wrong — registered dealers stand under the Consumer Protection Act; a private seller's 'voetstoots' usually does not.",
+]
+
+LEGAL_NOTE_CARS_BUY = ("Buying a car privately carries real risks you keep: cloned or still-financed vehicles, "
+              "odometer fraud, voetstoots terms, and cash handovers with no recourse. A MIRA-registered "
+              "sales agent carries what they may, and facilitates the rest.")
+
 AGENT_ADVANTAGES_CARS = [
     "Right price, real market — priced against live trade and retail data, not guesswork or lowball WhatsApp offers.",
     "Paperwork handled — NATIS change of ownership, roadworthy certificate, licence and registration done properly.",
@@ -236,6 +264,8 @@ VERTICALS = {
         "submit_required": [("category.property.ppra", "PPRA registration not submitted")],
         "advantages": AGENT_ADVANTAGES_PROPERTY,
         "legal_note": LEGAL_NOTE_PROPERTY,
+        "advantages_buy": AGENT_ADVANTAGES_PROPERTY_BUY,
+        "legal_note_buy": LEGAL_NOTE_PROPERTY_BUY,
         "sold_noun": "properties",
     },
     "cars": {
@@ -253,6 +283,8 @@ VERTICALS = {
         "submit_required": [],
         "advantages": AGENT_ADVANTAGES_CARS,
         "legal_note": LEGAL_NOTE_CARS,
+        "advantages_buy": AGENT_ADVANTAGES_CARS_BUY,
+        "legal_note_buy": LEGAL_NOTE_CARS_BUY,
         "sold_noun": "cars",
     },
     "travel": {
@@ -649,7 +681,7 @@ def agents_nearby(city: str, suburb: str = "", limit: int = 10, vertical: str = 
             "count": len(agents), "agents": agents}
 
 @router.get("/agents/pitch")
-def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property"):
+def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property", side: str = "sell"):
     """Seller-side nudge content for the sell flow: why use an agent/dealer, the
     legal reality, and a preview of local listed agents (anonymised, ranked)."""
     v = _vert(vertical); V = VERTICALS[v]
@@ -664,8 +696,10 @@ def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property"):
         n = conn.execute(_q, _p).fetchone()["n"]
     finally:
         conn.close()
-    return {"vertical": v, "label": V["label"],
-            "advantages": V["advantages"], "legal_note": V["legal_note"],
+    _buy = (side or "sell").strip().lower() == "buy"
+    return {"vertical": v, "label": V["label"], "side": ("buy" if _buy else "sell"),
+            "advantages": (V.get("advantages_buy") or V["advantages"]) if _buy else V["advantages"],
+            "legal_note": (V.get("legal_note_buy") or V["legal_note"]) if _buy else V["legal_note"],
             "local_agent_count": n, "preview": preview,
             "cta": ("Pick one and we introduce you — no phoning around, no lead brokers. They pay 1T only if they accept."
                     if v != "travel" else

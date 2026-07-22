@@ -15636,7 +15636,7 @@ async function advAgentIntro(ref){
   var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
   if(!email){ showToast('Sign in first so the agent can reach you if they accept'); return; }
   var _v=(window._agentDirVert||'travel');
-  var wish=prompt(_v==='travel'?'What are you dreaming of? (destination, dates, people — no phone numbers needed)':'What do you need? (what you are selling, area, timing — no phone numbers needed)','');
+  var wish=prompt(_v==='travel'?'What are you dreaming of? (destination, dates, people — no phone numbers needed)':(window._agentDirSide==='buy'?'What are you looking for? (area, budget, timing — no phone numbers needed)':'What do you need? (what you are selling, area, timing — no phone numbers needed)'),'');
   if(wish===null) return;
   try{
     var r=await fetch(BEA_URL+'/agents/intro',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -15661,11 +15661,16 @@ function svcAgentsBannerHtml(){   // AGENT-PILL-1: category-tailored (David, 20 
       s:'MIRA-registered sales agents, ranked by trust — free introduction; the agent pays 1T.'}
   }[activeFilter];
   if(!cfg) return '';
-  return '<div onclick="agentDirOpen(\''+cfg.v+'\')" style="grid-column:1/-1;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;">'+
+  // JNR-CAT-AGENTS (22 Jul 2026, David): Property + Cars banners open the same inline
+  // "why use an agent" panel Adventures has; the pill still jumps to the directory.
+  var inlinePanel = (activeFilter==='Property'||activeFilter==='Cars');
+  var mainClick = inlinePanel ? 'catAgentsToggle(\''+cfg.v+'\')' : 'agentDirOpen(\''+cfg.v+'\')';
+  return '<div onclick="'+mainClick+'" style="grid-column:1/-1;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;">'+
     '<div style="font-size:26px;">'+cfg.ic+'</div>'+
     '<div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:14px;">'+cfg.t+'</div>'+
     '<div style="font-size:11.5px;opacity:.78;">'+cfg.s+'</div></div>'+
-    '<div style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>';
+    '<div onclick="event.stopPropagation();agentDirOpen(\''+cfg.v+'\')" style="flex:0 0 auto;background:rgba(232,201,123,.9);color:#3a2a08;border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:800;">Browse →</div></div>'+
+    (inlinePanel?'<div id="cat-agents-panel" data-vert="'+cfg.v+'" style="grid-column:1/-1;display:none;"></div>':'');
 }
 function agentDirOpen(v){
   if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to browse professional agents.'); return; }
@@ -15674,6 +15679,46 @@ function agentDirOpen(v){
   agentDirRender();
 }
 function agentDirClose(){ goTo('browse'); }
+/* ── JNR-CAT-AGENTS: inline buyer-side agent panel for Property + Cars browse,
+   mirroring the Adventures tour-agent panel (pitch side=buy + top agents). ── */
+var _catAgentsLoadedFor='';
+function catAgentsToggle(v){
+  if(typeof DEMO_MODE!=='undefined'&&DEMO_MODE){ showToast('This is a demo. Visit trustsquare.co to plan with a professional agent.'); return; }
+  var p=document.getElementById('cat-agents-panel'); if(!p) return;
+  var open=p.style.display!=='none';
+  p.style.display=open?'none':'block';
+  if(!open && _catAgentsLoadedFor!==v){ catAgentsLoad(v); }
+}
+async function catAgentsLoad(v){
+  window._agentDirVert=v; window._agentDirSide='buy';
+  var p=document.getElementById('cat-agents-panel'); if(!p) return;
+  p.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-3);font-size:12.5px;">Finding credential-verified agents…</div>';
+  var city=(typeof activeCity!=='undefined'&&activeCity.name)||'';
+  var pitch=null, near=null;
+  try{
+    var r1=await fetch(BEA_URL+'/agents/pitch?city='+encodeURIComponent(city)+'&vertical='+v+'&side=buy');
+    if(r1.ok) pitch=await r1.json();
+    var r2=await fetch(BEA_URL+'/agents/nearby?city='+encodeURIComponent(city)+'&limit=5&vertical='+v);
+    if(r2.ok) near=await r2.json();
+  }catch(e){}
+  _catAgentsLoadedFor=v;
+  var card='background:var(--surface,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:12px 14px;margin-top:10px;color:var(--text,#1c2434);';
+  var title=(v==='cars')?'Why buy through a registered sales agent?':'Why buy through an estate agent?';
+  var h='';
+  if(pitch&&pitch.advantages){
+    h+='<div style="'+card+'"><div style="font-weight:800;font-size:13.5px;margin-bottom:4px;">'+title+'</div>';
+    pitch.advantages.forEach(function(a){ h+='<div style="display:flex;gap:8px;padding:5px 0;font-size:12px;line-height:1.4;border-bottom:1px dashed var(--border,#e8ecf2);"><span style="color:#1e7d4f;font-weight:800;">✓</span><span>'+a+'</span></div>'; });
+    h+='<div style="font-size:11px;color:var(--text-3,#68758c);margin-top:8px;line-height:1.45;">'+pitch.legal_note+'</div></div>';
+  }
+  var ags=(near&&near.agents)||[];
+  if(!ags.length){
+    h+='<div style="'+card+'text-align:center;"><b>No credential-verified agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:var(--text-3,#68758c);margin-top:4px;">Verified agents join weekly — browse listings directly meanwhile.</div></div>';
+  } else {
+    ags.forEach(function(a){ h+=advAgentCard(a,card); });
+    h+='<div style="font-size:10.5px;color:var(--text-3,#68758c);font-style:italic;margin-top:8px;">Anonymous until introduced — the agent\'s identity is shared only if they accept. Free for you; the agent pays 1T.</div>';
+  }
+  p.innerHTML=h;
+}
 function agentDirRender(){
   var o=document.getElementById('agent-dir-body'); if(!o) return;
   var v=window._agentDirVert;

@@ -24,6 +24,18 @@
 - bea_main.py deployed via the deploy_bea_safe pattern: main.py.lastgood saved, boot-import OK,
   restart HEALTH-OK. Local backup bea_main.py.bak-20260722-credpanel.
 
+## Session 147 (cont.) — JNR-CAT-AGENTS: "why use an agent" panel replicated on Property + Cars (David: "i love what you did with the adventures")
+- Server: estate_agents.py gains buyer-side pitch content — AGENT_ADVANTAGES_PROPERTY_BUY /
+  _CARS_BUY + matching legal notes (PPRA/FFC deposit protection, disclosure and transfer risks;
+  NATIS/finance/odometer checks, CPA vs voetstoots) — and /agents/pitch takes side=buy|sell
+  (default sell: sell-flow copy unchanged). Travel serves its single set for both sides.
+- Front-end: Property and Cars browse banners now toggle an inline cat-agents-panel (same
+  pattern as the Adventures tour-agent panel: pitch card + top-5 ranked anonymous agents +
+  intro buttons); the gold "Browse →" pill still opens the full directory (stopPropagation).
+  Intro prompt gains buyer framing ("What are you looking for?") via _agentDirSide.
+- Verify: py_compile clean (estate_agents.py 809→843), node --check clean (ms.js →983153B),
+  anchored drivers + timestamped .baks, never Edit/Write on the mount.
+
 ## Session 147 · 22 Jul 2026 — David Jnr Super-Advert QA round 1 (David's verdicts applied)
 - Source: David Jnr's WhatsApp walkthrough 21 Jul (summary doc: FEEDBACK_DAVIDJNR_SUPERADVERTS_2026-07-21.docx).
   David's review: 1 fix · 2 intended (no change) · 3 fix · 4 fix · 5 fix · 6 discuss · 7 approved.
