@@ -1,0 +1,4 @@
+# deploy_files.txt - files for deploy_files.bat to ship (one per line, local|remote if renamed)
+# example from the EULA v1.9 ship:
+terms.html
+marketsquare.html|index.html
