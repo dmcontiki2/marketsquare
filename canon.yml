@@ -2,7 +2,7 @@
 # Docs restate these for humans; scripts/check_canon_pointers.py asserts the docs match THIS.
 # If a value changes: update here first, then run the checker. (P3 of the prevention plan.)
 meta:
-  updated: "2026-06-29"
+  updated: "2026-07-23"
   owner: David
 
 versions:                       # the one place version pointers are declared
@@ -10,7 +10,7 @@ versions:                       # the one place version pointers are declared
   codex_status: "CANON"
   requirements: "v1.5"          # 18 Jul 2026 — added PART H (Third Pillar); single canonical + 4 mirrors
   agent_briefing: "v1.9"        # 18 Jun 2026
-  eula: "v1.7"                  # baselined; counsel finalization pending (A6)
+  eula: "v1.9"                  # PUBLISHED 23 Jul 2026 pre-counsel (David); A6 review + fork consolidation open
   ip_brief: "v6"               # DRAFT; counsel pending (A1)
   whitepaper: "v3.11"          # converged 23 Jun + alignment-corrected 29 Jun (v2 = published defensive pub)
 

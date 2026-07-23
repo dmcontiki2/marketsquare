@@ -775,6 +775,20 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sc_seller ON seller_complaints(seller_email, filed_at DESC)")
 
+    # RESP-1 (23 Jul 2026, David's ruling — gentle model): one −5 responsiveness
+    # penalty per introduction left unanswered 48h; at 96h the intro is removed
+    # and both parties informed. Penalty is post-cap and eases after 90 days.
+    conn.execute("""CREATE TABLE IF NOT EXISTS intro_penalties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        intro_id INTEGER NOT NULL UNIQUE,
+        seller_email TEXT NOT NULL,
+        listing_id INTEGER,
+        points INTEGER NOT NULL DEFAULT -5,
+        incurred_at TEXT NOT NULL,
+        note TEXT
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ip_seller ON intro_penalties(seller_email, incurred_at DESC)")
+
     # ── AGENCY (Team plan): umbrella over agent-seller emails ──────────
     # Each agent is a normal seller (own listings/trust/intros). The agency
     # adds membership, a per-agent listing cap (mirrored into users.slot_limit),
@@ -3821,9 +3835,9 @@ def seller_public_credentials(listing_id: int):
         # PEN-CAP-1 (23 Jul 2026): active complaint penalties render as their own group
         # and apply AFTER the cap, exactly like the scorer — the visible list must
         # still sum to the displayed score (evidence-true principle, 20 Jul).
-        _pens = _seller_active_complaints(conn, email)
+        _pens = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
         if _pens:
-            _pen_items = [{"name": "Complaint — " + str(p.get("reason_code") or "upheld"),
+            _pen_items = [{"name": p.get("label") or ("Complaint — " + str(p.get("reason_code") or "upheld")),
                            "points": int(p["points"])} for p in _pens]
             groups.append({"title": "Penalties", "items": _pen_items,
                            "subtotal": sum(i["points"] for i in _pen_items),
@@ -8416,8 +8430,8 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     earned_t = min(30, _sum_earned_with_replaces(items_t, _TRUST_SIGNALS))
     earned_c = min(40, _sum_earned_with_replaces(items_c, cat_signals))
 
-    # Penalties
-    penalties = _seller_active_complaints(conn, email)
+    # Penalties (complaints §5a + responsiveness RESP-1) — applied post-cap (PEN-CAP-1)
+    penalties = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
     penalty_total = sum(p["points"] for p in penalties)
 
     # All sellers start at 40 (Established base) — matches the sell-flow sbCalcScore model.

@@ -1,11 +1,29 @@
-## 23 Jul 2026 — PEN-CAP-1: trust-score penalties now bite AFTER the 100 cap
-- David spotted the gap: raw evidence over 100 (LM uncapped group, e.g. 178) displayed as 100
-  and silently ate penalties — a −8 complaint on raw 140 changed nothing on screen.
-- Scorer fixed: `max(0, min(100, 40 + evidence) + penalties)` (bea_main.py /trust-score/breakdown).
-- Evidence ledger (/sellers/credentials/{id}) now shows a post-cap "Penalties" group so the
-  itemised list still sums to the displayed score. Recovery stays time-gated (24-mo decay/dispute).
-- Canon: TRUST_SCORE_CRITERIA.md Amendment v1.2 appended. Backups: bea_main.py.bak-pencap-20260723.
-- NOT deployed — awaiting /ship.
+## Session 149 · 23 Jul 2026 — EULA v1.9 PUBLISHED: not-a-referral + Reference Library + Country Schedules (UK/US/AU)
+- DAVID-DIRECTED publish, pre-counsel (A6 counsel review stays OPEN; register updated accordingly).
+- AUDIT FIRST (remote session, phone-driven): v1.7 docx audited — found §5.2/§5.5 "consumed" wording
+  contradicting the §6.1 Tuppence HOLD; photo licence blocking the planned MtG Reference Library three
+  ways (purpose limit, own-listing limit, licence death on account closure); no not-a-referral clause;
+  no local-laws clause. v1.8 + v1.9 docx drafts produced (repo root) + nice-format audit report (docs/).
+- FORK DISCOVERED before ship: live web EULA (labelled v1.3) had drifted FAR ahead of the docx lineage —
+  250 substantive lines only in the web fork (3.4 Deferred KYC/FICA model, Tuppence expiry rules, Casuals
+  Requester/Helper roles, AI 2T/3T/5T pricing, 8.2 perpetual in-platform licence, 8.3 never-sell
+  commitments, taxes 6.5, assignment 15.6). Publishing from the docx would have DELETED live legal terms.
+  Rebased: web fork = base, v1.9 additions grafted in web numbering.
+- SHIPPED (targeted, 2 files): terms.html (v1.9) + marketsquare.html (embedded acceptance-gate copy
+  v1.9, 613 lines regenerated in modal div format; gate JS untouched). eula_raw/eula_clean.html
+  regenerated as source-of-truth for terms.html. Rollback: tag ship-20260723-eulav19 + .bak-20260723-eulav19
+  copies of all six touched files.
+- NEW CLAUSES (web numbering): §2.6 Introduction ≠ referral (single fixed 1T, service discharged at
+  reveal, not advice/vetting/brokerage; Trust Score = informational signal); §8.10 Collectables
+  Reference Library (anonymised set galleries inside the 8.2 licence + 8.3 commitments, free to view,
+  metadata stripped, survives account closure, opt-out for future uploads, rights-holder acknowledgement
+  + 8.6 takedown); §13.5 local-laws responsibility (non-scheduled jurisdictions); §13.6 Country
+  Schedules + Schedules A (UK: CRA 2015, CCR 2013 14-day/immediate-performance, UK GDPR/ICO),
+  B (US: E-SIGN, auto-renewal, CCPA/CPRA, arbitration opt-out 30d + class waiver), C (AU: ACL
+  guarantees + s64A limit, unfair terms, Privacy Act/OAIC). Defs: Reference Library, Scheduled Country.
+- OPEN: counsel — v1.9 review, docx/web fork consolidation, FAIS "not a referral" check, WotC posture
+  if Reference Library becomes headline feature; privacy.html needs UK/US/AU supplements (EULA §9.1 and
+  Schedules now reference them).
 
 ## Session 148 (cont.) · 22 Jul 2026 — MARIETJIE UNBLOCKED: gate code + account relink + MAIL-FALLBACK-1 SHIPPED
 - Marietjie could not get in ("which password?"). Journal confirms: failed /review/login 401s from

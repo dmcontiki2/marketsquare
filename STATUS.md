@@ -1,6 +1,14 @@
 # TrustSquare — Status
 
 ## Current Session
+2026-07-23 (Session 149, attended, David — remote/phone): EULA v1.9 PUBLISHED (David's explicit
+pre-counsel instruction; A6 counsel review stays open). Audit of v1.7 docx + discovery that the live web
+EULA (v1.3 label) was a drifted fork 250 lines ahead of the docx; v1.9 = web fork + not-a-referral §2.6,
+MtG Reference Library licence §8.10, local-laws §13.5, Country Schedules UK/US/AU §13.6 + A/B/C.
+Shipped terms.html + embedded gate copy in marketsquare.html (both stamped v1.9). Rollback tag
+ship-20260723-eulav19. Register/canon bumped to v1.9. OPEN: counsel consolidation of docx vs web forks;
+privacy.html UK/US/AU supplements.
+
 2026-07-22 (Session 147, attended, David): DAVID JNR QA ROUND 1 — his 21-Jul Super-Advert
 walkthrough triaged with David's verdicts (1 fix · 2 intended · 3 fix · 4 fix · 5 fix · 6 discuss ·
 7 approved). Shipped: RNaN fix on Adventures detail (JNR-FIX-3) + always-visible price units
