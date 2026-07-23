@@ -1,4 +1,6 @@
 ## 23 Jul 2026 (cont.) — FADE-1 + RESP-1: listing fade-out engine + gentle responsiveness penalties
+- **SHIPPED 06:28 (with PEN-CAP-1):** frontend v=366 + backend live; smoke GREEN; hotfix 51eec71
+  ('import threading') after startup crash; ~10 min API outage 06:17–06:28 during the failed restart.
 - **FADE-1:** the locked fade-out design (state machine v1.2) had NEVER been implemented — nothing
   ever set a listing to 'faded'. Now live in bea_main.py: daily `_lifecycle_sweep` thread
   (boot + 24h) — warning email at window−7, hidden at window (30/60/90 days for

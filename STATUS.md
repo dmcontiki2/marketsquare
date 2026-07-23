@@ -1,6 +1,21 @@
 # TrustSquare — Status
 
 ## Current Session
+2026-07-23 (Session 150, attended, David): TRUST + LIFECYCLE SHIP — PEN-CAP-1 (penalties now bite
+AFTER the 100 cap; David's 178-case gap closed; evidence ledger shows post-cap Penalties group),
+FADE-1 (fade-out engine finally implemented: 30/60/90-day windows per David's ruling, warn at
+window−7, hide, archive +14d; daily sweep + /admin/lifecycle-sweep + keep-live endpoint + dashboard
+button; demo exempt), RESP-1 (gentle model: −5 at 48h unanswered intro, removed at 96h, both parties
+emailed, 90-day time-only recovery; LM excluded). State machine v1.3 (EULA §2 aligned $0/$5/$20 +
+Agency free), trust criteria amendments v1.2+v1.3. SHIP was rocky: first run shipped frontend only;
+a parallel session overwrote bea_main.py in-tree (restored from f2e6612, its Maurice relink was
+already included); startup NameError (missing 'import threading') took the BEA down ~10 min —
+hotfixed 51eec71, redeployed via targeted scp, smoke GREEN 06:28 (root 0.8s, browse OK, new routes
+live + gated, Bee Lady ledger 100==100, sweep dry-run all zeros). Tags: ship-20260723-0503.
+OPEN: lifecycle EULA clauses (§§1–6) not yet in live in-app EULA — next EULA revision; lawyer draft
+v1.9 "penalty halves every 90 days" clause contradicts canon decay rules — flag to counsel;
+git-on-FUSE leaves stale .lock files every commit (worked around via _to_delete/, needs real fix).
+
 2026-07-23 (Session 149, attended, David — remote/phone): EULA v1.9 PUBLISHED (David's explicit
 pre-counsel instruction; A6 counsel review stays open). Audit of v1.7 docx + discovery that the live web
 EULA (v1.3 label) was a drifted fork 250 lines ahead of the docx; v1.9 = web fork + not-a-referral §2.6,
