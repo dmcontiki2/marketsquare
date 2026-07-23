@@ -95,6 +95,11 @@ if not exist "%PROJECT%\payments.py" (
     pause
     exit /b 1
 )
+if not exist "%PROJECT%\scripts\sync_assets.ps1" (
+    echo  ERROR: scripts\sync_assets.ps1 not found - asset hash-sync helper missing.
+    pause
+    exit /b 1
+)
 echo  All required files found locally.
 echo.
 
@@ -196,8 +201,8 @@ echo.
 :: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
 :: Permanent step so listing photo sets always ship with the site.
 echo  [3d] Deploying SUPER exemplar photos (assets\super -^> /static/super/)...
-ssh -n -o ConnectTimeout=15 %SERVER% "mkdir -p %REMOTE%/static/super"
-scp "%PROJECT%\assets\super\*.jpg" %SERVER%:%REMOTE%/static/super/
+:: ASSET-SYNC (22 Jul 2026): hash-sync uploads only new/changed files (was: full re-upload every deploy)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\assets\super" -Filter *.jpg -RemoteDir %REMOTE%/static/super -Server %SERVER%
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for assets\super photos. Check SSH connection.
     pause
@@ -267,7 +272,7 @@ if %errorlevel% neq 0 (
 
 echo  [3f] Deploying feature videos - the how-to set the app plays...
 :: mkdir removed 5 Jul - dir exists and serves; the bare ssh line wedged a run for 7+ min
-scp "%PROJECT%\videos\*.mp4" %SERVER%:%REMOTE%/static/videos/
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\videos" -Filter *.mp4 -RemoteDir %REMOTE%/static/videos -Server %SERVER%
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for videos. Check SSH connection.
     pause
@@ -283,23 +288,13 @@ scp "%PROJECT%\agency_import_guide.html" %SERVER%:%REMOTE%/static/agency-import-
 scp "%PROJECT%\TrustSquare_Agency_Playbook.pdf" %SERVER%:%REMOTE%/static/TrustSquare_Agency_Playbook.pdf
 scp "%PROJECT%\agents_as_a_service.html" %SERVER%:%REMOTE%/static/agents-as-a-service.html
 :: PHOTO-ANON-1 (20 Jul 2026): generic per-vertical agent scenes - cards never show a person pre-intro
-ssh -n %SERVER% "mkdir -p %REMOTE%/static/agent-stock"
-scp "%PROJECT%\assets\agent-stock\property.svg" %SERVER%:%REMOTE%/static/agent-stock/property.svg
-scp "%PROJECT%\assets\agent-stock\cars.svg" %SERVER%:%REMOTE%/static/agent-stock/cars.svg
-scp "%PROJECT%\assets\agent-stock\travel.svg" %SERVER%:%REMOTE%/static/agent-stock/travel.svg
-scp "%PROJECT%\assets\agent-stock\property.jpg" %SERVER%:%REMOTE%/static/agent-stock/property.jpg
-scp "%PROJECT%\assets\agent-stock\cars.jpg" %SERVER%:%REMOTE%/static/agent-stock/cars.jpg
-scp "%PROJECT%\assets\agent-stock\travel.jpg" %SERVER%:%REMOTE%/static/agent-stock/travel.jpg
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\assets\agent-stock" -Filter * -RemoteDir %REMOTE%/static/agent-stock -Server %SERVER%
 :: BRAND-PHOTO-1 (20 Jul 2026): Higgsfield brand photos - home category tiles + sell-flow tiles (self-hosted, no hotlinks)
-ssh -n %SERVER% "mkdir -p %REMOTE%/static/brand-photos"
-scp "%PROJECT%\assets\brand-photos\*.jpg" %SERVER%:%REMOTE%/static/brand-photos/
-scp "%PROJECT%\assets\sf-tiles\*.jpg" %SERVER%:%REMOTE%/static/
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\assets\brand-photos" -Filter *.jpg -RemoteDir %REMOTE%/static/brand-photos -Server %SERVER%
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\assets\sf-tiles" -Filter *.jpg -RemoteDir %REMOTE%/static -Server %SERVER%
 ssh -n %SERVER% "chmod 644 %REMOTE%/static/agent-stock/* %REMOTE%/static/brand-photos/*.jpg %REMOTE%/static/sf_cat_*.jpg"
 scp "%PROJECT%\assets\legal-must-haves\legal-cards.js" %SERVER%:%REMOTE%/static/legal-must-haves/legal-cards.js
-scp "%PROJECT%\assets\legal-must-haves\ZA\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/ZA/
-scp "%PROJECT%\assets\legal-must-haves\US\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/US/
-scp "%PROJECT%\assets\legal-must-haves\UK\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/UK/
-scp "%PROJECT%\assets\legal-must-haves\AU\*.png" %SERVER%:%REMOTE%/static/legal-must-haves/AU/
+for %%C in (ZA US UK AU) do powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%\assets\legal-must-haves\%%C" -Filter *.png -RemoteDir %REMOTE%/static/legal-must-haves/%%C -Server %SERVER%
 ssh -n %SERVER% "chmod 755 %REMOTE%/static/legal-must-haves %REMOTE%/static/legal-must-haves/* && chmod 644 %REMOTE%/static/legal-must-haves/*/*.png"
 
 :: -- DOC-SYNC-1 (17 Jul 2026, David/Session-141 counter drift): dashboard docs ship with EVERY deploy.

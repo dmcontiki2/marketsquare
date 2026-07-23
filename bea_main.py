@@ -260,6 +260,9 @@ def run_migrations(conn):
         # category-scoped credentials — added Session 37
         "ALTER TABLE user_credentials ADD COLUMN listing_category TEXT",
         "ALTER TABLE listings ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0",
+        # live presence — added Session 148 (live-users dashboard)
+        "ALTER TABLE users ADD COLUMN last_seen TEXT",
+        "ALTER TABLE users ADD COLUMN last_city TEXT",
     ]:
         try:
             conn.execute(col_def)
@@ -10050,6 +10053,102 @@ def dashboard_bit_post(payload: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail="bad bit payload: " + str(e)[:120]) from e
 
+
+# ── Live presence (Session 148, David) — heartbeat + live-users dashboard ──
+class PresencePing(BaseModel):
+    email: str
+    city: str | None = None
+
+@app.post("/presence/ping")
+def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key)):
+    """The signed-in app pings this every ~45s so the live-users map can light up.
+    Records last_seen + last_city on the user row. Cheap, idempotent."""
+    email = (p.email or "").lower().strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="email required")
+    conn = database.get_db()
+    try:
+        conn.execute(
+            "UPDATE users SET last_seen = strftime('%Y-%m-%dT%H:%M:%SZ','now'), "
+            "last_city = COALESCE(?, last_city) WHERE LOWER(email) = ?",
+            (p.city, email),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True}
+
+@app.get("/dashboard/presence")
+def dashboard_presence(city: str = "", window: int = 150):
+    """Live users (last_seen within `window` seconds) + subscriber counters for the
+    dashboard. Aggregate + masked-email only (served behind the dashboard's auth)."""
+    def _mask(e):
+        e = e or ""
+        a, sep, b = e.partition("@")
+        return (a[:2] + "***@" + b) if b else e
+    conn = database.get_db()
+    try:
+        trows = conn.execute(
+            "SELECT COALESCE(seller_tier,'free') t, COUNT(*) n FROM users GROUP BY t"
+        ).fetchall()
+        tiers = {r["t"]: r["n"] for r in trows}
+        try:
+            agency_n = conn.execute("SELECT COUNT(*) n FROM agencies").fetchone()["n"]
+        except Exception:
+            agency_n = 0
+        total_users = conn.execute("SELECT COUNT(*) n FROM users").fetchone()["n"]
+        try:
+            win = "-%d seconds" % int(window)
+        except Exception:
+            win = "-150 seconds"
+        rows = conn.execute(
+            "SELECT email, name, COALESCE(seller_tier,'free') tier, trust_score, "
+            "created_at, last_city, last_seen FROM users "
+            "WHERE last_seen IS NOT NULL "
+            "AND last_seen >= strftime('%Y-%m-%dT%H:%M:%SZ','now',?) "
+            "ORDER BY last_seen DESC",
+            (win,),
+        ).fetchall()
+        online, cities = [], {}
+        for r in rows:
+            c = (r["last_city"] or "").strip() or "Unknown"
+            cities[c] = cities.get(c, 0) + 1
+            try:
+                lc = conn.execute(
+                    "SELECT COUNT(*) n FROM listings WHERE LOWER(seller_email)=? "
+                    "AND (listing_status IS NULL OR listing_status='live')",
+                    ((r["email"] or "").lower(),),
+                ).fetchone()["n"]
+            except Exception:
+                lc = 0
+            online.append({
+                "name": r["name"] or _mask(r["email"]),
+                "email_masked": _mask(r["email"]),
+                "tier": r["tier"],
+                "trust": r["trust_score"] or 40,
+                "joined": r["created_at"],
+                "city": c,
+                "last_seen": r["last_seen"],
+                "listings": lc,
+            })
+        shown = [u for u in online if u["city"] == city] if city else online
+        return {
+            "counters": {
+                "free": tiers.get("free", 0),
+                "starter": tiers.get("starter", 0),
+                "pro": tiers.get("pro", 0),
+                "agency": agency_n,
+                "total_users": total_users,
+                "online_total": len(online),
+                "city_online": len([u for u in online if u["city"] == city]) if city else len(online),
+            },
+            "cities": sorted(cities.keys()),
+            "online": shown,
+            "selected_city": city,
+            "window": window,
+        }
+    finally:
+        conn.close()
 
 @app.get("/dashboard/bit")
 def dashboard_bit_get():

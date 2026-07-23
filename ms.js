@@ -33,6 +33,20 @@ async function tsCheckUpdate(){
 }
 window.addEventListener('load', function(){ setTimeout(tsCheckUpdate, 1800); });
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) tsCheckUpdate(); });
+
+// ── Live presence heartbeat (Session 148) — signed-in app pings so the live-users
+// dashboard map can light up. Skips demo mode and signed-out users. ──
+function tsPresencePing(){
+  try{
+    var email = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
+    if(!email) return;
+    if(typeof DEMO_MODE!=='undefined' && DEMO_MODE) return;
+    var city = (typeof activeCity!=='undefined' && activeCity && activeCity.name) ? activeCity.name : '';
+    fetch(BEA_URL+'/presence/ping', {method:'POST', headers:{'Content-Type':'application/json','X-Api-Key':API_KEY}, body:JSON.stringify({email:email, city:city}), keepalive:true}).catch(function(){});
+  }catch(e){}
+}
+window.addEventListener('load', function(){ setTimeout(tsPresencePing, 3000); setInterval(tsPresencePing, 45000); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) tsPresencePing(); });
 function loadFeatureFlags(){
   try{
     fetch(BEA_URL + '/flags').then(function(r){return r.ok ? r.json() : null;}).then(function(f){

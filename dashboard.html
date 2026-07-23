@@ -410,6 +410,7 @@
     <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
     <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
     <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 Launch Switch</button>
+    <button class="vtab" id="vtab-liveusers" onclick="switchView('liveusers')">🌆 Live Users</button>
     <a id="orch-cockpit-link" href="/orchestrator/v2/cockpit.html" title="Orchestration v2 — Control Room" style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:linear-gradient(135deg,#0f6e56,#1d9e75);color:#fff;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;">🛰️ Orchestration</a>
   </div>
 </div>
@@ -720,6 +721,9 @@ function switchView(view) {
   const ops = document.getElementById('ops-view');
   var _ls=document.getElementById('launch-switch-view');
   if(view==='launch'){  dash.style.display='none'; var _g=document.getElementById('graph-view'); if(_g)_g.classList.remove('visible'); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
+  var _lu=document.getElementById('liveusers-view');
+  if(view==='liveusers'){ dash.style.display='none'; if(graph)graph.classList.remove('visible'); if(ops)ops.style.display='none'; if(_ls)_ls.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops','vtab-launch'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lub=document.getElementById('vtab-liveusers'); if(_lub)_lub.classList.add('active'); if(_lu)_lu.style.display='block'; if(window.luStart)luStart(); return; }
+  if(_lu)_lu.style.display='none'; var _lub2=document.getElementById('vtab-liveusers'); if(_lub2)_lub2.classList.remove('active'); if(window.luStop)luStop();
   if(_ls)_ls.style.display='none'; var _lb2=document.getElementById('vtab-launch'); if(_lb2)_lb2.classList.remove('active');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
   document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
@@ -1846,5 +1850,86 @@ window.apv2TestAll = function(){
 })();
 try{ window.infraLoad(); setInterval(function(){window.infraLoad();}, 300000); }catch(e){}
 </script>
+<!-- ══ LIVE USERS VIEW (Session 148, David) — city selector + presence galaxy + counters ══ -->
+<div id="liveusers-view" style="display:none;padding:18px 20px;max-width:1120px;margin:0 auto;position:relative;min-height:74vh">
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+    <h2 style="margin:0;font-size:18px">🌆 Live Users</h2>
+    <select id="lu-city" onchange="luCityChange()" style="background:#13234a;color:#eaf0fb;border:1px solid #24407c;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit">
+      <option value="">All cities</option>
+    </select>
+    <span id="lu-status" style="font-size:12px;color:#8fa6d6"></span>
+  </div>
+  <svg id="lu-galaxy" width="100%" height="540" style="display:block;background:radial-gradient(circle at 50% 42%, #0b1a3a, #060d1f);border:1px solid #1c3363;border-radius:14px"></svg>
+  <div id="lu-detail" style="display:none;position:absolute;top:74px;right:26px;width:250px;background:#0f1e40;border:1px solid #2f52a0;border-radius:12px;padding:14px;box-shadow:0 10px 28px rgba(0,0,0,.45);z-index:6"></div>
+  <div id="lu-counters" style="position:fixed;right:14px;bottom:14px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:60vw;z-index:9"></div>
+</div>
+<script>
+var LU_POLL=null, LU_SEL_CITY='';
+function luBase(){ return window.location.protocol==='file:' ? 'https://trustsquare.co' : ''; }
+function luStart(){ luLoad(); if(LU_POLL) clearInterval(LU_POLL); LU_POLL=setInterval(luLoad, 12000); }
+function luStop(){ if(LU_POLL){ clearInterval(LU_POLL); LU_POLL=null; } }
+function luCityChange(){ LU_SEL_CITY=document.getElementById('lu-city').value; luLoad(); }
+async function luLoad(){
+  try{
+    var url=luBase()+'/dashboard/presence'+(LU_SEL_CITY?('?city='+encodeURIComponent(LU_SEL_CITY)):'');
+    var d=await (await fetch(url)).json();
+    luRenderCounters(d.counters, LU_SEL_CITY);
+    luRenderCities(d.cities);
+    luRenderGalaxy(d.online||[]);
+    var c=d.counters||{};
+    document.getElementById('lu-status').textContent=(c.online_total||0)+' online now'+(LU_SEL_CITY?(' · '+(c.city_online||0)+' in '+LU_SEL_CITY):'');
+  }catch(e){ var st=document.getElementById('lu-status'); if(st) st.textContent='presence unavailable'; }
+}
+function luRenderCities(cities){
+  var sel=document.getElementById('lu-city'); if(!sel) return; var cur=sel.value;
+  sel.innerHTML='<option value="">All cities</option>'+(cities||[]).map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  sel.value=cur;
+}
+function luRenderCounters(c, city){
+  c=c||{};
+  var items=[['Free · $0',c.free||0,'#64748b'],['Starter · $5',c.starter||0,'#0ea5e9'],['Pro · $20',c.pro||0,'#f59e0b'],['Agency',c.agency||0,'#a855f7'],['Total users',c.total_users||0,'#22c55e'],[((city||'All'))+' live',c.city_online||0,'#f43f5e']];
+  document.getElementById('lu-counters').innerHTML=items.map(function(it){
+    return '<div style="background:rgba(6,13,31,.94);border:1px solid '+it[2]+';border-radius:10px;padding:6px 10px;min-width:74px;text-align:center">'+
+      '<div style="font-size:8.5px;color:#9db4d8;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap">'+it[0]+'</div>'+
+      '<div style="font-size:18px;font-weight:800;color:'+it[2]+'">'+it[1]+'</div></div>';
+  }).join('');
+}
+function luRenderGalaxy(users){
+  var box=document.getElementById('lu-galaxy'); if(!box||typeof d3==='undefined') return;
+  var svg=d3.select('#lu-galaxy'); svg.selectAll('*').remove();
+  var w=box.clientWidth||900, h=540, cx=w/2, cy=h/2;
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',36).attr('fill','#13234a').attr('stroke','#3b82f6').attr('stroke-width',2);
+  svg.append('text').attr('x',cx).attr('y',cy-2).attr('text-anchor','middle').attr('fill','#cfe2ff').attr('font-size',12).attr('font-weight',700).text(LU_SEL_CITY||'All cities');
+  svg.append('text').attr('x',cx).attr('y',cy+15).attr('text-anchor','middle').attr('fill','#7c93c9').attr('font-size',10).text(users.length+' online');
+  if(!users.length){ svg.append('text').attr('x',cx).attr('y',cy+78).attr('text-anchor','middle').attr('fill','#5a6b96').attr('font-size',12).text('No one online right now — your testers will pop up here'); return; }
+  var tc={free:'#94a3b8',starter:'#0ea5e9',pro:'#f59e0b',agency:'#a855f7'};
+  var rad=Math.min(w,h)/2*0.64;
+  users.forEach(function(u,i){
+    var ang=(i/users.length)*2*Math.PI - Math.PI/2;
+    var x=cx+Math.cos(ang)*rad, y=cy+Math.sin(ang)*rad;
+    svg.insert('line',':first-child').attr('x1',cx).attr('y1',cy).attr('x2',x).attr('y2',y).attr('stroke','#24407c').attr('stroke-width',1).attr('opacity',0.5);
+    var g=svg.append('g').style('cursor','pointer').on('click',function(){ luShowUser(u); });
+    var star=g.append('circle').attr('cx',x).attr('cy',y).attr('r',11).attr('fill',tc[u.tier]||'#94a3b8').attr('stroke','#fff').attr('stroke-width',1.5);
+    star.append('animate').attr('attributeName','opacity').attr('values','1;0.5;1').attr('dur','2.2s').attr('repeatCount','indefinite');
+    g.append('text').attr('x',x).attr('y',y+23).attr('text-anchor','middle').attr('fill','#c7d6f2').attr('font-size',10).text(String(u.name||'').split('@')[0].slice(0,14));
+  });
+}
+function luTierLabel(t){ return ({free:'Free · $0',starter:'Starter · $5',pro:'Pro · $20',agency:'Agency'})[t]||t; }
+function luShowUser(u){
+  var el=document.getElementById('lu-detail'); if(!el) return;
+  el.innerHTML='<div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:8px">'+(u.name||'User')+'</div>'+
+    '<div style="font-size:11.5px;color:#9db4d8;line-height:1.85">'+
+    'City: <b style="color:#cfe2ff">'+(u.city||'—')+'</b><br>'+
+    'Plan: <b style="color:#cfe2ff">'+luTierLabel(u.tier)+'</b><br>'+
+    'Trust: <b style="color:#cfe2ff">'+(u.trust||'—')+'</b><br>'+
+    'Live listings: <b style="color:#cfe2ff">'+(u.listings||0)+'</b><br>'+
+    'Email: '+(u.email_masked||'—')+'<br>'+
+    'Joined: '+String(u.joined||'').slice(0,10)+'<br>'+
+    'Last seen: '+String(u.last_seen||'').slice(11,19)+' UTC</div>'+
+    '<button onclick="document.getElementById(\'lu-detail\').style.display=\'none\'" style="margin-top:10px;background:#1b2f5c;color:#cfe2ff;border:1px solid #2f52a0;border-radius:8px;padding:6px 11px;font-size:11px;cursor:pointer;font-family:inherit">Close</button>';
+  el.style.display='block';
+}
+</script>
+
 </body>
 </html>
