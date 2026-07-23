@@ -68,3 +68,8 @@ are terminated then try again. If it still fails, a git process
 may have crashed in this repository earlier:
 remove the file manually to continue.
 Wed 07/22/2026  5:30:06.12  committed 21 change(s)
+[main 2fee6a2] Nightly checkpoint Thu 07/23/2026  5:30:03.90 (auto, no deploy)
+ 7 files changed, 354 insertions(+), 18 deletions(-)
+ create mode 100644 Records/COST_SWEEP_2026-07-23.md
+ create mode 100644 scripts/sync_assets.ps1
+Thu 07/23/2026  5:30:04.03  committed 7 change(s)

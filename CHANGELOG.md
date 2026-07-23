@@ -1,3 +1,12 @@
+## 23 Jul 2026 — PEN-CAP-1: trust-score penalties now bite AFTER the 100 cap
+- David spotted the gap: raw evidence over 100 (LM uncapped group, e.g. 178) displayed as 100
+  and silently ate penalties — a −8 complaint on raw 140 changed nothing on screen.
+- Scorer fixed: `max(0, min(100, 40 + evidence) + penalties)` (bea_main.py /trust-score/breakdown).
+- Evidence ledger (/sellers/credentials/{id}) now shows a post-cap "Penalties" group so the
+  itemised list still sums to the displayed score. Recovery stays time-gated (24-mo decay/dispute).
+- Canon: TRUST_SCORE_CRITERIA.md Amendment v1.2 appended. Backups: bea_main.py.bak-pencap-20260723.
+- NOT deployed — awaiting /ship.
+
 ## Session 148 (cont.) · 22 Jul 2026 — MARIETJIE UNBLOCKED: gate code + account relink + MAIL-FALLBACK-1 SHIPPED
 - Marietjie could not get in ("which password?"). Journal confirms: failed /review/login 401s from
   03:23–04:47 this morning (plus one /admin/login attempt). THREE compounding causes found and fixed:

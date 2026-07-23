@@ -3818,6 +3818,17 @@ def seller_public_credentials(listing_id: int):
             total = min(100, raw_total)
         else:
             total = sum(gr["subtotal"] for gr in groups)
+        # PEN-CAP-1 (23 Jul 2026): active complaint penalties render as their own group
+        # and apply AFTER the cap, exactly like the scorer — the visible list must
+        # still sum to the displayed score (evidence-true principle, 20 Jul).
+        _pens = _seller_active_complaints(conn, email)
+        if _pens:
+            _pen_items = [{"name": "Complaint — " + str(p.get("reason_code") or "upheld"),
+                           "points": int(p["points"])} for p in _pens]
+            groups.append({"title": "Penalties", "items": _pen_items,
+                           "subtotal": sum(i["points"] for i in _pen_items),
+                           "note": "deducted after the cap — recovers on time rules (24-month decay or successful dispute), not by adding evidence"})
+            total = max(0, total + sum(i["points"] for i in _pen_items))
         return {"trust_score": int(user.get("trust_score") or 0), "computed_total": total,
                 "groups": groups,
                 "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
@@ -4086,6 +4097,38 @@ def delete_user(email: str, _key: str = Depends(auth.require_api_key)):
 # Intros are buyer-initiated — no API key required to submit.
 # Accept/decline are seller actions — protected.
 
+# ── SELLER ID-VERIFICATION GATE (23 Jul 2026) ─────────────────────────────
+# Fraud control: a seller must hold a verified ID (the vision-checked
+# /users/{email}/verify-identity path sets users.id_verified_at) before their
+# listings may RECEIVE introductions. Listing stays free and open; the gate
+# sits at the introduction — the moment contact and money happen — so a
+# remote scammer posing as local can list but can never reach a buyer without
+# handing over an ID bound to him. Active agents of a VERIFIED agency pass
+# via the agency's own verification (Agency tier is free + verified).
+# Returns an HTTPException to raise (caller closes its own conn first), or None if clear.
+def _seller_intro_gate(conn, seller_email):
+    if not seller_email:
+        return HTTPException(status_code=409,
+            detail="Listing has no seller \u2014 cannot accept introductions")
+    em = seller_email.lower().strip()
+    row = conn.execute(
+        "SELECT id_verified_at FROM users WHERE lower(email)=?", (em,)
+    ).fetchone()
+    if row and row["id_verified_at"]:
+        return None
+    ag = conn.execute(
+        """SELECT 1 FROM agency_members m JOIN agencies a ON a.id = m.agency_id
+           WHERE lower(m.agent_email)=? AND m.status != 'removed' AND a.verified = 1
+           LIMIT 1""", (em,)
+    ).fetchone()
+    if ag:
+        return None
+    return HTTPException(status_code=403,
+        detail="This seller hasn't completed ID verification yet, so "
+               "introductions to their listings are paused for your safety. "
+               "Verified sellers show the ID badge on their profile.")
+
+
 @app.post("/intros")
 def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     conn = database.get_db()
@@ -4101,6 +4144,11 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
     if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
         conn.close()
         raise HTTPException(status_code=409, detail="You cannot request an introduction to your own listing")
+    # Seller ID-verification gate (23 Jul 2026) — see _seller_intro_gate above.
+    _gate = _seller_intro_gate(conn, listing["seller_email"])
+    if _gate:
+        conn.close()
+        raise _gate
     conn.execute(
         "INSERT INTO intro_requests (listing_id, buyer_email, buyer_name, message) VALUES (?,?,?,?)",
         (intro.listing_id, intro.buyer_email, intro.buyer_name, intro.message)
@@ -7426,6 +7474,11 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
     if not seller_email:
         conn.close()
         raise HTTPException(status_code=409, detail="Listing has no seller — cannot accept intros")
+    # Seller ID-verification gate (23 Jul 2026) — see _seller_intro_gate above.
+    _gate = _seller_intro_gate(conn, seller_email)
+    if _gate:
+        conn.close()
+        raise _gate
 
     # DESIGN NOTE (Session 28 hotfix): Buyer trust is no longer a hard gate
     # for submitting intros. New buyers must be able to participate from day
@@ -8369,8 +8422,12 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
 
     # All sellers start at 40 (Established base) — matches the sell-flow sbCalcScore model.
     # Penalties pull below 40 (bad actors); credentials push above 40.
+    # PEN-CAP-1 (23 Jul 2026, David's ruling): penalties apply AFTER the 100 cap.
+    # Surplus evidence (raw totals over 100) must never absorb a penalty — a seller
+    # displaying 100 who draws complaints must visibly drop, and recover only via
+    # the time rules (24-month complaint decay / dispute), never by adding evidence.
     base_score = 40
-    score_total = max(0, min(100, base_score + earned_u + earned_t + earned_c + penalty_total))
+    score_total = max(0, min(100, base_score + earned_u + earned_t + earned_c) + penalty_total)
     tier = _trust_tier(score_total)
 
     # Pending points (uploaded but not yet verified by admin)

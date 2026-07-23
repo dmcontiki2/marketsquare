@@ -361,3 +361,36 @@ this addendum records what changed since the 6 Jul revision.
 4. **Professional agents carry three named scores:** Trust Score (TS, this catalog),
    Agent Score (SPS — avg listing quality; for agents it measures technical, regulatory,
    legal and safety completeness of their adverts), and Rank = 50% TS + 50% SPS.
+
+
+---
+
+## Amendment v1.2 — Penalties apply AFTER the 100 cap (PEN-CAP-1)
+**Decision: David · 23 July 2026**
+
+**Gap closed.** Previously the scorer summed penalties INSIDE the cap:
+`max(0, min(100, base + evidence + penalties))`. A seller whose raw evidence exceeded 100
+(realistic under the Local Market model, where the credential group is uncapped — raw totals
+of 140–178 exist) absorbed penalties invisibly: raw 140 with a −8 complaint → 132 → still
+displayed 100. The penalty had zero visible effect until raw evidence dipped below 100.
+
+**New formula:**
+
+> `score = max(0, min(100, 40 + Universal(≤30) + Track Record(≤30) + Category) + penalties)`
+
+Every active penalty now visibly reduces the displayed score regardless of surplus evidence.
+Recovery is time-gated only — §5b complaint decay (50% after 24 months) or a successful
+dispute. Surplus evidence can never buy a penalty back.
+
+**Surfaces updated (both in bea_main.py, 23 Jul):**
+- `/trust-score/breakdown` scorer (persists `users.trust_score`) — penalty applied post-cap.
+- Buyer-visible evidence ledger `GET /sellers/credentials/{listing_id}` — renders a
+  "Penalties" group (reason codes + points) after the cap so the itemised list still sums
+  exactly to the displayed score (evidence-true principle, 20 Jul).
+
+**Flagged for council (not changed):** ignoring introductions currently costs only the T2
+`zero_ignored_90d` signal (10 pts INSIDE the capped evidence), so a surplus-evidence seller
+can still absorb that loss invisibly. If non-response must always bite the displayed score,
+it needs its own post-cap penalty entry in §5 — David to rule.
+
+*End Amendment v1.2*
