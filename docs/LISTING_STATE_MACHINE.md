@@ -1,5 +1,5 @@
 # TrustSquare — Listing State Machine
-**Version 1.2 · 25 May 2026 · Locked design — do not change without Architect agent sign-off**
+**Version 1.3 · 23 July 2026 · Locked design — do not change without Architect agent sign-off**
 
 ---
 
@@ -28,7 +28,7 @@ Buyers only ever interact with listings in the **LIVE** state.
 - Commitment model listings auto-pause when an intro request arrives
 - Duration before Fade Out is gated by seller subscription tier (see Fade Out section)
 - **Listing count limits by tier:** Free = 2 simultaneous live listings · Starter ($5/mo) = 10 · Pro ($20/mo) = 30 · Agency (free + verified) = 10 base (grows with Trust Score). Source: bea_main.py _SELLER_SUB_TIERS.
-- **Batch expansion:** Starter and Premium sellers may purchase additional listing capacity at 2T per batch of 20 extra listings. Free tier sellers must upgrade to Starter before purchasing extra slots.
+- **Batch expansion:** Starter and Pro sellers may purchase additional listing capacity at 2T per batch of 20 extra listings. Free tier sellers must upgrade to Starter before purchasing extra slots.
 
 ### 3. PAUSED
 - Was LIVE, now temporarily off
@@ -44,18 +44,20 @@ Buyers only ever interact with listings in the **LIVE** state.
 - System-triggered when a listing has been LIVE or PAUSED with no intro requests
   received AND no seller login within the tier's inactivity window
 - Removed from buyer browse silently — no buyer-facing notice
-- Seller receives nudge email: *"Your listing is fading — tap to keep it live"*
-- Seller has **14 days from nudge** to respond
-  - Tap "Keep live" → returns to LIVE immediately
+- Seller receives a warning nudge email 7 days BEFORE the window closes, and a
+  second notice the day the listing is hidden
+- Seller has **14 days from being hidden** to respond
+  - Tap "Keep live" → returns to LIVE immediately (endpoint: `POST /listings/{id}/keep-live`)
   - No response within 14 days → auto-moves to ARCHIVED
 
-**Inactivity windows by subscription tier:**
+**Inactivity windows by subscription tier (David's ruling, 23 Jul 2026 — 30/60/90):**
 
-| Tier        | Inactivity window | Nudge sent | Auto-archived if no action |
-|-------------|-------------------|------------|----------------------------|
-| Free        | 30 days           | Day 23     | Day 44 (30 + 14)           |
-| Starter     | 60 days           | Day 53     | Day 74 (60 + 14)           |
-| Premium     | 120 days (4 mo.)  | Day 113    | Day 134 (120 + 14)         |
+| Tier        | Inactivity window | Warning nudge | Hidden | Auto-archived if no action |
+|-------------|-------------------|---------------|--------|----------------------------|
+| Free        | 30 days           | Day 23        | Day 30 | Day 44 (30 + 14)           |
+| Starter     | 60 days           | Day 53        | Day 60 | Day 74 (60 + 14)           |
+| Pro         | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
+| Agency      | 90 days           | Day 83        | Day 90 | Day 104 (90 + 14)          |
 
 ### 5. WITHDRAWN
 - Seller-initiated soft delete — sold, no longer available, or changed mind
@@ -179,10 +181,12 @@ The seller acknowledges that every listing exists in exactly one of seven states
 
 The number of simultaneously active (LIVE or PAUSED) listings is governed by the seller's subscription tier:
 
-- **Free tier:** maximum 2 live listings at any time
-- **Starter tier ($5/month):** maximum 25 live listings
-- **Premium tier ($15/month):** maximum 50 live listings
-- **Batch expansion:** Starter and Premium sellers may purchase additional listing capacity at 2 Tuppence per batch of 20 extra listings. Batches stack and are permanent. Free tier sellers must upgrade to Starter first — extra slots are not available on the free tier.
+- **Free tier ($0/month):** maximum 2 live listings at any time
+- **Starter tier ($5/month):** maximum 10 live listings
+- **Pro tier ($20/month):** maximum 30 live listings
+- **Agency tier (free of charge · verification required):** 10 live listings base — the cap
+  grows with the agency's Trust Score (10 new → 100 verified → 500 established + review)
+- **Batch expansion:** Starter and Pro sellers may purchase additional listing capacity at 2 Tuppence per batch of 20 extra listings. Batches stack and are permanent. Free tier sellers must upgrade to Starter first — extra slots are not available on the free tier.
 
 Attempting to publish beyond the tier cap (without a batch) will be rejected with an in-app message showing the upgrade or batch-purchase option.
 
@@ -192,13 +196,14 @@ Attempting to publish beyond the tier cap (without a batch) will be rejected wit
 
 A listing enters FADE OUT when there has been no intro request received and no seller login recorded within the inactivity window for the seller's current subscription tier:
 
-| Tier | Inactivity window | Nudge sent | Auto-archived if no action |
-|------|-------------------|------------|----------------------------|
-| Free | 30 days | Day 23 | Day 44 (30 + 14) |
-| Starter | 60 days | Day 53 | Day 74 (60 + 14) |
-| Premium | 120 days | Day 113 | Day 134 (120 + 14) |
+| Tier | Inactivity window | Warning nudge | Hidden | Auto-archived if no action |
+|------|-------------------|---------------|--------|----------------------------|
+| Free | 30 days | Day 23 | Day 30 | Day 44 (30 + 14) |
+| Starter | 60 days | Day 53 | Day 60 | Day 74 (60 + 14) |
+| Pro | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
+| Agency | 90 days | Day 83 | Day 90 | Day 104 (90 + 14) |
 
-On entering FADE OUT the listing is hidden from buyers immediately. A nudge email is sent to the seller's registered address. The seller has 14 days from the nudge to tap "Keep live" — if no action is taken within that window the listing is automatically ARCHIVED. The seller may renew a Free tier listing's active status at no charge by logging in within the inactivity window.
+A warning nudge email is sent 7 days before the window closes. On entering FADE OUT the listing is hidden from buyers immediately and a second notice is emailed. The seller has 14 days from being hidden to tap "Keep live" — if no action is taken within that window the listing is automatically ARCHIVED. The seller may renew a Free tier listing's active status at no charge by logging in within the inactivity window.
 
 ---
 
@@ -258,5 +263,14 @@ The seller consents to this retention as a condition of using the platform. Reta
 - This document (`LISTING_STATE_MACHINE.md`) — canonical reference
 
 ---
+
+**v1.3 changelog (23 Jul 2026, David's rulings):** fade windows set to 30/60/90 days
+(Free/Starter/Pro; Agency = 90) replacing the pre-Simpler-Model 30/60/120 "Premium" table;
+EULA §2 aligned with live pricing ($0 / $5 / $20 / Agency free + verified) and live slot
+caps (2 / 10 / 30 / 10-base trust-graduated); warning nudge formalised at window−7.
+IMPLEMENTED 23 Jul 2026 in bea_main.py: daily `_lifecycle_sweep` (warn → fade → archive),
+`POST /admin/lifecycle-sweep`, `POST /listings/{id}/keep-live`; demo listings exempt.
+NOTE: the live in-app EULA (v1.3, ms.js `_EULA_HTML`) does NOT yet contain §§1–6 above —
+they must be inserted at the next EULA revision (lawyer has v1.9 draft).
 
 *This document is the source of truth for listing state logic. All BEA endpoints, frontend state rendering, and admin tooling must conform to it. Update version number and date on any change. Architect agent arbitrates conflicts.*

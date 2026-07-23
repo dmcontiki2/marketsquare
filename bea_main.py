@@ -622,7 +622,7 @@ def run_migrations(conn):
         "dmcontiki2@gmail.com",
         "miconradie1@gmail.com",
         "davidconradie1234@gmail.com",
-        "mauriceconradie@yahoo.com",
+        "conradiedm@gmail.com",  # Maurice — relinked from mauriceconradie@yahoo.com (22 Jul 2026)
     ]
     for su_email in SUPERUSER_EMAILS:
         conn.execute(
@@ -15467,6 +15467,295 @@ def tuppence_ai_settle(payload: dict, _key: str = Depends(auth.require_api_key))
 # P2 cost-compliance fixes applied 12 Jun 2026 (nightly sweep): ceiling checks +
 # real-token spend logging on grade_card_condition, _vision_orient_image,
 # _classify_email, ai-rewrite, ai-audit, batch-cards. See CHANGELOG.
+
+
+
+# ══ LIFECYCLE SWEEP — Fade Out (LISTING_STATE_MACHINE v1.3) + RESP-1 ══════════
+# David's rulings 23 Jul 2026: fade windows 30/60/90 (agency 90); responsiveness
+# = gentle model: −5 at 48h unanswered, intro removed at 96h, both parties told.
+
+_FADE_WINDOWS = {"free": 30, "starter": 60, "pro": 90, "agency": 90,
+                 "standard": 90, "professional": 90, "business": 90, "elite": 90}
+_FADE_WARN_LEAD_DAYS = 7      # nudge email this many days BEFORE the window closes
+_FADE_GRACE_DAYS = 14         # faded → archived after this many days, per locked spec
+RESP_PENALTY_AT_H = 48        # unanswered intro → −5 at this age
+RESP_REMOVE_AT_H = 96         # unanswered intro → removed at this age
+RESP_PENALTY_PTS = -5
+RESP_PENALTY_ACTIVE_DAYS = 90 # penalty eases (drops out of the score) after this
+
+
+def _send_system_email(to_email: str, subject: str, html: str) -> str:
+    """Transactional lifecycle email. Resend if configured, Gmail SMTP fallback
+    (MAIL-FALLBACK-1 pattern). Returns 'sent' | 'failed' | 'dry'."""
+    key = os.getenv("RESEND_API_KEY", "")
+    if key:
+        try:
+            import httpx
+            r = httpx.post("https://api.resend.com/emails",
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+                      "to": [to_email], "subject": subject, "html": html},
+                timeout=20)
+            if r.status_code in (200, 201):
+                return "sent"
+            _log.error("system email (resend) HTTP %s: %s -- falling back to Gmail SMTP",
+                       r.status_code, r.text[:200])
+        except Exception as exc:
+            _log.error("system email (resend) failed: %s -- falling back to Gmail SMTP", exc)
+    if GMAIL_APP_PASSWORD:
+        try:
+            msg = EmailMessage()
+            msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            import re as _re
+            msg.set_content(_re.sub(r"<[^>]+>", " ", html))
+            msg.add_alternative(html, subtype="html")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+                server.starttls()
+                server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                server.send_message(msg)
+            return "sent"
+        except Exception as exc:
+            _log.error("system email (smtp) failed: %s", exc)
+    return "dry" if not key and not GMAIL_APP_PASSWORD else "failed"
+
+
+def _lc_parse_ts(s):
+    """Parse the DB's mixed timestamp formats → aware UTC datetime, or None."""
+    if not s:
+        return None
+    try:
+        t = str(s).strip().replace("Z", "").replace("T", " ").split(".")[0]
+        d = datetime.fromisoformat(t)
+        return d.replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _lc_email_html(title: str, body: str, cta: str = "Open TrustSquare") -> str:
+    return ("<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+            "<h2 style='color:#0c1a2e'>" + title + "</h2><p>" + body + "</p>"
+            "<p><a href='" + APP_URL + "' style='display:inline-block;background:#C8873A;color:#fff;"
+            "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>"
+            + cta + " &rarr;</a></p></div>")
+
+
+def _seller_responsiveness_penalties(conn, email: str) -> list:
+    """Active RESP-1 penalties (−5 per unanswered intro, easing after 90 days).
+    Post-cap, same as complaints — surplus evidence can never absorb them."""
+    rows = conn.execute(
+        """SELECT id, intro_id, listing_id, points, incurred_at FROM intro_penalties
+           WHERE LOWER(seller_email) = ?
+           AND incurred_at >= datetime('now', ?)
+           ORDER BY incurred_at DESC""",
+        (email.lower(), "-%d days" % RESP_PENALTY_ACTIVE_DAYS)
+    ).fetchall()
+    return [{"id": r["id"], "points": int(r["points"]), "incurred_at": r["incurred_at"],
+             "label": "Unanswered introduction", "reason_code": "unanswered_intro"}
+            for r in rows]
+
+
+def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
+    """Daily sweep: fade-out warn/hide/archive + responsiveness penalty/removal.
+    Idempotent — safe to run any number of times. Own connection."""
+    if email_cap is None:
+        email_cap = int(os.getenv("FADE_EMAIL_CAP", "50"))
+    now = datetime.now(timezone.utc)
+    now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    sent = [0]
+
+    def _mail(to, subj, html):
+        if dry_run or sent[0] >= email_cap:
+            return "capped"
+        out = _send_system_email(to, subj, html)
+        if out == "sent":
+            sent[0] += 1
+        return out
+
+    res = {"warned": 0, "faded": 0, "fade_archived": 0, "nudge_cleared": 0,
+           "resp_penalised": 0, "resp_removed": 0, "emails_sent": 0, "dry_run": dry_run}
+    conn = database.get_db()
+    try:
+        # ── FADE: warn / hide / clear-stamp ──
+        cands = conn.execute(
+            """SELECT l.id, l.title, l.seller_email, l.listing_status, l.fade_nudge_sent_at,
+                      l.published_at, l.created_at, l.status_changed_at,
+                      u.seller_tier, u.last_seen,
+                      (SELECT MAX(ir.created_at) FROM intro_requests ir
+                        WHERE ir.listing_id = l.id) AS last_intro
+               FROM listings l
+               LEFT JOIN users u ON LOWER(u.email) = LOWER(l.seller_email)
+               WHERE l.listing_status IN ('live','paused')
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND l.seller_email IS NOT NULL AND l.seller_email != ''"""
+        ).fetchall()
+        for c in cands:
+            w = _FADE_WINDOWS.get((c["seller_tier"] or "free").lower(), 90)
+            acts = [_lc_parse_ts(c[k]) for k in
+                    ("published_at", "created_at", "status_changed_at", "last_seen", "last_intro")]
+            acts = [a for a in acts if a]
+            if not acts:
+                continue
+            days = (now - max(acts)).days
+            if days >= w:
+                if not dry_run:
+                    conn.execute("UPDATE listings SET listing_status='faded', status_changed_at=?, "
+                                 "fade_nudge_sent_at=COALESCE(fade_nudge_sent_at, ?) WHERE id=?",
+                                 (now_iso, now_iso, c["id"]))
+                res["faded"] += 1
+                _mail(c["seller_email"], "Your listing is now hidden \u2014 bring it back with one tap",
+                      _lc_email_html("\u201c" + (c["title"] or "Your listing") + "\u201d is now hidden",
+                          "It saw no activity for " + str(w) + " days, so buyers can no longer see it. "
+                          "Sign in and tap <strong>Keep live</strong> within " + str(_FADE_GRACE_DAYS) +
+                          " days to bring it straight back \u2014 free. After that it is archived for good.",
+                          "Keep it live"))
+            elif days >= w - _FADE_WARN_LEAD_DAYS:
+                if not c["fade_nudge_sent_at"]:
+                    if not dry_run:
+                        conn.execute("UPDATE listings SET fade_nudge_sent_at=? WHERE id=?",
+                                     (now_iso, c["id"]))
+                    res["warned"] += 1
+                    _mail(c["seller_email"], "Your TrustSquare listing is fading \u2014 tap to keep it live",
+                          _lc_email_html("\u201c" + (c["title"] or "Your listing") + "\u201d is fading",
+                              "It has had no activity for " + str(days) + " days. In " +
+                              str(max(1, w - days)) + " day(s) it will be hidden from buyers. "
+                              "Just sign in to keep it live \u2014 free, one tap.", "Keep it live"))
+            elif c["fade_nudge_sent_at"]:
+                if not dry_run:
+                    conn.execute("UPDATE listings SET fade_nudge_sent_at=NULL WHERE id=?", (c["id"],))
+                res["nudge_cleared"] += 1
+
+        # ── FADE: archive after the 14-day grace ──
+        cutoff = (now - timedelta(days=_FADE_GRACE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        rows = conn.execute("SELECT id FROM listings WHERE listing_status='faded' "
+                            "AND status_changed_at IS NOT NULL AND status_changed_at <= ?",
+                            (cutoff,)).fetchall()
+        for r in rows:
+            if not dry_run:
+                conn.execute("UPDATE listings SET listing_status='archived', status_changed_at=? "
+                             "WHERE id=?", (now_iso, r["id"]))
+            res["fade_archived"] += 1
+
+        # ── RESP-1: −5 at 48h unanswered (once per intro) ──
+        pend = conn.execute(
+            """SELECT ir.id, ir.listing_id, ir.buyer_email, ir.created_at,
+                      l.seller_email, l.title
+               FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+               WHERE ir.status = 'pending'
+                 AND ir.created_at < datetime('now', ?)
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')
+                 AND l.seller_email IS NOT NULL AND l.seller_email != ''
+                 AND ir.id NOT IN (SELECT intro_id FROM intro_penalties)""",
+            ("-%d hours" % RESP_PENALTY_AT_H,)
+        ).fetchall()
+        for ir in pend:
+            if not dry_run:
+                conn.execute("INSERT OR IGNORE INTO intro_penalties "
+                             "(intro_id, seller_email, listing_id, points, incurred_at, note) "
+                             "VALUES (?,?,?,?,?,?)",
+                             (ir["id"], ir["seller_email"].lower(), ir["listing_id"],
+                              RESP_PENALTY_PTS, now_iso,
+                              "unanswered %dh" % RESP_PENALTY_AT_H))
+            res["resp_penalised"] += 1
+            _mail(ir["seller_email"], "A buyer is waiting \u2014 \u22125 trust points applied",
+                  _lc_email_html("An introduction has waited over " + str(RESP_PENALTY_AT_H) + " hours",
+                      "A buyer asked to be introduced on \u201c" + (ir["title"] or "your listing") +
+                      "\u201d and has had no reply. A \u22125 trust point penalty now shows on your "
+                      "score (it eases after " + str(RESP_PENALTY_ACTIVE_DAYS) + " days). Respond within "
+                      "the next " + str(RESP_REMOVE_AT_H - RESP_PENALTY_AT_H) +
+                      " hours or the introduction is removed.", "Respond now"))
+
+        # ── RESP-1: remove at 96h, inform both parties ──
+        gone = conn.execute(
+            """SELECT ir.id, ir.listing_id, ir.buyer_email, ir.created_at,
+                      l.seller_email, l.title
+               FROM intro_requests ir JOIN listings l ON l.id = ir.listing_id
+               WHERE ir.status = 'pending'
+                 AND ir.created_at < datetime('now', ?)
+                 AND (l.is_demo = 0 OR l.is_demo IS NULL)
+                 AND LOWER(COALESCE(l.category,'')) NOT IN ('local_market','local market')""",
+            ("-%d hours" % RESP_REMOVE_AT_H,)
+        ).fetchall()
+        for ir in gone:
+            if not dry_run:
+                conn.execute("UPDATE intro_requests SET status='expired' WHERE id=?", (ir["id"],))
+            res["resp_removed"] += 1
+            if ir["buyer_email"]:
+                _mail(ir["buyer_email"], "We couldn\u2019t make this introduction",
+                      _lc_email_html("This introduction couldn\u2019t be made",
+                          "The seller of \u201c" + (ir["title"] or "the listing") + "\u201d didn\u2019t "
+                          "respond in time, so we\u2019ve closed the introduction. You were not charged. "
+                          "Unresponsive sellers lose trust points \u2014 the score you see is real.",
+                          "Find another seller"))
+            if ir["seller_email"]:
+                _mail(ir["seller_email"], "Introduction removed \u2014 no response",
+                      _lc_email_html("You\u2019ve lost an introduction",
+                          "The introduction on \u201c" + (ir["title"] or "your listing") + "\u201d went "
+                          "unanswered for " + str(RESP_REMOVE_AT_H) + " hours and has been removed. The "
+                          "\u22125 trust point penalty stands and eases after " +
+                          str(RESP_PENALTY_ACTIVE_DAYS) + " days.", "Open your dashboard"))
+
+        if not dry_run:
+            conn.commit()
+    finally:
+        conn.close()
+    res["emails_sent"] = sent[0]
+    return res
+
+
+@app.post("/admin/lifecycle-sweep")
+def admin_lifecycle_sweep(dry_run: int = 0, _key: str = Depends(auth.require_api_key)):
+    """Manual/cron trigger for the daily lifecycle sweep. dry_run=1 counts only."""
+    return _lifecycle_sweep(dry_run=bool(dry_run))
+
+
+class _KeepLiveIn(BaseModel):
+    email: str
+
+@app.post("/listings/{listing_id}/keep-live")
+def keep_listing_live(listing_id: int, req: _KeepLiveIn):
+    """Seller revives a FADED listing (or resets the fade clock on a warned one).
+    Seller identifies by email — same trust model as /users/{email}/photo."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id, seller_email, listing_status FROM listings WHERE id=?",
+                           (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if (row["seller_email"] or "").lower() != (req.email or "").lower():
+            raise HTTPException(status_code=403, detail="Not your listing")
+        st = (row["listing_status"] or "live").lower()
+        if st not in ("faded", "live", "paused"):
+            raise HTTPException(status_code=409, detail="Cannot revive a listing in state: " + st)
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if st == "faded":
+            conn.execute("UPDATE listings SET listing_status='live', status_changed_at=?, "
+                         "fade_nudge_sent_at=NULL WHERE id=?", (now_iso, listing_id))
+        else:
+            conn.execute("UPDATE listings SET fade_nudge_sent_at=NULL WHERE id=?", (listing_id,))
+        conn.execute("UPDATE users SET last_seen=? WHERE LOWER(email)=?",
+                     (now_iso, req.email.lower()))
+        conn.commit()
+        return {"listing_id": listing_id, "listing_status": "live"}
+    finally:
+        conn.close()
+
+
+# Daily runner: first pass ~2 minutes after boot, then every 24h. Gated by env.
+if os.getenv("FADE_SWEEP_ENABLED", "1") == "1":
+    def _lifecycle_daily_loop():
+        import time as _lt
+        _lt.sleep(120)
+        while True:
+            try:
+                _r = _lifecycle_sweep(dry_run=os.getenv("FADE_SWEEP_DRYRUN", "0") == "1")
+                print("LIFECYCLE-SWEEP: %s" % _r)
+            except Exception as _le:
+                print("LIFECYCLE-SWEEP error: %s" % _le)
+            _lt.sleep(86400)
+    threading.Thread(target=_lifecycle_daily_loop, daemon=True).start()
 
 
 # ── DEMAND-LOOP-1: one-time boot sweep (EOF — all names now defined) ──────────

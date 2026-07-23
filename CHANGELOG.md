@@ -1,3 +1,20 @@
+## 23 Jul 2026 (cont.) — FADE-1 + RESP-1: listing fade-out engine + gentle responsiveness penalties
+- **FADE-1:** the locked fade-out design (state machine v1.2) had NEVER been implemented — nothing
+  ever set a listing to 'faded'. Now live in bea_main.py: daily `_lifecycle_sweep` thread
+  (boot + 24h) — warning email at window−7, hidden at window (30/60/90 days for
+  Free/Starter/Pro, Agency 90 — David's ruling), archived 14 days later. Demo listings exempt.
+  `POST /admin/lifecycle-sweep?dry_run=1` for manual/cron runs; `POST /listings/{id}/keep-live`
+  revives; ms.js: 'faded' chip + ↻ Keep live button (fade_out chip kept as alias).
+- **RESP-1 (supersedes ladder proposal):** unanswered intro at 48h → one −5 (post-cap, recorded
+  in new `intro_penalties`, eases after 90 days); at 96h intro expires + both parties emailed
+  (buyer never charged — Tuppence charges on accept only). LM excluded (own machinery). Shows in
+  evidence ledger as "Unanswered introduction". B3 block + T2 signal unchanged.
+- Docs: LISTING_STATE_MACHINE.md → v1.3 (windows 30/60/90, EULA §2 aligned to $0/$5/$20 + Agency
+  free+verified, slots 2/10/30); TRUST_SCORE_CRITERIA.md Amendment v1.3. Live in-app EULA still
+  lacks the lifecycle clauses — flagged for next EULA revision.
+- Env gates: FADE_SWEEP_ENABLED (default on), FADE_SWEEP_DRYRUN, FADE_EMAIL_CAP (50/run).
+- Verified: py_compile + AST clean, node --check ms.js clean. NOT deployed — awaiting /ship.
+
 ## Session 149 · 23 Jul 2026 — EULA v1.9 PUBLISHED: not-a-referral + Reference Library + Country Schedules (UK/US/AU)
 - DAVID-DIRECTED publish, pre-counsel (A6 counsel review stays OPEN; register updated accordingly).
 - AUDIT FIRST (remote session, phone-driven): v1.7 docx audited — found §5.2/§5.5 "consumed" wording

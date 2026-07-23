@@ -8331,6 +8331,7 @@ function sbLifecycleChip(ls){
     live:      ['st-active','● Live'],
     paused:    ['st-paused','⏸ Paused'],
     fade_out:  ['st-fade','🌙 Fading — refresh to stay visible'],
+    faded:     ['st-fade','🌙 Hidden — buyers can\u2019t see this listing'],
     withdrawn: ['st-withdrawn','↩ Withdrawn'],
     blocked:   ['st-blocked','⛔ Blocked'],
     archived:  ['st-archived','🗄 Archived']
@@ -8339,15 +8340,32 @@ function sbLifecycleChip(ls){
   return '<span class="ml-status '+c[0]+'">'+c[1]+'</span>';
 }
 
+// FADE-1 (23 Jul 2026): revive a faded listing — one tap, free (state machine v1.3).
+function msKeepLive(id){
+  var email = localStorage.getItem('ms_aa_email') || '';
+  if(!email){ console.warn('keep-live: not signed in'); return; }
+  fetch(BEA_URL + '/listings/' + id + '/keep-live', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email: email})
+  }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(){
+      var dl = dashState.listings.find(function(x){ return x.id === id; });
+      if(dl) dl.listing_status = 'live';
+      renderDash();
+    })
+    .catch(function(e){ console.warn('keep-live failed', e); });
+}
+
 function renderDashCard(dl){
   const pendingIntros = dl.intros.filter(i=>i.status==='pending');
   const thumbHtml = dl.photo
     ? `<img src="${dl.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
     : CATS[dl.cat].icon;
   const _ls = (dl.listing_status || (dl.status==='draft'?'draft':(dl.status==='paused'?'paused':'live')));
-  const statusBadge = (_ls==='live' && pendingIntros.length>0)
+  let statusBadge = (_ls==='live' && pendingIntros.length>0)
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
     : sbLifecycleChip(_ls);
+  if(_ls==='faded') statusBadge += ` <button class="mla-btn accent" onclick="msKeepLive(${dl.id})" style="padding:5px 12px;font-size:11px;border-radius:8px;">\u21bb Keep live</button>`;
 
   const introsHtml = pendingIntros.map(intro => `
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">

@@ -394,3 +394,36 @@ can still absorb that loss invisibly. If non-response must always bite the displ
 it needs its own post-cap penalty entry in §5 — David to rule.
 
 *End Amendment v1.2*
+
+
+---
+
+## Amendment v1.3 — Responsiveness penalties, gentle model (RESP-1)
+**Decision: David · 23 July 2026 · supersedes the escalating-ladder proposal flagged in v1.2**
+
+**Ruling.** David chose a less abrasive model than an escalating ladder:
+
+1. An introduction left unanswered for **48 hours** incurs a single **−5** penalty
+   (applied AFTER the 100 cap per PEN-CAP-1, recorded permanently in `intro_penalties`
+   at the moment the threshold passes — a late reply no longer erases the evidence).
+2. If the seller still hasn't responded at **96 hours**, the introduction is **removed**
+   (`intro_requests.status = 'expired'`) and **both parties are informed**:
+   - Buyer: "We couldn't make this introduction — the seller didn't respond in time.
+     You were not charged." (True: Tuppence is only charged on acceptance.)
+   - Seller: "You've lost an introduction and incurred a −5 trust point penalty."
+3. **Recovery is time-based only:** each −5 eases (drops out of the score) 90 days
+   after it was incurred. It cannot be bought back with surplus evidence.
+4. One −5 per introduction, no escalation. The B3 block (3+ ignored in rolling
+   30 days → account blocked, 60-day cooling) remains the unchanged backstop, and
+   the T2 `zero_ignored_90d` 10-pt signal continues to work as the carrot.
+
+**Scope.** Applies to standard `intro_requests` only. Local Market intros are excluded —
+LM has its own no-show complaint machinery (`lm_complaints`, LM-T4). Demo listings exempt.
+
+**Implementation (23 Jul 2026, bea_main.py):** `intro_penalties` table;
+`_seller_responsiveness_penalties()` feeding the post-cap penalty stream in both the
+scorer and the buyer-visible evidence ledger (shown as "Unanswered introduction — −5"
+in the Penalties group); detection runs in the daily `_lifecycle_sweep` (same engine
+as Fade Out), with warning email at −5 and removal emails at 96h.
+
+*End Amendment v1.3*
