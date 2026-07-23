@@ -1,3 +1,15 @@
+## 23 Jul 2026 (cont.) — SEC-1 + SEC-2: admin key containment + HTTPS deploy channel
+- **SEC-1:** the shared API key baked into shipped ms.js (client-readable by anyone) no longer
+  carries admin power. Seven admin endpoints re-gated to admin JWT OR env-only MS_ADMIN_KEY
+  (fail-closed, never boot-refuse): ai-spend/summary, migrate-photos, LM complaint
+  uphold/dismiss/list, credentials/pending, lifecycle-sweep. 44 user-facing endpoints remain on
+  the legacy shared key — full per-user auth refactor registered in BACKLOG (post-launch).
+- **SEC-2 / DEPLOY-CHANNEL-1:** POST /admin/deploy-file — atomic, sha256-verified,
+  whitelist-only (static frontend files; backend deliberately excluded), env-only MS_DEPLOY_KEY,
+  .predeploy rollback copy kept. Ends the your-keyboard-only deploy dependency for frontend.
+- Secrets generated to .secrets/ (gitignored); server env one-liner staged in
+  .secrets/TONIGHT_PASTE.txt. Ships with tonight's full deploy_marketsquare.bat run.
+
 ## 23 Jul 2026 (cont.) — EULA v1.10: lifecycle clauses live on every surface
 - David-directed (pre-counsel, A6 open): listing lifecycle §4.6, tier caps §4.7 ($0/$5/$20 +
   Agency free+verified), fade-out §4.8 (30/60/90, warn −7d, 14-day grace), introduction

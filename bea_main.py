@@ -25,6 +25,24 @@ import logging
 import smtplib
 import threading
 from email.message import EmailMessage
+
+# ── SEC-1 (23 Jul 2026, David-approved): admin-power endpoints come OFF the
+# client-shipped shared API key (ms_mk_... is readable in ms.js by anyone).
+# Admin surface accepts EITHER a valid admin JWT (ops UI, /admin/login) OR the
+# env-only MS_ADMIN_KEY header (Claude/cron automation). Fail CLOSED when the
+# env key is unset — never boot-refuse (lesson of the 23 Jul startup outage).
+MS_ADMIN_KEY = os.environ.get("MS_ADMIN_KEY", "")
+
+def _require_admin_or_key(x_admin_token: str = Header(default=None),
+                          x_admin_key: str = Header(default=None)):
+    if x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY:
+        return {"via": "admin-key"}
+    if x_admin_token:
+        try:  # _pyjwt/_JWT_SECRET defined later at module level — resolved at call time
+            return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        except Exception:
+            pass
+    raise HTTPException(status_code=401, detail="Admin credentials required.")
 from email.utils import parseaddr, formataddr
 from datetime import datetime, timezone, timedelta
 
@@ -4639,7 +4657,7 @@ def verify_seller_subscription(reference: str):
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
 
 @app.get("/admin/ai-spend/summary")
-def admin_ai_spend_daily_summary(_key: str = Depends(auth.require_api_key)):
+def admin_ai_spend_daily_summary(_admin=Depends(_require_admin_or_key)):
     """Live AI-spend summary for the nightly cost-compliance sweep (P2, 11 Jun 2026).
     Returns today's and 7-day spend, the configured ceilings, and a 7-day
     per-endpoint/model breakdown. Read-only; $0; admin key required."""
@@ -4673,7 +4691,7 @@ def admin_ai_spend_daily_summary(_key: str = Depends(auth.require_api_key)):
 
 
 @app.post("/admin/migrate-photos")
-def migrate_photos(_key: str = Depends(auth.require_api_key)):
+def migrate_photos(_admin=Depends(_require_admin_or_key)):
     """Migrate existing local photos to Hetzner Object Storage.
     Idempotent — skips listings already pointing to an S3 URL.
     Does NOT delete local files.
@@ -7629,7 +7647,7 @@ def lm_file_complaint(req: LMComplaintIn, _key: str = Depends(auth.require_api_k
 
 
 @app.put("/local-market/complaint/{complaint_id}/uphold")
-def lm_uphold_complaint(complaint_id: int, _key: str = Depends(auth.require_api_key)):
+def lm_uphold_complaint(complaint_id: int, _admin=Depends(_require_admin_or_key)):
     """Ops upholds the complaint: −3 buyer Trust (LM-T4 / LM-16), 1T credit to
     seller IF listing still active (LM-T3), buyer auto-blocked if Trust < 20 (LM-17)."""
     conn = database.get_db()
@@ -7675,7 +7693,7 @@ def lm_uphold_complaint(complaint_id: int, _key: str = Depends(auth.require_api_
 
 
 @app.put("/local-market/complaint/{complaint_id}/dismiss")
-def lm_dismiss_complaint(complaint_id: int, _key: str = Depends(auth.require_api_key)):
+def lm_dismiss_complaint(complaint_id: int, _admin=Depends(_require_admin_or_key)):
     """Ops dismisses the complaint — no Trust Score penalty, no credit."""
     conn = database.get_db()
     res = conn.execute(
@@ -7693,7 +7711,7 @@ def lm_dismiss_complaint(complaint_id: int, _key: str = Depends(auth.require_api
 
 
 @app.get("/local-market/complaints")
-def lm_list_complaints(status: str = "pending", _key: str = Depends(auth.require_api_key)):
+def lm_list_complaints(status: str = "pending", _admin=Depends(_require_admin_or_key)):
     """Ops queue. Returns pending (default) / upheld / dismissed."""
     conn = database.get_db()
     rows = conn.execute(
@@ -8563,7 +8581,7 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
 
 
 @app.get("/trust-score/credentials/pending")
-def trust_score_pending_queue(_key: str = Depends(auth.require_api_key)):
+def trust_score_pending_queue(_admin=Depends(_require_admin_or_key)):
     """Ops queue — credentials awaiting manual review across all sellers."""
     conn = database.get_db()
     rows = conn.execute(
@@ -15707,7 +15725,7 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
 
 
 @app.post("/admin/lifecycle-sweep")
-def admin_lifecycle_sweep(dry_run: int = 0, _key: str = Depends(auth.require_api_key)):
+def admin_lifecycle_sweep(dry_run: int = 0, _admin=Depends(_require_admin_or_key)):
     """Manual/cron trigger for the daily lifecycle sweep. dry_run=1 counts only."""
     return _lifecycle_sweep(dry_run=bool(dry_run))
 
@@ -15757,6 +15775,58 @@ if os.getenv("FADE_SWEEP_ENABLED", "1") == "1":
                 print("LIFECYCLE-SWEEP error: %s" % _le)
             _lt.sleep(86400)
     threading.Thread(target=_lifecycle_daily_loop, daemon=True).start()
+
+
+# ── SEC-2 / DEPLOY-CHANNEL-1 (23 Jul 2026, David-approved) ────────────────────
+# HTTPS deploy for STATIC FRONTEND FILES ONLY, gated by env-only MS_DEPLOY_KEY
+# (never shipped to any client). The backend (main.py) is deliberately NOT
+# deployable here — backend changes always go through scp + systemd restart.
+MS_DEPLOY_KEY = os.environ.get("MS_DEPLOY_KEY", "")
+_DEPLOY_ROOT = "/var/www/marketsquare"
+_DEPLOY_WHITELIST = {
+    "index.html": "index.html", "terms.html": "terms.html",
+    "privacy.html": "privacy.html", "support.html": "support.html",
+    "admin.html": "admin.html",
+    "ms.js": "static/ms.js", "ms.css": "static/ms.css",
+    "wonders.json": "wonders.json",
+}
+
+class _DeployFileIn(BaseModel):
+    filename: str
+    content_b64: str
+    sha256: str
+
+@app.post("/admin/deploy-file")
+def admin_deploy_file(req: _DeployFileIn, x_deploy_key: str = Header(default=None)):
+    """Atomic whitelist-only static deploy. Keeps a .predeploy backup of the
+    previous version for instant rollback. Fail-closed when MS_DEPLOY_KEY unset."""
+    if not MS_DEPLOY_KEY or not x_deploy_key or x_deploy_key != MS_DEPLOY_KEY:
+        raise HTTPException(status_code=401, detail="Deploy key required.")
+    rel = _DEPLOY_WHITELIST.get((req.filename or "").strip())
+    if not rel:
+        raise HTTPException(status_code=400, detail="File not in deploy whitelist.")
+    try:
+        raw = base64.b64decode(req.content_b64, validate=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="content_b64 is not valid base64.")
+    if len(raw) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File exceeds 8MB cap.")
+    digest = hashlib.sha256(raw).hexdigest()
+    if digest != (req.sha256 or "").strip().lower():
+        raise HTTPException(status_code=400, detail="sha256 mismatch — refusing to write.")
+    dest = os.path.join(_DEPLOY_ROOT, rel)
+    tmp = dest + ".tmp-deploy"
+    try:
+        if os.path.exists(dest):
+            with open(dest, "rb") as f_old, open(dest + ".predeploy", "wb") as f_bak:
+                f_bak.write(f_old.read())
+        with open(tmp, "wb") as fh:
+            fh.write(raw)
+        os.replace(tmp, dest)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="write failed: %s" % exc)
+    _log.info("DEPLOY-FILE: %s (%d bytes, sha %s...)", rel, len(raw), digest[:12])
+    return {"written": rel, "bytes": len(raw), "sha256": digest}
 
 
 # ── DEMAND-LOOP-1: one-time boot sweep (EOF — all names now defined) ──────────

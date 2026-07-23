@@ -498,3 +498,5 @@ KEY FACTS FOR THE REGISTRATION SESSION:
 
 ## MODEL-COST-GUARD-1 — the anti-silent-killer guard (David's standing demand, 16 Jul 2026)
 Two rules, institutional: (1) The daily loop computes ACTUAL average $/photo from the spend logs and compares it to AI_PHOTO_COST_MODEL.xlsx's assumption — drift >20% goes in the morning brief as an amber line. (2) ANY change to an AI call site (prompt length, probe size, model, rounds, new call) MUST restate the unit cost in its CHANGELOG entry next to the quality claim — a quality upgrade without its price is an incomplete entry. Context: probe 896->1344 + verify loop + moderation clause moved photos from $4.80 to $13.89/1000 across five days with no budget restatement; David caught it, not the process.
+
+- [SEC] Post-launch auth refactor: migrate the 44 user-facing endpoints off the client-shipped shared API key onto per-user session auth (magic-link JWT); then retire ms_mk_2026_pretoria_admin entirely. Origin: SEC-1 containment, 23 Jul 2026.
