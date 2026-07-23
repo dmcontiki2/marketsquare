@@ -1,6 +1,11 @@
 # TrustSquare — Status
 
 ## Current Session
+2026-07-23 (Session 150 close): EVERYTHING SHIPPED AND VERIFIED LIVE — PEN-CAP-1, FADE-1, RESP-1
+(morning), EULA v1.10 on /terms + gate + modal, SEC-1 admin-key containment (leaked ms_mk_ key
+demoted to user-facing only), SEC-2 HTTPS deploy channel (first cloud deploy executed and proven).
+Server env carries MS_ADMIN_KEY / MS_DEPLOY_KEY (secrets in .secrets/, gitignored).
+
 2026-07-23 (Session 150, attended, David): TRUST + LIFECYCLE SHIP — PEN-CAP-1 (penalties now bite
 AFTER the 100 cap; David's 178-case gap closed; evidence ledger shows post-cap Penalties group),
 FADE-1 (fade-out engine finally implemented: 30/60/90-day windows per David's ruling, warn at

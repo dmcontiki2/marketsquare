@@ -1,3 +1,13 @@
+## 23 Jul 2026 (evening) — SHIPPED: EULA v1.10 + SEC-1 + SEC-2 all live and verified
+- David ran full deploy + server env one-liner. Verified from cloud: /terms serves v1.10 with
+  lifecycle sections (NOTE: public URL is /terms — /terms.html is a FastAPI 404, always was);
+  in-app gate + ms.js modal on v1.10; leaked key now 401 on admin endpoints; env-only admin key
+  runs lifecycle-sweep (dry-run all zeros); backend md5 972cb9a2 confirmed on server.
+- DEPLOY-CHANNEL-1 proven end-to-end: first cloud deploy executed (terms.html, 94,554 bytes,
+  sha256-verified, wrong-key 401). Gotcha for future runs: Cloudflare Browser Integrity Check
+  403s (error 1010) non-browser user agents — deploy client must send a browser-style UA.
+- Frontend deploys no longer require David's keyboard. Backend remains scp-only by design.
+
 ## 23 Jul 2026 (cont.) — SEC-1 + SEC-2: admin key containment + HTTPS deploy channel
 - **SEC-1:** the shared API key baked into shipped ms.js (client-readable by anyone) no longer
   carries admin power. Seven admin endpoints re-gated to admin JWT OR env-only MS_ADMIN_KEY
