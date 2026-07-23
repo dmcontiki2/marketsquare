@@ -270,7 +270,9 @@ EULA §2 aligned with live pricing ($0 / $5 / $20 / Agency free + verified) and 
 caps (2 / 10 / 30 / 10-base trust-graduated); warning nudge formalised at window−7.
 IMPLEMENTED 23 Jul 2026 in bea_main.py: daily `_lifecycle_sweep` (warn → fade → archive),
 `POST /admin/lifecycle-sweep`, `POST /listings/{id}/keep-live`; demo listings exempt.
-NOTE: the live in-app EULA (v1.3, ms.js `_EULA_HTML`) does NOT yet contain §§1–6 above —
-they must be inserted at the next EULA revision (lawyer has v1.9 draft).
+EULA v1.10 (23 Jul 2026, David-directed): lifecycle clauses inserted as EULA §§4.6–4.9 +
+§§14.5–14.6 across all surfaces (eula_clean/raw, terms.html, in-app gate, ms.js modal — the
+modal's stale v1.3 fork was regenerated from eula_clean, single source restored). Counsel
+review of v1.10 remains open (A6).
 
 *This document is the source of truth for listing state logic. All BEA endpoints, frontend state rendering, and admin tooling must conform to it. Update version number and date on any change. Architect agent arbitrates conflicts.*

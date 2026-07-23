@@ -1,4 +1,5 @@
 # deploy_files.txt - files for deploy_files.bat to ship (one per line, local|remote if renamed)
-# example from the EULA v1.9 ship:
+# EULA v1.10 ship (23 Jul 2026): lifecycle clauses on all surfaces
 terms.html
 marketsquare.html|index.html
+ms.js|static/ms.js

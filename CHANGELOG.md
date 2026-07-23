@@ -1,3 +1,14 @@
+## 23 Jul 2026 (cont.) — EULA v1.10: lifecycle clauses live on every surface
+- David-directed (pre-counsel, A6 open): listing lifecycle §4.6, tier caps §4.7 ($0/$5/$20 +
+  Agency free+verified), fade-out §4.8 (30/60/90, warn −7d, 14-day grace), introduction
+  responsiveness §4.9 (−5@48h, removal@96h), blocking causes B1–B6 §14.5 + appeals §14.6.
+- Surfaces: eula_clean.html + eula_raw.html + terms.html + marketsquare.html gate copy +
+  ms.js _EULA_HTML modal — the modal was a STALE v1.3 fork (drift class of Session 149's
+  finding); regenerated verbatim from eula_clean so all five now share one source, all v1.10.
+- check_pricing_canon.py: ALL IN LINE. Cache-buster ms.js v=367.
+- OPEN: users who accepted v1.9 are not re-prompted (acceptance gate is once-off) — pre-launch
+  user count tiny; counsel to advise on re-acceptance policy.
+
 ## 23 Jul 2026 (cont.) — FADE-1 + RESP-1: listing fade-out engine + gentle responsiveness penalties
 - **SHIPPED 06:28 (with PEN-CAP-1):** frontend v=366 + backend live; smoke GREEN; hotfix 51eec71
   ('import threading') after startup crash; ~10 min API outage 06:17–06:28 during the failed restart.
