@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Durability &amp; AI-Independence — Orchestration v2</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;
+--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;--gold:#9a6212;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55}
+.doc{max-width:880px;margin:0 auto;padding:26px 20px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:14px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 4px;font-size:24px;font-weight:700}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px;max-width:660px}
+header.hd .thesis{margin-top:12px;border-left:3px solid #7fd4bb;padding:5px 0 5px 13px;font-size:13.5px;color:#dce6f0}
+header.hd .thesis b{color:#fff}
+/* nav tabs */
+.nav{display:flex;gap:8px;margin-bottom:20px}
+.nav a{flex:0 0 auto;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--navy)}
+.nav a.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:26px 0 11px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:250px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px}
+.chip .tag{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal)}
+.chip b{display:block;font-size:13.5px;margin:3px 0 3px}
+.chip small{color:var(--muted);font-size:12.3px}
+/* ladder */
+.dir{font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);text-align:center;padding:3px 0}
+.rung{position:relative;border:1px solid var(--line);border-left:4px solid #d7dde4;border-radius:11px;padding:10px 14px;margin:5px 0;background:var(--card)}
+.rung .rn{font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--muted)}
+.rung .rt{font-size:13.5px;font-weight:700;margin:1px 0}
+.rung .rd{font-size:12px;color:var(--muted)}
+.rung.done{border-left-color:var(--green);background:var(--greenbg)}
+.rung.now{border-left-color:var(--amber);background:var(--amberbg)}
+.rung.top{border-left-color:var(--teal);background:var(--tealbg);border-style:dashed}
+.rung.bad{opacity:.75}
+.rung .bdg{position:absolute;top:10px;right:12px;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.bh{background:#cdebcf;color:var(--green)}.ba{background:#f3e2c1;color:var(--amber)}.bn{background:#eef1f4;color:var(--muted)}.bg{background:#cfeee3;color:var(--teal)}.br{background:#f0c4c4;color:var(--red)}
+.here{margin:2px 0;border:1.5px dashed var(--amber);border-radius:11px;padding:3px 0;text-align:center;font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);background:#fffaf1}
+code{font-size:11px;background:#eef2f6;color:var(--navy);padding:1px 5px;border-radius:5px;font-family:'Consolas',ui-monospace,monospace}
+/* loop */
+.loopwrap{display:flex;justify-content:center}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}.cap b{color:var(--teal)}
+.leg{display:flex;gap:15px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.leg span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.d{width:9px;height:9px;border-radius:50%;display:inline-block}
+/* status lanes */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+@media(max-width:760px){.sgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.sgrid{grid-template-columns:1fr}}
+.s{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--card);border-left:4px solid}
+.s .sh{display:flex;align-items:center;gap:7px}.s h4{font-size:12.8px;margin:0}
+.s .lv{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-left:auto}
+.s p{font-size:11.3px;color:var(--muted);margin:6px 0 0}
+.s.g{border-left-color:var(--green)}.s.g .lv{color:var(--green)}
+.s.a{border-left-color:var(--amber)}.s.a .lv{color:var(--amber)}
+.s.r{border-left-color:var(--red)}.s.r .lv{color:var(--red)}
+/* nirvana steps */
+.step{display:flex;gap:13px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px;border-left:4px solid var(--blue)}
+.step .num{flex:none;width:30px;height:30px;border-radius:9px;background:var(--navy);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center}
+.step .b b{font-size:14px}.step .b .meta{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.04em}
+.step .b small{display:block;color:var(--muted);font-size:12.3px;margin-top:3px}
+.step.fin{border-left-color:var(--teal);background:var(--tealbg)}
+.step.fin .num{background:var(--teal)}
+.foot-nirvana{background:var(--navy);color:#eaf1f8;border-radius:14px;padding:16px 20px;margin-top:8px;font-size:13.5px}
+.foot-nirvana b{color:#7fd4bb}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare</div>
+  <h1>Durability &amp; AI-Independence</h1>
+  <p>The strategy view of the self-healing system: what the app's AI should depend on to survive years and moves, and the loop that stops the same complaint from ever being fought twice.</p>
+  <div class="thesis">The model is the <b>least</b> important variable. Durability = a <b>portable AI substrate</b> + a <b>closed maintenance loop</b> + <b>knowledge in the repo</b> — so any model picks up where the last left off.</div>
+</header>
+
+<div class="nav">
+  <a href="cockpit.html">🛰️ Control Room</a>
+  <a href="durability_map.html" class="active">🧭 Durability Map</a>
+</div>
+
+<h2>Two AIs — don't confuse them</h2>
+<div class="chips">
+  <div class="chip"><div class="tag">AI #1 · Runtime</div><b>The AI inside the product</b><small>Coach, search, quality scoring — what customers touch and what you pay per token for. This is the durability decision: portable, price-stable, un-bannable.</small></div>
+  <div class="chip"><div class="tag">AI #2 · Build &amp; maintain</div><b>The AI that helps you build</b><small>Where "we lose when a new model ships" bites. Cured not by locking a model, but by putting the app's knowledge in the repo so churn stops costing you.</small></div>
+</div>
+
+<h2>A · Durability ladder — the runtime AI</h2>
+<div class="dir">▲ more durable · portable · sovereign</div>
+<div class="rung top"><span class="bdg bg">Endgame</span><div class="rn">RUNG 4 · SOVEREIGN</div><div class="rt">Self-host on the Karoo farm 🌾</div><div class="rd">Own the weights and the compute. Off-grid, off-jurisdiction, un-bannable. The architecture is built to reach here — don't jump early.</div></div>
+<div class="rung"><span class="bdg bn">Next</span><div class="rn">RUNG 3 · MULTI-HOST</div><div class="rt">Same open model from ≥ 2 hosts</div><div class="rd">No single vendor can cut you off or spike your price. Failover is a config flag, not a rewrite.</div></div>
+<div class="here">● You are here — foundation set, climbing ●</div>
+<div class="rung now"><span class="bdg ba">In progress</span><div class="rn">RUNG 2 · PINNED &amp; VENDOR-NEUTRAL</div><div class="rt">Pin one open-weight model + version</div><div class="rd">Constant cost, no silent model drift. You hold Scaleway (EU, open models) + OpenAI keys already. To do: set the pinned default &amp; ensure no feature code calls a vendor SDK directly.</div></div>
+<div class="rung done"><span class="bdg bh">Done</span><div class="rn">RUNG 1 · ABSTRACTED</div><div class="rt">All AI behind one swap seam</div><div class="rd">You built this: <code>ai_provider.py</code> · <code>ai_active</code> flag · tiered routing in <code>ai_service_tiers.py</code>. The hard part is done.</div></div>
+<div class="rung bad"><span class="bdg br">Avoid</span><div class="rn">RUNG 0 · FRAGILE</div><div class="rd">One proprietary frontier model, called directly from feature code. Price you don't control, a ban you can't appeal, a dependency you can't carry to the farm.</div></div>
+<div class="dir">▼ fragile · locked-in · rentable only</div>
+
+<h2>B · The maintenance loop — fix the class, not the instance</h2>
+<div class="loopwrap">
+<svg width="100%" viewBox="0 0 400 350" role="img" aria-label="Closed maintenance loop">
+  <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0f6e56"/></marker></defs>
+  <circle cx="200" cy="175" r="118" fill="none" stroke="#e3e7ec" stroke-width="26"/>
+  <path d="M 200 57 A 118 118 0 1 1 82.5 145" fill="none" stroke="#0f6e56" stroke-width="2.5" stroke-dasharray="5 5" marker-end="url(#ah)" opacity=".85"/>
+  <text x="200" y="168" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0c1a2e">Close the CLASS,</text>
+  <text x="200" y="186" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0c1a2e">not the instance</text>
+  <circle cx="200" cy="57" r="21" fill="#2f7d32"/><text x="200" y="61" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">1</text><text x="200" y="26" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Detect</text>
+  <circle cx="308" cy="116" r="21" fill="#9a6212"/><text x="308" y="120" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">2</text><text x="356" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Repro-</text><text x="356" y="126" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">duce</text>
+  <circle cx="308" cy="234" r="21" fill="#185fa5"/><text x="308" y="238" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">3</text><text x="356" y="238" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Fix</text>
+  <circle cx="200" cy="293" r="21" fill="#185fa5"/><text x="200" y="297" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">4</text><text x="200" y="330" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Verify · test + live</text>
+  <circle cx="92" cy="234" r="21" fill="#9a6212"/><text x="92" y="238" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">5</text><text x="44" y="238" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Guard</text>
+  <circle cx="92" cy="116" r="21" fill="#185fa5"/><text x="92" y="120" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">6</text><text x="44" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Ship</text><text x="44" y="126" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">safe</text>
+</svg>
+</div>
+<div class="cap"><b>Step 5 is the one that changes everything.</b> Your Prevent phase already exists — make it mandatory: no fix is "done" until it leaves a class-guard behind (evidence-true → pre-deploy, done today). Closed classes stay closed.</div>
+<div class="leg"><span><span class="d" style="background:#2f7d32"></span>strong</span><span><span class="d" style="background:#9a6212"></span>the two keystones still to build</span><span><span class="d" style="background:#185fa5"></span>in place, growing</span></div>
+
+<h2>Where you already stand — ~70% there</h2>
+<div class="sgrid">
+  <div class="s g"><div class="sh"><h4>Detect</h4><span class="lv">Have</span></div><p><code>/pulse</code> · <code>/feedback</code> · <code>/fixback</code> · the v2 Detect engine.</p></div>
+  <div class="s a"><div class="sh"><h4>Reproduce</h4><span class="lv">Keystone</span></div><p><code>/fix</code> drives the computer; <code>seed_demo_data</code> exists — but no fixture to <b>replay any failing scenario</b> on demand.</p></div>
+  <div class="s g"><div class="sh"><h4>Fix (agent)</h4><span class="lv">Have</span></div><p>v2 Fix engine · <code>/fix</code> autofix · <code>Autonomous_Maintenance_Agent</code>.</p></div>
+  <div class="s g"><div class="sh"><h4>Verify</h4><span class="lv">Growing</span></div><p><code>/ship</code> smoke · <code>predeploy_check</code> · first evidence-true test today.</p></div>
+  <div class="s a"><div class="sh"><h4>Guard the class</h4><span class="lv">Keystone</span></div><p>The v2 Prevent engine exists — make it the rule: every fix leaves an invariant + test. Started today.</p></div>
+  <div class="s g"><div class="sh"><h4>Record</h4><span class="lv">Strong</span></div><p><code>CHANGELOG</code> · <code>CHANGE_REGISTER</code> · <code>STATUS</code> · <code>TRUST_SCORE_CRITERIA</code>.</p></div>
+  <div class="s g"><div class="sh"><h4>Safe deploy</h4><span class="lv">Have</span></div><p>Rollback tag + smoke + auto-rollback in <code>/ship</code>; pre-deploy gate blocks bad builds.</p></div>
+  <div class="s r"><div class="sh"><h4>Closed loop, live</h4><span class="lv">The gap</span></div><p>The v2 conductor runs <b>SHADOW</b> (deploys nothing). Cutover to LIVE on the green lane — on a box you own — is the missing keystone.</p></div>
+  <div class="s g"><div class="sh"><h4>Repo-as-memory</h4><span class="lv">Growing</span></div><p><code>PRINCIPLE_REQUIREMENTS</code> · specs · guards. The cure for "we lose every new model."</p></div>
+</div>
+
+<h2>The 5 steps to Nirvana 🧘 — toward the goal</h2>
+<div class="step"><div class="num">1</div><div class="b"><b>Pin the substrate</b> <span class="meta">· rung 1 → 2 · an afternoon</span><small>Set a pinned open-weight default in <code>ai_provider.py</code>; grep out any feature that still calls a vendor SDK directly. Removes model drift and starts killing ban/price risk.</small></div></div>
+<div class="step"><div class="num">2</div><div class="b"><b>Every fix leaves a guard</b> <span class="meta">· make Prevent mandatory</span><small>No fix is "done" until it ships a class-level test into <code>predeploy_check</code> — the way evidence-true landed today. This is what stops complaint #100 from ever reaching a customer.</small></div></div>
+<div class="step"><div class="num">3</div><div class="b"><b>Reproduction on tap</b> <span class="meta">· close the amber keystone</span><small>A fixture/seed harness that replays any failing scenario on demand, so the Fixer verifies against reality instead of inferring. Kills the "fix it twice, fight it live three more times" battle.</small></div></div>
+<div class="step"><div class="num">4</div><div class="b"><b>Multi-host failover</b> <span class="meta">· rung 2 → 3</span><small>The same open model served from ≥ 2 hosts, switchable by config flag. Un-bannable, price-stable, portable to any region at the drop of a hat.</small></div></div>
+<div class="step fin"><div class="num">5</div><div class="b"><b>Close the loop on your own box</b> <span class="meta">· rung 3 → 4 · Nirvana</span><small>Flip the v2 conductor from SHADOW to LIVE on the green lane — then onto self-hosted weights on the Karoo. Detect → reproduce → fix → verify → guard → ship, unattended, on hardware you own and no one can switch off.</small></div></div>
+<div class="foot-nirvana">The top of the ladder and the last step of the loop are the <b>same place</b>: one box you control, that maintains itself, that nobody can switch off. Your instinct and your long-term vision were pointing at the same destination all along — <b>this map just names it.</b></div>
+
+<p class="foot">Orchestration v2 · Durability &amp; AI-Independence · companion to the Control Room · small step by small step</p>
+</div></body></html>

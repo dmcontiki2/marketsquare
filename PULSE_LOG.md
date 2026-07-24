@@ -18,3 +18,4 @@
 2026-07-22 (follow-up) 🟢 amber resolved — edge caching enabled; homepage 0.2–0.3s (cf-cache HIT), purge-on-deploy fixed (stale CF_ZONE_ID was root cause)
 2026-07-23 🟢 trustsquare.co up · 1.3s · SSL 63d · /health ok · /payment/test ok
 2026-07-23 19:03 🟢 trustsquare.co up · 1.5s · SSL 62d · /health ok · /payment/test ok
+🟢 trustsquare.co up · 1.2s · SSL 62d · /health ok · /payment/test ok  (2026-07-24)

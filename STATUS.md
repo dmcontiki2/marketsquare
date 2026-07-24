@@ -4,6 +4,8 @@
 
 
 ## Current Session
+2026-07-24 (attended, David): ADVENTURES WOW PASS — +5 photos to each Adventures SUPER ADVERT (270 game drive, 271 lodge) via Higgsfield/Nano Banana Pro with reference-image consistency, plus an interactive Dinokeng Leaflet map embedded in both listing pages ("Explore the reserve"). Staged + armed (deploy steps 3c-map/3d/3f, RUN_ADV_PHOTOS_ONCE.flag). Awaiting the guarded deploy on David's machine.
+
 2026-07-23 (Session 150 close): EVERYTHING SHIPPED AND VERIFIED LIVE — PEN-CAP-1, FADE-1, RESP-1
 (morning), EULA v1.10 on /terms + gate + modal, SEC-1 admin-key containment (leaked ms_mk_ key
 demoted to user-facing only), SEC-2 HTTPS deploy channel (first cloud deploy executed and proven).

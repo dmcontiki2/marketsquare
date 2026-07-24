@@ -223,6 +223,19 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3c-map: Deploy interactive Dinokeng map (-> /static/) ──
+:: ADV-MAP-1 (24 Jul 2026, David): self-contained Leaflet map embedded in the two
+:: Adventures super-advert listing pages via iframe.
+echo  [3c-map] Deploying adventures Dinokeng map...
+scp "%PROJECT%\adventures_dinokeng_map.html" %SERVER%:%REMOTE%/static/adventures_dinokeng_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_dinokeng_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
 :: ── Step 3d: Deploy SUPER exemplar photos (assets/super -> /static/super/) ──
 :: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
 :: Permanent step so listing photo sets always ship with the site.
@@ -261,6 +274,31 @@ if exist "%PROJECT%\RUN_SUPER_FIX_ONCE.flag" (
     )
     echo.
 )
+
+:: ── Step 3f: ONE-SHOT adventures super-advert photo expansion (flag-guarded) ──
+:: ADV-SUPER-PHOTOS-1 (24 Jul 2026, David): add 5 new Higgsfield photos to EACH of the
+:: two Adventures exemplars (270 game drive, 271 lodge) - extends photo_urls + [photos:].
+:: Idempotent; guarded by RUN_ADV_PHOTOS_ONCE.flag; deletes the flag after a clean apply.
+if exist "%PROJECT%\RUN_ADV_PHOTOS_ONCE.flag" (
+    echo  [3f] ONE-SHOT: adventures super-advert photo expansion...
+    scp "%PROJECT%\scripts\expand_adventure_super_photos.py" %SERVER%:%REMOTE%/expand_adventure_super_photos.py
+    if %errorlevel% neq 0 (
+        echo  ERROR: SCP failed for expand_adventure_super_photos.py - fix NOT run, flag kept.
+    ) else (
+        echo  --- dry run ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 expand_adventure_super_photos.py"
+        echo  --- apply ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 expand_adventure_super_photos.py --apply"
+        if %errorlevel% equ 0 (
+            del "%PROJECT%\RUN_ADV_PHOTOS_ONCE.flag"
+            echo  [OK] Adventures photo expansion applied - one-shot flag removed.
+        ) else (
+            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
+        )
+    )
+    echo.
+)
+
 
 :: ── Step 3b: Deploy World Heritage data (wonders.json) ────
 echo  [3b] Deploying Wonders data (wonders.json -^> wonders.json)...
