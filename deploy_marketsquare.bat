@@ -223,13 +223,13 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
-:: ── Step 3c-map: Deploy interactive Dinokeng map (-> /static/) ──
+:: ── Step 3c-map: Deploy interactive reserve map (-> /static/) ──
 :: ADV-MAP-1 (24 Jul 2026, David): self-contained Leaflet map embedded in the two
 :: Adventures super-advert listing pages via iframe.
-echo  [3c-map] Deploying adventures Dinokeng map...
-scp "%PROJECT%\adventures_dinokeng_map.html" %SERVER%:%REMOTE%/static/adventures_dinokeng_map.html
+echo  [3c-map] Deploying adventures reserve map...
+scp "%PROJECT%\adventures_reserve_map.html" %SERVER%:%REMOTE%/static/adventures_reserve_map.html
 if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_dinokeng_map.html.
+    echo  ERROR: SCP failed for adventures_reserve_map.html.
     pause
     exit /b 1
 )
