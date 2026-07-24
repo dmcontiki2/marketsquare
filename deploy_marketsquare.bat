@@ -103,6 +103,32 @@ if not exist "%PROJECT%\scripts\sync_assets.ps1" (
 echo  All required files found locally.
 echo.
 
+:: -- [0c] Concurrency LOCK (added 24 Jul 2026) ---------------------------------
+:: Refuse to run if another TrustSquare deploy is already in progress. EVERY path
+:: that runs this batch (/TSL, /ship, /start, or a bare double-click) passes here,
+:: so two uploads can never collide. A crashed run auto-expires after the lock TTL
+:: (default 30 min). The lock is released at the normal end of this script (Step 8).
+if not exist "%PROJECT%\tsl_gate.py" goto :tsl_lock_skip
+set "PYEXE="
+where python >nul 2>&1 && set "PYEXE=python"
+if not defined PYEXE (
+    where py >nul 2>&1 && set "PYEXE=py"
+)
+if not defined PYEXE goto :tsl_lock_skip
+echo  [0c] Acquiring deploy lock...
+%PYEXE% "%PROJECT%\tsl_gate.py" acquire
+if errorlevel 1 (
+    echo  ABORT: another TrustSquare deploy is already running ^(lock held^).
+    echo  If you are certain none is, delete "%PROJECT%\.tsl.lock" and retry.
+    pause
+    exit /b 1
+)
+set "TSL_LOCK_HELD=1"
+goto :tsl_lock_done
+:tsl_lock_skip
+echo  [0c] Deploy lock skipped ^(tsl_gate.py or python not found^) - continuing.
+:tsl_lock_done
+
 :: ── Step 0: Auto-bump cache-buster (?v=N) on ms.js + ms.css ──
 :: The browser caches each ?v= URL forever (nginx 'immutable'), so a deploy only
 :: reaches users when the version number changes. Bumped automatically here so it
@@ -572,6 +598,13 @@ powershell -NoProfile -Command ^
   "git push *> $null;" ^
   "if ($LASTEXITCODE -eq 0) { Write-Host '   [OK] Pushed to remote.' } else { Write-Host '   [WARN] git push failed - commit is safe locally; push manually when able.' }"
 echo.
+echo.
+:: -- [8/8] Release the deploy lock (only if THIS run acquired it) --
+if not defined TSL_LOCK_HELD goto :tsl_norelease
+if not defined PYEXE goto :tsl_norelease
+echo  [8/8] Releasing deploy lock...
+%PYEXE% "%PROJECT%\tsl_gate.py" release
+:tsl_norelease
 echo.
 echo  ============================================================
 echo   DEPLOY COMPLETE
