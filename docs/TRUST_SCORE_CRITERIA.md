@@ -427,3 +427,43 @@ in the Penalties group); detection runs in the daily `_lifecycle_sweep` (same en
 as Fade Out), with warning email at −5 and removal emails at 96h.
 
 *End Amendment v1.3*
+
+
+## Amendment v1.4 — Trust and Quality are separate axes (fraud firewall)
+**Decision: David · 24 July 2026 · extends §6 Anti-Manipulation Principles**
+
+**Ruling.** The Trust Score must never award points for listing quality, compliance,
+or advert completeness. Trust measures the *seller* — verified identity, credentials,
+and system-calculated track record. Listing quality is a separate axis: the **Quality
+Score / Agent Score (SPS)**, the "technical, regulatory & safety completeness of the
+advert."
+
+**Why (the fraud rationale, in David's words).** "A good pedantic fraudster can
+provide the absolute best listing of a non-existent product and maybe push himself into
+a Trust Score of 90, luring people with a false sense of peace." Polish is grindable by
+anyone; trust must stay non-fungible with presentation, or a con artist can buy a
+verified-looking halo. Listing quality is rewarded where it belongs — in ranking — and
+never inflates the safety signal.
+
+**How the two axes combine (kept apart on purpose).**
+- **Trust Score (TS)** — earned/verified facts about the seller; protects the buyer;
+  cannot be raised by making a nicer advert.
+- **Quality Score / SPS** — per-advert quality; the lever an honest agent *can* pull.
+- **Rank = 50% TS + 50% SPS.** A verified, low-risk agent who also produces clean,
+  compliant adverts rises and wins more introductions than a sloppier competitor — so
+  agents are incentivised to keep improving, the marketplace looks more professional,
+  and none of it leaks into the trust badge. Win-win by design.
+- **Buyer-facing guardrail.** Because polish still creates a psychological halo, the UI
+  must keep stating, next to the badge, that trust certifies *who the seller is*, not
+  how nice the listing looks ("Verified by TrustSquare — not self-reported").
+
+**Credential vs. advert (so the distinction is unambiguous).** A *verified compliance
+certificate the seller holds* — e.g. a category "regulator compliance" or "health &
+safety" cert — is a trust credential and legitimately scores. The *quality or
+compliance of a given advert* never does.
+
+**Enforcement (24 Jul 2026, bea_main.py).** An invariant comment beside `_TRUST_SIGNALS`
+plus `test_trust_evidence_true.py`, wired into `predeploy_check.py`, which fails the
+pre-deploy check if a listing-quality / SPS token ever appears in the trust catalog.
+
+*End Amendment v1.4*

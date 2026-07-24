@@ -7902,6 +7902,12 @@ def _trust_tier(score: int) -> dict:
 # 'universal' | 'track_record' | 'category.<cat_key>'. Numbers below
 # come straight out of TRUST_SCORE_CRITERIA.md — do not edit without
 # updating the spec first.
+# INVARIANT (TRUST_SCORE_CRITERIA.md §6 / Amendment v1.4, 24 Jul 2026): the Trust
+# Score measures the SELLER - verified identity, credentials, system-calculated track
+# record - NEVER listing quality/compliance/SPS. A flawless advert for a non-existent
+# product must not buy a trust halo. Listing quality lives on the separate Quality/SPS
+# axis (Rank = 50% TS + 50% SPS). Do NOT add any listing-quality signal to this catalog.
+# (Guarded by test_trust_evidence_true.py -> predeploy_check.py.)
 _TRUST_SIGNALS = {
     # ── Group 1 · Universal (max 30) ─────────────────────────
     "universal.id_verified": {

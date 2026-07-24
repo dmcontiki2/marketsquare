@@ -57,6 +57,19 @@ def test_frontend_header_is_reconcilable():
     assert "querySelector('.cv-trust-num')" in js, \
         "hero score (.cv-trust-num) is never synced to the computed evidence total"
 
+def test_trust_catalog_excludes_listing_quality():
+    """Fraud firewall (TRUST_SCORE_CRITERIA Amendment v1.4): listing quality / SPS must
+    never score trust points - a flawless advert for a fake product must not buy a trust
+    halo. The _TRUST_SIGNALS catalog (Universal + Track Record) must hold no quality/SPS
+    signal. (Category *credential* certs are a separate, legitimate thing.)"""
+    src = _read("bea_main.py")
+    i = src.index("_TRUST_SIGNALS = {")
+    j = src.index("_CATEGORY_SIGNALS = {", i)
+    catalog = src[i:j].lower()
+    for token in ("quality", "avg_listing_quality", "listing_quality"):
+        assert token not in catalog, \
+            "listing-quality/SPS token %r in the trust catalog -> trust and quality merged" % token
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
