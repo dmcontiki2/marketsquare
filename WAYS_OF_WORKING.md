@@ -112,3 +112,12 @@ read it before touching any video work. Summary of the proven path:
 When the way-of-working changes, update THIS file in the same session (same spirit as the
 canon/demo-mode rules). It is the carry-over surface — if it drifts, the next session inherits
 the drift.
+
+## Open loops — one ledger, Claude is the integrator (added 2026-07-24)
+
+`OPEN_LOOPS.md` is the single source of truth for what is open. The rule is structural, not a
+reminder: **read it first every session, write every opened/closed loop back to it before the
+session ends.** Ranked — David reads top-down and stops when he stops caring; he never sorts nor
+correlates across files or parallel sessions. Because it lives on disk it is the shared memory
+between parallel sessions: a loop staged in one session is visible to another. A stale ledger
+(disagreeing with STATUS) is a visible bug. Success = David's rounds go DOWN.

@@ -1,6 +1,10 @@
 # TrustSquare — Project Intelligence
 
 ## ⚠️ ON SESSION START — adopt the operating agreement (do this first)
+**Read `OPEN_LOOPS.md` FIRST — it is the single source of truth for what is open on TrustSquare.**
+It is ranked; tell David the top loop and stop there. Any loop you open or close, write it BACK to
+`OPEN_LOOPS.md` before the session ends — a loop that lives only in a chat transcript is lost, and David
+then has to be the integrator across sessions (the exact failure this file exists to end). Then:
 **Read `WAYS_OF_WORKING.md` and adopt it immediately.** It is the durable operating agreement
 between David and Claude (approvals model, Chrome/browser method, Higgsfield video pipeline,
 what Claude can't do). Chat history does NOT carry across sessions and claude-mem can fail

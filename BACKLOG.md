@@ -1,4 +1,7 @@
 # TrustSquare · Feature & Fix Backlog
+> **📍 Active/live loops live in `OPEN_LOOPS.md` (canonical).** This file is the durable
+> "do it later" backlog only. If something is open NOW, it belongs in `OPEN_LOOPS.md`.
+
 *Updated S140 · 18 June 2026 — added the Deferred items list (surfaced in the daily brief)*
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 

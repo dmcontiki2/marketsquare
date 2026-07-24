@@ -88,6 +88,12 @@ current state, anything flagged or awaiting him, and the next steps. Include the
 "last session recap" from the claude-mem digest (Step 3) so he sees both the documented status
 and what was actually worked on most recently.
 
+## Step 5b — Read OPEN_LOOPS.md (the open-threads ledger)
+
+Read `C:\Users\David\Projects\MarketSquare\OPEN_LOOPS.md` — the single canonical list of open
+loops, ranked. Report ONLY the top live loop plus a count of the rest in the Step 5 summary. This is
+the answer to "what's open?"; do not reconstruct it from STATUS.md prose.
+
 ## Step 6 — Open the app in Chrome
 
 Open the local buyer app in Chrome with the Claude-in-Chrome tools (not computer-use —

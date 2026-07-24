@@ -1,4 +1,6 @@
 # Next Session Prompt — Expand World Heritage / Wonders List (+200 sites)
+> **📍 Deferred content task, tracked in `BACKLOG.md` → Deferred items.** Live loops live in `OPEN_LOOPS.md`.
+
 
 **Goal:** Add at least **200 new sites** to the Wonders/World Heritage content layer, taking the total from the confirmed **120 base → ~320**, so that listings in well-covered areas link to a rich set of nearby sites (8–15+ candidates within radius), not just the 2–3 they currently show. Prioritise density in and around the **launch region (South Africa + Southern/East Africa)** first, then global breadth.
 

@@ -345,7 +345,10 @@ async function loadLiveListings(retryCount) {
           beds    = (l.beds    && l.beds    > 0) ? l.beds    : (desc.match(/(\d+)[-\s]*bed/i)    ? parseInt(desc.match(/(\d+)[-\s]*bed/i)[1])    : 0);
           baths   = (l.baths   && l.baths   > 0) ? l.baths   : (desc.match(/(\d+)[-\s]*bath/i)   ? parseInt(desc.match(/(\d+)[-\s]*bath/i)[1])   : 0);
           garages = (l.garages && l.garages > 0) ? l.garages : (desc.match(/(\d+)[-\s]*garage/i) ? parseInt(desc.match(/(\d+)[-\s]*garage/i)[1]) : 0);
-          if(l.listing_type) listingType = l.listing_type === 'For Rent' ? 'rent' : 'sale';
+          // BEDS-PUBLISH-1: tolerate every stored spelling — 'For Rent', 'To Rent',
+          // 'To Let', 'Commercial Rental' all mean rent (=== 'For Rent' silently
+          // flipped sell-flow rentals to 'For Sale' badges).
+          if(l.listing_type) listingType = /rent|let/i.test(l.listing_type) ? 'rent' : 'sale';
           else if(/for rent|per month|monthly rent|to let|to-let|rental/i.test(desc)) listingType='rent';
           else if(/for sale|asking price|selling price/i.test(desc)) listingType='sale';
           const _furSrc=((l.title||'')+' '+desc);
@@ -2131,9 +2134,14 @@ function advCatLabel(l){
   const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
   const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
   const match = cats.find(c=>c.key===(l.experience_type||l.accommodation_type||''));
-  return match ? match.icon+' '+match.name : (isAccom ? '🏕 Accommodation' : '🌄 Experiences');
+  return match ? match.icon+' '+match.name : (isAccom ? ADV_SUBCAT_LABELS.adventures_accommodation : ADV_SUBCAT_LABELS.adventures_experiences);
 }
 
+/* JNR-FIX-6 (23 Jul 2026, David Jnr feedback; re-applied 24 Jul after overnight revert):
+   SINGLE SOURCE OF TRUTH for the Adventures sub-category display labels. Every
+   user-facing 'Stays'/'Experiences' string must read from here — never hardcode
+   '🏕 Accommodation' anywhere else. That drift made the browse pill say 'Stays'
+   while the card and detail said 'Accommodation'. Internal filter keys stay 'adventures_*'. */
 const ADV_SUBCAT_LABELS = {
   adventures_accommodation:'🏕 Stays',
   adventures_experiences:'🌄 Experiences',
@@ -2750,7 +2758,32 @@ function setViewMode(mode){
   document.getElementById('btn-view-map').classList.toggle('active',mode==='map');
   document.getElementById('listing-grid').style.display=mode==='grid'?'':'none';
   document.getElementById('listing-map').style.display=mode==='map'?'':'none';
-  if(mode==='map') renderMap();
+  if(mode==='map'){
+    renderMap();
+    // MAP-FIX-1 (23 Jul 2026, Maroushka feedback): Leaflet initialised while the
+    // container was display:none renders a broken/grey map — recalc once visible.
+    if(_leafletMap) setTimeout(function(){ try{_leafletMap.invalidateSize();}catch(e){} },60);
+  }
+}
+
+/* MAP-FIX-1 (23 Jul 2026, Maroushka feedback): "the map function did not take me
+   to a map to see the area" — the listing detail's location row now opens the
+   browse map centred on the listing's own (or suburb) coordinates. */
+function showListingAreaMap(id){
+  var l=LISTINGS.find(function(x){return String(x.id)===String(id);});
+  if(!l){ goTo('browse'); setViewMode('map'); return; }
+  var lat=l.listing_lat||l.suburb_lat, lng=l.listing_lng||l.suburb_lng;
+  goTo('browse');
+  setViewMode('map');
+  setTimeout(function(){
+    try{
+      if(_leafletMap){
+        _leafletMap.invalidateSize();
+        if(lat!=null&&lng!=null) _leafletMap.setView([lat,lng],14);
+      }
+    }catch(e){}
+  },120);
+  if(lat==null&&typeof showToast==='function') showToast('Showing the area map — this listing has no pinned location yet');
 }
 
 function renderMap(){
@@ -3567,6 +3600,26 @@ function openBEASellerProfile(l) {
          '<div style="font-size:16px;font-weight:800;color:var(--accent,#1e7d4f);">'+d.computed_total+' / 100</div></div>';
       if(d.next) h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.4;">\u2192 '+d.next+'</div>';
       el.innerHTML=h;
+      /* JNR-FIX-2 (24 Jul 2026, David Jnr feedback): the headline Trust Score must
+         equal the evidence total on the same page — he saw 90 over an 85 list.
+         The evidence total is the single source; sync the headline to it on load. */
+      try{ if(typeof d.computed_total==='number'){ var _ct=d.computed_total, _tt=trustTier(_ct), _e;
+        _e=document.getElementById('tscore-'+l.id);   if(_e){ _e.textContent=_ct;        _e.style.color=_tt.c; }
+        _e=document.getElementById('tlabel-'+l.id);   if(_e){ _e.textContent=_tt.label;  _e.style.color=_tt.c; }
+        _e=document.getElementById('tbarfill-'+l.id); if(_e){ _e.style.width=_ct+'%';     _e.style.background=_tt.c; }
+        _e=document.getElementById('trustblk-'+l.id); if(_e){ _e.style.background=_tt.bg; _e.style.borderColor=_tt.c+'30'; }
+        /* EVIDENCE-TRUE (24 Jul 2026): also reconcile the seller-profile HERO.
+           It paints .cv-trust-* by CLASS with no id, so the id-based sync above
+           only reached the listing-detail block - which is exactly why the 87
+           header sat over the 50 evidence list. Query inside #screen-seller-cv
+           so there is no duplicate-id clash with the detail view. */
+        var _sc=document.getElementById('screen-seller-cv');
+        if(_sc){
+          var _hn=_sc.querySelector('.cv-trust-num');   if(_hn){ _hn.textContent=_ct; }
+          var _hl=_sc.querySelector('.cv-trust-label'); if(_hl){ _hl.textContent=_tt.label; }
+          var _hf=_sc.querySelector('.cv-trust-fill');  if(_hf){ _hf.style.width=_ct+'%'; _hf.style.background=_tt.c; }
+        }
+      } }catch(_e){}
     }).catch(function(){});
     fetch(BEA_URL+'/sellers/summary/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(s){
       const el=document.getElementById('bea-sellersum-'+l.id); if(!el) return;
@@ -3687,8 +3740,8 @@ function openDetail(id){
   // Adventures category display label + price formatting
   const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences'||l.cat==='Adventures';
   const isCars = l.cat==='Cars';   // CARS-SPEC-1: cars share the gallery thumb strip
-  const catDisplayLabel = l.cat==='adventures_accommodation' ? '🏕 Accommodation'
-    : l.cat==='adventures_experiences' ? '🌄 Experiences'
+  const catDisplayLabel = l.cat==='adventures_accommodation' ? ADV_SUBCAT_LABELS.adventures_accommodation
+    : l.cat==='adventures_experiences' ? ADV_SUBCAT_LABELS.adventures_experiences
     : l.cat;
   const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
   const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
@@ -3753,7 +3806,7 @@ function openDetail(id){
       </div>
       ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;margin-bottom:6px;">★ SUPER ADVERT — the benchmark listing for this category</div>':''}
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
-      <div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''}</div></div>
+      <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
@@ -3765,9 +3818,9 @@ function openDetail(id){
         </div>
       </div>
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
-      <div class="trust-block" style="background:${t.bg};border-color:${t.c}30;">
-        <div><div class="tscore" style="color:${t.c};">${l.trust}</div><div class="tlabel" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
-        <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
+      <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
+        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
+        <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
       </div>
 
       <div id="detail-price-check-${id}" style="margin-bottom:14px;display:none;">
@@ -3776,7 +3829,7 @@ function openDetail(id){
         <div id="detail-pc-chips-${id}"></div>
         <div id="detail-pc-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>
-      ${(l.cat==='Property'||l.cat==='Estate Agents'||l.cat==='Accommodation') ? `
+      ${(l.cat==='Property'||l.cat==='Estate Agents'||l.cat==='Accommodation') && l.listingType!=='rent' ? `
       <div id="detail-yield-${id}" style="margin-bottom:14px;display:none;">
         <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:2px;font-family:'Syne',sans-serif;">📈 Investor Yield Calculator</div>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Gross rental yield — choose how precise you need it.</div>
@@ -3864,7 +3917,7 @@ function openDetail(id){
   goTo('detail');
   loadDetailWonders(l);
   loadDetailPois(l);
-  tvsInitDetail(id, l.cat);
+  tvsInitDetail(id, l.cat, l.listingType);
   if (photos.length > 1) {
     const stripEl = document.getElementById('pstrip-' + id);
     if (stripEl) {
@@ -3890,10 +3943,12 @@ function openDetail(id){
 
 // ── AI3: Buyer Price Check (Session 73) ──────────────────────────────────────
 // -- Tiered Value Selector (TVS) chip selector + tier-aware checks (STEP 4) ----
-function tvsInitDetail(id, cat){
+function tvsInitDetail(id, cat, listingType){
   try{
     tvsLoadService(id,'fair_price','detail-price-check-'+id,'detail-pc-chips-'+id);
-    if(cat==='Property'||cat==='Estate Agents'||cat==='Accommodation')
+    // RENTAL-GUIDE-1 (23 Jul 2026, Maroushka feedback): an investor yield calculator
+    // has no use on a rental listing — it just clutters and confuses tenants.
+    if((cat==='Property'||cat==='Estate Agents'||cat==='Accommodation') && listingType!=='rent')
       tvsLoadService(id,'yield','detail-yield-'+id,'detail-yield-chips-'+id);
   }catch(e){}
 }
@@ -5382,7 +5437,7 @@ function sobResetEulaGate() {
       _enote = document.createElement('div');
       _enote.id = 'sob-eula-signed-note';
       _enote.style.cssText = 'background:rgba(52,211,153,.08);border:1.5px solid rgba(52,211,153,.3);border-radius:10px;padding:12px 14px;margin-bottom:4px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;';
-      _enote.innerHTML = '<strong style="color:#34d399;">\u2713 Terms already accepted.</strong> You accepted the TrustSquare Seller Terms on this account \u2014 no need to read them again. <a href="#" onclick="event.preventDefault();sobShowEulaAgain()" style="color:rgba(200,135,58,.9);">Read them again</a>';
+      _enote.innerHTML = '<strong style="color:#34d399;">\u2713 Terms already accepted.</strong> You accepted the TrustSquare Seller Terms on this account, so there\u2019s nothing to sign again. <a href="#" onclick="event.preventDefault();sobShowEulaAgain()" style="color:rgba(200,135,58,.9);">View the terms</a>';
       _ebox.parentNode.insertBefore(_enote, _ebox);
     }
     if (_enote) _enote.style.display = 'block';
@@ -5645,10 +5700,21 @@ function sobRenderAttest(){
     return '<div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,.03);">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
       +'<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);">'+def.label+'</span>'
-      +'<button id="sob-attest-btn-'+sec+'" onclick="sobConfirmSection(\''+sec+'\')" style="font-size:11px;font-weight:700;border-radius:8px;padding:4px 10px;border:1px solid rgba(200,135,58,.5);background:transparent;color:rgba(200,135,58,.95);cursor:pointer;">Confirm \u2713</button>'
+      +'<span style="display:flex;gap:6px;align-items:center;">'+'<button onclick="sobEditSection(\''+sec+'\')" style="font-size:11px;font-weight:700;border-radius:8px;padding:4px 10px;border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.7);cursor:pointer;">\u270e Edit</button>'+'<button id="sob-attest-btn-'+sec+'" onclick="sobConfirmSection(\''+sec+'\')" style="font-size:11px;font-weight:700;border-radius:8px;padding:4px 10px;border:1px solid rgba(200,135,58,.5);background:transparent;color:rgba(200,135,58,.95);cursor:pointer;">Confirm \u2713</button>'+'</span>'
       +'</div>'+rows+'</div>';
   }).join('');
   sobCheckEula();
+}
+
+function sobEditSection(sec){
+  // JNR-FIX-9 (24 Jul 2026, David Jnr feedback): the confirm screen was a dead
+  // end — once a section was confirmed there was no way to fix a wrong value.
+  // Edit jumps back to the details step and un-confirms so the change is re-attested.
+  if(sobState._attest && sobState._attest.confirmed) delete sobState._attest.confirmed[sec];
+  var _b=document.getElementById('sob-attest-btn-'+sec);
+  if(_b){ _b.textContent='Confirm \u2713'; _b.style.background='transparent'; _b.style.color='rgba(200,135,58,.95)'; _b.style.borderColor='rgba(200,135,58,.5)'; _b.disabled=false; }
+  if(typeof sobGoPhase==='function') sobGoPhase(2);
+  if(typeof sobCheckEula==='function') sobCheckEula();
 }
 
 function sobConfirmSection(sec){
@@ -6768,6 +6834,8 @@ async function goSaveAndNext() {
       if (f.street_address) body.street_address = f.street_address;
       if (f.beds)           body.beds           = parseInt(f.beds) || null;
       if (f.baths)          body.baths          = parseInt(f.baths) || null;
+      if (f.garages)        body.garages        = parseInt(f.garages) || null;   // BEDS-PUBLISH-1
+      if (f.prop_type)      body.prop_type      = f.prop_type;                   // BEDS-PUBLISH-1
       if (f.subject)        body.subject        = f.subject;
       if (f.level)          body.level          = f.level;
       if (f.service_type)   body.service_type   = f.service_type;
@@ -6898,6 +6966,18 @@ async function goHandoff() {
           seller_email:   goState.email,
           listing_status: 'draft',
         };
+        // BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): structured category fields
+        // were dropped on the CREATE path (only the PUT patch carried them), so a
+        // fresh sell-flow publish stored no beds/baths/garages/listing_type at all.
+        if (f.prop_type)    body.prop_type    = f.prop_type;
+        if (f.beds)         body.beds         = parseInt(f.beds)    || null;
+        if (f.baths)        body.baths        = parseInt(f.baths)   || null;
+        if (f.garages)      body.garages      = parseInt(f.garages) || null;
+        if (f.listing_type) body.listing_type = f.listing_type;
+        if (f.subject)      body.subject      = f.subject;
+        if (f.level)        body.level        = f.level;
+        if (f.service_type) body.service_type = f.service_type;
+        if (f.availability) body.availability = f.availability;
         // CARS-SPEC-1: carry the AI-drafted vehicle identity/specs into the draft
         if ((goState.cat||'').toLowerCase()==='cars' && goState.vehicle) Object.assign(body, goState.vehicle);
         const res = await fetch(BEA_URL + '/listings', {
@@ -6919,6 +6999,8 @@ async function goHandoff() {
         if (f.suburb)      body.suburb      = f.suburb;
         if (f.beds)        body.beds        = parseInt(f.beds) || null;
         if (f.baths)       body.baths       = parseInt(f.baths) || null;
+        if (f.garages)     body.garages     = parseInt(f.garages) || null;   // BEDS-PUBLISH-1
+        if (f.prop_type)   body.prop_type   = f.prop_type;                   // BEDS-PUBLISH-1
         if (f.subject)     body.subject     = f.subject;
         if (f.level)       body.level       = f.level;
         if (f.service_type)body.service_type= f.service_type;
@@ -13923,7 +14005,7 @@ let AI_FNS=[], AI_SEL=null, AI_POLL=null, AI_T0=0, AI_PHOTOS=[], AI_LAST=null, A
 // Maps /ai/functions ids to deployed tutor videos. Features without an entry show no button.
 const AI_VIDEOS = {
   collectables_advert:    '/static/videos/collectables-advert-howto.mp4?v=20260722t',
-  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260722t',
+  heritage_tour:          '/static/videos/heritage-tour-howto.mp4?v=20260723m',
   expedition_dossier:     '/static/videos/expedition-dossier-howto.mp4?v=20260722t',
   property_dossier:       '/static/videos/property-dossier-howto.mp4?v=20260722t',
   car_dossier:            '/static/videos/car-dossier-howto.mp4?v=20260722t',
@@ -14712,6 +14794,23 @@ function sfLoadSuburbs(){
     }).catch(function(){});
 }
 
+/* RENTAL-COSTS-1 (23 Jul 2026, Maroushka feedback): levies and rates & taxes are
+   NEVER for the tenant's account — a To Rent listing swaps section C for the
+   tenant-relevant cost questions: electricity, water, garden upkeep & maintenance,
+   deposit, other tenant fees. Sale listings keep the original Costs & Connectivity rows. */
+var SF_PROP_RENTAL_SEC_C = {key:'C',title:'Tenant Costs & Responsibilities',pts:10,
+  coach:'<b>The questions every serious tenant asks anyway</b> — levies and rates stay with the owner; spell out exactly what the tenant pays.',rows:[
+  ['deposit','Deposit (R)','number','e.g. 15 000'],
+  ['electricity','Electricity','select','Tenant pays — prepaid meter|Tenant pays — municipal account|Included in rent'],
+  ['water','Water','select','Tenant pays|Included in rent'],
+  ['garden','Garden upkeep & maintenance','select','Tenant|Landlord|Garden service included|No garden'],
+  ['tenant_fees','Other tenant fees','text','e.g. R150/m prepaid meter admin — blank if none'],
+  ['fibre','Fibre available','select','Yes|No'],
+  ['security','Security','select','None|Alarm|Security estate|Armed response']]};
+function sfIsRental(){
+  return !!(sfState && sfState.cat==='Property' && /rent|let/i.test(String((sfState.A&&sfState.A.ltype)||'')));
+}
+
 function sfFlow(){
   var c = SF_CATS[sfState.cat];
   if(!c) return null;
@@ -14721,6 +14820,11 @@ function sfFlow(){
     return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
       sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
                 b.sections[1], b.sections[2]], feats:b.lmFeats[t]};
+  }
+  // RENTAL-COSTS-1: To Rent property → tenant-cost section C replaces levies/rates
+  if(sfState.cat==='Property' && sfIsRental()){
+    return {label:c.label, aiCap:c.aiCap, priceLabel:c.priceLabel, slots:c.slots,
+      sections:[c.sections[0], c.sections[1], SF_PROP_RENTAL_SEC_C], feats:c.feats};
   }
   return c;
 }
@@ -14760,12 +14864,14 @@ function sfWords(s){ return String(s||'').trim().split(/\s+/).filter(Boolean).le
 function sfScore(){
   var f=sfFlow(); if(!f) return {total:0,advice:[]};
   var s=0, adv=[], slots=f.slots, others=slots.length-1;
-  if(sfState.photos.main===2) s+=10; else adv.push(['Add your main photo',10]);
+  // SCORE-JUMP-1 (23 Jul 2026, Maroushka feedback): every advice item carries the
+  // screen where it is fixed, so the scorecard can deep-link straight there.
+  if(sfState.photos.main===2) s+=10; else adv.push(['Add your main photo',10,'photos']);
   var base = others>0?Math.floor(30/others):0, extra=30-base*others, oi=0;
   slots.forEach(function(sl){
     if(sl[0]==='main') return;
     var per = base + (oi<extra?1:0); oi++;
-    if(sfState.photos[sl[0]]===2) s+=per; else adv.push(['Add the '+sl[1].toLowerCase()+' photo',per]);
+    if(sfState.photos[sl[0]]===2) s+=per; else adv.push(['Add the '+sl[1].toLowerCase()+' photo',per,'photos']);
   });
   f.sections.forEach(function(sec){
     var rows=sec.rows, n=0;
@@ -14776,12 +14882,12 @@ function sfScore(){
     var pts = rows.length?Math.round(sec.pts*n/rows.length):0; s+=pts;
     if(n<rows.length){
       var ta=rows.filter(function(r){return r[2]==='textarea'&&sfWords(sfState[sec.key][r[0]])<15;});
-      if(ta.length && n===rows.length-ta.length) adv.push(['Write "'+ta[0][1]+'" (15+ words)',sec.pts-pts]);
-      else adv.push(['Complete '+sec.title+' ('+(rows.length-n)+' left)',sec.pts-pts]);
+      if(ta.length && n===rows.length-ta.length) adv.push(['Write "'+ta[0][1]+'" (15+ words)',sec.pts-pts,'sec'+sec.key]);
+      else adv.push(['Complete '+sec.title+' ('+(rows.length-n)+' left)',sec.pts-pts,'sec'+sec.key]);
     }
   });
-  if(String(sfState.price).trim()) s+=6; else adv.push(['Set your price',6]);
-  if(String(sfState.area).trim()) s+=4; else adv.push(['Add your suburb / area',4]);
+  if(String(sfState.price).trim()) s+=6; else adv.push(['Set your price',6,'secA']);
+  if(String(sfState.area).trim()) s+=4; else adv.push(['Add your suburb / area',4,'secA']);
   adv.sort(function(a,b){return b[1]-a[1];});
   return {total:Math.min(100,s), advice:adv};
 }
@@ -15132,6 +15238,9 @@ var SF_LEGAL_COUNTRIES = {ZA:'South Africa', US:'United States', UK:'United King
 var SF_LEGAL_LIVE = ['ZA'];  // countries whose cards passed legal review (manifest.json)
 var SF_LEGAL_NOTES = {
   property: '<b>Why sellers use an estate agent:</b> an agent manages the sale end-to-end and facilitates the legal steps with the conveyancer — certificates, clearances, bond cancellation — while pricing your home against real sales, vetting buyers before they reach your door, and negotiating on your behalf. Selling privately saves commission; a good agent saves months and mistakes.',
+  /* RENTAL-COSTS-1 (23 Jul 2026, Maroushka feedback): lessors get lessor-relevant
+     agency value on Step 6, not the sale pitch. */
+  property_rental: '<b>Why lessors use a rental agent:</b> a good rental agent keeps you compliant with the Rental Housing Act and all relevant property legislation — the lease, the deposit rules, the inspections and notices the law requires — properly vets and credit-checks applicants so only suitable prospective lessees reach you, and carries the monthly admin: collecting rent, managing the deposit correctly, and handling maintenance calls. You can let privately; an agent carries the legal and administrative load.',
   cars: '<b>Why sellers use a dealer or sales agency:</b> they handle the ownership and registration paperwork, settle outstanding finance correctly, screen out payment-day fraud, and give buyers the confidence that closes the sale. Privately you keep the margin — an agency carries the admin and the risk.',
   tutors: '<b>Why tutors join an agency:</b> agencies carry the vetting, clearances and contracts above, match you with the right learners, chase the invoices, and lend you their reputation while you build your own.',
   services: '<b>Why providers work through an agency:</b> an agency proves your licences and insurance to cautious clients, keeps the paperwork compliant, brings a steady pipeline of work, and stands behind the job if a dispute flares.',
@@ -15158,7 +15267,9 @@ function sfLegalCard(){
   var cc = sfLegalCountry();
   var live = SF_LEGAL_LIVE.indexOf(cc) >= 0;
   var d = (live && typeof SF_LEGAL_CARDS !== 'undefined' && SF_LEGAL_CARDS[cc] && SF_LEGAL_CARDS[cc].cats[cat]) || null;
-  return {cat:cat, cc:cc, cname:SF_LEGAL_COUNTRIES[cc]||cc, note:SF_LEGAL_NOTES[cat], data:d};
+  // RENTAL-COSTS-1: To Rent property listings get the lessor-oriented agency note
+  var note = (cat==='property' && sfIsRental() && SF_LEGAL_NOTES.property_rental) || SF_LEGAL_NOTES[cat];
+  return {cat:cat, cc:cc, cname:SF_LEGAL_COUNTRIES[cc]||cc, note:note, data:d};
 }
 /* LEGAL-STEP-2 (17 Jul 2026, David): phone-native render — stacked rows from
    /static/legal-must-haves/legal-cards.js (window.SF_LEGAL_CARDS), no wide PNG
@@ -15209,8 +15320,13 @@ function sfScoreS(){
   '<div class="sf-dial" style="--sfpct:'+sc.total+';--sfdialcol:'+col+';"><div class="sf-inner"><div class="sf-num" style="color:'+col+'">'+sc.total+'</div><div class="sf-of">out of 100</div></div></div>'+
   '<div class="sf-verdict" style="color:'+col+'">'+verdict+'</div><div class="sf-verdict sub">'+sub+'</div>';
   if(sc.advice.length){
-    h+='<div class="sf-advice"><div class="sf-at">What lifts your score</div>';
-    sc.advice.slice(0,5).forEach(function(a){h+='<div class="sf-ai"><span>'+a[0]+'</span><b>+'+a[1]+'</b></div>';});
+    // SCORE-JUMP-1: each tip is a button — tap it and land on the exact step
+    // where the fix is made (no manual back-stepping, nothing gets lost).
+    h+='<div class="sf-advice"><div class="sf-at">What lifts your score — tap a tip to fix it</div>';
+    sc.advice.slice(0,5).forEach(function(a){
+      var go=a[2]?' onclick="sfGo(\''+a[2]+'\')" style="cursor:pointer;"':'';
+      h+='<div class="sf-ai"'+go+'><span>'+a[0]+(a[2]?' <span style="opacity:.55;">→</span>':'')+'</span><b>+'+a[1]+'</b></div>';
+    });
     h+='</div>';
   }
   if(sc.total>=50){
@@ -15305,10 +15421,15 @@ async function sfFinish(draftOnly){
       suburb: sfState.area||'',
       description: sfComposeDescription()
     };
-    var A=sfState.A;
+    A=sfState.A;
     if(A.beds) fields.beds=A.beds;
     if(A.baths) fields.baths=A.baths;
-    if(A.ltype) fields.listing_type=A.ltype;
+    // BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): garages + property type now
+    // travel to the BEA as structured columns, and listing_type is normalised to the
+    // canonical 'For Rent'/'For Sale' the browse mapping and filters expect.
+    if(A.parking) fields.garages=A.parking;
+    if(A.ptype) fields.prop_type=A.ptype;
+    if(A.ltype) fields.listing_type=/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale';
     if(A.subjects) fields.subject=A.subjects;
     if(A.levels) fields.level=A.levels;
     if(A.trade) fields.service_type=A.trade;

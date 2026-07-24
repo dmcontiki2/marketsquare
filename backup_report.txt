@@ -1,0 +1,63 @@
+MarketSquare backup - 2026-07-24_0830
+============================================================
+[1] CODE: pushed to github.com/dmcontiki2/marketsquare (9 commit(s)).
+[2] DB: pulled marketsquare.db snapshot (2449408 bytes) to backups\2026-07-24_0830\
+     NOTE: no /var/www/marketsquare/uploads dir found - assets likely in object storage (Scaleway/R2); NOT in this archive.
+[3] ARCHIVE: backups\2026-07-24_0830.zip (690080 bytes)
+[4] INTEGRITY:
+integrity_check: ok
+tables: 51
+  admin_users                  5
+  agencies                     3
+  agency_members               9
+  agent_intros                 0
+  agent_profiles               3
+  ai_spend_config              1
+  ai_spend_log                 281
+  buyer_trust                  0
+  demand_invites_outbox        2
+  demand_prospects             1487
+  demand_tickets               4
+  email_triage                 10
+  founders_badges              0
+  geo_cities                   79
+  geo_countries                4
+  geo_regions                  19
+  geo_suburbs                  11679
+  intro_penalties              0
+  intro_requests               113
+  launch_codes                 0
+  launch_redeem_attempts       0
+  launch_switches              1
+  listing_cities               0
+  listing_photos               17
+  listing_tier_config          3
+  listing_versions             72
+  listings                     14
+  listings_fts                 14
+  listings_fts_config          1
+  listings_fts_data            15
+  listings_fts_docsize         14
+  listings_fts_idx             13
+  lm_complaints                0
+  lm_suspensions               1
+  outreach_ledger              0
+  search_interpret_cache       24
+  seller_complaints            0
+  seller_documents             10
+  seller_extra_slots           0
+  sqlite_sequence              25
+  suburbs                      121
+  transactions                 188
+  tuppence_monthly_grants      0
+  user_credentials             65
+  user_declarations            0
+  users                        28
+  wearable_devices             0
+  wishlist_matches             50
+  wishlist_showcase            12
+  wishlist_signals             492
+  wishlist_subscriptions       0
+------------------------------------------------------------
+Code mirror = off-machine (GitHub). DB archive = local backups\ folder.
+NOT covered: object-storage assets (if any); retention pruning (manual for now).

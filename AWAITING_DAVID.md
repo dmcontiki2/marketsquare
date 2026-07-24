@@ -1,4 +1,7 @@
 # AWAITING DAVID — CCP Run 2026-06-10 (CC-001 + CC-002)
+> **⚠️ SUPERSEDED by `OPEN_LOOPS.md` (2026-07-24).** Historical — decisions from the CCP run of
+> 2026-06-10. Current items awaiting David live in `OPEN_LOOPS.md`.
+
 
 Items requiring David's decision, approval, or go-live action. Logged in lieu of asking (unattended run). Each item: file, exact question/action, recommended answer, what was done meanwhile.
 

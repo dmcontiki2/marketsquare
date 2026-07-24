@@ -1,3 +1,61 @@
+## 24 Jul 2026 — EVIDENCE-TRUE trust guard: a Trust Score headline can no longer diverge from its evidence
+- Source: David — buyer seller-profile showed **87 (Trusted)** over an evidence list summing to **50** (recurring tester feedback), plus a planted twin.
+- **Root cause (frontend, ms.js):** the live-seller hero paints `.cv-trust-*` by CLASS with no id, so JNR-FIX-2's id-based sync (written for the listing-detail block) never reached it — the header kept the stored `l.trust`. Fix: the credentials callback reconciles the hero by class inside `#screen-seller-cv` to `computed_total` (no duplicate-id clash with the detail view).
+- **Root cause (backend, bea_main.py `get_user_trust` / My Space):** returned the stored `users.trust_score` as the headline while its own visible signals summed differently. Fix: the headline is derived from the earned signals via a new `_assert_evidence_true()` guard, which returns the evidence sum and logs any drift.
+- **Guard / flow (won't recur):** `_assert_evidence_true()` runtime invariant logs `EVIDENCE-TRUE VIOLATION` if a headline ever disagrees with its list; `test_trust_evidence_true.py` source-level test fails if any trust surface returns a stored headline or the hero can't reconcile; wired into `predeploy_check.py` so a diverging build is caught pre-ship. Verified: test PASSES on the fix, FAILS on the pre-fix files.
+- `trust_score_breakdown` confirmed already evidence-true (returns recomputed `score_total`) — no third fault.
+
+## 23 Jul 2026 (late) — DAVID JNR super-advert round: Cars About de-dup + super advert format (ms.js BUILT + server data script)
+- Source: David Jnr super-advert screenshots (via David). Two points. Register: FEEDBACK.md (F-009, F-010).
+- **CARS-DESC-DEDUPE-1 (ms.js):** the guided sell flow (sfComposeDescription) folded every Cars
+  field into the About text as "Label: value" — the same data the Vehicle Specs panel already shows,
+  so mileage / service history / transmission / fuel / engine / gears / colour / body type appeared
+  TWICE (David Jnr's Figo). Fixed: for Cars the About now carries ONLY the seller's free-text
+  (condition notes); service history + features are routed into vehicle_specs (sfFinish) so they
+  still render in the spec panel and nothing is lost. Other categories unchanged. node --check clean.
+- **SUPER-FORMAT-1 (scripts/fix_super_advert_format.py):** the super_example Hilux was authored
+  before the structured spec columns existed, so vehHasSpecData() is false and it renders the legacy
+  chip/prose (OLD) format instead of the WeBuyCars-style panel. Data fix, not code — a server-run
+  script (dry-run + --apply, backs up DB): backfills the Hilux spec fields (make/model/variant/year/
+  colour/body/fuel/engine cc/service history/roadworthy; attested_at stamped so the Seller-confirmed
+  badge shows) and ALSO strips the duplicated "Label: value" lines from any existing Cars description
+  (cleans the live Figo). Idempotent. WARNING two REVIEW fields (mileage_km, transmission) left blank
+  — set the real figures before --apply, or they are omitted.
+- TO SHIP: `/ship` deploys the ms.js fix; run `python3 scripts/fix_super_advert_format.py --apply`
+  ON THE SERVER for the two live rows (Hilux format + Figo About).
+
+## 23 Jul 2026 (night) — MAROUSHKA QA ROUND: rental listing flow + published-listing fixes (BUILT, not yet shipped)
+- Source: Maroushka Conradie's 23-Jul test of the rental listing flow (7 fixes, 2 praise points —
+  "loved seeing my quality score climb", "I love the Introduce me to an agent function"). Register: FEEDBACK.md.
+- **RENTAL-COSTS-1 (ms.js):** To Rent property listings no longer ask levies / rates & taxes
+  (never the tenant's account) — section C becomes Tenant Costs & Responsibilities: deposit,
+  electricity, water, garden upkeep & maintenance, other tenant fees (+ fibre, security kept).
+  Sale listings unchanged. Step 6 legal note is now lessor-oriented for rentals: compliance with
+  rental legislation, applicant vetting, payments & maintenance admin (SF_LEGAL_NOTES.property_rental).
+- **SCORE-JUMP-1 (ms.js):** quality-score advice items on the scorecard are now tappable —
+  each deep-links to the exact step (photos / secA / secB / secC) where the fix is made.
+- **BEDS-PUBLISH-1 (ms.js + bea_main.py):** root cause of "bedrooms, bathrooms and garages did
+  not display": the sell-flow CREATE path posted no structured property fields (only the PUT
+  patch carried some), garages/prop_type were never sent at all, listing_type was absent from
+  the backend Listing create model, and 'To Rent' failed the === 'For Rent' check (rentals
+  rendered as For Sale). Fixed end-to-end: sfFinish sends garages+prop_type+normalised
+  listing_type; goHandoff POST/PUT carry all structured fields; Listing model + INSERT gain
+  listing_type; browse mapping now rent-tolerant (/rent|let/i).
+- **MAP-FIX-1 (ms.js):** listing-detail location row is now "· View on map" — opens the browse
+  map centred on the listing's (or suburb's) coordinates; Leaflet invalidateSize() on show fixes
+  the grey/broken map when the container was display:none at init.
+- **POI-QUALITY-1 (bea_main.py):** wrong "closest" amenities root cause: `out center 50`
+  truncated Overpass results arbitrarily (not by distance) — now 600 and we sort ourselves.
+  Also: relations included (Brooklyn Mall class), healthcare=hospital tag recognised
+  (St. Mary's class private hospitals), shopping radius 3→5km with the nearest mall guaranteed
+  a slot, schools cap 3→5 (Waterkloof Prep / Anton van Wouw / Affies / Boys High / DSG class).
+  NOTE: existing listings keep their stored nearby_pois — clear the column to refetch.
+- **RENTAL-GUIDE-1 (ms.js + bea_main.py):** property guide is rental-aware — 0T area guide
+  returns PayProp/TPN monthly-rent benchmark for rentals (fallback: 0.85%/month of area value,
+  the industry rule of thumb); 1T comps use rentals-only comparables worded as monthly rent.
+  Investor Yield Calculator hidden on rental listings (frontend; endpoint untouched).
+- Cache-buster ms.js v=369. py_compile + node --check green. NOT YET DEPLOYED — run /ship.
+
 ## 23 Jul 2026 (evening) — SHIPPED: EULA v1.10 + SEC-1 + SEC-2 all live and verified
 - David ran full deploy + server env one-liner. Verified from cloud: /terms serves v1.10 with
   lifecycle sections (NOTE: public URL is /terms — /terms.html is a FastAPI 404, always was);

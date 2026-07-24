@@ -1,4 +1,7 @@
 # 20h00 Status — SUPER Exemplars (Mon 20 Jul 2026, written 17:25)
+> **⚠️ HISTORICAL one-off snapshot (20 Jul 2026).** Not a live status. Current open loops live in
+> `OPEN_LOOPS.md`; the running narrative is `STATUS.md`.
+
 
 ## 19h0x UPDATE — IT IS DONE ✔
 You broke the download logjam with one click (the zip had everything). I assembled the rest:

@@ -1245,6 +1245,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ai-result th{background:#15243d;color:#cfe2ff}
 .ai-result a{color:#7cc4ff}.ai-result ul{margin:6px 0 6px 18px}
 .ai-result pre{background:#08101e;padding:9px;border-radius:8px;font-size:11px;overflow-x:auto}
+/* FIX 23 Jul 2026: report figures were unscaled — phones showed only the image's top-left corner (the 'Namibia map' bug) */
+.ai-result .fig{margin:14px 0;text-align:center}
+.ai-result .fig img{max-width:100%;height:auto;border-radius:8px}
+.ai-result .fig .cap{font-size:10px;color:#9db4d8;margin-top:4px}
 .ai-meta{font-size:11px;color:#8fa3c0;margin-top:8px}
 .ai-foot{font-size:11px;color:var(--text-2,#5a6b8a);text-align:center;padding:0 16px 24px}
 .ai-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}

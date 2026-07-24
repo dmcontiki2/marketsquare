@@ -1,4 +1,7 @@
 # TrustSquare — Status
+> **📍 Open loops now live in `OPEN_LOOPS.md` (canonical, ranked).** This file is the session
+> narrative history — do not hunt `OPEN:` fragments here to learn what's open; read `OPEN_LOOPS.md`.
+
 
 ## Current Session
 2026-07-23 (Session 150 close): EVERYTHING SHIPPED AND VERIFIED LIVE — PEN-CAP-1, FADE-1, RESP-1

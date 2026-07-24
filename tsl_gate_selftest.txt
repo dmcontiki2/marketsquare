@@ -1,0 +1,20 @@
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-07-24T05:16:41Z   mode=warn
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-07-23 (1 days ago)
+    - CHANGELOG newest    : 2026-07-24
+    - Ship pending        : bea_main.py, launch_redemption.py, marketsquare.html, ms.css, ms.js
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - market.db          [ZERO BYTES]
+    - marketplace.db     [ZERO BYTES]
+    - marketsquare.db    [ok, 2449408 bytes, integrity ok]
+    - prospects.db       [ZERO BYTES]
+    - redis             [ok, PONG]
+    !! market.db is 0 bytes
+    !! marketplace.db is 0 bytes
+    !! prospects.db is 0 bytes
+  Verdict: CM=ok  DB=DANGER  ->  DANGER   (logged -> tsl_audit.log)
+  ------------------------------------------------------------

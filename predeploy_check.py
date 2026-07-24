@@ -90,6 +90,25 @@ def main():
         print('     ' + ', '.join(recent))
     if danger:
         print('  !! DANGER: torn/incomplete file(s): ' + ', '.join(danger))
+    # Evidence-true trust invariant (24 Jul 2026): a Trust Score headline must equal
+    # the evidence shown beside it. Run the source-level guard so a deploy that would
+    # ship a diverged headline (the 87-over-50 class) is caught here, not by a buyer.
+    try:
+        import subprocess as _sp
+        _tf = os.path.join(HERE, 'test_trust_evidence_true.py')
+        if os.path.isfile(_tf):
+            _tt = _sp.run([sys.executable, _tf, HERE], capture_output=True, text=True, timeout=30)
+            if _tt.returncode != 0:
+                danger.append('trust-evidence-true')
+                print('  !! EVIDENCE-TRUE: trust headline/evidence check FAILED:')
+                for _l in (_tt.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  Evidence-true trust check: ok')
+    except Exception as _e:
+        print('  [evidence-true] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

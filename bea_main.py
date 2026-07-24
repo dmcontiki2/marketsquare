@@ -1591,6 +1591,9 @@ class Listing(BaseModel):
     beds: Optional[int] = None
     baths: Optional[int] = None
     garages: Optional[int] = None
+    # BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): listing_type existed only on
+    # ListingUpdate, so the sell-flow CREATE path silently dropped For Sale/For Rent.
+    listing_type: Optional[str] = None
     # Tutor fields
     subject: Optional[str] = None
     level: Optional[str] = None
@@ -2136,16 +2139,17 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     cursor = conn.execute(
         """INSERT INTO listings
            (title, price, category, city, area, suburb, description, thumb_url, medium_url,
-            service_class, prop_type, beds, baths, garages,
+            service_class, prop_type, beds, baths, garages, listing_type,
             subject, level, mode, service_type, availability, rental_status, available_from,
             trust_score, seller_email, listing_status, published_at,
             street_address, listing_lat, listing_lng, geo_city_id,
             make, model, variant, vehicle_year, mileage_km, transmission,
             fuel_type, body_type, drivetrain, colour, vehicle_specs, spec_confirmed)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (listing.title, listing.price, listing.category, listing.city,
          listing.area, listing.suburb, listing.description, listing.thumb_url, listing.medium_url,
          listing.service_class, listing.prop_type, listing.beds, listing.baths, listing.garages,
+         listing.listing_type,   # BEDS-PUBLISH-1
          listing.subject, listing.level, listing.mode, listing.service_type, listing.availability,
          (listing.rental_status or 'available'), listing.available_from,
          listing.trust_score, listing.seller_email, 'draft',
@@ -2249,17 +2253,22 @@ def _derived_radius_km(city_lat: float, city_lon: float, country_iso2: str) -> f
 # ── Property POI Auto-Link ─────────────────────────────────────────────────────
 
 _POI_CATEGORIES = {
+    # POI-QUALITY-1 (23 Jul 2026, Maroushka feedback): private hospitals are often
+    # tagged healthcare=hospital (not amenity=), and malls like Brooklyn Mall are
+    # frequently mapped as relations — both were invisible to the old query.
     "schools":      [("amenity", "school"), ("amenity", "college")],
     "universities": [("amenity", "university")],
-    "shopping":     [("shop", "supermarket"), ("shop", "grocery"),
-                      ("shop", "convenience"), ("shop", "mall"),
+    "shopping":     [("shop", "mall"), ("shop", "supermarket"), ("shop", "grocery"),
+                      ("shop", "convenience"),
                       ("amenity", "marketplace")],
-    "hospitals":    [("amenity", "hospital")],
+    "hospitals":    [("amenity", "hospital"), ("healthcare", "hospital")],
     "police":       [("amenity", "police")],
 }
 
 _POI_RADIUS_M = 15000      # 15km radius for most POI categories
-_POI_SHOPPING_RADIUS_M = 3000  # 3km for shopping — supermarkets/grocery stores are local
+_POI_SHOPPING_RADIUS_M = 5000  # 5km for shopping — reaches the nearest mall without leaving the area
+_POI_CATEGORY_CAPS = {"schools": 5}  # POI-QUALITY-1: school-dense SA suburbs deserve more than 3
+_POI_DEFAULT_CAP = 3
 
 def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) -> dict:
     """Query OSM Overpass API for property-relevant POIs near a location.
@@ -2285,8 +2294,14 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
         for key, val in tags:
             union_parts.append(f'node["{key}"="{val}"](around:{cat_radius},{lat},{lon});')
             union_parts.append(f'way["{key}"="{val}"](around:{cat_radius},{lat},{lon});')
+            # POI-QUALITY-1: large hospitals/malls/schools are mapped as relations
+            union_parts.append(f'relation["{key}"="{val}"](around:{cat_radius},{lat},{lon});')
 
-    query = '[out:json][timeout:15];(\n' + '\n'.join(union_parts) + '\n);out center 50;'
+    # POI-QUALITY-1: 'out center 50' truncated the result set ARBITRARILY (Overpass
+    # orders by type/id, not distance) — in a metro the 50 kept elements were a
+    # near-random subset, which is why the "closest" hospital/school could be wrong.
+    # 600 comfortably covers a dense metro radius; we sort/cap by distance ourselves.
+    query = '[out:json][timeout:15];(\n' + '\n'.join(union_parts) + '\n);out center 600;'
 
     try:
         import socket as _socket
@@ -2348,13 +2363,15 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
         # Assign to category
         amenity = tags.get('amenity', '')
         shop = tags.get('shop', '')
+        healthcare = tags.get('healthcare', '')   # POI-QUALITY-1
         if amenity in ('school', 'college'):
             cat_results['schools'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'university':
             cat_results['universities'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif shop in ('mall', 'supermarket', 'grocery', 'convenience') or amenity == 'marketplace':
-            cat_results['shopping'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
-        elif amenity == 'hospital':
+            cat_results['shopping'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon,
+                                            'kind': ('mall' if shop == 'mall' else 'shop')})
+        elif amenity == 'hospital' or healthcare == 'hospital':
             cat_results['hospitals'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
         elif amenity == 'police':
             cat_results['police'].append({'name': name, 'dist_km': dist, 'lat': elat, 'lon': elon})
@@ -2373,9 +2390,17 @@ def _overpass_query_pois(lat: float, lon: float, radius_m: int = _POI_RADIUS_M) 
 
     for cat in cat_results:
         cat_results[cat].sort(key=lambda x: x['dist_km'])
-        cat_results[cat] = _dedup(cat_results[cat])[:3]
-        # Strip lat/lon from final output (not needed by FEA)
-        cat_results[cat] = [{'name': p['name'], 'dist_km': p['dist_km']} for p in cat_results[cat]]
+        _cap = _POI_CATEGORY_CAPS.get(cat, _POI_DEFAULT_CAP)
+        deduped = _dedup(cat_results[cat])
+        capped = deduped[:_cap]
+        # POI-QUALITY-1: the nearest mall always earns a shopping slot — buyers ask
+        # "which mall?" before "which supermarket?" (Brooklyn Mall case, Maroushka).
+        if cat == 'shopping' and capped and not any(p.get('kind') == 'mall' for p in capped):
+            nearest_mall = next((p for p in deduped if p.get('kind') == 'mall'), None)
+            if nearest_mall:
+                capped = capped[:_cap - 1] + [nearest_mall]
+        # Strip lat/lon/kind from final output (not needed by FEA)
+        cat_results[cat] = [{'name': p['name'], 'dist_km': p['dist_km']} for p in capped]
 
     # Remove empty categories
     return {k: v for k, v in cat_results.items() if v}
@@ -3862,11 +3887,45 @@ def seller_public_credentials(listing_id: int):
                            "subtotal": sum(i["points"] for i in _pen_items),
                            "note": "deducted after the cap — recovers on time rules (24-month decay or successful dispute), not by adding evidence"})
             total = max(0, total + sum(i["points"] for i in _pen_items))
-        return {"trust_score": int(user.get("trust_score") or 0), "computed_total": total,
+        # JNR-FIX-2 (24 Jul 2026, David Jnr feedback): the stored trust_score must
+        # never diverge from the evidence total shown here (he saw a 90 headline over
+        # an 85 evidence list). Self-heal it to the evidence-true total when they
+        # differ — mirrors the scorer's own sync (see UPDATE ... trust_score below).
+        try:
+            if int(user.get("trust_score") or 0) != int(total):
+                conn.execute("UPDATE users SET trust_score = ? WHERE email = ?", (int(total), email))
+                conn.execute("UPDATE listings SET trust_score = ? WHERE seller_email = ?", (int(total), email))
+                conn.commit()
+        except Exception:
+            pass
+        return {"trust_score": int(total), "computed_total": total,
                 "groups": groups,
                 "next": "Verified referrals (up to 10 pts) unlock as the referral programme goes live — the path from here toward 100."}
     finally:
         conn.close()
+
+
+def _assert_evidence_true(claimed, parts, where=""):
+    """Reliability invariant (24 Jul 2026): a headline Trust Score MUST equal the
+    sum of the evidence shown beside it. Returns the evidence-true sum, and logs
+    loudly when `claimed` disagreed - so a headline sitting over a different list
+    (the 87-over-50 / 90-over-85 class of bug) can never ship silently again.
+    `parts` = the point values actually shown to the user."""
+    try:
+        true_sum = int(sum(int(p) for p in parts))
+    except Exception:
+        try:
+            return int(claimed or 0)
+        except Exception:
+            return 0
+    try:
+        if claimed is not None and int(claimed) != true_sum:
+            _log.warning("EVIDENCE-TRUE VIOLATION [%s]: headline=%s but visible "
+                         "evidence sums to %s - serving the evidence total.",
+                         where, int(claimed), true_sum)
+    except Exception:
+        pass
+    return true_sum
 
 
 @app.get("/users/{email}/trust")
@@ -3978,9 +4037,17 @@ def get_user_trust(email: str):
         },
     ]
 
-    tier = _trust_tier(score)
     earned_pts  = sum(s["points"] for s in signals if s["earned"])
     available_pts = sum(s["points"] for s in signals if not s["earned"])
+    # EVIDENCE-TRUE (24 Jul 2026): the headline score IS the sum of the earned
+    # signals shown below it - never the stored users.trust_score, which other
+    # paths (seed 40, id-verify, subscription) mutate independently and which
+    # drifted above the visible list (the same 87-over-50 class the buyer card
+    # hit). _assert_evidence_true returns that sum and logs any drift it heals.
+    score = _assert_evidence_true(user.get("trust_score"),
+                                  [s["points"] for s in signals if s["earned"]],
+                                  "get_user_trust")
+    tier = _trust_tier(score)
 
     return {
         "email":         email,
@@ -13815,6 +13882,23 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
     """STEP 3 fair-price resolver for non-card categories (FREE/owned sources only).
     Returns ('verified', {...}) | ('area_guide', {...}) | None. The NUMBER always
     comes from a feed or arithmetic; the model only narrates the verified branch."""
+    # RENTAL-GUIDE-1 (23 Jul 2026, Maroushka feedback): the property guide catered
+    # only to buyers — rental listings now get rental benchmarks, never sale prices.
+    def _is_rental_listing():
+        try:
+            lt = ((listing["listing_type"] if "listing_type" in listing.keys() else None) or "").lower()
+        except Exception:
+            lt = ""
+        if "rent" in lt or "let" in lt:
+            return True
+        if "sale" in lt:
+            return False
+        try:
+            blob = (((listing["title"] if "title" in listing.keys() else "") or "") + " "
+                    + ((listing["description"] if "description" in listing.keys() else "") or "")).lower()
+        except Exception:
+            blob = ""
+        return any(k in blob for k in ("for rent", "to let", "to-let", "per month", "monthly rent"))
     try:
         if tierkey == "property" and country == "UK" and tier == "1T":
             lr = await tier_resolvers.uk_land_registry_median(city)
@@ -13834,17 +13918,23 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
                     _ref_title = (listing["title"] if "title" in listing.keys() else None)
                 except Exception:
                     _ref_title = None
+            # RENTAL-GUIDE-1: rental property comps against rentals only —
+            # never price a monthly rent against sale asking prices.
+            _rentals = (tierkey == "property" and _is_rental_listing())
             est = tier_resolvers.internal_comps_estimate(
-                _comp_amounts(category, city, listing_id, ref_title=_ref_title), min_n=8)
+                _comp_amounts(category, city, listing_id, rentals_only=_rentals,
+                              ref_title=_ref_title), min_n=8)
             if est:
                 med = est["value"]
                 _match_note = " matched on make/model/year" if tierkey == "vehicles" else ""
+                _unit = " per month" if _rentals else ""
+                _kind = "rent" if _rentals else "price"
                 return ("verified", {
                     "source": "internal_comps", "floor_zar": med,
-                    "official_range": "R" + format(med, ",.0f") + "  (median of " + str(est["n"]) + " comparable " + str(city) + " listings" + _match_note + ")",
+                    "official_range": "R" + format(med, ",.0f") + _unit + "  (median of " + str(est["n"]) + " comparable " + str(city) + (" rental" if _rentals else "") + " listings" + _match_note + ")",
                     "official_ctx": est["provenance"],
                     "block": ("VERIFIED MARKET DATA (use these EXACT figures, do not alter): "
-                              + est["provenance"] + " | Median asking price R" + format(med, ",.0f")
+                              + est["provenance"] + " | Median asking " + _kind + " R" + format(med, ",.0f") + _unit
                               + " | These are comparable TrustSquare listings, not this exact item.")})
         if tier == "0T" and tierkey == "property" and country == "ZA":
             fa = None
@@ -13853,6 +13943,42 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
                     fa = float(listing["floor_area"])
             except Exception:
                 fa = None
+            # RENTAL-GUIDE-1: rental listings get an area RENT benchmark. First
+            # choice: the PayProp/TPN monthly-rent feed. Fallback: 0.85% of the
+            # area's implied sale value per month (the industry rule of thumb).
+            if _is_rental_listing():
+                r = tier_resolvers.za_area_rent(city)
+                if r and r.get("value"):
+                    if r.get("low") and r.get("high"):
+                        rng = "R" + format(r["low"], ",.0f") + "-R" + format(r["high"], ",.0f") + " per month (typical R" + format(r["value"], ",.0f") + "/month)"
+                    else:
+                        rng = "around R" + format(r["value"], ",.0f") + " per month"
+                    assess = ("Typical monthly rents in " + str(city) + " run " + rng
+                              + " (" + r["source"] + ", " + str(r["date"]) + ")."
+                              + " This is an area benchmark, not a figure for this specific property "
+                              "- compare it against the asking rent yourself. " + _INDICATIVE_LABEL)
+                    return ("area_guide", {
+                        "source": "payprop_tpn", "range_text": rng,
+                        "assessment": assess, "provenance": r["provenance"],
+                        "date": r["date"]})
+                gr = tier_resolvers.za_area_price_guide(city, floor_area=fa)
+                if gr and gr.get("implied_value"):
+                    lo_r = gr["implied_low"] * 0.0085
+                    hi_r = gr["implied_high"] * 0.0085
+                    rng = "R" + format(lo_r, ",.0f") + "-R" + format(hi_r, ",.0f") + " per month"
+                    assess = ("Typical rents for a ~" + format(fa, ".0f") + " m2 " + str(city)
+                              + " property come to about " + rng
+                              + " — derived as 0.85% per month of the area's typical value ("
+                              + gr["source"] + ", " + str(gr["date"]) + "; the industry rule of thumb)."
+                              + " This is an area benchmark, not a figure for this specific property "
+                              "- compare it against the asking rent yourself. " + _INDICATIVE_LABEL)
+                    return ("area_guide", {
+                        "source": "payprop_tpn", "range_text": rng,
+                        "assessment": assess,
+                        "provenance": gr["source"] + " (" + str(gr["date"]) + "), 0.85%/month rental conversion",
+                        "date": gr["date"]})
+                # No rent feed and no floor area — fall through to the sale guide
+                # rather than return nothing (still better than silence).
             g = tier_resolvers.za_area_price_guide(city, floor_area=fa)
             if g:
                 imp = ""

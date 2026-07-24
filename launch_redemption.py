@@ -433,7 +433,7 @@ def sync_registry(_key: str = Depends(auth.require_api_key)):
             "FROM launch_codes").fetchall()
         s.close()
     except sqlite3.Error as e:
-        raise HTTPException(status_code=502, detail=f"Could not read registry source: {e}")
+        raise HTTPException(status_code=502, detail=f"Could not read registry source: {e}") from e
     conn = database.get_db()
     try:
         _ensure_schema(conn)
