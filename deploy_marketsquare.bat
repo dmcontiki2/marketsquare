@@ -312,6 +312,11 @@ if %errorlevel% neq 0 (
     ssh -n %SERVER% "cd %REMOTE% && python3 seed_super_global.py --apply"
 )
 echo.
+:: SUPER-DIAG-1: read-only snapshot (trust/category/country) — prints, writes nothing.
+echo  [3g-diag] Super-advert diagnostics (read-only, safe)...
+scp "%PROJECT%\scripts\diag_super.py" %SERVER%:%REMOTE%/diag_super.py
+if %errorlevel% equ 0 ( ssh -n %SERVER% "cd %REMOTE% && python3 diag_super.py" )
+echo.
 
 
 :: ── Step 3b: Deploy World Heritage data (wonders.json) ────

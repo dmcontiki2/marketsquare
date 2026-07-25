@@ -22,3 +22,4 @@
 2026-07-24 14:00 🟢 trustsquare.co up · 2.4s · SSL 61d · /health ok · /payment/test ok
 2026-07-25 🟢 trustsquare.co up · 1.3s · SSL 61d
 2026-07-25 🟢 trustsquare.co up · 1.2s · SSL 60d · /health ok · /payment/test ok
+2026-07-26 🟢 trustsquare.co up · 1.3s · SSL 60d · /health ok · /payment/test ok (scheduled daytime pulse)

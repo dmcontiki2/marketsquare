@@ -144,6 +144,27 @@ def backfill_country_from_geo(conn):
     """Set each listing's country from its city's geo_cities.country_iso2. Returns rows changed."""
     return conn.execute(f"UPDATE listings SET country = {_BF_SUB} WHERE {_BF_WHERE}").rowcount
 
+def _trust_where():
+    # only OUR new US/GB/AU exemplars whose stored trust disagrees with their seller's stored trust
+    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU') AND EXISTS "
+            f"(SELECT 1 FROM users u WHERE LOWER(u.email)=LOWER(listings.seller_email) "
+            f"AND u.{_utrust} IS NOT NULL AND u.{_utrust} <> COALESCE(listings.trust_score,-999))")
+
+def trust_align_needed(conn):
+    if not _utrust or "trust_score" not in {r[1] for r in conn.execute('PRAGMA table_info(listings)')}:
+        return 0
+    try:
+        return conn.execute(f"SELECT COUNT(*) FROM listings WHERE {_trust_where()}").fetchone()[0]
+    except Exception:
+        return 0
+
+def align_trust_to_seller(conn):
+    if not _utrust:
+        return 0
+    return conn.execute(
+        f"UPDATE listings SET trust_score = (SELECT u.{_utrust} FROM users u "
+        f"WHERE LOWER(u.email)=LOWER(listings.seller_email)) WHERE {_trust_where()}").rowcount
+
 def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng):
     """Idempotently ensure country→region→city exist; return the city id."""
     conn.execute("INSERT OR IGNORE INTO geo_countries (iso2,name,region_label,active) VALUES (?,?,?,1)",
@@ -172,6 +193,15 @@ has = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
 if "super_example" not in has:
     sys.exit("No super_example column — wrong DB.")
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# SUPER-TRUST-1: the exemplar's trust must equal its seller's own trust (single source),
+# else the advert shows the listing's stored number and the seller CV shows a different one
+# (the 90-vs-45 flicker). Detect a stored seller trust column to align to; safe if absent.
+_utrust = None
+try:
+    _ucols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    _utrust = "trust_score" if "trust_score" in _ucols else None
+except Exception:
+    _utrust = None
 RESET_NULL = ["listing_lat","listing_lng","street_address","nearby_pois","boost_until"]
 RESET_ZERO = ["view_count"]
 
@@ -220,6 +250,12 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
         if "listing_status" in has: row["listing_status"] = "live"
         if "suspension_reason" in has: row["suspension_reason"] = ""
         if "super_example" in has: row["super_example"] = 1
+        # align trust to the seller (single source) — kills the 90-vs-45 flicker
+        if _utrust and "trust_score" in has:
+            _st = conn.execute(f"SELECT {_utrust} FROM users WHERE LOWER(email)=LOWER(?)",
+                               ((row.get("seller_email") or ""),)).fetchone()
+            if _st and _st[0] is not None:
+                row["trust_score"] = _st[0]
         for k in RESET_NULL:
             if k in has: row[k] = None
         for k in RESET_ZERO:
@@ -254,8 +290,9 @@ if not APPLY:
 # Self-healing: skip entirely (and skip the backup) when nothing needs doing.
 col_missing = "country" not in has
 bf_need = 0 if col_missing else backfill_needed(conn)
-if (not col_missing) and (not plan) and bf_need == 0:
-    print("\n[IN SYNC] country column present, all exemplars exist, every country correct — no changes, no backup.")
+ta_need = 0 if col_missing else trust_align_needed(conn)
+if (not col_missing) and (not plan) and bf_need == 0 and ta_need == 0:
+    print("\n[IN SYNC] country column present, all exemplars exist, country + trust consistent — no changes, no backup.")
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
         print(f"    country {iso2}: {n} listings")
@@ -290,8 +327,9 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid,
 #    before the column existed, and the ones just inserted)
 conn.commit()
 backfilled = backfill_country_from_geo(conn)
+aligned = align_trust_to_seller(conn)
 conn.commit()
-print(f"Inserted {ins} listings; backfilled country on {backfilled} listing(s).")
+print(f"Inserted {ins} listings; backfilled country on {backfilled}; aligned trust->seller on {aligned} (US/GB/AU exemplars).")
 try:
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
