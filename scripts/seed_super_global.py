@@ -122,16 +122,17 @@ def ensure_country_column(conn):
         return True
     return False
 
+_BF_SUB = "(SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)"
+_BF_WHERE = (f"geo_city_id IS NOT NULL AND {_BF_SUB} IS NOT NULL "
+             f"AND COALESCE(country,'') <> {_BF_SUB}")
+
+def backfill_needed(conn):
+    """How many listings would have their country corrected (column must already exist)."""
+    return conn.execute(f"SELECT COUNT(*) FROM listings WHERE {_BF_WHERE}").fetchone()[0]
+
 def backfill_country_from_geo(conn):
-    """Set each listing's country from its city's geo_cities.country_iso2 (via geo_city_id).
-    Fixes rows already inserted before the country column existed. Returns rows changed."""
-    return conn.execute("""
-        UPDATE listings
-           SET country = (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)
-         WHERE geo_city_id IS NOT NULL
-           AND (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id) IS NOT NULL
-           AND COALESCE(country,'') <> (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)
-    """).rowcount
+    """Set each listing's country from its city's geo_cities.country_iso2. Returns rows changed."""
+    return conn.execute(f"UPDATE listings SET country = {_BF_SUB} WHERE {_BF_WHERE}").rowcount
 
 def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng):
     """Idempotently ensure country→region→city exist; return the city id."""
@@ -224,8 +225,20 @@ if not APPLY:
     print("\nDRY-RUN only — rerun with --apply to add/backfill country, seed geo + insert.")
     conn.close(); sys.exit(0)
 
+# Self-healing: skip entirely (and skip the backup) when nothing needs doing.
+col_missing = "country" not in has
+bf_need = 0 if col_missing else backfill_needed(conn)
+if (not col_missing) and (not plan) and bf_need == 0:
+    print("\n[IN SYNC] country column present, all exemplars exist, every country correct — no changes, no backup.")
+    for iso2 in ("ZA","US","GB","AU"):
+        n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
+        print(f"    country {iso2}: {n} listings")
+    conn.close(); sys.exit(0)
+print(f"\n[WORK] country column {'MISSING' if col_missing else 'present'}, "
+      f"new listings to insert: {len(plan)}, listings needing country backfill: {bf_need}")
+
 bak = DB + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-superglobal"
-shutil.copy2(DB, bak); print(f"\nDB backed up -> {bak}")
+shutil.copy2(DB, bak); print(f"DB backed up -> {bak}")
 
 # 1) ensure the country column exists (this is what surfaces l.country to the frontend)
 added = ensure_country_column(conn)

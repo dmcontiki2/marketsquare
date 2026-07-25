@@ -300,28 +300,18 @@ if exist "%PROJECT%\RUN_ADV_PHOTOS_ONCE.flag" (
 )
 
 
-:: SUPER-GLOBAL-1 (25 Jul 2026, David): create US/UK/AUS super_example listings across all 8
-:: categories by cloning the ZA exemplars (wires the new /static/super photos + localized copy).
-:: Idempotent; guarded by RUN_SEED_SUPER_ONCE.flag; deletes the flag after a clean apply.
-if exist "%PROJECT%\RUN_SEED_SUPER_ONCE.flag" (
-    echo  [3g] ONE-SHOT: seeding US/UK/AUS super-advert listings...
-    scp "%PROJECT%\scripts\seed_super_global.py" %SERVER%:%REMOTE%/seed_super_global.py
-    if %errorlevel% neq 0 (
-        echo  ERROR: SCP failed for seed_super_global.py - seed NOT run, flag kept.
-    ) else (
-        echo  --- dry run ---
-        ssh -n %SERVER% "cd %REMOTE% && python3 seed_super_global.py"
-        echo  --- apply ---
-        ssh -n %SERVER% "cd %REMOTE% && python3 seed_super_global.py --apply"
-        if %errorlevel% equ 0 (
-            del "%PROJECT%\RUN_SEED_SUPER_ONCE.flag"
-            echo  [OK] Super-global seed applied - one-shot flag removed.
-        ) else (
-            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
-        )
-    )
-    echo.
+:: SUPER-GLOBAL-1 (25 Jul 2026, David): create/repair US/UK/AUS super_example listings.
+:: SELF-HEALING & idempotent - runs EVERY deploy (no flag): adds listings.country if missing,
+:: seeds US/GB/AU geo, inserts any missing exemplars, backfills each listing's country from its
+:: city. Prints per-country tallies. Skips its own DB backup when already in sync.
+echo  [3g] Seeding/repairing US/UK/AUS super-advert listings (idempotent, self-healing)...
+scp "%PROJECT%\scripts\seed_super_global.py" %SERVER%:%REMOTE%/seed_super_global.py
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for seed_super_global.py - seed skipped this deploy.
+) else (
+    ssh -n %SERVER% "cd %REMOTE% && python3 seed_super_global.py --apply"
 )
+echo.
 
 
 :: ── Step 3b: Deploy World Heritage data (wonders.json) ────
