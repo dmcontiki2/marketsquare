@@ -65,6 +65,16 @@ CAT_KEY = {
     "services":   "svc",
 }
 
+# Category-specific columns to blank out if we ever have to clone a cross-category base row
+# (so a base clone doesn't carry, e.g., vehicle specs onto a Property listing).
+CAT_SPECIFIC_COLS = [
+    "beds","baths","garages","prop_type","floor_area","erf_size","listing_type",
+    "subject","level","mode","service_type","availability",
+    "collectible_type","condition","era_year","ai_grade","ai_grade_conf","ai_grade_notes","grade_tier",
+    "make","model","variant","vehicle_year","mileage_km","transmission","fuel_type","body_type","drivetrain","colour",
+    "environment_type","per",
+]
+
 # Localised copy per (cc, category): (title, price, blurb). AUD shown as A$.
 COPY = {
  ("us","adventures_experiences"): ("Yellowstone Country Big-Game Safari — Guided Wildlife Drive","$180 / person","A full-day guided wildlife drive through world-famous geyser-and-wildlife country in Wyoming. Bison, elk, wolf, grizzly and moose from an open-sided touring truck, with a sundowner over the canyon."),
@@ -176,12 +186,26 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
             warns.append(f"no copy for {cc}/{cat} — skipped"); continue
         if conn.execute("SELECT id FROM listings WHERE title=? LIMIT 1", (title,)).fetchone():
             skips.append(f"{iso2}/{cat}: '{title[:40]}...' already exists"); continue
+        # The DB stores categories with mixed casing (adventures/local_market lowercase, others
+        # e.g. 'Cars'/'Property' Title Case). Match case-insensitively, and use the DB's actual
+        # casing for the new listing so it lands under the right category filter.
+        cat_row = conn.execute(
+            "SELECT category FROM listings WHERE LOWER(category)=LOWER(?) LIMIT 1", (cat,)).fetchone()
+        actual_cat = cat_row["category"] if cat_row else cat
         tmpl = conn.execute(
-            "SELECT * FROM listings WHERE COALESCE(super_example,0)=1 AND category=? LIMIT 1",
+            "SELECT * FROM listings WHERE COALESCE(super_example,0)=1 AND LOWER(category)=LOWER(?) LIMIT 1",
             (cat,)).fetchone()
+        base_used = False
+        if not tmpl:   # no same-category exemplar — clone ANY super_example as a structural base
+            tmpl = conn.execute("SELECT * FROM listings WHERE COALESCE(super_example,0)=1 LIMIT 1").fetchone()
+            base_used = True
         if not tmpl:
-            warns.append(f"no ZA template for category {cat} — skipped {iso2}"); continue
+            warns.append(f"no super_example template at all in DB — skipped {iso2}/{cat}"); continue
         row = dict(tmpl); row.pop("id", None)
+        row["category"] = actual_cat
+        if base_used:
+            for _k in CAT_SPECIFIC_COLS:
+                if _k in has: row[_k] = None
         row.update({
             "city": city, "title": title, "price": price,
             "description": "[photos:" + "|".join(photos) + "]\n" + blurb,
@@ -209,6 +233,8 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
 print(f"DB     : {DB}")
 print(f"ASSETS : {ASSETS}")
 print(f"MODE   : {'APPLY' if APPLY else 'DRY-RUN'}")
+_sx = conn.execute("SELECT category, COUNT(*) n FROM listings WHERE COALESCE(super_example,0)=1 GROUP BY category ORDER BY category").fetchall()
+print("SUPER-EX categories in DB: " + ", ".join(f"{r['category']}x{r['n']}" for r in _sx))
 geo_needed = sorted({(iso2, cname, city) for (cc,iso2,cname,city,*_rest) in plan})
 print(f"GEO    : ensure {len(geo_needed)} city(s): " + ", ".join(f"{c} ({i})" for i,cn,c in geo_needed))
 print(f"PLAN   : {len(plan)} new listings, {len(skips)} skipped (exist), {len(warns)} warnings\n")
