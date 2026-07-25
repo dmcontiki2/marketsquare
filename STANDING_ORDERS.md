@@ -28,3 +28,28 @@ _First applied:_ the two Adventures exemplars (game drive #270, lodge #271) were
 Dinokeng Game Reserve, then genericised to "a Big Five reserve in Gauteng, ~40 min north of
 Pretoria" (Option A) — map de-named and kept deliberately illustrative. David to offer a real
 Dinokeng landowner the lead advert.
+
+## SO-1b · Heritage & public landmarks — accurate anchor, genericise the rest  (25 Jul 2026, David)
+Refines SO-1 for adverts built around real, PUBLIC, documented places — national parks,
+world-heritage sites, public long-distance trails, public railways/routes, well-known
+landmarks. Because their existence, geography and public facts are public record
+(Wikipedia-grade), an exemplar MAY **name the public site/route accurately and map it
+accurately from public sources.** Everything else stays under SO-1:
+
+- **Genericise every private / commercial specific** — the named hotel, the specific B&B,
+  the operator, the brand. "A cosy B&B", not "Gasthof Müller"; "a church tower", not that
+  named church.
+- **Imagery stays clearly illustrative** — your own or AI-generated generic scenes; never a
+  copyrighted photo/film, a real trademark/logo, an identifiable face, or licensed music.
+- **No claim of official endorsement.**
+- **Each such advert is a DEMO for outreach** — built so David can take it to the real body
+  or operator and offer them the lead advert (their real name, their real detail).
+
+Practical test (not legal advice): *the geography is free; the specific stuff is where the
+care is. Composite, don't copy.*
+
+## SO-1b clarification — heritage sites are depicted REAL (25 Jul 2026, David)
+A public heritage/World-Heritage site (e.g. **Stonehenge, Avebury**) does **NOT** get genericised on our exemplars.
+It is named and depicted **accurately** — Wikipedia info and reference imagery are fair to use — because it is public, famous and not ours to disguise.
+Only the **surrounding private specifics** are genericised: the tour operator, the vehicle/coach branding, the accommodation, and any nearby private business.
+Rule of thumb: *the monument is real; the business around it is a composite.* (Applied in the UK Adventures set: real Stonehenge/Avebury hero shots, fictional cream-and-green heritage coach + generic Georgian country-house stay.)

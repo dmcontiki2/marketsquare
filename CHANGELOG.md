@@ -5341,3 +5341,26 @@ Cost model impact: none.
 ## SCAN-22 shipped — dead local `name` removed from `_demand_render_invite` · 15 Jul 2026 (daily-loop Fixer)
 Static-scan LOW (ruff F841): `bea_main.py:5685` computed `name = (prospect["email_enc"] or "").split("@")[0] if prospect else ""` but never used it — the next line hardcodes `greeting = ""` ("no scraped personal names in v1"). Removed the one dead line (behaviour-neutral; `name` had no other reference in the function). Non-gated: an outreach-render template filler on a dead variable — touches no payments/ledger/EULA/KYC and no consent/opt-out/send-gating logic (Gate 1+2 clear, positive confidence → auto-ship). Method: Python str.replace driver on the server-fetched main.py (anchor asserted unique; never Edit/Write), ast.parse clean, −75B / one line. Deploy: server backup `main.py.bak-20260715-scan22` (722211B), scp md5 parity `cdeda94…` local==server, server-venv AST OK, dead-local grep=0 on served file, `systemctl restart marketsquare` active, /health v1.3.1 direct+public, smoke 40/40 pre+post, Cloudflare purge `{purged:true}`. Queue advances: SCAN-23 (B904 ×2 auth_verify) → SCAN-24 (unused param ticket_id) remain auto-ship for the next Fixer.
 Cost model impact: none.
+
+## 2026-07-25 — Launch-market Adventures image sets built (US, UK, AUS)
+Mirrors the ZA Adventures pass. Each = 8 experience + 8 accommodation photos, 1200x805 web-weight, in assets/super/.
+- US  : sup_us_advexp_* (Yellowstone-style wildlife tour, olive touring truck) + sup_us_advacc_* (timber-stone great lodge).
+- UK  : sup_uk_advexp_* (English heritage tour — REAL Stonehenge & Avebury per SO-1b clarification, generic cream/green coach) + sup_uk_advacc_* (Georgian country-house stay).
+- AUS : sup_au_advexp_* (REAL Great Barrier Reef dive, generic white/teal catamaran) + sup_au_advacc_* (over-water reef-island eco-lodge).
+All SO-1/SO-1b + PHOTO-ANON-1 compliant (faces from behind, no signage/logos; heritage sites real, private operators/lodgings composite).
+NOT yet wired into the DB — these are assets only. Next: create super_example listings per country (or upsell demos), remaining categories (Cars/Property/Tutors/Local/Collectors/Services), and flagship journeys (Pan-American, Trans-Siberian).
+
+## 2026-07-25 — Marketplace CATEGORY exemplars built for US, UK, AUS (66 photos)
+Each country mirrors the ZA category set: Cars(4), Property(6), Tutors(3), Local Market(3), Collectors(3), Services(3) = 22/country.
+- US : pickup truck, craftsman home, maple-syrup artisan, US gold-eagle coins, home-electrical service. (sup_us_cars/property/tutors/lm/collect/svc_*)
+- UK : classic green Mini, honey-stone period home, cheese & chutney artisan, gold sovereigns, English landscape gardening. (sup_uk_*)
+- AUS: white ute (RHD), modern coastal home + pool, macadamia & native-honey artisan, opals & gold nuggets, pool service. (sup_au_*)
+Artisan product labels are the composite seller's own (e.g. 'Sugar Hill Farm', 'Native Wildflower Honey') — consistent with the ZA bee/honey exemplar. No third-party brands; no faces (hands/backs only).
+STATUS: All 4 launch markets (ZA+US+UK+AUS) now have a full Adventures pass + full category exemplar set as assets. ~114 new sup_ images this session. assets/super now holds 155 sup_*.jpg.
+NOT yet wired into the DB (assets only). Remaining: (a) DB wiring to publish these as super_example listings/demos; (b) flagship journeys (Pan-American, Trans-Siberian); (c) sync assets to /static on deploy.
+
+## 2026-07-25 — SUPER-GLOBAL-1: wire US/UK/AUS super_example listings
+- NEW scripts/seed_super_global.py — clones ZA super_example rows to create US/UK/AUS exemplars across all 8 categories (24 listings), wiring the new /static/super photos + localized title/price/city/country/desc. Idempotent, dry-run-first, DB-backup. Tested against a synthetic DB (insert + idempotent no-op + clone-of-all-columns verified).
+- ms.js: gated the adv-reserve-map iframe to country ZA only (l.country ZA check) so US/UK/AUS adventure listings don't show the Gauteng map. Syntax verified (node --check).
+- VISIBILITY: Adventures categories are borderless (trip-planning reach exemption) -> US/UK/AUS adventure exemplars appear pinned in the feed immediately. Cars/Property/Tutors/LM/Collectors/Services are city-gated -> live in DB + reachable by direct link, but won't surface in the ZA feed until a market/city switcher + per-country geo seeding lands.
+- RUN ORDER: deploy (syncs assets/super -> /static/super + ms.js), then on server: python3 scripts/seed_super_global.py (dry-run) -> --apply.
