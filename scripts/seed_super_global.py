@@ -113,6 +113,26 @@ def photos_for(cc, catkey):
     hits.sort(key=idx)
     return [STATIC_PREFIX + os.path.basename(p) for p in hits]
 
+def ensure_country_column(conn):
+    """Add listings.country (default ZA) if missing — the feed serialises SELECT l.*,
+    so this is what surfaces l.country to the frontend (currency, flag, map-gate)."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    if "country" not in cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN country TEXT DEFAULT 'ZA'")
+        return True
+    return False
+
+def backfill_country_from_geo(conn):
+    """Set each listing's country from its city's geo_cities.country_iso2 (via geo_city_id).
+    Fixes rows already inserted before the country column existed. Returns rows changed."""
+    return conn.execute("""
+        UPDATE listings
+           SET country = (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)
+         WHERE geo_city_id IS NOT NULL
+           AND (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id) IS NOT NULL
+           AND COALESCE(country,'') <> (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)
+    """).rowcount
+
 def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng):
     """Idempotently ensure country→region→city exist; return the city id."""
     conn.execute("INSERT OR IGNORE INTO geo_countries (iso2,name,region_label,active) VALUES (?,?,?,1)",
@@ -196,22 +216,28 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid,
 for s in skips: print(f"  = SKIP {s}")
 for w in warns: print(f"  ! WARN {w}")
 
+country_present = "country" in has
+print(f"COUNTRY: listings.country column {'present' if country_present else 'MISSING → will add (default ZA)'}; "
+      f"then backfill every listing's country from its city's geo_cities entry.")
+
 if not APPLY:
-    print("\nDRY-RUN only — rerun with --apply to seed geo + insert.")
+    print("\nDRY-RUN only — rerun with --apply to add/backfill country, seed geo + insert.")
     conn.close(); sys.exit(0)
-if not plan:
-    print("\nNothing to insert (all up to date)."); conn.close(); sys.exit(0)
 
 bak = DB + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-superglobal"
 shutil.copy2(DB, bak); print(f"\nDB backed up -> {bak}")
 
-# seed geo once per country, cache city ids
-city_id = {}
-for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid, row in plan:
-    if iso2 not in city_id:
-        city_id[iso2] = ensure_geo_city(conn, iso2, cname, rlabel, rname, city, lat, lng)
-        print(f"  geo: {iso2} {city} -> geo_city_id {city_id[iso2]}")
+# 1) ensure the country column exists (this is what surfaces l.country to the frontend)
+added = ensure_country_column(conn)
+print(f"  country column: {'ADDED (default ZA)' if added else 'already present'}")
 
+# 2) seed the geo hierarchy for all target countries (idempotent), cache city ids
+city_id = {}
+for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
+    city_id[iso2] = ensure_geo_city(conn, iso2, cname, rlabel, rname, city, lat, lng)
+    print(f"  geo: {iso2} {city} -> geo_city_id {city_id[iso2]}")
+
+# 3) insert any missing listings (pointing at the seeded city)
 ins = 0
 for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid, row in plan:
     if "geo_city_id" in has:
@@ -220,8 +246,19 @@ for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid,
     conn.execute(f"INSERT INTO listings ({','.join(cols)}) VALUES ({','.join('?'*len(cols))})",
                  [row[c] for c in cols])
     ins += 1
+
+# 4) backfill country on EVERY listing from its city's geo entry (covers rows created
+#    before the column existed, and the ones just inserted)
 conn.commit()
-print(f"Inserted {ins} listings.")
+backfilled = backfill_country_from_geo(conn)
+conn.commit()
+print(f"Inserted {ins} listings; backfilled country on {backfilled} listing(s).")
+try:
+    for iso2 in ("ZA","US","GB","AU"):
+        n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
+        print(f"    country {iso2}: {n} listings")
+except Exception:
+    pass
 try:
     conn.execute("INSERT INTO listings_fts(listings_fts) VALUES('rebuild')"); conn.commit()
     print("FTS rebuilt.")
