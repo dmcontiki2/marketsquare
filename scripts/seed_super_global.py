@@ -1,34 +1,36 @@
 """
-seed_super_global.py — SUPER-GLOBAL-1 (25 Jul 2026, David)
+seed_super_global.py — SUPER-GLOBAL-2 (25 Jul 2026, David)
 ==========================================================
 Creates the US / UK / AUS super_example exemplar listings by CLONING the existing
 ZA super_example rows (one per category), so every column the app expects is filled
-exactly like a working ZA exemplar. Only the country-specific fields are overridden:
-country, city, suburb, title, price, price_num, description (+[photos:] prefix),
-photo_urls, thumb_url/medium_url, and location fields are reset.
+exactly like a working ZA exemplar. Country is NOT a listings column — the app derives
+a listing's country from geo_cities (see _seller_country_for_listing in bea_main.py) —
+so this script SEEDS a minimal geo hierarchy (country → region → city) for US/GB/AU and
+points each new listing at that city via city + geo_city_id. That makes the country,
+flag and currency resolve correctly (ms.js ADV_COUNTRY_FLAGS / ADV_COUNTRY_CURRENCY).
 
-Photos are discovered on disk from the assets dir by the naming convention
-    sup_<cc>_<catkey>_<n>_<name>.jpg      (cc = us|uk|au)
-so the exact file list per country+category is picked up automatically.
+Per (country, category) it overrides: city, geo_city_id, title, price, price_num,
+description (+[photos:] prefix), photo_urls, thumb_url/medium_url, suburb (cleared),
+and resets location fields. Everything else (seller_email, category, super_example,
+trust_score, flags) is inherited from the live ZA exemplar.
 
 SAFE BY DESIGN:
   • Dry-run first. --apply backs up the DB, then writes.
-  • Idempotent: skips any (country, category) that already has a super_example listing.
-  • Clones a live ZA exemplar row → inherits seller_email, trust_score, category, flags.
+  • Idempotent: skips any listing whose exact title already exists.
+  • Photos discovered on disk by naming convention  sup_<cc>_<catkey>_<n>_<name>.jpg.
   • Only inserts columns that actually exist in the listings table.
 
 Run ON THE SERVER:
     python3 seed_super_global.py            # dry-run, prints the full plan
-    python3 seed_super_global.py --apply    # backs up DB, inserts
+    python3 seed_super_global.py --apply    # backs up DB, seeds geo, inserts
 
 Optional env:
     MS_DB_PATH=/path/to/marketsquare.db
-    MS_SUPER_ASSETS=/var/www/marketsquare/static/super   (where the sup_*.jpg live)
+    MS_SUPER_ASSETS=/var/www/marketsquare/static/super
 """
 import os, sys, re, json, glob, shutil, sqlite3
 from datetime import datetime
 
-# ── DB + assets discovery ─────────────────────────────────────────────────────
 DB = os.getenv("MS_DB_PATH") or next((p for p in [
     "/var/www/marketsquare/marketsquare.db",
     "/var/www/marketsquare/data/marketsquare.db",
@@ -44,16 +46,14 @@ if not ASSETS:
     sys.exit("No super assets dir found — set MS_SUPER_ASSETS=/path/to/static/super")
 
 APPLY = "--apply" in sys.argv
-STATIC_PREFIX = "/static/super/"   # web path the app serves photos from
+STATIC_PREFIX = "/static/super/"
 
-# ── Country + category maps ───────────────────────────────────────────────────
-# cc (filename code) -> (DB country, display city label)
+# cc (filename code) -> (iso2, country name, city, region label, region name, lat, lng, currency)
 COUNTRIES = [
-    ("us", "US", "Denver"),
-    ("uk", "UK", "London"),
-    ("au", "AU", "Sydney"),
+    ("us", "US", "United States", "Denver", "State",  "Colorado", 39.7392, -104.9903, "$"),
+    ("uk", "GB", "United Kingdom", "London", "County", "Greater London", 51.5074, -0.1278, "£"),
+    ("au", "AU", "Australia",      "Sydney", "State",  "New South Wales", -33.8688, 151.2093, "A$"),
 ]
-# DB category slug -> filename category key
 CAT_KEY = {
     "adventures_experiences":   "advexp",
     "adventures_accommodation": "advacc",
@@ -65,8 +65,7 @@ CAT_KEY = {
     "services":   "svc",
 }
 
-# ── Localised copy: title / price / blurb per (cc, category) ───────────────────
-# price carries its unit for rate categories (tutors/services/adventures), mirroring ZA.
+# Localised copy per (cc, category): (title, price, blurb). AUD shown as A$.
 COPY = {
  ("us","adventures_experiences"): ("Yellowstone Country Big-Game Safari — Guided Wildlife Drive","$180 / person","A full-day guided wildlife drive through world-famous geyser-and-wildlife country in Wyoming. Bison, elk, wolf, grizzly and moose from an open-sided touring truck, with a sundowner over the canyon."),
  ("us","adventures_accommodation"): ("The Great Lodge — Timber & Stone Retreat","$420 / night","A handcrafted timber-and-stone lodge on the lake. Fireside lounge, hot-spring deck, and dinner under the stars — the base camp for your wildlife days."),
@@ -86,17 +85,15 @@ COPY = {
  ("uk","collectors"): ("Gold Sovereign — Antique Graded Coin","£1,850","An antique gold sovereign in graded holder, with loupe-ready detail and full provenance. Viewing by appointment."),
  ("uk","services"): ("Landscape Gardener — Design & Planting","£280 / day","Landscape gardener — design, planting, borders and lawns. Tidy, reliable, beautiful results. References available."),
 
- ("au","adventures_experiences"): ("Great Barrier Reef Dive & Snorkel — Guided Reef Day","$160 / person","A guided day on the Great Barrier Reef aboard a reef dive catamaran — coral gardens, sea turtles, manta rays and a sandy cay, finishing with a sunset on the water. All levels."),
- ("au","adventures_accommodation"): ("Reef Island Eco-Lodge — Over-Water Villas","$540 / night","A reef-island eco-lodge of over-water timber-and-thatch villas above a turquoise lagoon. Beach dinners, infinity pool and sunrise from your deck."),
- ("au","cars"): ("Workhorse Ute — Tidy, Full Service History","$21,900","A clean, tidy ute with an open tray and full service history. Reliable workhorse, ready to go. Inspection welcome."),
- ("au","property"): ("Modern Coastal Home — Pool & Deck","$1,150,000","A bright modern home with open-plan living, a stone-island kitchen, a sparkling pool and a sunny entertaining deck amid native planting."),
- ("au","tutors"): ("Maths & Science Tutor — High School & HSC","$65 / hour","Experienced maths and science tutor. High school through HSC, exam prep a strength. In-home or online."),
- ("au","local_market"): ("Native Wildflower Honey & Macadamias — Bush Harvest","$22","Golden native wildflower honey and fresh macadamias, small-batch and hand-labelled. Bush-food gift boxes available."),
- ("au","collectors"): ("Australian Opal & Gold Nugget — Collector Piece","$1,400","A brilliant flashing Australian opal and gold nugget, in graded holders with full provenance. Viewing by appointment."),
- ("au","services"): ("Pool Care & Maintenance — Weekly Service","$75 / visit","Reliable pool care — cleaning, water testing and balancing, equipment checks. Weekly or fortnightly. Sparkling results."),
+ ("au","adventures_experiences"): ("Great Barrier Reef Dive & Snorkel — Guided Reef Day","A$160 / person","A guided day on the Great Barrier Reef aboard a reef dive catamaran — coral gardens, sea turtles, manta rays and a sandy cay, finishing with a sunset on the water. All levels."),
+ ("au","adventures_accommodation"): ("Reef Island Eco-Lodge — Over-Water Villas","A$540 / night","A reef-island eco-lodge of over-water timber-and-thatch villas above a turquoise lagoon. Beach dinners, infinity pool and sunrise from your deck."),
+ ("au","cars"): ("Workhorse Ute — Tidy, Full Service History","A$21,900","A clean, tidy ute with an open tray and full service history. Reliable workhorse, ready to go. Inspection welcome."),
+ ("au","property"): ("Modern Coastal Home — Pool & Deck","A$1,150,000","A bright modern home with open-plan living, a stone-island kitchen, a sparkling pool and a sunny entertaining deck amid native planting."),
+ ("au","tutors"): ("Maths & Science Tutor — High School & HSC","A$65 / hour","Experienced maths and science tutor. High school through HSC, exam prep a strength. In-home or online."),
+ ("au","local_market"): ("Native Wildflower Honey & Macadamias — Bush Harvest","A$22","Golden native wildflower honey and fresh macadamias, small-batch and hand-labelled. Bush-food gift boxes available."),
+ ("au","collectors"): ("Australian Opal & Gold Nugget — Collector Piece","A$1,400","A brilliant flashing Australian opal and gold nugget, in graded holders with full provenance. Viewing by appointment."),
+ ("au","services"): ("Pool Care & Maintenance — Weekly Service","A$75 / visit","Reliable pool care — cleaning, water testing and balancing, equipment checks. Weekly or fortnightly. Sparkling results."),
 }
-
-PREFIX_RE = re.compile(r"^\[photos:([^\]]*)\]")
 
 def price_to_num(s):
     m = re.search(r"[0-9][0-9,\. ]*", s or "")
@@ -109,7 +106,6 @@ def price_to_num(s):
         return None
 
 def photos_for(cc, catkey):
-    """All sup_<cc>_<catkey>_*.jpg on disk, ordered by the numeric index in the name."""
     hits = glob.glob(os.path.join(ASSETS, f"sup_{cc}_{catkey}_*.jpg"))
     def idx(p):
         m = re.search(rf"sup_{cc}_{catkey}_(\d+)_", os.path.basename(p))
@@ -117,45 +113,57 @@ def photos_for(cc, catkey):
     hits.sort(key=idx)
     return [STATIC_PREFIX + os.path.basename(p) for p in hits]
 
+def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng):
+    """Idempotently ensure country→region→city exist; return the city id."""
+    conn.execute("INSERT OR IGNORE INTO geo_countries (iso2,name,region_label,active) VALUES (?,?,?,1)",
+                 (iso2, cname, region_label))
+    r = conn.execute("SELECT id FROM geo_regions WHERE name=? AND country_iso2=?",
+                     (region_name, iso2)).fetchone()
+    region_id = r["id"] if r else conn.execute(
+        "INSERT INTO geo_regions (name,country_iso2,active) VALUES (?,?,1)",
+        (region_name, iso2)).lastrowid
+    c = conn.execute("SELECT id FROM geo_cities WHERE name=? AND country_iso2=?",
+                     (city, iso2)).fetchone()
+    if c:
+        return c["id"]
+    gcols = [x[1] for x in conn.execute("PRAGMA table_info(geo_cities)").fetchall()]
+    if "lat" in gcols and "lng" in gcols:
+        return conn.execute(
+            "INSERT INTO geo_cities (name,region_id,country_iso2,lat,lng,active) VALUES (?,?,?,?,?,1)",
+            (city, region_id, iso2, lat, lng)).lastrowid
+    return conn.execute(
+        "INSERT INTO geo_cities (name,region_id,country_iso2,active) VALUES (?,?,?,1)",
+        (city, region_id, iso2)).lastrowid
+
 # ── Build the plan ────────────────────────────────────────────────────────────
 conn = sqlite3.connect(DB); conn.row_factory = sqlite3.Row
-listing_cols = [r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()]
-if "super_example" not in listing_cols:
+has = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+if "super_example" not in has:
     sys.exit("No super_example column — wrong DB.")
-has = set(listing_cols)
-now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-# fields we null-out / reset on the clone (only if the column exists)
-RESET_NULL = ["geo_city_id","listing_lat","listing_lng","street_address","nearby_pois","boost_until"]
+now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+RESET_NULL = ["listing_lat","listing_lng","street_address","nearby_pois","boost_until"]
 RESET_ZERO = ["view_count"]
 
 plan, skips, warns = [], [], []
-for cc, country, city in COUNTRIES:
+for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
     for cat, catkey in CAT_KEY.items():
         photos = photos_for(cc, catkey)
         if not photos:
-            warns.append(f"no photos for {cc}/{cat} (looked for sup_{cc}_{catkey}_*.jpg) — skipped")
-            continue
-        # idempotency: already have a super exemplar for this country+category?
-        exists = conn.execute(
-            "SELECT id FROM listings WHERE COALESCE(super_example,0)=1 AND category=? AND country=? LIMIT 1",
-            (cat, country)).fetchone()
-        if exists:
-            skips.append(f"{country}/{cat} already exists (listing {exists['id']})")
-            continue
+            warns.append(f"no photos for {cc}/{cat} (sup_{cc}_{catkey}_*.jpg) — skipped"); continue
+        title, price, blurb = COPY.get((cc, cat), (None, None, None))
+        if not title:
+            warns.append(f"no copy for {cc}/{cat} — skipped"); continue
+        if conn.execute("SELECT id FROM listings WHERE title=? LIMIT 1", (title,)).fetchone():
+            skips.append(f"{iso2}/{cat}: '{title[:40]}...' already exists"); continue
         tmpl = conn.execute(
             "SELECT * FROM listings WHERE COALESCE(super_example,0)=1 AND category=? LIMIT 1",
             (cat,)).fetchone()
         if not tmpl:
-            warns.append(f"no ZA template for category {cat} — skipped {country}")
-            continue
-        title, price, blurb = COPY.get((cc, cat), (tmpl["title"], tmpl["price"], ""))
-        desc = "[photos:" + "|".join(photos) + "]\n" + blurb
-        row = dict(tmpl)
-        row.pop("id", None)
+            warns.append(f"no ZA template for category {cat} — skipped {iso2}"); continue
+        row = dict(tmpl); row.pop("id", None)
         row.update({
-            "country": country, "city": city, "title": title,
-            "price": price, "description": desc,
+            "city": city, "title": title, "price": price,
+            "description": "[photos:" + "|".join(photos) + "]\n" + blurb,
             "photo_urls": json.dumps(photos),
         })
         if "suburb" in has: row["suburb"] = ""
@@ -173,31 +181,41 @@ for cc, country, city in COUNTRIES:
             if k in has: row[k] = 0
         for k in ("created_at","updated_at","published_at"):
             if k in has: row[k] = now
-        # keep only real columns
-        row = {k: v for k, v in row.items() if k in has}
-        plan.append((country, cat, title, price, len(photos), tmpl["id"], row))
+        row = {k: v for k, v in row.items() if k in has and k != "country"}
+        plan.append((cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, len(photos), tmpl["id"], row))
 
 # ── Report ────────────────────────────────────────────────────────────────────
 print(f"DB     : {DB}")
 print(f"ASSETS : {ASSETS}")
 print(f"MODE   : {'APPLY' if APPLY else 'DRY-RUN'}")
+geo_needed = sorted({(iso2, cname, city) for (cc,iso2,cname,city,*_rest) in plan})
+print(f"GEO    : ensure {len(geo_needed)} city(s): " + ", ".join(f"{c} ({i})" for i,cn,c in geo_needed))
 print(f"PLAN   : {len(plan)} new listings, {len(skips)} skipped (exist), {len(warns)} warnings\n")
-for country, cat, title, price, nph, tid, _row in plan:
-    print(f"  + {country:<3} {cat:<26} {nph} photos  {price:<16} | {title[:52]}  (clone of ZA #{tid})")
+for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid, _row in plan:
+    print(f"  + {iso2:<3} {cat:<26} {nph} ph  {price:<16} {city:<8} | {title[:48]}  (clone ZA #{tid})")
 for s in skips: print(f"  = SKIP {s}")
 for w in warns: print(f"  ! WARN {w}")
 
 if not APPLY:
-    print("\nDRY-RUN only — rerun with --apply to insert.")
+    print("\nDRY-RUN only — rerun with --apply to seed geo + insert.")
     conn.close(); sys.exit(0)
-
 if not plan:
     print("\nNothing to insert (all up to date)."); conn.close(); sys.exit(0)
 
 bak = DB + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-superglobal"
 shutil.copy2(DB, bak); print(f"\nDB backed up -> {bak}")
+
+# seed geo once per country, cache city ids
+city_id = {}
+for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid, row in plan:
+    if iso2 not in city_id:
+        city_id[iso2] = ensure_geo_city(conn, iso2, cname, rlabel, rname, city, lat, lng)
+        print(f"  geo: {iso2} {city} -> geo_city_id {city_id[iso2]}")
+
 ins = 0
-for country, cat, title, price, nph, tid, row in plan:
+for cc, iso2, cname, city, rlabel, rname, lat, lng, cat, title, price, nph, tid, row in plan:
+    if "geo_city_id" in has:
+        row["geo_city_id"] = city_id[iso2]
     cols = list(row.keys())
     conn.execute(f"INSERT INTO listings ({','.join(cols)}) VALUES ({','.join('?'*len(cols))})",
                  [row[c] for c in cols])
@@ -209,5 +227,5 @@ try:
     print("FTS rebuilt.")
 except Exception as e:
     print("FTS rebuild skipped:", e)
-print("APPLIED. Deploy static assets so /static/super/* resolve, then purge CDN cache if edge-cached.")
+print("APPLIED. Adventures appear pinned in the feed; refresh (purge CDN cache if edge-cached).")
 conn.close()
