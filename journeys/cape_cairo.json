@@ -1,0 +1,544 @@
+{
+ "id": "cape_cairo",
+ "out": "cape_to_cairo_journey.html",
+ "photo_dir": "assets/journey/c2c",
+ "title": "Cape to Cairo — the rail journey",
+ "pill": "★ CAPE TO CAIRO · RAIL EPIC",
+ "h1": "Cape to Cairo, by rail",
+ "sub": "Six legs, one continent — tap a leg to ride it: the great stations, the crossings, the food, where you sleep.",
+ "cap": "Illustrative continental rail format · real cities shown for bearing; trains, stays &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "unit": "Leg",
+ "stat1_icon": "🚂",
+ "stat2_icon": "🕓",
+ "route_summary": "<b>Whole route</b> · 6 legs · ~10 500 km · Table Mountain to the Pyramids. &nbsp;<span class=\"hint\">Tap a leg to ride it.</span>",
+ "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
+ "overlays": {
+  "route": "🚂 Rail route",
+  "view": "🏔️ Viewpoints",
+  "food": "🍽️ Dishes on the line"
+ },
+ "towns": [
+  [
+   "Cape Town",
+   -33.925,
+   18.424
+  ],
+  [
+   "Matjiesfontein",
+   -33.23,
+   20.58
+  ],
+  [
+   "Kimberley",
+   -28.738,
+   24.763
+  ],
+  [
+   "Pretoria",
+   -25.746,
+   28.188
+  ],
+  [
+   "Victoria Falls",
+   -17.925,
+   25.856
+  ],
+  [
+   "Dar es Salaam",
+   -6.792,
+   39.208
+  ],
+  [
+   "Aswan",
+   24.089,
+   32.899
+  ],
+  [
+   "Luxor",
+   25.687,
+   32.64
+  ],
+  [
+   "Cairo",
+   30.044,
+   31.236
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Table Mountain to the Karoo",
+   "dist": "1 100 km",
+   "ascent": "18 hr",
+   "color": "#C8873A",
+   "summary": "Out of the Cape through the winelands and up onto a high, dry plateau of endless sky.",
+   "seg": [
+    [
+     -33.925,
+     18.424
+    ],
+    [
+     -33.9,
+     18.6
+    ],
+    [
+     -33.7,
+     19.4
+    ],
+    [
+     -33.23,
+     20.58
+    ],
+    [
+     -33.1,
+     21.0
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -33.925,
+     "lng": 18.424,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Cape Town · the platform",
+     "blurb": "Table Mountain filling the window, brass, teak and a station clock — the journey starts formally.",
+     "photo": "l1_start.jpg"
+    },
+    {
+     "lat": -33.9,
+     "lng": 18.6,
+     "type": "food",
+     "icon": "🍮",
+     "name": "Cape Malay farewell lunch",
+     "blurb": "Spiced mince baked under savoury custard with yellow rice, then syrup-soaked plaited doughnuts with coconut.",
+     "photo": "l1_food.jpg"
+    },
+    {
+     "lat": -33.7,
+     "lng": 19.4,
+     "type": "view",
+     "icon": "🍇",
+     "name": "Through the winelands",
+     "blurb": "Whitewashed gables, vineyards in rows, and a wall of blue mountains the train has to find a way through.",
+     "photo": "l1_view.jpg"
+    },
+    {
+     "lat": -33.23,
+     "lng": 20.58,
+     "type": "sight",
+     "icon": "🚂",
+     "name": "Victorian halt on the plateau",
+     "blurb": "A perfectly preserved railway village on the empty Karoo — gaslamps, a double-storey verandah, one street.",
+     "photo": "l1_sight.jpg"
+    },
+    {
+     "lat": -33.1,
+     "lng": 21.0,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "First night in the sleeper",
+     "blurb": "Berth made up while you dine; the rhythm of rail joints and a lit lamp somewhere far out on the plain.",
+     "photo": "l1_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Karoo to the diamond city",
+   "dist": "700 km",
+   "ascent": "12 hr",
+   "color": "#3f9d78",
+   "summary": "Across the great dry interior to the city built beside the largest hand-dug hole on earth.",
+   "seg": [
+    [
+     -33.1,
+     21.0
+    ],
+    [
+     -31.0,
+     22.5
+    ],
+    [
+     -28.738,
+     24.763
+    ],
+    [
+     -28.7,
+     24.8
+    ],
+    [
+     -28.65,
+     24.85
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -33.1,
+     "lng": 21.0,
+     "type": "start",
+     "icon": "🚂",
+     "name": "Dawn on the Karoo",
+     "blurb": "Pink light on flat-topped hills, windmills, sheep, and not one other vehicle.",
+     "photo": "l2_start.jpg"
+    },
+    {
+     "lat": -31.0,
+     "lng": 22.5,
+     "type": "food",
+     "icon": "🐑",
+     "name": "Karoo lamb, slow-roasted",
+     "blurb": "Lamb raised on wild aromatic scrub, so the meat arrives pre-seasoned — served pink with pumpkin fritters.",
+     "photo": "l2_food.jpg"
+    },
+    {
+     "lat": -28.738,
+     "lng": 24.763,
+     "type": "sight",
+     "icon": "💎",
+     "name": "The Big Hole",
+     "blurb": "A 200 m crater dug by hand by fifty thousand men with picks and buckets, now filled with green water.",
+     "photo": "l2_sight.jpg"
+    },
+    {
+     "lat": -28.7,
+     "lng": 24.8,
+     "type": "view",
+     "icon": "🌾",
+     "name": "Highveld grassland",
+     "blurb": "Grass to the horizon in every direction, thunderheads stacking up in the afternoon.",
+     "photo": "l2_view.jpg"
+    },
+    {
+     "lat": -28.65,
+     "lng": 24.85,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Second night, rolling north",
+     "blurb": "Dinner in the dining car under lamplight, then the long climb onto the highveld in the dark.",
+     "photo": "l2_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Highveld to the great falls",
+   "dist": "1 400 km",
+   "ascent": "24 hr",
+   "color": "#3b5bff",
+   "summary": "North through the jacaranda capital, over the border, to the largest curtain of falling water on earth.",
+   "seg": [
+    [
+     -25.746,
+     28.188
+    ],
+    [
+     -22.5,
+     27.5
+    ],
+    [
+     -17.925,
+     25.856
+    ],
+    [
+     -17.93,
+     25.86
+    ],
+    [
+     -17.935,
+     25.865
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -25.746,
+     "lng": 28.188,
+     "type": "start",
+     "icon": "🌳",
+     "name": "Jacaranda capital",
+     "blurb": "Purple streets in spring, union buildings on the ridge, and the last big-city platform for a while.",
+     "photo": "l3_start.jpg"
+    },
+    {
+     "lat": -22.5,
+     "lng": 27.5,
+     "type": "food",
+     "icon": "🥩",
+     "name": "Biltong &amp; braai on board",
+     "blurb": "Air-dried spiced beef sliced thin as a snack, then flame-grilled steak and coiled farm sausage for dinner.",
+     "photo": "l3_food.jpg"
+    },
+    {
+     "lat": -17.925,
+     "lng": 25.856,
+     "type": "sight",
+     "icon": "💦",
+     "name": "The smoke that thunders",
+     "blurb": "A kilometre-wide curtain dropping 100 m into a gorge; the spray column is visible 50 km away.",
+     "photo": "l3_sight.jpg"
+    },
+    {
+     "lat": -17.93,
+     "lng": 25.86,
+     "type": "view",
+     "icon": "🌈",
+     "name": "The bridge over the gorge",
+     "blurb": "A 1905 steel arch spanning the chasm — the original dream of this whole railway, and the point it stalled.",
+     "photo": "l3_view.jpg"
+    },
+    {
+     "lat": -17.935,
+     "lng": 25.865,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Colonial hotel by the falls",
+     "blurb": "Verandahs, ceiling fans, high tea, warthogs on the lawn and permanent thunder in the background.",
+     "photo": "l3_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "Across the plateau to the ocean",
+   "dist": "1 900 km",
+   "ascent": "46 hr",
+   "color": "#9b59b6",
+   "summary": "The long haul east — miombo woodland, escarpment and a game park the line runs straight through.",
+   "seg": [
+    [
+     -17.935,
+     25.865
+    ],
+    [
+     -10.5,
+     33.5
+    ],
+    [
+     -8.5,
+     36.0
+    ],
+    [
+     -6.792,
+     39.208
+    ],
+    [
+     -6.8,
+     39.215
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -17.935,
+     "lng": 25.865,
+     "type": "start",
+     "icon": "🚂",
+     "name": "Onto the long line",
+     "blurb": "The famous cross-continental service: two nights, one train, minimal fuss.",
+     "photo": "l4_start.jpg"
+    },
+    {
+     "lat": -10.5,
+     "lng": 33.5,
+     "type": "view",
+     "icon": "🦒",
+     "name": "Game from the window",
+     "blurb": "The line runs through a national park — giraffe, elephant and buffalo from the dining-car window at walking pace.",
+     "photo": "l4_view.jpg"
+    },
+    {
+     "lat": -8.5,
+     "lng": 36.0,
+     "type": "food",
+     "icon": "🔥",
+     "name": "Grilled meat &amp; maize",
+     "blurb": "Charcoal-grilled goat and beef with stiff maize porridge and a fierce tomato-chilli relish, eaten with hands.",
+     "photo": "l4_food.jpg"
+    },
+    {
+     "lat": -6.792,
+     "lng": 39.208,
+     "type": "sight",
+     "icon": "🌶️",
+     "name": "Spice port on the ocean",
+     "blurb": "Indian Ocean harbour thick with the smell of clove, cardamom and cinnamon from the islands offshore.",
+     "photo": "l4_sight.jpg"
+    },
+    {
+     "lat": -6.8,
+     "lng": 39.215,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Harbour-side rooms",
+     "blurb": "Carved doors, a courtyard, call to prayer at dusk and dhows on the water at first light.",
+     "photo": "l4_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "title": "The Nile road north",
+   "dist": "3 000 km",
+   "ascent": "3 days",
+   "color": "#e0574a",
+   "summary": "North by rail and river through desert to the great dam and the beginning of Egypt.",
+   "seg": [
+    [
+     -6.8,
+     39.215
+    ],
+    [
+     15.5,
+     32.5
+    ],
+    [
+     18.5,
+     31.8
+    ],
+    [
+     22.0,
+     32.5
+    ],
+    [
+     24.089,
+     32.899
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -6.8,
+     "lng": 39.215,
+     "type": "start",
+     "icon": "⛴️",
+     "name": "Northbound",
+     "blurb": "Rail, road and river stitched together — the one leg where the dream of a single line still has gaps.",
+     "photo": "l5_start.jpg"
+    },
+    {
+     "lat": 15.5,
+     "lng": 32.5,
+     "type": "view",
+     "icon": "🏜️",
+     "name": "Where two Niles meet",
+     "blurb": "Blue water from the highlands and white water from the lakes joining in one visible seam.",
+     "photo": "l5_view.jpg"
+    },
+    {
+     "lat": 18.5,
+     "lng": 31.8,
+     "type": "sight",
+     "icon": "🔺",
+     "name": "Desert pyramids",
+     "blurb": "Steep, narrow pyramids in golden sand — smaller than Egypt's, and often entirely empty of people.",
+     "photo": "l5_sight.jpg"
+    },
+    {
+     "lat": 22.0,
+     "lng": 32.5,
+     "type": "food",
+     "icon": "🫓",
+     "name": "Slow-cooked beans &amp; flatbread",
+     "blurb": "Fava beans stewed overnight with cumin, lemon and olive oil, scooped up with hot flatbread — breakfast for a continent.",
+     "photo": "l5_food.jpg"
+    },
+    {
+     "lat": 24.089,
+     "lng": 32.899,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Nubian village on the river",
+     "blurb": "Blue and ochre houses, palm-shaded courtyards, and the Nile running fast and green below.",
+     "photo": "l5_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 6,
+   "title": "Aswan to the Pyramids",
+   "dist": "900 km",
+   "ascent": "14 hr",
+   "color": "#0e7490",
+   "summary": "The final sleeper down the Nile past temples and green fields to the oldest tourist attraction on earth.",
+   "seg": [
+    [
+     24.089,
+     32.899
+    ],
+    [
+     25.687,
+     32.64
+    ],
+    [
+     27.5,
+     31.5
+    ],
+    [
+     29.5,
+     31.3
+    ],
+    [
+     30.02,
+     31.13
+    ],
+    [
+     30.044,
+     31.236
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 24.089,
+     "lng": 32.899,
+     "type": "start",
+     "icon": "🚂",
+     "name": "The Nile sleeper",
+     "blurb": "Boarding at dusk with the river turning copper; dinner served in the cabin as the palms slide past.",
+     "photo": "l6_start.jpg"
+    },
+    {
+     "lat": 25.687,
+     "lng": 32.64,
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "Temple city at dawn",
+     "blurb": "Avenues of stone rams, hypostyle halls of vast painted columns, cut sharp by early light.",
+     "photo": "l6_sight.jpg"
+    },
+    {
+     "lat": 27.5,
+     "lng": 31.5,
+     "type": "food",
+     "icon": "🍚",
+     "name": "Rice, lentils &amp; fried onion",
+     "blurb": "The great street dish — rice, lentils and macaroni under spiced tomato sauce, vinegar and crisp onions.",
+     "photo": "l6_food.jpg"
+    },
+    {
+     "lat": 29.5,
+     "lng": 31.3,
+     "type": "view",
+     "icon": "🌾",
+     "name": "The green Nile valley",
+     "blurb": "A ribbon of intense green a few kilometres wide with hard desert on both edges — the whole country in one view.",
+     "photo": "l6_view.jpg"
+    },
+    {
+     "lat": 30.02,
+     "lng": 31.13,
+     "type": "food",
+     "icon": "🍵",
+     "name": "Mint tea in sight of the tombs",
+     "blurb": "Sweet mint tea on a rooftop with the three pyramids filling the skyline behind the cups.",
+     "photo": "l6_food2.jpg"
+    },
+    {
+     "lat": 30.044,
+     "lng": 31.236,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Journey's end · Cairo",
+     "blurb": "Ten thousand kilometres, one continent, and a last look back down the line from the Giza plateau.",
+     "photo": "l6_finish.jpg"
+    }
+   ]
+  }
+ ]
+}

@@ -53,6 +53,7 @@ COUNTRIES = [
     ("us", "US", "United States", "Denver", "State",  "Colorado", 39.7392, -104.9903, "$"),
     ("uk", "GB", "United Kingdom", "London", "County", "Greater London", 51.5074, -0.1278, "£"),
     ("au", "AU", "Australia",      "Sydney", "State",  "New South Wales", -33.8688, 151.2093, "A$"),
+    ("de", "DE", "Germany",        "Garmisch-Partenkirchen", "State", "Bavaria", 47.4917, 11.0954, "€"),
 ]
 CAT_KEY = {
     "adventures_experiences":   "advexp",
@@ -103,6 +104,8 @@ COPY = {
  ("au","local_market"): ("Native Wildflower Honey & Macadamias — Bush Harvest","A$22","Golden native wildflower honey and fresh macadamias, small-batch and hand-labelled. Bush-food gift boxes available."),
  ("au","collectors"): ("Australian Opal & Gold Nugget — Collector Piece","A$1,400","A brilliant flashing Australian opal and gold nugget, in graded holders with full provenance. Viewing by appointment."),
  ("au","services"): ("Pool Care & Maintenance — Weekly Service","A$75 / visit","Reliable pool care — cleaning, water testing and balancing, equipment checks. Weekly or fortnightly. Sparkling results."),
+ ("de","adventures_experiences"): ("Trek the Bavarian Alps — Guided Hut-to-Hut Journey","€1,450 / person","A five-day guided hut-to-hut trek through the Bavarian Alps — meadow trails and high passes, a fairy-tale castle, painted villages and mirror-still alpine lakes, with a mountain hut or gasthof each night. Guiding, half-board and luggage transfer included."),
+ ("de","adventures_accommodation"): ("Alpine Gasthof & Mountain-Hut Stay — Half-Board","€180 / night","A cosy alpine stay of timber gasthofs and mountain huts along the trail — carved balconies, feather duvets, hearty half-board dinners and sunrise over the peaks. A generic composite along the Bavarian route."),
 }
 
 def price_to_num(s):
@@ -146,7 +149,7 @@ def backfill_country_from_geo(conn):
 
 def _trust_where():
     # only OUR new US/GB/AU exemplars whose stored trust disagrees with their seller's stored trust
-    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU') AND EXISTS "
+    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU','DE') AND EXISTS "
             f"(SELECT 1 FROM users u WHERE LOWER(u.email)=LOWER(listings.seller_email) "
             f"AND u.{_utrust} IS NOT NULL AND u.{_utrust} <> COALESCE(listings.trust_score,-999))")
 
@@ -329,7 +332,7 @@ conn.commit()
 backfilled = backfill_country_from_geo(conn)
 aligned = align_trust_to_seller(conn)
 conn.commit()
-print(f"Inserted {ins} listings; backfilled country on {backfilled}; aligned trust->seller on {aligned} (US/GB/AU exemplars).")
+print(f"Inserted {ins} listings; backfilled country on {backfilled}; aligned trust->seller on {aligned} (US/GB/AU/DE exemplars).")
 try:
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]

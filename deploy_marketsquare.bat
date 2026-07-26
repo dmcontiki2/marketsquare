@@ -275,6 +275,18 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3c-de: Deploy adventures DE map (Bavaria journey -> /static/) ──
+:: GERMANY (26 Jul 2026, David): the beloved 5-day Bavaria trek map, wired to the
+:: German super-adventure via ms.js ADV_COUNTRY_MAP (DE).
+echo  [3c-de] Deploying adventures de map...
+scp "%PROJECT%\adventures_de_map.html" %SERVER%:%REMOTE%/static/adventures_de_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_de_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
 :: ── Step 3d: Deploy SUPER exemplar photos (assets/super -> /static/super/) ──
 :: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
 :: Permanent step so listing photo sets always ship with the site.

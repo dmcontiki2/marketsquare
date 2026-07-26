@@ -1,0 +1,438 @@
+{
+ "id": "mozambique",
+ "out": "mozambique_journey.html",
+ "photo_dir": "assets/journey/moz",
+ "title": "Mozambique — Coast, Islands &amp; Spice",
+ "pill": "★ MOZAMBIQUE · 5-DAY COAST",
+ "h1": "Mozambique, down the coast",
+ "sub": "Five days of Indian Ocean, dhow sails and peri-peri — tap a day to sail it: the beaches, the reefs, the food, where you sleep.",
+ "cap": "Illustrative 5-day coastal route · real Mozambican towns shown for bearing; lodges &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "unit": "Day",
+ "stat1_icon": "⛵",
+ "stat2_icon": "⏱",
+ "route_summary": "<b>Whole route</b> · 5 days · capital, coast and archipelago. &nbsp;<span class=\"hint\">Tap a day to sail it.</span>",
+ "legend": "<b>On the coast</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏝️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "overlays": {
+  "view": "🏝️ Viewpoints",
+  "route": "〰️ Coastal route"
+ },
+ "towns": [
+  [
+   "Maputo",
+   -25.966,
+   32.567
+  ],
+  [
+   "Inhambane",
+   -23.865,
+   35.383
+  ],
+  [
+   "Tofo",
+   -23.851,
+   35.545
+  ],
+  [
+   "Vilanculos",
+   -22.001,
+   35.313
+  ],
+  [
+   "Bazaruto",
+   -21.66,
+   35.47
+  ],
+  [
+   "Ilha de Moçambique",
+   -15.036,
+   40.735
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Capital of tiles &amp; prawns",
+   "dist": "City day",
+   "ascent": "Full day",
+   "color": "#C8873A",
+   "summary": "A day in a capital of Portuguese facades, iron markets and the best prawns on the continent.",
+   "seg": [
+    [
+     -25.966,
+     32.567
+    ],
+    [
+     -25.97,
+     32.573
+    ],
+    [
+     -25.975,
+     32.59
+    ],
+    [
+     -25.96,
+     32.6
+    ],
+    [
+     -25.955,
+     32.605
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -25.966,
+     "lng": 32.567,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Maputo · arrival",
+     "blurb": "Wide jacaranda avenues, Mediterranean balconies and Indian Ocean humidity in equal measure.",
+     "photo": "d1_start.jpg"
+    },
+    {
+     "lat": -25.97,
+     "lng": 32.573,
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "The iron market",
+     "blurb": "A cast-iron market hall shipped out in pieces a century ago, still stacked with chillies, cashews and fish.",
+     "photo": "d1_sight.jpg"
+    },
+    {
+     "lat": -25.975,
+     "lng": 32.59,
+     "type": "food",
+     "icon": "🦐",
+     "name": "Peri-peri prawns",
+     "blurb": "Giant prawns split, drowned in garlic, lemon and fierce bird's-eye chilli, grilled hot — with cold beer and rough bread.",
+     "photo": "d1_food.jpg"
+    },
+    {
+     "lat": -25.96,
+     "lng": 32.6,
+     "type": "view",
+     "icon": "🌆",
+     "name": "The bay at dusk",
+     "blurb": "Rooftop view over the harbour, cranes going quiet, the whole sky turning peach.",
+     "photo": "d1_view.jpg"
+    },
+    {
+     "lat": -25.955,
+     "lng": 32.605,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Colonial townhouse rooms",
+     "blurb": "High ceilings, shutters, a slow fan and mosaic floors that stay cool all day.",
+     "photo": "d1_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "North to the whale-shark coast",
+   "dist": "480 km",
+   "ascent": "7 hr",
+   "color": "#3f9d78",
+   "summary": "Up the coast road to a bay where the world's biggest fish cruises past all year.",
+   "seg": [
+    [
+     -25.966,
+     32.567
+    ],
+    [
+     -24.5,
+     34.5
+    ],
+    [
+     -23.865,
+     35.383
+    ],
+    [
+     -23.851,
+     35.545
+    ],
+    [
+     -23.855,
+     35.55
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -25.966,
+     "lng": 32.567,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Out of the capital",
+     "blurb": "Coconut palms, roadside pineapple stalls and speed bumps in every village.",
+     "photo": "d2_start.jpg"
+    },
+    {
+     "lat": -24.5,
+     "lng": 34.5,
+     "type": "food",
+     "icon": "🥥",
+     "name": "Cassava leaf &amp; coconut stew",
+     "blurb": "Pounded cassava leaves slow-cooked with coconut milk, peanuts and prawns, served over rice — the country's signature dish.",
+     "photo": "d2_food.jpg"
+    },
+    {
+     "lat": -23.865,
+     "lng": 35.383,
+     "type": "sight",
+     "icon": "⛵",
+     "name": "Dhow across the bay",
+     "blurb": "A lateen-sailed dhow ferrying passengers and bicycles across a turquoise bay, unchanged in centuries.",
+     "photo": "d2_sight.jpg"
+    },
+    {
+     "lat": -23.851,
+     "lng": 35.545,
+     "type": "view",
+     "icon": "🐋",
+     "name": "Whale sharks offshore",
+     "blurb": "A shape the size of a bus rising slowly under the boat, spotted like a night sky.",
+     "photo": "d2_view.jpg"
+    },
+    {
+     "lat": -23.855,
+     "lng": 35.55,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Beach cabana in the dunes",
+     "blurb": "Reed and thatch on a vegetated dune, ten steps down to a wide empty beach.",
+     "photo": "d2_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Reef, market &amp; sand road",
+   "dist": "260 km",
+   "ascent": "5 hr",
+   "color": "#3b5bff",
+   "summary": "A morning on the reef, then north again on sand roads to the archipelago gateway.",
+   "seg": [
+    [
+     -23.851,
+     35.545
+    ],
+    [
+     -23.4,
+     35.4
+    ],
+    [
+     -22.5,
+     35.35
+    ],
+    [
+     -22.001,
+     35.313
+    ],
+    [
+     -22.01,
+     35.32
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -23.851,
+     "lng": 35.545,
+     "type": "start",
+     "icon": "🤿",
+     "name": "Morning on the reef",
+     "blurb": "Warm water, soft corals, and manta rays queuing at a cleaning station like traffic.",
+     "photo": "d3_start.jpg"
+    },
+    {
+     "lat": -23.4,
+     "lng": 35.4,
+     "type": "sight",
+     "icon": "🥜",
+     "name": "Roadside cashew stand",
+     "blurb": "Cashews roasted in the shell over a drum fire, sold hot in newspaper cones by the kilo.",
+     "photo": "d3_sight.jpg"
+    },
+    {
+     "lat": -22.5,
+     "lng": 35.35,
+     "type": "food",
+     "icon": "🍞",
+     "name": "Bread, chilli &amp; grilled fish",
+     "blurb": "Crusty rolls baked in a wood oven, split and filled with grilled fish and a spoon of chilli oil.",
+     "photo": "d3_food.jpg"
+    },
+    {
+     "lat": -22.001,
+     "lng": 35.313,
+     "type": "view",
+     "icon": "🏝️",
+     "name": "First sight of the islands",
+     "blurb": "Five sand islands strung along the horizon, water going from jade to deep blue.",
+     "photo": "d3_view.jpg"
+    },
+    {
+     "lat": -22.01,
+     "lng": 35.32,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Fishing-town guesthouse",
+     "blurb": "Whitewashed rooms above a working beach where the boats are dragged up at dusk.",
+     "photo": "d3_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "The archipelago",
+   "dist": "Boat day",
+   "ascent": "Full day",
+   "color": "#9b59b6",
+   "summary": "Out to the sand islands — dunes in the sea, sandbanks that appear and vanish with the tide.",
+   "seg": [
+    [
+     -22.001,
+     35.313
+    ],
+    [
+     -21.8,
+     35.42
+    ],
+    [
+     -21.66,
+     35.47
+    ],
+    [
+     -21.65,
+     35.48
+    ],
+    [
+     -21.64,
+     35.49
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -22.001,
+     "lng": 35.313,
+     "type": "start",
+     "icon": "⛵",
+     "name": "Dhow to the islands",
+     "blurb": "Sailing out on the morning wind with the boom swinging low over your head.",
+     "photo": "d4_start.jpg"
+    },
+    {
+     "lat": -21.8,
+     "lng": 35.42,
+     "type": "view",
+     "icon": "🏖️",
+     "name": "Sandbank at low tide",
+     "blurb": "A crescent of white sand that exists for four hours a day, surrounded by every shade of blue there is.",
+     "photo": "d4_view.jpg"
+    },
+    {
+     "lat": -21.66,
+     "lng": 35.47,
+     "type": "sight",
+     "icon": "🐠",
+     "name": "Two-mile reef",
+     "blurb": "Bright shallow reef thick with clownfish, parrotfish and the occasional passing turtle.",
+     "photo": "d4_sight.jpg"
+    },
+    {
+     "lat": -21.65,
+     "lng": 35.48,
+     "type": "food",
+     "icon": "🦞",
+     "name": "Lobster on the beach",
+     "blurb": "Split lobster grilled over coconut husks with lemon and chilli butter, feet in the sand.",
+     "photo": "d4_food.jpg"
+    },
+    {
+     "lat": -21.64,
+     "lng": 35.49,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Island dune lodge",
+     "blurb": "Thatched chalets high on a vegetated dune with nothing but ocean in three directions.",
+     "photo": "d4_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "title": "North to the stone island",
+   "dist": "Flight",
+   "ascent": "2 hr",
+   "color": "#e0574a",
+   "summary": "A flight north to a tiny coral island that was the capital for four centuries.",
+   "seg": [
+    [
+     -21.64,
+     35.49
+    ],
+    [
+     -15.036,
+     40.735
+    ],
+    [
+     -15.04,
+     40.738
+    ],
+    [
+     -15.038,
+     40.74
+    ],
+    [
+     -15.036,
+     40.735
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -21.64,
+     "lng": 35.49,
+     "type": "start",
+     "icon": "✈️",
+     "name": "North along the coast",
+     "blurb": "The coastline from above: reef, mangrove, river mouth, repeat, for eight hundred kilometres.",
+     "photo": "d5_start.jpg"
+    },
+    {
+     "lat": -15.036,
+     "lng": 40.735,
+     "type": "sight",
+     "icon": "🏰",
+     "name": "The old stone town",
+     "blurb": "Coral-stone streets, a Portuguese sea fort, and a chapel claimed to be the oldest European building south of the Sahara.",
+     "photo": "d5_sight.jpg"
+    },
+    {
+     "lat": -15.04,
+     "lng": 40.738,
+     "type": "view",
+     "icon": "🌉",
+     "name": "The long causeway",
+     "blurb": "A three-kilometre single-lane bridge to the mainland, best walked at sunset.",
+     "photo": "d5_view.jpg"
+    },
+    {
+     "lat": -15.038,
+     "lng": 40.74,
+     "type": "food",
+     "icon": "🍛",
+     "name": "Spiced coconut curry",
+     "blurb": "Fish curry heavy with coconut, cinnamon and clove — Arab, Indian and Portuguese cooking in one pot.",
+     "photo": "d5_food.jpg"
+    },
+    {
+     "lat": -15.036,
+     "lng": 40.735,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Journey's end · the island",
+     "blurb": "Sundowners on a fort wall built in 1558, dhows coming home below.",
+     "photo": "d5_finish.jpg"
+    }
+   ]
+  }
+ ]
+}

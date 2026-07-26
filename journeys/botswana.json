@@ -1,0 +1,438 @@
+{
+ "id": "botswana",
+ "out": "botswana_journey.html",
+ "photo_dir": "assets/journey/bwa",
+ "title": "Botswana — Delta, River &amp; Salt",
+ "pill": "★ BOTSWANA · 5-DAY SAFARI",
+ "h1": "Botswana, water to salt",
+ "sub": "Five days from a flooded delta to a dry white pan — tap a day to travel it: the channels, the herds, the food, where you sleep.",
+ "cap": "Illustrative 5-day safari circuit · real Botswanan towns shown for bearing; camps &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "unit": "Day",
+ "stat1_icon": "🛶",
+ "stat2_icon": "⏱",
+ "route_summary": "<b>Whole route</b> · 5 days · delta, river and salt pan. &nbsp;<span class=\"hint\">Tap a day to travel it.</span>",
+ "legend": "<b>On safari</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🦓 Wildlife</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "overlays": {
+  "view": "🦓 Wildlife",
+  "route": "〰️ Safari route"
+ },
+ "towns": [
+  [
+   "Maun",
+   -19.988,
+   23.417
+  ],
+  [
+   "Khwai",
+   -19.15,
+   23.66
+  ],
+  [
+   "Savuti",
+   -18.567,
+   24.067
+  ],
+  [
+   "Kasane",
+   -17.798,
+   25.163
+  ],
+  [
+   "Gweta",
+   -20.19,
+   25.24
+  ],
+  [
+   "Nata",
+   -20.21,
+   26.18
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Into the delta by mokoro",
+   "dist": "90 km",
+   "ascent": "3 hr",
+   "color": "#C8873A",
+   "summary": "A light aircraft over the floodplain, then a dugout canoe poled through papyrus channels.",
+   "seg": [
+    [
+     -19.988,
+     23.417
+    ],
+    [
+     -19.5,
+     23.5
+    ],
+    [
+     -19.3,
+     23.55
+    ],
+    [
+     -19.25,
+     23.6
+    ],
+    [
+     -19.2,
+     23.63
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -19.988,
+     "lng": 23.417,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Maun · safari town",
+     "blurb": "Dusty frontier town where every second vehicle is a converted game-viewer and every pilot is twenty-four.",
+     "photo": "d1_start.jpg"
+    },
+    {
+     "lat": -19.5,
+     "lng": 23.5,
+     "type": "view",
+     "icon": "✈️",
+     "name": "The delta from the air",
+     "blurb": "An inland delta that never reaches the sea — silver channels braided through ten thousand green islands.",
+     "photo": "d1_view.jpg"
+    },
+    {
+     "lat": -19.3,
+     "lng": 23.55,
+     "type": "sight",
+     "icon": "🛶",
+     "name": "Poled through the papyrus",
+     "blurb": "Standing in the stern with a long pole, reed tips brushing past, frogs the size of a thumbnail on the stems.",
+     "photo": "d1_sight.jpg"
+    },
+    {
+     "lat": -19.25,
+     "lng": 23.6,
+     "type": "food",
+     "icon": "🐟",
+     "name": "Bream on the coals",
+     "blurb": "Freshwater bream caught that afternoon, split, salted and grilled over a driftwood fire on an island.",
+     "photo": "d1_food.jpg"
+    },
+    {
+     "lat": -19.2,
+     "lng": 23.63,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Island tented camp",
+     "blurb": "Six tents under wild fig trees; hippo grunting in the channel all night, close enough to feel.",
+     "photo": "d1_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Predator country",
+   "dist": "70 km",
+   "ascent": "Full day",
+   "color": "#3f9d78",
+   "summary": "Game drives at first and last light through a reserve known for big cats and wild dog.",
+   "seg": [
+    [
+     -19.2,
+     23.63
+    ],
+    [
+     -19.15,
+     23.66
+    ],
+    [
+     -19.1,
+     23.75
+    ],
+    [
+     -19.08,
+     23.8
+    ],
+    [
+     -19.05,
+     23.85
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -19.2,
+     "lng": 23.63,
+     "type": "start",
+     "icon": "🚙",
+     "name": "First light drive",
+     "blurb": "Out before the sun with a blanket and a flask; the bush is loudest in the first forty minutes.",
+     "photo": "d2_start.jpg"
+    },
+    {
+     "lat": -19.15,
+     "lng": 23.66,
+     "type": "view",
+     "icon": "🐆",
+     "name": "Wild dog on the hunt",
+     "blurb": "A pack of painted dogs moving at a fast trot, ears like satellite dishes, absolutely committed.",
+     "photo": "d2_view.jpg"
+    },
+    {
+     "lat": -19.1,
+     "lng": 23.75,
+     "type": "view",
+     "icon": "🦁",
+     "name": "Lions in the shade",
+     "blurb": "A pride flat on their backs under a leadwood, paws in the air, indifferent to everything.",
+     "photo": "d2_view2.jpg"
+    },
+    {
+     "lat": -19.08,
+     "lng": 23.8,
+     "type": "food",
+     "icon": "🍲",
+     "name": "Slow-pounded beef &amp; sorghum",
+     "blurb": "The national comfort dish — beef simmered for hours then pounded to threads, with fermented sorghum porridge and wild greens.",
+     "photo": "d2_food.jpg"
+    },
+    {
+     "lat": -19.05,
+     "lng": 23.85,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Camp on the floodplain edge",
+     "blurb": "Raised decks looking over open grassland; elephants cross in front of the fire before dinner.",
+     "photo": "d2_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "North to the marsh",
+   "dist": "180 km",
+   "ascent": "5 hr",
+   "color": "#3b5bff",
+   "summary": "Deep sand tracks north into elephant country and a marsh with a fearsome reputation.",
+   "seg": [
+    [
+     -19.05,
+     23.85
+    ],
+    [
+     -18.8,
+     23.95
+    ],
+    [
+     -18.567,
+     24.067
+    ],
+    [
+     -18.55,
+     24.1
+    ],
+    [
+     -18.53,
+     24.12
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -19.05,
+     "lng": 23.85,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Sand-track transfer",
+     "blurb": "Low range, windows down, four hours of mopane and deep sand to cover ninety kilometres.",
+     "photo": "d3_start.jpg"
+    },
+    {
+     "lat": -18.8,
+     "lng": 23.95,
+     "type": "view",
+     "icon": "🐘",
+     "name": "Elephant highway",
+     "blurb": "Bull elephants in single file on a path worn a metre deep by a century of the same walk.",
+     "photo": "d3_view.jpg"
+    },
+    {
+     "lat": -18.567,
+     "lng": 24.067,
+     "type": "sight",
+     "icon": "🪶",
+     "name": "The marsh channel",
+     "blurb": "A channel that mysteriously dried up for decades, then refilled — and the game came straight back.",
+     "photo": "d3_sight.jpg"
+    },
+    {
+     "lat": -18.55,
+     "lng": 24.1,
+     "type": "food",
+     "icon": "🔥",
+     "name": "Bush braai under the stars",
+     "blurb": "Grilled meat, pot bread baked in the coals, and a long table set out in the open with lanterns.",
+     "photo": "d3_food.jpg"
+    },
+    {
+     "lat": -18.53,
+     "lng": 24.12,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Marsh-side camp",
+     "blurb": "Canvas under a rock ridge; lion calling somewhere south, answered twice before midnight.",
+     "photo": "d3_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "The great river",
+   "dist": "160 km",
+   "ascent": "4 hr",
+   "color": "#9b59b6",
+   "summary": "East to a river frontier where four countries almost touch and the elephants come to drink.",
+   "seg": [
+    [
+     -18.53,
+     24.12
+    ],
+    [
+     -17.9,
+     25.0
+    ],
+    [
+     -17.798,
+     25.163
+    ],
+    [
+     -17.81,
+     25.17
+    ],
+    [
+     -17.82,
+     25.18
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -18.53,
+     "lng": 24.12,
+     "type": "start",
+     "icon": "🚙",
+     "name": "East to the river",
+     "blurb": "Out of deep sand onto a tar road — the first hard surface in four days feels like flying.",
+     "photo": "d4_start.jpg"
+    },
+    {
+     "lat": -17.9,
+     "lng": 25.0,
+     "type": "view",
+     "icon": "🐊",
+     "name": "Riverfront herds",
+     "blurb": "Hundreds of elephants coming down to drink at once, calves shoulder-deep, crocodiles keeping their distance.",
+     "photo": "d4_view.jpg"
+    },
+    {
+     "lat": -17.798,
+     "lng": 25.163,
+     "type": "sight",
+     "icon": "🚤",
+     "name": "Sundown on the water",
+     "blurb": "A flat-bottomed boat drifting with the current while the sun goes down enormous and orange behind the reeds.",
+     "photo": "d4_sight.jpg"
+    },
+    {
+     "lat": -17.81,
+     "lng": 25.17,
+     "type": "food",
+     "icon": "🍤",
+     "name": "River-fish supper",
+     "blurb": "Grilled tilapia with chilli, lime and a cold beer on a deck built out over the water.",
+     "photo": "d4_food.jpg"
+    },
+    {
+     "lat": -17.82,
+     "lng": 25.18,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Riverside lodge",
+     "blurb": "Thatch and timber above the bank; hippos on the lawn at 2 a.m., which the staff mention casually.",
+     "photo": "d4_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "title": "Out onto the salt",
+   "dist": "310 km",
+   "ascent": "5 hr",
+   "color": "#e0574a",
+   "summary": "South to a salt pan the size of a small country — a horizon with nothing on it at all.",
+   "seg": [
+    [
+     -17.82,
+     25.18
+    ],
+    [
+     -20.19,
+     25.24
+    ],
+    [
+     -20.2,
+     25.3
+    ],
+    [
+     -20.21,
+     26.18
+    ],
+    [
+     -20.215,
+     26.185
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -17.82,
+     "lng": 25.18,
+     "type": "start",
+     "icon": "🚙",
+     "name": "South from the river",
+     "blurb": "Green gives way to grey scrub, then to grass, then to nothing much at all.",
+     "photo": "d5_start.jpg"
+    },
+    {
+     "lat": -20.19,
+     "lng": 25.24,
+     "type": "view",
+     "icon": "🧂",
+     "name": "The pan, edge to edge",
+     "blurb": "A flat white plain so featureless the horizon curves; drive out onto it and the vehicle is the only vertical thing.",
+     "photo": "d5_view.jpg"
+    },
+    {
+     "lat": -20.2,
+     "lng": 25.3,
+     "type": "sight",
+     "icon": "🦫",
+     "name": "Meerkats at their burrow",
+     "blurb": "A habituated colony that will stand on your shoulder for a better view, entirely on their own terms.",
+     "photo": "d5_sight.jpg"
+    },
+    {
+     "lat": -20.21,
+     "lng": 26.18,
+     "type": "food",
+     "icon": "🥘",
+     "name": "Last supper on the salt",
+     "blurb": "A table, white cloth and lanterns set out on the open pan; grilled meats, cold wine, and a full 360° sunset.",
+     "photo": "d5_food.jpg"
+    },
+    {
+     "lat": -20.215,
+     "lng": 26.185,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Journey's end · the pan",
+     "blurb": "Bedrolls on the salt, no tent, no tree, no sound — just the whole sky.",
+     "photo": "d5_finish.jpg"
+    }
+   ]
+  }
+ ]
+}

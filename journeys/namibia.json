@@ -1,0 +1,412 @@
+{
+ "id": "namibia",
+ "out": "namibia_journey.html",
+ "photo_dir": "assets/journey/nam",
+ "title": "Namibia — Dunes, Skeleton Coast & Etosha",
+ "pill": "★ NAMIBIA · 5-DAY SELF-DRIVE",
+ "h1": "Namibia, end to end",
+ "sub": "Five days from the red dunes to the great waterhole — tap a day to drive it: the roads, the light, the food, where you sleep.",
+ "cap": "Illustrative 5-day self-drive · real Namibian towns shown for bearing; lodges &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "unit": "Day",
+ "stat1_icon": "🚙",
+ "stat2_icon": "⏱",
+ "route_summary": "<b>Whole route</b> · 5 days · ~1 900 km · Windhoek to Etosha, the long way round. &nbsp;<span class=\"hint\">Tap a day to drive it.</span>",
+ "legend": "<b>On the road</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏜️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "overlays": {
+  "view": "🏜️ Viewpoints",
+  "route": "〰️ Driving route"
+ },
+ "towns": [
+  [
+   "Windhoek",
+   -22.56,
+   17.065
+  ],
+  [
+   "Sesriem",
+   -24.487,
+   15.797
+  ],
+  [
+   "Swakopmund",
+   -22.678,
+   14.526
+  ],
+  [
+   "Henties Bay",
+   -22.115,
+   14.283
+  ],
+  [
+   "Khorixas",
+   -20.366,
+   14.968
+  ],
+  [
+   "Okaukuejo",
+   -19.182,
+   15.918
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Into the red dunes",
+   "dist": "340 km",
+   "ascent": "5 hr",
+   "color": "#C8873A",
+   "summary": "South-west out of the capital, gravel roads unspooling into the oldest desert on earth.",
+   "seg": [
+    [
+     -22.56,
+     17.065
+    ],
+    [
+     -23.267,
+     16.23
+    ],
+    [
+     -24.487,
+     15.797
+    ],
+    [
+     -24.52,
+     15.85
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -22.56,
+     "lng": 17.065,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Windhoek · departure",
+     "blurb": "Highland capital, jacaranda streets, a last flat white before the gravel begins.",
+     "photo": "d1_start.jpg"
+    },
+    {
+     "lat": -23.267,
+     "lng": 16.23,
+     "type": "food",
+     "icon": "🔥",
+     "name": "Roadside grill stop",
+     "blurb": "Flame-grilled beef cut straight onto brown paper with a fist of coarse salt and chilli — the country's favourite roadside lunch.",
+     "photo": "d1_food.jpg"
+    },
+    {
+     "lat": -24.487,
+     "lng": 15.797,
+     "type": "view",
+     "icon": "🏜️",
+     "name": "Dune country, first light",
+     "blurb": "Rust-red dunes 300 m tall, knife-edge crests, a dead white pan cracked like old porcelain.",
+     "photo": "d1_view.jpg"
+    },
+    {
+     "lat": -24.52,
+     "lng": 15.85,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Desert camp under the escarpment",
+     "blurb": "Canvas and stone tucked below a rock wall; no light for 200 km, so the Milky Way does the ceiling.",
+     "photo": "d1_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Desert to the cold Atlantic",
+   "dist": "350 km",
+   "ascent": "5 hr",
+   "color": "#3f9d78",
+   "summary": "Down the canyon road, across the gravel plains, into a coastal fog that never quite burns off.",
+   "seg": [
+    [
+     -24.487,
+     15.797
+    ],
+    [
+     -23.6,
+     15.2
+    ],
+    [
+     -22.955,
+     14.505
+    ],
+    [
+     -22.678,
+     14.526
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -24.487,
+     "lng": 15.797,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Dawn on the dunes",
+     "blurb": "Climb the high crest before sunrise; the sand goes from grey to blood-orange in four minutes.",
+     "photo": "d2_start.jpg"
+    },
+    {
+     "lat": -23.6,
+     "lng": 15.2,
+     "type": "view",
+     "icon": "🏜️",
+     "name": "Canyon &amp; gravel plains",
+     "blurb": "A deep rock gorge, then 200 km of pale gravel where the horizon shimmers and nothing moves.",
+     "photo": "d2_view.jpg"
+    },
+    {
+     "lat": -22.955,
+     "lng": 14.505,
+     "type": "food",
+     "icon": "🦪",
+     "name": "Lagoon oysters &amp; flamingos",
+     "blurb": "Cold Atlantic oysters shucked at a lagoon shack, thousands of flamingos standing pink in the shallows.",
+     "photo": "d2_food.jpg"
+    },
+    {
+     "lat": -22.678,
+     "lng": 14.526,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Seaside colonial town",
+     "blurb": "Pastel German colonial facades, palm-lined promenade, sea fog rolling in at four o'clock.",
+     "photo": "d2_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "The Skeleton Coast",
+   "dist": "230 km",
+   "ascent": "4 hr",
+   "color": "#3b5bff",
+   "summary": "North on the salt road where the desert runs straight into a cold, wrecking sea.",
+   "seg": [
+    [
+     -22.678,
+     14.526
+    ],
+    [
+     -22.115,
+     14.283
+    ],
+    [
+     -21.775,
+     13.955
+    ],
+    [
+     -21.1,
+     13.7
+    ],
+    [
+     -20.9,
+     14.1
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -22.678,
+     "lng": 14.526,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Out on the salt road",
+     "blurb": "A road made of salt and gypsum, sea on the left, dunes on the right, fog between.",
+     "photo": "d3_start.jpg"
+    },
+    {
+     "lat": -22.115,
+     "lng": 14.283,
+     "type": "food",
+     "icon": "🥐",
+     "name": "Coastal bakery stop",
+     "blurb": "Apple strudel and strong coffee in a fishing village — a century-old German baking habit that never left.",
+     "photo": "d3_food.jpg"
+    },
+    {
+     "lat": -21.775,
+     "lng": 13.955,
+     "type": "sight",
+     "icon": "🦭",
+     "name": "Cape fur seal colony",
+     "blurb": "A hundred thousand seals on one headland: the noise, the smell and the sheer churn of it.",
+     "photo": "d3_sight.jpg"
+    },
+    {
+     "lat": -21.1,
+     "lng": 13.7,
+     "type": "view",
+     "icon": "⚓",
+     "name": "Shipwreck on the strand",
+     "blurb": "A rusting hull half-swallowed by sand, the reason this coast earned its name.",
+     "photo": "d3_view.jpg"
+    },
+    {
+     "lat": -20.9,
+     "lng": 14.1,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Desert camp behind the dunes",
+     "blurb": "Wind-scoured camp behind the first dune line; jackal tracks past the tent by morning.",
+     "photo": "d3_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "Damaraland &amp; the desert elephants",
+   "dist": "300 km",
+   "ascent": "5 hr",
+   "color": "#9b59b6",
+   "summary": "Inland into burnt-orange rock country, tracking elephants that walk on sand.",
+   "seg": [
+    [
+     -20.9,
+     14.1
+    ],
+    [
+     -20.593,
+     14.372
+    ],
+    [
+     -20.45,
+     14.5
+    ],
+    [
+     -20.366,
+     14.968
+    ],
+    [
+     -20.3,
+     15.1
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -20.9,
+     "lng": 14.1,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Turning inland",
+     "blurb": "The fog lifts within twenty minutes and the temperature climbs twenty degrees.",
+     "photo": "d4_start.jpg"
+    },
+    {
+     "lat": -20.593,
+     "lng": 14.372,
+     "type": "sight",
+     "icon": "🪨",
+     "name": "Ancient rock engravings",
+     "blurb": "Thousands of animals chipped into red sandstone by hunters six thousand years ago.",
+     "photo": "d4_sight.jpg"
+    },
+    {
+     "lat": -20.45,
+     "lng": 14.5,
+     "type": "view",
+     "icon": "🐘",
+     "name": "Desert-adapted elephants",
+     "blurb": "A breeding herd moving down a dry riverbed, broad feet spread for sand, sixty kilometres between drinks.",
+     "photo": "d4_view.jpg"
+    },
+    {
+     "lat": -20.366,
+     "lng": 14.968,
+     "type": "food",
+     "icon": "🍲",
+     "name": "Three-legged pot supper",
+     "blurb": "Lamb, root vegetables and red wine left to collapse for five hours in a cast-iron pot over coals.",
+     "photo": "d4_food.jpg"
+    },
+    {
+     "lat": -20.3,
+     "lng": 15.1,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Camp among the boulders",
+     "blurb": "Rooms built into a jumble of granite boulders, each one facing its own slice of valley.",
+     "photo": "d4_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "title": "The great white pan",
+   "dist": "290 km",
+   "ascent": "4 hr",
+   "color": "#e0574a",
+   "summary": "North to a salt pan so large it is visible from orbit, and the waterhole that draws everything to it.",
+   "seg": [
+    [
+     -20.3,
+     15.1
+    ],
+    [
+     -19.5,
+     15.7
+    ],
+    [
+     -19.182,
+     15.918
+    ],
+    [
+     -19.2,
+     15.93
+    ],
+    [
+     -19.182,
+     15.918
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -20.3,
+     "lng": 15.1,
+     "type": "start",
+     "icon": "🚙",
+     "name": "North to the park gate",
+     "blurb": "Mopane scrub thickens, the road reddens, and the first giraffe appears at the fence line.",
+     "photo": "d5_start.jpg"
+    },
+    {
+     "lat": -19.5,
+     "lng": 15.7,
+     "type": "view",
+     "icon": "🧂",
+     "name": "The salt pan edge",
+     "blurb": "A white nothing to the horizon, heat-shimmer turning distant zebra into floating smudges.",
+     "photo": "d5_view.jpg"
+    },
+    {
+     "lat": -19.182,
+     "lng": 15.918,
+     "type": "sight",
+     "icon": "🦏",
+     "name": "Floodlit waterhole",
+     "blurb": "Elephant, rhino and lion take turns at the same water through the night; you just sit still and let it come.",
+     "photo": "d5_sight.jpg"
+    },
+    {
+     "lat": -19.2,
+     "lng": 15.93,
+     "type": "food",
+     "icon": "🥩",
+     "name": "Braai under the thorn trees",
+     "blurb": "Game fillet and boerewors over hardwood coals, dust settling, the pan glowing pink behind.",
+     "photo": "d5_food.jpg"
+    },
+    {
+     "lat": -19.182,
+     "lng": 15.918,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Journey's end · the waterhole",
+     "blurb": "Last night: a chair, a cold beer, and whatever chooses to walk out of the dark.",
+     "photo": "d5_finish.jpg"
+    }
+   ]
+  }
+ ]
+}

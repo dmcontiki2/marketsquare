@@ -2097,8 +2097,8 @@ const ADV_ACC_TYPE_LABELS = {
   boutique_hotel:'🏨 Boutique Hotel', self_catering:'🍳 Self-Catering',
   unique_stays:'🌳 Unique Stays', caravan_camping:'🚐 Caravan & Camping',
 };
-const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
-const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', EU:'€', AU:'A$', NZ:'NZ$' };
+const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', DE:'🇩🇪', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
+const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', DE:'€', EU:'€', AU:'A$', NZ:'NZ$' };
 // PER-COUNTRY-MAP (25 Jul 2026, David): each super-adventure country shows its OWN interactive
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
@@ -2107,6 +2107,7 @@ const ADV_COUNTRY_MAP = {
   US: { file:'adventures_us_map.html',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
   GB: { file:'adventures_uk_map.html',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  DE: { file:'adventures_de_map.html',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
 // Experience categories (adventures_experiences)
