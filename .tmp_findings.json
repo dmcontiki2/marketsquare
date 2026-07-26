@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-07-26T04:38:57Z",
+  "loop_date": "2026-07-26",
+  "generated_by": "sensor(merged)",
+  "smoke": {
+    "passed": 40,
+    "total": 40,
+    "result": "40/40",
+    "all_green": true
+  },
+  "health": {
+    "status": "ok",
+    "version": "1.3.1",
+    "endpoint": "https://trustsquare.co/health"
+  },
+  "spend": {
+    "today_usd": 0.0,
+    "platform_ceiling_usd": 100.0,
+    "platform_pct_of_ceiling": 0.0,
+    "platform_breached": false,
+    "daily_user_ceiling_usd": 0.5,
+    "margin_pct": null,
+    "real_token_pct": 100.0,
+    "month_cost_usd": 1.319466,
+    "calls_this_month": 238
+  },
+  "fea": {
+    "status": "ok",
+    "alerts": [],
+    "live_ms_js_v": 385,
+    "live_ms_css_v": 258,
+    "note": "baseline lagged 376->385 (25 Jul Adventures/category/super-global deploys, legit); refreshed this run"
+  },
+  "cron_parity": "MATCH (both all-green; health ok/1.3.1 both; spend $0.00/$100 both; live smoke 40/40 vs cron 39/39 - repo runner has 1 extra check, ratio 100% both)",
+  "scan_delta": "n/a (Sunday - deep static scan is Monday-only)",
+  "subscriptions": {
+    "counts": {
+      "UP": 34,
+      "HELD": 15,
+      "STANDBY": 1,
+      "PLANNED": 1
+    },
+    "issues": [],
+    "keys_unverified": [
+      "OpenAI (failover)"
+    ],
+    "by_category_note": "all categories UP/intentional; Servers: TLS 59d, disk 56% free, redis PONG"
+  },
+  "anomalies": [
+    {
+      "id": "DEPLOY-DRIFT-DE",
+      "sev": "SEV-3",
+      "file": "ms.js",
+      "summary": "Local ms.js ahead of live (v385): unshipped Germany (DE) adventures addition (flag/currency + adventures_de_map.html present locally, absent on server). Committed by 05:30 nightly checkpoint, not deployed. David-owned FEA/content change -> run /ship when DE set complete. Loop does NOT auto-ship (FEA track, \u00a77; in-flight)."
+    }
+  ],
+  "open_items": [
+    {
+      "id": "OPS-L3a",
+      "sev": "SEV-3",
+      "file": "SUPPORT_MAILBOX_SETUP.md",
+      "summary": "support@trustsquare.co not a real mailbox - launch blocker; ops-owned (Cloudflare/Brevo/env) + one surgical BEA edit gated on that. FILE."
+    },
+    {
+      "id": "WONDER-DUP-1/4/7/8/9/10",
+      "sev": "SEV-3",
+      "file": "wonders.json",
+      "summary": "6 coord-duplicate heritage groups - data calls David decides in chat. Loop FILEs, never fixes."
+    }
+  ]
+}

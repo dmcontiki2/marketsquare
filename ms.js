@@ -2097,8 +2097,8 @@ const ADV_ACC_TYPE_LABELS = {
   boutique_hotel:'🏨 Boutique Hotel', self_catering:'🍳 Self-Catering',
   unique_stays:'🌳 Unique Stays', caravan_camping:'🚐 Caravan & Camping',
 };
-const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', DE:'🇩🇪', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
-const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', DE:'€', EU:'€', AU:'A$', NZ:'NZ$' };
+const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', BW:'🇧🇼', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', DE:'🇩🇪', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
+const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', US:'$', CA:'CA$', GB:'£', DE:'€', EU:'€', AU:'A$', NZ:'NZ$' };
 // PER-COUNTRY-MAP (25 Jul 2026, David): each super-adventure country shows its OWN interactive
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
@@ -2107,6 +2107,12 @@ const ADV_COUNTRY_MAP = {
   US: { file:'adventures_us_map.html',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
   GB: { file:'adventures_uk_map.html',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  // GATED 26 Jul 2026 — re-enable when assets/journey/na has its photos:
+  // NA: { file:'adventures_na_map.html',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  // GATED 26 Jul 2026 — re-enable when assets/journey/bw has its photos:
+  // BW: { file:'adventures_bw_map.html',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
+  // GATED 26 Jul 2026 — re-enable when assets/journey/mz has its photos:
+  // MZ: { file:'adventures_mz_map.html',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
   DE: { file:'adventures_de_map.html',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 

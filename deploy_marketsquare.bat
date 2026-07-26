@@ -275,6 +275,54 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: -- Step 3c-na: Deploy adventures Namibia map (-> /static/) --
+:: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
+echo  [3c-na] Deploying adventures na map...
+scp "%PROJECT%\adventures_na_map.html" %SERVER%:%REMOTE%/static/adventures_na_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_na_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: -- Step 3c-bw: Deploy adventures Botswana map (-> /static/) --
+:: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
+echo  [3c-bw] Deploying adventures bw map...
+scp "%PROJECT%\adventures_bw_map.html" %SERVER%:%REMOTE%/static/adventures_bw_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_bw_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: -- Step 3c-mz: Deploy adventures Mozambique map (-> /static/) --
+:: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
+echo  [3c-mz] Deploying adventures mz map...
+scp "%PROJECT%\adventures_mz_map.html" %SERVER%:%REMOTE%/static/adventures_mz_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_mz_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: -- Step 3c-c2c: Deploy adventures Cape to Cairo map (-> /static/) --
+:: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
+echo  [3c-c2c] Deploying adventures c2c map...
+scp "%PROJECT%\adventures_c2c_map.html" %SERVER%:%REMOTE%/static/adventures_c2c_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_c2c_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
 :: ── Step 3c-de: Deploy adventures DE map (Bavaria journey -> /static/) ──
 :: GERMANY (26 Jul 2026, David): the beloved 5-day Bavaria trek map, wired to the
 :: German super-adventure via ms.js ADV_COUNTRY_MAP (DE).

@@ -81,3 +81,23 @@ are terminated then try again. If it still fails, a git process
 may have crashed in this repository earlier:
 remove the file manually to continue.
 Fri 07/24/2026  5:30:03.74  committed 13 change(s)
+[main 3e9d8d0] Nightly checkpoint Sun 07/26/2026  5:30:03.39 (auto, no deploy)
+ 20 files changed, 3085 insertions(+), 4 deletions(-)
+ create mode 100644 JOURNEY_HIGGSFIELD_PROMPTS.md
+ create mode 100644 adventures_de_map.html
+ create mode 100644 assets/journey/c2c/.claimed
+ create mode 100644 botswana_journey.html
+ create mode 100644 cape_to_cairo_journey.html
+ create mode 100644 journeys/.claimed_downloads
+ create mode 100644 journeys/botswana.json
+ create mode 100644 journeys/cape_cairo.json
+ create mode 100644 journeys/mozambique.json
+ create mode 100644 journeys/namibia.json
+ create mode 100644 mozambique_journey.html
+ create mode 100644 namibia_journey.html
+ create mode 100644 scripts/build_journey.py
+ create mode 100644 scripts/claim_photos.py
+ create mode 100644 scripts/journey_template.html
+ create mode 100644 scripts/make_prompt_pack.py
+ create mode 100644 scripts/photo_status.py
+Sun 07/26/2026  5:30:03.57  committed 16 change(s)
