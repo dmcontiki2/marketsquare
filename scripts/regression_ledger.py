@@ -365,6 +365,96 @@ def rg_iso_codes_and_filenames():
     return out
 
 
+@entry("RG-0012", "Per-tour maps stay wired: tour listings live, map follows the tour not the operator's country",
+       OPEN, scope="tour super listings (Cape-to-Cairo, Namibia)",
+       ref="Added 26 Jul. Two coupled facts must hold together or a tour map silently vanishes. "
+           "(1) A multi-country tour is DECOUPLED: the listing sits under its operator's country "
+           "(Cape-to-Cairo lists under a SA/Rand operator) but its map follows the ROUTE via a new "
+           "ADV_TOUR_MAP keyed on listing.tour, consulted BEFORE ADV_COUNTRY_MAP. Lose that "
+           "precedence and Cape-to-Cairo would show a South-Africa map. (2) A country map (Namibia) "
+           "only surfaces once its country is un-gated AND real super listings exist to carry it — "
+           "the exact gap that made 'I deployed but see no tours' true on 26 Jul: maps were live but "
+           "no listing carried them. OPEN until the next deploy creates the tour/NA super listings; "
+           "the moment this reports READY TO LOCK, promote to LOCKED so the wiring cannot rot back.")
+def rg_tour_maps_wired():
+    out = []
+    # ── repo side: the wiring that makes tour maps resolve at all ──
+    fe = repo_file("ms.js")
+    if fe is None:
+        out.append((INFO, "ms.js not present (running outside the repo) — repo checks skipped"))
+    else:
+        m = re.search(r"ADV_TOUR_MAP\s*=\s*\{([^}]*)\}", fe, re.S)
+        if not m:
+            out.append((FAIL, "ADV_TOUR_MAP not defined in ms.js — per-tour maps cannot resolve"))
+        elif "adventures_c2c_map.html" not in m.group(1):
+            out.append((FAIL, "ADV_TOUR_MAP has no c2c -> adventures_c2c_map.html entry"))
+        if "ADV_TOUR_MAP[l.tour]" not in fe:
+            out.append((FAIL, "map picker never consults ADV_TOUR_MAP[l.tour] — tour no longer beats country (decouple lost)"))
+        if not re.search(r"^\s*NA:\s*\{\s*file:'adventures_na_map\.html'", fe, re.M):
+            out.append((FAIL, "NA is not un-gated in ADV_COUNTRY_MAP (still commented, or missing)"))
+    # ── live side: the listings and map files a buyer actually reaches ──
+    advs = [l for l in listings() if is_adventures(l) and not is_placeholder(l)]
+    c2c = [l for l in advs if str(l.get("tour", "")).strip().lower() == "c2c"]
+    if not c2c:
+        out.append((FAIL, "no live listing carries tour='c2c' — Cape-to-Cairo map has nothing to surface on"))
+    else:
+        stray = [l.get("id") for l in c2c if str(l.get("country", "")).upper() not in ("ZA", "")]
+        if stray:
+            out.append((FAIL, f"c2c listings not under the SA operator: {stray} (decouple expects country=ZA/Rand)"))
+    if not [l for l in advs if str(l.get("country", "")).upper() == "NA" and l.get("super_example")]:
+        out.append((FAIL, "no live NA super listing — the Namibia map has nothing to surface on"))
+    for f in ("adventures_c2c_map.html", "adventures_na_map.html"):
+        try:
+            if len(_get("/static/" + f)) < 500:
+                out.append((FAIL, f"/static/{f} is present but suspiciously small — likely not the real map"))
+        except Exception as ex:
+            out.append((FAIL, f"/static/{f} unreachable: {ex!r}"))
+    # the JS a browser actually receives (at the version the live index points to) must
+    # carry the tour render — catches 'new code on the server, old build still served/cached'.
+    try:
+        mv = re.search(r"ms\.js\?v=(\d+)", _get("/"))
+        js = _get("/static/ms.js" + ("?v=" + mv.group(1) if mv else ""))
+        if "ADV_TOUR_MAP[l.tour]" not in js:
+            out.append((FAIL, "live-served ms.js (at the version the index references) has no ADV_TOUR_MAP[l.tour] render — browsers get a build without tour maps"))
+    except Exception as ex:
+        out.append((FAIL, f"could not verify the live-served ms.js build: {ex!r}"))
+    return out
+
+
+@entry("RG-0013", "Every deploy path that uploads ms.js also bumps the ?v= cache-buster",
+       LOCKED, scope="repo, all deploy scripts", fixed_on="2026-07-26",
+       ref="THE ROOT of the recurring 'map fix never held' class. The cache-buster bump was made "
+           "'permanent' in July but only inside deploy_marketsquare.bat; deploy_frontend_only.bat was "
+           "a separate quick-deploy path that uploaded ms.js and NEVER bumped ?v=. nginx serves each "
+           "?v= URL as immutable, so a fix shipped through the quick script landed on the server under "
+           "a version key every browser had already cached forever -- delivered to nobody, for weeks. "
+           "This asserts the INVARIANT rather than the instance: any deploy script that scp's ms.js must "
+           "also increment ms.js?v=. A newly-added unprotected deploy path trips this red instead of "
+           "silently reintroducing the whole class.")
+def rg_all_deploy_paths_bump():
+    import glob
+    if repo_file("ms.js") is None:
+        return [(INFO, "running outside the repo -- deploy-script check skipped")]
+    out = []
+    scripts = sorted(glob.glob(os.path.join(REPO, "deploy*.bat")))
+    checked = 0
+    for path in scripts:
+        if os.path.basename(path).endswith((".bak", ".bak.bat")) or ".bak-" in os.path.basename(path):
+            continue
+        try:
+            t = open(path, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        if not re.search(r"scp\b[^\n]*ms\.js", t):   # this script does not ship ms.js
+            continue
+        checked += 1
+        if not re.search(r"'ms\.js\?v='\s*\+\s*\(\s*\[int\]", t):
+            out.append((FAIL, os.path.basename(path) + " uploads ms.js but never bumps ms.js?v= "
+                              "-- its deploys ship an invisible, browser-cached-stale asset"))
+    out.append((INFO, str(checked) + " deploy script(s) ship ms.js; every one must bump the cache-buster"))
+    return out
+
+
 # ════════════════════════════════════════════════════════════════════════════
 
 
