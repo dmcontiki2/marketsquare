@@ -363,6 +363,7 @@ async function loadLiveListings(retryCount) {
           id: 'bea_' + l.id,
           cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
+          country: (l.country||'ZA').toString().toUpperCase(),   // MAP+CURRENCY FIX (25 Jul): country must survive normalization, else detail view treats every adventure as ZA (Dinokeng map + rands)
           feat: false,
           title: l.title,
           city:   l.city || activeCity.name,
@@ -2098,6 +2099,15 @@ const ADV_ACC_TYPE_LABELS = {
 };
 const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
 const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', US:'$', CA:'CA$', GB:'£', EU:'€', AU:'A$', NZ:'NZ$' };
+// PER-COUNTRY-MAP (25 Jul 2026, David): each super-adventure country shows its OWN interactive
+// tour map on the detail page. Keyed by listing.country (which now survives normalization).
+// No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
+const ADV_COUNTRY_MAP = {
+  ZA: { file:'adventures_reserve_map.html', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
+  US: { file:'adventures_us_map.html',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_uk_map.html',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+};
 
 // Experience categories (adventures_experiences)
 const ADV_EXP_CATS = [
@@ -3887,7 +3897,7 @@ function openDetail(id){
       </div>` : ''}
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
-      ${(l.super_example && isAdv && (l.country||'ZA').toUpperCase()==='ZA') ? `<div class="dsec adv-reserve-map"><h3>🗺️ Explore the reserve</h3><div style="font-size:12px;color:var(--text-3);margin:-6px 0 10px;">A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="/static/adventures_reserve_map.html" title="Interactive reserve safari map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#dcd6bd;"></iframe></div></div>` : ''}
+      ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; return '<div class="dsec adv-reserve-map"><h3>'+_mc.title+'</h3><div style="font-size:12px;color:var(--text-3);margin:-6px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="/static/'+_mc.file+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
       <div style="margin-bottom:16px;">
         ${(function(){var sidStr=l.sellerIdx!=null?l.sellerIdx:'null';var ci=catCfg(l);var onclk='openSellerCV('+sidStr+','+'\''+(id)+'\''+')';return '<button onclick="'+onclk+'" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">'+'<div style="width:40px;height:40px;border-radius:50%;background:'+ci.bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ci.icon+'</div>'+'<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>'+'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';})()}
       </div>

@@ -236,6 +236,45 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
+:: ── Step 3c-us: Deploy adventures US map (-> /static/) ──
+:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
+:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
+echo  [3c-us] Deploying adventures us map...
+scp "%PROJECT%\adventures_us_map.html" %SERVER%:%REMOTE%/static/adventures_us_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_us_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: ── Step 3c-uk: Deploy adventures UK map (-> /static/) ──
+:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
+:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
+echo  [3c-uk] Deploying adventures uk map...
+scp "%PROJECT%\adventures_uk_map.html" %SERVER%:%REMOTE%/static/adventures_uk_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_uk_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
+:: ── Step 3c-au: Deploy adventures AU map (-> /static/) ──
+:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
+:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
+echo  [3c-au] Deploying adventures au map...
+scp "%PROJECT%\adventures_au_map.html" %SERVER%:%REMOTE%/static/adventures_au_map.html
+if %errorlevel% neq 0 (
+    echo  ERROR: SCP failed for adventures_au_map.html.
+    pause
+    exit /b 1
+)
+echo  Done.
+echo.
+
 :: ── Step 3d: Deploy SUPER exemplar photos (assets/super -> /static/super/) ──
 :: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
 :: Permanent step so listing photo sets always ship with the site.
