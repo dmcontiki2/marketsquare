@@ -89,3 +89,44 @@ progress state, there is no separate ledger to drift.
 Every stop without a photo renders a styled "photo pending" tile, so all four maps
 are fully working and presentable right now. Photos drop in incrementally — no
 big-bang needed, and nothing breaks part-way.
+
+
+## Why a finished map still didn't show — and the fix (26 Jul)
+A tour map is a widget that renders ONLY on a super_example adventures listing via
+ADV_COUNTRY_MAP[listing.country]. Un-gating a country in ms.js is necessary but NOT
+sufficient: there must ALSO be a super adventures listing with that country. Those
+listings are created by scripts/seed_super_global.py, which deploy_marketsquare.bat
+runs on every deploy (step 3g); its COUNTRIES list only had ZA/US/GB/AU/DE, so NA (and
+c2c/mz/bw) never got a listing — the map had nothing to ride on. Existing super demos
+(Pretoria x8, US/GB/AU/DE x2) are all intact; nothing was deleted.
+FIX for Namibia (done 26 Jul): added NA to seed_super_global.py COUNTRIES + COPY
+(a route listing + a lodge listing) and dropped 14 gallery photos into assets/super/
+(sup_na_advexp_*.jpg x8, sup_na_advacc_*.jpg x6, reused from assets/journey/nam).
+Next deploy auto-creates the two NA listings and the Namibia map surfaces on them.
+Same recipe for MZ/BW when their photos are done (+ un-gate in ms.js).
+CAPE TO CAIRO still pending a decision: it is not a single country (ZA->Egypt), so it
+does not fit country->map. Options: pin to EG (fast, keeps c2c filename, minor RG-0011
+canon note like ZA->reserve / GB->uk), or rename map to adventures_eg_map.html (canon
+clean, more surgery). Awaiting David's call.
+
+
+## Per-tour maps — the map follows the TOUR, not the country (26 Jul, David)
+Problem: a multi-country tour (Cape to Cairo, ZA->Egypt) has no single country, and the
+old code picked the map from listing.country, so one country could only ever show ONE
+tour map. Decision: the LISTING'S country = the tour operator's country (drives currency
++ market); the MAP = the tour's own route.
+Implementation:
+- ms.js: new ADV_TOUR_MAP registry keyed by route code (c2c -> adventures_c2c_map.html).
+  Render prefers (l.tour && ADV_TOUR_MAP[l.tour]) then falls back to ADV_COUNTRY_MAP[country],
+  so every existing country tour is untouched. (Not checked by RG-0011; c2c filename is
+  canon-correct anyway.)
+- listings gains a `tour` column (backend serves all columns, so it surfaces as l.tour).
+- seed_super_global.py: added ensure_tour_column(); Cape to Cairo seeded as a ZA/Cape Town
+  operator listing pair (Rand), then UPDATE stamps tour='c2c' on listings carrying sup_c2c_*
+  photos. Namibia seeded as its own NA/Windhoek pair (N$), tour empty (country fallback).
+- Gallery photos: assets/super/sup_na_* (8 exp + 6 acc, from assets/journey/nam) and
+  sup_c2c_* (8 exp + 6 acc, from assets/journey/c2c).
+Result after next deploy: NA map shows on the Namibia listings; Cape to Cairo map shows on
+the SA listings, beside the reserve tour. To add a future multi-country tour: drop sup_<r>_*
+photos, add its ADV_TOUR_MAP entry, add a COUNTRIES+COPY row (operator country) and a tour
+stamp. Single-country tours still just need un-gating + a country listing.

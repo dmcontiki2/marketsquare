@@ -54,6 +54,8 @@ COUNTRIES = [
     ("uk", "GB", "United Kingdom", "London", "County", "Greater London", 51.5074, -0.1278, "£"),
     ("au", "AU", "Australia",      "Sydney", "State",  "New South Wales", -33.8688, 151.2093, "A$"),
     ("de", "DE", "Germany",        "Garmisch-Partenkirchen", "State", "Bavaria", 47.4917, 11.0954, "€"),
+    ("na", "NA", "Namibia",        "Windhoek", "Region", "Khomas", -22.5597, 17.0832, "N$"),
+    ("c2c","ZA", "South Africa",   "Cape Town", "Province", "Western Cape", -33.9249, 18.4241, "R"),
 ]
 CAT_KEY = {
     "adventures_experiences":   "advexp",
@@ -106,6 +108,10 @@ COPY = {
  ("au","services"): ("Pool Care & Maintenance — Weekly Service","A$75 / visit","Reliable pool care — cleaning, water testing and balancing, equipment checks. Weekly or fortnightly. Sparkling results."),
  ("de","adventures_experiences"): ("Trek the Bavarian Alps — Guided Hut-to-Hut Journey","€1,450 / person","A five-day guided hut-to-hut trek through the Bavarian Alps — meadow trails and high passes, a fairy-tale castle, painted villages and mirror-still alpine lakes, with a mountain hut or gasthof each night. Guiding, half-board and luggage transfer included."),
  ("de","adventures_accommodation"): ("Alpine Gasthof & Mountain-Hut Stay — Half-Board","€180 / night","A cosy alpine stay of timber gasthofs and mountain huts along the trail — carved balconies, feather duvets, hearty half-board dinners and sunrise over the peaks. A generic composite along the Bavarian route."),
+ ("na","adventures_experiences"): ("Namibia End to End — Guided Desert & Wildlife Journey","N$ 24,500 / person","A five-day guided journey across Namibia — the red dunes of Sossusvlei, the fog and shipwrecks of the Skeleton Coast, desert-adapted elephants and the floodlit waterholes of the north, aboard an open 4x4 with a sundowner each evening. Guiding, park fees and transfers included."),
+ ("na","adventures_accommodation"): ("Desert Camps & Boulder Lodge — Half-Board Stay","N$ 3,200 / night","A string of desert stays along the route — canvas-and-stone camps under the Milky Way, a lodge built into granite boulders, and a waterhole deck for sundowners. Carved detail, warm lamplight and hearty half-board dinners each night."),
+ ("c2c","adventures_experiences"): ("Cape to Cairo — The Great Rail Journey","R 245,000 / person","The great Cape to Cairo rail journey — ten thousand kilometres and one continent, from Table Mountain to the Giza plateau. Winelands and Karoo, the thundering falls and the Zambezi bridge, game from the dining-car window, spice ports and Nubian villages, temples at dawn and the pyramids at the end of the line. Brass-and-teak sleepers, white-linen dining and a new country almost every day."),
+ ("c2c","adventures_accommodation"): ("Sleepers, Falls Hotels & Nile Stays — En-Route","R 6,500 / night","The stays along the line — a brass-and-teak sleeper cabin made up while you dine, a colonial hotel above the falls, carved harbour-side rooms on the Indian Ocean, a Nubian village on the green Nile and the Nile sleeper north to Cairo. A different bed, and a different country, most nights."),
 }
 
 def price_to_num(s):
@@ -149,7 +155,7 @@ def backfill_country_from_geo(conn):
 
 def _trust_where():
     # only OUR new US/GB/AU exemplars whose stored trust disagrees with their seller's stored trust
-    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU','DE') AND EXISTS "
+    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU','DE','NA') AND EXISTS "
             f"(SELECT 1 FROM users u WHERE LOWER(u.email)=LOWER(listings.seller_email) "
             f"AND u.{_utrust} IS NOT NULL AND u.{_utrust} <> COALESCE(listings.trust_score,-999))")
 
@@ -191,6 +197,17 @@ def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng
         (city, region_id, iso2)).lastrowid
 
 # ── Build the plan ────────────────────────────────────────────────────────────
+def ensure_tour_column(conn):
+    """The per-tour map selector: ms.js reads listing.tour (route code) to pick a tour-
+    specific map, so one country can carry several tours. NULL/empty => country fallback."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    if "tour" not in cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN tour TEXT DEFAULT ''")
+        conn.commit()
+        return True
+    return False
+
+
 conn = sqlite3.connect(DB); conn.row_factory = sqlite3.Row
 has = {r[1] for r in conn.execute("PRAGMA table_info(listings)").fetchall()}
 if "super_example" not in has:
@@ -309,6 +326,8 @@ shutil.copy2(DB, bak); print(f"DB backed up -> {bak}")
 # 1) ensure the country column exists (this is what surfaces l.country to the frontend)
 added = ensure_country_column(conn)
 print(f"  country column: {'ADDED (default ZA)' if added else 'already present'}")
+added_tour = ensure_tour_column(conn)
+print(f"  tour column: {'ADDED' if added_tour else 'already present'}")
 
 # 2) seed the geo hierarchy for all target countries (idempotent), cache city ids
 city_id = {}
@@ -333,6 +352,13 @@ backfilled = backfill_country_from_geo(conn)
 aligned = align_trust_to_seller(conn)
 conn.commit()
 print(f"Inserted {ins} listings; backfilled country on {backfilled}; aligned trust->seller on {aligned} (US/GB/AU/DE exemplars).")
+# per-tour map: stamp the route code on listings carrying that route's gallery photos
+tour_set = conn.execute(
+    "UPDATE listings SET tour='c2c' WHERE COALESCE(super_example,0)=1 "
+    "AND (COALESCE(thumb_url,'') LIKE '%sup_c2c_%' OR COALESCE(photo_urls,'') LIKE '%sup_c2c_%') "
+    "AND COALESCE(tour,'') <> 'c2c'").rowcount
+conn.commit()
+print(f"tour codes: set 'c2c' on {tour_set} listing(s).")
 try:
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]
