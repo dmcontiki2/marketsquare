@@ -14066,6 +14066,35 @@
    "photos": [
     "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80"
    ]
+  },
+  {
+   "id": "demo_stay_bw_1",
+   "cat": "adventures_accommodation",
+   "city": "Maun",
+   "environment_type": "Wetland & Delta",
+   "accommodation_type": "tented_camp",
+   "feat": true,
+   "country": "BW",
+   "city_country": "BW",
+   "title": "Okavango Delta Island Camp · Private Concession · Botswana",
+   "area": "Botswana",
+   "suburb": "Okavango Delta",
+   "trust": 92,
+   "price": 14500,
+   "per": "/night",
+   "priceNum": 14500,
+   "desc": "Six tented suites on a private island in the Okavango Delta, reached by light aircraft from Maun and then by mokoro through the papyrus channels. Twice-daily game drives and guided walks on a private concession — no other vehicles. Hippo in the channel below camp, wild dog denning nearby in winter. Freshwater bream grilled over coals, and dinner under the trees. Maximum 12 guests. Water levels peak Jun-Aug.",
+   "photo": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80",
+   "photos": [
+    "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80",
+    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
+    "https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80"
+   ],
+   "linked_wonders": [],
+   "paused": false,
+   "queueCount": 0,
+   "sellerIdx": 3
   }
  ]
 }

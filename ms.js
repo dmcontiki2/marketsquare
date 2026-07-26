@@ -2107,8 +2107,8 @@ const ADV_COUNTRY_MAP = {
   US: { file:'adventures_us_map.html',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
   GB: { file:'adventures_uk_map.html',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
-  // GATED 26 Jul 2026 — re-enable when assets/journey/na has its photos:
-  // NA: { file:'adventures_na_map.html',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
+  NA: { file:'adventures_na_map.html',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
   // GATED 26 Jul 2026 — re-enable when assets/journey/bw has its photos:
   // BW: { file:'adventures_bw_map.html',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
   // GATED 26 Jul 2026 — re-enable when assets/journey/mz has its photos:
@@ -3717,6 +3717,37 @@ function openSellerCV(sellerIdx,listingId){
 // Safe listing lookup — works for both numeric ids (demo data) and 'bea_N' string ids (live data)
 function findListing(id){ return LISTINGS.find(l=>l.id==id)||LISTINGS.find(l=>String(l.id)===String(id)); }
 
+// ADV-MAP-EXPAND (26 Jul 2026, David + David Jnr): tours/stays maps were cramped in the
+// 480px inline frame. Two affordances now sit top-right of every map: a fullscreen in-app
+// overlay (great on phones) and an open-in-new-tab link (great on laptops).
+function advMapExpand(el){
+  var url=el.getAttribute('data-u'), title=el.getAttribute('data-t')||'Interactive map';
+  var ov=document.getElementById('advmap-ov');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='advmap-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0a1626;display:none;flex-direction:column;';
+    ov.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#0f2036;border-bottom:1px solid #22406b;flex-shrink:0;">'
+      +'<span id="advmap-ov-t" style="color:#eaf0f7;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>'
+      +'<span style="display:flex;gap:8px;flex-shrink:0;">'
+      +'<a id="advmap-ov-open" href="#" target="_blank" rel="noopener" style="color:#cdd9e8;text-decoration:none;font-size:13px;font-weight:600;padding:8px 12px;border:1px solid #35507a;border-radius:9px;white-space:nowrap;">Open in new tab ↗</a>'
+      +'<button type="button" onclick="advMapClose()" aria-label="Close map" style="color:#fff;background:#1a2942;border:1px solid #35507a;border-radius:9px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Close</button>'
+      +'</span></div>'
+      +'<iframe id="advmap-ov-f" title="Interactive tour map" style="flex:1;width:100%;border:0;background:#0d1b2e;"></iframe>';
+    document.body.appendChild(ov);
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') advMapClose(); });
+  }
+  document.getElementById('advmap-ov-f').src=url;
+  document.getElementById('advmap-ov-open').href=url;
+  document.getElementById('advmap-ov-t').textContent=title;
+  ov.style.display='flex'; document.body.style.overflow='hidden';
+}
+function advMapClose(){
+  var ov=document.getElementById('advmap-ov'); if(!ov) return;
+  ov.style.display='none';
+  var fr=document.getElementById('advmap-ov-f'); if(fr) fr.src='about:blank';
+  document.body.style.overflow='';
+}
+
 // Safe CATS lookup — maps Adventures subcategories to the 'Adventures' entry
 function catCfg(l){
   const key = l.cat;
@@ -3904,7 +3935,7 @@ function openDetail(id){
       </div>` : ''}
       ${l.cat==='Cars' ? vehSpecPanel(l) : ''}
       <div class="dsec"><h3>About this listing</h3>${maskContactInfo(formatDesc(l.desc),_introAccepted)}</div>
-      ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; return '<div class="dsec adv-reserve-map"><h3>'+_mc.title+'</h3><div style="font-size:12px;color:var(--text-3);margin:-6px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="/static/'+_mc.file+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
+      ${(function(){ if(!(l.super_example && isAdv)) return ''; var _mc=ADV_COUNTRY_MAP[(l.country||'ZA').toUpperCase()]; if(!_mc) return ''; var _u='/static/'+_mc.file; var _bs='background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;'; return '<div class="dsec adv-reserve-map"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;flex-wrap:wrap;"><h3 style="margin:0;">'+_mc.title+'</h3><div style="display:flex;gap:7px;flex-shrink:0;"><button type="button" data-u="'+_u+'" data-t="'+_mc.title+'" onclick="advMapExpand(this)" style="'+_bs+'">⤢ Expand</button><a href="'+_u+'" target="_blank" rel="noopener" style="'+_bs+'text-decoration:none;display:inline-flex;align-items:center;">Open ↗</a></div></div><div style="font-size:12px;color:var(--text-3);margin:-2px 0 10px;">'+_mc.blurb+'</div><div style="border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);box-shadow:0 3px 14px rgba(0,0,0,.10);"><iframe src="'+_u+'" title="Interactive tour map" loading="lazy" style="width:100%;height:480px;border:0;display:block;background:#0d1b2e;"></iframe></div></div>'; })()}
       <div style="margin-bottom:16px;">
         ${(function(){var sidStr=l.sellerIdx!=null?l.sellerIdx:'null';var ci=catCfg(l);var onclk='openSellerCV('+sidStr+','+'\''+(id)+'\''+')';return '<button onclick="'+onclk+'" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">'+'<div style="width:40px;height:40px;border-radius:50%;background:'+ci.bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+ci.icon+'</div>'+'<div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;color:var(--text);">View seller profile</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:400;">Credentials · Track record · Availability · 🔒 Identity masked</div></div>'+'<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="var(--text-3)" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';})()}
       </div>

@@ -83,3 +83,24 @@ differ by a field, not by scattered special cases.
 - **Scotland is not a country code.** It is part of `GB`. If Scotland ever needs to
   be addressed separately it is the ISO 3166-**2** subdivision `GB-SCT`, never a
   top-level market. Treating it as one would fork `GB` and break every `GB` lookup.
+
+## 8. Outstanding work — owned by Claude, no action needed from David (26 Jul 2026)
+
+Recorded here so it survives session ends. Neither is urgent; both are pre-launch.
+
+**A. Market registry consolidation — FRONT-END, not database.**
+Three objects in `ms.js` (`ADV_COUNTRY_FLAGS`, `ADV_COUNTRY_CURRENCY`,
+`ADV_COUNTRY_MAP`) must be edited in step and nothing enforces it — which is how
+`BW` came to be absent from all three while a Botswana tour was being built.
+Collapse to one registry keyed by ISO code (§7), derive the three from it.
+Do it when `ms.js` is quiet — it is a shared file.
+
+**B. Backfill `country` on listings — DATABASE, small.**
+243 of 302 live listings carry no country, so they fall back to `'ZA'` and render
+in Rand (the RG-0003 family). The column already exists; this is populating data,
+not restructuring. Then make country required at write time so it cannot recur.
+Separately: confirm completed transactions STORE their currency rather than
+deriving it — a payment is a financial fact and must not change if a mapping does.
+
+**Neither is a David task.** They are recorded so the next session picks them up
+without being told.
