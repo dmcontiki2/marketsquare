@@ -1,6 +1,21 @@
 # Journey photo generation — runbook & run state (26 Jul 2026)
 
-## Where it stands
+## Where it stands  (updated 26 Jul 06:57)
+- Photos: **9 of 104**. Cape to Cairo has 9 (Leg 1 complete + Leg 2 partial:
+  l1_start/food/view/over/sight, l2_start/food/sight/view). NA, BW, MZ have none.
+- All four maps are DEPLOYED and load from `/static/adventures_{c2c,na,bw,mz}_map.html`.
+- `ms.js` v387 is live: NA/BW/MZ are **gated out** of ADV_COUNTRY_MAP (they have no
+  photos); live keys are ZA, US, GB, AU, DE. Un-gate a country the moment its photos
+  are done — the commented lines are right there with a note.
+- Botswana has **zero listings** live, so even un-gated its map cannot surface.
+  A market needs listings before a map means anything.
+- Canon for codes and market tiers: `MAP_NAMING_CANON.md`. Enforced by RG-0011.
+
+## NEXT ACTION (start here)
+22 photos to finish Cape to Cairo. Prompts are in JOURNEY_HIGGSFIELD_PROMPTS.md;
+`python3 scripts/photo_status.py --next 10` lists the exact filenames still missing.
+
+## Original notes
 4 of 104 photos generated and placed, all in Cape to Cairo:
 `l1_start` (Cape Town platform) · `l1_food` (dining-car bobotie) ·
 `l1_view` (winelands) · `l1_over` (sleeper cabin).

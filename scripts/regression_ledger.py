@@ -335,6 +335,36 @@ def rg_health():
     return out
 
 
+@entry("RG-0011", "Country codes are ISO 3166-1 and map filenames match their code",
+       OPEN, scope="ALL markets",
+       ref="MAP_NAMING_CANON.md. Found 26 Jul: GB points at adventures_uk_map.html and ZA at "
+           "adventures_reserve_map.html, and ADV_COUNTRY_FLAGS carries EU and LL which are not "
+           "countries (LL is in flags but not currency). Every lookup keyed on listing.country "
+           "has to special-case these, which is how per-country bugs get born.")
+def rg_iso_codes_and_filenames():
+    import re
+    fe = repo_file("ms.js")
+    if fe is None:
+        return [(INFO, "ms.js not present (running outside the repo) — check skipped")]
+    out = []
+    ISO = {"ZA","US","GB","AU","DE","NA","BW","MZ","NZ","CA","ZW","TZ","SD","EG","KE","BR","AR"}
+    # Deliberate non-country sentinels, allowed by canon §3 because they are declared:
+    #   ALL = every market (filter sentinel), EU = euro-zone pricing fallback.
+    SENTINELS = {"ALL", "EU"}
+    for table in ("ADV_COUNTRY_FLAGS", "ADV_COUNTRY_CURRENCY"):
+        m = re.search(table + r"\s*=\s*\{([^}]*)\}", fe)
+        if not m:
+            out.append((FAIL, f"{table} not found in ms.js")); continue
+        for k in re.findall(r"(?:^|[{,])\s*([A-Z]{2,3}):", m.group(1)):
+            if k not in ISO and k not in SENTINELS:
+                out.append((FAIL, f"{table} contains {k!r}, which is not an ISO 3166-1 country code"))
+    for key, slug in re.findall(r"^\s*(?://\s*)?([A-Z]{2}): \{ file:'adventures_([a-z0-9]+)_map\.html'", fe, re.M):
+        if slug != key.lower():
+            out.append((FAIL, f"map key {key} points at adventures_{slug}_map.html "
+                              f"(canon: adventures_{key.lower()}_map.html)"))
+    return out
+
+
 # ════════════════════════════════════════════════════════════════════════════
 
 
