@@ -2115,8 +2115,7 @@ const ADV_COUNTRY_MAP = {
   NA: { file:'adventures_na_map.html?v=2',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
   // GATED 26 Jul 2026 — re-enable when assets/journey/bw has its photos:
   // BW: { file:'adventures_bw_map.html',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
-  // GATED 26 Jul 2026 — re-enable when assets/journey/mz has its photos:
-  // MZ: { file:'adventures_mz_map.html',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
+  MZ: { file:'adventures_mz_map.html?v=1',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
   DE: { file:'adventures_de_map.html',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
@@ -2142,9 +2141,14 @@ const ADV_TOUR_EXTENSIONS = {
     { icon:'\u{1F981}', name:'Etosha extension', detail:'Two extra nights at a floodlit-waterhole lodge on the northern pan, big-game at your veranda.', price:'+N$3,200 pp / night' },
     { icon:'\u{1F30A}', name:'Skeleton Coast add-on', detail:'A night at Swakopmund with a catamaran cruise out among the seals and dolphins.', price:'+N$2,800 pp' },
   ],
+  mz: [
+    { icon:'\u{1F93F}', name:'Tofo whale-shark dive', detail:'A full day by boat off Tofo \u2014 two dives with whale sharks and mantas, lunch aboard.', price:'+MT 9,500 pp' },
+    { icon:'\u{1F3DD}\u{FE0F}', name:'Bazaruto archipelago', detail:'Two nights at a private island lodge in the Bazaruto archipelago \u2014 sandbanks, snorkelling and dhow sailing.', price:'+MT 14,500 pp / night' },
+    { icon:'\u{26F5}', name:'Dhow sunset & grill', detail:'A sundowner dhow cruise, then a fresh seafood grill on the beach.', price:'+MT 3,800 pp' },
+  ],
 };
 // The tour a listing belongs to: an explicit route code (c2c) or a route-country (Namibia end-to-end).
-function tourKeyOf(l){ if(l && l.tour) return String(l.tour).toLowerCase(); var c=((l&&l.country)||'').toString().toUpperCase(); return c==='NA' ? 'na' : ''; }
+function tourKeyOf(l){ if(l && l.tour) return String(l.tour).toLowerCase(); var c=((l&&l.country)||'').toString().toUpperCase(); return c==='NA' ? 'na' : c==='MZ' ? 'mz' : ''; }
 
 // Experience categories (adventures_experiences)
 const ADV_EXP_CATS = [

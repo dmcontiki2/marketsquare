@@ -5390,3 +5390,16 @@ paths verify the served version post-upload, so a future AV block can no longer 
   Kimberley·Klerksdorp·Johannesburg·Pretoria points so the rail line is now unbroken end to end.
 - Map cache-busting: ms.js now versions the tour-map URLs (c2c ?v=3, na ?v=2) so map-file changes actually
   reach browsers (maps are nginx-immutable like ms.js); deploy_frontend_nops.bat uploads both maps.
+
+## 27 Jul 2026 — Mozambique tour COMPLETE + wired for launch
+- Photos: Mozambique 25/25 (was 5/25). Generated + verified + claimed 20 shots this session via Higgsfield
+  (Nano Banana Pro, 3:2), food shots prompted dish-first to avoid the coastal-scene miss. Overall 79/104.
+- Map: adventures_mz_map.html rebuilt — 25 embedded, 0 pending.
+- Launch wiring (mirrors Namibia): ms.js un-gates MZ in ADV_COUNTRY_MAP (adventures_mz_map.html?v=1),
+  tourKeyOf maps MZ->'mz', ADV_TOUR_EXTENSIONS.mz = 3 Metical add-ons (Tofo dive / Bazaruto / dhow-grill);
+  seed_super_global.py gains the MZ COUNTRIES row + MZ COPY (experiences MT 165,000 pp; accommodation
+  MT 4,200/night, the latter hidden by the one-listing-per-tour filter) + MZ in _trust_where.
+  12 sup_mz_* super photos added to assets/super (8 advexp, 4 advacc) from the journey set.
+- GO-LIVE needs the FULL deploy (deploy_marketsquare.bat) so the seed creates the MZ super listings — the
+  full deploy also bumps the version, uploads adventures_mz_map.html (line 305) and syncs assets/super.
+  PowerShell now works (360 removed) so the full deploy runs clean. Botswana remains 0/25 (next).

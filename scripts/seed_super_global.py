@@ -55,6 +55,7 @@ COUNTRIES = [
     ("au", "AU", "Australia",      "Sydney", "State",  "New South Wales", -33.8688, 151.2093, "A$"),
     ("de", "DE", "Germany",        "Garmisch-Partenkirchen", "State", "Bavaria", 47.4917, 11.0954, "€"),
     ("na", "NA", "Namibia",        "Windhoek", "Region", "Khomas", -22.5597, 17.0832, "N$"),
+    ("mz", "MZ", "Mozambique",     "Maputo", "Province", "Maputo City", -25.9692, 32.5732, "MT"),
     ("c2c","ZA", "South Africa",   "Cape Town", "Province", "Western Cape", -33.9249, 18.4241, "R"),
 ]
 CAT_KEY = {
@@ -110,6 +111,8 @@ COPY = {
  ("de","adventures_accommodation"): ("Alpine Gasthof & Mountain-Hut Stay — Half-Board","€180 / night","A cosy alpine stay of timber gasthofs and mountain huts along the trail — carved balconies, feather duvets, hearty half-board dinners and sunrise over the peaks. A generic composite along the Bavarian route."),
  ("na","adventures_experiences"): ("Namibia End to End — Guided Desert & Wildlife Journey","N$ 24,500 / person","A five-day guided journey across Namibia — the red dunes of Sossusvlei, the fog and shipwrecks of the Skeleton Coast, desert-adapted elephants and the floodlit waterholes of the north, aboard an open 4x4 with a sundowner each evening. Guiding, park fees and transfers included."),
  ("na","adventures_accommodation"): ("Desert Camps & Boulder Lodge — Half-Board Stay","N$ 3,200 / night","A string of desert stays along the route — canvas-and-stone camps under the Milky Way, a lodge built into granite boulders, and a waterhole deck for sundowners. Carved detail, warm lamplight and hearty half-board dinners each night."),
+    ("mz","adventures_experiences"): ("Mozambique Coast \u2014 Dhows, Reefs & Island Journey","MT 165,000 / person","A five-day journey up the Mozambique coast \u2014 Maputo's iron market and peri-peri prawns, dhows across turquoise bays, whale sharks and manta reefs, castaway sandbanks in the Bazaruto archipelago, and the old coral-stone island town at the end. Guiding, dhow transfers and island stays included."),
+    ("mz","adventures_accommodation"): ("Beach Cabanas, Dune Lodges & Island Stays \u2014 En-Route","MT 4,200 / night","The stays down the coast \u2014 a reed-and-thatch cabana in the dunes, a whitewashed guesthouse above a working fishing beach, and a thatched lodge high on an island dune with ocean in three directions. Lamplight, sea breeze and fresh seafood each night."),
  ("c2c","adventures_experiences"): ("Cape to Cairo — The Great Rail Journey","R 245,000 / person","The great Cape to Cairo rail journey — ten thousand kilometres and one continent, from Table Mountain to the Giza plateau. Winelands and Karoo, the thundering falls and the Zambezi bridge, game from the dining-car window, spice ports and Nubian villages, temples at dawn and the pyramids at the end of the line. Brass-and-teak sleepers, white-linen dining and a new country almost every day."),
  ("c2c","adventures_accommodation"): ("Sleepers, Falls Hotels & Nile Stays — En-Route","R 6,500 / night","The stays along the line — a brass-and-teak sleeper cabin made up while you dine, a colonial hotel above the falls, carved harbour-side rooms on the Indian Ocean, a Nubian village on the green Nile and the Nile sleeper north to Cairo. A different bed, and a different country, most nights."),
 }
@@ -155,7 +158,7 @@ def backfill_country_from_geo(conn):
 
 def _trust_where():
     # only OUR new US/GB/AU exemplars whose stored trust disagrees with their seller's stored trust
-    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU','DE','NA') AND EXISTS "
+    return (f"COALESCE(super_example,0)=1 AND country IN ('US','GB','AU','DE','NA','MZ') AND EXISTS "
             f"(SELECT 1 FROM users u WHERE LOWER(u.email)=LOWER(listings.seller_email) "
             f"AND u.{_utrust} IS NOT NULL AND u.{_utrust} <> COALESCE(listings.trust_score,-999))")
 
