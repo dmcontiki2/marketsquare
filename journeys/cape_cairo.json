@@ -2,18 +2,18 @@
  "id": "cape_cairo",
  "out": "adventures_c2c_map.html",
  "photo_dir": "assets/journey/c2c",
- "title": "Cape to Cairo — the rail journey",
- "pill": "★ CAPE TO CAIRO · RAIL EPIC",
- "h1": "Cape to Cairo, by rail",
- "sub": "Six legs, one continent — tap a leg to ride it: the great stations, the crossings, the food, where you sleep.",
- "cap": "Illustrative continental rail format · real cities shown for bearing; trains, stays &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "title": "Cape to Cairo — the great journey",
+ "pill": "★ CAPE TO CAIRO · THE GREAT JOURNEY",
+ "h1": "Cape to Cairo — rail, wings &amp; the Nile",
+ "sub": "Six legs, one continent — the great train to the Indian Ocean, flights where no rails run, and a cruise down the Nile. Tap a leg to ride it.",
+ "cap": "Modelled on the real Cape-to-Cairo luxury departures (32 days · from ±US$50 000 pp · the train alone from ±US$16 500). The rails end at Dar es Salaam — flown legs shown dashed, as every real operator flies them. Real cities shown for bearing; trains, stays &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
  "unit": "Leg",
  "stat1_icon": "🚂",
  "stat2_icon": "🕓",
- "route_summary": "<b>Whole route</b> · 6 legs · ~10 500 km · Table Mountain to the Pyramids. &nbsp;<span class=\"hint\">Tap a leg to ride it.</span>",
- "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
+ "route_summary": "<b>Whole route</b> · 6 legs · ~12 000 km · rails to the Indian Ocean, wings over the Rift, the Nile home. Benchmark: the real thing runs 32 days from ±US$50 000 pp. &nbsp;<span class=\"hint\">Tap a leg to ride it.</span>",
+ "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px\">🚂 rail — solid · ✈️ flight — dashed · 🛳️ Nile — dotted</div><div style=\"color:#cdd8e8\">no railway runs north of Dar es Salaam</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
  "overlays": {
-  "route": "🚂 Rail route",
+  "route": "🚂✈️🛳️ Route",
   "view": "🏔️ Viewpoints",
   "food": "🍽️ Dishes on the line"
  },
@@ -62,6 +62,26 @@
    "Cairo",
    30.044,
    31.236
+  ],
+  [
+   "Arusha",
+   -3.372,
+   36.682
+  ],
+  [
+   "Kigali",
+   -1.95,
+   30.059
+  ],
+  [
+   "Addis Ababa",
+   9.03,
+   38.74
+  ],
+  [
+   "Lalibela",
+   12.031,
+   39.041
   ]
  ],
  "days": [
@@ -139,8 +159,18 @@
      "name": "First night in the sleeper",
      "blurb": "Berth made up while you dine; the rhythm of rail joints and a lit lamp somewhere far out on the plain.",
      "photo": "l1_over.jpg"
+    },
+    {
+     "lat": -33.45,
+     "lng": 20.15,
+     "type": "food",
+     "icon": "🍞",
+     "name": "Roosterkoek at the halt",
+     "blurb": "Griddle bread off the coals at a Victorian siding — split, buttered and eaten hot with apricot jam.",
+     "photo": "l1_bread.jpg"
     }
-   ]
+   ],
+   "mode": "rail"
   },
   {
    "day": 2,
@@ -216,8 +246,18 @@
      "name": "Second night, rolling north",
      "blurb": "Dinner in the dining car under lamplight, then the long climb onto the highveld in the dark.",
      "photo": "l2_over.jpg"
+    },
+    {
+     "lat": -29.9,
+     "lng": 23.6,
+     "type": "food",
+     "icon": "🍲",
+     "name": "Potjie under the stars",
+     "blurb": "Lamb, potatoes and sweet wine simmered for hours in a three-legged pot beside the line, under a sky thick with stars.",
+     "photo": "l2_potjie.jpg"
     }
-   ]
+   ],
+   "mode": "rail"
   },
   {
    "day": 3,
@@ -309,8 +349,18 @@
      "name": "Colonial hotel by the falls",
      "blurb": "Verandahs, ceiling fans, high tea, warthogs on the lawn and permanent thunder in the background.",
      "photo": "l3_over.jpg"
+    },
+    {
+     "lat": -18.06,
+     "lng": 25.95,
+     "type": "food",
+     "icon": "🐟",
+     "name": "Zambezi bream by the river",
+     "blurb": "Whole bream off the coals at the water's edge, lemon-buttered, with the spray of the falls drifting over.",
+     "photo": "l3_bream.jpg"
     }
-   ]
+   ],
+   "mode": "rail"
   },
   {
    "day": 4,
@@ -318,7 +368,7 @@
    "dist": "1 900 km",
    "ascent": "46 hr",
    "color": "#9b59b6",
-   "summary": "The long haul east — miombo woodland, escarpment and a game park the line runs straight through.",
+   "summary": "The long haul east — miombo woodland, escarpment and a game park the line runs straight through. Journey's end for the rails: no railway runs north of Dar es Salaam.",
    "seg": [
     [
      -17.935,
@@ -386,32 +436,55 @@
      "name": "Harbour-side rooms",
      "blurb": "Carved doors, a courtyard, call to prayer at dusk and dhows on the water at first light.",
      "photo": "l4_over.jpg"
+    },
+    {
+     "lat": -9.5,
+     "lng": 34.75,
+     "type": "food",
+     "icon": "🫖",
+     "name": "Chai na mandazi at dawn",
+     "blurb": "Sweet, gingery tea and warm fried dough as the miombo woodland slides past — Tanzania's answer to breakfast in bed.",
+     "photo": "l4_chai.jpg"
     }
-   ]
+   ],
+   "mode": "rail"
   },
   {
    "day": 5,
-   "title": "The Nile road north",
-   "dist": "3 000 km",
-   "ascent": "3 days",
+   "title": "Where the rails end — by air",
+   "dist": "5 500 km",
+   "ascent": "6 flights",
    "color": "#e0574a",
-   "summary": "North by rail and river through desert to the great dam and the beginning of Egypt.",
+   "mode": "air",
+   "summary": "The railway stops at the Indian Ocean, so the journey grows wings — over the crater highlands, the Great Migration, a gorilla forest and the roof of Ethiopia, landing back on the Nile at Aswan. Sudan is overflown, as on every real departure.",
    "seg": [
     [
-     -6.8,
-     39.215
+     -6.792,
+     39.208
     ],
     [
-     15.5,
-     32.5
+     -3.2,
+     35.49
     ],
     [
-     18.5,
-     31.8
+     -2.33,
+     34.83
     ],
     [
-     22.0,
-     32.5
+     -1.47,
+     29.49
+    ],
+    [
+     9.03,
+     38.74
+    ],
+    [
+     12.03,
+     39.04
+    ],
+    [
+     22.34,
+     31.62
     ],
     [
      24.089,
@@ -420,49 +493,67 @@
    ],
    "stops": [
     {
-     "lat": -6.8,
-     "lng": 39.215,
-     "type": "start",
-     "icon": "⛴️",
-     "name": "Northbound",
-     "blurb": "Rail, road and river stitched together — the one leg where the dream of a single line still has gaps.",
-     "photo": "l5_start.jpg"
-    },
-    {
-     "lat": 15.5,
-     "lng": 32.5,
+     "lat": -3.2,
+     "lng": 35.49,
      "type": "view",
-     "icon": "🏜️",
-     "name": "Where two Niles meet",
-     "blurb": "Blue water from the highlands and white water from the lakes joining in one visible seam.",
-     "photo": "l5_view.jpg"
+     "icon": "🌋",
+     "name": "Ngorongoro Crater rim",
+     "blurb": "Sundowners on the lip of the world's largest unbroken caldera, the game grazing two thousand feet below.",
+     "photo": "l5_crater.jpg"
     },
     {
-     "lat": 18.5,
-     "lng": 31.8,
+     "lat": -2.33,
+     "lng": 34.83,
      "type": "sight",
-     "icon": "🔺",
-     "name": "Desert pyramids",
-     "blurb": "Steep, narrow pyramids in golden sand — smaller than Egypt's, and often entirely empty of people.",
-     "photo": "l5_sight.jpg"
+     "icon": "🦓",
+     "name": "Serengeti · the Great Migration",
+     "blurb": "A million wildebeest and zebra on the move — often called the greatest show on earth.",
+     "photo": "l5_migration.jpg"
     },
     {
-     "lat": 22.0,
-     "lng": 32.5,
+     "lat": -1.47,
+     "lng": 29.49,
+     "type": "sight",
+     "icon": "🦍",
+     "name": "Gorillas of the Volcanoes",
+     "blurb": "One quiet hour with a mountain gorilla family in the bamboo forests of Rwanda.",
+     "photo": "l5_gorilla.jpg"
+    },
+    {
+     "lat": 9.03,
+     "lng": 38.74,
      "type": "food",
      "icon": "🫓",
-     "name": "Slow-cooked beans &amp; flatbread",
-     "blurb": "Fava beans stewed overnight with cumin, lemon and olive oil, scooped up with hot flatbread — breakfast for a continent.",
-     "photo": "l5_food.jpg"
+     "name": "Injera in Addis Ababa",
+     "blurb": "Sour flatbread piled with spiced stews and lentils, eaten by hand from one shared platter.",
+     "photo": "l5_injera.jpg"
     },
     {
-     "lat": 24.089,
-     "lng": 32.899,
-     "type": "over",
-     "icon": "🛏️",
-     "name": "Nubian village on the river",
-     "blurb": "Blue and ochre houses, palm-shaded courtyards, and the Nile running fast and green below.",
-     "photo": "l5_over.jpg"
+     "lat": 10.6,
+     "lng": 38.9,
+     "type": "food",
+     "icon": "☕",
+     "name": "Coffee, born in Ethiopia",
+     "blurb": "The ceremony: green beans roasted at your feet, pounded, brewed three times — coffee in the country that gave it to the world.",
+     "photo": "l5_coffee.jpg"
+    },
+    {
+     "lat": 12.03,
+     "lng": 39.04,
+     "type": "sight",
+     "icon": "⛪",
+     "name": "Lalibela, carved from rock",
+     "blurb": "Eleven medieval churches chiselled straight down into the mountain, still in daily use.",
+     "photo": "l5_lalibela.jpg"
+    },
+    {
+     "lat": 22.34,
+     "lng": 31.62,
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "Abu Simbel colossi",
+     "blurb": "Ramses II at twenty metres, rescued stone by stone above Lake Nasser.",
+     "photo": "l5_abusimbel.jpg"
     }
    ]
   },
@@ -470,9 +561,9 @@
    "day": 6,
    "title": "Aswan to the Pyramids",
    "dist": "900 km",
-   "ascent": "14 hr",
+   "ascent": "4 days",
    "color": "#0e7490",
-   "summary": "The final sleeper down the Nile past temples and green fields to the oldest tourist attraction on earth.",
+   "summary": "A slow cruise between temple banks from Aswan to Luxor, then the night sleeper into Cairo and the oldest tourist attraction on earth.",
    "seg": [
     [
      24.089,
@@ -504,10 +595,10 @@
      "lat": 24.089,
      "lng": 32.899,
      "type": "start",
-     "icon": "🚂",
-     "name": "The Nile sleeper",
-     "blurb": "Boarding at dusk with the river turning copper; dinner served in the cabin as the palms slide past.",
-     "photo": "l6_start.jpg"
+     "icon": "🛳️",
+     "name": "Casting off at Aswan",
+     "blurb": "Three slow nights on the river — dinner on deck as the palms slide by and the banks turn copper.",
+     "photo": "l6_cruise.jpg"
     },
     {
      "lat": 25.687,
@@ -546,6 +637,15 @@
      "photo": "l6_food2.jpg"
     },
     {
+     "lat": 26.6,
+     "lng": 31.9,
+     "type": "over",
+     "icon": "🚂",
+     "name": "The night sleeper to Cairo",
+     "blurb": "Boarding at dusk with the river turning copper — dinner served in the cabin as the palms slide by.",
+     "photo": "l6_start.jpg"
+    },
+    {
      "lat": 30.044,
      "lng": 31.236,
      "type": "finish",
@@ -554,7 +654,8 @@
      "blurb": "Ten thousand kilometres, one continent, and a last look back down the line from the Giza plateau.",
      "photo": "l6_finish.jpg"
     }
-   ]
+   ],
+   "mode": "nile"
   }
  ]
 }

@@ -22,8 +22,11 @@
  .leaflet-container{background:#dcd6bd}
 /* gesture-handling */
 @-webkit-keyframes leaflet-gestures-fadein{0%{opacity:0}100%{opacity:1}}@keyframes leaflet-gestures-fadein{0%{opacity:0}100%{opacity:1}}.leaflet-container:after{-webkit-animation:leaflet-gestures-fadein .8s backwards;animation:leaflet-gestures-fadein .8s backwards;color:#fff;font-family:Roboto,Arial,sans-serif;font-size:22px;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;padding:15px;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:461;pointer-events:none}.leaflet-gesture-handling-scroll-warning:after,.leaflet-gesture-handling-touch-warning:after{-webkit-animation:leaflet-gestures-fadein .8s forwards;animation:leaflet-gestures-fadein .8s forwards}.leaflet-gesture-handling-touch-warning:after{content:attr(data-gesture-handling-touch-content)}.leaflet-gesture-handling-scroll-warning:after{content:attr(data-gesture-handling-scroll-content)}
+
+ @media (max-width:640px){ .leaflet-control-layers{display:none!important} .legend{display:none!important} }
+ #backbtn{display:none;position:fixed;top:10px;right:12px;z-index:3000;background:#C8873A;color:#1b1206;border:0;border-radius:18px;padding:7px 14px;font-weight:800;font-size:13px;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
 </style></head>
-<body><div id="wrap">
+<body><button id="backbtn" type="button">‹ Back</button><div id="wrap">
  <header><div class="pill">★ GAUTENG · BIG FIVE</div><h1>Your safari, mapped</h1>
  <p>Tap a pin for photos — the lodge, the waterhole circuit, sundowner spot and where the Big Five show up.</p></header>
  <div id="map"></div>
@@ -51,4 +54,4 @@ L.control.layers(null,{'🏠 Lodge & places':placeLayer,'🦁 Big Five sightings
 const lg=L.control({position:'bottomright'});
 lg.onAdd=function(){const d=L.DomUtil.create('div','legend');d.innerHTML='<b>Legend</b><div><i>🏠</i>The Lodge</div><div><i>💧</i>Waterhole</div><div><i>🌅</i>Sundowner</div><div><i>🦁</i>Big Five sighting</div><div><i style="color:#C8873A">— —</i>Game-drive route</div>';return d;};lg.addTo(map);
 setTimeout(()=>map.invalidateSize(),250);
-</script></body></html>
+</script><script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script></body></html>

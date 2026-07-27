@@ -37,8 +37,11 @@ header p{margin:0;color:var(--mut);font-size:14.5px;max-width:760px;line-height:
 .pk h3{margin:0 0 4px;font-size:14.5px}
 .pk p{margin:0;font-size:12.5px;color:#b9c6d8;line-height:1.5}
 .townlbl span{display:inline-block;white-space:nowrap;color:#9fb4d0;font-size:11px;font-weight:600;text-shadow:0 1px 3px #000,0 0 3px #000;padding:1px 4px}
+
+ @media (max-width:640px){ .leaflet-control-layers{display:none!important} .legend{display:none!important} }
+ #backbtn{display:none;position:fixed;top:10px;right:12px;z-index:3000;background:#C8873A;color:#1b1206;border:0;border-radius:18px;padding:7px 14px;font-weight:800;font-size:13px;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
 </style></head>
-<body><div id="wrap">
+<body><button id="backbtn" type="button">‹ Back</button><div id="wrap">
  <header><div class="pill">★ YELLOWSTONE COUNTRY · BIG-GAME SAFARI</div><h1>Yellowstone Country Big-Game Safari</h1><p>A guided wildlife drive through the world's first national park — tap a leg to ride it: the valleys and their herds, the geyser basins, and the timber lodge where you stay.</p></header>
  <div id="tabs"></div>
  <div id="sum"></div>
@@ -77,4 +80,4 @@ var rt=document.createElement('button');rt.setAttribute('data-k','all');rt.inner
 J.legs.forEach(function(d){var b=document.createElement('button');b.setAttribute('data-k',d.key);b.innerHTML='<b>'+d.tab+'</b><span>'+(d.tabsub||'')+'</span>';b.onclick=function(){showLeg(d.key);};tabs.appendChild(b);});
 showAll();
 </script>
-</body></html>
+<script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script></body></html>

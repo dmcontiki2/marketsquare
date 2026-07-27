@@ -5403,3 +5403,22 @@ paths verify the served version post-upload, so a future AV block can no longer 
 - GO-LIVE needs the FULL deploy (deploy_marketsquare.bat) so the seed creates the MZ super listings — the
   full deploy also bumps the version, uploads adventures_mz_map.html (line 305) and syncs assets/super.
   PowerShell now works (360 removed) so the full deploy runs clean. Botswana remains 0/25 (next).
+
+## 27 Jul 2026 — Botswana tour COMPLETE + wired for launch; map-verify method corrected
+- Photos: Botswana 25/25 (was 0/25) — generated + verified + claimed this session (Higgsfield Nano Banana Pro,
+  3:2; food shots prompted dish-first). All four tours now have full photo sets.
+- Map: adventures_bw_map.html rebuilt — 25 embedded, 0 pending.
+- Launch wiring (mirrors Namibia/Mozambique): ms.js un-gates BW in ADV_COUNTRY_MAP (adventures_bw_map.html?v=2),
+  tourKeyOf maps BW->'bw', ADV_TOUR_EXTENSIONS.bw = 3 Pula add-ons (Delta helicopter +P4,200pp /
+  Makgadikgadi extension +P12,500pp-night / extra mokoro delta night +P9,500pp-night). seed_super_global.py
+  gains the BW COUNTRIES row (Maun) + BW COPY (experiences P95,000pp; accommodation P12,000/night, hidden by
+  the one-listing-per-tour filter) + BW in _trust_where. 12 sup_bw_* super photos added to assets/super.
+- PRICING grounded in real actuals (David-requested): Botswana luxury safari ~$1,300+/pp/day, 5-day luxury
+  ~$6,500-10,000pp -> base P95,000pp (~$7,000); scenic heli ~$300pp -> +P4,200; pans/meerkat camp ~$900-1,100/nt
+  -> +P12,500. Sources: ellamckendrick.com/botswana-safari-cost, africansafarimag.com/botswana-luxury-safari.
+- GO-LIVE needs the FULL deploy (deploy_marketsquare.bat) — runs the seed, uploads adventures_bw_map.html
+  (line 293), bumps version. PowerShell healthy (360 removed).
+- MAP-VERIFY-1 (canonical, corrects a bad method): to check a deployed journey map is complete, COUNT
+  `data:image/svg` in the fetched HTML — those are the base64 placeholder tiles; 0 = complete, N = N missing.
+  Do NOT grep for "photo pending" — that text is inside the base64 SVG and never appears in plaintext, so it
+  always reads 0 even when tiles are missing. (Cross-session catch from the C2C session — thanks to it.)
