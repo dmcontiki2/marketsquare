@@ -366,7 +366,7 @@ def rg_iso_codes_and_filenames():
 
 
 @entry("RG-0012", "Per-tour maps stay wired: tour listings live, map follows the tour not the operator's country",
-       OPEN, scope="tour super listings (Cape-to-Cairo, Namibia)",
+       LOCKED, scope="tour super listings (Cape-to-Cairo, Namibia)", fixed_on="2026-07-26",
        ref="Added 26 Jul. Two coupled facts must hold together or a tour map silently vanishes. "
            "(1) A multi-country tour is DECOUPLED: the listing sits under its operator's country "
            "(Cape-to-Cairo lists under a SA/Rand operator) but its map follows the ROUTE via a new "
@@ -392,6 +392,10 @@ def rg_tour_maps_wired():
             out.append((FAIL, "map picker never consults ADV_TOUR_MAP[l.tour] — tour no longer beats country (decouple lost)"))
         if not re.search(r"^\s*NA:\s*\{\s*file:'adventures_na_map\.html'", fe, re.M):
             out.append((FAIL, "NA is not un-gated in ADV_COUNTRY_MAP (still commented, or missing)"))
+        if "ADV_TOUR_MAP[l.tour]" in fe and not re.search(r"\btour:\s*\(?\s*l\.tour", fe):
+            out.append((FAIL, "ms.js reads l.tour in the map render but NO normalizer assigns tour from the API row "
+                              "-- l.tour is always undefined, so every tour silently falls back to the country/reserve map "
+                              "(same class as the 25-Jul country-survival bug)"))
     # ── live side: the listings and map files a buyer actually reaches ──
     advs = [l for l in listings() if is_adventures(l) and not is_placeholder(l)]
     c2c = [l for l in advs if str(l.get("tour", "")).strip().lower() == "c2c"]
