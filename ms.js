@@ -2112,7 +2112,7 @@ const ADV_COUNTRY_MAP = {
   GB: { file:'adventures_uk_map.html',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  NA: { file:'adventures_na_map.html?v=2',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
   // GATED 26 Jul 2026 — re-enable when assets/journey/bw has its photos:
   // BW: { file:'adventures_bw_map.html',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
   // GATED 26 Jul 2026 — re-enable when assets/journey/mz has its photos:
@@ -2125,7 +2125,7 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  c2c: { file:'adventures_c2c_map.html?v=3', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE

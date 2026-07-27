@@ -1,99 +1,103 @@
 {
- "schema_version": 1,
- "report_type": "weekly_discovery_scan",
- "generated_at": "2026-07-20T06:15:00Z",
- "generated_by": "merged-daily-loop Monday scan (2026-07-20)",
- "scan_scope": [
-  "bea_main.py",
-  "auth.py",
-  "database.py",
-  "storage.py",
-  "payments.py",
-  "estate_agents.py",
-  "launch_redemption.py",
-  "ms.js",
-  "marketsquare.html (inline)",
-  "marketsquare_admin.html (inline)"
- ],
- "tools": [
-  "ruff 0.15.22 (F,E9,B)",
-  "vulture 2.x (min-confidence 80)",
-  "pylint cyclic-import",
-  "eslint 9 (structural rules=error / no-undef+no-unused-vars=warn)"
- ],
- "totals": {
-  "found_this_week": 3,
-  "fixed_this_week": 3,
-  "still_open": 3,
-  "note": "Delta vs 2026-07-13: prior open set SCAN-22/23/24 all CONFIRMED FIXED (absent this scan). 3 NEW LOW findings, all introduced by attended Session 139-143 work: SCAN-25 B023 x2 @bea_main.py:11362/11367 (IMPORT-SYNC-1 nested helpers close over loop var 'ad'); SCAN-26 B904 @launch_redemption.py:436 (registry-sync sqlite3.Error raise lacks 'from e') -> STAGED, Gate 2 (Founders allocation module); SCAN-27-JS no-redeclare 'A' @ms.js:15052 (sfFinish declares var A twice). Zero crash-class: pylint 10.00/10, 0 cyclic imports, 0 F821, all 7 py compile, eslint 0 NEW structural errors beyond the known tshLoad FP. NEW scope this week: estate_agents.py (S143, 799 lines) - CLEAN under ruff+vulture. FP idioms unchanged: ruff B008 x16 (was 14; +2 from new S143 endpoints), vulture family x2, eslint tshLoad x1."
- },
- "severity_breakdown": {
-  "CRIT": 0,
-  "HIGH": 0,
-  "MED": 0,
-  "LOW": 3
- },
- "open_issues": [
-  {
-   "id": "SCAN-25",
-   "sev": "LOW",
-   "file": "bea_main.py:11362,11367",
-   "rule": "B023",
-   "summary": "agency-import IMPORT-SYNC-1 helpers _imp_i/_imp_s defined inside the per-ad loop close over loop var 'ad'; called synchronously in-iteration so behaviour is correct today. Fix: bind explicitly (def _imp_i(k, ad=ad)) to make it structurally safe.",
-   "gate": "clear (agency bulk-import field mapping; no payments/ledger/EULA/KYC)",
-   "verdict": "auto-ship"
+  "schema_version": 1,
+  "report_type": "weekly_discovery_scan",
+  "generated_at": "2026-07-27T04:40:18Z",
+  "generated_by": "sensor(merged-daily-loop) Monday deep scan",
+  "scan_scope": [
+    "bea_main.py",
+    "auth.py",
+    "database.py",
+    "storage.py",
+    "payments.py",
+    "estate_agents.py",
+    "launch_redemption.py",
+    "ms.js",
+    "marketsquare.html (inline)",
+    "marketsquare_admin.html (inline)"
+  ],
+  "tools": [
+    "ruff 0.15+ (F,E9,B)",
+    "vulture 2.x (min-confidence 80)",
+    "pylint cyclic-import+undefined-variable",
+    "node --check (JS structural proxy; eslint not in sandbox)"
+  ],
+  "totals": {
+    "found_this_week": 3,
+    "fixed_this_week": 3,
+    "still_open": 3,
+    "note": "3 lint hits new (SCAN-28 B905 x1, SCAN-29 B904 x2), all LOW/auto-ship; prior open set SCAN-25/26/27-JS all confirmed fixed. B008 22 (FastAPI arg-default FP, +6 vs 16 from new admin/infra endpoints). Zero crash-class."
   },
-  {
-   "id": "SCAN-26",
-   "sev": "LOW",
-   "file": "launch_redemption.py:436",
-   "rule": "B904",
-   "summary": "raise HTTPException(502) inside 'except sqlite3.Error as e' in the registry-sync reader lacks 'from e'. Behaviour-neutral chaining fix.",
-   "gate": "GATE 2 - Founders Badge redemption module carries the x1.2 Tuppence ALLOCATION hook; POLICY 12 lists Tuppence allocations as never-automated. Default-to-stage.",
-   "verdict": "stage"
+  "severity_breakdown": {
+    "CRIT": 0,
+    "HIGH": 0,
+    "MED": 0,
+    "LOW": 3
   },
-  {
-   "id": "SCAN-27-JS",
-   "sev": "LOW",
-   "file": "ms.js:15052",
-   "rule": "no-redeclare",
-   "summary": "sfFinish() declares 'var A=sfState.A' twice (also @15027 inside the Cars branch alongside B,C). Both assign the same value so behaviour is unchanged today, but a future edit to the 15027 branch could bite. Fix: drop the redundant declaration at 15052 (var hoists) or rename the branch-local.",
-   "gate": "clear (sell-flow publish field assembly; no payments/ledger/EULA/KYC)",
-   "verdict": "auto-ship"
-  }
- ],
- "false_positives_reconfirmed": [
-  "ruff B008 x16 (FastAPI File/Body/Depends argument-default idiom; count rose 14->16 with the S143 agent-service endpoints)",
-  "vulture family x2 @2233/2334 (getaddrinfo IPv4 monkeypatch wrapper signature params - SCAN-11 ruling; line numbers shifted from 2214/2315)",
-  "eslint no-func-assign x1 tshLoad @admin inline (SCAN-21-JS - intentional doc-load decorator, IGNORE 2026-07-01)",
-  "eslint no-undef/no-unused-vars warning class (575 warns under this run's config = browser/cross-file globals + onclick handlers)"
- ],
- "history": [
-  {
-   "week_of": "2026-07-06",
-   "found": 0,
-   "fixed": 3,
-   "open": 0
+  "open_issues": [
+    {
+      "id": "SCAN-28",
+      "severity": "LOW",
+      "file": "bea_main.py:12201",
+      "summary": "ruff B905 zip(ids,results) without strict= in /admin/services-status (admin_services_status). Behaviour-neutral (results = gather over ids, same length). Non-gated admin infra diagnostic -> auto-ship."
+    },
+    {
+      "id": "SCAN-29",
+      "severity": "LOW",
+      "file": "bea_main.py:15943,15959",
+      "summary": "ruff B904 x2 in /admin/deploy-file (admin_deploy_file, MS_DEPLOY_KEY channel): raise HTTPException(400 base64 / 500 write-failed) inside except lack 'from None'/'from exc'. Behaviour-neutral exception chaining; admin/deploy infra, security-class, neither gate -> auto-ship."
+    }
+  ],
+  "false_positives_reconfirmed": [
+    {
+      "tool": "ruff B008",
+      "count": 22,
+      "reason": "FastAPI File/Depends/Body arg-default idiom (+6 vs prior 16 from new admin/infra endpoints)"
+    },
+    {
+      "tool": "vulture",
+      "id": "family",
+      "count": 2,
+      "file": "bea_main.py:2312,2423",
+      "reason": "getaddrinfo wrapper params (line-drifted from :2214/:2315)"
+    },
+    {
+      "tool": "eslint",
+      "id": "tshLoad",
+      "note": "eslint not available in sandbox this run; node --check ms.js clean as structural proxy; warn-class no-undef/no-unused unchanged historically"
+    }
+  ],
+  "history": [
+    {
+      "week_of": "2026-07-06",
+      "found": 0,
+      "fixed": 3,
+      "open": 0
+    },
+    {
+      "week_of": "2026-07-13",
+      "found": 3,
+      "fixed": 0,
+      "open": 3
+    },
+    {
+      "week_of": "2026-07-20",
+      "found": 3,
+      "fixed": 3,
+      "open": 3
+    },
+    {
+      "scan_date": "2026-07-27T04:40:18Z",
+      "found": 3,
+      "fixed": 3,
+      "still_open": 3,
+      "note": "prior open SCAN-25/26/27-JS all fixed; new SCAN-28 (B905) + SCAN-29 (B904 x2), all LOW/auto-ship; crash-class clean"
+    }
+  ],
+  "health_at_scan": {
+    "bea": "ok v1.3.1",
+    "smoke": "40/40",
+    "spend": "$0.00/$100 (0.0%)",
+    "subs": "34up/15held/1standby/1planned 0 issues"
   },
-  {
-   "week_of": "2026-07-13",
-   "found": 3,
-   "fixed": 0,
-   "open": 3
-  },
-  {
-   "week_of": "2026-07-20",
-   "found": 3,
-   "fixed": 3,
-   "open": 3
-  }
- ],
- "health_at_scan": {
-  "bea": "ok v1.3.1",
-  "smoke": "40/40",
-  "today_spend_usd": 0.029245,
-  "platform_ceiling_usd": 100.0,
-  "real_token_pct": 100.0,
-  "fea_integrity": "alert - index bytes 382540->384270 (+1730) alongside ms.js v315->v319; matched to the Session 143 AGENT-SVC deploy in CHANGELOG (marketsquare.html changed with ms.js), baseline refreshed"
- }
+  "scan_date": "2026-07-27T04:40:18Z"
 }

@@ -101,3 +101,12 @@ Fri 07/24/2026  5:30:03.74  committed 13 change(s)
  create mode 100644 scripts/make_prompt_pack.py
  create mode 100644 scripts/photo_status.py
 Sun 07/26/2026  5:30:03.57  committed 16 change(s)
+[main 416fc55] Nightly checkpoint Mon 07/27/2026  5:30:03.37 (auto, no deploy)
+ 11 files changed, 16271 insertions(+), 16 deletions(-)
+ create mode 100644 Records/COST_SWEEP_2026-07-27.md
+ create mode 100644 _to_delete/verify_ms_394.js
+ create mode 100644 deploy_frontend_nops.bat
+ create mode 100644 scripts/smoke_harness/README.md
+ create mode 100644 scripts/smoke_harness/server.py
+ create mode 100644 scripts/smoke_harness/verify.mjs
+Mon 07/27/2026  5:30:03.52  committed 9 change(s)

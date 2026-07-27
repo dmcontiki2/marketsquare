@@ -5364,3 +5364,29 @@ NOT yet wired into the DB (assets only). Remaining: (a) DB wiring to publish the
 - ms.js: gated the adv-reserve-map iframe to country ZA only (l.country ZA check) so US/UK/AUS adventure listings don't show the Gauteng map. Syntax verified (node --check).
 - VISIBILITY: Adventures categories are borderless (trip-planning reach exemption) -> US/UK/AUS adventure exemplars appear pinned in the feed immediately. Cars/Property/Tutors/LM/Collectors/Services are city-gated -> live in DB + reachable by direct link, but won't surface in the ZA feed until a market/city switcher + per-country geo seeding lands.
 - RUN ORDER: deploy (syncs assets/super -> /static/super + ms.js), then on server: python3 scripts/seed_super_global.py (dry-run) -> --apply.
+
+## 27 Jul 2026 — PS-BLOCK-1: PowerShell "Access is denied" root-caused (360 Total Security)
+All `powershell` invocations from .bat files began failing with "Access is denied" (exit 5) on ~26 Jul,
+silently killing deploy_marketsquare.bat step 0 (version bump) and every deploy that weekend — the direct
+cause of the "deployed but nothing changed" episodes during the tour-map work. DIAGNOSIS (ps_diag.bat /
+ps_diag2.bat, run via double-click, logs read from the mount): 64-bit powershell.exe denied even by full
+path; 32-bit SysWOW64 copy worked; ACLs normal; IFEO clean in both registry views; AppLocker had zero
+block events; Code Integrity routine. SecurityCenter2 showed TWO active AVs: Windows Defender + 360 Total
+Security (likely bundled arrival that weekend). PROOF: exiting 360 -> bare PS OK, full-path PS OK, and a
+step-0 rehearsal bump on a COPY ran clean (ps_test.bat). PERMANENT FIX APPLIED 27 Jul: whitelist attempt FAILED (360's behavior shield ignores its own trust list
+for file AND folder entries — retested blocked both times), so David uninstalled 360; Defender re-armed.
+VERIFIED post-uninstall: bare PS, full-path PS and a step-0 rehearsal bump all clean (no reboot needed). RESILIENCE ALREADY SHIPPED: deploy_frontend_only.bat
+auto-forwards to deploy_frontend_nops.bat (scp+curl only) when PowerShell is denied, and both frontend
+paths verify the served version post-upload, so a future AV block can no longer ship silently-stale assets.
+
+## 27 Jul 2026 — Mobile map UX + Cape-to-Cairo route gap (v395)
+- MAP-MOBILE-1: journey_template.html — on phone widths (<=640px) the layer-control and the "ON THE LINE"
+  legend now open expanded (readable), then collapse to matching tappable chips ("🗺 Map layers" / "🔑 Key")
+  the moment the user drags or zooms, freeing the map and photo pins; re-open with a tap. Gesture-based (no
+  fixed timer — a fixed timer loses the race against the 1.9MB embedded-image load). Desktop unchanged.
+  Verified in headless Chromium at 390px: expanded on open, stays expanded untouched, collapses on drag,
+  re-expands on chip tap. All 4 journey maps rebuilt from the template.
+- C2C-ROUTE-1: cape_cairo.json Day-3 seg was discontinuous (Kimberley→Pretoria leg undrawn); prepended the
+  Kimberley·Klerksdorp·Johannesburg·Pretoria points so the rail line is now unbroken end to end.
+- Map cache-busting: ms.js now versions the tour-map URLs (c2c ?v=3, na ?v=2) so map-file changes actually
+  reach browsers (maps are nginx-immutable like ms.js); deploy_frontend_nops.bat uploads both maps.

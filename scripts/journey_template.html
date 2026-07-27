@@ -108,11 +108,13 @@ J.days.forEach(function(d){var b=document.createElement('button');b.setAttribute
 var ov={};
 ov[CFG.ov.ends]=G.ends; ov[CFG.ov.over]=G.over; ov[CFG.ov.food]=G.food;
 ov[CFG.ov.view]=G.view; ov[CFG.ov.sight]=G.sight; ov[CFG.ov.route]=routeG; ov[CFG.ov.towns]=townG;
-L.control.layers(null,ov,{collapsed:false}).addTo(map);
+var _isMob=window.innerWidth<=640;
+var layerCtl=L.control.layers(null,ov,{collapsed:false}).addTo(map);
 
 var lg=L.control({position:'bottomright'});
-lg.onAdd=function(){var el=L.DomUtil.create('div','legend');el.innerHTML=CFG.legend;return el;};
+lg.onAdd=function(){var el=L.DomUtil.create('div','legend'+(_isMob?' legend-collapsible':''));el.innerHTML='<div class="legend-body">'+CFG.legend+'</div><button type="button" class="legend-chip">🔑 Key</button>';L.DomEvent.disableClickPropagation(el);var chip=el.querySelector('.legend-chip');chip.onclick=function(e){e.preventDefault();e.stopPropagation();el.classList.remove('collapsed');};lg._el=el;return el;};
 lg.addTo(map);
+if(_isMob){var _cs=document.createElement('style');_cs.textContent='.legend-chip{display:none;cursor:pointer;font:600 12px/1 Helvetica,Arial,sans-serif;color:#fff;background:rgba(12,26,46,.92);border:1px solid rgba(255,255,255,.28);border-radius:16px;padding:8px 13px;box-shadow:0 2px 8px rgba(0,0,0,.35);}.legend-collapsible.collapsed .legend-body{display:none;}.legend-collapsible.collapsed{padding:0 !important;background:transparent !important;border:none !important;box-shadow:none !important;}.legend-collapsible.collapsed .legend-chip{display:inline-block;}.leaflet-control-layers:not(.leaflet-control-layers-expanded) .leaflet-control-layers-toggle{background-image:none !important;background:rgba(12,26,46,.92) !important;width:auto !important;height:auto !important;line-height:1 !important;border:1px solid rgba(255,255,255,.28);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.35);}.leaflet-control-layers:not(.leaflet-control-layers-expanded) .leaflet-control-layers-toggle::after{content:"🗺 Map layers";color:#fff;font:600 12px/1 Helvetica,Arial,sans-serif;padding:8px 13px;display:block;white-space:nowrap;}';document.head.appendChild(_cs);var doC=function(){layerCtl.collapse();if(lg._el)lg._el.classList.add('collapsed');};map.on('dragstart',doC);map.whenReady(function(){setTimeout(function(){map.on('zoomstart',doC);},1500);});}
 
 showAll();
 setTimeout(function(){map.invalidateSize();},250);
