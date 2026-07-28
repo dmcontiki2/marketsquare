@@ -109,6 +109,28 @@ def main():
     except Exception as _e:
         print('  [evidence-true] check skipped: %r' % _e)
 
+    # BASE-40 canon guard (28 Jul 2026): every surface that writes or previews a
+    # Trust Score must carry the universal 40-point base and the scorer's caps.
+    # Added after the 40->5 bug: a base-less panel total gained write authority
+    # (JNR-FIX-2 self-heal) and rewrote stored scores on profile view. The
+    # evidence-true check above could not catch it (list and headline were wrong
+    # together); this one checks the arithmetic canon itself.
+    try:
+        import subprocess as _sp2
+        _tf2 = os.path.join(HERE, 'test_trust_base40.py')
+        if os.path.isfile(_tf2):
+            _tb = _sp2.run([sys.executable, _tf2, HERE], capture_output=True, text=True, timeout=30)
+            if _tb.returncode != 0:
+                danger.append('trust-base40')
+                print('  !! BASE-40: trust arithmetic canon check FAILED:')
+                for _l in (_tb.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  Base-40 trust canon check: ok')
+    except Exception as _e:
+        print('  [base-40] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

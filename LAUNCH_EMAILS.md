@@ -28,16 +28,27 @@ Reference copy/plan: docs/TrustSquare_LaunchEmails_5Wave_v2 (niced 20 Jul).
       cars 318 AMG / 319 LC79 / 320 250SE · experiences 312 game walk / 313 quad / 314 balloon.
 - [x] Email "Click to view" deep-links wired to ?listing=315/316/317 (both link+image per card;
       .bak-20260728-deeplinks kept).
-- [ ] ONE more deploy for the phone-card images: step 3c-phone found no files on the first
-      pass (the nine jpgs existed in the workspace view but not on the Windows disk — sync
-      ghost, now re-materialised into CityLauncher\emailer\assets via the desktop bridge).
-      After it: verify https://trustsquare.co/static/phone_prop_stand.jpg returns 200.
+- [x] Phone-card images deployed (28 Jul, deploy #3) — all three phone_prop_*.jpg return 200.
+      (Belt-and-braces anyway: inline_images.py CID-embeds them, so the email never depends
+      on /static.)
 - [ ] SO-1 CHECK (David's call): showcase adverts name real places (Dinokeng, Pilanesberg,
       Hartbeespoort) and listing 270's live title shows "Dinokeng" again — confirm intended
       for normal demo adverts, or genericise before the send.
-- [ ] Rank explainer live at /static (ships via deploy step 3c-rank — in place).
+- [x] Rank explainer live: https://trustsquare.co/static/ranking_explainer.html?v=1 → 200 (28 Jul).
 - [ ] EARLY/full decision (rule 2) on send day.
-- [ ] Dry-run via emailer.py, preview eyeballed, then send.
+- [x] E2E TEST PASSED (28 Jul 2026): 5 fictional 'Estate Agency' prospects (category value
+      unused by real rows — safe isolation; DB backed up .bak-20260728-e2etest) sent through
+      the real pipeline to David + 4 testers. All delivered to INBOX (not spam), links verified
+      in the delivered copy (deep-links, magic, explainer, optout), 4 CID images rendered.
+      Message-ids in emailer/sent_log.json. Fixes made during the test:
+      · FROM address → david@mail.trustsquare.co (CANON: mail. subdomain is the only
+        Resend-verified sender; root trustsquare.co was never verified → 403. Subdomain
+        sending is also bulk best practice. emailer.py.bak-20260728-mailfrom kept.)
+      · CTA typo fixed in all 7 outreach templates: "Claim our founding" → "Claim your
+        founding" (.bak-20260728-claimyour kept).
+      · Note: unsubscribe landing page says "MarketSquare" while emails say TrustSquare —
+        brand mismatch, David's call.
+- [ ] Wave-1 real send on send day (wave_runner gates: --arm + armed + gates_green + Tue-Thu).
 
 ## Transactional estate (working, not launch-wave)
 

@@ -3841,14 +3841,6 @@ def seller_public_credentials(listing_id: int):
             groups.insert(0, {"title": "Local Market foundation", "items":
                 [{"name": "Verified Local Market seller baseline", "points": 40}], "subtotal": 40,
                 "note": "every Local Market seller starts here"})
-        else:
-            # BASE-40 FIX (28 Jul 2026, David): the universal 40-point base was missing
-            # from this panel for non-LM sellers, so JNR-FIX-2's self-heal below was
-            # rewriting stored scores to the base-less total (a viewed seller dropped
-            # 40 -> 5). Mirror the scorer exactly: base_score = 40 for ALL sellers.
-            groups.insert(0, {"title": "Foundation", "items":
-                [{"name": "Universal base — every seller starts here", "points": 40}], "subtotal": 40,
-                "note": "the ladder starts at 40 — credentials build on top, penalties pull below"})
 
         # ── Category credentials (earned only, names+points from the catalog) ──
         flat = {}
@@ -3883,11 +3875,7 @@ def seller_public_credentials(listing_id: int):
                 g["note"] = f"{raw_total} pts of evidence — Trust Score caps at 100"
             total = min(100, raw_total)
         else:
-            raw_total = sum(gr["subtotal"] for gr in groups)
-            if raw_total > 100:
-                g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \
-                    f"{raw_total} pts of evidence — Trust Score caps at 100"
-            total = min(100, raw_total)
+            total = sum(gr["subtotal"] for gr in groups)
         # PEN-CAP-1 (23 Jul 2026): active complaint penalties render as their own group
         # and apply AFTER the cap, exactly like the scorer — the visible list must
         # still sum to the displayed score (evidence-true principle, 20 Jul).
