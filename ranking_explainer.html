@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>How ranking works — MarketSquare</title>
+<style>
+ :root{--navy:#0c1a2e;--panel:#12203a;--line:#26374f;--amber:#C8873A;--ink:#e8eef7;--ink2:#aeb9c9;--muted:#93a4bd;
+       --t-new:#5e6d85;--t-est:#63a9ff;--t-tru:#42a87c;--t-gold:#e6a93e;}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--navy);color:var(--ink);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.45}
+ .wrap{max-width:920px;margin:0 auto;padding:26px 18px 40px}
+ .pill{display:inline-block;background:var(--amber);color:#1b1206;font-weight:800;font-size:11px;padding:3px 10px;border-radius:12px;letter-spacing:.05em}
+ h1{margin:10px 0 4px;font-size:28px;line-height:1.15}
+ .sub{color:var(--ink2);font-size:14px;margin:0 0 6px}
+ .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;margin-top:18px}
+ .step{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+ .stepnum{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--amber);color:#1b1206;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+ h2{margin:0;font-size:19px}
+ .lead{color:var(--ink2);font-size:13.5px;margin:6px 0 14px}
+ /* VEL rungs */
+ .vel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+ .rung{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#0e1c33}
+ .rung .doc{width:56px;height:70px;margin:2px auto 8px;border-radius:6px;position:relative}
+ .doc i{display:block;height:5px;border-radius:3px;background:#3a4a63;margin:7px 9px 0}
+ .doc i:first-child{margin-top:14px;width:60%}
+ .r1 .doc{background:#1a2740;border:2px dashed #3a4a63}
+ .r2 .doc{background:#1a2740;border:2px solid var(--ink2)}
+ .r3 .doc{background:#243250;border:2px solid var(--t-gold)}
+ .r3 .doc::after{content:"✓";position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:50%;
+   background:var(--t-gold);color:#1b1206;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid var(--panel)}
+ .rung b{display:block;font-size:13.5px}
+ .rung small{color:var(--muted);font-size:11.5px;display:block;margin-top:2px}
+ .rung .pts{margin-top:7px;font-size:12px;font-weight:800;color:var(--muted)}
+ .r3 .pts{color:var(--t-gold)}
+ /* credential chips */
+ .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+ .chip{display:flex;align-items:center;gap:7px;background:#0e1c33;border:1px solid var(--line);border-radius:20px;padding:5px 12px 5px 7px;font-size:12.5px}
+ .chip .seal{width:20px;height:20px;border-radius:50%;background:var(--t-gold);color:#1b1206;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center}
+ .chip b{color:var(--t-gold);font-weight:800}
+ /* score bar */
+ .barwrap{margin:16px 2px 2px}
+ .bands{display:flex;height:34px;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+ .band{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:#0c1a2e}
+ .b-new{width:39%;background:var(--t-new);color:#e8eef7}
+ .b-est{width:30%;background:var(--t-est)}
+ .b-tru{width:20%;background:var(--t-tru)}
+ .b-gold{width:11%;background:var(--t-gold)}
+ .scale{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:4px}
+ .marks{position:relative;height:36px;margin-top:2px}
+ .mark{position:absolute;transform:translateX(-50%);text-align:center;font-size:11px;color:var(--ink2);white-space:nowrap}
+ .mark::before{content:"";display:block;width:2px;height:10px;background:var(--amber);margin:0 auto 2px}
+ .footnote{color:var(--muted);font-size:11.5px;margin-top:12px;border-top:1px dashed var(--line);padding-top:9px}
+ /* quality anatomy */
+ .anat{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start}
+ .advert{background:#0e1c33;border:1px solid var(--line);border-radius:10px;padding:9px}
+ .ph{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+ .ph div{aspect-ratio:4/3;border-radius:4px;background:#243250}
+ .ph div:first-child{grid-column:1/4;aspect-ratio:16/7;background:#2c3d5e}
+ .fld{height:9px;border-radius:5px;background:#3a4a63;margin-top:7px}
+ .fld.short{width:55%}
+ .qrow{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13px}
+ .qpts{flex:0 0 74px;text-align:right;font-weight:800;color:var(--amber);font-size:14px}
+ .qfill{height:12px;border-radius:6px;background:var(--amber);opacity:.9}
+ .qlab b{display:block}
+ .qlab small{color:var(--muted)}
+ .gate{margin-top:12px;position:relative;height:26px;border-radius:8px;background:#0e1c33;border:1px solid var(--line);overflow:hidden}
+ .gate .fill{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#7a5322,var(--amber))}
+ .gate .gline{position:absolute;left:50%;top:-4px;bottom:-4px;width:3px;background:var(--ink)}
+ .gatelab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:5px}
+ /* rank dial */
+ .dial{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+ .dbox{background:#0e1c33;border:1px solid var(--line);border-radius:12px;padding:12px 8px}
+ .dbox .big{font-size:26px;font-weight:900}
+ .d-trust .big{color:var(--t-tru)} .d-fresh .big{color:var(--t-est)} .d-rank .big{color:var(--t-gold)}
+ .dbox small{color:var(--muted);font-size:11.5px;display:block;margin-top:3px}
+ .op{font-size:24px;font-weight:900;color:var(--muted)}
+ .ticket{display:flex;gap:10px;background:#0e1c33;border:1px dashed var(--amber);border-radius:10px;padding:10px 12px;margin-top:13px;font-size:12.5px;color:var(--ink2);align-items:center}
+ .ticket .tk{font-size:20px}
+ /* feed mock */
+ .filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+ .fchip{background:#0e1c33;border:1px solid var(--line);border-radius:16px;padding:4px 12px;font-size:12px;color:var(--ink2)}
+ .fchip.on{background:var(--amber);color:#1b1206;font-weight:800;border-color:var(--amber)}
+ .card{display:flex;gap:11px;background:#0e1c33;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:9px;align-items:center}
+ .rankn{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--amber);color:#1b1206;font-weight:900;display:flex;align-items:center;justify-content:center}
+ .thumb{flex:0 0 74px;height:52px;border-radius:8px;background:#2c3d5e}
+ .cbody{flex:1;min-width:0}
+ .cbody .t{height:9px;border-radius:5px;background:#3a4a63;width:70%}
+ .cbody .u{height:7px;border-radius:4px;background:#243250;width:45%;margin-top:6px}
+ .cmeta{flex:0 0 auto;text-align:right}
+ .badge{display:inline-block;border-radius:12px;padding:2px 9px;font-size:11.5px;font-weight:800;color:#0c1a2e}
+ .bg-gold{background:var(--t-gold)} .bg-tru{background:var(--t-tru)} .bg-est{background:var(--t-est)}
+ .fresh{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}
+ .rcol{flex:0 0 46px;text-align:center;border-right:1px solid var(--line);padding-right:9px}
+ .rcol .rbig{font-size:21px;font-weight:900;color:var(--t-gold)}
+ .rcol .rlab{font-size:8.5px;letter-spacing:.09em;color:var(--muted)}
+ .card.hidden{opacity:.32;border-style:dashed}
+ .card.hidden .why{font-size:11px;color:var(--ink2)}
+ .velfoot{margin-top:20px;text-align:center;color:var(--muted);font-size:12px}
+ .velfoot b{color:var(--amber)}
+ @media(max-width:640px){.vel{grid-template-columns:1fr}.anat{grid-template-columns:1fr}.dial{grid-template-columns:1fr;gap:4px}.op{transform:rotate(90deg)}h1{font-size:22px}.mark.m-mid{display:none}.band{font-size:9.5px;letter-spacing:0}.card{flex-wrap:wrap}.cmeta{flex-basis:100%;text-align:left;margin-left:41px}}
+</style></head>
+<body><div class="wrap">
+ <div class="pill">★ MARKETSQUARE · HOW RANKING WORKS</div>
+ <h1>Seen first is earned — never bought</h1>
+ <p class="sub">Four steps from evidence to the top of the feed. No promoted posts, no paid placement: the ladder is the same for everyone.</p>
+
+ <!-- STEP 1 -->
+ <div class="panel">
+  <div class="step"><div class="stepnum">1</div><h2>Evidence becomes your Trust Score</h2></div>
+  <p class="lead">The <b>Verified Evidence Ladder</b>: the same credential is worth nothing said, nothing pending — and full points once independently verified.</p>
+  <div class="vel">
+   <div class="rung r1"><div class="doc"><i></i><i></i><i></i></div><b>Said it</b><small>self-declared</small><div class="pts">+0 points</div></div>
+   <div class="rung r2"><div class="doc"><i></i><i></i><i></i></div><b>Showed it</b><small>document uploaded · pending</small><div class="pts">+0 — held</div></div>
+   <div class="rung r3"><div class="doc"><i></i><i></i><i></i></div><b>Proved it</b><small>independently verified</small><div class="pts">points land</div></div>
+  </div>
+  <div class="chips">
+   <span class="chip"><span class="seal">✓</span>Professional membership <b>+10</b></span>
+   <span class="chip"><span class="seal">✓</span>Industry accreditation <b>+10</b></span>
+   <span class="chip"><span class="seal">✓</span>Registered company <b>+6</b></span>
+   <span class="chip"><span class="seal">✓</span>Years trading <b>+5&nbsp;·&nbsp;+5</b></span>
+   <span class="chip"><span class="seal">✓</span>Named industry role <b>high value</b></span>
+  </div>
+  <p class="lead" style="margin:6px 0 0">Every seller starts at <b>40</b>. Your category's verified signals add up to <b>+60</b> on top — hard evidence is worth much more than soft claims.</p>
+  <div class="barwrap">
+   <div class="bands">
+    <div class="band b-new">NEW</div><div class="band b-est">ESTABLISHED</div><div class="band b-tru">TRUSTED</div><div class="band b-gold">GOLD</div>
+   </div>
+   <div class="scale"><span>0</span><span>40</span><span>70</span><span>90</span><span>100</span></div>
+   <div class="marks">
+    <span class="mark" style="left:40%">start 40</span>
+    <span class="mark m-mid" style="left:55%">+ certs ≈ 55</span>
+    <span class="mark m-mid" style="left:85%">+ role ≈ 85</span>
+    <span class="mark" style="left:95%">full profile ≈ 95</span>
+   </div>
+  </div>
+  <p class="footnote">Gold (90+) = <b>Highly Trusted</b>: gold badge, top of results. Complaints subtract on a diminishing scale — and below 30, listings are suppressed. The ladder goes down as well as up.</p>
+ </div>
+
+ <!-- STEP 2 -->
+ <div class="panel">
+  <div class="step"><div class="stepnum">2</div><h2>Craft becomes your Listing Quality</h2></div>
+  <p class="lead">Every advert is scored out of 100 before it can go live. The Advert Coach always shows your biggest missing win first.</p>
+  <div class="anat">
+   <div class="advert"><div class="ph"><div></div><div></div><div></div><div></div></div><div class="fld"></div><div class="fld"></div><div class="fld short"></div></div>
+   <div>
+    <div class="qrow"><span class="qpts">up to 40</span><div class="qfill" style="width:40%"></div><span class="qlab"><b>Photos</b><small>first photo 10, each next one 8</small></span></div>
+    <div class="qrow"><span class="qpts">50</span><div class="qfill" style="width:50%"></div><span class="qlab"><b>Complete details</b><small>every required field + a real description (15+ words)</small></span></div>
+    <div class="qrow"><span class="qpts">6</span><div class="qfill" style="width:6%"></div><span class="qlab"><b>A real price</b><small>“POA” scores zero</small></span></div>
+    <div class="qrow"><span class="qpts">4</span><div class="qfill" style="width:4%"></div><span class="qlab"><b>Suburb / area</b></span></div>
+    <div class="gate"><div class="fill"></div><div class="gline"></div></div>
+    <div class="gatelab"><span>0</span><span><b style="color:var(--ink)">the publish bar — 50</b></span><span>100</span></div>
+   </div>
+  </div>
+  <p class="footnote">Below the bar, the advert <b>cannot go live</b> — quality is the ticket into the marketplace, for every seller equally.</p>
+ </div>
+
+ <!-- STEP 3 -->
+ <div class="panel">
+  <div class="step"><div class="stepnum">3</div><h2>Trust and Quality become your Rank</h2></div>
+  <p class="lead">Two halves, equally weighted — and no dial money can turn.</p>
+  <div class="dial">
+   <div class="dbox d-trust"><div class="big">50%</div><b>Trust Score</b><small>who you've proved<br/>you are</small></div>
+   <div class="op">+</div>
+   <div class="dbox d-fresh"><div class="big">50%</div><b>Listing Quality</b><small>how well you<br/>present the work</small></div>
+   <div class="op">=</div>
+   <div class="dbox d-rank"><div class="big">RANK</div><b>Your position</b><small>recomputed live,<br/>for every search</small></div>
+  </div>
+  <div class="ticket"><span class="tk">🎫</span><span><b>Quality works twice.</b> It's the entry ticket — below the bar you can't publish at all — and then it becomes half of your Rank. Craft is never wasted.</span></div>
+  <p class="footnote">In buyer listing feeds, new adverts also get a freshness nudge that fades over 30 days. Exemplar adverts are pinned first in every view as the measuring stick.</p>
+ </div>
+
+ <!-- STEP 4 -->
+ <div class="panel">
+  <div class="step"><div class="stepnum">4</div><h2>What the viewer sees</h2></div>
+  <p class="lead">Ask for the agents in any city, no filters — the answer always comes back in <b>Rank order</b>. Filters only narrow the list; Rank always orders it:</p>
+  <div class="filters"><span class="fchip on">Sort: Rank</span><span class="fchip on">Trust 70+</span><span class="fchip">City</span><span class="fchip">Category</span></div>
+  <div class="card"><div class="rankn">1</div><div class="rcol"><div class="rbig">92</div><div class="rlab">RANK</div></div><div class="thumb"></div><div class="cbody"><div class="t"></div><div class="u"></div></div><div class="cmeta"><span class="badge bg-gold">HIGHLY TRUSTED · 95</span><span class="fresh">Quality 88 · Rank = ½×95 + ½×88</span></div></div>
+  <div class="card"><div class="rankn">2</div><div class="rcol"><div class="rbig">90</div><div class="rlab">RANK</div></div><div class="thumb"></div><div class="cbody"><div class="t"></div><div class="u"></div></div><div class="cmeta"><span class="badge bg-tru">TRUSTED · 84</span><span class="fresh">Quality 96 · Rank = ½×84 + ½×96</span></div></div>
+  <div class="card"><div class="rankn">3</div><div class="rcol"><div class="rbig">80</div><div class="rlab">RANK</div></div><div class="thumb"></div><div class="cbody"><div class="t"></div><div class="u"></div></div><div class="cmeta"><span class="badge bg-gold">HIGHLY TRUSTED · 90</span><span class="fresh">Quality 70 · Rank = ½×90 + ½×70</span></div></div>
+  <div class="card hidden"><div class="rankn">–</div><div class="rcol"><div class="rbig">76</div><div class="rlab">RANK</div></div><div class="thumb"></div><div class="cbody"><div class="t"></div><div class="u"></div><div class="why">hidden by the viewer's Trust 70+ filter</div></div><div class="cmeta"><span class="badge bg-est">ESTABLISHED · 62</span><span class="fresh">Quality 90</span></div></div>
+  <p class="footnote">Note rank 2 vs 3: a Trusted-84 with an excellent advert outranks a Highly-Trusted-90 with a thin one — craft is half the score. The lasting way up is <b>both</b> ladders.</p>
+ </div>
+
+ <p class="velfoot"><b>VEL — the Verified Evidence Ladder:</b> said it → showed it → proved it. Only independent verification unlocks Trusted and Highly Trusted.<br/>All values mirror the live scoring and ranking engine (TRUST_SCORE_CRITERIA v1.0 · Principle A5).</p>
+</div></body></html>

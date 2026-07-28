@@ -1,3 +1,17 @@
+## 28 Jul 2026 — EMAIL SIMPLICITY PASS (David): one skin, one build, one archive, one page
+- Source: David — "I want to hear simplicity." Roadmap-6's dependency on Roadmap #1 is dissolved by ruling: the LIVE skin reference is CityLauncher/emailer/templates/agency_outreach.html (the 27–28 Jul iterated wave-1 email), not a future token lock.
+- **RANK-CTA-1 (CityLauncher agency_outreach.html):** "See how ranking works →" button added under the phone-card showcase, linking /static/ranking_explainer.html?v=1 (.bak-20260728-rankcta kept).
+- **ARCHIVE-APRIL-1:** all 19 April-era n8n outreach templates (+EARLY variants, +property_outreach_v2 reference) moved to n8n/email_templates/_archive_2026-04/. Live in that folder now: demand_invite, intro_accepted, intro_declined only.
+- **LAUNCH_EMAILS.md** created at repo root — the one page of truth: skin ruling, EARLY/full one-line rule, wave table, wave-1 checklist, transactional estate. ROADMAP_6_EMAIL_OVERHAUL marked superseded by it.
+- NOTE: correction recorded — the "April fleet" critique applied to the superseded n8n copies; the CityLauncher wave-1 email (David, 27–28 Jul) was and is current.
+
+## 28 Jul 2026 — LISTING DEEP LINK: ?listing=<id> opens the exact advert (David + CityLauncher Cowork session)
+- Source: David — wave-1 agency emails' phone-card showcase must land recipients on THE advert shown on the card, not just browse ("click on any one and then see the actual advert").
+- **DEEPLINK-1 (ms.js):** new block after the magic-link parser — reads `?listing=<id>`, strips the param from the URL bar, retries up to 25×400ms for LISTINGS to load, matches raw or `bea_`-prefixed ids, then goTo('browse') + openDetail(hit). Unknown/missing ids degrade silently to normal browse (supers pinned first). node --check clean; md5 parity cloud/device 79618d02; backup ms.js.bak-20260728-deeplink.
+- Also rides this ship: v372 drift already staged since 24 Jul (clears audit MSJS-DRIFT + VERSION-KEY flags).
+- Consumers: 9 phone-card hrefs in CityLauncher emailer templates flip to `?listing=<id>` once the 9 matching showcase adverts exist server-side (OPEN_LOOPS D5, David-approved 28 Jul).
+- Ship: via /TSL → deploy_marketsquare.bat driven on David's machine (cloud session holds no key per TSL rule).
+
 ## 27 Jul 2026 — CAPE TO CAIRO COMPLETE + GERMANY LIVE: rail+fly route, 38/38 photos, phone fixes fleet-wide (David + two Cowork sessions)
 - Source: David — benchmark the C2C demo against the real North South Travel/Goway 32-day product; remove rails-where-none; complete photos; surface Bavaria.
 - **C2C-ROUTE-1 (journeys/cape_cairo.json + scripts/journey_template.html):** Leg 5 rewritten from fictional Sudan rail to the flown safari circuit (Dar → Ngorongoro → Serengeti → Volcanoes NP → Addis → Lalibela → Abu Simbel → Aswan); Leg 6 reframed cruise + night sleeper; 5 traditional-meal stops (roosterkoek, potjie, Zambezi bream, chai na mandazi, coffee ceremony) + sleeper stop → 38 stops. Template gained mode-aware line styles (rail solid / air dashed / Nile dotted) + per-leg stat icon. Benchmark copy: 32 days · from ±US$50 000 pp (the train alone from ±US$16 500, 2026 Rovos rates).

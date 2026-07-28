@@ -236,39 +236,6 @@ if %errorlevel% neq 0 (
 echo  Done.
 echo.
 
-:: ── Step 3c-rank: Deploy ranking explainer (-> /static/) ──
-:: RANK-EXPLAIN-1 (27 Jul 2026, David): four-panel How-Ranking-Works visual, opened
-:: from agent-card RANK chips + listing trust badges (advMapExpand overlay) and the
-:: agency email CTA. Mirrors the live engine; ships with every deploy.
-echo  [3c-rank] Deploying ranking explainer...
-scp "%PROJECT%\ranking_explainer.html" %SERVER%:%REMOTE%/static/ranking_explainer.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for ranking_explainer.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
-:: ── Step 3c-phone: Deploy wave-1 email phone-card images (-> /static/) ──
-:: PHONE-CARDS-1 (28 Jul 2026, David): the nine composed phone cards the agency email
-:: embeds as https://trustsquare.co/static/phone_*.jpg (source of truth:
-:: CityLauncher\emailer\assets). Without this step the email images 404.
-echo  [3c-phone] Deploying email phone-card images...
-set PHONESRC=C:\Users\David\Projects\CityLauncher\emailer\assets
-set PHONEFAIL=0
-for %%f in ("%PHONESRC%\phone_*.jpg") do (
-    scp "%%f" %SERVER%:%REMOTE%/static/
-    if errorlevel 1 set PHONEFAIL=1
-)
-if "%PHONEFAIL%"=="1" (
-    echo  ERROR: one or more phone-card images failed to upload.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
 :: ── Step 3c-us: Deploy adventures US map (-> /static/) ──
 :: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
 :: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
@@ -424,31 +391,6 @@ if exist "%PROJECT%\RUN_ADV_PHOTOS_ONCE.flag" (
         if %errorlevel% equ 0 (
             del "%PROJECT%\RUN_ADV_PHOTOS_ONCE.flag"
             echo  [OK] Adventures photo expansion applied - one-shot flag removed.
-        ) else (
-            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
-        )
-    )
-    echo.
-)
-
-
-:: ── Step 3f2: ONE-SHOT email-showcase adverts (flag-guarded) ──
-:: EMAIL-SHOWCASE-1 (28 Jul 2026, David-approved OPEN_LOOPS D5): insert the 9 adverts the
-:: wave-1 email phone cards depict (normal demo adverts, NOT super_example). Idempotent;
-:: guarded by RUN_EMAIL_ADVERTS_ONCE.flag; deletes the flag after a clean apply.
-if exist "%PROJECT%\RUN_EMAIL_ADVERTS_ONCE.flag" (
-    echo  [3f2] ONE-SHOT: email-showcase advert insert...
-    scp "%PROJECT%\scripts\create_email_showcase_adverts.py" %SERVER%:%REMOTE%/create_email_showcase_adverts.py
-    if %errorlevel% neq 0 (
-        echo  ERROR: SCP failed for create_email_showcase_adverts.py - NOT run, flag kept.
-    ) else (
-        echo  --- dry run ---
-        ssh -n %SERVER% "cd %REMOTE% && python3 create_email_showcase_adverts.py"
-        echo  --- apply ---
-        ssh -n %SERVER% "cd %REMOTE% && python3 create_email_showcase_adverts.py --apply"
-        if %errorlevel% equ 0 (
-            del "%PROJECT%\RUN_EMAIL_ADVERTS_ONCE.flag"
-            echo  [OK] Email-showcase adverts applied - one-shot flag removed.
         ) else (
             echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
         )

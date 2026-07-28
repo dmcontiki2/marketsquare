@@ -3925,7 +3925,7 @@ function openDetail(id){
       </div>
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
       <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
-        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=1" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
+        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
       </div>
 
@@ -15622,7 +15622,7 @@ function sfAgentCardHtml(a,top){
     (top?'<div style="position:absolute;top:-9px;right:10px;background:#C8873A;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.05em;">BEST MATCH</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=1" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK &#9432;</div></div></div>'+
+      '<div style="text-align:center;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK</div></div></div>'+
     '<div style="font-size:12px;color:'+mut+';margin-top:3px;">'+(a.suburbs||a.city)+' · <b style="color:inherit;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:8px;">'+
@@ -15919,7 +15919,7 @@ function advAgentCard(a,card){
     (a.photo?'<img src="'+a.photo+'" alt="" style="width:calc(100% + 28px);margin:-12px -14px 8px;display:block;">':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=1" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK &#9432;</div></div></div>'+
+      '<div style="text-align:center;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK</div></div></div>'+
     '<div style="font-size:12px;color:#68758c;margin-top:2px;">'+(a.suburbs||a.city||'')+' · <b style="color:#1c2434;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:7px;">'+

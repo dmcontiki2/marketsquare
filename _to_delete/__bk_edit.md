@@ -503,8 +503,3 @@ KEY FACTS FOR THE REGISTRATION SESSION:
 Two rules, institutional: (1) The daily loop computes ACTUAL average $/photo from the spend logs and compares it to AI_PHOTO_COST_MODEL.xlsx's assumption — drift >20% goes in the morning brief as an amber line. (2) ANY change to an AI call site (prompt length, probe size, model, rounds, new call) MUST restate the unit cost in its CHANGELOG entry next to the quality claim — a quality upgrade without its price is an incomplete entry. Context: probe 896->1344 + verify loop + moderation clause moved photos from $4.80 to $13.89/1000 across five days with no budget restatement; David caught it, not the process.
 
 - [SEC] Post-launch auth refactor: migrate the 44 user-facing endpoints off the client-shipped shared API key onto per-user session auth (magic-link JWT); then retire ms_mk_2026_pretoria_admin entirely. Origin: SEC-1 containment, 23 Jul 2026.
-
-## 27 Jul 2026 — Agency auto-email: ranking-explainer CTA (spec, build with the email template)
-- When the agency auto-email template is built, include a primary button: **“See how ranking works →”** linking to https://trustsquare.co/static/ranking_explainer.html?v=1 (bump ?v= if the file changes; nginx serves immutable).
-- Optional: a static screenshot of panel 3 (50/50 dials) as the button's teaser image.
-- In-app counterparts already wired: agent-card RANK chips + listing trust-badge “how scores work” link (advMapExpand overlay).

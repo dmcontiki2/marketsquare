@@ -27,7 +27,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
-| L1 | **Deploy staged & pending** — repo ms.js v372, live v370; today's audit flags MSJS-DRIFT + VERSION-KEY (INFO, day 1). | [C] | Run `/ship` to push live, which clears both audit flags. David: say "ship" or "hold". | 2026-07-24 | AUDIT_GLOBAL_QA/LATEST.md |
+| L1 | **Deploy staged & pending** — repo ms.js v372+deep-link, live v370; audit flags MSJS-DRIFT + VERSION-KEY. 28 Jul added `?listing=<id>` deep link (email showcase cards → exact advert; node --check green; ms.js.bak-20260728-deeplink). | [C] | Run `/TSL` to push live — clears audit flags AND activates email deep links. David: say "ship" or "hold". | 2026-07-24 | AUDIT_GLOBAL_QA/LATEST.md |
 | L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
@@ -38,6 +38,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | D2 | Lawyer draft v1.9 **"penalty halves every 90 days"** contradicts canon decay rules. | [D] | Flag to counsel for reconciliation. | 2026-07-23 | STATUS.md:20 |
 | D3 | **Counsel consolidation** of docx vs web EULA forks. | [D] | Send both forks to counsel. | 2026-07-23 | STATUS.md:29 |
 | D4 | **privacy.html UK/US/AU** supplements missing. | [C] | David confirms scope → Claude drafts. | 2026-07-23 | STATUS.md S149 |
+| D5 | **9 email-showcase adverts to create on the live server** so wave-1 "Click to view" lands on the EXACT advert shown on each phone card (titles/prices/photos already fixed in CityLauncher/emailer/assets; recommend inserting as normal demo adverts, NOT super_example, so the pinned row stays 3). After insert: flip 9 hrefs in the 4 CityLauncher templates to `?listing=<id>`. | [D] | David approves insert → Claude creates adverts + flips hrefs + test send. | 2026-07-28 | CityLauncher project doc za-agency-readiness |
 | D5 | **Stays/Experiences label unification** (one buyer-facing vocabulary). | [D] | David Jnr discussion → ruling. | 2026-07-22 | STATUS.md:38 |
 | D6 | Counsel question on **post-filing disclosure** of reverse-intro + Rank. | [D] | Include in counsel packet. | (earlier) | STATUS.md:50 |
 

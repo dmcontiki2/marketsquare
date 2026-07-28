@@ -110,3 +110,12 @@ Sun 07/26/2026  5:30:03.57  committed 16 change(s)
  create mode 100644 scripts/smoke_harness/server.py
  create mode 100644 scripts/smoke_harness/verify.mjs
 Mon 07/27/2026  5:30:03.52  committed 9 change(s)
+[main d91959e] Nightly checkpoint Tue 07/28/2026  5:30:03.85 (auto, no deploy)
+ 7 files changed, 212 insertions(+)
+ create mode 100644 CAR_RAINBOW_HIGGSFIELD_PROMPTS.md
+ create mode 100644 PROPERTY_RAINBOW_HIGGSFIELD_PROMPTS.md
+ create mode 100644 Records/COST_SWEEP_2026-07-28.md
+ create mode 100644 _to_delete/HEAD.lock.stale-24361
+ rename deploy_now.bat => _to_delete/deploy_now.bat (100%)
+ create mode 100644 scripts/compose_email_rainbow.py
+Tue 07/28/2026  5:30:03.94  committed 8 change(s)
