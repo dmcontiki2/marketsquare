@@ -407,6 +407,29 @@ if exist "%PROJECT%\RUN_SUPER_FIX_ONCE.flag" (
     echo.
 )
 
+:: -- Step 3e2: ONE-SHOT archive tester adverts 276+277 + decline pending demo intros --
+:: (28 Jul 2026, David: tester placements must never look live.) Guarded by
+:: RUN_ARCHIVE_TESTERS_ONCE.flag; deletes the flag only after a clean apply.
+if exist "%PROJECT%\RUN_ARCHIVE_TESTERS_ONCE.flag" (
+    echo  [3e2] ONE-SHOT: archiving tester adverts 276+277...
+    scp "%PROJECT%\scripts\archive_tester_listings.py" %SERVER%:%REMOTE%/archive_tester_listings.py
+    if errorlevel 1 (
+        echo  ERROR: SCP failed for archive_tester_listings.py - NOT run, flag kept.
+    ) else (
+        echo  --- dry run ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 archive_tester_listings.py"
+        echo  --- apply ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 archive_tester_listings.py --apply"
+        if errorlevel 1 (
+            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
+        ) else (
+            del "%PROJECT%\RUN_ARCHIVE_TESTERS_ONCE.flag"
+            echo  [OK] Tester adverts archived - one-shot flag removed.
+        )
+    )
+    echo.
+)
+
 :: ── Step 3f: ONE-SHOT adventures super-advert photo expansion (flag-guarded) ──
 :: ADV-SUPER-PHOTOS-1 (24 Jul 2026, David): add 5 new Higgsfield photos to EACH of the
 :: two Adventures exemplars (270 game drive, 271 lodge) - extends photo_urls + [photos:].
@@ -671,7 +694,8 @@ echo.
 
 :: ── Step 5b: Purge Cloudflare edge cache ──
 echo  [5b] Purging Cloudflare cache...
-ssh -n %SERVER% "curl -sf -m 20 -X POST http://localhost:8000/admin/purge-cache >nul 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+ssh -n %SERVER% "cd %REMOTE% && curl -sf -m 20 -X POST -H \"x-admin-key: $(grep -oP '(?<=^ADMIN_KEY=).*' .env 2>/dev/null)\" http://localhost:8000/admin/purge-cache > /dev/null 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+:: (28 Jul 2026: purge was silently 403ing - the endpoint requires x-admin-key; now read server-side from .env)
 
 :: -- Step 5c: Re-warm the tutor-video edge cache (purge above evicted them) --
 :: The tutor .mp4s are large; on a COLD Cloudflare cache the first mobile viewer

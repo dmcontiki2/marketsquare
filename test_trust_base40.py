@@ -26,8 +26,9 @@ def _func_body(src, header):
     return rest[:m.start()] if m else rest
 
 # ---- the canon formula, as published (agency email: "40 + 45 = 85") ---------
-def canon_score(uni, track, cat, penalties):
-    return max(0, min(100, 40 + min(30, uni) + min(30, track) + min(40, cat)) + penalties)
+def canon_score(uni, track, cat, penalties, lm=False):
+    c = cat if lm else min(40, cat)
+    return max(0, min(100, 40 + min(30, uni) + min(30, track) + c) + penalties)
 
 def test_published_examples_hold():
     # The agency outreach email promises: base 40 + 45 credentials = 85.
@@ -37,13 +38,23 @@ def test_published_examples_hold():
     # Floor and cap.
     assert canon_score(0, 0, 0, -60) == 0
     assert canon_score(30, 30, 40, 0) == 100
+    # LM (Addendum 2026-07-21 §2): credential group UNCAPPED, total caps at 100.
+    # Bee Lady (id 273): full-catalog evidence must reach 100, not the capped 85.
+    assert canon_score(5, 0, 60, 0, lm=True) == 100   # 40+5+60=105 -> caps at 100
+    assert canon_score(5, 0, 60, 0, lm=False) == 85   # standard 40-cap bites: 40+5+40
+    assert canon_score(20, 20, 140, -8, lm=True) == 92  # penalties visible past surplus
 
 # ---- the scorer must carry the base ----------------------------------------
 def test_scorer_has_base40():
     src = _read("bea_main.py")
+    assert "def _trust_math(" in src, "the single shared trust formula is missing"
+    hb = _func_body(src, "def _trust_math(")
+    assert re.search(r"cat_pts if lm else min\(40,\s*cat_pts\)", hb), \
+        "LM credential group must be uncapped in the shared formula (Addendum 2026-07-21)"
+    assert re.search(r"max\(0,\s*min\(100,\s*40\s*\+", hb), "formula lost base-40/cap/penalty order"
     body = _func_body(src, "def trust_score_breakdown(")
-    assert "base_score = 40" in body, "canonical scorer lost its 40-point base"
-    assert re.search(r"min\(100,\s*base_score", body), "scorer must cap at 100 on top of the base"
+    assert "_trust_math(" in body, "scorer must compute via the shared formula"
+    assert re.search(r"if _is_lm_score else min\(40", body), "scorer lost the LM-uncapped rule"
 
 # ---- the buyer-facing seller panel must carry the base (today's bug) --------
 def test_seller_panel_has_base40():
@@ -53,8 +64,8 @@ def test_seller_panel_has_base40():
         "seller_public_credentials lost the universal Foundation-40 group " \
         "(the 40->5 bug: its self-heal then rewrites stored scores base-less)"
     assert "Local Market foundation" in body, "LM foundation-40 group missing"
-    assert re.search(r"total\s*=\s*min\(100,\s*raw_total\)", body), \
-        "seller panel must cap at 100 BEFORE penalties, like the scorer"
+    assert "_trust_math(" in body, \
+        "seller panel must compute via the shared formula (no local arithmetic)"
 
 # ---- any surface that self-heals stored scores must prove the base first ----
 def test_selfheal_only_with_base():

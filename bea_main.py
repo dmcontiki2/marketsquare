@@ -3874,20 +3874,19 @@ def seller_public_credentials(listing_id: int):
             g["note"] = f"{raw_cat} pts earned — capped at the category maximum of 40"
         groups.append(g)
 
+        _uni_sub = next((gr["subtotal"] for gr in groups if gr["title"] == "Identity & profile"), 0)
+        _trk_sub = next((gr["subtotal"] for gr in groups if gr["title"] == "Platform track record"), 0)
         if _is_lm:
             # LM: no 40-cap on the credential group; the TOTAL caps at 100 instead
             g["subtotal"] = raw_cat
             g.pop("note", None)
-            raw_total = sum(gr["subtotal"] for gr in groups)
-            if raw_total > 100:
-                g["note"] = f"{raw_total} pts of evidence — Trust Score caps at 100"
-            total = min(100, raw_total)
-        else:
-            raw_total = sum(gr["subtotal"] for gr in groups)
-            if raw_total > 100:
-                g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \
-                    f"{raw_total} pts of evidence — Trust Score caps at 100"
-            total = min(100, raw_total)
+        raw_total = sum(gr["subtotal"] for gr in groups)
+        if raw_total > 100:
+            g["note"] = ((g.get("note") + " · ") if g.get("note") else "") + \
+                f"{raw_total} pts of evidence — Trust Score caps at 100"
+        # One formula for every surface (base-40 bug, 28 Jul 2026): pre-penalty total
+        # via _trust_math; the Penalties group below applies post-cap, matching it.
+        total = _trust_math(_uni_sub, _trk_sub, raw_cat, 0, lm=_is_lm)
         # PEN-CAP-1 (23 Jul 2026): active complaint penalties render as their own group
         # and apply AFTER the cap, exactly like the scorer — the visible list must
         # still sum to the displayed score (evidence-true principle, 20 Jul).
@@ -3905,8 +3904,10 @@ def seller_public_credentials(listing_id: int):
         # differ — mirrors the scorer's own sync (see UPDATE ... trust_score below).
         try:
             if int(user.get("trust_score") or 0) != int(total):
-                conn.execute("UPDATE users SET trust_score = ? WHERE email = ?", (int(total), email))
-                conn.execute("UPDATE listings SET trust_score = ? WHERE seller_email = ?", (int(total), email))
+                # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row may
+                # not be — exact-match UPDATEs silently no-oped (Bee Lady: ledger 100, feed 85).
+                conn.execute("UPDATE users SET trust_score = ? WHERE LOWER(email) = ?", (int(total), email))
+                conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ?", (int(total), email))
                 conn.commit()
         except Exception:
             pass
@@ -7896,6 +7897,17 @@ TRUST_TIERS = [
     (90, 100, "Highly Trusted", "gold"),
 ]
 
+def _trust_math(uni_pts, track_pts, cat_pts, penalty_pts, lm=False):
+    """CANON — docs/TRUST_SCORE_CRITERIA.md Amendment v1.3 + Addendum 2026-07-21 §2:
+        score = max(0, min(100, 40 + Universal(<=30) + Track(<=30) + Category) + penalties)
+    Category caps at 40 for standard categories; the LOCAL MARKET credential group is
+    UNCAPPED (raw totals of 140-178 exist) — only the 100 total caps it (Bee Lady = 100).
+    THE ONLY PLACE THIS FORMULA MAY LIVE (base-40 bug + LM cap drift, 28 Jul 2026).
+    Guarded by test_trust_base40.py -> predeploy_check.py."""
+    cat = cat_pts if lm else min(40, cat_pts)
+    return max(0, min(100, 40 + min(30, uni_pts) + min(30, track_pts) + cat) + penalty_pts)
+
+
 def _trust_tier(score: int) -> dict:
     s = max(0, min(100, int(score or 0)))
     for lo, hi, name, color in TRUST_TIERS:
@@ -8530,9 +8542,16 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     items_c = _build_breakdown_items(conn, email, cat_signals, {}) if cat_signals else []
 
     # Sums (max-capped)
-    earned_u = min(30, _sum_earned_with_replaces(items_u, _TRUST_SIGNALS))
-    earned_t = min(30, _sum_earned_with_replaces(items_t, _TRUST_SIGNALS))
-    earned_c = min(40, _sum_earned_with_replaces(items_c, cat_signals))
+    _raw_u = _sum_earned_with_replaces(items_u, _TRUST_SIGNALS)
+    _raw_t = _sum_earned_with_replaces(items_t, _TRUST_SIGNALS)
+    _raw_c = _sum_earned_with_replaces(items_c, cat_signals)
+    _is_lm_score = (cat_key == "local_market")
+    earned_u = min(30, _raw_u)
+    earned_t = min(30, _raw_t)
+    # LM-CAP FIX (28 Jul 2026, David's ruling "according to the rules"): the LM
+    # credential group is uncapped per the criteria doc — the old min(40) here was
+    # writing 85 while the evidence ledger truthfully showed 100 (Bee Lady drift).
+    earned_c = _raw_c if _is_lm_score else min(40, _raw_c)
 
     # Penalties (complaints §5a + responsiveness RESP-1) — applied post-cap (PEN-CAP-1)
     penalties = _seller_active_complaints(conn, email) + _seller_responsiveness_penalties(conn, email)
@@ -8544,8 +8563,8 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     # Surplus evidence (raw totals over 100) must never absorb a penalty — a seller
     # displaying 100 who draws complaints must visibly drop, and recover only via
     # the time rules (24-month complaint decay / dispute), never by adding evidence.
-    base_score = 40
-    score_total = max(0, min(100, base_score + earned_u + earned_t + earned_c) + penalty_total)
+    base_score = 40  # kept for response payloads; the arithmetic lives in _trust_math
+    score_total = _trust_math(_raw_u, _raw_t, _raw_c, penalty_total, lm=_is_lm_score)
     tier = _trust_tier(score_total)
 
     # Pending points (uploaded but not yet verified by admin)
@@ -8564,13 +8583,13 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     prior_score = int(user["trust_score"] or 0)
     if not category and prior_score != score_total:
         conn.execute(
-            "UPDATE users SET trust_score = ? WHERE email = ?",
+            "UPDATE users SET trust_score = ? WHERE LOWER(email) = LOWER(?)",
             (score_total, email)
         )
         # Sync score to all listing rows for this seller+category so the
         # browse card badge stays accurate without a separate job.
         conn.execute(
-            "UPDATE listings SET trust_score = ? WHERE seller_email = ?",
+            "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = LOWER(?)",
             (score_total, email)
         )
         conn.commit()
@@ -8593,7 +8612,7 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
         }
         db_cat = _cat_listing_map.get(category, category)
         conn.execute(
-            "UPDATE listings SET trust_score = ? WHERE seller_email = ? AND category = ?",
+            "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = LOWER(?) AND category = ?",
             (score_total, email, db_cat)
         )
         conn.commit()
