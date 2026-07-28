@@ -23,12 +23,18 @@ Reference copy/plan: docs/TrustSquare_LaunchEmails_5Wave_v2 (niced 20 Jul).
 
 ## Wave-1 remaining checklist
 
-- [ ] Re-run deploy: step 3c-phone (added 28 Jul) uploads the nine phone-card images
-      (first deploy left them 404 — no upload step existed), and step 3f2 retries the
-      showcase insert (flag still armed after a non-clean first apply — watch its output).
-- [ ] Next deploy runs EMAIL-SHOWCASE-1 (flag armed 28 Jul) → harvest the nine printed
-      `SHOWCASE id=` values → point the three phone-card "Click to view" links at
-      `https://trustsquare.co/?listing=<id>`.
+- [x] EMAIL-SHOWCASE-1 applied (28 Jul, second deploy — flag consumed). Nine showcase ids,
+      verified in the live feed: property 315 stand / 316 home / 317 penthouse ·
+      cars 318 AMG / 319 LC79 / 320 250SE · experiences 312 game walk / 313 quad / 314 balloon.
+- [x] Email "Click to view" deep-links wired to ?listing=315/316/317 (both link+image per card;
+      .bak-20260728-deeplinks kept).
+- [ ] ONE more deploy for the phone-card images: step 3c-phone found no files on the first
+      pass (the nine jpgs existed in the workspace view but not on the Windows disk — sync
+      ghost, now re-materialised into CityLauncher\emailer\assets via the desktop bridge).
+      After it: verify https://trustsquare.co/static/phone_prop_stand.jpg returns 200.
+- [ ] SO-1 CHECK (David's call): showcase adverts name real places (Dinokeng, Pilanesberg,
+      Hartbeespoort) and listing 270's live title shows "Dinokeng" again — confirm intended
+      for normal demo adverts, or genericise before the send.
 - [ ] Rank explainer live at /static (ships via deploy step 3c-rank — in place).
 - [ ] EARLY/full decision (rule 2) on send day.
 - [ ] Dry-run via emailer.py, preview eyeballed, then send.
