@@ -3903,12 +3903,16 @@ def seller_public_credentials(listing_id: int):
         # an 85 evidence list). Self-heal it to the evidence-true total when they
         # differ — mirrors the scorer's own sync (see UPDATE ... trust_score below).
         try:
+            # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row may
+            # not be — exact-match UPDATEs silently no-oped (Bee Lady: ledger 100, feed 85).
+            # LISTINGS-SYNC FIX (28 Jul 2026): sync listings UNCONDITIONALLY — the old
+            # users-differ guard left listings stale forever once users was already
+            # correct (Bee Lady again: users 100, browse cards 85, nothing repaired it).
             if int(user.get("trust_score") or 0) != int(total):
-                # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row may
-                # not be — exact-match UPDATEs silently no-oped (Bee Lady: ledger 100, feed 85).
                 conn.execute("UPDATE users SET trust_score = ? WHERE LOWER(email) = ?", (int(total), email))
-                conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ?", (int(total), email))
-                conn.commit()
+            conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND trust_score != ?",
+                         (int(total), email, int(total)))
+            conn.commit()
         except Exception:
             pass
         return {"trust_score": int(total), "computed_total": total,

@@ -75,6 +75,11 @@ def test_selfheal_only_with_base():
     base = body.find('"title": "Foundation"')
     assert heal == -1 or (base != -1 and base < heal), \
         "a base-less total must never gain write authority over stored scores"
+    # LISTINGS-SYNC (28 Jul): the listings heal must run unconditionally — gating it
+    # on the users-differ check strands browse cards at a stale score forever.
+    ls = body.find("UPDATE listings SET trust_score")
+    assert ls != -1 and "AND trust_score != ?" in body, \
+        "listings self-heal must be unconditional (guarded only by value-changed)"
 
 # ---- the sell-flow preview (ms.js) must agree ------------------------------
 def test_sellflow_preview_has_base40():
