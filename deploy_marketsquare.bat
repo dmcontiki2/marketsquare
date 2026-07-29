@@ -430,6 +430,28 @@ if exist "%PROJECT%\RUN_ARCHIVE_TESTERS_ONCE.flag" (
     echo.
 )
 
+:: -- Step 3e3: ONE-SHOT mark the nine showcase adverts as SUPER ADVERTS --
+:: (29 Jul 2026, David: demo content must never render as real adverts - SO-1.)
+if exist "%PROJECT%\RUN_MARK_SUPERS_ONCE.flag" (
+    echo  [3e3] ONE-SHOT: marking showcase adverts 312-320 as supers...
+    scp "%PROJECT%\scripts\mark_showcase_supers.py" %SERVER%:%REMOTE%/mark_showcase_supers.py
+    if errorlevel 1 (
+        echo  ERROR: SCP failed for mark_showcase_supers.py - NOT run, flag kept.
+    ) else (
+        echo  --- dry run ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 mark_showcase_supers.py"
+        echo  --- apply ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 mark_showcase_supers.py --apply"
+        if errorlevel 1 (
+            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
+        ) else (
+            del "%PROJECT%\RUN_MARK_SUPERS_ONCE.flag"
+            echo  [OK] Showcase adverts marked as supers - one-shot flag removed.
+        )
+    )
+    echo.
+)
+
 :: ── Step 3f: ONE-SHOT adventures super-advert photo expansion (flag-guarded) ──
 :: ADV-SUPER-PHOTOS-1 (24 Jul 2026, David): add 5 new Higgsfield photos to EACH of the
 :: two Adventures exemplars (270 game drive, 271 lodge) - extends photo_urls + [photos:].
