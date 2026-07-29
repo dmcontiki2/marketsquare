@@ -452,6 +452,29 @@ if exist "%PROJECT%\RUN_MARK_SUPERS_ONCE.flag" (
     echo.
 )
 
+:: -- Step 3e4: ONE-SHOT supers-ladder seed (29 Jul 2026, David signed off) --
+:: Real accounts + evidence-true credential ladders for the showcase sellers:
+:: property 60/81/96, cars 60/80/92, experiences on the existing adventures ladder.
+if exist "%PROJECT%\RUN_LADDER_SEED_ONCE.flag" (
+    echo  [3e4] ONE-SHOT: seeding showcase seller accounts + credential ladders...
+    scp "%PROJECT%\scripts\supers_ladder_seed.py" %SERVER%:%REMOTE%/supers_ladder_seed.py
+    if errorlevel 1 (
+        echo  ERROR: SCP failed for supers_ladder_seed.py - NOT run, flag kept.
+    ) else (
+        echo  --- dry run ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 supers_ladder_seed.py"
+        echo  --- apply ---
+        ssh -n %SERVER% "cd %REMOTE% && python3 supers_ladder_seed.py --apply"
+        if errorlevel 1 (
+            echo  [FAIL] apply returned an error - flag kept, investigate before next deploy.
+        ) else (
+            del "%PROJECT%\RUN_LADDER_SEED_ONCE.flag"
+            echo  [OK] Ladder seeded - one-shot flag removed.
+        )
+    )
+    echo.
+)
+
 :: ── Step 3f: ONE-SHOT adventures super-advert photo expansion (flag-guarded) ──
 :: ADV-SUPER-PHOTOS-1 (24 Jul 2026, David): add 5 new Higgsfield photos to EACH of the
 :: two Adventures exemplars (270 game drive, 271 lodge) - extends photo_urls + [photos:].
