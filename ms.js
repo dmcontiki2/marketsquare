@@ -15406,7 +15406,7 @@ function sfLegalS(){
     });
     h+='<div style="background:#14213d;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px 12px;margin-top:12px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.4;">'+d.foot+'</div>'+
       '<div style="font-size:10.5px;color:'+mut+';margin-top:8px;line-height:1.4;">'+d.note+'</div>'+
-      '<div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;color:'+a+';">Accredited agencies on MarketSquare manage what they may, and facilitate the rest with the right professionals.</div>'+
+      '<div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;color:'+a+';">Accredited agencies on TrustSquare manage what they may, and facilitate the rest with the right professionals.</div>'+
       '</div></div>'+
       '<div style="font-size:11px;color:'+mut+';margin:8px 2px 0;">Shown for '+L.cname+' — this swaps automatically to the listing\'s country. General guidance, not legal advice.</div>';
   } else {

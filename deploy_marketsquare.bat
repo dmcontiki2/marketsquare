@@ -694,8 +694,9 @@ echo.
 
 :: ── Step 5b: Purge Cloudflare edge cache ──
 echo  [5b] Purging Cloudflare cache...
-ssh -n %SERVER% "cd %REMOTE% && curl -sf -m 20 -X POST -H \"x-admin-key: $(grep -oP '(?<=^ADMIN_KEY=).*' .env 2>/dev/null)\" http://localhost:8000/admin/purge-cache > /dev/null 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
-:: (28 Jul 2026: purge was silently 403ing - the endpoint requires x-admin-key; now read server-side from .env)
+ssh -n %SERVER% "cd %REMOTE% && KEY=$(grep -oP '(?<=^ADMIN_KEY=).*' .env 2>/dev/null); curl -sf -m 20 -X POST -H 'x-admin-key: '$KEY http://localhost:8000/admin/purge-cache >/dev/null 2>&1" && echo   [OK] Cloudflare purge requested || echo   [WARN] Cloudflare purge failed - purge manually if users see stale assets
+:: (29 Jul 2026: single-quotes-only inside the ssh - the earlier \" escaping collapsed in cmd and
+::  '> /dev/null' became a local Windows redirect: "The system cannot find the file specified")
 
 :: -- Step 5c: Re-warm the tutor-video edge cache (purge above evicted them) --
 :: The tutor .mp4s are large; on a COLD Cloudflare cache the first mobile viewer
