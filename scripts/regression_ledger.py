@@ -476,6 +476,51 @@ def rg_all_deploy_paths_bump():
     return out
 
 
+@entry("RG-0014", "Adventures-screen cards show the red ★ SUPER ADVERT ribbon",
+       OPEN, scope="Adventures dedicated screen, ALL markets (one shared renderer)",
+       ref="Added 29 Jul 2026. Fixed TWICE before yet the Adventures tab stayed bare: SUPER-1 "
+           "(Session 144) put the ribbon on the shared browse lcard renderer + the detail pill, "
+           "and the 22-Jul LM pass put it on Local Market cards — but the Adventures tab renders "
+           "through its OWN renderAdvGrid() inline template, which never read l.super_example. "
+           "Both earlier fixes were correct for the renderers they touched and invisible on the "
+           "Adventures screen; verification passed because it checked browse/LM/detail, not this "
+           "tab. Third pass (29 Jul) patched renderAdvGrid() itself. OPEN until the next frontend "
+           "deploy ships ms.js v409; the moment this reports READY TO LOCK, promote to LOCKED. "
+           "Live side checks the build browsers actually receive at the ?v= the live index "
+           "references (RG-0013 class), so a cache-stale deploy cannot fake a pass.")
+def rg_adv_screen_super_ribbon():
+    out = []
+
+    def _adv_slice(js):
+        i = js.find("function renderAdvGrid(")
+        if i < 0:
+            return None
+        j = js.find("function renderActiveFilterTags(", i)
+        return js[i:(j if j > i else i + 20000)]
+
+    fe = repo_file("ms.js")
+    if fe is None:
+        out.append((INFO, "ms.js not present (running outside the repo) — repo check skipped"))
+    else:
+        seg = _adv_slice(fe)
+        if seg is None:
+            out.append((FAIL, "renderAdvGrid() not found in repo ms.js — Adventures renderer missing or renamed"))
+        elif "super_example" not in seg:
+            out.append((FAIL, "repo renderAdvGrid() card template has no super_example ribbon — Adventures cards ship bare"))
+    try:
+        mv = re.search(r"ms\.js\?v=(\d+)", _get("/"))
+        js = _get("/static/ms.js" + ("?v=" + mv.group(1) if mv else ""))
+        seg = _adv_slice(js)
+        if seg is None:
+            out.append((FAIL, "renderAdvGrid() not found in live-served ms.js"))
+        elif "super_example" not in seg:
+            out.append((FAIL, "live-served renderAdvGrid() (at the ?v= the live index references) has no "
+                              "super_example ribbon — browsers get bare Adventures cards"))
+    except Exception as ex:
+        out.append((FAIL, f"could not verify the live-served ms.js build: {ex!r}"))
+    return out
+
+
 # ════════════════════════════════════════════════════════════════════════════
 
 

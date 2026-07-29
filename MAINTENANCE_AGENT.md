@@ -72,6 +72,23 @@ fleet; the separation lives in the spec so any stage can be re-bound later):
 Stack answer for the record: FastAPI + SQLite + Redis on Hetzner; git mirror on
 GitHub; ticketing IS email_triage + FAULT_REGISTER (no Jira/Zendesk).
 
+## Independence map + brain-binding ruling (29 Jul 2026 evening, David)
+**The spine is server-resident and subscription-free TODAY:** ingestion (CF Worker
+→ BEA endpoint), triage classification (Anthropic API key on the server, through
+the ai_provider.py swap seam — pay-per-token, engine = one config line), fault
+codes + register, the ACK (Resend), all gates (canon tests / BIT / predeploy),
+and Phase-3 self-deploy. FEA involvement: none (the agent edits FEA files like
+any developer). BEA involvement: the pipeline endpoints only, by design.
+
+**The brain (B2 fix sessions) — RULED:** runs as scheduled Claude sessions (the
+subscription) FOR LAUNCH — fastest to build and rehearse. Its contract is strict
+so the binding stays swappable: REGISTER ROWS IN → GATE-PASSING COMMITS OUT,
+nothing else. **Re-bind trigger (mirrors the Postgres ruling):** once the launch
+rush of issues has been managed down to a trickle, the brain is re-bound to a
+DEDICATED server-resident worker (Agent SDK / any vendor / self-hosted) on
+Hetzner, API-billed, provider-swappable by key. A planned config-grade move,
+not a redesign — the spine never changes.
+
 ## Build batches (each rides a normal deploy; each leaves tripwires)
 - **B1 — Register + codes:** FAULT_REGISTER.md; every triaged complaint gets a
   failure code + bin; recurrence counter; auto-ACK reply switched on after test.

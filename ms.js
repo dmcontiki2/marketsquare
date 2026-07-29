@@ -2474,7 +2474,7 @@ function renderAdvGrid(){
       : `<div class="adv-card-img-placeholder">${isAccom?'🏕':'🌄'}</div>`;
 
     return `<div style="background:#fff;border:1.5px solid #e2e5ea;border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openDetail('${esc(l.id)}')">
-      <div style="position:relative;">${imgHtml}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
+      <div style="position:relative;">${imgHtml}${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.05em;font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">★ SUPER ADVERT</div>':''}${(String(l.id).startsWith('demo_'))?'<div class="demo-card-badge"></div>':''}</div>
       <div style="padding:12px 14px 14px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${badgeCol};background:${badgeBg};padding:2px 8px;border-radius:10px;">${catLabel}</span>
