@@ -245,6 +245,8 @@ echo.
 :: agency email CTA. Mirrors the live engine; ships with every deploy.
 echo  [3c-rank] Deploying ranking explainer...
 scp "%PROJECT%\ranking_explainer.html" %SERVER%:%REMOTE%/static/ranking_explainer.html
+scp "%PROJECT%\AGENTS.md" %SERVER%:%REMOTE%/static/agents_status.md
+if errorlevel 1 echo  [WARN] agents_status.md not shipped - stand-up falls back to desktop read.
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for ranking_explainer.html.
     pause

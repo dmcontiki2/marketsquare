@@ -1,5 +1,8 @@
 # MAINTENANCE AGENT — canon spec + readiness (29 Jul 2026, David's ruling)
 
+**RULED — 29 Jul 2026, David:** one-word-per-day ship gate approved. Engine-agnostic
+per AGENTS.md doctrine (role/capability-defined, AI binding swappable).
+
 **Mission:** from launch minute one, complaints are handled by AI end-to-end —
 logged, acknowledged, binned, fixed majors-first, shipped invisibly, recurrence-
 watched — with David seeing ONLY safety / legal / cost, always as a solution

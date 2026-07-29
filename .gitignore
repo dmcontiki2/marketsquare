@@ -139,3 +139,6 @@ feature-videos/production-kit/cast/
 add_scaleway_key.bat
 
 .secrets/
+
+# session backups with bak2 suffix (regression-ledger closure, 29 Jul 2026)
+*.bak2-*

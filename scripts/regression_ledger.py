@@ -88,11 +88,13 @@ CITY_CCY = {
     "pretoria": "R", "johannesburg": "R", "cape town": "R", "durban": "R",
     "centurion": "R", "midrand": "R", "sandton": "R",
     "new york": "$", "london": "£", "sydney": "A$",
+    "maun": "P",   # Botswana Pula — Okavango super market demo_stay_bw_1 (added 29 Jul 2026)
 }
 CITY_COUNTRY = {
     "pretoria": "ZA", "johannesburg": "ZA", "cape town": "ZA", "durban": "ZA",
     "centurion": "ZA", "midrand": "ZA", "sandton": "ZA",
     "new york": "US", "london": "GB", "sydney": "AU",
+    "maun": "BW",   # Maun is in Botswana (added 29 Jul 2026)
 }
 SYMBOLS = ("A$", "CA$", "NZ$", "N$", "MT", "R", "$", "£", "€")
 
@@ -150,7 +152,7 @@ def rg_adv_country_present():
            "everything else stores a pre-formatted string whose symbol IS the currency. "
            "Both paths must land on the same answer for a given city.")
 def rg_rendered_symbol_matches_market():
-    ADV = {"ZA": "R", "NA": "N$", "MZ": "MT", "US": "$", "CA": "CA$",
+    ADV = {"ZA": "R", "NA": "N$", "MZ": "MT", "BW": "P", "US": "$", "CA": "CA$",
            "GB": "£", "EU": "€", "AU": "A$", "NZ": "NZ$"}
     out = []
     for l in listings():
@@ -336,7 +338,7 @@ def rg_health():
 
 
 @entry("RG-0011", "Country codes are ISO 3166-1 and map filenames match their code",
-       OPEN, scope="ALL markets",
+       LOCKED, scope="ALL markets", fixed_on="2026-07-29",
        ref="MAP_NAMING_CANON.md. Found 26 Jul: GB points at adventures_uk_map.html and ZA at "
            "adventures_reserve_map.html, and ADV_COUNTRY_FLAGS carries EU and LL which are not "
            "countries (LL is in flags but not currency). Every lookup keyed on listing.country "
@@ -390,22 +392,36 @@ def rg_tour_maps_wired():
             out.append((FAIL, "ADV_TOUR_MAP has no c2c -> adventures_c2c_map.html entry"))
         if "ADV_TOUR_MAP[l.tour]" not in fe:
             out.append((FAIL, "map picker never consults ADV_TOUR_MAP[l.tour] — tour no longer beats country (decouple lost)"))
-        if not re.search(r"^\s*NA:\s*\{\s*file:'adventures_na_map\.html'", fe, re.M):
+        # NA map filename legitimately carries a ?v= cache-buster (fleet-wide bump 27 Jul); tolerate it
+        if not re.search(r"^\s*NA:\s*\{\s*file:'adventures_na_map\.html(?:\?v=\d+)?'", fe, re.M):
             out.append((FAIL, "NA is not un-gated in ADV_COUNTRY_MAP (still commented, or missing)"))
         if "ADV_TOUR_MAP[l.tour]" in fe and not re.search(r"\btour:\s*\(?\s*l\.tour", fe):
             out.append((FAIL, "ms.js reads l.tour in the map render but NO normalizer assigns tour from the API row "
                               "-- l.tour is always undefined, so every tour silently falls back to the country/reserve map "
                               "(same class as the 25-Jul country-survival bug)"))
-    # ── live side: the listings and map files a buyer actually reaches ──
-    advs = [l for l in listings() if is_adventures(l) and not is_placeholder(l)]
-    c2c = [l for l in advs if str(l.get("tour", "")).strip().lower() == "c2c"]
+    # ── live side: the SUPER example listings the tour maps actually hang off ──
+    # Corrected 29 Jul 2026: the tour maps render only on (l.super_example && isAdv), and the super
+    # exemplars live in /listings (the real feed, keyed on `category`), NOT /demo-listings (which
+    # carries no supers). The old check read /demo-listings and keyed on is_adventures()'s `cat`,
+    # so it could never see the live c2c/NA supers — the guard was looking in the wrong feed, not a
+    # product regression. Invariant unchanged: a live c2c super and a live NA super must both exist.
+    def _adv(l):
+        return str(l.get("cat") or l.get("category") or "").lower().startswith("adventures")
+    try:
+        real = _json("/listings?limit=500")
+        real = real.get("listings") if isinstance(real, dict) else real
+    except Exception as ex:
+        real = []
+        out.append((FAIL, f"/listings unreadable — super-listing coverage unverified: {ex!r}"))
+    supers = [l for l in real if l.get("super_example") and _adv(l)]
+    c2c = [l for l in supers if str(l.get("tour", "")).strip().lower() == "c2c"]
     if not c2c:
-        out.append((FAIL, "no live listing carries tour='c2c' — Cape-to-Cairo map has nothing to surface on"))
+        out.append((FAIL, "no live super listing carries tour='c2c' — Cape-to-Cairo map has nothing to surface on"))
     else:
         stray = [l.get("id") for l in c2c if str(l.get("country", "")).upper() not in ("ZA", "")]
         if stray:
-            out.append((FAIL, f"c2c listings not under the SA operator: {stray} (decouple expects country=ZA/Rand)"))
-    if not [l for l in advs if str(l.get("country", "")).upper() == "NA" and l.get("super_example")]:
+            out.append((FAIL, f"c2c supers not under the SA operator: {stray} (decouple expects country=ZA/Rand)"))
+    if not [l for l in supers if str(l.get("country", "")).upper() == "NA"]:
         out.append((FAIL, "no live NA super listing — the Namibia map has nothing to surface on"))
     for f in ("adventures_c2c_map.html", "adventures_na_map.html"):
         try:
@@ -452,7 +468,8 @@ def rg_all_deploy_paths_bump():
         if not re.search(r"scp\b[^\n]*ms\.js", t):   # this script does not ship ms.js
             continue
         checked += 1
-        if not re.search(r"'ms\.js\?v='\s*\+\s*\(\s*\[int\]", t):
+        # a script bumps the cache-buster via EITHER the PowerShell inline expr OR scripts/autobump.py (broadened 29 Jul 2026)
+        if not re.search(r"(?:'ms\.js\?v='\s*\+\s*\(\s*\[int\])|autobump", t):
             out.append((FAIL, os.path.basename(path) + " uploads ms.js but never bumps ms.js?v= "
                               "-- its deploys ship an invisible, browser-cached-stale asset"))
     out.append((INFO, str(checked) + " deploy script(s) ship ms.js; every one must bump the cache-buster"))
