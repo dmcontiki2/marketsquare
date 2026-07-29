@@ -131,6 +131,28 @@ def main():
     except Exception as _e:
         print('  [base-40] check skipped: %r' % _e)
 
+    # PG-readiness ratchet (29 Jul 2026): the SQLite-specific surface must never
+    # grow, so the post-launch Postgres move stays cheap (David's DB ruling).
+    try:
+        import subprocess as _sp3
+        _tf3 = os.path.join(HERE, 'test_pg_readiness.py')
+        if os.path.isfile(_tf3):
+            _tp = _sp3.run([sys.executable, _tf3, HERE], capture_output=True, text=True, timeout=30)
+            if _tp.returncode != 0:
+                danger.append('pg-readiness')
+                print('  !! PG-READINESS: SQLite-ism count grew:')
+                for _l in (_tp.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                _rem = ''
+                for _l in (_tp.stdout or '').splitlines():
+                    if _l.startswith('PASS'):
+                        _rem = _l.split('ratchet:',1)[-1].strip()
+                print('  PG-readiness ratchet: ok — remaining to convert: ' + _rem)
+    except Exception as _e:
+        print('  [pg-readiness] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

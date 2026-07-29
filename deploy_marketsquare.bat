@@ -35,6 +35,9 @@ echo.
 :: to deploy_audit.log. NON-FATAL BY DESIGN (same rule as the Step 7 auto-commit):
 :: default warn mode never aborts. Set PREDEPLOY_MODE=strict to ABORT on a torn file.
 echo  [0b] Pre-deploy change scan (monitoring)...
+:: Auto-bump cache-busters for any changed static (29 Jul 2026) - runs BEFORE the
+:: predeploy scan so the scan sees the final files. Never blocks a deploy.
+python "%PROJECT%\scripts\autobump.py" || py "%PROJECT%\scripts\autobump.py"
 python "%PROJECT%\predeploy_check.py" || py "%PROJECT%\predeploy_check.py"
 set SCANRC=%errorlevel%
 if /I "%PREDEPLOY_MODE%"=="strict" if not "%SCANRC%"=="0" (
