@@ -748,6 +748,11 @@ def run_migrations(conn):
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_recv ON email_triage(received_at DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_email_triage_cat  ON email_triage(category, received_at DESC)")
+    # MAINT-B1 (29 Jul 2026): fault-code binning — see FAULT_REGISTER.md
+    try:
+        conn.execute("ALTER TABLE email_triage ADD COLUMN fault_code TEXT")
+    except Exception:
+        pass
 
     conn.commit()
 
@@ -14884,7 +14889,7 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
 async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
     """Call Claude to classify an inbound email and draft a reply.
     Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
-    fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False}
+    fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False, "bin": "MISC"}
     if not ANTHROPIC_API_KEY:
         return fallback
     # P2 wrapper — ceiling check before the paid call. Inbound mail is an
@@ -14905,6 +14910,8 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         "JSON shape: {\"category\": one of "
         "[\"support\",\"billing\",\"legal\",\"compliance\",\"spam\",\"other\"], "
         "\"urgency\": one of [\"low\",\"normal\",\"high\"], "
+        "\"bin\": the app area, one of [\"AUTH\",\"LIST\",\"TRUST\",\"INTRO\","
+        "\"BROWSE\",\"ADV\",\"MAIL\",\"PERF\",\"COPY\",\"MISC\"], "
         "\"draft_reply\": a short, warm, professional plain-text reply signed "
         "'The TrustSquare Team', "
         "\"auto_safe\": boolean — true ONLY if a routine support or billing question "
@@ -14935,11 +14942,15 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         urg = parsed.get("urgency", "normal")
         if urg not in ("low", "normal", "high"):
             urg = "normal"
+        _bin = str(parsed.get("bin") or "MISC").upper()
+        if _bin not in ("AUTH","LIST","TRUST","INTRO","BROWSE","ADV","MAIL","PERF","COPY","MISC"):
+            _bin = "MISC"
         return {
             "category": cat,
             "urgency": urg,
             "draft_reply": (parsed.get("draft_reply") or "").strip(),
             "auto_safe": bool(parsed.get("auto_safe", False)),
+            "bin": _bin,
         }
     except Exception as exc:
         _log.error("_classify_email failed: %s", exc)
@@ -14973,7 +14984,7 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
     status = "drafted"
     can_auto = (
         EMAIL_AUTO_SEND
-        and bool(GMAIL_APP_PASSWORD)
+        and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))
         and result["auto_safe"]
         and category in _AUTO_SEND_CATEGORIES
         and bool(draft_reply)
@@ -14984,26 +14995,50 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         sent = _smtp_send_reply(from_addr, subject, draft_reply, req.message_id)
         status = "sent" if sent else "failed"
 
+    fault_code = None
     try:
         conn = database.get_db()
         try:
-            conn.execute(
+            _cur = conn.execute(
                 "INSERT INTO email_triage "
                 "(from_addr, to_addr, subject, body_preview, category, urgency, "
                 " draft_reply, status, message_id) VALUES (?,?,?,?,?,?,?,?,?)",
                 (from_addr, (req.to_addr or "").strip(), subject, body[:500],
                  category, urgency, draft_reply, status, req.message_id),
             )
+            _rowid = _cur.lastrowid
+            fault_code = f"{result.get('bin', 'MISC')}-{_rowid}"
+            conn.execute("UPDATE email_triage SET fault_code=? WHERE id=?", (fault_code, _rowid))
             conn.commit()
         finally:
             conn.close()
     except Exception as exc:
         _log.error("email_triage persist failed: %s", exc)
 
+    # MAINT-B1 ACK (29 Jul 2026, David-approved wording): every non-spam complainant
+    # gets an IMMEDIATE acknowledgment with their fault-code reference. Rides
+    # _smtp_send_reply (Resend from the verified mail subdomain, Gmail fallback).
+    # Total-autonomy ruling: sends by default; MAINT_ACK_SEND=0 is the off switch.
+    ack_sent = False
+    if category != "spam" and fault_code and os.getenv("MAINT_ACK_SEND", "1") == "1":
+        _ack = (
+            "Hi there,\n\n"
+            "Thank you — your report is logged and already in our fix queue with "
+            f"reference {fault_code}. You don't need to do anything further; if our "
+            "fix needs anything from you, we'll write to this address.\n\n"
+            "— TrustSquare Support"
+        )
+        try:
+            ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, req.message_id)
+        except Exception as exc:
+            _log.error("MAINT-B1 ack send failed: %s", exc)
+
     return {
         "category": category,
         "urgency": urgency,
         "status": status,
+        "fault_code": fault_code,
+        "ack_sent": bool(ack_sent),
         "auto_send_enabled": EMAIL_AUTO_SEND,
         "reply_drafted": bool(draft_reply),
     }

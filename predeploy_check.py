@@ -153,6 +153,24 @@ def main():
     except Exception as _e:
         print('  [pg-readiness] check skipped: %r' % _e)
 
+    # Maintenance Agent tripwires (B1, 29 Jul 2026): complaint pipeline guards —
+    # fault codes, immediate ACK, working send path. See MAINTENANCE_AGENT.md.
+    try:
+        import subprocess as _sp4
+        _tf4 = os.path.join(HERE, 'test_maintenance_agent.py')
+        if os.path.isfile(_tf4):
+            _tm = _sp4.run([sys.executable, _tf4, HERE], capture_output=True, text=True, timeout=30)
+            if _tm.returncode != 0:
+                danger.append('maintenance-agent')
+                print('  !! MAINTENANCE: complaint-pipeline guard FAILED:')
+                for _l in (_tm.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  Maintenance-agent guards: ok')
+    except Exception as _e:
+        print('  [maintenance] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

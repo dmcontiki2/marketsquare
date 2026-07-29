@@ -19,7 +19,7 @@ Projects folder, else the published copy at /static/agents_status.md).
 ## Roster
 | Agent | Role | Spec / engine binding today | Status |
 |---|---|---|---|
-| Maintenance | Complaint→fix pipeline, majors first, one-word daily ship gate | MAINTENANCE_AGENT.md · triage: Haiku via BEA; fix sessions: Claude scheduled task | **RULED 29 Jul — building B1–B4, rehearsed by ~22 Aug** |
+| Maintenance | Complaint→fix pipeline, majors first, one-word daily ship gate | MAINTENANCE_AGENT.md · triage: Haiku via BEA; fix sessions: Claude scheduled task | **TOTAL AUTONOMY ruled 29 Jul (no veto; mechanical gates + auto-rollback + kill switch) — building B1–B4, rehearsed by ~22 Aug** |
 | Pulse/Monitor | Site heartbeat, amber/red alerts | /pulse skill + server mailer | live |
 | BIT Tester | Functional + negative self-test each deploy | trustsquare-bit-agent/bit_cycle.py | live (deterministic engine) |
 | Outreach/Emailer | Wave sends, gated | wave_runner.py + emailer.py (--no-ai default) | built, gated for wave-1 |
