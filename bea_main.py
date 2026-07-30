@@ -12238,7 +12238,7 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
     ids = [service] if service in _INFRA_CHECKS else list(_INFRA_CHECKS.keys())
     results = await asyncio.gather(*[_INFRA_CHECKS[i][2]() for i in ids], return_exceptions=True)
     out = []
-    for i, res in zip(ids, results):
+    for i, res in zip(ids, results, strict=False):
         label, kind, _fn, envk = _INFRA_CHECKS[i]
         if isinstance(res, Exception):
             res = {"status": "warn", "detail": "check crashed: " + type(res).__name__}

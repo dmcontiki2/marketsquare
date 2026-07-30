@@ -9,6 +9,7 @@ cd /d "%~dp0"
 
 echo.
 echo === Untracking Kronberg/ media folder (files stay on disk) ===
+call "%~dp0git_unlock.bat"
 git rm -r --cached --ignore-unmatch "Kronberg" 2>nul
 
 echo.

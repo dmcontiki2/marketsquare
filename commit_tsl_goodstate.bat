@@ -20,6 +20,7 @@ for %%F in (tsl_gate.py deploy_marketsquare.bat nightly_tsl.bat register_nightly
 )
 
 echo.
+call "%~dp0git_unlock.bat"
 git add -- tsl_gate.py deploy_marketsquare.bat nightly_tsl.bat register_nightly_tsl.bat tsl_selftest.bat
 if errorlevel 1 ( echo  ERROR: git add failed. & pause & exit /b 1 )
 

@@ -9,6 +9,7 @@ git rev-parse --is-inside-work-tree >nul 2>&1 || ( echo %date% %time%  SKIP: not
 set DIRTY=0
 for /f %%i in ('git status --porcelain ^| find /c /v ""') do set DIRTY=%%i
 if "%DIRTY%"=="0" ( echo %date% %time%  clean - nothing to commit>>"%LOG%" & exit /b 0 )
+call "%~dp0git_unlock.bat"
 git add -A
 git commit -m "Nightly checkpoint %date% %time% (auto, no deploy)" >>"%LOG%" 2>&1
 echo %date% %time%  committed %DIRTY% change^(s^)>>"%LOG%"

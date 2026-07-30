@@ -477,7 +477,7 @@ def rg_all_deploy_paths_bump():
 
 
 @entry("RG-0014", "Adventures-screen cards show the red ★ SUPER ADVERT ribbon",
-       OPEN, scope="Adventures dedicated screen, ALL markets (one shared renderer)",
+       LOCKED, scope="Adventures dedicated screen, ALL markets (one shared renderer)", fixed_on="2026-07-30",
        ref="Added 29 Jul 2026. Fixed TWICE before yet the Adventures tab stayed bare: SUPER-1 "
            "(Session 144) put the ribbon on the shared browse lcard renderer + the detail pill, "
            "and the 22-Jul LM pass put it on Local Market cards — but the Adventures tab renders "
@@ -522,6 +522,47 @@ def rg_adv_screen_super_ribbon():
 
 
 # ════════════════════════════════════════════════════════════════════════════
+
+
+@entry("RG-0015", "Every git-writing .bat clears a stale .git/index.lock before committing",
+       LOCKED, scope="repo, all commit/checkpoint/deploy scripts", fixed_on="2026-07-30",
+       ref="THE ROOT of the recurring 'Unable to create .git/index.lock: File exists' class. Several "
+           "uncoordinated git writers share ONE repo -- manual commit.bat, the nightly checkpoint task, "
+           "the deploy auto-commit, and the daily-loop sandbox. When two overlap or one is interrupted git "
+           "leaves a 0-byte index.lock; on the FUSE-mounted sandbox it cannot be removed at all, so it sits "
+           "there and blocks the NEXT commit. deploy_marketsquare.bat got an inline stale-lock sweep on "
+           "22 Jul 2026, but the manual + checkpoint committers never did -- so David's manual commits kept "
+           "failing with the same error, session after session. Fix (30 Jul): git_unlock.bat removes a stale "
+           "lock ONLY when no git.exe is running (so it can never race a live commit) and every committer "
+           "calls it first. This asserts the INVARIANT: any .bat that git-commits must first clear a stale "
+           "lock (call git_unlock.bat OR an inline del of .git/index.lock). A new unguarded committer trips "
+           "this red instead of silently reintroducing the whole class.")
+def rg_git_writers_selfheal_lock():
+    import glob
+    if repo_file("commit.bat") is None:
+        return [(INFO, "running outside the repo -- commit-script lock check skipped")]
+    out = []
+    if repo_file("git_unlock.bat") is None:
+        out.append((FAIL, "git_unlock.bat missing -- the shared stale-lock clearer every committer calls"))
+    checked = 0
+    for path in sorted(glob.glob(os.path.join(REPO, "*.bat"))):
+        base = os.path.basename(path)
+        if ".bak" in base:
+            continue
+        try:
+            t = open(path, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        is_writer = re.search(r"\bgit\s+commit\b", t) and re.search(r"\bgit\s+(add|rm)\b", t)
+        if not is_writer:
+            continue
+        checked += 1
+        guarded = ("git_unlock.bat" in t) or re.search(r"del\b.*index\.lock", t, re.I)
+        if not guarded:
+            out.append((FAIL, base + " commits but never clears a stale .git/index.lock first "
+                              "-- a leftover lock will block the next commit (recurring index.lock class)"))
+    out.append((INFO, str(checked) + " git-writing .bat(s); each must self-heal a stale index.lock"))
+    return out
 
 
 def run():

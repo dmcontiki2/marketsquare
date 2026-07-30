@@ -22,6 +22,7 @@ echo [1/5] clear stale git lock if present >> "%LOG%"
 if exist "%PROJECT%\.git\index.lock" del /f "%PROJECT%\.git\index.lock" >> "%LOG%" 2>&1
 
 echo [2/5] git commit >> "%LOG%"
+call "%~dp0git_unlock.bat"
 git add -A >> "%LOG%" 2>&1
 git commit -m "Targeted deploy %DATE% %TIME% (deploy_files.bat): see deploy_files.txt" >> "%LOG%" 2>&1
 

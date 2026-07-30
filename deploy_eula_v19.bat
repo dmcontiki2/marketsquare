@@ -16,6 +16,7 @@ if exist "%PROJECT%\.git\index.lock" del /f "%PROJECT%\.git\index.lock" >> "%LOG
 if exist "%PROJECT%\_to_delete_gitlock" del /f "%PROJECT%\_to_delete_gitlock" >> "%LOG%" 2>&1
 
 echo [2/6] git commit v1.9 changes >> "%LOG%"
+call "%~dp0git_unlock.bat"
 git add -A >> "%LOG%" 2>&1
 git commit -m "EULA v1.9 published (pre-counsel, David-directed): not-a-referral 2.6, Reference Library 8.10, local-laws 13.5, Country Schedules UK/US/AU; terms.html + embedded gate copy; register/canon v1.9; rollback tag ship-20260723-eulav19" >> "%LOG%" 2>&1
 

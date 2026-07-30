@@ -16,6 +16,7 @@ git status --short
 echo.
 set /p OK=Commit ALL of the above as a checkpoint? (y/N): 
 if /I not "%OK%"=="y" ( echo  Cancelled - nothing committed. & pause & exit /b 0 )
+call "%~dp0git_unlock.bat"
 git add -A
 git commit -m "Checkpoint %date% %time% (manual, no deploy)"
 echo.

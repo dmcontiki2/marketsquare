@@ -10,6 +10,7 @@ set "MSG=%~1"
 if "%MSG%"=="" set "MSG=WIP: session commit %DATE% %TIME%"
 
 echo.
+call "%~dp0git_unlock.bat"
 echo === git add -A ===
 git add -A
 
