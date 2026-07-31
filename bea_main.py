@@ -1316,21 +1316,9 @@ def _ts_models_for(prov):
     except Exception:
         return _TS_AI_MODELS
 
-def _ts_ai_url():
-    """The active provider's chat endpoint — the ONE place the inference URL lives."""
-    _u = {"anthropic": "https://api.anthropic.com/v1/messages",
-          "openai":    "https://api.openai.com/v1/chat/completions"}
-    # scaleway/unknown -> anthropic: the one unmigrated raw site (vision-draft) speaks Anthropic wire format only (P1 guard)
-    return _u.get(_ts_active_provider(), _u["anthropic"])
-
-def _ts_ai_headers():
-    """The active provider's auth headers — the ONE place the wire auth lives.
-    Swap provider via AI_ACTIVE; this changes here, not in 15 call bodies."""
-    if _ts_active_provider()=="openai":
-        return {"Authorization":"Bearer "+(os.getenv("OPENAI_API_KEY") or ""),
-                "content-type":"application/json"}
-    # scaleway/unknown -> anthropic: the one unmigrated raw site (vision-draft) speaks Anthropic wire format only (P1 guard)
-    return {"x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","content-type":"application/json"}
+# _ts_ai_url()/_ts_ai_headers() REMOVED 31 Jul 2026 — their sole caller (vision-draft) migrated
+# to the ai_provider seam, completing P0 at 22/22 call sites. The wire protocol now lives ONLY in
+# ai_provider.py adapters; RG-0017 asserts no raw vendor endpoint ever returns to this file.
 if not EMAIL_INBOUND_SECRET:
     _log.warning("EMAIL_INBOUND_SECRET not set — /email/inbound will reject all calls")
 if not GMAIL_APP_PASSWORD:
@@ -12314,7 +12302,7 @@ def _flags_payload(d):
         "ai_provider": {
             "active": d.get("ai_active", "anthropic"),
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
-            "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(os.getenv("OPENAI_API_KEY")),
+            "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(ai_provider.envkey("OPENAI_API_KEY")),
                           "scaleway": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY"))},
             # P1: ordered provider cards for the NEW dashboard UI (old card keeps reading active/available above)
             "providers": [
@@ -12324,8 +12312,8 @@ def _flags_payload(d):
                 {"id": "scaleway", "label": "Scaleway EU", "family": "open", "jurisdiction": "EU · Paris",
                  "available": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY")),
                  "models": ai_provider.TASK_MODEL.get("scaleway", {})},
-                {"id": "openai", "label": "OpenAI", "family": "us", "jurisdiction": "US",
-                 "available": bool(os.getenv("OPENAI_API_KEY")),
+                {"id": "openai", "label": "OpenAI (GPT-5.6)", "family": "us", "jurisdiction": "US",
+                 "available": bool(ai_provider.envkey("OPENAI_API_KEY")),
                  "models": ai_provider.TASK_MODEL.get("openai", {})},
             ],
         },
@@ -12993,7 +12981,10 @@ async def vision_draft(
     No database writes — this is a stateless analysis endpoint.
     The FEA collects seller edits and calls POST /listings (existing flow) to publish.
     """
-    if not ANTHROPIC_API_KEY:
+    # SEAM-GATE (31 Jul 2026): ANY configured provider keeps this endpoint alive — the ban
+    # drill (Anthropic key absent, OpenAI/Scaleway present) must not kill photo onboarding.
+    if not (ANTHROPIC_API_KEY or ai_provider.envkey("OPENAI_API_KEY")
+            or ai_provider.envkey("SCALEWAY_API_KEY", "FAILOVER_API_KEY")):
         raise HTTPException(status_code=503, detail="AI not configured")
 
     if not photos or len(photos) == 0:
@@ -13070,40 +13061,30 @@ async def vision_draft(
         }
     ]
 
-    # ── 3. Call Claude Vision ────────────────────────────────────────────────
+    # ── 3. Call the vision model — SEAM-ROUTED (31 Jul 2026): the LAST raw call site is gone,
+    # P0 now stands at 22/22. ai_provider.complete() translates the content blocks per provider
+    # and runs the any-of fallback chain. An adapter timeout degrades to the next provider inside
+    # the seam rather than raising, so the old dedicated 504 branch folds into the not-ok path.
     try:
-        async with httpx.AsyncClient(timeout=45) as client:
-            resp = await client.post(
-                _ts_ai_url(),
-                headers=_ts_ai_headers(),
-                json={
-                    "model": VISION_MODEL,
-                    "max_tokens": 1200,
-                    "system": _VISION_SYSTEM,
-                    "messages": [{"role": "user", "content": user_content}],
-                },
-            )
-    except httpx.TimeoutException as exc:
-        _log.error("vision-draft: Claude API timeout after 45s")
-        raise HTTPException(
-            status_code=504,
-            detail="Vision analysis timed out — try describing your listing instead"
-        ) from exc
+        _sr = await asyncio.to_thread(
+            ai_provider.complete, [{"role": "user", "content": user_content}],
+            task="vision", max_tokens=1200, system=_VISION_SYSTEM,
+            provider=_ts_active_provider(), timeout=45)
     except Exception as exc:
-        _log.error("vision-draft: Claude API call failed: %s", exc)
+        _log.error("vision-draft: AI call failed: %s", exc)
         raise HTTPException(status_code=503, detail="Vision analysis unavailable") from exc
 
-    # ── 4. Parse Claude response ─────────────────────────────────────────────
+    # ── 4. Parse response (AIResult — provider-neutral) ──────────────────────
     raw_text = ""
     try:
-        body = resp.json()
-        if resp.status_code != 200:
-            err_msg = body.get("error", {}).get("message", "Unknown error")
-            _log.error("vision-draft: Claude returned %d: %s", resp.status_code, err_msg)
-            raise HTTPException(status_code=502, detail=f"AI error: {err_msg}")
+        if not _sr.ok:
+            _log.error("vision-draft: no usable reply (provider=%s model=%s)", _sr.provider, _sr.model)
+            raise HTTPException(
+                status_code=502,
+                detail="AI error: vision analysis unavailable — try describing your listing instead")
 
-        raw_text = body["content"][0]["text"].strip()
-        _vd_in, _vd_out = _usage_tokens(body)   # C2
+        raw_text = (_sr.text or "").strip()
+        _vd_in, _vd_out = _sr.in_tokens, _sr.out_tokens   # C2
 
         # Strip markdown code fences if Claude wraps the JSON anyway
         if raw_text.startswith("```"):
@@ -13226,7 +13207,7 @@ async def vision_draft(
     return {
         "draft": draft,
         "warnings": all_warnings,
-        "model_used": VISION_MODEL,
+        "model_used": _sr.model,   # the model that ACTUALLY answered (may be a fallback provider)
         "anonymity_scrubbed": draft["anonymity_scrubbed"],
         "violating_photo_indices": vpi,
         "off_category_photo_indices": ocpi,

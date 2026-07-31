@@ -255,20 +255,30 @@ def rg_market_coverage():
 
 
 @entry("RG-0006", "Seller price prompts are not hardcoded to Rand",
-       OPEN, scope="ALL markets, seller flow",
-       ref="Every category config in ms.js labels the price field '(R)' — 'Asking price (R)', "
+       LOCKED, scope="ALL markets, seller flow", fixed_on="2026-07-31",
+       ref="Every category config in ms.js labelled the price field '(R)' — 'Asking price (R)', "
            "'Hourly rate (R)', 'Nightly rate (R)', 'Price per person (R)'. A London or New York "
-           "seller is asked for Rand. This is the same ZA assumption as RG-0003, on the input "
-           "side rather than the display side.")
+           "seller was asked for Rand — the RG-0003 ZA assumption on the input side. Fixed "
+           "31 Jul 2026 (ms.js v412): all 9 config labels and the two PRICE-LABEL-1 Property "
+           "literals de-Randed; the render site appends the symbol from _sfCcySym(), which reads "
+           "the seller/market country through ADV_COUNTRY_CURRENCY — the same table the buyer "
+           "display uses, so both sides of a market agree by construction. Check strengthened at "
+           "promotion (never weakened): also catches inline _pl='… (R)' literals and the removal "
+           "of the helper itself.")
 def rg_seller_labels_not_rand():
     fe = repo_file("ms.js")
     if fe is None:
         return [(INFO, "ms.js not present (running outside the repo) — check skipped")]
     hits = re.findall(r"priceLabel\s*:\s*'([^']*\(R\)[^']*)'", fe)
+    hits += re.findall(r"_pl\s*=\s*'([^']*\(R\)[^']*)'", fe)
+    out = []
     if hits:
         uniq = sorted(set(hits))
-        return [(FAIL, f"{len(hits)} seller price prompts hardcode Rand, e.g. {uniq[:4]}")]
-    return []
+        out.append((FAIL, f"{len(hits)} seller price prompts hardcode Rand, e.g. {uniq[:4]}"))
+    if "_sfCcySym" not in fe:
+        out.append((FAIL, "_sfCcySym() is gone from ms.js — the seller-flow prompt has lost its "
+                          "market-currency source and has likely reverted to hardcoded Rand"))
+    return out
 
 
 @entry("RG-0007", "Placeholder listings stay unpriced and inert",
@@ -565,6 +575,59 @@ def rg_git_writers_selfheal_lock():
     return out
 
 
+@entry("RG-0016", "The seam's OpenAI lane carries current-generation model ids, never stale ones",
+       LOCKED, scope="repo, ai_provider.py openai TASK_MODEL row (all task tiers)", fixed_on="2026-07-31",
+       ref="The openai row shipped 17 Jul 2026 with 2024-era ids (gpt-4o-mini/gpt-4o) and a VERIFY-later "
+           "comment — an activation or any-of fallback onto OpenAI would have requested retired models "
+           "and failed at the worst moment (mid-outage). Fixed 31 Jul 2026: row updated to the GPT-5.6 "
+           "family (luna on haiku/vision/triage, terra on sonnet; ids verified against "
+           "developers.openai.com/api/docs/models), and _openai hardened in the same pass — "
+           "max_completion_tokens for gpt-5*/o* (chat/completions 400-rejects max_tokens there), "
+           "envkey() lookup (ENVKEY-1 class), FAILOVER-PARITY-1 ok-rule. This asserts the row never "
+           "rots back to a retired generation. Golden-set gate before production traffic UNCHANGED, "
+           "pending OPENAI_API_KEY (David-only).")
+def rg_openai_row_not_stale():
+    src = repo_file("ai_provider.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- ai_provider.py row check skipped")]
+    m = re.search(r'"openai"\s*:\s*\{(.*?)\}', src, re.S)
+    if not m:
+        return [(FAIL, "ai_provider.py no longer has an openai TASK_MODEL row")]
+    row = m.group(1)
+    stale = sorted({t for t in ("gpt-4o", "gpt-4-", "gpt-3.5") if t in row})
+    out = []
+    if stale:
+        out.append((FAIL, f"openai TASK_MODEL row carries retired-generation ids again: {stale}"))
+    if "gpt-5" not in row:
+        out.append((FAIL, "openai TASK_MODEL row names no gpt-5-generation model -- if the catalog "
+                          "moved on, update the row AND this assertion deliberately (never weaken silently)"))
+    return out
+
+
+@entry("RG-0017", "Every BEA AI call goes through the ai_provider seam — no raw vendor endpoints",
+       LOCKED, scope="repo, bea_main.py (all 22 AI call sites, all providers)", fixed_on="2026-07-31",
+       ref="P0 (17 Jul 2026) migrated 21 of 22 call sites to ai_provider.complete(); the last one "
+           "(vision-draft) kept a raw httpx POST with Anthropic wire format, first guarded by an "
+           "Anthropic-pin (31 Jul) and then migrated the same day, completing P0 at 22/22. The "
+           "provider swap is only real if it stays total: ONE raw vendor URL in bea_main.py makes "
+           "the dashboard switch a lie for that feature (the 7-of-22 'decorative switch' class from "
+           "AI_SWAP_ARCHITECTURE §0). Asserts bea_main.py names no vendor inference endpoint and "
+           "still imports the seam; the wire protocol lives in ai_provider.py adapters only.")
+def rg_no_raw_vendor_endpoints():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- bea_main.py seam check skipped")]
+    out = []
+    for host in ("api.anthropic.com", "api.openai.com", "api.scaleway.ai"):
+        n = src.count(host)
+        if n:
+            out.append((FAIL, f"bea_main.py names {host} {n}x — a raw vendor call path is back; "
+                              "route it through ai_provider.complete() instead"))
+    if "import ai_provider" not in src:
+        out.append((FAIL, "bea_main.py no longer imports ai_provider — the seam is unwired"))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []
@@ -578,7 +641,11 @@ def run():
         if e["state"] == LOCKED:
             status = "REGRESSION" if fails else "HOLDING"
         else:
-            status = "OPEN" if fails else "READY TO LOCK"
+            # LEDGER-FAULT-1 (31 Jul 2026): outside the repo a repo-only OPEN check skips, produced
+            # zero fails, and falsely reported READY TO LOCK (RG-0006 was nearly promoted while ms.js
+            # still carried 9 Rand price labels). A skip is "unverified here", never "now passing".
+            skipped = (not fails) and any(s == INFO and "skip" in m.lower() for s, m in out)
+            status = "OPEN" if (fails or skipped) else "READY TO LOCK"
         results.append({**{k: v for k, v in e.items() if k != "fn"},
                         "status": status, "fails": fails, "infos": infos})
     return results, round(time.time() - t0, 1)

@@ -14665,7 +14665,7 @@ var SF_TILE_IMGS = {
 };
 
 var SF_CATS = {
-Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Asking price (R)',
+Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Asking price',
   slots:[['main','Main photo','Front three-quarter — your advert cover','📸'],
          ['side','Side view','Full profile, whole car','🚙'],
          ['interior','Interior','Front seats and cabin','💺'],
@@ -14685,7 +14685,7 @@ Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Ask
     ['transmission','Transmission','select','Automatic|Manual'],['fuel','Fuel type','select','Petrol|Diesel|Hybrid|Electric'],
     ['cc','Engine capacity (cc)','number','e.g. 1995'],['kw','Power (kW)','number','e.g. 110'],['gears','Gears','number','e.g. 8']]}],
   feats:['Auto stop-start','Aircon','Leather seats','Cruise control','Park sensors','Reverse camera','Bluetooth','Nav','Sunroof','Tow bar','New tyres','Under warranty']},
-Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLabel:'Asking price / rent (R)',
+Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLabel:'Asking price / rent',
   slots:[['main','Front of the property','Whole facade, golden light if you can','🏡'],
          ['lounge','Lounge','Curtains open, lights on','🛋️'],['kitchen','Kitchen','Counters clear','🍳'],
          ['mainbed','Main bedroom','Bed made','🛏️'],['bath','Bathroom','Clean and bright','🛁'],
@@ -14704,7 +14704,7 @@ Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLa
     ['levies','Levies (R/month)','number','e.g. 1 850'],['rates','Rates (R/month)','number','e.g. 1 200'],
     ['fibre','Fibre available','select','Yes|No'],['security','Security','select','None|Alarm|Security estate|Armed response']]}],
   feats:['Pool','Solar / inverter','Borehole','Fibre','Pet friendly','Security estate','Double garage','Flatlet','Garden cottage','Sea / mountain view','Fireplace','Aircon']},
-Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact details", priceLabel:'Hourly rate (R)',
+Tutors: { label:'Tutors', aiCap:"school names, children's faces and contact details", priceLabel:'Hourly rate',
   slots:[['main','You or your space','You at the board, or your teaching space','🎓'],
          ['board','The board mid-lesson','Real working, not posed','🧮'],
          ['materials','Books & materials','What learners work from','📚'],
@@ -14729,7 +14729,7 @@ Services: { label:'Services',
       ['agents','🤝','Professional Agents','Estate, car sales & tour agents — your ranked service profile + seller leads'],
     ['casual','🧹','Casual & In-home','Garden, cleaning, painting, moving — reliable hands']]},
   sub:{
-  technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate (R)',
+  technical:{ label:'Services · Technical', aiCap:'vehicle number plates and phone numbers on signage', priceLabel:'Call-out rate',
     slots:[['main','You on the job','Working, in your gear','⚡'],['job1','Completed job 1','Your best recent work','🔧'],
            ['job2','Completed job 2','Different job type if you can','🛠️'],['tools','Tools / workshop','Professional setup','🧰'],
            ['cert','Certification','Trade cert — names are auto-blurred','📜']],
@@ -14745,7 +14745,7 @@ Services: { label:'Services',
       ['hours','Working hours','text','e.g. 07:00–17:00'],['weekends','Weekends','select','Yes|No'],
       ['response','Typical response','select','Same day|Within 24h|This week']]}],
     feats:['COC certificates','Free quotes','Workmanship guarantee','Card payments','After-hours','Maintenance contracts']},
-  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate (R)',
+  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate',
     slots:[['main','You at work','Honest and real beats posed','🧹'],
            ['ex1','Work example 1','Before / after works well','🌿'],['ex2','Work example 2','Another job','🎨']],
     sections:[
@@ -14761,7 +14761,7 @@ Services: { label:'Services',
      {key:'C',title:'Availability',pts:10,coach:'<b>When can you start?</b> That is usually the deciding question.',rows:[
       ['days','Days','select','Weekdays|Weekends|Both'],['start','Can start','select','This week|Within two weeks|Within a month']]}],
     feats:['Own tools','Own transport','References','Same-week start','Weekend work']}}},
-Collectors: { label:'Collectors', aiCap:'names and addresses on certificates and documents', priceLabel:'Asking price (R)',
+Collectors: { label:'Collectors', aiCap:'names and addresses on certificates and documents', priceLabel:'Asking price',
   slots:[['main','The item, straight on','Neutral background, natural light','🏺'],
          ['back','Back / reverse','Condition tells the truth here','🔄'],
          ['detail','Close-up of markings',"Maker's marks, signatures, serials",'🔍'],
@@ -14784,7 +14784,7 @@ Adventures: { label:'Adventures',
     ['experiences','🧗','Experiences','Hikes, tours, water, wildlife — things people do'],
     ['accommodation','🛖','Accommodation','Guest houses, bush camps, self-catering — places people stay']]},
   sub:{
-  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person (R)',
+  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person',
     slots:[['main','The experience in action','Your money shot — people doing the thing','🧗'],
            ['view','The view / setting',"Why they'll remember it",'🏔️'],
            ['group','Guests enjoying it','Real moments beat staged ones','😄'],
@@ -14802,7 +14802,7 @@ Adventures: { label:'Adventures',
       ['guide','Registered guide','select','Yes — provincial registration|In process|No'],
       ['firstaid','First aid','select','Current|Expired|None'],['insurance','Liability insurance','select','Yes|No']]}],
     feats:['Transport included','Meals included','Kid friendly','Photos included','Private groups','Sunset option','Beginner friendly']},
-  accommodation:{ label:'Adventures · Accommodation', aiCap:'signage and street numbers — the exact location stays private', priceLabel:'Nightly rate (R)',
+  accommodation:{ label:'Adventures · Accommodation', aiCap:'signage and street numbers — the exact location stays private', priceLabel:'Nightly rate',
     slots:[['main','Hero shot','Exterior or the view — your best single image','🛖'],
            ['room','Room','Beds made, warm light','🛏️'],['bath','Bathroom','Clean, towels out','🚿'],
            ['common','Common area / deck','Where guests live','🔥'],['view','The view','What they wake up to','🌄']],
@@ -14827,7 +14827,7 @@ local_market: { label:'Local Market', typePickTitle:'What are you selling?',
          ['instruments','🎸','Instruments & Gear','Guitars, amps, cameras, tools'],
          ['antiques','🏺','Antiques & Rare','Old, storied, one of a kind'],
          ['general','📦','General','Everything else worth selling']],
-  aiCap:'labels with addresses or phone numbers', priceLabel:'Price (R)',
+  aiCap:'labels with addresses or phone numbers', priceLabel:'Price',
   typeToasts:{food:'🍯 Local food sells fast — great choice',handmade:"🧵 Buyers love a maker's story",
     furniture:'🛋️ Good photos double furniture enquiries',instruments:'🎸 Gear with cases sells quicker',
     antiques:'🏺 Provenance is everything — photograph the marks',general:"📦 Clear photos, honest condition — that's the recipe"},
@@ -14863,6 +14863,16 @@ local_market: { label:'Local Market', typePickTitle:'What are you selling?',
 };
 
 var sfState = null;
+
+// RG-0006 (31 Jul 2026): seller price prompts carry the MARKET's currency symbol, never a
+// hardcoded "(R)". Source of truth = sfState.country when the flow ever sets it, else the
+// active market (activeCountry), else ZA — resolved through ADV_COUNTRY_CURRENCY, the same
+// table the buyer-side display uses (RG-0002/RG-0005 class).
+function _sfCcySym(){
+  var cc='ZA';
+  try{ cc=String((sfState&&sfState.country)||(typeof activeCountry!=='undefined'&&activeCountry&&activeCountry.iso2)||'ZA').toUpperCase(); }catch(e){}
+  return (typeof ADV_COUNTRY_CURRENCY!=='undefined'&&ADV_COUNTRY_CURRENCY[cc])||'R';
+}
 
 function sfInit(){
   sfState = {screen:'home', cat:null, sub:null, lmType:null,
@@ -15282,9 +15292,10 @@ function sfSpecS(secKey){
     // once a type is chosen — label follows the seller's Listing type selection.
     var _pl=f.priceLabel, _lt=String(sfState.A.ltype||'');
     if(sfState.cat==='Property'){
-      if(/rent|let/i.test(_lt)) _pl='Monthly rent (R)';
-      else if(/sale/i.test(_lt)) _pl='Asking price (R)';
+      if(/rent|let/i.test(_lt)) _pl='Monthly rent';
+      else if(/sale/i.test(_lt)) _pl='Asking price';
     }
+    _pl=_pl+' ('+_sfCcySym()+')';   // RG-0006: symbol follows the seller's market
     rows=rows.concat([['__price',_pl,'number','e.g. 500','root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
   }
   rows.forEach(function(r){

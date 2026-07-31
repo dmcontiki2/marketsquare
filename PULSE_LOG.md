@@ -32,3 +32,4 @@
 2026-07-29 11:16 UTC 🟢 trustsquare.co up · 1.1s · SSL 57d · /health ok · /payment/test ok
 2026-07-29 🟢 trustsquare.co up · 1.3s · SSL 57d · /health ok (v1.3.1) · /payment/test ok (paystack_connected)
 2026-07-30 (daytime) 🟢 trustsquare.co up · 0.4s · SSL 55d · /health ok · /payment/test ok
+2026-07-31 🟢 trustsquare.co up · 0.9s · SSL 55d (health ok, payment/test ok, paystack connected)

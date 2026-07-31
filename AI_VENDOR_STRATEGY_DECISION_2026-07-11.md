@@ -151,3 +151,66 @@ Stability outranks cost.
   valued; Sonnet 4.6 remains the quality-ceiling reference for advert copy
   (with the caveat that even Sonnet fabricated once — the no-invention guard
   lives in the prompt, not the model choice).
+
+
+## Addendum 5 (31 Jul 2026) — GPT-5.6 second lane, sandbox ban drill, video swap lanes
+
+David's rulings, recorded in-session:
+
+1. **GPT-5.6 wired as the OpenAI lane** (Luna on haiku/vision/triage tiers, Terra on the
+   sonnet tier) — seam, dashboard registry and any-of fallback chain all carry it; RG-0016
+   locks the ids. Blocked on OPENAI_API_KEY only; golden-set eval gate before production
+   traffic stands.
+2. **Sandbox ban drill planned.** David will fund an OpenAI API key (platform.openai.com
+   credit — NOTE: the $20 ChatGPT subscription is separate and contributes nothing to the
+   API) and test the app in a sandbox with the Anthropic key absent, to prove the app runs
+   with no Claude dependency. Claude stays the design/engineering harness by choice; the APP
+   must not need any single vendor to run. The P2 design (AI_AUTO_FAILOVER_P2_DESIGN.md)
+   carries the drill protocol.
+3. **Video swap lanes designated: Kling 3.0 (~$0.075/s) and Luma Ray 2 (~$0.04/s)** as the
+   ×10 cost-drop alternatives to Veo 3.1 standard (~$0.75/s) for the marketing video
+   pipeline (no in-app video call site exists yet). Jurisdiction note: Kling is
+   Kuaishou (Chinese endpoint) — acceptable for marketing spiels under the standing red
+   line (no customer PII/KYC content to Chinese-jurisdiction endpoints; marketing prompts
+   carry none). Luma is US. The true "through Scaleway" video route is self-hosting
+   open-weight Wan on rented Scaleway GPUs — a Karoo-class build for later, not a swap flip.
+
+
+## Addendum 6 (31 Jul 2026) — Review roles: GPT-5.6 becomes the formal PEER; video ruling refined
+
+**1. Review-roles model (David's ruling, from his QA practice).** Every design review
+carries five mandatory roles — QA, CM, Author (Engineer), Peer (another Engineer),
+System Engineer. Mapped onto MarketSquare:
+
+| Role | Held by |
+|---|---|
+| Author (Engineer) | Claude — writes the code and designs |
+| Peer (Engineer)   | **GPT-5.6 — `scripts/peer_review.py`** (read-only; reports, never edits) |
+| QA                | The executable machinery: regression ledger, BIT, audits |
+| CM                | STATUS / CHANGELOG / CHANGE_REGISTER + git history |
+| System Engineer   | David — decides, integrates, veto anchor |
+
+This gives the 11-Jul "roving auditor" its concrete runner and its formal name. The Peer
+reviews designs and code on request (`python3 scripts/peer_review.py FILE...`, Terra
+default, ~$0.02–0.06 a review), writes Records/PEER_REVIEW_<date>.md, and David brings
+the report back to the Author for discussion. The OpenAI key is therefore no longer
+"optional (auditor purity only)" — it is the Peer's working key, alongside its standby
+role in the app's fallback chain.
+
+**2. Video ruling refined (supersedes Addendum 5 item 3).** The soul-line, David's words:
+"all about cost but not at a price of selling our soul." Operational meaning:
+
+- **No pure Chinese endpoints for ANY workload** — not only PII paths. Kling DIRECT
+  (Kuaishou API) is out.
+- **Chinese-origin models remain acceptable via Western/EU-hosted providers** (models
+  vs endpoints doctrine): Wan 2.6 ≈ $0.05–0.071/s and Kling 3.0 ≈ $0.085–0.153/s are
+  served by US aggregators (fal.ai, Atlas Cloud) under Western jurisdiction.
+- **Fully Western lanes:** Luma Ray 2 ≈ $0.04/s, Veo 3.1 Lite ≈ $0.05/s (both ~10–15×
+  under Veo 3.1 standard at $0.75/s).
+- **Research finding (31 Jul 2026):** no European managed video-generation API exists —
+  the sovereignty-grade EU providers (Scaleway, Nebius, T-Systems, OUTSCALE, Exoscale)
+  serve text/vision/audio only. The EU-resident video route is therefore SELF-HOSTED
+  open weights (Wan / LTX-class) on EU GPUs — the Karoo-class build, later. Until then
+  the video pipeline's swap lanes are Luma Ray 2 and Western-hosted Wan/Kling, chosen
+  per clip on cost; marketing prompts carry no customer PII, so US hosting is
+  compliance-clean.

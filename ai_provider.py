@@ -44,8 +44,13 @@ def envkey(*names):
 TASK_MODEL = {
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
-    # STALE 2024-era ids — VERIFY against current OpenAI catalog when OPENAI_API_KEY is provisioned (vendor doc gate: golden-set eval before production traffic)
-    "openai":    {"haiku":"gpt-4o-mini","sonnet":"gpt-4o","vision":"gpt-4o","triage":"gpt-4o-mini"},
+    # GPT-5.6 family (verified 31 Jul 2026 vs developers.openai.com/api/docs/models): Luna $0.20/$1.20,
+    # Terra $2/$12, Sol $5/$30 per Mtok after the 30 Jul cuts; all three take image input, so Luna covers
+    # the vision tier too. Luna = cheap tiers, Terra = reasoning rung ("gpt-5.6-sol" exists as flagship).
+    # Vendor-doc gate UNCHANGED: golden-set eval before production traffic; OPENAI_API_KEY still
+    # unprovisioned (David-only) — dashboard shows the lane DISABLED until the key lands. RG-0016.
+    "openai":    {"haiku":"gpt-5.6-luna","sonnet":"gpt-5.6-terra",
+                  "vision":"gpt-5.6-luna","triage":"gpt-5.6-luna"},
     # Scaleway EU (P1) — canon lives HERE per seam philosophy; deliberately ignores FAILOVER_MODEL_* env
     # (those belong to failover/ai_backends.py). Reasoning tier uses the non-thinking instruct variant
     # (qwen3.5-397b overthinks short tasks — live demo finding 17 Jul).
@@ -110,9 +115,11 @@ def _openai(messages, model, max_tokens, system, timeout=30):
     """Real OpenAI adapter — chat/completions. Translates the app's content-block
     messages to OpenAI format, calls the API, parses text + token usage."""
     import httpx
-    key=os.getenv("OPENAI_API_KEY")
+    key=envkey("OPENAI_API_KEY")   # ENVKEY-1 class: systemd unit does not export the server .env
     if not key: return AIResult("",None,None,"openai",model,ok=False)
-    body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
+    # gpt-5*/o* chat/completions 400-reject max_tokens ("Unsupported parameter") — they take max_completion_tokens.
+    _tokkey = "max_completion_tokens" if model.startswith(("gpt-5","o")) else "max_tokens"
+    body={"model":model,_tokkey:max_tokens,"messages":_to_openai_messages(messages,system)}
     try:
         with httpx.Client(timeout=timeout) as c:
             r=c.post("https://api.openai.com/v1/chat/completions",
@@ -121,8 +128,10 @@ def _openai(messages, model, max_tokens, system, timeout=30):
         j=r.json()
         text=(j.get("choices",[{}])[0].get("message",{}).get("content","") or "")
         u=j.get("usage",{}) or {}
+        # FAILOVER-PARITY-1 rule (18 Jul), applied to _openai 31 Jul: 200-with-empty-text must degrade
+        # to the fallback chain, not report ok — same rule as _anthropic/_scaleway.
         return AIResult(text, u.get("prompt_tokens"), u.get("completion_tokens"), "openai", model,
-                        ok=bool(text) or r.status_code==200)
+                        ok=(r.status_code==200 and bool(text)))
     except Exception:
         return AIResult("",None,None,"openai",model,ok=False)
 
