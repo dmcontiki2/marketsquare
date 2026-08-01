@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  marketsquare-deploy.service — runs the git-pull deploy check once.
+#  Triggered by marketsquare-deploy.timer (every ~2 min) and by the optional
+#  POST /admin/deploy hook. It is a oneshot: it exits after each check. When the
+#  tracked ref has not advanced it is a sub-second no-op.
+#
+#  Installed to /etc/systemd/system/ by install_autodeploy.sh.
+#  To change config, edit the Environment= lines here, then:
+#     systemctl daemon-reload
+# ─────────────────────────────────────────────────────────────────────────────
+[Unit]
+Description=MarketSquare git-pull auto-deploy (checks the mirror, deploys if advanced)
+After=network-online.target marketsquare.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+# ---- Configuration (override defaults here) --------------------------------
+# The branch the server treats as "what should be live". Default "deploy" means
+# deploys are explicit (someone publishes to it). Set to "main" for full GitOps
+# (every push to main auto-ships). See ACTIVATION.md for the trade-off.
+Environment=MS_DEPLOY_REF=deploy
+Environment=MS_SRC=/opt/marketsquare-src
+Environment=MS_LIVE=/var/www/marketsquare
+Environment=MS_REMOTE_URL=https://github.com/dmcontiki2/marketsquare.git
+Environment=MS_SERVICES=marketsquare
+# If you set an ADMIN_KEY on the BEA, mirror it here so the CDN purge is authorised.
+# Environment=MS_ADMIN_KEY=
+
+ExecStart=/opt/marketsquare-src/ops/autodeploy/server_deploy.sh
+
+# Keep a bad deploy from thrashing: if the script exits non-zero, the timer's
+# next tick still runs, but we don't auto-restart the unit itself.
+TimeoutStartSec=600

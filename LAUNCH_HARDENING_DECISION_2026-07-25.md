@@ -39,6 +39,38 @@ trips over it. This is the defect class that will bite hardest when listings arr
 - While here: fix the deploy .bat's false `[OK]`-on-failure (it reads exit codes wrong
   inside if-blocks and hid failures today).
 
+**DELIVERED — 26 Jul 2026 (server-side git-pull auto-deploy).** Built the "self-hosted
+runner on the box" option — a git-driven deploy the server runs itself, so no human runs
+`deploy_marketsquare.bat`. Files in `ops/autodeploy/` + `activate_autodeploy.bat`,
+`release.bat`, `deploy_web.py`; full guide in `ACTIVATION.md`.
+- **Engine (`server_deploy.sh`).** Pulls the tracked ref, places files via an allowlist
+  manifest (the same renames the `.bat` does — never deletes, so the live DB/`.env`/uploads
+  are untouched), bumps the cache-buster monotonically, restarts `marketsquare`, reloads
+  nginx, purges the CDN, health-checks `/health`, and **auto-rolls-back** (restores a
+  pre-deploy file snapshot + the previous commit) if the app doesn't come up. Verified in a
+  mocked-server harness: placement+renames, monotonic `?v=` bump, idempotent no-op on an
+  unchanged ref, and the unhealthy→rollback path (exit 2, good files restored, bad SHA not
+  recorded).
+- **Trigger.** A `systemd` timer (`marketsquare-deploy.timer`) polls the mirror every 2 min
+  and deploys only when the tracked `deploy` ref advances (explicit-intent default; a one-line
+  switch to `MS_DEPLOY_REF=main` gives full GitOps). Plus an OPTIONAL authenticated
+  `POST /admin/deploy` HTTPS hook (`deploy_router.py`, off unless `MS_DEPLOY_TOKEN` is set on
+  the server) as the port-443 trigger for sessions that can't ssh or push.
+- **One deploy engine.** The endpoint and the timer both call `server_deploy.sh` — one engine,
+  one rollback story, consistent with `/ship` and `/TSL`.
+- **Activation is one step:** double-click `activate_autodeploy.bat` once. After that, "go
+  live" is `release.bat` (one push) or `deploy_web.py` from any session.
+- **Honest access boundary (verified this build):** a *scheduled, unattended* cloud session
+  cannot push to the mirror (sandbox git proxy returns 403; read/clone work) and has no server
+  key, so its only route is HTTPS/443. It therefore cannot trigger a deploy on its own until
+  David grants ONE channel: either enable the `/admin/deploy` token, or grant the session push
+  access to the `deploy` ref. Until then the mechanism is fully hands-free for David
+  (`release.bat`) but not yet for a human-absent scheduled run. This is a deliberate boundary,
+  documented in `ACTIVATION.md`.
+- **Still open:** the `.bat`'s false-`[OK]`-on-failure quirk is left unchanged (can't be tested
+  from the cloud; fix in an attended session). The new engine handles exit codes correctly and
+  gates on a real health check, so cloud-path deploys don't inherit that quirk.
+
 ### Phase 4 — Postgres   [risk: high (cutover) · effort: 1-2 weeks]
 - Migrate SQLite -> Postgres: write concurrency for continuous multi-source ingestion,
   an ENFORCEABLE category type (gives the contract teeth), and a read replica for safe

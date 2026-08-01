@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  deploy_manifest.txt — repo → live-server file placement map
+#  Read by server_deploy.sh. ONE line per file:  <src-in-repo>  |  <dest-under-live-root>
+#
+#  Rules:
+#   • Placement is an ALLOWLIST COPY. Only files listed here are copied.
+#     The live DB (*.db), .env, uploads/, demo_sellers.json and anything else on
+#     the box is NEVER touched. There is no delete-sync — nothing is removed.
+#   • A missing source is skipped with a [skip] note, never an error.
+#   • This is the SAME mapping deploy_marketsquare.bat performs by scp, kept as
+#     data so the git-deploy and the Windows .bat stay in step. When you add a
+#     file to the .bat, add the same line here.
+#   • Lines beginning with # and blank lines are ignored. Whitespace around | is ok.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Core apps (note the renames the server expects) ──────────────────────────
+marketsquare.html          | index.html
+marketsquare_admin.html    | admin.html
+bea_main.py                | main.py
+
+# ── Static front-end assets (nginx serves these from /static/) ───────────────
+ms.js                      | static/ms.js
+ms.css                     | static/ms.css
+
+# ── Service worker (served from web root, not /static/) ──────────────────────
+assets/service-worker.js   | service-worker.js
+
+# ── Legal / support pages ────────────────────────────────────────────────────
+privacy.html               | privacy.html
+terms.html                 | terms.html
+support.html               | support.html
+
+# ── Adventures interactive maps (served from /static/) ───────────────────────
+adventures_reserve_map.html | static/adventures_reserve_map.html
+adventures_us_map.html      | static/adventures_us_map.html
+adventures_uk_map.html      | static/adventures_uk_map.html
+adventures_au_map.html      | static/adventures_au_map.html
+adventures_na_map.html      | static/adventures_na_map.html
+adventures_bw_map.html      | static/adventures_bw_map.html
+adventures_mz_map.html      | static/adventures_mz_map.html
+adventures_c2c_map.html     | static/adventures_c2c_map.html
+adventures_de_map.html      | static/adventures_de_map.html
+
+# ── Data files the BEA reads at boot / on request ────────────────────────────
+wonders.json               | wonders.json
+demo_listings.json         | demo_listings.json
+#  NOTE: demo_sellers.json is SERVER-MANAGED (single source lives only on the box,
+#  by deliberate design — see CLAUDE.md). It is intentionally NOT listed here.
+
+# ── Backend modules imported by main.py (must land before the restart) ───────
+auth.py                    | auth.py
+database.py                | database.py
+storage.py                 | storage.py
+payments.py                | payments.py
+ai_service_tiers.py        | ai_service_tiers.py
+ai_provider.py             | ai_provider.py
+launch_redemption.py       | launch_redemption.py
+estate_agents.py           | estate_agents.py
+
+# ── Dashboard docs (BEA parses these at GET /dashboard/summary) ──────────────
+STATUS.md                  | STATUS.md
+CHANGELOG.md               | CHANGELOG.md
+BACKLOG.md                 | BACKLOG.md
+AUDIT_PROGRESS.md          | AUDIT_PROGRESS.md

@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  marketsquare-deploy.timer — polls the mirror every ~2 minutes.
+#  Each tick runs marketsquare-deploy.service, which is a no-op unless the
+#  tracked deploy ref has advanced. Persistent=true means a tick missed while
+#  the box was off runs at next boot.
+#
+#  Enable with:  systemctl enable --now marketsquare-deploy.timer
+#  Watch with:   systemctl list-timers marketsquare-deploy.timer
+# ─────────────────────────────────────────────────────────────────────────────
+[Unit]
+Description=Poll the GitHub mirror and auto-deploy MarketSquare when it advances
+
+[Timer]
+# First run 1 min after boot, then every 2 min.
+OnBootSec=1min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Persistent=true
+Unit=marketsquare-deploy.service
+
+[Install]
+WantedBy=timers.target
