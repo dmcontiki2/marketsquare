@@ -214,3 +214,33 @@ role in the app's fallback chain.
   the video pipeline's swap lanes are Luma Ray 2 and Western-hosted Wan/Kling, chosen
   per clip on cost; marketing prompts carry no customer PII, so US hosting is
   compliance-clean.
+
+
+**Clarification (same day, David):** video is NOT an app feature and will not become
+one — deliberately excluded because it would add a reliability, cost and complexity
+dimension the marketplace does not need. Higgsfield covers ALL of David's own video
+generation and is not linked to the app in any way. The video lanes above are therefore
+SHELF INTELLIGENCE for his content pipeline only — consulted if Higgsfield ever fails,
+reprices, or a video feature is one day deliberately chosen. Nothing is built, keyed,
+or integrated on their account.
+
+
+## Addendum 7 (31 Jul 2026) — Live-Values Doctrine; interim chain confirmed; Medium price corrected
+
+David's rulings after the Peer's cost review:
+
+1. **Interim three-lane chain stands** (anthropic → openai → scaleway; full provider
+   registry deferred until the lane pool actually grows).
+2. **Live values over historical values.** "We should not depend on historical values
+   but live values, otherwise we are designing for failure of our intent." Operational
+   form: `ai_price_card.json` is the ONLY legal source of AI prices (each entry: rate,
+   currency, source, verified_at, capability gate); RG-0018 goes RED when the card is
+   stale (>45 days) or misses a wired model; `scripts/price_truth.py` renders the card
+   as the value ranking with David's two KPI drivers — CAPABILITY first, COST second.
+   The ranking advises; Addendum 3 still governs switching. At P2, computed spend gets
+   reconciled against vendor billing — a pricing page is a claim, an invoice is a fact.
+3. **Correction of record:** the 18 Jul "Mistral Medium ≈ 40% of Haiku" claim is
+   contradicted by Scaleway's live price page (€1.50/€7.50 ≈ 1.65× Haiku with FX buffer);
+   the 40% likely inherited mistral-small's card. Until David's console check says
+   otherwise, Medium's role is CONTINUITY/JURISDICTION standby, not a cheap lane. The
+   cheap lane on current cards is GPT-5.6 Luna — GATED OUT until its golden-set passes.

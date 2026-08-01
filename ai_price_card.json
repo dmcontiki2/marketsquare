@@ -1,0 +1,55 @@
+{
+  "_doc": "THE single source of AI price truth (Live-Values Doctrine, David 31 Jul 2026 — Addendum 7). No document, decision or tool may cite an AI price that is not on this card. Update = re-verify against the vendor's live page/console, bump verified_at, note the source. RG-0018 goes RED when this card is stale (>45 days) or misses a wired model. Prices are per MILLION tokens.",
+  "version": "2026-07-31",
+  "verified_at": "2026-07-31",
+  "fx": {
+    "EUR_USD": 1.10,
+    "as_of": "2026-07-31",
+    "buffer_pct": 5,
+    "note": "Approximate rate; buffer applied on top when converting EUR lanes to USD (a USD rail cannot be a hard bound on unbuffered EUR spend — Peer cost review 31 Jul)."
+  },
+  "providers": {
+    "anthropic": {
+      "models": {
+        "claude-haiku-4-5-20251001": {
+          "in": 1.00, "out": 5.00, "ccy": "USD",
+          "source": "metacto.com Anthropic pricing breakdown (verified 31 Jul 2026)",
+          "gate": "production",
+          "note": "Active lane; months of production history, prompts tuned (Addendum 4)."
+        },
+        "claude-sonnet-4-6": {
+          "in": 3.00, "out": 15.00, "ccy": "USD",
+          "source": "metacto.com Anthropic pricing breakdown (verified 31 Jul 2026)",
+          "gate": "production",
+          "note": "Paid 5T deep-dives + agency-import scan only. Sonnet 5 intro $2/$10 ends 31 Aug 2026 — a dated upgrade decision, not an automatic move."
+        }
+      }
+    },
+    "scaleway": {
+      "models": {
+        "mistral-medium-3.5-128b": {
+          "in": 1.50, "out": 7.50, "ccy": "EUR",
+          "source": "scaleway.com model-as-a-service pricing page (fetched 31 Jul 2026)",
+          "gate": "golden-set-passed",
+          "note": "CORRECTION (Peer cost review 31 Jul): at these rates Medium is ~1.65x Haiku 4.5, contradicting the 18 Jul '~40% of Haiku' claim (which likely inherited mistral-small's card: EUR 0.15/0.35). CONSOLE VERIFICATION PENDING (Addendum 4 precondition #1 — David). Role: continuity/jurisdiction standby, NOT a cheap lane, unless the console proves otherwise."
+        }
+      }
+    },
+    "openai": {
+      "models": {
+        "gpt-5.6-luna": {
+          "in": 0.20, "out": 1.20, "ccy": "USD",
+          "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026; 80% cut effective 30 Jul)",
+          "gate": "pending-golden-set",
+          "note": "Cheapest wired lane on paper, 3 days old. Reasoning-token burn risk (observed 31 Jul: Terra empty-reply at 4k budget) — watch completion-vs-visible ratio in the eval."
+        },
+        "gpt-5.6-terra": {
+          "in": 2.00, "out": 12.00, "ccy": "USD",
+          "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026)",
+          "gate": "pending-golden-set",
+          "note": "Sonnet-tier candidate; also the Peer Reviewer's working model (keyed locally, not on server)."
+        }
+      }
+    }
+  }
+}

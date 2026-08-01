@@ -142,3 +142,6 @@ add_scaleway_key.bat
 
 # session backups with bak2 suffix (regression-ledger closure, 29 Jul 2026)
 *.bak2-*
+
+# Local API keys for runners (scripts/peer_review.py reads <repo>/.env) - NEVER commit
+.env

@@ -20,6 +20,9 @@ USAGE
     python3 scripts/peer_review.py FILE [FILE ...]         review these files
     python3 scripts/peer_review.py --dry-run FILE ...      size the request, no call, $0
     python3 scripts/peer_review.py --model gpt-5.6-sol ... deep pass (default: terra)
+  python3 scripts/peer_review.py --lens cost FILE ...    pick the review lens:
+      design (default) | code | security | privacy | cost | operability |
+      performance | maintainability | full
     python3 scripts/peer_review.py --focus "..." FILE ...  point the Peer at a question
 
 KEY   OPENAI_API_KEY — env first, then /var/www/marketsquare/.env, then <repo>/.env.
@@ -34,9 +37,42 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PER_FILE_CAP = 120_000          # chars per file
 TOTAL_CAP = 400_000             # chars across all files
 DEFAULT_MODEL = "gpt-5.6-terra" # the Peer's default rig; luna = cheap pass, sol = deep pass
-MAX_OUT = 4000
+MAX_OUT = 16000   # reasoning models burn thinking tokens from this budget first —
+                  # 4000 starved Terra to an empty reply (same class as the 17 Jul
+                  # qwen3.5 finding on Scaleway). 16k leaves room to think AND answer.
 # $/Mtok (in, out) — 30 Jul 2026 prices; used for the report's cost line only
 PRICES = {"gpt-5.6-luna": (0.20, 1.20), "gpt-5.6-terra": (2.0, 12.0), "gpt-5.6-sol": (5.0, 30.0)}
+
+
+# ── Review lenses — the Peer's charter is BASE + chosen lens. David's environment names
+# design/code/config/compliance; the catalogue deliberately adds lenses beyond that list.
+LENSES = {
+ "design": "LENS: DESIGN. Judge the architecture and state models: can the stated rules be "
+   "implemented from the stated state? Failure modes, unstated assumptions, contradictions "
+   "between documents and code, simpler alternatives.",
+ "code": "LENS: CODE. Line-level correctness: error handling, concurrency and races, resource "
+   "leaks, injection and unsafe parsing, silent exception swallowing, API misuse, edge cases.",
+ "security": "LENS: SECURITY. AuthN/AuthZ on every endpoint, secrets handling and leakage "
+   "paths, input validation, SSRF/injection surfaces, abuse and enumeration, blast radius.",
+ "privacy": "LENS: PRIVACY. POPIA/GDPR posture: what personal data flows where, retention, "
+   "anonymisation guarantees and their failure modes, third-party exposure, jurisdiction.",
+ "cost": "LENS: COST / FinOps. Unit economics in actual currency: cost per call and per 1,000 "
+   "calls per provider lane from the supplied prices and token profiles; what each swap "
+   "saves or costs; where silent cost drift can enter (retries, fallbacks, probes, verbose "
+   "models); pricing risks (intro-price expiries, FX, vendor repricing); whether the cost "
+   "rails actually bound worst-case spend; the cheapest SAFE configuration given the "
+   "project's stability and golden-set rules. Show your arithmetic.",
+ "operability": "LENS: OPERABILITY. One human operates this alone, no on-call team: can a "
+   "fault be diagnosed from what is logged/alerted? Runbook completeness, alert fatigue, "
+   "recovery steps, observability gaps, what breaks silently.",
+ "performance": "LENS: PERFORMANCE. Latency budgets, timeout stacking across fallback chains, "
+   "blocking calls in async paths, scalability bottlenecks, degradation under load.",
+ "maintainability": "LENS: MAINTAINABILITY. Complexity, duplication, dead code, doc-vs-code "
+   "drift, single-file monolith risks, what the next engineer will misunderstand.",
+ "full": "LENS: FULL SWEEP. Apply ALL of the above lenses (design, code, security, privacy, "
+   "cost, operability, performance, maintainability), prioritize findings by impact, and "
+   "say which lens each finding came from.",
+}
 
 SYSTEM = """You are the PEER REVIEWER (a second, independent engineer) in a formal design
 review. Another engineer (the Author) produced the material below; the System Engineer
@@ -98,6 +134,12 @@ def main():
     args = [a for a in sys.argv[1:]]
     dry = "--dry-run" in args
     model, focus = DEFAULT_MODEL, ""
+    lens = "design"
+    if "--lens" in args:
+        lens = args[args.index("--lens") + 1]
+        if lens not in LENSES:
+            print("unknown lens %r — choose from: %s" % (lens, ", ".join(LENSES))); sys.exit(2)
+        del args[args.index("--lens"): args.index("--lens") + 2]
     if "--model" in args:
         model = args[args.index("--model") + 1]
         del args[args.index("--model"): args.index("--model") + 2]
@@ -113,7 +155,7 @@ def main():
     p_in, p_out = PRICES.get(model, PRICES[DEFAULT_MODEL])
     est_cost = est_in / 1e6 * p_in + MAX_OUT / 1e6 * p_out
     scope_lines = "\n".join(f"  - {p} ({n:,} chars{' TRUNCATED' if c else ''})" for p, n, c in meta)
-    print(f"Peer review scope ({model}):\n{scope_lines}\n"
+    print(f"Peer review scope ({model} · lens={lens}):\n{scope_lines}\n"
           f"  ~{est_in:,} input tokens · cost ceiling ≈ ${est_cost:.3f}")
 
     if dry:
@@ -128,14 +170,14 @@ def main():
             + (f"The Author asks the Peer to focus on: {focus}\n\n" if focus else "")
             + corpus)
     body = {"model": model, "max_completion_tokens": MAX_OUT,
-            "messages": [{"role": "system", "content": SYSTEM},
+            "messages": [{"role": "system", "content": SYSTEM + "\n\n" + LENSES[lens]},
                          {"role": "user", "content": user}]}
     req = urllib.request.Request(
         "https://api.openai.com/v1/chat/completions",
         data=json.dumps(body).encode(),
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=300) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:
             resp = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
         print(f"API error {e.code}: {e.read().decode()[:400]}"); sys.exit(3)
@@ -144,15 +186,18 @@ def main():
 
     text = (resp.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
     if not text:
-        print("Empty reply from the Peer — nothing written."); sys.exit(3)
+        u = resp.get("usage", {})
+        print("Empty reply from the Peer — nothing written. Usage:", u.get("prompt_tokens"),
+              "in /", u.get("completion_tokens"), "out — if 'out' is large, the model spent the whole "
+              "budget reasoning; raise MAX_OUT."); sys.exit(3)
     u = resp.get("usage", {})
     cost = (u.get("prompt_tokens", 0) / 1e6 * p_in) + (u.get("completion_tokens", 0) / 1e6 * p_out)
 
     os.makedirs(os.path.join(REPO, "Records"), exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M")
-    out_path = os.path.join(REPO, "Records", f"PEER_REVIEW_{stamp}.md")
+    out_path = os.path.join(REPO, "Records", f"PEER_REVIEW_{stamp}_{lens}.md")
     header = (f"# Independent Peer Review — {stamp}\n\n"
-              f"*Peer: {model} (second vendor, read-only) · Author: Claude · "
+              f"*Peer: {model} (second vendor, read-only) · Lens: {lens} · Author: Claude · "
               f"System Engineer: David*\n\n"
               f"**Scope:**\n{scope_lines}\n\n"
               f"**Usage:** {u.get('prompt_tokens','?')} in / {u.get('completion_tokens','?')} out "

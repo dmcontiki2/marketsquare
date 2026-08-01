@@ -1,134 +1,182 @@
-# AI Auto-Failover — P2 Implementation Design (breaker · heartbeat · drill)
+# AI Auto-Failover — P2 Implementation Design v1.1 (breaker · heartbeat · drill)
 
-*31 Jul 2026 · designed for David's go · grounded in AI_SWAP_ARCHITECTURE.md §2/§4,
-AI_VENDOR_STRATEGY_DECISION Addenda 3–5, and the live seam (ai_provider.py, 22/22 call
-sites as of today). Build size: one session for P2a, one short session for P2b+P2c.*
+*31 Jul 2026 · v1.1 — revised same day after the first independent Peer review
+(Records/PEER_REVIEW_2026-07-31-0608.md, GPT-5.6-terra: 3 BLOCKER, 6 MAJOR, 3 MINOR,
+3 QUESTION, 2 PRAISE — all three blockers accepted and folded in) and David's recovery
+ruling. Grounded in AI_SWAP_ARCHITECTURE.md §2/§4, AI_VENDOR_STRATEGY_DECISION Addenda
+3–6, and the live seam (ai_provider.py, 22/22 call sites). Build: one session P2a, one
+short session P2b+P2c.*
 
-## 0. Where we stand after today (audited)
+## Plain language first: what "tripped" means
+
+The same as the breaker in an electrical panel. When a provider keeps failing, its
+breaker TRIPS: the app stops sending calls to that lane (each one would only add its
+timeout to a user's request) and traffic runs on the surviving lanes. A tripped lane is
+then probed until it proves healthy. What happens NEXT is David's ruling below.
+
+## 0. Where we stand (audited 31 Jul)
 
 - The seam is TOTAL: all 22 AI call sites route through `ai_provider.complete()`
-  (vision-draft, the last raw site, migrated 31 Jul — RG-0017 asserts it stays that way).
+  (RG-0017 asserts it stays that way). The DB-backed active-provider switch lives in
+  bea_main.py (`launch_switches.ai_active`, `_ts_active_provider()`, ~10 s cache) and is
+  passed into the seam per call — noted here explicitly because the Peer, given only
+  ai_provider.py, correctly flagged that it could not see this. AI_SWAP_ARCHITECTURE §0
+  describes the HISTORICAL 17-Jul state (7/22); this document describes today.
 - Three lanes wired: Anthropic (active), Scaleway EU (keyed standby, golden-set passed),
-  OpenAI GPT-5.6 (wired, awaiting key — RG-0016 locks the ids).
-- Failover today is a NAIVE per-call any-of: a failed call walks the chain once, every
-  call, forever. No memory (a dead provider is re-tried on every single call, adding its
-  timeout to every user request during an outage), no alerting (David learns from users),
-  no distinction between blip and ban, no drill mode.
+  OpenAI GPT-5.6 (wired + keyed for the Peer; server key pending — RG-0016 locks ids).
+- Failover today is a naive per-call any-of: no memory, no alerting, no blip-vs-ban
+  distinction, no drill mode. P2 adds the memory, the judgment, and the alarm bell.
 
-P2 adds the memory, the judgment, and the alarm bell. Doctrine unchanged: **fail-over is
-automatic, fail-back is manual** (§1 of the architecture doc).
+## 1. Recovery doctrine (David's ruling, 31 Jul 2026 — supersedes blanket manual-fail-back)
 
-## 1. The one new object: `ai_breaker` (SQLite, sibling of launch_switches)
+| Trip class | Fail-over | Recovery |
+|---|---|---|
+| T1 outage / T2 degradation ("dropouts") | automatic | **AUTOMATIC**, with anti-flap hysteresis: 3 consecutive probe successes spanning ≥ 5 min → lane closes, traffic returns, "recovered" notice sent |
+| T3 ban / account action (and drill) | automatic | **MANUAL ONLY.** Probes may prove health → state becomes `ready` and the dashboard says READY TO RESTORE, but routing stays excluded until David presses Restore — a ban has a REASON, and he considers it before walking back in |
+
+Rationale: for dropouts the outage was the provider's problem, and auto-return with
+hysteresis cannot flap (the old blanket-manual rule existed to prevent flapping — the
+hysteresis window does that job without the dashboard chore). For bans, context first.
+This separates HEALTH (what probes measure) from ROUTING (who gets traffic) — the
+Peer's blocker #2, resolved.
+
+## 2. State objects (Peer blocker #1 folded in)
 
     CREATE TABLE IF NOT EXISTS ai_breaker (
-      provider    TEXT NOT NULL,            -- anthropic | openai | scaleway
-      task        TEXT NOT NULL,            -- haiku | sonnet | vision | triage
-      state       TEXT NOT NULL DEFAULT 'closed',   -- closed | tripped | half_open
-      fail_count  INTEGER NOT NULL DEFAULT 0,
-      window_start TEXT,                    -- ISO ts of the current failure window
-      trip_reason TEXT,                     -- T1_outage | T2_degraded | T3_account | drill
-      tripped_at  TEXT,
-      last_error  TEXT, last_error_at TEXT, last_ok_at TEXT,
-      probe_after TEXT,                     -- when the next half-open trial is allowed
+      provider TEXT NOT NULL, task TEXT NOT NULL,
+      state TEXT NOT NULL DEFAULT 'closed',   -- closed | tripped | half_open | ready
+      trip_reason TEXT,                       -- T1_outage | T2_degraded | T3_account
+      tripped_at TEXT, probe_after TEXT,
+      probe_ok_streak INTEGER NOT NULL DEFAULT 0,
+      first_probe_ok_at TEXT,                 -- start of the current success streak (hysteresis)
+      last_error TEXT,                        -- SANITIZED summary, ≤200 chars (see §7)
+      last_error_at TEXT, last_ok_at TEXT,
       PRIMARY KEY (provider, task));
 
-Per provider·task, not global — vision can trip while text lanes stay up (§3 of the
-architecture doc: capability is the constraint). Read through a ~10 s cache exactly like
-`_ts_active_provider()` so the hot path costs one dict lookup, not one DB hit per call.
+    -- rolling stats: T2 needs a DENOMINATOR, not just a failure count (Peer blocker #1)
+    CREATE TABLE IF NOT EXISTS ai_breaker_stats (
+      provider TEXT NOT NULL, task TEXT NOT NULL,
+      bucket_minute TEXT NOT NULL,            -- ISO minute, e.g. 2026-07-31T06:41
+      attempts INTEGER NOT NULL DEFAULT 0,
+      failures INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (provider, task, bucket_minute));
+    -- retention: delete buckets older than 15 min on write; T2 reads the last 10.
 
-## 2. Trip rules (mapped to the §2 taxonomy — machine judgment only where unambiguous)
+Per provider·task, not global — vision can trip while text lanes stay up. Hot-path reads
+go through a ~10 s in-process cache; ALL state TRANSITIONS are authoritative atomic
+writes, never cache-mediated (§5), and every transition busts the cache.
+
+## 3. Failure classification (Peer majors #4/#5 folded in)
+
+`AIResult` gains `status` (HTTP int or None) and `error_kind`, set even on malformed
+bodies: `timeout | connection | http_5xx | rate_limited | unauthorized |
+credit_exhausted | unconfigured | invalid_request | unknown`.
+
+| Signal | Counts toward |
+|---|---|
+| timeout / connection / http_5xx | T1 (consecutive) and T2 (failure) |
+| rate_limited (429) | T2 only — one 429 is throttling, not an outage |
+| unauthorized / credit_exhausted (401/403/provider ban body) | T3, immediately |
+| invalid_request (400/422) | NEITHER — that is OUR bug; separate "deployment bug" alert, never a lane trip |
+| unconfigured (no key) | NOTHING. The lane shows DISABLED, is excluded from chains silently, never trips, never alerts. An unkeyed standby is configuration, not an outage |
+
+A success resets the T1 consecutive counter. A fallback provider's success NEVER credits
+the failed provider (probes are direct — §5). p95-latency degradation from the
+architecture's T2 is explicitly DEFERRED to P2c (needs a latency baseline first) — the
+doc discrepancy the Peer flagged, now a stated decision instead of an omission.
+
+## 4. Trip rules
 
 | Trigger | Rule | Action |
 |---|---|---|
-| T1 hard outage | 3 consecutive adapter failures (exception/timeout/5xx) within 120 s for one provider·task | trip → `tripped`, probe_after = now + 5 min, alert |
-| T2 degradation | over a rolling 10 min: ≥ 10 calls AND ≥ 20 % not-ok | trip (sustained window, never one blip), probe_after = now + 5 min, alert |
-| T3 account action | any 401/403, or the provider's explicit ban/credit-exhausted error body | trip IMMEDIATELY, probe_after = now + 60 min (it won't self-heal), LOUD alert |
-| T4a runaway cost | existing `_check_cost_ceiling` rails — unchanged, they already degrade | no breaker involvement; rails stay senior |
-| drill | `AI_DRILL_BAN` names this provider (§6) | treated exactly as T3, tagged `drill` |
+| T1 hard outage | 3 consecutive T1-class failures within 120 s per provider·task | trip → probe_after now+5 min, alert |
+| T2 degradation | last 10 min of ai_breaker_stats: attempts ≥ 10 AND failures/attempts ≥ 20 % | trip (sustained, never one blip), alert |
+| T3 account action | one T3-class signal | trip IMMEDIATELY → probe_after now+60 min, LOUD alert (won't self-heal) |
+| T4a cost | existing `_check_cost_ceiling` rails, unchanged | rails stay senior to all of this |
 
-Adapters must surface the STATUS CLASS for this to work: `AIResult` gains one field,
-`status` (int HTTP status or None on exception). One-line change per adapter; no call-site
-churn (dataclass default keeps the signature compatible).
+## 5. Mechanism — inside `complete()`, nowhere else (Peer blocker #3 folded in)
 
-## 3. Mechanism placement — inside `complete()`, nowhere else
+- Chain build: `[active] + others`, minus lanes whose state or `unconfigured` status
+  excludes them. Today all three lanes cover all four task tiers (verified: every row in
+  TASK_MODEL is complete and vision-capable), so dict order is a valid chain; the
+  capability-aware per-task chain table arrives with the full provider registry (P1++)
+  and this section is where it plugs in.
+- Every REAL call records attempts/failures into the stats buckets for the provider that
+  actually served or failed it — attribution is per adapter invocation, never per chain.
+- **Probes are direct**: `complete(..., provider=target, allow_fallback=False,
+  probe=True)` — no chain walk, so a probe's outcome is unambiguously the target's
+  (the Peer's blocker #3: a probe that silently fell back to Scaleway would mark
+  Anthropic healthy). Probe claiming is ATOMIC:
+  `UPDATE ai_breaker SET state='half_open', probe_after=<now+lease> WHERE provider=? AND
+  task=? AND state IN ('tripped','half_open') AND probe_after <= now` — rowcount 1 claims
+  the probe; anything else does not probe. Safe even if BEA ever runs multiple workers
+  (today it runs one systemd-owned uvicorn process; this survives that changing).
+- Probe success paths: T1/T2 lane → streak+1; when streak ≥ 3 AND ≥ 5 min since
+  first_probe_ok_at → state 'closed', traffic returns (auto-recover per §1). T3 lane →
+  state 'ready', dashboard READY TO RESTORE, routing still excluded until manual restore.
+- Deterministic zero-AI floors stay where they live today — at the call sites
+  (search-interpret degrades to the deterministic parser; draft-from-photo degrades to
+  the template draft; deliver-then-charge makes a no-result free). The seam returns an
+  honest failed AIResult when all lanes are down; each caller already degrades. Named
+  here explicitly because the Peer correctly noted the seam itself holds no fallback.
 
-The seam is the only chokepoint every call already crosses; the breaker lives there:
+## 6. Heartbeat (idle recovery detection)
 
-    def complete(...):
-        chain = [active] + [others]                  # today's order, unchanged
-        chain = [p for p in chain if breaker.allows(p, task)]   # skip tripped lanes
-        for prov in chain:
-            res = ADAPTERS[prov](...)
-            breaker.record(prov, task, res)          # ok -> reset window / close half-open
-            if res.ok: return res                    # fail -> count toward T1/T2/T3
-        return last_res                              # all lanes down -> honest failure
+One asyncio task in BEA (systemd owns the process — nothing on disk schedules itself):
+every 60 s, if any row is eligible (tripped/half_open, probe_after passed, no real
+traffic probed it), claim and send ONE probe — one per tick TOTAL, round-robin across
+eligible rows, so a bad night can never multiply cost. Text ping only (~$0.00002): it
+proves transport/auth/model health; true VISION quality remains the golden-set eval's
+job, not a heartbeat's. T3 rows probe hourly and alert LOUD once at trip, not hourly.
+Heartbeat spend is logged through `_log_ai_spend` like all spend.
 
-`breaker.allows()` returns True for `closed`, True-once for `half_open` when
-`probe_after` has passed (that single live call IS the probe — success closes the
-breaker and fires a "ready to restore" notice; failure re-trips and pushes
-`probe_after` out again), False for `tripped`. Zero extra spend: probes are real user
-calls, not synthetic ones, except the idle heartbeat below.
+## 7. Alerts, dashboard, data handling (Peer major #9 folded in)
 
-Deterministic floors stay senior: chains still end in the zero-AI fallback where one
-exists (search interpret, template drafts) — the platform limps, never dies.
+- Transport: the existing n8n webhook lane. Payload: provider, task, trip_reason,
+  SANITIZED error summary (≤200 chars, request-ids and echoed content stripped, never
+  prompt/image data), timestamp. Alerts: trip (LOUD for T3), recovered (T1/T2 auto),
+  ready-to-restore (T3), deployment-bug (invalid_request class).
+- `/flags.ai_provider` gains `breaker` per provider·task: state, trip_reason, tripped_at,
+  sanitized summary. Registry card: green ACTIVE/STANDBY · amber TRIPPED (reason) ·
+  blue READY TO RESTORE (button) · grey DISABLED (no key).
+- `POST /admin/ai-restore {provider, task?}` — same admin-token auth dependency as
+  `/admin/flags` (the existing state-changing admin pattern), and every restore is
+  written to the breaker row's history (who-when) for the audit trail.
+- Spend attribution: `_log_ai_spend` gains the provider column in the SAME change.
 
-## 4. Heartbeat (idle recovery detection) — smallest honest version
+## 8. Drill mode (Peer major #8 folded in: overlay, never state)
 
-A tripped provider with zero traffic would stay tripped forever without probes. One
-asyncio background task in BEA, started at boot: every 60 s, ONLY IF some breaker row is
-`tripped`/`half_open` AND its `probe_after` has passed AND no real call has probed it in
-the last window, send a 10-token ping through the seam for that provider·task
-(~$0.00002 on Luna/Haiku). It writes the breaker row like any call. No tripped rows =
-the task sleeps; the idle system spends nothing. (Nothing-on-disk-schedules-itself
-doctrine is respected: this rides the BEA process, which systemd already owns.)
+`AI_DRILL_BAN=<provider>[,provider]` is a NON-PERSISTENT ROUTING OVERLAY evaluated on
+every call: the named lanes are excluded from chains and probes exactly as if T3-tripped,
+but NO breaker rows are written, real health state is never mutated, and alerts route to
+a distinct "DRILL" notice (never the LOUD T3 alarm). The dashboard shows a DRILL badge.
+Unset the env (or restart without it) and the drill is over instantly — nothing to clean.
 
-## 5. Alerts + fail-back (manual, on the dashboard)
+**Sandbox independence protocol:** key into sandbox .env → OpenAI STANDBY on the card →
+Test → golden-set eval vs Luna/Terra → `AI_DRILL_BAN=anthropic` → run BIT journeys + one
+vision-draft + one paid flagship → PASS = every AI feature served with Claude absent →
+unset, log as the first monthly T0 drill. NOTE (Peer question #15, correct): REMOVING the
+Anthropic key instead tests the `unconfigured` path — also worth one pass, but it is a
+different test than a ban simulation; the runbook runs both and expects DISABLED (silent)
+for the first, DRILL badge for the second.
 
-- Alert transport: reuse the existing n8n spend-alert webhook (`_maybe_fire_spend_alert`
-  pattern). Payload: provider, task, trip_reason, last_error, timestamp. T3 marked LOUD
-  (n8n can escalate to email — David's existing flow).
-- `/flags.ai_provider` gains `breaker`: per provider·task state + trip_reason +
-  tripped_at + last_error. The Page-4 registry card shows amber TRIPPED with the reason,
-  and a **Restore** button when a half-open probe has reported ready.
-- `POST /admin/ai-restore {provider, task?}` (admin-token) closes the breaker manually.
-  There is NO automatic fail-back (flapping; §7 doctrine).
-- Spend attribution: `_log_ai_spend` gains the provider column in the SAME change (the
-  P1 leftover — after a swap, spend must be attributable per provider or the cost rails
-  report fiction).
+## 9. Build plan
 
-## 6. Drill mode — the sandbox ban test, first-class
+- **P2a (~1 session):** AIResult status+error_kind · both tables · breaker logic +
+  direct-probe mode in `complete()` · drill overlay · provider column in spend log.
+  Mandatory test matrix (adopted from the Peer's review): T2 rolling denominator and
+  bucket expiry · concurrent probe claim (atomicity) · probe with fallback disabled ·
+  attribution to the correct provider·task · unconfigured lane trips nothing · 401/403 +
+  credit-body classification · malformed/non-JSON error bodies retain status ·
+  T1/T2 auto-recover hysteresis (no flap) · T3 requires manual restore · restore's
+  routing effect · drill on/off leaves no state · all-lanes-down honest failure.
+- **P2b (short):** /flags breaker block · card lights + Restore · n8n alert wiring.
+- **P2c (short):** heartbeat task · latency baseline + p95 T2 clause · first live T0
+  drill · ledger entry LOCKED.
 
-`AI_DRILL_BAN=anthropic` (env, or comma list) makes the seam treat that provider as
-T3-tripped WITHOUT touching keys: adapters never called, breaker rows tagged
-`trip_reason='drill'`, dashboard shows a DRILL badge so a real outage is never confused
-with an exercise. Unset the env (or POST /admin/ai-restore) to end the drill.
+## 10. What NOT to do (inherited, binding)
 
-**Sandbox independence protocol (David's #4):**
-1. OPENAI_API_KEY lands in the sandbox .env (platform.openai.com credit — the $20
-   ChatGPT subscription is separate and contributes nothing to the API; $5–10 credit is
-   ample: a full golden set + drill on Luna costs cents).
-2. Dashboard: OpenAI shows STANDBY; press Test (live 1-call probe through the seam).
-3. Golden-set eval vs Luna/Terra (the standing gate — an available provider is not an
-   equivalent provider).
-4. Drill: `AI_DRILL_BAN=anthropic` (or simply remove the Anthropic key in the sandbox —
-   today's SEAM-GATE change means vision-draft and every other endpoint stays alive on
-   the surviving lanes).
-5. Run the BIT journeys + one real vision-draft + one paid-tier flagship. PASS = the app
-   served every AI feature with Claude absent. That is the independence proof.
-6. Restore, then log the drill as the first T0 entry (monthly cadence per §2).
-
-## 7. Build plan (each phase shippable, David lands each deploy)
-
-- **P2a (~1 session):** `AIResult.status` + breaker table + breaker logic in
-  `complete()` + `AI_DRILL_BAN` + provider column in spend log. Unit tests: transition
-  table (closed→tripped→half_open→closed; T3 immediate; drill). Ledger: new entry
-  asserting the breaker table exists and `complete()` consults it.
-- **P2b (short):** /flags breaker block + registry-card lights + Restore endpoint/button
-  + n8n alert wiring.
-- **P2c (short):** idle heartbeat task + first live drill (T0) + promote its ledger entry.
-
-## 8. What NOT to do (inherited, binding)
-
-No auto fail-back. No global binary switch. No Chinese-jurisdiction endpoints for user
-content (weights yes, endpoints no). No lane carries production traffic without a
-golden-set pass. Cost rails never fail open after a swap — degraded-provider spend counts.
+No global binary switch. No Chinese-jurisdiction endpoints for user content. No lane
+carries production traffic without a golden-set pass. Cost rails never fail open after a
+swap. And the one amendment: automatic fail-back is now ALLOWED for T1/T2 with the §1
+hysteresis — and remains FORBIDDEN for T3/bans, where David decides.

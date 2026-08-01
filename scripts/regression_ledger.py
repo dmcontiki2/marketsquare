@@ -628,6 +628,48 @@ def rg_no_raw_vendor_endpoints():
     return out
 
 
+@entry("RG-0018", "AI price truth is LIVE: the price card is fresh and covers every wired model",
+       LOCKED, scope="repo, ai_price_card.json vs ai_provider.py TASK_MODEL", fixed_on="2026-07-31",
+       ref="Live-Values Doctrine (David, 31 Jul 2026 — vendor doc Addendum 7). Root incident: the "
+           "18 Jul 'Mistral Medium ~40% of Haiku' claim drove the designated-swap-out decision, but "
+           "the Peer's 31 Jul cost review showed the live Scaleway page at ~1.65x Haiku — a July "
+           "decision was standing on a stale (or wrong-model) June price. Cure: ai_price_card.json "
+           "is the ONLY legal source of AI prices; every entry carries source + verified_at; this "
+           "check goes RED when the card is missing, unparseable, older than 45 days, or missing "
+           "any model wired in TASK_MODEL. scripts/price_truth.py renders the card as a cost-and-"
+           "capability value ranking; switching stays governed by Addendum 3.")
+def rg_price_card_live():
+    card_txt = repo_file("ai_price_card.json")
+    seam = repo_file("ai_provider.py")
+    if card_txt is None or seam is None:
+        if seam is not None and card_txt is None:
+            return [(FAIL, "ai_price_card.json is MISSING from the repo -- the Live-Values "
+                           "Doctrine requires it (see Addendum 7)")]
+        return [(INFO, "running outside the repo -- price-card check skipped")]
+    try:
+        card = json.loads(card_txt)
+        age = (datetime.date.today() - datetime.date.fromisoformat(card["verified_at"])).days
+    except Exception as ex:
+        return [(FAIL, f"ai_price_card.json unreadable ({ex!r}) -- an unparseable card is a stale card")]
+    out = []
+    if age > 45:
+        out.append((FAIL, f"price card verified {card['verified_at']} -- {age} days old (max 45). "
+                          "Re-verify against live vendor pages/console and bump verified_at; "
+                          "decisions must not run on remembered prices"))
+    priced = {m for p in card.get("providers", {}).values() for m in p.get("models", {})}
+    wired = set()
+    for prov in ("anthropic", "openai", "scaleway"):
+        m = re.search('"%s"\\s*:\\s*\\{(.*?)\\}' % prov, seam, re.S)
+        if m:
+            wired |= {v for _, v in re.findall(r'"(\w+)"\s*:\s*"([^"]+)"', m.group(1))}
+    for missing in sorted(wired - priced):
+        out.append((FAIL, f"wired model {missing!r} has no price-card entry -- it can be routed "
+                          "to but not costed, so any cost decision about it runs on memory"))
+    out.append((INFO, f"card {card.get('version','?')} verified {card.get('verified_at','?')} "
+                      f"({age}d) -- {len(priced)} priced / {len(wired)} wired"))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []
