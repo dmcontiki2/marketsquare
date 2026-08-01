@@ -35,6 +35,11 @@ s = re.sub(r'<script>(?:(?!</script>).)*?window\\._apv2B(?:(?!</script>).)*?</sc
 
 CARD = """
   <!-- AI PROVIDER REGISTRY v3 — funnel strip (order+types) · manual pin with decay -->
+  <script>/* EARLY SHIM (DASH-AIPROV-3): later cards (Infrastructure/services) read these v2-era
+  globals AT PARSE TIME — they must exist before those scripts run, not only at page bottom. */
+  window._apv2B=(location.protocol==='file:'?'https://trustsquare.co':'');
+  window._apv2Tok=function(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}};
+  window._apv2=window._apv2||{providers:[]};</script>
   <div class="ls-card" id="ai-prov-card-v3">
     <div class="ls-h">&#128268; AI Providers <span id="apv3-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
     <div id="apv3-pin" style="display:none;font-size:12px;margin:-2px 0 8px;padding:7px 10px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);"></div>

@@ -12266,6 +12266,53 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                     "status": "ok" if jt else "nokey",
                     "detail": "key set (presence only — no cheap live probe)" if jt else "JUSTTCG_API_KEY not set",
                     "key": _infra_mask(jt)})
+    # DATA & PARTNERS (David 1 Aug 2026): dark feeds are SHOWN so their wiring exists before
+    # enable-day — a partner you cannot see is a partner that fails silently when its flag
+    # flips. Presence-only: NEVER live-probe paid providers from a panel refresh. The env
+    # names below are the RESERVED names for when subscriptions start (currently HELD).
+    if service is None:
+        try:
+            _fc = database.get_db()
+            try:
+                _frow = _fc.execute("SELECT data_ops, data_places, data_flights, data_mapbox "
+                                    "FROM launch_switches WHERE id=1").fetchone()
+                _fr = dict(_frow) if _frow else {}
+            finally:
+                _fc.close()
+        except Exception:
+            _fr = {}
+        for _pid, _label, _kind, _envk, _flagk in (
+            ("op_photos", "Signed-operator photos", "showcase agreements — internal flag", None, "data_ops"),
+            ("places",    "Google Places",          "live ratings · hours · photos",       "GOOGLE_PLACES_API_KEY", "data_places"),
+            ("amadeus",   "Amadeus",                "flight fares — Expedition tier",      "AMADEUS_API_KEY",       "data_flights"),
+            ("mapbox",    "Mapbox",                 "maps upgrade (optional — OSM free)",  "MAPBOX_TOKEN",          "data_mapbox"),
+        ):
+            _on = bool(_fr.get(_flagk, 0))
+            _kv = os.getenv(_envk) if _envk else None
+            if not _on:
+                _st = "nokey"
+                _dt = "DARK by design — flag off; " + ("key staged for enable-day" if _kv else
+                       ("no external key needed" if not _envk else "key not provisioned (reserved: %s)" % _envk))
+            elif _envk and not _kv:
+                _st, _dt = "fail", "flag is LIVE but %s is not set — this feature WILL fail" % _envk
+            else:
+                _st, _dt = "ok", "flag LIVE" + (" · key set (presence only)" if _envk else "")
+            out.append({"id": _pid, "label": _label, "kind": _kind, "status": _st,
+                        "detail": _dt, "key": _infra_mask(_kv) if _envk else None})
+        # AI VENDOR KEYS (David 1 Aug 2026): the three inference lanes' keys are the most
+        # important keys the platform holds — they belong on the dead-key-turns-red surface.
+        # Presence only (masked tails); LIVE testing stays on the AI Providers card's Test
+        # button so a panel refresh never spends inference money.
+        for _pid, _label, _role, _kv in (
+            ("ai_anthropic", "Anthropic API key", "AI inference — ACTIVE lane", os.getenv("ANTHROPIC_API_KEY")),
+            ("ai_openai",    "OpenAI API key",    "AI inference — standby (GPT-5.6)", ai_provider.envkey("OPENAI_API_KEY")),
+            ("ai_scaleway",  "Scaleway API key",  "AI inference — EU standby", ai_provider.envkey("SCALEWAY_API_KEY", "FAILOVER_API_KEY")),
+        ):
+            out.append({"id": _pid, "label": _label, "kind": _role,
+                        "status": "ok" if _kv else "nokey",
+                        "detail": ("key set (presence only — live test via the AI Providers card)"
+                                    if _kv else "key not set — this lane cannot serve"),
+                        "key": _infra_mask(_kv)})
     return {"services": out, "checked_at": datetime.utcnow().isoformat() + "Z"}
 
 @app.post("/admin/ai-test")   # AITEST-ROUTE-1 (17 Jul, found live by David's demo): decorator was pasted onto demand_sweep; real tester was never registered
