@@ -10,46 +10,28 @@ f = sys.argv[1] if len(sys.argv) > 1 else "dashboard.html"
 s = open(f, encoding="utf-8").read()
 orig = len(s)
 
-if 'id="ai-prov-card-v3"' in s:
-    print("v3 registry card already present — no change"); sys.exit(0)
-# strip a v2 card + its JS if present (index-based, same technique as the v1 strip below)
-_c2 = s.find('id="ai-prov-card-v2"')
-if _c2 != -1:
-    _s2 = s.rfind('<div', 0, _c2)
-    _cm2 = s.rfind('<!-- AI PROVIDER REGISTRY v2', max(0, _s2-400), _s2)
-    if _cm2 != -1: _s2 = _cm2
-    _pos, _depth, _e2 = _s2, 0, -1
+# SELF-REPAIRING (1 Aug 2026, DASH-AIPROV-2): an existing v3 card/script is STRIPPED and
+# re-injected fresh — re-running the deploy always converges on a known-good card.
+def _strip_div_by_id(s, marker, comment_prefix):
+    _ci = s.find(marker)
+    if _ci == -1: return s
+    _start = s.rfind('<div', 0, _ci)
+    _cm = s.rfind(comment_prefix, max(0, _start-400), _start)
+    if _cm != -1: _start = _cm
+    _pos, _depth, _end = _start, 0, -1
     while True:
         _o = s.find('<div', _pos); _c = s.find('</div>', _pos)
         if _c == -1: break
         if _o != -1 and _o < _c: _depth += 1; _pos = _o + 4
         else:
             _depth -= 1; _pos = _c + 6
-            if _depth <= 0: _e2 = _pos; break
-    if _e2 != -1: s = s[:_s2] + s[_e2:]
-s = re.sub(r'<script>\s*/\* AI Provider Registry v2 .*?</script>\s*', '', s, flags=re.S)
-
-# ── strip v1 remnants (card div, any copy of the v1 JS, the aiProvLoad view hook) ──
-# card div: index-based excision (server copies vary in whitespace — regex proved brittle)
-_ci = s.find('id="ai-prov-card"')
-if _ci != -1:
-    _start = s.rfind('<div', 0, _ci)                      # opening <div ... id="ai-prov-card">
-    _cm = s.rfind('<!-- AI PROVIDER SWAP', max(0, _start-400), _start)
-    if _cm != -1: _start = _cm                            # include the leading comment if present
-    # depth-walk to the card's closing </div> — immune to card-variant drift (v1a/v1b)
-    _pos, _depth, _end = _start, 0, -1
-    while True:
-        _o = s.find('<div', _pos); _c = s.find('</div>', _pos)
-        if _c == -1: break
-        if _o != -1 and _o < _c:
-            _depth += 1; _pos = _o + 4
-        else:
-            _depth -= 1; _pos = _c + 6
             if _depth <= 0: _end = _pos; break
-    if _end != -1:
-        s = s[:_start] + s[_end:]
-s = re.sub(r'window\._aiProv\s*=\s*\{active:"anthropic".*?catch\(function\(e\)\{\s*if\(out\)\s*out\.textContent=.Test failed:.\s*\+\s*e;\s*\}\);\n\}\n?', "", s, flags=re.S)
-s = s.replace(" try{aiProvLoad();}catch(e){} ", " ")
+    while _start > 0 and s[_start-1] in ' \t\r\n': _start -= 1
+    return s[:_start] + s[_end:] if _end != -1 else s
+s = _strip_div_by_id(s, 'id="ai-prov-card-v3"', '<!-- AI PROVIDER REGISTRY v3')
+s = re.sub(r'\s*<script>(?:(?!</script>).)*?window\._apv3B(?:(?!</script>).)*?</script>\s*', '', s, flags=re.S)
+s = _strip_div_by_id(s, 'id="ai-prov-card-v2"', '<!-- AI PROVIDER REGISTRY v2')
+s = re.sub(r'<script>(?:(?!</script>).)*?window\\._apv2B(?:(?!</script>).)*?</script>\\s*', '', s, flags=re.S)
 
 CARD = """
   <!-- AI PROVIDER REGISTRY v3 — funnel strip (order+types) · manual pin with decay -->
@@ -64,12 +46,15 @@ CARD = """
   </div>
 """
 
-JS = """
+JS = r"""
 <script>
 /* AI Provider Registry v3 — funnel strip + manual pin with decay (1 Aug 2026) */
 window._apv3B = (location.protocol==='file:' ? 'https://trustsquare.co' : '');
 window._apv3Tok = function(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } };
 window._apv3 = {active:'anthropic', standing:'anthropic', override:null, ttl:24, providers:[], funnel:null};
+/* Back-compat shims (DASH-AIPROV-2): the Infrastructure/services card was built on v2's
+   globals — keep them alive so removing the v2 script never strands another card again. */
+window._apv2B = window._apv3B; window._apv2Tok = window._apv3Tok; window._apv2 = window._apv3;
 window.apv3Render = function(){
   var d=window._apv3, box=document.getElementById('apv3-rows'); if(!box) return;
   var pin=document.getElementById('apv3-pin');
@@ -113,6 +98,7 @@ window.apv3Load = function(){
   fetch(window._apv3B+'/flags').then(function(r){return r.json();}).then(function(f){
     if(f&&f.ai_provider){ var a=f.ai_provider;
       window._apv3={active:a.active, standing:a.standing||a.active, override:a.override||null, ttl:a.override_ttl_hours||24, providers:(a.providers||[]), funnel:a.funnel||null};
+      window._apv2=window._apv3;   /* keep the shim's provider list fresh */
       window.apv3Render(); }
   }).catch(function(){});
 };

@@ -679,6 +679,10 @@ scp "%PROJECT%\ai_provider.py" %SERVER%:%REMOTE%/ai_provider.py
 if errorlevel 1 (
     echo  ERROR: SCP failed for ai_provider.py ^(AI provider seam^). Check SSH connection.
 )
+scp "%PROJECT%\ai_funnel_snapshot.json" %SERVER%:%REMOTE%/ai_funnel_snapshot.json
+if errorlevel 1 (
+    echo  WARN: SCP failed for ai_funnel_snapshot.json ^(+1 funnel strip stays empty until shipped^).
+)
 if %errorlevel% neq 0 (
     echo  ERROR: SCP failed for ai_service_tiers.py. Check SSH connection.
     pause
