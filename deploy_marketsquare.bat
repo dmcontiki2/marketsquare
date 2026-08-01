@@ -229,10 +229,13 @@ echo.
 :: ── Step 3c-map: Deploy interactive reserve map (-> /static/) ──
 :: ADV-MAP-1 (24 Jul 2026, David): self-contained Leaflet map embedded in the two
 :: Adventures super-advert listing pages via iframe.
-echo  [3c-map] Deploying adventures reserve map...
-scp "%PROJECT%\adventures_reserve_map.html" %SERVER%:%REMOTE%/static/adventures_reserve_map.html
+:: DEPLOY-SYNC-2 (1 Aug 2026, David): ONE hash-gated sync now covers ALL adventure maps
+:: (reserve + every per-country file, ~20MB) — replaces the former individual scp
+:: sections 3c-us/uk/au/na/bw/mz/c2c/de below, which are removed.
+echo  [3c-maps] Syncing ALL adventure maps (hash-gated)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PROJECT%" -Filter "adventures_*map.html" -RemoteDir %REMOTE%/static -Server %SERVER%
 if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_reserve_map.html.
+    echo  ERROR: adventure-map sync failed.
     pause
     exit /b 1
 )
@@ -261,52 +264,11 @@ echo.
 :: CityLauncher\emailer\assets). Without this step the email images 404.
 echo  [3c-phone] Deploying email phone-card images...
 set PHONESRC=C:\Users\David\Projects\CityLauncher\emailer\assets
-set PHONEFAIL=0
-for %%f in ("%PHONESRC%\phone_*.jpg") do (
-    scp "%%f" %SERVER%:%REMOTE%/static/
-    if errorlevel 1 set PHONEFAIL=1
-)
-if "%PHONEFAIL%"=="1" (
-    echo  ERROR: one or more phone-card images failed to upload.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
-:: ── Step 3c-us: Deploy adventures US map (-> /static/) ──
-:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
-:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
-echo  [3c-us] Deploying adventures us map...
-scp "%PROJECT%\adventures_us_map.html" %SERVER%:%REMOTE%/static/adventures_us_map.html
+:: DEPLOY-SYNC-2 (1 Aug 2026, David): hash-gated via the same ASSET-SYNC engine as the
+:: other synced steps — remote md5s read once, only new/changed cards upload.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PROJECT%\scripts\sync_assets.ps1" -LocalDir "%PHONESRC%" -Filter "phone_*.jpg" -RemoteDir %REMOTE%/static -Server %SERVER%
 if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_us_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
-:: ── Step 3c-uk: Deploy adventures UK map (-> /static/) ──
-:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
-:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
-echo  [3c-uk] Deploying adventures uk map...
-scp "%PROJECT%\adventures_uk_map.html" %SERVER%:%REMOTE%/static/adventures_uk_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_uk_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
-:: ── Step 3c-au: Deploy adventures AU map (-> /static/) ──
-:: PER-COUNTRY-MAP (25 Jul 2026, David): each country's super-adventure tour
-:: gets its own interactive map (wired data-driven in ms.js ADV_COUNTRY_MAP).
-echo  [3c-au] Deploying adventures au map...
-scp "%PROJECT%\adventures_au_map.html" %SERVER%:%REMOTE%/static/adventures_au_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_au_map.html.
+    echo  ERROR: phone-card image sync failed.
     pause
     exit /b 1
 )
@@ -315,64 +277,12 @@ echo.
 
 :: -- Step 3c-na: Deploy adventures Namibia map (-> /static/) --
 :: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
-echo  [3c-na] Deploying adventures na map...
-scp "%PROJECT%\adventures_na_map.html" %SERVER%:%REMOTE%/static/adventures_na_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_na_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
 :: -- Step 3c-bw: Deploy adventures Botswana map (-> /static/) --
 :: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
-echo  [3c-bw] Deploying adventures bw map...
-scp "%PROJECT%\adventures_bw_map.html" %SERVER%:%REMOTE%/static/adventures_bw_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_bw_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
 :: -- Step 3c-mz: Deploy adventures Mozambique map (-> /static/) --
 :: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
-echo  [3c-mz] Deploying adventures mz map...
-scp "%PROJECT%\adventures_mz_map.html" %SERVER%:%REMOTE%/static/adventures_mz_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_mz_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
 :: -- Step 3c-c2c: Deploy adventures Cape to Cairo map (-> /static/) --
 :: PER-COUNTRY-MAP (26 Jul 2026): added with the four new journey maps.
-echo  [3c-c2c] Deploying adventures c2c map...
-scp "%PROJECT%\adventures_c2c_map.html" %SERVER%:%REMOTE%/static/adventures_c2c_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_c2c_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
-
-:: ── Step 3c-de: Deploy adventures DE map (Bavaria journey -> /static/) ──
-:: GERMANY (26 Jul 2026, David): the beloved 5-day Bavaria trek map, wired to the
-:: German super-adventure via ms.js ADV_COUNTRY_MAP (DE).
-echo  [3c-de] Deploying adventures de map...
-scp "%PROJECT%\adventures_de_map.html" %SERVER%:%REMOTE%/static/adventures_de_map.html
-if %errorlevel% neq 0 (
-    echo  ERROR: SCP failed for adventures_de_map.html.
-    pause
-    exit /b 1
-)
-echo  Done.
-echo.
 :: ── Step 3d: Deploy SUPER exemplar photos (assets/super -> /static/super/) ──
 :: JNR-FIX-4 (22 Jul 2026): exemplar photos previously uploaded by hand and drifted.
 :: Permanent step so listing photo sets always ship with the site.

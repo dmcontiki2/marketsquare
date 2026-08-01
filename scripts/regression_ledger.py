@@ -735,6 +735,37 @@ def rg_funnel_snapshot_current():
     return [(INFO, f"snapshot current (card {cv})")]
 
 
+@entry("RG-0021", "Bulk assets deploy hash-gated; release-critical files stay UNCONDITIONAL",
+       LOCKED, scope="repo, deploy_marketsquare.bat asset-vs-code ship discipline", fixed_on="2026-08-01",
+       ref="DEPLOY-SYNC-2 (David, 1 Aug 2026): maps (~20MB) and phone-card images re-uploaded "
+           "on every deploy although unchanged — the last bulk sections still on bare scp after "
+           "the 22 Jul ASSET-SYNC work. Fixed: both now ride scripts/sync_assets.ps1 (remote md5s "
+           "read once, only changed files upload) — ten sync call-sites total. The INVERSE "
+           "invariant matters just as much: ms.js, bea_main.py and marketsquare.html must remain "
+           "UNCONDITIONAL bare-scp ships — hash-gating the release carriers risks a silent "
+           "non-deploy, which is worse than a slow one. This asserts both directions.")
+def rg_deploy_sync_discipline():
+    bat = repo_file("deploy_marketsquare.bat")
+    if bat is None:
+        return [(INFO, "running outside the repo -- deploy-sync check skipped")]
+    out = []
+    if repo_file("scripts/sync_assets.ps1") is None:
+        out.append((FAIL, "scripts/sync_assets.ps1 missing -- every synced section breaks"))
+    if 'scp "%PROJECT%\\adventures_' in bat:
+        out.append((FAIL, "a bare per-map scp is back in deploy_marketsquare.bat -- maps must ship "
+                          "via the hash-gated sync (DEPLOY-SYNC-2)"))
+    if 'for %%f in ("%PHONESRC%' in bat:
+        out.append((FAIL, "the phone-card bare-scp loop is back -- phone_*.jpg must ship via sync"))
+    for must, label in (('scp "%PROJECT%\\ms.js"', "ms.js"),
+                        ('scp "%PROJECT%\\bea_main.py"', "bea_main.py"),
+                        ('scp "%PROJECT%\\marketsquare.html"', "marketsquare.html")):
+        if must not in bat:
+            out.append((FAIL, f"{label} is no longer an UNCONDITIONAL ship -- gating a release "
+                              "carrier risks a silent non-deploy"))
+    out.append((INFO, "%d sync_assets call-sites in the deploy" % bat.count("sync_assets.ps1")))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []
