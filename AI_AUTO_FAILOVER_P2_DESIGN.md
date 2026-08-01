@@ -1,4 +1,4 @@
-# AI Auto-Failover — P2 Implementation Design v1.1 (breaker · heartbeat · drill)
+# AI Auto-Failover — P2 Implementation Design v1.2 (breaker · heartbeat · drill)
 
 *31 Jul 2026 · v1.1 — revised same day after the first independent Peer review
 (Records/PEER_REVIEW_2026-07-31-0608.md, GPT-5.6-terra: 3 BLOCKER, 6 MAJOR, 3 MINOR,
@@ -180,3 +180,38 @@ No global binary switch. No Chinese-jurisdiction endpoints for user content. No 
 carries production traffic without a golden-set pass. Cost rails never fail open after a
 swap. And the one amendment: automatic fail-back is now ALLOWED for T1/T2 with the §1
 hysteresis — and remains FORBIDDEN for T3/bans, where David decides.
+
+
+## v1.2 — P2a BUILT (1 Aug 2026): full-sweep findings + Correction 2 folded in, code shipped
+
+Peer full-sweep findings resolved in the implementation (ai_breaker.py + ai_provider.py + bea_main.py):
+- **T1 consecutive state** (blocker): ai_breaker gains consec_fails + first_fail_at — "3
+  consecutive T1-class failures within 120 s" is now computable; a success resets the counter.
+- **Adapter classification** (major #4): AIResult gains status + error_kind (timeout/connection/
+  http_5xx/rate_limited/unauthorized/credit_exhausted/unconfigured/invalid_request/unknown),
+  set even on malformed bodies; 401/403 bodies mentioning credit/billing/quota → credit_exhausted.
+- **unconfigured is configuration, not outage** (major #5): never trips, never alerts, never
+  pollutes T2 stats; lane shows DISABLED.
+- **_anthropic envkey consistency** (full-sweep): all three adapters now use envkey().
+- **Atomic probe claim** (major #6): single conditional UPDATE with a 90 s lease — True exactly
+  once under any concurrency; probes are direct (allow_fallback=False), so attribution is exact
+  (blocker #3).
+- **Recovery doctrine implemented** (blocker #2 + David's ruling): dropouts (T1/T2) auto-close
+  after 3 probe successes spanning ≥5 min; bans (T3) go READY and wait for POST /admin/ai-restore.
+- **Drill = stateless overlay** (major #8): AI_DRILL_BAN evaluated per call, banned lanes write
+  no rows, distinct (non-LOUD) alert path; unset = over.
+- **Correction 2 rails, seam part**: at most ONE attempt per configured lane (≤3 total), no
+  retries, output hard-capped per call — worst-case attempts/latency computable pre-dispatch
+  (≤ 3 × timeout). The CURRENCY budget reservation (pre-dispatch $ ceiling) lands with P2b,
+  where the price card is available server-side.
+- **Fail-open**: breaker unattached or faulting = yesterday's exact behavior; standalone scripts
+  (peer review, golden set) never touch it.
+- **Tests**: the 12-case mandatory matrix (test_ai_breaker.py) — 12/12 green, incl. hysteresis
+  no-flap, T3-manual, probe no-fallback, drill statelessness, all-lanes-down.
+- **Drill executed** (seam-level, real keys, 1 Aug): AI_DRILL_BAN=anthropic → all four tiers
+  served by OpenAI (Luna/Terra), banned lane wrote zero state — Records/DRILL_T0_SEAM_2026-08-01.
+  The FULL live-app T0 drill runs post-deploy per §8's protocol.
+- **Still P2b/P2c**: dashboard breaker lights + Restore button (the /flags 'breaker' block is
+  already served), n8n wiring done via N8N_WEBHOOK_AI_ALERT, heartbeat (MUST use
+  asyncio.to_thread around the sync seam — full-sweep major), latency baseline + p95 T2 clause,
+  currency budget reservation.

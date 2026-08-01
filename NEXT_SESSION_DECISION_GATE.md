@@ -14,3 +14,4 @@ STILL OPEN:
 - Sandbox ban drill after key + golden set.
 - Monthly: /housekeep runs price_truth.py --check (RG-0018/0019 already enforce via ledger).
 UPDATE 1 Aug (later): +1 dashboard ops layer BUILT (funnel strip order+types, manual pin w/ 24h decay, RG-0020) — needs DEPLOY (bea_main.py + apply_ai_provider_card.py run on the server dashboard + ai_funnel_snapshot.json shipped). TTL review ~1 Nov 2026 (1h candidate).
+UPDATE 1 Aug (evening): P2a BUILT (design v1.2) — breaker + classification + probes + drill overlay + /admin/ai-restore + 12/12 tests + RG-0022; seam-level T0 drill PASSED (all tiers served, Claude absent). Remaining: DEPLOY P2a; full live T0 drill post-deploy; P2b (card breaker lights + Restore btn + currency budget), P2c (heartbeat async-safe, p95); CM catch-up.

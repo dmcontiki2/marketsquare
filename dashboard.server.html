@@ -577,6 +577,13 @@
     <div id="apv3-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
 
+  <!-- AI PROVIDER REGISTRY v3 — funnel strip (order+types) · manual pin with decay -->
+  <script>/* EARLY SHIM (DASH-AIPROV-3): later cards (Infrastructure/services) read these v2-era
+  globals AT PARSE TIME — they must exist before those scripts run, not only at page bottom. */
+  window._apv2B=(location.protocol==='file:'?'https://trustsquare.co':'');
+  window._apv2Tok=function(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}};
+  window._apv2=window._apv2||{providers:[]};</script>
+
 
 
   

@@ -766,6 +766,34 @@ def rg_deploy_sync_discipline():
     return out
 
 
+@entry("RG-0022", "The circuit breaker exists, the seam consults it, and its test matrix is present",
+       LOCKED, scope="repo, ai_breaker.py + ai_provider.py + bea_main.py + test matrix", fixed_on="2026-08-01",
+       ref="P2a (design v1.2, 1 Aug 2026). Before this, failover was a naive per-call any-of with "
+           "no memory: a dead provider re-tried on every request, no blip-vs-ban distinction, no "
+           "alerts, no drill. Asserts the breaker module exists, bea attaches it at boot, "
+           "complete() consults it (and carries the direct-probe mode that keeps probe attribution "
+           "honest), and the 12-case mandatory test matrix stays in the repo. Recovery doctrine "
+           "under test: dropouts auto-recover with hysteresis; bans wait for manual restore.")
+def rg_breaker_wired():
+    out = []
+    if repo_file("ai_breaker.py") is None:
+        if repo_file("ai_provider.py") is None:
+            return [(INFO, "running outside the repo -- breaker check skipped")]
+        out.append((FAIL, "ai_breaker.py missing -- the failover has no memory again"))
+    bea = repo_file("bea_main.py"); seam = repo_file("ai_provider.py")
+    if bea is not None and "import ai_breaker" not in bea:
+        out.append((FAIL, "bea_main.py no longer attaches ai_breaker at boot"))
+    if seam is not None:
+        if "ai_breaker" not in seam:
+            out.append((FAIL, "ai_provider.complete() no longer consults the breaker"))
+        if "allow_fallback" not in seam or "probe=" not in seam:
+            out.append((FAIL, "the direct no-fallback probe mode is gone from the seam -- probe "
+                              "attribution is dishonest again (Peer blocker #3 class)"))
+    if repo_file("test_ai_breaker.py") is None:
+        out.append((FAIL, "test_ai_breaker.py missing -- the 12-case mandatory matrix must live in the repo"))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []

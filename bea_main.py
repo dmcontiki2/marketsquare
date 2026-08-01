@@ -66,6 +66,22 @@ app.add_middleware(
 )
 
 database.init_db()
+# ── P2a (1 Aug 2026): circuit breaker attaches to the DB at boot. Fail-open by design —
+# an attach failure leaves the seam exactly as it was yesterday (naive any-of fallback).
+try:
+    import ai_breaker as _ai_brk
+    def _brk_alert(payload):
+        try:
+            _log.warning("AI-BREAKER %s: %s", payload.get("event"), payload)
+            _hook = os.getenv("N8N_WEBHOOK_AI_ALERT")
+            if _hook:
+                import httpx as _hx
+                with _hx.Client(timeout=5) as _c: _c.post(_hook, json={"source": "ai_breaker", **payload})
+        except Exception:
+            pass
+    _ai_brk.attach(database.get_db, alert=_brk_alert)
+except Exception as _brk_e:
+    import logging as _lg; _lg.getLogger("bea").warning("ai_breaker attach failed (fail-open): %r", _brk_e)
 
 
 # CityLauncher scrapes AGENCY vocabulary ("Estate Agents", "Car Dealers", ...); the app
@@ -12315,6 +12331,22 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                         "key": _infra_mask(_kv)})
     return {"services": out, "checked_at": datetime.utcnow().isoformat() + "Z"}
 
+@app.post("/admin/ai-restore")
+def admin_ai_restore(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
+    """P2a: MANUAL restore — the ONLY path back to traffic for a banned (T3) lane
+    (David's ruling 31 Jul: dropouts auto-recover, bans wait for the operator)."""
+    _p = ((payload or {}).get("provider") or "").strip()
+    _t = ((payload or {}).get("task") or "").strip() or None
+    if _p not in ai_provider.ADAPTERS:
+        raise HTTPException(status_code=400, detail="unknown provider")
+    try:
+        import ai_breaker as _brk
+        n = _brk.restore(_p, _t, who="dashboard-admin")
+        _log.warning("AI-BREAKER manual restore: %s/%s (%d rows)", _p, _t or "ALL", n)
+        return {"restored": n, "provider": _p, "task": _t or "ALL"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="restore failed: " + str(e)[:120]) from e
+
 @app.post("/admin/ai-test")   # AITEST-ROUTE-1 (17 Jul, found live by David's demo): decorator was pasted onto demand_sweep; real tester was never registered
 def admin_ai_test(payload: dict = Body(default=None), _admin=Depends(_require_admin)):
     """David-only: run a tiny prompt through the ACTIVE provider via the ai_provider seam
@@ -12383,6 +12415,8 @@ def _flags_payload(d):
                           if _TS_AI_CACHE.get("override") else None),
             "override_ttl_hours": AI_OVERRIDE_TTL_HOURS,
             "funnel": _ts_funnel_snapshot(),
+            "breaker": (lambda: __import__("ai_breaker").snapshot())(),
+            "drill": sorted(__import__("ai_breaker").drill_banned()) or None,
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
             "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(ai_provider.envkey("OPENAI_API_KEY")),
                           "scaleway": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY"))},

@@ -1,0 +1,33 @@
+{
+ "drill": "AI_DRILL_BAN=anthropic, seam-level, real keys",
+ "date": "2026-08-01",
+ "results": {
+  "haiku": {
+   "ok": true,
+   "served_by": "openai",
+   "model": "gpt-5.6-luna",
+   "text": "Well-Worn Brown Leather Couch With Plenty of Life Left"
+  },
+  "triage": {
+   "ok": true,
+   "served_by": "openai",
+   "model": "gpt-5.6-luna",
+   "text": "billing"
+  },
+  "sonnet": {
+   "ok": true,
+   "served_by": "openai",
+   "model": "gpt-5.6-terra",
+   "text": "{\"fair\":false,\"estimate\":7200}"
+  },
+  "vision": {
+   "ok": true,
+   "served_by": "openai",
+   "model": "gpt-5.6-luna",
+   "text": "vision lane alive"
+  }
+ },
+ "breaker_rows": 4,
+ "verdict": "PASS \u2014 every tier served with Claude absent; banned lane wrote no state",
+ "breaker_rows_note": "4 rows are the SERVING lane's (openai) success bookkeeping \u2014 correct and desired. The banned lane (anthropic) wrote ZERO rows; statelessness of the drill overlay is proven by test_ai_breaker.py test_09."
+}

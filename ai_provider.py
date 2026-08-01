@@ -64,11 +64,27 @@ TASK_MODEL = {
 @dataclass
 class AIResult:
     text: str; in_tokens: int|None; out_tokens: int|None; provider: str; model: str; ok: bool=True
+    # P2a (1 Aug 2026): failure CLASSIFICATION for the breaker — Peer major #4: a bare
+    # ok-flag cannot distinguish ban from blip from our-own-bug. Defaults keep every
+    # existing constructor call valid.
+    status: int|None = None      # HTTP status, None on exception/no-call
+    error_kind: str = ""         # timeout|connection|http_5xx|rate_limited|unauthorized|
+                                 # credit_exhausted|unconfigured|invalid_request|unknown|"" (ok)
+
+def _classify(status, body_text=""):
+    """Map an HTTP status (+error body) to the breaker's error_kind taxonomy."""
+    if status in (401, 403):
+        t = (body_text or "").lower()
+        return "credit_exhausted" if any(w in t for w in ("credit", "billing", "quota", "insufficient")) else "unauthorized"
+    if status == 429: return "rate_limited"
+    if status in (400, 422): return "invalid_request"
+    if status and status >= 500: return "http_5xx"
+    return "unknown"
 
 def _anthropic(messages, model, max_tokens, system, timeout=30):
     import httpx
-    key=os.getenv("ANTHROPIC_API_KEY")
-    if not key: return AIResult("",None,None,"anthropic",model,ok=False)
+    key=envkey("ANTHROPIC_API_KEY")   # ENVKEY-1 class, applied here too (Peer full-sweep, 31 Jul)
+    if not key: return AIResult("",None,None,"anthropic",model,ok=False,error_kind="unconfigured")
     body={"model":model,"max_tokens":max_tokens,"messages":messages}
     if system: body["system"]=system
     # FAILOVER-PARITY-1 (18 Jul 2026): try/except + status/text ok-check, same rule as _scaleway.
@@ -82,10 +98,14 @@ def _anthropic(messages, model, max_tokens, system, timeout=30):
         j=r.json()
         text=(j.get("content",[{}])[0].get("text","") or "")
         u=j.get("usage",{}) or {}
+        _ok = (r.status_code==200 and bool(text))
         return AIResult(text, u.get("input_tokens"), u.get("output_tokens"), "anthropic", model,
-                        ok=(r.status_code==200 and bool(text)))
+                        ok=_ok, status=r.status_code,
+                        error_kind="" if _ok else _classify(r.status_code, r.text[:300]))
+    except httpx.TimeoutException:
+        return AIResult("",None,None,"anthropic",model,ok=False,error_kind="timeout")
     except Exception:
-        return AIResult("",None,None,"anthropic",model,ok=False)
+        return AIResult("",None,None,"anthropic",model,ok=False,error_kind="connection")
 
 def _to_openai_messages(messages, system):
     """Translate the app's Anthropic-style content-block messages -> OpenAI chat format.
@@ -116,7 +136,7 @@ def _openai(messages, model, max_tokens, system, timeout=30):
     messages to OpenAI format, calls the API, parses text + token usage."""
     import httpx
     key=envkey("OPENAI_API_KEY")   # ENVKEY-1 class: systemd unit does not export the server .env
-    if not key: return AIResult("",None,None,"openai",model,ok=False)
+    if not key: return AIResult("",None,None,"openai",model,ok=False,error_kind="unconfigured")
     # gpt-5*/o* chat/completions 400-reject max_tokens ("Unsupported parameter") — they take max_completion_tokens.
     _tokkey = "max_completion_tokens" if model.startswith(("gpt-5","o")) else "max_tokens"
     body={"model":model,_tokkey:max_tokens,"messages":_to_openai_messages(messages,system)}
@@ -135,10 +155,14 @@ def _openai(messages, model, max_tokens, system, timeout=30):
         u=j.get("usage",{}) or {}
         # FAILOVER-PARITY-1 rule (18 Jul), applied to _openai 31 Jul: 200-with-empty-text must degrade
         # to the fallback chain, not report ok — same rule as _anthropic/_scaleway.
+        _ok = (r.status_code==200 and bool(text))
         return AIResult(text, u.get("prompt_tokens"), u.get("completion_tokens"), "openai", model,
-                        ok=(r.status_code==200 and bool(text)))
+                        ok=_ok, status=r.status_code,
+                        error_kind="" if _ok else _classify(r.status_code, r.text[:300]))
+    except httpx.TimeoutException:
+        return AIResult("",None,None,"openai",model,ok=False,error_kind="timeout")
     except Exception:
-        return AIResult("",None,None,"openai",model,ok=False)
+        return AIResult("",None,None,"openai",model,ok=False,error_kind="connection")
 
 def _scaleway(messages, model, max_tokens, system, timeout=30):
     """Scaleway EU adapter (P1) — OpenAI-compatible chat/completions at api.scaleway.ai.
@@ -147,7 +171,7 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
     fall back to that field before declaring the reply empty."""
     import httpx
     key=envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY")
-    if not key: return AIResult("",None,None,"scaleway",model,ok=False)
+    if not key: return AIResult("",None,None,"scaleway",model,ok=False,error_kind="unconfigured")
     body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
     try:
         with httpx.Client(timeout=timeout) as c:
@@ -160,25 +184,53 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
         if not text:  # Qwen reasoning models put the text here when the thinking budget runs out
             text=(msg.get("reasoning") or "")
         u=j.get("usage",{}) or {}
+        _ok = (r.status_code==200 and bool(text))
         return AIResult(text, u.get("prompt_tokens"), u.get("completion_tokens"), "scaleway", model,
-                        ok=(r.status_code==200 and bool(text)))
+                        ok=_ok, status=r.status_code,
+                        error_kind="" if _ok else _classify(r.status_code, r.text[:300]))
+    except httpx.TimeoutException:
+        return AIResult("",None,None,"scaleway",model,ok=False,error_kind="timeout")
     except Exception:
-        return AIResult("",None,None,"scaleway",model,ok=False)
+        return AIResult("",None,None,"scaleway",model,ok=False,error_kind="connection")
 
 # Fallback chain order = dict order: anthropic -> openai -> scaleway
 ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway}
 
-def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None, timeout=30):
+def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None,
+             timeout=30, allow_fallback=True, probe=False):
+    """P2a (1 Aug 2026): breaker-aware. Chain = [requested/active] + others, minus lanes the
+    breaker or the AI_DRILL_BAN overlay excludes. Attribution is recorded PER ADAPTER
+    INVOCATION (Peer cost review). probe=True is the direct no-fallback trial mode —
+    a probe's outcome is unambiguously the target's (Peer blocker #3). RAILS (Correction 2,
+    seam part): at most one attempt per configured lane, no retries, output hard-capped by
+    max_tokens — worst-case = sum of per-lane caps, computable before dispatch. Breaker
+    unattached (standalone scripts) = exactly yesterday's behavior."""
+    try:
+        import ai_breaker as _brk
+    except Exception:
+        _brk = None
     prov = provider or AI_ACTIVE
-    model = TASK_MODEL.get(prov,{}).get(task) or TASK_MODEL["anthropic"]["haiku"]
-    fn = ADAPTERS.get(prov)
-    if not fn: return AIResult("",None,None,prov,model,ok=False)
-    res = fn(messages, model, max_tokens, system, timeout)
-    # any-of fallback: if the active provider is unavailable, try the others in order (feeds-style)
-    if not res.ok:
-        for alt in [p for p in ADAPTERS if p!=prov]:
-            m=TASK_MODEL.get(alt,{}).get(task)
-            if not m: continue
-            r2=ADAPTERS[alt](messages,m,max_tokens,system,timeout)
-            if r2.ok: return r2
+    if probe:
+        allow_fallback = False
+    def _allowed(p):
+        if _brk is None: return True
+        if probe and p == prov:
+            return p not in _brk.drill_banned()   # probes bypass state gates, never the drill
+        return _brk.allows(p, task)
+    chain = [prov] + ([p for p in ADAPTERS if p != prov] if allow_fallback else [])
+    chain = [p for p in chain if ADAPTERS.get(p) and TASK_MODEL.get(p, {}).get(task)]
+    open_chain = [p for p in chain if _allowed(p)]
+    if not open_chain:
+        return AIResult("",None,None,prov,TASK_MODEL.get(prov,{}).get(task,""),
+                        ok=False, error_kind="unconfigured" if not chain else "unknown")
+    res = None
+    for p in open_chain:
+        r = ADAPTERS[p](messages, TASK_MODEL[p][task], max_tokens, system, timeout)
+        if _brk is not None:
+            _brk.record(p, task, r.ok, r.error_kind or ("" if r.ok else "unknown"),
+                        (r.error_kind or "")[:60], probe=probe)
+        if r.ok:
+            return r
+        if res is None:
+            res = r   # report the FIRST failure (the requested lane's) when all lanes fail
     return res
