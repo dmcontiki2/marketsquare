@@ -306,6 +306,10 @@
   function hideGate(){
     gate.style.display = 'none';
     _tempPin = null;
+    /* INFRA-PANEL-2 (1 Aug 2026): announce successful admin auth so token-gated
+       cards (Infrastructure checks, etc.) reload themselves instead of sitting
+       on their "Loading…" placeholder until the next 5-minute poll. */
+    try{ document.dispatchEvent(new Event('ms-admin-auth')); }catch(e){}
   }
   function showLoginError(msg){
     err.textContent = msg; err.style.display = 'block';
@@ -1784,10 +1788,32 @@ window.infraRender = function(d){
       +'</div>';
   }).join('')||'<div style="color:var(--muted);font-size:12px">No checks returned.</div>';
 };
+/* INFRA-PANEL-2 (1 Aug 2026): the checks must load or fail LOUDLY — never sit on
+   "Loading checks…". A 401 (no PIN yet / session expired) renders this paused state,
+   and the gate's ms-admin-auth event re-runs the load the moment sign-in succeeds. */
+window.infraAuthWait = function(){
+  var box=document.getElementById('infra-rows');
+  if(box) box.innerHTML='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;font-size:12px;">'
+    +'<span style="width:9px;height:9px;border-radius:50%;background:#eab308;flex:0 0 auto;"></span>'
+    +'<span style="flex:1;color:#eab308;font-weight:600;">Checks paused — admin session signed out.</span>'
+    +'<span style="color:var(--muted);font-size:11px;">resumes automatically after PIN sign-in</span>'
+    +'<button type="button" onclick="infraLoad()" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit">Retry</button>'
+    +'</div>';
+  var out=document.getElementById('infra-out'); if(out) out.textContent='';
+};
+window.infraFailLoud = function(msg){
+  var box=document.getElementById('infra-rows');
+  if(box && !window._infraD) box.innerHTML='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;font-size:12px;">'
+    +'<span style="width:9px;height:9px;border-radius:50%;background:#ef4444;flex:0 0 auto;"></span>'
+    +'<span style="flex:1;color:#ef4444;font-weight:600;">Checks could not load.</span>'
+    +'<button type="button" onclick="infraLoad()" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit">Retry</button>'
+    +'</div>';
+  var out=document.getElementById('infra-out'); if(out) out.textContent=msg;
+};
 window.infraLoad = function(one){
   var out=document.getElementById('infra-out'); if(out&&one) out.textContent='Re-testing '+one+'…';
   fetch(window._apv2B+'/admin/services-status'+(one?('?service='+encodeURIComponent(one)):''),{headers:{'X-Admin-Token':window._apv2Tok()}})
-   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired — reload + PIN.'; return null; } return r.json(); })
+   .then(function(r){ if(r.status===401){ window.infraAuthWait(); return null; } return r.json(); })
    .then(function(d){ if(!d) return;
      if(one&&window._infraD){
        var cur=window._infraD;
@@ -1797,7 +1823,7 @@ window.infraLoad = function(one){
      window._infraD=d; window.infraRender(d);
      if(out) out.textContent='Checked '+(d.checked_at||'now');
    })
-   .catch(function(e){ if(out) out.textContent='Check failed: '+e; });
+   .catch(function(e){ window.infraFailLoud('Check failed: '+e); });
 };
 /* APV2-TESTALL-1 (22 Jul 2026): one-click sweep of every available AI provider */
 window.apv2TestAll = function(){
@@ -1821,7 +1847,14 @@ window.apv2TestAll = function(){
     b.onclick=window.apv2TestAll; o.parentNode.insertBefore(b, o.nextSibling);
   }
 })();
-try{ window.infraLoad(); setInterval(function(){window.infraLoad();}, 300000); }catch(e){}
+/* INFRA-PANEL-2 (1 Aug 2026): token-aware bootstrap. No token yet -> show the paused
+   state (no doomed 401 round-trip); the gate's ms-admin-auth event triggers the real
+   load on sign-in. The 5-minute poll also skips while signed out. */
+try{
+  document.addEventListener('ms-admin-auth', function(){ window.infraLoad(); });
+  if(window._apv2Tok()) window.infraLoad(); else window.infraAuthWait();
+  setInterval(function(){ if(window._apv2Tok()) window.infraLoad(); }, 300000);
+}catch(e){}
 </script>
 <!-- ══ LIVE USERS VIEW (Session 148, David) — city selector + presence galaxy + counters ══ -->
 <div id="liveusers-view" style="display:none;padding:18px 20px;max-width:1120px;margin:0 auto;position:relative;min-height:74vh">
