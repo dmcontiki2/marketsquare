@@ -5,9 +5,13 @@ Reads ai_price_card.json (the ONLY legal source of AI prices in this project) an
 ai_provider.py's TASK_MODEL, then reports, per task tier and lane:
 
   effective USD cost per call (low/high token shapes, FX-buffered for EUR lanes)
-  a VALUE RANKING driven by the two KPIs David named: CAPABILITY first, COST second
-    gate order: production > golden-set-passed > pending-golden-set (ineligible for
-    production traffic — shown, marked, never ranked eligible)
+  the DECISION FUNNEL (Addendum 8): VALUE SCORE = AA-index points per (USD per 1k calls,
+    mid shape) proposes the order; the golden-set GATE disposes (production >
+    golden-set-passed > pending — pending lanes are shown but never eligible);
+    the ANTI-JITTER materiality check compares the winner to the sitting model:
+    a procurement switch needs >= the card's min_cost_delta_pct, sustained across
+    >= min_card_refreshes (>= min_sustained_days). Failover (T1-T3) is exempt — ops,
+    not procurement.
 
 The ranking ADVISES. Switching stays governed by the standing rules (Addendum 3:
 measured failure / forced exit, golden-set gate, stability over price-chasing).
@@ -18,6 +22,7 @@ USAGE
     python3 scripts/price_truth.py            # full report
     python3 scripts/price_truth.py --check    # quiet freshness/coverage check (ledger/housekeep)
     python3 scripts/price_truth.py --days-max 45
+    python3 scripts/price_truth.py --snapshot   # also emit ai_funnel_snapshot.json for the +1 card
 Exit: 0 ok · 1 stale card / coverage gap · 2 config error.  Stdlib only.
 """
 import json, os, re, sys, datetime
@@ -78,6 +83,8 @@ def main():
         problems.append(f"wired model {m!r} has NO price-card entry — a cost decision about "
                         "it would run on memory, which is the exact fault this card prevents")
 
+    if not card.get("active_lane"):
+        problems.append("card has no active_lane — RG-0019 cannot compare it to the live switch")
     if check:
         for p in problems: print("FAIL:", p)
         print("price card: %s · verified %s (%d days) · %d models priced, %d wired"
@@ -103,22 +110,87 @@ def main():
             e = entry_of.get((prov, model))
             if not e:
                 lanes.append((prov, model, None, None, None, "NO PRICE ENTRY")); continue
+            tier_gate = (e.get("gate_by_tier", {}).get(tier) or {}).get("status")
+            gate_eff = {"production": "production", "passed": "golden-set-passed",
+                        "pending": "pending-golden-set"}.get(tier_gate, e.get("gate"))
             pi, po = usd(e, card)
             lo = il / 1e6 * pi + ol / 1e6 * po
             hi = ih / 1e6 * pi + oh / 1e6 * po
-            lanes.append((prov, model, lo, hi, e["gate"], ""))
-        ranked = sorted(lanes, key=lambda x: (x[4] not in GATE_ELIGIBLE if x[4] else True,
-                                              GATE_ORDER.get(x[4], 9), x[3] or 9e9))
+            lanes.append((prov, model, lo, hi, gate_eff, ""))
+        # VALUE PROPOSES: rank by value score (aa points per $/1k, mid shape), all lanes
+        scored = []
+        for prov, model, lo, hi, gate, note in lanes:
+            if lo is None:
+                scored.append((0, prov, model, lo, hi, gate, None, note)); continue
+            mid1k = (lo + hi) / 2 * 1000
+            e = entry_of.get((prov, model), {})
+            ax = e.get("aa_index") or {}
+            aa = ax.get("score")
+            vs = (aa / mid1k) if (aa and mid1k) else None
+            mm = "" if ax.get("effort_matched") else "*"
+            scored.append((vs or 0, prov, model, lo, hi, gate, aa, mm))
+        scored.sort(key=lambda x: -x[0])
         print(f"## {tier}  (shapes: {il}/{ol} low, {ih}/{oh} high tokens)")
-        for i, (prov, model, lo, hi, gate, note) in enumerate(ranked, 1):
+        winner = None
+        for i, (vs, prov, model, lo, hi, gate, aa, note) in enumerate(scored, 1):
             if lo is None:
                 print(f"  {i}. {prov:10s} {model:28s} {note}"); continue
-            tag = "ELIGIBLE" if gate in GATE_ELIGIBLE else "GATED-OUT (no production traffic)"
-            print(f"  {i}. {prov:10s} {model:28s} ${lo:.5f}–${hi:.5f}/call "
-                  f"(${lo*1000:.2f}–${hi*1000:.2f}/1k) · {gate} · {tag}")
+            ok = gate in GATE_ELIGIBLE
+            verdict = {"production": "GATE: production-proven",
+                       "golden-set-passed": "GATE: passed",
+                       "pending-golden-set": "GATE: NOT RUN — ineligible"}.get(gate, gate)
+            print(f"  {i}. {prov:10s} {model:28s} value {vs:6.2f}{note} · AA {aa if aa is not None else '—'}{note} · "
+                  f"${lo*1000:.2f}–${hi*1000:.2f}/1k · {verdict}")
+            if ok and winner is None:
+                winner = (vs, prov, model, lo, hi, aa)
+        # FITNESS DISPOSES + ANTI-JITTER: compare eligible winner to the sitting model
+        active = card.get("active_lane")
+        sitting = next((x for x in scored if x[1] == active and x[3] is not None), None)
+        if winner and sitting and winner[1] != active:
+            w_mid = (winner[3] + winner[4]) / 2 * 1000
+            s_mid = (sitting[3] + sitting[4]) / 2 * 1000
+            delta = (s_mid - w_mid) / s_mid * 100
+            aj = card.get("policy", {}).get("anti_jitter", {})
+            bar = aj.get("min_cost_delta_pct", 30)
+            verdict = ("MEETS the %d%% materiality bar — hold for %s card refreshes (>=%s days), then convene the funnel"
+                       % (bar, aj.get("min_card_refreshes", 2), aj.get("min_sustained_days", 30))
+                       ) if delta >= bar else f"below the {bar}% bar — jitter, no move"
+            floor = aj.get("min_net_saving_usd_90d")
+            print(f"  -> eligible winner {winner[2]} vs sitting {sitting[2]}: {delta:+.0f}% cost delta · {verdict}")
+            if floor:
+                print(f"     AND absolute floor: net >= ${floor}/90d after switch costs — needs spend-log "
+                      f"volume data to compute; formally UNMET until volumes exist (Correction 5)")
+        elif winner:
+            print(f"  -> sitting model {winner[2]} IS the eligible winner — no action")
+        best_gated = next((x for x in scored if x[5] == "pending-golden-set" and x[0] > (winner[0] if winner else 0)), None)
+        if best_gated:
+            print(f"  -> PRIZE BEHIND THE GATE: {best_gated[2]} (value {best_gated[0]:.2f} vs winner "
+                  f"{winner[0]:.2f}) — run its golden set to unlock")
         print()
 
-    print("Ranking = capability gate first, then cost. It ADVISES; switches follow the "
+    if "--snapshot" in sys.argv:
+        snap = {"card_version": card["version"], "generated": card["verified_at"], "tiers": {}}
+        for tier in SHAPES:
+            rows = []
+            for prov, row in task_model.items():
+                model = row.get(tier); e = entry_of.get((prov, model)) or {}
+                mid = None
+                if e:
+                    pi, po = usd(e, card)
+                    il, ol, ih, oh = SHAPES[tier]
+                    mid = ((il/1e6*pi + ol/1e6*po) + (ih/1e6*pi + oh/1e6*po)) / 2 * 1000
+                aa = (e.get("aa_index") or {}).get("score")
+                g = (e.get("gate_by_tier", {}).get(tier) or {}).get("status") or e.get("gate")
+                rows.append(((aa/mid) if (aa and mid) else 0, prov,
+                             {"provider": prov, "gate": {"production":"production","passed":"golden-set-passed","pending":"pending"}.get(g, g)}))
+            snap["tiers"][tier] = [x[2] for x in sorted(rows, key=lambda x: -x[0])]
+        sp = os.path.join(REPO, "ai_funnel_snapshot.json")
+        json.dump(snap, open(sp, "w", encoding="utf-8"), indent=1)
+        print("snapshot written:", sp, "(order + gate types only — the +1 card's funnel strip)")
+
+    print("* = AA score's effort mode differs from production mode — INDICATIVE only, not decision-grade")
+    print("    (Correction 1: a switch needs an effort-matched golden set + token profile first).")
+    print("Funnel = value proposes, gate disposes, materiality restrains. It ADVISES; switches follow the "
           "standing rules (golden-set, stability, no price-chasing). Verify EUR lanes on "
           "the vendor console before acting — a pricing page is a claim, an invoice is a fact.")
     sys.exit(1 if problems else 0)

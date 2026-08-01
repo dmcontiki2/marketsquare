@@ -120,6 +120,11 @@ def _openai(messages, model, max_tokens, system, timeout=30):
     # gpt-5*/o* chat/completions 400-reject max_tokens ("Unsupported parameter") — they take max_completion_tokens.
     _tokkey = "max_completion_tokens" if model.startswith(("gpt-5","o")) else "max_tokens"
     body={"model":model,_tokkey:max_tokens,"messages":_to_openai_messages(messages,system)}
+    # EFFORT PIN (GS-OAI-V1, 1 Aug 2026): production effort = the effort the golden set passed at.
+    # Default reasoning burned the ENTIRE 120-token search-interpret budget (120 reasoning, 0 visible
+    # — the 17 Jul qwen3.5 class again); reasoning_effort "none" passed every task INSIDE production
+    # budgets with 0 burn. Changing this invalidates the gate tuple — re-run scripts/golden_openai_v1.py.
+    if model.startswith("gpt-5"): body["reasoning_effort"]="none"
     try:
         with httpx.Client(timeout=timeout) as c:
             r=c.post("https://api.openai.com/v1/chat/completions",

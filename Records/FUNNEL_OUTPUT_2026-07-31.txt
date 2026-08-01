@@ -1,0 +1,32 @@
+# Price truth — card 2026-07-31.2 · verified 2026-07-31 (1 days old, max 45)
+  FX: EUR->USD 1.1 +5% buffer (as of 2026-07-31)
+
+## haiku  (shapes: 500/120 low, 2000/700 high tokens)
+  1. openai     gpt-5.6-luna                 value  69.06 · AA 51.24 · $0.24–$1.24/1k · GATE: NOT RUN — ineligible
+  2. anthropic  claude-haiku-4-5-20251001    value   8.96 · AA 29.58 · $1.10–$5.50/1k · GATE: production-proven
+  3. scaleway   mistral-medium-3.5-128b      value   5.24 · AA 29.95 · $1.91–$9.53/1k · GATE: passed
+  -> sitting model claude-haiku-4-5-20251001 IS the eligible winner — no action
+  -> PRIZE BEHIND THE GATE: gpt-5.6-luna (value 69.06 vs winner 8.96) — run its golden set to unlock
+
+## triage  (shapes: 500/120 low, 2000/700 high tokens)
+  1. openai     gpt-5.6-luna                 value  69.06 · AA 51.24 · $0.24–$1.24/1k · GATE: NOT RUN — ineligible
+  2. anthropic  claude-haiku-4-5-20251001    value   8.96 · AA 29.58 · $1.10–$5.50/1k · GATE: production-proven
+  3. scaleway   mistral-medium-3.5-128b      value   5.24 · AA 29.95 · $1.91–$9.53/1k · GATE: passed
+  -> sitting model claude-haiku-4-5-20251001 IS the eligible winner — no action
+  -> PRIZE BEHIND THE GATE: gpt-5.6-luna (value 69.06 vs winner 8.96) — run its golden set to unlock
+
+## sonnet  (shapes: 500/120 low, 2000/700 high tokens)
+  1. openai     gpt-5.6-terra                value   7.41 · AA 54.95 · $2.44–$12.40/1k · GATE: NOT RUN — ineligible
+  2. scaleway   mistral-medium-3.5-128b      value   5.24 · AA 29.95 · $1.91–$9.53/1k · GATE: passed
+  3. anthropic  claude-sonnet-4-6            value   4.77 · AA 47.21 · $3.30–$16.50/1k · GATE: production-proven
+  -> eligible winner mistral-medium-3.5-128b vs sitting claude-sonnet-4-6: +42% cost delta · MEETS the 30% materiality bar — hold for 2 card refreshes (>=30 days), then convene the funnel
+  -> PRIZE BEHIND THE GATE: gpt-5.6-terra (value 7.41 vs winner 5.24) — run its golden set to unlock
+
+## vision  (shapes: 1500/1200 low, 20000/1200 high tokens)
+  1. openai     gpt-5.6-luna                 value  14.27 · AA 51.24 · $1.74–$5.44/1k · GATE: NOT RUN — ineligible
+  2. anthropic  claude-haiku-4-5-20251001    value   1.77 · AA 29.58 · $7.50–$26.00/1k · GATE: production-proven
+  3. scaleway   mistral-medium-3.5-128b      value   1.03 · AA 29.95 · $12.99–$45.05/1k · GATE: passed
+  -> sitting model claude-haiku-4-5-20251001 IS the eligible winner — no action
+  -> PRIZE BEHIND THE GATE: gpt-5.6-luna (value 14.27 vs winner 1.77) — run its golden set to unlock
+
+Funnel = value proposes, gate disposes, materiality restrains. It ADVISES; switches follow the standing rules (golden-set, stability, no price-chasing). Verify EUR lanes on the vendor console before acting — a pricing page is a claim, an invoice is a fact.

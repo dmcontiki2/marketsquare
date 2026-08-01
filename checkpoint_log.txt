@@ -131,3 +131,18 @@ Wed 07/29/2026  5:30:02.03  committed 2 change(s)
  2 files changed, 86 insertions(+)
  create mode 100644 Records/COST_SWEEP_2026-07-30.md
 Thu 07/30/2026  5:30:01.76  committed 2 change(s)
+[main 01c50e6] Nightly checkpoint Sat 08/01/2026  5:30:02.58 (auto, no deploy)
+ 20 files changed, 3259 insertions(+), 129 deletions(-)
+ create mode 100644 AUDIT_GLOBAL_QA/findings-2026-07-31.json
+ create mode 100644 COST_FACTS_AI_SWAP_2026-07-31.md
+ create mode 100644 NEXT_SESSION_DECISION_GATE.md
+ create mode 100644 PEER_REVIEW.bat
+ create mode 100644 Records/COST_SWEEP_2026-08-01.md
+ create mode 100644 Records/PEER_REVIEW_2026-07-31-0608.md
+ create mode 100644 Records/PEER_REVIEW_2026-07-31-0645_full.md
+ create mode 100644 Records/PEER_REVIEW_2026-07-31-0646_cost.md
+ create mode 100644 ai_price_card.json
+ create mode 100644 backups/_to_delete/.fuse_hidden0000002500000001
+ create mode 100644 docs/TrustSquare_Contagion_Model_v0.1.html
+ create mode 100644 scripts/price_truth.py
+Sat 08/01/2026  5:30:02.85  committed 20 change(s)

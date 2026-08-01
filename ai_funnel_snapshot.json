@@ -1,0 +1,62 @@
+{
+ "card_version": "2026-08-01.1",
+ "generated": "2026-08-01",
+ "tiers": {
+  "haiku": [
+   {
+    "provider": "openai",
+    "gate": "golden-set-passed"
+   },
+   {
+    "provider": "anthropic",
+    "gate": "production"
+   },
+   {
+    "provider": "scaleway",
+    "gate": "golden-set-passed"
+   }
+  ],
+  "triage": [
+   {
+    "provider": "openai",
+    "gate": "golden-set-passed"
+   },
+   {
+    "provider": "anthropic",
+    "gate": "production"
+   },
+   {
+    "provider": "scaleway",
+    "gate": "golden-set-passed"
+   }
+  ],
+  "sonnet": [
+   {
+    "provider": "openai",
+    "gate": "golden-set-passed"
+   },
+   {
+    "provider": "scaleway",
+    "gate": "golden-set-passed"
+   },
+   {
+    "provider": "anthropic",
+    "gate": "production"
+   }
+  ],
+  "vision": [
+   {
+    "provider": "openai",
+    "gate": "golden-set-passed"
+   },
+   {
+    "provider": "anthropic",
+    "gate": "production"
+   },
+   {
+    "provider": "scaleway",
+    "gate": "golden-set-passed"
+   }
+  ]
+ }
+}

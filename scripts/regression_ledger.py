@@ -670,6 +670,71 @@ def rg_price_card_live():
     return out
 
 
+@entry("RG-0019", "The Model Register matches the live switch — a swap never outruns the record",
+       LOCKED, scope="live /flags vs ai_price_card.json active_lane", fixed_on="2026-07-31",
+       ref="Decision-Gate Process (Addendum 8, David 31 Jul 2026): when the live AI lane changes "
+           "(manual Activate/Restore on the +1 page today; P2 breaker fail-over once P2b exposes "
+           "breaker state in /flags), the Model Register must be updated the same working day — "
+           "otherwise every cost/capability decision runs on a record that no longer describes "
+           "production, the exact stale-values fault the register exists to prevent. This check "
+           "reads the LIVE /flags active provider and compares it to the card's active_lane. "
+           "Extend to the /flags breaker block when P2b lands.")
+def rg_register_matches_live_switch():
+    card_txt = repo_file("ai_price_card.json")
+    if card_txt is None:
+        return [(INFO, "running outside the repo -- register/live-switch check skipped")]
+    try:
+        recorded = json.loads(card_txt).get("active_lane")
+    except Exception as ex:
+        return [(FAIL, f"ai_price_card.json unreadable ({ex!r})")]
+    if not recorded:
+        return [(FAIL, "ai_price_card.json has no active_lane field -- the register cannot "
+                       "track the live switch without it")]
+    ap = _json("/flags").get("ai_provider") or {}
+    # AMENDED 1 Aug 2026 (manual-pin feature): the register tracks the STANDING lane; a
+    # time-decaying operator pin is ops, not procurement, so it must NOT trip this check.
+    live = ap.get("standing") or ap.get("active")
+    _pin = ap.get("override")
+    if not live:
+        return [(FAIL, "live /flags carries no ai_provider.active -- the switch surface itself "
+                       "has changed; re-point this check")]
+    if live != recorded:
+        return [(FAIL, f"LIVE lane is {live!r} but the Model Register records {recorded!r} -- "
+                       "a switch happened without updating the register; update "
+                       "ai_price_card.json active_lane (and the switch's reason) today")]
+    out = [(INFO, f"live standing lane {live!r} == register -- record is current")]
+    if _pin:
+        out.append((INFO, f"manual pin active: {_pin.get('provider')!r} until {_pin.get('expires_at')} "
+                          "(ops override, decays automatically -- register untouched by design)"))
+    return out
+
+
+@entry("RG-0020", "The dashboard funnel strip is never staler than the Model Register",
+       LOCKED, scope="repo, ai_funnel_snapshot.json vs ai_price_card.json", fixed_on="2026-08-01",
+       ref="The +1 card shows the funnel ORDER (order + gate types only, David's ruling 1 Aug "
+           "2026), served from ai_funnel_snapshot.json which scripts/price_truth.py --snapshot "
+           "generates from the Model Register — ONE ranking engine. A card update without a "
+           "snapshot regeneration would show David yesterday's order under today's card: the "
+           "stale-values fault, on the very surface built to prevent it. Asserts snapshot exists "
+           "and its card_version equals the register's version.")
+def rg_funnel_snapshot_current():
+    card_txt = repo_file("ai_price_card.json")
+    snap_txt = repo_file("ai_funnel_snapshot.json")
+    if card_txt is None:
+        return [(INFO, "running outside the repo -- snapshot check skipped")]
+    if snap_txt is None:
+        return [(FAIL, "ai_funnel_snapshot.json missing -- run scripts/price_truth.py --snapshot "
+                       "(the +1 card's funnel strip has no data source)")]
+    try:
+        cv = json.loads(card_txt).get("version"); sv = json.loads(snap_txt).get("card_version")
+    except Exception as ex:
+        return [(FAIL, f"snapshot/card unreadable ({ex!r})")]
+    if cv != sv:
+        return [(FAIL, f"funnel snapshot built from card {sv!r} but the register is at {cv!r} -- "
+                       "regenerate: python3 scripts/price_truth.py --snapshot")]
+    return [(INFO, f"snapshot current (card {cv})")]
+
+
 def run():
     t0 = time.time()
     results = []

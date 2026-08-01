@@ -707,6 +707,10 @@ def run_migrations(conn):
         tuppence_burn_enabled  INTEGER NOT NULL DEFAULT 1,
         -- AI provider seam (D1): live-switchable inference vendor (Page-4 control). Default = anthropic.
         ai_active     TEXT    NOT NULL DEFAULT 'anthropic',
+        -- MANUAL PIN (David 1 Aug 2026): operator override with DECAY — precedence over any
+        -- auto selection while unexpired; expiry returns control to the standing lane.
+        ai_active_override  TEXT,
+        ai_override_expires TEXT,
         updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
@@ -716,6 +720,8 @@ def run_migrations(conn):
         "ALTER TABLE launch_switches ADD COLUMN auth_fail_closed      INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE launch_switches ADD COLUMN tuppence_burn_enabled INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE launch_switches ADD COLUMN ai_active TEXT NOT NULL DEFAULT 'anthropic'",
+        "ALTER TABLE launch_switches ADD COLUMN ai_active_override TEXT",
+        "ALTER TABLE launch_switches ADD COLUMN ai_override_expires TEXT",
     ):
         try:
             conn.execute(_ddl)
@@ -1289,7 +1295,11 @@ GMAIL_APP_PASSWORD   = os.getenv("GMAIL_APP_PASSWORD")
 EMAIL_AUTO_SEND      = os.getenv("EMAIL_AUTO_SEND", "0") == "1"
 TRIAGE_MODEL = _TS_AI_MODELS["triage"]
 
-_TS_AI_CACHE = {"prov": None, "ts": 0.0}
+# Manual-pin TTL (hours). David 1 Aug 2026: 24h now; REVIEW dated ~1 Nov 2026 (3 months
+# proven live) to consider shortening to 1h. Env-tunable, no deploy needed to change.
+AI_OVERRIDE_TTL_HOURS = float(os.getenv("AI_OVERRIDE_TTL_HOURS", "24"))
+
+_TS_AI_CACHE = {"prov": None, "standing": None, "override": None, "expires": None, "ts": 0.0}
 def _ts_active_provider():
     """The LIVE active provider — DB-backed (Page-4 switchable, no restart). Falls back to the
     startup env value if the DB is unreachable. Cached ~10s so we never hammer the DB per call."""
@@ -1298,16 +1308,33 @@ def _ts_active_provider():
     if _TS_AI_CACHE["prov"] and (now-_TS_AI_CACHE["ts"])<10:
         return _TS_AI_CACHE["prov"]
     prov=_TS_AI_PROVIDER  # startup default
+    standing, override, expires = prov, None, None
     try:
         conn=database.get_db()
         try:
-            row=conn.execute("SELECT ai_active FROM launch_switches WHERE id=1").fetchone()
-            if row and row["ai_active"]: prov=row["ai_active"]
+            row=conn.execute("SELECT ai_active, ai_active_override, ai_override_expires "
+                             "FROM launch_switches WHERE id=1").fetchone()
+            if row:
+                if row["ai_active"]: standing = prov = row["ai_active"]
+                override, expires = row["ai_active_override"], row["ai_override_expires"]
         finally:
             conn.close()
     except Exception:
         pass
-    _TS_AI_CACHE.update(prov=prov, ts=now)
+    # MANUAL PIN precedence with DECAY (David 1 Aug 2026): an unexpired operator pin
+    # outranks the standing/auto lane; past expiry the standing lane silently resumes.
+    import datetime as _dt
+    if override and expires:
+        try:
+            if _dt.datetime.utcnow() < _dt.datetime.fromisoformat(expires):
+                prov = override
+            else:
+                override = None   # expired — report as inactive, standing rules
+        except Exception:
+            override = None
+    else:
+        override = None
+    _TS_AI_CACHE.update(prov=prov, standing=standing, override=override, expires=expires if override else None, ts=now)
     return prov
 
 def _ts_models_for(prov):
@@ -12276,6 +12303,7 @@ class _FlagsUpdate(BaseModel):
     auth_fail_closed:      Optional[bool] = None
     tuppence_burn_enabled: Optional[bool] = None
     ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' | 'scaleway' (Page-4 switch)
+    ai_active_override:    Optional[str]  = None  # MANUAL PIN: provider = pin (TTL decay) | '' = unpin (1 Aug 2026)
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -12300,7 +12328,14 @@ def _flags_payload(d):
             "tuppence_burn_enabled": bool(d.get("tuppence_burn_enabled", 1)),
         },
         "ai_provider": {
-            "active": d.get("ai_active", "anthropic"),
+            # effective = the lane calls actually use RIGHT NOW (pin-aware); standing = the
+            # auto/default lane the system returns to when the pin decays.
+            "active": _ts_active_provider(),   # pin-aware effective lane
+            "standing": d.get("ai_active", "anthropic"),
+            "override": ({"provider": _TS_AI_CACHE["override"], "expires_at": _TS_AI_CACHE["expires"]}
+                          if _TS_AI_CACHE.get("override") else None),
+            "override_ttl_hours": AI_OVERRIDE_TTL_HOURS,
+            "funnel": _ts_funnel_snapshot(),
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
             "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(ai_provider.envkey("OPENAI_API_KEY")),
                           "scaleway": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY"))},
@@ -12319,6 +12354,22 @@ def _flags_payload(d):
         },
         "updated_at": d.get("updated_at", ""),
     }
+
+_TS_FUNNEL_CACHE = {"mtime": None, "data": None}
+def _ts_funnel_snapshot():
+    """The +1 card's funnel strip: ORDER AND GATE-TYPES ONLY (David 1 Aug 2026 — no numbers).
+    Read from ai_funnel_snapshot.json, generated by scripts/price_truth.py --snapshot (ONE
+    ranking engine); absent file -> None, dashboard shows nothing. Cached on mtime."""
+    import os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "ai_funnel_snapshot.json")
+    try:
+        mt = _os.path.getmtime(p)
+        if _TS_FUNNEL_CACHE["mtime"] != mt:
+            with open(p, encoding="utf-8") as fh:
+                _TS_FUNNEL_CACHE.update(mtime=mt, data=json.load(fh))
+        return _TS_FUNNEL_CACHE["data"]
+    except Exception:
+        return None
 
 @app.get("/flags")
 def get_flags():
@@ -12345,6 +12396,19 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
                 raise HTTPException(status_code=400, detail="ai_active must be 'anthropic', 'openai' or 'scaleway'")
             sets.append("ai_active = ?"); vals.append(v)
             _TS_AI_CACHE["prov"] = None  # bust the seam cache so the switch is instant
+        elif k == "ai_active_override":
+            # MANUAL PIN (David 1 Aug 2026): provider = pin for AI_OVERRIDE_TTL_HOURS with
+            # precedence over auto; "" = unpin now. Decay returns control to the standing lane.
+            if v not in ("anthropic", "openai", "scaleway", ""):
+                raise HTTPException(status_code=400, detail="ai_active_override must be a provider or '' to unpin")
+            import datetime as _dt
+            if v == "":
+                sets.append("ai_active_override = NULL"); sets.append("ai_override_expires = NULL")
+            else:
+                _exp = (_dt.datetime.utcnow() + _dt.timedelta(hours=AI_OVERRIDE_TTL_HOURS)).isoformat(timespec="seconds")
+                sets.append("ai_active_override = ?"); vals.append(v)
+                sets.append("ai_override_expires = ?"); vals.append(_exp)
+            _TS_AI_CACHE["prov"] = None
         else:
             sets.append(k + " = ?"); vals.append(1 if v else 0)
     conn = database.get_db()

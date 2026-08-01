@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""v2 (P1, 17 Jul 2026): AI Provider REGISTRY card for Page-4 (dashboard.html), IN PLACE, idempotent.
+"""v3 (1 Aug 2026): adds the FUNNEL STRIP (order + gate types only) and the MANUAL PIN
+(operator precedence with decay — David's ruling 1 Aug 2026). Based on v2 (P1, 17 Jul 2026): AI Provider REGISTRY card for Page-4 (dashboard.html), IN PLACE, idempotent.
 Replaces the v1 two-pill card. Fixes DASH-AIPROV-1: v1's JS could land inside another
 script's closure (onclick handlers resolve on window -> ReferenceError). v2 injects ALL
 JS as its own <script> before </body>, self-contained (own base-url + token helpers).
@@ -9,8 +10,24 @@ f = sys.argv[1] if len(sys.argv) > 1 else "dashboard.html"
 s = open(f, encoding="utf-8").read()
 orig = len(s)
 
-if 'id="ai-prov-card-v2"' in s:
-    print("v2 registry card already present — no change"); sys.exit(0)
+if 'id="ai-prov-card-v3"' in s:
+    print("v3 registry card already present — no change"); sys.exit(0)
+# strip a v2 card + its JS if present (index-based, same technique as the v1 strip below)
+_c2 = s.find('id="ai-prov-card-v2"')
+if _c2 != -1:
+    _s2 = s.rfind('<div', 0, _c2)
+    _cm2 = s.rfind('<!-- AI PROVIDER REGISTRY v2', max(0, _s2-400), _s2)
+    if _cm2 != -1: _s2 = _cm2
+    _pos, _depth, _e2 = _s2, 0, -1
+    while True:
+        _o = s.find('<div', _pos); _c = s.find('</div>', _pos)
+        if _c == -1: break
+        if _o != -1 and _o < _c: _depth += 1; _pos = _o + 4
+        else:
+            _depth -= 1; _pos = _c + 6
+            if _depth <= 0: _e2 = _pos; break
+    if _e2 != -1: s = s[:_s2] + s[_e2:]
+s = re.sub(r'<script>\s*/\* AI Provider Registry v2 .*?</script>\s*', '', s, flags=re.S)
 
 # ── strip v1 remnants (card div, any copy of the v1 JS, the aiProvLoad view hook) ──
 # card div: index-based excision (server copies vary in whitespace — regex proved brittle)
@@ -35,60 +52,86 @@ s = re.sub(r'window\._aiProv\s*=\s*\{active:"anthropic".*?catch\(function\(e\)\{
 s = s.replace(" try{aiProvLoad();}catch(e){} ", " ")
 
 CARD = """
-  <!-- AI PROVIDER REGISTRY v2 (P1) — per-provider status, per-task chains, test-any-provider -->
-  <div class="ls-card" id="ai-prov-card-v2">
-    <div class="ls-h">&#128268; AI Providers <span id="apv2-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
-    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Per-provider status and live test. Activate swaps the vendor for all seam-routed features (21 of 22), no restart.</div>
-    <div id="apv2-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading registry&hellip;</div></div>
-    <div id="apv2-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
+  <!-- AI PROVIDER REGISTRY v3 — funnel strip (order+types) · manual pin with decay -->
+  <div class="ls-card" id="ai-prov-card-v3">
+    <div class="ls-h">&#128268; AI Providers <span id="apv3-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
+    <div id="apv3-pin" style="display:none;font-size:12px;margin:-2px 0 8px;padding:7px 10px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);"></div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Pin = manual precedence for a limited time; when it expires the standing lane resumes automatically. Standing-lane changes go through the Model Register process, not this card.</div>
+    <div id="apv3-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading registry&hellip;</div></div>
+    <div class="ls-h" style="margin-top:12px;font-size:12px;">Latest funnel (order &middot; gate only)</div>
+    <div id="apv3-funnel" style="font-size:11px;color:var(--muted);line-height:1.7"></div>
+    <div id="apv3-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
 """
 
 JS = """
 <script>
-/* AI Provider Registry v2 (P1) — all-global, self-contained (DASH-AIPROV-1 fix) */
-window._apv2B = (location.protocol==='file:' ? 'https://trustsquare.co' : '');
-window._apv2Tok = function(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } };
-window._apv2 = {active:'anthropic', providers:[]};
-window.apv2Render = function(){
-  var box=document.getElementById('apv2-rows'); if(!box) return;
-  var d=window._apv2, h='';
+/* AI Provider Registry v3 — funnel strip + manual pin with decay (1 Aug 2026) */
+window._apv3B = (location.protocol==='file:' ? 'https://trustsquare.co' : '');
+window._apv3Tok = function(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } };
+window._apv3 = {active:'anthropic', standing:'anthropic', override:null, ttl:24, providers:[], funnel:null};
+window.apv3Render = function(){
+  var d=window._apv3, box=document.getElementById('apv3-rows'); if(!box) return;
+  var pin=document.getElementById('apv3-pin');
+  if(pin){
+    if(d.override){
+      var until=new Date(d.override.expires_at+'Z');
+      pin.style.display='block';
+      pin.innerHTML='&#128204; <b>PINNED to '+d.override.provider+'</b> until '+until.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' (local) — standing lane <b>'+d.standing+'</b> resumes on expiry &nbsp;<button type="button" onclick="apv3Pin(\'\')" style="padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit">Unpin now</button>';
+    } else pin.style.display='none';
+  }
+  var h='';
   (d.providers||[]).forEach(function(p){
     var active=(p.id===d.active), avail=!!p.available;
-    var st = active?['#22c55e','ACTIVE']:(avail?['#22c55e','STANDBY']:['#6b7280','DISABLED — no key']);
-    var models=p.models?('fast '+ (p.models.haiku||'—').split('-20')[0] +' &middot; reason '+ (p.models.sonnet||'—') +' &middot; vision '+ (p.models.vision||'—')):'';
+    var st = active?['#22c55e','ACTIVE'+(d.override&&d.override.provider===p.id?' (PIN)':'')]:(avail?['#22c55e','STANDBY']:['#6b7280','DISABLED — no key']);
+    var models=p.models?('fast '+(p.models.haiku||'—').split('-20')[0]+' &middot; reason '+(p.models.sonnet||'—')):'';
     h+='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
       +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';opacity:'+(active?'1':(avail?'.55':'.6'))+';flex:0 0 auto;"></span>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+p.label+' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(p.jurisdiction||'')+'</span></div>'
       +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+models+'</div></div>'
       +'<span style="font-size:10.5px;font-weight:700;color:'+(active?'#22c55e':(avail?'var(--text)':'var(--muted)'))+';flex:0 0 auto">'+st[1]+'</span>'
-      +'<button type="button" onclick="apv2Test(\\''+p.id+'\\')" '+(avail?'':'disabled ')+'style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:'+(avail?'pointer':'not-allowed')+';font-family:inherit;opacity:'+(avail?'1':'.4')+'">Test</button>'
-      +(!active&&avail?('<button type="button" onclick="apv2Activate(\\''+p.id+'\\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">Activate</button>'):'')
+      +'<button type="button" onclick="apv3Test(\''+p.id+'\')" '+(avail?'':'disabled ')+'style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:'+(avail?'pointer':'not-allowed')+';font-family:inherit;opacity:'+(avail?'1':'.4')+'">Test</button>'
+      +(avail&&!(d.override&&d.override.provider===p.id)?('<button type="button" onclick="apv3Pin(\''+p.id+'\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">Pin '+(d.ttl||24)+'h</button>'):'')
       +'</div>';
   });
   box.innerHTML=h||'<div style="color:var(--muted);font-size:12px">Registry unavailable.</div>';
-  var sub=document.getElementById('apv2-sub'); if(sub) sub.textContent='— active: '+d.active;
+  var fb=document.getElementById('apv3-funnel');
+  if(fb){
+    if(d.funnel&&d.funnel.tiers){
+      var fh='';
+      Object.keys(d.funnel.tiers).forEach(function(t){
+        fh+='<div><b style="color:var(--text)">'+t+':</b> '+d.funnel.tiers[t].map(function(x,i){
+          return (i+1)+'. '+x.provider+' <span style="opacity:.7">('+x.gate+')</span>';}).join(' &rarr; ')+'</div>';
+      });
+      fh+='<div style="opacity:.6">card '+(d.funnel.card_version||'')+' &middot; order &amp; gate only — dollars live in the Model Register</div>';
+      fb.innerHTML=fh;
+    } else fb.innerHTML='<span style="opacity:.6">No funnel snapshot on the server yet (scripts/price_truth.py --snapshot, then deploy).</span>';
+  }
+  var sub=document.getElementById('apv3-sub'); if(sub) sub.textContent='— active: '+d.active+(d.override?' (pinned)':'')+' · standing: '+d.standing;
 };
-window.apv2Load = function(){
-  fetch(window._apv2B+'/flags').then(function(r){return r.json();}).then(function(f){
-    if(f&&f.ai_provider){ window._apv2={active:f.ai_provider.active, providers:(f.ai_provider.providers||[])}; window.apv2Render(); }
+window.apv3Load = function(){
+  fetch(window._apv3B+'/flags').then(function(r){return r.json();}).then(function(f){
+    if(f&&f.ai_provider){ var a=f.ai_provider;
+      window._apv3={active:a.active, standing:a.standing||a.active, override:a.override||null, ttl:a.override_ttl_hours||24, providers:(a.providers||[]), funnel:a.funnel||null};
+      window.apv3Render(); }
   }).catch(function(){});
 };
-window.apv2Test = function(p){
-  var out=document.getElementById('apv2-out'); if(out) out.textContent='Testing '+p+'\\u2026';
-  fetch(window._apv2B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv2Tok()},body:JSON.stringify({provider:p})})
-   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired \\u2014 reload + PIN.'; return null; } return r.json(); })
-   .then(function(d){ if(!d) return; if(out) out.textContent=(d.ok?'\\u2713 ':'\\u2717 ')+d.provider+' ('+d.model+'): '+(d.text||d.detail||'(no text)')+(d.in_tokens?('  ['+d.in_tokens+'+'+d.out_tokens+' tok]'):''); })
+window.apv3Test = function(p){
+  var out=document.getElementById('apv3-out'); if(out) out.textContent='Testing '+p+'…';
+  fetch(window._apv3B+'/admin/ai-test',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv3Tok()},body:JSON.stringify({provider:p})})
+   .then(function(r){ if(r.status===401){ if(out) out.textContent='Admin session expired — reload + PIN.'; return null; } return r.json(); })
+   .then(function(d){ if(!d) return; if(out) out.textContent=(d.ok?'✓ ':'✗ ')+d.provider+' ('+d.model+'): '+(d.text||d.detail||'(no text)'); })
    .catch(function(e){ if(out) out.textContent='Test failed: '+e; });
 };
-window.apv2Activate = function(p){
-  if(!confirm('Switch the LIVE AI vendor to '+p+'? All seam-routed features swap immediately (no restart). Note: golden-set eval for non-Anthropic lanes is still pending \\u2014 outage use only until evals pass.')) return;
-  fetch(window._apv2B+'/admin/flags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv2Tok()},body:JSON.stringify({ai_active:p})})
-   .then(function(r){ if(r.status===401){ alert('Admin session expired \\u2014 reload and log in.'); return null; } if(r.status===400){ alert('Server rejected provider.'); return null; } return r.json(); })
-   .then(function(f){ if(f&&f.ai_provider){ window._apv2={active:f.ai_provider.active, providers:(f.ai_provider.providers||[])}; window.apv2Render(); } })
-   .catch(function(e){ console.warn('activate failed', e); });
+window.apv3Pin = function(p){
+  var msg = p ? ('PIN the live AI vendor to '+p+' for '+(window._apv3.ttl||24)+' hours? This outranks any automatic selection; the standing lane ('+window._apv3.standing+') resumes when the pin expires.') : 'Remove the pin now? The standing lane resumes immediately.';
+  if(!confirm(msg)) return;
+  fetch(window._apv3B+'/admin/flags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':window._apv3Tok()},body:JSON.stringify({ai_active_override:p})})
+   .then(function(r){ if(r.status===401){ alert('Admin session expired — reload and log in.'); return null; } if(r.status===400){ alert('Server rejected provider.'); return null; } return r.json(); })
+   .then(function(f){ if(f&&f.ai_provider){ window.apv3Load(); } })
+   .catch(function(e){ console.warn('pin failed', e); });
 };
-try{ window.apv2Load(); setInterval(window.apv2Load, 60000); }catch(e){}
+try{ window.apv3Load(); setInterval(window.apv3Load, 60000); }catch(e){}
 </script>
 """
 
@@ -102,5 +145,5 @@ bi = s.rfind("</body>")
 if bi == -1: print("ANCHOR </body> missing"); sys.exit(2)
 s = s[:bi] + JS + s[bi:]
 open(f, "w", encoding="utf-8").write(s)
-print(f"v2 registry card applied to {f}: {orig}->{len(s)}")
+print(f"v3 registry card applied to {f}: {orig}->{len(s)}")
 sys.exit(0)
