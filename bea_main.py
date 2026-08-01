@@ -12300,7 +12300,7 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
         for _pid, _label, _kind, _envk, _flagk in (
             ("op_photos", "Signed-operator photos", "showcase agreements — internal flag", None, "data_ops"),
             ("places",    "Google Places",          "live ratings · hours · photos",       "GOOGLE_PLACES_API_KEY", "data_places"),
-            ("amadeus",   "Amadeus",                "flight fares — Expedition tier",      "AMADEUS_API_KEY",       "data_flights"),
+            ("travelpayouts", "Travelpayouts",     "flight fares — Aviasales cache (ZAR) · Expedition tier", "TRAVELPAYOUTS_TOKEN",   "data_flights"),  # 1 Aug 2026: Amadeus self-service dead 17 Jul; TP Data API is the flights lane
             ("mapbox",    "Mapbox",                 "maps upgrade (optional — OSM free)",  "MAPBOX_TOKEN",          "data_mapbox"),
         ):
             _on = bool(_fr.get(_flagk, 0))
@@ -12329,6 +12329,26 @@ async def admin_services_status(service: str = None, _admin=Depends(_require_adm
                         "detail": ("key set (presence only — live test via the AI Providers card)"
                                     if _kv else "key not set — this lane cannot serve"),
                         "key": _infra_mask(_kv)})
+        # TRAVEL LANES AHEAD (David 1 Aug 2026): planned/deferred travel feeds are SHOWN
+        # dark for the same reason as the partners above — an invisible lane fails
+        # silently on enable-day. Presence-only; no live probes; no spend.
+        _dfk = os.getenv("DUFFEL_ACCESS_TOKEN")
+        _adb = os.getenv("AERODATABOX_KEY")
+        for _pid, _label, _kind, _st, _dt, _kv in (
+            ("duffel", "Duffel", "flight search — warm standby lane",
+             "ok" if _dfk else "nokey",
+             "standby key staged" if _dfk else
+             "STANDBY by doctrine — swap-in adapter if the Aviasales cache turns (reserved: DUFFEL_ACCESS_TOKEN)", _dfk),
+            ("aerodatabox", "AeroDataBox", "schedules · aircraft types — flat tier",
+             "ok" if _adb else "nokey",
+             "key staged" if _adb else
+             "DEFERRED by ruling (1 Aug) — no subscription until a screen needs timetables (reserved: AERODATABOX_KEY)", _adb),
+            ("tp_tours", "Travelpayouts Tours", "GetYourGuide · Viator · Welcome Pickups · Booking.com",
+             "warn",
+             "awaiting Travelpayouts project review (shortlist approved by David 1 Aug) — rides TRAVELPAYOUTS_TOKEN + marker 758984, no extra key", None),
+        ):
+            out.append({"id": _pid, "label": _label, "kind": _kind, "status": _st,
+                        "detail": _dt, "key": _infra_mask(_kv) if _kv else None})
     return {"services": out, "checked_at": datetime.utcnow().isoformat() + "Z"}
 
 @app.post("/admin/ai-restore")

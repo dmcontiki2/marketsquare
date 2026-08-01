@@ -18,6 +18,8 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 
 ---
 
+- **[D] AFFILIATE-INCOME COMPLIANCE GATE (opened 1 Aug, TP-FLIGHTS-1):** before `data_flights`/tours ever flip live: (a) DONE 1 Aug: SS6.1A disclosure clause LIVE in EULA v1.11 — counsel to RATIFY wording; still to ship with planner UI: a "we may earn a commission at no extra cost to you" line ships next to travel click-outs; (b) accountant confirms tax/VAT treatment of Travelpayouts commission (foreign-source, HK payer, likely USD — new income class in the tax module, exported-services zero-rating to confirm). Zero exposure while flags stay dark; the flag flip is BLOCKED on both. Detail: CHANGELOG 1 Aug (TP-FLIGHTS-1) + CLAUDE.md travel section.
+
 ## 🔴 BLOCKING NOW
 *(nothing proceeds until these clear)*
 

@@ -311,3 +311,29 @@ Plumbing: launch_switches gains ai_active_override + ai_override_expires (idempo
 migration); /admin/flags accepts ai_active_override (provider = pin, '' = unpin);
 /flags.ai_provider now carries active (pin-aware), standing, override, funnel.
 
+
+## Addendum 11 (1 Aug 2026) — Kimi K3: WAIT for Scaleway or OVHcloud; fewer servers preferred
+
+David's ruling, recorded in-session after the EU-availability survey:
+
+1. **The Addendum 1 trigger fired 1 Aug 2026** — EU serving of Kimi K3 (open weights,
+   released 16 Jul 2026, weights public ~27 Jul) now exists: Nebius Token Factory (NL)
+   at $3/$15 per Mtok, eurouter.ai (base $3/$15 + 15%/9%/3% routing markup), and
+   HostYourAI at a claimed EUR 0.40/0.60.
+2. **Ruling: WAIT for Scaleway or OVHcloud AI Endpoints to serve K3.** David prefers
+   FEWER servers/providers — Scaleway is already wired and OVH is on the vetted EU
+   list; adding Nebius or eurouter for one model works against consolidation. Neither
+   Scaleway nor OVH lists any Kimi/Moonshot model as of 1 Aug 2026.
+3. **HostYourAI is NOT pursued.** David is dubious of the EUR 0.40/0.60 rate (~25x
+   under every other host for a 2.8T model — plausibly quantized or loss-leader).
+   No probe, no key. Revisit only if it surfaces via a vetted route.
+4. **Cost picture at decision time** (Model Register v2026-08-01.1): K3 at a credible
+   EU host costs exactly Sonnet 4.6 ($3/$15) — 3x Haiku, 15x Luna, dearer than Terra.
+   No procurement case on cost; the candidate role is EU FRONTIER/JURISDICTION STANDBY
+   (Mistral Medium's role, higher capability class, ~1.7x Medium's price).
+5. **Watch mechanism:** the /housekeep catalog re-scan (which already covers wired
+   vendors) EXTENDS to two specific checks for this item: (a) Scaleway Generative APIs
+   supported-models page, (b) OVHcloud AI Endpoints catalog — looking for Kimi K3 or
+   any Moonshot model, capturing first-party price on sight. On sight: record price
+   here + Model Register funnel per Addendum 9 (price triggers EVALUATION, never a
+   switch); the golden-set gate still stands before any lane use.
