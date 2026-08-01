@@ -12415,8 +12415,10 @@ def _flags_payload(d):
                           if _TS_AI_CACHE.get("override") else None),
             "override_ttl_hours": AI_OVERRIDE_TTL_HOURS,
             "funnel": _ts_funnel_snapshot(),
-            "breaker": (lambda: __import__("ai_breaker").snapshot())(),
-            "drill": sorted(__import__("ai_breaker").drill_banned()) or None,
+            # FAIL-OPEN here too (FLAGS-BRK-1, 1 Aug): a missing/broken breaker module must
+            # never take /flags down — the card degrades, the platform does not.
+            "breaker": _ts_breaker_safe("snapshot"),
+            "drill": _ts_breaker_safe("drill"),
             # which providers have a REAL adapter wired (vs stub) — Page 4 greys out the stubs
             "available": {"anthropic": bool(ANTHROPIC_API_KEY), "openai": bool(ai_provider.envkey("OPENAI_API_KEY")),
                           "scaleway": bool(ai_provider.envkey("SCALEWAY_API_KEY","FAILOVER_API_KEY"))},
@@ -12435,6 +12437,14 @@ def _flags_payload(d):
         },
         "updated_at": d.get("updated_at", ""),
     }
+
+def _ts_breaker_safe(what):
+    try:
+        import ai_breaker as _b
+        if what == "snapshot": return _b.snapshot()
+        return sorted(_b.drill_banned()) or None
+    except Exception:
+        return None
 
 _TS_FUNNEL_CACHE = {"mtime": None, "data": None}
 def _ts_funnel_snapshot():

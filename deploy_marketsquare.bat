@@ -586,6 +586,12 @@ if %errorlevel% neq 0 (
 :: main.py; must land BEFORE the BEA restart so the gate + sweep ship atomically.
 scp "%PROJECT%\ai_service_tiers.py" %SERVER%:%REMOTE%/ai_service_tiers.py
 scp "%PROJECT%\ai_provider.py" %SERVER%:%REMOTE%/ai_provider.py
+scp "%PROJECT%\ai_breaker.py" %SERVER%:%REMOTE%/ai_breaker.py
+if errorlevel 1 (
+    echo  ERROR: SCP failed for ai_breaker.py ^(P2a circuit breaker^). Check SSH connection.
+    pause
+    exit /b 1
+)
 if errorlevel 1 (
     echo  ERROR: SCP failed for ai_provider.py ^(AI provider seam^). Check SSH connection.
 )
