@@ -18,6 +18,10 @@ echo [2b/6] Apply the AI Provider card (Page-4 / Launch Switch) onto the SERVER 
 python "%PROJECT%\apply_ai_provider_card.py" "%PROJECT%\dashboard.server.html"
 if errorlevel 1 ( echo  ERROR: AI Provider card anchors not found in server dashboard - tell Claude. & exit /b 1 )
 
+echo [2c/6] Apply INFRA-PANEL-2 (auth-aware Infrastructure card) onto the SERVER copy (idempotent)...
+python "%PROJECT%\apply_infra_panel2.py" "%PROJECT%\dashboard.server.html"
+if errorlevel 1 ( echo  ERROR: INFRA-PANEL-2 anchors not found in server dashboard - tell Claude. & exit /b 1 )
+
 echo [3/6] Syntax-check the patched dashboard...
 node --check "%PROJECT%\dashboard.server.html" 2>nul || echo  (node --check skipped/na - HTML, continuing)
 
