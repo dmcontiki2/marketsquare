@@ -40,32 +40,44 @@ def main():
         raw = fh.read()
     nl = b"\r\n" if b"\r\n" in raw[:4096] else b"\n"
 
-    parts = []
+    log_flat = raw.replace(b"\r\n", b"\n")
+    parts, folded_names = [], []
     for f in frags:
         p = os.path.join(FRAG_DIR, f)
         with open(p, "rb") as fh:
             body = fh.read().replace(b"\r\n", b"\n").strip(b"\n")
-        parts.append(body.replace(b"\n", nl))
-    block = (nl + nl).join(parts) + nl + nl
-
-    tmp = LOG + ".compile-tmp"
-    with open(tmp, "wb") as fh:
-        fh.write(block + raw)
-    os.replace(tmp, LOG)              # atomic on the same filesystem
+        # DEDUP GUARD (2 Aug 2026): a re-armed fragment must be safe. If this fragment's
+        # first heading line already sits in CHANGELOG.md, it is folded already - archive
+        # without prepending (protects against double-fold after a wipe/restore cycle).
+        head_line = body.split(b"\n", 1)[0].strip()
+        if head_line and head_line in log_flat:
+            print("skip (already present): %s" % f); folded_names.append(f); continue
+        parts.append(body.replace(b"\n", nl)); folded_names.append(f)
+    if parts:
+        block = (nl + nl).join(parts) + nl + nl
+        tmp = LOG + ".compile-tmp"
+        with open(tmp, "wb") as fh:
+            fh.write(block + raw)
+        os.replace(tmp, LOG)          # atomic on the same filesystem
+    else:
+        block = b""
 
     os.makedirs(FOLDED, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    for f in frags:
+    for f in folded_names:
         dst = os.path.join(FOLDED, f)
         if os.path.exists(dst):
             dst = os.path.join(FOLDED, "%s.%s" % (f, stamp))
         shutil.move(os.path.join(FRAG_DIR, f), dst)
 
     # verify our own write landed (the incident class was a SILENT loss)
-    with open(LOG, "rb") as fh:
-        head = fh.read(len(block) + 64)
-    ok = parts[0][:60] in head
-    print("folded %d fragment(s) into CHANGELOG.md · verify %s" % (len(frags), "OK" if ok else "FAILED"))
+    ok = True
+    if parts:
+        with open(LOG, "rb") as fh:
+            head = fh.read(len(block) + 64)
+        ok = parts[0][:60] in head
+    print("folded %d, skipped %d (already present) · verify %s"
+          % (len(parts), len(folded_names) - len(parts), "OK" if ok else "FAILED"))
     return 0 if ok else 2
 
 if __name__ == "__main__":

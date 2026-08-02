@@ -16,6 +16,11 @@
 - **Incident:** VIZ-MAPS-1/2 entries (15:31/15:52) and their 16:10 restoration were silently lost — a concurrently running session rewrote CHANGELOG.md from its own pre-entry snapshot at 15:55 and again 16:12 (its EMAIL-SHOWCASE addenda). Whole-file read-modify-write + stale base = last-writer-wins, no error anywhere. The deploy engine was ruled OUT (wrapper never touches CHANGELOG; releases committed disk state faithfully).
 - **Class fix:** `changelog.d/` fragment pattern — a session NEVER rewrites CHANGELOG.md directly; it drops its entries as a NEW uniquely-named file `changelog.d/YYYY-MM-DD-<slug>.md` (creating a new file cannot wipe anything). `scripts/changelog_compile.py` folds fragments into the top of CHANGELOG.md (single writer) and moves them to `changelog.d/folded/`. Doctrine added to Projects CLAUDE.md.
 
+## 02 Aug 2026 — TP-DRIVE-1: Travelpayouts Drive script installed for site verification + travel monetization (attended, David)
+- **Why:** Travelpayouts approved the TrustSquare partnership (project 557391, "Trustsquare" / trustsquare.co) and connected it to relevant travel-brand programs. One gate remained: site verification via their Drive script in the `<head>`. Until installed, no programs can pay out.
+- **Change:** the unique Drive snippet (async loader for `https://tp-em.com/NTU3Mzkx.js?t=557391`, copied verbatim from the dashboard's Manual installation panel) inserted once at the top of `<head>` in **marketsquare.html** (live `index.html` — the page Travelpayouts verifies) and all nine **adventures_*_map.html** travel pages (the content Drive actually monetizes). No other markup touched; script is async and inert to layout. Comment marker `Travelpayouts Drive` above each insertion.
+- **Next:** deploy, then dashboard → Finish setup → "Check installation" to flip the project to verified; then map connected brand programs onto the Adventures/journey content (Cape-to-Cairo first).
+
 ## 02 Aug 2026 — Daily loop: RG-0015 regression closed (new unguarded git committer)
 - **RG-0015 · SEV-3 · DONE (auto-ship, Gate 1+2 clear).** The regression ledger went RED this run: `activate_autodeploy.bat` was a 9th git-writing .bat that runs `git add -A` + `commit` + `push` (under `[1/3]`) with **no** stale-`.git/index.lock` guard first — the exact recurring index.lock class GIT-LOCK-1 locked down on 30 Jul (RG-0015). A leftover lock from any overlapping committer would block its next commit.
 - **Fix:** inserted `call "%~dp0git_unlock.bat"` immediately before `git add -A`, matching the 8 already-guarded siblings (commit.bat pattern). Build-script hygiene only — no payments/EULA/Tuppence-ledger/KYC, no served artifact, so **no server deploy / restart / CF purge**; smoke unaffected (40/40).
@@ -5657,4 +5662,14 @@ Cost model impact: none.
 - FOUND: 312/313/314 (super-adventures@, 28 Jul, super_example=1) duplicate the by-design trio
   321-323 - buyers saw each experience twice + 3 rogue pinned supers. migrations/004 archives the
   super copies (soft, reversible, title+seller guarded). Rides the same release as migration 003.
+Cost model impact: none.
+
+
+## Addendum 4 - 2 Aug 2026 (late): D8 opened - Stays/B&B showcase trio was never built
+David's catch: the adventures_accommodation outreach track has NO showcase section (0 cards vs 3
+on every other track) and no ZA B&B/guesthouse showcase adverts exist. Filed as OPEN_LOOPS D8 with
+the full build plan (adverts + photos + phone cards + template section + deep links); needs a
+David-assisted photo-generation session, then Claude wires it end-to-end on the hardened pattern.
+David deploying tonight's staged work (migrations 003+004) - verification handed to the next session
+(expectations documented in Addenda 2-3: specs visible on 318-320, duplicates 312-314 archived).
 Cost model impact: none.

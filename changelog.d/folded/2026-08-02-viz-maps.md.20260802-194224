@@ -1,0 +1,17 @@
+## 02 Aug 2026 — VIZ-MAPS-3: sidebar column hidden on phone widths (attended, David)
+- **Why:** on a phone body the fixed 280px sidebar column (Launch Blockers · Session Rules · Auctions) left the main display a sliver.
+- **Change (dashboard.server.html):** one `@media (max-width: 820px)` block — `.main` collapses to one column, `.sidebar` hides. Desktop unchanged. Backup `dashboard.server.html.bak-20260802-phonesidebar`.
+- **Verified headless:** 390px → sidebar hidden, main full width; 1600px → sidebar intact; zero JS errors both. Ships with the next deploy-ref publish.
+
+## 02 Aug 2026 — VIZ-MAPS-2: Live State sidebar removed from the dashboard (attended, David) — SHIPPED in 75c97c6
+- **Why:** David: never used it, and it crowded the phone layout.
+- **Change (dashboard.server.html):** sidebar "Live State" section + its populate() lines removed with asserted-unique anchors; server-side STATUS.md `## Live State` → /dashboard/summary `liveState` left intact. Backup `dashboard.server.html.bak-20260802-nolivestate`.
+- **Verified:** headless at phone size (populate OK, section gone, visuals intact, zero JS errors) + live DOM read post-deploy.
+
+## 02 Aug 2026 — VIZ-MAPS-1: interface visuals for the AI Providers + Infrastructure cards (attended, David) — SHIPPED in fa3e579
+- **What:** each card on the Launch Switch (+1) page carries one **Visual** button (top right) opening a full-screen animated SVG map with **Return to Dashboard** (Esc works). (1) **AI Providers:** app features by category (Listings purple · Trust green · Search blue · Tuppence cyan · Ops amber) → task tiers (haiku/sonnet/vision/triage) → the `ai_provider.complete()` seam (standing lane · pin · breaker · fallback chain) → vendor lanes (Anthropic/OpenAI/Scaleway) with LIVE registry badges. (2) **Infrastructure:** Buyers & Sellers → TLS + Cloudflare edge → BEA hub (SQLite · Redis · uploads/ · seam) → Paystack (charge→/←webhook) · Resend · Hetzner S3, LIVE status dots + captions from /admin/services-status. Neutral-grey no-data render before checks load.
+- **Where:** dashboard.server.html (VIZ-MAPS-1 block + two card buttons). Backup `dashboard.server.html.bak-20260802-vizmaps`. Verified headless + live DOM read post-deploy (both buttons + dialogs present, registry data flowing). Ledger 22 holding · 0 regressed; pulse green; SSL to 1 Sep 2026.
+
+## 02 Aug 2026 — CHANGELOG-COLLISION-1: concurrent sessions can silently wipe each other's CHANGELOG entries (root-caused)
+- **Incident:** VIZ-MAPS-1/2 entries (15:31/15:52) and their 16:10 restoration were silently lost — a concurrently running session rewrote CHANGELOG.md from its own pre-entry snapshot at 15:55 and again 16:12 (its EMAIL-SHOWCASE addenda). Whole-file read-modify-write + stale base = last-writer-wins, no error anywhere. The deploy engine was ruled OUT (wrapper never touches CHANGELOG; releases committed disk state faithfully).
+- **Class fix:** `changelog.d/` fragment pattern — a session NEVER rewrites CHANGELOG.md directly; it drops its entries as a NEW uniquely-named file `changelog.d/YYYY-MM-DD-<slug>.md` (creating a new file cannot wipe anything). `scripts/changelog_compile.py` folds fragments into the top of CHANGELOG.md (single writer) and moves them to `changelog.d/folded/`. Doctrine added to Projects CLAUDE.md.

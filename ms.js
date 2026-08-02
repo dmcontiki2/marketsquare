@@ -2127,15 +2127,15 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', US:'$', CA:'CA$
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
-  ZA: { file:'adventures_reserve_map.html?v=2', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
-  US: { file:'adventures_us_map.html?v=2',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_uk_map.html?v=2',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
-  AU: { file:'adventures_au_map.html?v=2',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  ZA: { file:'adventures_reserve_map.html?v=3', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
+  US: { file:'adventures_us_map.html?v=3',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_uk_map.html?v=3',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html?v=3',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html?v=3',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
-  BW: { file:'adventures_bw_map.html?v=2',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
-  MZ: { file:'adventures_mz_map.html?v=2',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
-  DE: { file:'adventures_de_map.html?v=2',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
+  NA: { file:'adventures_na_map.html?v=4',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  BW: { file:'adventures_bw_map.html?v=3',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
+  MZ: { file:'adventures_mz_map.html?v=3',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
+  DE: { file:'adventures_de_map.html?v=3',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
 // Per-tour maps (26 Jul 2026, David): a tour's map follows the TOUR, not the country, so
@@ -2143,7 +2143,7 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html?v=6', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  c2c: { file:'adventures_c2c_map.html?v=7', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE
