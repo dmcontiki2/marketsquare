@@ -29,7 +29,6 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
-| L1 | **Deploy staged & pending** — repo ms.js v372+deep-link, live v370; audit flags MSJS-DRIFT + VERSION-KEY. 28 Jul added `?listing=<id>` deep link (email showcase cards → exact advert; node --check green; ms.js.bak-20260728-deeplink). | [C] | Say "ship" — /TSL (or deploy_marketsquare.bat) now publishes the deploy ref; the server engine deploys with monotonic buster + auto-rollback (DEPLOY-CONSOLIDATION-1, 2 Aug). | 2026-07-24 | AUDIT_GLOBAL_QA/LATEST.md |
 | L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
@@ -37,12 +36,13 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | # | Decision | Owner | Single next action | Opened | Source |
 |---|----------|-------|--------------------|--------|--------|
 | D4 | **privacy.html UK/US/AU supplements** — verified 2 Aug: NEW work, never drafted (EULA got §13.6 Country Schedules on 23 Jul; privacy.html has zero UK/US/AU content). | [C] | David confirms scope → Claude drafts. | 2026-07-23 | STATUS.md S149 |
-| D5a | **Email-showcase adverts** — property trio DONE (315–317 live 28 Jul, agency template deep-linked). SIX remain (3 Cars + 3 Adventures), fully staged 2 Aug: migration 001 creates them at next release (ids print in deploy log) → `CityLauncher/emailer/flip_showcase_hrefs.py <card>=<id>…` flips cars_dealer/tour_guide/travel_agency → test send. | [D] | Say "ship" (release runs migration) → Claude flips hrefs + test send. | 2026-07-28 | CityLauncher za-agency-readiness |
-| D5b | **Stays vs Accommodation** — the real decision found 2 Aug: buyers browse "Stays", sellers list under "Accommodation", the live EULA formally names "Adventures Accommodation". Rename is mechanically trivial but touches published EULA vocabulary. Recommend: "Stays" everywhere buyer-facing now; EULA formal name follows at next counsel revision. | [D] | One-word ruling ("Stays" / "Accommodation" / discuss with Jnr) → Claude sweeps. | 2026-07-22 | STATUS.md:38 |
-| D6 | **Counsel: post-filing disclosure of reverse-intro + Rank** — explained 2 Aug: both mechanisms are NEW post-filing inventions (payer+moment inverted vs claims C10–C13; published 50/50 rank formula), publicly visible since 18 Jul. Ready-to-send draft asks counsel (a) still protectable? (b) risk to filing 2026/06760? (c) pause marketing? Settle BEFORE Wave 1. | [D] | Send the draft (in your Gmail drafts) to the attorney. | (earlier) | Patents/DRAFT_Counsel_Email_NewMatter_2026-07-21 |
+| D5a | **Email-showcase adverts** — property AND cars trios found already live (315–317, 318–320); agency + cars_dealer templates deep-linked. Only the 3 Adventures adverts remain: migration 001 creates them on the next release (engine hook active since v422). | [C] | One more release (double-click deploy_marketsquare.bat) → Claude harvests ids, flips tour_guide + travel_agency, test send. | 2026-07-28 | CityLauncher za-agency-readiness |
 
 ## ✅ CLOSED — last 7 days
 *(short tail; drop rows older than 7 days)*
 
 - **D1 CLOSED 2 Aug 2026** — "publish the latest EULA": already true at origin (lifecycle clauses live as §§4.6–4.9 + §§14.5–14.6 since v1.10, 23 Jul; v1.11 current on terms.html + in-app gate + modal). Found & fixed in closing: the CDN edge was serving stale **v1.3 (17 May)** on /terms — purged same day, class locked as ledger **RG-0024** (edge stamp must equal origin stamp).
+- **L1 CLOSED 2 Aug 2026 (evening)** — the pending release SHIPPED via the ONE-deploy engine's first live run: v421→v422, health ok, deep-link ms.js + Saturday's work + DEPLOY-CONSOLIDATION-1 + the Stays sweep all live. MSJS-DRIFT / VERSION-KEY flags clear next audit.
+- **D5b CLOSED 2 Aug 2026** — David's ruling: standardize on **"Stays"**. Swept buyer/seller-facing surfaces (filter chip + ADV-SYNC-1 state loop + seller picker + onboarding dropdown + 2 home tiles; ms.js/marketsquare.html, node --check green, live-verified on v422). EULA's formal "Adventures Accommodation" untouched by design — renames at the next counsel revision.
+- **D6 CLOSED 2 Aug 2026** — David's call: proceed as-is; post-filing disclosure of reverse-intro + Rank accepted as a small risk alongside the new referrals. **Wave 1 is NOT blocked on counsel.** The drafted attorney email stays in Gmail drafts should he still want the answer.
 - **D2 / D3 REMOVED 2 Aug 2026** (David: "re-open when the time is right") → parked in BACKLOG.md → Deferred items; counsel register (LEGAL_VERSIONS.md A6) still tracks the fork consolidation as the authority.

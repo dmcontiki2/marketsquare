@@ -448,10 +448,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Live State</div>
-      <div id="live-state-list"></div>
-    </div>
+    <!-- VIZ-MAPS-2 (2 Aug 2026, David): Live State sidebar section removed — unused, and it crowded the phone layout. Data path (STATUS.md '## Live State' -> /dashboard/summary liveState) left intact server-side. -->
 
     <div class="sidebar-section">
       <div class="sidebar-label">⚠ Launch Blockers</div>
@@ -1819,11 +1816,7 @@ function populate() {
   el('session-badge').textContent = 'Session ' + DATA.currentSession;
   el('gen-time').textContent = DATA.generatedAt;
 
-  // Sidebar — Live State
-  const liveLines = (DATA.liveState || '').split('.').map(s=>s.trim()).filter(Boolean);
-  el('live-state-list').innerHTML = liveLines.map(l =>
-    '<div style="font-size:12px;color:#94a3b8;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);">'+l+'</div>'
-  ).join('');
+  // VIZ-MAPS-2: Live State sidebar removed (unused; phone UX) — populate no longer touches it.
 
   // Sidebar — Launch Blockers
   const blockers = DATA.blockers || [];

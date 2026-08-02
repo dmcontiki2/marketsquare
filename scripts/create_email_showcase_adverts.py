@@ -28,32 +28,28 @@ APPLY = "--apply" in sys.argv
 SELLER = "showcase-email@trustsquare.co"
 FOOT = " Showcase advert: AI imagery; free for a real seller to claim and replace with their own product."
 
-# (clone_template_id, title, price, suburb, photo, trust, blurb)
+# (clone_template_id, title, price, suburb, photo, trust, blurb, price_num)
 ADVERTS = [
  (270, "Big 5 Game Walk · Pilanesberg", "R1,850 / person", "Pretoria North",
   "/static/super/sup_email_gamewalk_1_main.jpg", 50,
-  "Guided Big 5 bush walk with an armed field guide — golden-hour departure, small groups, all levels."),
+  "Guided Big 5 bush walk with an armed field guide — golden-hour departure, small groups, all levels.", 1850.0),
  (270, "Quad Biking Dinokeng · Full Day", "R1,250 / person", "Pretoria North",
   "/static/super/sup_email_quad_1_main.jpg", 50,
-  "Full-day guided quad trail through open bushveld — helmets, briefing and sundowner stop included."),
+  "Full-day guided quad trail through open bushveld — helmets, briefing and sundowner stop included.", 1250.0),
  (270, "Hot Air Balloon Safari · Hartbeespoort", "R3,200 / person", "Centurion",
   "/static/super/sup_email_balloon_1_main.jpg", 50,
-  "Sunrise balloon flight over the Magaliesberg with sparkling-wine landing breakfast."),
+  "Sunrise balloon flight over the Magaliesberg with sparkling-wine landing breakfast.", 3200.0),
  # PROPERTY TRIO REMOVED 2 Aug 2026 (David: "complete D5 now" session): these three
  # already exist LIVE as listings 315/316/317 (sellers prop-showcase-a/b/c@trustsquare.co,
  # created 28 Jul) and agency_outreach.html is already deep-linked to them. Re-adding them
  # here would DUPLICATE (this script's idempotency keys on seller showcase-email@ + title,
  # which does not match the live prop-showcase-* rows). Remaining to create: 3 Cars + 3
  # Adventures below -> cars_dealer / tour_guide / travel_agency templates.
- (265, "2021 Mercedes-AMG C63 S · Saloon · 42 000km", "R1 450 000", "Brooklyn",
-  "/static/super/sup_email_amg_1_main.jpg", 85,
-  "One owner, full agent history, 375 kW bi-turbo V8 — balance of Premium Drive plan."),
- (265, "2020 Toyota Land Cruiser 79 · 4.5 V8 · Bakkie", "R1 100 000", "Pretoria North",
-  "/static/super/sup_email_lc79_1_main.jpg", 50,
-  "4.5 V8 diesel double-cab legend — canopy, dual tanks, service book stamped to date."),
- (265, "1966 Mercedes-Benz 250SE W108 · Restored", "R345 000", "Pretoria East",
-  "/static/super/sup_email_250se_1_main.jpg", 50,
-  "Nut-and-bolt restored W108 — numbers matching, original hubcaps, concours-ready."),
+ # CARS TRIO REMOVED 2 Aug 2026 (post-ship discovery, same class as the property trio):
+ # already LIVE as listings 318/319/320 (sellers cars-showcase-a/b/c@trustsquare.co) —
+ # this script's showcase-email@ idempotency would have duplicated them.
+ # cars_dealer_outreach.html deep-linked to 318-320 on 2 Aug. Only the THREE
+ # Adventures adverts above remain for this script to create.
 ]
 
 conn = sqlite3.connect(DB)
@@ -61,7 +57,7 @@ conn.row_factory = sqlite3.Row
 now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 plan, existing = [], []
-for tid, title, price, suburb, photo, trust, blurb in ADVERTS:
+for tid, title, price, suburb, photo, trust, blurb, price_num in ADVERTS:
     hit = conn.execute("SELECT id FROM listings WHERE seller_email=? AND title=?",
                        (SELLER, title)).fetchone()
     if hit:
@@ -82,6 +78,10 @@ for tid, title, price, suburb, photo, trust, blurb in ADVERTS:
         "created_at": now, "updated_at": now, "published_at": now,
         "view_count": 0, "boost_until": None, "suspension_reason": None,
         "listing_status": "live",
+        # EMAIL-SHOWCASE-2 (2 Aug 2026): clone-junk guard — the 28 Jul trios kept the
+        # template's price_num/wonders/attestation stamps; never inherit those again.
+        "price_num": price_num, "linked_wonders": None, "spec_confirmed": None,
+        "attested_at": None, "attested_email": None, "nearby_pois": None,
     })
     plan.append((row, title))
 

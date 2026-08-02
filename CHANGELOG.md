@@ -5574,3 +5574,40 @@ David ruled on the six open decisions. Actions taken:
 - D6 explained from the draft itself; counsel email staged as a Gmail draft for David to send.
 Ledger AFTER: 24 entries, 22 holding, 0 regressed (RG-0023 + RG-0024 new, both passing live). No server deploy this session.
 Cost model impact: none.
+
+
+## Session - 2 Aug 2026 (evening): FIRST ONE-DEPLOY RELEASE SHIPPED (v422) + Stays ruling live + D6 decided
+- RELEASE (David double-click -> push wrapper -> server engine, first live run): v421->v422, health ok,
+  monotonic bump proven in production. Cargo: DEPLOY-CONSOLIDATION-1 engine files, migration 001,
+  Saturday's pending work incl. deep-link ms.js (closes OPEN_LOOPS L1), D5b Stays sweep. The engine
+  handover behaved as predicted: the OLD script completed this deploy (no hook), the NEW script+hook
+  are active from the next release.
+- D5b (David: "standardize"): buyer/seller-facing 'Accommodation' -> 'Stays' — filter chip, ADV-SYNC-1
+  lockstep (mapper/setter/filter-check), seller subcat picker ('Guided experience' -> 'Experiences' too),
+  onboarding category option, 2 home tiles. Internal keys (adventures_accommodation etc.), data-value
+  compares (cat==='Accommodation') and ALL EULA copy untouched; EULA formal name follows at next counsel
+  revision. node --check green; live-verified on v422. LINE-ENDING LESSON: marketsquare.html is CRLF —
+  python text-mode rewrite strips \r (-4,273B, the DW-005 signature); edits done with newline='' preserved.
+- D5a: cars trio discovered ALREADY LIVE (318/319/320, cars-showcase-a/b/c@) — second idempotency
+  blindspot avoided; script trimmed to the 3 Adventures only; cars_dealer_outreach.html deep-linked to
+  318-320 (2 hrefs/card, header link untouched). Remaining: one small release runs migration 001 ->
+  adventures trio -> flip tour_guide + travel_agency + test send.
+- D6 (David): proceed as-is, risk accepted, Wave 1 unblocked. Counsel draft remains in Gmail drafts.
+- Also this release: new deploy bats normalized to CRLF (cmd label safety).
+Cost model impact: none.
+
+
+## Addendum - 2 Aug 2026 (EMAIL-SHOWCASE-2, from David's screenshots)
+All six 28-Jul showcase adverts kept their CLONE TEMPLATE'S structured fields: AMG C63 + 250SE
+showed Toyota Hilux specs (Make/Model/2755cc/Diesel/68000km), the vacant stand showed a 4-bed
+house, every price_num was the template's (sort/filter poison: AMG sorted at R489,900), all six
+were super_example=1 (against the recorded not-super design), and carried a false seller-attestation
+stamp + auto-linked heritage wonders. Fix: migrations/002_fix_showcase_clone_fields.py heals all
+six rows (correct vehicle/property fields, price_num, super_example=0, attestation + wonders
+cleared; idempotent, seller-sanity-guarded); script 001 extended so the 3 Adventures adverts are
+born clean (price_num tuple + clone-junk guard). Both ride the next release's post-deploy hook.
+ALSO IDENTIFIED (David's click-through): the ?listing= deep links land on the pre-launch Unlock
+gate (ADMIN LOGIN GATE v2, marketsquare.html:~250, by design, REMOVE-BEFORE-LAUNCH marker).
+Email phone-card images verified LIVE at /static/ (200) - the broken squares in the screenshot
+are the email client blocking remote images, not missing files. Wave-1 gate decision: David's call
+when the send date is set (read-only ?listing preview bypass vs send-at-launch).
