@@ -1,0 +1,47 @@
+{
+ "next_id": 7,
+ "items": {
+  "DW-001": {
+   "first_seen": "2026-08-02",
+   "sev": "INFO",
+   "source": "audit:VERSION-KEY",
+   "status": "OPEN",
+   "last_seen": "2026-08-02"
+  },
+  "DW-002": {
+   "first_seen": "2026-08-02",
+   "sev": "INFO",
+   "source": "audit:DEMO-PLACEHOLDERS",
+   "status": "OPEN",
+   "last_seen": "2026-08-02"
+  },
+  "DW-003": {
+   "first_seen": "2026-08-02",
+   "sev": "MEDIUM",
+   "source": "consolidation",
+   "status": "OPEN",
+   "last_seen": "2026-08-02"
+  },
+  "DW-004": {
+   "first_seen": "2026-08-02",
+   "sev": "MEDIUM",
+   "source": "consolidation",
+   "status": "OPEN",
+   "last_seen": "2026-08-02"
+  },
+  "DW-005": {
+   "first_seen": "2026-08-02",
+   "last_seen": "2026-08-02",
+   "sev": "MEDIUM",
+   "source": "cron-sensor:fea-integrity",
+   "status": "OPEN"
+  },
+  "DW-006": {
+   "first_seen": "2026-08-02",
+   "last_seen": "2026-08-02",
+   "sev": "INFO",
+   "source": "daily_checks:deploy_drift",
+   "status": "OPEN"
+  }
+ }
+}

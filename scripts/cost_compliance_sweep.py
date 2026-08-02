@@ -190,6 +190,18 @@ def model_discipline(root: Path):
             if re.search(r"\(\s*\d+\.\d+\s*,\s*\d+\.\d+\s*\)", ltxt) or \
                re.search(r"_AI_COST|_MODEL_PRICE|MODEL_RATES|AA_MODEL_FALLBACK", ltxt):
                 continue
+            # JSON price-card entries, e.g. ai_price_card.json:  "claude-sonnet-4-6": { "in": 3.0,
+            # "out": 15.0, "ccy": "USD", ... } — a per-MTok pricing-reference row used to compute
+            # cost estimates elsewhere, not a call site. Distinguish from a real call/registry
+            # hit by requiring the JSON-object shape AND cost fields nearby (2 Aug 2026: this
+            # exact line, ai_price_card.json:91, WARNed every day since Jul — verified no .py/.js
+            # imports or reads this key as a live model selector, same false-positive class as the
+            # GOLDEN_EVAL_* exemption above).
+            if re.match(r'^"claude-[a-z0-9.\-]+"\s*:\s*\{', ltxt):
+                lookahead = "\n".join(tlines[line:line + 5])
+                if re.search(r'"in"\s*:\s*[\d.]+', lookahead) and re.search(r'"out"\s*:\s*[\d.]+', lookahead):
+                    findings.append((INFO, f"{rel}:{line} Sonnet pricing-table entry (per-MTok rate card) — reference data, not a call site"))
+                    continue
             if fam == "opus":
                 findings.append((CRIT, f"{rel}:{line} uses OPUS ({m.group(0)}) — cost model rejected Opus"))
             elif fam == "sonnet":

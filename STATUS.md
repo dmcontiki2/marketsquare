@@ -5,6 +5,9 @@
 
 ## Current Session
 
+2026-08-01 (Session 155, attended, David, evening): SESSION COUNTER CORRECTED 150 -> 155 (precedent: the 139->141 correction, Session 141). The counter froze at Session 150's close (23 Jul) while attended work continued unnumbered: 151 = 24 Jul (Adventures wow pass), 152 = 27 Jul (Cape to Cairo), 153 = 31 Jul (AI-vendor Addenda 5-8 + GPT-5.6 seam WIP + peer-review build), 154 = 1 Aug daytime (INFRA-PANEL-2 + TP-FLIGHTS-1 + EULA v1.11 — sitting boundaries unrecorded, collapsed to one number), 155 = this evening cloud session (Kimi K3 EU survey -> vendor-strategy Addendum 11: WAIT for Scaleway/OVH, HostYourAI not pursued). NB the dashboard parses this counter from STATUS.md ON THE SERVER — the badge shows 155 after the next deploy carries this file.
+
+
 2026-08-01 (attended, David, evening): EULA v1.11 LIVE — SS6.1A affiliate-disclosure clause added + SS6.1 income enumeration corrected (v1.10 would have been falsified by Travelpayouts commission). All three copies synced (eula_clean/terms/ms.js modal), shipped via SEC-2 from the cloud, CF purged, /terms verified. Counsel ratification + tax treatment remain the [D] gate in OPEN_LOOPS before any travel flag flips.
 
 2026-08-01 (attended, David): TP-FLIGHTS-1 — Travelpayouts is live as the flights pre-information lane (Amadeus self-service died 17 Jul; Google OUT per David's $360 ruling). Account activated + project "Trustsquare" connected to Aviasales (hidden blockers: unread activation email, missing Project). Flight Data API dry-run green in native ZAR across 4 trunk routes; thin routes return clean empty. Panel row swapped amadeus→travelpayouts (TRAVELPAYOUTS_TOKEN, presence-only, flag data_flights stays DARK); token provisioned to server .env (never in git). Travel positioning + supplier-fallback doctrine + fixed-cost pricing rule all recorded in CLAUDE.md. Introduction model intact: commission in, no money through the till.

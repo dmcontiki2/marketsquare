@@ -29,6 +29,7 @@ cd /d "%PROJECT%" || (echo  ERROR: project folder not found: %PROJECT% & pause &
 
 :: -- Step 1: make sure the mirror has the auto-deploy files --------------------
 echo  [1/3] Committing and pushing the project to the mirror...
+call "%~dp0git_unlock.bat"
 git add -A
 git commit -m "Activate Phase 3 auto-deploy (ops/autodeploy)" 1>nul 2>nul
 git push origin HEAD:main

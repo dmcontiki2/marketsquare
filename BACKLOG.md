@@ -3,6 +3,8 @@
 > "do it later" backlog only. If something is open NOW, it belongs in `OPEN_LOOPS.md`.
 
 *Updated S140 · 18 June 2026 — added the Deferred items list (surfaced in the daily brief)*
+
+- **Super-advert travel refresh pass** (deferred 1 Aug 2026, after tours programs connect + compliance gate clears): one enrichment pass over the journey/Adventures SUPER ADVERTS — add cached ZAR "from" fare lines (Travelpayouts, with as-of stamps) and disclosed affiliate click-outs (GYG/Viator/Welcome Pickups) to the pages. Photos, routes, narrative UNCHANGED — pricing garnish only, not a regeneration. Blocked by OPEN_LOOPS compliance gate.
 *Prioritised by: launch-blocking first, UX polish second, future features third.*
 
 ---
