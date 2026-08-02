@@ -48,6 +48,11 @@ call "%PROJECT%\git_unlock.bat"
 :: covers the CHILD references INSIDE ms.js (tour maps etc.) before we commit.
 if defined PYEXE %PYEXE% "%PROJECT%\scripts\autobump.py"
 
+:: -- CHANGELOG-COLLISION-1 (2 Aug 2026): fold pending changelog.d/ fragments into
+:: -- CHANGELOG.md (the ONE writer) so the record rides this release commit. Sessions
+:: -- drop fragments, never rewrite CHANGELOG.md directly - see scripts/changelog_compile.py.
+if defined PYEXE if exist "%PROJECT%\scripts\changelog_compile.py" %PYEXE% "%PROJECT%\scripts\changelog_compile.py"
+
 :: -- [3/6] Gates: pre-deploy scan + deploy lock + CM/DB gate -----------------
 set "TSL_LOCK_HELD="
 if not defined PYEXE (

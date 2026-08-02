@@ -1,3 +1,21 @@
+## 02 Aug 2026 — VIZ-MAPS-3: sidebar column hidden on phone widths (attended, David)
+- **Why:** on a phone body the fixed 280px sidebar column (Launch Blockers · Session Rules · Auctions) left the main display a sliver.
+- **Change (dashboard.server.html):** one `@media (max-width: 820px)` block — `.main` collapses to one column, `.sidebar` hides. Desktop unchanged. Backup `dashboard.server.html.bak-20260802-phonesidebar`.
+- **Verified headless:** 390px → sidebar hidden, main full width; 1600px → sidebar intact; zero JS errors both. Ships with the next deploy-ref publish.
+
+## 02 Aug 2026 — VIZ-MAPS-2: Live State sidebar removed from the dashboard (attended, David) — SHIPPED in 75c97c6
+- **Why:** David: never used it, and it crowded the phone layout.
+- **Change (dashboard.server.html):** sidebar "Live State" section + its populate() lines removed with asserted-unique anchors; server-side STATUS.md `## Live State` → /dashboard/summary `liveState` left intact. Backup `dashboard.server.html.bak-20260802-nolivestate`.
+- **Verified:** headless at phone size (populate OK, section gone, visuals intact, zero JS errors) + live DOM read post-deploy.
+
+## 02 Aug 2026 — VIZ-MAPS-1: interface visuals for the AI Providers + Infrastructure cards (attended, David) — SHIPPED in fa3e579
+- **What:** each card on the Launch Switch (+1) page carries one **Visual** button (top right) opening a full-screen animated SVG map with **Return to Dashboard** (Esc works). (1) **AI Providers:** app features by category (Listings purple · Trust green · Search blue · Tuppence cyan · Ops amber) → task tiers (haiku/sonnet/vision/triage) → the `ai_provider.complete()` seam (standing lane · pin · breaker · fallback chain) → vendor lanes (Anthropic/OpenAI/Scaleway) with LIVE registry badges. (2) **Infrastructure:** Buyers & Sellers → TLS + Cloudflare edge → BEA hub (SQLite · Redis · uploads/ · seam) → Paystack (charge→/←webhook) · Resend · Hetzner S3, LIVE status dots + captions from /admin/services-status. Neutral-grey no-data render before checks load.
+- **Where:** dashboard.server.html (VIZ-MAPS-1 block + two card buttons). Backup `dashboard.server.html.bak-20260802-vizmaps`. Verified headless + live DOM read post-deploy (both buttons + dialogs present, registry data flowing). Ledger 22 holding · 0 regressed; pulse green; SSL to 1 Sep 2026.
+
+## 02 Aug 2026 — CHANGELOG-COLLISION-1: concurrent sessions can silently wipe each other's CHANGELOG entries (root-caused)
+- **Incident:** VIZ-MAPS-1/2 entries (15:31/15:52) and their 16:10 restoration were silently lost — a concurrently running session rewrote CHANGELOG.md from its own pre-entry snapshot at 15:55 and again 16:12 (its EMAIL-SHOWCASE addenda). Whole-file read-modify-write + stale base = last-writer-wins, no error anywhere. The deploy engine was ruled OUT (wrapper never touches CHANGELOG; releases committed disk state faithfully).
+- **Class fix:** `changelog.d/` fragment pattern — a session NEVER rewrites CHANGELOG.md directly; it drops its entries as a NEW uniquely-named file `changelog.d/YYYY-MM-DD-<slug>.md` (creating a new file cannot wipe anything). `scripts/changelog_compile.py` folds fragments into the top of CHANGELOG.md (single writer) and moves them to `changelog.d/folded/`. Doctrine added to Projects CLAUDE.md.
+
 ## 02 Aug 2026 — Daily loop: RG-0015 regression closed (new unguarded git committer)
 - **RG-0015 · SEV-3 · DONE (auto-ship, Gate 1+2 clear).** The regression ledger went RED this run: `activate_autodeploy.bat` was a 9th git-writing .bat that runs `git add -A` + `commit` + `push` (under `[1/3]`) with **no** stale-`.git/index.lock` guard first — the exact recurring index.lock class GIT-LOCK-1 locked down on 30 Jul (RG-0015). A leftover lock from any overlapping committer would block its next commit.
 - **Fix:** inserted `call "%~dp0git_unlock.bat"` immediately before `git add -A`, matching the 8 already-guarded siblings (commit.bat pattern). Build-script hygiene only — no payments/EULA/Tuppence-ledger/KYC, no served artifact, so **no server deploy / restart / CF purge**; smoke unaffected (40/40).
@@ -5611,3 +5629,32 @@ gate (ADMIN LOGIN GATE v2, marketsquare.html:~250, by design, REMOVE-BEFORE-LAUN
 Email phone-card images verified LIVE at /static/ (200) - the broken squares in the screenshot
 are the email client blocking remote images, not missing files. Wave-1 gate decision: David's call
 when the send date is set (read-only ?listing preview bypass vs send-at-launch).
+
+
+## Addendum 2 - 2 Aug 2026 (night): v423 verified + EMAIL-SHOWCASE-3 + D5a closed
+- v423 landed (second ONE-deploy release; hook's first live run): migration 001 created adventures
+  showcase 321/322/323 (clean: super 0, correct price_num, no false attestation); migration 002
+  healed 315-320 (verified live: vacant stand real fields, price_num all six, super 0, wonders +
+  false attestation cleared). seed idempotent-ok.
+- FOUND via David's screenshot + serializer read (CARS-SPEC-1 @bea_main ~91690): public payload
+  hides ALL vehicle fields on non-demo cars listings without confirmed sections - 002's stamp
+  clearing made the (now-correct) specs invisible. David's ruling: specs are the selling point.
+  migrations/003_showcase_specs_visible.py re-asserts correct specs AND restores
+  spec_confirmed{details,performance,condition}+attested_at with today's stamp (idempotent).
+- tour_guide + travel_agency templates deep-linked to 321/322/323 (2 anchors per card, header
+  links untouched). cars_dealer done earlier (318-320). All four templates now deep-linked.
+- D5a CLOSED; NEW D7 [D]: wave-1 recipients hit the pre-launch Unlock gate - rule wait-for-launch
+  vs read-only ?listing preview bypass; test send follows that ruling.
+Cost model impact: none.
+
+
+## Addendum 3 - 2 Aug 2026 (night): travel template gets the flagship tours + duplicate supers found
+- David's ruling: travel_agency_outreach.html now shows the three SIGNATURE TOURS instead of
+  repeating the guided-experiences trio - Cape to Cairo (306), Namibia End to End (304),
+  Mozambique Coast (308), each card: live hero photo + name + "Click to view" deep link + NEW
+  gate-free "Interactive route map" link (static maps bypass the pre-launch Unlock gate, so email
+  recipients can explore routes cold - partial D7 relief). Section heading updated.
+- FOUND: 312/313/314 (super-adventures@, 28 Jul, super_example=1) duplicate the by-design trio
+  321-323 - buyers saw each experience twice + 3 rogue pinned supers. migrations/004 archives the
+  super copies (soft, reversible, title+seller guarded). Rides the same release as migration 003.
+Cost model impact: none.
