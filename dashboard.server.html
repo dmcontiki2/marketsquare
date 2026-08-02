@@ -571,10 +571,11 @@
   window._apv2B=(location.protocol==='file:'?'https://trustsquare.co':'');
   window._apv2Tok=function(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}};
   window._apv2=window._apv2||{providers:[]};</script>
-  <div class="ls-card" id="ai-prov-card-v3">
+  <div class="ls-card" id="ai-prov-card-v3" style="position:relative">
+    <button type="button" class="ms-viz-btn" onclick="msVizOpen('ai')" title="See how the AI providers interface with the app">&#128506;&#65039; Visual</button>
     <div class="ls-h">&#128268; AI Providers <span id="apv3-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
     <div id="apv3-pin" style="display:none;font-size:12px;margin:-2px 0 8px;padding:7px 10px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);"></div>
-    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Pin = manual precedence for a limited time; when it expires the standing lane resumes automatically. Standing-lane changes go through the Model Register process, not this card.</div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px;padding-right:92px">Pin = manual precedence for a limited time; when it expires the standing lane resumes automatically. Standing-lane changes go through the Model Register process, not this card.</div>
     <div id="apv3-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading registry&hellip;</div></div>
     <div class="ls-h" style="margin-top:12px;font-size:12px;">Latest funnel (order &middot; gate only)</div>
     <div id="apv3-funnel" style="font-size:11px;color:var(--muted);line-height:1.7"></div>
@@ -607,9 +608,10 @@
   
 
   <!-- INFRA-PANEL-1 (22 Jul 2026) — external services health; mirrors AI Providers card -->
-  <div class="ls-card" id="infra-card">
+  <div class="ls-card" id="infra-card" style="position:relative">
+    <button type="button" class="ms-viz-btn" onclick="msVizOpen('infra')" title="See how the external services interface with the app">&#128506;&#65039; Visual</button>
     <div class="ls-h">&#128736;&#65039; Infrastructure <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— external services</span></div>
-    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Live key + endpoint checks, keys shown masked. A dead key turns red here instead of failing silently for a month.</div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px;padding-right:92px">Live key + endpoint checks, keys shown masked. A dead key turns red here instead of failing silently for a month.</div>
     <div id="infra-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading checks&hellip;</div></div>
     <div id="infra-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
@@ -722,6 +724,354 @@ window.lsSave=function(){ var body={mode:S.mode,verified_tier:!!S.verified_tier,
 })();
 </script>
 <!-- ── END LAUNCH SWITCH VIEW ── -->
+
+<!-- ══ VIZ-MAPS-1 (2 Aug 2026, David) — "how it interfaces with the app" visuals for the
+     AI Providers and Infrastructure cards. One button per card (top right) opens a full-screen
+     animated SVG map; ↩ Return (or Esc) closes it. Live-status aware: lanes/services tint from
+     window._apv3 / window._infraD when the cards have loaded; static structure renders regardless. -->
+<style>
+  .ms-viz-btn{position:absolute;top:12px;right:12px;z-index:5;display:inline-flex;align-items:center;gap:6px;
+    padding:6px 12px;border-radius:50px;border:1px solid var(--border);cursor:pointer;font-family:inherit;
+    font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--text);
+    background:linear-gradient(135deg,#1a2232,#111827);transition:box-shadow .2s,border-color .2s}
+  .ms-viz-btn:hover{border-color:var(--accent);box-shadow:0 0 14px rgba(59,130,246,.35)}
+  .ms-viz-ov{display:none;position:fixed;inset:0;z-index:5000;
+    background:radial-gradient(1200px 700px at 50% 30%,#101a30 0%,#0b0f1a 70%);}
+  .ms-viz-ov.open{display:flex;flex-direction:column;animation:msvFade .25s ease}
+  @keyframes msvFade{from{opacity:0}to{opacity:1}}
+  .ms-viz-top{display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--border);
+    background:rgba(17,24,39,.85);backdrop-filter:blur(6px)}
+  .ms-viz-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+  .ms-viz-sub{font-size:11.5px;color:var(--muted)}
+  .ms-viz-ret{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:50px;
+    border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;
+    font-size:12.5px;font-weight:700;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+  .ms-viz-ret:hover{border-color:var(--accent);box-shadow:0 0 12px rgba(59,130,246,.35)}
+  .ms-viz-body{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px}
+  .ms-viz-body svg{width:100%;height:100%;max-height:calc(100vh - 76px)}
+  .msv-flow{stroke-dasharray:7 9;animation:msvDash 1.1s linear infinite}
+  .msv-flow.slow{animation-duration:2.2s}
+  @keyframes msvDash{to{stroke-dashoffset:-16}}
+  .msv-pulse{animation:msvPulse 2s ease-in-out infinite}
+  @keyframes msvPulse{0%,100%{opacity:.55}50%{opacity:1}}
+  @media (prefers-reduced-motion: reduce){.msv-flow,.msv-pulse{animation:none}}
+</style>
+
+<div id="ms-viz-ai" class="ms-viz-ov" role="dialog" aria-label="AI Providers interface map">
+  <div class="ms-viz-top">
+    <div>
+      <div class="ms-viz-title">&#128268; AI Providers — how they interface with the app</div>
+      <div class="ms-viz-sub">every AI feature calls ONE seam by task tier — the seam picks the vendor lane; pin &amp; breaker re-route it live</div>
+    </div>
+    <button type="button" class="ms-viz-ret" onclick="msVizClose('ai')">&#8617; Return to Dashboard</button>
+  </div>
+  <div class="ms-viz-body"><svg id="ms-viz-ai-svg" viewBox="0 0 1360 880" preserveAspectRatio="xMidYMid meet"></svg></div>
+</div>
+
+<div id="ms-viz-infra" class="ms-viz-ov" role="dialog" aria-label="Infrastructure interface map">
+  <div class="ms-viz-top">
+    <div>
+      <div class="ms-viz-title">&#128736;&#65039; Infrastructure — external services around the app</div>
+      <div class="ms-viz-sub">the roads in and out of trustsquare.co — traffic, payments, email, storage — with the live health of each service</div>
+    </div>
+    <button type="button" class="ms-viz-ret" onclick="msVizClose('infra')">&#8617; Return to Dashboard</button>
+  </div>
+  <div class="ms-viz-body"><svg id="ms-viz-infra-svg" viewBox="0 0 1360 840" preserveAspectRatio="xMidYMid meet"></svg></div>
+</div>
+
+<script>
+/* VIZ-MAPS-1 — SVG builders. Rebuilt on every open so live registry/health data is fresh. */
+(function(){
+  var esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  function link(x1,y1,x2,y2,color,w,cls,op){
+    var mx=(x1+x2)/2;
+    return '<path d="M'+x1+' '+y1+' C '+mx+' '+y1+', '+mx+' '+y2+', '+x2+' '+y2+'" fill="none" stroke="'+color+
+      '" stroke-width="'+(w||2)+'" opacity="'+(op==null?0.8:op)+'"'+(cls?(' class="'+cls+'"'):'')+' stroke-linecap="round"/>';
+  }
+  function box(x,y,w,h,stroke,fill,rx){
+    return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(rx||12)+'" fill="'+(fill||'#111827')+
+      '" stroke="'+stroke+'" stroke-width="1.4"/>';
+  }
+  function txt(x,y,s,size,color,weight,anchor,spacing){
+    return '<text x="'+x+'" y="'+y+'" font-size="'+size+'" fill="'+color+'" font-weight="'+(weight||400)+
+      '" text-anchor="'+(anchor||'start')+'"'+(spacing?(' letter-spacing="'+spacing+'"'):'')+
+      ' font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">'+s+'</text>';
+  }
+  function dot(x,y,color,pulse){return '<circle cx="'+x+'" cy="'+y+'" r="5.5" fill="'+color+'"'+(pulse?' class="msv-pulse"':'')+'/>';}
+
+  /* ── colour system ─────────────────────────────────────────────
+     App categories:  Listings/Adverts purple · Trust&Safety green · Search blue ·
+                      Tuppence cyan · Ops amber
+     Task tiers:      haiku sky · sonnet violet · vision pink · triage gold
+     Vendor lanes:    Anthropic terracotta · OpenAI green · Scaleway purple
+     Status:          ok green · warn amber · fail red · no-key grey            */
+  var CAT={listings:'#8b5cf6',trust:'#10b981',search:'#3b82f6',tuppence:'#06b6d4',ops:'#f59e0b'};
+  var TIER={haiku:'#38bdf8',sonnet:'#a78bfa',vision:'#f472b6',triage:'#fbbf24'};
+  var LANE={anthropic:'#e07a5f',openai:'#10a37f',scaleway:'#8b5cf6'};
+  var STAT={ok:'#22c55e',warn:'#eab308',fail:'#ef4444',nokey:'#6b7280'};
+
+  /* ════════ 1 · AI PROVIDERS MAP ════════ */
+  window.msVizBuildAI=function(){
+    var d=window._apv3||{active:'anthropic',standing:'anthropic',override:null,providers:[]};
+    var avail={}; (d.providers||[]).forEach(function(p){avail[p.id]=!!p.available;});
+    if(!(d.providers||[]).length){avail={anthropic:true};}
+    var groups=[
+      {id:'listings',name:'LISTINGS &amp; ADVERTS',c:CAT.listings,items:[
+        {n:'Advert coach &amp; super-adverts',t:['sonnet','haiku']},
+        {n:'Mode B anonymity rewrite',t:['sonnet']},
+        {n:'Import photo scan',t:['sonnet','vision']}]},
+      {id:'trust',name:'TRUST &amp; SAFETY',c:CAT.trust,items:[
+        {n:'KYC ID verification',t:['sonnet','vision']},
+        {n:'Photo checks — orientation &middot; anonymity',t:['vision']}]},
+      {id:'search',name:'SEARCH &amp; DISCOVERY',c:CAT.search,items:[
+        {n:'Search interpretation',t:['haiku']}]},
+      {id:'tuppence',name:'TUPPENCE AI SERVICES',c:CAT.tuppence,items:[
+        {n:'Tier 1 &amp; 2 buyer/seller services',t:['haiku','sonnet']}]},
+      {id:'ops',name:'OPS &amp; ADMIN',c:CAT.ops,items:[
+        {n:'Email triage',t:['triage']},
+        {n:'Provider self-test (this dashboard)',t:['haiku']}]}
+    ];
+    var s='';
+    s+='<defs><filter id="msvGlow" x="-40%" y="-40%" width="180%" height="180%">'+
+       '<feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    /* column headings */
+    s+=txt(180,32,'APP FEATURES',12,'#64748b',800,'middle','2px');
+    s+=txt(487,32,'TASK TIERS',12,'#64748b',800,'middle','2px');
+    s+=txt(770,32,'THE SEAM',12,'#64748b',800,'middle','2px');
+    s+=txt(1170,32,'VENDOR LANES',12,'#64748b',800,'middle','2px');
+
+    /* tier chips */
+    var tiers={haiku:{y:170,d:'everyday text'},sonnet:{y:290,d:'heavy reasoning'},vision:{y:410,d:'image analysis'},triage:{y:530,d:'inbox sorting'}};
+    Object.keys(tiers).forEach(function(k){var t=tiers[k];
+      s+=box(432,t.y-26,112,52,TIER[k],'#0d1526',26);
+      s+=txt(488,t.y-2,k,14,TIER[k],800,'middle');
+      s+=txt(488,t.y+15,t.d,9,'#64748b',400,'middle');
+    });
+
+    /* feature groups + item→tier links */
+    var y=52;
+    groups.forEach(function(g){
+      var h=34+g.items.length*34+8;
+      s+=box(22,y,318,h,g.c,'rgba(17,24,39,.92)');
+      s+='<rect x="22" y="'+y+'" width="5" height="'+h+'" rx="2.5" fill="'+g.c+'"/>';
+      s+=txt(40,y+23,g.name,10.5,g.c,800,'start','1.2px');
+      var iy=y+34;
+      g.items.forEach(function(it){
+        s+='<circle cx="46" cy="'+(iy+11)+'" r="3.5" fill="'+g.c+'"/>';
+        s+=txt(58,iy+15,it.n,12.5,'#e2e8f0',600);
+        it.t.forEach(function(tk){
+          s+=link(340,iy+11,430,tiers[tk].y,TIER[tk],1.6,'msv-flow slow',0.5);
+        });
+        iy+=34;
+      });
+      y+=h+14;
+    });
+
+    /* seam hub */
+    s+=box(620,120,300,480,'#3b82f6','rgba(13,21,38,.95)',16);
+    s+=txt(770,152,'ai_provider.complete()',15,'#fff',800,'middle');
+    s+=txt(770,172,'ONE SEAM — call sites never name a vendor',10,'#64748b',400,'middle');
+    var seam=[
+      {y:200,icon:'&#129517;',t:'Standing lane',d:'set by the Model Register process',c:'#3b82f6'},
+      {y:295,icon:'&#128204;',t:'Pin override',d:'manual &middot; time-boxed &middot; auto-expires to standing',c:'#eab308'},
+      {y:390,icon:'&#9889;',t:'Breaker',d:'auto-swap on bans &middot; 429 &middot; 5xx &middot; timeouts',c:'#ef4444'},
+      {y:485,icon:'&#128257;',t:'Fallback chain',d:'anthropic &rarr; openai &rarr; scaleway, one try per lane',c:'#10b981'}
+    ];
+    seam.forEach(function(m){
+      s+=box(640,m.y,260,72,m.c,'#111827',10);
+      s+=txt(660,m.y+30,m.icon+' '+m.t,13,'#e2e8f0',700);
+      s+=txt(660,m.y+50,m.d,10,'#64748b');
+    });
+    /* tiers → seam */
+    Object.keys(tiers).forEach(function(k){s+=link(544,tiers[k].y,618,360,TIER[k],2.4,'msv-flow',0.75);});
+
+    /* vendor lanes (live-aware) */
+    var act=d.override?d.override.provider:d.active;
+    var lanes=[
+      {id:'anthropic',y:90, name:'Anthropic',models:'claude-haiku-4.5 &middot; claude-sonnet-4.6',note:'all four tiers &middot; production lane'},
+      {id:'openai',  y:290,name:'OpenAI',   models:'GPT-5.6 Luna &middot; GPT-5.6 Terra',       note:'adapter wired &middot; golden-set gated'},
+      {id:'scaleway',y:490,name:'Scaleway EU',models:'mistral-medium-3.5-128b (one model)',    note:'standby &middot; EU data residency'}
+    ];
+    lanes.forEach(function(L){
+      var isAct=(L.id===act), isAv=!!avail[L.id];
+      var lc=LANE[L.id];
+      s+=link(922,360,1015,L.y+70,lc,isAct?5:2,isAct?'msv-flow':'msv-flow slow',isAct?0.95:(isAv?0.5:0.22));
+      s+='<g'+(isAct?' filter="url(#msvGlow)"':'')+'>';
+      s+=box(1018,L.y,320,140,lc,isAct?'rgba(17,24,39,1)':'rgba(17,24,39,.75)',14);
+      s+='<rect x="1018" y="'+L.y+'" width="320" height="6" rx="3" fill="'+lc+'" opacity="'+(isAv?1:.35)+'"/>';
+      s+='</g>';
+      s+=txt(1040,L.y+36,L.name,16,isAv?'#fff':'#94a3b8',800);
+      s+=txt(1040,L.y+60,L.models,10.5,'#94a3b8');
+      s+=txt(1040,L.y+80,L.note,10,'#64748b');
+      var badge, bc;
+      if(isAct&&d.override){badge='&#128204; PINNED ACTIVE';bc='#eab308';}
+      else if(isAct){badge='&#9679; ACTIVE — standing';bc='#22c55e';}
+      else if(isAv){badge='READY — fallback';bc='#3b82f6';}
+      else{badge='NO KEY — lane closed';bc='#6b7280';}
+      s+='<rect x="1040" y="'+(L.y+96)+'" width="'+(badge.length>18?178:150)+'" height="26" rx="13" fill="'+bc+'22" stroke="'+bc+'"/>';
+      s+=txt(1052,L.y+113,badge,10.5,bc,800);
+      if(isAct) s+=dot(1330,L.y+18,'#22c55e',true);
+    });
+    /* fallback order arrows between lanes */
+    s+=link(1178,232,1178,288,'#64748b',1.6,'msv-flow slow',0.5);
+    s+=link(1178,432,1178,488,'#64748b',1.6,'msv-flow slow',0.5);
+    s+=txt(1196,265,'if closed / failing &darr;',9.5,'#64748b');
+    s+=txt(1196,465,'if closed / failing &darr;',9.5,'#64748b');
+
+    /* legend */
+    s+=box(22,720,1316,120,'#1e2d40','rgba(13,21,38,.7)',14);
+    s+=txt(40,748,'LEGEND',10,'#64748b',800,'start','2px');
+    var lx=40;
+    [['App category',null],['Listings',CAT.listings],['Trust &amp; Safety',CAT.trust],['Search',CAT.search],['Tuppence',CAT.tuppence],['Ops',CAT.ops]].forEach(function(e){
+      if(e[1]){s+='<rect x="'+lx+'" y="762" width="12" height="12" rx="3" fill="'+e[1]+'"/>';s+=txt(lx+18,772,e[0],11,'#94a3b8');lx+=e[0].length*7+42;}
+      else{s+=txt(lx,772,e[0]+':',11,'#e2e8f0',700);lx+=e[0].length*7+16;}
+    });
+    lx=40;
+    [['Task tier',null],['haiku',TIER.haiku],['sonnet',TIER.sonnet],['vision',TIER.vision],['triage',TIER.triage]].forEach(function(e){
+      if(e[1]){s+='<rect x="'+lx+'" y="790" width="12" height="12" rx="3" fill="'+e[1]+'"/>';s+=txt(lx+18,800,e[0],11,'#94a3b8');lx+=e[0].length*7+42;}
+      else{s+=txt(lx,800,e[0]+':',11,'#e2e8f0',700);lx+=e[0].length*7+16;}
+    });
+    s+=txt(700,772,'Animated lines = request flow. The bright thick line is the lane serving traffic right now.',11,'#94a3b8');
+    s+=txt(700,800,'Badges are LIVE from the registry: active / pinned / ready-fallback / no-key.',11,'#94a3b8');
+    document.getElementById('ms-viz-ai-svg').innerHTML=s;
+  };
+
+  /* ════════ 2 · INFRASTRUCTURE MAP ════════ */
+  window.msVizBuildInfra=function(){
+    var d=window._infraD||{services:[]};
+    var st={}; (d.services||[]).forEach(function(x){st[x.id]=x;});
+    function stat(id){var x=st[id];return x?(STAT[x.status]||STAT.warn):null;}
+    function statTxt(id){var x=st[id];if(!x)return 'live status appears after checks load';
+      return esc((x.status||'').toUpperCase()+(x.detail?(' — '+x.detail):''));}
+    var s='';
+    s+='<defs><filter id="msvGlow2" x="-40%" y="-40%" width="180%" height="180%">'+
+       '<feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    s+=txt(140,34,'THE WORLD',12,'#64748b',800,'middle','2px');
+    s+=txt(452,34,'THE EDGE',12,'#64748b',800,'middle','2px');
+    s+=txt(810,34,'THE APP',12,'#64748b',800,'middle','2px');
+    s+=txt(1180,34,'EXTERNAL SERVICES',12,'#64748b',800,'middle','2px');
+
+    /* buyers & sellers */
+    s+=box(30,300,220,130,'#3b82f6','rgba(17,24,39,.92)',16);
+    s+=txt(140,340,'&#128101; Buyers &amp; Sellers',14,'#fff',800,'middle');
+    s+=txt(140,362,'phones &middot; browsers',10.5,'#94a3b8',400,'middle');
+    s+=txt(140,382,'browse &middot; list &middot; introduce &middot; pay',10,'#64748b',400,'middle');
+    s+=txt(140,408,'https &rarr; the padlock they trust',9.5,'#22c55e',600,'middle');
+
+    /* TLS chip */
+    var tlsc=stat('ssl')||'#22c55e';
+    s+=box(352,196,200,58,tlsc,'rgba(17,24,39,.92)',12);
+    s+=dot(372,225,tlsc,!!st.ssl);
+    s+=txt(386,222,'&#128274; TLS certificate',12,'#e2e8f0',700);
+    s+=txt(386,240,st.ssl?statTxt('ssl'):'trustsquare.co padlock',9,'#64748b');
+
+    /* Cloudflare */
+    var cfc=stat('cloudflare')||'#475569';
+    s+=box(340,290,225,150,'#f6821f','rgba(17,24,39,.95)',16);
+    s+='<rect x="340" y="290" width="225" height="6" rx="3" fill="#f6821f"/>';
+    s+=dot(360,322,cfc,!!st.cloudflare);
+    s+=txt(374,327,'&#9729;&#65039; Cloudflare',14,'#fff',800);
+    s+=txt(360,350,'CDN &middot; cache &middot; DNS',10.5,'#94a3b8');
+    s+=txt(360,368,'caches pages close to users',9.5,'#64748b');
+    s+=txt(360,384,'purge-on-deploy keeps it fresh',9.5,'#64748b');
+    s+=txt(360,412,st.cloudflare?statTxt('cloudflare').slice(0,46):'live status appears after checks load',8.5,st.cloudflare?cfc:'#64748b',600);
+    /* TLS sits on the edge — dotted tie to Cloudflare */
+    s+='<path d="M452 254 L452 288" stroke="'+tlsc+'" stroke-width="1.5" stroke-dasharray="3 4" opacity=".7"/>';
+
+    /* main road: users → CF → app (and back) */
+    s+=link(252,365,338,365,'#3b82f6',5,'msv-flow',0.9);
+    s+=link(567,365,656,410,'#3b82f6',5,'msv-flow',0.9);
+    s+=txt(295,350,'requests',9.5,'#3b82f6',600,'middle');
+    s+=txt(610,372,'origin pulls',9.5,'#3b82f6',600,'middle');
+
+    /* app hub */
+    s+='<g filter="url(#msvGlow2)">'+box(660,240,300,340,'#d50c2d','rgba(13,21,38,.97)',18)+'</g>';
+    s+='<rect x="660" y="240" width="300" height="6" rx="3" fill="#d50c2d"/>';
+    s+=txt(810,276,'trustsquare.co',17,'#fff',800,'middle');
+    s+=txt(810,296,'MarketSquare BEA — FastAPI',11,'#94a3b8',600,'middle');
+    s+=txt(810,312,'on Hetzner (EU) &middot; self-hosted &middot; sovereign',9.5,'#64748b',400,'middle');
+    [['&#128451;&#65039; SQLite','listings · users · Tuppence ledger',340],
+     ['&#9889; Redis','sessions · queues · rate limits',388],
+     ['&#128444;&#65039; uploads/','listing photos (served via CDN)',436],
+     ['&#129517; ai_provider seam','→ see the AI Providers map',484]].forEach(function(r){
+      s+=box(680,r[2],260,40,'#1e2d40','#111827',9);
+      s+=txt(696,r[2]+18,r[0],11.5,'#e2e8f0',700);
+      s+=txt(696,r[2]+33,r[1],9,'#64748b');
+    });
+    s+=txt(810,562,'deploy ref &rarr; self-deploys ~2 min &middot; health-check &middot; auto-rollback',8.5,'#64748b',400,'middle');
+
+    /* Paystack */
+    var pc=stat('paystack')||'#475569';
+    s+=box(1050,90,290,150,'#0ba4db','rgba(17,24,39,.95)',16);
+    s+='<rect x="1050" y="90" width="290" height="6" rx="3" fill="#0ba4db"/>';
+    s+=dot(1070,124,pc,!!st.paystack);
+    s+=txt(1084,129,'&#128179; Paystack',14,'#fff',800);
+    s+=txt(1070,152,'payments &middot; ZAR',10.5,'#94a3b8');
+    s+=txt(1070,170,'feeds: Tuppence top-ups &middot; seller subscriptions',9.5,'#64748b');
+    s+=txt(1070,186,'app initialises &rarr; buyer pays &rarr; webhook confirms',9.5,'#64748b');
+    s+=txt(1070,214,st.paystack?statTxt('paystack').slice(0,46):'live status appears after checks load',8.5,st.paystack?pc:'#64748b',600);
+    s+=link(962,300,1048,150,'#0ba4db',3,'msv-flow',0.85);
+    s+=link(1048,185,962,330,'#0ba4db',2,'msv-flow slow',0.5);
+    s+=txt(1006,232,'charge &rarr;',9,'#0ba4db',600);
+    s+=txt(1000,282,'&larr; webhook',9,'#0ba4db',600);
+
+    /* Resend */
+    var rc=stat('resend')||'#475569';
+    s+=box(1050,300,290,130,'#94a3b8','rgba(17,24,39,.95)',16);
+    s+='<rect x="1050" y="300" width="290" height="6" rx="3" fill="#94a3b8"/>';
+    s+=dot(1070,334,rc,!!st.resend);
+    s+=txt(1084,339,'&#9993;&#65039; Resend',14,'#fff',800);
+    s+=txt(1070,362,'transactional email',10.5,'#94a3b8');
+    s+=txt(1070,380,'feeds: introduction alerts &middot; support replies &middot; pulse',9.5,'#64748b');
+    s+=txt(1070,404,st.resend?statTxt('resend').slice(0,46):'live status appears after checks load',8.5,st.resend?rc:'#64748b',600);
+    s+=link(962,400,1048,365,'#94a3b8',3,'msv-flow',0.8);
+    s+=txt(1004,376,'send &rarr;',9,'#94a3b8',600);
+
+    /* Hetzner S3 */
+    var hc=stat('hetzner_s3')||'#475569';
+    s+=box(1050,490,290,150,'#d50c2d','rgba(17,24,39,.95)',16);
+    s+='<rect x="1050" y="490" width="290" height="6" rx="3" fill="#d50c2d"/>';
+    s+=dot(1070,524,hc,!!st.hetzner_s3);
+    s+=txt(1084,529,'&#128452;&#65039; Hetzner S3',14,'#fff',800);
+    s+=txt(1070,552,'object storage',10.5,'#94a3b8');
+    s+=txt(1070,570,'feeds: listing photo originals &middot; nightly DB backups',9.5,'#64748b');
+    s+=txt(1070,586,'belt-and-braces: restore is tested, not hoped',9.5,'#64748b');
+    s+=txt(1070,614,st.hetzner_s3?statTxt('hetzner_s3').slice(0,46):'live status appears after checks load',8.5,st.hetzner_s3?hc:'#64748b',600);
+    s+=link(962,480,1048,540,'#d50c2d',3,'msv-flow',0.85);
+    s+=link(1048,580,962,510,'#d50c2d',2,'msv-flow slow',0.5);
+    s+='<text x="1042" y="522" font-size="9" fill="#d50c2d" font-weight="600" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">photos &amp; backups &#8644;</text>';
+
+    /* legend */
+    s+=box(30,690,1310,120,'#1e2d40','rgba(13,21,38,.7)',14);
+    s+=txt(48,718,'LEGEND',10,'#64748b',800,'start','2px');
+    var lx=48;
+    [['Live status',null],['OK',STAT.ok],['WARN',STAT.warn],['FAIL',STAT.fail],['NO KEY',STAT.nokey]].forEach(function(e){
+      if(e[1]){s+='<circle cx="'+(lx+6)+'" cy="738" r="6" fill="'+e[1]+'"/>';s+=txt(lx+18,742,e[0],11,'#94a3b8');lx+=e[0].length*7+44;}
+      else{s+=txt(lx,742,e[0]+':',11,'#e2e8f0',700);lx+=e[0].length*7+18;}
+    });
+    s+=txt(48,772,'Animated lines = data flow, coloured per service. Thick = main road, thin = the return path (webhooks, restores).',11,'#94a3b8');
+    s+=txt(48,794,'Status dots and captions are LIVE from the Infrastructure card checks'+(d.checked_at?(' — last checked '+esc(d.checked_at)):'')+'. A dead key turns red here, never silently.',11,'#94a3b8');
+    document.getElementById('ms-viz-infra-svg').innerHTML=s;
+  };
+
+  window.msVizOpen=function(which){
+    try{ if(which==='ai') window.msVizBuildAI(); else window.msVizBuildInfra(); }catch(e){ console.warn('viz build failed',e); }
+    var ov=document.getElementById(which==='ai'?'ms-viz-ai':'ms-viz-infra');
+    if(ov){ ov.classList.add('open'); document.body.style.overflow='hidden'; }
+  };
+  window.msVizClose=function(which){
+    var ov=document.getElementById(which==='ai'?'ms-viz-ai':'ms-viz-infra');
+    if(ov) ov.classList.remove('open');
+    document.body.style.overflow='';
+  };
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){ window.msVizClose('ai'); window.msVizClose('infra'); }
+  });
+})();
+</script>
+<!-- ══ END VIZ-MAPS-1 ══ -->
+
+
 
 
 

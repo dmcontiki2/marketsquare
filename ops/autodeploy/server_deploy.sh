@@ -58,6 +58,7 @@ MS_KEEP_BACKUPS="${MS_KEEP_BACKUPS:-10}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST="${MS_MANIFEST:-$SCRIPT_DIR/deploy_manifest.txt}"
 
+main() {   # entire run parses before execution — safe against self-update mid-run (2 Aug 2026)
 FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
@@ -230,6 +231,19 @@ if [ "$healthy" -eq 1 ] && [ "$restart_ok" -eq 1 ]; then
         ls -1dt "$MS_LIVE"/.deploy-backups/*/ 2>/dev/null | tail -n +"$((MS_KEEP_BACKUPS+1))" \
             | xargs -r rm -rf 2>/dev/null || true
     fi
+    # ── Post-deploy hook (2 Aug 2026, DEPLOY-CONSOLIDATION-1) ────────────────
+    # Runs the repo's ops/autodeploy/post_deploy.sh (seed + one-time migrations)
+    # AFTER the app is confirmed healthy. Non-fatal by design: the deploy is
+    # already live; a hook problem is logged loudly, never rolls anything back.
+    HOOK="$MS_SRC/ops/autodeploy/post_deploy.sh"
+    if [ -f "$HOOK" ]; then
+        log "post-deploy hook: running (seed + migrations)"
+        if MS_SRC="$MS_SRC" MS_LIVE="$MS_LIVE" bash "$HOOK" >>"$MS_LOG" 2>&1; then
+            log "post-deploy hook: ok"
+        else
+            warn "post-deploy hook reported a problem (deploy stays live) — read this log above."
+        fi
+    fi
     log "DEPLOY OK · now live at ${SHORT} · health ok"
     log "─────────────────────────────────────────────────────────────────────────"
     exit 0
@@ -269,3 +283,6 @@ log "ROLLBACK FAILED — the site may be down. Human action needed."
 log "  restore by hand:  cp -a $BACKUP_DIR/<file> $MS_LIVE/<file>  then  systemctl restart $MS_SERVICES"
 log "─────────────────────────────────────────────────────────────────────────"
 exit 3
+}
+
+main "$@"

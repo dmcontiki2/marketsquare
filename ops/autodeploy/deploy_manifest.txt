@@ -62,3 +62,24 @@ STATUS.md                  | STATUS.md
 CHANGELOG.md               | CHANGELOG.md
 BACKLOG.md                 | BACKLOG.md
 AUDIT_PROGRESS.md          | AUDIT_PROGRESS.md
+
+# ── Added 2 Aug 2026 (DEPLOY-CONSOLIDATION-1): everything the retired scp bats
+#    shipped, so the manifest engine is the ONE deploy for all tracked code. ──
+dashboard.server.html      | dashboard.html
+ai_breaker.py              | ai_breaker.py
+ai_funnel_snapshot.json    | ai_funnel_snapshot.json
+apply_ai_provider_card.py  | apply_ai_provider_card.py
+ranking_explainer.html     | static/ranking_explainer.html
+AGENTS.md                  | static/agents_status.md
+agency_import_guide.html   | static/agency-import-guide.html
+agents_as_a_service.html   | static/agents-as-a-service.html
+assets/legal-must-haves/legal-cards.js | static/legal-must-haves/legal-cards.js
+scripts/seed_super_global.py | seed_super_global.py
+ops/autodeploy/deploy_router.py | deploy_router.py
+warm_videos.sh             | warm_videos.sh
+
+# NOT here (by design):
+#  • demo_sellers.json — server-managed single source (see CLAUDE.md).
+#  • Binary media (*.jpg/*.png/*.mp4, the Agency Playbook PDF, n8n templates) —
+#    git-ignored, so the mirror never carries them. They ship via media_push.bat
+#    (hash-gated sync_assets.ps1 — the media lane). Code NEVER rides that lane.

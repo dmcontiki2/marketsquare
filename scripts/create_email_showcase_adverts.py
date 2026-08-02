@@ -39,15 +39,12 @@ ADVERTS = [
  (270, "Hot Air Balloon Safari · Hartbeespoort", "R3,200 / person", "Centurion",
   "/static/super/sup_email_balloon_1_main.jpg", 50,
   "Sunrise balloon flight over the Magaliesberg with sparkling-wine landing breakfast."),
- (264, "Vacant Stand — Silver Lakes Golf Estate", "R1 650 000", "Silver Lakes",
-  "/static/super/sup_email_stand_1_main.jpg", 50,
-  "North-facing 920 m2 stand on the fairway — build your forever home in a top security estate."),
- (264, "Modern 4-Bed Family Home — Waterkloof Ridge", "R4 250 000", "Waterkloof Ridge",
-  "/static/super/sup_email_home_1_main.jpg", 50,
-  "Architect-designed 4-bed with pool, jacaranda street and double lock-up — walk to top schools."),
- (264, "Penthouse Apartment — Brooklyn, Pretoria", "R3 100 000", "Brooklyn",
-  "/static/super/sup_email_penthouse_1_main.jpg", 50,
-  "Top-floor penthouse with skyline terrace, fire-pit lounge and two secure parkings."),
+ # PROPERTY TRIO REMOVED 2 Aug 2026 (David: "complete D5 now" session): these three
+ # already exist LIVE as listings 315/316/317 (sellers prop-showcase-a/b/c@trustsquare.co,
+ # created 28 Jul) and agency_outreach.html is already deep-linked to them. Re-adding them
+ # here would DUPLICATE (this script's idempotency keys on seller showcase-email@ + title,
+ # which does not match the live prop-showcase-* rows). Remaining to create: 3 Cars + 3
+ # Adventures below -> cars_dealer / tour_guide / travel_agency templates.
  (265, "2021 Mercedes-AMG C63 S · Saloon · 42 000km", "R1 450 000", "Brooklyn",
   "/static/super/sup_email_amg_1_main.jpg", 85,
   "One owner, full agent history, 375 kW bi-turbo V8 — balance of Premium Drive plan."),

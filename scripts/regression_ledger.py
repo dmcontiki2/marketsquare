@@ -735,34 +735,35 @@ def rg_funnel_snapshot_current():
     return [(INFO, f"snapshot current (card {cv})")]
 
 
-@entry("RG-0021", "Bulk assets deploy hash-gated; release-critical files stay UNCONDITIONAL",
-       LOCKED, scope="repo, deploy_marketsquare.bat asset-vs-code ship discipline", fixed_on="2026-08-01",
-       ref="DEPLOY-SYNC-2 (David, 1 Aug 2026): maps (~20MB) and phone-card images re-uploaded "
-           "on every deploy although unchanged — the last bulk sections still on bare scp after "
-           "the 22 Jul ASSET-SYNC work. Fixed: both now ride scripts/sync_assets.ps1 (remote md5s "
-           "read once, only changed files upload) — ten sync call-sites total. The INVERSE "
-           "invariant matters just as much: ms.js, bea_main.py and marketsquare.html must remain "
-           "UNCONDITIONAL bare-scp ships — hash-gating the release carriers risks a silent "
-           "non-deploy, which is worse than a slow one. This asserts both directions.")
+@entry("RG-0021", "Bulk media ships hash-gated via the media lane; code rides the manifest engine",
+       LOCKED, scope="repo, media_push.bat + scripts/sync_assets.ps1", fixed_on="2026-08-01",
+       ref="DEPLOY-SYNC-2 (David, 1 Aug 2026): maps and phone-card images re-uploaded on every deploy "
+           "although unchanged; fixed by riding scripts/sync_assets.ps1 (hash-gated). ASSERTION REWRITTEN "
+           "2 Aug 2026 (DEPLOY-CONSOLIDATION-1, not weakened): the per-file copy engine inside "
+           "deploy_marketsquare.bat was retired -- code now ships ONLY via the deploy-ref manifest engine, "
+           "where 'release carriers are unconditional' is structural (allowlist copy, asserted by RG-0023). "
+           "What must not rot is the OTHER half: binary media (git-ignored, so it cannot ride the mirror) "
+           "ships through ONE hash-gated lane, media_push.bat, and that lane never carries code.")
 def rg_deploy_sync_discipline():
-    bat = repo_file("deploy_marketsquare.bat")
-    if bat is None:
-        return [(INFO, "running outside the repo -- deploy-sync check skipped")]
+    mp = repo_file("media_push.bat")
+    if mp is None and repo_file("deploy_marketsquare.bat") is None:
+        return [(INFO, "running outside the repo -- media-lane check skipped")]
     out = []
+    if mp is None:
+        out.append((FAIL, "media_push.bat missing -- media has no deploy lane (a new unmanaged "
+                          "scp path will grow back in its place)"))
+        return out
     if repo_file("scripts/sync_assets.ps1") is None:
-        out.append((FAIL, "scripts/sync_assets.ps1 missing -- every synced section breaks"))
-    if 'scp "%PROJECT%\\adventures_' in bat:
-        out.append((FAIL, "a bare per-map scp is back in deploy_marketsquare.bat -- maps must ship "
-                          "via the hash-gated sync (DEPLOY-SYNC-2)"))
-    if 'for %%f in ("%PHONESRC%' in bat:
-        out.append((FAIL, "the phone-card bare-scp loop is back -- phone_*.jpg must ship via sync"))
-    for must, label in (('scp "%PROJECT%\\ms.js"', "ms.js"),
-                        ('scp "%PROJECT%\\bea_main.py"', "bea_main.py"),
-                        ('scp "%PROJECT%\\marketsquare.html"', "marketsquare.html")):
-        if must not in bat:
-            out.append((FAIL, f"{label} is no longer an UNCONDITIONAL ship -- gating a release "
-                              "carrier risks a silent non-deploy"))
-    out.append((INFO, "%d sync_assets call-sites in the deploy" % bat.count("sync_assets.ps1")))
+        out.append((FAIL, "scripts/sync_assets.ps1 missing -- every synced media section breaks"))
+    if "sync_assets.ps1" not in mp:
+        out.append((FAIL, "media_push.bat no longer hash-gates via sync_assets.ps1 -- the "
+                          "bulk-reupload class (DEPLOY-SYNC-2) is back"))
+    for code in ("ms\.js", "bea_main\.py", "marketsquare\.html", "\.py\b"):
+        if re.search(r"(?:scp|sync_assets\.ps1)[^\n]*-Filter[^\n]*" + code, mp) or \
+           re.search(r"^\s*scp\b[^\n]*" + code, mp, re.M):
+            out.append((FAIL, "media_push.bat ships code (" + code.replace("\\", "") +
+                              ") -- the media lane must never carry code (one engine for code)"))
+    out.append((INFO, "%d sync_assets call-sites in media_push.bat" % mp.count("sync_assets.ps1")))
     return out
 
 
@@ -791,6 +792,101 @@ def rg_breaker_wired():
                               "attribution is dishonest again (Peer blocker #3 class)"))
     if repo_file("test_ai_breaker.py") is None:
         out.append((FAIL, "test_ai_breaker.py missing -- the 12-case mandatory matrix must live in the repo"))
+    return out
+
+
+
+@entry("RG-0023", "ONE deploy engine: code ships only by publishing the deploy ref",
+       LOCKED, scope="repo, ALL .bat paths + ops/autodeploy manifest (code class, every file)", fixed_on="2026-08-02",
+       ref="DEPLOY-CONSOLIDATION-1 (David, 2 Aug 2026): ten deploy paths had accreted -- the 44KB "
+           "per-file copy engine in deploy_marketsquare.bat, frontend-only/nops variants, bea_safe, "
+           "eula/files/video/dashboard/n8n one-offs -- each an uncoordinated writer with its own "
+           "version/cache behaviour. The 2 Aug morning near-miss (blind local +1 cache-buster vs the "
+           "server's monotonic 421+) was this class about to fire. Consolidation: code deploys ONLY "
+           "via the deploy-ref engine (server_deploy.sh: manifest allowlist, monotonic buster, health "
+           "check, auto-rollback, seed+migration hook); deploy_marketsquare.bat became a thin gated "
+           "push wrapper (marker: ONE-DEPLOY PUSH WRAPPER) so /ship, /TSL and /start all ride the "
+           "same engine; the old bats retired to _to_delete/. This asserts the INVARIANT: no .bat "
+           "grows back a second engine that copies app code to the server.")
+def rg_one_deploy_engine():
+    import glob
+    bat = repo_file("deploy_marketsquare.bat")
+    if bat is None:
+        return [(INFO, "running outside the repo -- one-deploy check skipped")]
+    out = []
+    if "ONE-DEPLOY PUSH WRAPPER" not in bat:
+        out.append((FAIL, "deploy_marketsquare.bat lost the push-wrapper marker -- the per-file "
+                          "copy engine may be back; code must ship via the deploy ref"))
+    if re.search(r"(?m)^\s*scp\b", bat):
+        out.append((FAIL, "deploy_marketsquare.bat runs scp again -- it must only gate, commit, "
+                          "and publish the deploy ref (one engine)"))
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is None:
+        out.append((FAIL, "ops/autodeploy/deploy_manifest.txt missing -- the engine has no placement map"))
+    else:
+        for carrier in ("marketsquare.html", "bea_main.py", "ms.js", "marketsquare_admin.html",
+                        "dashboard.server.html", "scripts/seed_super_global.py"):
+            if not re.search(r"(?m)^\s*" + re.escape(carrier) + r"\s*\|", man):
+                out.append((FAIL, "manifest no longer places " + carrier +
+                                  " -- a release carrier fell out of the ONE engine"))
+    APP_CODE = ("bea_main.py", "ms.js", "ms.css", "marketsquare.html", "marketsquare_admin.html",
+                "auth.py", "database.py", "storage.py", "payments.py", "ai_provider.py",
+                "terms.html", "privacy.html", "support.html", "dashboard.server.html")
+    MEDIA_LANE = {"media_push.bat"}   # binaries only; its own check is RG-0021
+    for path in sorted(glob.glob(os.path.join(REPO, "*.bat"))):
+        base = os.path.basename(path)
+        if ".bak" in base or base in MEDIA_LANE:
+            continue
+        try:
+            t = open(path, encoding="utf-8", errors="replace").read()
+        except Exception:
+            continue
+        hits = [f for f in APP_CODE if re.search(r"(?m)^\s*scp\b[^\n]*" + re.escape(f), t)]
+        if hits:
+            out.append((FAIL, base + " copies app code to the server (" + ", ".join(sorted(set(hits))) +
+                              ") -- a second deploy engine is growing back; ship via the deploy ref"))
+    for retired in ("deploy_frontend_only.bat", "deploy_frontend_nops.bat", "deploy_bea_safe.bat",
+                    "deploy_eula_v19.bat", "deploy_files.bat", "deploy_bit_monitoring.bat",
+                    "deploy_n8n_templates.bat", "deploy_collectables_video.bat", "deploy_intro_video.bat"):
+        if os.path.exists(os.path.join(REPO, retired)):
+            out.append((FAIL, retired + " is back in the repo root -- it was retired to _to_delete/ "
+                              "on 2 Aug 2026 (DEPLOY-CONSOLIDATION-1); one engine only"))
+    return out
+
+
+
+@entry("RG-0024", "The public /terms page a buyer sees is the EULA we actually published",
+       LOCKED, scope="live edge vs origin, /terms (the legal surface, all future EULA versions)", fixed_on="2026-08-02",
+       ref="EULA-CDN-STALE-1 (found 2 Aug 2026 during D1 closure): origin terms.html was v1.11 "
+           "(md5-verified by the nightly drift check) but the CDN edge served v1.3 dated 17 May "
+           "2026 to any cold visitor of /terms -- a 2.5-month-old EULA presented as current, "
+           "spanning the v1.9/v1.10/v1.11 ships. Deploy purges ran in that window, so purging is "
+           "not a durable guarantee for this URL. Occurrence fixed same day (manual purge via "
+           "/admin/purge-cache, verified cold). This asserts the CLASS: the version stamp the "
+           "EDGE serves must equal the version stamp the ORIGIN serves (origin reached with a "
+           "cache-busting query). Catches any future EULA ship that the CDN quietly pins.")
+def rg_terms_edge_matches_origin():
+    import datetime as _dt
+    def stamp(t):
+        m = re.search(r"Version\s+(1\.\d+)", t)
+        return m.group(1) if m else None
+    edge = stamp(_get("/terms"))
+    origin = stamp(_get("/terms?rgledger=" + _dt.date.today().isoformat()))
+    out = []
+    if not origin:
+        out.append((FAIL, "origin /terms carries no 'Version 1.x' stamp -- stamp the EULA or amend this check deliberately"))
+    if not edge:
+        out.append((FAIL, "edge /terms carries no 'Version 1.x' stamp"))
+    if origin and edge and origin != edge:
+        out.append((FAIL, "CDN serves EULA v" + edge + " but origin serves v" + origin + " -- buyers are "
+                          "reading a stale legal document; purge /terms and find what pinned it"))
+    if origin:
+        src = repo_file("terms.html")
+        if src:
+            rv = stamp(src)
+            if rv and rv != origin:
+                out.append((INFO, "repo terms.html is v" + rv + " vs live v" + origin + " -- an EULA ship is "
+                                  "pending (legitimate if a release is staged)"))
     return out
 
 

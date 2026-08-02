@@ -2027,7 +2027,7 @@ function applyFilters(cat){
     filterState.adventures.adventureType = getSelOptInSection('Adventure Type','fs-adventures');
     (function(){   // ADV-SYNC-1: sheet choice drives the top pills too
       var t=filterState.adventures.adventureType;
-      var sc = t==='Experiences' ? 'adventures_experiences' : t==='Accommodation' ? 'adventures_accommodation' : 'all';
+      var sc = t==='Experiences' ? 'adventures_experiences' : t==='Stays' ? 'adventures_accommodation' : 'all';
       if(sc!==advSubcat){
         advSubcat=sc;
         document.querySelectorAll('.adv-subcat-btn').forEach(function(b){b.classList.remove('active');});
@@ -2228,7 +2228,7 @@ function setAdvSubcat(sc, btn){
   // ADV-SYNC-1: the sheet's Adventure Type mirrors the pills — one dimension, one state
   if(typeof filterState!=='undefined' && filterState.adventures){
     filterState.adventures.adventureType = (sc==='adventures_experiences') ? 'Experiences'
-      : (sc==='adventures_accommodation') ? 'Accommodation' : '';
+      : (sc==='adventures_accommodation') ? 'Stays' : '';
   }
   document.querySelectorAll('.adv-subcat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -2426,7 +2426,7 @@ function renderAdvGrid(){
     if(fa){
       const _tcat = (l.advType && l.advType.startsWith('adventures_')) ? l.advType : cat;   // ADV-SYNC-1
       if(fa.adventureType==='Experiences'   && !_tcat.includes('experien')) return false;
-      if(fa.adventureType==='Accommodation' && !_tcat.includes('accommodation')) return false;
+      if(fa.adventureType==='Stays' && !_tcat.includes('accommodation')) return false;
       if(fa.environment && fa.environment!=='' && (l.environment_type||'')!==fa.environment) return false;
       if(fa.maxPrice && Number(l.priceNum||l.price||0) > parseInt(fa.maxPrice)) return false;
       if(fa.area && fa.area!=='' && (l.suburb||'')!==fa.area) return false;
@@ -7551,7 +7551,7 @@ function sbRenderB3(){
   if(sbState.cat==='Services'||sbState.cat==='Adventures'){
     const opts=sbState.cat==='Services'
       ? [{v:'services_technical',l:'Technical (trade/professional)'},{v:'services_casual',l:'Casuals (in-home/general)'}]
-      : [{v:'adventures_experiences',l:'Guided experience'},{v:'adventures_accommodation',l:'Accommodation'}];
+      : [{v:'adventures_experiences',l:'Experiences'},{v:'adventures_accommodation',l:'Stays'}];
     subcatHtml=`<div style="margin-bottom:18px;">
       <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Sub-type</div>
       <div style="display:flex;gap:8px;">${opts.map(o=>`

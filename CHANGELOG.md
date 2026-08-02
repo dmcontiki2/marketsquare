@@ -5522,3 +5522,55 @@ paths verify the served version post-upload, so a future AV block can no longer 
 ## Session - 1 Aug 2026: Phase 3 automated deploy ACTIVATED and proven live
 Activated the Phase 3 auto-deploy (built 26 Jul, ops/autodeploy/): the Hetzner box now deploys MarketSquare itself from the GitHub mirror - a 2-minute systemd timer runs server_deploy.sh, which places files by allowlist manifest (never touches DB/.env/uploads), bumps the cache-buster, restarts the BEA, reloads nginx, purges the CDN, health-checks and auto-rolls-back on failure. "Go live" is now one push of the deploy ref (release.bat or deploy_web.py); deploy_marketsquare.bat remains as fallback and first-time asset seeder. First hands-free deploy landed 09:27 UTC (cache-buster 419->420). Found and fixed same hour: Windows git dropped the executable bit on the shell scripts, which would have disabled the timer after its first run - recorded the bit in git (2c8b3fe) plus one server chmod, and the fixed mechanism then deployed its own fix (09:30 UTC, ->421), proving the loop end to end. Side effect: the staged v372 deep-link ms.js (OPEN_LOOPS L1) went live with the release - verified byte-identical to the repo; MSJS-DRIFT and VERSION-KEY audit flags should clear next audit. Watch: /var/log/marketsquare-deploy.log. Off switch: systemctl disable --now marketsquare-deploy.timer.
 Cost model impact: none (existing box, no new services).
+
+
+## Session - 2 Aug 2026: DEPLOY-CONSOLIDATION-1 - ten deploy paths become ONE
+David's call ("only one deploy, catering for all scenarios"). Code now ships ONLY by publishing the
+deploy ref; the server engine (server_deploy.sh) does manifest placement, MONOTONIC cache-buster,
+restart, health check, AUTO-ROLLBACK, CDN purge, then a new post_deploy hook (idempotent
+seed_super_global + one-time migrations/ runner with pre-migration DB snapshot). Changes:
+(1) deploy_manifest.txt extended with everything the retired bats shipped (dashboard.server.html->
+dashboard.html, ai_breaker.py, ai_funnel_snapshot.json, apply_ai_provider_card.py, ranking_explainer,
+agents_status, agency pages, legal-cards.js, seed_super_global.py, deploy_router.py, warm_videos.sh).
+(2) server_deploy.sh: body wrapped in main() (safe against self-update mid-run) + post_deploy hook call.
+(3) deploy_marketsquare.bat 44KB copy engine -> thin ONE-DEPLOY PUSH WRAPPER (gates -> commit ->
+push main + deploy -> drift-verify); /ship, /TSL, /start ride the push path with zero skill changes;
+old engine preserved as deploy_marketsquare.bat.bak-onedeploy-20260802.
+(4) media_push.bat NEW - the single hash-gated lane for git-ignored binaries (super photos, videos,
+phone cards, legal PNGs, Playbook PDF, n8n templates); never carries code.
+(5) Retired to _to_delete/retired-deploy-bats-20260802/ (README maps each to its replacement):
+frontend_only, frontend_nops, bea_safe, bit_monitoring, eula_v19, files, collectables_video,
+intro_video, n8n_templates + add_travelpayouts_key (job done 1 Aug; it also scp'd bea_main.py -
+caught by the new ledger check on first run, proving the lock works).
+(6) Ledger: RG-0023 NEW LOCKED (one engine invariant - no .bat may copy app code to the server;
+manifest must keep the release carriers; retired bats must stay retired). RG-0021 assertion
+REWRITTEN (not weakened) to guard the media lane. Ledger BEFORE: 22 entries 20 holding 0 regressed;
+AFTER: 23 entries 21 holding 0 regressed (2 open RG-0003/0004 pre-existing, unchanged).
+(7) ONE_DEPLOY.md NEW - the runbook: one deploy, one rollback story, break-glass recovery,
+post-launch agent flow (gates as machinery, auto-ship class only, deploy-scoped token, flat report).
+Scope: repo + engine config; NO server deploy this session - everything lands with the next release.
+Cost model impact: none.
+
+
+## Session - 2 Aug 2026 (later): D-decision sweep - D1 closed, D2/D3 parked, D5a staged, EULA-CDN-STALE-1 found+fixed
+David ruled on the six open decisions. Actions taken:
+- D1 CLOSED: lifecycle clauses were already live (EULA v1.10 23 Jul: SS4.6-4.9 + SS14.5-14.6, all
+  surfaces; v1.11 current since 1 Aug). Real finding while verifying: /terms at the CDN EDGE served
+  EULA v1.3 (17 May) while origin served v1.11 - buyers could read a 2.5-month-stale legal doc.
+  Occurrence fixed: manual /admin/purge-cache (200, purged:true). Class locked: RG-0024 (edge
+  version stamp must equal origin version stamp; runs from any session). Side effect of the full
+  purge: video edge cache cold until next warm.
+- D2/D3 parked to BACKLOG Deferred per David ("re-open when the time is right"); A6 in
+  LEGAL_VERSIONS.md remains the counsel-register authority for the fork consolidation.
+- D4 verified as NEW work (privacy.html has zero UK/US/AU content) - awaits David's scope call.
+- D5a: discovered the property trio ALREADY LIVE (315/316/317, 28 Jul, agency template deep-linked)
+  - the script's showcase-email@ idempotency would NOT have caught them and would have duplicated.
+  create_email_showcase_adverts.py trimmed to the 6 remaining (3 Cars + 3 Adventures) with a dated
+  note; migrations/001_email_showcase_adverts.py wraps it into the ONE-deploy post-hook (first real
+  migration); CityLauncher/emailer/flip_showcase_hrefs.py NEW (order-based dual-anchor flip,
+  idempotent, self-tested on scratch copies incl. re-run). Completes at next release + id harvest.
+- D5b re-framed to the real decision (Stays vs Accommodation crosses into published EULA vocab) -
+  back to David/Jnr with a recommendation, no unilateral rename.
+- D6 explained from the draft itself; counsel email staged as a Gmail draft for David to send.
+Ledger AFTER: 24 entries, 22 holding, 0 regressed (RG-0023 + RG-0024 new, both passing live). No server deploy this session.
+Cost model impact: none.
