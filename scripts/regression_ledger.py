@@ -890,32 +890,49 @@ def rg_terms_edge_matches_origin():
     return out
 
 
-@entry("RG-0025", "The Travelpayouts Drive script is live on the index and every adventures map",
-       LOCKED, scope="live index.html + all 9 adventures_*_map.html static pages (the whole TP surface)", fixed_on="2026-08-02",
-       ref="TP-DRIVE-1 (2 Aug 2026): Travelpayouts approved the partnership (project 557391) and "
-           "site verification required their Drive loader in the <head> of every page. Installed on "
-           "index (marketsquare.html) + the 9 adventures maps and verified live same day -- dashboard "
-           "flipped to 'Drive is active on your website'. If any deploy, page rewrite or map "
-           "regeneration drops the loader, verification silently dies and with it the whole "
-           "affiliate revenue lane -- and nothing else on the site would ever notice. This asserts "
-           "the marker stays on every page of the TP surface. NOTE: Drive auto-monetization "
-           "features stay OFF until compliance loop [D] (EULA disclosure + tax) closes -- this "
-           "entry asserts script PRESENCE only, deliberately.")
-def rg_travelpayouts_script_present():
-    MARK = "tp-em.com/NTU3Mzkx.js?t=557391"
+@entry("RG-0025", "No third-party script is loaded on the index or any adventures map",
+       LOCKED, scope="live index.html + all 9 adventures_*_map.html static pages (the whole former TP surface)",
+       fixed_on="2026-08-03",
+       ref="TP-DRIVE-1 REVERSED (3 Aug 2026, David's ruling). This entry previously asserted the "
+           "Travelpayouts Drive loader must be PRESENT; that is now wrong, so the assertion is "
+           "INVERTED deliberately -- it is not being weakened to make something pass. Evidence that "
+           "forced the reversal: the loader pulled remote code from tp-em.com into the <head> of "
+           "marketsquare.html, which is BOTH the live index AND the page carrying the "
+           "identity-document flow, with no SRI hash and no script-src CSP (nginx_security_headers "
+           "sets frame-ancestors only). A browser network capture on 3 Aug of a LOCKED, "
+           "password-gated page load -- no password entered -- showed tp-em.com fetching 4 further "
+           "JS chunks, POSTing repeatedly to /collect and /collect_batch, and calling "
+           "/link-switch/v1/convert with the visited URL. The pre-launch gate is a client-side "
+           "overlay inside the same document, so <head> executed for every visitor, tester, bot and "
+           "scanner from 2 Aug onward regardless of the password. David's ruling: no third-party "
+           "code on the app at all; if that is a prerequisite for Travelpayouts' products, the offer "
+           "is passed. Affiliate revenue continues via plain affiliate LINKS, which need no script. "
+           "This entry now asserts the surface stays clean -- any future session re-adding a remote "
+           "loader trips it red.")
+def rg_no_third_party_script_on_surface():
+    BANNED = ("tp-em.com", "NTU3Mzkx.js")
     PAGES = ["/"] + ["/static/adventures_%s_map.html" % m
                      for m in ("reserve", "us", "uk", "au", "na", "bw", "mz", "c2c", "de")]
     out = []
     for p in PAGES:
         try:
-            if MARK not in _get(p):
-                out.append((FAIL, p + " no longer carries the Travelpayouts Drive loader -- "
-                                  "site verification and the affiliate lane are silently dead on this page"))
+            body = _get(p)
+            for mark in BANNED:
+                if mark in body:
+                    out.append((FAIL, p + " carries third-party loader marker '" + mark + "' -- remote "
+                                      "code is back on the app surface; David's 3 Aug ruling forbids it"))
         except Exception as ex:
-            out.append((FAIL, p + " unreachable while checking the TP loader: " + repr(ex)))
+            out.append((FAIL, p + " unreachable while checking for third-party scripts: " + repr(ex)))
     src_html = repo_file("marketsquare.html")
-    if src_html is not None and MARK not in src_html:
-        out.append((FAIL, "repo marketsquare.html lost the Travelpayouts snippet -- the next deploy will kill verification"))
+    if src_html is not None:
+        for mark in BANNED:
+            if mark in src_html:
+                out.append((FAIL, "repo marketsquare.html carries '" + mark + "' -- the next deploy would "
+                                  "put a third-party script back on the index"))
+        ext = sorted(set(re.findall(r'<script[^>]+src=["\']https?://([^/"\']+)', src_html, re.I)))
+        if ext:
+            out.append((INFO, "external script origins on the index (eyeball these deliberately): "
+                              + ", ".join(ext)))
     return out
 
 
