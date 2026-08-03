@@ -10,7 +10,7 @@ versions:                       # the one place version pointers are declared
   codex_status: "CANON"
   requirements: "v1.5"          # 18 Jul 2026 — added PART H (Third Pillar); single canonical + 4 mirrors
   agent_briefing: "v1.9"        # 18 Jun 2026
-  eula: "v1.9"                  # PUBLISHED 23 Jul 2026 pre-counsel (David); A6 review + fork consolidation open
+  eula: "v1.12"                  # PUBLISHED 23 Jul 2026 pre-counsel (David); A6 review + fork consolidation open
   ip_brief: "v6"               # DRAFT; counsel pending (A1)
   whitepaper: "v3.11"          # converged 23 Jun + alignment-corrected 29 Jun (v2 = published defensive pub)
 

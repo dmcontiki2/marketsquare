@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cape to Cairo — Reality Audit · TrustSquare</title>
+<style>
+  :root{--navy:#1e3a5f; --ink:#16283f; --paper:#f6f8fb; --gold:#c9a227; --teal:#0e7490;
+        --ok:#15803d; --warn:#b45309; --gap:#b91c1c; --line:#e3e9f1;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; font-size:14px;}
+  .wrap{max-width:980px; margin:0 auto; padding:24px 18px 70px;}
+  header{background:var(--navy); color:#fff; border-radius:14px; padding:24px 26px;}
+  header h1{font-size:24px;} header .sub{color:#c9d6e6; margin-top:6px; font-size:14px; max-width:760px;}
+  header .stamp{display:inline-block; background:var(--gold); color:#2b2306; font-weight:700; font-size:11px;
+    letter-spacing:.1em; padding:3px 10px; border-radius:6px; margin-bottom:10px;}
+  .verdictbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .vb{background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 16px; flex:1; min-width:150px;}
+  .vb b{display:block; font-size:20px;} .vb span{font-size:12px; color:#61708a;}
+  .vb.ok b{color:var(--ok);} .vb.warn b{color:var(--warn);} .vb.gap b{color:var(--gap);}
+  h2{color:var(--navy); font-size:18px; margin:28px 0 10px;}
+  table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  th{background:var(--navy); color:#fff; text-align:left; font-size:12px; padding:9px 12px; letter-spacing:.03em;}
+  td{padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; font-size:13px;}
+  tr:nth-child(even) td{background:#fafcfe;}
+  .badge{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;}
+  .b-ok{background:#dcfce7; color:var(--ok);} .b-warn{background:#fef3c7; color:var(--warn);} .b-gap{background:#fee2e2; color:var(--gap);}
+  .price{font-weight:700; color:var(--teal); white-space:nowrap;}
+  .foodline{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-top:8px; font-size:13.5px;}
+  .foodline b{color:var(--navy);}
+  .note{background:#fffbeb; border:1px solid #f1e0a3; border-radius:10px; padding:12px 16px; margin-top:14px; font-size:13px; color:#713f12;}
+  .fine{font-size:12px; color:#748199; margin-top:16px;}
+  .src{font-size:11.5px; color:#748199; margin-top:24px; border-top:1px solid var(--line); padding-top:12px;}
+  .src a{color:var(--teal); text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="stamp">REALITY AUDIT · 2 AUG 2026</div>
+  <h1>Cape to Cairo, by rail — how close is our story to what's bookable?</h1>
+  <div class="sub">Our showcase rail epic (6 legs · Table Mountain to the Pyramids), measured leg-by-leg
+  against real operators, real fares and real bookable tours — not against the internet's opinion,
+  but against what a traveller could actually pay for this month.</div>
+  <div class="verdictbar">
+    <div class="vb ok"><b>5 / 6</b><span>legs match a real, bookable service</span></div>
+    <div class="vb ok"><b>6 / 6</b><span>foods authentic &amp; correctly placed</span></div>
+    <div class="vb warn"><b>1</b><span>pacing: ad compresses weeks into days</span></div>
+    <div class="vb gap"><b>1</b><span>leg not currently bookable (Sudan)</span></div>
+  </div>
+</header>
+
+<h2>Leg by leg — our claim vs. bookable reality</h2>
+<table>
+<tr><th style="width:26%">Our leg (the ad)</th><th style="width:37%">Real-world equivalent</th><th style="width:22%">Real price, verified</th><th>Verdict</th></tr>
+
+<tr><td><b>1 · Table Mountain to the Karoo</b><br>1 100 km · 18 hr · winelands, Victorian halt, first night in the sleeper</td>
+<td>Cape Town → Kimberley main line. The "Victorian halt" is <b>Matjiesfontein</b> — a real preserved railway village, gaslamps and all. Day-tour layer bookable via our live Klook partner rail.</td>
+<td class="price">Klook Cape Town tours $32–$181<br>Rovos (luxury lane) from $5,420 CPT→Vic Falls</td>
+<td><span class="badge b-ok">REAL</span></td></tr>
+
+<tr><td><b>2 · Karoo to the diamond city</b><br>700 km · 12 hr · the Big Hole</td>
+<td>Kimberley's Big Hole is exactly as claimed — the largest hand-dug excavation on earth. Route served by mainline rail.</td>
+<td class="price">included in through-fares above</td>
+<td><span class="badge b-ok">REAL</span></td></tr>
+
+<tr><td><b>3 · Highveld to the great falls</b><br>1 400 km · 24 hr · jacarandas, the 1905 bridge, colonial hotel</td>
+<td>Pretoria → Victoria Falls. The 1905 steel arch and its "stalled Cape-to-Cairo dream" are textbook-accurate (Rhodes's railway). The "colonial hotel by the falls" is the Victoria Falls Hotel, still operating. Luxury: <b>Rovos Rail Pretoria→Vic Falls, 3 nights</b>. Budget: Zambia Railways Livingstone line.</td>
+<td class="price">Rovos $3,200 pp (Pullman)<br>Zambia Rail sleeper ≈ $8–10</td>
+<td><span class="badge b-ok">REAL</span></td></tr>
+
+<tr><td><b>4 · Across the plateau to the ocean</b><br>1 900 km · <b>46 hr</b> · game from the window, spice port</td>
+<td><b>TAZARA</b>, Kapiri Mposhi → Dar es Salaam — the famous two-nights-one-train service. Scheduled ≈ 45 hr (our ad says 46 — near-exact). Passes Selous/Nyerere game country: animals from the window is a documented traveller experience. First-class sleeper with bedding, dining car meals ≈ $1.</td>
+<td class="price">TAZARA 1st class ≈ $44<br>(yes, forty-four dollars)</td>
+<td><span class="badge b-ok">REAL — uncannily so</span></td></tr>
+
+<tr><td><b>5 · The Nile road north</b><br>3 000 km · 3 days · two Niles meet, desert pyramids, Nubian village</td>
+<td>Geographically and culturally accurate: Khartoum (White + Blue Nile), <b>Meroë's pyramids</b> (more than Egypt has), ful medames for breakfast. BUT: the Sudan corridor (rail + Wadi Halfa ferry) is <b>not reliably bookable</b> under current conditions — real travellers bridge Dar→Cairo/Aswan by air.</td>
+<td class="price">air bridge ≈ $300–500<br>(historic ferry+rail ≈ $50–80, when open)</td>
+<td><span class="badge b-gap">STORY OUTRUNS REALITY</span></td></tr>
+
+<tr><td><b>6 · Aswan to the Pyramids</b><br>900 km · 14 hr · Nile sleeper, temple city at dawn, journey's end</td>
+<td>The <b>Watania/Abela sleeper</b>, Aswan → Cairo overnight (~13 hr — our 14 is right), dinner served in the cabin as claimed. Luxor as "temple city at dawn" ✓. Cairo end-point tours bookable via our live Klook rail.</td>
+<td class="price">Sleeper cabin ≈ $80–120 pp<br>Klook Cairo tours $96–$126</td>
+<td><span class="badge b-ok">REAL</span></td></tr>
+</table>
+
+<h2>The food test — every plate checked</h2>
+<div class="foodline">
+<b>6 for 6, correctly placed:</b> the "spiced mince under savoury custard with syrup-soaked plaited doughnuts"
+is <b>bobotie + koeksisters</b> (Cape Malay ✓ at the Cape) · slow-roasted <b>Karoo lamb</b> ✓ on the Karoo ·
+"air-dried spiced beef + coiled farm sausage" is <b>biltong + boerewors</b> ✓ on the Highveld ·
+"grilled meat &amp; maize" is <b>nyama choma + ugali</b> ✓ on TAZARA · "fava beans stewed overnight with cumin"
+is <b>ful medames</b> ✓ on the Nile · "rice, lentils &amp; fried onion" is <b>koshari</b> ✓ in Egypt.
+Whoever wrote this menu ate their way up the continent.</div>
+
+<h2>The two honest gaps</h2>
+<div class="note"><b>Pacing.</b> Our six legs sum to ~9,000 km (the header says ~10,500 — small internal
+inconsistency worth a one-line fix) and read as ~10 continuous days. A real overland run takes 3–6 weeks
+with connections, visas and waiting. Fine for an advert — it sells the dream — but a buyer who asks
+"can I book this?" gets lane-3 partner segments, not the through-ticket.<br><br>
+<b>The Sudan leg.</b> The one stretch where no operator can currently take a booking. When the corridor
+reopens it is the single most romantic rail gap on earth; until then the honest product is
+rail to Dar, air bridge, rail again from Aswan.</div>
+
+<h2>What this means for the comparison David asked for</h2>
+<table>
+<tr><th>Lane</th><th>What's actually bookable today</th><th>Real total (pp, indicative)</th></tr>
+<tr><td><b>Budget overland</b></td><td>SA mainline + Zambia rail + TAZARA + air bridge over Sudan + Egypt sleeper + entry-level tours</td><td class="price">≈ $700–1,000 + food/nights</td></tr>
+<tr><td><b>Luxury rail (Rovos lane)</b></td><td>Rovos CPT→Vic Falls ($5,420) or the 15-night African Collage ($11,860 Pullman) + Egypt luxury add-ons</td><td class="price">≈ $6,000–15,000+</td></tr>
+<tr><td><b>The garnish</b></td><td>Direct flight CPT→CAI (the "skip it all" baseline)</td><td class="price">≈ $330–520 one-way</td></tr>
+<tr><td><b>Our partner rail (live now)</b></td><td>Klook: Cape Point &amp; Penguins $32 · Table Mountain $53 · Peninsula day $181 · Giza 2-day $96 · Saqqara $111 · Cairo 3-day $126</td><td class="price">$32–181 per experience</td></tr>
+</table>
+
+<p class="fine"><b>Photos:</b> our ad's imagery is illustrative; the partner rail brings real, licensed
+photography (see the two screenshots delivered with this audit — Cape Point, the penguins, Table Mountain
+at dusk, Giza). Once GetYourGuide &amp; Viator unlock (re-review in progress), Victoria Falls, Zanzibar and
+Luxor fill the photographic middle of the route and this audit can be re-run point-for-point with
+their content API.<br><br>
+<b>Bottom line:</b> the ad is more honest than most travel marketing — geography exact, rail lore exact
+(46 hr!), food impeccable, one leg ahead of what the world can currently deliver. We are not far from
+reality; on leg 4 we practically ARE reality.</p>
+
+<div class="src"><b>Sources checked 2 Aug 2026:</b>
+Rovos 2026 USD rates — luxurytrainsouthafrica.com/rovos-rail-cost-in-us-dollars ·
+TAZARA fares &amp; times — seat61.com/Zambia.htm ·
+Egypt sleeper — seat61.com/Egypt.htm ·
+CPT→CAI fares — momondo.co.za (from R5,898) / skyscanner (£413) ·
+Klook prices — live Travelpayouts widget, project 557391.</div>
+
+</div>
+</body>
+</html>

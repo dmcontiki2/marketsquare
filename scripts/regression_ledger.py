@@ -890,6 +890,35 @@ def rg_terms_edge_matches_origin():
     return out
 
 
+@entry("RG-0025", "The Travelpayouts Drive script is live on the index and every adventures map",
+       LOCKED, scope="live index.html + all 9 adventures_*_map.html static pages (the whole TP surface)", fixed_on="2026-08-02",
+       ref="TP-DRIVE-1 (2 Aug 2026): Travelpayouts approved the partnership (project 557391) and "
+           "site verification required their Drive loader in the <head> of every page. Installed on "
+           "index (marketsquare.html) + the 9 adventures maps and verified live same day -- dashboard "
+           "flipped to 'Drive is active on your website'. If any deploy, page rewrite or map "
+           "regeneration drops the loader, verification silently dies and with it the whole "
+           "affiliate revenue lane -- and nothing else on the site would ever notice. This asserts "
+           "the marker stays on every page of the TP surface. NOTE: Drive auto-monetization "
+           "features stay OFF until compliance loop [D] (EULA disclosure + tax) closes -- this "
+           "entry asserts script PRESENCE only, deliberately.")
+def rg_travelpayouts_script_present():
+    MARK = "tp-em.com/NTU3Mzkx.js?t=557391"
+    PAGES = ["/"] + ["/static/adventures_%s_map.html" % m
+                     for m in ("reserve", "us", "uk", "au", "na", "bw", "mz", "c2c", "de")]
+    out = []
+    for p in PAGES:
+        try:
+            if MARK not in _get(p):
+                out.append((FAIL, p + " no longer carries the Travelpayouts Drive loader -- "
+                                  "site verification and the affiliate lane are silently dead on this page"))
+        except Exception as ex:
+            out.append((FAIL, p + " unreachable while checking the TP loader: " + repr(ex)))
+    src_html = repo_file("marketsquare.html")
+    if src_html is not None and MARK not in src_html:
+        out.append((FAIL, "repo marketsquare.html lost the Travelpayouts snippet -- the next deploy will kill verification"))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []

@@ -18,7 +18,6 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 
 ---
 
-- **[D] AFFILIATE-INCOME COMPLIANCE GATE (opened 1 Aug, TP-FLIGHTS-1):** before `data_flights`/tours ever flip live: (a) DONE 1 Aug: SS6.1A disclosure clause LIVE in EULA v1.11 — counsel to RATIFY wording; still to ship with planner UI: a "we may earn a commission at no extra cost to you" line ships next to travel click-outs; (b) accountant confirms tax/VAT treatment of Travelpayouts commission (foreign-source, HK payer, likely USD — new income class in the tax module, exported-services zero-rating to confirm). Zero exposure while flags stay dark; the flag flip is BLOCKED on both. Detail: CHANGELOG 1 Aug (TP-FLIGHTS-1) + CLAUDE.md travel section.
 
 ## 🔴 BLOCKING NOW
 *(nothing proceeds until these clear)*
@@ -42,6 +41,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 ## ✅ CLOSED — last 7 days
 *(short tail; drop rows older than 7 days)*
 
+- **[D] AFFILIATE GATE CLOSED 2 Aug 2026 (evening)** — David's ruling, attended: gate cleared, **full Drive on**. Presented with the on-disk state (SS6.1A disclosure live in EULA v1.11; counsel ratification + accountant tax/VAT treatment outstanding; Drive auto-inject broader than the curated gate) David chose "Gate cleared — full Drive on". All Drive monetization functions enabled on trustsquare.co ("running at full capacity"). Residual items now ORDINARY follow-ups, not blockers: counsel ratifies SS6.1A wording at next revision; accountant classifies TP commission income (foreign-source, HK payer) when it first accrues; per-click-out disclosure line ships with the planner UI. data_flights/tours flags are no longer legally blocked. Ref: changelog.d TP-DRIVE-2.
 - **D1 CLOSED 2 Aug 2026** — "publish the latest EULA": already true at origin (lifecycle clauses live as §§4.6–4.9 + §§14.5–14.6 since v1.10, 23 Jul; v1.11 current on terms.html + in-app gate + modal). Found & fixed in closing: the CDN edge was serving stale **v1.3 (17 May)** on /terms — purged same day, class locked as ledger **RG-0024** (edge stamp must equal origin stamp).
 - **D5a CLOSED 2 Aug 2026 (night)** — all NINE email-showcase adverts live and deep-linked: property 315–317 (28 Jul), cars 318–320 (28 Jul, healed: real specs replacing cloned Hilux fields, sort prices fixed, super flag + false attestation cleared then correctly re-stamped), adventures 321–323 (born clean via migration 001). All four templates flipped (2 anchors per card). Remaining test send rides the D7 gate ruling.
 - **L1 CLOSED 2 Aug 2026 (evening)** — the pending release SHIPPED via the ONE-deploy engine's first live run: v421→v422, health ok, deep-link ms.js + Saturday's work + DEPLOY-CONSOLIDATION-1 + the Stays sweep all live. MSJS-DRIFT / VERSION-KEY flags clear next audit.

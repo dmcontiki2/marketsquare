@@ -135,4 +135,83 @@ if(_isMob){var _cs=document.createElement('style');_cs.textContent='.legend-chip
 showAll();
 setTimeout(function(){map.invalidateSize();},250);
 </script>
+<!-- ═══════════ TP-C2C-1 · One-Map layers: Introductions (demo) + Partner offers ═══════════
+     Added 2 Aug 2026 · append-only block, touches nothing above. Partner cards render the REAL
+     Travelpayouts/Klook widget (project 557391) in a panel — photos, prices and booking links are
+     the brand's own, per EULA §6.1B (openly branded, outside Mode B, commission disclosed).
+     Intro pins are DEMO sellers (stays + tours), anonymous by design — Mode B means no photo. -->
+<style>
+.pin-tp{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;
+  background:#0e7490;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);font-size:15px;}
+.pin-intro{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);background:#1e3a5f;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+.pin-intro span{transform:rotate(45deg);font-size:14px;}
+.pk .anonph{height:86px;border-radius:8px 8px 0 0;background:linear-gradient(135deg,#1e3a5f,#3a5f8a);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;letter-spacing:.35em;}
+.pk .demo{display:inline-block;background:#fef3c7;color:#92400e;font-size:9.5px;font-weight:700;
+  padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.pk .tcta{display:block;margin-top:7px;font-weight:700;font-size:12px;color:#1e3a5f;}
+#tpPanel{position:fixed;top:0;right:0;bottom:0;width:min(430px,96vw);background:#fff;z-index:12000;
+  box-shadow:-12px 0 40px rgba(12,26,46,.35);transform:translateX(105%);transition:transform .28s ease;
+  display:flex;flex-direction:column;font-family:Helvetica,Arial,sans-serif;}
+#tpPanel.open{transform:translateX(0);}
+#tpPanel .hd{background:#0e7490;color:#fff;padding:14px 18px;}
+#tpPanel .hd h3{margin:0;font-size:16px;}
+#tpPanel .hd .x{position:absolute;top:10px;right:14px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+#tpPanel .disc{background:#f0fbfd;border-bottom:1px solid #d8eef3;color:#155e70;font-size:11px;padding:8px 18px;line-height:1.45;}
+#tpPanel .bd{flex:1;overflow-y:auto;padding:12px 14px;}
+#tpPanel .bd .from{font-size:12px;color:#51617a;margin:0 0 8px;}
+</style>
+<div id="tpPanel" role="dialog" aria-label="Partner offers">
+  <div class="hd"><h3 id="tpTitle">Partner offers</h3><button class="x" onclick="tpClose()">✕</button></div>
+  <div class="disc"><b>Partner content.</b> Offers below come from our travel partners and carry their brand.
+  This is <b>not an Introduction</b> — you book directly with the partner, and we may earn a commission
+  at no extra cost to you.</div>
+  <div class="bd"><p class="from" id="tpFrom"></p><div id="tpW272" style="display:none"></div><div id="tpW284" style="display:none"></div></div>
+</div>
+<script>
+/* TP-C2C-1 */
+const TP_POINTS=[
+  {lat:-33.95,lng:18.41,city:272,name:'Cape Town — tours & sightseeing',from:'Cape Point & Penguins from $32 · Table Mountain from $53 · full-day Peninsula $181'},
+  {lat:29.977,lng:31.132,city:284,name:'Cairo — tours & sightseeing',from:'Giza 2-day private from $96 · Saqqara & Memphis $111 · 3-day luxury $126'}
+];
+const INTRO_DEMOS=[
+  {lat:-33.93,lng:18.86,kind:'stay',title:'Winelands guesthouse — anonymous',blurb:'Boutique stay among the vines. Trust 4.8 · credentials verified · Mode B.'},
+  {lat:-17.92,lng:25.84,kind:'tour',title:'Falls-area operator — anonymous',blurb:'12 years guiding the gorge and the river. Trust 4.9 · Mode B.'},
+  {lat:-6.165,lng:39.20,kind:'stay',title:'Zanzibar B&B — anonymous',blurb:'Stone Town rooftop rooms, spice-market breakfasts. Trust 4.7 · Mode B.'},
+  {lat:25.70,lng:32.64,kind:'tour',title:'Luxor guide — anonymous',blurb:'Temple city at dawn, tombs before the crowds. Trust 4.9 · Mode B.'}
+];
+const introG=L.layerGroup(), partnerG=L.layerGroup();
+function tpPin(){return L.divIcon({className:'',html:'<div class="pin-tp">🎫</div>',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-16]});}
+function introPin(){return L.divIcon({className:'',html:'<div class="pin-intro"><span>🤝</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]});}
+function introPopup(s){
+  var em = s.kind==='stay' ? '🛏️' : '🥾';
+  return '<div class="pk"><div class="anonph">■ ■ ■</div><div class="b"><h3>'+em+' '+s.title+
+         '<span class="demo">DEMO</span></h3><p>'+s.blurb+'</p><span class="tcta">Introduction · 1 Tuppence</span></div></div>';
+}
+INTRO_DEMOS.forEach(function(s){ introG.addLayer(L.marker([s.lat,s.lng],{icon:introPin()}).bindPopup(introPopup(s))); });
+var tpLoaded={};
+function tpOpen(p){
+  document.getElementById('tpTitle').textContent='🎫 '+p.name;
+  document.getElementById('tpFrom').textContent=p.from;
+  ['272','284'].forEach(function(c){document.getElementById('tpW'+c).style.display = (String(p.city)===c)?'block':'none';});
+  document.getElementById('tpPanel').classList.add('open');
+  /* load the widget only after the panel is fully on-screen — Chrome throttles
+     iframes initialised while their container is translated off-viewport */
+  if(!tpLoaded[p.city]){
+    tpLoaded[p.city]=true;
+    setTimeout(function(){
+      var s=document.createElement('script'); s.async=true; s.charset='utf-8';
+      s.src='https://tpwdgt.com/content?currency=USD&trs=557391&shmarker=758984&locale=en&city_id='+p.city+'&category=2&amount=3&powered_by=true&campaign_id=137&promo_id=4497';
+      document.getElementById('tpW'+p.city).appendChild(s);
+    }, 380);
+  }
+}
+function tpClose(){document.getElementById('tpPanel').classList.remove('open');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')tpClose();});
+TP_POINTS.forEach(function(p){ partnerG.addLayer(L.marker([p.lat,p.lng],{icon:tpPin()}).on('click',function(){tpOpen(p);})); });
+introG.addTo(map); partnerG.addTo(map);
+layerCtl.addOverlay(introG,'🤝 Introductions <i>(demo)</i>');
+layerCtl.addOverlay(partnerG,'🎫 Partner offers');
+</script>
 <script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script></body></html>

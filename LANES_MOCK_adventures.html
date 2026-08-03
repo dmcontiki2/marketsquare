@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustSquare · Adventures — The Three Lanes (MOCK)</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1e3a5f; --ink:#16283f; --paper:#f6f8fb; --card:#ffffff;
+    --gold:#c9a227; --teal:#0e7490; --coral:#c2410c; --line:#e3e9f1;
+    --ok:#15803d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif; background:var(--paper); color:var(--ink); line-height:1.55;}
+  .wrap{max-width:1080px; margin:0 auto; padding:28px 20px 80px;}
+  header.mock{background:var(--navy); color:#fff; border-radius:14px; padding:26px 28px; margin-bottom:14px;}
+  header.mock .brand{font-family:'Syne',sans-serif; font-weight:800; font-size:22px; letter-spacing:.4px;}
+  header.mock .brand span{color:var(--gold);}
+  header.mock h1{font-family:'Syne',sans-serif; font-size:30px; font-weight:700; margin-top:10px;}
+  header.mock p{margin-top:8px; color:#c9d6e6; font-size:15px; max-width:720px;}
+  .mockbadge{display:inline-block; background:#c2410c; color:#fff; font-size:11px; font-weight:700;
+    letter-spacing:.12em; padding:4px 10px; border-radius:6px; margin-bottom:12px;}
+  .lane{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px 26px; margin-top:22px; position:relative;}
+  .lane-tag{position:absolute; top:-12px; left:22px; font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
+    letter-spacing:.14em; padding:5px 14px; border-radius:999px; color:#fff;}
+  .lane h2{font-family:'Syne',sans-serif; font-size:21px; color:var(--navy); margin:6px 0 4px;}
+  .lane .sub{color:#51617a; font-size:14px; max-width:760px;}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:18px;}
+  .tcard{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; display:flex; flex-direction:column;}
+  .tcard .ph{height:120px; display:flex; align-items:center; justify-content:center; font-size:38px; color:#fff;}
+  .tcard .bd{padding:12px 14px; font-size:13.5px; flex:1;}
+  .tcard .bd b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+  .tcard .ft{padding:10px 14px; border-top:1px solid var(--line); font-size:13px; display:flex; justify-content:space-between; align-items:center;}
+  .pill{font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px;}
+  .free .lane-tag{background:var(--ok);}
+  .free .ph{background:linear-gradient(135deg,#15803d,#22c55e);}
+  .pill.free{background:#dcfce7; color:#15803d;}
+  .sellers .lane-tag{background:var(--navy);}
+  .sellers .ph{background:linear-gradient(135deg,#1e3a5f,#3a5f8a); position:relative;}
+  .anon{filter:blur(0px); font-family:'Syne',sans-serif; font-size:15px; letter-spacing:.2em; opacity:.85;}
+  .pill.mode-b{background:#e0eaf6; color:#1e3a5f;}
+  .travel .lane-tag{background:var(--teal);}
+  .pill.partner{background:#cffafe; color:#0e7490;}
+  .sunset{border-style:dashed; background:#fffdf5;}
+  .sunset .lane-tag{background:var(--gold); color:#3b2f06;}
+  .count{font-family:'Syne',sans-serif; font-weight:800; font-size:20px; color:var(--coral); letter-spacing:.05em;}
+  .sunset-row{display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-top:12px;}
+  .sunset-row .demo{flex:1; min-width:220px; border:1px solid #eadfb8; background:#fff; border-radius:10px; padding:12px 14px; font-size:13.5px;}
+  .disclosure{margin-top:14px; background:#f0fbfd; border:1px solid #bae6ef; border-radius:10px; padding:12px 16px; font-size:13.5px; color:#155e70;}
+  .disclosure b{color:#0e7490;}
+  .widgetbox{margin-top:18px; border:1px solid var(--line); border-radius:12px; padding:16px 18px; background:#fff;}
+  .widgetbox h3{font-family:'Syne',sans-serif; color:var(--navy); font-size:16px; margin-bottom:2px;}
+  .widgetbox .src{font-size:12px; color:#748199; margin-bottom:8px;}
+  .compare{margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:760px){ .compare{grid-template-columns:1fr;} }
+  .cmp{border-radius:12px; padding:16px 18px; font-size:13.5px;}
+  .cmp.ours{background:var(--navy); color:#dbe7f5;}
+  .cmp.ours h4{font-family:'Syne',sans-serif; color:#fff; font-size:15px; margin-bottom:6px;}
+  .cmp.ours .star{color:var(--gold); font-weight:700;}
+  .cmp.theirs{background:#fff; border:1px solid var(--line);}
+  .cmp.theirs h4{font-family:'Syne',sans-serif; color:var(--teal); font-size:15px; margin-bottom:6px;}
+  .note{margin-top:16px; font-size:12.5px; color:#748199;}
+  .unlock{margin-top:12px; font-size:13px; background:#fef9c3; border:1px solid #e7d878; border-radius:8px; padding:9px 13px; color:#713f12;}
+  a{color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mock">
+    <div class="mockbadge">DESIGN MOCK · NOT SHIPPED</div>
+    <div class="brand">Trust<span>Square</span> · Adventures</div>
+    <h1>How trips reach buyers — the three lanes</h1>
+    <p>One screen, three clearly different products. The contrast is deliberate: buyers can always
+    tell what is our trust product, what is a seller's advert, and what is openly-branded partner content.</p>
+  </header>
+
+  <!-- ── LANE 1 ─────────────────────────────────────────────── -->
+  <section class="lane free">
+    <div class="lane-tag">LANE 1 · FREE</div>
+    <h2>Design your own — with AI</h2>
+    <p class="sub">Any user describes their trip; MarketSquare's AI designs the advert for them.
+    Free, always first, because the platform's promise starts with what costs nothing.</p>
+    <div class="cards">
+      <div class="tcard">
+        <div class="ph">✨</div>
+        <div class="bd"><b>"A weekend in the Cederberg…"</b>
+          Type a sentence. The AI drafts your advert — layout, copy, structure — in minutes.</div>
+        <div class="ft"><span class="pill free">FREE</span><span>Start designing →</span></div>
+      </div>
+      <div class="tcard">
+        <div class="ph">🎨</div>
+        <div class="bd"><b>Yours to shape</b>
+          Regenerate, restyle, refine. You own the result; publish it as your advert when ready.</div>
+        <div class="ft"><span class="pill free">FREE</span><span>No card needed</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SUNSET BAND ────────────────────────────────────────── -->
+  <section class="lane sunset">
+    <div class="lane-tag">SUPER DEMOS · RETIRING</div>
+    <h2>The showcase window — final month</h2>
+    <p class="sub">The Super demo adverts did their job: they showed what an advert here can be.
+    After launch they hand the stage to real sellers.</p>
+    <div class="sunset-row">
+      <div class="demo">★ CAPE TO CAIRO · RAIL EPIC — the flagship showcase, still on display</div>
+      <div class="demo">★ Okavango stilted lodge · ★ Kruger fly-camp — the Adventures window set</div>
+      <div style="text-align:center; min-width:170px;">
+        <div style="font-size:11px; letter-spacing:.12em; color:#8a7a33; font-weight:700;">RETIRES IN</div>
+        <div class="count" id="cd">30d 00h 00m</div>
+        <div style="font-size:11px; color:#8a7a33;">launch + 30 days (mock)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LANE 2 ─────────────────────────────────────────────── -->
+  <section class="lane sellers">
+    <div class="lane-tag">LANE 2 · THE INTRODUCTION</div>
+    <h2>Seller adverts — sellers, agencies, agents</h2>
+    <p class="sub">The core product. Sellers stay anonymous (Mode B) until both sides accept an
+    Introduction. What you buy with a Tuppence is the reveal — that is the trust model, unchanged.</p>
+    <div class="cards">
+      <div class="tcard">
+        <div class="ph"><span class="anon">■ ■ ■ ■</span></div>
+        <div class="bd"><b>Safari operator — Limpopo</b>
+          12 years guiding, Big Five reserve access. Identity revealed on Introduction.</div>
+        <div class="ft"><span class="pill mode-b">ANONYMOUS · MODE B</span><span>Intro · 1 Tuppence</span></div>
+      </div>
+      <div class="tcard">
+        <div class="ph"><span class="anon">■ ■ ■ ■</span></div>
+        <div class="bd"><b>Boutique agency — Garden Route</b>
+          Tailored coastal itineraries. Trust score 4.8 · credentials verified.</div>
+        <div class="ft"><span class="pill mode-b">ANONYMOUS · MODE B</span><span>Intro · 1 Tuppence</span></div>
+      </div>
+      <div class="tcard">
+        <div class="ph"><span class="anon">■ ■ ■ ■</span></div>
+        <div class="bd"><b>Travel agent — Pretoria</b>
+          Rail journeys a speciality. Reveal on bilateral acceptance only.</div>
+        <div class="ft"><span class="pill mode-b">ANONYMOUS · MODE B</span><span>Intro · 1 Tuppence</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LANE 3 ─────────────────────────────────────────────── -->
+  <section class="lane travel">
+    <div class="lane-tag">LANE 3 · PARTNER OFFERS</div>
+    <h2>TrustSquare Travel — openly branded, book direct</h2>
+    <p class="sub">Global travel brands, presented under their own names with their own photos and
+    prices — the licence that makes the material legal is the branding itself.</p>
+    <div class="disclosure">
+      <b>Partner content.</b> These offers come from our travel partners and carry their brand.
+      This is <b>not an Introduction</b> — you book directly with the partner, and
+      <b>we may earn a commission at no extra cost to you</b>.
+    </div>
+
+    <!-- The first query: CAPE TO CAIRO -->
+    <div class="widgetbox">
+      <h3>First query: “Cape to Cairo”</h3>
+      <div class="src">Live partner content · Klook via Travelpayouts (project 557391) · loads when opened in a browser</div>
+      <p style="font-size:13.5px; margin-bottom:6px;"><b style="color:var(--navy);">The southern anchor — Cape Town</b></p>
+      <script async src="https://tpwdgt.com/content?currency=USD&trs=557391&shmarker=758984&locale=en&city_id=272&category=2&amount=3&powered_by=true&campaign_id=137&promo_id=4497" charset="utf-8"></script>
+      <p style="font-size:13.5px; margin:14px 0 6px;"><b style="color:var(--navy);">The northern anchor — Cairo</b></p>
+      <script async src="https://tpwdgt.com/content?currency=USD&trs=557391&shmarker=758984&locale=en&city_id=284&category=2&amount=3&powered_by=true&campaign_id=137&promo_id=4497" charset="utf-8"></script>
+      <div class="unlock">⏳ The middle of the route — Victoria Falls, Zanzibar, Luxor — arrives with
+      GetYourGuide &amp; Viator, currently in Travelpayouts re-review (auto-connects on approval).</div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="compare">
+      <div class="cmp ours">
+        <h4><span class="star">★</span> Ours — the showcase rail epic</h4>
+        “Cape to Cairo, by rail” — the flagship Super demo: one continuous
+        journey, sold as a story. Aspirational, editorial, anonymous-seller ready —
+        the advert format a real operator would buy.
+        <div style="margin-top:8px; font-size:12px; color:#9fb4cd;">
+        Live route map: trustsquare.co/static/adventures_c2c_map.html</div>
+      </div>
+      <div class="cmp theirs">
+        <h4>Theirs — bookable segments, today</h4>
+        Cape Point &amp; Penguins <b>$32</b> · Table Mountain private hike <b>$53</b> ·
+        Cape Peninsula full day <b>$181</b> · Giza 2-day private tour <b>$96</b> ·
+        Pyramids, Saqqara &amp; Memphis <b>$111</b> · Cairo 3-day luxury <b>$126</b>
+        <div style="margin-top:8px; font-size:12.5px; color:#51617a;">
+        Real photos, real prices, real reviews — the journey's anchors are bookable
+        <i>today</i>; the epic in between stays the story we tell.</div>
+      </div>
+    </div>
+
+    <div class="note">Mock page — for David's review only. The partner widgets are live embeds with the real
+    TrustSquare partner ID; open this file in Chrome to see brand photos and prices render.
+    Lane structure implements the ruling of 2 Aug 2026: partner content sits outside Mode B by
+    construction — branded, disclosed, never an Introduction.</div>
+  </section>
+
+</div>
+<script>
+  // mock countdown: launch + 30 days, anchored to first open
+  const end = Date.now() + 30*24*3600*1000;
+  const el = document.getElementById('cd');
+  function tick(){
+    let s = Math.max(0, Math.floor((end - Date.now())/1000));
+    const d = Math.floor(s/86400); s%=86400;
+    const h = Math.floor(s/3600);  s%=3600;
+    const m = Math.floor(s/60);
+    el.textContent = d + 'd ' + String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm';
+  }
+  tick(); setInterval(tick, 30000);
+</script>
+</body>
+</html>

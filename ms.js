@@ -2143,7 +2143,7 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html?v=7', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  c2c: { file:'adventures_c2c_map.html?v=8', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE

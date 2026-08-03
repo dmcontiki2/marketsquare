@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Map · xTuppence Feature — MOCK</title>
+<style>
+  :root{--navy:#1e3a5f; --ink:#16283f; --paper:#f6f8fb; --gold:#c9a227; --teal:#0e7490;
+        --ok:#15803d; --line:#e3e9f1; --coral:#c2410c;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif; background:var(--paper); color:var(--ink); font-size:14px;}
+  .wrap{max-width:960px; margin:0 auto; padding:22px 16px 70px;}
+  header{background:var(--navy); color:#fff; border-radius:14px; padding:20px 24px;}
+  header h1{font-size:21px;} header p{color:#c9d6e6; font-size:13.5px; margin-top:6px; max-width:720px;}
+  .mockbadge{display:inline-block; background:var(--coral); color:#fff; font-size:10.5px; font-weight:700;
+    letter-spacing:.12em; padding:3px 9px; border-radius:6px; margin-bottom:8px;}
+  .steps{display:flex; gap:8px; margin:16px 0 0;}
+  .step{flex:1; text-align:center; padding:10px 8px; border-radius:10px; border:2px solid var(--line);
+    background:#fff; cursor:pointer; font-weight:600; font-size:13px; color:#61708a; transition:.2s;}
+  .step small{display:block; font-weight:400; font-size:11px; margin-top:2px;}
+  .step.on{border-color:var(--gold); color:var(--navy); background:#fffdf4; box-shadow:0 2px 10px rgba(201,162,39,.18);}
+  .mapbox{margin-top:14px; background:linear-gradient(180deg,#eef4ee 0%, #f2ead9 55%, #f7e9c9 100%);
+    border:1px solid var(--line); border-radius:14px; position:relative; overflow:hidden;}
+  svg{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; padding:10px 16px; background:#fff; border-top:1px solid var(--line); font-size:12px;}
+  .legend b{font-weight:700;}
+  .lg{display:flex; align-items:center; gap:6px;}
+  .dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+  .card{position:absolute; width:250px; background:#fff; border-radius:12px; border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(22,40,63,.25); padding:0; display:none; z-index:9;}
+  .card .ph{height:88px; border-radius:12px 12px 0 0; display:flex; align-items:center; justify-content:center;
+    font-size:34px; color:#fff;}
+  .card .bd{padding:10px 12px; font-size:12.5px;}
+  .card .bd b{color:var(--navy); font-size:13px;}
+  .card .disc{font-size:10.5px; color:#155e70; background:#f0fbfd; border-top:1px solid #d8eef3; padding:7px 12px; border-radius:0 0 12px 12px;}
+  .card .cta{display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:var(--teal);}
+  .card .anon-cta{color:var(--navy);}
+  .card .x{position:absolute; top:6px; right:9px; cursor:pointer; color:#fff; font-weight:700; opacity:.85;}
+  .explain{margin-top:16px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 18px; font-size:13.5px;}
+  .explain b{color:var(--navy);}
+  .pill{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:6px;}
+  .p-free{background:#dcfce7; color:var(--ok);} .p-xt{background:#fdf3d7; color:#8a6d1a;}
+  .p-intro{background:#e0eaf6; color:var(--navy);} .p-tp{background:#cffafe; color:var(--teal);}
+  .fine{font-size:11.5px; color:#748199; margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="mockbadge">DESIGN MOCK · NOT SHIPPED</div>
+  <h1>One map. Their dream. Everything else is a layer.</h1>
+  <p>The traveller draws their own journey — free. xTuppence improves it. Introductions and partner
+  offers appear only as icons, only where they exist, only when the traveller wants them. Tap the steps;
+  tap the icons.</p>
+</header>
+
+<div class="steps">
+  <div class="step on" id="s1" onclick="setStep(1)">1 · Their dream <small>free, self-designed</small></div>
+  <div class="step" id="s2" onclick="setStep(2)">2 · xTuppence improve <small>AI enriches the plan</small></div>
+  <div class="step" id="s3" onclick="setStep(3)">3 · Travel it <small>icons open on the way</small></div>
+</div>
+
+<div class="mapbox">
+<svg viewBox="0 0 960 520" id="map">
+  <!-- route path: Cape Town -> Winelands -> Kimberley -> Vic Falls -> Zanzibar -> Luxor -> Cairo -->
+  <defs>
+    <filter id="sh" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#16283f" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- user's rough dream line (step 1) -->
+  <path id="dreamline" d="M150,470 C 260,430 300,330 400,300 C 520,265 560,210 640,170 C 700,140 730,110 790,60"
+        fill="none" stroke="#1e3a5f" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+  <!-- AI improved line (step 2+) -->
+  <path id="ailine" d="M150,470 C 210,455 240,420 290,395 C 350,365 330,330 400,300 C 470,272 520,290 575,250 C 630,212 610,190 640,170 C 690,138 700,120 735,105 C 770,88 775,75 790,60"
+        fill="none" stroke="#c9a227" stroke-width="3.5" stroke-linecap="round" opacity="0"/>
+
+  <!-- user pins (always) -->
+  <g class="upin" transform="translate(150,470)"><circle r="11" fill="#1e3a5f" filter="url(#sh)"/><text y="5" x="0" text-anchor="middle" font-size="12" fill="#fff">1</text><text y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f">Cape Town</text></g>
+  <g class="upin" transform="translate(400,300)"><circle r="11" fill="#1e3a5f" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="12" fill="#fff">2</text><text y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f">Vic Falls</text></g>
+  <g class="upin" transform="translate(640,170)"><circle r="11" fill="#1e3a5f" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="12" fill="#fff">3</text><text y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f">Zanzibar</text></g>
+  <g class="upin" transform="translate(790,60)"><circle r="11" fill="#1e3a5f" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="12" fill="#fff">4</text><text y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f">Cairo</text></g>
+
+  <!-- xTuppence enrichment stops (step 2+) -->
+  <g class="ai" opacity="0">
+    <g transform="translate(290,395)"><circle r="7" fill="#c9a227" filter="url(#sh)"/><text y="-13" text-anchor="middle" font-size="11" fill="#8a6d1a" font-weight="600">Karoo sleeper night</text></g>
+    <g transform="translate(575,250)"><circle r="7" fill="#c9a227" filter="url(#sh)"/><text y="-13" text-anchor="middle" font-size="11" fill="#8a6d1a" font-weight="600">TAZARA · 2 nights</text></g>
+    <g transform="translate(735,105)"><circle r="7" fill="#c9a227" filter="url(#sh)"/><text y="-13" text-anchor="middle" font-size="11" fill="#8a6d1a" font-weight="600">Luxor at dawn</text></g>
+  </g>
+
+  <!-- Intro icons (step 3): anonymous sellers on route -->
+  <g class="icons intro" opacity="0">
+    <g transform="translate(198,447)" class="ic" onclick="openCard('intro1',198,300)"><rect x="-13" y="-13" width="26" height="26" rx="7" fill="#1e3a5f" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="13" fill="#fff">🤝</text></g>
+    <g transform="translate(430,282)" class="ic" onclick="openCard('intro2',430,120)"><rect x="-13" y="-13" width="26" height="26" rx="7" fill="#1e3a5f" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="13" fill="#fff">🤝</text></g>
+  </g>
+
+  <!-- Partner icons (step 3): only where inventory EXISTS -->
+  <g class="icons tp" opacity="0">
+    <g transform="translate(128,430)" class="ic" onclick="openCard('tp1',130,255)"><circle r="13" fill="#0e7490" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="13" fill="#fff">🎫</text></g>
+    <g transform="translate(822,92)" class="ic" onclick="openCard('tp2',600,40)"><circle r="13" fill="#0e7490" filter="url(#sh)"/><text y="5" text-anchor="middle" font-size="13" fill="#fff">🎫</text></g>
+    <!-- Vic Falls: NO icon — inventory pending (GYG/Viator). Nothing shows. That's the point. -->
+  </g>
+  <text x="20" y="508" font-size="11" fill="#8a95a8" id="maphint">Step 1 — the traveller sketched four pins. That's a valid, free advert of their dream.</text>
+</svg>
+
+<!-- cards -->
+<div class="card" id="tp1">
+  <span class="x" onclick="closeCards()">✕</span>
+  <div class="ph" style="background:linear-gradient(135deg,#0e7490,#22d3ee)">🐧</div>
+  <div class="bd"><b>Cape Point &amp; Penguin Tour</b> — Klook<br>
+  ★ 4.6 · <b style="color:#c2410c">US$ 32.29</b><br>
+  <span class="cta">Open with Klook ↗ (mock)</span></div>
+  <div class="disc">Partner offer · we may earn a commission at no extra cost to you · not an Introduction</div>
+</div>
+<div class="card" id="tp2">
+  <span class="x" onclick="closeCards()">✕</span>
+  <div class="ph" style="background:linear-gradient(135deg,#0e7490,#f59e0b)">🔺</div>
+  <div class="bd"><b>Giza Pyramids 2-Day Private Tour</b> — Klook<br>
+  ★ 4.9 (88) · <b style="color:#c2410c">US$ 95.79</b><br>
+  <span class="cta">Open with Klook ↗ (mock)</span></div>
+  <div class="disc">Partner offer · we may earn a commission at no extra cost to you · not an Introduction</div>
+</div>
+<div class="card" id="intro1">
+  <span class="x" onclick="closeCards()">✕</span>
+  <div class="ph" style="background:linear-gradient(135deg,#1e3a5f,#3a5f8a)">■ ■ ■</div>
+  <div class="bd"><b>Winelands guide — anonymous</b><br>
+  Trust 4.8 · credentials verified · Mode B<br>
+  <span class="cta anon-cta">Introduction · 1 Tuppence</span></div>
+  <div class="disc" style="background:#eef3fa; color:#1e3a5f; border-color:#dbe5f2;">Identity revealed on bilateral acceptance — the TrustSquare product</div>
+</div>
+<div class="card" id="intro2">
+  <span class="x" onclick="closeCards()">✕</span>
+  <div class="ph" style="background:linear-gradient(135deg,#1e3a5f,#3a5f8a)">■ ■ ■</div>
+  <div class="bd"><b>Falls-area operator — anonymous</b><br>
+  12 yrs guiding · Trust 4.9 · Mode B<br>
+  <span class="cta anon-cta">Introduction · 1 Tuppence</span></div>
+  <div class="disc" style="background:#eef3fa; color:#1e3a5f; border-color:#dbe5f2;">Identity revealed on bilateral acceptance — the TrustSquare product</div>
+</div>
+
+<div class="legend">
+  <span class="lg"><span class="dot" style="background:#1e3a5f"></span><b>Their pins</b> — the dream, free</span>
+  <span class="lg"><span class="dot" style="background:#c9a227"></span><b>xTuppence</b> — AI-improved route &amp; schedule</span>
+  <span class="lg"><span style="font-size:15px">🤝</span><b>Introduction</b> — anonymous seller, Mode B</span>
+  <span class="lg"><span style="font-size:15px">🎫</span><b>Partner offer</b> — branded, opens photo + price</span>
+</div>
+</div>
+
+<div class="explain">
+  <b>Why this works — the 1·2·3:</b><br>
+  <b>1.</b> The traveller designs their dream map <span class="pill p-free">FREE</span> — it is already a valid advert/plan.<br>
+  <b>2.</b> One tap: <b>improve with xTuppence</b> <span class="pill p-xt">PAID FEATURE</span> — the AI adds real
+  legs, nights, food stops and a schedule (our reality-audit knowledge, applied).<br>
+  <b>3.</b> They travel it. Along the route: 🤝 intro icons <span class="pill p-intro">MODE B</span> where our
+  sellers are, 🎫 partner icons <span class="pill p-tp">BRANDED</span> only where partner stock actually exists —
+  tap opens the real photo, price and booking. <b>No icon where there's no inventory — the empty-shelf
+  problem never appears.</b> Note Vic Falls on this mock: no 🎫 yet, because Klook has no stock there;
+  the icon appears by itself the day GetYourGuide/Viator unlock.<br><br>
+  <b>The quiet fourth step:</b> buying at the point of travel isn't just simple — it converts.
+  Partner cookie windows run 7–30 days; a traveller who taps 🎫 standing at the gates of Giza books
+  <i>now</i>, not "someday".
+</div>
+
+<p class="fine">Mock only · icons and cards use real verified Klook prices (2 Aug 2026) · partner cards carry
+the §6.1B disclosure exactly as the EULA requires · production version rides the existing Leaflet
+stops[] format the adventures maps already use, so this is an icon-layer extension, not a rebuild.</p>
+
+</div>
+<script>
+function setStep(n){
+  for (let i=1;i<=3;i++) document.getElementById('s'+i).classList.toggle('on', i<=n);
+  const ai = document.querySelectorAll('.ai, #ailine');
+  const icons = document.querySelectorAll('.icons');
+  const dream = document.getElementById('dreamline');
+  ai.forEach(e=>e.setAttribute('opacity', n>=2 ? '1':'0'));
+  dream.setAttribute('opacity', n>=2 ? '0.25':'1');
+  icons.forEach(e=>e.setAttribute('opacity', n>=3 ? '1':'0'));
+  closeCards();
+  const hints = {
+    1:'Step 1 — the traveller sketched four pins. That\'s a valid, free advert of their dream.',
+    2:'Step 2 — xTuppence: the AI reroutes with real legs, nights and food stops (gold). Their pins stay theirs.',
+    3:'Step 3 — icons appear only where something real exists. Tap 🎫 at Cape Town or Cairo; note Vic Falls has none — yet.'
+  };
+  document.getElementById('maphint').textContent = hints[n];
+}
+function openCard(id,x,y){
+  closeCards();
+  const c = document.getElementById(id);
+  const box = document.querySelector('.mapbox');
+  c.style.left = Math.min(x, box.clientWidth-270)+'px';
+  c.style.top = Math.max(10,y)+'px';
+  c.style.display = 'block';
+}
+function closeCards(){ document.querySelectorAll('.card').forEach(c=>c.style.display='none'); }
+</script>
+</body>
+</html>
