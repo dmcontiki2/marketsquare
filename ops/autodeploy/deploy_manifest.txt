@@ -83,3 +83,6 @@ warm_videos.sh             | warm_videos.sh
 #  • Binary media (*.jpg/*.png/*.mp4, the Agency Playbook PDF, n8n templates) —
 #    git-ignored, so the mirror never carries them. They ship via media_push.bat
 #    (hash-gated sync_assets.ps1 — the media lane). Code NEVER rides that lane.
+
+# ── SCOREBOARD-1 (3 Aug 2026): silent scoreboard agent (nightly lane probes) ──
+ai_scoreboard.py           | ai_scoreboard.py

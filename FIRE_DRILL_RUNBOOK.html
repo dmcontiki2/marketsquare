@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fire Drill Runbook — FLIP-DRILL-1 · TrustSquare</title>
+<style>
+:root{--navy:#0c1a2e;--ink:#1b2733;--muted:#5f6b78;--line:#e3e7ec;--bg:#f6f8fa;--card:#fff;
+--green:#2f7d32;--greenbg:#e7f4e8;--amber:#9a6212;--amberbg:#fbf0db;--red:#a32d2d;--redbg:#fbe9e9;
+--teal:#0f6e56;--tealbg:#e1f5ee;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Inter,system-ui,sans-serif;line-height:1.55}
+.doc{max-width:880px;margin:0 auto;padding:26px 20px 60px}
+header.hd{background:var(--navy);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:18px}
+header.hd .ey{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7fd4bb;font-weight:700}
+header.hd h1{margin:6px 0 4px;font-size:24px;font-weight:700}
+header.hd p{margin:0;color:#b9c4d0;font-size:14px;max-width:680px}
+header.hd .thesis{margin-top:12px;border-left:3px solid #7fd4bb;padding:5px 0 5px 13px;font-size:13.5px;color:#dce6f0}
+header.hd .thesis b{color:#fff}
+h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 17px;margin-bottom:10px;border-left:4px solid var(--blue)}
+.card.g{border-left-color:var(--green)}.card.a{border-left-color:var(--amber)}.card.r{border-left-color:var(--red)}.card.t{border-left-color:var(--teal)}
+.card h3{margin:0 0 6px;font-size:14.5px}
+.card p,.card li{font-size:13px;color:var(--ink)}
+.card small{color:var(--muted);font-size:12px}
+code{font-size:11.5px;background:#eef2f6;color:var(--navy);padding:1px 5px;border-radius:5px;font-family:'Consolas',ui-monospace,monospace}
+pre{background:#0c1a2e;color:#dce6f0;border-radius:9px;padding:10px 13px;font-size:11.5px;overflow-x:auto;font-family:'Consolas',ui-monospace,monospace}
+.chk{list-style:none;padding:0;margin:6px 0}
+.chk li{display:flex;gap:10px;align-items:flex-start;padding:7px 9px;border-radius:8px;margin:3px 0;background:#fbfcfd;border:1px solid var(--line);cursor:pointer}
+.chk li.done{background:var(--greenbg);border-color:#cdebcf;text-decoration:line-through;color:var(--muted)}
+.chk .box{flex:none;width:18px;height:18px;border:2px solid #b9c4d0;border-radius:5px;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.chk li.done .box{background:var(--green);border-color:var(--green)}
+.abort{background:var(--redbg);border:1.5px solid #e8b9b9;border-radius:12px;padding:13px 17px;margin:10px 0}
+.abort h3{margin:0 0 6px;color:var(--red);font-size:14.5px}
+.abort p{font-size:13px;margin:4px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.two{grid-template-columns:1fr}}
+.badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.bA{background:#cfeee3;color:var(--teal)}.bB{background:#f3e2c1;color:var(--amber)}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:28px}
+.note{font-size:12px;color:var(--muted);margin-top:6px}
+</style></head><body><div class="doc">
+
+<header class="hd">
+  <div class="ey">Solar Council · TrustSquare · Durability programme</div>
+  <h1>🔥 Fire Drill Runbook — FLIP-DRILL-1</h1>
+  <p>One rehearsed hour that converts "validated READY" into "we have done it". Drill A flips live traffic onto the open-weight standby and back. Drill B (after A passes) simulates a full Anthropic ban.</p>
+  <div class="thesis">An unrehearsed failover is a hope, not a capability. <b>The flip-back is rehearsed too</b> — aborting cleanly is a passing result, not a failure.</div>
+</header>
+
+<h2>Choose the hour</h2>
+<div class="card">
+  <p>A quiet weekday mid-morning (SAST) with you at the laptop and one hour undisturbed. Traffic is pre-launch light, so any hour works — what matters is that <b>you are watching</b>. Everything below is reversible in one click at any moment.</p>
+</div>
+
+<h2>Drill A — the live flip <span class="badge bA">≈ 1 hour · dashboard only</span></h2>
+
+<div class="card g"><h3>1 · Pre-flight (10 minutes)</h3>
+<ul class="chk">
+  <li><span class="box">✓</span><span>Site green: open trustsquare.co, log in, one search works. <code>/health</code> reports ok (the dashboard shows it).</span></li>
+  <li><span class="box">✓</span><span>Backups fresh: last night's 03:17 R2 backup ran (checkpoint log) — nothing about this drill touches data, but rules are rules.</span></li>
+  <li><span class="box">✓</span><span>Dashboard → Infrastructure → <b>AI Providers card</b>: Scaleway shows as keyed STANDBY (its golden-set pass is 18 Jul: 7/7 text, 2/2 vision). If the confirm copy still says "outage use only", that wording is stale — this drill is exactly the evidence that retires it.</span></li>
+  <li><span class="box">✓</span><span>Note the time. Open a notepad for observations (or tell me in chat as you go — I'll keep the log).</span></li>
+</ul></div>
+
+<div class="card t"><h3>2 · The flip (one click)</h3>
+<p>On the AI Providers card, set the active provider to <b>scaleway</b>. That writes <code>launch_switches.ai_active</code> via <code>POST /admin/flags</code>; the app picks it up within ~10 seconds (cache window). Anthropic automatically becomes the <i>fallback</i> lane — the safety net inverts, it never disappears.</p>
+<p class="note">Every AI feature now runs on <code>mistral-medium-3.5-128b</code> (EU, open weights) — the ONE-MODEL STANDBY you ruled on 18 Jul.</p></div>
+
+<div class="card"><h3>3 · The watch hour — exercise every AI muscle</h3>
+<p>Spread these over the hour, roughly every 10 minutes. You are looking for: empty or nonsense AI replies, obvious slowness, error toasts.</p>
+<ul class="chk">
+  <li><span class="box">✓</span><span><b>AI search</b> — a natural-language search a buyer would type ("bakkie under R200k near Cape Town"). Interpretation still sensible?</span></li>
+  <li><span class="box">✓</span><span><b>Free example button</b> — any category's example (<code>/ai/example</code> route). Output arrives, reads well?</span></li>
+  <li><span class="box">✓</span><span><b>Listing quality feedback</b> — open a draft listing, request the quality/SPS feedback. Coherent?</span></li>
+  <li><span class="box">✓</span><span><b>Vision draft</b> — draft a listing from a photo. This is the tier that fails first on weaker models; Mistral passed 2/2 on the golden set, now prove it live.</span></li>
+  <li><span class="box">✓</span><span><b>Triage / coach touchpoint</b> — any assistant-style flow you normally test.</span></li>
+  <li><span class="box">✓</span><span><b>BIT self-test</b> — run <code>trustsquare-bit-agent\bit_cycle.py</code> once mid-hour. All markers should PASS exactly as on Anthropic.</span></li>
+</ul></div>
+
+<div class="abort"><h3>⛔ Abort criteria — flip back immediately if any of these appear</h3>
+<p>Empty AI replies · a customer-visible error · vision draft produces garbage · BIT reports an S1 failure · anything that makes you uneasy.</p>
+<p><b>The abort IS part of the drill:</b> set active back to <b>anthropic</b> on the same card (≤10 s to take effect), confirm the failing feature recovers, and record what broke. A clean abort still proves the switch works both ways — that is a pass on the mechanism, with homework on the lane.</p></div>
+
+<div class="card g"><h3>4 · Flip back &amp; capture the evidence</h3>
+<ul class="chk">
+  <li><span class="box">✓</span><span>Set active back to <b>anthropic</b>. Confirm one AI feature responds.</span></li>
+  <li><span class="box">✓</span><span>Evidence: screenshot of the card while scaleway was active · the hour's AI spend rows (the spend log now carries a <b>provider</b> column — they should read <code>scaleway</code>) · BIT result · your notes.</span></li>
+  <li><span class="box">✓</span><span>Tell me the verdict + notes — I write the CHANGELOG entry (<b>FLIP-DRILL-1</b>), update the vendor-strategy addendum, retire the stale "outage use only" confirm copy, and mark the Durability Map.</span></li>
+</ul></div>
+
+<h2>Drill B — the ban simulation <span class="badge bB">run only after A passes · 20 min</span></h2>
+<div class="card a"><h3>AI_DRILL_BAN — Claude ceases to exist for 20 minutes</h3>
+<p>Drill A proves the standby carries traffic <i>by choice</i>. Drill B proves survival when Anthropic is <i>gone</i>: the P2a drill overlay excludes the lane exactly as if banned (T3) — but it is a routing overlay only: no breaker state is written, no LOUD alarm fires, and unsetting it ends the drill instantly. The design doc calls this the first monthly T0 drill.</p>
+<pre># start the drill (one line, from your terminal):
+ssh root@178.104.73.239 "mkdir -p /etc/systemd/system/marketsquare.service.d && printf '[Service]\nEnvironment=AI_DRILL_BAN=anthropic\n' > /etc/systemd/system/marketsquare.service.d/drill.conf && systemctl daemon-reload && systemctl restart marketsquare"
+
+# ... run the same watch-hour spot checks (15–20 min is enough) ...
+
+# end the drill (removes the overlay completely):
+ssh root@178.104.73.239 "rm /etc/systemd/system/marketsquare.service.d/drill.conf && systemctl daemon-reload && systemctl restart marketsquare"</pre>
+<p class="note">During the drill the dashboard shows a DRILL badge (P2b adds the full breaker lights). PASS = every AI feature served with Claude absent. That sentence, in the CHANGELOG, is the strongest independence statement TrustSquare can make short of owning the box.</p></div>
+
+<h2>What a pass unlocks</h2>
+<div class="two">
+  <div class="card g"><h3>Immediately</h3><p>Scaleway is promoted from "outage use only" to <b>proven peer lane</b> on the dashboard · FLIP-DRILL-1 recorded · Durability Map Rung 3 gains its first hard evidence.</p></div>
+  <div class="card t"><h3>Next</h3><p>Monthly T0 drill on the calendar · P2b/c (breaker lights + heartbeat) · the scoreboard agent begins collecting the 3-month record that will eventually <i>decide</i> flips instead of recommending them.</p></div>
+</div>
+
+<p class="foot">FLIP-DRILL-1 · prepared 3 Aug 2026 · companion to AI_AUTO_FAILOVER_P2_DESIGN.md §8 · tick-boxes are session-only (print or re-tick on reload) · small step by small step</p>
+</div>
+<script>
+document.querySelectorAll('.chk li').forEach(function(li){
+  li.addEventListener('click',function(){ li.classList.toggle('done'); });
+});
+</script>
+</body></html>

@@ -61,6 +61,9 @@ code{font-size:11px;background:#eef2f6;color:var(--navy);padding:1px 5px;border-
 .step .b small{display:block;color:var(--muted);font-size:12.3px;margin-top:3px}
 .step.fin{border-left-color:var(--teal);background:var(--tealbg)}
 .step.fin .num{background:var(--teal)}
+.step.won{border-left-color:var(--green);background:var(--greenbg)}
+.step.won .num{background:var(--green)}
+.step.won .b .meta{color:var(--green)}
 .foot-nirvana{background:var(--navy);color:#eaf1f8;border-radius:14px;padding:16px 20px;margin-top:8px;font-size:13.5px}
 .foot-nirvana b{color:#7fd4bb}
 .foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
@@ -87,9 +90,9 @@ code{font-size:11px;background:#eef2f6;color:var(--navy);padding:1px 5px;border-
 <h2>A · Durability ladder — the runtime AI</h2>
 <div class="dir">▲ more durable · portable · sovereign</div>
 <div class="rung top"><span class="bdg bg">Endgame</span><div class="rn">RUNG 4 · SOVEREIGN</div><div class="rt">Self-host on the Karoo farm 🌾</div><div class="rd">Own the weights and the compute. Off-grid, off-jurisdiction, un-bannable. The architecture is built to reach here — don't jump early.</div></div>
-<div class="rung"><span class="bdg bn">Next</span><div class="rn">RUNG 3 · MULTI-HOST</div><div class="rt">Same open model from ≥ 2 hosts</div><div class="rd">No single vendor can cut you off or spike your price. Failover is a config flag, not a rewrite.</div></div>
-<div class="here">● You are here — foundation set, climbing ●</div>
-<div class="rung now"><span class="bdg ba">In progress</span><div class="rn">RUNG 2 · PINNED &amp; VENDOR-NEUTRAL</div><div class="rt">Pin one open-weight model + version</div><div class="rd">Constant cost, no silent model drift. You hold Scaleway (EU, open models) + OpenAI keys already. To do: set the pinned default &amp; ensure no feature code calls a vendor SDK directly.</div></div>
+<div class="rung now"><span class="bdg ba">In progress</span><div class="rn">RUNG 3 · MULTI-HOST</div><div class="rt">Three lanes wired, failover with judgment</div><div class="rd">Anthropic (active) · Scaleway EU (keyed standby, golden-set 18 Jul) · OpenAI GPT-5.6 (wired + effort-pinned 31 Jul, server key = one run of <code>add_openai_key.bat</code>, RG-0016). The P2a <b>circuit breaker</b> is live &amp; tested: a failing lane trips, blip vs ban vs our-bug classified, recovery doctrine ruled (dropouts auto-return with hysteresis; a ban waits for David). Remaining: P2b/c heartbeat + drill, live status on the dashboard card — and the silent <b>scoreboard agent</b> (uptime · latency · cost · quality per capability, 3-month ranking as the flip determinant).</div></div>
+<div class="here">● You are here — Rung 2 closed, climbing Rung 3 ●</div>
+<div class="rung done"><span class="bdg bh">Done</span><div class="rn">RUNG 2 · PINNED &amp; VENDOR-NEUTRAL</div><div class="rt">Pinned models, zero raw vendor calls</div><div class="rd">Closed 31 Jul–1 Aug: the seam is <b>TOTAL — all 22 AI call sites</b> route through <code>ai_provider.complete()</code>, guarded by ledger <b>RG-0017</b>. Model ids pinned per lane (ONE-MODEL STANDBY: <code>mistral-medium-3.5-128b</code> whole row); golden-set evals gate every lane before traffic. The flip stays one dashboard click.</div></div>
 <div class="rung done"><span class="bdg bh">Done</span><div class="rn">RUNG 1 · ABSTRACTED</div><div class="rt">All AI behind one swap seam</div><div class="rd">You built this: <code>ai_provider.py</code> · <code>ai_active</code> flag · tiered routing in <code>ai_service_tiers.py</code>. The hard part is done.</div></div>
 <div class="rung bad"><span class="bdg br">Avoid</span><div class="rn">RUNG 0 · FRAGILE</div><div class="rd">One proprietary frontier model, called directly from feature code. Price you don't control, a ban you can't appeal, a dependency you can't carry to the farm.</div></div>
 <div class="dir">▼ fragile · locked-in · rentable only</div>
@@ -110,29 +113,29 @@ code{font-size:11px;background:#eef2f6;color:var(--navy);padding:1px 5px;border-
   <circle cx="92" cy="116" r="21" fill="#185fa5"/><text x="92" y="120" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="800">6</text><text x="44" y="112" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">Ship</text><text x="44" y="126" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b2733">safe</text>
 </svg>
 </div>
-<div class="cap"><b>Step 5 is the one that changes everything.</b> Your Prevent phase already exists — make it mandatory: no fix is "done" until it leaves a class-guard behind (evidence-true → pre-deploy, done today). Closed classes stay closed.</div>
-<div class="leg"><span><span class="d" style="background:#2f7d32"></span>strong</span><span><span class="d" style="background:#9a6212"></span>the two keystones still to build</span><span><span class="d" style="background:#185fa5"></span>in place, growing</span></div>
+<div class="cap"><b>Step 5 became the rule — and it held.</b> What started 24 Jul as one evidence-true test is now the <b>regression ledger</b>: 25+ locked classes (RG-0014 … RG-0026), re-proven after every deploy — latest run 3 Aug: <b>0 REGRESSED</b>. Closed classes stay closed.</div>
+<div class="leg"><span><span class="d" style="background:#2f7d32"></span>strong</span><span><span class="d" style="background:#9a6212"></span>keystone still to build</span><span><span class="d" style="background:#185fa5"></span>in place, growing</span></div>
 
-<h2>Where you already stand — ~70% there</h2>
+<h2>Where you already stand — ~85% there <small style="font-weight:400;text-transform:none;letter-spacing:0">(was ~70% on 24 Jul)</small></h2>
 <div class="sgrid">
-  <div class="s g"><div class="sh"><h4>Detect</h4><span class="lv">Have</span></div><p><code>/pulse</code> · <code>/feedback</code> · <code>/fixback</code> · the v2 Detect engine.</p></div>
-  <div class="s a"><div class="sh"><h4>Reproduce</h4><span class="lv">Keystone</span></div><p><code>/fix</code> drives the computer; <code>seed_demo_data</code> exists — but no fixture to <b>replay any failing scenario</b> on demand.</p></div>
+  <div class="s g"><div class="sh"><h4>Detect</h4><span class="lv">Have</span></div><p><code>/pulse</code> · <code>/feedback</code> · v2 Detect · BIT self-test · drift monitor (CRLF class fixed 3 Aug, RG-0026) · breaker failure taxonomy.</p></div>
+  <div class="s a"><div class="sh"><h4>Reproduce</h4><span class="lv">Keystone</span></div><p>Golden-set evals per lane + BIT + headless Playwright checks now routine — but still no fixture to <b>replay any failing scenario</b> on demand.</p></div>
   <div class="s g"><div class="sh"><h4>Fix (agent)</h4><span class="lv">Have</span></div><p>v2 Fix engine · <code>/fix</code> autofix · <code>Autonomous_Maintenance_Agent</code>.</p></div>
-  <div class="s g"><div class="sh"><h4>Verify</h4><span class="lv">Growing</span></div><p><code>/ship</code> smoke · <code>predeploy_check</code> · first evidence-true test today.</p></div>
-  <div class="s a"><div class="sh"><h4>Guard the class</h4><span class="lv">Keystone</span></div><p>The v2 Prevent engine exists — make it the rule: every fix leaves an invariant + test. Started today.</p></div>
-  <div class="s g"><div class="sh"><h4>Record</h4><span class="lv">Strong</span></div><p><code>CHANGELOG</code> · <code>CHANGE_REGISTER</code> · <code>STATUS</code> · <code>TRUST_SCORE_CRITERIA</code>.</p></div>
-  <div class="s g"><div class="sh"><h4>Safe deploy</h4><span class="lv">Have</span></div><p>Rollback tag + smoke + auto-rollback in <code>/ship</code>; pre-deploy gate blocks bad builds.</p></div>
-  <div class="s r"><div class="sh"><h4>Closed loop, live</h4><span class="lv">The gap</span></div><p>The v2 conductor runs <b>SHADOW</b> (deploys nothing). Cutover to LIVE on the green lane — on a box you own — is the missing keystone.</p></div>
-  <div class="s g"><div class="sh"><h4>Repo-as-memory</h4><span class="lv">Growing</span></div><p><code>PRINCIPLE_REQUIREMENTS</code> · specs · guards. The cure for "we lose every new model."</p></div>
+  <div class="s g"><div class="sh"><h4>Verify</h4><span class="lv">Strong</span></div><p>TSL lock + gate green on every deploy · <code>predeploy_check</code> · server health-check with <b>auto-rollback</b> · post-deploy ledger run.</p></div>
+  <div class="s g"><div class="sh"><h4>Guard the class</h4><span class="lv">Strong</span></div><p>Was a keystone on 24 Jul — now the <b>regression ledger</b>: 25+ LOCKED classes, 0 regressed on the 3 Aug run. The rule held.</p></div>
+  <div class="s g"><div class="sh"><h4>Record</h4><span class="lv">Strong</span></div><p><code>CHANGELOG</code> · <code>CHANGE_REGISTER</code> · <code>STATUS</code> · <code>OPEN_LOOPS.md</code> — one ranked list, Claude integrates, David reads.</p></div>
+  <div class="s g"><div class="sh"><h4>Safe deploy</h4><span class="lv">Strong</span></div><p><b>ONE deploy engine</b> (2 Aug): server pulls the deploy ref, manifest allowlist, monotonic cache-buster, health-check + auto-rollback. First live run shipped v421→v422.</p></div>
+  <div class="s r"><div class="sh"><h4>Closed loop, live</h4><span class="lv">The gap</span></div><p>The v2 conductor still runs <b>SHADOW</b> (deploys nothing). Cutover to LIVE on the green lane — on a box you own — is the missing keystone.</p></div>
+  <div class="s g"><div class="sh"><h4>Repo-as-memory</h4><span class="lv">Strong</span></div><p><code>PRINCIPLE_REQUIREMENTS</code> · specs · ledger · <code>OPEN_LOOPS</code>. claude-mem retired (1 Aug) — the repo IS the memory, by ruling.</p></div>
 </div>
 
 <h2>The 5 steps to Nirvana 🧘 — toward the goal</h2>
-<div class="step"><div class="num">1</div><div class="b"><b>Pin the substrate</b> <span class="meta">· rung 1 → 2 · an afternoon</span><small>Set a pinned open-weight default in <code>ai_provider.py</code>; grep out any feature that still calls a vendor SDK directly. Removes model drift and starts killing ban/price risk.</small></div></div>
-<div class="step"><div class="num">2</div><div class="b"><b>Every fix leaves a guard</b> <span class="meta">· make Prevent mandatory</span><small>No fix is "done" until it ships a class-level test into <code>predeploy_check</code> — the way evidence-true landed today. This is what stops complaint #100 from ever reaching a customer.</small></div></div>
-<div class="step"><div class="num">3</div><div class="b"><b>Reproduction on tap</b> <span class="meta">· close the amber keystone</span><small>A fixture/seed harness that replays any failing scenario on demand, so the Fixer verifies against reality instead of inferring. Kills the "fix it twice, fight it live three more times" battle.</small></div></div>
-<div class="step"><div class="num">4</div><div class="b"><b>Multi-host failover</b> <span class="meta">· rung 2 → 3</span><small>The same open model served from ≥ 2 hosts, switchable by config flag. Un-bannable, price-stable, portable to any region at the drop of a hat.</small></div></div>
+<div class="step won"><div class="num">✓</div><div class="b"><b>Pin the substrate</b> <span class="meta">· DONE — validated 24 Jul, closed 1 Aug</span><small>Seam total: all 22 AI call sites through <code>ai_provider.complete()</code> (RG-0017 keeps it that way). Model ids pinned per lane; golden-set gate before any lane carries traffic. The last raw call site is gone.</small></div></div>
+<div class="step won"><div class="num">✓</div><div class="b"><b>Every fix leaves a guard</b> <span class="meta">· DONE — the rule, and it held</span><small>From two first guards on 24 Jul to the regression ledger: 25+ LOCKED classes re-proven post-deploy (3 Aug: 0 regressed). Complaint #100 dies here.</small></div></div>
+<div class="step"><div class="num">3</div><div class="b"><b>Reproduction on tap</b> <span class="meta">· the remaining amber keystone</span><small>Golden sets, BIT and headless Playwright cover a lot — still missing: a fixture/seed harness that replays <b>any failing scenario</b> on demand, so the Fixer verifies against reality instead of inferring.</small></div></div>
+<div class="step"><div class="num">4</div><div class="b"><b>Multi-host failover</b> <span class="meta">· in progress — breaker live (P2a)</span><small>Three lanes wired; blip/ban/our-bug classified; recovery doctrine ruled (auto-return for dropouts, David's hand for bans). Remaining: P2b/c heartbeat + drill, OpenAI server key (<code>add_openai_key.bat</code>), and the silent <b>scoreboard agent</b> — the 3-month per-capability ranking that becomes the flip determinant.</small></div></div>
 <div class="step fin"><div class="num">5</div><div class="b"><b>Close the loop on your own box</b> <span class="meta">· rung 3 → 4 · Nirvana</span><small>Flip the v2 conductor from SHADOW to LIVE on the green lane — then onto self-hosted weights on the Karoo. Detect → reproduce → fix → verify → guard → ship, unattended, on hardware you own and no one can switch off.</small></div></div>
 <div class="foot-nirvana">The top of the ladder and the last step of the loop are the <b>same place</b>: one box you control, that maintains itself, that nobody can switch off. Your instinct and your long-term vision were pointing at the same destination all along — <b>this map just names it.</b></div>
 
-<p class="foot">Orchestration v2 · Durability &amp; AI-Independence · companion to the Control Room · small step by small step</p>
+<p class="foot">Orchestration v2 · Durability &amp; AI-Independence · companion to the Control Room · small step by small step<br>first drawn 24 Jul 2026 · position re-surveyed 3 Aug 2026 (2 of 5 steps closed, ladder ~85%)</p>
 </div></body></html>

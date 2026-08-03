@@ -29,6 +29,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
 | L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
+| L3 | **SCOREBOARD-1 shipped-not-live** — agent + guards + nightly wiring in repo (7/7 tests); probes OFF until enabled. | [D] | Next deploy carries it, then run `enable_scoreboard.bat` once. | 2026-08-03 | CHANGELOG SCOREBOARD-1 |
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
 
@@ -37,6 +38,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | D4 | **privacy.html UK/US/AU supplements** — verified 2 Aug: NEW work, never drafted (EULA got §13.6 Country Schedules on 23 Jul; privacy.html has zero UK/US/AU content). | [C] | David confirms scope → Claude drafts. | 2026-07-23 | STATUS.md S149 |
 | D7 | **Wave-1 send: how do email recipients get past the pre-launch Unlock gate?** Deep links + all 9 showcase adverts are DONE; a cold click lands on the editor-PIN gate (by design, REMOVE-BEFORE-LAUNCH). Either wave-1 waits for launch, or Claude builds a read-only `?listing=` preview that bypasses the gate for a single advert (data already publicly readable pre-launch). Test send follows this call. | [D] | Rule: wait-for-launch / build preview bypass. | 2026-08-02 | this session |
 | D8 | **Stays/B&B showcase trio missing** (David, 2 Aug: "we totally overlooked them"). Verified: adventures_accommodation_outreach.html has ZERO showcase cards (all other tracks have 3) and no ZA B&B/guesthouse showcase adverts exist (only lodge super 271 + tour stays). Needed: 3 Stays adverts (safari lodge B&B / boutique guesthouse / bush camp — clone-271 pattern, born clean per hardened script), AI photo set (Higgsfield, David-assisted), phone-card composites, template section + deep links. | [D]+[C] | Next working session: David generates photos → Claude wires end-to-end (advert script rows → migration → cards → template → links). | 2026-08-02 | this session |
+| D9 | **FLIP-DRILL-1: pick the hour** — runbook ready (`FIRE_DRILL_RUNBOOK.html`); one quiet hour on the Scaleway lane converts 'validated' into 'proven'. | [D] | Schedule the hour; Claude keeps the log in chat. | 2026-08-03 | this session |
 
 ## ✅ CLOSED — last 7 days
 *(short tail; drop rows older than 7 days)*

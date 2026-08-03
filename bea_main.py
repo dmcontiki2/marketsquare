@@ -16212,3 +16212,36 @@ if os.getenv("DEMAND_SWEEP_ON_BOOT", "0") == "1" and DEMAND_LOOP_ENABLED:
               % (_bs.get("matched"), _bs.get("composed"), _bs.get("sent", 0), _ob, DEMAND_LOOP_DRYRUN))
     except Exception as _dse:
         print("DEMAND-BOOT-SWEEP error: %s" % _dse)
+
+
+# ── SCOREBOARD-1 (3 Aug 2026): the silent scoreboard agent, nightly ──────────
+# The SLOW-signal half of the failover programme (fast signals = ai_breaker):
+# probes every configured lane x task tier each night at 03:33 SAST (01:33 UTC,
+# after the 03:17 backup), stores history in ai_scoreboard_probes (primary DB,
+# so it rides the backup lanes), writes the rolling 90-day ranking to
+# ai_scoreboard.json. Quality is a GATE not a weight (golden-set registry).
+# Spend-gated OFF by default — launch_switches.scoreboard_enabled=1
+# (enable_scoreboard.bat) is David's explicit click. Import-guarded and
+# exception-walled: a scoreboard failure can never hurt the app.
+try:
+    import ai_scoreboard as _ts_scoreboard
+except Exception as _ts_sb_err:
+    _ts_scoreboard = None
+    print("SCOREBOARD-1: module not importable (%s) — nightly probes off" % _ts_sb_err)
+
+if _ts_scoreboard is not None:
+    @app.on_event("startup")
+    async def _ts_scoreboard_nightly():
+        async def _sb_loop():
+            while True:
+                _now = datetime.now(timezone.utc)
+                _nxt = _now.replace(hour=1, minute=33, second=0, microsecond=0)
+                if _nxt <= _now:
+                    _nxt += timedelta(days=1)
+                await asyncio.sleep(max(60.0, (_nxt - _now).total_seconds()))
+                try:
+                    await asyncio.get_running_loop().run_in_executor(
+                        None, _ts_scoreboard.run_nightly)
+                except Exception as _sb_e:
+                    print("SCOREBOARD-1 nightly error: %s" % _sb_e)
+        asyncio.get_running_loop().create_task(_sb_loop())

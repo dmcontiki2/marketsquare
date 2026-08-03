@@ -109,6 +109,25 @@ def main():
     except Exception as _e:
         print('  [evidence-true] check skipped: %r' % _e)
 
+    # SCOREBOARD-1 guard suite (3 Aug 2026): the scoreboard's class rules — quality
+    # is a GATE not a weight, 'unconfigured' is configuration not outage, flag-off
+    # means ZERO probe spend — must hold on every deploy that ships the agent.
+    try:
+        import subprocess as _sp2
+        _sf = os.path.join(HERE, 'test_ai_scoreboard.py')
+        if os.path.isfile(_sf):
+            _st = _sp2.run([sys.executable, _sf, HERE], capture_output=True, text=True, timeout=45)
+            if _st.returncode != 0:
+                danger.append('scoreboard-guards')
+                print('  !! SCOREBOARD: guard suite FAILED:')
+                for _l in (_st.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  Scoreboard guard suite: ok')
+    except Exception as _e:
+        print('  [scoreboard] check skipped: %r' % _e)
+
     # BASE-40 canon guard (28 Jul 2026): every surface that writes or previews a
     # Trust Score must carry the universal 40-point base and the scorer's caps.
     # Added after the 40->5 bug: a base-less panel total gained write authority
