@@ -919,6 +919,29 @@ def rg_travelpayouts_script_present():
     return out
 
 
+@entry("RG-0026", "The deploy-drift monitor compares CONTENT, not Windows line endings",
+       LOCKED, scope="repo, check_deploy_drift.py (every CRLF file it tracks: ms.js, marketsquare.html)",
+       fixed_on="2026-08-03",
+       ref="DRIFT-CRLF-1 (3 Aug 2026): DEPLOY-CONSOLIDATION-1 changed placement from scp (byte copy, "
+           "CRLF preserved) to `git checkout` on the box, which writes LF. The working copy here is "
+           "CRLF, so a RAW byte md5 can never match live again for a CRLF file -- ms.js measured "
+           "local 1049997B vs live 1033905B, a difference of exactly its 16092 line endings, with the "
+           "content proven identical (LF-normalised md5 60f5d918... on both sides). Left alone the "
+           "monitor cries 'local ahead of live' forever, which trains everyone to ignore it -- and a "
+           "REAL drift then hides inside the permanent false alarm. _md5() now normalises CRLF->LF "
+           "before hashing (server files are already LF, so it is a no-op there). This asserts the "
+           "normalisation stays in.")
+def rg_drift_monitor_normalises_crlf():
+    src = repo_file("check_deploy_drift.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- drift-monitor normalisation check skipped")]
+    out = []
+    if 'replace(b"\\r\\n", b"\\n")' not in src:
+        out.append((FAIL, "check_deploy_drift.py._md5 no longer normalises CRLF->LF -- every CRLF "
+                          "file (ms.js, marketsquare.html) will report phantom drift forever"))
+    return out
+
+
 def run():
     t0 = time.time()
     results = []

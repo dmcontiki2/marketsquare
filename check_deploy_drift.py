@@ -45,10 +45,18 @@ FILEMAP = {
 }
 
 def _md5(path):
+    """md5 of the file with CRLF normalised to LF (DRIFT-CRLF-1, 3 Aug 2026).
+
+    The ONE-deploy engine places files by `git checkout` on the box, which writes
+    LF. Windows working-copy files here are CRLF, so a raw byte md5 can NEVER
+    match live for a CRLF file (ms.js: local 1049997B vs live 1033905B = exactly
+    its 16092 line endings) and this monitor reported permanent phantom drift.
+    Normalising both sides compares CONTENT, which is what "is live behind?" means.
+    Server files are already LF, so normalising is a no-op there."""
     h = hashlib.md5()
     with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
-            h.update(chunk)
+        data = f.read()
+    h.update(data.replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 def _server_md5s(remote_paths):
