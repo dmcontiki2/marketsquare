@@ -1,46 +1,88 @@
 {
- "next_id": 7,
+ "next_id": 13,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "INFO",
-   "source": "audit:VERSION-KEY",
-   "status": "OPEN",
-   "last_seen": "2026-08-02"
+   "source": "audit VERSION-KEY",
+   "status": "OPEN"
   },
   "DW-002": {
    "first_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "INFO",
-   "source": "audit:DEMO-PLACEHOLDERS",
-   "status": "OPEN",
-   "last_seen": "2026-08-02"
+   "source": "audit DEMO-PLACEHOLDERS",
+   "status": "OPEN"
   },
   "DW-003": {
    "first_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "MEDIUM",
    "source": "consolidation",
-   "status": "OPEN",
-   "last_seen": "2026-08-02"
+   "status": "OPEN"
   },
   "DW-004": {
    "first_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "MEDIUM",
    "source": "consolidation",
-   "status": "OPEN",
-   "last_seen": "2026-08-02"
+   "status": "OPEN"
   },
   "DW-005": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "MEDIUM",
-   "source": "cron-sensor:fea-integrity",
+   "source": "cron-sensor fea-integrity",
    "status": "OPEN"
   },
   "DW-006": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-02",
+   "last_seen": "2026-08-03",
    "sev": "INFO",
-   "source": "daily_checks:deploy_drift",
+   "source": "run_daily_checks deploy_drift",
+   "status": "OPEN"
+  },
+  "DW-007": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "HIGH",
+   "source": "regression ledger RG-0023",
+   "status": "OPEN"
+  },
+  "DW-008": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "MEDIUM",
+   "source": "audit MSJS-DRIFT",
+   "status": "OPEN"
+  },
+  "DW-009": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "LOW",
+   "source": "cost sweep (new vs 2 Aug)",
+   "status": "OPEN"
+  },
+  "DW-010": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "MEDIUM",
+   "source": "cc_age_check (Monday)",
+   "status": "OPEN"
+  },
+  "DW-011": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "LOW",
+   "source": "Monday deep scan (ruff)",
+   "status": "OPEN"
+  },
+  "DW-012": {
+   "first_seen": "2026-08-03",
+   "last_seen": "2026-08-03",
+   "sev": "INFO",
+   "source": "Monday deep scan coverage",
    "status": "OPEN"
   }
  }

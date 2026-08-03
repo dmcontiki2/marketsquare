@@ -1,3 +1,35 @@
+## 03 Aug 2026 — TP-VIZ-1: Travel lane card + Tuppence & referral flow visual on the +1 page (attended, David)
+- **Why:** David asked for the Tuppence/referral flow visual as a Visual icon button on the +1 dashboard page, following the VIZ-MAPS-1 pattern (card + top-right pill + full-screen map).
+- **Change (dashboard.server.html):** new `#travel-lane-card` ("💰 Travel — Tuppence & referral lane") directly after the Infrastructure card, with a 🌍 Visual button; new TP-VIZ-1 overlay after END VIZ-MAPS-1 — a static dark-theme SVG of the four traveller moments (Dream 0T → Upgrade 3–5T → Connect 1T → Travel $), the three money rails (gold Feature fees, blue Introduction, dashed-teal brand-paid commission, plus the free-lane referral trickle), the "agency's own deal — never ours" box, and the two nevers (no TP inside agency adverts; no commission after an Introduction, EULA §2.6/§6.1B). Append-only: reuses VIZ-MAPS-1 CSS classes, owns its open/close (`msTravelVizOpen/Close`), VIZ-MAPS-1 functions untouched. Backup `dashboard.server.html.bak-20260803-tpviz`.
+- **Verified headless:** desktop 1600px + phone 390px — card, button and overlay present, overlay opens and Esc closes, zero page errors; visual confirmed by isolated render (PIN gate respected, not bypassed). Ships with the next deploy-ref publish.
+
+## 2026-08-03 — DRIFT-CRLF-1: deploy-drift monitor compared line endings, not content
+
+**Found during /start (Session 156 boot), after the 03:11 release landed clean.**
+
+`check_deploy_drift.py` reported `ms.js` as local-ahead-of-live even though the deploy
+had just succeeded. Root cause: DEPLOY-CONSOLIDATION-1 (2 Aug) moved placement from
+`scp` (byte copy, CRLF preserved) to `git checkout` on the box, which writes **LF**.
+The Windows working copy is CRLF, so a raw byte md5 can never match live again for a
+CRLF file.
+
+Measured: local `ms.js` 1 049 997 B vs live 1 033 905 B — a difference of **exactly**
+its 16 092 line endings. Content proven identical: LF-normalised md5
+`60f5d918c152416e918aae3e74a746d4` on both sides. Only `ms.js` and `marketsquare.html`
+are CRLF among the 19 tracked files.
+
+**Why it mattered:** left alone the monitor cries drift forever, everyone learns to
+ignore it, and a REAL drift then hides inside the permanent false alarm.
+
+**Fix:** `_md5()` now normalises `CRLF -> LF` before hashing (server files are already
+LF, so it is a no-op there). Backup beside the file; `py_compile` clean.
+
+**Locked:** regression ledger **RG-0026** (LOCKED, repo scope) asserts the
+normalisation stays in. Ledger run post-deploy: 25 entries, **0 REGRESSED, exit 0**.
+
+Files: `check_deploy_drift.py`, `scripts/regression_ledger.py` (+ `.bak-*` beside each).
+No app code, no deploy.
+
 ## 02 Aug 2026 — TP-DRIVE-2: affiliate compliance gate cleared, Drive at full capacity (attended, David's ruling)
 - **Why:** David challenged the gate ("is this not opposed to me approving all legal blocks removed?"). Checked on disk: D6/D2/D3 rulings never touched loop [D]. Presented the true residue (SS6.1A disclosure already live in EULA v1.11; counsel ratification + accountant tax treatment outstanding; Drive auto-inject broader than the curated-links gate). David ruled: **gate cleared — full Drive on**.
 - **Change:** all Drive monetization functions enabled in the Travelpayouts dashboard (Switch Links, Link Relevant Keywords, Insert Recommendations, Smart Previews, Targeted Offers) — "Drive is running at full capacity", boost Maximum. OPEN_LOOPS.md loop [D] closed with the ruling recorded; CLAUDE.md travel section updated (gate note superseded, TP-DRIVE-1 note reflects toggles ON).

@@ -620,6 +620,13 @@
     <div id="infra-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
 
+  <!-- TP-VIZ-1 (3 Aug 2026, David) — Travel lane card + Tuppence & referral flow visual -->
+  <div class="ls-card" id="travel-lane-card" style="position:relative">
+    <button type="button" class="ms-viz-btn" onclick="msTravelVizOpen()" title="See the Tuppence &amp; referral flow — where every coin lands">&#127758; Visual</button>
+    <div class="ls-h">&#128176; Travel <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— Tuppence &amp; referral lane</span></div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 2px;padding-right:92px">One traveller, four moments: free plan &rarr; xT Features (3&ndash;5T) &rarr; Introduction (1T) &rarr; partner referrals on the map. The Visual shows the money rails &mdash; and the two &ldquo;nevers&rdquo; that keep the Introduction promise clean.</div>
+  </div>
+
   
 
  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
@@ -1074,6 +1081,116 @@ window.lsSave=function(){ var body={mode:S.mode,verified_tier:!!S.verified_tier,
 })();
 </script>
 <!-- ══ END VIZ-MAPS-1 ══ -->
+
+<!-- ══ TP-VIZ-1 (3 Aug 2026, David) — Tuppence & referral flow visual for the Travel card.
+     Append-only: reuses VIZ-MAPS-1's CSS classes, owns its overlay + open/close (msTravelViz*),
+     touches nothing in VIZ-MAPS-1. Static SVG — no live data needed. ══ -->
+<div id="ms-viz-travel" class="ms-viz-ov" role="dialog" aria-label="Tuppence and referral flow">
+  <div class="ms-viz-top">
+    <div>
+      <div class="ms-viz-title">&#128176; Travel — the Tuppence &amp; referral flow</div>
+      <div class="ms-viz-sub">solid gold/navy = Tuppence, ours by design &middot; dashed teal = referral, brand-paid and possible &middot; grey = never ours, by promise</div>
+    </div>
+    <button type="button" class="ms-viz-ret" onclick="msTravelVizClose()">&#8617; Return to Dashboard</button>
+  </div>
+  <div class="ms-viz-body">
+  <svg viewBox="0 0 1360 860" preserveAspectRatio="xMidYMid meet" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
+    <!-- ── four traveller moments ── -->
+    <text x="48" y="46" font-size="13" fill="#64748b" font-weight="800" letter-spacing="2px">THE TRAVELLER'S FOUR MOMENTS</text>
+
+    <rect x="40" y="70" width="290" height="190" rx="14" fill="#111827" stroke="#22c55e" stroke-width="1.6"/>
+    <text x="62" y="102" font-size="15" fill="#22c55e" font-weight="800">1 &middot; DREAM</text>
+    <text x="258" y="106" font-size="22" fill="#22c55e" font-weight="800">0T</text>
+    <text x="62" y="128" font-size="12" fill="#e2e8f0" font-weight="600">Free plan — local AI, background build</text>
+    <text x="62" y="150" font-size="11" fill="#94a3b8">Route &middot; plan &middot; budget, user-managed.</text>
+    <text x="62" y="168" font-size="11" fill="#94a3b8">The conversion hook: cheap models, open data.</text>
+    <text x="62" y="200" font-size="11" fill="#22d3ee" font-weight="700">&#127915; TP icons: YES</text>
+    <text x="62" y="218" font-size="10" fill="#64748b">free users are referral revenue too</text>
+
+    <rect x="380" y="70" width="290" height="190" rx="14" fill="#111827" stroke="#c9a227" stroke-width="1.6"/>
+    <text x="402" y="102" font-size="15" fill="#c9a227" font-weight="800">2 &middot; UPGRADE</text>
+    <text x="580" y="106" font-size="22" fill="#c9a227" font-weight="800">3–5T</text>
+    <text x="402" y="128" font-size="12" fill="#e2e8f0" font-weight="600">xTuppence Features (Pro tier, S3 gate)</text>
+    <text x="402" y="150" font-size="11" fill="#94a3b8">&#127963; Heritage Suite Tour Planner — 5T</text>
+    <text x="402" y="168" font-size="11" fill="#94a3b8">&#127890; Expedition Dossier — 5T &middot; &#129406; Weekend — 3T</text>
+    <text x="402" y="200" font-size="11" fill="#22d3ee" font-weight="700">&#127915; TP icons: YES — auto-added on route</text>
+    <text x="402" y="218" font-size="10" fill="#64748b">5T covers Sonnet + contracted feed cost</text>
+
+    <rect x="720" y="70" width="290" height="190" rx="14" fill="#111827" stroke="#3b82f6" stroke-width="1.6"/>
+    <text x="742" y="102" font-size="15" fill="#3b82f6" font-weight="800">3 &middot; CONNECT</text>
+    <text x="920" y="106" font-size="22" fill="#3b82f6" font-weight="800">1T</text>
+    <text x="742" y="128" font-size="12" fill="#e2e8f0" font-weight="600">The Introduction — Mode B</text>
+    <text x="742" y="150" font-size="11" fill="#94a3b8">Agency &amp; operator adverts, anonymous.</text>
+    <text x="742" y="168" font-size="11" fill="#94a3b8">Reveal on bilateral acceptance only.</text>
+    <text x="742" y="200" font-size="11" fill="#94a3b8" font-weight="700">&#127915; TP icons: NO</text>
+    <text x="742" y="218" font-size="10" fill="#64748b">never a competitor inside their advert</text>
+
+    <rect x="1060" y="70" width="260" height="190" rx="14" fill="#111827" stroke="#0ea5b7" stroke-width="1.6"/>
+    <text x="1082" y="102" font-size="15" fill="#22d3ee" font-weight="800">4 &middot; TRAVEL</text>
+    <text x="1272" y="106" font-size="22" fill="#22d3ee" font-weight="800">$&rarr;</text>
+    <text x="1082" y="128" font-size="12" fill="#e2e8f0" font-weight="600">On the map, en route</text>
+    <text x="1082" y="150" font-size="11" fill="#94a3b8">&#127915; icons open real brand offers —</text>
+    <text x="1082" y="168" font-size="11" fill="#94a3b8">photos, prices, booking.</text>
+    <text x="1082" y="200" font-size="11" fill="#22d3ee" font-weight="700">Tap on arrival = inside the cookie</text>
+    <text x="1082" y="218" font-size="10" fill="#64748b">highest-attribution moment in travel</text>
+
+    <!-- moment arrows -->
+    <path d="M330 165 C 355 165, 355 165, 380 165" fill="none" stroke="#64748b" stroke-width="2.5" class="msv-flow slow"/>
+    <path d="M670 165 C 695 165, 695 165, 720 165" fill="none" stroke="#64748b" stroke-width="2.5" class="msv-flow slow"/>
+    <path d="M1010 165 C 1035 165, 1035 165, 1060 165" fill="none" stroke="#64748b" stroke-width="2.5" class="msv-flow slow"/>
+
+    <!-- ── money rails ── -->
+    <text x="48" y="330" font-size="13" fill="#64748b" font-weight="800" letter-spacing="2px">WHERE THE MONEY LANDS</text>
+
+    <rect x="560" y="420" width="250" height="120" rx="16" fill="#0d1526" stroke="#c9a227" stroke-width="2"/>
+    <text x="685" y="468" font-size="16" fill="#fff" font-weight="800" text-anchor="middle">TrustSquare</text>
+    <text x="685" y="492" font-size="11.5" fill="#94a3b8" text-anchor="middle">Tuppence certain &middot; referral possible</text>
+    <text x="685" y="514" font-size="11" fill="#64748b" text-anchor="middle">never a cut of anyone's deal</text>
+
+    <!-- feature fees -->
+    <path d="M525 200 C 480 300, 500 380, 580 425" fill="none" stroke="#c9a227" stroke-width="4" class="msv-flow"/>
+    <text x="452" y="330" font-size="12" fill="#c9a227" font-weight="700">Feature fees 3–5T</text>
+    <text x="452" y="347" font-size="10" fill="#94a3b8">charged on delivery</text>
+    <!-- intro fees -->
+    <path d="M865 260 C 850 340, 830 390, 780 422" fill="none" stroke="#3b82f6" stroke-width="4" class="msv-flow"/>
+    <text x="852" y="330" font-size="12" fill="#3b82f6" font-weight="700">Introduction 1T</text>
+    <text x="852" y="347" font-size="10" fill="#94a3b8">held on request &middot; burned on acceptance</text>
+    <!-- referral -->
+    <path d="M1190 260 C 1180 380, 1000 460, 812 478" fill="none" stroke="#22d3ee" stroke-width="3" stroke-dasharray="6 8" class="msv-pulse"/>
+    <text x="1052" y="392" font-size="12" fill="#22d3ee" font-weight="700">Partner commission</text>
+    <text x="1052" y="409" font-size="10" fill="#94a3b8">brand-paid &middot; 7–30 day cookie &middot; last-click</text>
+    <!-- free lane referral note -->
+    <path d="M185 260 C 220 420, 380 470, 558 486" fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="5 9" class="msv-pulse" opacity="0.6"/>
+    <text x="252" y="430" font-size="10.5" fill="#22d3ee" opacity="0.85">free users refer too</text>
+
+    <!-- the deal that is never ours -->
+    <rect x="880" y="560" width="440" height="66" rx="12" fill="#111827" stroke="#374151" stroke-width="1.4" stroke-dasharray="4 5"/>
+    <text x="902" y="588" font-size="12" fill="#94a3b8" font-weight="700">The agency's own deal — whatever follows an Introduction</text>
+    <text x="902" y="608" font-size="11" fill="#64748b">never ours, by EULA promise: beyond the 1T, no commission ever</text>
+
+    <!-- ── the two nevers ── -->
+    <rect x="40" y="680" width="1280" height="130" rx="14" fill="rgba(13,21,38,.7)" stroke="#1e2d40"/>
+    <text x="64" y="712" font-size="11" fill="#64748b" font-weight="800" letter-spacing="2px">THE TWO NEVERS — THE SPINE OF THE MODEL</text>
+    <text x="64" y="742" font-size="12.5" fill="#e2e8f0">&#10060; No Travelpayouts content inside an agency's advert — their paid space, their trust in us.</text>
+    <text x="64" y="768" font-size="12.5" fill="#e2e8f0">&#10060; No commission on anything that follows an Introduction — the 1 Tuppence is final (EULA &sect;2.6). Partner and Introduction lanes never touch (&sect;6.1B).</text>
+    <text x="64" y="794" font-size="11" fill="#64748b">The referral lane funds the platform precisely so the Introduction lane never has to take a cut of anyone's deal.</text>
+  </svg>
+  </div>
+</div>
+<script>
+/* TP-VIZ-1 — own open/close; VIZ-MAPS-1 untouched */
+window.msTravelVizOpen=function(){
+  var ov=document.getElementById('ms-viz-travel');
+  if(ov){ ov.classList.add('open'); document.body.style.overflow='hidden'; }
+};
+window.msTravelVizClose=function(){
+  var ov=document.getElementById('ms-viz-travel');
+  if(ov) ov.classList.remove('open');
+  document.body.style.overflow='';
+};
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') window.msTravelVizClose(); });
+</script>
+<!-- ══ END TP-VIZ-1 ══ -->
 
 
 
