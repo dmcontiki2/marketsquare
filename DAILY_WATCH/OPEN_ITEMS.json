@@ -1,74 +1,74 @@
 {
- "next_id": 13,
+ "next_id": 17,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "INFO",
    "source": "audit VERSION-KEY",
    "status": "OPEN"
   },
   "DW-002": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "INFO",
    "source": "audit DEMO-PLACEHOLDERS",
    "status": "OPEN"
   },
   "DW-003": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "MEDIUM",
    "source": "consolidation",
    "status": "OPEN"
   },
   "DW-004": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "MEDIUM",
    "source": "consolidation",
    "status": "OPEN"
   },
   "DW-005": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "MEDIUM",
    "source": "cron-sensor fea-integrity",
    "status": "OPEN"
   },
   "DW-006": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-03",
-   "sev": "INFO",
+   "last_seen": "2026-08-04",
+   "sev": "MEDIUM",
    "source": "run_daily_checks deploy_drift",
    "status": "OPEN"
   },
   "DW-007": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "HIGH",
    "source": "regression ledger RG-0023",
    "status": "OPEN"
   },
   "DW-008": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "MEDIUM",
    "source": "audit MSJS-DRIFT",
    "status": "OPEN"
   },
   "DW-009": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-03",
+   "last_seen": "2026-08-04",
    "sev": "LOW",
-   "source": "cost sweep (new vs 2 Aug)",
+   "source": "cost sweep",
    "status": "OPEN"
   },
   "DW-010": {
    "first_seen": "2026-08-03",
    "last_seen": "2026-08-03",
    "sev": "MEDIUM",
-   "source": "cc_age_check (Monday)",
+   "source": "cc_age_check (Monday lane)",
    "status": "OPEN"
   },
   "DW-011": {
@@ -83,6 +83,34 @@
    "last_seen": "2026-08-03",
    "sev": "INFO",
    "source": "Monday deep scan coverage",
+   "status": "OPEN"
+  },
+  "DW-013": {
+   "first_seen": "2026-08-04",
+   "last_seen": "2026-08-04",
+   "sev": "MEDIUM",
+   "source": "smoke_test parity + RG-0027 side-effect",
+   "status": "OPEN"
+  },
+  "DW-014": {
+   "first_seen": "2026-08-04",
+   "last_seen": "2026-08-04",
+   "sev": "MEDIUM",
+   "source": "doc drift vs disk (security-relevant)",
+   "status": "OPEN"
+  },
+  "DW-015": {
+   "first_seen": "2026-08-04",
+   "last_seen": "2026-08-04",
+   "sev": "LOW",
+   "source": "run_daily_checks transport",
+   "status": "OPEN"
+  },
+  "DW-016": {
+   "first_seen": "2026-08-04",
+   "last_seen": "2026-08-04",
+   "sev": "HIGH",
+   "source": "watch RED-alert path",
    "status": "OPEN"
   }
  }

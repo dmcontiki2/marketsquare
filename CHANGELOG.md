@@ -1,3 +1,337 @@
+## 2026-08-05 — The reviewer token is now ENFORCED at the origin (GATE-ENFORCE-1)
+
+**David's ruling:** proper token gate for the testers (chosen over a country-IP allowlist, which the
+Peer review said is not authentication).
+
+**The gap this closes.** `/review/login` issued a proper bcrypt-checked, separately-signed 14-day
+token, but nothing enforced it — nginx served the page and API without checking, so the "pre-launch"
+screen was a client-side curtain only. This makes the token real.
+
+**Two coupled changes:**
+
+1. `bea_main.py` (GATE-ENFORCE-1): `/review/login` now also sets an HttpOnly, Secure, SameSite=Lax
+   `ts_review` cookie (a top-level navigation cannot carry the X-Review-Token header, so a cookie is
+   required for nginx to gate). `/review/verify` accepts the token from the header OR the cookie.
+   Client unchanged — the existing curtain already POSTs the code; browsers send the cookie
+   automatically on same-origin requests.
+
+2. `migrations/007_review_gate_enforce.py`: adds `auth_request -> /review/verify` on the API
+   catch-all in the live nginx config. Exempt (never gated): `/review/login`, `/review/verify`,
+   `/health` (deploy rollback), `/payment/webhook` (Paystack), `/.well-known/` (certbot). Backs up
+   the config, runs `nginx -t`, auto-rolls-back on failure. Idempotent.
+
+**Scope decision:** gates the DATA API, not the static page shell. The shell holds no data
+(everything sensitive is fetched through the now-gated API), so gating it adds deploy risk with no
+confidentiality gain. Document-gating can be added later if wanted.
+
+**Deploy order (safety):** the deploy places app code + restarts BEFORE post_deploy runs migration
+007, so cookie-setting is live before the gate turns on — no lockout window. Expect data endpoints
+(e.g. /wonders) to return 401 in any post-deploy smoke test: that is the gate working, and /health
+stays 200 so auto-rollback is unaffected.
+
+**Then:** once verified from David's (allowlisted) browser, the Cloudflare IP-only WAF rule is
+relaxed so testers can reach the gate from anywhere; the origin firewall (RG-0028) still ensures
+only Cloudflare reaches the box, and the app gate still ensures only the reviewer code gets data.
+Testers' instructions are unchanged (open trustsquare.co, enter the code).
+
+**Ledger:** RG-0029 to be added asserting an unauthenticated data endpoint returns 401 while /health
+returns 200 (once deployed).
+
+## 2026-08-04 — The origin now refuses everything except Cloudflare (ORIGIN-LOCKDOWN-1)
+
+**Found by the Peer, missed by the Author.** The GPT-5.6 independent security review
+(`Records/PEER_REVIEW_2026-08-04-0516_security.md`) opened with a BLOCKER: the Cloudflare WAF rule
+from RG-0027 only ever governed traffic that *chose* to arrive via Cloudflare.
+
+The nginx block `server { server_name 178.104.73.239; return 444; }` rejects requests addressed to
+the **raw IP**. It does nothing about a request carrying `Host: trustsquare.co` — that selects the
+real vhost and gets served in full.
+
+**Proven, not theorised.** On 4 Aug:
+
+```
+curl -k --resolve trustsquare.co:443:178.104.73.239 https://trustsquare.co/   ->  200, 391 KB
+```
+
+The entire marketplace, straight off Hetzner, WAF bypassed. And the origin IP is printed in
+`assets/nginx_marketsquare.conf`, so anyone with repo access — or historical DNS, or certificate
+transparency — could find it. The Author's 3 Aug "site is closed to the outside world" conclusion
+was wrong: every verification had gone *through* Cloudflare, so it measured the one road that was
+already guarded and never asked whether there was another.
+
+**Fix — Hetzner Cloud Firewall** (deny-all inbound by default), applied to the CPX22:
+
+| Port | Source |
+|---|---|
+| TCP 22 | David's IP only |
+| TCP 80 | Cloudflare's 15 IPv4 + 7 IPv6 published ranges |
+| TCP 443 | the same 22 ranges |
+
+Outbound deliberately left empty (allow-all), so deploys, Paystack calls and R2 are unaffected.
+
+**Verified both directions.** The same curl now fails to connect after 21 s. `/health` still returns
+200 *through* Cloudflare, and `/` still returns 403 to non-ZA traffic — the bypass is shut without
+closing the legitimate road.
+
+**Ledger.** `RG-0028` added as LOCKED, and it is the load-bearing entry: it attempts a raw TCP
+connect to the origin on 80 and 443 and fails if either is accepted, and separately checks `/health`
+still answers through Cloudflare. **RG-0027's edge rule is only an access boundary while RG-0028
+holds.** Remove the firewall and the WAF is decorative again.
+
+**Watch items.** Cloudflare's published ranges change occasionally — if legitimate traffic starts
+failing, re-pull `cloudflare.com/ips-v4` and `ips-v6` first. A GitHub webhook posting direct to the
+IP rather than via the domain would now be dropped.
+
+**Still open from the same review** (not addressed here): the `X-Admin-Token` validation path is
+unknown, so it is not yet established that rotating `MS_JWT_SECRET` revokes anything; `MS_ADMIN_KEY`
+and `ADMIN_KEY` need investigating alongside it; the four Travelpayouts JS chunks remain unexamined;
+`*.bak-tpdrive-*` copies of the compromised pages are still in the web tree; the `/.well-known/`
+WAF exemption is broader than ACME needs; CDN and service-worker caches are unverified; `unpkg.com`
+Leaflet makes "no third-party code" untrue as written. **The Peer also advised against widening the WAF rule to South Africa** — a country is not
+an authentication boundary.
+
+## 2026-08-04 — Admin-token path investigated; weak-fallback trap removed (JWT-HARDEN-1)
+
+**Trigger:** the GPT-5.6 Peer review asked (correctly) whether rotating `MS_JWT_SECRET` would
+actually revoke the admin token exposed during the 2-3 Aug breach window, and whether `ms_admin_token`
+was really the same thing as the server-side `MS_ADMIN_KEY` / `ADMIN_KEY`.
+
+**Findings (read-only investigation of `bea_main.py`):**
+
+1. `ms_admin_token` is a **signed HS256 JWT** minted by `_make_token()` from `MS_JWT_SECRET`,
+   8-hour expiry — NOT a static key. Therefore rotating `MS_JWT_SECRET` **does** invalidate it.
+   The Peer's worry that rotation might be a no-op (opaque token) is resolved: rotation is effective.
+
+2. `ms_admin_token` is **not** `MS_ADMIN_KEY` or `ADMIN_KEY`. Those are a separate static header
+   key checked on a different path (`x_admin_key == MS_ADMIN_KEY`). The browser only ever held the
+   JWT, so the static admin key was **never browser-exposed** and needs no breach-driven rotation.
+
+3. **Latent trap found (unrelated to Travelpayouts):**
+   `_JWT_SECRET = os.environ.get("MS_JWT_SECRET", "ms_jwt_secret_change_me")` carried a hardcoded
+   fallback. If any environment ever failed to set the variable, the app would silently sign admin
+   tokens with a **publicly-known string**, making all 14 admin-guarded endpoints forgeable — with
+   no warning.
+
+4. **Live is safe right now.** Verified on the box by reading the running process environment
+   (`/proc/<pid>/environ`): `MS_JWT_SECRET` is SET, 64 chars, strong. The fallback is not in effect.
+   (The `.env` file does not contain it — it is injected via systemd / start script — which is why a
+   file grep said "NOT PRESENT" while the live process has it.)
+
+**Fix shipped (repo, live on next deploy):**
+- Removed the weak fallback: default is now `""`.
+- `_make_token()` raises 503 if `MS_JWT_SECRET` is unset (never signs with an empty/known key).
+- `_require_admin_or_key()` ignores `X-Admin-Token` when the secret is empty (no empty-key verify).
+- Net effect: admin auth now **fails closed** instead of silently trusting a known string.
+
+**Rotation — DONE 4 Aug 2026.** `MS_JWT_SECRET` rotated to a fresh `openssl rand -hex 32` value on
+the live box and the service restarted; verified by reading `/proc/<pid>/environ` that the running
+process uses the new secret (MATCH). Any admin token captured during the breach window is now
+rejected. `MS_REVIEW_SECRET` is derived from `MS_JWT_SECRET` in code (not set explicitly), so it
+rotated automatically. `MS_ADMIN_KEY` / `ADMIN_KEY` were NOT rotated (never browser-exposed).
+Config hygiene fixed in the same pass: the secret was defined in BOTH the systemd unit
+(`Environment=`, the original source) and — after rotation — `/etc/environment`. The stale old value
+was removed from the unit file, leaving `/etc/environment` as the single source. Backups:
+`/etc/environment.bak-jwt-*` and `/etc/systemd/system/marketsquare.service.bak-jwt-*` (the unit
+backup contains the now-dead old secret — delete once confident).
+
+**Low-priority note:** the static-key check `x_admin_key == MS_ADMIN_KEY` is a plain `==`, not
+constant-time — a theoretical timing side-channel, worth a `hmac.compare_digest` at some point.
+
+
+## Follow-ups surfaced during rotation (non-urgent)
+
+- `MS_JWT_SECRET` now lives in `/etc/environment`, which is world-readable and system-wide (every
+  local process/login sees it). Move app secrets to a dedicated `EnvironmentFile=` with `chmod 600`.
+- `marketsquare.service` runs uvicorn with `--host 0.0.0.0` (all interfaces) — the reason the
+  direct-origin hit worked before the firewall. Bind `127.0.0.1` since nginx is the only intended
+  client; the Hetzner firewall (RG-0028) already mitigates, so this is defence-in-depth.
+- Old-secret backups (`*.bak-jwt-*`) can be deleted once the new secret is trusted in production.
+
+## 2026-08-03 — The pre-launch gate becomes a door instead of a curtain (GATE-SERVERSIDE-1)
+
+**David's ruling:** "close it immediately."
+
+**The defect.** The "MARKETPLACE PREVIEW / Pre-launch access only" screen was never an access
+control. It is a `<div id="admin-gate" style="display:none">` living inside `marketsquare.html`,
+revealed by JavaScript — while nginx serves that file straight off disk
+(`location = / { try_files /index.html }`). The complete page was therefore handed to anyone who
+asked, with no credential checked, and JavaScript then painted a curtain over content that had
+already arrived. View-source, `curl`, or simply disabling JavaScript read the entire marketplace.
+
+Proven the same day: a page load with the gate showing and **no password entered** still returned
+HTTP 200 on `/wonders`, `/flags`, `/local-market/listings`, `/geo/cities` and `/tuppence/balance`,
+and executed every script in `<head>` — which is also precisely how the Travelpayouts loader ran
+for every visitor regardless of the password.
+
+**The fix.** `migrations/005_prelaunch_server_side_gate.py` adds nginx `auth_basic` to the five
+document locations (`/`, `/rental.html`, `/dashboard.html`, `/admin.html`, `/command.html`), so
+nginx refuses to send the bytes at all without credentials. Verified offline against the repo copy
+of the site config: 5 locations gated, brace balance preserved, API catch-all untouched, idempotent
+on re-run.
+
+**Deliberately not gated** — gating these breaks the platform: the catch-all API proxy (keeps
+`/health` alive, which `server_deploy.sh` health-checks and auto-rolls-back on, and keeps
+`POST /payment/webhook` reachable for Paystack), `/.well-known/` (certbot), `/static/` and `/media/`.
+
+**Arming is David's, by design.** The migration refuses to run without a password, so it can never
+lock anyone out by accident. It exits non-zero when unarmed, so it is not recorded and retries on
+the next deploy.
+
+```
+printf 'your-password' > /var/www/marketsquare/.prelaunch_pass && chmod 600 /var/www/marketsquare/.prelaunch_pass
+```
+
+Then deploy. Safety: backs up the site config, runs `nginx -t`, and restores the backup if the test
+fails, so a bad edit can never leave nginx unable to start.
+
+**Ledger.** `RG-0027` added as **OPEN** — it passes the moment an unauthenticated `GET /` returns
+401, and flips to READY TO LOCK on its own. Scope stated honestly on the entry: documents only.
+
+**Known remaining hole (phase 2).** The JSON API still answers unauthenticated. Closing it needs
+per-path exemptions for `/health` and `/payment/webhook` handled one at a time, and is not covered
+by this change or by RG-0027.
+
+## 2026-08-03 — Maroushka's six listings: what she reported, and the three faults behind them (MAROUSHKA-2026-08-03)
+
+**Source.** Maroushka Conradie, founding seller (letting agent), by email after publishing 6 property
+listings through the guided sell flow. Four points. All four confirmed against the code; two were
+worse than she was able to describe, because the app gave her no way to see the rest.
+
+**1 · "I couldn't go back and replace a photo once it was uploaded."** Two separate faults.
+In the wizard, `sfPickFile` hard-refused a filled slot — `sfToast('Photo already added — it uploads
+when you finish')` — with no remove control anywhere in the `sf*` namespace. A filled slot now
+re-opens the picker and carries a ✕ (`sfClearSlot`), extras included, so the photo cap stops being a
+one-way door (MAROUSHKA-PHOTO-1). Behind that: the post-publish 🔄 Replace button *said* "✓ Photo
+replaced" and then wrote the **old** URL back, because `elReplacePhoto` patched the `<img>` and
+`elCurrentRaw` but never `_elPhotoUrls` — the array `saveEditedListing()` actually serialises. Index 0
+silently reverted; index >0 never persisted at all (MAROUSHKA-PHOTO-2). The Edit button was also
+hidden entirely on any listing with a pending introduction, so a seller with live enquiries could not
+reach the edit screen at all — condition removed.
+
+**2 · "We charge a flat fee for these utilities but there is no option for it given."** Correct:
+`SF_PROP_RENTAL_SEC_C` hard-coded three electricity options and two water options, none of them a flat
+fee. Added, plus an explicit *Not applicable* (MAROUSHKA-UTIL-1).
+
+**3 · "Additional services look to buyers like additional costs."** Her diagnosis was wrong and her
+instinct was right. Blank fields never reached buyers — `sfComposeDescription` already dropped them.
+But blank also scored 0 and triggered "Complete Tenant Costs & Responsibilities (n left)", which is
+what pushes a seller to type something misleading rather than leave a true blank. *Not applicable* now
+scores as a real answer and is suppressed from the buyer-facing description (MAROUSHKA-UTIL-2).
+
+**4 · "It refused to upload or publish the listing. I don't know why."** She could not know why. The
+guided flow never captures a seller email and has no field for one; with none, `goHandoff` skipped
+draft creation and photo upload **in silence** (`if (BEA_ENABLED && goState.email)`), `POST /listings`
+had no `else` on `res.ok`, failures went to `console.warn` on a phone, photo refusals — including the
+400 an iPhone HEIC file earns — were swallowed by `.catch(() => null)`, and the only visible output was
+`No draft found (drafts=0, email=none)` in 12px red. Every one of those exits now speaks, in a
+seller's sentence rather than a developer's, and `sfFinish` asks for the email at the last moment it
+can still be fixed (MAROUSHKA-PUB-1…6). Root cause of *her* specific failure is still unproven —
+the app server logs live only on the Hetzner box — but the next attempt will now say what went wrong
+instead of nothing.
+
+**5 · "It doesn't give me an easy option for uploading my FFC and the mandate" / "I could not add my
+agency info."** Also correct, and structural. The agent profile form had no agency field, no PPRA
+field, no FFC field and no certificate upload of any kind — only a paragraph pointing at
+*My Space → Trust Score*, a screen that cannot accept an FFC — while `_go_live_gaps` blocked her
+profile for not having provided one. The profile now renders one upload row per credential slot the
+vertical defines (server-supplied from `estate_agents.py`, so form and catalog cannot drift), posting
+to `/users/{email}/documents` **with the correct `signal_id`**; previously the only reachable uploader
+never sent one, so an FFC was filed by `_next_signal_for_doc()` as a Local-Market certificate and
+earned the wrong points entirely. The agent's agency is resolved from membership and shown
+(MAROUSHKA-CRED-1, MAROUSHKA-CRED-2).
+
+**Also fixed, found en route.** Agency membership set `seller_tier='starter'`, so no user was ever on
+the `agency` tier that `_SELLER_SUB_TIERS` and `_FADE_WINDOWS` define — agency agents silently got the
+60-day fade window instead of 90 (AGENCY-TIER-1). `agency_members.status` was written `'invited'` at
+invite time and never advanced; first successful sign-in now sets `'active'` and `joined_at`
+(AGENCY-MEMBER-1).
+
+**Status.** Local. Not deployed — `/TSL` is a separate, deliberate act.
+
+## 2026-08-03 — Evidence-true applied to legal credentials and the mandate (EVIDENCE-TRUE-1, EVIDENCE-TRUE-2)
+
+**David's ruling:** "we need to apply the current rules" · "Re-queue them please."
+
+The rules already existed. `TRUST_SCORE_CRITERIA.md`, Addendum 2026-07-21 §1 (David's ruling, 20 Jul):
+*"every point of a displayed trust score must map to a specific certificate, accreditation, experience
+or platform-recorded result"* — and the buyer-visible ledger that must satisfy it is served **per
+listing**, `GET /sellers/credentials/{listing_id}`. Two things in the code contradicted that.
+
+**EVIDENCE-TRUE-1 — the mandate was inherited across every listing.** A mandate authorises *one*
+property; `bea_main.py:8049` says so in its own words ("Prevents fraudulent listings"). But
+`seller_documents` was keyed on email alone and `user_credentials` is `UNIQUE(email, signal_id)`, so
+the first mandate an agent ever uploaded earned +8 on listings 2…n with no document behind them — on
+the per-listing ledger a buyer reads. A mandate credential with no mandate behind it is precisely the
+fraud the signal exists to stop.
+
+*Fix.* Additive nullable `seller_documents.listing_id` (+ index). Per-listing signals count only on the
+listing whose document covers them. In South African practice the mandate is signed between the seller
+and the **agency**, and any agent of that firm may market it — so the check resolves through agency
+membership, and a colleague covering a listing does not trip the anti-fraud signal they are satisfying.
+FFC and PPRA are deliberately unchanged: one certificate, one person, one year, genuinely covering
+every listing that agent makes — evidence-true is already satisfied there.
+
+**EVIDENCE-TRUE-2 — legal credentials were auto-earned by any file.**
+`POST /users/{email}/documents` carried `# All other doc types: auto-earn immediately
+(self-attestation)`, so an uploaded FFC awarded its full 10 points with nobody having opened it. That
+contradicted §4a ("checked against the PPRA public register", "uploaded and reviewed"), §7's
+verification workflow, and the app's own promise to the agent in `ms.js` — *"ops verifies before
+points"*. An ops queue already existed (`GET /trust-score/credentials/pending`) and simply was not used
+for these.
+
+*Fix.* `_LEGAL_SIGNALS` (PPRA, FFC, mandate, MIRA dealer reg, ASATA, trade licence) land `pending` on
+upload and go through the existing queue. `migrations/006_requeue_legal_credentials.py` applies the same
+rule backwards — dry-run by default, `--apply` to re-queue — so credentials already earned under the old
+path return to `pending` for a human to check. Declared and rejected rows are left alone; non-legal
+credentials keep self-attestation by design. **Trust scores will move down for affected sellers until
+ops verifies. That is the point: the score was asserting something nobody had checked.**
+
+**Status.** Local. Migration 006 not yet run against the live database.
+
+## 2026-08-03 — Pre-launch gate closed at the Cloudflare edge (GATE-SERVERSIDE-1, shipped)
+
+**David's ruling:** "close it immediately" — and, on being shown Cloudflare's checkout,
+"this is very suspect."
+
+**Closed.** A Cloudflare WAF custom rule, `PRELAUNCH GATE - block all except allowlisted IPs`,
+action **Block**, active as rule 1 on trustsquare.co:
+
+```
+(not ip.src in {<David's IP>}
+ and not http.request.uri.path in {"/health" "/payment/webhook"}
+ and not starts_with(http.request.uri.path, "/.well-known/"))
+```
+
+This blocks at Cloudflare's edge **before anything reaches the origin**, and covers the
+documents *and* the JSON API — so the leak where `/wonders`, `/flags`,
+`/local-market/listings`, `/geo/cities` and `/tuppence/balance` answered anonymously behind
+the "locked" screen is closed by the same rule. No phase 2 needed.
+
+**Verified from an off-allowlist host:** `/` → 403 · `/index.html` → 403 · `/?cb=rand` → 403 ·
+`/wonders` → 403 · `/health` → **200**. From David's own IP the site loads normally.
+
+**Exemptions, and why:** `/health` backs `server_deploy.sh`'s health check and auto-rollback —
+gating it would make every future deploy roll itself back. `/payment/webhook` must stay open or
+Paystack settlements fail silently. `/.well-known/` keeps certbot renewal working.
+
+**Cloudflare Zero Trust Access was rejected deliberately.** Its free tier (50 seats, $0/month)
+still requires ticking *"I authorize Cloudflare to charge this card for usage that exceeds free
+limits each month until cancellation"* against the card on file. That is the same uncapped
+standing-authorisation shape as the silent ~$360 Google Places burn. The WAF rule achieves the
+same closure with no subscription, no card and no seats. Cloudflare itself stays — DNS, CDN, R2
+and Workers are unaffected; only that one optional paid-tier product was declined.
+
+**Trade-off accepted:** the rule is IP-based, so it has no identity and no audit trail, and
+testers need their IPs added (`Security → Security rules → rule 1 → edit the ip.src set`).
+Deliberate: this gate is temporary and gets removed at launch.
+
+**Ledger.** `RG-0027` **LOCKED**. It cannot self-verify from an allowlisted network — a 200 from
+David's own machine is expected, not a regression, and the entry says so. It fails on the two
+things that are always wrong: a 200 from off-list, or `/health` breaking.
+
+**Still shipped but unarmed:** `migrations/005_prelaunch_server_side_gate.py` (nginx `auth_basic`)
+stays in the tree as defence-in-depth if the edge rule is ever removed before launch.
+
 ## 2026-08-03 — Third-party Drive loader removed from the entire app surface (TP-DRIVE-1 REVERSED)
 
 **David's ruling:** no third-party code may run on the app, at all. If that is a prerequisite for

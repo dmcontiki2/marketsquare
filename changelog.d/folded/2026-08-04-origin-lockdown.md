@@ -48,6 +48,5 @@ unknown, so it is not yet established that rotating `MS_JWT_SECRET` revokes anyt
 and `ADMIN_KEY` need investigating alongside it; the four Travelpayouts JS chunks remain unexamined;
 `*.bak-tpdrive-*` copies of the compromised pages are still in the web tree; the `/.well-known/`
 WAF exemption is broader than ACME needs; CDN and service-worker caches are unverified; `unpkg.com`
-Leaflet makes "no third-party code" untrue as written; and the POPIA s22 notification decision needs
-counsel. **The Peer also advised against widening the WAF rule to South Africa** — a country is not
+Leaflet makes "no third-party code" untrue as written. **The Peer also advised against widening the WAF rule to South Africa** — a country is not
 an authentication boundary.

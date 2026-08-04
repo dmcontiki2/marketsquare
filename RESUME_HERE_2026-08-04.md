@@ -30,23 +30,20 @@ Full write-ups: `changelog.d/2026-08-0*` and `Records/BREACH_AUDIT_BRIEF_2026-08
 GPT-5.6 Peer review at `Records/PEER_REVIEW_2026-08-04-0516_security.md`. It CONFIRMED the analysis,
 CORRECTED three of Claude's claims (exposure ceiling was wider than "just tokens"; payloads are
 unrecoverable *from our logs* not absolutely; a country block is not authentication), and found the
-origin-bypass BLOCKER above. Re-run with `run_peer_audit.bat` or peer_review.py --lens privacy for POPIA.
+origin-bypass BLOCKER above. Re-run any time with `run_peer_audit.bat`.
 
 ## STILL OPEN (priority order, none on fire)
-1. **Testers locked out.** Maroushka (miconradie1@gmail.com), Maurice (conradiedm@gmail.com — his
+1. **Testers — GATE BUILT 5 Aug, awaiting deploy.** Maroushka (miconradie1@gmail.com), Maurice (conradiedm@gmail.com — his
    yahoo bounced), Marietjie (marietjie.marais59@gmail.com), David (davidconradie1234@gmail.com).
    Do NOT widen the WAF to South Africa (Peer: a country is not auth). Real fix = enforce the
    existing server-side /review/login token at the ORIGIN (bea_main.py already has the machinery,
    just not enforced). This is the natural next build.
-2. **POPIA s.22** — behavioural profiling by a HK processor on an ID-collection page. Peer says the
-   notification decision needs SA counsel NOW, not after payload reconstruction. Issue a preservation
-   + data-access request to Travelpayouts (project 557391).
-3. `.bak-tpdrive-*` backups of the compromised pages still in the web tree — move out of /var/www.
-4. `/.well-known/` WAF exemption is broader than ACME needs — narrow to /.well-known/acme-challenge/.
-5. Four Travelpayouts JS chunks never examined (chunk.CIR5CNTC.js + 3).
-6. Cloudflare + service-worker caches may still hold old compromised HTML — purge + verify.
-7. `unpkg.com` Leaflet makes "no third-party code" untrue — self-host/pin.
-8. Hardening from the box: secret in world-readable /etc/environment (move to chmod 600 file);
+2. `.bak-tpdrive-*` backups of the compromised pages still in the web tree — move out of /var/www.
+3. `/.well-known/` WAF exemption is broader than ACME needs — narrow to /.well-known/acme-challenge/.
+4. Four Travelpayouts JS chunks never examined (chunk.CIR5CNTC.js + 3).
+5. Cloudflare + service-worker caches may still hold old compromised HTML — purge + verify.
+6. `unpkg.com` Leaflet makes "no third-party code" untrue — self-host/pin.
+7. Hardening from the box: secret in world-readable /etc/environment (move to chmod 600 file);
    uvicorn binds 0.0.0.0 (bind 127.0.0.1 — firewall already mitigates).
 
 ## Housekeeping

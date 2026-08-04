@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header, Body
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header, Body, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -10786,7 +10786,7 @@ class _ReviewLoginRequest(_BaseModel):
     code: str
 
 @app.post("/review/login")
-def review_login(req: _ReviewLoginRequest, request: Request):
+def review_login(req: _ReviewLoginRequest, request: Request, response: Response):
     """Validate a reviewer code server-side; return a scoped view-only token. Grants
     NOTHING but passage past the pre-launch gate (browse view). Never admin/superuser."""
     ip = (request.headers.get("x-forwarded-for")
@@ -10811,15 +10811,22 @@ def review_login(req: _ReviewLoginRequest, request: Request):
         "iat": datetime.now(timezone.utc),
     }
     token = _pyjwt.encode(payload, _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    # GATE-ENFORCE-1 (5 Aug 2026): also set an HttpOnly cookie so nginx auth_request can gate
+    # document + API requests — a top-level navigation cannot carry the X-Review-Token header.
+    response.set_cookie("ts_review", token, max_age=_REVIEW_TOKEN_DAYS*24*3600,
+                        httponly=True, secure=True, samesite="lax", path="/")
     return {"token": token, "expires_days": _REVIEW_TOKEN_DAYS}
 
 @app.get("/review/verify")
-def review_verify(x_review_token: str = Header(default=None)):
-    """Verify a view-only review token (separate secret). 200 if valid, 401 otherwise."""
-    if not x_review_token:
+def review_verify(x_review_token: str = Header(default=None), ts_review: str = Cookie(default=None)):
+    """Verify a view-only review token (separate secret). 200 if valid, 401 otherwise.
+    Accepts the token from the X-Review-Token header OR the ts_review cookie (GATE-ENFORCE-1),
+    so nginx auth_request can validate ordinary browser requests that carry only the cookie."""
+    tok = x_review_token or ts_review
+    if not tok:
         raise HTTPException(status_code=401, detail="No token.")
     try:
-        payload = _pyjwt.decode(x_review_token, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+        payload = _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
     except _pyjwt.ExpiredSignatureError as exc:
         raise HTTPException(status_code=401, detail="Token expired.") from exc
     except _pyjwt.InvalidTokenError as exc:
