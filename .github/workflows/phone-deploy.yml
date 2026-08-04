@@ -1,0 +1,60 @@
+# One-tap deploy from a phone (5 Aug 2026).
+#
+# David: "I want to deploy from my phone and they can verify 10 minutes later."
+# The first answer was a compare-and-merge PR, which is miserable on a handset —
+# long diffs, the Merge button below the fold, the app hijacking the link. This is
+# the mechanism GitHub built for the job: Actions -> this workflow -> Run workflow.
+# Two taps, no diff to scroll, works in the mobile app and mobile web alike.
+#
+# It does exactly what deploy_marketsquare.bat's last step does and nothing more:
+# moves the `deploy` ref to whatever `main` points at. The gates already ran on
+# David's machine at arm time (arm_phone_deploy.bat, strict mode); the server runs
+# its own health check and auto-rollback after the pull. ONE DEPLOY is intact —
+# publishing the deploy ref is still the only way code ships.
+
+name: Deploy to trustsquare.co
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm'
+        required: true
+        default: 'deploy'
+
+jobs:
+  publish-deploy-ref:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Guard against a mis-tap
+        if: ${{ github.event.inputs.confirm != 'deploy' }}
+        run: |
+          echo "::error::Confirmation text was not 'deploy' — nothing published."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Show what is about to go live
+        run: |
+          git fetch origin deploy:refs/remotes/origin/deploy || true
+          echo "### Shipping these commits" >> $GITHUB_STEP_SUMMARY
+          git log --oneline origin/deploy..HEAD >> $GITHUB_STEP_SUMMARY 2>/dev/null \
+            || echo "(deploy ref not found — this will be the first publish)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Publish the deploy ref (fast-forward only)
+        run: |
+          # No --force. If deploy has diverged from main this FAILS rather than
+          # rewriting history from a phone, which is the last place to do that.
+          git push origin HEAD:refs/heads/deploy
+
+      - name: What happens next
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published. The server pulls within ~2 minutes, runs its gates, restarts," >> $GITHUB_STEP_SUMMARY
+          echo "health-checks, and rolls itself back if the site does not come up." >> $GITHUB_STEP_SUMMARY
+          echo "Check: https://trustsquare.co/health" >> $GITHUB_STEP_SUMMARY

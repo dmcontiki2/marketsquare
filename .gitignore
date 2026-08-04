@@ -146,3 +146,6 @@ add_scaleway_key.bat
 # Local API keys for runners (scripts/peer_review.py reads <repo>/.env) - NEVER commit
 .env
 add_openai_key.bat
+
+# predeploy_check scratch flags — diagnostic output, never repo content (5 Aug 2026)
+DEPLOY_REVIEW_*.flag
