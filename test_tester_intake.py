@@ -191,6 +191,35 @@ def test_labels_do_not_impersonate_buttons():
         "the badge label reverted to an imperative verb - 'viewed' describes, 'VIEW' instructs"
 
 
+def test_photo_gate_covers_the_sellers_own_brand():
+    """TS-0004: a honey jar carrying the producer's own label reached the live feed.
+    The anonymiser hunted agency logos and number plates - property and cars framing -
+    and never considered that for a home producer the product label IS the identity."""
+    src = _read("bea_main.py")
+    i = src.find("_ANON_SCAN_PROMPT = ")
+    assert i > 0, "the photo anonymiser prompt is gone"
+    prompt = src[i:src.find("_ANON_SCAN_PROMPT_TOURS", i)]
+    assert "SELLER'S OWN brand" in prompt, \
+        "the anonymiser no longer looks for the seller's own brand on the goods (TS-0004)"
+    assert "Nikon" in prompt or "resold" in prompt, \
+        "the carve-out for mass-market manufacturer marks is gone - it would start " \
+        "blurring the Toyota badge on a car someone is reselling"
+
+
+def test_every_photo_door_applies_the_same_rules():
+    """Two doors let photos into the app: seller upload and agency import. On 5 Aug the
+    agency door was found to skip the moderation flag entirely — anonymity was checked,
+    acceptability was not. A rule that holds at one door and not the other is not a rule."""
+    src = _read("bea_main.py")
+    i = src.find("def _anon_photo_pass")
+    assert i > 0, "the agency-import photo pass is gone"
+    blk = src[i:i + 3200]
+    assert 'scan.get("flag") == "inappropriate"' in blk, \
+        "the agency import no longer checks the moderation flag - an anonymous but " \
+        "unacceptable photo could be attached from an agency feed"
+    assert "_anon_photo_scan" in blk, "the agency import stopped using the shared vision scan"
+
+
 def test_widget_is_deployable():
     mani = _read(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
     assert "ts_report.js" in mani, "ts_report.js is not on the deploy manifest - it would never ship"

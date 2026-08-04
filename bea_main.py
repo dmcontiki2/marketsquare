@@ -11380,7 +11380,20 @@ _ANON_SCAN_PROMPT = (
     "sellers and agents must be unidentifiable from listing photos. Inspect this "
     "photo for ANY identifying content: phone numbers or contact-detail text/overlay "
     "bars, agency logos or watermarks, estate-agent boards or For-Sale signage, "
-    "branded flyers/collages, agent portrait/headshot promo overlays, vehicle number "
+    "branded flyers/collages, agent portrait/headshot promo overlays, "
+    # TS-0004 (David, 5 Aug 2026): a honey jar labelled with the producer's own brand
+    # reached the live feed. The list above is written for property and cars, where the
+    # identity leak is a logo or a board. For a home producer the LABEL IS THE SELLER.
+    # The distinction that matters is whose brand it is, not whether a brand is present.
+    "the SELLER'S OWN brand printed on the goods themselves - a label, jar, bottle, "
+    "packaging, box, tag, apron or stall banner carrying a farm, producer, bakery, "
+    "studio or small-business name. On TrustSquare the maker IS the anonymous seller, "
+    "so their own label identifies them exactly as a signboard would: box it. This does "
+    "NOT apply to a mass-market manufacturer's mark on something being resold (a Nikon "
+    "camera, a Samsung TV, a Toyota badge) - that names the maker, not the seller, and "
+    "must be left alone. When unsure which it is, ask whether a buyer could search that "
+    "name and find the person selling this: if yes, box it. "
+    "Also: vehicle number "
     "plates AND their dealer plate-surrounds/frames (the strip above/below the "
     "plate often prints a dealership website and PHONE NUMBER — box the WHOLE "
     "plate unit including that strip), visible house or street numbers, "
@@ -11884,6 +11897,14 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
             _log_ai_spend(agent, "/agencies/import#photo-scan", "sonnet_vision", _it, _ot)
         if not scan:
             held += 1; notes.append("held:scan-failed"); continue
+        # MODERATION PARITY (David, 5 Aug 2026, asking "does the API agencies upload get
+        # scanned for illegal photos?"). It did not. The seller upload gate has refused
+        # inappropriate photos since MODERATION-1 (15 Jul); this path never read the flag,
+        # so an anonymous-but-unacceptable photo could be attached from an agency feed.
+        # Same rule, both doors. Held rather than rejected: the import is a bulk operation
+        # and one bad photo must not fail a whole agency's advert.
+        if scan.get("flag") == "inappropriate":
+            held += 1; notes.append("held:inappropriate"); continue
         if scan["verdict"] == "reject":
             held += 1; notes.append("held:flyer-or-unsafe"); continue
         if scan["confidence"] < _ANON_PHOTO_CONF:
