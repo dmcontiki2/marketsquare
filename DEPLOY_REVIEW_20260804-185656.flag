@@ -1,0 +1,3 @@
+Pre-deploy scan flagged torn/incomplete file(s):
+  tester-intake
+See deploy_audit.log. Fix or restore before deploying.

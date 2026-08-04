@@ -1180,5 +1180,34 @@ def rg_tester_fault_channel():
     return out
 
 
+@entry("RG-0031", "openDetail never dereferences a listing it did not find (no silent dead clicks)",
+       LOCKED, scope="every card in the app, every city, every category — the whole openDetail call graph",
+       fixed_on="2026-08-05",
+       ref="TS-0002/TS-0003, the first faults reported through the new in-app channel. openDetail() "
+           "read l.trust straight off findListing()'s result. Two ways that returned undefined: a RAW "
+           "BEA INTEGER id (FEA ids are 'bea_N' strings — sobViewMyListing passed the integer), and any "
+           "wishlist feed/showcase card for a listing OUTSIDE the active city, since LISTINGS holds only "
+           "the active city while those feeds deliberately span countries. The TypeError was thrown inside "
+           "a handler, so nothing caught it and nothing rendered: the button 'did nothing'. Invisible "
+           "failures are the expensive kind — this asserts the guard, not the symptom.")
+def rg_open_detail_guard():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "running outside the repo — openDetail guard check skipped")]
+    i = src.find("function openDetail(id){")
+    if i < 0:
+        return [(FAIL, "openDetail is gone from ms.js")]
+    head = src[i:i + 1400]
+    out = []
+    if "if (!l)" not in head:
+        out.append((FAIL, "openDetail lost its not-found guard — every out-of-city card and every raw "
+                          "integer id becomes a silent dead click again (TS-0002/0003)"))
+    if "'bea_' + id" not in head and '"bea_" + id' not in head:
+        out.append((FAIL, "openDetail no longer normalises a raw BEA integer id to the FEA 'bea_N' form"))
+    if "setTimeout(() => openDetail(first.id), 300)" in src:
+        out.append((FAIL, "sobViewMyListing is back on the raw id + 300ms race that broke it"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

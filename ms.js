@@ -3820,7 +3820,20 @@ function catCfg(l){
 }
 
 function openDetail(id){
-  const l=findListing(id);
+  // DEAD-CLICK GUARD (TS-0002/0003, 5 Aug 2026). Two failures met here:
+  //  1. FEA listing ids are 'bea_N' STRINGS; BEA ids are integers. A raw integer from
+  //     /listings/mine matched nothing and openDetail threw on l.trust — inside a
+  //     setTimeout, so nothing caught it and the screen simply never changed.
+  //  2. Wishlist feed + showcase cards deliberately span cities; LISTINGS only holds the
+  //     ACTIVE city. Any out-of-city card was therefore a silent dead tap.
+  // Never dereference a listing we did not find. Tell the person something instead.
+  let l = findListing(id);
+  if (!l && id != null && !String(id).startsWith('bea_')) l = findListing('bea_' + id);
+  if (!l) {
+    console.warn('openDetail: no listing for id', id);
+    if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.');
+    return;
+  }
   msTrackView(l);
   const active=document.querySelector('.screen.active');
   prevScreen=active?active.id.replace('screen-',''):'browse';
@@ -5990,7 +6003,12 @@ function sobViewMyListing() {
   const first = sobState.drafts && sobState.drafts[0];
   if (first && first.id) {
     goTo('browse');
-    setTimeout(() => openDetail(first.id), 300);
+    // Was: a raw integer id on a 300ms timer racing loadLiveListings(). Both wrong —
+    // normalise to the FEA id form and wait for the load instead of guessing at it.
+    const _id = String(first.id).startsWith('bea_') ? String(first.id) : 'bea_' + first.id;
+    Promise.resolve(typeof loadLiveListings === 'function' ? loadLiveListings() : null)
+      .then(() => openDetail(_id))
+      .catch(() => openDetail(_id));
   } else {
     goTo('browse');
     showToast('Your listing is live — find it in the marketplace.');
@@ -12137,11 +12155,17 @@ async function wlLoadFeed() {
     _wlLastFeed = data;
     wrap.innerHTML = _wlRenderCards(data.cards, false);
     if (data.upgrade_prompt && upBox) {
+      // TS-0001, 5 Aug 2026: "the 15 matching list button doesnt work". It never was a
+      // button — only the trailing link carried a handler, so tapping the number (the
+      // thing the sentence is about) hit dead space. The whole box is now the control.
+      upBox.style.cursor = 'pointer';
+      upBox.onclick = function () { goTo('wishlist'); };
       upBox.innerHTML =
         '✨ <strong>' + data.upgrade_prompt.matches_elsewhere + '</strong> matching listing'
         + (data.upgrade_prompt.matches_elsewhere === 1 ? '' : 's')
-        + ' in <strong>' + _wlEsc(data.upgrade_prompt.sample_country || 'another country') + '</strong>. '
-        + '<a onclick="goTo(\'wishlist\')" style="color:var(--accent-bright);cursor:pointer;font-weight:700;">Upgrade to Global &rarr;</a>';
+        + ' in <strong>' + _wlEsc(data.upgrade_prompt.sample_country || 'another country') + '</strong>'
+        + ' &mdash; hidden on the free tier. '
+        + '<span style="color:var(--accent-bright);font-weight:700;text-decoration:underline;">See Global &rarr;</span>';
       upBox.style.display = 'block';
     } else if (upBox) {
       upBox.style.display = 'none';

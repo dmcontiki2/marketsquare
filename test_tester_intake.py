@@ -152,6 +152,26 @@ def test_paste_is_the_attachment_path():
         "a third-party capture library appeared (RG-0025)"
 
 
+def test_maintenance_key_opens_faults_and_nothing_else():
+    """The whole point of a scoped key is the scope. If MS_MAINT_KEY ever guards an
+    endpoint outside the fault lane, a leaked maintenance credential stops costing us a
+    complaint list and starts costing us the platform (SEC-1, 23 Jul 2026)."""
+    src = _read("bea_main.py")
+    assert "def _require_maint" in src, "the scoped maintenance credential is gone"
+    guarded = re.findall(r"@app\.(?:get|post|put|delete)\(\"([^\"]+)\"\)\s*\n(?:async )?def [^\n]*\n?[^\n]*Depends\(_require_maint\)", src)
+    stray = [r for r in guarded if not r.startswith("/admin/faults")]
+    assert not stray, "MS_MAINT_KEY now opens endpoints outside the fault lane: " + ", ".join(stray)
+    assert src.count("Depends(_require_maint)") == 4, \
+        "expected exactly 4 maintenance-scoped endpoints, found %d" % src.count("Depends(_require_maint)")
+    i = src.find('@app.post("/admin/flags")')
+    assert "Depends(_require_admin)" in src[i:i + 200], \
+        "the launch switches must stay on the FULL admin credential, never the scoped one"
+    i = src.find("def _require_maint")
+    body = src[i:src.find("\ndef ", i + 10)]      # the whole function, not a guessed window
+    assert "compare_digest" in body, "the maintenance key comparison is no longer constant-time"
+    assert "MS_MAINT_KEY" in body, "the scoped key is no longer checked at all"
+
+
 def test_widget_is_deployable():
     mani = _read(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
     assert "ts_report.js" in mani, "ts_report.js is not on the deploy manifest - it would never ship"

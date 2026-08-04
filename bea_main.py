@@ -15385,6 +15385,28 @@ def _fault_report_enabled() -> bool:
         return False
 
 
+MS_MAINT_KEY = os.environ.get("MS_MAINT_KEY", "")
+
+
+def _require_maint(x_maint_key: str = Header(default=None),
+                   x_admin_token: str = Header(default=None),
+                   x_admin_key: str = Header(default=None)):
+    """Least-privilege credential for the Maintenance lane ONLY.
+
+    Why this exists rather than handing a session MS_ADMIN_KEY: the master key opens
+    flags, deploys, the lifecycle sweep and the ledger. This one opens the fault queue
+    and nothing else, so a leak costs us a complaint list, not the platform. (Precedent:
+    SEC-1, 23 Jul 2026 — a leaked key had to be demoted after the fact. Cheaper to scope
+    it up front.) The retest letter can only ever mail the address already on the fault
+    row, so this key cannot be pointed at an arbitrary recipient.
+
+    Accepts, in order: MS_MAINT_KEY (the scoped one), then the ordinary admin paths so
+    David's dashboard keeps working unchanged. Fails CLOSED when nothing is configured."""
+    if x_maint_key and MS_MAINT_KEY and _ts_secrets.compare_digest(x_maint_key, MS_MAINT_KEY):
+        return {"via": "maint-key", "scope": "faults"}
+    return _require_admin_or_key(x_admin_token=x_admin_token, x_admin_key=x_admin_key)
+
+
 def _fault_known_user(email: str) -> bool:
     """Does this address belong to a real account? A signed-in user IS a credential —
     the report is attributable, which is the property that actually matters here."""
@@ -15598,7 +15620,7 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
 
 @app.get("/admin/faults")
 def admin_faults(status: str = "", bin: str = "", limit: int = 100,
-                 _admin=Depends(_require_admin_or_key)):
+                 _admin=Depends(_require_maint)):
     """The Maintenance queue. Majors first, newest first."""
     conn = database.get_db()
     try:
@@ -15630,7 +15652,7 @@ class _FaultUpdate(BaseModel):
 
 
 @app.put("/admin/faults/{fid}")
-def admin_fault_update(fid: int, upd: _FaultUpdate, _admin=Depends(_require_admin_or_key)):
+def admin_fault_update(fid: int, upd: _FaultUpdate, _admin=Depends(_require_maint)):
     """Triage / progress a fault. Marking dup_of increments the parent's recurrence —
     that counter is what trips a Path B design-change dossier (FAULT_REGISTER rule 3)."""
     data = {k: v for k, v in upd.dict(exclude_unset=True).items() if v is not None}
@@ -15689,7 +15711,7 @@ def _fault_retest_email(row) -> dict:
 
 
 @app.get("/admin/faults/{fid}/retest-draft")
-def admin_fault_retest_draft(fid: int, _admin=Depends(_require_admin_or_key)):
+def admin_fault_retest_draft(fid: int, _admin=Depends(_require_maint)):
     """Draft only — David reads this before anything is sent (his approval gate)."""
     conn = database.get_db()
     try:
@@ -15702,7 +15724,7 @@ def admin_fault_retest_draft(fid: int, _admin=Depends(_require_admin_or_key)):
 
 
 @app.post("/admin/faults/{fid}/retest-send")
-def admin_fault_retest_send(fid: int, _admin=Depends(_require_admin_or_key)):
+def admin_fault_retest_send(fid: int, _admin=Depends(_require_maint)):
     """Send the approved retest letter and move the fault to awaiting-retest."""
     conn = database.get_db()
     try:
