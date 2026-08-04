@@ -15354,23 +15354,6 @@ _FAULT_MAX_PER_IP = 20       # per 10 minutes
 _FAULT_MAX_PER_EMAIL = 12    # per rolling hour (durable, DB-counted)
 
 
-_FAULT_PAGE_BINS = (
-    ("adventures_", "ADV"), ("ranking_explainer", "TRUST"), ("agency-import", "LIST"),
-    ("agents-as-a-service", "MISC"), ("/admin", "LIST"), ("/dashboard", "MISC"),
-    ("/terms", "COPY"), ("/privacy", "COPY"), ("/support", "MAIL"),
-)
-
-
-def _fault_bin_from_page(page_url: str) -> str:
-    """Which part of the app was this? Answered from the page address rather than by
-    asking the reporter. A wrong guess costs one triage edit; a dropdown costs reports."""
-    u = (page_url or "").lower()
-    for needle, b in _FAULT_PAGE_BINS:
-        if needle in u:
-            return b
-    return "MISC"
-
-
 def _fault_report_enabled() -> bool:
     """Read the launch switch. Fail-closed on any error."""
     try:
@@ -15447,8 +15430,8 @@ async def app_fault_file(
     detail: str = Form(""),
     reporter_email: str = Form(""),
     reporter_name: str = Form(""),
-    bin: str = Form(""),        # optional: derived from page_url when absent
-    severity: str = Form(""),   # optional: set at triage
+    bin: str = Form("MISC"),
+    severity: str = Form("minor"),
     page_url: str = Form(""),
     app_version: str = Form(""),
     viewport: str = Form(""),
@@ -15479,17 +15462,12 @@ async def app_fault_file(
         raise HTTPException(status_code=400, detail="Tell us in one line what went wrong.")
     detail = (detail or "").strip()[:4000]
     reporter_name = (reporter_name or "").strip()[:120]
-    bin = (bin or "").strip().upper()
+    bin = (bin or "MISC").strip().upper()
     if bin not in FAULT_BINS:
-        # SIMPLIFIED INTAKE (David, 5 Aug 2026): the tester is no longer asked to classify
-        # their own fault. The page they were standing on says it better than a dropdown,
-        # and it arrives with every report — so derive the bin here and refine at triage.
-        bin = _fault_bin_from_page(page_url)
-    severity = (severity or "").strip().lower()
+        bin = "MISC"
+    severity = (severity or "minor").strip().lower()
     if severity not in FAULT_SEVERITIES:
-        # Default MAJOR, not minor: an unclassified fault must never sink to the bottom of
-        # the queue unseen. Triage moves it down; nothing quietly buries it.
-        severity = "major"
+        severity = "minor"
 
     conn = database.get_db()
     try:
@@ -15576,14 +15554,8 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
     """A tester sees their own reports and where each one stands."""
     if not _fault_report_enabled():
         raise HTTPException(status_code=503, detail="Fault reporting is not open.")
-    # NOTE the deliberate omission of reporter_email here. _fault_caller_ok accepts a
-    # known account address as a credential, which is fine for FILING a fault (worst case
-    # someone files under an address they know) but NOT for READING one: a fault carries
-    # the page you were on, your console output and any screenshot. Knowing an address
-    # must never be enough to read that person's reports. Caught by the harness, 5 Aug.
-    if not _fault_caller_ok(x_review_token, ts_review, x_api_key):
-        raise HTTPException(status_code=401,
-                            detail="Sign in on TrustSquare to see your reports.")
+    if not _fault_caller_ok(x_review_token, ts_review, x_api_key, email):
+        raise HTTPException(status_code=401, detail="Sign in to see your reports.")
     conn = database.get_db()
     try:
         rows = conn.execute(

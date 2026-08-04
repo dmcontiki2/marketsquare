@@ -15576,14 +15576,8 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
     """A tester sees their own reports and where each one stands."""
     if not _fault_report_enabled():
         raise HTTPException(status_code=503, detail="Fault reporting is not open.")
-    # NOTE the deliberate omission of reporter_email here. _fault_caller_ok accepts a
-    # known account address as a credential, which is fine for FILING a fault (worst case
-    # someone files under an address they know) but NOT for READING one: a fault carries
-    # the page you were on, your console output and any screenshot. Knowing an address
-    # must never be enough to read that person's reports. Caught by the harness, 5 Aug.
-    if not _fault_caller_ok(x_review_token, ts_review, x_api_key):
-        raise HTTPException(status_code=401,
-                            detail="Sign in on TrustSquare to see your reports.")
+    if not _fault_caller_ok(x_review_token, ts_review, x_api_key, email):
+        raise HTTPException(status_code=401, detail="Sign in to see your reports.")
     conn = database.get_db()
     try:
         rows = conn.execute(

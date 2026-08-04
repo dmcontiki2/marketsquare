@@ -53,24 +53,6 @@
     } catch (e) { return ''; }
   }
 
-  var AREAS = [
-    ['MISC', 'Not sure / something else'],
-    ['AUTH', 'Signing in, my account'],
-    ['LIST', 'Listings and adverts'],
-    ['TRUST', 'Trust score, badges, ranking'],
-    ['INTRO', 'Introductions, Tuppence, payment'],
-    ['BROWSE', 'Search, browsing, categories'],
-    ['ADV', 'Adventures and maps'],
-    ['MAIL', 'Emails I received'],
-    ['PERF', 'Slow, stuck or would not load'],
-    ['COPY', 'Wrong wording or a typo']
-  ];
-  var SEVS = [
-    ['blocker', 'Blocked me completely'],
-    ['major', 'Got in my way'],
-    ['minor', 'Small / cosmetic']
-  ];
-
   function el(tag, css, html) {
     var n = document.createElement(tag);
     if (css) n.style.cssText = css;
@@ -103,28 +85,22 @@
 
     var body = el('div', 'overflow-y:auto;padding:4px 18px 22px;flex:1;');
     body.appendChild(el('p', 'font-size:13px;color:#64748b;line-height:1.6;margin:12px 0 2px;',
-      'You are testing before launch — thank you. Tell us what happened and we will fix it, ' +
-      'then write to you so you can check the fix yourself.'));
+      'You are testing before launch — thank you. Say what went wrong, snip the screen if it ' +
+      'helps, and send. We fix it and write back so you can check it yourself.'));
 
     var f = {};
     function field(key, label, node) {
       body.appendChild(el('label', LBL, label));
       body.appendChild(node); f[key] = node; return node;
     }
-    field('title', 'What went wrong? <span style="color:' + GOLD + '">*</span>',
-          el('input', FLD)).placeholder = 'One line — e.g. "Publish button does nothing"';
-    field('detail', 'What were you doing? What did you expect?',
-          el('textarea', FLD + 'height:88px;resize:vertical;')).placeholder =
-            'Steps you took, what happened instead, anything else that helps us reproduce it.';
-
-    var sev = el('select', FLD);
-    SEVS.forEach(function (s) { var o = el('option'); o.value = s[0]; o.textContent = s[1]; sev.appendChild(o); });
-    sev.value = 'major';
-    field('severity', 'How badly did it affect you?', sev);
-
-    var area = el('select', FLD);
-    AREAS.forEach(function (a) { var o = el('option'); o.value = a[0]; o.textContent = a[1]; area.appendChild(o); });
-    field('bin', 'Which part of the app?', area);
+    /* THREE things, deliberately (David, 5 Aug 2026): "we basically paste a snip and say
+       what is wrong... having it this simple will increase fix rate tremendously". The two
+       fields we dropped — how bad is it, which part of the app — are ones WE can answer
+       better than the tester can: the page address arrives with every report, and severity
+       is a triage judgement. Never make someone classify a fault to be allowed to report it. */
+    field('title', 'What&rsquo;s wrong? <span style="color:' + GOLD + '">*</span>',
+          el('textarea', FLD + 'height:104px;resize:vertical;')).placeholder =
+            'Just say it plainly — what you did, and what happened instead.';
 
     var em = field('reporter_email', 'Your email <span style="color:' + GOLD + '">*</span>', el('input', FLD));
     em.type = 'email'; em.value = testerEmail();
@@ -132,6 +108,58 @@
 
     var shot = field('file', 'Screenshot (optional)', el('input', FLD + 'padding:8px;'));
     shot.type = 'file'; shot.accept = 'image/png,image/jpeg,image/webp';
+
+    /* ── Snip the screen, no library ────────────────────────────────────────
+       getDisplayMedia is native to the browser, so this stays first-party (RG-0025).
+       Desktop only — phones do not implement it, and there the file picker above is
+       the right answer anyway because the phone's own screenshot is one button. */
+    var captured = null;
+    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+      var snipRow = el('div', 'display:flex;gap:9px;align-items:center;margin-top:9px;');
+      var snip = el('button', 'flex:0 0 auto;background:' + NAVY + ';color:#fff;border:none;' +
+                              'border-radius:8px;padding:9px 13px;font:inherit;font-size:12.5px;' +
+                              'font-weight:700;cursor:pointer;', 'Snip this screen');
+      var snipNote = el('span', 'font-size:11.5px;color:#94a3b8;line-height:1.4;',
+                        'Grabs one frame. You choose what to share.');
+      var thumb = el('img', 'display:none;width:74px;height:auto;border:1px solid ' + LINE + ';' +
+                            'border-radius:7px;');
+      snipRow.appendChild(snip); snipRow.appendChild(snipNote);
+      body.appendChild(snipRow); body.appendChild(thumb);
+
+      snip.onclick = function () {
+        snip.disabled = true; snip.textContent = 'Choose a window…';
+        sheet.style.visibility = 'hidden';          // do not photograph our own form
+        navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, audio: false })
+          .then(function (stream) {
+            var v = document.createElement('video');
+            v.srcObject = stream; v.muted = true;
+            return v.play().then(function () {
+              return new Promise(function (res) { setTimeout(function () { res(v); }, 260); });
+            });
+          })
+          .then(function (v) {
+            var cv = document.createElement('canvas');
+            cv.width = v.videoWidth; cv.height = v.videoHeight;
+            cv.getContext('2d').drawImage(v, 0, 0);
+            (v.srcObject.getTracks() || []).forEach(function (t) { t.stop(); });
+            return new Promise(function (res) { cv.toBlob(res, 'image/png'); });
+          })
+          .then(function (blob) {
+            sheet.style.visibility = '';
+            if (!blob) throw new Error('nothing captured');
+            captured = blob;
+            thumb.src = URL.createObjectURL(blob); thumb.style.display = 'block';
+            snip.disabled = false; snip.textContent = 'Snip again';
+            snipNote.textContent = 'Attached (' + Math.round(blob.size / 1024) + ' KB).';
+            snipNote.style.color = '#15803d';
+          })
+          .catch(function () {
+            sheet.style.visibility = '';
+            snip.disabled = false; snip.textContent = 'Snip this screen';
+            snipNote.textContent = 'No capture — attach a file instead, or just describe it.';
+          });
+      };
+    }
 
     body.appendChild(el('p', 'font-size:11px;color:#94a3b8;line-height:1.6;margin:14px 0 0;',
       'We store your report with the page address, your browser details and any screenshot you attach, ' +
@@ -151,23 +179,24 @@
 
     send.onclick = function () {
       var t = (f.title.value || '').trim(), e = (f.reporter_email.value || '').trim();
-      if (!t) { note.style.color = '#b91c1c'; note.textContent = 'Please tell us in one line what went wrong.'; return; }
+      if (!t) { note.style.color = '#b91c1c'; note.textContent = 'Tell us what went wrong — a sentence is plenty.'; return; }
       if (!e || e.indexOf('@') < 1) { note.style.color = '#b91c1c'; note.textContent = 'We need your email so we can tell you it is fixed.'; return; }
       send.disabled = true; send.textContent = 'Sending…';
       note.style.color = '#64748b'; note.textContent = '';
 
       var fd = new FormData();
-      fd.append('title', t);
-      fd.append('detail', f.detail.value || '');
+      // first line becomes the headline; the whole thing is kept as the detail
+      fd.append('title', t.split('\n')[0].slice(0, 160));
+      fd.append('detail', t);
       fd.append('reporter_email', e);
       fd.append('reporter_name', testerName());
-      fd.append('bin', f.bin.value);
-      fd.append('severity', f.severity.value);
+      // bin is derived server-side from the page address; severity is set at triage
       fd.append('page_url', location.href.slice(0, 500));
       fd.append('app_version', appVersion());
       fd.append('viewport', window.innerWidth + 'x' + window.innerHeight);
       fd.append('console_tail', tail.join(' | ').slice(0, 2000));
       if (f.file.files && f.file.files[0]) fd.append('file', f.file.files[0]);
+      else if (captured) fd.append('file', captured, 'snip.png');
 
       var h = {};
       var rt = reviewToken(); if (rt) h['X-Review-Token'] = rt;
@@ -222,10 +251,10 @@
     if (document.getElementById('ts-report-tab')) return;
     var b = el('button',
       'position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9000;' +
-      'background:' + NAVY + ';color:#fff;border:none;border-radius:10px 0 0 10px;' +
-      'padding:13px 7px;cursor:pointer;font-family:Inter,system-ui,Arial,sans-serif;' +
-      'font-size:11px;font-weight:800;letter-spacing:1.4px;writing-mode:vertical-rl;' +
-      'box-shadow:0 2px 12px rgba(8,12,20,.28);opacity:.92;', 'REPORT');
+      'background:' + GOLD + ';color:#fff;border:none;border-radius:12px 0 0 12px;' +
+      'padding:16px 9px;cursor:pointer;font-family:Inter,system-ui,Arial,sans-serif;' +
+      'font-size:12px;font-weight:800;letter-spacing:1.6px;writing-mode:vertical-rl;' +
+      'box-shadow:-2px 2px 16px rgba(200,135,58,.5);opacity:1;', 'REPORT');
     b.id = 'ts-report-tab';
     b.title = 'Report a problem (testers)';
     b.setAttribute('aria-label', 'Report a problem');
@@ -233,15 +262,56 @@
     document.body.appendChild(b);
   }
 
+  /* One-time pointer. The failure this prevents: a tester who never notices the tab
+     never reports anything, and silence reads exactly like "no faults found". */
+  function coach() {
+    try { if (localStorage.getItem('ts_report_seen') === '1') return; } catch (e) { return; }
+    var c = el('div',
+      'position:fixed;right:56px;top:50%;transform:translateY(-50%);z-index:9001;max-width:216px;' +
+      'background:' + NAVY + ';color:#fff;border-radius:12px;padding:13px 15px;' +
+      'font-family:Inter,system-ui,Arial,sans-serif;font-size:12.5px;line-height:1.5;' +
+      'box-shadow:0 6px 22px rgba(8,12,20,.34);',
+      '<b style="display:block;margin-bottom:3px;font-size:13px">Something wrong?</b>' +
+      'Tap <b style="color:' + GOLD + '">REPORT</b> any time, on any page. We fix it and write ' +
+      'back so you can check it.');
+    var arrow = el('span', 'position:absolute;right:-6px;top:50%;transform:translateY(-50%) rotate(45deg);' +
+                           'width:12px;height:12px;background:' + NAVY + ';');
+    var got = el('button', 'display:block;margin-top:10px;background:' + GOLD + ';color:#fff;border:none;' +
+                           'border-radius:7px;padding:7px 12px;font:inherit;font-size:12px;font-weight:700;' +
+                           'cursor:pointer;', 'Got it');
+    got.onclick = function () {
+      try { localStorage.setItem('ts_report_seen', '1'); } catch (e) {}
+      if (c.parentNode) c.parentNode.removeChild(c);
+    };
+    c.appendChild(arrow); c.appendChild(got);
+    c.id = 'ts-report-coach';
+    document.body.appendChild(c);
+    setTimeout(function () {           // never nag: it fades itself after 12 seconds
+      if (c.parentNode) { c.style.transition = 'opacity .5s'; c.style.opacity = '0';
+        setTimeout(function () { if (c.parentNode) c.parentNode.removeChild(c); }, 600); }
+    }, 12000);
+  }
+
   function start() {
     if (!isTester()) return;                       // not a tester: nothing renders
     fetch(BEA + '/flags', { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d && d.fault_report) mountTab(); })   // fail-closed
+      .then(function (d) { if (d && d.fault_report) { mountTab(); coach(); } })   // fail-closed
       .catch(function () { /* flag unreadable: stay hidden */ });
   }
 
   window.tsReportOpen = open;                      // console escape hatch for David
+  window.tsReportWhere = function () {             // 'where is it?' -- flash it, re-show the pointer
+    try { localStorage.removeItem('ts_report_seen'); } catch (e) {}
+    var t = document.getElementById('ts-report-tab');
+    if (!t) { mountTab(); t = document.getElementById('ts-report-tab'); }
+    if (!document.getElementById('ts-report-coach')) coach();
+    var n = 0, iv = setInterval(function () {
+      t.style.transform = 'translateY(-50%) scale(' + (n % 2 ? 1 : 1.18) + ')';
+      if (++n > 7) { clearInterval(iv); t.style.transform = 'translateY(-50%)'; }
+    }, 220);
+    return 'tab flashing on the right edge';
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();

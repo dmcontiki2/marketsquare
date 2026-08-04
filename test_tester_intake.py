@@ -101,6 +101,50 @@ def test_dashboard_switch_is_usable_during_launch_mode():
          "greyed out during exactly the month it is needed")
 
 
+def test_a_signed_in_account_can_file():
+    """The 5 Aug 401: the tab rendered for superusers but the POST refused them, because
+    ms.js declares API_KEY with `const` (not on window) and superusers never enter the
+    reviewer code. Every in-app report failed. Both halves of the fix are asserted here."""
+    src = _read("bea_main.py")
+    assert "def _fault_known_user" in src, "the account-is-a-credential check is gone"
+    assert "_fault_caller_ok(x_review_token, ts_review, x_api_key, reporter_email)" in src, \
+        "the intake no longer accepts a signed-in account - superuser reports will 401 again"
+    js = _read("ms.js")
+    assert "window.API_KEY = API_KEY" in js, \
+        "ms.js stopped exposing API_KEY on window - the widget's fallback silently dies again"
+
+
+def test_reading_reports_is_stricter_than_filing_them():
+    """A fault carries the page you were on, your console output and your screenshot.
+    Knowing someone's address must never be enough to read it."""
+    src = _read("bea_main.py")
+    i = src.find('@app.get("/app/faults/mine")')
+    assert i > 0, "the tester's own-reports endpoint is gone"
+    blk = src[i:i + 1400]
+    assert "_fault_caller_ok(x_review_token, ts_review, x_api_key)" in blk, \
+        "the read path now accepts a bare email address - anyone knowing an address could " \
+        "read that person's fault reports"
+
+
+def test_intake_asks_three_things_not_five():
+    """David, 5 Aug: 'we basically paste a snip and say what is wrong... this simple will
+    increase fix rate tremendously.' Never make someone classify a fault to report it."""
+    js = _read("ts_report.js")
+    assert "How badly did it affect you" not in js, "the severity picker is back"
+    assert "Which part of the app" not in js, "the area picker is back"
+    src = _read("bea_main.py")
+    assert "def _fault_bin_from_page" in src, \
+        "the bin is no longer derived from the page - dropping the picker would lose the taxonomy"
+    assert 'severity = "major"' in src, \
+        "unclassified faults no longer default to major - they would sink to the bottom unseen"
+
+
+def test_snip_is_first_party():
+    js = _read("ts_report.js")
+    assert "getDisplayMedia" in js, "the screen-snip button is gone"
+    assert "html2canvas" not in js, "a third-party capture library appeared (RG-0025)"
+
+
 def test_widget_is_deployable():
     mani = _read(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
     assert "ts_report.js" in mani, "ts_report.js is not on the deploy manifest - it would never ship"
