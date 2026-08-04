@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Found something wrong? Tell us — TrustSquare testers</title>
+<style>
+  :root{--navy:#0c1a2e;--gold:#C8873A;--ink:#1e293b;--dim:#64748b;--line:#e2e8f0;
+        --you:#1d4ed8;--you-bg:#e8eefc;--us:#15803d;--us-bg:#e8f5ec;--wait:#b45309;--wait-bg:#fdf3e3}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f7f9;color:var(--ink);
+       font:15px/1.65 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:840px;margin:0 auto;padding:26px 20px 64px}
+  header{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;margin-bottom:18px}
+  header h1{margin:0 0 7px;font-size:24px;letter-spacing:-.3px}
+  header p{margin:0;color:#b9c6d8;font-size:14.5px;max-width:62ch}
+  h2{font-size:17px;color:var(--navy);margin:32px 0 12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+  .lede{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:74ch}
+
+  .stage{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+  .stage:last-child{border-bottom:none}
+  .who{flex:0 0 96px;font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+       border-radius:6px;padding:5px 9px;text-align:center;margin-top:2px}
+  .who.you{background:var(--you-bg);color:var(--you)}
+  .who.us{background:var(--us-bg);color:var(--us)}
+  .who.wait{background:var(--wait-bg);color:var(--wait)}
+  .stage h3{margin:0 0 4px;font-size:15px;color:var(--navy)}
+  .stage p{margin:0;font-size:14px;color:var(--ink)}
+  .stage p.sub{color:var(--dim);font-size:13px;margin-top:5px}
+
+  .tab-demo{background:var(--navy);color:#fff;border-radius:9px 0 0 9px;padding:14px 8px;
+            font-size:11px;font-weight:800;letter-spacing:1.5px;writing-mode:vertical-rl;
+            display:inline-block;box-shadow:0 2px 12px rgba(8,12,20,.28)}
+  .demo-row{display:flex;align-items:center;gap:18px;background:#eef1f5;border:1px dashed #cbd5e1;
+            border-radius:12px;padding:16px 4px 16px 20px;justify-content:space-between}
+  .demo-row p{margin:0;font-size:13.5px;color:var(--dim);max-width:52ch}
+
+  ul.ask{margin:0;padding-left:19px;font-size:14px}
+  ul.ask li{margin:7px 0}
+  ul.ask b{color:var(--navy)}
+  .auto{background:#f8fafc;border-left:3px solid var(--gold);border-radius:0 8px 8px 0;
+        padding:13px 16px;margin-top:15px;font-size:13.5px;color:var(--dim)}
+  .auto b{color:var(--gold)}
+  .ref{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;
+       padding:2px 9px;font-weight:700;font-size:13px;letter-spacing:.5px}
+  .good{background:var(--us-bg);border:1px solid #bfe0ca;border-radius:12px;padding:15px 18px}
+  .good h3{margin:0 0 8px;font-size:14px;color:var(--us)}
+  .good p{margin:0 0 6px;font-size:13.5px}
+  .good .eg{font-style:italic;color:var(--ink)}
+  .good .no{color:var(--dim);text-decoration:line-through}
+  footer{margin-top:34px;text-align:center;font-size:12px;color:var(--dim)}
+  @media (max-width:620px){.stage{flex-direction:column;gap:8px}.who{flex:none}.demo-row{flex-direction:column;gap:14px;padding:18px}}
+  @media print{body{background:#fff}.wrap{padding:0}header{border-radius:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Found something wrong? Tell us.</h1>
+  <p>You are using TrustSquare before anyone else, which means you will hit things that are
+     broken. That is not an inconvenience to us — it is the entire point. Here is how to report
+     one, and what happens afterwards.</p>
+</header>
+
+<div class="card">
+  <div class="demo-row">
+    <p><b>Look at the right-hand edge of any page.</b> This tab follows you everywhere in the app —
+       the marketplace, your listings, the adventure maps, the terms pages. Tap it the moment
+       something misbehaves, while you are still on the screen that went wrong.</p>
+    <span class="tab-demo">REPORT</span>
+  </div>
+</div>
+
+<h2>What we ask you</h2>
+<div class="card">
+  <ul class="ask">
+    <li><b>What went wrong</b> — one line is enough.</li>
+    <li><b>What you were doing, and what you expected</b> — the steps you took, and what happened instead.</li>
+    <li><b>How badly it affected you</b> — blocked me completely / got in my way / small or cosmetic.</li>
+    <li><b>Which part of the app</b> — pick the closest; "not sure" is a perfectly good answer.</li>
+    <li><b>Your email</b> — so we can tell you when it is fixed.</li>
+    <li><b>A screenshot</b>, if you have one. Optional, and often worth more than a paragraph.</li>
+  </ul>
+  <div class="auto"><b>You do not need to describe your phone or the page you were on.</b>
+    The form quietly picks up the page address, the app version, your screen size, your browser
+    and the last few technical errors it recorded. That is usually what lets us reproduce the
+    fault without having to ask you anything.</div>
+</div>
+
+<h2>What happens next</h2>
+<div class="card">
+  <div class="stage">
+    <span class="who you">You</span>
+    <div><h3>You send it</h3>
+    <p>The moment you tap send, it is logged with a reference like <span class="ref">TS-0007</span>.</p></div>
+  </div>
+  <div class="stage">
+    <span class="who us">Us</span>
+    <div><h3>You get an email within seconds</h3>
+    <p>Confirming the reference and that it is in the fix queue.</p>
+    <p class="sub">Nothing further is needed from you. If a fix needs something only you can tell us,
+       we will write to that address.</p></div>
+  </div>
+  <div class="stage">
+    <span class="who us">Us</span>
+    <div><h3>We fix it — worst first</h3>
+    <p>Anything that blocked you completely jumps the queue. Everything else is ordered behind it.</p>
+    <p class="sub">If two of you report the same thing, it stays one fault with two voices behind it —
+       which makes it more likely to be fixed sooner, not less.</p></div>
+  </div>
+  <div class="stage">
+    <span class="who us">Us</span>
+    <div><h3>We write to you and say what changed</h3>
+    <p>Not "resolved". The actual change we made, quoting what you originally reported.</p></div>
+  </div>
+  <div class="stage">
+    <span class="who wait">You</span>
+    <div><h3>You check it, and that is what closes it</h3>
+    <p>Open the app, repeat the steps that failed, and tell us whether it now behaves.</p>
+    <p class="sub">If it is still wrong, report it again from the same tab and quote the reference —
+       it stays on the same thread. <b>A fault is only marked confirmed when you say so.</b>
+       We do not get to mark our own homework.</p></div>
+  </div>
+</div>
+
+<h2>What makes a report easy to fix</h2>
+<div class="card">
+  <div class="good">
+    <h3>Say what you did, not what you think is broken</h3>
+    <p class="eg">"Tapped Publish on my listing, the spinner span for about a minute, then the page
+       went back to the form and my photos were gone."</p>
+    <p class="no">"The publish function is broken."</p>
+    <p style="margin-top:10px;color:var(--dim);font-size:13px">The first one we can reproduce in
+       two minutes. The second sends us hunting. Neither is wrong to send — send the second if the
+       first is too much effort, always.</p>
+  </div>
+</div>
+
+<div class="card" style="border-left:4px solid var(--gold)">
+  <p style="margin:0;font-size:14px">
+  <b>A word on the screenshots.</b> A screenshot captures whatever was on your screen — please
+  glance at it before attaching. And a small point of honesty: we store your report, your email
+  and those details so we can fix the fault and reply to you. Nothing else, and nobody else.</p>
+</div>
+
+<footer>TrustSquare · pre-launch tester guide · August 2026</footer>
+</div>
+</body>
+</html>

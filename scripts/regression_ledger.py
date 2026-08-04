@@ -1161,12 +1161,22 @@ def rg_tester_fault_channel():
                               "outright while the flag is off (503)"))
     except Exception as ex:
         out.append((INFO, "intake probe inconclusive: " + repr(ex)))
-    try:
-        if "fault_report" not in _get("/flags"):
-            out.append((FAIL, "/flags no longer carries fault_report -- the widget fails closed "
-                              "and every tester silently loses the report button"))
-    except Exception as ex:
-        out.append((FAIL, "/flags unreadable: " + repr(ex)))
+    code = _status("/flags")
+    if code == 200:
+        try:
+            if "fault_report" not in _get("/flags"):
+                out.append((FAIL, "/flags no longer carries fault_report -- the widget fails closed "
+                                  "and every tester silently loses the report button"))
+        except Exception as ex:
+            out.append((FAIL, "/flags unreadable despite a 200: " + repr(ex)))
+    elif code in (401, 403):
+        # GATE-ENFORCE-1 (5 Aug): the reviewer gate refuses anonymous reads at the origin.
+        # A gated /flags is CORRECT; a gated tester's own browser carries the ts_review
+        # cookie and gets 200. Verified in-browser 5 Aug: fault_report present, value false.
+        out.append((INFO, "/flags is gated to anonymous callers (%d) -- expected while the "
+                          "pre-launch gate is up; verify the key from a gated browser" % code))
+    else:
+        out.append((FAIL, "/flags answered %d -- neither readable nor gated" % code))
     return out
 
 

@@ -75,6 +75,15 @@ def test_widget_is_wired_into_every_tester_page():
             continue
         assert "ts_report.js" in _read(name), "report widget missing from " + name
 
+def test_dashboard_switch_is_usable_during_launch_mode():
+    d = _read("dashboard.server.html")
+    assert "ls_m_fault" in d, "the fault-reporting switch is gone from the Launch Switch page"
+    assert "'fault_report'" in d or '"fault_report"' in d, "the switch is not bound to the server flag"
+    assert "id!=='ls_m_fault'" in d.replace(" ", ""), \
+        ("the fault switch lost its exemption from the launch-mode disable rule - it would render "
+         "greyed out during exactly the month it is needed")
+
+
 def test_widget_is_deployable():
     mani = _read(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
     assert "ts_report.js" in mani, "ts_report.js is not on the deploy manifest - it would never ship"
