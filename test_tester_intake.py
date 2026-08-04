@@ -139,10 +139,17 @@ def test_intake_asks_three_things_not_five():
         "unclassified faults no longer default to major - they would sink to the bottom unseen"
 
 
-def test_snip_is_first_party():
+def test_paste_is_the_attachment_path():
+    """David, 5 Aug: 'can\'t we just have a paste option?' Win+Shift+S then Ctrl+V is
+    two things people already do; a capture button was one thing they had to learn."""
     js = _read("ts_report.js")
-    assert "getDisplayMedia" in js, "the screen-snip button is gone"
-    assert "html2canvas" not in js, "a third-party capture library appeared (RG-0025)"
+    assert "addEventListener('paste'" in js, "the paste handler is gone - Ctrl+V would do nothing"
+    assert "clipboardData" in js, "the clipboard read is gone"
+    assert "e.dataTransfer" in js, "drag-and-drop (same handler, free) is gone"
+    assert "removeEventListener('paste'" in js, \
+        "the document-level paste listener is never unhooked - it would keep firing after close"
+    assert "html2canvas" not in js and "cdn" not in js.lower().split("*/")[-1], \
+        "a third-party capture library appeared (RG-0025)"
 
 
 def test_widget_is_deployable():

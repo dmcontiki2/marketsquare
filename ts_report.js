@@ -106,60 +106,69 @@
     em.type = 'email'; em.value = testerEmail();
     em.placeholder = 'So we can tell you when it is fixed';
 
-    var shot = field('file', 'Screenshot (optional)', el('input', FLD + 'padding:8px;'));
-    shot.type = 'file'; shot.accept = 'image/png,image/jpeg,image/webp';
-
-    /* ── Snip the screen, no library ────────────────────────────────────────
-       getDisplayMedia is native to the browser, so this stays first-party (RG-0025).
-       Desktop only — phones do not implement it, and there the file picker above is
-       the right answer anyway because the phone's own screenshot is one button. */
+    /* ── Paste. That is the whole interaction. ──────────────────────────────
+       David, 5 Aug 2026: "instead of having a complex... can't we just have a paste
+       option? open report, say 'the view button doesn't work', snip the button and
+       paste it." He is right — Win+Shift+S then Ctrl+V is two things people already
+       do. The getDisplayMedia button that was here asked for a permission prompt and
+       a window choice to achieve the same end, so it is gone. Drag-and-drop rides the
+       same handler for free; the file picker stays for phones, quietly. */
     var captured = null;
-    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-      var snipRow = el('div', 'display:flex;gap:9px;align-items:center;margin-top:9px;');
-      var snip = el('button', 'flex:0 0 auto;background:' + NAVY + ';color:#fff;border:none;' +
-                              'border-radius:8px;padding:9px 13px;font:inherit;font-size:12.5px;' +
-                              'font-weight:700;cursor:pointer;', 'Snip this screen');
-      var snipNote = el('span', 'font-size:11.5px;color:#94a3b8;line-height:1.4;',
-                        'Grabs one frame. You choose what to share.');
-      var thumb = el('img', 'display:none;width:74px;height:auto;border:1px solid ' + LINE + ';' +
-                            'border-radius:7px;');
-      snipRow.appendChild(snip); snipRow.appendChild(snipNote);
-      body.appendChild(snipRow); body.appendChild(thumb);
 
-      snip.onclick = function () {
-        snip.disabled = true; snip.textContent = 'Choose a window…';
-        sheet.style.visibility = 'hidden';          // do not photograph our own form
-        navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, audio: false })
-          .then(function (stream) {
-            var v = document.createElement('video');
-            v.srcObject = stream; v.muted = true;
-            return v.play().then(function () {
-              return new Promise(function (res) { setTimeout(function () { res(v); }, 260); });
-            });
-          })
-          .then(function (v) {
-            var cv = document.createElement('canvas');
-            cv.width = v.videoWidth; cv.height = v.videoHeight;
-            cv.getContext('2d').drawImage(v, 0, 0);
-            (v.srcObject.getTracks() || []).forEach(function (t) { t.stop(); });
-            return new Promise(function (res) { cv.toBlob(res, 'image/png'); });
-          })
-          .then(function (blob) {
-            sheet.style.visibility = '';
-            if (!blob) throw new Error('nothing captured');
-            captured = blob;
-            thumb.src = URL.createObjectURL(blob); thumb.style.display = 'block';
-            snip.disabled = false; snip.textContent = 'Snip again';
-            snipNote.textContent = 'Attached (' + Math.round(blob.size / 1024) + ' KB).';
-            snipNote.style.color = '#15803d';
-          })
-          .catch(function () {
-            sheet.style.visibility = '';
-            snip.disabled = false; snip.textContent = 'Snip this screen';
-            snipNote.textContent = 'No capture — attach a file instead, or just describe it.';
-          });
-      };
+    var drop = el('div', 'margin-top:6px;border:2px dashed ' + LINE + ';border-radius:11px;' +
+                         'padding:16px 14px;text-align:center;color:#94a3b8;font-size:13px;' +
+                         'cursor:pointer;transition:.15s;background:#fcfdfe;',
+                  '<b style="color:' + NAVY + ';font-size:13.5px">Paste a screenshot</b><br>' +
+                  'Snip it (<b>Win + Shift + S</b>), then press <b>Ctrl + V</b> anywhere in here');
+    var thumb = el('img', 'display:none;margin-top:9px;width:100%;max-height:168px;object-fit:contain;' +
+                          'border:1px solid ' + LINE + ';border-radius:9px;background:#f8fafc;');
+    var shot = el('input', 'display:none;');
+    shot.type = 'file'; shot.accept = 'image/*';
+    var pick = el('button', 'background:none;border:none;color:#94a3b8;font:inherit;font-size:12px;' +
+                            'text-decoration:underline;cursor:pointer;padding:7px 0 0;',
+                  'or choose an image from this device');
+    pick.onclick = function (ev) { ev.preventDefault(); shot.click(); };
+    body.appendChild(drop); body.appendChild(thumb); body.appendChild(shot); body.appendChild(pick);
+    f.file = shot;
+
+    function attach(file) {
+      if (!file || file.type.indexOf('image/') !== 0) return false;
+      captured = file;
+      try { thumb.src = URL.createObjectURL(file); thumb.style.display = 'block'; } catch (e) {}
+      drop.style.borderColor = '#bfe0ca'; drop.style.background = '#f2faf5';
+      drop.innerHTML = '<b style="color:#15803d">Screenshot attached</b> &middot; ' +
+                       Math.round(file.size / 1024) + ' KB<br>' +
+                       '<span style="font-size:12px">Paste again to replace it</span>';
+      return true;
     }
+
+    function onPaste(ev) {
+      var items = (ev.clipboardData || window.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image/') === 0) {
+          var file = items[i].getAsFile();
+          if (attach(file)) { ev.preventDefault(); return; }
+        }
+      }
+    }
+    sheet.addEventListener('paste', onPaste);      // catches the textarea and everything else
+    _paste = onPaste;
+    document.addEventListener('paste', onPaste);   // and a paste with nothing focused
+
+    drop.onclick = function () { shot.click(); };
+    shot.onchange = function () { if (shot.files && shot.files[0]) attach(shot.files[0]); };
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      drop.addEventListener(evt, function (e) {
+        e.preventDefault(); drop.style.borderColor = GOLD; drop.style.background = '#fdf8f1';
+      });
+    });
+    drop.addEventListener('dragleave', function () {
+      if (!captured) { drop.style.borderColor = LINE; drop.style.background = '#fcfdfe'; }
+    });
+    drop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) attach(e.dataTransfer.files[0]);
+    });
 
     body.appendChild(el('p', 'font-size:11px;color:#94a3b8;line-height:1.6;margin:14px 0 0;',
       'We store your report with the page address, your browser details and any screenshot you attach, ' +
@@ -195,8 +204,7 @@
       fd.append('app_version', appVersion());
       fd.append('viewport', window.innerWidth + 'x' + window.innerHeight);
       fd.append('console_tail', tail.join(' | ').slice(0, 2000));
-      if (f.file.files && f.file.files[0]) fd.append('file', f.file.files[0]);
-      else if (captured) fd.append('file', captured, 'snip.png');
+      if (captured) fd.append('file', captured, captured.name || 'pasted.png');
 
       var h = {};
       var rt = reviewToken(); if (rt) h['X-Review-Token'] = rt;
@@ -239,10 +247,12 @@
   }
 
   function esc(ev) { if (ev.key === 'Escape') close(); }
+  var _paste = null;                                 // so close() can unhook it
   function close() {
     var ov = document.getElementById('ts-report-ov');
     if (ov) ov.parentNode.removeChild(ov);
     document.removeEventListener('keydown', esc);
+    if (_paste) { document.removeEventListener('paste', _paste); _paste = null; }
   }
 
   /* ── the tab: right edge, vertically centred — the one fixed slot no other
