@@ -2131,15 +2131,15 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', US:'$', CA:'CA$
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
-  ZA: { file:'adventures_reserve_map.html?v=7', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
-  US: { file:'adventures_us_map.html?v=7',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_uk_map.html?v=7',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
-  AU: { file:'adventures_au_map.html?v=7',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  ZA: { file:'adventures_reserve_map.html?v=8', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
+  US: { file:'adventures_us_map.html?v=8',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_uk_map.html?v=8',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html?v=8',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html?v=8',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
-  BW: { file:'adventures_bw_map.html?v=7',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
-  MZ: { file:'adventures_mz_map.html?v=7',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
-  DE: { file:'adventures_de_map.html?v=7',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
+  NA: { file:'adventures_na_map.html?v=9',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  BW: { file:'adventures_bw_map.html?v=8',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
+  MZ: { file:'adventures_mz_map.html?v=8',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
+  DE: { file:'adventures_de_map.html?v=8',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
 // Per-tour maps (26 Jul 2026, David): a tour's map follows the TOUR, not the country, so
@@ -2147,7 +2147,7 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html?v=12', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  c2c: { file:'adventures_c2c_map.html?v=13', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE
@@ -3929,7 +3929,7 @@ function openDetail(id){
       </div>
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
       <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
-        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=4" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
+        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=5" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Established · 70 · Trusted · 90 · Highly Trusted</div></div>
       </div>
 
@@ -15775,7 +15775,7 @@ function sfAgentCardHtml(a,top){
     (top?'<div style="position:absolute;top:-9px;right:10px;background:#C8873A;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.05em;">BEST MATCH</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=4" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK &#9432;</div></div></div>'+
+      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=5" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK &#9432;</div></div></div>'+
     '<div style="font-size:12px;color:'+mut+';margin-top:3px;">'+(a.suburbs||a.city)+' · <b style="color:inherit;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:8px;">'+
@@ -16143,7 +16143,7 @@ function advAgentCard(a,card){
     (a.photo?'<img src="'+a.photo+'" alt="" style="width:calc(100% + 28px);margin:-12px -14px 8px;display:block;">':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=4" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK &#9432;</div></div></div>'+
+      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=5" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK &#9432;</div></div></div>'+
     '<div style="font-size:12px;color:#68758c;margin-top:2px;">'+(a.suburbs||a.city||'')+' · <b style="color:#1c2434;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:7px;">'+
