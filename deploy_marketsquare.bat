@@ -52,6 +52,8 @@ if defined PYEXE %PYEXE% "%PROJECT%\scripts\autobump.py"
 :: -- CHANGELOG.md (the ONE writer) so the record rides this release commit. Sessions
 :: -- drop fragments, never rewrite CHANGELOG.md directly - see scripts/changelog_compile.py.
 if defined PYEXE if exist "%PROJECT%\scripts\changelog_compile.py" %PYEXE% "%PROJECT%\scripts\changelog_compile.py"
+:: -- same discipline for STATUS.md (STATUS-COLLISION-1, 5 Aug 2026): fold status.d/.
+if defined PYEXE if exist "%PROJECT%\scripts\status_compile.py" %PYEXE% "%PROJECT%\scripts\status_compile.py"
 
 :: -- [3/6] Gates: pre-deploy scan + deploy lock + CM/DB gate -----------------
 set "TSL_LOCK_HELD="

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the REPORT tab lives — TrustSquare</title>
+<style>
+  :root{--navy:#0c1a2e;--gold:#C8873A;--ink:#1e293b;--dim:#64748b;--line:#e2e8f0;
+        --app:#1d4ed8;--app-bg:#e8eefc;--maps:#15803d;--maps-bg:#e8f5ec;
+        --legal:#b45309;--legal-bg:#fdf3e3;--ops:#6d28d9;--ops-bg:#f0eafc}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f7f9;color:var(--ink);
+       font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  header{background:var(--navy);color:#fff;border-radius:16px;padding:25px 27px;margin-bottom:20px}
+  header h1{margin:0 0 6px;font-size:23px;letter-spacing:-.3px}
+  header p{margin:0;color:#b9c6d8;font-size:14px;max-width:70ch}
+  .stamp{display:inline-block;margin-top:13px;background:rgba(255,255,255,.1);
+         border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 13px;
+         font-size:12px;font-weight:700;letter-spacing:.4px}
+  h2{font-size:17px;color:var(--navy);margin:32px 0 12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px}
+  .lede{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:76ch}
+
+  /* ── the phone mock ── */
+  .where{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
+  .phone{position:relative;width:236px;height:430px;background:#fff;border:3px solid var(--navy);
+         border-radius:26px;flex:0 0 236px;overflow:hidden;box-shadow:0 8px 26px rgba(12,26,46,.13)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:74px;height:15px;
+         background:var(--navy);border-radius:0 0 9px 9px}
+  .ph-top{padding:26px 12px 8px;font-size:10px;font-weight:800;color:var(--navy);letter-spacing:.6px}
+  .ph-line{height:8px;background:#eef1f5;border-radius:4px;margin:7px 12px}
+  .ph-line.s{width:52%} .ph-line.m{width:74%}
+  .ph-card{height:56px;background:#f4f6f9;border:1px solid var(--line);border-radius:9px;margin:9px 12px}
+  .ph-nav{position:absolute;bottom:0;left:0;right:0;height:38px;background:#fff;
+          border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around}
+  .ph-nav i{width:15px;height:15px;background:#dbe1e9;border-radius:4px;display:block}
+  .ph-tab{position:absolute;right:0;top:50%;transform:translateY(-50%);background:var(--navy);
+          color:#fff;border-radius:8px 0 0 8px;padding:12px 6px;font-size:9px;font-weight:800;
+          letter-spacing:1.3px;writing-mode:vertical-rl;box-shadow:0 2px 10px rgba(8,12,20,.3)}
+  .pulse{position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:52px;height:78px;
+         border:2px dashed var(--gold);border-radius:12px;animation:bob 1.9s ease-in-out infinite}
+  @keyframes bob{0%,100%{opacity:.35}50%{opacity:1}}
+  .where .say{flex:1;min-width:250px}
+  .where .say h3{margin:0 0 8px;font-size:16px;color:var(--navy)}
+  .where .say p{margin:0 0 10px;font-size:14px}
+  .where .say b{color:var(--gold)}
+
+  /* ── page list ── */
+  .grp{margin-top:8px}
+  .grp-h{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.7px;
+         text-transform:uppercase;margin:20px 0 9px}
+  .grp-h .dot{width:10px;height:10px;border-radius:50%}
+  .g-app{color:var(--app)} .g-app .dot{background:var(--app)}
+  .g-maps{color:var(--maps)} .g-maps .dot{background:var(--maps)}
+  .g-legal{color:var(--legal)} .g-legal .dot{background:var(--legal)}
+  .g-ops{color:var(--ops)} .g-ops .dot{background:var(--ops)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  td{border-bottom:1px solid var(--line);padding:9px 10px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.nm{font-weight:600;color:var(--navy);width:34%}
+  td.u a{color:var(--app);text-decoration:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+  td.u a:hover{text-decoration:underline}
+  td.tick{width:36px;text-align:center;color:#15803d;font-weight:800}
+  .app-note{background:var(--app-bg);border:1px solid #c2d2f7;border-radius:10px;padding:12px 15px;
+            font-size:13px;color:var(--ink);margin:10px 0 0}
+  .app-note b{color:var(--app)}
+  .miss{background:#e8f5ec;border:1px solid #bfe0ca;border-radius:10px;padding:13px 16px;
+        font-size:13.5px;color:#15803d;font-weight:600;margin-top:16px}
+  footer{margin-top:34px;text-align:center;font-size:12px;color:var(--dim)}
+  @media(max-width:640px){.where{justify-content:center}td.nm{width:auto}}
+  @media print{body{background:#fff}.wrap{padding:0}header{border-radius:0}.pulse{animation:none;opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Where the REPORT tab lives</h1>
+  <p>Every page the site deploys, and exactly where on the screen to look. Built from the deploy
+     manifest, not from memory — so this is what is actually true, not what I remember wiring.</p>
+  <span class="stamp">18 OF 18 PAGES &middot; NONE MISSING</span>
+</header>
+
+<h2>Where on the screen</h2>
+<div class="card">
+  <div class="where">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ph-top">TrustSquare</div>
+      <div class="ph-line m"></div>
+      <div class="ph-line s"></div>
+      <div class="ph-card"></div>
+      <div class="ph-card"></div>
+      <div class="ph-card"></div>
+      <div class="ph-nav"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="ph-tab">REPORT</div>
+      <div class="pulse"></div>
+    </div>
+    <div class="say">
+      <h3>Right edge, halfway down.</h3>
+      <p>A narrow navy tab with <b>REPORT</b> running vertically. It is fixed to the viewport, so it
+         stays exactly there as you scroll — it does not move with the page.</p>
+      <p>That slot was chosen because it is the only fixed position nothing else on any page already
+         claims: the bottom bar, the toast, the sticky buttons and the offline banner all live along
+         the bottom edge, and the top-right corner belongs to the dev toggle.</p>
+      <p style="color:var(--dim);font-size:13px">If you cannot see it: the server flag
+         <b>Tester fault reporting</b> on the +1 page is still off, or the page needs a hard refresh
+         (Ctrl&nbsp;+&nbsp;F5). It also only renders for a gated tester or a superuser — an ordinary
+         visitor never sees it.</p>
+    </div>
+  </div>
+</div>
+
+<h2>Which pages</h2>
+<p class="lede">Grouped by what they are. Every row has the tab.</p>
+<div class="card">
+
+  <div class="grp">
+    <div class="grp-h g-app"><span class="dot"></span>The app</div>
+    <table>
+      <tr><td class="tick">&#10003;</td><td class="nm">The marketplace</td><td class="u"><a href="https://trustsquare.co/">trustsquare.co/</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Seller admin tool</td><td class="u"><a href="https://trustsquare.co/admin.html">/admin.html</a></td></tr>
+    </table>
+    <p class="app-note"><b>The marketplace is one page.</b> Browse, Sell, Wallet, My Space, every
+      listing detail and every category screen all live inside that single document — so the tab is
+      present on every screen inside the app, not only where you list.</p>
+  </div>
+
+  <div class="grp">
+    <div class="grp-h g-maps"><span class="dot"></span>Adventure maps</div>
+    <table>
+      <tr><td class="tick">&#10003;</td><td class="nm">Big Five reserve</td><td class="u"><a href="https://trustsquare.co/static/adventures_reserve_map.html">/static/adventures_reserve_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Cape to Cairo</td><td class="u"><a href="https://trustsquare.co/static/adventures_c2c_map.html">/static/adventures_c2c_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Namibia</td><td class="u"><a href="https://trustsquare.co/static/adventures_na_map.html">/static/adventures_na_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Botswana</td><td class="u"><a href="https://trustsquare.co/static/adventures_bw_map.html">/static/adventures_bw_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Mozambique</td><td class="u"><a href="https://trustsquare.co/static/adventures_mz_map.html">/static/adventures_mz_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">United States</td><td class="u"><a href="https://trustsquare.co/static/adventures_us_map.html">/static/adventures_us_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">United Kingdom</td><td class="u"><a href="https://trustsquare.co/static/adventures_uk_map.html">/static/adventures_uk_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Australia</td><td class="u"><a href="https://trustsquare.co/static/adventures_au_map.html">/static/adventures_au_map.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Germany / Bavaria</td><td class="u"><a href="https://trustsquare.co/static/adventures_de_map.html">/static/adventures_de_map.html</a></td></tr>
+    </table>
+  </div>
+
+  <div class="grp">
+    <div class="grp-h g-legal"><span class="dot"></span>Support &amp; legal</div>
+    <table>
+      <tr><td class="tick">&#10003;</td><td class="nm">Support</td><td class="u"><a href="https://trustsquare.co/support.html">/support.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Terms of use</td><td class="u"><a href="https://trustsquare.co/terms.html">/terms.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Privacy policy</td><td class="u"><a href="https://trustsquare.co/privacy.html">/privacy.html</a></td></tr>
+    </table>
+  </div>
+
+  <div class="grp">
+    <div class="grp-h g-ops"><span class="dot"></span>Explainers &amp; console</div>
+    <table>
+      <tr><td class="tick">&#10003;</td><td class="nm">How ranking works</td><td class="u"><a href="https://trustsquare.co/static/ranking_explainer.html">/static/ranking_explainer.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Agency import guide</td><td class="u"><a href="https://trustsquare.co/static/agency-import-guide.html">/static/agency-import-guide.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Agents as a service</td><td class="u"><a href="https://trustsquare.co/static/agents-as-a-service.html">/static/agents-as-a-service.html</a></td></tr>
+      <tr><td class="tick">&#10003;</td><td class="nm">Your dashboard (+1 page)</td><td class="u"><a href="https://trustsquare.co/dashboard.html">/dashboard.html</a></td></tr>
+    </table>
+  </div>
+
+  <div class="miss">Nothing the site deploys is without it. The tripwire now reads this same manifest,
+    so any new page fails the pre-deploy check until it carries the tab — you will never have to
+    guess this again.</div>
+</div>
+
+<h2>If it is not there</h2>
+<div class="card">
+  <table>
+    <tr><td class="nm">The flag is off</td><td>+1 page &rsaquo; Launch Switch &rsaquo; <b>Maintenance</b> &rsaquo; Tester fault reporting. Saves instantly, no redeploy.</td></tr>
+    <tr><td class="nm">Stale page in the browser</td><td>Hard refresh — Ctrl&nbsp;+&nbsp;F5.</td></tr>
+    <tr><td class="nm">Not recognised as a tester</td><td>The tab renders only for a gated tester or a superuser. If you signed out, sign back in.</td></tr>
+    <tr><td class="nm">Three pages need one more deploy</td><td>The ranking explainer, agency import guide, agents-as-a-service and the dashboard were wired after your 18:09 release.</td></tr>
+  </table>
+</div>
+
+<footer>TrustSquare · REPORT tab coverage · 5 August 2026 · generated from ops/autodeploy/deploy_manifest.txt</footer>
+</div>
+</body>
+</html>

@@ -7,11 +7,27 @@ import os, re, sys
 
 HERE = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
 
-PAGES = ["marketsquare.html", "marketsquare_admin.html", "support.html", "terms.html",
-         "privacy.html", "adventures_au_map.html", "adventures_bw_map.html",
-         "adventures_c2c_map.html", "adventures_de_map.html", "adventures_mz_map.html",
-         "adventures_na_map.html", "adventures_reserve_map.html", "adventures_uk_map.html",
-         "adventures_us_map.html"]
+# Pages the tab is deliberately NOT on. Everything else that SHIPS must carry it —
+# the list is derived from the deploy manifest, never hand-typed, because a hand-typed
+# list is exactly how three tester-reachable pages (ranking explainer, agency import
+# guide, agents-as-a-service) were missed on 5 Aug and the tripwire still read green.
+NOT_TESTER_FACING = set()   # 5 Aug: David ruled the tab belongs on EVERY page, his own
+                            # console included. Nothing is excluded. Keep it that way.
+
+
+def tester_pages(here):
+    """Every .html the site actually deploys, minus the operator console."""
+    out = []
+    mp = os.path.join(here, "ops", "autodeploy", "deploy_manifest.txt")
+    with open(mp, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.split("#")[0].strip()
+            if "|" not in line:
+                continue
+            src = line.split("|")[0].strip()
+            if src.endswith(".html") and src not in NOT_TESTER_FACING:
+                out.append(src)
+    return out
 
 def _read(name):
     with open(os.path.join(HERE, name), encoding="utf-8", errors="replace") as f:
@@ -69,11 +85,12 @@ def test_reporter_widget_is_first_party_and_flag_gated():
     assert "window.DEMO_MODE === true" in js, "demo-mode guard lost (CLAUDE.md demo-wiring rule)"
 
 def test_widget_is_wired_into_every_tester_page():
-    for name in PAGES:
-        p = os.path.join(HERE, name)
-        if not os.path.isfile(p):
-            continue
-        assert "ts_report.js" in _read(name), "report widget missing from " + name
+    pages = tester_pages(HERE)
+    assert len(pages) >= 14, "the manifest lists only %d tester pages - is it truncated?" % len(pages)
+    missing = [n for n in pages
+               if os.path.isfile(os.path.join(HERE, n)) and "ts_report.js" not in _read(n)]
+    assert not missing, ("a tester could land on these pages with no way to report a fault: "
+                         + ", ".join(missing))
 
 def test_dashboard_switch_is_usable_during_launch_mode():
     d = _read("dashboard.server.html")
