@@ -15,10 +15,25 @@
 | F-008 | 2026-07-23 | Maroushka Conradie | "There is no use for an investor yield calculator on a rental property, this will just clutter the listing and confuse people looking for rentals." | yield-on-rentals | fix-now | FIXED (built, awaiting /ship) | RENTAL-GUIDE-1 (frontend hide) |
 | F-009 | 2026-07-23 | David Jnr (super-advert screenshots, via David) | "the super advert example shows the older format… Claude can you please update the super advert of the better format?" | super-advert-old-format | fix-now | LIVE ✅ — server migration applied 24 Jul, verified on trustsquare.co (/listings/265) | SUPER-FORMAT-1 · CHANGELOG 23 Jul (late) |
 | F-010 | 2026-07-23 | David Jnr (super-advert screenshots, via David) | "There are repetition of information… inside the table blocks and his About This Listing… This way it looks unproffessional" | cars-about-repeats-specs | fix-now | Existing Figo LIVE ✅ (migration applied 24 Jul) · new-listing prevention (CARS-DESC-DEDUPE-1, ms.js) awaiting code deploy | CARS-DESC-DEDUPE-1 · CHANGELOG 23 Jul (late) |
+| F-011 | 2026-08-03 | Maroushka Conradie (email, 6 published property listings) | "It annoyed me that I couldn't go back and replace a photo once it was uploaded." | photo-replace | fix-now | FIXED (built, awaiting /ship) — two faults: wizard refused a filled slot; post-publish Replace silently wrote the old URL back | MAROUSHKA-PHOTO-1 · MAROUSHKA-PHOTO-2 |
+| F-012 | 2026-08-03 | Maroushka Conradie | "I want there to be a different option at the electricity and water cost options, we charge a flat fee for these utilities but there is no option for it given." | rental-utility-flatfee | fix-now | FIXED (built, awaiting /ship) — follow-up refinement of F-001 | MAROUSHKA-UTIL-1 |
+| F-013 | 2026-08-03 | Maroushka Conradie (via David) | wants a "Not Applicable or skip so that it doesn't show" — additional services read to buyers as additional costs | na-option-cost-fields | fix-now | FIXED (built, awaiting /ship) — blanks never reached buyers; the real driver was the score nag punishing an honest blank | MAROUSHKA-UTIL-2 |
+| F-014 | 2026-08-03 | Maroushka Conradie | "As soon as I tried to list a property using the AI listing option, after completing the listing steps, it refused to upload or publish the listing. I don't know why." | ai-listing-publish-silent-fail | fix-now | FIXED — every silent exit on the publish path now speaks; her specific root cause still UNPROVEN (server logs are Hetzner-only), retry will now report it | MAROUSHKA-PUB-1…6 |
+| F-015 | 2026-08-03 | Maroushka Conradie | "It doesn't give me an easy options for uploading my FFC and the mandate." + (via David) "she could not add her agency info like the FFC etc" | ffc-mandate-agency-no-fields | fix-now | FIXED (built, awaiting /ship) — the fields did not exist; the only reachable uploader never sent signal_id, so an FFC was filed as a Local-Market certificate | MAROUSHKA-CRED-1 · MAROUSHKA-CRED-2 |
+| F-016 | 2026-08-03 | Found reviewing F-015 (not reported by a user) | mandate is per-property but was stored per-profile — listings 2..n inherited +8 "mandate" with no document behind them | mandate-inherited | fix-now | FIXED (built) — per-listing, resolving through agency membership per SA practice | EVIDENCE-TRUE-1 |
+| F-017 | 2026-08-03 | Found reviewing F-015 (not reported by a user) | legal credentials (FFC/PPRA/mandate) auto-earned full points on upload with no human check, against §4a and the app's own "ops verifies before points" copy | legal-cred-autoearn | fix-now | FIXED (built) — land 'pending'; migration 006 re-queues existing, David's ruling 3 Aug | EVIDENCE-TRUE-2 |
 | P-001 | 2026-07-23 | Maroushka Conradie | "The listing process was easy and I loved seeing my quality score climb with the info I added." | praise-quality-score | — (praise) | noted | — |
 | P-002 | 2026-07-23 | Maroushka Conradie | "I love the 'Introduce me to an agent' function!!!" | praise-agent-intro | — (praise) | noted | AGENT-SVC-1 |
 
 ## Notes
+- 2026-08-03: F-011…F-015 from Maroushka after publishing 6 property listings (the sell flow worked;
+  the AI listing path did not). All four of her points confirmed against the code — two were worse
+  than she could describe, because the app gave her no way to see the rest. F-016/F-017 were found
+  while reviewing F-015 and were reported by nobody: both are evidence-true breaches on a platform
+  whose whole product is trust. David's rulings this session: apply the current rules; re-queue the
+  already-earned legal credentials rather than grandfather them.
+- Standing note for triage: her diagnosis was wrong on F-013 and the report was still valid. Testers
+  report symptoms; the mechanism is ours to find. Two of her four "small" items opened larger faults.
 - 2026-07-23: F-001…F-008 all from one voice (Maroushka, founding seller, rental vertical). fix-now
   classification: F-001/2/4/5/6/7/8 sit on the sell/browse core journeys and touch listing trust.
   All eight fixed in one pass same day (see CHANGELOG 23 Jul night). Related earlier round:

@@ -473,7 +473,33 @@ def get_agent_profile(email: str):
         badges = _badges(conn, email, _v)
         gate = _go_live_gaps(conn, dict(prof))
         trust = int(user["trust_score"] or 0) if user else 0
+        # MAROUSHKA-CRED-1 (3 Aug 2026, Maroushka feedback): "I could not add my
+        # agency info like the FFC etc." The profile form had no field for any of
+        # it. Return the vertical's credential slots WITH their live status so the
+        # form can render an upload row per slot, and resolve the agent's agency
+        # from membership so they can see which firm they sit under.
+        slots = []
+        for s in VERTICALS[_v]["slots"]:
+            sig = s.get("signal_id")
+            slots.append({
+                "slot": s["slot"], "label": s["label"], "signal_id": sig,
+                "points": s.get("points"), "legal": bool(s.get("legal")),
+                "verify": s.get("verify", ""),
+                "status": _credential_status(conn, email, sig) if sig else "n/a",
+            })
+        try:
+            ag = conn.execute(
+                "SELECT a.id, a.name, a.verified, m.listing_cap, m.status "
+                "FROM agency_members m JOIN agencies a ON a.id = m.agency_id "
+                "WHERE LOWER(m.agent_email)=? AND m.status != 'removed' LIMIT 1", (email,)).fetchone()
+        except Exception:
+            ag = None   # agency tables live in the main app migration; absent on a bare schema
+        agency = ({"id": ag["id"], "name": ag["name"], "verified": bool(ag["verified"]),
+                   "listing_cap": ag["listing_cap"], "member_status": ag["status"]}
+                  if ag else None)
         return {**{k: prof[k] for k in prof.keys()},
+                "credential_slots": slots,
+                "agency": agency,
                 "trust_score": trust,
                 "live_listings": n_live, "avg_listing_quality": avg_q,
                 "match_rank": round(0.5 * avg_q + 0.5 * trust, 1),

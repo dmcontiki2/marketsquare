@@ -37,7 +37,7 @@ def _require_admin_or_key(x_admin_token: str = Header(default=None),
                           x_admin_key: str = Header(default=None)):
     if x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY:
         return {"via": "admin-key"}
-    if x_admin_token:
+    if x_admin_token and _JWT_SECRET:
         try:  # _pyjwt/_JWT_SECRET defined later at module level — resolved at call time
             return _pyjwt.decode(x_admin_token, _JWT_SECRET, algorithms=[_JWT_ALGO])
         except Exception:
@@ -316,6 +316,16 @@ def run_migrations(conn):
             uploaded_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
         )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_seller_docs_email ON seller_documents(email)")
+    # EVIDENCE-TRUE-1 (David's ruling 3 Aug 2026, applying the 20 Jul evidence-true
+    # principle): a mandate authorises ONE property, but seller_documents was keyed
+    # on email alone, so listings 2..n inherited a +8 "mandate" credential with no
+    # document behind them — on the buyer-visible per-listing ledger
+    # (GET /sellers/credentials/{listing_id}). Additive nullable column; NULL keeps
+    # the per-profile meaning for FFC/PPRA, which genuinely are per-person.
+    _sd_cols = {r[1] for r in conn.execute("PRAGMA table_info(seller_documents)").fetchall()}
+    if "listing_id" not in _sd_cols:
+        conn.execute("ALTER TABLE seller_documents ADD COLUMN listing_id INTEGER")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_seller_docs_listing ON seller_documents(listing_id)")
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS user_declarations (
@@ -3895,10 +3905,38 @@ def seller_public_credentials(listing_id: int):
         cred_rows = conn.execute("SELECT signal_id FROM user_credentials WHERE LOWER(email)=? AND status='earned' AND signal_id LIKE ?", (email, _like)).fetchall()
         if not _is_lm:
             cred_rows = [r for r in cred_rows if not r["signal_id"].startswith("category.lm.")]
+        # EVIDENCE-TRUE-1 (David's ruling 3 Aug 2026): a per-listing credential —
+        # the signed mandate — counts ONLY on the listing whose document it covers.
+        # Before this, the first mandate an agent uploaded earned +8 on every
+        # listing they ever made, which is exactly the fraud the mandate signal
+        # exists to prevent. In SA the mandate is signed with the AGENCY, so any
+        # member of that agency satisfies it for the property.
+        _per_listing_ok = set()
+        try:
+            _peers = [email]
+            _ag = conn.execute(
+                "SELECT agency_id FROM agency_members WHERE LOWER(agent_email)=? "
+                "AND status!='removed' LIMIT 1", (email,)).fetchone()
+            if _ag:
+                _peers = [str(r["agent_email"]).lower() for r in conn.execute(
+                    "SELECT agent_email FROM agency_members WHERE agency_id=? AND status!='removed'",
+                    (_ag["agency_id"],)).fetchall()] or [email]
+            _ph = ",".join("?" * len(_peers))
+            for r in conn.execute(
+                    "SELECT DISTINCT signal_id FROM seller_documents "
+                    "WHERE listing_id=? AND LOWER(email) IN (" + _ph + ")",
+                    tuple([listing_id] + _peers)).fetchall():
+                if r["signal_id"]:
+                    _per_listing_ok.add(r["signal_id"])
+        except Exception:
+            pass
+
         cat = []
         seen = set()
         for r in cred_rows:
             sid = r["signal_id"]
+            if sid in _PER_LISTING_SIGNALS and sid not in _per_listing_ok:
+                continue   # no mandate document for THIS property — no points here
             if sid in flat and sid not in seen:
                 seen.add(sid)
                 cat.append({"name": flat[sid]["name"], "points": flat[sid]["points"]})
@@ -9120,6 +9158,25 @@ def _next_signal_for_doc(doc_type: str, conn, email: str) -> Optional[str]:
             return sig_id
     return chain[-1]  # all filled — map to last slot (no extra points)
 
+# EVIDENCE-TRUE-2 (David's ruling 3 Aug 2026): credentials that are a LEGAL
+# prerequisite to trade are never auto-earned on upload. §4a of
+# TRUST_SCORE_CRITERIA specifies "checked against the PPRA public register" /
+# "uploaded and reviewed", §7 defines a verification workflow, and the app's own
+# copy already promises the agent "ops verifies before points". The code awarded
+# them instantly for any file. These land 'pending' and go through the existing
+# ops queue (GET /trust-score/credentials/pending).
+_LEGAL_SIGNALS = {
+    "category.property.ppra",
+    "category.property.ffc",
+    "category.property.mandate",
+    "category.cars.dealer_reg",
+    "category.travel.asata",
+    "category.services.trade_licence",
+}
+# A mandate is granted per property, so it must arrive with the listing it covers.
+_PER_LISTING_SIGNALS = {"category.property.mandate"}
+
+
 @app.post("/users/{email}/documents")
 async def upload_seller_document(
     email: str,
@@ -9129,6 +9186,7 @@ async def upload_seller_document(
     label: str = Form(""),
     visibility: str = Form("private"),
     signal_id: str = Form(None),
+    listing_id: int = Form(None),
     _key: str = Depends(auth.require_api_key),
 ):
     """Upload a document for a seller. Stores to R2, records in seller_documents.
@@ -9179,9 +9237,9 @@ async def upload_seller_document(
     declaration_completed = False
     try:
         conn.execute(
-            """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (email, doc_type, label or orig_name, url, visibility, effective_signal)
+            """INSERT INTO seller_documents (email, doc_type, label, url, visibility, signal_id, listing_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (email, doc_type, label or orig_name, url, visibility, effective_signal, listing_id)
         )
         doc_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
@@ -9201,14 +9259,16 @@ async def upload_seller_document(
             ).fetchone()
             already_declared = existing_cred and existing_cred["status"] == "declared"
 
-            if is_id_doc:
+            # EVIDENCE-TRUE-2: legal credentials wait for a human.
+            is_legal = effective_signal in _LEGAL_SIGNALS
+            if is_id_doc or is_legal:
                 initial_status = "pending"
             else:
                 initial_status = "earned"
 
             _upsert_credential(conn, email, effective_signal, initial_status)
 
-            if not is_id_doc:
+            if not is_id_doc and not is_legal:
                 auto_earned = True
 
             # If upgrading from declared → earned, note it for the response
@@ -10649,7 +10709,7 @@ import jwt as _pyjwt
 from pydantic import BaseModel as _BaseModel
 
 _ADMIN_PASSWORD = os.environ.get("MS_ADMIN_PASSWORD", "")
-_JWT_SECRET     = os.environ.get("MS_JWT_SECRET", "ms_jwt_secret_change_me")
+_JWT_SECRET     = os.environ.get("MS_JWT_SECRET", "")  # JWT-HARDEN-1 (4 Aug 2026): no weak fallback. Empty => admin auth fails CLOSED, never signs with a known string.
 _JWT_ALGO       = "HS256"
 _TOKEN_HOURS    = 8
 
@@ -10676,6 +10736,8 @@ def _make_token(sub: str) -> str:
         "exp": datetime.now(timezone.utc) + timedelta(hours=_TOKEN_HOURS),
         "iat": datetime.now(timezone.utc),
     }
+    if not _JWT_SECRET:
+        raise HTTPException(status_code=503, detail="Server auth not configured (MS_JWT_SECRET unset).")
     return _pyjwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGO)
 
 # ── VIEW-ONLY REVIEWER ACCESS (Paystack compliance) ───────────────────────────
@@ -10859,6 +10921,17 @@ def auth_verify(req: _SignInVerify):
     conn = database.get_db()
     try:
         conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
+        # AGENCY-MEMBER-1 (3 Aug 2026, David): agency_members.status was written
+        # 'invited' at invite time and NEVER advanced — nothing anywhere set
+        # 'active' or joined_at, so any future logic keyed on active membership
+        # would have misfired. First successful sign-in IS the join.
+        try:
+            conn.execute(
+                "UPDATE agency_members SET status='active', joined_at=? "
+                "WHERE LOWER(agent_email)=? AND status='invited'",
+                (datetime.now(timezone.utc).isoformat(), email))
+        except Exception:
+            pass
         conn.commit()
         row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
         name = row["name"] if row and row["name"] else email.split("@")[0]
@@ -10956,7 +11029,15 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
         if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
             raise HTTPException(status_code=404, detail="Agency not found")
         conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
-        conn.execute("UPDATE users SET slot_limit=?, seller_tier='starter' WHERE LOWER(email)=?", (cap, email))
+        # AGENCY-TIER-1 (3 Aug 2026, David): _SELLER_SUB_TIERS carried an "agency"
+        # tier and _FADE_WINDOWS gave it 90 days, but nobody was ever assigned it —
+        # invite stamped 'starter', so agency agents silently got the 60-day window
+        # and the tier was a price card with no runtime identity. A member of a
+        # VERIFIED agency now carries it; unverified agencies stay on starter until
+        # the agency itself is verified.
+        _ag_verified = conn.execute("SELECT verified FROM agencies WHERE id=?", (agency_id,)).fetchone()
+        _tier = "agency" if (_ag_verified and _ag_verified["verified"]) else "starter"
+        conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, _tier, email))
         conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status, agent_name, city, country) VALUES (?,?,?, 'invited', ?,?,?) "
                      "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap, "
                      "agent_name=COALESCE(excluded.agent_name, agent_name), city=COALESCE(excluded.city, city), country=COALESCE(excluded.country, country)",

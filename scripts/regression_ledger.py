@@ -45,7 +45,7 @@ Stdlib only. Live checks need only network, so any session or machine can run it
 Repo checks run additionally when the script sits inside the repo; otherwise they
 report SKIPPED rather than failing.
 """
-import json, os, re, sys, time, datetime, urllib.request
+import json, os, re, sys, time, datetime, urllib.request, urllib.error
 
 BASE = os.environ.get("TS_BASE", "https://trustsquare.co").rstrip("/")
 UA = {"User-Agent": "TrustSquare-RegressionLedger/1.0 (dmcontiki2@gmail.com)"}
@@ -63,6 +63,16 @@ def _get(path):
         req = urllib.request.Request(BASE + path, headers=UA)
         _cache[path] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
     return _cache[path]
+
+
+def _status(path):
+    """HTTP status for an UNAUTHENTICATED request. Never cached, never raises on 4xx/5xx —
+    403/401 are legitimate answers here (RG-0027: the pre-launch gate must refuse anonymous GETs)."""
+    req = urllib.request.Request(BASE + path, headers=UA)
+    try:
+        return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+    except urllib.error.HTTPError as e:
+        return e.code
 
 
 def _json(path):
@@ -1021,6 +1031,98 @@ def main():
     else:
         print(f"RESULT: every locked fix is holding. {open_} known defect(s) still open.")
     return 1 if regressed else 0
+
+
+@entry("RG-0027", "The pre-launch gate is enforced by the EDGE, not by JavaScript",
+       LOCKED, scope="whole domain at Cloudflare: documents AND API. /health + /payment/webhook + /.well-known/ exempt",
+       fixed_on="2026-08-03",
+       ref="GATE-SERVERSIDE-1 (3 Aug 2026, David: \"close it immediately\"). The old gate was a "
+           "client-side overlay -- <div id=\"admin-gate\" style=\"display:none\"> inside "
+           "marketsquare.html revealed by JS -- while nginx served that file straight off disk, so "
+           "the COMPLETE page went to anyone who asked and JS painted a curtain over content that "
+           "had already arrived. Proven: a gated load with NO password returned 200 on /wonders, "
+           "/flags, /local-market/listings, /geo/cities and /tuppence/balance and ran every <head> "
+           "script -- which is also how the Travelpayouts loader reached every visitor (RG-0025). "
+           "CLOSED at the Cloudflare edge, not in nginx: custom rule 'PRELAUNCH GATE - block all "
+           "except allowlisted IPs', action Block, expression "
+           "(not ip.src in {...} and not http.request.uri.path in {\"/health\" \"/payment/webhook\"} "
+           "and not starts_with(http.request.uri.path, \"/.well-known/\")). Verified from an "
+           "off-allowlist host: / -> 403, /index.html -> 403, /?cb=rand -> 403, /wonders -> 403, "
+           "/health -> 200. Cloudflare Zero Trust Access was REJECTED deliberately: its free tier "
+           "still demands a standing 'charge this card for usage beyond free limits until "
+           "cancellation' authorisation, the same uncapped-billing shape as the silent ~$360 Google "
+           "burn. migrations/005_prelaunch_server_side_gate.py (nginx auth_basic) remains shipped "
+           "but UNARMED as defence-in-depth. NOTE ON SELF-VERIFICATION: this check cannot prove the "
+           "gate from an allowlisted network -- a 200 from David's own machine is EXPECTED, not a "
+           "regression. It fails only on the two things that are always wrong: a 200 from off-list, "
+           "or /health breaking (which would take server_deploy's auto-rollback down with it).")
+def rg_gate_is_edge_enforced():
+    out = []
+    try:
+        if _status("/health") != 200:
+            out.append((FAIL, "/health is no longer reachable -- the WAF exemption broke; "
+                              "server_deploy's health check and auto-rollback are blind. Fix the "
+                              "exemption before the next deploy"))
+    except Exception as ex:
+        out.append((FAIL, "/health unreachable while checking the gate exemption: " + repr(ex)))
+    try:
+        root = _status("/")
+    except Exception as ex:
+        return out + [(INFO, "could not probe / for the gate: " + repr(ex))]
+    if root == 403:
+        out.append((INFO, "gate proving itself: / returns 403 from this host (off-allowlist)"))
+    elif root == 200:
+        out.append((INFO, "/ returns 200 -- this host is on the Cloudflare allowlist, so the gate "
+                          "cannot be self-verified from here. Confirm from a phone on mobile data: "
+                          "https://trustsquare.co/ must show a Cloudflare block page"))
+    else:
+        out.append((FAIL, "/ returned %s -- neither 403 (gated) nor 200 (allowlisted). The edge "
+                          "rule or the origin is in an unexpected state" % root))
+    return out
+
+
+@entry("RG-0028", "The origin refuses direct connections -- Cloudflare is the ONLY way in",
+       LOCKED, scope="Hetzner CPX22 178.104.73.239, inbound 80/443", fixed_on="2026-08-04",
+       ref="ORIGIN-LOCKDOWN-1 (4 Aug 2026). Found by the GPT-5.6 Peer review "
+           "(Records/PEER_REVIEW_2026-08-04-0516_security.md) as its top BLOCKER, and MISSED by the "
+           "Author: the Cloudflare WAF rule of RG-0027 governed only traffic that chose to arrive via "
+           "Cloudflare. The nginx `server_name 178.104.73.239 { return 444; }` block catches requests "
+           "addressed to the raw IP, NOT requests carrying Host: trustsquare.co -- those selected the "
+           "real vhost and were served in full. Proven 4 Aug: "
+           "curl --resolve trustsquare.co:443:178.104.73.239 https://trustsquare.co/ returned 200 with "
+           "391 KB, the entire marketplace, bypassing the WAF completely. The origin IP is printed in "
+           "assets/nginx_marketsquare.conf, so this was discoverable, not theoretical. FIXED by a "
+           "Hetzner Cloud Firewall (deny-all inbound): TCP 22 from David's IP only; TCP 80 and 443 "
+           "from Cloudflare's 15 IPv4 + 7 IPv6 published ranges only; outbound untouched. Re-tested: "
+           "the same curl now fails to connect after 21s, while /health still returns 200 THROUGH "
+           "Cloudflare. THIS ENTRY IS THE LOAD-BEARING ONE: RG-0027's edge rule is only an access "
+           "boundary while this firewall stands. Remove or widen the firewall and the WAF becomes "
+           "decorative again. Cloudflare's ranges change occasionally -- if legitimate traffic starts "
+           "failing, re-pull https://www.cloudflare.com/ips-v4 and ips-v6 before suspecting anything "
+           "else. A GitHub webhook posting direct to the IP (rather than via the domain) would also "
+           "now be dropped.")
+def rg_origin_refuses_direct():
+    import socket
+    ORIGIN, out = "178.104.73.239", []
+    for port in (80, 443):
+        sk = socket.socket(); sk.settimeout(6)
+        try:
+            sk.connect((ORIGIN, port))
+            out.append((FAIL, "origin %s:%d ACCEPTED a direct connection -- the Cloudflare WAF "
+                              "(RG-0027) can be bypassed entirely. Check the Hetzner Cloud Firewall "
+                              "is still applied to the server" % (ORIGIN, port)))
+        except Exception:
+            pass                      # refused/timed out = correct
+        finally:
+            try: sk.close()
+            except Exception: pass
+    try:
+        if _status("/health") != 200:
+            out.append((FAIL, "/health does not answer through Cloudflare -- the firewall may have "
+                              "cut the legitimate path too; check the Cloudflare ranges are current"))
+    except Exception as ex:
+        out.append((FAIL, "/health unreachable through Cloudflare after origin lockdown: " + repr(ex)))
+    return out
 
 
 if __name__ == "__main__":

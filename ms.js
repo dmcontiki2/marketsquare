@@ -2127,15 +2127,15 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', US:'$', CA:'CA$
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
-  ZA: { file:'adventures_reserve_map.html?v=3', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
-  US: { file:'adventures_us_map.html?v=3',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_uk_map.html?v=3',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
-  AU: { file:'adventures_au_map.html?v=3',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  ZA: { file:'adventures_reserve_map.html?v=4', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
+  US: { file:'adventures_us_map.html?v=4',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_uk_map.html?v=4',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html?v=4',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html?v=4',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
-  BW: { file:'adventures_bw_map.html?v=3',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
-  MZ: { file:'adventures_mz_map.html?v=3',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
-  DE: { file:'adventures_de_map.html?v=3',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
+  NA: { file:'adventures_na_map.html?v=5',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  BW: { file:'adventures_bw_map.html?v=4',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
+  MZ: { file:'adventures_mz_map.html?v=4',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
+  DE: { file:'adventures_de_map.html?v=4',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 
 // Per-tour maps (26 Jul 2026, David): a tour's map follows the TOUR, not the country, so
@@ -2143,7 +2143,7 @@ const ADV_COUNTRY_MAP = {
 // the Cape-to-Cairo rail journey). Keyed by listing.tour (route code); when absent the map
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
-  c2c: { file:'adventures_c2c_map.html?v=8', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  c2c: { file:'adventures_c2c_map.html?v=9', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE
@@ -5921,9 +5921,20 @@ async function sobGoLive() {
       errEl.style.display = 'block';
       errEl.style.color = '#fca5a5';
       // Show actual state instead of generic message
-      const reason = (sobState.drafts||[]).length === 0
-        ? 'No draft found (drafts=0, email=' + (email||'none') + ')'
-        : 'Publish failed — see error above';
+      /* MAROUSHKA-PUB-6 (3 Aug 2026): "drafts=0, email=none" is a developer's
+         sentence, and it was the ONLY thing a seller saw. Report the real cause
+         captured upstream by goHandoff. */
+      let reason;
+      if ((sobState.drafts||[]).length === 0) {
+        if (typeof goPublishError !== 'undefined' && goPublishError === 'no-email')
+          reason = 'We could not save this listing because no email address was attached to it. Sign in (or open your invite link) and your listing will be here.';
+        else if (typeof goPublishError !== 'undefined' && goPublishError)
+          reason = 'Your listing could not be saved: ' + goPublishError + '. Nothing was lost — please try again, or reply to this email address and we will finish it for you.';
+        else
+          reason = 'We could not find a saved draft for ' + (email || 'this account') + '. Nothing was lost — please try again, or contact us and we will finish it for you.';
+      } else {
+        reason = 'Publish failed — see error above';
+      }
       errEl.textContent = reason;
     }
     if (btn) { btn.disabled = false; btn.textContent = 'Go live →'; }
@@ -7040,6 +7051,9 @@ function goAnonReplace() {
 }
 
 // ── Handoff to seller-onboard funnel ──────────────────────────────────────
+// MAROUSHKA-PUB-1..4: last publish failure, kept so the seller-onboard screen can
+// say what actually went wrong instead of "No draft found".
+var goPublishError = '';
 async function goHandoff() {
   // Disable the button immediately to prevent double-taps
   const btn = document.querySelector('#go-s3 .go-btn-next');
@@ -7057,6 +7071,15 @@ async function goHandoff() {
   // sobInit() fetches /listings/mine and needs at least one draft to publish.
   // If goState.listingId is null (new seller, no prior draft), create it now.
   // If it already exists (from goInit() fetch or earlier photo upload), reuse it.
+  /* MAROUSHKA-PUB-1 (3 Aug 2026, Maroushka feedback): "it refused to upload or
+     publish the listing. I don't know why." She could not know why — this whole
+     block was skipped in silence when goState.email was blank, and every failure
+     inside it went to console.warn on a phone. Every exit now speaks. */
+  if (BEA_ENABLED && !goState.email) {
+    if (typeof showToast === 'function')
+      showToast('We need your email address to save this listing — please sign in or register, then tap Continue again.');
+    goPublishError = 'no-email';
+  }
   if (BEA_ENABLED && goState.email) {
     try {
       if (!goState.listingId) {
@@ -7096,6 +7119,12 @@ async function goHandoff() {
         if (res.ok) {
           const data = await res.json();
           goState.listingId = data.id;
+        } else {
+          // MAROUSHKA-PUB-2: a 400/401/429 here used to be discarded entirely.
+          let _msg = 'HTTP ' + res.status;
+          try { const _e = await res.json(); if (_e && _e.detail) _msg = (typeof _e.detail === 'string' ? _e.detail : JSON.stringify(_e.detail)); } catch (e) {}
+          goPublishError = _msg;
+          throw new Error(_msg);
         }
       } else {
         // Draft already exists — patch with latest fields from vision/manual edit
@@ -7135,9 +7164,19 @@ async function goHandoff() {
             BEA_URL + '/listings/' + goState.listingId + '/photo/draft?email=' + encodeURIComponent(goState.email),
             { method: 'POST', body: fd }
           ).catch(() => null);
-          // WRONG-TYPE-1 / anon gate: a 422 means the photo was refused — tell the seller instead of swallowing it
-          if (_pr && _pr.status === 422) {
-            try { const _pj = await _pr.json(); if (typeof showToast === 'function') showToast('⚠ Photo ' + (pi + 1) + ' was not accepted: ' + (_pj.detail || 'not suitable for this advert')); } catch (e) {}
+          /* WRONG-TYPE-1 / anon gate: a 422 means the photo was refused.
+             MAROUSHKA-PUB-3 (3 Aug 2026): every OTHER failure was swallowed too —
+             including the 400 an iPhone HEIC file gets ("Only JPEG, PNG or WebP
+             photos accepted") and the 20MB cap. The listing then published with
+             no photos and the seller was told nothing. */
+          if (!_pr) {
+            if (typeof showToast === 'function') showToast('⚠ Photo ' + (pi + 1) + ' could not be uploaded — check your connection and add it again from Edit listing.');
+          } else if (!_pr.ok) {
+            let _pd = 'not accepted';
+            try { const _pj = await _pr.json(); if (_pj && _pj.detail) _pd = _pj.detail; } catch (e) {}
+            if (_pr.status === 400 && /JPEG|PNG|WebP/i.test(String(_pd)))
+              _pd = 'iPhone HEIC photos are not supported yet — set Camera → Formats to "Most Compatible", or re-save the photo as JPEG.';
+            if (typeof showToast === 'function') showToast('⚠ Photo ' + (pi + 1) + ' was not accepted: ' + _pd);
           }
         }
         if (filesToUpload.length) goState.photoUploaded = true;
@@ -7156,8 +7195,12 @@ async function goHandoff() {
         }];
       }
     } catch(e) {
-      // Non-fatal — sobInit() will attempt its own fetch as fallback
+      // MAROUSHKA-PUB-4: was console.warn only — invisible on a phone, which is
+      // exactly how a seller ends up saying "I don't know why".
       console.warn('goHandoff: draft creation failed', e);
+      goPublishError = goPublishError || (e && e.message) || 'unknown error';
+      if (typeof showToast === 'function')
+        showToast('⚠ Your listing could not be saved: ' + goPublishError + ' — nothing was lost, tap Continue to try again.');
     }
   }
 
@@ -8607,7 +8650,7 @@ function renderDashCard(dl){
       ${statusBadge}
       ${wonderBanners}
       ${introsHtml}
-      ${pendingIntros.length===0 && dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
+      ${dl.beaListingId?`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button><button class="mla-btn" onclick="showToast('Pause coming soon')">Pause</button></div>`:''}
     </div>
   </div>`;
 }
@@ -9170,10 +9213,20 @@ async function elReplacePhoto(event) {
       if (warn) warn.remove();
     }
 
+    /* MAROUSHKA-PHOTO-2 (3 Aug 2026): Replace used to patch only the <img> and
+       elCurrentRaw, never _elPhotoUrls — the array saveEditedListing() actually
+       serialises (payload.photo_urls = JSON.stringify(_elPhotoUrls)). Save then
+       wrote the OLD url back: index 0 silently reverted, index >0 never
+       persisted. Write the array first; it is the source of truth. */
+    const _newUrl = data.medium_url || data.thumb_url;
+    if (_newUrl && Array.isArray(_elPhotoUrls) && _elPhotoReplaceIdx > -1) {
+      _elPhotoUrls[_elPhotoReplaceIdx] = _newUrl;
+    }
+
     // Patch the raw object so Save picks up the new URLs
     if (elCurrentRaw) {
-      elCurrentRaw.thumb_url  = data.thumb_url  || elCurrentRaw.thumb_url;
-      elCurrentRaw.medium_url = data.medium_url || elCurrentRaw.medium_url;
+      elCurrentRaw.thumb_url  = _elPhotoUrls[0] || data.thumb_url  || elCurrentRaw.thumb_url;
+      elCurrentRaw.medium_url = _elPhotoUrls[0] || data.medium_url || elCurrentRaw.medium_url;
     }
 
     showToast('✓ Photo replaced — tap Save Changes to apply');
@@ -9203,6 +9256,34 @@ const EL_DOC_LABELS = {
   membership:'🏛 Association / Body Membership', professional_role:'⭐ Named Role in Association',
   guide:'📖 Product Guide', recipe:'🍯 Recipe / Care Instructions', presentation:'📊 Presentation', other:'📎 Other'
 };
+
+/* MAROUSHKA-CRED-2 (3 Aug 2026): the doc hub never sent signal_id, so an FFC
+   uploaded here was filed by _next_signal_for_doc() as a Local-Market
+   certificate and earned the wrong points entirely. It also sits inside Edit
+   Listing, which is the ONE place that knows a listing_id — the right home for
+   the mandate, which authorises one specific property (5b, evidence-true). */
+const EL_CRED_SIGNALS = {
+  Property: [
+    ['category.property.mandate', 'Signed mandate for THIS property (+8) — required per listing'],
+    ['category.property.ffc',     'Fidelity Fund Certificate (FFC) (+10) — yours, renewed annually'],
+    ['category.property.ppra',    'PPRA / EAAB registration (+15) — yours'],
+    ['category.property.body',    'Professional body membership (+5)'],
+  ],
+  Cars: [
+    ['category.cars.dealer_reg',  'MIRA dealer / trader registration (+8)'],
+  ],
+};
+function EL_SIGNAL_OPTS_HTML(){
+  const list = EL_CRED_SIGNALS[elCurrentCat] || [];
+  if (!list.length) return '';
+  return '<select id="el-dh-signal" style="background:var(--surface-2);border:1.5px solid var(--border);'+
+    'border-radius:8px;padding:8px 10px;font-size:13px;">'+
+    '<option value="">What is this document? (general — no credential)</option>'+
+    list.map(s => '<option value="'+s[0]+'">'+s[1]+'</option>').join('')+
+    '</select>'+
+    '<div style="font-size:11px;color:#6b7280;background:#f0f9ff;border-radius:6px;padding:5px 9px;">'+
+    'Legal credentials go to our team for verification before any points are added — a document earns nothing until a person has checked it.</div>';
+}
 
 // Points available per doc type and how many uploads count
 const EL_DOC_STACKING = {
@@ -9303,6 +9384,7 @@ function elRenderDocHub(docs, email, declarableItems) {
       <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:12px;">
         <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Upload new document</div>
         <div style="display:grid;gap:8px;">
+          ${EL_SIGNAL_OPTS_HTML()}
           <select id="el-dh-type" onchange="elUpdateDocHint(this.value)"
             style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;">${typeOpts}</select>
           <div id="el-dh-hint" style="font-size:11px;color:#6b7280;background:#f0f9ff;border-radius:6px;padding:5px 9px;display:none;"></div>
@@ -9385,6 +9467,10 @@ async function elDocHubUpload(email) {
   fd.append('doc_type', docType);
   fd.append('label', label || fileInput.files[0].name);
   fd.append('visibility', postIntro ? 'post_intro' : 'private');
+  // MAROUSHKA-CRED-2: name the credential, and tie a mandate to THIS listing.
+  const _sig = document.getElementById('el-dh-signal')?.value || '';
+  if (_sig) fd.append('signal_id', _sig);
+  if (_sig === 'category.property.mandate' && elCurrentId) fd.append('listing_id', String(elCurrentId));
   try {
     const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents', {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
@@ -14916,11 +15002,15 @@ function sfLoadSuburbs(){
    NEVER for the tenant's account — a To Rent listing swaps section C for the
    tenant-relevant cost questions: electricity, water, garden upkeep & maintenance,
    deposit, other tenant fees. Sale listings keep the original Costs & Connectivity rows. */
+/* MAROUSHKA-UTIL-1 (3 Aug 2026, Maroushka feedback): "we charge a flat fee for
+   these utilities but there is no option for it given" — electricity and water
+   now offer a flat monthly fee, and an explicit "Not applicable" that scores as
+   a real answer but never reaches the buyer (see MAROUSHKA-UTIL-2 below). */
 var SF_PROP_RENTAL_SEC_C = {key:'C',title:'Tenant Costs & Responsibilities',pts:10,
   coach:'<b>The questions every serious tenant asks anyway</b> — levies and rates stay with the owner; spell out exactly what the tenant pays.',rows:[
   ['deposit','Deposit (R)','number','e.g. 15 000'],
-  ['electricity','Electricity','select','Tenant pays — prepaid meter|Tenant pays — municipal account|Included in rent'],
-  ['water','Water','select','Tenant pays|Included in rent'],
+  ['electricity','Electricity','select','Tenant pays — prepaid meter|Tenant pays — municipal account|Flat monthly fee — see other tenant fees|Included in rent|Not applicable'],
+  ['water','Water','select','Tenant pays|Flat monthly fee — see other tenant fees|Included in rent|Not applicable'],
   ['garden','Garden upkeep & maintenance','select','Tenant|Landlord|Garden service included|No garden'],
   ['tenant_fees','Other tenant fees','text','e.g. R150/m prepaid meter admin — blank if none'],
   ['fibre','Fibre available','select','Yes|No'],
@@ -15101,8 +15191,12 @@ function sfSlotHtml(sl){
   else thumb = sl[3];
   var badge = st===2 ? '<span class="sf-st ok">✓ checked</span>' : (st===1 ? '<span class="sf-st chk"><span class="sf-spin"></span>AI check…</span>' :
     (key==='main' ? '<span class="sf-st req">required</span>' : '<span class="sf-st" style="opacity:.5;">tap to add</span>'));
+  // MAROUSHKA-PHOTO-1: a filled slot gets a ✕ so the seller can drop it.
+  var clr = st===2 ? '<span class="sf-clr" title="Remove this photo" onclick="event.stopPropagation();sfClearSlot(\''+key+'\')" '+
+    'style="margin-left:8px;flex-shrink:0;width:26px;height:26px;line-height:24px;text-align:center;border-radius:50%;'+
+    'border:1px solid var(--border,#c9d2df);color:#ef4444;font-weight:700;cursor:pointer;">✕</span>' : '';
   return '<div class="sf-slot'+(st===2?' sf-done':'')+'" onclick="sfPickFile(\''+key+'\')"><div class="sf-thumb">'+thumb+
-  '</div><div class="sf-info"><div class="sf-nm">'+sl[1]+'</div><div class="sf-hint">'+sl[2]+'</div></div>'+badge+'</div>';
+  '</div><div class="sf-info"><div class="sf-nm">'+sl[1]+'</div><div class="sf-hint">'+(st===2?'Tap to replace':sl[2])+'</div></div>'+badge+clr+'</div>';
 }
 function sfPhotosS(){
   var f=sfFlow();
@@ -15135,8 +15229,13 @@ function sfPhotosS(){
     if(_extras>0){
       h+='<div style="display:flex;gap:6px;overflow-x:auto;margin:0 18px 10px;">';
       Object.keys(sfState.files).forEach(function(k){
+        // MAROUSHKA-PHOTO-1: extras were a one-way door against the photo cap.
         if(k.indexOf('extra')===0 && sfState.previews[k])
-          h+='<img src="'+sfState.previews[k]+'" style="width:56px;height:42px;object-fit:cover;border-radius:8px;flex-shrink:0;">';
+          h+='<span style="position:relative;flex-shrink:0;display:inline-block;">'+
+             '<img src="'+sfState.previews[k]+'" style="width:56px;height:42px;object-fit:cover;border-radius:8px;display:block;">'+
+             '<span onclick="sfClearSlot(\''+k+'\')" title="Remove this photo" style="position:absolute;top:-5px;right:-5px;'+
+             'width:18px;height:18px;line-height:17px;text-align:center;border-radius:50%;background:#ef4444;color:#fff;'+
+             'font-size:11px;font-weight:700;cursor:pointer;">✕</span></span>';
       });
       h+='</div>';
     }
@@ -15150,10 +15249,25 @@ function sfPhotosS(){
   return h;
 }
 var _sfPickKey = null;
+/* MAROUSHKA-PHOTO-1 (3 Aug 2026, Maroushka feedback): "I couldn't go back and
+   replace a photo once it was uploaded." A filled slot used to hard-refuse. It
+   now re-opens the picker (sfFileChosen already overwrites files/previews/photos
+   cleanly and re-runs vision for main), and each filled slot carries a ✕. */
 function sfPickFile(key){
-  if(sfState.photos[key]===2){ sfToast('Photo already added — it uploads when you finish'); return; }
+  if(sfState.photos[key]===2) sfToast('Choose a replacement photo');
   _sfPickKey = key;
   var el=document.getElementById('sf-file'); if(el){ el.value=''; el.click(); }
+}
+/* MAROUSHKA-PHOTO-1: clear one slot. Mirrors the wrong-type rejection reset
+   (sfRunVision) but user-initiated, so mainPhase returns to 0, not 3. */
+function sfClearSlot(key){
+  delete sfState.files[key];
+  delete sfState.previews[key];
+  if(key.indexOf('extra')===0){ delete sfState.photos[key]; }
+  else { sfState.photos[key]=0; }
+  if(key==='main'){ sfState.mainPhase=0; sfState.mainMsg=''; sfState.visionDraft=null; }
+  sfRender();
+  sfToast('Photo removed — tap the slot to add another');
 }
 function sfFileChosen(input){
   var file = input.files && input.files[0];
@@ -15466,7 +15580,12 @@ function sfComposeDescription(){
     var idx=k==='B'?1:2, sec=f.sections[idx];
     sec.rows.forEach(function(r){
       var v=sfState[k][r[0]];
-      if(!String(v||'').trim()) return;
+      /* MAROUSHKA-UTIL-2 (3 Aug 2026, Maroushka feedback): "additional services
+         look to buyers like additional costs". Blank already never reached the
+         buyer — but blank also scored 0 and triggered the "Complete Tenant Costs
+         (n left)" nag, which pushes a seller to type something misleading.
+         "Not applicable" now scores as a real answer and is dropped here. */
+      if(!String(v||'').trim() || /^not applicable$/i.test(String(v).trim())) return;
       if(r[2]==='textarea') out.push(String(v).trim());
       else out.push(r[1]+': '+String(v).trim());
     });
@@ -15502,6 +15621,25 @@ async function sfFinish(draftOnly){
     var files=[]; var f=sfFlow();
     f.slots.forEach(function(sl){ if(sfState.files[sl[0]]) files.push(sfState.files[sl[0]]); });
     Object.keys(sfState.files).forEach(function(k){ if(k.indexOf('extra')===0) files.push(sfState.files[k]); });   // PHOTO-CAP-1
+    /* MAROUSHKA-PUB-5 (3 Aug 2026): the guided flow never asks for an email and
+       has no field for one. With none, goHandoff silently created nothing and the
+       seller reached "Go live" to find no draft. EMAIL-FALLBACK-1 (v299) covered
+       signed-in sellers; this covers everyone else — ask, once, at the last
+       moment it can still be fixed. */
+    if(!String(sfState.email||'').trim()){
+      var _em = '';
+      try { _em = window.prompt('One last thing — what email should this listing be saved under?\n\n(We use it to send your sign-in link and buyer introductions.)') || ''; } catch(e) { _em = ''; }
+      _em = String(_em).trim();
+      if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(_em)){
+        sfState.email = _em;
+        try { localStorage.setItem('ms_aa_email', _em); } catch(e) {}
+      } else {
+        sfToast('We need a valid email address to save your listing — nothing has been lost, tap List it again.');
+        if(btn){btn.disabled=false;btn.textContent='List it';}
+        sfState._busy=false;
+        return;
+      }
+    }
     // populate goState — goHandoff reads exactly these
     goState.email=sfState.email; goState.name=sfState.name;
     goState.cat = sfState.cat;
@@ -15726,9 +15864,45 @@ function _asProfileHtml(p,tpl){
       '<input type="file" accept="image/*" onchange="asPhotoUpload(event)" style="font-size:12px;">'+
       '<span id="as-photo-status" style="font-size:11.5px;color:var(--text-3);margin-left:8px;"></span></div>'+
     '<button onclick="asProfileSave()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Save profile</button></div>';
+  /* MAROUSHKA-CRED-1 (3 Aug 2026, Maroushka feedback): "It doesn't give me an
+     easy option for uploading my FFC and the mandate" / "I could not add my
+     agency info like the FFC etc." — correct: there was no field for any of it,
+     only a paragraph pointing at My Space → Trust Score, which cannot accept an
+     FFC. The profile now carries one upload row per credential slot the vertical
+     defines (server-supplied, so the two never drift), posting to
+     /users/{email}/documents WITH the right signal_id. Per David's ruling of
+     3 Aug, legal credentials land 'pending' for ops verification — never
+     auto-earned — so the app's own promise ("ops verifies before points")
+     becomes true. */
+  var _agency = p.agency;
   h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
-    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Certificates — upload under Trust Score</div>'+
-    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">'+AS_VERT[_asState.vertical].certs+' Upload in <a href="#" onclick="goTo(\'myspace\');return false;" style="font-weight:700;">My Space → Trust Score</a>; ops verifies before points count.</div>'+
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Your agency</div>'+
+    (_agency
+      ? '<div style="font-size:12.5px;line-height:1.5;">'+_agency.name+
+        (_agency.verified?' <span style="font-size:10px;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:2px 7px;font-weight:700;">✓ verified agency</span>':'')+
+        '<div style="color:var(--text-3);margin-top:3px;">'+(_agency.listing_cap||10)+' listing slots on your seat. Your FFC and PPRA stay personal to you — every practising agent holds their own.</div></div>'
+      : '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">Not linked to an agency yet. Agencies are set up by us after verification — ask your principal to email <b>hello@trustsquare.co</b> and we will add the firm and invite each agent. Until then you are listed as an independent agent.</div>')+
+    '</div>';
+  h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Your certificates</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">'+AS_VERT[_asState.vertical].certs+' Upload each one here — we verify before the points count, so a document earns nothing until a person has checked it.</div>'+
+    (p.credential_slots||[]).map(function(s){
+      var st = s.status||'missing';
+      var pill = st==='earned' ? '<span style="font-size:10px;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:2px 7px;font-weight:700;">✓ verified</span>'
+               : st==='pending' ? '<span style="font-size:10px;background:#fff4e5;border:1px solid #c55a11;color:#8a4a10;border-radius:8px;padding:2px 7px;font-weight:700;">⏳ with ops</span>'
+               : '<span style="font-size:10px;background:#f6f8fb;border:1px solid var(--border,#c9d2df);color:var(--text-3);border-radius:8px;padding:2px 7px;font-weight:700;">not yet uploaded</span>';
+      return '<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">'+
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:12.5px;">'+s.label+'</b>'+
+        (s.points?'<span style="font-size:11px;color:var(--text-3);">+'+s.points+' pts</span>':'')+
+        (s.legal?'<span style="font-size:10px;background:#fde8e8;border:1px solid #e02424;color:#9b1c1c;border-radius:8px;padding:2px 7px;font-weight:700;">legally required</span>':'')+
+        pill+'</div>'+
+        '<div style="font-size:11.5px;color:var(--text-3);line-height:1.4;margin:5px 0 7px;">'+(s.verify||'')+'</div>'+
+        '<input id="as-cred-ref-'+s.slot+'" placeholder="Registration / certificate number or year" '+
+          'style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:12.5px;margin-bottom:6px;">'+
+        '<input type="file" accept="image/*,application/pdf" onchange="asCredUpload(event,\''+s.slot+'\',\''+(s.signal_id||'')+'\',\''+String(s.label).replace(/'/g,"\\'")+'\')" style="font-size:12px;">'+
+        '<span id="as-cred-st-'+s.slot+'" style="font-size:11.5px;color:var(--text-3);margin-left:8px;"></span>'+
+      '</div>';
+    }).join('')+
     (gaps.length?'<div style="background:#fff4e5;border-left:3px solid #c55a11;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12px;"><b>Before you can go live:</b><br>'+gaps.map(function(g){return '· '+g;}).join('<br>')+'</div>':'')+
     (!live?'<button onclick="asProfilePublish()" style="width:100%;margin-top:10px;background:'+(gaps.length?'#9aa3b5':'#166534')+';color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Go live as a listed agent</button>':'')+'</div>';
   return h;
@@ -15750,6 +15924,41 @@ async function asPhotoUpload(e){
     if(up.ok){ if(st) st.textContent='\u2713 Saved'; showToast('Profile photo saved \u2014 shown after an accepted introduction'); }
     else { if(st) st.textContent=''; showToast('Upload failed \u2014 try again'); }
   }catch(err){ if(st) st.textContent=''; showToast('Upload failed \u2014 try again'); }
+}
+/* MAROUSHKA-CRED-1: upload one credential document against its real signal_id.
+   The endpoint has accepted signal_id all along (bea_main.py POST
+   /users/{email}/documents); nothing in the live UI ever sent it, so an FFC was
+   filed as a Local-Market certificate and earned the wrong points. The
+   registration number / year travels in the label, which is what ops reads when
+   they verify. */
+async function asCredUpload(e, slot, signalId, label){
+  var file = e.target.files && e.target.files[0]; if(!file) return;
+  var st = document.getElementById('as-cred-st-'+slot);
+  var refEl = document.getElementById('as-cred-ref-'+slot);
+  var ref = refEl ? refEl.value.trim() : '';
+  var email = (_asState && _asState.email) || localStorage.getItem('ms_aa_email') || '';
+  if(!email){ showToast('Sign in first'); e.target.value=''; return; }
+  if(!ref){
+    if(st) st.textContent='';
+    showToast('Add the registration or certificate number first — ops needs it to verify against the register.');
+    e.target.value=''; return;
+  }
+  if(st) st.textContent='Uploading…';
+  try{
+    var fd=new FormData();
+    fd.append('file', file, file.name||'credential');
+    fd.append('doc_type','certificate');
+    fd.append('label', label+' — '+ref);
+    fd.append('visibility','ops');
+    if(signalId) fd.append('signal_id', signalId);
+    var r=await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/documents',{method:'POST',body:fd});
+    var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ if(st) st.textContent=''; showToast('Upload failed: '+((d&&d.detail)||('HTTP '+r.status))); e.target.value=''; return; }
+    if(st) st.textContent='✓ sent for verification';
+    showToast('✓ '+label+' received — with our team for verification. Points are added once a person has checked it.');
+    _asProfileLoad();
+  }catch(err){ if(st) st.textContent=''; showToast('Upload failed — try again'); }
+  e.target.value='';
 }
 async function asProfileSave(){
   var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
