@@ -46,6 +46,22 @@ def main():
     children = sorted(glob.glob(os.path.join(ROOT, "adventures_*_map.html"))) + \
                [os.path.join(ROOT, "ranking_explainer.html")]
     bumped = 0
+    # MAINT-B1b: ts_report.js is referenced by EVERY tester-facing page, so its bump
+    # fans out. Runs FIRST so the map edits it causes are picked up by the loop below
+    # (which re-hashes the maps post-edit and cascades into ms.js).
+    _tsr = os.path.join(ROOT, "ts_report.js")
+    if os.path.isfile(_tsr):
+        h = sha(_tsr)
+        if manifest.get("ts_report.js") != h:
+            if not first_run:
+                for _host in sorted(glob.glob(os.path.join(ROOT, "*.html"))):
+                    if "ts_report.js" not in open(_host, encoding="utf-8").read():
+                        continue
+                    v = bump_ref(_host, "ts_report.js")
+                    if v:
+                        print(f"  [autobump] ts_report.js changed -> {os.path.basename(_host)} ref ?v={v}")
+                        bumped += 1
+            manifest["ts_report.js"] = h
     for p in children:
         if not os.path.isfile(p): continue
         name = os.path.basename(p); h = sha(p)

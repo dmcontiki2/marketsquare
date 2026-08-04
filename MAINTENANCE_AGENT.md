@@ -33,13 +33,13 @@ list with tick actions.
 
 | # | Stage (David's spec) | Status | What exists / what's missing |
 |---|---------------------|--------|------------------------------|
-| 1 | Log every complaint | **BUILT** | Cloudflare Email Worker → POST /email/inbound (secret-authed) → email_triage table; in-app: seller_complaints, lm_complaints, demand_tickets |
+| 1 | Log every complaint | **BUILT** | Email: CF Worker → POST /email/inbound → email_triage. **In-app APP FAULTS: the REPORT tab → POST /app/fault → app_faults (MAINT-B1b, 5 Aug).** NB seller_complaints / lm_complaints are marketplace CONDUCT, not app faults — different lane. Still missing: the app's own error log as a third channel |
 | 2 | Respond to the logger | **80% — gated off** | Haiku classifies (support/billing/legal/compliance/spam/other + urgency) and DRAFTS a reply; EMAIL_AUTO_SEND=0 today; needs GMAIL_APP_PASSWORD on server. Launch mode: auto-ACK every non-spam complaint in seconds (ref number, "logged, being handled"), full answers auto-send for support/billing only |
-| 3 | Sort / analyze to bins | **40%** | Email-level categories exist. MISSING: failure-code binning (which part of the app) + FAULT_REGISTER.md with dedupe + votes (the /feedback pattern, made automatic) |
+| 3 | Sort / analyze to bins | **70%** | Both lanes now carry a bin. app_faults has the dedupe boundary in the schema: `dup_of` on a child increments the parent's `recurrence` (register rule 3). MISSING: the SEMANTIC dedupe that decides two differently-worded reports are one fault — done by hand this month, which is exactly how we learn what the rule should be |
 | 4 | Manage fixes, majors first | **skills exist, not scheduled** | /feedback → /fix → /fixback do exactly this when invoked. MISSING: the scheduled Maintenance session that runs them unattended |
 | 5 | Update live app, invisible to users | **BUILT this week** | Guarded deploy + tripwire gates + autobump + working CF purge; users get every fix on next load, no action, no visible process |
 | 6 | Parallel recurrence watch → design changes | **30%** | Deploy-gate tripwires catch CODE regression. MISSING: failure-code recurrence counting in the register; threshold → "design change" item |
-| 7 | David sees only safety/legal/cost, with solutions + tick | **concept wired** | legal/compliance already excluded from auto-send. MISSING: the escalation brief format (issue → solution options → one-tick choice) |
+| 7 | David sees only safety/legal/cost, with solutions + tick | **concept wired** | legal/compliance excluded from auto-send. The retest letter's draft/send split is the first working instance of the shape (read, then one action). MISSING: the escalation brief format (issue → solution options → one-tick choice) |
 
 ## The honest design decision (revised 29 Jul evening)
 The control system that stopped our recurring bugs was never a human — it was the
@@ -89,7 +89,41 @@ DEDICATED server-resident worker (Agent SDK / any vendor / self-hosted) on
 Hetzner, API-billed, provider-swappable by key. A planned config-grade move,
 not a redesign — the spine never changes.
 
+## THE PRE-LAUNCH MONTH — Claude runs the loop by hand (5 Aug → 1 Sep)
+**David's ruling, 4 Aug 2026.** Testers report through the app's own complaint channel;
+Claude fixes what comes in and writes back to the tester with what changed so they can
+retest and confirm. This is not a stopgap while the agent is built — **it is how the agent
+gets specified.** A month of real faults, filed by real testers on real screens, answers
+the questions no design session can answer honestly from an armchair.
+
+**The daily rhythm (one session, unattended-capable):**
+1. Read `GET /admin/faults?status=new` — blockers first, the endpoint already sorts.
+2. Bin and code each one against FAULT_REGISTER.md; mark duplicates with `dup_of` so
+   recurrence counts itself.
+3. Decide Path A (mechanical → fix now) or Path B (design change → dossier, batched).
+4. Fix, add the tripwire, ship through the normal gates.
+5. `GET /admin/faults/{id}/retest-draft`, read it, then `POST .../retest-send` once David
+   approves. Fault moves to `awaiting-retest`.
+6. The tester's confirmation — and only that — moves it to `verified`.
+
+**What the month must produce (the agent's real requirements, measured not guessed):**
+| Evidence | The design question it settles |
+|---|---|
+| Time from filing to shipped fix, per bin | Where autonomy pays and where it is theatre |
+| Path A : Path B ratio | How big the design-backlog lane really has to be |
+| How often two reports were the same fault | Whether semantic dedupe needs a model at all |
+| How often the tester's retest said "still broken" | Whether "fixed" can ever be self-declared |
+| Which faults Claude got WRONG on first attempt | The escalation threshold — when to stop and ask |
+| Which faults were safety / legal / cost | Whether stage 7's filter fires often enough to matter |
+
+**The one thing this month must not do:** let a fault close without an outside confirmation.
+`awaiting-retest` exists precisely so a fix we have only verified ourselves cannot be
+recorded as verified. That distinction is the honest core of the whole agent.
+
 ## Build batches (each rides a normal deploy; each leaves tripwires)
+- **B1b — In-app tester intake (DONE, 5 Aug 2026):** app_faults + POST /app/fault + auto-ACK
+  with reference TS-nnnn + admin triage queue + the draft/send retest letter + ts_report.js on
+  all 14 tester-facing pages. Fail-closed behind `launch_switches.fault_report`. RG-0030.
 - **B1 — Register + codes:** FAULT_REGISTER.md; every triaged complaint gets a
   failure code + bin; recurrence counter; auto-ACK reply switched on after test.
   PLUS (adopted from N×N review, 29 Jul): the SERVER ERROR LOG becomes a complaint

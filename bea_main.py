@@ -737,6 +737,8 @@ def run_migrations(conn):
         -- auto selection while unexpired; expiry returns control to the standing lane.
         ai_active_override  TEXT,
         ai_override_expires TEXT,
+        -- MAINT-B1b: in-app tester fault intake. OFF by default (fail-closed).
+        fault_report  INTEGER NOT NULL DEFAULT 0,
         updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
@@ -748,6 +750,7 @@ def run_migrations(conn):
         "ALTER TABLE launch_switches ADD COLUMN ai_active TEXT NOT NULL DEFAULT 'anthropic'",
         "ALTER TABLE launch_switches ADD COLUMN ai_active_override TEXT",
         "ALTER TABLE launch_switches ADD COLUMN ai_override_expires TEXT",
+        "ALTER TABLE launch_switches ADD COLUMN fault_report INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -785,6 +788,43 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE email_triage ADD COLUMN fault_code TEXT")
     except Exception:
         pass
+
+    # ── MAINT-B1b (5 Aug 2026): in-app FAULT intake (the app's own NCR channel) ──
+    # Testers file APP FAULTS here. This is NOT marketplace conduct — that stays in
+    # seller_complaints / lm_complaints. Same failure-code taxonomy as the email lane
+    # (FAULT_REGISTER.md): the reporter gets ref TS-nnnn immediately; the BIN-nnn
+    # fault_code is assigned at triage, which is also the dedupe boundary (dup_of).
+    conn.execute("""CREATE TABLE IF NOT EXISTS app_faults (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        ref             TEXT    NOT NULL DEFAULT '',
+        fault_code      TEXT,
+        bin             TEXT    NOT NULL DEFAULT 'MISC',
+        reporter_email  TEXT    NOT NULL DEFAULT '',
+        reporter_name   TEXT    NOT NULL DEFAULT '',
+        source          TEXT    NOT NULL DEFAULT 'in-app',
+        severity        TEXT    NOT NULL DEFAULT 'minor',
+        title           TEXT    NOT NULL DEFAULT '',
+        detail          TEXT    NOT NULL DEFAULT '',
+        page_url        TEXT    NOT NULL DEFAULT '',
+        app_version     TEXT    NOT NULL DEFAULT '',
+        user_agent      TEXT    NOT NULL DEFAULT '',
+        viewport        TEXT    NOT NULL DEFAULT '',
+        console_tail    TEXT    NOT NULL DEFAULT '',
+        screenshot_url  TEXT,
+        status          TEXT    NOT NULL DEFAULT 'new',
+        dup_of          INTEGER,
+        recurrence      INTEGER NOT NULL DEFAULT 1,
+        fix_note        TEXT    NOT NULL DEFAULT '',
+        deploy_ref      TEXT    NOT NULL DEFAULT '',
+        ack_sent        INTEGER NOT NULL DEFAULT 0,
+        retest_sent_at  TEXT,
+        verified_at     TEXT,
+        filed_at        TEXT    NOT NULL,
+        updated_at      TEXT    NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_af_status   ON app_faults(status, filed_at DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_af_reporter ON app_faults(reporter_email, filed_at DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_af_bin      ON app_faults(bin, filed_at DESC)")
 
     conn.commit()
 
@@ -10753,7 +10793,7 @@ def _make_token(sub: str) -> str:
 #   * Brute-force resistant: high-entropy code + bcrypt cost + per-IP rate limit.
 _REVIEW_SECRET     = os.environ.get("MS_REVIEW_SECRET") or hashlib.sha256(
                         ("trustsquare-review-scope|" + _JWT_SECRET).encode()).hexdigest()
-_REVIEW_TOKEN_DAYS = 14
+_REVIEW_TOKEN_DAYS = 365   # was 14 — extended so pre-launch testers enter the code ONCE (5 Aug 2026, David)
 _REVIEW_HASH_FILE  = "/var/www/marketsquare/review_code.hash"
 _review_attempts   = {}   # ip -> [count, window_start_epoch]
 
@@ -12491,6 +12531,7 @@ class _FlagsUpdate(BaseModel):
     tuppence_burn_enabled: Optional[bool] = None
     ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' | 'scaleway' (Page-4 switch)
     ai_active_override:    Optional[str]  = None  # MANUAL PIN: provider = pin (TTL decay) | '' = unpin (1 Aug 2026)
+    fault_report:          Optional[bool] = None  # MAINT-B1b: in-app tester fault intake visible
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -12498,6 +12539,7 @@ def _flags_payload(d):
     return {
         "mode": d.get("mode", "launch"),
         "verified_tier": b("verified_tier"), "videos": b("videos"),
+        "fault_report": b("fault_report"),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
                  "flights": b("data_flights"), "mapbox": b("data_mapbox")},
         "planners": {"heritage": b("p_heritage"), "expedition": b("p_expedition"),
@@ -15286,6 +15328,350 @@ async def email_inbound(req: InboundEmail, background_tasks: BackgroundTasks,
         "auto_send_enabled": EMAIL_AUTO_SEND,
         "reply_drafted": bool(draft_reply),
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# MAINT-B1b — IN-APP FAULT INTAKE (the tester complaint channel)
+# 5 Aug 2026. David's ruling: testers report app faults IN THE APP, not by email,
+# so the Maintenance agent's NCR intake is exercised every day of the pre-launch
+# month. The reporter gets ref TS-nnnn instantly; triage assigns the BIN-nnn
+# fault_code from FAULT_REGISTER.md and is where dedupe/recurrence happens.
+# Fail-closed: the whole lane 503s unless launch_switches.fault_report = 1.
+# ══════════════════════════════════════════════════════════════════════════
+
+def _fault_now() -> str:
+    """Portable UTC stamp — deliberately NOT the SQLite-only now-function, so the
+    whole fault lane survives the Postgres move as a connection-string swap."""
+    return datetime.now(timezone.utc).isoformat(sep=" ", timespec="seconds")[:19]
+
+
+FAULT_BINS = ("AUTH", "LIST", "TRUST", "INTRO", "BROWSE", "ADV", "MAIL", "PERF", "COPY", "MISC")
+FAULT_SEVERITIES = ("blocker", "major", "minor")
+FAULT_STATUSES = ("new", "triaged", "fixing", "fixed", "awaiting-retest",
+                  "verified", "closed", "rejected", "duplicate")
+_FAULT_IP_HITS = {}          # ip -> [count, window_start_epoch]   (in-process, per worker)
+_FAULT_MAX_PER_IP = 20       # per 10 minutes
+_FAULT_MAX_PER_EMAIL = 12    # per rolling hour (durable, DB-counted)
+
+
+def _fault_report_enabled() -> bool:
+    """Read the launch switch. Fail-closed on any error."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT fault_report FROM launch_switches WHERE id = 1").fetchone()
+        finally:
+            conn.close()
+        return bool(row and row["fault_report"])
+    except Exception as exc:
+        _log.error("fault_report flag read failed: %s", exc)
+        return False
+
+
+def _fault_caller_ok(x_review_token, ts_review, x_api_key) -> bool:
+    """A fault may be filed by a gated pre-launch tester (review token, header or
+    cookie) or by the app itself (shared API key). No new secret is introduced."""
+    if x_api_key and auth.API_KEY and x_api_key == auth.API_KEY:
+        return True
+    tok = x_review_token or ts_review
+    if tok:
+        try:
+            _pyjwt.decode(tok, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+            return True
+        except Exception:
+            return False
+    return False
+
+
+def _fault_ip_ok(ip: str) -> bool:
+    import time as _t
+    now = _t.time()
+    rec = _FAULT_IP_HITS.get(ip)
+    if not rec or now - rec[1] > 600:
+        _FAULT_IP_HITS[ip] = [1, now]
+        return True
+    rec[0] += 1
+    return rec[0] <= _FAULT_MAX_PER_IP
+
+
+def _fault_row_public(r) -> dict:
+    d = dict(r)
+    d.pop("user_agent", None)
+    d.pop("console_tail", None)
+    return d
+
+
+@app.post("/app/fault")
+async def app_fault_file(
+    request: Request,
+    title: str = Form(...),
+    detail: str = Form(""),
+    reporter_email: str = Form(""),
+    reporter_name: str = Form(""),
+    bin: str = Form("MISC"),
+    severity: str = Form("minor"),
+    page_url: str = Form(""),
+    app_version: str = Form(""),
+    viewport: str = Form(""),
+    console_tail: str = Form(""),
+    file: UploadFile = File(None),
+    x_review_token: str = Header(default=None),
+    ts_review: str = Cookie(default=None),
+    x_api_key: str = Header(default=None),
+):
+    """A tester files an app fault from inside the app. Returns the reference the
+    ACK email quotes. Screenshot is optional (multipart 'file')."""
+    if not _fault_report_enabled():
+        raise HTTPException(status_code=503, detail="Fault reporting is not open.")
+    if not _fault_caller_ok(x_review_token, ts_review, x_api_key):
+        raise HTTPException(status_code=401, detail="Tester access required.")
+
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _fault_ip_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many reports. Please wait a few minutes.")
+
+    title = (title or "").strip()[:200]
+    if not title:
+        raise HTTPException(status_code=400, detail="Tell us in one line what went wrong.")
+    detail = (detail or "").strip()[:4000]
+    reporter_email = (reporter_email or "").strip().lower()[:200]
+    reporter_name = (reporter_name or "").strip()[:120]
+    bin = (bin or "MISC").strip().upper()
+    if bin not in FAULT_BINS:
+        bin = "MISC"
+    severity = (severity or "minor").strip().lower()
+    if severity not in FAULT_SEVERITIES:
+        severity = "minor"
+
+    conn = database.get_db()
+    try:
+        if reporter_email:
+            _since = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(sep=" ", timespec="seconds")[:19]
+            n = conn.execute(
+                "SELECT COUNT(*) AS n FROM app_faults WHERE reporter_email = ? "
+                "AND filed_at >= ?", (reporter_email, _since)).fetchone()
+            if (n["n"] or 0) >= _FAULT_MAX_PER_EMAIL:
+                raise HTTPException(status_code=429,
+                                    detail="That is a lot of reports in one hour — take a breath, "
+                                           "then carry on. Nothing is lost.")
+
+        screenshot_url = None
+        if file is not None and getattr(file, "filename", ""):
+            ct = file.content_type or "application/octet-stream"
+            if ct not in {"image/jpeg", "image/png", "image/webp"}:
+                raise HTTPException(status_code=400, detail="Screenshot must be JPEG, PNG or WebP.")
+            raw = await file.read()
+            if len(raw) > 10 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Screenshot too large — max 10MB.")
+            key = "faults/" + uuid.uuid4().hex + "_shot." + ("png" if ct == "image/png" else
+                                                             "webp" if ct == "image/webp" else "jpg")
+            if _S3_CONFIGURED:
+                screenshot_url = _s3_upload(raw, key, ct)
+            else:
+                safe = key.replace("/", "_")
+                try:
+                    with open(os.path.join(_LOCAL_MEDIA_DIR, safe), "wb") as fh:
+                        fh.write(raw)
+                    screenshot_url = "/media/" + safe
+                except Exception as exc:
+                    _log.error("fault screenshot save failed: %s", exc)
+
+        cur = conn.execute(
+            "INSERT INTO app_faults (ref, bin, reporter_email, reporter_name, source, severity, "
+            " title, detail, page_url, app_version, user_agent, viewport, console_tail, "
+            " screenshot_url, filed_at, updated_at) "
+            "VALUES ('',?,?,?,'in-app',?,?,?,?,?,?,?,?,?,?,?)",
+            (bin, reporter_email, reporter_name, severity, title, detail,
+             (page_url or "")[:500], (app_version or "")[:60],
+             (request.headers.get("user-agent") or "")[:300],
+             (viewport or "")[:40], (console_tail or "")[:2000], screenshot_url,
+             _fault_now(), _fault_now()),
+        )
+        fid = cur.lastrowid
+        ref = "TS-%04d" % fid
+        conn.execute("UPDATE app_faults SET ref = ? WHERE id = ?", (ref, fid))
+        conn.commit()
+    finally:
+        conn.close()
+
+    # Auto-ACK — instant, per David's launch-mode ruling. FAULT_ACK_SEND=0 is the off switch.
+    ack_sent = False
+    if reporter_email and os.getenv("FAULT_ACK_SEND", "1") == "1":
+        try:
+            body = ("Thank you — your report is logged as <b>" + ref + "</b> and is in the fix "
+                    "queue.<br><br><i>&ldquo;" + (title.replace("<", "&lt;")) + "&rdquo;</i>"
+                    "<br><br>You don&rsquo;t need to do anything further. When it is fixed we will "
+                    "write to you with what changed, so you can retest and confirm it is right.")
+            html = _lc_email_html("Report " + ref + " received", body, "Back to TrustSquare")
+            ack_sent = _send_system_email(reporter_email,
+                                          "TrustSquare " + ref + " — we have your report", html) == "sent"
+        except Exception as exc:
+            _log.error("fault ACK send failed: %s", exc)
+        if ack_sent:
+            try:
+                conn = database.get_db()
+                try:
+                    conn.execute("UPDATE app_faults SET ack_sent = 1 WHERE id = ?", (fid,))
+                    conn.commit()
+                finally:
+                    conn.close()
+            except Exception:
+                pass
+
+    return {"ref": ref, "id": fid, "status": "new", "ack_sent": bool(ack_sent)}
+
+
+@app.get("/app/faults/mine")
+def app_faults_mine(email: str, x_review_token: str = Header(default=None),
+                    ts_review: str = Cookie(default=None),
+                    x_api_key: str = Header(default=None)):
+    """A tester sees their own reports and where each one stands."""
+    if not _fault_report_enabled():
+        raise HTTPException(status_code=503, detail="Fault reporting is not open.")
+    if not _fault_caller_ok(x_review_token, ts_review, x_api_key):
+        raise HTTPException(status_code=401, detail="Tester access required.")
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, ref, fault_code, bin, severity, title, status, fix_note, "
+            "       filed_at, retest_sent_at, verified_at "
+            "FROM app_faults WHERE reporter_email = ? ORDER BY filed_at DESC LIMIT 100",
+            ((email or "").strip().lower(),)).fetchall()
+    finally:
+        conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/admin/faults")
+def admin_faults(status: str = "", bin: str = "", limit: int = 100,
+                 _admin=Depends(_require_admin_or_key)):
+    """The Maintenance queue. Majors first, newest first."""
+    conn = database.get_db()
+    try:
+        sql = "SELECT * FROM app_faults"
+        where, vals = [], []
+        if status:
+            where.append("status = ?"); vals.append(status)
+        if bin:
+            where.append("bin = ?"); vals.append(bin.upper())
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += (" ORDER BY CASE severity WHEN 'blocker' THEN 0 WHEN 'major' THEN 1 ELSE 2 END, "
+                "filed_at DESC LIMIT ?")
+        vals.append(max(1, min(limit, 500)))
+        rows = conn.execute(sql, vals).fetchall()
+    finally:
+        conn.close()
+    return [dict(r) for r in rows]
+
+
+class _FaultUpdate(BaseModel):
+    fault_code: Optional[str] = None
+    bin:        Optional[str] = None
+    severity:   Optional[str] = None
+    status:     Optional[str] = None
+    fix_note:   Optional[str] = None
+    deploy_ref: Optional[str] = None
+    dup_of:     Optional[int] = None
+
+
+@app.put("/admin/faults/{fid}")
+def admin_fault_update(fid: int, upd: _FaultUpdate, _admin=Depends(_require_admin_or_key)):
+    """Triage / progress a fault. Marking dup_of increments the parent's recurrence —
+    that counter is what trips a Path B design-change dossier (FAULT_REGISTER rule 3)."""
+    data = {k: v for k, v in upd.dict(exclude_unset=True).items() if v is not None}
+    if not data:
+        raise HTTPException(status_code=400, detail="Nothing to update.")
+    if "bin" in data:
+        data["bin"] = str(data["bin"]).upper()
+        if data["bin"] not in FAULT_BINS:
+            raise HTTPException(status_code=400, detail="Unknown bin.")
+    if "status" in data and data["status"] not in FAULT_STATUSES:
+        raise HTTPException(status_code=400, detail="Unknown status.")
+    if "severity" in data and data["severity"] not in FAULT_SEVERITIES:
+        raise HTTPException(status_code=400, detail="Unknown severity.")
+    conn = database.get_db()
+    try:
+        cur = conn.execute("SELECT * FROM app_faults WHERE id = ?", (fid,)).fetchone()
+        if not cur:
+            raise HTTPException(status_code=404, detail="No such fault.")
+        parent = data.get("dup_of")
+        if parent:
+            if parent == fid:
+                raise HTTPException(status_code=400, detail="A fault cannot duplicate itself.")
+            p = conn.execute("SELECT id FROM app_faults WHERE id = ?", (parent,)).fetchone()
+            if not p:
+                raise HTTPException(status_code=404, detail="Parent fault not found.")
+            if not cur["dup_of"]:
+                conn.execute("UPDATE app_faults SET recurrence = recurrence + 1 WHERE id = ?", (parent,))
+            data["status"] = "duplicate"
+        if data.get("status") == "verified":
+            conn.execute("UPDATE app_faults SET verified_at = ? WHERE id = ?", (_fault_now(), fid))
+        sets = ", ".join(k + " = ?" for k in data)
+        conn.execute("UPDATE app_faults SET " + sets + ", updated_at = ? WHERE id = ?",
+                     list(data.values()) + [_fault_now(), fid])
+        conn.commit()
+        row = conn.execute("SELECT * FROM app_faults WHERE id = ?", (fid,)).fetchone()
+    finally:
+        conn.close()
+    return dict(row)
+
+
+def _fault_retest_email(row) -> dict:
+    """The 'fixed — please retest' letter. One shape, so every tester gets the same
+    courtesy: what they reported, what changed, what to do to confirm it."""
+    ref = row["ref"] or ("TS-%04d" % row["id"])
+    fix = (row["fix_note"] or "").strip() or "The fault you reported has been corrected."
+    body = ("You reported this on " + (row["filed_at"] or "")[:10] + ":<br>"
+            "<i>&ldquo;" + (row["title"] or "").replace("<", "&lt;") + "&rdquo;</i><br><br>"
+            "<b>What was changed</b><br>" + fix.replace("<", "&lt;").replace("\n", "<br>") + "<br><br>"
+            "<b>What we&rsquo;d like from you</b><br>Please open the app, repeat the steps that failed, "
+            "and tell us whether it now behaves. If it still misbehaves, report it again from the same "
+            "button and quote " + ref + " — that keeps it on the same thread.<br><br>"
+            "Thank you for finding it. Reports like yours are the reason launch will be steadier.")
+    return {"to": row["reporter_email"],
+            "subject": "TrustSquare " + ref + " — fixed, please retest",
+            "html": _lc_email_html(ref + " is fixed", body, "Open TrustSquare")}
+
+
+@app.get("/admin/faults/{fid}/retest-draft")
+def admin_fault_retest_draft(fid: int, _admin=Depends(_require_admin_or_key)):
+    """Draft only — David reads this before anything is sent (his approval gate)."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM app_faults WHERE id = ?", (fid,)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="No such fault.")
+    return _fault_retest_email(row)
+
+
+@app.post("/admin/faults/{fid}/retest-send")
+def admin_fault_retest_send(fid: int, _admin=Depends(_require_admin_or_key)):
+    """Send the approved retest letter and move the fault to awaiting-retest."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM app_faults WHERE id = ?", (fid,)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="No such fault.")
+    if not row["reporter_email"]:
+        raise HTTPException(status_code=400, detail="No reporter address on this fault.")
+    msg = _fault_retest_email(row)
+    sent = _send_system_email(msg["to"], msg["subject"], msg["html"])
+    if sent == "sent":
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE app_faults SET status = 'awaiting-retest', "
+                         "retest_sent_at = ?, updated_at = ? WHERE id = ?",
+                         (_fault_now(), _fault_now(), fid))
+            conn.commit()
+        finally:
+            conn.close()
+    return {"id": fid, "ref": row["ref"], "send_result": sent}
 
 
 @app.get("/admin/email-triage")

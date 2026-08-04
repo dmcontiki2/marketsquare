@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maintenance Agent — design board · TrustSquare</title>
+<style>
+  :root{
+    --navy:#0c1a2e; --gold:#C8873A; --ink:#1e293b; --dim:#64748b; --line:#e2e8f0; --bg:#f6f7f9;
+    --built:#15803d;   --built-bg:#e8f5ec;
+    --partial:#b45309; --partial-bg:#fdf3e3;
+    --hand:#1d4ed8;    --hand-bg:#e8eefc;
+    --design:#6d28d9;  --design-bg:#f0eafc;
+    --gap:#b91c1c;     --gap-bg:#fdeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 70px}
+  header{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;margin-bottom:22px}
+  header h1{margin:0 0 6px;font-size:24px;letter-spacing:-.3px}
+  header p{margin:0;color:#b9c6d8;font-size:14px;max-width:70ch}
+  .stamp{display:inline-block;margin-top:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+         border-radius:999px;padding:5px 13px;font-size:12px;font-weight:700;letter-spacing:.4px;color:#fff}
+  h2{font-size:17px;margin:34px 0 12px;color:var(--navy);letter-spacing:-.2px}
+  h2 .n{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;background:var(--navy);
+        color:#fff;border-radius:7px;font-size:12px;margin-right:9px;vertical-align:2px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .lede{color:var(--dim);font-size:14px;margin:0 0 14px;max-width:78ch}
+
+  .key{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:5px 12px;
+        font-size:12px;font-weight:700;border:1px solid transparent}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+  .c-built{background:var(--built-bg);color:var(--built);border-color:#bfe0ca}   .d-built{background:var(--built)}
+  .c-partial{background:var(--partial-bg);color:var(--partial);border-color:#f0d9ac} .d-partial{background:var(--partial)}
+  .c-hand{background:var(--hand-bg);color:var(--hand);border-color:#c2d2f7}      .d-hand{background:var(--hand)}
+  .c-design{background:var(--design-bg);color:var(--design);border-color:#d8c8f5} .d-design{background:var(--design)}
+  .c-gap{background:var(--gap-bg);color:var(--gap);border-color:#f3c6c6}         .d-gap{background:var(--gap)}
+
+  .stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px}
+  .stage{border-radius:12px;padding:13px 14px;border:1px solid var(--line);background:#fff;position:relative;
+         border-left-width:5px}
+  .stage.built{border-left-color:var(--built)}   .stage.partial{border-left-color:var(--partial)}
+  .stage.hand{border-left-color:var(--hand)}     .stage.design{border-left-color:var(--design)}
+  .stage.gap{border-left-color:var(--gap)}
+  .stage .num{font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px}
+  .stage h3{margin:3px 0 6px;font-size:14px;color:var(--navy)}
+  .stage p{margin:0;font-size:12.5px;color:var(--dim);line-height:1.5}
+  .stage .tag{display:inline-block;margin-top:9px;font-size:10.5px;font-weight:800;letter-spacing:.6px;
+              border-radius:5px;padding:3px 7px}
+  .tag.built{background:var(--built-bg);color:var(--built)}
+  .tag.partial{background:var(--partial-bg);color:var(--partial)}
+  .tag.hand{background:var(--hand-bg);color:var(--hand)}
+  .tag.design{background:var(--design-bg);color:var(--design)}
+  .tag.gap{background:var(--gap-bg);color:var(--gap)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--dim);
+     border-bottom:2px solid var(--line);padding:0 10px 8px}
+  td{border-bottom:1px solid var(--line);padding:10px;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.q{font-weight:600;color:var(--navy);width:38%}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .path{border-radius:12px;padding:16px 18px;border:1px solid var(--line)}
+  .path.a{background:var(--built-bg);border-color:#bfe0ca}
+  .path.b{background:var(--design-bg);border-color:#d8c8f5}
+  .path h3{margin:0 0 4px;font-size:15px}
+  .path.a h3{color:var(--built)} .path.b h3{color:var(--design)}
+  .path p{margin:0 0 8px;font-size:13px;color:var(--ink)}
+  .path ul{margin:0;padding-left:17px;font-size:12.5px;color:var(--dim)} .path li{margin:3px 0}
+
+  .dec{border:1px solid var(--line);border-radius:12px;margin-bottom:11px;overflow:hidden;background:#fff}
+  .dec>summary{cursor:pointer;padding:13px 16px;font-weight:700;font-size:14px;color:var(--navy);
+               list-style:none;display:flex;align-items:center;gap:10px}
+  .dec>summary::-webkit-details-marker{display:none}
+  .dec>summary::after{content:"›";margin-left:auto;color:var(--dim);font-size:20px;transition:transform .18s}
+  .dec[open]>summary::after{transform:rotate(90deg)}
+  .dec .body{padding:0 16px 16px;font-size:13.5px;color:var(--ink)}
+  .dec .body p{margin:0 0 9px}
+  .badge{font-size:10px;font-weight:800;letter-spacing:.6px;border-radius:5px;padding:3px 7px}
+  .badge.open{background:var(--design-bg);color:var(--design)}
+  .badge.ruled{background:var(--built-bg);color:var(--built)}
+  .rec{border-left:3px solid var(--gold);background:#fdf8f1;padding:9px 12px;border-radius:0 8px 8px 0;
+       font-size:13px;margin-top:4px}
+  .rec b{color:var(--gold)}
+
+  .tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:4px}
+  .tl div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:10px;padding:12px 14px}
+  .tl .d{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.8px}
+  .tl .t{font-size:13px;font-weight:700;color:var(--navy);margin:3px 0 4px}
+  .tl .s{font-size:12px;color:var(--dim);line-height:1.45}
+  footer{margin-top:34px;color:var(--dim);font-size:12px;text-align:center}
+  @media (max-width:680px){.split,.stages{grid-template-columns:1fr}td.q{width:auto}}
+  @media print{body{background:#fff}.wrap{padding:0}.dec{break-inside:avoid}header{border-radius:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Maintenance Agent — design board</h1>
+  <p>The pipeline as it actually stands on 5 August 2026, what the pre-launch month runs by hand,
+     and the eight decisions still to make together. Colour is the status, not decoration.</p>
+  <span class="stamp">27 DAYS TO LAUNCH · REHEARSAL TARGET 22 AUG</span>
+</header>
+
+<div class="card">
+  <div class="key">
+    <span class="chip c-built"><i class="dot d-built"></i>Built &amp; proven</span>
+    <span class="chip c-partial"><i class="dot d-partial"></i>Partly built</span>
+    <span class="chip c-hand"><i class="dot d-hand"></i>Claude by hand this month</span>
+    <span class="chip c-design"><i class="dot d-design"></i>To design together</span>
+    <span class="chip c-gap"><i class="dot d-gap"></i>Gap — launch-blocking</span>
+  </div>
+</div>
+
+<h2><span class="n">1</span>The seven stages</h2>
+<p class="lede">Your original specification, one column per stage. Three were built this week;
+the blue ones are the ones I personally stand in for until the agent can.</p>
+<div class="stages">
+  <div class="stage built"><div class="num">STAGE 1</div><h3>Log every complaint</h3>
+    <p>Email lane live since July. The in-app REPORT tab landed today — testers file app faults from the screen that broke.</p>
+    <span class="tag built">BUILT</span></div>
+  <div class="stage built"><div class="num">STAGE 2</div><h3>Respond to the logger</h3>
+    <p>Automatic acknowledgement in seconds, quoting reference TS-nnnn, promising the retest letter.</p>
+    <span class="tag built">BUILT</span></div>
+  <div class="stage partial"><div class="num">STAGE 3</div><h3>Sort into bins</h3>
+    <p>Ten failure-code bins and the duplicate/recurrence counter are in the schema. Deciding that two differently-worded reports are one fault is still a judgement.</p>
+    <span class="tag hand">BY HAND</span></div>
+  <div class="stage hand"><div class="num">STAGE 4</div><h3>Fix, majors first</h3>
+    <p>The queue already sorts blockers to the top. The fixing itself is me, in session, three times a day.</p>
+    <span class="tag hand">BY HAND</span></div>
+  <div class="stage built"><div class="num">STAGE 5</div><h3>Ship invisibly</h3>
+    <p>Phase-3 self-deploy: gates, health check, automatic rollback. Users get the fix on next load.</p>
+    <span class="tag built">BUILT</span></div>
+  <div class="stage partial"><div class="num">STAGE 6</div><h3>Watch for recurrence</h3>
+    <p>Counter exists and arms itself. The threshold that turns a recurring fault into a design-change dossier is set but unproven.</p>
+    <span class="tag design">TO DESIGN</span></div>
+  <div class="stage design"><div class="num">STAGE 7</div><h3>You see only safety, legal, cost</h3>
+    <p>The retest letter's read-then-send split is the first working instance of the shape. The escalation brief format is not written.</p>
+    <span class="tag gap">GAP</span></div>
+</div>
+
+<h2><span class="n">2</span>What shipped today</h2>
+<div class="card">
+  <p class="lede">MAINT-B1b. Built, tested, in the repo — not yet on the server, and the switch is off.</p>
+  <table>
+    <tr><td class="q">The tester's side</td><td>A REPORT tab on all 14 tester-facing pages. First-party, 13&nbsp;KB, no CDN, no dependency on the app's own JavaScript — so it works identically on the marketplace, the admin tool, the legal pages and the nine adventure maps.</td></tr>
+    <tr><td class="q">What a report carries</td><td>Their words, plus the page address, app version, screen size, browser string and the last few console errors — captured automatically, so a fault arrives with its own evidence instead of "it didn't work".</td></tr>
+    <tr><td class="q">What they get back</td><td>An acknowledgement in seconds with reference TS-nnnn. Later, a letter naming what was changed and asking them to repeat the steps that failed.</td></tr>
+    <tr><td class="q">Your gate</td><td>The retest letter is split in two: a draft you read, and a send you approve. Nothing reaches a founding seller unread.</td></tr>
+    <tr><td class="q">Safety</td><td>Fail-closed twice — the whole lane refuses service unless the server flag is on, and the widget hides itself if it cannot read the flag. Anonymous posts are refused. 12 reports per tester per hour.</td></tr>
+    <tr><td class="q">Proof</td><td>49 assertions against the real code and a real database, 8 source-level tripwires wired into the pre-deploy gate, one regression-ledger entry.</td></tr>
+  </table>
+</div>
+
+<h2><span class="n">3</span>The Path A / Path B boundary</h2>
+<p class="lede">Your adopted split. Everything the agent does eventually reduces to choosing one of these two,
+so getting the boundary right matters more than any other single decision.</p>
+<div class="split">
+  <div class="path a"><h3>Path A — mechanical</h3>
+    <p>Fix it now, ship it through the gates, tell nobody.</p>
+    <ul><li>Wrong copy, typos, labels</li><li>Configuration and flags</li><li>Logic bugs with a clear right answer</li><li>Anything with a tripwire test that proves it</li></ul></div>
+  <div class="path b"><h3>Path B — design change</h3>
+    <p>Write a dossier, batch it, never hotfix it.</p>
+    <ul><li>Layout and new interface</li><li>Flows and journeys</li><li>Brand and voice</li><li>Anything three testers hit for the same underlying reason</li></ul></div>
+</div>
+
+<h2><span class="n">4</span>What the month must measure</h2>
+<p class="lede">The month is not a holding pattern. Each row is a design question that
+only real faults can answer honestly — and each is recorded automatically by the intake.</p>
+<div class="card">
+<table>
+  <tr><th>Evidence the month produces</th><th>The design question it settles</th></tr>
+  <tr><td>Time from filing to shipped fix, per bin</td><td>Where autonomy pays, and where it is theatre</td></tr>
+  <tr><td>Ratio of Path A to Path B</td><td>How large the design-backlog lane really has to be</td></tr>
+  <tr><td>How often two reports were one fault</td><td>Whether semantic dedupe needs a model at all</td></tr>
+  <tr><td>How often a retest came back "still broken"</td><td>Whether "fixed" can ever be self-declared</td></tr>
+  <tr><td>Which fixes were wrong on the first attempt</td><td>The escalation threshold — when to stop and ask</td></tr>
+  <tr><td>How many faults were safety, legal or cost</td><td>Whether stage 7's filter fires often enough to matter</td></tr>
+</table>
+</div>
+
+<h2><span class="n">5</span>The eight decisions still open</h2>
+<p class="lede">Each carries my recommendation so you can settle it in a sentence.
+Open one at a time; nothing here is urgent before the 22 August rehearsal.</p>
+
+<details class="dec" open><summary><span class="badge open">OPEN</span> 1 · Can the agent close a fault the tester never confirms?</summary>
+<div class="body">
+  <p>Today's intake introduces <b>awaiting-retest</b> — shipped and written to, but not confirmed from
+  outside. Total autonomy says the agent decides; honesty says a fix we only verified ourselves is not verified.
+  Testers will go quiet, so something must give.</p>
+  <div class="rec"><b>Recommendation:</b> after 7 days of silence the fault becomes <i>presumed fixed</i>, not
+  <i>verified</i> — a distinct state — and the recurrence counter stays armed. If it comes back, it comes back
+  to the same row with the same code and the count tells us we closed it too early.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge open">OPEN</span> 2 · What may the agent never touch on its own?</summary>
+<div class="body">
+  <p>Doctrine says money, legal and safety escalate. Doctrine is not a control — a denylist in code is.</p>
+  <div class="rec"><b>Recommendation:</b> a hard path guard in the fix session: the Tuppence ledger, payment
+  handlers, the authentication path, and the EULA/privacy surfaces are refused outright with a clear message,
+  not merely discouraged. Everything else is fair game.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge open">OPEN</span> 3 · The escalation brief — the one thing you actually read</summary>
+<div class="body">
+  <p>Stage 7 is the only place you appear in the whole loop, so its shape is the whole ergonomics of the agent.</p>
+  <div class="rec"><b>Recommendation:</b> one screen per issue — what happened, what I have <i>already done</i>
+  (safest option, taken without asking), then two or three alternatives each as a single tick. You are never
+  asked to approve an action; you are offered the chance to redirect one already taken.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge open">OPEN</span> 4 · How often does it wake?</summary>
+<div class="body">
+  <p>Three scheduled sessions a day was the B2 sketch. A blocker filed at 09:05 waiting until 13:00 is a bad look
+  during a launch month.</p>
+  <div class="rec"><b>Recommendation:</b> three scheduled runs, plus an immediate run when a blocker is filed —
+  the intake already knows the severity at the moment of filing, so the trigger is free.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge open">OPEN</span> 5 · The recurrence threshold</summary>
+<div class="body">
+  <p>The register says three recurrences after a shipped fix triggers a Path B dossier. Untested — three may be
+  too patient for a launch month and too twitchy afterwards.</p>
+  <div class="rec"><b>Recommendation:</b> keep three, but let the month tell us. If the count reaches three on
+  anything before 1 September, that fault is the first real test of the design lane.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge open">OPEN</span> 6 · What exactly does the kill switch kill?</summary>
+<div class="body">
+  <p>One lever, two possible meanings: stop shipping, or stop everything.</p>
+  <div class="rec"><b>Recommendation:</b> the switch stops <i>shipping</i> only. Intake, acknowledgement and
+  triage keep running — a tester must never hit a dead button because we paused the fixer.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge ruled">RULED</span> 7 · Who reviews the agent's work?</summary>
+<div class="body">
+  <p>Your review-roles doctrine puts an Author, a Peer, QA, CM and a System Engineer on every design review.
+  The agent is Author. GPT-5.6 is already appointed Peer.</p>
+  <div class="rec"><b>Open sub-question:</b> does the Peer review every autonomous fix, or only Path B design
+  changes? <b>Recommendation:</b> Path B only — reviewing every typo fix would make the Peer noise, and the
+  gates already are the review for Path A.</div>
+</div></details>
+
+<details class="dec"><summary><span class="badge ruled">RULED</span> 8 · When does the brain move off the subscription?</summary>
+<div class="body">
+  <p>Ruled: scheduled Claude sessions for launch, re-bound to a server-resident worker once the rush subsides.
+  The trigger was left as "a trickle", which is not a number anyone can act on.</p>
+  <div class="rec"><b>Recommendation:</b> re-bind when new faults fall below five a week for two consecutive
+  weeks. Config-grade move, spine unchanged — exactly as ruled.</div>
+</div></details>
+
+<h2><span class="n">6</span>The runway</h2>
+<div class="tl">
+  <div><div class="d">5 AUG</div><div class="t">Intake built</div><div class="s">Deploy, flip the flag, testers get the REPORT tab.</div></div>
+  <div><div class="d">5–22 AUG</div><div class="t">The loop by hand</div><div class="s">Real faults, real fixes, real retest letters. Every one of them a requirement.</div></div>
+  <div><div class="d">~15 AUG</div><div class="t">Decisions settled</div><div class="s">The eight above, answered from evidence rather than from an armchair.</div></div>
+  <div><div class="d">22 AUG</div><div class="t">Rehearsal (B4)</div><div class="s">Synthetic complaint storm, every category, including one legal and one safety.</div></div>
+  <div><div class="d">1 SEP</div><div class="t">Launch</div><div class="s">Complaints handled end to end. You see only safety, legal and cost.</div></div>
+</div>
+
+<footer>TrustSquare · Maintenance Agent design board · 5 August 2026 · sources: MAINTENANCE_AGENT.md, FAULT_REGISTER.md, OPEN_LOOPS.md</footer>
+</div>
+</body>
+</html>

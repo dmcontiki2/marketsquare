@@ -26,6 +26,19 @@ that triggers Path B design-change dossiers.
 4. Every fix that closes a code names its deploy + tripwire test in the row.
 5. The 21h00 stand-up reads this file; safety/legal/cost rows float to the top.
 
+## Sources (MAINT-B1b, 5 Aug 2026)
+| Lane | Where it lands | Reference the reporter sees |
+|---|---|---|
+| Email (Cloudflare Worker -> /email/inbound) | `email_triage.fault_code` | `BIN-nnn`, in the ACK |
+| **In-app tester report (the REPORT tab)** | **`app_faults`** | **`TS-nnnn`, in the ACK; the `BIN-nnn` code is assigned at triage** |
+| The app's own error log | (B1, still to wire) | n/a — the app reports itself |
+
+Status ladder for `app_faults`: `new -> triaged -> fixing -> fixed -> awaiting-retest ->
+verified -> closed`, plus `rejected` and `duplicate`. **`awaiting-retest` is the honest
+state**: we have shipped a fix and written to the tester, but nobody has yet confirmed it
+from the outside. Only the tester's confirmation moves a fault to `verified` — a fix we
+have only verified ourselves is not verified.
+
 ## Open incidents
 | Code | Opened | Source | Summary | Recur | Status | Fix / tripwire |
 |---|---|---|---|---|---|---|

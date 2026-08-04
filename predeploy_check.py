@@ -190,6 +190,24 @@ def main():
     except Exception as _e:
         print('  [maintenance] check skipped: %r' % _e)
 
+    # Tester fault-intake tripwires (MAINT-B1b, 5 Aug 2026): the in-app NCR channel —
+    # table, endpoints, fail-closed flag, reference + ACK, widget on every tester page.
+    try:
+        import subprocess as _sp5
+        _tf5 = os.path.join(HERE, 'test_tester_intake.py')
+        if os.path.isfile(_tf5):
+            _ti = _sp5.run([sys.executable, _tf5, HERE], capture_output=True, text=True, timeout=60)
+            if _ti.returncode != 0:
+                danger.append('tester-intake')
+                print('  !! TESTER INTAKE: fault-report guard FAILED:')
+                for _l in (_ti.stdout or '').splitlines():
+                    if _l.startswith('FAIL'):
+                        print('       ' + _l)
+            else:
+                print('  Tester fault-intake guards: ok')
+    except Exception as _e:
+        print('  [tester-intake] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

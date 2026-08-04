@@ -21,6 +21,7 @@ bea_main.py                | main.py
 # ── Static front-end assets (nginx serves these from /static/) ───────────────
 ms.js                      | static/ms.js
 ms.css                     | static/ms.css
+ts_report.js               | static/ts_report.js
 
 # ── Service worker (served from web root, not /static/) ──────────────────────
 assets/service-worker.js   | service-worker.js

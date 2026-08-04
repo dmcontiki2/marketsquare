@@ -75,6 +75,16 @@ def _status(path):
         return e.code
 
 
+def _post_status(path, data=b""):
+    """HTTP status for an UNAUTHENTICATED POST. Used by negative entries that assert a
+    write endpoint refuses anonymous callers. Never raises on 4xx/5xx."""
+    req = urllib.request.Request(BASE + path, data=data, headers=UA, method="POST")
+    try:
+        return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+    except urllib.error.HTTPError as e:
+        return e.code
+
+
 def _json(path):
     return json.loads(_get(path))
 
@@ -1122,6 +1132,41 @@ def rg_origin_refuses_direct():
                               "cut the legitimate path too; check the Cloudflare ranges are current"))
     except Exception as ex:
         out.append((FAIL, "/health unreachable through Cloudflare after origin lockdown: " + repr(ex)))
+    return out
+
+
+@entry("RG-0030", "The in-app tester fault channel exists, is fail-closed, and ships to every page",
+       OPEN, scope="all tester-facing pages (index, admin, legal, 9 adventure maps)",
+       fixed_on="2026-08-05",
+       ref="MAINT-B1b. Testers had no way to report an APP FAULT from inside the app -- "
+           "seller_complaints/lm_complaints are marketplace conduct, and email skipped the "
+           "Maintenance agent's intake entirely. This asserts three things that must stay true: "
+           "the widget is actually served, an unauthenticated POST can never file a fault "
+           "(fail-closed, so a public visitor cannot flood the queue), and /flags still carries "
+           "the fault_report switch the widget reads. OPEN until deployed and proven live -- "
+           "promote to LOCKED the moment it passes.")
+def rg_tester_fault_channel():
+    out = []
+    try:
+        if _status("/static/ts_report.js") != 200:
+            out.append((FAIL, "/static/ts_report.js is not served -- the report button cannot "
+                              "appear on any page, so testers have no way in"))
+    except Exception as ex:
+        out.append((FAIL, "tester widget unreachable: " + repr(ex)))
+    try:
+        code = _post_status("/app/fault")
+        if code == 200:
+            out.append((FAIL, "POST /app/fault accepted an UNAUTHENTICATED report -- the intake "
+                              "must refuse anyone without a tester credential (401) or refuse "
+                              "outright while the flag is off (503)"))
+    except Exception as ex:
+        out.append((INFO, "intake probe inconclusive: " + repr(ex)))
+    try:
+        if "fault_report" not in _get("/flags"):
+            out.append((FAIL, "/flags no longer carries fault_report -- the widget fails closed "
+                              "and every tester silently loses the report button"))
+    except Exception as ex:
+        out.append((FAIL, "/flags unreadable: " + repr(ex)))
     return out
 
 
