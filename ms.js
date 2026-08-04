@@ -12272,11 +12272,12 @@ async function wlRenderSettings() {
     return;
   }
   list.innerHTML = signals.map(s => {
-    const badge = s.signal_type === 'explicit' ? 'WISH' : (s.signal_type === 'browse_search' ? 'SEARCH' : 'VIEW');
+    // Past tense on purpose: 'viewed' describes what happened, 'VIEW' reads as an instruction.
+    const badge = s.signal_type === 'explicit' ? 'wished' : (s.signal_type === 'browse_search' ? 'searched' : 'viewed');
     const txt = (s.raw_text || s.category || '(empty)');
     return (
       '<div class="wl-sig-row">'
-      + '<span class="wl-sig-badge">' + badge + '</span>'
+      + '<span class="wl-sig-badge" title="How we noticed this — not a button">' + badge + '</span>'
       + '<span class="wl-sig-text" title="' + _wlEsc(txt) + '">' + _wlEsc(txt) + '</span>'
       + '<button class="wl-sig-del" onclick="wlDeleteSignal(' + s.id + ')" title="Remove">&times;</button>'
       + '</div>'

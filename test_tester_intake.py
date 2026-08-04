@@ -172,6 +172,25 @@ def test_maintenance_key_opens_faults_and_nothing_else():
     assert "MS_MAINT_KEY" in body, "the scoped key is no longer checked at all"
 
 
+def test_labels_do_not_impersonate_buttons():
+    """The recurring class behind TS-0001, TS-0002 and TS-0003: an element that LOOKS like a
+    control and is not one. Three of the first six tester reports were this same fault wearing
+    different clothes — a count, a badge, a pill. A label may not carry button styling."""
+    css = _read("ms.css")
+    i = css.find(".wl-sig-badge{")
+    assert i > 0, "the wishlist signal badge style is gone"
+    rule = css[i:css.find("}", i)]
+    assert "cursor:default" in rule, \
+        "the signal badge lost cursor:default - it reads as clickable again (TS-0002/0003)"
+    assert "border-radius:50px" not in rule, "the badge is a pill again, which reads as a button"
+    js = _read("ms.js")
+    i = js.find("const badge = s.signal_type")
+    assert i > 0, "the signal badge label line is gone"
+    line = js[i:js.find("\n", i)]
+    assert "'viewed'" in line and "'VIEW'" not in line, \
+        "the badge label reverted to an imperative verb - 'viewed' describes, 'VIEW' instructs"
+
+
 def test_widget_is_deployable():
     mani = _read(os.path.join("ops", "autodeploy", "deploy_manifest.txt"))
     assert "ts_report.js" in mani, "ts_report.js is not on the deploy manifest - it would never ship"

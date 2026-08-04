@@ -1135,7 +1135,10 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
   .wf-trust-grey{background:#9ca3af;color:#fff;}
   .wl-sig-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;}
   .wl-sig-text{flex:1;min-width:0;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .wl-sig-badge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);padding:3px 7px;border-radius:50px;}
+  /* TS-0002/0003 (5 Aug 2026): this is a LABEL saying how the signal was captured, not a
+     control. Styled as a bold uppercase pill beside a real button, it read as clickable and
+     David tapped it. Stripped to a plain muted tag: no fill, no pill, no pointer. */
+  .wl-sig-badge{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text-3);background:none;padding:0;border-radius:0;cursor:default;user-select:none;min-width:56px;flex:0 0 56px;}
   .wl-sig-del{background:transparent;border:1px solid var(--border);color:var(--text-3);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;}
 
 /* ── Photo-First AI Onboarding — Session 71 ──────────────────────────────── */
