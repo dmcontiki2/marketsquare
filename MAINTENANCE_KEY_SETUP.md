@@ -66,7 +66,7 @@ $k = Get-Content .secrets\ms_maint_key.txt -Raw
 curl.exe -s -H "X-Maint-Key: $k" "https://trustsquare.co/admin/faults?limit=3"
 ```
 
-That returns the fault queue as JSON. If it returns `Admin credentials required`, the key
+That returns the fault queue as JSON. **GATE NOTE (5 Aug 2026, found live):** since the edge gate (RG-0027/GATE-ENFORCE-1) went up, this curl — and ANY off-browser HTTP call — gets 403 at the edge BEFORE the key is examined. That is the gate working, not key drift. Maintenance tooling now runs ON the server against localhost over SSH (see RECONCILE_FAULTS.bat v2 for the pattern). If it returns `Admin credentials required`, the key
 on the server and the key in the file have drifted — re-run the block above, which resets
 both from one source.
 

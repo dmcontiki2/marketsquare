@@ -36,8 +36,10 @@ that triggers Path B design-change dossiers.
 Status ladder for `app_faults`: `new -> triaged -> fixing -> fixed -> awaiting-retest ->
 verified -> closed`, plus `rejected` and `duplicate`. **`awaiting-retest` is the honest
 state**: we have shipped a fix and written to the tester, but nobody has yet confirmed it
-from the outside. Only the tester's confirmation moves a fault to `verified` — a fix we
-have only verified ourselves is not verified.
+from the outside. AIK-VERIFY-1 (David, 5 Aug 2026, supersedes the sentence that stood here):
+**machine evidence may verify** — the AI reproduces the failing action clean (or a
+tripwire/probe covers it), names the evidence in fix_note, and sets `verified`. People
+report; machines verify. A tester's "still broken" always reopens.
 
 ## Open incidents
 | Code | Opened | Source | Summary | Recur | Status | Fix / tripwire |

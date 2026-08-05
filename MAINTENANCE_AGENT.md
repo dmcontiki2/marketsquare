@@ -120,6 +120,20 @@ the questions no design session can answer honestly from an armchair.
 `awaiting-retest` exists precisely so a fix we have only verified ourselves cannot be
 recorded as verified. That distinction is the honest core of the whole agent.
 
+**AIK-VERIFY-1 — SUPERSEDES the paragraph above (David's ruling, 5 Aug 2026 evening).**
+One month of evidence answered the design question early: *people report, but people do
+not verify* — the retest chip sat at zero while fixed faults piled amber. Ruling, David's
+words in substance: after a fix, the AI must also TEST it and then declare it fixed
+(green). Operational form:
+- A fault may move to **verified** on MACHINE evidence: the failing action reproduced
+  clean, a tripwire/ledger assertion covering it, or a live probe — named in `fix_note`.
+  No named evidence = no verified; "the code looks right" does not qualify.
+- The tester retest letter becomes an optional **courtesy**, not the gate. A tester who
+  writes back "still broken" REOPENS the fault (their word still outranks our evidence).
+- The dashboard's honest ladder stays: open (amber) → fix shipped · retest (middle) →
+  verified/closed (green) — only the *who* of verification changed, never the *whether*.
+- Tooling: RECONCILE_FAULTS.bat / scripts/fault_reconcile.py applies this to the queue.
+
 ## Build batches (each rides a normal deploy; each leaves tripwires)
 - **B1b — In-app tester intake (DONE, 5 Aug 2026):** app_faults + POST /app/fault + auto-ACK
   with reference TS-nnnn + admin triage queue + the draft/send retest letter + ts_report.js on

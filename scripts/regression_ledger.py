@@ -1403,6 +1403,7 @@ def rg_intro_relay():
         ('@app.post("/intro/relay")', "the relay inbound endpoint is gone"),
         ('"TrustSquare Intro <%s>" % from_alias', "the forward no longer sends From an ALIAS"),
         ('from_addr != counter["real_email"]', "the enrolled-parties-only check is gone"),
+        ('ai_provider.envkey("RELAY_INBOUND_SECRET")', "the secret read lost its ENVKEY-1 fallback -- os.getenv is empty on the server (systemd does not export .env), so the rail would silently report unconfigured"),
         ('_b_alias if _relay_on else intro["buyer_email"]', "the accept webhook can leak the raw buyer email under the relay again"),
     ):
         if tok not in src:

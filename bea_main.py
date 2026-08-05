@@ -4535,8 +4535,12 @@ def _bind_charged_email(passed_email, ts_user, ctx=""):
 # Dark until launch_switches.intro_relay = 1 (fail-closed). Spec:
 # Records/INTRO_RELAY_BUILD_SPEC.md. Inbound rides Cloudflare Email Routing via the
 # Worker (ops/cloudflare/intro_relay_worker.js); outbound rides the Resend lane.
-RELAY_DOMAIN = os.getenv("RELAY_DOMAIN", "relay.trustsquare.co")
-RELAY_INBOUND_SECRET = os.getenv("RELAY_INBOUND_SECRET", "")
+# ENVKEY-1 class (fixed 5 Aug 2026, found live by the rail light staying off): the
+# systemd unit does NOT export the server .env to this process — a bare os.getenv is
+# empty on the server. ai_provider.envkey() checks the environment FIRST, then falls
+# back to reading /var/www/marketsquare/.env — the established pattern for every key.
+RELAY_DOMAIN = ai_provider.envkey("RELAY_DOMAIN") or "relay.trustsquare.co"
+RELAY_INBOUND_SECRET = ai_provider.envkey("RELAY_INBOUND_SECRET") or ""
 _RELAY_MAX_BODY = 100_000        # relayed text cap; attachments are v2, dropped loudly
 _RELAY_TTL_DAYS = int(os.getenv("RELAY_TTL_DAYS", "30"))
 
