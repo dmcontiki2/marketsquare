@@ -1,0 +1,14 @@
+@echo off
+REM One-shot (DW-016): give the daily watch a readable copy of the Resend key.
+REM Copies the root-only key file to /etc/marketsquare/resend.watch.conf
+REM owner root, group msdeploy, mode 640 (msdeploy reads, never writes).
+REM Retire this file to _to_delete after it has run once.
+setlocal
+echo.
+echo  Fixing the watch RED-alert path (DW-016)...
+echo.
+ssh -o ConnectTimeout=15 root@178.104.73.239 "mkdir -p /etc/marketsquare && install -o root -g msdeploy -m 640 /etc/systemd/system/marketsquare.service.d/resend.conf /etc/marketsquare/resend.watch.conf && ls -l /etc/marketsquare/resend.watch.conf && sudo -u msdeploy cat /etc/marketsquare/resend.watch.conf >/dev/null && echo WATCH-CAN-READ-THE-KEY---DONE"
+echo.
+echo  If you see WATCH-CAN-READ-THE-KEY---DONE above, tell Claude "done".
+echo  Press any key to close.
+pause >nul

@@ -1,3 +1,51 @@
+## 2026-08-05 — DW-016 CLOSED: watch RED-alert email path restored
+
+- David ran fix_watch_alerts.bat (one-shot, now retired): key copied to /etc/marketsquare/resend.watch.conf, 0640 root:msdeploy.
+- Watch task (trustsquare-daily-watch) prompt updated: RED email now sends from the server via the msdeploy-readable copy; broken path re-opens DW-016 loudly.
+- Proven live: test email accepted by Resend (id 77de9576), delivered to dmcontiki2@gmail.com.
+
+## 2026-08-05 — TSL-SHIP: guarded deploy via the ONE engine (ship-20260805-0752)
+
+- /TSL gate: lock free, CM ok (WATCH-FIX-1 folded first), DB ok (marketsquare.db 2.4MB integrity ok, redis PONG).
+- Rollback tag ship-20260805-0752 (f7d6c1c); deploy commit 10d96d0 published to the deploy ref via deploy_marketsquare.bat (run on David's machine via the ms-deploy shortcut; key never left the machine).
+- Carried: bea_main.py (WATCH-FIX-1 base_score drop), dashboard.server.html, marketsquare.html, run_daily_checks.py self-seeding, ledger RG-0030 LOCKED, retired scp bat.
+- Smoke: /health ok v1.3.1 · index 200 1.09s 403,869B · sentinel present · no error strings · cache-busters bumped v440->v441 (js) v304->v305 (css) — engine placed and bumped.
+- Residual "2 files ahead" drift = known artifact only: ?v= stamp + Cloudflare email-obfuscation rewrites (verified 0 real diff lines after normalisation) — DW-001's content-aware fix will silence it.
+- Post-ship regression ledger: exit 0, every locked fix holding.
+
+## 2026-08-05 — OPS-MAP-1: the live Ops Map replaces the Galaxy Graph (David's ruling)
+
+David's present principle applied to tooling: the Galaxy Graph was good but unused, so it
+goes; in its place the dashboard's 🗺️ Ops Map — a live block diagram of the whole business.
+Five layers over fixed block positions (Structure · Traffic & Load · Money · Switches ·
+NCR & Feedback), pastel block colours by type (People/Edge/Apps/Server/External/Agents),
+amber attention rings, and the two-agent NCR view (Maintenance vs Feedback-Triage, ruled
+earlier today).
+
+**Honesty rule:** a chip only shows a number a live endpoint returned. Live day one:
+/flags, /admin/services-status, /admin/faults (severity/state/recurrence/top-bin computed
+client-side), /health/resources, /dashboard/presence (incl. tier counters), /dashboard/cost,
+/dashboard/bit, /dashboard/email-triage. Dashed = honestly not wired yet (money-in via
+Paystack, req/h, deploys/wk, SSL days, feedback classes — the B-OPS batches). Red = that
+feed failed just now. Refreshes every 60s while open; scales to phone width.
+
+**Removed:** the Galaxy Graph view (D3 force graph + drilldown + detail panels, ~7 KB of
+markup/CSS and ~600 lines of JS). D3 stays — the Live Users presence galaxy still uses it.
+Retrievable in full from dashboard.server.html.bak-20260805-galaxy. Verified before ship:
+all 14 inline scripts parse, zero page errors across all five views under a mocked-endpoint
+playwright run, desktop + phone viewports.
+
+## 2026-08-05 — DW-005 CLOSED: fea-integrity baseline acked and refreshed
+
+- David confirmed the 3-5 Aug deploys explain the index/ms.js/ms.css byte drift (independently proven: live index == repo modulo ?v= + CF email-obfuscation).
+- `fea_integrity_check.py --update-baseline` run as msdeploy; recheck: status ok, zero alerts. Nightly cron re-alerts end.
+
+## 2026-08-05 — D10 landed: fault-intake privacy clause in privacy.html (David approved)
+
+- New s13 "Reporting a problem" per PRIVACY_FAULT_INTAKE_DRAFT.md as approved; Changes renumbered s14.
+- Deletion contact = support@trustsquare.co (consistent with s9 Your rights). 12-month post-close retention as drafted.
+- Rides the next deploy. The fault_report flag may now open beyond testers once this is live.
+
 ## 2026-08-05 — WATCH-FIX-1: attended sweep clears the RED (4 fixes + 1 hygiene)
 
 - RG-0023 regression HEALED: fix_support_public.bat (root@ + scp, one-shot from 6 Jul) retired to _to_delete/retired-deploy-bats-20260802/; support.html already in the deploy manifest. Ledger exit 0.

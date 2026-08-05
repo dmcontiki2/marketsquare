@@ -1,3 +1,0 @@
-Pre-deploy scan flagged torn/incomplete file(s):
-  pg-readiness
-See deploy_audit.log. Fix or restore before deploying.

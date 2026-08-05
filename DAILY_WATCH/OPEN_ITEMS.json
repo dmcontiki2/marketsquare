@@ -34,7 +34,8 @@
       "last_seen": "2026-08-05",
       "sev": "MEDIUM",
       "source": "cron-sensor fea-integrity",
-      "status": "OPEN"
+      "status": "CLOSED",
+      "closed": "2026-08-05"
     },
     "DW-006": {
       "first_seen": "2026-08-02",
@@ -115,7 +116,8 @@
       "last_seen": "2026-08-05",
       "sev": "HIGH",
       "source": "watch RED-alert path",
-      "status": "OPEN"
+      "status": "CLOSED",
+      "closed": "2026-08-05"
     },
     "DW-017": {
       "first_seen": "2026-08-05",
@@ -130,7 +132,8 @@
       "last_seen": "2026-08-05",
       "sev": "INFO",
       "source": "cost sweep delta",
-      "status": "OPEN"
+      "status": "CLOSED",
+      "closed": "2026-08-05"
     }
   }
 }
