@@ -1092,7 +1092,7 @@ def rg_gate_is_edge_enforced():
 
 
 @entry("RG-0028", "The origin refuses direct connections -- Cloudflare is the ONLY way in",
-       LOCKED, scope="Hetzner CPX22 178.104.73.239, inbound 80/443", fixed_on="2026-08-04",
+       LOCKED, scope="Hetzner CPX32 178.104.73.239, inbound 80/443", fixed_on="2026-08-04",
        ref="ORIGIN-LOCKDOWN-1 (4 Aug 2026). Found by the GPT-5.6 Peer review "
            "(Records/PEER_REVIEW_2026-08-04-0516_security.md) as its top BLOCKER, and MISSED by the "
            "Author: the Cloudflare WAF rule of RG-0027 governed only traffic that chose to arrive via "
@@ -1110,11 +1110,41 @@ def rg_gate_is_edge_enforced():
            "decorative again. Cloudflare's ranges change occasionally -- if legitimate traffic starts "
            "failing, re-pull https://www.cloudflare.com/ips-v4 and ips-v6 before suspecting anything "
            "else. A GitHub webhook posting direct to the IP (rather than via the domain) would also "
-           "now be dropped.")
+           "now be dropped. FALSE-ALARM NOTE (5 Aug 2026): a sandboxed baseline run reported this "
+           "entry REGRESSED. Independent verification the same day (check-host.net global TCP "
+           "probes: 57/58 nodes timed out on both 80 and 443; Hetzner console: firewall "
+           "trustsquare-origin-lockdown Fully applied, 3 rules intact) proved the firewall was "
+           "never off -- the runner sat behind a transparent proxy that intercepts ALL outbound "
+           "TCP on 80/443, so every raw connect 'succeeded' locally. The probe now self-checks "
+           "runner fitness first (control connect to unroutable TEST-NET-3); an unfit runner "
+           "reports INFO, never a false FAIL. The assertion is unchanged on fit runners.")
 def rg_origin_refuses_direct():
     import socket
     ORIGIN, out = "178.104.73.239", []
-    for port in (80, 443):
+    # RG-0028-GUARD (5 Aug 2026): some runners (Claude cloud sandboxes among them)
+    # transparently intercept ALL outbound TCP on 80/443, so a raw connect "succeeds"
+    # locally no matter what the Hetzner firewall does. Control: connect to an
+    # unroutable TEST-NET-3 address. If THAT succeeds, nothing this probe measures
+    # is real -- say so and skip, rather than raise a false open-gate alarm.
+    # On a fit runner the control times out and behaviour is identical to before.
+    unfit = False
+    ck = socket.socket(); ck.settimeout(3)
+    try:
+        ck.connect(("203.0.113.1", 80)); unfit = True
+    except Exception:
+        pass
+    finally:
+        try: ck.close()
+        except Exception: pass
+    if unfit:
+        out.append((INFO, "RUNNER UNFIT for the raw-TCP probe: a connect to unroutable "
+                          "203.0.113.1:80 'succeeded', so this network intercepts outbound "
+                          "80/443 and any direct-connect result from here is meaningless. "
+                          "Verify from an independent vantage instead: check-host.net TCP "
+                          "check on 178.104.73.239 ports 80 and 443 (real nodes must all "
+                          "time out), or David's own browser opening http://178.104.73.239/ "
+                          "(must time out -- never render, reset, or answer)."))
+    for port in (() if unfit else (80, 443)):
         sk = socket.socket(); sk.settimeout(6)
         try:
             sk.connect((ORIGIN, port))
@@ -1206,6 +1236,97 @@ def rg_open_detail_guard():
         out.append((FAIL, "openDetail no longer normalises a raw BEA integer id to the FEA 'bea_N' form"))
     if "setTimeout(() => openDetail(first.id), 300)" in src:
         out.append((FAIL, "sobViewMyListing is back on the raw id + 300ms race that broke it"))
+    return out
+
+
+@entry("RG-0032", "AI endpoints gate on ANY configured lane, never on one vendor's key",
+       LOCKED, scope="repo, bea_main.py -- all 15 endpoint gates + ai_provider.any_lane_configured()",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F1 (David's go, 5 Aug 2026). Fifteen endpoints opened with "
+           "'if not ANTHROPIC_API_KEY: 503' although every call runs through the vendor-neutral "
+           "seam -- with the Anthropic key absent and OpenAI/Scaleway keyed and healthy, every AI "
+           "service refused anyway, defeating the independence doctrine (Addendum 5.2: the app "
+           "must not need any single vendor to run). The 1 Aug AI_DRILL_BAN drill could not catch "
+           "it (key present, lane banned); only the unconfigured-key drill variant exposes it. "
+           "Fixed at class level in one pass. Both drill variants must be re-run post-deploy.")
+def rg_any_lane_gate():
+    src = repo_file("bea_main.py")
+    prov = repo_file("ai_provider.py")
+    if src is None or prov is None:
+        return [(INFO, "running outside the repo -- any-lane gate check skipped")]
+    out = []
+    n = src.count("if not ANTHROPIC_API_KEY")
+    if n:
+        out.append((FAIL, f"bea_main.py gates on ANTHROPIC_API_KEY again ({n}x) -- a single-vendor "
+                          "key outage would 503 AI services despite healthy standby lanes (F1 class)"))
+    if src.count("any_lane_configured()") < 15:
+        out.append((FAIL, "fewer than 15 any_lane_configured() gates in bea_main.py -- an endpoint "
+                          "lost its vendor-neutral gate (or a new one was added vendor-specific)"))
+    if "def any_lane_configured" not in prov:
+        out.append((FAIL, "ai_provider.py no longer defines any_lane_configured()"))
+    return out
+
+
+@entry("RG-0033", "Paid AI services charge Tuppence on DELIVERY, never before the model call",
+       LOCKED, scope="AI1 rewrite, AI2 audit, AI5 batch cards (AI3/AI4 already compliant) -- the whole paid-AI class",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F2. The help card promises 'server error -> no Tuppence deducted', "
+           "but AI1/AI2/AI5 ran _deduct_tuppence BEFORE the model call and their failure detail "
+           "admitted 'Tuppence charged'. David's ruling 5 Aug: the refund promise must be true. "
+           "All three now pre-flight with _require_tuppence and deduct only after a successful "
+           "result (the Session-95 deliver-then-charge pattern, same as AI3/AI4).")
+def rg_deliver_then_charge():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- deliver-then-charge check skipped")]
+    out = []
+    n = src.count('\u2014 Tuppence charged"')   # the dishonest form; 'no Tuppence charged' is the honest one
+    if n:
+        out.append((FAIL, f"a failure path admits charging before delivery again ({n}x '-- Tuppence charged')"))
+    for var in ("_rw_charge_desc", "_au_charge_desc", "_bc_charge_desc"):
+        if src.count(var) < 2:
+            out.append((FAIL, f"{var} missing -- its service lost the deliver-then-charge structure"))
+    if src.count("no Tuppence was charged") < 3:
+        out.append((FAIL, "the honest failure copy ('no Tuppence was charged') is gone from a paid AI service"))
+    return out
+
+
+@entry("RG-0034", "The breaker heartbeat lives in the BEA -- tripped lanes recover without traffic",
+       LOCKED, scope="bea_main.py startup (HEARTBEAT-1). P2c's latency baseline + p95 T2 clause remain separate work",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F5 + David's ruling 5 Aug ('it should be live now, otherwise how "
+           "will we have confidence it works at launch'). Implements AI_AUTO_FAILOVER_P2_DESIGN "
+           "section 6: 60 s tick, ONE atomically-claimed direct probe per tick, round-robin across "
+           "eligible rows, text ping, spend logged. Without it a tripped lane only recovers when "
+           "real traffic happens to probe it -- an overnight outage would stick until morning.")
+def rg_breaker_heartbeat():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- heartbeat check skipped")]
+    out = []
+    if "HEARTBEAT-1" not in src:
+        out.append((FAIL, "HEARTBEAT-1 block is gone from bea_main.py"))
+    if "claim_probe" not in src:
+        out.append((FAIL, "the heartbeat no longer claims probes atomically (claim_probe missing)"))
+    return out
+
+
+@entry("RG-0035", "User-facing AI service copy is vendor-neutral -- no lane name promised to users",
+       LOCKED, scope="marketsquare.html AI Services help card, all five services",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F3, David's ruling 5 Aug: neutral reference so a lane swap never "
+           "makes the copy wrong. The card said 'Claude rewrites/reviews/drafts/compares/estimates' "
+           "while Phase-A cost-first routing + failover may lawfully serve any wired lane on a "
+           "given call. Dev-comment mentions of Claude are fine; USER-facing claims are not.")
+def rg_vendor_neutral_copy():
+    src = repo_file("marketsquare.html")
+    if src is None:
+        return [(INFO, "running outside the repo -- copy check skipped")]
+    out = []
+    for phrase in ("Claude rewrites", "Claude reviews", "Claude drafts",
+                   "Claude compares", "Claude estimates"):
+        if phrase in src:
+            out.append((FAIL, f"user-facing copy names a vendor again: '{phrase}...' -- a lane swap makes it false"))
     return out
 
 

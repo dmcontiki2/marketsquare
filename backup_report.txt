@@ -1,30 +1,34 @@
-MarketSquare backup - 2026-07-24_0830
+MarketSquare backup - 2026-08-05_1247
 ============================================================
-[1] CODE: pushed to github.com/dmcontiki2/marketsquare (9 commit(s)).
-[2] DB: pulled marketsquare.db snapshot (2449408 bytes) to backups\2026-07-24_0830\
+[1] CODE: pushed to github.com/dmcontiki2/marketsquare (0 commit(s)).
+[2] DB: pulled marketsquare.db snapshot (2560000 bytes) to backups\2026-08-05_1247\
      NOTE: no /var/www/marketsquare/uploads dir found - assets likely in object storage (Scaleway/R2); NOT in this archive.
-[3] ARCHIVE: backups\2026-07-24_0830.zip (690080 bytes)
+[3] ARCHIVE: backups\2026-08-05_1247.zip (735198 bytes)
 [4] INTEGRITY:
 integrity_check: ok
-tables: 51
+tables: 55
   admin_users                  5
   agencies                     3
   agency_members               9
   agent_intros                 0
   agent_profiles               3
+  ai_breaker                   4
+  ai_breaker_stats             5
+  ai_scoreboard_probes         0
   ai_spend_config              1
-  ai_spend_log                 281
+  ai_spend_log                 427
+  app_faults                   21
   buyer_trust                  0
-  demand_invites_outbox        2
+  demand_invites_outbox        3
   demand_prospects             1487
-  demand_tickets               4
+  demand_tickets               5
   email_triage                 10
   founders_badges              0
-  geo_cities                   79
-  geo_countries                4
-  geo_regions                  19
+  geo_cities                   84
+  geo_countries                8
+  geo_regions                  25
   geo_suburbs                  11679
-  intro_penalties              0
+  intro_penalties              1
   intro_requests               113
   launch_codes                 0
   launch_redeem_attempts       0
@@ -33,31 +37,36 @@ tables: 51
   listing_photos               17
   listing_tier_config          3
   listing_versions             72
-  listings                     14
-  listings_fts                 14
+  listings                     69
+  listings_fts                 69
   listings_fts_config          1
-  listings_fts_data            15
-  listings_fts_docsize         14
-  listings_fts_idx             13
+  listings_fts_data            22
+  listings_fts_docsize         69
+  listings_fts_idx             20
   lm_complaints                0
   lm_suspensions               1
   outreach_ledger              0
   search_interpret_cache       24
   seller_complaints            0
-  seller_documents             10
+  seller_documents             12
   seller_extra_slots           0
-  sqlite_sequence              25
+  sqlite_sequence              27
   suburbs                      121
   transactions                 188
   tuppence_monthly_grants      0
-  user_credentials             65
+  user_credentials             81
   user_declarations            0
-  users                        28
+  users                        34
   wearable_devices             0
-  wishlist_matches             50
+  wishlist_matches             41
   wishlist_showcase            12
-  wishlist_signals             492
+  wishlist_signals             366
   wishlist_subscriptions       0
+[5] RETENTION:
+  keep  2026-08-05_1247  [newest]   (removed redundant folder)
+  keep  2026-07-24_0830  [weekly]
+  keep  2026-07-14_1953  [weekly]
+retention: kept 3, pruned 0, freed ~0B
 ------------------------------------------------------------
 Code mirror = off-machine (GitHub). DB archive = local backups\ folder.
-NOT covered: object-storage assets (if any); retention pruning (manual for now).
+NOT covered: object-storage assets (if any). Loose non-archive files are left as-is.

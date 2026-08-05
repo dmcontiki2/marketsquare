@@ -196,6 +196,22 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
 # Fallback chain order = dict order: anthropic -> openai -> scaleway
 ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway}
 
+# F1 fix (AI-SERVICES-AUDIT-1, 5 Aug 2026): the correct "is AI available at all" gate.
+# Endpoints must never gate on ONE vendor's key — the app must not need any single
+# vendor to run (Vendor Strategy Addendum 5.2). Configuration truth only; lane
+# HEALTH is the breaker's question, answered per call inside complete().
+_LANE_KEYS = {"anthropic": ("ANTHROPIC_API_KEY",),
+              "openai": ("OPENAI_API_KEY",),
+              "scaleway": ("SCALEWAY_API_KEY", "FAILOVER_API_KEY")}
+
+def configured_lanes():
+    """Providers with a key present (env or server .env)."""
+    return [p for p, names in _LANE_KEYS.items() if envkey(*names)]
+
+def any_lane_configured(task="haiku"):
+    """True when at least ONE wired lane is keyed and maps this task tier."""
+    return any(TASK_MODEL.get(p, {}).get(task) for p in configured_lanes())
+
 def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=None,
              timeout=30, allow_fallback=True, probe=False):
     """P2a (1 Aug 2026): breaker-aware. Chain = [requested/active] + others, minus lanes the

@@ -5,6 +5,37 @@
 
 ## Current Session
 
+## status fragment — 2026-08-05 rg0028 false alarm closed
+- RG-0028 ALERT RESOLVED — FALSE ALARM: Hetzner firewall `trustsquare-origin-lockdown` verified
+  INTACT + Fully applied (check-host.net 57/58 global nodes time out on 80/443; console rules
+  exact: 22=David only, 80/443=Cloudflare ranges). The "regression" was the sandbox runner's own
+  transparent 80/443 proxy accepting every connect. No Hetzner action was ever needed.
+- RG-0028 probe hardened (RG-0028-GUARD): control-connect to unroutable TEST-NET-3 first; unfit
+  runner → INFO + skip, fit runner → unchanged. Scope label corrected CPX22 → CPX32.
+  Backup: scripts/regression_ledger.py.bak-rg0028guard-20260805.
+- Known 403-gate-artifact REGRESSION lines from off-allowlist runners: unchanged, still expected
+  until run from a gated/allowlisted vantage.
+
+## 2026-08-05 — AI services fixes (audit acted on)
+
+- AI-SERVICES-AUDIT-1 findings ACTED ON same day per David: F1 any-lane gates (15x),
+  F2 deliver-then-charge (AI1/AI2/AI5), F3 vendor-neutral card copy, F5 HEARTBEAT-1
+  idle-recovery live in code. RG-0032..0035 LOCKED. py_compile green; NOT yet
+  deployed — rides next /tsl. Post-deploy: re-run both ban-drill variants.
+- Peer pack v2 ready (extract generator answers the packet complaint) — David
+  re-runs PEER_AUDIT_AI_SERVICES.bat.
+- ALERT: RG-0028 regression — origin accepts direct connections (Hetzner firewall
+  likely off). David: Hetzner console. Not fixable from a session.
+
+## 2026-08-05 — AI services audit
+
+- AI services audit Phase 1 DONE (Records/AI_SERVICES_AUDIT_2026-08-05.md + nice
+  docx): estate verified sound overall; F1 HIGH (15 ANTHROPIC_API_KEY hard gates
+  defeat vendor independence — pre-launch blocking, fix awaits David's go),
+  F2 MEDIUM (AI1/AI2/AI5 charge-before-deliver vs published refund promise),
+  F3 David-decision (Claude-branded copy vs cost-first routing). Phase 2 peer
+  audit staged: double-click PEER_AUDIT_AI_SERVICES.bat.
+
 2026-08-05 (scheduled follow-up, ~10:00, unattended): Travelpayouts project review returned DECLINED for the tours shortlist (+22 partner programs) — "website under development / not yet ready, re-submit after setup." Not resubmitted (unchanged site fails again); parked as OPEN_LOOPS D10 — David picks the resubmit moment, passing auto-connects the programs. Aviasales flights lane unaffected (Data API re-verified, JNB-CPT R2,284 ZAR). $400 payout minimum on chosen method noted for later.
 
 2026-08-05 (attended, David — found by his question, not by our testing): MODERATION PARITY ON THE AGENCY IMPORT DOOR. David asked "as long as the API agencies upload does get scanned for illegal photos?". Checked rather than reassured. HALF YES: /agencies/{id}/import runs _anon_photo_pass, which uses the SAME vision scan as the seller gate (so it inherits anonymity checks, the confidence floor, redact-blur, reject-hold, and today's seller-own-brand extension) and is fail-closed — a failed scan HOLDS the photo. BUT it never read scan["flag"], so the MODERATION-1 rules live since 15 Jul on the seller upload path (nudity, graphic violence, weapons brandished at people, degrading states, hate symbols) were simply absent at the agency door. An anonymous-but-unacceptable photo could be attached from an agency feed. FIXED: same check, both doors — held (not rejected) because the import is a bulk operation and one bad photo must not fail an entire agency's advert. Tripwire test_every_photo_door_applies_the_same_rules asserts the flag check and the shared scan on that path; the principle it encodes is that a rule holding at one door and not the other is not a rule. NOTE ON PROVENANCE: this was a LAUNCH-RELEVANT gap in a compliance-adjacent control, and no tester, audit or code review found it — David found it by asking a sceptical question about a path we had just declared fine. Worth remembering when weighing "we checked it" against "someone asked whether we checked it".

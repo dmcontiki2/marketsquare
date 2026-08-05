@@ -1,3 +1,119 @@
+## 2026-08-05 — RG-0028 "regression" was a false alarm; the probe now knows when it can't see (RG-0028-GUARD)
+
+**The alarm.** A sandboxed baseline ledger run reported RG-0028 REGRESSED — origin
+178.104.73.239:80/443 "accepting direct connections from an off-allowlist host" — implying the
+Hetzner Cloud Firewall was off and the Cloudflare WAF bypassable. David was told it needed his
+Hetzner console.
+
+**The truth (verified 5 Aug, three independent ways).**
+1. Control probe from the same sandbox class: a TCP connect to UNROUTABLE TEST-NET-3
+   (203.0.113.1:80/443) also "succeeded" — the Claude cloud sandbox transparently intercepts ALL
+   outbound TCP on 80/443, so every raw connect succeeds locally regardless of the firewall.
+   The alarm measured the sandbox's proxy, not the origin.
+2. check-host.net global TCP probes: 57/58 real nodes worldwide TIMED OUT on both 80 and 443.
+   (The lone "Connected, 0.003s" Kyiv node is physically impossible timing to Hetzner — that
+   node's own interception, same artifact class.)
+3. Hetzner console (via David's Chrome): firewall `trustsquare-origin-lockdown` — Fully applied,
+   applied to the project's 1 server, all 3 rules intact: TCP 22 = David's IP only (197.185.169.80);
+   TCP 80/443 = Cloudflare edge ranges only; outbound open. Activity log shows created/applied/updated
+   4 Aug, nothing since. Ports 22 and 8000 (not proxy-intercepted) correctly time out from the
+   sandbox; /health still 200 through Cloudflare. **The gate was never open.**
+
+**Class fix (the ledger, not the firewall).** `scripts/regression_ledger.py` RG-0028 probe now
+runs a runner-fitness control FIRST: connect to unroutable 203.0.113.1. If that "succeeds", the
+environment intercepts 80/443 and the probe reports INFO ("RUNNER UNFIT... verify via
+check-host.net or David's browser") and skips the raw probes instead of reporting a false
+REGRESSION. On a fit runner the control times out and behaviour is byte-identical to before —
+the LOCKED assertion is NOT weakened. Proven: patched ledger re-run from the same sandbox now
+shows RG-0028 [ok] with the UNFIT info line. /health-through-Cloudflare check still always runs.
+
+**Also corrected.** RG-0028 scope said "Hetzner CPX22" — the box is a CPX32 (David's correction;
+STATUS.md agrees). Entry ref extended with the false-alarm note per ledger rule 4 (fix the
+assertion and say so — never weaken).
+
+**Scope note.** The OTHER sandbox-run REGRESSION lines (RG-0030 etc.) remain the known
+403-gate-artifact class from off-allowlist runners — documented, unchanged, separate from this fix.
+
+**Files.** scripts/regression_ledger.py (1304 → 1334 lines, py_compile OK).
+Backup: scripts/regression_ledger.py.bak-rg0028guard-20260805. Restore = cp back.
+
+## 2026-08-05 — Peer round 2: privacy disclosure + probe-claim verdicts
+
+- Peer BLOCKER (claim_probe unused) CONFIRMED for pre-5-Aug code: nothing called
+  claim_probe — a tripped lane was only ever probed by the (default-OFF) nightly
+  scoreboard, without a lease. HEARTBEAT-1 (shipped this session) is now the atomic
+  claimer, closing the blocker. Residual nuance: the scoreboard's nightly force-probe
+  still bypasses the lease by design (single nightly thread, low risk) — noted.
+- Peer MAJOR (multi-processor privacy) CONFIRMED: privacy.html section 5 named
+  Paystack/Hetzner/Cloudflare but hid AI vendors behind "content-assistance
+  services" while fallback can resend prompts/photos/ID documents across
+  Anthropic/OpenAI/Scaleway. FIXED: explicit AI-processing disclosure added
+  (vendors, jurisdictions, no-training terms, failover, data-minimisation).
+  COUNSEL: ratify wording with the SS6.1A batch (ordinary follow-up, not a blocker).
+  Backup: privacy.html.bak-20260805-aiproc. DECISION open for David: should KYC
+  identity verification pin allow_fallback=False (fail closed, retry later) so ID
+  documents only ever reach the primary lane?
+- Peer MAJOR (cost not bounded at seam): attempts/tokens ARE bounded (Correction 2
+  rails: ≤1 attempt/lane, ≤3 total, hard token caps, per-attempt spend logging);
+  the CURRENCY pre-dispatch reservation remains open P2b work as already recorded.
+
+## 2026-08-05 — AI services audit findings ACTED ON (F1/F2/F3/F5) + Peer pack v2
+
+David's rulings on AI-SERVICES-AUDIT-1, all implemented same session (NOT yet deployed):
+
+- **F1 / RG-0032 — any-lane gates.** All 15 `if not ANTHROPIC_API_KEY` endpoint gates
+  replaced with `ai_provider.any_lane_configured()` (new `configured_lanes()` helper in
+  ai_provider.py). A single-vendor key loss can no longer 503 the AI estate while
+  standby lanes are healthy. Both drill variants (AI_DRILL_BAN + unconfigured-key)
+  must be re-run post-deploy.
+- **F2 / RG-0033 — deliver-then-charge.** AI1 rewrite, AI2 audit, AI5 batch cards now
+  pre-flight with `_require_tuppence` and deduct ONLY after a successful result
+  (Session-95 pattern; AI3/AI4 were already compliant). Failure copy now honest:
+  "no Tuppence was charged". The help card's refund promise is true for all five.
+  (David recalled a hold/settle: that lives in the AdvertAgent metered lane
+  (advert_agent.py hold/settle); these three older services had charge-first — now aligned.)
+- **F3 / RG-0035 — vendor-neutral copy.** The five AI Services card descriptions in
+  marketsquare.html no longer name Claude ("Our AI rewrites…") so a lane swap can
+  never make user-facing copy false.
+- **F5 / RG-0034 — HEARTBEAT-1 live.** P2c idle-recovery heartbeat added to BEA
+  startup per design §6: 60s tick, ONE atomically-claimed direct probe per tick,
+  round-robin, text ping, spend logged. Tripped lanes now recover overnight without
+  traffic. (P2c's latency baseline + P2b card lights remain open.)
+- **F4 answered:** the sweep's Sonnet WARN (dashboard.server.html) is display text in
+  the VIZ-MAPS legend/labels, not a call site — no routing failure; DW-009 stays
+  David's justify/downgrade call.
+- **Ledger:** RG-0032..0035 added (all LOCKED, repo-side assertions verified green).
+  Backups: *.bak-20260805-aisvcfix beside each touched file.
+- **Peer pack v2:** scripts/peer_pack_ai.py builds a fresh 88 KB bea_main.py extract
+  (real line numbers) each run — answers the Peer's "bea_main.py not supplied" packet
+  complaint (the 120 KB/file cap forbids shipping 850 KB whole).
+  PEER_AUDIT_AI_SERVICES.bat v2 includes extract + price card + breaker tests + funnel.
+- **ALERT (found by the pre-fix ledger run, NOT caused by it): RG-0028 REGRESSION —
+  origin 178.104.73.239:80/443 accepted a DIRECT connection from an off-allowlist
+  host. The Hetzner Cloud Firewall appears to be off the server — Cloudflare WAF
+  (RG-0027) is bypassable until restored. David: Hetzner console check needed.**
+  (Most other ledger REGRESSION lines from the sandbox run are the known
+  403-gate-artifact class — this one is not.)
+
+## 2026-08-05 — Internal AI services audit (Phase 1) + Peer pack
+
+- **AI-SERVICES-AUDIT-1:** Author's investigation of the whole internal AI estate
+  (5 user-facing Tuppence services, 22 seam call sites, breaker, tier gates, cost
+  rails, governance). Report: `Records/AI_SERVICES_AUDIT_2026-08-05.md` (+ nice
+  docx). Verified sound: seam totality (RG-0017), breaker P2a attached fail-open,
+  cost rails 17/17 wrapped (sweep 0 critical), paid feeds all OFF, register locks
+  RG-0016..0020. Findings: **F1 HIGH** — 15 endpoints hard-gate on
+  ANTHROPIC_API_KEY, breaking single-vendor independence (class fix = seam-level
+  any-lane-configured check; pre-launch blocking); **F2 MEDIUM** — AI1/AI2/AI5
+  charge Tuppence BEFORE the model call, contradicting the published "no Tuppence
+  on server error" promise (AI3/AI4 already deliver-then-charge); **F3 DECISION**
+  — help copy names "Claude" per service vs cost-first routing; F4=DW-009
+  (known); F5=P2b/P2c residue (by design). No fixes shipped — findings filed,
+  David's go pending; F1/F2 need ledger entries when fixed.
+- **PEER_AUDIT_AI_SERVICES.bat** (repo root): one-click Phase 2 — GPT-5.6 Terra
+  full-sweep over the report + estate, confirm/refute F1–F5. David
+  double-clicks (OpenAI key + spend are his side). ~$0.05–0.10.
+
 ## 2026-08-05 — DW-016 CLOSED: watch RED-alert email path restored
 
 - David ran fix_watch_alerts.bat (one-shot, now retired): key copied to /etc/marketsquare/resend.watch.conf, 0640 root:msdeploy.

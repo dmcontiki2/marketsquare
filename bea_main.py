@@ -3316,7 +3316,7 @@ def _vision_orient_image(img):
     """
     import base64 as _b64
     try:
-        if not ANTHROPIC_API_KEY:
+        if not ai_provider.any_lane_configured():
             return (img, False, None, None)
         w, h = img.size
         if w <= h:
@@ -4959,7 +4959,7 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
     Accepts {email, prompt} and returns {response} with a single Haiku sentence.
     Used by sbTriggerMarketNote() in the sell flow (B3 inline note + Path A inline note).
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
 
     prompt = (req.get("prompt") or "").strip()
@@ -5079,7 +5079,7 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
     category = (req.get("category") or "Property")[:40]
     fields = req.get("fields") or {}
     empty = {"captions": [], "description": "", "source": "none"}
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         return empty
     try:
         _check_cost_ceiling("")
@@ -5155,7 +5155,7 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
     if len(photo_b64) > 2_500_000:   # ~1.8 MB image — frontend compresses well below this
         photo_b64 = ""
 
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         return draft
     try:
         _check_cost_ceiling(email)   # C1 — over the daily ceiling: serve the $0 template
@@ -5231,7 +5231,7 @@ def aa_status(email: str):
 @app.post("/advert-agent/coach")
 async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
     """Gate check + Claude Haiku call + return coaching output."""
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI Coach not configured")
 
     conn = database.get_db()
@@ -8898,7 +8898,7 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     points_needed = max(0, score_target - current_score)
     all_missing   = sorted(universal_missing + cat_missing, key=lambda x: x["points"], reverse=True)
 
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         return {
             "ai_available":  False,
             "current_score": current_score,
@@ -9114,7 +9114,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
     missing.sort(key=lambda x: x["points"], reverse=True)
     next_suggestion = missing[0] if missing else None
 
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         comment = f"✅ {signal_name} submitted for verification — worth +{signal_pts} pts once approved."
         if next_suggestion:
             comment += f" Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)."
@@ -9652,7 +9652,7 @@ async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
     so this helper stays metered even if a future caller forgets to.
     Returns: {verified(bool), confidence(float), extracted_name(str),
               extracted_id(str), notes(str), model(str)}"""
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         return {"verified": False, "confidence": 0.0, "extracted_name": "",
                 "extracted_id": "", "notes": "AI verification unavailable — API key not set",
                 "model": "none"}
@@ -13746,7 +13746,7 @@ async def ai_listing_rewrite(listing_id: int, email: str):
     Uses current market language and buyer psychology for the listing category.
     Returns {new_title, new_description, tuppence_remaining}.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
     _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
@@ -13759,11 +13759,8 @@ async def ai_listing_rewrite(listing_id: int, email: str):
         conn.close()
         raise HTTPException(status_code=403, detail="Email does not match listing owner")
 
-    remaining = _deduct_tuppence(
-        conn, email, 1,
-        f"AI Listing Rewrite · #{listing_id} · {listing['title'][:40]}"
-    )
-    conn.commit()
+    _require_tuppence(email, 1)   # F2 fix (5 Aug 2026): pre-flight only — charge on delivery
+    _rw_charge_desc = f"AI Listing Rewrite · #{listing_id} · {listing['title'][:40]}"
     conn.close()
 
     category = listing["category"] or "General"
@@ -13810,8 +13807,16 @@ async def ai_listing_rewrite(listing_id: int, email: str):
         new_desc  = str(result.get("new_description", "")).strip()[:1000]
     except Exception as exc:
         _log.error("ai-rewrite: %s", exc)
-        raise HTTPException(status_code=500, detail="AI rewrite failed — Tuppence charged") from exc
+        raise HTTPException(status_code=500, detail="AI rewrite failed — no Tuppence was charged") from exc
 
+    # F2 fix: deliver-then-charge — deduction happens ONLY here, after a good result,
+    # so the help card's "server error = no Tuppence deducted" promise is true.
+    _conn2 = database.get_db()
+    try:
+        remaining = _deduct_tuppence(_conn2, email, 1, _rw_charge_desc)
+        _conn2.commit()
+    finally:
+        _conn2.close()
     _log.info("ai-rewrite: listing #%d email=%s", listing_id, email)
     return {
         "new_title": new_title,
@@ -13828,7 +13833,7 @@ async def ai_seller_audit(listing_id: int, email: str):
     3 specific, actionable improvement steps.
     Returns {actions: [{step, reason}], tuppence_remaining}.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
     _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
@@ -13853,11 +13858,8 @@ async def ai_seller_audit(listing_id: int, email: str):
     ).fetchone()
     trust_score = user_row["trust_score"] if user_row and user_row["trust_score"] else "unknown"
 
-    remaining = _deduct_tuppence(
-        conn, email, 1,
-        f"AI Seller Audit · #{listing_id} · {listing['title'][:40]}"
-    )
-    conn.commit()
+    _require_tuppence(email, 1)   # F2 fix (5 Aug 2026): pre-flight only — charge on delivery
+    _au_charge_desc = f"AI Seller Audit · #{listing_id} · {listing['title'][:40]}"
     conn.close()
 
     category = listing["category"] or "General"
@@ -13913,8 +13915,14 @@ async def ai_seller_audit(listing_id: int, email: str):
                 })
     except Exception as exc:
         _log.error("ai-audit: %s", exc)
-        raise HTTPException(status_code=500, detail="AI audit failed — Tuppence charged") from exc
+        raise HTTPException(status_code=500, detail="AI audit failed — no Tuppence was charged") from exc
 
+    _conn2 = database.get_db()
+    try:
+        remaining = _deduct_tuppence(_conn2, email, 1, _au_charge_desc)   # F2: charge on delivery
+        _conn2.commit()
+    finally:
+        _conn2.close()
     _log.info("ai-audit: listing #%d email=%s intros=%d", listing_id, email, intro_count)
     return {
         "actions": clean_actions,
@@ -14407,7 +14415,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
              official_range, local_vs_global, asking_price, verified, safety_flag,
              tuppence_remaining, ...legacy}.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
 
     conn = database.get_db()
@@ -14717,7 +14725,7 @@ async def ai_yield_calc(listing_id: int, email: str,
     writes the benchmark sentence. 1T is charged ONLY when a real yield is
     produced from real inputs.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
 
     conn = database.get_db()
@@ -14939,7 +14947,7 @@ async def ai_batch_card_listings(req: BatchCardRequest):
     Capped at 10 images per call. 2T flat cost regardless of card count.
     Returns {drafts: [...], cards_processed, tuppence_remaining}.
     """
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
 
     if not req.images:
@@ -14950,13 +14958,8 @@ async def ai_batch_card_listings(req: BatchCardRequest):
     images = req.images[:10]
     card_count = len(images)
 
-    conn = database.get_db()
-    remaining = _deduct_tuppence(
-        conn, req.seller_email, 2,
-        f"AI Batch Cards · {card_count} card(s) · {req.city}"
-    )
-    conn.commit()
-    conn.close()
+    _require_tuppence(req.seller_email, 2)   # F2 fix (5 Aug 2026): pre-flight only — charge on delivery
+    _bc_charge_desc = f"AI Batch Cards · {card_count} card(s) · {req.city}"
 
     suburb_str = req.suburb or req.city
     location_str = f"{suburb_str}, {req.city}"
@@ -15043,8 +15046,14 @@ async def ai_batch_card_listings(req: BatchCardRequest):
 
     except Exception as exc:
         _log.error("ai-batch-cards: %s", exc)
-        raise HTTPException(status_code=500, detail="AI batch card listing failed — Tuppence charged") from exc
+        raise HTTPException(status_code=500, detail="AI batch card listing failed — no Tuppence was charged") from exc
 
+    _conn2 = database.get_db()
+    try:
+        remaining = _deduct_tuppence(_conn2, req.seller_email, 2, _bc_charge_desc)   # F2: charge on delivery
+        _conn2.commit()
+    finally:
+        _conn2.close()
     _log.info("ai-batch-cards: seller=%s city=%s cards=%d drafts=%d",
               req.seller_email, req.city, card_count, len(clean_drafts))
     return {
@@ -15196,7 +15205,7 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
     """Call Claude to classify an inbound email and draft a reply.
     Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
     fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False, "bin": "MISC"}
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         return fallback
     # P2 wrapper — ceiling check before the paid call. Inbound mail is an
     # unauthenticated external surface; on 429 fall back to the safe default
@@ -16082,7 +16091,7 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
     result = {"grade": None, "confidence": None, "notes": "",
               "model": VISION_MODEL, "in_tokens": None, "out_tokens": None,
               "error": None}
-    if not ANTHROPIC_API_KEY:
+    if not ai_provider.any_lane_configured():
         result["error"] = "no_api_key"
         return result
     # P2 wrapper — platform-rail ceiling check (no user context in batch grading).
@@ -16814,3 +16823,45 @@ if _ts_scoreboard is not None:
                 except Exception as _sb_e:
                     print("SCOREBOARD-1 nightly error: %s" % _sb_e)
         asyncio.get_running_loop().create_task(_sb_loop())
+
+
+# ── HEARTBEAT-1 (5 Aug 2026, David's F5 ruling: live NOW, confidence before launch) ──
+# P2c idle-recovery heartbeat per AI_AUTO_FAILOVER_P2_DESIGN §6: every 60 s, if any
+# breaker row is eligible (tripped/half_open, probe window open), claim and send ONE
+# direct probe — one per tick TOTAL, round-robin, so a bad night can never multiply
+# cost. Text ping only (~$0.00002); T3 rows carry hourly probe_after, so bans probe
+# hourly. Spend is logged like all spend. Fail-open: any error waits for the next tick.
+@app.on_event("startup")
+async def _ts_breaker_heartbeat():
+    async def _hb_loop():
+        _rr = 0
+        while True:
+            await asyncio.sleep(60)
+            try:
+                import ai_breaker as _hb_brk
+                if getattr(_hb_brk, "_get_db", None) is None:
+                    continue   # breaker unattached — nothing to probe
+                _hb_conn = database.get_db()
+                try:
+                    _rows = _hb_conn.execute(
+                        "SELECT provider, task FROM ai_breaker "
+                        "WHERE state IN ('tripped','half_open') "
+                        "AND (probe_after IS NULL OR probe_after <= ?) "
+                        "ORDER BY provider, task",
+                        (datetime.utcnow().isoformat(timespec="seconds"),)).fetchall()
+                finally:
+                    _hb_conn.close()
+                if not _rows:
+                    continue
+                _row = _rows[_rr % len(_rows)]; _rr += 1
+                _p, _t = _row["provider"], _row["task"]
+                if not _hb_brk.claim_probe(_p, _t):
+                    continue   # someone else holds the half-open lease
+                _r = await asyncio.to_thread(
+                    ai_provider.complete, [{"role": "user", "content": "ping"}],
+                    task=_t, max_tokens=8, provider=_p, probe=True, timeout=20)
+                _log_ai_spend("system:heartbeat", "/breaker/heartbeat", _t,
+                              _r.in_tokens, _r.out_tokens)
+            except Exception as _hb_e:
+                print("HEARTBEAT-1 error: %s" % _hb_e)
+    asyncio.get_running_loop().create_task(_hb_loop())
