@@ -713,6 +713,20 @@ def run_migrations(conn):
         (id, monthly_income_usd, alert_threshold_pct, alert_email)
         VALUES (1, 0.0, 20.0, 'dmcontiki2@gmail.com')""")
 
+    # C1-RES (AI-SERVICES-AUDIT-1 F2, 5 Aug 2026): pre-dispatch spend RESERVATIONS.
+    # The ceiling check summed only LOGGED spend, which is written AFTER the call — so
+    # N concurrent calls all passed the check before any recorded its cost and could
+    # collectively overshoot. A reservation is a short-lived worst-case hold placed
+    # BEFORE dispatch and counted by the ceiling check; it is settled when real spend
+    # is logged, and self-expires so an aborted call can never wedge the budget.
+    conn.execute("""CREATE TABLE IF NOT EXISTS ai_spend_holds (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        email      TEXT    NOT NULL DEFAULT '',
+        est_usd    REAL    NOT NULL DEFAULT 0.0,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT    NOT NULL
+    )""")
+
     # Launch Switch (free-only <-> verified) — singleton flag row; default = launch/free-only
     conn.execute("""CREATE TABLE IF NOT EXISTS launch_switches (
         id            INTEGER PRIMARY KEY CHECK (id = 1),
@@ -1524,6 +1538,7 @@ def _log_ai_spend(email: str, endpoint: str, model_key: str,
             _maybe_fire_spend_alert(conn)
         finally:
             conn.close()
+        _settle_hold(email or '')   # C1-RES: real spend recorded — release the reservation
     except Exception as exc:
         _log.error("_log_ai_spend failed: %s", exc)
 
@@ -1593,6 +1608,41 @@ def _maybe_fire_spend_alert(conn):
         _log.error("_maybe_fire_spend_alert failed: %s", exc)
 
 
+# C1-RES worst-case hold (USD): a conservative per-call ceiling — the dearest metered
+# call (Sonnet vision batch) rounds up to this. Over-reserves slightly (safe direction);
+# settled down to the real figure the moment _log_ai_spend records actual tokens.
+_AI_WORST_CASE_HOLD_USD = 0.06
+_HOLD_TTL_S = 180
+
+def _active_holds_usd(conn, email: str | None = None) -> float:
+    """Sum of unexpired reservations (optionally for one user). Purges expired rows."""
+    now = __import__('datetime').datetime.utcnow().isoformat(timespec="seconds")
+    conn.execute("DELETE FROM ai_spend_holds WHERE expires_at < ?", (now,))
+    if email is not None:
+        row = conn.execute("SELECT COALESCE(SUM(est_usd),0) t FROM ai_spend_holds "
+                           "WHERE email=? AND expires_at >= ?", (email, now)).fetchone()
+    else:
+        row = conn.execute("SELECT COALESCE(SUM(est_usd),0) t FROM ai_spend_holds "
+                           "WHERE expires_at >= ?", (now,)).fetchone()
+    return float(row["t"] if row else 0.0)
+
+def _settle_hold(email: str) -> None:
+    """Release the oldest reservation for this user — called once real spend is logged.
+    Never raises (bookkeeping must not break serving)."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT id FROM ai_spend_holds WHERE email=? "
+                               "ORDER BY id ASC LIMIT 1", (email or '',)).fetchone()
+            if row:
+                conn.execute("DELETE FROM ai_spend_holds WHERE id=?", (row["id"],))
+                conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.error("_settle_hold failed: %s", exc)
+
+
 def _check_cost_ceiling(email: str) -> None:
     """C1 (Session 97) — HARD daily cost ceiling. Pre-flight guard before every paid
     AI call. REFUSES (HTTP 429) when today's logged AI spend has reached the per-user
@@ -1619,9 +1669,10 @@ def _check_cost_ceiling(email: str) -> None:
                     "SELECT COALESCE(SUM(est_cost_usd),0) as t FROM ai_spend_log WHERE logged_at >= ?",
                     (day_start,)
                 ).fetchone()
-                if (prow["t"] if prow else 0.0) >= platform_cap:
+                _plat_spent = (prow["t"] if prow else 0.0) + _active_holds_usd(conn)   # C1-RES
+                if _plat_spent >= platform_cap:
                     _log.warning("C1 platform ceiling hit: $%.4f >= $%.2f — refusing (%s)",
-                                 prow["t"], platform_cap, email)
+                                 _plat_spent, platform_cap, email)
                     raise HTTPException(
                         status_code=429,
                         detail="AI services are temporarily paused (daily platform budget reached). "
@@ -1634,14 +1685,23 @@ def _check_cost_ceiling(email: str) -> None:
                         "SELECT COALESCE(SUM(est_cost_usd),0) as t FROM ai_spend_log "
                         "WHERE email = ? AND logged_at >= ?", (email, day_start)
                     ).fetchone()
-                    if (urow["t"] if urow else 0.0) >= user_cap:
+                    _user_spent = (urow["t"] if urow else 0.0) + _active_holds_usd(conn, email)   # C1-RES
+                    if _user_spent >= user_cap:
                         _log.warning("C1 user ceiling hit: %s $%.4f >= $%.2f — refusing",
-                                     email, urow["t"], user_cap)
+                                     email, _user_spent, user_cap)
                         raise HTTPException(
                             status_code=429,
                             detail="You've reached today's AI usage limit on this account. "
                                    "It resets at 00:00 UTC."
                         )
+            # C1-RES: cleared all ceilings — place a worst-case reservation atomically so
+            # concurrent callers see it and cannot collectively overshoot. Settled by
+            # _log_ai_spend once the real cost is known; self-expires if the call aborts.
+            _exp = (__import__('datetime').datetime.utcnow()
+                    + __import__('datetime').timedelta(seconds=_HOLD_TTL_S)).isoformat(timespec="seconds")
+            conn.execute("INSERT INTO ai_spend_holds (email, est_usd, expires_at) VALUES (?,?,?)",
+                         (email or '', _AI_WORST_CASE_HOLD_USD, _exp))
+            conn.commit()
         finally:
             conn.close()
     except HTTPException:
@@ -9643,6 +9703,65 @@ def _names_match(name_a: str, name_b: str) -> float:
     return round(min(score, 1.0), 2)
 
 
+# ── KYC-SSRF-1 (5 Aug 2026, AI-SERVICES-AUDIT-1 F3): the ID-document fetch used
+# a caller-supplied URL with no allowlist, no private-IP block, no redirect ban and
+# no size cap — a textbook SSRF (a caller with the public app key could point it at
+# cloud metadata or an internal address) plus a memory-DoS. This guard pins the fetch
+# to the R2 public host, forbids redirects, blocks any host that resolves to a
+# private/loopback/link-local address, and caps the download. KYC images are small;
+# 12 MB is generous.
+import ipaddress as _ipaddr, socket as _socket
+from urllib.parse import urlparse as _urlparse
+
+_KYC_MAX_BYTES = 12 * 1024 * 1024
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code,
+                                     "redirects are not allowed for KYC document fetch",
+                                     headers, fp)
+
+def _host_is_public(host: str) -> bool:
+    """True only if EVERY address the host resolves to is a global (public) IP."""
+    try:
+        infos = _socket.getaddrinfo(host, None)
+    except Exception:
+        return False
+    addrs = {i[4][0] for i in infos}
+    if not addrs:
+        return False
+    for a in addrs:
+        try:
+            ip = _ipaddr.ip_address(a)
+        except ValueError:
+            return False
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            return False
+    return True
+
+def _fetch_kyc_document(doc_url: str) -> bytes:
+    """SSRF-safe fetch of an already-uploaded ID document. Raises ValueError on any
+    policy violation; the caller turns that into an honest 'could not fetch' result."""
+    base = (R2_PUBLIC_URL or "").rstrip("/")
+    if not base or not doc_url.startswith(base + "/"):
+        raise ValueError("document URL is not on the approved storage host")
+    p = _urlparse(doc_url)
+    if p.scheme != "https" or not p.hostname:
+        raise ValueError("document URL must be https")
+    if not _host_is_public(p.hostname):
+        raise ValueError("document host resolves to a non-public address")
+    opener = urllib.request.build_opener(_NoRedirect)
+    req = urllib.request.Request(doc_url, headers={"User-Agent": "TrustSquare-KYC/1.0"})
+    with opener.open(req, timeout=10) as resp:
+        clen = resp.headers.get("Content-Length")
+        if clen and int(clen) > _KYC_MAX_BYTES:
+            raise ValueError("document exceeds the size limit")
+        data = resp.read(_KYC_MAX_BYTES + 1)
+    if len(data) > _KYC_MAX_BYTES:
+        raise ValueError("document exceeds the size limit")
+    return data
+
+
 async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
                                    claimed_id: str, doc_type: str, email: str = "") -> dict:
     """Call Sonnet vision to verify identity document.
@@ -9658,10 +9777,8 @@ async def _sonnet_verify_identity(doc_url: str, claimed_name: str,
                 "model": "none"}
     _check_cost_ceiling(email)   # C1 — refuse if daily cost ceiling reached
     try:
-        # Fetch the document image
-        req = urllib.request.Request(doc_url, headers={"User-Agent": "TrustSquare-KYC/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            img_bytes = resp.read()
+        # Fetch the document image (KYC-SSRF-1: allowlisted host, no redirects, size-capped)
+        img_bytes = _fetch_kyc_document(doc_url)
         img_b64 = base64.standard_b64encode(img_bytes).decode()
         # Detect media type
         media_type = "image/jpeg"
@@ -9710,7 +9827,7 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
                 ]
             }],
             task="sonnet", max_tokens=300,
-            provider=_ts_active_provider(), timeout=120)
+            provider=_ts_active_provider(), allow_fallback=False, timeout=120)   # KYC-PIN-1 (F3): ID docs never fan out to standby vendors
         raw = _sr.text.strip()
         # Parse JSON from response
         json_match = re.search(r'\{[\s\S]*\}', raw)

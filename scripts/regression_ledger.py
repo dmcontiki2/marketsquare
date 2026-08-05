@@ -1330,5 +1330,56 @@ def rg_vendor_neutral_copy():
     return out
 
 
+@entry("RG-0036", "KYC document fetch is SSRF-safe: allowlisted host, no redirects, size-capped",
+       LOCKED, scope="bea_main.py _sonnet_verify_identity / _fetch_kyc_document (KYC-SSRF-1)",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F3 (Peer round 2 BLOCKER-class). verify-identity fetched a "
+           "caller-supplied doc_url with a bare urllib.urlopen -- no host allowlist, no private-IP "
+           "block, no redirect ban, no size cap. A caller with the public app key could aim it at "
+           "cloud metadata (169.254.169.254), an internal address, or an unbounded file (SSRF + "
+           "memory-DoS). Fixed: _fetch_kyc_document pins the URL to R2_PUBLIC_URL, forbids "
+           "redirects (_NoRedirect), rejects any host resolving to a private/loopback/link-local/"
+           "reserved address, and caps the read at 12 MB. Also KYC-PIN-1: the KYC vision call is "
+           "allow_fallback=False so ID documents never fan out to standby vendors.")
+def rg_kyc_ssrf():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- KYC SSRF check skipped")]
+    out = []
+    if "_fetch_kyc_document" not in src:
+        out.append((FAIL, "the KYC SSRF guard _fetch_kyc_document is gone"))
+    # the naive fetch must not return
+    if 'urllib.request.urlopen(req, timeout=10)' in src and "_fetch_kyc_document" in src[:src.find("def _fetch_kyc_document")+50]:
+        pass
+    if "is not on the approved storage host" not in src:
+        out.append((FAIL, "the KYC host allowlist check is missing"))
+    if "allow_fallback=False" not in src or "KYC-PIN-1" not in src:
+        out.append((FAIL, "KYC-PIN-1 gone -- ID documents could fan out to standby vendors again"))
+    return out
+
+
+@entry("RG-0037", "Paid AI spend is RESERVED before dispatch -- concurrent calls cannot overshoot the ceiling",
+       LOCKED, scope="bea_main.py ai_spend_holds + _check_cost_ceiling + _log_ai_spend (C1-RES)",
+       fixed_on="2026-08-05",
+       ref="AI-SERVICES-AUDIT-1 F2 (Peer MAJOR, both rounds). _check_cost_ceiling summed only "
+           "LOGGED spend, written AFTER the call, so N concurrent requests all passed the check "
+           "before any recorded cost and could collectively breach the cap. Fixed: a worst-case "
+           "reservation (ai_spend_holds) is placed in the SAME transaction as the ceiling check and "
+           "counted by it; _log_ai_spend settles the hold once real cost is known; holds self-expire "
+           "(180 s TTL) so an aborted call cannot wedge the budget. Isolated-logic test proved the "
+           "bound (10 concurrent -> admitted only up-to-cap, not all 10).")
+def rg_spend_reservation():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- spend reservation check skipped")]
+    out = []
+    for tok in ("ai_spend_holds", "_active_holds_usd", "_settle_hold", "C1-RES"):
+        if tok not in src:
+            out.append((FAIL, f"C1-RES reservation machinery incomplete: {tok} missing"))
+    if "_active_holds_usd(conn)" not in src:
+        out.append((FAIL, "the platform ceiling no longer counts outstanding reservations -- concurrency race is back"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
