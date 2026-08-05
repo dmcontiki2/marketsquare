@@ -19,12 +19,18 @@ Projects folder, else the published copy at /static/agents_status.md).
 ## Roster
 | Agent | Role | Spec / engine binding today | Status |
 |---|---|---|---|
-| Maintenance | Complaint→fix pipeline, majors first, one-word daily ship gate | MAINTENANCE_AGENT.md · spine: server-resident (API-billed, swap seam); brain: Claude scheduled sessions for launch → re-bind to dedicated Hetzner worker when launch rush trickles (ruled 29 Jul) | **TOTAL AUTONOMY ruled 29 Jul (no veto; mechanical gates + auto-rollback + kill switch) — building B1–B4, rehearsed by ~22 Aug** |
+| Maintenance | Fault (NCR) lane: adjudicate→fix→verify→harden, majors first (stale 'one-word gate' wording removed — retired by the 29 Jul evening ruling) | MAINTENANCE_AGENT.md · spine: server-resident (API-billed, swap seam); brain: Claude scheduled sessions for launch → re-bind to dedicated Hetzner worker when launch rush trickles (ruled 29 Jul) | **TOTAL AUTONOMY ruled 29 Jul (no veto; mechanical gates + auto-rollback + kill switch) — building B1–B4, rehearsed by ~22 Aug** |
 | Pulse/Monitor | Site heartbeat, amber/red alerts | /pulse skill + server mailer | live |
 | BIT Tester | Functional + negative self-test each deploy | trustsquare-bit-agent/bit_cycle.py | live (deterministic engine) |
 | Outreach/Emailer | Wave sends, gated | wave_runner.py + emailer.py (--no-ai default) | built, gated for wave-1 |
-| Feedback Triage | Tester/seller feedback → register → fixes | /feedback, /fixback, /fix skills | live, session-invoked |
+| Feedback Triage | Voice-of-customer lane: listen→synthesize→prioritize→route; never fixes — fix-now routes to Maintenance by reference; design-change items feed the shared design backlog | /feedback, /fixback skills + FEEDBACK.md register | live, session-invoked — RULED a separate agent from Maintenance, 5 Aug 2026 |
 | Video Pipeline | Launch clips generate/QC/package | /launch-series, /video-qc, /youtube-pack | live, session-invoked |
 | (further agents) | — | to be defined with David | discussion tonight |
 
 Roster changes and engine re-bindings are recorded HERE, dated, David-ruled.
+
+- **5 Aug 2026 (David):** Maintenance vs Feedback-Triage RULED as TWO agents sharing ONE
+  intake (REPORT tab / email / error log — the reporter never picks a lane; triage routes).
+  Hand-over contract + full boundary: MAINTENANCE_AGENT.md, LAUNCH BOUNDARY REDRAW section.
+  The designer approval gate sits on the shared design backlog both agents feed — on
+  neither agent itself. Path A total autonomy remains Maintenance-only.

@@ -16,7 +16,23 @@ from datetime import datetime, timezone
 HERE = os.path.dirname(os.path.abspath(__file__))
 MANIFEST = os.path.join(HERE, "ops", "daily_checks.json")
 
+def _seed_transport():
+    """DW-015: seed the server host key so a fresh shell never reports a false
+    'unreachable' (Host key verification failed). Idempotent, silent on failure."""
+    try:
+        home = os.path.expanduser("~/.ssh"); os.makedirs(home, exist_ok=True)
+        kh = os.path.join(home, "known_hosts")
+        host = "178.104.73.239"
+        existing = open(kh, encoding="utf-8", errors="replace").read() if os.path.exists(kh) else ""
+        if host not in existing:
+            r = subprocess.run(["ssh-keyscan", "-H", host], capture_output=True, text=True, timeout=20)
+            if r.returncode == 0 and r.stdout.strip():
+                with open(kh, "a", encoding="utf-8") as f: f.write(r.stdout)
+    except Exception:
+        pass  # transport stays as-is; the drift check will report honestly
+
 def main():
+    _seed_transport()
     as_json = "--json" in sys.argv
     try:
         man = json.load(open(MANIFEST, encoding="utf-8"))

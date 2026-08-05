@@ -1136,7 +1136,7 @@ def rg_origin_refuses_direct():
 
 
 @entry("RG-0030", "The in-app tester fault channel exists, is fail-closed, and ships to every page",
-       OPEN, scope="all tester-facing pages (index, admin, legal, 9 adventure maps)",
+       LOCKED, scope="all tester-facing pages (index, admin, legal, 9 adventure maps)",
        fixed_on="2026-08-05",
        ref="MAINT-B1b. Testers had no way to report an APP FAULT from inside the app -- "
            "seller_complaints/lm_complaints are marketplace conduct, and email skipped the "

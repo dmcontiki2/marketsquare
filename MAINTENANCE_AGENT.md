@@ -141,3 +141,46 @@ recorded as verified. That distinction is the honest core of the whole agent.
   whole loop end-to-end, then sign it READY.
 
 Target: B1–B4 complete and rehearsed ≥ 1 week before 1 Sep (i.e. by ~22 Aug).
+
+
+## LAUNCH BOUNDARY REDRAW — David, 5 Aug 2026 (amends the 29 Jul evening ruling for Path B ONLY)
+David's ruling, his words: for launch the Maintenance Agent has "autonomy of complaints
+regarding customer faults found and customer feedback reporting, with the possible design
+changes then to be measured against more stringent guidelines with a designer approval gate."
+- **Path A (mechanical fixes) — UNCHANGED.** Total autonomy, no veto, mechanical gates only.
+- **Path B (design changes) — AMENDED.** The dossier lane stays, but a design change now
+  requires (a) measurement against stringent design-change guidelines (to be written before
+  launch) and (b) a DESIGNER APPROVAL GATE before build. The 29 Jul "Autonomous too — but
+  batched" wording no longer applies to Path B; batched-never-hotfixed still does. This does
+  NOT reintroduce the single point of failure the 29 Jul ruling removed: Path B is the batched
+  lane, so a stalled approval delays a design change, never a fix.
+- **Pre-launch (now → 1 Sep):** improvement vs design change deliberately NOT strictly
+  differentiated — the tester pool is contained to three (David, Maroushka, David Junior), so
+  drift/baseline risk is controlled by the people, not the process. The strict Path A/B
+  boundary + designer gate activates AT LAUNCH.
+- **OPEN before launch:** (1) write the stringent design-change guidelines; (2) bind the
+  designer role (AGENTS.md roster discussion still pending) — per doctrine a ROLE with a
+  swappable binding (David, a design agent, or both); (3) the Maintenance vs
+  Feedback-Triage roster boundary. **David's correction, 5 Aug 2026 (later same day):** do NOT
+  assume feedback folds under Maintenance — "it may very well be 2 agents." Boundary review
+  RULED by David, 5 Aug 2026 — "I agree to the two-agent split", with an explicit
+  information flow / hand-over between them:
+  * TWO agents, ONE intake. The reporter never picks a lane (the register proves testers
+    can't: F-013 was "feedback" with a wrong diagnosis hiding a real fault; F-015 opened
+    F-016/F-017). Triage routes: failure claim -> FAULT_REGISTER (Maintenance); preference /
+    suggestion / praise -> FEEDBACK.md (Feedback-Triage); cross-link when one reveals the other.
+  * Maintenance Agent = adjudicate-fix-verify-harden. NCR lane, majors first, immediate,
+    Path A total autonomy. Escalates on safety/legal/cost.
+  * Feedback-Triage Agent = listen-synthesize-prioritize-route. Voice-of-customer lane,
+    batched, vote-counting, fix-now/next/later/out-of-scope classes. Autonomous in reporting
+    and classification; never fixes — routes fix-now items to Maintenance.
+  * The designer approval gate sits on NEITHER agent — it gates the ONE design backlog that
+    BOTH feed (Maintenance via recurrence rule 3 dossiers; Feedback via design-change items).
+    One lane, one gate, two feeders.
+  * HAND-OVER CONTRACT (David, 5 Aug): items cross by REFERENCE, never by copy.
+    Feedback routes a fix-now item to Maintenance as a FAULT_REGISTER row citing the
+    F-nnn verbatim; Maintenance reports fix/ship status back so the F-row closes on the
+    same evidence (FEEDBACK.md's link column already does this). A Maintenance
+    NOT-A-FAULT adjudication that reveals a wish/preference routes back as a new F-row.
+    Recurrence counts and theme votes stay visible to both. Reporter replies: Maintenance
+    owns retest letters (TS-nnnn faults); Feedback owns suggestion acknowledgements.

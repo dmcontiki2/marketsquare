@@ -8681,7 +8681,6 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     # Surplus evidence (raw totals over 100) must never absorb a penalty — a seller
     # displaying 100 who draws complaints must visibly drop, and recover only via
     # the time rules (24-month complaint decay / dispute), never by adding evidence.
-    base_score = 40  # kept for response payloads; the arithmetic lives in _trust_math
     score_total = _trust_math(_raw_u, _raw_t, _raw_c, penalty_total, lm=_is_lm_score)
     tier = _trust_tier(score_total)
 
