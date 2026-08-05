@@ -41,3 +41,5 @@
 - 2026-07-23 (late): F-009/F-010 from David Jnr's super-advert screenshots. Root cause of the About-vs-table repetition was sfComposeDescription folding structured Cars fields into the description; fixed in ms.js for new listings (CARS-DESC-DEDUPE-1) and cleaned on existing rows by scripts/fix_super_advert_format.py, which also backfills the Hilux super advert to the new spec-panel format.
 - The retired quick-list wizard (SB_FIELDS in ms.js) still carries a levies field for To Let;
   left as-is since the guided sell flow (sf) is the live path — flag if it ever resurfaces.
+
+- 2026-08-05: TS-0007..TS-0013 (Maroushka, via the in-app REPORT tab — the fault lane, not this register): censor sprawl capped, parking type added, credential-decision emails, coach mentions credentials, HEIC supported, agent-hub uploader confirmed shipped. Dispositions in CHANGELOG (fixback-ts-batch) and app_faults.

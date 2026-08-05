@@ -606,10 +606,13 @@ function formatDescLegacy(desc) {
       flushList();
       const isHeading = line.endsWith(':') ||
         (line.length <= 50 && !/[.!?,;:]/.test(line));
+      // TS-0019 (5 Aug 2026): AI descriptions carry markdown **bold**; this plain-text
+      // path rendered the asterisks literally ("**Suburb:** Waterkloof"). One inline pass.
+      const _mdb = t => t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
       if (isHeading) {
-        out.push(`<h4 class="desc-heading">${line.replace(/:$/, '')}</h4>`);
+        out.push(`<h4 class="desc-heading">${_mdb(line.replace(/:$/, ''))}</h4>`);
       } else {
-        out.push(`<p class="desc-p">${line}</p>`);
+        out.push(`<p class="desc-p">${_mdb(line)}</p>`);
       }
     }
   }
@@ -1085,7 +1088,8 @@ function catSummaryTiles(l){
     add('\ud83d\udecf','Bedrooms', l.beds); add('\ud83d\udebf','Bathrooms', l.baths);
     add('\ud83d\udcd0','Floor', l.floor_area?l.floor_area+' m\u00b2':null);
     add('\ud83c\udf33','Erf', l.erf_size?l.erf_size+' m\u00b2':null);
-    add('\ud83d\ude97','Garages', l.garages);
+    add('\ud83d\ude97','Parking', (function(){ var pt=l.parking_type; if(!pt){ try{ pt=JSON.parse(l.structured_fields||'{}').parking_type; }catch(e){} }
+      if(pt && l.garages) return l.garages + ' \u00b7 ' + pt; if(pt) return pt; return l.garages ? l.garages + ' (garage)' : null; })());   /* TS-0009 */
   } else if(c==='Tutors'){
     add('\ud83d\udcda','Subjects', l.subject); add('\ud83c\udf93','Level', l.level); add('\ud83d\udccd','Mode', l.mode);
   } else if(c==='Services'){
@@ -4965,7 +4969,7 @@ function renderCVEditForm(){
     <!-- Credentials -->
     <div class="cv-edit-sec">
       <div class="cv-edit-sec-title">Credentials &amp; Qualifications</div>
-      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Certificate photos are blurred to buyers until introduction is accepted — they verify your credentials without revealing your identity.</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Add yours in My Space → Credentials &amp; Qualifications — each one adds Trust Score points once our team verifies it (nothing auto-earns). Certificate photos are blurred to buyers until introduction is accepted — they verify your credentials without revealing your identity.</div>
       ${s.creds.map((c,i)=>`
         <div class="cv-cred-edit-row">
           <div class="cv-cred-edit-num">${i+1}</div>
@@ -7197,7 +7201,7 @@ async function goHandoff() {
             let _pd = 'not accepted';
             try { const _pj = await _pr.json(); if (_pj && _pj.detail) _pd = _pj.detail; } catch (e) {}
             if (_pr.status === 400 && /JPEG|PNG|WebP/i.test(String(_pd)))
-              _pd = 'iPhone HEIC photos are not supported yet — set Camera → Formats to "Most Compatible", or re-save the photo as JPEG.';
+              _pd = 'This photo format was not accepted. HEIC is supported after the 5 Aug update — retry once; if it still fails, set Camera → Formats to "Most Compatible", or re-save the photo as JPEG.';
             if (typeof showToast === 'function') showToast('⚠ Photo ' + (pi + 1) + ' was not accepted: ' + _pd);
           }
         }
@@ -7507,6 +7511,9 @@ const SB_FIELDS = {
     {id:'bedrooms',      label:'Bedrooms',         type:'select', opts:['Studio','1','2','3','4','5','6+']},
     {id:'bathrooms',     label:'Bathrooms',        type:'select', opts:['1','1.5','2','2.5','3','4+']},
     {id:'garages',       label:'Garages',          type:'select', opts:['0','1','2','3+']},
+    /* TS-0009 (Maroushka, 5 Aug 2026): "just parking" that is not a garage was
+       un-sayable, which reads as misleading advertising. Say what it really is. */
+    {id:'parking_type',  label:'Parking type',     type:'select', opts:['Garage','Carport','Open parking','Street only','None']},
     {id:'floor_size',    label:'Floor size (m²)',  type:'number', placeholder:'e.g. 180'},
     {id:'stand_size',    label:'Stand size (m²)',  type:'number', placeholder:'e.g. 600'},
     {id:'suburb',        label:'Suburb',           type:'text',   placeholder:'e.g. Waterkloof'},
@@ -10400,6 +10407,7 @@ const AA_CATEGORIES = {
       {id:'beds',         label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
       {id:'baths',        label:'Bathrooms',           type:'number', placeholder:'e.g. 2'},
       {id:'garages',      label:'Garages / parking',   type:'number', placeholder:'e.g. 1'},
+      {id:'parking_type', label:'Parking type',        type:'select', options:['Garage','Carport','Open parking','Street only','None']},   /* TS-0009 */
       {id:'floor_area',   label:'Floor area (m²)',     type:'number', placeholder:'e.g. 140'},
       {id:'erf_size',     label:'Erf / plot size (m²)',type:'number', placeholder:'e.g. 600'},
       {id:'suburb',       label:'Suburb / area',       type:'text',   placeholder:'e.g. Waterkloof Ridge'},
@@ -13500,7 +13508,7 @@ function msRenderLiveSignals(signals){
   if(!document.getElementById('ms-id-upload-input')){
     const inp = document.createElement('input');
     inp.type='file'; inp.id='ms-id-upload-input';
-    inp.accept='image/jpeg,image/png,image/webp';
+    inp.accept='image/jpeg,image/png,image/webp,image/heic,image/heif';   /* TS-0012 */
     inp.style.display='none';
     inp.addEventListener('change', msUploadIdDoc);
     document.body.appendChild(inp);

@@ -20,6 +20,15 @@ import urllib.request
 import base64
 import httpx
 from PIL import Image, ImageOps
+# TS-0012 (Maroushka, 5 Aug 2026): iPhone HEIC photos. pillow-heif teaches PIL to open
+# HEIC/HEIF; the photo pipelines re-encode to JPEG, so registering the opener IS the
+# converter. Fail-open to the old behaviour when the wheel is absent.
+try:
+    import pillow_heif as _pillow_heif
+    _pillow_heif.register_heif_opener()
+    _HEIF_OK = True
+except Exception:
+    _HEIF_OK = False
 import io
 import logging
 import smtplib
@@ -723,7 +732,7 @@ def run_migrations(conn):
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
         email      TEXT    NOT NULL DEFAULT '',
         est_usd    REAL    NOT NULL DEFAULT 0.0,
-        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        created_at TEXT    NOT NULL DEFAULT '',
         expires_at TEXT    NOT NULL
     )""")
 
@@ -1699,8 +1708,9 @@ def _check_cost_ceiling(email: str) -> None:
             # _log_ai_spend once the real cost is known; self-expires if the call aborts.
             _exp = (__import__('datetime').datetime.utcnow()
                     + __import__('datetime').timedelta(seconds=_HOLD_TTL_S)).isoformat(timespec="seconds")
-            conn.execute("INSERT INTO ai_spend_holds (email, est_usd, expires_at) VALUES (?,?,?)",
-                         (email or '', _AI_WORST_CASE_HOLD_USD, _exp))
+            _crt = __import__('datetime').datetime.utcnow().isoformat(timespec="seconds")
+            conn.execute("INSERT INTO ai_spend_holds (email, est_usd, expires_at, created_at) VALUES (?,?,?,?)",
+                         (email or '', _AI_WORST_CASE_HOLD_USD, _exp, _crt))
             conn.commit()
         finally:
             conn.close()
@@ -3545,6 +3555,8 @@ async def upload_listing_photo(
 ):
     # Validate file type
     allowed = {"image/jpeg", "image/png", "image/webp"}
+    if _HEIF_OK:
+        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
     content_type = file.content_type or "image/jpeg"
     if content_type not in allowed:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP photos accepted")
@@ -3698,6 +3710,8 @@ async def upload_draft_listing_photo(
 
     # Validate file type
     allowed = {"image/jpeg", "image/png", "image/webp"}
+    if _HEIF_OK:
+        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
     content_type = file.content_type or "image/jpeg"
     if content_type not in allowed:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP photos accepted")
@@ -4255,6 +4269,8 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
     """Upload a seller profile photo. Compresses to 400×400 JPEG, stores to R2 or local,
     saves URL to users.photo_url. No API key required — seller identifies by email."""
     allowed = {"image/jpeg", "image/png", "image/webp"}
+    if _HEIF_OK:
+        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
     content_type = file.content_type or "image/jpeg"
     if content_type not in allowed:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
@@ -4314,6 +4330,8 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
     trust — identity is only awarded by the vision-checked verify-identity path
     (or admin review). This closes the instant self-grant of +15 trust."""
     allowed = {"image/jpeg", "image/png", "image/webp"}
+    if _HEIF_OK:
+        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
     content_type = file.content_type or "image/jpeg"
     if content_type not in allowed:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
@@ -4325,6 +4343,17 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
         raise HTTPException(status_code=400, detail="File too small — please upload a clear photo")
 
     email = email.lower().strip()
+
+    # TS-0012: this path stores the RAW bytes (no re-encode), so a HEIC must be
+    # converted here or ops/vision would receive an unviewable file.
+    if _HEIF_OK and content_type in ("image/heic", "image/heif"):
+        try:
+            _him = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
+            _hbuf = io.BytesIO(); _him.save(_hbuf, format="JPEG", quality=90)
+            raw = _hbuf.getvalue(); content_type = "image/jpeg"
+        except Exception:
+            raise HTTPException(status_code=400,
+                detail="Could not read this HEIC photo — please re-save it as JPEG and try again")
 
     # Upload to R2 or local
     fname = f"id_{uuid.uuid4().hex}.jpg"
@@ -8856,6 +8885,29 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
                listing_category = COALESCE(excluded.listing_category, user_credentials.listing_category)""",
         (req.email, req.signal_id, req.status, pts, req.evidence_url, req.notes, verified_at, lc or None)
     )
+    # TS-0010 (Maroushka, 5 Aug 2026): her ID silently failed review - she re-uploaded
+    # blind. Every decision now mails the person (Resend transactional; skipped without a key).
+    try:
+        _rk = os.getenv("RESEND_API_KEY", "")
+        if _rk and req.status in ("earned", "rejected"):
+            _sname = sig.get("name", req.signal_id)
+            if req.status == "earned":
+                _sub = "Your %s credential is verified \u2713" % _sname
+                _body = ("Good news - our team verified your %s. It now adds %d points to your "
+                         "Trust Score.\n\nTrustSquare" % (_sname, pts))
+            else:
+                _sub = "Your %s upload needs another look" % _sname
+                _body = ("We could not verify your %s.%s\n\nPlease upload it again "
+                         "(My Space -> Credentials) - a clear, current document verifies fastest.\n\nTrustSquare"
+                         % (_sname, (" Reason: " + req.notes) if req.notes else ""))
+            import requests as _rq2
+            _rq2.post("https://api.resend.com/emails", json={
+                "from": os.getenv("SUPPORT_FROM_EMAIL", "TrustSquare Support <support@mail.trustsquare.co>"),
+                "to": [req.email], "subject": _sub, "text": _body,
+                "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")},
+                headers={"Authorization": "Bearer " + _rk}, timeout=10)
+    except Exception as _mx:
+        _log.warning("credential decision mail failed (non-fatal): %s", _mx)
     conn.commit()
     conn.close()
     return {"message": "Credential updated", "signal_id": req.signal_id, "status": req.status}
@@ -8980,6 +9032,11 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         "Be warm, direct, and specific. "
         "IMPORTANT: Only recommend actions the seller has NOT already completed. "
         "Never suggest uploading an ID if id_verified is already earned. "
+        # TS-0011 (Maroushka, 5 Aug 2026): the coach never mentioned her FFC/qualifications.
+        "If any professional credential signal (FFC, PPRA registration, qualifications, "
+        "training certificates, memberships) is NOT yet earned, ALWAYS include uploading it "
+        "as a step - credentials are the highest-trust evidence on the platform. Say exactly "
+        "where: My Space -> Credentials & Qualifications (agents: Agent Hub -> My agent profile). "
         "For each step, give a specific WHERE and HOW (e.g. which tab, which button). "
         'Reply ONLY with a valid JSON object — no markdown, no preamble. '
         'Format: {"intro": "one encouraging sentence", '
@@ -11971,10 +12028,15 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     # axis-aligned with generous expansion, then verify ONE more time. Only a
     # scanner failure or an explicit "reject" verdict still holds the photo. ──
     if _acc:
+        # TS-0007/0008 (Maroushka, 5 Aug 2026, recurrence x2): the last-resort rung blurred
+        # every box ever accumulated with unbounded growth - half a facade went grey.
+        # Dedupe repeat boxes and CAP expansion at 6% of frame per side. The verify pass
+        # below still gates the output, so anonymity is untouched - only sprawl is.
+        _acc = list({tuple(round(v) for v in _r[:4]): _r for _r in _acc}.values())
         _big = []
         for _r in _acc:
             _x0, _y0, _x1, _y1 = _r[0], _r[1], _r[2], _r[3]
-            _dx = (_x1 - _x0) * 0.30 + 8; _dy = (_y1 - _y0) * 0.60 + 8
+            _dx = min((_x1 - _x0) * 0.30, 60) + 8; _dy = min((_y1 - _y0) * 0.60, 60) + 8
             _big.append((max(0, _x0 - _dx), max(0, _y0 - _dy),
                          min(1000, _x1 + _dx), min(1000, _y1 + _dy),
                          "last-resort"))
