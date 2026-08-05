@@ -1,3 +1,110 @@
+## 2026-08-05 — INTRO-RELAY-1 + ACCOUNT-BIND-1 BUILT (dark), Fable 5 session
+
+Both of David's rulings implemented in one pass on the intro flow; both fail-closed
+behind new launch_switches (intro_relay, account_binding), so live behaviour is
+byte-identical until flipped. NOT yet deployed.
+
+- **INTRO-RELAY-1 (Option B):** intro_relay_aliases table; _mint_relay_aliases (2 rows
+  per accepted intro, random aliases on RELAY_DOMAIN); _relay_forward via the Resend
+  lane (From/Reply-To ALWAYS an alias); _relay_send_intro_notes (each party's note
+  arrives FROM the counterpart's alias — reply starts the conversation); POST
+  /intro/relay (X-Relay-Secret, enrolled-parties-only, expiry, kill switch, CR/LF
+  sanitise, 100 KB cap, no outbound fetch — nothing SSRF-shaped); accept_intro mints +
+  sends notes + webhook carries ALIASES ONLY when the relay is on. Worker for David's
+  console step: ops/cloudflare/intro_relay_worker.js (setup steps in its header).
+  Isolated-logic test: all 7 semantics proven (enrolment, both-direction kill,
+  expiry, injection strip, no-info-leak on unknown alias).
+- **ACCOUNT-BIND-1 (Option A):** /auth/verify now KEEPS its magic-link proof as an
+  HttpOnly ts_user session cookie (JWT scope 'user', 180 d, same _JWT_SECRET,
+  distinct scope — the shared review token can never pass). _bind_charged_email
+  enforces (flag ON: 401/403) or shadow-logs (flag OFF) on AI1–AI5 + create_intro;
+  BIND-OWNER-1 makes accept/decline intro owner-only. BEA_URL is same-origin so the
+  cookie rides existing FEA fetches — zero FEA changes. Isolated test: scope
+  separation proven (review/expired/forged/absent all refuse).
+- Ledger: RG-0038 + RG-0039 LOCKED (repo assertions green on disk). Backups:
+  bea_main.py.bak-20260805-relaybind. Peer pack sections extended for round 3.
+- NOTE: built alongside a parallel attended session (TS-0005..20 fixback batch +
+  14:55 release) — all anchors re-verified against the moved file; nothing stomped.
+- NEXT: David's Cloudflare console step (worker + MX + RELAY_INBOUND_SECRET + Resend
+  subdomain auth) → deploy → Peer round 3 → flip flags → live two-party drill.
+
+## 2026-08-05 — Introduction relay: Option B selected, build spec written
+
+- David chose Option B (masked-alias relay) as the introduction mechanism, over direct-email
+  (status quo) and on-platform messaging. Reasoning: fewest added parts for full anonymity +
+  "neutral ground" legal posture (we disclose nothing, we relay). Comparative brief in
+  Records/INTRODUCTION_MECHANISM_BRIEF.
+- DOCTRINE RULED (David, 5 Aug 2026): "Nothing of the customer's leaves TrustSquare except a
+  consented, revocable email channel — never the address itself." To be enshrined in CLAUDE.md.
+- Build spec: Records/INTRO_RELAY_BUILD_SPEC (+ nice docx). Reuses Cloudflare Email Routing +
+  Worker (inbound, like /email/inbound) and Resend (outbound, _smtp_send_reply lane) — NO new
+  subscription. New: intro_relay_aliases table, POST /intro/relay (X-Relay-Secret), _relay_forward
+  helper, and the accept_intro change that STOPS leaking both raw emails to the n8n webhook.
+  One-way-first scope; behind launch_switches.intro_relay (fail-closed/dark). Folds into the F1
+  account-binding pass as one "who sees what, who pays" change; Peer-reviewed before any live intro.
+- David's console prerequisites before end-to-end: CF Email Routing alias route + MX, RELAY_INBOUND_SECRET
+  env, Resend authorised for *@relay.trustsquare.co. NOT code — the one part not doable from a session.
+- STATUS: awaiting David — build P1 now behind the dark flag, or hold for the console prerequisites first.
+
+## 2026-08-05 — Fixback batch: the first 16 REPORT-tab faults, dispositioned (David approved in session)
+
+Two testers (David, Maroushka), 16 reports, every one answered. Already fixed by the parallel
+session this morning and verified as-is: TS-0001 (whole matches-box now clickable), TS-0002/0003
+(openDetail dead-click guard — kept deliberately as a guard rather than auto-open, because feed
+cards span cities and auto-opening would bypass the Global-tier gate), TS-0004 prompt (seller's
+own product label = identity), TS-0013 uploader (MAROUSHKA-CRED shipped after her v441 test).
+
+**Implemented this batch:**
+- TS-0005: Agent Hub banner says "estate, car & tour agents" (form already had Tour agent).
+- TS-0007/0008 (recurrence ×2): last-resort anonymiser blur — dedupe accumulated boxes + cap
+  expansion at 6% of frame per side. The verify pass still gates output: anonymity untouched,
+  sprawl fixed.
+- TS-0009: Parking type field (Garage/Carport/Open/Street/None) in both property wizards;
+  listing spec row now says "Parking · 2 · Carport" instead of claiming everything is a garage.
+- TS-0010: credential review decisions (verified/rejected) now EMAIL the person, with the
+  reason — no more silent re-upload loops. Rides POST /trust-score/credential; Resend-gated.
+- TS-0011: Trust Score coach must always surface unearned professional credentials (FFC, PPRA,
+  qualifications) and say exactly where to upload them.
+- TS-0012: HEIC/HEIF accepted — pillow-heif registered (guarded), all four upload gates widened,
+  ID path converts explicitly (it stores raw); pickers + error hint updated. Migration 008
+  installs the wheel.
+- TS-0019: migration 008 repairs "Waterklof" in listing data (substring-safe, proven), and the
+  plain-description renderer now renders **bold** instead of printing asterisks.
+- TS-0020: credentials section explains where to add them and that points come after ops verify.
+- ALSO: portable-SQL fix for this morning's C1-RES table (created_at supplied by code, not
+  datetime('now')) — returns the PG-readiness ratchet to green.
+
+**Deferred with reasons:** TS-0006 duplicate-photo detection (perceptual hashing — design-change
+lane). Agency-verify flow for agents (TS-0013 second half — design-change lane). TS-0021 is a
+work order (AI services value audit), not an app fault — scheduled as its own session.
+**Open action:** the honey listing (TS-0004) needs one POST /admin/anon-rescan-listing to redact
+the existing photo — flagged for the next Maintenance run.
+
+Verified: node --check on ms.js, py_compile on bea_main.py + migration, browser probe proves the
+parking field registers and **bold** renders, migration replace proven substring-safe on a test
+DB, predeploy gate back to REVIEW-only. Local until the next deploy.
+
+## 2026-08-05 — LS-TIPS-1 + Ops Map relay block (the dashboard becomes David's memory)
+
+David's ruling: the project has outgrown memory — the instruments must carry it.
+
+- **LS-TIPS-1:** every Launch Switch now has a hover explainer (styled tooltip):
+  what OFF does, what ON does, and the implication — covering verified_tier, videos,
+  fault_report, all four data switches, all three per-planner switches, and the two
+  new rails. No switch depends on recall anymore.
+- **Launch Switch page — new "Trust & privacy rails" group:** intro_relay and
+  account_binding toggles, wired to /flags + /admin/flags (server accepts + returns
+  both; also returns relay_configured = RELAY_INBOUND_SECRET present). The relay row
+  shows the live Cloudflare-rail status ("configured ✓" / "NOT configured") so David
+  can see switch-vs-rail at a glance and can't flip ON before the rail exists.
+- **Ops Map (OPS-MAP-1): new "Intro Relay" block** in the external column under
+  Resend — flow line buyer ↔ CF worker ↔ BEA ↔ Resend ↔ seller, three live chips
+  (switch ON/OFF, rail ready/not built, acct binding ON/OFF) tinting from /flags,
+  and a hover title telling the full OFF→ON story incl. the doctrine. Flag-chips
+  row also gains intro relay + acct binding.
+- All dashboard script blocks node --check clean. Backup:
+  dashboard.server.html.bak-20260805-lstips. Rides next /tsl with the relay/binding code.
+
 ## 2026-08-05 — Peer round 2: F2 + F3 fixed, F1 briefed
 
 - **F3 / RG-0036 — KYC SSRF guard (KYC-SSRF-1) + lane pin (KYC-PIN-1).** verify-identity

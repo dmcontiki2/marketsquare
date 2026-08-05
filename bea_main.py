@@ -736,6 +736,23 @@ def run_migrations(conn):
         expires_at TEXT    NOT NULL
     )""")
 
+    # INTRO-RELAY-1 (5 Aug 2026, David's Option B ruling): masked-alias introduction
+    # relay. Two rows per accepted intro - one alias per party. real_email is the ONLY
+    # place the real address lives; it never enters an outbound body, header, or
+    # webhook. Doctrine: nothing of the customer's leaves TrustSquare except a
+    # consented, revocable email channel - never the address itself.
+    conn.execute("""CREATE TABLE IF NOT EXISTS intro_relay_aliases (
+        alias         TEXT PRIMARY KEY,
+        intro_id      INTEGER NOT NULL,
+        party         TEXT NOT NULL,
+        real_email    TEXT NOT NULL,
+        counter_alias TEXT NOT NULL,
+        active        INTEGER NOT NULL DEFAULT 1,
+        created_at    TEXT NOT NULL DEFAULT '',
+        expires_at    TEXT NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_relay_intro ON intro_relay_aliases(intro_id)")
+
     # Launch Switch (free-only <-> verified) — singleton flag row; default = launch/free-only
     conn.execute("""CREATE TABLE IF NOT EXISTS launch_switches (
         id            INTEGER PRIMARY KEY CHECK (id = 1),
@@ -762,6 +779,9 @@ def run_migrations(conn):
         ai_override_expires TEXT,
         -- MAINT-B1b: in-app tester fault intake. OFF by default (fail-closed).
         fault_report  INTEGER NOT NULL DEFAULT 0,
+        -- INTRO-RELAY-1 + ACCOUNT-BIND-1 (5 Aug 2026): both OFF by default (fail-closed/dark)
+        intro_relay      INTEGER NOT NULL DEFAULT 0,
+        account_binding  INTEGER NOT NULL DEFAULT 0,
         updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
@@ -774,6 +794,8 @@ def run_migrations(conn):
         "ALTER TABLE launch_switches ADD COLUMN ai_active_override TEXT",
         "ALTER TABLE launch_switches ADD COLUMN ai_override_expires TEXT",
         "ALTER TABLE launch_switches ADD COLUMN fault_report INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE launch_switches ADD COLUMN intro_relay INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE launch_switches ADD COLUMN account_binding INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -4449,8 +4471,221 @@ def _seller_intro_gate(conn, seller_email):
                "Verified sellers show the ID badge on their profile.")
 
 
+# ══ ACCOUNT-BIND-1 (5 Aug 2026) — charged identity is PROVEN, never asserted ══
+# Peer round-2 BLOCKER (F1), David's Option A ruling: the account an action charges
+# comes from the authenticated session (ts_user cookie, set by /auth/verify after a
+# magic-link proof of email possession), never from a caller-typed email behind the
+# public app key. Dark until launch_switches.account_binding = 1; while OFF, every
+# mismatch is shadow-logged so the flip is informed, not hopeful.
+
+def _account_binding_enabled() -> bool:
+    """Read the launch switch. Fail-closed on any error."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT account_binding FROM launch_switches WHERE id = 1").fetchone()
+        finally:
+            conn.close()
+        return bool(row and row["account_binding"])
+    except Exception as exc:
+        _log.error("account_binding flag read failed: %s", exc)
+        return False
+
+
+def _session_email(ts_user):
+    """Proven email from the ts_user session cookie (JWT scope 'user'), or None.
+    The cookie is set ONLY by /auth/verify after a magic-link click — possession of
+    the inbox is the proof. The shared review token has scope 'review' and can never
+    pass this check even though it rides the same secret."""
+    if not ts_user:
+        return None
+    try:
+        p = _pyjwt.decode(ts_user, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        if p.get("scope") != "user":
+            return None
+        return ((p.get("sub") or "").strip().lower()) or None
+    except Exception:
+        return None
+
+
+def _bind_charged_email(passed_email, ts_user, ctx=""):
+    """Enforce (flag ON) or shadow-log (flag OFF) that the charged account is the
+    session's proven identity. Returns the canonical charged email. Flag OFF is
+    byte-identical to today's behaviour apart from one log line."""
+    passed = (passed_email or "").strip().lower()
+    sess = _session_email(ts_user)
+    if not _account_binding_enabled():
+        if not sess:
+            _log.info("ACCOUNT-BIND-1 shadow: no session (ctx=%s passed=%s)", ctx, passed)
+        elif passed and sess != passed:
+            _log.warning("ACCOUNT-BIND-1 shadow MISMATCH (ctx=%s): session=%s passed=%s",
+                         ctx, sess, passed)
+        return passed
+    if not sess:
+        raise HTTPException(status_code=401, detail="Please sign in to use this feature.")
+    if passed and passed != sess:
+        raise HTTPException(status_code=403,
+                            detail="This action can only be performed on your own account.")
+    return sess
+
+
+# ══ INTRO-RELAY-1 (5 Aug 2026) — masked-alias introduction relay (Option B) ══
+# David's doctrine: "Nothing of the customer's leaves TrustSquare except a consented,
+# revocable email channel — never the address itself. We disclose nothing; we relay."
+# Dark until launch_switches.intro_relay = 1 (fail-closed). Spec:
+# Records/INTRO_RELAY_BUILD_SPEC.md. Inbound rides Cloudflare Email Routing via the
+# Worker (ops/cloudflare/intro_relay_worker.js); outbound rides the Resend lane.
+RELAY_DOMAIN = os.getenv("RELAY_DOMAIN", "relay.trustsquare.co")
+RELAY_INBOUND_SECRET = os.getenv("RELAY_INBOUND_SECRET", "")
+_RELAY_MAX_BODY = 100_000        # relayed text cap; attachments are v2, dropped loudly
+_RELAY_TTL_DAYS = int(os.getenv("RELAY_TTL_DAYS", "30"))
+
+
+def _intro_relay_enabled() -> bool:
+    """Read the launch switch. Fail-closed on any error (mirror of _fault_report_enabled)."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute("SELECT intro_relay FROM launch_switches WHERE id = 1").fetchone()
+        finally:
+            conn.close()
+        return bool(row and row["intro_relay"])
+    except Exception as exc:
+        _log.error("intro_relay flag read failed: %s", exc)
+        return False
+
+
+def _mint_relay_aliases(conn, intro_id: int, buyer_email: str, seller_email: str):
+    """Create the two masked aliases for an accepted intro. Random, unguessable, no PII
+    in the string. buyer_alias MASKS the buyer (mail sent to it reaches the buyer);
+    each party is GIVEN the counterparty's alias to write to."""
+    import secrets as _sec
+    b_alias = "intro-%s@%s" % (_sec.token_hex(6), RELAY_DOMAIN)
+    s_alias = "intro-%s@%s" % (_sec.token_hex(6), RELAY_DOMAIN)
+    now = datetime.now(timezone.utc)
+    exp = (now + timedelta(days=_RELAY_TTL_DAYS)).isoformat(timespec="seconds")
+    for alias, party, real, counter in (
+            (b_alias, "buyer", buyer_email, s_alias),
+            (s_alias, "seller", seller_email, b_alias)):
+        conn.execute(
+            "INSERT INTO intro_relay_aliases "
+            "(alias, intro_id, party, real_email, counter_alias, created_at, expires_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            (alias, intro_id, party, (real or "").strip().lower(), counter,
+             now.isoformat(timespec="seconds"), exp))
+    return b_alias, s_alias
+
+
+def _relay_sanitize_subject(s: str) -> str:
+    """One line, header-injection-proof, bounded."""
+    return " ".join((s or "").replace("\r", " ").replace("\n", " ").split())[:200]
+
+
+def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bool:
+    """Forward one relayed message via the Resend lane. From AND Reply-To are the
+    sender's ALIAS — never a real address — so the reply loops back through the
+    curtain. Text only in v1. Never raises."""
+    to_clean = parseaddr(to_real)[1]
+    if not to_clean:
+        _log.warning("INTRO-RELAY-1 forward skipped — bad recipient")
+        return False
+    key = os.getenv("RESEND_API_KEY", "")
+    if not key:
+        _log.error("INTRO-RELAY-1 forward skipped — RESEND_API_KEY not set")
+        return False
+    try:
+        import httpx as _hx
+        r = _hx.post("https://api.resend.com/emails",
+            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+            json={"from": "TrustSquare Intro <%s>" % from_alias,
+                  "to": [to_clean],
+                  "subject": _relay_sanitize_subject(subject) or "TrustSquare introduction",
+                  "text": (body or "")[:_RELAY_MAX_BODY],
+                  "reply_to": from_alias},
+            timeout=20)
+        if r.status_code in (200, 201):
+            return True
+        _log.error("INTRO-RELAY-1 forward HTTP %s: %s", r.status_code, r.text[:200])
+        return False
+    except Exception as exc:
+        _log.error("INTRO-RELAY-1 forward failed: %s", exc)
+        return False
+
+
+def _relay_send_intro_notes(intro_id: int, buyer_email: str, buyer_name: str,
+                            seller_email: str, listing_title: str,
+                            b_alias: str, s_alias: str) -> None:
+    """Introduce both parties through the curtain. Each note arrives FROM the
+    counterparty's alias, so simply replying starts the relayed conversation.
+    Background task — never raises."""
+    try:
+        t = (listing_title or "your listing")[:80]
+        privacy = ("Reply to THIS email to talk. Your email address stays private: messages "
+                   "travel through TrustSquare's introduction relay and each of you sees only "
+                   "a TrustSquare address. The channel stays open %d days.\n\n"
+                   "— TrustSquare · anonymous until you choose otherwise" % _RELAY_TTL_DAYS)
+        note_seller = ("Good news — %s asked to be introduced about \"%s\" and the "
+                       "introduction is now open.\n\n%s" % (buyer_name or "a buyer", t, privacy))
+        note_buyer = ("Good news — the seller accepted your introduction request about "
+                      "\"%s\".\n\n%s" % (t, privacy))
+        # the seller's note arrives FROM the buyer's alias; the buyer's FROM the seller's
+        _relay_forward(seller_email, b_alias, "Introduction: %s" % t, note_seller)
+        _relay_forward(buyer_email, s_alias, "You're introduced: %s" % t, note_buyer)
+        _log.info("INTRO-RELAY-1 notes sent for intro #%s (aliases only)", intro_id)
+    except Exception as exc:
+        _log.error("INTRO-RELAY-1 notes failed for intro #%s: %s", intro_id, exc)
+
+
+class _RelayInbound(BaseModel):
+    to_alias: str
+    from_addr: str
+    subject: str = ""
+    body: str = ""
+
+
+@app.post("/intro/relay")
+def intro_relay_inbound(req: _RelayInbound, x_relay_secret: str = Header(default="")):
+    """Receive one relayed message from the Cloudflare Email Worker and forward it to
+    the hidden counterparty. Enrolled-parties-only: the sender's address must match the
+    counter-alias's real_email — a stranger who guesses an alias is rejected and the
+    real addresses never move. No outbound fetch exists on this path (nothing
+    SSRF-shaped). Auth: X-Relay-Secret (RELAY_INBOUND_SECRET)."""
+    if not _intro_relay_enabled():
+        raise HTTPException(status_code=503, detail="The introduction relay is not open.")
+    if not RELAY_INBOUND_SECRET or x_relay_secret != RELAY_INBOUND_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid relay secret")
+    to_alias = (req.to_alias or "").strip().lower()
+    from_addr = (parseaddr(req.from_addr or "")[1] or "").strip().lower()
+    if not to_alias or not from_addr:
+        raise HTTPException(status_code=400, detail="to_alias and from_addr are required")
+    conn = database.get_db()
+    try:
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        row = conn.execute("SELECT * FROM intro_relay_aliases WHERE alias=?",
+                           (to_alias,)).fetchone()
+        if not row or not row["active"] or row["expires_at"] < now:
+            raise HTTPException(status_code=404, detail="This introduction channel is closed.")
+        counter = conn.execute("SELECT * FROM intro_relay_aliases WHERE alias=?",
+                               (row["counter_alias"],)).fetchone()
+        if not counter or not counter["active"]:
+            raise HTTPException(status_code=404, detail="This introduction channel is closed.")
+        if from_addr != counter["real_email"]:
+            _log.warning("INTRO-RELAY-1 rejected non-enrolled sender on %s", to_alias)
+            raise HTTPException(status_code=403,
+                                detail="Only the introduced parties can use this channel.")
+    finally:
+        conn.close()
+    ok = _relay_forward(row["real_email"], counter["alias"],
+                        req.subject, (req.body or "")[:_RELAY_MAX_BODY])
+    if not ok:
+        raise HTTPException(status_code=502, detail="The relay could not deliver this message.")
+    return {"relayed": True}
+
+
 @app.post("/intros")
-def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks):
+def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
+                 ts_user: str = Cookie(default=None)):
+    _bind_charged_email(intro.buyer_email, ts_user, "create-intro")   # ACCOUNT-BIND-1
     conn = database.get_db()
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro.listing_id,)).fetchone()
     if not listing:
@@ -4544,13 +4779,28 @@ def get_intros(listing_id: int):
     return [dict(r) for r in rows]
 
 @app.put("/intros/{intro_id}/accept")
-def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
+def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
+                 _key: str = Depends(auth.require_api_key),
+                 ts_user: str = Cookie(default=None)):
     conn = database.get_db()
     intro = conn.execute("SELECT * FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
     if not intro:
         conn.close()
         raise HTTPException(status_code=404, detail="Intro not found")
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro["listing_id"],)).fetchone()
+    # BIND-OWNER-1 (ACCOUNT-BIND-1, 5 Aug 2026): accepting charges the BUYER, so the
+    # accepter must be PROVEN to be the listing owner — not merely hold the public key.
+    if _account_binding_enabled():
+        _sess = _session_email(ts_user)
+        _owner = ((listing["seller_email"] or "") if listing else "").strip().lower()
+        if not _sess:
+            conn.close()
+            raise HTTPException(status_code=401,
+                                detail="Please sign in to accept introductions.")
+        if _owner and _sess != _owner:
+            conn.close()
+            raise HTTPException(status_code=403,
+                                detail="Only the listing owner can accept an introduction.")
     conn.execute(
         "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 WHERE id = ?",
         (intro_id,)
@@ -4561,7 +4811,26 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = D
         (intro["buyer_email"], f"Intro accepted · listing #{intro['listing_id']} · {listing['title'] if listing else ''}")
     )
     conn.commit()
+    # INTRO-RELAY-1 (5 Aug 2026): with the relay ON, the introduction happens through
+    # masked aliases — the raw counterpart addresses never leave TrustSquare (not to the
+    # parties, not to the webhook). Flag OFF = today's behaviour, byte for byte.
+    _relay_on = _intro_relay_enabled()
+    _b_alias = _s_alias = None
+    if _relay_on and listing and listing["seller_email"]:
+        try:
+            _b_alias, _s_alias = _mint_relay_aliases(
+                conn, intro_id, intro["buyer_email"], listing["seller_email"])
+            conn.commit()
+        except Exception as _re:
+            _log.error("INTRO-RELAY-1 mint failed — legacy flow for intro #%s: %s", intro_id, _re)
+            _relay_on = False
     conn.close()
+    if _relay_on and _b_alias and _s_alias:
+        background_tasks.add_task(
+            _relay_send_intro_notes, intro_id,
+            intro["buyer_email"], intro["buyer_name"] or "",
+            listing["seller_email"], listing["title"] or "",
+            _b_alias, _s_alias)
     if N8N_WEBHOOK_ACCEPT:
         payload = {
             "event":              "intro_accepted",
@@ -4569,9 +4838,12 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = D
             "listing_id":         intro["listing_id"],
             "listing_title":      listing["title"] if listing else None,
             "category":           listing["category"] if listing else None,
-            "buyer_email":        intro["buyer_email"],
+            # relay ON: aliases only — the raw addresses stay inside TrustSquare
+            "buyer_email":        _b_alias if _relay_on else intro["buyer_email"],
             "buyer_name":         intro["buyer_name"],
-            "seller_email":       listing["seller_email"] if listing and listing["seller_email"] else None,
+            "seller_email":       (_s_alias if _relay_on else
+                                   (listing["seller_email"] if listing and listing["seller_email"] else None)),
+            "relay":              bool(_relay_on),
             "city":               listing["city"] if listing else None,
             "timestamp":          datetime.now(timezone.utc).isoformat(),
         }
@@ -4579,13 +4851,25 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = D
     return {"message": "Introduction accepted — 1T charged"}
 
 @app.put("/intros/{intro_id}/decline")
-def decline_intro(intro_id: int, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key)):
+def decline_intro(intro_id: int, background_tasks: BackgroundTasks,
+                  _key: str = Depends(auth.require_api_key),
+                  ts_user: str = Cookie(default=None)):
     conn = database.get_db()
     intro = conn.execute("SELECT * FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
     if not intro:
         conn.close()
         raise HTTPException(status_code=404, detail="Intro not found")
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro["listing_id"],)).fetchone()
+    # BIND-OWNER-1: declining is the owner's decision too — no griefing declines.
+    if _account_binding_enabled():
+        _sess = _session_email(ts_user)
+        _owner = ((listing["seller_email"] or "") if listing else "").strip().lower()
+        if not _sess:
+            conn.close()
+            raise HTTPException(status_code=401, detail="Please sign in to decline introductions.")
+        if _owner and _sess != _owner:
+            conn.close()
+            raise HTTPException(status_code=403, detail="Only the listing owner can decline an introduction.")
     conn.execute(
         "UPDATE intro_requests SET status = 'declined' WHERE id = ?",
         (intro_id,)
@@ -11125,7 +11409,7 @@ def auth_request_link(req: _SignInRequest):
     return {"ok": True, "sent": status}
 
 @app.post("/auth/verify")
-def auth_verify(req: _SignInVerify):
+def auth_verify(req: _SignInVerify, response: Response):
     """Verify a sign-in token; create the account on first use. Returns email+name."""
     try:
         payload = _pyjwt.decode(req.token, _JWT_SECRET, algorithms=[_JWT_ALGO])
@@ -11157,6 +11441,17 @@ def auth_verify(req: _SignInVerify):
         name = row["name"] if row and row["name"] else email.split("@")[0]
     finally:
         conn.close()
+    # ACCOUNT-BIND-1 (5 Aug 2026): a verified magic link now ESTABLISHES a server
+    # session — the missing piece of LAUNCH-AUTH-1. The proof of email possession is
+    # kept as an HttpOnly cookie so charging endpoints can bind to a PROVEN identity
+    # instead of a caller-typed email. Same JWT machinery, distinct scope 'user'.
+    _sess_tok = _pyjwt.encode(
+        {"scope": "user", "sub": email,
+         "exp": datetime.now(timezone.utc) + timedelta(days=180),
+         "iat": datetime.now(timezone.utc)},
+        _JWT_SECRET, algorithm=_JWT_ALGO)
+    response.set_cookie("ts_user", _sess_tok, max_age=180*24*3600,
+                        httponly=True, secure=True, samesite="lax", path="/")
     return {"ok": True, "email": email, "name": name}
 
 # ── AGENCY (Team plan) — umbrella over agent sellers ───────────────────────
@@ -12731,6 +13026,8 @@ class _FlagsUpdate(BaseModel):
     ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' | 'scaleway' (Page-4 switch)
     ai_active_override:    Optional[str]  = None  # MANUAL PIN: provider = pin (TTL decay) | '' = unpin (1 Aug 2026)
     fault_report:          Optional[bool] = None  # MAINT-B1b: in-app tester fault intake visible
+    intro_relay:           Optional[bool] = None  # INTRO-RELAY-1: masked-alias introductions (dark until CF rail is live)
+    account_binding:       Optional[bool] = None  # ACCOUNT-BIND-1: charges bound to the proven session
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -12739,6 +13036,9 @@ def _flags_payload(d):
         "mode": d.get("mode", "launch"),
         "verified_tier": b("verified_tier"), "videos": b("videos"),
         "fault_report": b("fault_report"),
+        "intro_relay": b("intro_relay"),
+        "account_binding": b("account_binding"),
+        "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
                  "flights": b("data_flights"), "mapbox": b("data_mapbox")},
         "planners": {"heritage": b("p_heritage"), "expedition": b("p_expedition"),
@@ -13920,13 +14220,14 @@ def _require_tuppence(email: str, amount: int = 1) -> None:
 # ── AI1 — Listing Rewrite ─────────────────────────────────────────────────────
 
 @app.post("/listings/{listing_id}/ai-rewrite")
-async def ai_listing_rewrite(listing_id: int, email: str):
+async def ai_listing_rewrite(listing_id: int, email: str, ts_user: str = Cookie(default=None)):
     """AI1: Seller pays 1T — Claude Haiku rewrites title + description.
     Uses current market language and buyer psychology for the listing category.
     Returns {new_title, new_description, tuppence_remaining}.
     """
     if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
+    email = _bind_charged_email(email, ts_user, "ai1-rewrite")   # ACCOUNT-BIND-1
     _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     conn = database.get_db()
@@ -14007,13 +14308,14 @@ async def ai_listing_rewrite(listing_id: int, email: str):
 # ── AI2 — Seller Audit ────────────────────────────────────────────────────────
 
 @app.post("/listings/{listing_id}/ai-audit")
-async def ai_seller_audit(listing_id: int, email: str):
+async def ai_seller_audit(listing_id: int, email: str, ts_user: str = Cookie(default=None)):
     """AI2: Seller pays 1T — Claude Haiku reviews listing quality and returns
     3 specific, actionable improvement steps.
     Returns {actions: [{step, reason}], tuppence_remaining}.
     """
     if not ai_provider.any_lane_configured():
         raise HTTPException(status_code=503, detail="AI not configured")
+    email = _bind_charged_email(email, ts_user, "ai2-audit")   # ACCOUNT-BIND-1
     _check_cost_ceiling(email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     conn = database.get_db()
@@ -14578,7 +14880,8 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
 
 
 @app.post("/listings/{listing_id}/price-check")
-async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None):
+async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None,
+                         ts_user: str = Cookie(default=None)):
     """AI3: Buyer pays 1T — honest, three-panel price intelligence.
 
     INTEGRITY MODEL (price-integrity fix):
@@ -14618,6 +14921,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
                 detail=f"Tier {tier} is not available for this listing")
         _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
     _require_tuppence(email, _charge)   # pre-flight only — no deduction yet
+    email = _bind_charged_email(email, ts_user, "ai3-price")   # ACCOUNT-BIND-1
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
     category    = listing["category"] or "General"
     city        = listing["city"] or "South Africa"
@@ -14890,6 +15194,7 @@ async def _yield_fill_missing(need, tier, country, city, suburb, listing, listin
 
 @app.post("/listings/{listing_id}/yield-calc")
 async def ai_yield_calc(listing_id: int, email: str,
+                        ts_user: str = Cookie(default=None),
                         rent: float | None = None,
                         purchase_price: float | None = None,
                         tier: Optional[str] = None):
@@ -14937,6 +15242,7 @@ async def ai_yield_calc(listing_id: int, email: str,
                 detail=f"Tier {tier} is not available for this listing")
         _charge = ai_service_tiers.TIER_TUPPENCE.get(tier, 1)
     _require_tuppence(email, _charge)
+    email = _bind_charged_email(email, ts_user, "ai4-yield")   # ACCOUNT-BIND-1
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
@@ -15119,7 +15425,7 @@ class BatchCardRequest(BaseModel):
 
 
 @app.post("/listings/batch-cards")
-async def ai_batch_card_listings(req: BatchCardRequest):
+async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(default=None)):
     """AI5: Seller pays 2T — Claude Sonnet Vision analyses up to 10 card photos and
     returns an array of draft listing JSONs ready for review and publish.
     Each draft contains title, description, price_suggestion, condition, category.
@@ -15131,6 +15437,7 @@ async def ai_batch_card_listings(req: BatchCardRequest):
 
     if not req.images:
         raise HTTPException(status_code=400, detail="At least one image is required")
+    _bind_charged_email(req.seller_email, ts_user, "ai5-batch-cards")   # ACCOUNT-BIND-1
     _check_cost_ceiling(req.seller_email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     # Cap at 10 cards

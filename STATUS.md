@@ -5,6 +5,33 @@
 
 ## Current Session
 
+## 2026-08-05 — Relay + account binding built (dark)
+
+- INTRO-RELAY-1 and ACCOUNT-BIND-1 built in one pass, both dark behind fail-closed
+  launch switches; RG-0038/0039 LOCKED; 7 relay semantics + session scope separation
+  proven by isolated tests; Cloudflare worker staged at ops/cloudflare/. Rides next
+  /tsl. Then: David's CF console step, Peer round 3, flag flip + two-party drill.
+
+## 2026-08-05 — Introduction relay (Option B)
+
+- David selected Option B (masked-alias relay). Build spec written (Records/INTRO_RELAY_BUILD_SPEC).
+  No new subscription — reuses Cloudflare Email Routing + Resend. One-way-first, dark-flagged,
+  folds into the F1 account-binding pass, Peer-reviewed before any live intro. Doctrine ruled:
+  nothing of the customer's leaves except a consented, revocable channel — enshrine in CLAUDE.md.
+- Awaiting David: build P1 now behind the dark flag, or hold for the CF console prerequisites first.
+
+## 2026-08-05 — Dashboard as memory
+
+- LS-TIPS-1: hover OFF/ON/implication explainers on ALL launch switches; new Trust &
+  privacy rails group (intro_relay + account_binding) with live Cloudflare-rail status;
+  Ops Map gains the Intro Relay block with switch/rail/binding chips. Server /flags +
+  /admin/flags carry the two new switches + relay_configured. Rides next /tsl.
+- FIXED-HONESTY-1: ops-map Maintenance chips no longer lump 'fixed' (shipped,
+  unconfirmed) with untouched faults — majors count only genuinely-open rows;
+  'fix shipped · retest' chip carries the pending-confirmation pile. If the 21
+  majors still show after deploy, their DB rows need advancing via the retest
+  letters (draft → send), which is the honest path to green.
+
 ## 2026-08-05 — Peer round 2 fixes
 
 - F3 KYC SSRF guard + lane pin (RG-0036) and F2 atomic spend reservation (RG-0037) DONE

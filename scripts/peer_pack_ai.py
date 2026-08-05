@@ -26,15 +26,18 @@ SECTIONS = [
     ("bea_main.py", "Tuppence helpers (deduct / balance / pre-flight require)", r"def _deduct_tuppence", 50),
     ("bea_main.py", "AI1 Listing Rewrite (full endpoint)", r"async def ai_listing_rewrite", 100),
     ("bea_main.py", "AI2 Seller Audit (full endpoint)", r"async def ai_seller_audit", 115),
-    ("bea_main.py", "AI3 Price Check (charge logic + integrity model)", r"async def ai_price_check", 260),
-    ("bea_main.py", "AI4 Yield (deliver-then-charge reference)", r"async def ai_yield_calc", 200),
+    ("bea_main.py", "AI3 Price Check (charge logic + integrity model)", r"async def ai_price_check", 180),
+    ("bea_main.py", "AI4 Yield (deliver-then-charge reference)", r"async def ai_yield_calc", 130),
     ("bea_main.py", "AI5 Batch Cards (full endpoint)", r"async def ai_batch_card_listings", 150),
-    ("bea_main.py", "KYC identity verification (vision, cost-guarded)", r"async def _sonnet_verify_identity", 110),
+    ("bea_main.py", "KYC identity verification (vision, cost-guarded)", r"async def _sonnet_verify_identity", 90),
     ("bea_main.py", "/admin/ai-restore + /flags provider block", r'@app\.post\("/admin/ai-restore"\)', 150),
     ("bea_main.py", "/admin/ai-spend summary endpoint", r'@app\.get\("/admin/ai-spend/summary"\)', 55),
     ("bea_main.py", "Scoreboard nightly wiring + HEARTBEAT-1 idle-recovery loop", r"SCOREBOARD-1 \(3 Aug 2026\)", 110),
     ("marketsquare.html", "AI Services help card copy (user-facing, F3 vendor-neutral fix)", r"AI Listing Rewrite", 55),
-    ("dashboard.server.html", "VIZ map legend naming Sonnet (F4 context: display text, not a call site)", r"Task tiers:\s+haiku sky", 45),
+    ("dashboard.server.html", "VIZ map legend naming Sonnet (F4 context: display text, not a call site)", r"Task tiers:\s+haiku sky", 45),    ("bea_main.py", "INTRO-RELAY-1: alias mint, forward, relay endpoint (Option B)", r"INTRO-RELAY-1 \(5 Aug 2026\) — masked-alias", 170),
+    ("bea_main.py", "ACCOUNT-BIND-1: session helpers + bind", r"ACCOUNT-BIND-1 \(5 Aug 2026\) — charged identity", 70),
+    ("bea_main.py", "accept_intro: owner gate + relay wiring + alias-only webhook", r"def accept_intro", 90),
+    ("bea_main.py", "/auth/verify: magic-link proof kept as ts_user session", r"def auth_verify", 55),
 ]
 
 def main():

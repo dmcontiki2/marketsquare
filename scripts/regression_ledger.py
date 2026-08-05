@@ -1381,5 +1381,65 @@ def rg_spend_reservation():
     return out
 
 
+@entry("RG-0038", "The introduction relay divulges nothing: aliases only, enrolled parties only, revocable",
+       LOCKED, scope="bea_main.py INTRO-RELAY-1 (accept_intro, /intro/relay, _relay_forward) — dark until launch_switches.intro_relay",
+       fixed_on="2026-08-05",
+       ref="David's Option B ruling + doctrine (5 Aug 2026): 'Nothing of the customer's leaves "
+           "TrustSquare except a consented, revocable email channel — never the address itself.' "
+           "Before this, accept_intro handed BOTH raw emails to each party via the n8n webhook — "
+           "an irreversible disclosure. Now (flag ON) the parties are introduced through masked "
+           "aliases; the webhook carries aliases only; the relay endpoint accepts mail only from "
+           "the two enrolled real addresses; From/Reply-To on every forward is an alias; channels "
+           "expire and can be killed. Isolated-logic test proved all 7 semantics incl. kill-switch "
+           "closing both directions and header-injection stripping. Flag OFF = legacy behaviour.")
+def rg_intro_relay():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- intro relay check skipped")]
+    out = []
+    for tok, why in (
+        ("intro_relay_aliases", "the alias mapping table is gone"),
+        ("def _intro_relay_enabled", "the fail-closed flag reader is gone"),
+        ('@app.post("/intro/relay")', "the relay inbound endpoint is gone"),
+        ('"TrustSquare Intro <%s>" % from_alias', "the forward no longer sends From an ALIAS"),
+        ('from_addr != counter["real_email"]', "the enrolled-parties-only check is gone"),
+        ('_b_alias if _relay_on else intro["buyer_email"]', "the accept webhook can leak the raw buyer email under the relay again"),
+    ):
+        if tok not in src:
+            out.append((FAIL, "INTRO-RELAY-1 rotted: " + why))
+    return out
+
+
+@entry("RG-0039", "Charged identity is PROVEN by session, never asserted by parameter",
+       LOCKED, scope="bea_main.py ACCOUNT-BIND-1 (ts_user session at /auth/verify + binds on AI1-AI5, create/accept/decline intro) — dark until launch_switches.account_binding",
+       fixed_on="2026-08-05",
+       ref="Peer round-2 BLOCKER (F1), David's Option A ruling. The account charged was a plain "
+           "caller parameter behind the shared public app key. Now /auth/verify keeps its "
+           "magic-link proof as an HttpOnly ts_user session cookie (JWT scope 'user' — the shared "
+           "review token, scope 'review', can never pass), and every charging endpoint binds "
+           "through _bind_charged_email: flag ON = enforce (401 no session / 403 mismatch), "
+           "flag OFF = shadow-log so the flip is informed. Accept/decline intro additionally "
+           "require the session to BE the listing owner (BIND-OWNER-1). Isolated test proved "
+           "scope separation: review/expired/forged/absent tokens all refuse.")
+def rg_account_binding():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- account binding check skipped")]
+    out = []
+    if 'response.set_cookie("ts_user"' not in src:
+        out.append((FAIL, "/auth/verify no longer establishes the ts_user session"))
+    for tok in ("def _account_binding_enabled", "def _session_email", "def _bind_charged_email"):
+        if tok not in src:
+            out.append((FAIL, "ACCOUNT-BIND-1 helper gone: " + tok))
+    n = src.count("_bind_charged_email(")
+    if n < 7:
+        out.append((FAIL, f"only {n} charge points bind the session (need >= 7: def + AI1-AI5 + create-intro)"))
+    if src.count("BIND-OWNER-1") < 2:
+        out.append((FAIL, "accept/decline intro lost the listing-owner gate (BIND-OWNER-1)"))
+    if 'p.get("scope") != "user"' not in src:
+        out.append((FAIL, "the session check no longer rejects non-user scopes -- the shared review token could charge accounts"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
