@@ -470,7 +470,11 @@
   .omg-agent{background:rgba(226,205,133,.13);border-color:#E2CD85}
   .om-chips{margin-top:6px;display:none;flex-wrap:wrap;gap:4px}
   .om-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#1F2937;
-           background:rgba(255,255,255,.85);border:1px solid #E2E8F0;border-radius:999px;padding:2px 8px;white-space:nowrap}
+           background:rgba(255,255,255,.85);border:1px solid #E2E8F0;border-radius:999px;padding:2px 8px;
+           white-space:normal;max-width:100%;line-height:1.25}
+  .om-chip[title]{cursor:help}
+  .om-blk{z-index:1}
+  .om-blk:hover{z-index:20;box-shadow:0 4px 14px rgba(12,26,46,.18)}
   .om-chip .om-v{font-weight:700;color:#1E3A5F}
   .om-chip.g .om-dot{background:#10B981}.om-chip.a .om-dot{background:#F59E0B}
   .om-chip.r .om-dot{background:#DC2626}.om-chip.o .om-dot{background:#6B7280}
@@ -521,8 +525,8 @@
     <line x1="200" y1="105" x2="240" y2="105" marker-end="url(#om-ar)"/>
     <line x1="420" y1="110" x2="460" y2="110" marker-end="url(#om-ar)"/>
     <line x1="670" y1="120" x2="730" y2="120" marker-end="url(#om-ar)"/>
-    <line x1="200" y1="215" x2="460" y2="140" marker-end="url(#om-ar)"/>
-    <line x1="200" y1="325" x2="460" y2="278" marker-end="url(#om-ar)"/>
+    <line x1="200" y1="262" x2="460" y2="140" marker-end="url(#om-ar)"/>
+    <line x1="200" y1="372" x2="460" y2="285" marker-end="url(#om-ar)"/>
     <line x1="670" y1="278" x2="730" y2="200" marker-end="url(#om-ar)"/>
     <line x1="420" y1="250" x2="730" y2="170" marker-end="url(#om-ar)"/>
     <line x1="1010" y1="120" x2="1040" y2="120" marker-end="url(#om-ar)"/>
@@ -545,19 +549,19 @@
   </div>
 
   <!-- PEOPLE -->
-  <div class="om-blk omf-people" style="left:20px;top:60px;width:180px">
+  <div class="om-blk omf-people" style="left:20px;top:60px;width:180px;z-index:6">
     <h3>Buyers &amp; Sellers</h3><div class="om-role">browsers on trustsquare.co</div>
     <div class="om-tierrow" id="om-tiers"><span class="om-tier">tiers —</span></div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-livenow"><span class="om-dot"></span>live now <span class="om-v">—</span></span><span class="om-chip g" id="om-users"><span class="om-dot"></span>users <span class="om-v">—</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>Tuppence held <span class="om-v">—</span></span></div>
     <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>praise <span class="om-v">reg.</span></span></div>
   </div>
-  <div class="om-blk omf-people" style="left:20px;top:172px;width:180px">
+  <div class="om-blk omf-people" style="left:20px;top:222px;width:180px;z-index:5">
     <h3>Testers ×3</h3><div class="om-role">David · Maroushka · David&nbsp;Jnr — REPORT tab</div>
     <div class="om-chips omc-ncr"><span class="om-chip g" id="om-t-filed"><span class="om-dot"></span>filed total <span class="om-v">—</span></span><span class="om-chip a" id="om-t-retest"><span class="om-dot"></span>awaiting retest <span class="om-v">—</span></span></div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>reports/day <span class="om-v">—</span></span></div>
   </div>
-  <div class="om-blk omf-people" style="left:20px;top:284px;width:180px">
+  <div class="om-blk omf-people" style="left:20px;top:334px;width:180px">
     <h3>David</h3><div class="om-role">phone + desktop → Admin console</div>
     <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>escalations <span class="om-v">B3</span></span></div>
     <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>kill switches armed</span></div>
@@ -578,13 +582,13 @@
   </div>
 
   <!-- APPS -->
-  <div class="om-blk omf-apps" style="left:460px;top:60px;width:210px">
+  <div class="om-blk omf-apps" style="left:460px;top:60px;width:210px;z-index:6">
     <h3>TrustSquare FEA</h3><div class="om-role">18 pages · marketplace, wizard, maps, wallet · REPORT tab 17/18</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-listings"><span class="om-dot"></span>live listings <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>req/h <span class="om-v">—</span></span></div>
     <div class="om-chips omc-switches" id="om-flagchips"><span class="om-chip a"><span class="om-dot"></span>flags loading…</span></div>
     <div class="om-chips omc-ncr"><span class="om-chip g" id="om-topbin"><span class="om-dot"></span>top bin <span class="om-v">—</span></span></div>
   </div>
-  <div class="om-blk omf-apps" style="left:460px;top:238px;width:210px">
+  <div class="om-blk omf-apps" style="left:460px;top:238px;width:210px;z-index:5">
     <h3>Admin Console</h3><div class="om-role">this dashboard — the map lives here</div>
     <div class="om-chips omc-ncr"><span class="om-chip g" id="om-queue"><span class="om-dot"></span>triage queue <span class="om-v">—</span></span></div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>visits <span class="om-v">—</span></span></div>
@@ -602,22 +606,22 @@
 
   <!-- HETZNER GROUP -->
   <div class="om-grp omg-server" style="left:710px;top:40px;width:300px;height:490px"><span>HETZNER SERVER</span></div>
-  <div class="om-blk omf-server" style="left:730px;top:70px;width:260px">
+  <div class="om-blk omf-server" style="left:730px;top:70px;width:260px;z-index:6">
     <h3>BEA — FastAPI</h3><div class="om-role">the API · auth, listings, intros, faults, flags</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-resp"><span class="om-dot"></span>response <span class="om-v">—</span></span><span class="om-chip g" id="om-bw"><span class="om-dot"></span>bandwidth <span class="om-v">—</span></span></div>
     <div class="om-chips omc-switches" id="om-svcchips"><span class="om-chip a"><span class="om-dot"></span>service checks loading…</span></div>
     <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>error-log lane <span class="om-v">B1</span></span></div>
   </div>
-  <div class="om-blk omf-server" style="left:730px;top:196px;width:122px">
+  <div class="om-blk omf-server" style="left:730px;top:196px;width:122px;z-index:5">
     <h3>SQLite</h3><div class="om-role">market.db</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-db"><span class="om-dot"></span><span class="om-v">—</span></span></div>
     <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>nightly backup</span></div>
   </div>
-  <div class="om-blk omf-server" style="left:868px;top:196px;width:122px">
+  <div class="om-blk omf-server" style="left:868px;top:196px;width:122px;z-index:5">
     <h3>Redis</h3><div class="om-role">sessions · limits</div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span><span class="om-v">—</span></span></div>
   </div>
-  <div class="om-blk omf-server" style="left:730px;top:296px;width:260px">
+  <div class="om-blk omf-server" style="left:730px;top:296px;width:260px;z-index:4">
     <h3>Deploy Engine + Gates</h3><div class="om-role">deploy ref → canon → predeploy → BIT → live · auto-revert</div>
     <div class="om-chips omc-switches"><span class="om-chip g" id="om-bit"><span class="om-dot"></span>BIT <span class="om-v">—</span></span></div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>deploys/wk <span class="om-v">—</span></span></div>
@@ -643,7 +647,7 @@
   </div>
   <div class="om-blk omf-ext" style="left:1040px;top:268px;width:180px">
     <h3>Paystack</h3><div class="om-role">Tuppence in · money IN</div>
-    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>MTD in <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>fees <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip g" id="om-tuppence"><span class="om-dot"></span>topups <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>MTD in (R) <span class="om-v">—</span></span></div>
     <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>test mode</span></div>
   </div>
   <div class="om-blk omf-ext" style="left:1040px;top:376px;width:180px">
@@ -1422,12 +1426,13 @@ function switchView(view) {
   function omTok(){ try{ return sessionStorage.getItem('ms_admin_token') || ''; }catch(e){ return ''; } }
   var omTimer = null;
 
-  function fill(id, txt, cls){
+  function fill(id, txt, cls, tip){
     var el = document.getElementById(id); if(!el) return;
     var v = el.querySelector('.om-v'); if(v) v.textContent = txt; else el.lastChild.textContent = ' ' + txt;
     if(cls){ el.className = 'om-chip ' + cls; }
+    if(tip !== undefined){ el.title = tip; }
   }
-  function fail(ids){ ids.forEach(function(id){ fill(id, 'offline', 'r'); }); }
+  function fail(ids, ep, err){ ids.forEach(function(id){ fill(id, 'offline', 'r', (ep||'feed') + ' failed just now' + (err ? ' — ' + err : '') + '. The map never invents a number; retry in 60s.'); }); }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
   function omLayers(){
@@ -1475,48 +1480,60 @@ function switchView(view) {
       fill('om-bw', (bw.total_gb||0) + '/' + (bw.limit_gb||'—') + ' GB', 'g');
       var db = d.db_sizes || {};
       fill('om-db', (db.marketsquare_mb||0) + ' MB', 'g');
-    }).catch(function(){ fail(['om-cpu','om-ram','om-disk','om-resp','om-bw','om-db']); });
+    }).catch(function(e){ fail(['om-cpu','om-ram','om-disk','om-resp','om-bw','om-db'], '/health/resources', String(e).slice(0,60)); });
 
     fetch(B + '/dashboard/presence').then(function(r){return r.json();}).then(function(d){
-      var on = (d.online||[]).length;
-      fill('om-livenow', String(on), 'g');
       var c = d.counters || {};
-      var total = 0, parts = [];
-      Object.keys(c).forEach(function(k){
-        if(typeof c[k] === 'number' && k !== 'agencies' && k !== 'total'){ total += c[k]; parts.push(esc(k) + ' ' + c[k]); }
-      });
-      if(c.total) total = c.total;
-      fill('om-users', String(total), 'g');
+      var on = (c.online_total !== undefined) ? c.online_total : (d.online||[]).length;
+      fill('om-livenow', String(on), 'g', 'users seen in the last ~2.5 minutes');
+      fill('om-users', String(c.total_users || 0), 'g', 'total registered users');
+      var TIERS = [['free','Free'],['starter','Starter'],['pro','Pro'],['agency','Agency']];
       var tr = document.getElementById('om-tiers');
-      if(tr && parts.length) tr.innerHTML = parts.map(function(p){ return '<span class="om-tier">' + p + '</span>'; }).join('');
-    }).catch(function(){ fail(['om-livenow','om-users']); });
+      if(tr){
+        tr.innerHTML = TIERS.filter(function(t){ return c[t[0]] !== undefined; })
+          .map(function(t){ return '<span class="om-tier" title="subscription tier">' + t[1] + ' ' + c[t[0]] + '</span>'; }).join('');
+      }
+    }).catch(function(e){ fail(['om-livenow','om-users'], '/dashboard/presence', String(e).slice(0,60)); });
 
     fetch(B + '/dashboard/summary').then(function(r){return r.json();}).then(function(d){
-      var s = d.stats || {};
-      if(s.liveListings !== undefined) fill('om-listings', String(s.liveListings), 'g');
-    }).catch(function(){ fail(['om-listings']); });
+      var st = d.stats || {};
+      if(st.liveListings !== undefined) fill('om-listings', String(st.liveListings), 'g', 'live listings on the marketplace');
+      if(st.tuppenceTopup !== undefined) fill('om-tuppence', String(st.tuppenceTopup), 'g', 'Tuppence top-ups from /dashboard/summary — amounts (rand) land with B-OPS3 Paystack wiring');
+    }).catch(function(e){ fail(['om-listings'], '/dashboard/summary', String(e).slice(0,60)); });
 
     fetch(B + '/dashboard/cost').then(function(r){return r.json();}).then(function(d){
       var usd = function(v){ return '$' + (Number(v)||0).toFixed(2); };
       fill('om-ai-mtd', usd(d.month_cost_usd), 'g');
       fill('om-money-out', usd(d.month_cost_usd));
       var mo = document.getElementById('om-money-out'); if(mo) mo.textContent = usd(d.month_cost_usd);
-      var c = d.ceilings || {};
-      fill('om-ai-today', usd(c.today_spend_usd), 'g');
-      fill('om-ai-calls', String(d.calls_this_month||0), 'g');
-      var pct = c.platform_pct_of_ceiling || 0;
-      fill('om-ai-ceil', c.platform_breached ? 'BREACHED' : (pct + '%'), c.platform_breached ? 'r' : (pct >= 75 ? 'a' : 'g'));
-    }).catch(function(){ fail(['om-ai-mtd','om-ai-today','om-ai-calls','om-ai-ceil']); });
+      var c = d.ceilings;
+      if(c && c.today_spend_usd !== undefined){
+        fill('om-ai-today', usd(c.today_spend_usd), 'g', 'AI spend today');
+        var pct = c.platform_pct_of_ceiling || 0;
+        fill('om-ai-ceil', c.platform_breached ? 'BREACHED' : (pct + '%'), c.platform_breached ? 'r' : (pct >= 75 ? 'a' : 'g'), 'C1 hard ceiling used today');
+      } else {
+        fill('om-ai-today', '—', 'nw', '/dashboard/cost has no ceilings block on the live server yet — shown as not-wired rather than a made-up $0');
+        fill('om-ai-ceil', '—', 'nw', '/dashboard/cost has no ceilings block on the live server yet');
+      }
+      fill('om-ai-calls', String(d.calls_this_month||0), 'g', 'AI calls this month');
+    }).catch(function(e){ fail(['om-ai-mtd','om-ai-today','om-ai-calls','om-ai-ceil'], '/dashboard/cost', String(e).slice(0,60)); });
 
     fetch(B + '/dashboard/bit').then(function(r){return r.json();}).then(function(b){
       var st = b.state || 'unknown';
       var cls = st === 'pass' ? 'g' : (st === 'critical' ? 'r' : 'a');
       var when = (b.ran_at||'').replace('T',' ').slice(0,16);
-      fill('om-bit', st.toUpperCase() + (when ? ' · ' + when : ''), cls);
-      fill('om-bit2', st.toUpperCase(), cls);
-      var f = (b.failing||[]).length;
-      fill('om-bitfail', String(f), f ? 'r' : 'g');
-    }).catch(function(){ fail(['om-bit','om-bit2','om-bitfail']); });
+      var tip = 'BIT self-test' + (b.worst ? ' · worst: ' + b.worst : '') + (b.note ? ' · ' + b.note : '');
+      fill('om-bit', st.toUpperCase() + (when ? ' · ' + when : ''), cls, tip);
+      fill('om-bit2', st.toUpperCase(), cls, tip);
+      if(b.failing !== undefined){
+        var f = (b.failing||[]).length;
+        fill('om-bitfail', String(f), f ? 'r' : 'g', f ? b.failing.join(', ') : 'no failing checks');
+      } else {
+        var res = b.results || {};
+        var bad = Object.keys(res).filter(function(k){ return res[k] && res[k] !== 'pass' && res[k].state !== 'pass'; });
+        fill('om-bitfail', String(bad.length), bad.length ? 'a' : 'g', bad.length ? bad.join(', ') : 'all checks passing');
+      }
+    }).catch(function(e){ fail(['om-bit','om-bit2','om-bitfail'], '/dashboard/bit', String(e).slice(0,60)); });
 
     fetch(B + '/dashboard/email-triage?limit=1').then(function(r){return r.json();}).then(function(d){
       fill('om-mailtotal', String(d.total||0), 'g');
@@ -1524,7 +1541,7 @@ function switchView(view) {
       fill('om-mailspam', String(bc.spam||0), 'g');
       var bs = d.by_status_30d || {};
       fill('om-mailsent', String(bs.sent||0), 'g');
-    }).catch(function(){ fail(['om-mailtotal','om-mailspam','om-mailsent']); });
+    }).catch(function(e){ fail(['om-mailtotal','om-mailspam','om-mailsent'], '/dashboard/email-triage', String(e).slice(0,60)); });
 
     fetch(B + '/flags').then(function(r){return r.json();}).then(function(f){
       var fc = document.getElementById('om-flagchips');
@@ -1557,14 +1574,19 @@ function switchView(view) {
         var sc = document.getElementById('om-svcchips');
         if(!sc) return;
         var svcs = d.services || [];
-        sc.innerHTML = svcs.map(function(s){
-          var ok = (s.status === 'ok');
-          var cls = ok ? 'g' : (s.status === 'warn' ? 'a' : 'r');
-          return '<span class="om-chip ' + cls + '"><span class="om-dot"></span>' + esc(s.id) + '</span>';
-        }).join('') || '<span class="om-chip o"><span class="om-dot"></span>no checks</span>';
-      }).catch(function(){
+        var oks = svcs.filter(function(x){ return x.status === 'ok'; });
+        var nokey = svcs.filter(function(x){ return x.status === 'nokey'; });
+        var warns = svcs.filter(function(x){ return x.status === 'warn'; });
+        var down = svcs.filter(function(x){ return ['ok','nokey','warn'].indexOf(x.status) < 0; });
+        var html = '';
+        if(oks.length) html += '<span class="om-chip g" title="' + esc(oks.map(function(x){return x.id;}).join(', ')) + '"><span class="om-dot"></span>' + oks.length + ' services ok</span>';
+        warns.forEach(function(x){ html += '<span class="om-chip a" title="' + esc(x.detail || 'check returned a warning') + '"><span class="om-dot"></span>' + esc(x.id) + ' warn</span>'; });
+        down.forEach(function(x){ html += '<span class="om-chip r" title="' + esc(x.detail || x.status) + '"><span class="om-dot"></span>' + esc(x.id) + ' ' + esc(x.status) + '</span>'; });
+        if(nokey.length) html += '<span class="om-chip o" title="No API key configured — a deliberate OFF, not a fault: ' + esc(nokey.map(function(x){return x.id;}).join(', ')) + '"><span class="om-dot"></span>' + nokey.length + ' no key (off)</span>';
+        sc.innerHTML = html || '<span class="om-chip o"><span class="om-dot"></span>no checks</span>';
+      }).catch(function(e){
         var sc = document.getElementById('om-svcchips');
-        if(sc) sc.innerHTML = '<span class="om-chip r"><span class="om-dot"></span>service checks offline</span>';
+        if(sc) sc.innerHTML = '<span class="om-chip r" title="/admin/services-status failed just now — ' + esc(String(e).slice(0,60)) + '"><span class="om-dot"></span>service checks offline</span>';
       });
 
       fetch(B + '/admin/faults?limit=500', {headers:{'X-Admin-Token': tok}}).then(function(r){
