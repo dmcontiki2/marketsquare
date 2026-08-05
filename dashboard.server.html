@@ -111,86 +111,6 @@
   .vtab { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .vtab.active { border-color: var(--accent); color: #fff; background: #1a2232; }
 
-  /* ── Graph view ── */
-  #graph-view { display: none; width: 100%; height: calc(100vh - 53px); min-height: 400px; position: fixed; top: 53px; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--navy, #0b0f1a); }
-  #graph-view.visible { display: block; }
-  #graph-svg { width: 100%; height: 100%; touch-action: none; }
-  #graph-zoom-wrap { will-change: transform; }
-  .node-label { font-size: 11px; fill: #e2e8f0; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  .node-sublabel { font-size: 9px; fill: #64748b; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-
-  /* ── Graph tooltip ── */
-  #graph-tooltip { position: fixed; background: #111827; border: 1px solid #1e2d40; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #e2e8f0; pointer-events: none; opacity: 0; transition: opacity 0.15s; max-width: 280px; z-index: 200; line-height: 1.6; }
-  #graph-tooltip.touch-visible { pointer-events: auto; }
-  #graph-tooltip .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
-  #graph-tooltip .tt-tag { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
-  #tt-dismiss { display: none; position: absolute; top: 6px; right: 8px; background: none; border: none; color: #64748b; font-size: 16px; cursor: pointer; line-height: 1; padding: 2px 4px; }
-  @media (hover: none) { #tt-dismiss { display: block; } }
-
-
-  /* ── Detail panel (Level 2 hover) ── */
-  #detail-panel {
-    position: fixed; top: 70px; right: 0; width: 300px;
-    background: #0d1424; border-left: 1px solid #1e2d40;
-    border-top: 1px solid #1e2d40; border-bottom: 1px solid #1e2d40;
-    border-radius: 12px 0 0 12px;
-    padding: 20px 18px; font-size: 12px; color: #e2e8f0;
-    transform: translateX(100%); transition: transform 0.2s ease;
-    pointer-events: none; z-index: 200; max-height: calc(100vh - 90px);
-    overflow-y: auto;
-  }
-  #detail-panel.visible { transform: translateX(0); }
-  #detail-panel .dp-breadcrumb { font-size: 10px; color: #334155; margin-bottom: 12px; letter-spacing: .3px; }
-  #detail-panel .dp-tag { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
-  #detail-panel .dp-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.3; }
-  #detail-panel .dp-body { font-size: 12px; color: #94a3b8; line-height: 1.7; white-space: pre-line; }
-  #detail-panel .dp-hint { font-size: 10px; color: #334155; margin-top: 14px; border-top: 1px solid #1e2d40; padding-top: 10px; }
-
-  /* ── Level 3 overlay ── */
-  #level3-overlay {
-    position: fixed; inset: 0; background: rgba(11,15,26,0.92);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 300; opacity: 0; pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-  #level3-overlay.visible { opacity: 1; pointer-events: auto; }
-  #level3-card {
-    background: #111827; border: 1.5px solid #1e2d40;
-    border-radius: 16px; padding: 32px 36px; max-width: 520px; width: 90%;
-    position: relative;
-  }
-  #level3-card .l3-breadcrumb {
-    font-size: 10px; color: #334155; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  #level3-card .l3-breadcrumb span { cursor: pointer; transition: color .15s; }
-  #level3-card .l3-breadcrumb span:hover { color: #94a3b8; }
-  #level3-card .l3-breadcrumb .sep { color: #1e2d40; cursor: default; }
-  #level3-card .l3-tag {
-    font-size: 10px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; margin-bottom: 10px;
-  }
-  #level3-card .l3-title {
-    font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.25;
-  }
-  #level3-card .l3-divider {
-    height: 1px; background: #1e2d40; margin-bottom: 16px;
-  }
-  #level3-card .l3-body {
-    font-size: 13px; color: #94a3b8; line-height: 1.8; white-space: pre-line;
-  }
-  #level3-card .l3-close {
-    position: absolute; top: 16px; right: 18px;
-    background: none; border: none; color: #334155; font-size: 20px;
-    cursor: pointer; line-height: 1; padding: 4px 6px; transition: color .15s;
-  }
-  #level3-card .l3-close:hover { color: #94a3b8; }
-  #level3-card .l3-back {
-    margin-top: 20px; font-size: 11px; color: #334155; cursor: pointer;
-    transition: color .15s; display: inline-flex; align-items: center; gap: 5px;
-  }
-  #level3-card .l3-back:hover { color: #94a3b8; }
-
   /* ── Server Health Panel ── */
   .health-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 20px; }
   .health-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
@@ -418,7 +338,7 @@
   </div>
   <div class="view-toggle">
     <button class="vtab active" id="vtab-dashboard" onclick="switchView('dashboard')">📋 Dashboard</button>
-    <button class="vtab" id="vtab-graph" onclick="switchView('graph')">🌌 Graph</button>
+    <button class="vtab" id="vtab-map" onclick="switchView('map')">🗺️ Ops Map</button>
     <button class="vtab" id="vtab-ops" onclick="switchView('ops')">⚙️ Ops</button>
     <button class="vtab" id="vtab-launch" onclick="switchView('launch')">🚀 Launch Switch</button>
     <button class="vtab" id="vtab-liveusers" onclick="switchView('liveusers')">🌆 Live Users</button>
@@ -426,29 +346,7 @@
   </div>
 </div>
 
-<div id="graph-tooltip"><button id="tt-dismiss" onclick="dismissTooltip()">✕</button><div class="tt-tag" id="tt-tag"></div><div class="tt-title" id="tt-title"></div><div id="tt-body"></div></div>
 
-<!-- Detail panel — Level 2 hover -->
-<div id="detail-panel">
-  <div class="dp-breadcrumb" id="dp-breadcrumb"></div>
-  <div class="dp-tag" id="dp-tag"></div>
-  <div class="dp-title" id="dp-title"></div>
-  <div class="dp-body" id="dp-body"></div>
-  <div class="dp-hint">Click to open full detail →</div>
-</div>
-
-<!-- Level 3 overlay -->
-<div id="level3-overlay" onclick="closeLevel3(event)">
-  <div id="level3-card">
-    <button class="l3-close" onclick="closeLevel3()">✕</button>
-    <div class="l3-breadcrumb" id="l3-breadcrumb"></div>
-    <div class="l3-tag" id="l3-tag"></div>
-    <div class="l3-title" id="l3-title"></div>
-    <div class="l3-divider"></div>
-    <div class="l3-body" id="l3-body"></div>
-    <div class="l3-back" onclick="closeLevel3()">← Back to solar system</div>
-  </div>
-</div>
 
 <div class="main">
 
@@ -533,10 +431,270 @@
   </div>
 </div>
 
-<!-- GRAPH VIEW -->
-<div id="graph-view">
-  <svg id="graph-svg"></svg>
+<!-- ══ OPS MAP VIEW (OPS-MAP-1, 5 Aug 2026, David) — live block diagram of the business.
+     Replaces the Galaxy Graph (usage-based ruling; galaxy code retrievable from
+     dashboard.server.html.bak-20260805-galaxy). Five layers, fixed block positions,
+     honest chips: solid dot = live endpoint, dashed = not wired yet, red = fetch failed. ══ -->
+<div id="opsmap-view" style="display:none;">
+<style>
+  #opsmap-view{padding:14px 12px 30px;}
+  #om-sheet{background:#F5F7FA;border-radius:14px;max-width:1440px;margin:0 auto;padding:14px 0 6px;color:#1F2937;
+            font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+  #om-tabs{display:flex;gap:8px;padding:0 22px 4px;align-items:center;flex-wrap:wrap}
+  #om-tabs button{font:600 12.5px inherit;font-family:inherit;padding:7px 15px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#1E3A5F;cursor:pointer}
+  #om-tabs button.on{background:#1E3A5F;border-color:#1E3A5F;color:#fff}
+  #om-tabs .om-upd{margin-left:auto;font-size:11px;color:#6B7280}
+  .om-legend{display:flex;gap:13px;padding:6px 22px 0;font-size:11px;color:#6B7280;align-items:center;flex-wrap:wrap}
+  .om-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+  .om-sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid rgba(0,0,0,.1)}
+  #om-ldesc{padding:8px 22px 0;font-size:12px;color:#6B7280;max-width:1100px}
+  #om-ldesc b{color:#1E3A5F}
+  #om-scalewrap{overflow:hidden}
+  #om-stage{position:relative;width:1400px;height:790px;margin:6px 0 0 12px;transform-origin:top left}
+  #om-wires{position:absolute;inset:0;pointer-events:none}
+  #om-wires line{stroke:#CBD5E1;stroke-width:1.5;fill:none}
+  #om-wires .om-flow{stroke:#1E3A5F;stroke-width:2.5;opacity:0;transition:opacity .25s}
+  .omL-traffic #om-wires .om-flow{opacity:.85}
+  .om-blk{position:absolute;background:#fff;border:1.5px solid #DDE4EE;border-left-width:5px;border-radius:12px;padding:8px 10px;box-shadow:0 1px 3px rgba(12,26,46,.07)}
+  .om-blk h3{margin:0;font-size:12.5px;font-weight:700;color:#0C1A2E;font-family:inherit}
+  .om-blk .om-role{font-size:10px;color:#6B7280;margin-top:2px;line-height:1.35}
+  .om-grp{position:absolute;border:1.5px dashed #B9C6D8;border-radius:14px}
+  .om-grp>span{position:absolute;top:-9px;left:14px;background:#F5F7FA;padding:0 8px;font-size:10.5px;font-weight:700;color:#1E3A5F;letter-spacing:.6px}
+  .omf-people{background:#E9F2FC;border-color:#B7CFE9}
+  .omf-edge{background:#FDEEDF;border-color:#EFCFA6}
+  .omf-apps{background:#EFEBF9;border-color:#CCC1EA}
+  .omf-server{background:#E6F4EC;border-color:#AFDCC4}
+  .omf-ext{background:#FBEAED;border-color:#EBBDC7}
+  .omf-agent{background:#FBF5DD;border-color:#E2CD85}
+  .omg-server{background:rgba(163,217,189,.09);border-color:#AFDCC4}
+  .omg-agent{background:rgba(226,205,133,.13);border-color:#E2CD85}
+  .om-chips{margin-top:6px;display:none;flex-wrap:wrap;gap:4px}
+  .om-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#1F2937;
+           background:rgba(255,255,255,.85);border:1px solid #E2E8F0;border-radius:999px;padding:2px 8px;white-space:nowrap}
+  .om-chip .om-v{font-weight:700;color:#1E3A5F}
+  .om-chip.g .om-dot{background:#10B981}.om-chip.a .om-dot{background:#F59E0B}
+  .om-chip.r .om-dot{background:#DC2626}.om-chip.o .om-dot{background:#6B7280}
+  .om-chip.r{border-color:#F3B4B4}
+  .om-chip.nw{border-style:dashed;color:#9CA3AF;background:#fff}
+  .om-chip.nw .om-dot{background:transparent;border:1.5px solid #9CA3AF;width:6px;height:6px}
+  .om-chip.nw .om-v{color:#9CA3AF}
+  .omL-traffic .omc-traffic,.omL-money .omc-money,.omL-switches .omc-switches,.omL-ncr .omc-ncr{display:flex}
+  .omL-traffic .om-warnT,.omL-ncr .om-warnN{outline:2.5px solid #F59E0B;outline-offset:2.5px}
+  #om-hero{position:absolute;left:20px;top:440px;display:none;gap:10px}
+  .omL-money #om-hero{display:flex}
+  #om-hero .om-tile{background:#0C1A2E;color:#fff;border-radius:12px;padding:8px 15px}
+  #om-hero .om-tile .om-k{font-size:9.5px;color:#B9C6D8;letter-spacing:.5px;text-transform:uppercase}
+  #om-hero .om-tile .om-n{font-weight:800;font-size:17px}
+  .om-tierrow{display:none;gap:3px;margin-top:5px;flex-wrap:wrap}
+  .omL-traffic .om-tierrow{display:flex}
+  .om-tier{font-size:9px;font-weight:700;color:#fff;border-radius:4px;padding:1px 5px;background:#6B7280}
+  #om-foot{padding:4px 22px 10px;font-size:11px;color:#6B7280;line-height:1.55;max-width:1200px}
+</style>
+<div id="om-sheet">
+  <div id="om-tabs">
+    <button data-l="structure" class="on">Structure</button>
+    <button data-l="traffic">Traffic &amp; Load</button>
+    <button data-l="money">Money</button>
+    <button data-l="switches">Switches</button>
+    <button data-l="ncr">NCR &amp; Feedback</button>
+    <span class="om-upd" id="om-upd">loading…</span>
+  </div>
+  <div class="om-legend">
+    <span style="font-weight:600;color:#1E3A5F">Blocks:</span>
+    <span><span class="om-sw" style="background:#E9F2FC;border-color:#B7CFE9"></span>People</span>
+    <span><span class="om-sw" style="background:#FDEEDF;border-color:#EFCFA6"></span>Edge</span>
+    <span><span class="om-sw" style="background:#EFEBF9;border-color:#CCC1EA"></span>Apps</span>
+    <span><span class="om-sw" style="background:#E6F4EC;border-color:#AFDCC4"></span>Server</span>
+    <span><span class="om-sw" style="background:#FBEAED;border-color:#EBBDC7"></span>External</span>
+    <span><span class="om-sw" style="background:#FBF5DD;border-color:#E2CD85"></span>Agents</span>
+    <span style="margin-left:6px"><span class="om-dot" style="background:#10B981"></span>on/healthy</span>
+    <span><span class="om-dot" style="background:#6B7280"></span>off (deliberate)</span>
+    <span><span class="om-dot" style="background:#DC2626"></span>offline/failed</span>
+    <span><span class="om-dot" style="border:1.5px solid #9CA3AF;background:none;width:6px;height:6px"></span>not wired yet</span>
+    <span>· amber ring = attention</span>
+  </div>
+  <div id="om-ldesc"></div>
+  <div id="om-scalewrap"><div id="om-stage" class="omL-structure">
+  <svg id="om-wires" width="1400" height="790">
+    <defs><marker id="om-ar" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#CBD5E1"/></marker></defs>
+    <line x1="200" y1="105" x2="240" y2="105" marker-end="url(#om-ar)"/>
+    <line x1="420" y1="110" x2="460" y2="110" marker-end="url(#om-ar)"/>
+    <line x1="670" y1="120" x2="730" y2="120" marker-end="url(#om-ar)"/>
+    <line x1="200" y1="215" x2="460" y2="140" marker-end="url(#om-ar)"/>
+    <line x1="200" y1="325" x2="460" y2="278" marker-end="url(#om-ar)"/>
+    <line x1="670" y1="278" x2="730" y2="200" marker-end="url(#om-ar)"/>
+    <line x1="420" y1="250" x2="730" y2="170" marker-end="url(#om-ar)"/>
+    <line x1="1010" y1="120" x2="1040" y2="120" marker-end="url(#om-ar)"/>
+    <line x1="1040" y1="215" x2="1010" y2="180" marker-end="url(#om-ar)"/>
+    <line x1="1010" y1="300" x2="1040" y2="300" marker-end="url(#om-ar)"/>
+    <line x1="1010" y1="390" x2="1040" y2="390" marker-end="url(#om-ar)"/>
+    <line x1="800" y1="560" x2="800" y2="530" marker-end="url(#om-ar)"/>
+    <line x1="960" y1="560" x2="900" y2="530" marker-end="url(#om-ar)"/>
+    <line x1="480" y1="560" x2="530" y2="300" marker-end="url(#om-ar)"/>
+    <line x1="640" y1="560" x2="580" y2="300" marker-end="url(#om-ar)"/>
+    <line class="om-flow" x1="200" y1="105" x2="240" y2="105"/>
+    <line class="om-flow" x1="420" y1="110" x2="460" y2="110"/>
+    <line class="om-flow" x1="670" y1="120" x2="730" y2="120"/>
+  </svg>
+
+  <div id="om-hero">
+    <div class="om-tile"><div class="om-k">In · MTD</div><div class="om-n" id="om-money-in">—</div></div>
+    <div class="om-tile"><div class="om-k">AI out · MTD</div><div class="om-n" id="om-money-out">—</div></div>
+    <div class="om-tile" style="background:#1E3A5F"><div class="om-k">Server fixed</div><div class="om-n">€4.51/mo</div></div>
+  </div>
+
+  <!-- PEOPLE -->
+  <div class="om-blk omf-people" style="left:20px;top:60px;width:180px">
+    <h3>Buyers &amp; Sellers</h3><div class="om-role">browsers on trustsquare.co</div>
+    <div class="om-tierrow" id="om-tiers"><span class="om-tier">tiers —</span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-livenow"><span class="om-dot"></span>live now <span class="om-v">—</span></span><span class="om-chip g" id="om-users"><span class="om-dot"></span>users <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>Tuppence held <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>praise <span class="om-v">reg.</span></span></div>
+  </div>
+  <div class="om-blk omf-people" style="left:20px;top:172px;width:180px">
+    <h3>Testers ×3</h3><div class="om-role">David · Maroushka · David&nbsp;Jnr — REPORT tab</div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-t-filed"><span class="om-dot"></span>filed total <span class="om-v">—</span></span><span class="om-chip a" id="om-t-retest"><span class="om-dot"></span>awaiting retest <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>reports/day <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-people" style="left:20px;top:284px;width:180px">
+    <h3>David</h3><div class="om-role">phone + desktop → Admin console</div>
+    <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>escalations <span class="om-v">B3</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>kill switches armed</span></div>
+  </div>
+
+  <!-- EDGE -->
+  <div class="om-blk omf-edge" style="left:240px;top:60px;width:180px">
+    <h3>Cloudflare CDN</h3><div class="om-role">cache + purge-on-deploy</div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>cache hit <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>cost <span class="om-v">R 0</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>proxied</span></div>
+  </div>
+  <div class="om-blk omf-edge" style="left:240px;top:196px;width:180px">
+    <h3>CF Email Worker</h3><div class="om-role">inbound mail → /email/inbound</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-mailtotal"><span class="om-dot"></span>triaged total <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>routing on</span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-mailspam"><span class="om-dot"></span>spam 30d <span class="om-v">—</span></span></div>
+  </div>
+
+  <!-- APPS -->
+  <div class="om-blk omf-apps" style="left:460px;top:60px;width:210px">
+    <h3>TrustSquare FEA</h3><div class="om-role">18 pages · marketplace, wizard, maps, wallet · REPORT tab 17/18</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-listings"><span class="om-dot"></span>live listings <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>req/h <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches" id="om-flagchips"><span class="om-chip a"><span class="om-dot"></span>flags loading…</span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-topbin"><span class="om-dot"></span>top bin <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-apps" style="left:460px;top:238px;width:210px">
+    <h3>Admin Console</h3><div class="om-role">this dashboard — the map lives here</div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-queue"><span class="om-dot"></span>triage queue <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>visits <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-apps" style="left:460px;top:346px;width:210px">
+    <h3>CityLauncher</h3><div class="om-role">adventures pipeline / city rollout</div>
+    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>idle (deliberate)</span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>runs <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-apps" style="left:460px;top:436px;width:210px">
+    <h3>AdvertAgent</h3><div class="om-role">super-advert coach + publisher</div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>per-use AI</span></div>
+    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>packs sold <span class="om-v">—</span></span></div>
+  </div>
+
+  <!-- HETZNER GROUP -->
+  <div class="om-grp omg-server" style="left:710px;top:40px;width:300px;height:490px"><span>HETZNER SERVER</span></div>
+  <div class="om-blk omf-server" style="left:730px;top:70px;width:260px">
+    <h3>BEA — FastAPI</h3><div class="om-role">the API · auth, listings, intros, faults, flags</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-resp"><span class="om-dot"></span>response <span class="om-v">—</span></span><span class="om-chip g" id="om-bw"><span class="om-dot"></span>bandwidth <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches" id="om-svcchips"><span class="om-chip a"><span class="om-dot"></span>service checks loading…</span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>error-log lane <span class="om-v">B1</span></span></div>
+  </div>
+  <div class="om-blk omf-server" style="left:730px;top:196px;width:122px">
+    <h3>SQLite</h3><div class="om-role">market.db</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-db"><span class="om-dot"></span><span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>nightly backup</span></div>
+  </div>
+  <div class="om-blk omf-server" style="left:868px;top:196px;width:122px">
+    <h3>Redis</h3><div class="om-role">sessions · limits</div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span><span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-server" style="left:730px;top:296px;width:260px">
+    <h3>Deploy Engine + Gates</h3><div class="om-role">deploy ref → canon → predeploy → BIT → live · auto-revert</div>
+    <div class="om-chips omc-switches"><span class="om-chip g" id="om-bit"><span class="om-dot"></span>BIT <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>deploys/wk <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>auto-reverts <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-server" style="left:730px;top:404px;width:260px">
+    <h3>Host / OS</h3><div class="om-role">CPX32 · /health/resources</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-cpu"><span class="om-dot"></span>CPU <span class="om-v">—</span></span><span class="om-chip g" id="om-ram"><span class="om-dot"></span>RAM <span class="om-v">—</span></span><span class="om-chip g" id="om-disk"><span class="om-dot"></span>disk <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>fixed <span class="om-v">€4.51/mo</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>SSL days <span class="om-v">—</span></span></div>
+  </div>
+
+  <!-- EXTERNAL -->
+  <div class="om-blk omf-ext" style="left:1040px;top:60px;width:180px">
+    <h3>AI Provider</h3><div class="om-role">via ai_provider seam (swappable)</div>
+    <div class="om-chips omc-money"><span class="om-chip g" id="om-ai-today"><span class="om-dot"></span>today <span class="om-v">—</span></span><span class="om-chip g" id="om-ai-mtd"><span class="om-dot"></span>MTD <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-ai-calls"><span class="om-dot"></span>calls/mo <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip g" id="om-ai-ceil"><span class="om-dot"></span>ceiling <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-ext" style="left:1040px;top:178px;width:180px">
+    <h3>GitHub Mirror</h3><div class="om-role">source of server pulls (deploy ref)</div>
+    <div class="om-chips omc-switches"><span class="om-chip nw"><span class="om-dot"></span>sync <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-ext" style="left:1040px;top:268px;width:180px">
+    <h3>Paystack</h3><div class="om-role">Tuppence in · money IN</div>
+    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>MTD in <span class="om-v">—</span></span><span class="om-chip nw"><span class="om-dot"></span>fees <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>test mode</span></div>
+  </div>
+  <div class="om-blk omf-ext" style="left:1040px;top:376px;width:180px">
+    <h3>Resend</h3><div class="om-role">outbound mail (acks, retest letters)</div>
+    <div class="om-chips omc-traffic"><span class="om-chip g" id="om-mailsent"><span class="om-dot"></span>auto-sent 30d <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>free tier</span></div>
+  </div>
+
+  <!-- AGENTS BAND -->
+  <div class="om-grp omg-agent" style="left:240px;top:560px;width:1090px;height:200px"><span>AGENT ROSTER · roles, swappable engines (AGENTS.md)</span></div>
+  <div class="om-blk omf-agent" style="left:260px;top:588px;width:168px" id="om-maint-blk">
+    <h3>Maintenance</h3><div class="om-role">fault lane: adjudicate→fix→verify→harden</div>
+    <div class="om-chips omc-ncr">
+      <span class="om-chip r" id="om-f-blocker"><span class="om-dot"></span>blockers <span class="om-v">—</span></span>
+      <span class="om-chip a" id="om-f-major"><span class="om-dot"></span>major <span class="om-v">—</span></span>
+      <span class="om-chip g" id="om-f-minor"><span class="om-dot"></span>minor <span class="om-v">—</span></span>
+      <span class="om-chip a" id="om-f-retest"><span class="om-dot"></span>awaiting retest <span class="om-v">—</span></span>
+      <span class="om-chip g" id="om-f-closed"><span class="om-dot"></span>closed <span class="om-v">—</span></span>
+      <span class="om-chip g" id="om-f-recur"><span class="om-dot"></span>recur ≥3 <span class="om-v">—</span></span>
+    </div>
+    <div class="om-chips omc-switches"><span class="om-chip g" id="om-faultflag"><span class="om-dot"></span>fault intake <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-agent" style="left:440px;top:588px;width:168px">
+    <h3>Feedback-Triage</h3><div class="om-role">voice of customer: synthesize→route</div>
+    <div class="om-chips omc-ncr"><span class="om-chip nw"><span class="om-dot"></span>classes in FEEDBACK.md <span class="om-v">reg.</span></span></div>
+    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>session-invoked</span></div>
+  </div>
+  <div class="om-blk omf-agent" style="left:620px;top:588px;width:168px">
+    <h3>Pulse / Monitor</h3><div class="om-role">daily heartbeat, amber/red alerts</div>
+    <div class="om-chips omc-switches"><span class="om-chip g"><span class="om-dot"></span>scheduled daily</span></div>
+    <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>verdict <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-agent" style="left:800px;top:588px;width:168px">
+    <h3>BIT Tester</h3><div class="om-role">self-test each deploy + live probe</div>
+    <div class="om-chips omc-switches"><span class="om-chip g" id="om-bit2"><span class="om-dot"></span>last <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-bitfail"><span class="om-dot"></span>failing <span class="om-v">—</span></span></div>
+  </div>
+  <div class="om-blk omf-agent" style="left:980px;top:588px;width:168px">
+    <h3>Outreach</h3><div class="om-role">wave sends, founding sellers</div>
+    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>gated (wave-1)</span></div>
+    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>no-AI default</span></div>
+  </div>
+  <div class="om-blk omf-agent" style="left:1160px;top:588px;width:168px">
+    <h3>Video Pipeline</h3><div class="om-role">launch clips: generate→QC→pack</div>
+    <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>session-invoked</span></div>
+  </div>
+  </div></div>
+  <div id="om-foot">Chips with a solid dot are fed live by the server (flags, service checks, faults, resources, presence, AI spend, BIT, email triage). Dashed chips are honestly not wired yet — B-OPS batches: money-in (Paystack), req/h, deploys/wk, SSL days, feedback classes. A red chip means that feed failed just now.</div>
 </div>
+</div>
+
 
 <!-- ── LAUNCH SWITCH VIEW (page 5 / the +1) ── -->
 <div id="launch-switch-view" style="display:none;padding:24px 20px;max-width:760px;margin:0 auto;">
@@ -1229,601 +1387,238 @@ async function loadDashboard() {
 // ── View switcher ────────────────────────────────────────────
 function switchView(view) {
   const dash = document.querySelector('.main');
-  const graph = document.getElementById('graph-view');
+  const map = document.getElementById('opsmap-view');
   const ops = document.getElementById('ops-view');
   var _ls=document.getElementById('launch-switch-view');
-  if(view==='launch'){  dash.style.display='none'; var _g=document.getElementById('graph-view'); if(_g)_g.classList.remove('visible'); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
+  if(view==='launch'){  dash.style.display='none'; if(map)map.style.display='none'; if(window.omStop)omStop(); var _o=document.getElementById('ops-view'); if(_o)_o.style.display='none'; ['vtab-dashboard','vtab-map','vtab-ops'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lb=document.getElementById('vtab-launch'); if(_lb)_lb.classList.add('active'); if(_ls)_ls.style.display='block'; if(window.lsLoad)lsLoad(); return; }
   var _lu=document.getElementById('liveusers-view');
-  if(view==='liveusers'){ dash.style.display='none'; if(graph)graph.classList.remove('visible'); if(ops)ops.style.display='none'; if(_ls)_ls.style.display='none'; ['vtab-dashboard','vtab-graph','vtab-ops','vtab-launch'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lub=document.getElementById('vtab-liveusers'); if(_lub)_lub.classList.add('active'); if(_lu)_lu.style.display='block'; if(window.luStart)luStart(); return; }
+  if(view==='liveusers'){ dash.style.display='none'; if(map)map.style.display='none'; if(window.omStop)omStop(); if(ops)ops.style.display='none'; if(_ls)_ls.style.display='none'; ['vtab-dashboard','vtab-map','vtab-ops','vtab-launch'].forEach(function(i){var b=document.getElementById(i); if(b)b.classList.remove('active');}); var _lub=document.getElementById('vtab-liveusers'); if(_lub)_lub.classList.add('active'); if(_lu)_lu.style.display='block'; if(window.luStart)luStart(); return; }
   if(_lu)_lu.style.display='none'; var _lub2=document.getElementById('vtab-liveusers'); if(_lub2)_lub2.classList.remove('active'); if(window.luStop)luStop();
   if(_ls)_ls.style.display='none'; var _lb2=document.getElementById('vtab-launch'); if(_lb2)_lb2.classList.remove('active');
   document.getElementById('vtab-dashboard').classList.toggle('active', view === 'dashboard');
-  document.getElementById('vtab-graph').classList.toggle('active', view === 'graph');
+  document.getElementById('vtab-map').classList.toggle('active', view === 'map');
   document.getElementById('vtab-ops').classList.toggle('active', view === 'ops');
-  if (view === 'graph') {
+  if (view === 'map') {
     dash.style.display = 'none';
     if(ops) ops.style.display = 'none';
-    graph.classList.add('visible');
-    requestAnimationFrame(() => buildGraph());
+    if(map){ map.style.display = 'block'; if(window.omStart)omStart(); }
   } else if (view === 'ops') {
     dash.style.display = 'none';
-    graph.classList.remove('visible');
+    if(map){ map.style.display = 'none'; if(window.omStop)omStop(); }
     if(ops) { ops.style.display = 'block'; loadOpsMetrics(); loadEmailTriage(); loadAiCost(); loadCodeScan(); }
   } else {
     dash.style.display = '';
-    graph.classList.remove('visible');
+    if(map){ map.style.display = 'none'; if(window.omStop)omStop(); }
     if(ops) ops.style.display = 'none';
   }
 }
 
-// ── Graph data ────────────────────────────────────────────────
-function getGalaxyData() {
-  const priorities = DATA.nextGoals.split('\n').filter(l => /^\d+\./.test(l.trim())).slice(0, 4);
+/* ══ OPS MAP (OPS-MAP-1, 5 Aug 2026) — live wiring ══
+   Honest chips: fill() only writes what a live endpoint returned; a failed fetch
+   turns that feed's chips red ("offline"); dashed chips stay dashed until their
+   endpoint exists. One refresh per 60s while the view is open. */
+(function(){
+  var B = (window.location.protocol === 'file:') ? 'https://trustsquare.co' : '';
+  function omTok(){ try{ return sessionStorage.getItem('ms_admin_token') || ''; }catch(e){ return ''; } }
+  var omTimer = null;
 
-  const nodes = [
-    { id: 'ts',     label: 'TrustSquare',  sub: `Session ${DATA.nextSession}`, group: 'TrustSquare',    size: 28, drilldown: 'ts',    detail: `Live at trustsquare.co · BEA v1.3.1\nSession ${DATA.currentSession} complete` },
-    { id: 'cl',     label: 'CityLauncher', sub: 'Live',                        group: 'CityLauncher',   size: 22, drilldown: 'cl',    detail: `Engine LIVE (S130) · strategist + saturation scraper\nPretoria prospect pool 1,416 / 1,326 mx_ok` },
-    { id: 'aa',     label: 'AdvertAgent',  sub: 'Live',                        group: 'AdvertAgent',    size: 20, drilldown: 'aa',    detail: 'Per-use AI features LIVE (S132) · port 8002\nIntegrated into app (S133) · Tuppence-metered' },
-    { id: 'infra',  label: 'Agentic OS',   sub: 'Framework',                   group: 'Infrastructure', size: 18, drilldown: 'infra', detail: 'Branch structure · Session automation\nAudit baseline' },
-    { id: 'tuppence', label: 'Tuppence',     sub: 'Currency',    group: 'Concept', size: 14, detail: 'Introduction currency shared across all projects' },
-    { id: 'bea',      label: 'BEA v1.3.1',  sub: 'FastAPI',     group: 'Concept', size: 16, detail: '✅ Active · FastAPI + SQLite\nHetzner CPX32 (8GB) + 100GB volume' },
-    { id: 'hetzner',  label: 'Hetzner',     sub: 'Server',      group: 'Concept', size: 13, detail: '178.104.73.239 · Ubuntu 24.04\nNginx + FastAPI + CityLauncher API' },
-    { id: 'paystack', label: 'Paystack',    sub: 'Payments',     group: 'Concept', size: 14, detail: 'ZA payments via Paystack · Stripe-global shelved 16 Jul (revisit on MRR/intl demand)' },
-    { id: 'trust',    label: 'Trust Score', sub: 'Metric',       group: 'Concept', size: 13, detail: 'Seller credibility score · Stamped on publish' },
-    { id: 'geo',      label: 'Geo',         sub: '4-level',      group: 'Concept', size: 12, detail: 'Country → Region → City → Suburb\nZA: 9 provinces · 54 cities' },
-    { id: 'codex',    label: 'Solar Codex', sub: 'Rules v4.8',   group: 'Concept', size: 15, detail: 'Canonical product rules (§13 BIT block diagram) · All agents check before business logic' },
-    { id: 'pretoria', label: 'Pretoria',    sub: 'Launch city',  group: 'CityLauncher', size: 13, detail: `${(DATA.stats&&DATA.stats.liveListings)||0} live listings\nWorld Heritage layer 332 sites` },
-    { id: 'github',   label: 'GitHub',      sub: 'Backup',       group: 'Infrastructure', size: 12, detail: 'github.com/dmcontiki2/marketsquare' },
-    { id: 'risks',    label: 'Risk Register', sub: 'Live risks',  group: 'RiskRegister',   size: 20, drilldown: 'risks', detail: 'Live risk register — security, legal, operational & technical risks' },
-  ];
-
-  // Blockers and Priorities are collapsed into single parent nodes.
-  // Their individual items live one level down (drilldown), not as loose satellites.
-  const _blockers = (DATA.blockers || []).slice(0, 8);
-  if (_blockers.length) {
-    nodes.push({ id: 'blockers', label: 'Blockers', sub: _blockers.length + ' active', group: 'Blocker', size: 18, drilldown: 'blockers', detail: 'Launch blockers — click to view all ' + _blockers.length + ' open blockers' });
+  function fill(id, txt, cls){
+    var el = document.getElementById(id); if(!el) return;
+    var v = el.querySelector('.om-v'); if(v) v.textContent = txt; else el.lastChild.textContent = ' ' + txt;
+    if(cls){ el.className = 'om-chip ' + cls; }
   }
-  if (priorities.length) {
-    nodes.push({ id: 'priorities', label: 'Priorities', sub: priorities.length + ' this session', group: 'Priority', size: 18, drilldown: 'priorities', detail: 'Next-session priorities — click to view each' });
-  }
+  function fail(ids){ ids.forEach(function(id){ fill(id, 'offline', 'r'); }); }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
-  // ── Risk Register satellites (definition only — rendered under drilldown, not at Level 1) ──
-  const RISK_ITEMS = [
-    { id:'r1',  label:'Prior art — patent',     detail:'No outreach until patent filed. A single email sent before filing voids the prior art defence entirely.', status:'open' },
-    { id:'r2',  label:'Nginx security headers', detail:'CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy not yet set. Required before public launch.', status:'open' },
-    { id:'r3',  label:'Rate limiting',           detail:'Magic link + intro endpoints have no cooldown or throttle. Vulnerable to OTP spam and intro flooding.', status:'open' },
-    { id:'r4',  label:'EULA hard gate',          detail:'EULA must block BEA API calls, not just UI. Unauthenticated users must not be able to submit data.', status:'open' },
-    { id:'r5',  label:'Account data deletion',   detail:'When full user accounts go live, all PII tables must be verifiably purged on delete (POPIA compliance).', status:'open' },
-    { id:'r6',  label:'POPIA transparency',      detail:'Onboarding screen must show one-line notice confirming scope of pre-filled data and when it is first stored.', status:'open' },
-    { id:'r7',  label:'BEA single point fail',   detail:'No failover — single Hetzner CPX32 instance. Post-launch: health endpoint + n8n auto-scale to CPX32 at 85%.', status:'monitor' },
-    { id:'r8',  label:'SQLite under load',       detail:'SQLite suitable for current load. If concurrent writes exceed ~50/s post-launch, migrate to PostgreSQL.', status:'monitor' },
-    { id:'r9',  label:'Payments posture',         detail:'Stripe-global SHELVED 16 Jul (foreign-entity cost pre-revenue); ZA payments via Paystack. Revisit on ~$500/mo MRR or real international demand.', status:'monitor' },
-    { id:'r10', label:'Memory drift (Claude)',   detail:'Session context resets each chat. STATUS.md + MEMORY.md + CLAUDE.md are the drift mitigation. Keep them current.', status:'monitor' },
-    { id:'r11', label:'FEA file size',           detail:'marketsquare.html is large. IP must stay in BEA. FEA is a display layer only — do not add business logic.', status:'monitor' },
-    { id:'r12', label:'Wave 1 prior to baseline',detail:'Wave 1 outreach before baseline freeze risks exposing a moving codebase to real users. Baseline before scale.', status:'open' },
-  ];
-  // (Risk items are NOT pushed to Level 1 — they render under the Risk Register drilldown.)
-  // Stash on DATA so getDrilldownData can read the same list without recomputing.
-  window._RISK_ITEMS = RISK_ITEMS;
-
-  const edges = [
-    {source:'ts',target:'risks',strength:0.5},{source:'ts',target:'bea',strength:0.9},{source:'cl',target:'bea',strength:0.7},{source:'aa',target:'bea',strength:0.6},
-    {source:'ts',target:'hetzner',strength:0.6},{source:'cl',target:'hetzner',strength:0.6},
-    {source:'ts',target:'paystack',strength:0.7},{source:'ts',target:'tuppence',strength:0.9},
-    {source:'cl',target:'tuppence',strength:0.5},{source:'aa',target:'tuppence',strength:0.5},
-    {source:'ts',target:'trust',strength:0.8},{source:'cl',target:'trust',strength:0.4},
-    {source:'ts',target:'geo',strength:0.7},{source:'cl',target:'geo',strength:0.8},
-    {source:'ts',target:'codex',strength:0.7},{source:'cl',target:'codex',strength:0.7},{source:'aa',target:'codex',strength:0.7},
-    {source:'ts',target:'github',strength:0.5},{source:'cl',target:'github',strength:0.5},{source:'infra',target:'github',strength:0.7},
-    {source:'cl',target:'pretoria',strength:0.9},{source:'ts',target:'pretoria',strength:0.6},
-    {source:'aa',target:'ts',strength:0.7},{source:'infra',target:'ts',strength:0.5},
-    {source:'infra',target:'cl',strength:0.5},{source:'infra',target:'aa',strength:0.5},
-  ];
-  if (_blockers.length) edges.push({source:'ts',target:'blockers',strength:0.6});
-  if (priorities.length) edges.push({source:'ts',target:'priorities',strength:0.5});
-  return { nodes, edges };
-}
-
-// ── Drilldown data per project ────────────────────────────────
-function getDrilldownData(projectId) {
-  const map = {
-    ts: {
-      center: { label: 'TrustSquare', color: '#3b82f6' },
-      nodes: [
-        // KPIs
-        { label: 'Founding sellers',  sub: 'KPI',     color: '#f59e0b', size: 16, type:'kpi',     detail: 'Founding-seller drive toward the 60 target · live count via /dashboard/summary' },
-        { label: '65 Live Listings', sub: 'KPI',     color: '#10b981', size: 14, type:'kpi',     detail: '65 live listings · World Heritage layer 332 sites · live count via /dashboard/summary' },
-        { label: 'BEA v1.3.1',       sub: 'Tool',    color: '#3b82f6', size: 15, type:'tool',    detail: '✅ Running · FastAPI · SQLite (WAL) · Hetzner CPX32 (8GB) + 100GB volume' },
-        { label: 'Paystack',         sub: 'Tool',    color: '#3b82f6', size: 14, type:'tool',    detail: 'Test mode · sk_test_ active · live mode pending Paystack approval' },
-        { label: 'Cloudflare R2',    sub: 'Tool',    color: '#3b82f6', size: 12, type:'tool',    detail: 'Photo storage · public dev URL · seller profile photos' },
-        { label: 'AI cost guardrails',sub: 'Tool',    color: '#3b82f6', size: 15, type:'tool',    detail: 'Real-token metering + hard daily ceiling ($100) + dashboard panel · LIVE' },
-        { label: 'Embedded API key',  sub: 'Risk',    color: '#ef4444', size: 13, type:'risk',    detail: '⚠ Static X-Api-Key shipped in front-end JS — rotate/retire before launch (audit C1)' },
-        { label: 'Sell-flow redo',   sub: 'Priority',color: '#06b6d4', size: 13, type:'priority', detail: 'SELL-FLOW-REDO-2 + CHAR-BLUR-1 staged behind SF_ENABLED · QA one car end-to-end' },
-        { label: 'AI features',      sub: 'Live',    color: '#10b981', size: 12, type:'metric',  detail: 'Per-use AI functions integrated in-app (S133) · Tuppence hold/settle ledger · dry-run default' },
-        { label: 'Trust Score',      sub: 'Metric',  color: '#8b5cf6', size: 12, type:'metric',  detail: 'Stamped on publish · sourced from users table · COALESCE guard applied' },
-        { label: 'Tuppence',         sub: 'Currency',color: '#8b5cf6', size: 13, type:'metric',  detail: 'Intro currency · 1T per intro · 2T boosted · synced from BEA on load' },
-        { label: 'trustsquare.co',   sub: 'Live URL', color: '#10b981', size: 14, type:'tool',   detail: '✅ Live · Nginx · HTTPS · Certbot · served from /var/www/marketsquare/' },
-      ]
-    },
-    cl: {
-      center: { label: 'CityLauncher', color: '#8b5cf6' },
-      nodes: [
-        { label: '1,416 Prospects',  sub: 'KPI',     color: '#f59e0b', size: 15, type:'kpi',     detail: 'Pretoria pool across all 7 categories · 1,326 mx_ok verified · agency + individual' },
-        { label: '426 Phone-only',   sub: 'KPI',     color: '#f59e0b', size: 13, type:'kpi',     detail: 'Gumtree prospects · phone only · no email · cannot email outreach' },
-        { label: 'Dashboard API',    sub: 'Tool',    color: '#8b5cf6', size: 14, type:'tool',    detail: '✅ Running · port 8001 · citylauncher.service · serves trustsquare.co/launch/' },
-        { label: 'OSM Scraper',      sub: 'Tool',    color: '#8b5cf6', size: 12, type:'tool',    detail: 'OpenStreetMap Overpass API · free · no key · primary scrape source' },
-        { label: 'Resend Emailer',   sub: 'Tool',    color: '#8b5cf6', size: 12, type:'tool',    detail: 'Email outreach via Resend API · 4 category templates · halted at AWAITING_APPROVAL' },
-        { label: 'Engine LIVE',      sub: 'Status',  color: '#10b981', size: 16, type:'metric',  detail: '✅ Strategist (claude-sonnet-4-8) + saturation scraper deployed on server (S130)' },
-        { label: 'No Email Scrape',  sub: 'Risk',    color: '#ef4444', size: 13, type:'risk',    detail: '⚠ Gumtree scraper finds phone only — emails not in DOM · blocked source' },
-        { label: 'Pretoria',         sub: 'City',    color: '#8b5cf6', size: 14, type:'metric',  detail: `Launch city · ${(DATA.stats&&DATA.stats.sellers)||0}/60 founding sellers · Property24 estate agents scraped` },
-        { label: 'Founders codes',   sub: 'Priority',color: '#06b6d4', size: 14, type:'priority', detail: 'Launch-code issuing side deployed env-gated OFF · BEA /launch/sync-registry wired green' },
-      ]
-    },
-    aa: {
-      center: { label: 'AdvertAgent', color: '#f59e0b' },
-      nodes: [
-        { label: 'LIVE (dev-gated)', sub: 'Status',  color: '#10b981', size: 16, type:'metric',  detail: 'Port 8002 · nginx /ai/ Basic-Auth · 2 flagship functions real-API tested (S132)' },
-        { label: 'Seller AI Coach',  sub: 'Purpose', color: '#f59e0b', size: 14, type:'tool',    detail: 'Help sellers create better listings · analyse intro acceptance rates' },
-        { label: 'Anonymity Rule',   sub: 'Risk',    color: '#ef4444', size: 14, type:'risk',    detail: '⚠ Every feature must preserve seller anonymity absolutely (Codex A2)' },
-        { label: 'Subscription Gate',sub: 'Risk',    color: '#ef4444', size: 13, type:'risk',    detail: '⚠ Never call Claude API without confirming active subscription first' },
-        { label: 'Part G Principles',sub: 'Tool',    color: '#f59e0b', size: 13, type:'tool',    detail: 'PRINCIPLE_REQUIREMENTS.md Part G · G1–G4 are founding constraints' },
-        { label: 'Claude API',       sub: 'Tool',    color: '#f59e0b', size: 14, type:'tool',    detail: 'Powers per-use AI · Sonnet (claude-sonnet-4-8) + web search · subscription/Tuppence gated' },
-        { label: 'B7 ceiling',       sub: 'Guard',   color: '#8b5cf6', size: 15, type:'metric',  detail: '$20/mo per-use spend ceiling enforced in code · commit→burn-on-delivery→release-on-failure' },
-        { label: 'BIT self-test',    sub: 'Tool',    color: '#10b981', size: 12, type:'tool',    detail: 'Built-In Test article (Codex v4.8 §13) · read-only · <1% of core LOC' },
-      ]
-    },
-    infra: {
-      center: { label: 'Agentic OS', color: '#10b981' },
-      nodes: [
-        { label: 'Session Dashboard',sub: 'Tool',    color: '#10b981', size: 16, type:'tool',    detail: '✅ Live · session_dashboard.py · auto-uploads to trustsquare.co/dashboard.html' },
-        { label: 'Galaxy Graph',     sub: 'Tool',    color: '#10b981', size: 14, type:'tool',    detail: '✅ D3 force graph · drilldown solar systems · live project state' },
-        { label: 'Memory System',    sub: 'Tool',    color: '#10b981', size: 13, type:'tool',    detail: 'Persistent memory across sessions · user/feedback/project/reference types' },
-        { label: 'GitHub',           sub: 'Tool',    color: '#10b981', size: 13, type:'tool',    detail: '3 repos · TrustSquare + CityLauncher + AdvertAgent · David commits from PowerShell' },
-        { label: '3 Active Projects',sub: 'KPI',     color: '#f59e0b', size: 14, type:'kpi',     detail: 'TrustSquare (S139) · CityLauncher (live) · AdvertAgent (live, dev-gated)' },
-        { label: `Session ${DATA.currentSession}`, sub: 'KPI',     color: '#f59e0b', size: 13, type:'kpi',     detail: `Current session · ${DATA.generatedAt} · live from /dashboard/summary` },
-        { label: 'Git Lock Risk',    sub: 'Risk',    color: '#ef4444', size: 12, type:'risk',    detail: '⚠ Sandbox/Windows share mount · never commit from sandbox · David runs git' },
-        { label: 'Branch Structure', sub: 'Priority',color: '#06b6d4', size: 13, type:'priority', detail: 'Formalise branch structure across all 3 projects · deferred' },
-        { label: 'Cowork + Skills',  sub: 'Tool',    color: '#10b981', size: 12, type:'tool',    detail: 'Claude Cowork mode · Skills · Schedule · session bat file startup' },
-      ]
-    },
-    risks: {
-      center: { label: 'Risk Register', color: '#f43f5e' },
-      nodes: (window._RISK_ITEMS || []).map(r => ({
-        label: r.label,
-        sub: r.status === 'open' ? '🔴 Open' : r.status === 'monitor' ? '🟡 Monitor' : '✅ Closed',
-        color: r.status === 'open' ? '#f43f5e' : r.status === 'monitor' ? '#f59e0b' : '#10b981',
-        size: 13,
-        type: r.status,
-        detail: (r.status === 'open' ? '🔴 OPEN' : r.status === 'monitor' ? '🟡 MONITOR' : '✅ CLOSED') + ' — ' + r.detail,
-      }))
-    },
-    blockers: {
-      center: { label: 'Blockers', color: '#ef4444' },
-      nodes: (DATA.blockers || []).slice(0, 8).map(b => ({
-        label: b.length > 22 ? b.slice(0, 22) + '…' : b,
-        sub: '⛔ Blocker',
-        color: '#ef4444',
-        size: 13,
-        type: 'risk',
-        detail: '⛔ BLOCKER — ' + b,
-      }))
-    },
-    priorities: {
-      center: { label: 'Priorities', color: '#06b6d4' },
-      nodes: (function() {
-        const pr = (DATA.nextGoals || '').split('\n').filter(l => /^\d+\./.test(l.trim()));
-        return pr.map((pp, i) => {
-          const text = pp.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '');
-          return {
-            label: text.length > 24 ? text.slice(0, 24) + '…' : text,
-            sub: 'Priority ' + (i + 1),
-            color: '#06b6d4',
-            size: 13,
-            type: 'priority',
-            detail: text,
-          };
-        });
-      })()
-    }
-  };
-  return map[projectId] || null;
-}
-
-// ── Graph builder ─────────────────────────────────────────────
-let _galaxySim = null;
-let _galaxyState = 'galaxy'; // 'galaxy' | 'drilldown'
-
-function buildGraph() {
-  if (!DATA) return;
-  drawGalaxy();
-  if (window._graphBuilt) return;
-  window._graphBuilt = true;
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      const overlay = document.getElementById('level3-overlay');
-      if (overlay.classList.contains('visible')) {
-        closeLevel3();  // Escape from Level 3 → back to Level 2
-      } else if (_galaxyState === 'drilldown') {
-        drawGalaxy();   // Escape from Level 2 → back to Level 1
-      }
-    }
-  });
-  // Touch: tap SVG background to dismiss tooltip
-  document.getElementById('graph-svg').addEventListener('touchstart', e => {
-    if (e.target.tagName === 'svg' || e.target.id === 'graph-svg') dismissTooltip();
-  }, { passive: true });
-}
-
-const COLORS = {
-  'TrustSquare':'#3b82f6','CityLauncher':'#8b5cf6','AdvertAgent':'#f59e0b',
-  'Infrastructure':'#10b981','Concept':'#64748b','Blocker':'#ef4444','Priority':'#06b6d4',
-  'RiskRegister':'#f43f5e',
-  'kpi':'#f59e0b','tool':'#3b82f6','risk':'#ef4444','priority':'#06b6d4','metric':'#8b5cf6',
-};
-
-function setupSvg() {
-  const svg = d3.select('#graph-svg');
-  svg.selectAll('*').remove();
-  const W = document.getElementById('graph-view').clientWidth;
-  const H = document.getElementById('graph-view').clientHeight;
-  svg.attr('viewBox', `0 0 ${W} ${H}`);
-
-  // Starfield (outside zoom group so it stays fixed)
-  for (let i=0;i<140;i++) {
-    svg.append('circle')
-      .attr('cx',Math.random()*W).attr('cy',Math.random()*H)
-      .attr('r',Math.random()*1.2+0.2)
-      .attr('fill','#fff').attr('opacity',Math.random()*0.35+0.05);
-  }
-
-  // Glow filters
-  const defs = svg.append('defs');
-  [...Object.values(COLORS),'#fff'].forEach(color => {
-    const id = 'glow'+color.replace('#','');
-    if (defs.select('#'+id).size()) return;
-    const f = defs.append('filter').attr('id',id);
-    f.append('feGaussianBlur').attr('stdDeviation','4').attr('result','blur');
-    const m = f.append('feMerge');
-    m.append('feMergeNode').attr('in','blur');
-    m.append('feMergeNode').attr('in','SourceGraphic');
-  });
-
-  // Zoom + pan wrapper group
-  const zoomG = svg.append('g').attr('id','graph-zoom-wrap');
-  const zoom = d3.zoom()
-    .scaleExtent([0.25, 4])
-    .on('zoom', e => zoomG.attr('transform', e.transform));
-  svg.call(zoom).on('dblclick.zoom', null);
-
-  // Expose reset helper
-  svg._zoomReset = () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
-
-  return { svg, W, H, zoomG };
-}
-
-function drawNode(parent, d, colorFn, clickFn) {
-  const g = parent.append('g').style('cursor','pointer');
-  g.append('circle').attr('r',d.size+6).attr('fill','none')
-    .attr('stroke',colorFn(d)).attr('stroke-opacity',0.15).attr('stroke-width',6);
-  g.append('circle').attr('r',d.size)
-    .attr('fill',colorFn(d)).attr('fill-opacity',0.85)
-    .attr('filter',`url(#glow${colorFn(d).replace('#','')})`)
-    .attr('stroke','#0b0f1a').attr('stroke-width',2);
-  g.append('circle').attr('r',d.size*0.45).attr('cx',-d.size*0.2).attr('cy',-d.size*0.2)
-    .attr('fill','#fff').attr('fill-opacity',0.12);
-  g.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',d.size+14).text(d.label);
-  g.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',d.size+25).text(d.sub);
-  if (clickFn) g.on('click', (event) => { event.stopPropagation(); clickFn(d); });
-  return g;
-}
-
-function dismissTooltip() {
-  const tt = document.getElementById('graph-tooltip');
-  tt.style.opacity = 0;
-  tt.classList.remove('touch-visible');
-}
-
-function showTooltip(d, colorFn, cx, cy) {
-  const tt = document.getElementById('graph-tooltip');
-  document.getElementById('tt-tag').textContent = d.type || d.group || '';
-  document.getElementById('tt-tag').style.color = colorFn(d);
-  document.getElementById('tt-title').textContent = d.label;
-  document.getElementById('tt-body').textContent = d.detail || '';
-  // Position: keep within viewport
-  const pad = 12, w = 280, h = 120;
-  let left = cx + 16, top = cy - 10;
-  if (left + w > window.innerWidth - pad) left = cx - w - 16;
-  if (top + h > window.innerHeight - pad) top = window.innerHeight - h - pad;
-  if (top < pad) top = pad;
-  tt.style.left = left + 'px';
-  tt.style.top = top + 'px';
-  tt.style.opacity = 1;
-  tt.classList.add('touch-visible');
-}
-
-function attachTooltip(selection, colorFn) {
-  const tt = document.getElementById('graph-tooltip');
-  selection
-    // Mouse (desktop)
-    .on('mouseenter', (event, d) => showTooltip(d, colorFn, event.clientX, event.clientY))
-    .on('mousemove', event => {
-      tt.style.left = (event.clientX+16)+'px';
-      tt.style.top  = (event.clientY-10)+'px';
-    })
-    .on('mouseleave', () => {
-      // Only auto-hide on non-touch devices
-      if (window.matchMedia('(hover: hover)').matches) dismissTooltip();
-    })
-    // Touch (mobile) — tap node to show, tap ✕ or background to hide
-    .on('touchstart', (event, d) => {
-      event.preventDefault();
-      const t = event.touches[0];
-      showTooltip(d, colorFn, t.clientX, t.clientY);
-    }, { passive: false });
-}
-
-function drawGalaxy() {
-  _galaxyState = 'galaxy';
-  _currentDrilldownLabel = '';
-  document.getElementById('detail-panel').classList.remove('visible');
-  document.getElementById('level3-overlay').classList.remove('visible');
-  // Remove any drilldown background click listener (safe even if not present)
-  if (typeof _drilldownBgClick === 'function') {
-    document.getElementById('graph-svg').removeEventListener('click', _drilldownBgClick);
-  }
-  if (_galaxySim) _galaxySim.stop();
-  const { svg, W, H, zoomG } = setupSvg();
-  const { nodes, edges } = getGalaxyData();
-  const colorFn = d => COLORS[d.group] || '#64748b';
-
-  // Hint + reset button (outside zoomG, stays fixed on screen)
-  svg.append('text').attr('x',W/2).attr('y',H-10)
-    .attr('text-anchor','middle').attr('fill','#334155').attr('font-size','11px')
-    .text('Tap a project star to drill in  ·  Pinch or scroll to zoom  ·  Drag to pan');
-  const resetG = svg.append('g').attr('transform',`translate(${W-44},${H-44})`).style('cursor','pointer')
-    .on('click', () => svg._zoomReset && svg._zoomReset());
-  resetG.append('circle').attr('r',18).attr('fill','#1a2232').attr('stroke','#334155').attr('stroke-width',1);
-  resetG.append('text').attr('text-anchor','middle').attr('dy',5).attr('fill','#64748b').attr('font-size','14px').text('⌖');
-
-  const sim = d3.forceSimulation(nodes)
-    .force('link',d3.forceLink(edges).id(d=>d.id).distance(d=>100/d.strength).strength(d=>d.strength*0.3))
-    .force('charge',d3.forceManyBody().strength(d=>-d.size*18))
-    .force('center',d3.forceCenter(W/2,H/2))
-    .force('collision',d3.forceCollide(d=>d.size+14));
-  _galaxySim = sim;
-
-  const link = zoomG.append('g').selectAll('line').data(edges).join('line')
-    .attr('stroke',d=>{const s=nodes.find(n=>n.id===(d.source.id||d.source));return s?colorFn(s):'#334155';})
-    .attr('stroke-opacity',0.22).attr('stroke-width',d=>d.strength*1.5);
-
-  const nodeG = zoomG.append('g').selectAll('g').data(nodes).join('g').style('cursor','pointer')
-    .call(d3.drag()
-      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
-      .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
-
-  nodeG.append('circle').attr('r',d=>d.size+6).attr('fill','none')
-    .attr('stroke',colorFn).attr('stroke-opacity',0.15).attr('stroke-width',6);
-  nodeG.append('circle').attr('r',d=>d.size)
-    .attr('fill',colorFn).attr('fill-opacity',0.85)
-    .attr('filter',d=>`url(#glow${colorFn(d).replace('#','')})`)
-    .attr('stroke','#0b0f1a').attr('stroke-width',2);
-  nodeG.append('circle').attr('r',d=>d.size*0.45).attr('cx',d=>-d.size*0.2).attr('cy',d=>-d.size*0.2)
-    .attr('fill','#fff').attr('fill-opacity',0.12);
-  nodeG.filter(d=>d.drilldown).append('circle').attr('r',d=>d.size+10).attr('fill','none')
-    .attr('stroke',colorFn).attr('stroke-opacity',0.35).attr('stroke-width',1.5)
-    .attr('stroke-dasharray','4 3');
-  nodeG.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',d=>d.size+14).text(d=>d.label);
-  nodeG.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',d=>d.size+25).text(d=>d.sub);
-
-  attachTooltip(nodeG, colorFn);
-  nodeG.on('click',(event,d)=>{ if(d.drilldown) drawDrilldown(d.drilldown, d.label); });
-
-  sim.on('tick',()=>{
-    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
-        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
-    nodeG.attr('transform',d=>`translate(${Math.max(d.size+5,Math.min(W-d.size-5,d.x))},${Math.max(d.size+5,Math.min(H-d.size-25,d.y))})`);
-  });
-}
-
-function drawDrilldown(projectId, projectLabel) {
-  _galaxyState = 'drilldown';
-  _currentDrilldownLabel = projectLabel;
-  _currentDrilldownId = projectId;
-  if (_galaxySim) _galaxySim.stop();
-  const dd = getDrilldownData(projectId);
-  if (!dd) return;
-
-  const { svg, W, H, zoomG } = setupSvg();
-  const cx = W/2, cy = H/2;
-  const color = dd.center.color;
-  dismissTooltip(); // Clear any floating tooltip from Level 1
-
-  // Scale orbit radii to fit smallest screen dimension with padding
-  const maxR = Math.min(W, H) * 0.44;
-  const orbits = [maxR*0.40, maxR*0.70, maxR*1.00];
-
-  // Background tap-to-return (outside zoomG, fixed)
-  // IMPORTANT: only fire when clicking the rect itself, not when a satellite click bubbles up
-  // No bgRect needed — use native SVG click listener instead.
-  // D3 v7 stopPropagation() only stops D3 dispatch; native events still bubble.
-  // Native listener checks event.target directly: only fire drawGalaxy if
-  // the user clicked the SVG background or the bgRect, not a satellite.
-  const svgEl = document.getElementById('graph-svg');
-  function _drilldownBgClick(e) {
-    const tag = e.target.tagName.toLowerCase();
-    console.log('[GRAPH CLICK] tag=' + tag + ' id=' + e.target.id + ' class=' + e.target.className.baseVal);
-    if (tag === 'circle' || tag === 'g' || tag === 'text' || tag === 'line') return;
-    if (tag === 'rect' || tag === 'svg') {
-      svgEl.removeEventListener('click', _drilldownBgClick);
-      drawGalaxy();
-    }
-  }
-  svgEl.addEventListener('click', _drilldownBgClick);
-
-  // Hints (fixed, outside zoom)
-  svg.append('text').attr('x',W/2).attr('y',H-10)
-    .attr('text-anchor','middle').attr('fill','#334155').attr('font-size','11px')
-    .text('Tap background or Escape to return  ·  Pinch/scroll to zoom  ·  Drag to pan');
-
-  // Zoom reset button
-  const resetG = svg.append('g').attr('transform',`translate(${W-44},${H-44})`).style('cursor','pointer')
-    .on('click', e => { e.stopPropagation(); svg._zoomReset && svg._zoomReset(); });
-  resetG.append('circle').attr('r',18).attr('fill','#1a2232').attr('stroke','#334155').attr('stroke-width',1);
-  resetG.append('text').attr('text-anchor','middle').attr('dy',5).attr('fill','#64748b').attr('font-size','14px').text('⌖');
-
-  // Project title (inside zoomG so it zooms with content)
-  zoomG.append('text').attr('x',cx).attr('y',cy - maxR - 18)
-    .attr('text-anchor','middle').attr('fill',color).attr('font-size','14px').attr('font-weight','700')
-    .attr('filter',`url(#glow${color.replace('#','')})`)
-    .text(projectLabel + ' — Solar System');
-
-  // Legend (fixed top-right, outside zoom)
-  const legendItems = [{t:'kpi',l:'KPI'},{t:'tool',l:'Tool'},{t:'risk',l:'Risk'},{t:'priority',l:'Priority'},{t:'metric',l:'Metric'}];
-  legendItems.forEach((li,i) => {
-    const lx = W-110, ly = 54+i*20;
-    svg.append('circle').attr('cx',lx).attr('cy',ly).attr('r',5).attr('fill',COLORS[li.t]||'#64748b').attr('fill-opacity',0.85);
-    svg.append('text').attr('x',lx+11).attr('y',ly+4).attr('fill','#64748b').attr('font-size','10px').text(li.l);
-  });
-
-  // Orbit rings (inside zoomG)
-  orbits.forEach(r => {
-    zoomG.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r)
-      .attr('fill','none').attr('stroke',color).attr('stroke-opacity',0.07).attr('stroke-width',1);
-  });
-
-  // Centre star (inside zoomG)
-  const centerG = zoomG.append('g').attr('transform',`translate(${cx},${cy})`);
-  centerG.append('circle').attr('r',38).attr('fill','none').attr('stroke',color).attr('stroke-opacity',0.2).attr('stroke-width',8);
-  centerG.append('circle').attr('r',30).attr('fill',color).attr('fill-opacity',0.9)
-    .attr('filter',`url(#glow${color.replace('#','')})`)
-    .attr('stroke','#0b0f1a').attr('stroke-width',2);
-  centerG.append('circle').attr('r',12).attr('cx',-8).attr('cy',-8).attr('fill','#fff').attr('fill-opacity',0.15);
-  centerG.append('text').attr('text-anchor','middle').attr('dy',4).attr('fill','#fff')
-    .attr('font-size','11px').attr('font-weight','700').text(dd.center.label);
-  centerG.style('cursor','pointer').on('click', e => { e.stopPropagation(); drawGalaxy(); });
-
-  // Arrange satellites by type in orbit rings
-  const typeOrder = ['risk','priority','kpi','tool','metric'];
-  const sorted = [...dd.nodes].sort((a,b)=>typeOrder.indexOf(a.type)-typeOrder.indexOf(b.type));
-  const perOrbit = [Math.ceil(sorted.length/3), Math.ceil(sorted.length/3)];
-  perOrbit[2] = sorted.length - perOrbit[0] - perOrbit[1];
-
-  let idx = 0;
-  orbits.forEach((r, oi) => {
-    const count = oi===2 ? sorted.length-idx : perOrbit[oi];
-    const batch = sorted.slice(idx, idx+count);
-    idx += count;
-    batch.forEach((node, ni) => {
-      const angle = (2*Math.PI/batch.length)*ni - Math.PI/2 + (oi*0.4);
-      const x = cx + r*Math.cos(angle);
-      const y = cy + r*Math.sin(angle);
-
-      zoomG.append('line').attr('x1',cx).attr('y1',cy).attr('x2',x).attr('y2',y)
-        .attr('stroke',node.color||color).attr('stroke-opacity',0.12).attr('stroke-width',1);
-
-      const g = zoomG.append('g').attr('transform',`translate(${x},${y})`);
-
-      // Visual layers — pointer-events:none so only the hit circle receives events
-      g.append('circle').attr('r',node.size+5).attr('fill','none')
-        .attr('stroke',node.color||color).attr('stroke-opacity',0.2).attr('stroke-width',5)
-        .style('pointer-events','none');
-      g.append('circle').attr('r',node.size)
-        .attr('fill',node.color||color).attr('fill-opacity',0.85)
-        .attr('filter',`url(#glow${(node.color||color).replace('#','')})`)
-        .attr('stroke','#0b0f1a').attr('stroke-width',1.5)
-        .style('pointer-events','none');
-      g.append('circle').attr('r',node.size*0.4).attr('cx',-node.size*0.2).attr('cy',-node.size*0.2)
-        .attr('fill','#fff').attr('fill-opacity',0.12)
-        .style('pointer-events','none');
-      g.append('text').attr('class','node-label').attr('text-anchor','middle').attr('dy',node.size+13).text(node.label)
-        .style('pointer-events','none');
-      g.append('text').attr('class','node-sublabel').attr('text-anchor','middle').attr('dy',node.size+24).text(node.sub)
-        .style('pointer-events','none');
-
-      // Single transparent hit circle on top — sole event target
-      const dp = document.getElementById('detail-panel');
-      const hitR = node.size + 14;
-      g.append('circle')
-        .attr('r', hitR)
-        .attr('fill', 'transparent')
-        .style('cursor', 'pointer')
-        .on('mouseenter', function(event) {
-          event.stopPropagation();
-          document.getElementById('dp-breadcrumb').textContent = 'Galaxy › ' + _currentDrilldownLabel + ' › ' + node.label;
-          document.getElementById('dp-tag').textContent = (node.type || '').toUpperCase();
-          document.getElementById('dp-tag').style.color = node.color || color;
-          document.getElementById('dp-title').textContent = node.label;
-          document.getElementById('dp-body').textContent = node.detail || '';
-          dp.classList.add('visible');
-        })
-        .on('mouseleave', function(event) {
-          event.stopPropagation();
-          dp.classList.remove('visible');
-        })
-        .on('click', function(event) {
-          event.stopPropagation();
-          dp.classList.remove('visible');
-          openLevel3(node, color);
-        })
-        .on('touchstart', function(event) {
-          event.stopPropagation();
-          document.getElementById('dp-breadcrumb').textContent = 'Galaxy › ' + _currentDrilldownLabel + ' › ' + node.label;
-          document.getElementById('dp-tag').textContent = (node.type || '').toUpperCase();
-          document.getElementById('dp-tag').style.color = node.color || color;
-          document.getElementById('dp-title').textContent = node.label;
-          document.getElementById('dp-body').textContent = node.detail || '';
-          dp.classList.add('visible');
-        }, { passive: true });
+  function omLayers(){
+    var DESCS = {
+      structure:'<b>Structure</b> — the fixed map. Blocks never move between layers; only what they say changes.',
+      traffic:'<b>Traffic &amp; Load</b> — who is on, what is moving, how hard the server works.',
+      money:'<b>Money</b> — AI spend live per month/today; money-in wiring is the B-OPS3 batch.',
+      switches:'<b>Switches</b> — flags, service checks, ceilings and BIT, exactly as the server reports them.',
+      ncr:'<b>NCR &amp; Feedback</b> — faults by severity and state (the two-agent view).'
+    };
+    var tabs = document.getElementById('om-tabs');
+    tabs.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      tabs.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
+      document.getElementById('om-stage').className = 'omL-' + b.dataset.l;
+      document.getElementById('om-ldesc').innerHTML = DESCS[b.dataset.l];
     });
-  });
-}
+    document.getElementById('om-ldesc').innerHTML = DESCS.structure;
+  }
 
-// ── Level 3 state + functions ────────────────────────────────
-let _currentDrilldownLabel = '';
-let _currentDrilldownId = '';
+  function omScale(){
+    var st = document.getElementById('om-stage'), wrap = document.getElementById('om-scalewrap');
+    if(!st || !wrap) return;
+    var avail = Math.max(320, (wrap.clientWidth || window.innerWidth) - 16);
+    var s = Math.min(1, avail / 1400);
+    st.style.transform = 'scale(' + s + ')';
+    wrap.style.height = Math.ceil(790 * s + 10) + 'px';
+  }
 
-function openLevel3(node, fallbackColor) {
-  const overlay = document.getElementById('level3-overlay');
-  const card    = document.getElementById('level3-card');
-  const color   = node.color || fallbackColor || '#3b82f6';
+  function omLoad(){
+    var upd = document.getElementById('om-upd');
+    if(upd) upd.textContent = 'refreshing…';
 
-  // Breadcrumb
-  const bc = document.getElementById('l3-breadcrumb');
-  bc.innerHTML = '';
-  const gal = document.createElement('span');
-  gal.textContent = 'Galaxy';
-  gal.onclick = function() { closeLevel3(); drawGalaxy(); };
-  const sep1 = document.createElement('span');
-  sep1.className = 'sep'; sep1.textContent = ' › ';
-  const proj = document.createElement('span');
-  proj.textContent = _currentDrilldownLabel;
-  proj.onclick = function() { closeLevel3(); };
-  const sep2 = document.createElement('span');
-  sep2.className = 'sep'; sep2.textContent = ' › ';
-  const curr = document.createElement('span');
-  curr.textContent = node.label;
-  curr.style.color = '#e2e8f0';
-  [gal, sep1, proj, sep2, curr].forEach(function(el) { bc.appendChild(el); });
+    fetch(B + '/health/resources').then(function(r){return r.json();}).then(function(d){
+      fill('om-cpu', d.cpu.pct + '%', d.cpu.pct >= 75 ? 'a' : 'g');
+      fill('om-ram', d.ram.pct + '%', d.ram.pct >= 80 ? 'a' : 'g');
+      fill('om-disk', d.disk.pct + '%', d.disk.pct >= 75 ? 'a' : 'g');
+      var hw = (d.cpu.pct>=75 || d.ram.pct>=80 || d.disk.pct>=75);
+      var host = document.querySelectorAll('.omf-server')[4];
+      document.querySelectorAll('.om-blk.omf-server').forEach(function(b){
+        if(b.querySelector('#om-cpu')) b.classList.toggle('om-warnT', hw);
+      });
+      fill('om-resp', (d.response_ms||'—') + ' ms', (d.response_ms||0) > 800 ? 'a' : 'g');
+      var bw = d.bandwidth || {};
+      fill('om-bw', (bw.total_gb||0) + '/' + (bw.limit_gb||'—') + ' GB', 'g');
+      var db = d.db_sizes || {};
+      fill('om-db', (db.marketsquare_mb||0) + ' MB', 'g');
+    }).catch(function(){ fail(['om-cpu','om-ram','om-disk','om-resp','om-bw','om-db']); });
 
-  // Tag + colour
-  var tagEl = document.getElementById('l3-tag');
-  tagEl.textContent = (node.type || node.sub || '').toUpperCase();
-  tagEl.style.color = color;
-  card.style.borderColor = color;
-  card.style.borderTopWidth = '3px';
+    fetch(B + '/dashboard/presence').then(function(r){return r.json();}).then(function(d){
+      var on = (d.online||[]).length;
+      fill('om-livenow', String(on), 'g');
+      var c = d.counters || {};
+      var total = 0, parts = [];
+      Object.keys(c).forEach(function(k){
+        if(typeof c[k] === 'number' && k !== 'agencies' && k !== 'total'){ total += c[k]; parts.push(esc(k) + ' ' + c[k]); }
+      });
+      if(c.total) total = c.total;
+      fill('om-users', String(total), 'g');
+      var tr = document.getElementById('om-tiers');
+      if(tr && parts.length) tr.innerHTML = parts.map(function(p){ return '<span class="om-tier">' + p + '</span>'; }).join('');
+    }).catch(function(){ fail(['om-livenow','om-users']); });
 
-  document.getElementById('l3-title').textContent = node.label;
-  document.getElementById('l3-body').textContent  = node.detail || 'No additional detail recorded.';
+    fetch(B + '/dashboard/summary').then(function(r){return r.json();}).then(function(d){
+      var s = d.stats || {};
+      if(s.liveListings !== undefined) fill('om-listings', String(s.liveListings), 'g');
+    }).catch(function(){ fail(['om-listings']); });
 
-  overlay.classList.add('visible');
-}
+    fetch(B + '/dashboard/cost').then(function(r){return r.json();}).then(function(d){
+      var usd = function(v){ return '$' + (Number(v)||0).toFixed(2); };
+      fill('om-ai-mtd', usd(d.month_cost_usd), 'g');
+      fill('om-money-out', usd(d.month_cost_usd));
+      var mo = document.getElementById('om-money-out'); if(mo) mo.textContent = usd(d.month_cost_usd);
+      var c = d.ceilings || {};
+      fill('om-ai-today', usd(c.today_spend_usd), 'g');
+      fill('om-ai-calls', String(d.calls_this_month||0), 'g');
+      var pct = c.platform_pct_of_ceiling || 0;
+      fill('om-ai-ceil', c.platform_breached ? 'BREACHED' : (pct + '%'), c.platform_breached ? 'r' : (pct >= 75 ? 'a' : 'g'));
+    }).catch(function(){ fail(['om-ai-mtd','om-ai-today','om-ai-calls','om-ai-ceil']); });
 
-function closeLevel3(event) {
-  if (event && event.target !== document.getElementById('level3-overlay')) return;
-  document.getElementById('level3-overlay').classList.remove('visible');
-  document.getElementById('detail-panel').classList.remove('visible');
-}
+    fetch(B + '/dashboard/bit').then(function(r){return r.json();}).then(function(b){
+      var st = b.state || 'unknown';
+      var cls = st === 'pass' ? 'g' : (st === 'critical' ? 'r' : 'a');
+      var when = (b.ran_at||'').replace('T',' ').slice(0,16);
+      fill('om-bit', st.toUpperCase() + (when ? ' · ' + when : ''), cls);
+      fill('om-bit2', st.toUpperCase(), cls);
+      var f = (b.failing||[]).length;
+      fill('om-bitfail', String(f), f ? 'r' : 'g');
+    }).catch(function(){ fail(['om-bit','om-bit2','om-bitfail']); });
+
+    fetch(B + '/dashboard/email-triage?limit=1').then(function(r){return r.json();}).then(function(d){
+      fill('om-mailtotal', String(d.total||0), 'g');
+      var bc = d.by_category_30d || {};
+      fill('om-mailspam', String(bc.spam||0), 'g');
+      var bs = d.by_status_30d || {};
+      fill('om-mailsent', String(bs.sent||0), 'g');
+    }).catch(function(){ fail(['om-mailtotal','om-mailspam','om-mailsent']); });
+
+    fetch(B + '/flags').then(function(r){return r.json();}).then(function(f){
+      var fc = document.getElementById('om-flagchips');
+      if(fc){
+        var chip = function(label, on){ return '<span class="om-chip ' + (on ? 'g' : 'o') + '"><span class="om-dot"></span>' + esc(label) + ' ' + (on ? 'ON' : 'OFF') + '</span>'; };
+        var html = '<span class="om-chip g"><span class="om-dot"></span>mode ' + esc(f.mode||'?') + '</span>';
+        html += chip('fault_report', !!f.fault_report);
+        html += chip('videos', !!f.videos);
+        html += chip('verified_tier', !!f.verified_tier);
+        var dOn = 0, dAll = 0, dd = f.data || {};
+        Object.keys(dd).forEach(function(k){ dAll++; if(dd[k]) dOn++; });
+        html += '<span class="om-chip ' + (dOn ? 'g' : 'o') + '"><span class="om-dot"></span>data ' + dOn + '/' + dAll + '</span>';
+        var pOn = 0, pAll = 0, pp = f.planners || {};
+        Object.keys(pp).forEach(function(k){ pAll++; if(pp[k]) pOn++; });
+        html += '<span class="om-chip ' + (pOn ? 'g' : 'o') + '"><span class="om-dot"></span>planners ' + pOn + '/' + pAll + '</span>';
+        fc.innerHTML = html;
+      }
+      fill('om-faultflag', f.fault_report ? 'ON' : 'OFF', f.fault_report ? 'g' : 'o');
+    }).catch(function(){
+      var fc = document.getElementById('om-flagchips');
+      if(fc) fc.innerHTML = '<span class="om-chip r"><span class="om-dot"></span>flags offline</span>';
+      fail(['om-faultflag']);
+    });
+
+    var tok = omTok();
+    if(tok){
+      fetch(B + '/admin/services-status', {headers:{'X-Admin-Token': tok}}).then(function(r){
+        if(r.status === 401) throw new Error('401'); return r.json();
+      }).then(function(d){
+        var sc = document.getElementById('om-svcchips');
+        if(!sc) return;
+        var svcs = d.services || [];
+        sc.innerHTML = svcs.map(function(s){
+          var ok = (s.status === 'ok');
+          var cls = ok ? 'g' : (s.status === 'warn' ? 'a' : 'r');
+          return '<span class="om-chip ' + cls + '"><span class="om-dot"></span>' + esc(s.id) + '</span>';
+        }).join('') || '<span class="om-chip o"><span class="om-dot"></span>no checks</span>';
+      }).catch(function(){
+        var sc = document.getElementById('om-svcchips');
+        if(sc) sc.innerHTML = '<span class="om-chip r"><span class="om-dot"></span>service checks offline</span>';
+      });
+
+      fetch(B + '/admin/faults?limit=500', {headers:{'X-Admin-Token': tok}}).then(function(r){
+        if(r.status === 401) throw new Error('401'); return r.json();
+      }).then(function(d){
+        var rows = d.faults || d.items || (Array.isArray(d) ? d : []);
+        var open = rows.filter(function(x){ return ['closed','verified','rejected','not-a-fault'].indexOf(x.status) < 0 && !x.dup_of; });
+        var active = open.filter(function(x){ return x.status !== 'awaiting-retest'; });
+        var sev = function(s){ return active.filter(function(x){ return (x.severity||'minor') === s; }).length; };
+        var nb = sev('blocker'), nm = sev('major');
+        var nmin = active.length - nb - nm;
+        var retest = rows.filter(function(x){ return x.status === 'awaiting-retest'; }).length;
+        var closed = rows.filter(function(x){ return ['closed','verified'].indexOf(x.status) >= 0; }).length;
+        var recur = rows.filter(function(x){ return (x.recurrence||0) >= 3; }).length;
+        var newq = rows.filter(function(x){ return x.status === 'new'; }).length;
+        fill('om-f-blocker', String(nb), nb ? 'r' : 'g');
+        fill('om-f-major', String(nm), nm ? 'a' : 'g');
+        fill('om-f-minor', String(Math.max(0, nmin)), 'g');
+        fill('om-f-retest', String(retest), retest ? 'a' : 'g');
+        fill('om-f-closed', String(closed), 'g');
+        fill('om-f-recur', String(recur), recur ? 'a' : 'g');
+        fill('om-queue', newq + ' new', newq ? 'a' : 'g');
+        fill('om-t-filed', String(rows.length), 'g');
+        fill('om-t-retest', String(retest), retest ? 'a' : 'g');
+        var bins = {};
+        rows.forEach(function(x){ if(x.bin) bins[x.bin] = (bins[x.bin]||0) + 1; });
+        var top = Object.keys(bins).sort(function(a,b){ return bins[b]-bins[a]; })[0];
+        fill('om-topbin', top ? (top + ' ×' + bins[top]) : 'none', top ? 'a' : 'g');
+        var mb = document.getElementById('om-maint-blk');
+        if(mb) mb.classList.toggle('om-warnN', (nb + nm) > 0);
+      }).catch(function(){
+        fail(['om-f-blocker','om-f-major','om-f-minor','om-f-retest','om-f-closed','om-f-recur','om-queue','om-t-filed','om-t-retest','om-topbin']);
+      });
+    } else {
+      ['om-svcchips'].forEach(function(id){ var el = document.getElementById(id); if(el) el.innerHTML = '<span class="om-chip a"><span class="om-dot"></span>sign in for service checks</span>'; });
+      ['om-f-blocker','om-f-major','om-f-minor','om-f-retest','om-f-closed','om-f-recur','om-queue','om-t-filed','om-t-retest','om-topbin'].forEach(function(id){ fill(id, 'sign in', 'a'); });
+    }
+
+    if(upd){
+      var t = new Date();
+      upd.textContent = 'updated ' + ('0'+t.getHours()).slice(-2) + ':' + ('0'+t.getMinutes()).slice(-2);
+    }
+  }
+
+  var omInit = false;
+  window.omStart = function(){
+    if(!omInit){ omLayers(); window.addEventListener('resize', omScale); omInit = true; }
+    omScale();
+    omLoad();
+    if(omTimer) clearInterval(omTimer);
+    omTimer = setInterval(omLoad, 60000);
+  };
+  window.omStop = function(){ if(omTimer){ clearInterval(omTimer); omTimer = null; } };
+})();
 
 
 // ── Server Health ────────────────────────────────────────────
