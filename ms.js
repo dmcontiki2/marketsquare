@@ -5387,7 +5387,15 @@ async function paDoPublish(){
       const blob=await (await fetch(paState.img)).blob();
       fd.append('file',blob,'photo.jpg');
       fd.append('listing_id',listingId);
-      await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>{});
+      // TS-0026: this path swallowed EVERY photo failure (.catch(()=>{})) — the
+      // advert went live minus its photo with no word to the seller. Speak up.
+      const _pr1=await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd}).catch(()=>null);
+      if((!_pr1 || !_pr1.ok) && typeof showToast==='function'){
+        let _w1='';
+        try{ if(_pr1){ const _j1=await _pr1.json(); _w1=(_j1&&_j1.detail)||''; } }catch(e){}
+        showToast('⚠ Your photo could not be added: '+(_w1||'the upload did not complete')+
+                  '. The advert is live — re-add the photo from Edit.', 8000);
+      }
     }
     // 4. Store email for returning seller recognition
     localStorage.setItem('ms_aa_email',email);
@@ -8466,6 +8474,10 @@ async function sbDoPublish(){
     }
     // Upload all listing photos (first is primary)
     if(BEA_ENABLED && sbState.photos.length>0 && listingId){
+      // TS-0026: collects per-photo failures so the seller is told what did not
+      // make it. Declared here (block scope) so it exists for both the loop and the
+      // summary toast below.
+      const _photoFails=[];
       for(let pi=0;pi<sbState.photos.length;pi++){
         const pfd=new FormData();
         const pblob=await (await fetch(sbState.photos[pi].dataUrl)).blob();
@@ -8476,8 +8488,26 @@ async function sbDoPublish(){
         const cap=(sbState.photos[pi].caption||'').replace(/[|\[\]]/g,' ').trim();
         if(cap) pfd.append('caption',cap);
         const _spr=await fetch(BEA_URL+'/listings/photo',{method:'POST',headers:{'X-Api-Key':API_KEY},body:pfd}).catch(()=>null);
-        // WRONG-TYPE-1 / anon gate: surface a 422 refusal instead of swallowing it
-        if(_spr && _spr.status===422){ try{ const _sj=await _spr.json(); if(typeof showToast==='function') showToast('⚠ Photo '+(pi+1)+' was not accepted: '+(_sj.detail||'not suitable for this advert')); }catch(e){} }
+        // TS-0026 (Maroushka, 7 Aug 2026): "the pictures didn't pull through, there was
+        // no notice to inform me that the pics was not going to be able to be displayed."
+        // WRONG-TYPE-1 surfaced ONLY 422. A 400 (format the server cannot decode - e.g.
+        // an iPhone HEIC) and a dropped request both vanished silently, so the advert
+        // published without its photos and said nothing. Every failure now speaks, and
+        // the seller is told which photo and why.
+        if(!_spr){
+          _photoFails.push((pi+1)+': upload did not complete');
+        } else if(!_spr.ok){
+          let _why='';
+          try{ const _sj=await _spr.json(); _why=(_sj&&_sj.detail)||''; }catch(e){}
+          _photoFails.push((pi+1)+': '+(_why||('rejected ('+_spr.status+')')));
+        }
+      }
+      // TS-0026: one clear summary rather than silence. The advert is live either
+      // way — the seller must know which photos did not make it, and why.
+      if(_photoFails.length && typeof showToast==='function'){
+        showToast('⚠ '+_photoFails.length+' photo'+(_photoFails.length>1?'s':'')+
+                  ' could not be added — '+_photoFails.join('; ')+
+                  '. Your advert is live; re-add them from Edit.', 9000);
       }
     }
     // Upload trust documents (B7 signals) — persist to seller profile + auto-earn credentials
@@ -11587,7 +11617,12 @@ async function aaRunCoach() {
       aaClearDetailEmail();
       return;
     }
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      // TS-0024: carry the BEA's own explanation through to the toast.
+      let _why = '';
+      try { _why = (JSON.parse(await res.text()) || {}).detail || ''; } catch(_) {}
+      throw new Error(_why || ('AI Coach failed (' + res.status + ')'));
+    }
     const data = await res.json();
     const coachSuggestions = data.coaching_json || {};
     aaCurrentSuggestions   = coachSuggestions.fields || {};
@@ -11599,7 +11634,7 @@ async function aaRunCoach() {
     const planCount  = (coachSuggestions.trust_score_actions || []).length;
     showToast(`AI suggestions ready — ${fieldCount} field tip${fieldCount !== 1 ? 's' : ''}, ${planCount} Trust Score action${planCount !== 1 ? 's' : ''}`);
   } catch (e) {
-    showToast('AI Coach unavailable — try again');
+    showToast((e && e.message) ? e.message : 'AI Coach unavailable — try again', 6000);
     if (btn) { btn.disabled = false; btn.textContent = '✨ Get AI Suggestions'; }
   }
 }
@@ -14014,6 +14049,17 @@ async function msAskAI(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, category: catForCoach })
     });
+    // TS-0024 (Maroushka, 7 Aug 2026): "it told me the AI coach was unavailable.
+    // Why was it unavailable?" — the BEA sends a precise reason (503 not configured,
+    // 402 out of Tuppence, 403 closed testing, 429 daily ceiling) and this handler
+    // threw it away behind one generic toast. Show the seller what we already know.
+    if (!res.ok) {
+      let _why = '';
+      try { _why = ((await res.json()) || {}).detail || ''; } catch(_) {}
+      showToast(_why || ('AI coach unavailable (' + res.status + ') — please try again'), 6000);
+      if (btn) { btn.disabled = false; btn.textContent = '\u2728 Ask AI how to improve my score \u2192'; }
+      return;
+    }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
@@ -15986,9 +16032,15 @@ async function asCredUpload(e, slot, signalId, label){
     fd.append('file', file, file.name||'credential');
     fd.append('doc_type','certificate');
     fd.append('label', label+' — '+ref);
-    fd.append('visibility','ops');
+    // 'ops' is not a value the server accepts - it silently coerced to 'private'.
+    // Say what actually happens; ops review is driven by signal_id, not visibility.
+    fd.append('visibility','private');
     if(signalId) fd.append('signal_id', signalId);
-    var r=await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/documents',{method:'POST',body:fd});
+    // TS-0013 (Maroushka, 5 Aug 2026): "it doesn't allow me do upload it or verify my
+    // status as an agent". This was the ONLY /documents POST in the app missing the
+    // API key, so the server refused it 401 every single time - the Agent Hub
+    // credential upload could never have worked for anyone.
+    var r=await fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/documents',{method:'POST',headers:{'X-Api-Key':API_KEY},body:fd});
     var d=await r.json().catch(function(){return {};});
     if(!r.ok){ if(st) st.textContent=''; showToast('Upload failed: '+((d&&d.detail)||('HTTP '+r.status))); e.target.value=''; return; }
     if(st) st.textContent='✓ sent for verification';

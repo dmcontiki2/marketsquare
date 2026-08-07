@@ -29,6 +29,68 @@ try:
     _HEIF_OK = True
 except Exception:
     _HEIF_OK = False
+
+# ── PHOTO-TYPE-1 (TS-0025, Maroushka, 7 Aug 2026) ──────────────────────────
+# The browser's DECLARED Content-Type was the gate. That value is client-supplied
+# and unreliable: Windows and Android frequently send application/octet-stream (or
+# nothing at all) for a .heic straight off an iPhone, so a photo pillow-heif can
+# decode perfectly was rejected with "Only JPEG, PNG or WebP photos accepted" — a
+# message that was ALSO untrue, because HEIC is accepted whenever the wheel is present.
+# The bytes are the honest gate: PIL opens the file or it does not. The declared type
+# is now used only to turn away things we positively know we cannot use, and every
+# rejection tells the seller what we really accept.
+_GENERIC_TYPES = {"", "application/octet-stream", "binary/octet-stream",
+                  "application/binary", "multipart/form-data"}
+_PHOTO_EXTS    = {"jpg", "jpeg", "jfif", "png", "webp"}
+_HEIC_EXTS     = {"heic", "heif"}
+
+def _photo_types_allowed() -> set:
+    a = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+    if _HEIF_OK:
+        a |= {"image/heic", "image/heif"}
+    return a
+
+def _photo_type_ok(content_type: str, filename: str = "") -> bool:
+    """True when the bytes should be allowed to decide. A supported declared type
+    passes; so does a generic/blank one (the browser simply did not know) — the
+    Image.open() that follows is the real validator and rejects anything unreadable."""
+    ct = (content_type or "").split(";")[0].strip().lower()
+    if ct in _photo_types_allowed() or ct in _GENERIC_TYPES:
+        return True
+    ext = (filename or "").rsplit(".", 1)[-1].strip().lower() if "." in (filename or "") else ""
+    if ext in _PHOTO_EXTS:
+        return True
+    if ext in _HEIC_EXTS and _HEIF_OK:
+        return True
+    return False
+
+def _is_heic_bytes(raw: bytes) -> bool:
+    """ISO-BMFF brand sniff — what the file actually IS, not what it claims."""
+    try:
+        return len(raw) > 12 and raw[4:12] in (
+            b"ftypheic", b"ftypheix", b"ftyphevc", b"ftypheim", b"ftypheis",
+            b"ftyphevm", b"ftyphevs", b"ftypmif1", b"ftypmsf1")
+    except Exception:
+        return False
+
+def _photo_reject_msg() -> str:
+    """Names what we ACTUALLY accept, so a seller is never sent away to re-save a
+    file that would have worked."""
+    if _HEIF_OK:
+        return ("That file isn't a photo we can read - please upload a JPEG, PNG, "
+                "WebP or HEIC image.")
+    return ("That file isn't a photo we can read - please upload a JPEG, PNG or WebP "
+            "image. (iPhone HEIC photos aren't supported at the moment: in Photos use "
+            "Share > Options > Most Compatible to send a JPEG.)")
+
+def _photo_decode_msg(raw: bytes = b"") -> str:
+    """A decode failure on iPhone bytes has one specific, actionable cause - say it
+    rather than the blanket 'could not read image file'."""
+    if _is_heic_bytes(raw) and not _HEIF_OK:
+        return ("This is an iPhone HEIC photo and HEIC support isn't available on the "
+                "server right now. In Photos use Share > Options > Most Compatible to "
+                "send it as a JPEG.")
+    return "Could not read this image - the file may be damaged. Please try another photo."
 import io
 import logging
 import smtplib
@@ -73,6 +135,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── SELFCHECK-1 (David, 7 Aug 2026) ────────────────────────────────────────
+# A session cannot open an SSH tunnel to this box, so every "is that dependency
+# actually installed / is the flag actually on / did the deploy actually land"
+# question cost a manual round-trip through David. These counters + /ops/selfcheck
+# below answer them over one HTTPS GET. Counters are SINCE BOOT by design - a
+# deploy restarts the process and zeroes them - and are always labelled as such,
+# never presented as an all-time figure.
+_BOOT_AT     = datetime.now(timezone.utc)
+_OPS_COUNTS  = {"requests": 0, "err_5xx": 0, "err_4xx": 0}
+_OPS_LAST5XX = {"path": None, "status": None, "at": None}
+
+def _ops_note(path, status):
+    try:
+        _OPS_COUNTS["requests"] += 1
+        if status >= 500:
+            _OPS_COUNTS["err_5xx"] += 1
+            _OPS_LAST5XX.update({"path": str(path)[:120], "status": int(status),
+                                 "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+        elif status >= 400:
+            _OPS_COUNTS["err_4xx"] += 1
+    except Exception:
+        pass
+
+@app.middleware("http")
+async def _ops_counter(request: Request, call_next):
+    try:
+        resp = await call_next(request)
+    except Exception:
+        # An unhandled exception IS a 500 to the caller - count it, then re-raise
+        # untouched so nothing about error handling changes.
+        _ops_note(getattr(getattr(request, "url", None), "path", "?"), 500)
+        raise
+    _ops_note(getattr(getattr(request, "url", None), "path", "?"), resp.status_code)
+    return resp
 
 database.init_db()
 # ── P2a (1 Aug 2026): circuit breaker attaches to the DB at boot. Fail-open by design —
@@ -782,6 +879,9 @@ def run_migrations(conn):
         -- INTRO-RELAY-1 + ACCOUNT-BIND-1 (5 Aug 2026): both OFF by default (fail-closed/dark)
         intro_relay      INTEGER NOT NULL DEFAULT 0,
         account_binding  INTEGER NOT NULL DEFAULT 0,
+        -- PHOTO-REPLACE-1 (7 Aug 2026): ON = ask for a different photo rather than
+        -- blur it into ruin. OFF = the old never-reject behaviour.
+        photo_replace_request INTEGER NOT NULL DEFAULT 1,
         updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
     )""")
     conn.execute("INSERT OR IGNORE INTO launch_switches (id) VALUES (1)")
@@ -796,6 +896,9 @@ def run_migrations(conn):
         "ALTER TABLE launch_switches ADD COLUMN fault_report INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE launch_switches ADD COLUMN intro_relay INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE launch_switches ADD COLUMN account_binding INTEGER NOT NULL DEFAULT 0",
+        # PHOTO-REPLACE-1: default ON - David ruled 7 Aug. OFF restores the 15 Jul
+        # "ugly-but-anonymous beats rejected" behaviour without a deploy.
+        "ALTER TABLE launch_switches ADD COLUMN photo_replace_request INTEGER NOT NULL DEFAULT 1",
     ):
         try:
             conn.execute(_ddl)
@@ -1865,6 +1968,118 @@ class IntroRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.1"}
+
+
+@app.get("/ops/selfcheck")
+def ops_selfcheck(_key: str = Depends(auth.require_api_key)):
+    """SELFCHECK-1 - read-only operational truth in one authenticated HTTPS GET.
+
+    PUBLISHES FACTS ONLY. No secrets, no API keys, no customer data, no fault or
+    message text - only presence booleans, counts, versions and flag states. Every
+    block is independently guarded: a probe that cannot answer returns null with a
+    stated reason, so a partial failure still yields a usable report and NOTHING
+    here is ever guessed."""
+    import sys as _sys, os as _os
+    now = datetime.now(timezone.utc)
+    out = {
+        "ok": True,
+        "service": "TrustSquare BEA",
+        "version": "1.3.1",
+        "checked_at": now.isoformat(timespec="seconds"),
+        "note": "counters are SINCE BOOT - a deploy restarts the process and zeroes them",
+    }
+
+    # ── runtime + deploy stamp: answers "did the deploy actually land?" ──
+    try:
+        st = _os.stat(__file__)
+        out["deploy"] = {
+            "bea_main_mtime": datetime.fromtimestamp(st.st_mtime, timezone.utc).isoformat(timespec="seconds"),
+            "bea_main_bytes": st.st_size,
+            "booted_at": _BOOT_AT.isoformat(timespec="seconds"),
+            "uptime_seconds": int((now - _BOOT_AT).total_seconds()),
+            "python": _sys.version.split()[0],
+        }
+    except Exception as e:
+        out["deploy"] = {"error": str(e)[:120]}
+
+    # ── dependency presence: the question that started this endpoint ──
+    deps = {}
+    deps["pillow_heif"] = bool(_HEIF_OK)          # TS-0025: HEIC decode available?
+    for _m in ("PIL", "boto3", "httpx", "docx", "openpyxl"):
+        try:
+            __import__(_m); deps[_m] = True
+        except Exception:
+            deps[_m] = False
+    try:
+        deps["s3_configured"] = bool(_S3_CONFIGURED)
+    except Exception:
+        deps["s3_configured"] = None
+    try:
+        deps["breaker_attached"] = bool(_ai_brk)
+    except Exception:
+        deps["breaker_attached"] = False
+    out["deps"] = deps
+
+    # ── AI lanes: names only, never a key or any fragment of one ──
+    try:
+        import ai_provider as _ap
+        out["ai"] = {
+            "lanes_configured": sorted(_ap.configured_lanes()),
+            "any_lane_ready": bool(_ap.any_lane_configured()),
+        }
+    except Exception as e:
+        out["ai"] = {"error": str(e)[:120]}
+
+    # ── flags, faults, spend - each guarded separately ──
+    conn = None
+    try:
+        conn = database.get_db()
+        try:
+            r = conn.execute("SELECT * FROM launch_switches WHERE id=1").fetchone()
+            d = dict(r) if r else {}
+            out["flags"] = {k: d.get(k) for k in (
+                "mode", "ai_active", "ai_active_override", "ai_override_expires",
+                "fault_report", "intro_relay", "account_binding", "verified_tier",
+                "ai_example_enabled", "auth_fail_closed", "tuppence_burn_enabled")}
+        except Exception as e:
+            out["flags"] = {"error": str(e)[:120]}
+        try:
+            rows = conn.execute(
+                "SELECT status, COUNT(*) c FROM app_faults GROUP BY status").fetchall()
+            out["faults"] = {str(x[0]): x[1] for x in rows}
+        except Exception as e:
+            out["faults"] = {"error": str(e)[:120]}
+        try:
+            today = now.strftime("%Y-%m-%d")
+            sp = conn.execute(
+                "SELECT COALESCE(SUM(est_cost_usd),0), COUNT(*) FROM ai_spend_log "
+                "WHERE substr(logged_at,1,10)=?", (today,)).fetchone()
+            hold = conn.execute(
+                "SELECT COALESCE(SUM(est_usd),0), COUNT(*) FROM ai_spend_holds "
+                "WHERE expires_at > ?", (now.isoformat(timespec="seconds"),)).fetchone()
+            out["ai_spend"] = {
+                "today_usd": round(float(sp[0]), 4), "today_calls": sp[1],
+                "active_holds_usd": round(float(hold[0]), 4), "active_holds": hold[1],
+            }
+        except Exception as e:
+            out["ai_spend"] = {"error": str(e)[:120]}
+        try:
+            lc = conn.execute("SELECT COUNT(*) FROM listings WHERE listing_status='live'").fetchone()
+            out["listings_live"] = lc[0]
+        except Exception:
+            out["listings_live"] = None
+    except Exception as e:
+        out["db"] = {"error": str(e)[:120]}
+    finally:
+        try:
+            if conn: conn.close()
+        except Exception:
+            pass
+
+    # ── traffic since boot: the cheapest "is it throwing errors" signal ──
+    out["traffic_since_boot"] = dict(_OPS_COUNTS)
+    out["last_5xx"] = dict(_OPS_LAST5XX)
+    return out
 
 @app.post("/admin/purge-cache")
 async def purge_cache(x_admin_key: str = Header(None)):
@@ -3561,6 +3776,16 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
             img, scan, _ts_active_provider(), category or "", spend_who,
             "/listings/photo#anon-verify")
         if img2 is None:
+            # PHOTO-REPLACE-1 (TS-0022): say WHICH problem this is. "We could not
+            # hide it" and "hiding it would spoil the picture" need different
+            # answers from the seller, and the old copy gave the same one to both.
+            if _ANON_REPLACE_TAG in (_lbls or []):
+                raise HTTPException(status_code=422,
+                    detail="We could not hide the identifying details in this photo "
+                           "without blurring so much of it that the picture no longer "
+                           "shows your listing properly. Please use a different photo "
+                           "- one without number plates, signage or contact details in "
+                           "shot works best.")
             raise HTTPException(status_code=422,
                 detail="Could not verifiably blur the identifying content. " + _retake)
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
@@ -3576,12 +3801,10 @@ async def upload_listing_photo(
     _key: str = Depends(auth.require_api_key)
 ):
     # Validate file type
-    allowed = {"image/jpeg", "image/png", "image/webp"}
-    if _HEIF_OK:
-        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
-    content_type = file.content_type or "image/jpeg"
-    if content_type not in allowed:
-        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP photos accepted")
+    # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
+    content_type = (file.content_type or "").strip()
+    if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
+        raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
     raw = await file.read()
     if len(raw) > 20 * 1024 * 1024:  # 20MB hard limit
@@ -3590,7 +3813,7 @@ async def upload_listing_photo(
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception as exc:
-        raise HTTPException(status_code=400, detail="Could not read image file") from exc
+        raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
     # Session 98 — collectibles: EXIF can't fix tag-less rotated card scans, so for
     # a landscape Collectors photo, ask vision which way is up and rotate to match.
@@ -3731,12 +3954,10 @@ async def upload_draft_listing_photo(
     import re as _re
 
     # Validate file type
-    allowed = {"image/jpeg", "image/png", "image/webp"}
-    if _HEIF_OK:
-        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
-    content_type = file.content_type or "image/jpeg"
-    if content_type not in allowed:
-        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP photos accepted")
+    # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
+    content_type = (file.content_type or "").strip()
+    if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
+        raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
     raw = await file.read()
     if len(raw) > 20 * 1024 * 1024:
@@ -3745,7 +3966,7 @@ async def upload_draft_listing_photo(
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception as exc:
-        raise HTTPException(status_code=400, detail="Could not read image file") from exc
+        raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
     # Auth + draft guard
     conn = database.get_db()
@@ -4290,12 +4511,10 @@ def get_user_trust(email: str):
 async def upload_user_photo(email: str, file: UploadFile = File(...)):
     """Upload a seller profile photo. Compresses to 400×400 JPEG, stores to R2 or local,
     saves URL to users.photo_url. No API key required — seller identifies by email."""
-    allowed = {"image/jpeg", "image/png", "image/webp"}
-    if _HEIF_OK:
-        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
-    content_type = file.content_type or "image/jpeg"
-    if content_type not in allowed:
-        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
+    # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
+    content_type = (file.content_type or "").strip()
+    if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
+        raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
     raw = await file.read()
     if len(raw) > 10 * 1024 * 1024:
@@ -4304,7 +4523,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...)):
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
     except Exception as exc:
-        raise HTTPException(status_code=400, detail="Could not read image file") from exc
+        raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
     # Square-crop to centre, then resize to 400×400
     w, h = img.size
@@ -4351,12 +4570,10 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
     C2 fix (audit 16 Jul 2026): stores the document as PENDING and grants NO
     trust — identity is only awarded by the vision-checked verify-identity path
     (or admin review). This closes the instant self-grant of +15 trust."""
-    allowed = {"image/jpeg", "image/png", "image/webp"}
-    if _HEIF_OK:
-        allowed |= {"image/heic", "image/heif"}   # TS-0012: converted to JPEG in-pipeline
-    content_type = file.content_type or "image/jpeg"
-    if content_type not in allowed:
-        raise HTTPException(status_code=400, detail="Only JPEG, PNG or WebP accepted")
+    # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
+    content_type = (file.content_type or "").strip()
+    if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
+        raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
     raw = await file.read()
     if len(raw) > 15 * 1024 * 1024:
@@ -4368,7 +4585,9 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
 
     # TS-0012: this path stores the RAW bytes (no re-encode), so a HEIC must be
     # converted here or ops/vision would receive an unviewable file.
-    if _HEIF_OK and content_type in ("image/heic", "image/heif"):
+    if _is_heic_bytes(raw) and not _HEIF_OK:
+        raise HTTPException(status_code=400, detail=_photo_decode_msg(raw))
+    if _HEIF_OK and (_is_heic_bytes(raw) or content_type in ("image/heic", "image/heif")):
         try:
             _him = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
             _hbuf = io.BytesIO(); _him.save(_hbuf, format="JPEG", quality=90)
@@ -4381,6 +4600,10 @@ async def upload_user_id(email: str, file: UploadFile = File(...), _key: str = D
     fname = f"id_{uuid.uuid4().hex}.jpg"
     if _S3_CONFIGURED:
         key = f"ids/{fname}"
+        # PHOTO-TYPE-1: never hand R2 a blank/generic type - it would serve the
+        # document back as a download instead of an image.
+        if (content_type or "").split(";")[0].strip().lower() not in _photo_types_allowed():
+            content_type = "image/jpeg"
         id_url = _s3_upload(raw, key, content_type)
     else:
         local_path = f"/var/www/marketsquare/media/{fname}"
@@ -4607,7 +4830,7 @@ def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bo
                   # route sends From the already-verified mail domain while the ALIAS
                   # rides Reply-To — replying still goes through the curtain, and no
                   # real address appears anywhere. Anonymity identical, cost zero.
-                  "from": ai_provider.envkey("RELAY_FROM") or "TrustSquare Intro <intro@mail.trustsquare.co>",
+                  "from": _safe_from(ai_provider.envkey("RELAY_FROM"), "TrustSquare Intro <intro@mail.trustsquare.co>"),
                   "to": [to_clean],
                   "subject": _relay_sanitize_subject(subject) or "TrustSquare introduction",
                   "text": (body or "")[:_RELAY_MAX_BODY],
@@ -6686,7 +6909,7 @@ def _demand_send_invite(to_email, subject, html):
         import httpx
         r = httpx.post("https://api.resend.com/emails",
             headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-            json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+            json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
                   "to": [to_email], "subject": subject, "html": html},
             timeout=20)
         if r.status_code in (200, 201):
@@ -9196,7 +9419,12 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
                          % (_sname, (" Reason: " + req.notes) if req.notes else ""))
             import requests as _rq2
             _rq2.post("https://api.resend.com/emails", json={
-                "from": os.getenv("SUPPORT_FROM_EMAIL", "TrustSquare Support <support@mail.trustsquare.co>"),
+                # RESEND-FROM-1 (7 Aug 2026): the ONE sender still reading the env raw.
+                # Bitter irony - this mail exists to fix TS-0010 (a credential decision
+                # that reached Maroushka silently), so an unverified/malformed sender
+                # here would re-create the exact silence it was built to end.
+                "from": _safe_from(os.getenv("SUPPORT_FROM_EMAIL"),
+                                   "TrustSquare Support <support@mail.trustsquare.co>"),
                 "to": [req.email], "subject": _sub, "text": _body,
                 "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")},
                 headers={"Authorization": "Bearer " + _rk}, timeout=10)
@@ -9653,13 +9881,42 @@ async def upload_seller_document(
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     }
-    ct = file.content_type or "application/octet-stream"
+    # PHOTO-TYPE-1 applied to documents (TS-0013/TS-0025, 7 Aug 2026). The seller is
+    # told to "photograph your qualifications", and a phone photo arrives with a
+    # generic or blank Content-Type - which this gate refused outright. Decide by
+    # extension when the declared type is generic, and keep refusing everything else.
+    _DOC_EXTS = {"pdf": "application/pdf", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                 "jfif": "image/jpeg", "png": "image/png", "webp": "image/webp",
+                 "doc": "application/msword",
+                 "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+    ct = (file.content_type or "").split(";")[0].strip().lower()
+    _ext = (file.filename or "").rsplit(".", 1)[-1].strip().lower() if "." in (file.filename or "") else ""
     if ct not in allowed_mime:
-        raise HTTPException(status_code=400, detail="Only PDF, JPEG, PNG, WebP, or Word documents accepted")
+        if ct in _GENERIC_TYPES and _ext in _DOC_EXTS:
+            ct = _DOC_EXTS[_ext]                      # believe the file, not the browser
+        elif _ext in ("heic", "heif") or ct in ("image/heic", "image/heif"):
+            ct = "image/heic"                          # handled by the converter below
+        else:
+            raise HTTPException(status_code=400, detail=(
+                "That file type isn't accepted - please upload a PDF, JPEG, PNG, WebP or "
+                "Word document (a clear photo of the certificate is fine)."))
 
     raw = await file.read()
     if len(raw) > 25 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Document too large — max 25MB")
+
+    # This path stores the RAW bytes, so a HEIC would sit in R2 unviewable by the person
+    # doing the verification - the seller would wait forever on a document nobody can open.
+    # Same proven conversion the ID path uses.
+    if _is_heic_bytes(raw) or ct in ("image/heic", "image/heif"):
+        if not _HEIF_OK:
+            raise HTTPException(status_code=400, detail=_photo_decode_msg(raw))
+        try:
+            _dim = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
+            _dbuf = io.BytesIO(); _dim.save(_dbuf, format="JPEG", quality=90)
+            raw = _dbuf.getvalue(); ct = "image/jpeg"
+        except Exception:
+            raise HTTPException(status_code=400, detail=_photo_decode_msg(raw))
 
     # Upload to R2 or local fallback
     orig_name = (file.filename or "document").replace(" ", "_")
@@ -11354,6 +11611,51 @@ class _SignInRequest(_BaseModel):
 class _SignInVerify(_BaseModel):
     token: str
 
+# ── RESEND-FROM-1 (7 Aug 2026) — never lose mail to a malformed sender ──────
+# Found live: EVERY POST to Resend was returning 422 "Invalid `from` field" for
+# hours — sign-in links AND the whole outreach lane — because one env value was
+# not in `a@b.c` / `Name <a@b.c>` form. Resend rejects the entire send, so the
+# mail simply never left. Two rules encoded here:
+#   1. VALIDATE the sender and fall back to a known-good one rather than lose the
+#      message (a bad config line must degrade, not delete).
+#   2. Fall back to the domain Resend has actually VERIFIED (mail.trustsquare.co).
+#      The root domain is NOT verified, so `hello@trustsquare.co` is refused even
+#      when perfectly formatted — the same lesson RELAY-FROM-1 learned.
+_RESEND_SAFE_FROM = "TrustSquare <hello@mail.trustsquare.co>"
+
+def _safe_from(value, fallback: str = _RESEND_SAFE_FROM) -> str:
+    """Return a Resend-acceptable `from`, or the verified-domain fallback.
+
+    Checks BOTH failure modes seen on 7 Aug: (a) malformed shape -> Resend 422 and
+    the send is discarded; (b) well-formed but on a domain Resend has NOT verified
+    (the root trustsquare.co) -> refused just the same. A sender only survives if
+    it is well-formed AND on the verified sending domain."""
+    import re as _r
+    v = (value or "").strip().strip('"').strip("'").strip()
+    if not v or "," in v or "\n" in v or "\r" in v:
+        if v:
+            _log.error("RESEND-FROM-1: unusable sender %r -- using %s", v[:90], fallback)
+        return fallback
+    domain_ok = (os.getenv("RESEND_SENDING_DOMAIN") or "mail.trustsquare.co").strip().lower()
+    addr = None
+    if _r.fullmatch(r"[^<>@\s,]+@[^<>@\s,]+\.[A-Za-z]{2,}", v):
+        addr, out = v, v
+    else:
+        m = _r.fullmatch(r'"?([^<>]*?)"?\s*<\s*([^<>@\s,]+@[^<>@\s,]+\.[A-Za-z]{2,})\s*>', v)
+        if m:
+            name = (m.group(1) or "").strip()
+            addr = m.group(2)
+            out = ("%s <%s>" % (name, addr)) if name else addr
+    if not addr:
+        _log.error("RESEND-FROM-1: malformed sender %r -- using %s", v[:90], fallback)
+        return fallback
+    if not addr.lower().endswith("@" + domain_ok):
+        _log.error("RESEND-FROM-1: sender %r is not on the verified domain %s -- using %s",
+                   addr, domain_ok, fallback)
+        return fallback
+    return out
+
+
 def _send_login_email(to_email: str, link: str) -> str:
     """Email the sign-in link. Resend if configured, else Gmail SMTP. Returns
     'sent' | 'failed' | 'dry' (no email transport configured)."""
@@ -11373,7 +11675,7 @@ def _send_login_email(to_email: str, link: str) -> str:
             import httpx
             r = httpx.post("https://api.resend.com/emails",
                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-                json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+                json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
                       "to": [to_email], "subject": subject, "html": html},
                 timeout=20)
             if r.status_code in (200, 201):
@@ -11851,6 +12153,71 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", w
 
 _ANON_PHOTO_MAX = 6        # photos scanned per advert (cost bound)
 _ANON_PHOTO_CONF = 0.75    # confidence gate — below this the photo is held
+
+# ── PHOTO-REPLACE-1 (TS-0022, David's ruling 7 Aug 2026) ───────────────────
+# Reverses the 15 Jul doctrine ("a seller photo must NEVER be held because the
+# pretty blur could not be verified - ugly-but-anonymous beats rejected"), on
+# Maroushka's third report of the same complaint and in her own words: "I'd rather
+# have you request that I change the picture if you can't make it look decent."
+# David, 7 Aug: "if we cant blurr a photo enough and it starts looking bad, then we
+# should request a replacement rather."
+#
+# Anonymity does not regress by doing this - refusing a photo cannot leak what the
+# blur failed to hide, so this moves in the SAFE direction. What changes is that a
+# ruined photo is no longer published: the seller is asked for a different one.
+_ANON_MAX_BLUR_FRAC = 0.18      # above this share of the frame the photo is spoiled
+try:
+    _ANON_MAX_BLUR_FRAC = float(os.getenv("ANON_MAX_BLUR_FRAC") or _ANON_MAX_BLUR_FRAC)
+except Exception:
+    pass
+_ANON_REPLACE_TAG = "needs-replacement"   # sentinel label the callers translate
+
+
+def _anon_blur_fraction(regions, grid=200):
+    """Share of the frame the redaction actually covers, 0.0-1.0.
+
+    Rasterised onto a grid so OVERLAPPING boxes count once. Summing box areas would
+    double-count the accumulation across correction rounds (the same plate boxed
+    four times reads as four plates) and would refuse good photos. Regions are the
+    0-1000 normalised coords used everywhere in this pipeline; each box is expanded
+    by the same proportional padding _anon_photo_redact paints with, so the number
+    reflects what the seller will actually see."""
+    if not regions:
+        return 0.0
+    cells = bytearray(grid * grid)
+    for r in regions:
+        try:
+            x0, y0, x1, y1 = float(r[0]), float(r[1]), float(r[2]), float(r[3])
+        except Exception:
+            continue
+        dx = (x1 - x0) * 0.04 + 4.0        # mirrors the px/py padding in _anon_photo_redact
+        dy = (y1 - y0) * 0.10 + 4.0
+        x0 -= dx; x1 += dx; y0 -= dy; y1 += dy
+        cx0 = max(0, min(grid - 1, int(x0 * grid / 1000.0)))
+        cy0 = max(0, min(grid - 1, int(y0 * grid / 1000.0)))
+        cx1 = max(cx0 + 1, min(grid, int(x1 * grid / 1000.0) + 1))
+        cy1 = max(cy0 + 1, min(grid, int(y1 * grid / 1000.0) + 1))
+        for yy in range(cy0, cy1):
+            base = yy * grid
+            for xx in range(cx0, cx1):
+                cells[base + xx] = 1
+    return sum(cells) / float(grid * grid)
+
+
+def _anon_replace_enabled():
+    """Fail-safe read of launch_switches.photo_replace_request. On ANY doubt return
+    True - the ruling is the current policy, and the safe side of this switch is the
+    one that refuses a spoiled photo rather than publishing it."""
+    try:
+        conn = database.get_db()
+        try:
+            row = conn.execute(
+                "SELECT photo_replace_request FROM launch_switches WHERE id=1").fetchone()
+            return bool(row["photo_replace_request"]) if row else True
+        finally:
+            conn.close()
+    except Exception:
+        return True
 _ANON_SPOTCHECK_N = 10     # first N adverts per agency flagged spot_check
 
 _ANON_SCAN_PROMPT = (
@@ -12301,12 +12668,18 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     labels = list(scan.get("labels") or [])
     regions = list(scan.get("regions") or [])
     _acc = []                 # every region ever boxed — feeds the last-resort rung
+    _replace_on = _anon_replace_enabled()   # read once — each read is a DB round-trip
     for _round in range(4):   # refine+blur+verify: initial + up to 3 corrections
         if regions:
             regions = _anon_refine_regions(img, regions, provider, category,
                                            spend_who, endpoint)   # tighten; may DROP not-found
         if regions:
             _acc.extend(regions)
+            # PHOTO-REPLACE-1: measure BEFORE painting another layer. Each round
+            # re-scans the already-blurred image and paints the new boxes on top of
+            # the old ones, so this is where a photo quietly turns to porridge.
+            if _replace_on and _anon_blur_fraction(_acc) > _ANON_MAX_BLUR_FRAC:
+                return None, labels + [_ANON_REPLACE_TAG]
             img, _n = _anon_photo_redact(img, regions)
         # ALWAYS verify the current image — the VERIFIER, not the boxes, is the
         # no-slips guarantee. If refinement dropped every region (over-flagged
@@ -12345,6 +12718,11 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
             _big.append((max(0, _x0 - _dx), max(0, _y0 - _dy),
                          min(1000, _x1 + _dx), min(1000, _y1 + _dy),
                          "last-resort"))
+        # PHOTO-REPLACE-1: this rung exists to avoid EVER rejecting a photo. David
+        # reversed that on 7 Aug - if the ugly-but-anonymous result would cover this
+        # much of the frame, do not paint it; ask for a different picture instead.
+        if _replace_on and _anon_blur_fraction(_big) > _ANON_MAX_BLUR_FRAC:
+            return None, labels + [_ANON_REPLACE_TAG]
         img, _n = _anon_photo_redact(img, _big)
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
@@ -12398,7 +12776,12 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
             img2, _lbls = _anon_blur_until_clean(
                 img, scan, provider, category, agent, "/agencies/import#photo-verify")
             if img2 is None:
-                held += 1; notes.append("held:redact-unverified"); continue
+                # PHOTO-REPLACE-1: distinguish "could not verify" from "would have
+                # been spoiled" so the agency report says which photo to re-supply.
+                held += 1
+                notes.append("held:needs-replacement" if _ANON_REPLACE_TAG in (_lbls or [])
+                             else "held:redact-unverified")
+                continue
             img = img2
             notes.append("redacted:" + ",".join(sorted(set(_lbls))[:4]))
         # Re-encode (EXIF/GPS stripped) → thumb + medium, same as the upload path.
@@ -13038,6 +13421,7 @@ class _FlagsUpdate(BaseModel):
     fault_report:          Optional[bool] = None  # MAINT-B1b: in-app tester fault intake visible
     intro_relay:           Optional[bool] = None  # INTRO-RELAY-1: masked-alias introductions (dark until CF rail is live)
     account_binding:       Optional[bool] = None  # ACCOUNT-BIND-1: charges bound to the proven session
+    photo_replace_request: Optional[bool] = None  # PHOTO-REPLACE-1: ask for a new photo rather than blur it into ruin (TS-0022)
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -13048,6 +13432,11 @@ def _flags_payload(d):
         "fault_report": b("fault_report"),
         "intro_relay": b("intro_relay"),
         "account_binding": b("account_binding"),
+        # PHOTO-REPLACE-1 defaults ON (David's 7 Aug ruling), so a row predating the
+        # column must read as ON - b() would read a missing key as OFF and silently
+        # restore the very behaviour Maroushka reported three times.
+        "photo_replace_request": bool(d.get("photo_replace_request", 1)),
+        "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
                  "flights": b("data_flights"), "mapbox": b("data_mapbox")},
@@ -15657,7 +16046,7 @@ def _smtp_send_reply(to_addr: str, subject: str, body: str,
     subj = subject if subject.lower().startswith("re:") else f"Re: {subject}"
     # ── Path 1: Resend (L3a — replies from the trustsquare.co brand, not personal Gmail)
     resend_key = os.getenv("RESEND_API_KEY", "")
-    support_from = os.getenv("SUPPORT_FROM_EMAIL", "TrustSquare Support <support@mail.trustsquare.co>")
+    support_from = _safe_from(os.getenv("SUPPORT_FROM_EMAIL"), "TrustSquare Support <support@mail.trustsquare.co>")
     if resend_key:
         try:
             import requests as _rq
@@ -16944,7 +17333,7 @@ def _send_system_email(to_email: str, subject: str, html: str) -> str:
             import httpx
             r = httpx.post("https://api.resend.com/emails",
                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-                json={"from": os.getenv("DEMAND_FROM_EMAIL", "TrustSquare <hello@trustsquare.co>"),
+                json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
                       "to": [to_email], "subject": subject, "html": html},
                 timeout=20)
             if r.status_code in (200, 201):

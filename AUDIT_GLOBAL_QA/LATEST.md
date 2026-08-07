@@ -1,10 +1,6 @@
-# Global QA audit — 2026-08-07 (8.5s)
+# Global QA audit — 2026-08-07 (13.5s)
 
-**6 findings** (6 new vs previous run)
+**2 findings** (2 new vs previous run)
 
-- **CRITICAL** [endpoints] 🆕 `EP-/ai/health` — /ai/health unreachable: HTTP Error 403: Forbidden
-- **CRITICAL** [endpoints] 🆕 `EP-/demo-listings` — /demo-listings unreachable: HTTP Error 403: Forbidden
-- **CRITICAL** [endpoints] 🆕 `EP-/demo-sellers` — /demo-sellers unreachable: HTTP Error 403: Forbidden
-- **CRITICAL** [endpoints] 🆕 `EP-/support` — /support unreachable: HTTP Error 403: Forbidden
-- **CRITICAL** [demo] 🆕 `DEMO-FETCH` — demo feeds unreadable: HTTP Error 403: Forbidden
-- **CRITICAL** [drift] 🆕 `INDEX-FETCH` — live index unreachable: HTTP Error 403: Forbidden
+- **INFO** [demo] 🆕 `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
+- **INFO** [drift] 🆕 `VERSION-KEY` — repo html pins ms.js v432, live pins v446 (deploy pending)

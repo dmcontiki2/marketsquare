@@ -1,5 +1,5 @@
 {
- "next_id": 23,
+ "next_id": 27,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -139,7 +139,8 @@
    "last_seen": "2026-08-07",
    "sev": "HIGH",
    "source": "pulse + audit + ledger + Chrome verify",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-07"
   },
   "DW-020": {
    "first_seen": "2026-08-07",
@@ -160,6 +161,34 @@
    "last_seen": "2026-08-07",
    "sev": "LOW",
    "source": "self-heartbeat",
+   "status": "OPEN"
+  },
+  "DW-023": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "HIGH",
+   "source": "gate verification post-DW-019",
+   "status": "OPEN"
+  },
+  "DW-024": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "HIGH",
+   "source": "ledger self-audit (Stays session)",
+   "status": "OPEN"
+  },
+  "DW-025": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "MEDIUM",
+   "source": "RG-0025 scope gap (Stays session)",
+   "status": "OPEN"
+  },
+  "DW-026": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "HIGH",
+   "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN"
   }
  }

@@ -1,3 +1,251 @@
+## 2026-08-07 (evening) — MAROUSHKA'S 7 AUG REPORTS + SELFCHECK-1 (David: "Build 1 after Maroushkas fixes")
+
+Six faults closed, one endpoint built, one instrument repaired. Everything below is local until
+`/ship` runs. The stale `.git/HEAD.lock` that made this morning's deploy a silent no-op (DW-026)
+has been moved aside, so the ship can actually land.
+
+**TS-0026 — "the pictures didn't pull through, there was no notice."** Two bugs, not one.
+The batch-publish loop surfaced ONLY HTTP 422; a 400 (a format the server could not decode) and a
+dropped request both vanished, and the single-photo advert path swallowed everything with
+`.catch(()=>{})`. The advert published photo-less and said nothing. Both paths now name the photo
+number and quote the server's own reason. The first cut of this fix pushed to `_photoFails` without
+ever declaring it — `node --check` passed and the runtime would have thrown `ReferenceError` on the
+first failing photo, breaking publish outright. Caught before ship; the declaration now sits at
+block scope and is proven in scope at every use by brace-depth walk.
+
+**The 502 was not a photo bug.** Her console showed `/listings?city=Pretoria` returning 502 while
+publish 333/334/335 all returned 200. Checked from outside: all three listings carry populated
+`photo_urls`, every R2 URL resolves 200 (10, 6 and 2 photos respectively), and `thumb_url`/
+`medium_url` are set. The photos were never lost. Five timed probes of the same endpoint returned
+200 in 0.65-1.18s, so the 502 was the restart window of this morning's failed deploy, not a chronic
+fault. Nothing to fix; recorded so it is not chased again.
+
+**TS-0025 — HEIC (PHOTO-TYPE-1).** The gate compared the browser's DECLARED `Content-Type` against
+an allow-list. Windows and Android send `application/octet-stream` (or nothing) for a `.heic`
+straight off an iPhone, so a photo `pillow-heif` can decode perfectly was refused — and refused
+with "Only JPEG, PNG or WebP photos accepted", which was ALSO false whenever the wheel is present.
+The bytes are now the gate: a supported or generic declared type passes through to `Image.open()`,
+which is the real validator, and every rejection names what we actually accept. A decode failure on
+iPhone bytes with no wheel present says so specifically and gives the Share > Options > Most
+Compatible route out, instead of the blanket "could not read image file". Applied at all four
+upload gates plus a byte-level HEIC sniff on the ID path (which stores raw bytes and would
+otherwise have filed an unviewable document). 10/10 offline cases pass, including her exact one:
+`ct=application/octet-stream` + `IMG_1.HEIC`.
+
+**TS-0013 — "it doesn't allow me do upload it or verify my status as an agent."** The Agent Hub
+credential upload was the ONE `/documents` POST in the app that omitted the `X-Api-Key` header,
+against a route guarded by `Depends(auth.require_api_key)`. It returned 401 on every attempt, for
+every user, since the day it shipped — never a permissions or account problem; that button could
+not have worked for anybody. Its two sibling calls always sent the header, which is why the fault
+looked user-specific. Also fixed on that path: `visibility:'ops'` was not a value the server
+accepts and was silently coerced to `'private'` (now says what it does), and the document gate had
+the same generic-Content-Type trap as TS-0025 — a phone photo of a certificate was refused outright.
+HEIC documents are now converted to JPEG on the way in, because that path stores raw bytes and ops
+cannot open a HEIC.
+
+**RESEND-FROM-1 completed.** One sender was still reading the env raw:
+`os.getenv("SUPPORT_FROM_EMAIL", ...)` on the credential-decision mail. Bitter irony — that mail
+exists to fix TS-0010 (a credential decision that reached Maroushka silently), so an unverified or
+malformed sender there would have re-created the exact silence it was built to end. Wrapped.
+Unwrapped senders remaining: zero.
+
+**SELFCHECK-1 — `GET /ops/selfcheck` (David's "Build 1").** A session cannot open an SSH tunnel to
+the box (port 22 is firewalled to David's IP), so every "is that dependency actually installed / is
+the flag actually on / did the deploy actually land" question cost a manual round-trip through
+David — and on 5 Aug one of them was answered by inference instead of evidence and had to be
+retracted. This endpoint answers them over one authenticated HTTPS GET: deploy stamp and uptime,
+dependency presence (`pillow_heif` first among them), AI lanes configured by NAME, launch-switch
+states, fault counts by status, today's AI spend and active holds, live listing count, and
+since-boot request/4xx/5xx counters with the last 5xx path. Facts only — no secrets, no keys, no
+customer data, no fault text; every block independently guarded so a partial failure still yields a
+usable report and nothing is ever guessed. Gated on the existing shared API key, so it needs no new
+env var (the ENVKEY-1 lesson: systemd does not export the server `.env`).
+
+**LEDGER-OFFLINE-1 — the instrument was lying.** Run from a machine with no route to the site, the
+regression ledger reported 15 network-backed entries as `REGRESSION: Tunnel connection failed` and
+closed with "Do not deploy over this." That is the cry-wolf failure: a tripwire that reports the
+instrument as the app teaches you to ignore the tripwire. A one-time cached preflight now
+distinguishes a transport failure from an HTTP answer (any status means the site replied and every
+check is valid), and unreachable entries report as **UNVERIFIED** — loudly not a pass, messages
+still printed, exit code 2 for "blind" versus 1 for "regressed" and 0 for genuinely clean. Same
+rule as LEDGER-FAULT-1 before it: a skip is "unverified here", never "now passing". The board went
+from *16 REGRESSED* to *0 regressed, 18 unverified* — the truth. Nothing consumes the exit code, so
+the deploy path is unaffected.
+
+**Tripwires added:** RG-0040 (a photo is judged by its bytes, never the browser's claim),
+RG-0041 (a photo that does not upload always says so), RG-0042 (the ops self-check publishes facts
+and never a secret), RG-0043 (every client upload to a key-guarded endpoint actually carries the
+key). All four green. RG-0041's own first version matched the `.catch(()=>{})` written inside the
+comment documenting the old bug and reported a regression against a correct file — corrected to
+scan code only, because a tripwire that cries wolf gets ignored.
+
+**TS-0022 — PHOTO-REPLACE-1, David's ruling 7 Aug.** Third report of the same complaint
+(TS-0007, TS-0008, now this), so it was treated as a doctrine change rather than a third patch.
+The blur was already minimal and already vision-driven — a model boxes the region, a zoom-in
+refine pass tightens the coordinates, and the mask is a feathered capsule aligned to the text
+angle. The sprawl came from the OTHER rule: the pipeline was forbidden to reject a photo (15 Jul:
+"a seller photo must NEVER be held because the pretty blur could not be verified — ugly-but-
+anonymous beats rejected"), so it escalated instead — four correction rounds, each re-scanning the
+already-blurred image and painting the new boxes on top of the old, then a last-resort rung
+blurring every region ever accumulated. David reversed it in Maroushka's own terms: "if we cant
+blurr a photo enough and it starts looking bad, then we should request a replacement rather."
+
+Coverage is now measured before each new layer and before the last-resort rung, by UNION rasterise
+onto a grid so the same plate boxed across four rounds counts ONCE — summing box areas would
+double-count the accumulation and start refusing perfectly good photos. Above 18% of the frame the
+photo is refused and the seller is asked for a different one, in words that name the real problem:
+hiding the details would spoil the picture, so a generic "could not blur" would have sent them back
+to retake a photo that fails the same way. Offline: a typical plate reads 2.5%, a plate plus dealer
+strip 4.6%, the same plate boxed four times still 2.5% (union proof exact), and the TS-0007/0008
+"half the facade" case reads 61% and is refused. Normal photos are untouched.
+
+Behind `launch_switches.photo_replace_request`, default ON, ceiling tunable via
+`ANON_MAX_BLUR_FRAC` without a code change; OFF restores the July behaviour without a deploy. The
+switch reader fails SAFE — any doubt reads as ON. Worth stating plainly, because it is why this was
+safe to build on a ruling rather than a review: **this direction cannot weaken anonymity.** Refusing
+a photo cannot leak what the blur failed to hide. On the Launch Switch page it carries the same
+OFF/ON/implication hover explainer as its neighbours. Tripwire RG-0044 asserts the measure, the
+fail-safe default and the honest wording all stay.
+
+## 2026-08-07 (later) — STAYS-SHOWCASE-1 completed + ZA 4-LAYER MAP PILOT (David: "please ship")
+
+Supersedes the "NOT DONE, deliberately" items in the STAYS-SHOWCASE-1 entry above — David gave
+the nod for the card swap and asked for the map pilot completed, so both landed in this release.
+
+**Phone cards (3).** `phone_stay_thatch/jacaranda/marula.jpg`, 352x728, 57-75KB, built from each
+property's hero and matched to the 28 Jul card design (navy frame, notch, status bar, gold
+"TrustSquare · Stays" band, photo, suburb chip, title/price/trust badge, navy CTA). CTA reads
+"Request Introduction · 1T" — the fixed intro price, not a booking. Placed in
+`CityLauncher/emailer/assets/`; registered in `inline_images.py` (17 entries; all three asset files
+asserted present on disk). They ship on the MEDIA lane (`media_push.bat` step 3/7), never the code lane.
+
+**The Stays email track's fake cards are gone.** `adventures_accommodation_outreach.html` lines
+189-279 replaced (8,409 chars): out went three MOCKUP phone cards depicting listings that do not
+exist ("Waterberg Private Lodge", "Boutique Hotel · Cape Town", "Sossusvlei Desert Lodge") with
+hand-typed prices in a format the app itself rejects; and with them THREE HOTLINKS TO
+images.unsplash.com, which fetched a third party at open time and leaked each recipient's IP.
+In went the sibling pattern: three real cards, two anchors each, six bare `https://trustsquare.co`
+hrefs matching `flip_showcase_hrefs.py`'s exact BARE constant. Asserted after the edit: 0 unsplash,
+0 mockup listings, 3 card images, 6 bare hrefs, balanced table/td tags, intro CTA intact.
+The Stays track now has the same 3 showcase cards as its three siblings — the 0-vs-3 gap David
+caught on 2 Aug is closed.
+
+**ZA 4-layer map pilot — `adventures_za_map.html` (162KB), the canon-correct ZA filename.**
+Built from `ADVENTURES_FULLMAP_CONCEPT.html`, the design David approved 5 Aug, reusing its INLINED
+Leaflet 1.9 (CSS + JS) verbatim. Four independently-switchable layers with colour-dotted checkboxes
+top-right, exactly as the concept specifies: ROUTE (4 driving pins + dashed polyline, blue),
+HERITAGE (2 sites, gold), STAYS (the 3 new B&Bs, green), PARTNERS (2 referrals, purple).
+Plus the legend, the geolocation "My location" control, and `geo:` navigate links that work on a
+phone. Verified by headless render: 11 pins, 4 layer switches, correct legend, all four popup
+types checked.
+- RG-0025 held by construction and asserted in the build: the ONLY `<script src>` on the page is
+  `/static/ts_report.js` (our own tester-fault widget, per RG-0030). Build refuses on any of
+  unpkg / tp-em.com / jsdelivr / googleapis. Tiles are plain OSM.
+- INTROS ARE 1T. The stays popup button reads "Request introduction · 1T" and the build asserts
+  the string "20T" appears nowhere.
+- Partner pins are INERT (`<span>`, no href) and labelled "(pending)" — Travelpayouts' tours review
+  was declined 5 Aug. When it passes they become plain affiliate LINKS; never a script.
+- Listing deep links: `STAY_IDS` at the top of the file is `{thatch:null, jacaranda:null, marula:null}`
+  because ids are assigned by migration 009 at deploy time. Until they are set, each stay button
+  falls back to the Stays category screen — a real destination, never a dead link. Harvest the three
+  ids from the deploy log and set them; that one edit is the only thing the file still wants.
+- Added to `ops/autodeploy/deploy_manifest.txt` -> `static/adventures_za_map.html` (47 rows now;
+  every manifest source verified to exist). NOT yet pointed at from `ADV_COUNTRY_MAP.ZA`: that
+  would replace the Big Five reserve map on the Dinokeng super listings, which is a product call,
+  not a pilot step. The map is live and linkable at `/static/adventures_za_map.html`, and static
+  maps bypass the pre-launch gate, so it can be opened cold.
+
+**Found, not fixed (no ledger change during a ship): RG-0011 is a false green.** Its regex is
+`file:'adventures_([a-z0-9]+)_map\.html'` — requiring the closing quote immediately after `.html`.
+Every real entry in `ADV_COUNTRY_MAP` carries a `?v=` cache-buster inside the quotes, so the regex
+matches NOTHING and the check has been passing vacuously. It therefore never caught the two canon
+debts it was written for (`GB` -> `adventures_uk_map.html`, `ZA` -> `adventures_reserve_map.html`).
+Filed for the daily watch; fixing the regex will turn those two red, which is correct but is a
+deliberate decision, not a mid-ship surprise.
+
+Pre-deploy scan: verdict **ok**. Cost model impact: none.
+
+## 2026-08-07 — STAYS-SHOWCASE-1: the fourth trio built (OPEN_LOOPS D8), staged not shipped
+
+**Photos — 15 of 15, done.** David-assisted Higgsfield run (Nano Banana Pro, 3:2, 1 image/gen,
+2 credits each). Three properties x five frames, each set locking one building description so the
+same property carries through every frame: `sup_email_thatch_*` (Pilanesberg — main/room/pool/
+breakfast/game), `sup_email_jacaranda_*` (Hartbeespoort — main/room/deck/breakfast/dam),
+`sup_email_marula_*` (Magaliesberg — main/tent/boma/deck/sunrise). All 15 audited at 1200x805,
+131-258KB, inside the size band of the existing nine. PHOTO-ANON-1 honoured throughout (people
+from behind or silhouetted only). Prompts + run settings recorded in `STAYS_HIGGSFIELD_PROMPTS.md`
+so any future session can regenerate a frame without reverse-engineering the wording.
+- Higgsfield queue wedged ~25 min on frame 2 (normal 50-60s); survived a full page reload, so it
+  was genuinely server-side. Waited it out per the runbook rather than double-firing. It cleared.
+- The freshness guard REFUSED one claim: floor was set to the previous file's own mtime and caught
+  it on the boundary, so two candidates appeared where one was expected. Tightened to strictly-above
+  and each claim now advances it. This is the guard doing exactly the job it was written for after
+  the 26 Jul mis-assignment; Downloads held 267 stale hf_*.png the whole run.
+
+**Adverts — script + migration written, NOT run.** `scripts/create_stays_showcase_adverts.py`
+(153 lines) + `migrations/009_stays_showcase_adverts.py` (21 lines), both py_compile green.
+Clones the ZA advacc exemplar 271 and ABORTS UNTOUCHED if 271 is not `adventures_accommodation`.
+Born-clean by construction, each choice traceable to a prior fault:
+- CLONE_JUNK guard nulls 40 foreign-category columns by name (vehicle/property/collector/tutor/
+  rental), filtered against the live schema so a missing column cannot crash it — migration 002
+  had to heal six rows for exactly this.
+- `super_example=0`. Deliberately NOT following `mark_showcase_supers.py` (29 Jul), which migration
+  002 reversed on 2 Aug: SUPER-PIN-1 pins super rows above every sort, so a super showcase advert
+  outranks real sellers. The 29 Jul marking was the error, not the pattern.
+- `price_num` set explicitly; price carries a "/ night" basis (adventures_accommodation is in
+  RATE_UNIT_CATEGORIES — a bare amount is rejected 422 by `_validate_price_unit`).
+- No attestation stamp, no linked wonders. Seller reuses `showcase-email@trustsquare.co` (RG-0008
+  normalises adventures* to one family, so no new seller row is invented).
+- `listing_lat`/`listing_lng` carry the concept map's pins, so the D8 map's B&B layer can read real
+  coordinates off the DB instead of hardcoding them.
+- Suburb stays a Pretoria-metro suburb with the real place in the TITLE — the established pattern
+  (cf. "Hot Air Balloon Safari · Hartbeespoort" / Centurion).
+
+**Email track — located, one safe edit made, rewrite NOT attempted.**
+- FOUND: the four flipped templates are not in this repo. They live in
+  `CityLauncher/emailer/templates/` — `agency`, `cars_dealer`, `tour_guide`, `travel_agency`
+  are the exact four carrying `?listing=`. `adventures_accommodation_outreach.html` is NOT a dead
+  filename: it is alive there, wired into the sender at `emailer.py:62`, and is a live wave-1 track.
+- FOUND: its showcase section (lines 189-279) is not missing — it is THREE MOCKUP CARDS of listings
+  that do not exist ("Waterberg Private Lodge", "Boutique Hotel · Cape Town", "Sossusvlei Desert
+  Lodge"), hand-typed prices in a format the app itself would reject ("24000 /night"), no deep links.
+  Its card photos are HOTLINKED FROM UNSPLASH — every sibling self-hosts at `/static/phone_*.jpg`
+  and inlines them as CID. That reaches a third party at open time and leaks recipient IPs; RG-0025's
+  spirit, though its literal scope is app pages. Template last touched 15 Jun, seven weeks behind
+  its siblings. Its intro button already reads "Request Introduction · 1T" — correct, left alone.
+- DONE: `flip_showcase_hrefs.py` extended with `thatch`/`jacaranda`/`marula` -> the stays template
+  (9 cards now; CARD_IMG and CARD_TPL key sets asserted equal; timestamped .bak taken).
+- NOT DONE, deliberately: swapping the three fake cards for real deep-linked phone cards. It is a
+  visible change to an email that goes to B&B owners and wants David's eye, and the 352x728 phone
+  cards still have to be built from the new photos.
+
+Regression ledger, closing: **38 entries · 36 holding · 0 REGRESSED · 2 open · exit 0** (from the
+vantage that can reach the live site; the two open are the long-standing RG-0003/RG-0004).
+Cost model impact: none. Nothing deployed — no /tsl this session.
+
+## 2026-08-05 — D8 grew into the 4-layer map vision; working concept built
+
+- David's ruling: B&Bs are a gap to close AND one of four map layers — ROUTE driving pins + HERITAGE sites + near-by B&B INTRO options + Travelpayouts partner referrals = the full interactive phone-map experience (geolocation, drive-between pins, browse buttons).
+- Concept page built reusing the existing map engine (inlined Leaflet, OSM tiles, zero third-party scripts — RG-0025-compatible): ADVENTURES_FULLMAP_CONCEPT.html — 4 colour-coded layers with legend, dashed drive route, My-location control, per-layer popup buttons (Navigate geo:, Request introduction 1T, heritage card, partner link-out marked pending TP approval).
+- Not deployed, not in the manifest; indexed into Projects/Visuals. D8 in OPEN_LOOPS updated to carry the full vision so it cannot be lost between sessions.
+- CORRECTION same day (David): introductions are ALWAYS 1T — the concept first showed 20T (taken from a CLAUDE.md pricing example); fixed in the concept page and the evening session prompt.
+- ADDITION same day (David): selective LAYER SWITCHES — each of the 4 layers now toggles on/off via a colour-dotted checkbox panel (Leaflet layer control, always visible, top-right). The visitor composes their own map: route only, route+stays, everything.
+
+- CF console stretch (driven via browser by Claude, David approving/pasting):
+  relay.trustsquare.co email subdomain created (a typo-twin created and deleted);
+  worker intro-relay deployed (v2 = relay + zone router: intro-* -> BEA, everything
+  else -> owner inbox forward, because the zone catch-all turned out to be ZONE-WIDE
+  — first version briefly repointed the main-domain catch-all, caught by immediate
+  two-sided verification and fixed by the router design); RELAY_INBOUND_SECRET set
+  (David pasted; value never transited Claude); catch-all -> intro-relay worker.
+  Repo worker copy synced. Remaining: Resend domain verify for relay subdomain.
+- RELAY-FROM-1 (found at the Resend paywall: 2nd domain = $20/mo): relay forwards now
+  send From the VERIFIED mail.trustsquare.co domain (env RELAY_FROM overridable) with
+  the ALIAS on Reply-To — replies still route through the curtain, anonymity identical,
+  deliverability better (proven SPF/DKIM), cost zero. Resend domain step DELETED from
+  the rail; RG-0038 assertion now locks the alias Reply-To instead. NO new subscription
+  — the original promise holds.
+
 ## 2026-08-05 — AIK-VERIFY-1: people report, machines verify (David's ruling)
 
 - **Doctrine amended** (MAINTENANCE_AGENT.md + FAULT_REGISTER.md): the month's evidence

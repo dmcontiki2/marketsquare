@@ -30,6 +30,38 @@ THE RULE (also written into CLAUDE.md)
 A fix is not "done" until it has an entry here. Fixing the occurrence is half the
 job; adding the assertion is the other half.
 
+PROVE THE CHECK BEFORE TRUSTING IT GREEN (7 Aug 2026)
+-----------------------------------------------------
+A new assertion must be shown to FAIL against deliberately broken code before its
+green is believed. Two entries written on 7 Aug reported a REGRESSION against
+correct code: RG-0041 matched the ".catch(()=>{})" written inside the comment that
+documents the old bug, and RG-0044 counted occurrences of "return True" in a
+function whose second fail-safe exit is a ternary. Both were the check being wrong,
+not the app.
+
+The failure mode cuts both ways and the quiet one is worse: a check that cannot
+fail reports green forever and the ledger's whole promise — "it must STAY fixed" —
+becomes decoration. So, for every new entry:
+
+  * assert the PROPERTY, not a word count or a substring that might live in prose;
+  * strip comments before scanning code (a fix's own explanation usually quotes
+    the bug it fixed, verbatim);
+  * mutate the source in memory to break the fix, run the check, and confirm it
+    goes red — then confirm it is green against the real file.
+
+A tripwire that cries wolf gets ignored, and an ignored tripwire is worth less
+than no tripwire at all, because it also carries false comfort.
+
+INSTRUMENT vs APP (LEDGER-OFFLINE-1, 7 Aug 2026)
+-----------------------------------------------
+Network-backed checks report UNVERIFIED, never REGRESSION, when the machine
+running the ledger cannot reach the site at all — a cached preflight tells a
+transport failure apart from an HTTP answer (any status means the site replied).
+UNVERIFIED is loudly NOT a pass: messages still print and the run exits 2 (1 =
+a real regression, 0 = genuinely clean). Before this, a laptop with no route to
+the site produced 15 "REGRESSION: Tunnel connection failed" lines and the verdict
+"Do not deploy over this" — the instrument reported as the app.
+
 SCOPE — the ZA-then-global trap
 -------------------------------
 Every entry declares scope. Most fixes must hold for ALL markets. Checks iterate
@@ -58,31 +90,78 @@ LOCKED, OPEN = "LOCKED", "OPEN"
 _cache = {}
 
 
+# ── LEDGER-OFFLINE-1 (7 Aug 2026) ──────────────────────────────────────────
+# A machine with no route to the site made every network-backed entry report
+# "REGRESSION: Tunnel connection failed" — 15 of them in one run — and the ledger
+# closed with "Do not deploy over this." That is the cry-wolf failure: a tripwire
+# that reports the instrument as the app teaches you to ignore the tripwire. An
+# unreachable site is now UNVERIFIED, which is loudly NOT a pass (same rule as
+# LEDGER-FAULT-1 below: a skip is "unverified here", never "now passing").
+class ProbeOffline(Exception):
+    """The instrument cannot reach the site. Says nothing about the app."""
+
+
+_NET = {"ok": None, "why": ""}
+
+
+def _net_ready():
+    """One cached preflight. An HTTP status of any kind means the site answered and
+    every check is valid; only a TRANSPORT failure means we are blind."""
+    if _NET["ok"] is None:
+        try:
+            urllib.request.urlopen(
+                urllib.request.Request(BASE + "/health", headers=UA), timeout=TIMEOUT).read(1)
+            _NET["ok"] = True
+        except urllib.error.HTTPError:
+            _NET["ok"] = True          # 403/401/500 IS an answer — the site is reachable
+        except Exception as ex:
+            _NET["ok"] = False
+            _NET["why"] = repr(ex)[:140]
+    return _NET["ok"]
+
+
+def _require_net():
+    if not _net_ready():
+        raise ProbeOffline(_NET["why"])
+
+
 def _get(path):
     if path not in _cache:
+        _require_net()
         req = urllib.request.Request(BASE + path, headers=UA)
-        _cache[path] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        try:
+            _cache[path] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        except urllib.error.HTTPError:
+            raise
+        except Exception as ex:
+            raise ProbeOffline(repr(ex)[:140])
     return _cache[path]
 
 
 def _status(path):
     """HTTP status for an UNAUTHENTICATED request. Never cached, never raises on 4xx/5xx —
     403/401 are legitimate answers here (RG-0027: the pre-launch gate must refuse anonymous GETs)."""
+    _require_net()
     req = urllib.request.Request(BASE + path, headers=UA)
     try:
         return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
     except urllib.error.HTTPError as e:
         return e.code
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
 
 
 def _post_status(path, data=b""):
     """HTTP status for an UNAUTHENTICATED POST. Used by negative entries that assert a
     write endpoint refuses anonymous callers. Never raises on 4xx/5xx."""
+    _require_net()
     req = urllib.request.Request(BASE + path, data=data, headers=UA, method="POST")
     try:
         return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
     except urllib.error.HTTPError as e:
         return e.code
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
 
 
 def _json(path):
@@ -985,11 +1064,32 @@ def run():
     for e in LEDGER:
         try:
             out = e["fn"]() or []
+        except ProbeOffline as ex:
+            out = [(INFO, f"NOT EVALUATED - this machine cannot reach {BASE} ({ex}). "
+                          "An instrument limit, not a verdict on the app. Re-run where "
+                          "the site is reachable before trusting a green board.")]
         except Exception as ex:
             out = [(FAIL, f"check crashed (ledger fault, not necessarily the app): {ex!r}")]
         fails = [m for s, m in out if s == FAIL]
         infos = [m for s, m in out if s == INFO]
-        if e["state"] == LOCKED:
+        # LEDGER-OFFLINE-1: several checks catch their own transport errors and turn
+        # them into FAIL text, so they never reach the ProbeOffline handler above.
+        # Reclassify those ONLY when the preflight has PROVEN this machine is blind -
+        # when the site is reachable, every FAIL is treated as real, exactly as before.
+        # Nothing is hidden: the messages still print, and UNVERIFIED still exits non-zero.
+        if fails and _NET["ok"] is False and any(
+                k in m for m in fails
+                for k in ("ProbeOffline", "Tunnel connection failed", "URLError",
+                          "Connection refused", "Name or service not known",
+                          "Temporary failure in name resolution")):
+            infos = infos + ["NOT EVALUATED - evidence for this entry depends on reaching "
+                             + BASE + ", which this machine cannot do. The messages below are "
+                             "the instrument failing, not proof about the app."] + fails
+            fails = []
+            status = "UNVERIFIED"
+        elif (not fails) and any(s == INFO and "NOT EVALUATED" in m for s, m in out):
+            status = "UNVERIFIED"          # never counted as a pass
+        elif e["state"] == LOCKED:
             status = "REGRESSION" if fails else "HOLDING"
         else:
             # LEDGER-FAULT-1 (31 Jul 2026): outside the repo a repo-only OPEN check skips, produced
@@ -1006,20 +1106,22 @@ def main():
     results, took = run()
     n = lambda s: sum(1 for r in results if r["status"] == s)
     regressed, holding, open_, ready = n("REGRESSION"), n("HOLDING"), n("OPEN"), n("READY TO LOCK")
+    unver = n("UNVERIFIED")
 
     if "--json" in sys.argv:
         print(json.dumps({"date": datetime.date.today().isoformat(), "took_s": took,
                           "regressed": regressed, "holding": holding,
-                          "open": open_, "ready_to_lock": ready,
+                          "open": open_, "ready_to_lock": ready, "unverified": unver,
                           "entries": results}, indent=1))
-        return 1 if regressed else 0
+        return 1 if regressed else (2 if unver else 0)
 
     print(f"# Regression ledger — {datetime.date.today().isoformat()}  ({took}s · {BASE})")
     print()
     print(f"{len(results)} entries · {holding} holding · {regressed} REGRESSED · "
-          f"{open_} open · {ready} ready to lock")
+          f"{open_} open · {ready} ready to lock · {unver} UNVERIFIED")
     print()
-    mark = {"HOLDING": "  ok  ", "REGRESSION": " !!!! ", "OPEN": " open ", "READY TO LOCK": " LOCK "}
+    mark = {"HOLDING": "  ok  ", "REGRESSION": " !!!! ", "OPEN": " open ",
+            "READY TO LOCK": " LOCK ", "UNVERIFIED": " ???? "}
     for r in results:
         print(f"[{mark[r['status']]}] {r['id']}  {r['title']}")
         meta = f"scope: {r['scope']}"
@@ -1036,11 +1138,16 @@ def main():
     print()
     if regressed:
         print(f"RESULT: {regressed} previously-fixed issue(s) HAVE COME BACK. Do not deploy over this.")
+    elif unver:
+        print(f"RESULT: no regressions in what COULD be checked, but {unver} entr(ies) were NOT "
+              f"EVALUATED - this machine cannot reach {BASE}. That is not a green board. "
+              f"Re-run somewhere with a route to the site before deploying on this result.")
     elif ready:
         print(f"RESULT: no regressions. {ready} open item(s) now pass — promote them to LOCKED.")
     else:
         print(f"RESULT: every locked fix is holding. {open_} known defect(s) still open.")
-    return 1 if regressed else 0
+    # 1 = a real regression · 2 = blind (unverified) · 0 = genuinely clean
+    return 1 if regressed else (2 if unver else 0)
 
 
 @entry("RG-0027", "The pre-launch gate is enforced by the EDGE, not by JavaScript",
@@ -1162,6 +1269,35 @@ def rg_origin_refuses_direct():
                               "cut the legitimate path too; check the Cloudflare ranges are current"))
     except Exception as ex:
         out.append((FAIL, "/health unreachable through Cloudflare after origin lockdown: " + repr(ex)))
+    return out
+
+
+@entry("RG-0029", "The reviewer token gate ENFORCES at the origin: anonymous data requests get 401",
+       OPEN, scope="every data endpoint (GATE-ENFORCE-1 / migrations/007); /health stays 200",
+       ref="Planned 5 Aug 2026 with GATE-ENFORCE-1 but NEVER ADDED -- the class failure this "
+           "exposes is the UNASSERTED FIX: the app half (ts_review cookie + /review/verify) "
+           "shipped and works, but migration 007 (nginx auth_request on the data API) never "
+           "took effect, and with no assertion here the gap was invisible. The Cloudflare "
+           "IP-only scaffolding rule masked it by blocking everyone until 7 Aug (DW-019/DW-023). "
+           "Added 7 Aug 2026 as OPEN so the gap is machinery-visible from today: expected to "
+           "FAIL until migration 007 is applied over SSH (DW-020), then READY TO LOCK.")
+def rg_origin_gate_enforces():
+    out = []
+    try:
+        code = _status("/wonders")
+    except Exception as ex:
+        return [(FAIL, "/wonders unreachable while probing the gate: " + repr(ex))]
+    if code == 200:
+        out.append((FAIL, "anonymous GET /wonders answered 200 -- the origin token gate is NOT "
+                          "enforcing; the reviewer curtain is client-side only"))
+    elif code not in (401, 403):
+        out.append((FAIL, "anonymous GET /wonders answered %d -- neither open nor gated" % code))
+    try:
+        if _status("/health") != 200:
+            out.append((FAIL, "/health no longer answers 200 -- the gate exemption list is wrong "
+                              "(deploy rollback and external monitoring both depend on it)"))
+    except Exception as ex:
+        out.append((FAIL, "/health unreachable: " + repr(ex)))
     return out
 
 
@@ -1439,6 +1575,194 @@ def rg_account_binding():
         out.append((FAIL, "accept/decline intro lost the listing-owner gate (BIND-OWNER-1)"))
     if 'p.get("scope") != "user"' not in src:
         out.append((FAIL, "the session check no longer rejects non-user scopes -- the shared review token could charge accounts"))
+    return out
+
+
+@entry("RG-0040", "A photo is judged by its BYTES, never by the browser's declared type",
+       LOCKED, scope="bea_main.py PHOTO-TYPE-1 — all four upload gates",
+       fixed_on="2026-08-07",
+       ref="TS-0025 (Maroushka, 7 Aug 2026) + TS-0012 before it. The gate compared the "
+           "client-supplied Content-Type against an allow-list. Windows and Android send "
+           "application/octet-stream (or nothing) for a .heic straight off an iPhone, so a photo "
+           "pillow-heif could decode perfectly was refused — and refused with 'Only JPEG, PNG or "
+           "WebP photos accepted', which was ALSO false whenever the HEIF wheel was present. "
+           "Now a supported or generic/blank declared type passes to Image.open(), which is the "
+           "real validator, and every rejection names what we actually accept. 10/10 offline "
+           "cases pass, including ct=application/octet-stream + IMG_1.HEIC (her exact case).")
+def rg_photo_type():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- photo type check skipped")]
+    out = []
+    for tok, why in (
+        ("def _photo_type_ok", "the byte-honest gate helper is gone"),
+        ("def _is_heic_bytes", "the ISO-BMFF brand sniff is gone"),
+        ("def _photo_reject_msg", "the honest rejection message helper is gone"),
+        ("def _photo_decode_msg", "the actionable decode-failure helper is gone"),
+    ):
+        if tok not in src:
+            out.append((FAIL, "PHOTO-TYPE-1 rotted: " + why))
+    n = src.count("if not _photo_type_ok(")
+    if n < 4:
+        out.append((FAIL, f"only {n} upload gates use the byte-honest check (need 4)"))
+    if 'detail="Only JPEG, PNG or WebP' in src:
+        out.append((FAIL, "a gate went back to the lying hard-coded rejection message"))
+    if 'detail="Could not read image file"' in src:
+        out.append((FAIL, "a decode failure went back to the blanket message -- a HEIC-with-no-wheel "
+                          "reads as a corrupt file and the seller is sent away with no way forward"))
+    return out
+
+
+@entry("RG-0041", "A photo that does not upload always SAYS SO — silence is the bug",
+       LOCKED, scope="ms.js — batch publish (sobGoLive) + single-photo advert path",
+       fixed_on="2026-08-07",
+       ref="TS-0026 (Maroushka, 7 Aug 2026): 'the pictures didn't pull through, there was no "
+           "notice to inform me'. The batch loop surfaced ONLY HTTP 422; a 400 (a format the "
+           "server could not decode) and a dropped request both vanished, and the single-photo "
+           "path swallowed everything with .catch(()=>{}). The advert published photo-less and "
+           "said nothing. Both paths now report every failure with the photo number and the "
+           "server's own reason. NOTE the declaration guard below: the first cut of this fix "
+           "pushed to _photoFails without ever declaring it — syntax passed, runtime would have "
+           "thrown ReferenceError and broken publish outright. Verified by brace-depth proof.")
+def rg_photo_failure_visible():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "running outside the repo -- photo failure check skipped")]
+    out = []
+    if "const _photoFails=[]" not in src.replace(" ", "").replace("const_photoFails=[]", "const _photoFails=[]"):
+        if "const _photoFails" not in src:
+            out.append((FAIL, "_photoFails is USED but never DECLARED -- publish throws "
+                              "ReferenceError at the first failing photo"))
+    if src.count("_photoFails") < 5:
+        out.append((FAIL, "the batch-publish failure collector was removed -- photos fail silently again"))
+    # Scan CODE only. v1 of this check matched the ".catch(()=>{})" written inside the
+    # comment that documents the old bug, and reported a regression against a correct
+    # file -- a tripwire that cries wolf gets ignored, which is worse than no tripwire.
+    win = src.split("3. Upload photo if provided")[-1][:900]
+    code = "\n".join(l for l in win.split("\n") if not l.lstrip().startswith("//"))
+    if ".catch(()=>{})" in code:
+        out.append((FAIL, "the single-photo advert path swallows failures again"))
+    if "const _pr1" not in code or "showToast(" not in code:
+        out.append((FAIL, "the single-photo advert path lost its failure notice"))
+    return out
+
+
+@entry("RG-0042", "The ops self-check publishes FACTS and never a secret",
+       LOCKED, scope="bea_main.py SELFCHECK-1 — GET /ops/selfcheck (API-key gated)",
+       fixed_on="2026-08-07",
+       ref="David, 7 Aug 2026. A session cannot open an SSH tunnel to the box, so every "
+           "'is that dependency actually installed / is the flag actually on / did the deploy "
+           "actually land' question cost a manual round-trip and several of them were answered "
+           "by inference instead of evidence. This endpoint answers them over one authenticated "
+           "HTTPS GET. Its whole value depends on it staying safe to call, so the tripwire "
+           "asserts it never grows a key, token or customer field.")
+def rg_selfcheck():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- selfcheck check skipped")]
+    out = []
+    if '@app.get("/ops/selfcheck")' not in src:
+        out.append((FAIL, "SELFCHECK-1 endpoint is gone -- server questions go back to guesswork"))
+    if "def _ops_counter" not in src:
+        out.append((FAIL, "the since-boot 5xx counter middleware is gone"))
+    if "Depends(auth.require_api_key)" not in src.split("/ops/selfcheck")[-1][:700]:
+        out.append((FAIL, "/ops/selfcheck lost its API-key gate -- it would be world-readable"))
+    body = src.split('@app.get("/ops/selfcheck")')[-1].split("\n@app.")[0]
+    for bad in ("API_KEY", "_KEY\"", "SECRET", "PASSWORD", "seller_email", "reporter_email",
+                "real_email", "ANTHROPIC", "RESEND_API"):
+        if bad in body:
+            out.append((FAIL, f"/ops/selfcheck now references {bad!r} -- it must publish facts, "
+                              "never secrets or customer data"))
+    return out
+
+
+@entry("RG-0043", "Every client upload to a key-guarded endpoint actually carries the key",
+       LOCKED, scope="ms.js — all POSTs to /users/{email}/documents (Agent Hub, My Space, batch publish)",
+       fixed_on="2026-08-07",
+       ref="TS-0013 (Maroushka, 5 Aug 2026): 'Found the place where I can update my "
+           "qualifications, but it doesn't allow me do upload it or verify my status as an agent "
+           "at the agency I'm at.' The Agent Hub credential upload was the ONE /documents POST in "
+           "the app that omitted the X-Api-Key header, against a route guarded by "
+           "Depends(auth.require_api_key) — so it returned 401 on every attempt, for every user, "
+           "since the day it shipped. It was never a permissions or account problem: that button "
+           "could not have worked for anybody. The sibling calls at the batch-publish and My Space "
+           "paths always sent the header, which is why the fault looked user-specific.")
+def rg_documents_key():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "running outside the repo -- documents key check skipped")]
+    import re as _re
+    out = []
+    posts = 0
+    for m in _re.finditer(r"fetch\(\s*BEA_URL\s*\+\s*'/users/'[^;]{0,300}", src, _re.S):
+        seg = m.group(0)
+        if "/documents" not in seg or "/documents/public" in seg:
+            continue
+        if "method:'POST'" not in seg.replace(" ", "") :
+            continue
+        posts += 1
+        if "X-Api-Key" not in seg:
+            ln = src[:m.start()].count("\n") + 1
+            out.append((FAIL, f"ms.js:{ln} POSTs a document without X-Api-Key -- the server "
+                              "guards that route, so it 401s every time and the seller is simply "
+                              "told the upload failed"))
+    if posts < 3:
+        out.append((FAIL, f"only {posts} guarded document POSTs found (expected 3) -- a upload "
+                          "path was removed or rewritten; re-check the key on each"))
+    return out
+
+
+@entry("RG-0044", "A photo is REFUSED rather than blurred into ruin",
+       LOCKED, scope="bea_main.py PHOTO-REPLACE-1 — _anon_blur_until_clean correction loop + last-resort rung",
+       fixed_on="2026-08-07",
+       ref="TS-0022 (Maroushka, 7 Aug 2026) — third report of the same complaint after TS-0007 "
+           "and TS-0008, which is why it was a doctrine change and not another patch. The blur "
+           "was already minimal and vision-driven; the sprawl came from the rule that the "
+           "pipeline may NEVER reject a photo (David, 15 Jul: 'ugly-but-anonymous beats "
+           "rejected'), so it escalated instead - four correction rounds each painting on top of "
+           "the last, then a last-resort rung blurring every region ever accumulated. David "
+           "reversed it 7 Aug in Maroushka's own terms: 'if we cant blurr a photo enough and it "
+           "starts looking bad, then we should request a replacement rather.' Coverage is "
+           "measured by UNION rasterise so the same plate boxed across four rounds counts ONCE - "
+           "summing box areas would refuse good photos. Offline: plate 2.5%, plate+strip 4.6%, "
+           "same plate x4 still 2.5%, half-facade 61% (refused). This direction CANNOT weaken "
+           "anonymity: refusing a photo cannot leak what the blur failed to hide.")
+def rg_photo_replace():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- photo replace check skipped")]
+    out = []
+    for tok, why in (
+        ("def _anon_blur_fraction", "the coverage measure is gone"),
+        ("def _anon_replace_enabled", "the fail-safe switch reader is gone"),
+        ("_ANON_REPLACE_TAG", "the sentinel label the callers translate is gone"),
+        ("photo_replace_request", "the launch switch column is gone"),
+    ):
+        if tok not in src:
+            out.append((FAIL, "PHOTO-REPLACE-1 rotted: " + why))
+    if src.count("_ANON_MAX_BLUR_FRAC") < 4:
+        out.append((FAIL, "the frame-coverage ceiling is no longer consulted at every rung (need "
+                          "the constant, the env override, the loop guard and the last-resort guard)"))
+    if "return None, labels + [_ANON_REPLACE_TAG]" not in src:
+        out.append((FAIL, "the pipeline no longer asks for a replacement -- it is back to "
+                          "escalating the blur until the photo is ruined"))
+    # Assert the PROPERTY, not a word count. v1 of this check required two literal
+    # "return True" lines and failed against correct code whose no-row branch is a
+    # ternary (`... if row else True`). A tripwire that cries wolf gets ignored, so
+    # both fail-safe exits are named explicitly here.
+    blk = src.split("def _anon_replace_enabled")[-1][:900]
+    if "else True" not in blk:
+        out.append((FAIL, "_anon_replace_enabled no longer defaults ON when the switch row is "
+                          "missing -- a fresh or half-migrated DB would restore the over-blur "
+                          "behaviour silently"))
+    if "except Exception:" not in blk or "return True" not in blk.split("except Exception:")[-1][:120]:
+        out.append((FAIL, "_anon_replace_enabled no longer defaults ON when the DB read raises -- "
+                          "a hiccup (or a row predating the column) would restore the over-blur "
+                          "behaviour silently"))
+    if "without blurring so much of it" not in src:
+        out.append((FAIL, "the replacement request lost its honest wording -- the seller is told "
+                          "'could not blur' again, which sends them back to retake a photo that "
+                          "would fail in exactly the same way"))
     return out
 
 

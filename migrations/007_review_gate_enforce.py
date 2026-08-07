@@ -69,6 +69,14 @@ BLOCK = (
     "    location = /review/verify   { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n"
     "    location = /health          { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n"
     "    location = /payment/webhook { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n"
+    # MACHINE-TO-MACHINE EXEMPTIONS (added 7 Aug 2026, before first apply). These are called by
+    # Cloudflare Workers, never by a browser, so they can NEVER carry a ts_review cookie — gating
+    # them would 401 the inbound-mail triage lane (live since Session 94) and the introduction
+    # relay (INTRO-RELAY-1). Both authenticate themselves with their own shared secret exactly as
+    # /payment/webhook does (X-Inbound-Secret / X-Relay-Secret, constant-time checked in the app),
+    # so exempting them at nginx removes no protection — the app still refuses a wrong secret.
+    "    location = /email/inbound   { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n"
+    "    location = /intro/relay     { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n"
     "    location ^~ /.well-known/   { proxy_pass http://127.0.0.1:8000; " + HDRS + " }\n\n"
     "    # " + MARK + " gated catch-all (API): every other path needs a valid review cookie\n"
     "    location / {\n"
@@ -111,7 +119,8 @@ def main():
     if r.returncode != 0:
         say("reload FAILED — restoring backup"); say((r.stderr or "")[:400])
         shutil.copyfile(backup, real); subprocess.run(["nginx", "-s", "reload"]); return 6
-    say("GATE LIVE. Data API now requires a valid review cookie; login/health/webhook/acme exempt.")
+    say("GATE LIVE. Data API needs a valid review cookie; exempt: login/verify, health, "
+        "payment webhook, acme, email-inbound, intro-relay (worker lanes, own secrets).")
     say("Rollback: cp %s %s && nginx -t && nginx -s reload" % (backup, real))
     return 0
 

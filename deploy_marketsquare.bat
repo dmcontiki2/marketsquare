@@ -90,12 +90,30 @@ if errorlevel 1 (
 :gates_done
 
 :: -- [4/6] Commit the working tree (deploying == committing, FEA-DRIFT guard) -
+:: DW-026 FIX (7 Aug 2026): "git commit" returns errorlevel 1 for TWO different
+:: things - "nothing to commit" (benign) and "the commit FAILED" (catastrophic).
+:: This step treated both as benign and pushed anyway. On 7 Aug a stale .git/HEAD.lock
+:: made the commit fail, the batch pushed the PREVIOUS commit as the deploy ref, the
+:: server deployed that, health-checked green and reported SUCCESS - a whole session's
+:: work never shipped and nothing said so. Staged-ness tells them apart: after a
+:: successful commit the index is clean; after a failed one the changes are still there.
 git add -A
-git commit -m "Release %DATE% %TIME%" >nul 2>&1
+git diff --cached --quiet
 if errorlevel 1 (
-    echo  [4/6] Working tree already clean - releasing the current commit.
-) else (
+    git commit -m "Release %DATE% %TIME%" >nul 2>&1
+    git diff --cached --quiet
+    if errorlevel 1 (
+        echo  ERROR: the commit FAILED - your changes are STILL STAGED.
+        echo         NOTHING was released. Do not re-run until this is cleared.
+        echo         Usual cause is a stale git lock left by a dead process:
+        echo            del /f /q .git\HEAD.lock
+        echo            del /f /q .git\index.lock
+        echo         Then run this again. ^(DW-026^)
+        goto :release_lock_fail
+    )
     echo  [4/6] Committed the working tree.
+) else (
+    echo  [4/6] Working tree already clean - releasing the current commit.
 )
 git log -1 --oneline
 

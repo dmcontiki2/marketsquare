@@ -150,20 +150,36 @@ def _newest_iso_date(text, not_after=None):
 
 
 def _newest_changelog_date(text):
-    """Newest '## DD Mon YYYY' header date (CHANGELOG.md)."""
+    """Newest header date in CHANGELOG.md — accepts BOTH house formats.
+
+    GATE-ISOdate-1 (7 Aug 2026): this read only '## DD Mon YYYY' and was therefore
+    blind to every entry scripts/changelog_compile.py writes, which are ISO
+    ('## 2026-08-07 (evening) - ...'). The gate's core rule is David's own -- "a
+    ship that is not recorded did not happen" -- and it was silently answering it
+    from whatever old hand-typed entry happened to be newest, reporting 2026-08-03
+    on a CHANGELOG whose top line was 2026-08-07. It still passed, but only via the
+    weaker `CHANGELOG.md is dirty` fallback, i.e. right answer, wrong reason. An
+    instrument that cannot see the thing it is asked to check is worse than no
+    instrument, because its green carries false comfort."""
     best = None
     for line in (text or "").splitlines():
+        cur = None
         m = re.match(r"^\s*#{1,3}\s+(\d{1,2})\s+([A-Za-z]{3,})\s+(20\d{2})", line)
-        if not m:
-            continue
-        mon = MONTHS.get(m.group(2)[:3].lower())
-        if not mon:
-            continue
-        try:
-            cur = date(int(m.group(3)), mon, int(m.group(1)))
-        except ValueError:
-            continue
-        if best is None or cur > best:
+        if m:
+            mon = MONTHS.get(m.group(2)[:3].lower())
+            if mon:
+                try:
+                    cur = date(int(m.group(3)), mon, int(m.group(1)))
+                except ValueError:
+                    cur = None
+        else:
+            m = re.match(r"^\s*#{1,3}\s+(20\d{2})-(\d{2})-(\d{2})", line)
+            if m:
+                try:
+                    cur = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                except ValueError:
+                    cur = None
+        if cur and (best is None or cur > best):
             best = cur
     return best
 

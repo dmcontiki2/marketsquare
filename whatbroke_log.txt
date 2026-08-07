@@ -1,0 +1,66 @@
+scp rc=0 
+ssh rc=0
+=== FAULT QUEUE (latest 25) ===
+TS-0026   new              major    2026-08-07 09:17   I reported a format issue with this listing, and upon furthe
+            by: miconradie1
+TS-0025   new              major    2026-08-07 09:02   The format of the pictures are heic format again, and it see
+            by: miconradie1
+TS-0024   new              major    2026-08-07 08:35   Tried to list a property using the AI coach, it told me the 
+            by: miconradie1
+TS-0023   new              major    2026-08-07 08:15   Thank you for sorting the parking option out. It's perfect
+            by: miconradie1
+TS-0022   new              major    2026-08-07 08:14   This censoring issue is still not sorted out, the cover phot
+            by: miconradie1
+TS-0021   new              major    2026-08-05 09:13   We need to review these services, for value added, which AI 
+            by: dmcontiki2
+TS-0020   verified         major    2026-08-05 09:05   How is credentials added here?  And does it then update the 
+            by: dmcontiki2
+TS-0019   verified         major    2026-08-05 09:03   Spelling, it should say Waterkloof
+            by: dmcontiki2
+TS-0018   new              major    2026-08-05 08:59   If we dont use this, can we remove it?
+            by: dmcontiki2
+TS-0017   verified         major    2026-08-05 08:54   Info disappearing out of the screen and then also text movin
+            by: dmcontiki2
+TS-0016   verified         major    2026-08-05 08:52   Here is plenty of offline/failed items.  Could it be possibl
+            by: dmcontiki2
+TS-0015   verified         major    2026-08-05 08:50   Some overlap, hiding info inside the Hetzner block.
+            by: dmcontiki2
+TS-0014   verified         major    2026-08-05 08:48   Buyers and sellers overlap, hiding info
+            by: dmcontiki2
+TS-0013   new              major    2026-08-05 07:08   Found the place where I can update my qualifications, but it
+            by: miconradie1
+TS-0012   verified         major    2026-08-05 06:54   None of the apartment photos that I uploaded is displaying, 
+            by: miconradie1
+TS-0011   verified         major    2026-08-05 06:40   I asked for AI assistance to improve my trust score, and it 
+            by: miconradie1
+TS-0010   verified         major    2026-08-05 06:36   I uploaded my ID previously and it stated that it was under 
+            by: miconradie1
+TS-0009   verified         major    2026-08-05 06:32   I need a option that says when it's just parking and not jus
+            by: miconradie1
+TS-0008   verified         major    2026-08-05 06:30   Censoring is blocking out too much of the photo again
+            by: miconradie1
+TS-0007   verified         major    2026-08-05 06:18   The censor block is too big and it's blocking too much of th
+            by: miconradie1
+TS-0006   new              major    2026-08-04 18:35   This photo is a duplicate (too close to the first image of t
+            by: davidconradie1234
+TS-0005   verified         major    2026-08-04 18:26   We did add the Tour agent afterwards and only need this word
+            by: dmcontiki2
+TS-0004   verified         major    2026-08-04 18:24   The photo of the honey bottle has "misty forest" which is a 
+            by: dmcontiki2
+TS-0003   verified         major    2026-08-04 18:19   The view button does not work when clicked
+            by: dmcontiki2
+TS-0002   verified         major    2026-08-04 17:56   View button doesnt work when clicked
+            by: dmcontiki2
+
+=== APP ERRORS TODAY (listing/edit/auth/publish) ===
+
+=== ALL TRACEBACK LINES TODAY (last 20) ===
+
+=== SIGN-IN ACTIVITY TODAY ===
+Aug 07 08:29:40 ubuntu-4gb-nbg1-1 uvicorn[2955521]: ERROR:bea:login email (resend) HTTP 422: {"statusCode":422,"name":"validation_error","message":"Invalid `from` field. The email address needs to follow the `email@example.com` or `Name <email@example.com>` format."} -- falling back to Gmail SMTP
+Aug 07 08:29:41 ubuntu-4gb-nbg1-1 uvicorn[2955521]: INFO:     172.68.140.140:0 - "POST /auth/request-link HTTP/1.0" 200 OK
+
+=== SERVICE STATE ===
+active
+ 14:01:05 up 71 days, 11:40, 2 users, load average: 0.08, 0.02, 0.01
+

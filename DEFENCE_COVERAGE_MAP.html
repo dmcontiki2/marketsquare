@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustSquare Defence Coverage Map — 7 Aug 2026</title>
+<style>
+:root{--bg:#0d1424;--card:#141d33;--ink:#e8edf7;--dim:#8fa0bf;
+--green:#2ecc71;--blue:#4da3ff;--amber:#f5a623;--red:#e74c3c;--grey:#7f8ca3;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 'Segoe UI',system-ui,sans-serif;padding:28px}
+h1{font-size:26px;margin-bottom:2px}
+.sub{color:var(--dim);margin-bottom:18px;font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;background:var(--card);border-radius:10px;padding:12px 16px;margin-bottom:22px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:13px}
+.dot{width:13px;height:13px;border-radius:50%;flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.col{background:var(--card);border-radius:12px;padding:16px}
+.col h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
+border-bottom:1px solid #26314d;padding-bottom:8px;margin-bottom:12px}
+.item{border-left:4px solid var(--grey);background:#0f1830;border-radius:0 8px 8px 0;
+padding:9px 12px;margin-bottom:9px}
+.item b{font-size:14px;display:block}
+.item .w{color:var(--dim);font-size:12px;margin-top:2px}
+.g{border-color:var(--green)} .b{border-color:var(--blue)} .a{border-color:var(--amber)}
+.r{border-color:var(--red)} .n{border-color:var(--grey)}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:9px;margin-left:6px;vertical-align:1px}
+.cg{background:#123524;color:var(--green)} .cb{background:#122a45;color:var(--blue)}
+.ca{background:#3a2c10;color:var(--amber)} .cr{background:#3a1512;color:var(--red)}
+.cn{background:#232c3f;color:var(--grey)}
+.foot{color:var(--dim);font-size:12px;margin-top:20px}
+</style></head><body>
+<h1>TrustSquare Defence Coverage Map</h1>
+<div class="sub">Snapshot 7 Aug 2026, post CF-gate incident · living truth = <b>scripts/regression_ledger.py</b> (39 entries) + <b>DAILY_WATCH/OPEN_ITEMS.md</b></div>
+
+<div class="legend">
+<div><span class="dot" style="background:var(--green)"></span><b>ARMED + ASSERTED</b>&nbsp;— working now AND a ledger assertion trips red if it rots</div>
+<div><span class="dot" style="background:var(--blue)"></span><b>ARMED, UNASSERTED</b>&nbsp;— working, but only trust says so (today's lesson class)</div>
+<div><span class="dot" style="background:var(--amber)"></span><b>DEGRADED / UNVERIFIABLE</b>&nbsp;— instrument or lane down</div>
+<div><span class="dot" style="background:var(--red)"></span><b>OPEN VULNERABILITY</b>&nbsp;— known gap, tracked, not yet closed</div>
+<div><span class="dot" style="background:var(--grey)"></span><b>ACCEPTED POSTURE</b>&nbsp;— deliberate, with reason on file</div>
+</div>
+
+<div class="grid">
+<div class="col"><h2>1 · Edge (Cloudflare)</h2>
+<div class="item g"><b>TLS certificate <span class="chip cg">GREEN</span></b><div class="w">48 days remaining · watched daily by /pulse in the watch</div></div>
+<div class="item g"><b>Edge serves origin content, not stale cache <span class="chip cg">GREEN</span></b><div class="w">RG-0024 (edge stamp = origin stamp) · burned once on /terms v1.3</div></div>
+<div class="item n"><b>IP-allowlist scaffolding REMOVED <span class="chip cn">BY DESIGN</span></b><div class="w">Disabled 7 Aug (DW-019 closed) — it locked out David + testers when his IP rotated. Kept disabled, not deleted</div></div>
+</div>
+
+<div class="col"><h2>2 · Origin server</h2>
+<div class="item g"><b>Cloudflare is the ONLY way in <span class="chip cg">GREEN</span></b><div class="w">RG-0028 origin firewall · holding 7 Aug</div></div>
+<div class="item r"><b>Reviewer token gate NOT enforcing <span class="chip cr">OPEN VULN</span></b><div class="w">RG-0029 (added 7 Aug, OPEN) + DW-023 · migration 007 written, unapplied · data endpoints answer anonymously · fix blocked by SSH</div></div>
+<div class="item a"><b>SSH lane DOWN <span class="chip ca">DEGRADED</span></b><div class="w">DW-020 · port 22 timeout · blocks: gate fix, server sensors, smoke, RED-alert email · next fix in line</div></div>
+</div>
+
+<div class="col"><h2>3 · Application locks</h2>
+<div class="item g"><b>No third-party scripts on app pages <span class="chip cg">GREEN</span></b><div class="w">RG-0025 (the Drive breach lock, inverted 3 Aug) · verified live 7 Aug · unpkg/Leaflet sole exception</div></div>
+<div class="item g"><b>Admin auth fails closed <span class="chip cg">GREEN</span></b><div class="w">JWT-HARDEN-1 · live since 5 Aug</div></div>
+<div class="item g"><b>KYC fetch SSRF-safe · spend reserved pre-dispatch · identity by session · relay divulges nothing <span class="chip cg">GREEN</span></b><div class="w">RG-0036 / RG-0037 / RG-0039 / RG-0038 · all holding 7 Aug</div></div>
+<div class="item g"><b>Tester fault channel fail-closed <span class="chip cg">GREEN</span></b><div class="w">RG-0030 · unauthenticated POST refused · verified 7 Aug</div></div>
+<div class="item b"><b>Reviewer cookie + /review/verify (app half of the gate) <span class="chip cb">UNASSERTED</span></b><div class="w">Works (verified by hand 7 Aug: anonymous → 401) but no ledger entry of its own — RG-0029 will cover the pair once locked</div></div>
+</div>
+
+<div class="col"><h2>4 · Data exposure</h2>
+<div class="item n"><b>Demo/listing data publicly readable <span class="chip cn">ACCEPTED · TEMP</span></b><div class="w">Pre-5-Aug posture restored while RG-0029 is open · was the deliberate norm for months · becomes UNACCEPTABLE at launch</div></div>
+<div class="item r"><b>240 listings: no country field · 2 city/country mismatches <span class="chip cr">OPEN</span></b><div class="w">RG-0003 / RG-0004 · known data-quality debt, expected-fail entries</div></div>
+</div>
+
+<div class="col"><h2>5 · Monitoring &amp; alerting</h2>
+<div class="item g"><b>Regression ledger — 39 executable assertions <span class="chip cg">GREEN</span></b><div class="w">The memory that outlives sessions · 36 holding, 3 honestly open · any locked fix that rots goes red next run</div></div>
+<div class="item a"><b>Daily watch 06:30 — single point, desktop-bound <span class="chip ca">FRAGILE</span></b><div class="w">DW-022: missed 6 Aug (app closed) · DW-003: no intraday tick — a daytime outage waits for morning</div></div>
+<div class="item a"><b>RED-alert email path <span class="chip ca">BROKEN</span></b><div class="w">DW-016 re-opened · rides SSH to the monitored server itself — circular · restored when DW-020 closes</div></div>
+<div class="item r"><b>External uptime monitor <span class="chip cr">NOT BUILT</span></b><div class="w">The answer to the 12-hour blind spot: third-party pings every 5 min, pages David's phone, owes nothing to desktop/app/server · NOW UNBLOCKED (edge open) · next after SSH</div></div>
+</div>
+
+<div class="col"><h2>6 · Recovery</h2>
+<div class="item g"><b>ONE deploy engine: manifest, monotonic cache-bust, health-check, AUTO-ROLLBACK <span class="chip cg">GREEN</span></b><div class="w">RG-0023 trips red on any rogue deploy path · /health exempt from every gate so rollback always sees truth</div></div>
+<div class="item b"><b>Backups: repo mirror + DB + assets, 7 daily / 4 weekly <span class="chip cb">UNASSERTED</span></b><div class="w">/backup exists and ran · restore-test is periodic, not asserted — "an untested backup is a hope"</div></div>
+</div>
+</div>
+
+<div class="foot"><b>The one rule this map exists to enforce:</b> nothing counts as covered until it is BOTH armed and asserted.
+Blue is the danger color on this board — blue is where the next 5-Aug hides. Two blues remain; both have a path to green.</div>
+</body></html>

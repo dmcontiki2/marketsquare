@@ -1,42 +1,18 @@
 {
  "date": "2026-08-07",
- "took_s": 8.5,
+ "took_s": 13.5,
  "findings": [
   {
-   "sev": "CRITICAL",
-   "area": "endpoints",
-   "id": "EP-/ai/health",
-   "msg": "/ai/health unreachable: HTTP Error 403: Forbidden"
-  },
-  {
-   "sev": "CRITICAL",
-   "area": "endpoints",
-   "id": "EP-/demo-listings",
-   "msg": "/demo-listings unreachable: HTTP Error 403: Forbidden"
-  },
-  {
-   "sev": "CRITICAL",
-   "area": "endpoints",
-   "id": "EP-/demo-sellers",
-   "msg": "/demo-sellers unreachable: HTTP Error 403: Forbidden"
-  },
-  {
-   "sev": "CRITICAL",
-   "area": "endpoints",
-   "id": "EP-/support",
-   "msg": "/support unreachable: HTTP Error 403: Forbidden"
-  },
-  {
-   "sev": "CRITICAL",
+   "sev": "INFO",
    "area": "demo",
-   "id": "DEMO-FETCH",
-   "msg": "demo feeds unreadable: HTTP Error 403: Forbidden"
+   "id": "DEMO-PLACEHOLDERS",
+   "msg": "3 'coming soon' placeholder listings present (by design; verify they stay out of counts)"
   },
   {
-   "sev": "CRITICAL",
+   "sev": "INFO",
    "area": "drift",
-   "id": "INDEX-FETCH",
-   "msg": "live index unreachable: HTTP Error 403: Forbidden"
+   "id": "VERSION-KEY",
+   "msg": "repo html pins ms.js v432, live pins v446 (deploy pending)"
   }
  ]
 }
