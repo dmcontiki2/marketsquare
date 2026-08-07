@@ -30,8 +30,12 @@ export default {
   async email(message, env, ctx) {
     try {
       const toAlias = (message.to || "").toLowerCase();
+      // v2 (found live, 5 Aug 2026): the zone has ONE catch-all, so this worker is
+      // also the router for ordinary mail — forward it to the owner's inbox, the
+      // exact behaviour the old catch-all had. Relay mail continues below.
       if (!toAlias.startsWith("intro-")) {
-        message.setReject("Unknown recipient");
+        try { await message.forward("dmcontiki2@gmail.com"); }
+        catch (e) { message.setReject("Recipient unavailable"); }
         return;
       }
 

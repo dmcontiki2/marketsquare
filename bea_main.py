@@ -4601,7 +4601,13 @@ def _relay_forward(to_real: str, from_alias: str, subject: str, body: str) -> bo
         import httpx as _hx
         r = _hx.post("https://api.resend.com/emails",
             headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-            json={"from": "TrustSquare Intro <%s>" % from_alias,
+            json={
+                  # RELAY-FROM-1 (5 Aug 2026, found at the Resend paywall): a second
+                  # verified domain costs $20/mo; the FREE and deliverability-superior
+                  # route sends From the already-verified mail domain while the ALIAS
+                  # rides Reply-To — replying still goes through the curtain, and no
+                  # real address appears anywhere. Anonymity identical, cost zero.
+                  "from": ai_provider.envkey("RELAY_FROM") or "TrustSquare Intro <intro@mail.trustsquare.co>",
                   "to": [to_clean],
                   "subject": _relay_sanitize_subject(subject) or "TrustSquare introduction",
                   "text": (body or "")[:_RELAY_MAX_BODY],

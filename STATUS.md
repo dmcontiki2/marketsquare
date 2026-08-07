@@ -5,6 +5,12 @@
 
 ## Current Session
 
+- PARKED 5 Aug evening (David's call, reminder set for 08:00 6 Aug): CF rail is BUILT
+  (subdomain + worker v2 router + secret both sides + catch-all wired; Resend step
+  deleted via RELAY-FROM-1 — verified-domain From, alias Reply-To, $0). Remaining:
+  /tsl (ships RELAY-FROM-1, safe — flag OFF), Peer round 3, then flip both rails +
+  two-party drill. Check: marketplace mode back to Launch—Free only?
+
 ## 2026-08-05 — AIK-VERIFY-1: people report, machines verify (David's ruling)
 
 - **Doctrine amended** (MAINTENANCE_AGENT.md + FAULT_REGISTER.md): the month's evidence

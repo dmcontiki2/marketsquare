@@ -1401,7 +1401,7 @@ def rg_intro_relay():
         ("intro_relay_aliases", "the alias mapping table is gone"),
         ("def _intro_relay_enabled", "the fail-closed flag reader is gone"),
         ('@app.post("/intro/relay")', "the relay inbound endpoint is gone"),
-        ('"TrustSquare Intro <%s>" % from_alias', "the forward no longer sends From an ALIAS"),
+        ('"reply_to": from_alias', "the forward lost its alias Reply-To -- replies would leave the curtain (RELAY-FROM-1)"),
         ('from_addr != counter["real_email"]', "the enrolled-parties-only check is gone"),
         ('ai_provider.envkey("RELAY_INBOUND_SECRET")', "the secret read lost its ENVKEY-1 fallback -- os.getenv is empty on the server (systemd does not export .env), so the rail would silently report unconfigured"),
         ('_b_alias if _relay_on else intro["buyer_email"]', "the accept webhook can leak the raw buyer email under the relay again"),
