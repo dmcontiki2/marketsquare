@@ -97,7 +97,18 @@ if str(tmpl["category"] or "") != CATEGORY:
     sys.exit(f"template {TEMPLATE_ID} is category '{tmpl['category']}', expected "
              f"'{CATEGORY}' — aborting rather than cloning the wrong shape")
 live_cols = set(dict(tmpl).keys())
+# NOT-NULL GUARD (8 Aug 2026): the first --apply run died on
+#   sqlite3.IntegrityError: NOT NULL constraint failed: listings.rental_status
+# Some clone-junk columns are declared NOT NULL, so blanking them to None is an
+# invalid write, not a clean one. Ask the live schema which columns tolerate NULL
+# and only blank those; a NOT NULL column keeps the template's own value, which is
+# always a legal value for that column. Self-adjusting: any future NOT NULL column
+# is handled without another edit here.
+nullable = {r["name"] for r in conn.execute("PRAGMA table_info(listings)") if not r["notnull"]}
+protected = sorted(c for c in CLONE_JUNK if c in live_cols and c not in nullable)
 print(f"template {TEMPLATE_ID} ok: category={CATEGORY}, {len(live_cols)} columns")
+if protected:
+    print(f"NOT NULL — keeping the template's value on: {', '.join(protected)}")
 
 plan, existing = [], []
 for title, price, price_num, suburb, photo, lat, lng, trust, blurb in ADVERTS:
@@ -121,7 +132,7 @@ for title, price, price_num, suburb, photo, lat, lng, trust, blurb in ADVERTS:
         "view_count": 0, "listing_status": "live",
     })
     for col in CLONE_JUNK:
-        if col in live_cols:
+        if col in live_cols and col in nullable:
             row[col] = None
     plan.append((row, title))
 
