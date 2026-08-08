@@ -23,12 +23,18 @@ from PIL import Image, ImageOps
 # TS-0012 (Maroushka, 5 Aug 2026): iPhone HEIC photos. pillow-heif teaches PIL to open
 # HEIC/HEIF; the photo pipelines re-encode to JPEG, so registering the opener IS the
 # converter. Fail-open to the old behaviour when the wheel is absent.
+# SELFCHECK-2 (7 Aug 2026): keep the REASON. /ops/selfcheck reported pillow_heif
+# False on its first live call - correct, and useless on its own, because "why"
+# needed another round-trip through David. A diagnostic that cannot say why is
+# only half a diagnostic.
+_HEIF_WHY = ""
 try:
     import pillow_heif as _pillow_heif
     _pillow_heif.register_heif_opener()
     _HEIF_OK = True
-except Exception:
+except Exception as _he:
     _HEIF_OK = False
+    _HEIF_WHY = "%s: %s" % (type(_he).__name__, str(_he)[:200])
 
 # ── PHOTO-TYPE-1 (TS-0025, Maroushka, 7 Aug 2026) ──────────────────────────
 # The browser's DECLARED Content-Type was the gate. That value is client-supplied
@@ -2005,6 +2011,13 @@ def ops_selfcheck(_key: str = Depends(auth.require_api_key)):
     # ── dependency presence: the question that started this endpoint ──
     deps = {}
     deps["pillow_heif"] = bool(_HEIF_OK)          # TS-0025: HEIC decode available?
+    if not _HEIF_OK:
+        # The single most useful string on this whole endpoint when it is False:
+        # "ModuleNotFoundError" means installed to the wrong interpreter; anything
+        # else means it IS importable and the registration itself failed.
+        deps["pillow_heif_why"] = _HEIF_WHY or "unknown"
+        deps["python_executable"] = _sys.executable
+        deps["site_roots"] = [q for q in _sys.path if "packages" in q][:4]
     for _m in ("PIL", "boto3", "httpx", "docx", "openpyxl"):
         try:
             __import__(_m); deps[_m] = True
@@ -2040,6 +2053,7 @@ def ops_selfcheck(_key: str = Depends(auth.require_api_key)):
             out["flags"] = {k: d.get(k) for k in (
                 "mode", "ai_active", "ai_active_override", "ai_override_expires",
                 "fault_report", "intro_relay", "account_binding", "verified_tier",
+                "photo_replace_request",
                 "ai_example_enabled", "auth_fail_closed", "tuppence_burn_enabled")}
         except Exception as e:
             out["flags"] = {"error": str(e)[:120]}
