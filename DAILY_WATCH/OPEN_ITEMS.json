@@ -1,30 +1,30 @@
 {
- "next_id": 27,
+ "next_id": 33,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "INFO",
    "source": "audit VERSION-KEY",
    "status": "OPEN"
   },
   "DW-002": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "INFO",
    "source": "audit DEMO-PLACEHOLDERS",
    "status": "OPEN"
   },
   "DW-003": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "MEDIUM",
    "source": "consolidation",
    "status": "OPEN"
   },
   "DW-004": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "MEDIUM",
    "source": "consolidation",
    "status": "OPEN"
@@ -39,7 +39,7 @@
   },
   "DW-006": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "LOW",
    "source": "run_daily_checks deploy_drift",
    "status": "OPEN"
@@ -54,14 +54,14 @@
   },
   "DW-008": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-05",
+   "last_seen": "2026-08-08",
    "sev": "MEDIUM",
    "source": "audit MSJS-DRIFT",
    "status": "OPEN"
   },
   "DW-009": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN"
@@ -90,10 +90,11 @@
   },
   "DW-013": {
    "first_seen": "2026-08-04",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "MEDIUM",
    "source": "smoke_test parity + RG-0027 side-effect",
-   "status": "OPEN"
+   "status": "OPEN",
+   "note": "check passing since 2026-08-08 - awaiting David's close"
   },
   "DW-014": {
    "first_seen": "2026-08-04",
@@ -113,10 +114,11 @@
   },
   "DW-016": {
    "first_seen": "2026-08-04",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "HIGH",
    "source": "watch RED-alert path",
-   "status": "OPEN"
+   "status": "OPEN",
+   "note": "check passing since 2026-08-08 - awaiting David's close"
   },
   "DW-017": {
    "first_seen": "2026-08-05",
@@ -144,28 +146,29 @@
   },
   "DW-020": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "HIGH",
    "source": "ssh sensors + smoke + run_daily_checks",
-   "status": "OPEN"
+   "status": "OPEN",
+   "note": "check passing since 2026-08-08 - awaiting David's close"
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN"
   },
   "DW-022": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "LOW",
    "source": "self-heartbeat",
    "status": "OPEN"
   },
   "DW-023": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "HIGH",
    "source": "gate verification post-DW-019",
    "status": "OPEN"
@@ -186,10 +189,54 @@
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-07",
+   "last_seen": "2026-08-08",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN"
+  },
+  "DW-028": {
+   "last_seen": "2026-08-08",
+   "first_seen": "2026-08-07",
+   "sev": "MEDIUM",
+   "source": "ledger/probe network blindness",
+   "status": "OPEN"
+  },
+  "DW-027": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "HIGH",
+   "source": "TS-0022 doctrine collision",
+   "status": "OPEN"
+  },
+  "DW-029": {
+   "first_seen": "2026-08-07",
+   "last_seen": "2026-08-07",
+   "sev": "MEDIUM",
+   "source": "production secrets in chat transcript",
+   "status": "OPEN"
+  },
+  "DW-030": {
+   "first_seen": "2026-08-08",
+   "last_seen": "2026-08-08",
+   "sev": "HIGH",
+   "source": "migration chain",
+   "status": "OPEN"
+  },
+  "DW-031": {
+   "first_seen": "2026-08-08",
+   "last_seen": "2026-08-08",
+   "sev": "MEDIUM",
+   "source": "live verification (Stays last mile)",
+   "status": "OPEN"
+  },
+  "DW-032": {
+   "first_seen": "2026-08-08",
+   "last_seen": "2026-08-08",
+   "sev": "MEDIUM",
+   "source": "AI-watch (vendor pricing)",
+   "status": "OPEN"
   }
- }
+ },
+ "last_run": "2026-08-08",
+ "last_verdict": "GREEN"
 }

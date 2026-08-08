@@ -37,7 +37,7 @@ html,body{margin:0;height:100%;font-family:system-ui,Segoe UI,Roboto,sans-serif;
    Until they are filled in here, each stay's button falls back to the Stays category
    screen, which is a real destination — never a dead link. Harvest the three ids from
    the deploy log and set them below; that is the only edit this file needs.        */
-var STAY_IDS = { thatch: null, jacaranda: null, marula: null };
+var STAY_IDS = { thatch: 336, jacaranda: 337, marula: 338 };
 var STAYS_BROWSE = 'https://trustsquare.co/?cat=adventures_accommodation';
 function stayHref(key){ return STAY_IDS[key] ? 'https://trustsquare.co/?listing=' + STAY_IDS[key] : STAYS_BROWSE; }
 
