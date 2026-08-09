@@ -34,7 +34,7 @@ it READY. Nothing here arms itself.
 Run:  python3 scripts/maintenance_agent.py            # shadow: propose + gate, write report
       python3 scripts/maintenance_agent.py --live     # honoured ONLY if the kill switch is on
 """
-import os, sys, json, subprocess, tempfile, shutil, time, urllib.request, urllib.error
+import os, sys, json, re, subprocess, tempfile, shutil, time, urllib.request, urllib.error
 from datetime import datetime, timezone
 
 REPO   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -151,6 +151,40 @@ def _looks_like_patch(t):
     return ("--- " in t) and ("+++ " in t) and ("@@" in t)
 
 
+_STOP = {"the", "and", "should", "shows", "says", "with", "that", "this", "from", "when",
+         "page", "link", "button", "does", "have", "into", "your", "there", "typo",
+         "fault", "error", "broken", "fixed", "please", "would", "which", "their",
+         "everyone", "twice", "once", "showed"}
+
+def _candidate_files(fault, max_files=2, max_bytes=12000):
+    """Find the file(s) the fault most likely lives in, so the brain edits real code
+    instead of guessing the path and context lines. Deterministic: git grep the fault's
+    own distinctive tokens (quoted literals first), rank by hit count, return small text
+    files with their contents. Added 9 Aug 2026 — a blind prompt (no file shown) was why
+    the real Sonnet patch never applied in B4 Tier 2 (two honest runs, both escalated)."""
+    text = " ".join([fault.get("title", ""), fault.get("detail", "")])
+    quoted = re.findall(r"['\"]([^'\"]{2,40})['\"]", text)
+    words = [w for w in re.findall(r"[A-Za-z_][A-Za-z0-9_]{3,}", text)
+             if w.lower() not in _STOP]
+    hits = {}
+    for tok in quoted + words:
+        try:
+            gp = subprocess.run(["git", "grep", "-lF", "--", tok], cwd=REPO,
+                                capture_output=True, text=True, timeout=20)
+            for fpath in gp.stdout.split():
+                hits[fpath] = hits.get(fpath, 0) + 1
+        except Exception:
+            pass
+    out = []
+    for fpath in sorted(hits, key=lambda f: -hits[f])[:max_files]:
+        try:
+            full = os.path.join(REPO, fpath)
+            if os.path.getsize(full) <= max_bytes:
+                out.append((fpath, open(full, encoding="utf-8", errors="replace").read()))
+        except OSError:
+            pass
+    return out
+
 def propose_patch(fault):
     if _BRAIN_STUB:
         stub = json.load(open(_BRAIN_STUB, encoding="utf-8"))
@@ -159,17 +193,28 @@ def propose_patch(fault):
         r.text, r.ok, r.provider, r.model, r.error_kind = (diff or "NObugfix"), bool(diff), "stub", "rehearsal", ""
         return r
     import ai_provider
+    files = _candidate_files(fault)
+    if files:
+        ctx = "\n\n".join("### FILE: %s\n%s" % (p, c) for p, c in files)
+        loc = ("The current contents of the most likely file(s) are shown below. Produce the "
+               "unified diff AGAINST EXACTLY THESE BYTES: git headers `--- a/<path>` and "
+               "`+++ b/<path>` with the real path and the real surrounding context lines.")
+    else:
+        ctx = "(no candidate file located in the repo)"
+        loc = ("No file could be located from the fault text; unless you are certain of the "
+               "exact path and lines, output NObugfix.")
     sys_p = ("You are a careful maintenance engineer. Produce a MINIMAL unified diff "
-             "(git format, ready for `git apply`) that fixes the reported fault and "
-             "nothing else. Touch the fewest lines possible. If you cannot fix it with "
-             "a small mechanical edit, output exactly NObugfix. Never touch payment, "
-             "auth, schema, or anonymity code.")
-    msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\nPAGE: %s\n"
-            "Reply with ONLY the diff, or NObugfix." % (
+             "(git format, applies with `git apply -p1`) that fixes the reported fault and "
+             "nothing else, touching the fewest lines possible. %s If you cannot fix it with "
+             "a small mechanical edit, output exactly NObugfix. Never touch payment, auth, "
+             "schema, or anonymity code." % loc)
+    msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\nPAGE: %s\n\n%s\n\n"
+            "Reply with ONLY the unified diff, or exactly NObugfix." % (
                 fault.get("ref"), fault.get("title", ""), fault.get("detail", ""),
-                fault.get("page_url", ""))}]
-    r = ai_provider.complete(msg, task="sonnet", max_tokens=1500, system=sys_p)
+                fault.get("page_url", ""), ctx)}]
+    r = ai_provider.complete(msg, task="sonnet", max_tokens=2000, system=sys_p)
     return r  # caller reads .text/.ok/.provider/.model
+
 
 # ── gates: run the REAL suite in a throwaway worktree ────────────────────────────
 def run_gates(workdir):
