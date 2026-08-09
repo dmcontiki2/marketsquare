@@ -1817,7 +1817,7 @@ def rg_no_seller_identity_in_public_payloads():
            "by default — LIVE requires BOTH MAINTENANCE_AGENT_ENABLED=1 AND --live, so an accident "
            "or a half-edit leaves it in shadow, committing nothing; (2) a deterministic REFUSE guard "
            "the AI cannot bypass keeps payment, auth, session, schema, ANONYMITY (seller_email — "
-           "tonight's own leak class), legal and safety code out of autonomous reach. This entry reads "
+           "tonight's own leak class), legal and safety code out of autonomous reach POST-LAUNCH; PRE-LAUNCH (David 9 Aug: 3 trusted testers, no real users/sellers/money) it narrows to legal + currently-costly by design, and MAINT_PHASE defaults to postlaunch so an unset config fails safe. This entry reads "
            "the file, not the live site, so it holds even offline; it fails if the default flips on or "
            "any trust-core marker is dropped from the guard.")
 def rg_maint_agent_failsafe():
@@ -1833,6 +1833,9 @@ def rg_maint_agent_failsafe():
         out.append((FAIL, "kill switch no longer defaults OFF — the agent could arm itself"))
     if 'LIVE   = ("--live" in sys.argv) and KILL' not in src:
         out.append((FAIL, "LIVE no longer requires BOTH the flag AND the env switch"))
+    if 'MAINT_PHASE", "postlaunch"' not in src:
+        out.append((FAIL, "maint phase no longer defaults to postlaunch (strict) -- an unset "
+                          "config could run the guard in permissive pre-launch mode"))
     must = ("payment", "paystack", "auth", "session", "token", "schema", "migration",
             "anonym", "seller_email", "legal", "popia", "safety")
     missing = [m for m in must if ('"%s"' % m) not in src and ("'%s'" % m) not in src]

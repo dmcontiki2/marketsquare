@@ -44,6 +44,14 @@ KILL   = os.environ.get("MAINTENANCE_AGENT_ENABLED", "0").strip() == "1"
 LIVE   = ("--live" in sys.argv) and KILL               # live REQUIRES both, by construction
 MAX_SHIPS_PER_HOUR = int(os.environ.get("MAINT_MAX_SHIPS_PER_HOUR", "3"))
 
+# Human-in-the-loop scope is PHASE-DEPENDENT (David, 9 Aug 2026). PRE-LAUNCH the agent is a
+# design tool for 3 trusted testers on a platform with no real users/sellers/money: it makes
+# micro DESIGN + mechanical corrections itself, and ONLY legal / currently-costly stops for a
+# human. POST-LAUNCH (real users via the complaints flow) the full trust-core guard returns and
+# design re-batches. Fail-safe default = postlaunch (strict): an unset config is never permissive.
+MAINT_PHASE = os.environ.get("MAINT_PHASE", "postlaunch").strip().lower()
+PRELAUNCH = MAINT_PHASE == "prelaunch"
+
 # ── test injection (B4 rehearsal only) — redirect INPUTS, never weaken the guard ──
 def _arg(name, default=None):
     for a in sys.argv[1:]:
@@ -65,12 +73,18 @@ def say(m): print("[maint] " + m, flush=True)
 # ── the deterministic REFUSE guard — un-bypassable by the AI ─────────────────────
 # Path A autonomy stops HARD at anything touching money, identity, the schema, or the
 # law. These never reach the brain as fixable; they escalate. Keyword OR page match.
-REFUSE_MARKERS = (
+# Legal + currently-costly ALWAYS stop for a human, in EVERY phase.
+REFUSE_LEGAL_COSTLY = (
+    "legal", "popia", "eula", "terms", "compliance", "ffc", "mandate",
     "payment", "paystack", "refund", "wallet", "tuppence charge", "billing", "card",
-    "auth", "login", "password", "session", "token", "kyc", "id number", "identity",
-    "anonym", "reveal", "seller_email", "schema", "migration", "database", "drop table",
-    "legal", "popia", "eula", "terms", "compliance", "ffc", "mandate", "safety",
+    "cost", "costly", "spend", "invoice", "vat", "tax", "payout",
 )
+# The trust core is added ON TOP only post-launch, when real users and real money are live.
+REFUSE_TRUST_CORE = (
+    "auth", "login", "password", "session", "token", "kyc", "id number", "identity",
+    "anonym", "reveal", "seller_email", "schema", "migration", "database", "drop table", "safety",
+)
+REFUSE_MARKERS = REFUSE_LEGAL_COSTLY if PRELAUNCH else (REFUSE_LEGAL_COSTLY + REFUSE_TRUST_CORE)
 def is_refused(fault):
     hay = ((fault.get("title") or "") + " " + (fault.get("detail") or "") + " " +
            (fault.get("page_url") or "")).lower()
@@ -141,6 +155,9 @@ def classify(fault):
         return "PATH_B", "brain unreachable (%s) -- defaulting to design lane" % r.error_kind
     if "MECHANICAL" in verdict:
         return "PATH_A", "brain[%s]=MECHANICAL" % src
+    if PRELAUNCH:
+        # pre-launch: micro design corrections are the JOB, not a backlog -- implement them.
+        return "PATH_A", "brain[%s]=DESIGN -> pre-launch micro-change lane" % src
     return "PATH_B", "brain[%s]=%s" % (src, verdict or "DESIGN")
 
 # ── brain: produce a unified-diff patch for a Path A fault ───────────────────────
@@ -204,10 +221,10 @@ def propose_patch(fault):
         loc = ("No file could be located from the fault text; unless you are certain of the "
                "exact path and lines, output NObugfix.")
     sys_p = ("You are a careful maintenance engineer. Produce a MINIMAL unified diff "
-             "(git format, applies with `git apply -p1`) that fixes the reported fault and "
-             "nothing else, touching the fewest lines possible. %s If you cannot fix it with "
-             "a small mechanical edit, output exactly NObugfix. Never touch payment, auth, "
-             "schema, or anonymity code." % loc)
+             "(git format, applies with `git apply -p1`) that resolves the reported fault -- a bug "
+             "fix or a small, targeted design correction -- and nothing else, touching the fewest "
+             "lines possible. %s If it cannot be done as a small, targeted change, output exactly "
+             "NObugfix. Keep the change within the file(s) shown; do not widen its scope." % loc)
     msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\nPAGE: %s\n\n%s\n\n"
             "Reply with ONLY the unified diff, or exactly NObugfix." % (
                 fault.get("ref"), fault.get("title", ""), fault.get("detail", ""),
@@ -270,7 +287,7 @@ def main():
     os.makedirs(STATE, exist_ok=True)
     mode = "LIVE" if LIVE else ("SHADOW (kill switch ON, --live not passed)" if KILL
                                 else "SHADOW (kill switch OFF — default, cannot commit)")
-    say("run %s  mode=%s  rate<=%d/h" % (now(), mode, MAX_SHIPS_PER_HOUR))
+    say("run %s  mode=%s  phase=%s  rate<=%d/h" % (now(), mode, MAINT_PHASE, MAX_SHIPS_PER_HOUR))
     key = maint_key()
     if not _FAULTS_FILE and not key:
         # a key is required ONLY for the live API path; a synthetic --faults-file
