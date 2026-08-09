@@ -1808,5 +1808,38 @@ def rg_no_seller_identity_in_public_payloads():
     return out
 
 
+
+@entry("RG-0046", "The maintenance agent is FAIL-SAFE: default off, trust-core untouchable",
+       LOCKED, scope="scripts/maintenance_agent.py — the Path A autonomous fix-agent (MAINTENANCE_AGENT.md B2b)",
+       fixed_on="2026-08-09",
+       ref="MAINT-AGENT-1 (9 Aug 2026). The agent ships code to a live trust platform with no "
+           "human watching, so its two safety properties must never silently erode: (1) it is OFF "
+           "by default — LIVE requires BOTH MAINTENANCE_AGENT_ENABLED=1 AND --live, so an accident "
+           "or a half-edit leaves it in shadow, committing nothing; (2) a deterministic REFUSE guard "
+           "the AI cannot bypass keeps payment, auth, session, schema, ANONYMITY (seller_email — "
+           "tonight's own leak class), legal and safety code out of autonomous reach. This entry reads "
+           "the file, not the live site, so it holds even offline; it fails if the default flips on or "
+           "any trust-core marker is dropped from the guard.")
+def rg_maint_agent_failsafe():
+    import os
+    out = []
+    f = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "scripts", "maintenance_agent.py")
+    try:
+        src = open(f, encoding="utf-8").read()
+    except OSError:
+        return [(INFO, "maintenance_agent.py not present (running outside the repo) — check skipped")]
+    if 'MAINTENANCE_AGENT_ENABLED", "0"' not in src:
+        out.append((FAIL, "kill switch no longer defaults OFF — the agent could arm itself"))
+    if 'LIVE   = ("--live" in sys.argv) and KILL' not in src:
+        out.append((FAIL, "LIVE no longer requires BOTH the flag AND the env switch"))
+    must = ("payment", "paystack", "auth", "session", "token", "schema", "migration",
+            "anonym", "seller_email", "legal", "popia", "safety")
+    missing = [m for m in must if ('"%s"' % m) not in src and ("'%s'" % m) not in src]
+    if missing:
+        out.append((FAIL, "REFUSE guard dropped trust-core markers: %s" % ", ".join(missing)))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
