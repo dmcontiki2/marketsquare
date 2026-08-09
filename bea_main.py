@@ -2506,7 +2506,12 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         if (_d.get("category") or "").lower() == "property":
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
-        out.append(_d)
+        # SELLER-ANON-1 (8 Aug 2026): strip seller identity LAST, after the founders
+        # lookup above has used seller_email. /listings was the only public endpoint
+        # still shipping it — the same _strip_seller_identity() has guarded the
+        # local-market feed since PR-29, it was simply never applied here. Anonymity
+        # until introduction is the product, so it cannot depend on remembering.
+        out.append(_strip_seller_identity(_d))
     if facets:
         # Counts computed from the SAME filtered set as the list — they can never lie.
         fc = {}

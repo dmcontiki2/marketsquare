@@ -1766,5 +1766,47 @@ def rg_photo_replace():
     return out
 
 
+
+@entry("RG-0045", "No public endpoint returns seller identity — anonymity IS the product",
+       LOCKED, scope="EVERY unauthenticated JSON endpoint, present and future", fixed_on="2026-08-08",
+       ref="SELLER-ANON-1 (8 Aug 2026). /listings shipped seller_email on all 50 rows, exposing two "
+           "real founding sellers' personal addresses to anonymous callers. The requirement was never "
+           "misunderstood: _strip_seller_identity() has guarded the local-market feed since PR-29, and "
+           "the detail endpoint uses an explicit column allowlist commented 'No seller identity "
+           "returned'. It was simply never applied to /listings, which builds its payload from SELECT * "
+           "and is therefore default-OPEN -- every column added to the table becomes public "
+           "automatically. RG-0038 asserts this same requirement for the introduction relay ONLY. "
+           "THAT is the class this entry closes: assertions written per-SURFACE instead of "
+           "per-REQUIREMENT, so knowledge that exists in one place never propagates. Written against "
+           "the requirement deliberately -- it reads the real public response bodies, so it cannot be "
+           "satisfied by code that merely looks right, and it cannot go vacuous the way RG-0011 did "
+           "(DW-024) because it asserts on bytes returned, not on a regex over source. If it can read "
+           "nothing it FAILS rather than passing quietly.")
+def rg_no_seller_identity_in_public_payloads():
+    import re
+    out = []
+    PUBLIC = ["/listings", "/demo-listings", "/demo-sellers", "/wonders", "/flags"]
+    IDENTITY_KEYS = ("seller_email", "reporter_email", "photo_url")
+    read_ok = 0
+    for path in PUBLIC:
+        try:
+            body = _get(path)
+        except Exception as ex:
+            out.append((INFO, "%s unreadable (%s) — not counted as a pass" % (path, ex)))
+            continue
+        read_ok += 1
+        for addr in sorted(set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.]+", body))):
+            if not addr.endswith(("trustsquare.co", "example.com")):
+                out.append((FAIL, "%s exposes a real address (%s...@%s) to anonymous callers"
+                                  % (path, addr.split("@")[0][:2], addr.split("@")[1])))
+        for key in IDENTITY_KEYS:
+            if ('"%s"' % key) in body:
+                out.append((FAIL, "%s ships identity field %r in its public payload" % (path, key)))
+    if read_ok == 0:
+        out.append((FAIL, "not one public endpoint could be read — this check proved NOTHING. "
+                          "Failing rather than passing quietly is the RG-0011 lesson (DW-024)."))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
