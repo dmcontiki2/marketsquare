@@ -28,6 +28,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 
 | # | Loop | Owner | Single next action | Opened | Source |
 |---|------|-------|--------------------|--------|--------|
+| L5 | **B4 Tier 2 false-green FIXED; real-patch quality still unproven** — harness now enforces the patch-quality check in BOTH tiers (ships this release); the real Sonnet patch for SYN-MECH did not apply (`propose_patch` feeds the brain no file contents), so the agent escalated — nothing shipped. Agent stays OFF. | [D]+[C] | Deploy this release -> re-run Tier 2 (honest now). If red, [C] fixes `propose_patch` (Path B, your gate) -> re-run -> then you arm. | 2026-08-09 | this session |
 | L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
 | L4 | **Tester fault channel built, not live** (MAINT-B1b) — intake + ACK + retest letter + widget on 14 pages, all gates green, flag `fault_report` defaults OFF. | [D] | Run `deploy_marketsquare.bat`, then `POST /admin/flags {"fault_report": true}`; tell the testers the REPORT tab is theirs. | 2026-08-05 | CHANGELOG MAINT-B1b |
 | L3 | **SCOREBOARD-1 shipped-not-live** — agent + guards + nightly wiring in repo (7/7 tests); probes OFF until enabled. | [D] | Next deploy carries it, then run `enable_scoreboard.bat` once. | 2026-08-03 | CHANGELOG SCOREBOARD-1 |

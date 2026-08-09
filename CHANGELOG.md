@@ -1,3 +1,30 @@
+## 2026-08-09 — MAINT-B4-2: Tier-2 self-audit — a false green caught and closed
+
+B4 Tier 2 (`--live-brain`) printed "TIER 2 PASS: the real brain's patch gated green end-to-end.
+Sign READY." Reading the harness before trusting it showed the banner was UNEARNED; fixed same session.
+
+- **The hole:** in `maint_b4_rehearsal.py` the patch-quality check (`passed &= spine_ok`, where
+  spine_ok = mechanical fault applied -> a gate passed -> outcome GREEN) sat inside `if not LIVE_BRAIN:`.
+  Enforced only in Tier 1 (the stub). Under `--live-brain` the block was skipped, so Tier 2's verdict
+  came from ROUTING ALONE — six faults routed right -> "PASS", though the one thing Tier 2 exists to
+  prove (real patch gates green) was never checked. The missing `spine (SYN-MECH):` line corroborated it.
+- **The fix:** enforcement + a full-outcome print are now UNCONDITIONAL (both tiers). "READY" now means
+  the real patch actually applied and gated green. py_compile green; only that file changed. Rides this
+  release; re-run Tier 2 after it lands.
+- **What the honest signal already showed:** the real Sonnet patch for SYN-MECH came back
+  `patch did not apply cleanly -> escalate` (the table truncated it at 30 chars to "-> "). Confirmed
+  from `maintenance_agent.py` line 266 — the patch did NOT apply, the agent correctly ESCALATED, shipped
+  nothing. Fail-safe spine held; patch QUALITY still unproven.
+- **Root cause (diagnosed, NOT yet fixed — Path B, David's gate):** `propose_patch()` asks the brain for
+  a `git apply`-ready unified diff but gives it only the fault title/detail/page — never the file
+  contents. The model guesses the path, context and whitespace, so `git apply --3way` rejects it. Fix
+  direction: find the offending file(s) from the fault signature, feed their real bytes, have the brain
+  return a diff against those exact bytes or a whole-file rewrite we diff mechanically. Design change to
+  the agent's brain-prompting -> batched, David's gate.
+
+Agent remains OFF (MAINTENANCE_AGENT_ENABLED unset); nothing armed. RG-0046 (guard + fail-safe) intact.
+The discipline worked: read the artifact, don't trust the banner, catch the false green BEFORE arming.
+
 ## 2026-08-09 — MAINT-B4-1: the launch-rehearsal harness + Tier-1 READY
 
 `scripts/maint_b4_rehearsal.py` (130 lines, py_compile green) — the synthetic complaint storm the

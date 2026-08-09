@@ -107,10 +107,15 @@ def main():
     mech = outcomes.get("SYN-MECH", {})
     spine_ok = mech.get("lane") == "PATH_A" and any(
         g.get("ok") for g in mech.get("gates", [])) and "GREEN" in mech.get("outcome", "").upper()
-    if not LIVE_BRAIN:
-        print("\nspine (SYN-MECH): %s" % (
-            "GREEN in shadow, commit withheld — PASS" if spine_ok else "did not reach a green shadow decision — FAIL"))
-        passed &= spine_ok
+    # ENFORCE in BOTH tiers. Tier 1 proves the spine with a known-good stub;
+    # Tier 2 (--live-brain) is the REAL patch-quality proof and must clear the
+    # SAME bar. The old `if not LIVE_BRAIN` gate let Tier 2 pass on routing
+    # alone — a false green. Fixed 9 Aug 2026 (B4 self-audit).
+    print("\nspine (SYN-MECH): %s" % (
+        "GREEN in shadow, commit withheld — PASS" if spine_ok
+        else "did not reach a green shadow decision — FAIL"))
+    print("  SYN-MECH full outcome: %s" % (mech.get("outcome") or "(no action recorded)"))
+    passed &= spine_ok
 
     shutil.rmtree(sandbox, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
     print("\n" + "=" * 70)
