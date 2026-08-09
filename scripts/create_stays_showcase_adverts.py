@@ -65,6 +65,23 @@ ADVERTS = [
   "Dinner happens around the fire in the stone boma, which is the point of coming."),
 ]
 
+# STAYS-GALLERY-1: the full five-photo set per property, main first. Keep in step
+# with assets/super/ — the migration refuses to write a listing whose files are absent.
+GALLERIES = {
+ "Thatch & Bushveld Safari Lodge · Pilanesberg": [
+   "/static/super/sup_email_thatch_1_main.jpg", "/static/super/sup_email_thatch_2_room.jpg",
+   "/static/super/sup_email_thatch_3_pool.jpg", "/static/super/sup_email_thatch_4_breakfast.jpg",
+   "/static/super/sup_email_thatch_5_game.jpg"],
+ "Jacaranda Boutique Guesthouse · Hartbeespoort": [
+   "/static/super/sup_email_jacaranda_1_main.jpg", "/static/super/sup_email_jacaranda_2_room.jpg",
+   "/static/super/sup_email_jacaranda_3_deck.jpg", "/static/super/sup_email_jacaranda_4_breakfast.jpg",
+   "/static/super/sup_email_jacaranda_5_dam.jpg"],
+ "Marula Bush Camp · Magaliesberg": [
+   "/static/super/sup_email_marula_1_main.jpg", "/static/super/sup_email_marula_2_tent.jpg",
+   "/static/super/sup_email_marula_3_boma.jpg", "/static/super/sup_email_marula_4_deck.jpg",
+   "/static/super/sup_email_marula_5_sunrise.jpg"],
+}
+
 # Every column that belongs to ANOTHER category. Cloning 271 would otherwise drag
 # these through silently — the exact fault migration 002 had to heal on six rows.
 CLONE_JUNK = [
@@ -117,14 +134,20 @@ for title, price, price_num, suburb, photo, lat, lng, trust, blurb in ADVERTS:
     if hit:
         existing.append((hit["id"], title))
         continue
+    gallery = GALLERIES.get(title) or [photo]
     row = dict(tmpl)
     row.pop("id", None)
     row.update({
         "title": title, "price": price, "price_num": price_num,
         "suburb": suburb, "category": CATEGORY,
-        "description": f"[photos:{photo}]{blurb}{FOOT}",
-        "photo_urls": json.dumps([photo]),
-        "thumb_url": photo, "medium_url": None,
+        # STAYS-GALLERY-1 (9 Aug 2026): the ORIGINAL BUG. This wrote a one-photo
+        # array, so the adverts rendered flat while the super advert beside them
+        # showed an 8-photo carousel — 12 of the 15 generated photos went unused.
+        # The live shape (copied from listing 271): photo_urls is the full array,
+        # and the description prefix lists every url PIPE-separated. Both must agree.
+        "description": f"[photos:{'|'.join(gallery)}]{blurb}{FOOT}",
+        "photo_urls": json.dumps(gallery),
+        "thumb_url": gallery[0], "medium_url": None,
         "listing_lat": lat, "listing_lng": lng,
         "super_example": 0, "trust_score": trust,
         "seller_email": SELLER, "claim_status": "claimed",
