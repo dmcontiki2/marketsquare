@@ -1844,5 +1844,55 @@ def rg_maint_agent_failsafe():
     return out
 
 
+@entry("RG-0047", "The blur ceiling judges the PAINTED OUTPUT, never just the boxes",
+       LOCKED, scope="bea_main.py PHOTO-MEASURE-1 — _anon_blur_until_clean, both accepted-image exits, ALL upload gates that route through it",
+       fixed_on="2026-08-10",
+       ref="TS-0028/TS-0029 (Maroushka, 10 Aug 2026, three censoring reports in one morning on "
+           "the CURRENT build) — covers uploaded through the live gate measured 22-32% painted "
+           "while the box-union measure (RG-0044) read under the 18% ceiling. Root cause: the "
+           "measure predicted coverage from the BOXES (+ the same padding the painter uses) but "
+           "the painter also adds a feather falloff margin and angle-aware capsule growth, so "
+           "what the seller SEES is bigger than what was measured. PHOTO-MEASURE-1 adds "
+           "_anon_painted_fraction: a pixel-diff of the pristine entry image against the "
+           "candidate output, so feather, capsules and accumulated rounds all count exactly "
+           "once, and gates BOTH accepted-image exits on the same _ANON_MAX_BLUR_FRAC ceiling. "
+           "Box measure stays as the cheap early refusal; output diff is the truth. Fail-open "
+           "on measurement error by design: anonymity is guaranteed by the verify pass, and a "
+           "broken ruler must not block every upload.")
+def rg_photo_measure():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo -- photo measure check skipped")]
+    out = []
+    if "def _anon_painted_fraction" not in src:
+        out.append((FAIL, "PHOTO-MEASURE-1 rotted: the output-diff measure is gone"))
+        return out
+    body = src.split("def _anon_blur_until_clean", 1)[-1].split("\ndef ", 1)[0]
+    if "_pristine = img.copy()" not in body:
+        out.append((FAIL, "the pristine baseline is no longer captured -- the diff has nothing "
+                          "to measure against"))
+    # Property: EVERY exit that returns an accepted image must consult the painted
+    # fraction first. Scan each `return img, labels` site in the loop body and
+    # require the gate within the preceding lines.
+    idx = 0
+    n_exits = 0
+    while True:
+        i = body.find("return img, labels", idx)
+        if i < 0:
+            break
+        n_exits += 1
+        if "_anon_painted_fraction(_pristine, img)" not in body[max(0, i - 500):i]:
+            out.append((FAIL, "an accepted-image exit returns paint the ceiling never measured "
+                              "(offset %d in _anon_blur_until_clean)" % i))
+        idx = i + 1
+    if n_exits < 2:
+        out.append((FAIL, "expected both accepted-image exits (clean + last-resort); found %d"
+                          % n_exits))
+    if body.count("_anon_painted_fraction(_pristine, img) > _ANON_MAX_BLUR_FRAC") < 2:
+        out.append((FAIL, "the output gates no longer share the ONE ceiling "
+                          "(_ANON_MAX_BLUR_FRAC) -- a second constant will drift"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

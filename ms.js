@@ -9212,7 +9212,14 @@ async function elAddPhoto(event) {
     const res = await fetch(BEA_URL + '/listings/photo', {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+      /* TS-0030 / PHOTO-MEASURE-1 (10 Aug 2026): the server names the real reason
+         (HEIC guidance, anonymity refusal, replacement request). A generic
+         'Upload failed' silenced all of them on the edit path - RG-0041 class. */
+      let _why = 'Upload failed';
+      try { const _j = await res.json(); if (_j && _j.detail) _why = _j.detail; } catch(_e) {}
+      throw new Error(_why);
+    }
     const data = await res.json();
     _elPhotoUrls.push(data.medium_url || data.thumb_url);
     if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
@@ -9257,7 +9264,14 @@ async function elReplacePhoto(event) {
       headers: { 'X-Api-Key': API_KEY },
       body: fd
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+      /* TS-0030 / PHOTO-MEASURE-1 (10 Aug 2026): the server names the real reason
+         (HEIC guidance, anonymity refusal, replacement request). A generic
+         'Upload failed' silenced all of them on the edit path - RG-0041 class. */
+      let _why = 'Upload failed';
+      try { const _j = await res.json(); if (_j && _j.detail) _why = _j.detail; } catch(_e) {}
+      throw new Error(_why);
+    }
     const data = await res.json();
 
     // Update the displayed photo immediately
@@ -13161,7 +13175,11 @@ async function msMeUploadPhoto(e) {
     const fd = new FormData();
     fd.append('file', file);
     const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/photo', { method: 'POST', body: fd });
-    if (!r.ok) throw new Error('Upload failed');
+    if (!r.ok) {
+      let _why = 'Upload failed';   /* RG-0041 class: surface the server's reason */
+      try { const _j = await r.json(); if (_j && _j.detail) _why = _j.detail; } catch(_e) {}
+      throw new Error(_why);
+    }
     const data = await r.json();
     const url = data.photo_url;
     localStorage.setItem('ms_user_photo', url);

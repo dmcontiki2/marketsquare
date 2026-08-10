@@ -12192,6 +12192,29 @@ except Exception:
 _ANON_REPLACE_TAG = "needs-replacement"   # sentinel label the callers translate
 
 
+def _anon_painted_fraction(before, after, grid=200, thresh=6):
+    """PHOTO-MEASURE-1 (TS-0028/0029, 10 Aug 2026): how much of the photo the blur
+    ACTUALLY changed - measured on the OUTPUT by pixel diff, so feather falloff,
+    capsule growth and accumulated rounds all count exactly once.
+    _anon_blur_fraction predicts from the boxes and under-reads the painted
+    footprint (the falloff margin m and capsule geometry are invisible to it);
+    Maroushka's 10 Aug covers measured 22-32% painted while the box union read
+    under the 18% ceiling - three reports in one morning (TS-0028/0029, cf.
+    TS-0022). Both images resize through the SAME transform, so the diff is
+    pure paint. Quality gate only: a measurement failure returns 0.0 (fail-open)
+    because anonymity is guaranteed by the verify pass, not by this measure -
+    a broken ruler must not block every upload."""
+    try:
+        from PIL import ImageChops
+        a = before.convert("L").resize((grid, grid))
+        b = after.convert("L").resize((grid, grid))
+        h = ImageChops.difference(a, b).histogram()
+        return sum(h[thresh + 1:]) / float(grid * grid)
+    except Exception:
+        return 0.0
+
+
+
 def _anon_blur_fraction(regions, grid=200):
     """Share of the frame the redaction actually covers, 0.0-1.0.
 
@@ -12686,6 +12709,7 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     import base64 as _b64
     labels = list(scan.get("labels") or [])
     regions = list(scan.get("regions") or [])
+    _pristine = img.copy()    # PHOTO-MEASURE-1: output-diff baseline (never stored)
     _acc = []                 # every region ever boxed — feeds the last-resort rung
     _replace_on = _anon_replace_enabled()   # read once — each read is a DB round-trip
     for _round in range(4):   # refine+blur+verify: initial + up to 3 corrections
@@ -12713,6 +12737,10 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         if not v:
             return None, labels
         if v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
+            # PHOTO-MEASURE-1: the ceiling is judged on the PAINTED OUTPUT, not
+            # the boxes - the seller sees paint, not coordinates.
+            if _replace_on and _anon_painted_fraction(_pristine, img) > _ANON_MAX_BLUR_FRAC:
+                return None, labels + [_ANON_REPLACE_TAG]
             return img, labels
         if v["verdict"] == "reject":
             return None, labels + list(v.get("labels") or [])
@@ -12750,6 +12778,9 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         if _it is not None or _ot is not None:
             _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot)
         if v and v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
+            # PHOTO-MEASURE-1: same output-truth ceiling on the last-resort rung.
+            if _replace_on and _anon_painted_fraction(_pristine, img) > _ANON_MAX_BLUR_FRAC:
+                return None, labels + [_ANON_REPLACE_TAG]
             return img, labels + ["last-resort blur"]
     return None, labels
 
