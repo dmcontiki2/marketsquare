@@ -2358,5 +2358,61 @@ def rg_rehearsal_scores_its_own_mode():
 
 
 
+@entry("RG-0058", "The fix agent is shown the REAL source, never its own exhaust, and never nothing at all",
+       LOCKED, scope="scripts/maintenance_agent.py _candidate_files -- every fault in every "
+                     "application file; the whole large-file class (ms.js, bea_main.py, "
+                     "marketsquare.html, dashboard.server.html, ms.css)",
+       fixed_on="2026-08-11",
+       ref="CAND-FIX-1, 11 Aug 2026, diagnosed from the FIRST EVER armed live run "
+           "(mode=LIVE, phase=prelaunch): 2 faults seen, 2 x 'no clean patch', nothing "
+           "shipped. Safe, but useless -- and the reason was structural, not the model's. "
+           "Two compounding faults in the 9 Aug candidate-file finder: "
+           "(1) it discarded any file over 12,000 bytes, and EVERY file this app lives in is "
+           "over it -- ms.js 1,074,965, bea_main.py 906,981, marketsquare.html 405,115, "
+           "dashboard.server.html 449,274, ms.css 129,178 -- so the very fix that was added on "
+           "9 Aug to stop blind patching ('a blind prompt was why the real Sonnet patch never "
+           "applied') could never once fire on real application code. "
+           "(2) it ranked raw git-grep hits across the WHOLE repo including the agent's own "
+           "output: TS-0024's top two candidates were .maint_agent/run_*.json, the agent's own "
+           "run reports, which quote the fault title verbatim. The brain was handed two copies "
+           "of its own exhaust and asked to patch it, and correctly declined. "
+           "Fix: noise paths are excluded BEFORE ranking (run reports, changelog.d/status.d/ "
+           "Records/AUDIT/DAILY_WATCH, CHANGELOG/STATUS/registers, .bak, APP_PREVIEW, logs), "
+           "and oversized files are WINDOWED to a real excerpt around the densest token "
+           "cluster with the true line range named, rather than dropped. Verified: ms.js now "
+           "yields lines 3626-3766 of 16425 (13,453 chars of the actual seller-CV code) where "
+           "it previously yielded nothing, and .maint_agent/run_*.json is excluded. "
+           "NOT claimed: that the agent can now write applicable patches. This removes a "
+           "structural blocker; whether the excerpts produce diffs that gate green is the next "
+           "live run's question, not this entry's.")
+def rg_fix_agent_sees_real_source():
+    a = repo_file("scripts/maintenance_agent.py")
+    if a is None:
+        return [(INFO, "running outside the repo -- CAND-FIX-1 is a source assertion, skipped")]
+    out = []
+    if "_is_noise" not in a or "_window" not in a:
+        out.append((FAIL, "the candidate finder lost its noise filter or its windowing -- the "
+                          "agent is back to reading its own run reports and discarding every "
+                          "file the app actually lives in (CAND-FIX-1)"))
+        return out
+    if ".maint_agent/" not in a:
+        out.append((FAIL, "the agent's own run-report directory is no longer excluded from "
+                          "candidate ranking -- it will read its own exhaust (CAND-FIX-1)"))
+    # the ONLY size branch may not silently drop a big file again
+    i = a.find("def _candidate_files(")
+    j = a.find("\ndef _is_noise", i)
+    body = a[i:j if j > 0 else len(a)]
+    if "_window(" not in body:
+        out.append((FAIL, "_candidate_files no longer windows oversized files -- every real "
+                          "application file is invisible to the brain again (CAND-FIX-1)"))
+    if "EXCERPT lines" not in a:
+        out.append((FAIL, "the excerpt no longer names its true line range -- the brain cannot "
+                          "write a diff it can place (CAND-FIX-1)"))
+    if not out:
+        out.append((INFO, "noise excluded before ranking; oversized files windowed, not dropped"))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

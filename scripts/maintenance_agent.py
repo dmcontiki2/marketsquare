@@ -264,31 +264,92 @@ _STOP = {"the", "and", "should", "shows", "says", "with", "that", "this", "from"
 def _candidate_files(fault, max_files=2, max_bytes=12000):
     """Find the file(s) the fault most likely lives in, so the brain edits real code
     instead of guessing the path and context lines. Deterministic: git grep the fault's
-    own distinctive tokens (quoted literals first), rank by hit count, return small text
-    files with their contents. Added 9 Aug 2026 — a blind prompt (no file shown) was why
-    the real Sonnet patch never applied in B4 Tier 2 (two honest runs, both escalated)."""
+    own distinctive tokens (quoted literals first), rank by hit count, return the relevant
+    source with its contents. Added 9 Aug 2026 -- a blind prompt (no file shown) was why
+    the real Sonnet patch never applied in B4 Tier 2.
+
+    CAND-FIX-1 (11 Aug 2026, after the FIRST armed live run returned 0/2 "no clean patch"):
+    the 9 Aug version could never fire on this repo, for two compounding reasons.
+      1. It dropped any file over 12,000 bytes. EVERY file the app lives in is over it --
+         ms.js 1,074,965 · bea_main.py 906,981 · marketsquare.html 405,115 ·
+         dashboard.server.html 449,274 · ms.css 129,178. So the "show the brain the file"
+         fix could never apply to any real application file. Large files are now WINDOWED
+         (a real excerpt around the densest token cluster) instead of discarded.
+      2. It ranked by raw grep hits across the WHOLE repo, including the agent's own
+         output. TS-0024's top two "candidate files" were .maint_agent/run_*.json -- the
+         agent's own run reports, which contain the fault's title verbatim. The brain was
+         handed two copies of its own exhaust and asked to patch it. Ledgers, changelogs,
+         status files, backups and previews are now excluded before ranking.
+    """
     text = " ".join([fault.get("title", ""), fault.get("detail", "")])
     quoted = re.findall(r"['\"]([^'\"]{2,40})['\"]", text)
     words = [w for w in re.findall(r"[A-Za-z_][A-Za-z0-9_]{3,}", text)
              if w.lower() not in _STOP]
+    toks = quoted + words
     hits = {}
-    for tok in quoted + words:
+    for tok in toks:
         try:
             gp = subprocess.run(["git", "grep", "-lF", "--", tok], cwd=REPO,
                                 capture_output=True, text=True, timeout=20)
             for fpath in gp.stdout.split():
+                if _is_noise(fpath):
+                    continue          # never rank our own paperwork or the agent's exhaust
                 hits[fpath] = hits.get(fpath, 0) + 1
         except Exception:
             pass
     out = []
-    for fpath in sorted(hits, key=lambda f: -hits[f])[:max_files]:
+    for fpath in sorted(hits, key=lambda f: (-hits[f], f)):
+        if len(out) >= max_files:
+            break
+        full = os.path.join(REPO, fpath)
         try:
-            full = os.path.join(REPO, fpath)
-            if os.path.getsize(full) <= max_bytes:
-                out.append((fpath, open(full, encoding="utf-8", errors="replace").read()))
+            size = os.path.getsize(full)
+            body = open(full, encoding="utf-8", errors="replace").read()
         except OSError:
-            pass
+            continue
+        if size <= max_bytes:
+            out.append((fpath, body))
+            continue
+        w = _window(fpath, body, toks)     # too big to send whole -- send the real excerpt
+        if w:
+            out.append(w)
     return out
+
+
+def _is_noise(p):
+    """Paths that can never be the SOURCE of a fault, only a record of one. Ranking these
+    is how the agent ended up reading its own run reports back to itself (CAND-FIX-1)."""
+    if any(seg in p for seg in (".maint_agent/", "changelog.d/", "status.d/", "Records/",
+                                "AUDIT_GLOBAL_QA/", "DAILY_WATCH/", "_to_delete/", "logs/",
+                                "node_modules/", ".git/")):
+        return True
+    if os.path.basename(p) in ("CHANGELOG.md", "STATUS.md", "CHANGE_REGISTER.md",
+                               "OPEN_LOOPS.md", "FAULT_REGISTER.md", "APP_PREVIEW.html"):
+        return True
+    return ".bak" in p or p.endswith((".log", ".lock"))
+
+
+def _window(fpath, body, toks, radius=70, hard_cap=16000):
+    """Return (label, excerpt) around the densest cluster of token hits, with the real line
+    range named. The bytes are exact, so a diff written against them applies -- and the
+    agent applies with `git apply --3way`, which resolves the surrounding blob anyway."""
+    lines = body.split("\n")
+    marks = []
+    low = [t.lower() for t in toks[:14] if len(t) >= 4]
+    for i, ln in enumerate(lines, 1):
+        l = ln.lower()
+        if any(t in l for t in low):
+            marks.append(i)
+    if not marks:
+        return None
+    best = max(marks, key=lambda L: sum(1 for m in marks if abs(m - L) <= radius))
+    lo, hi = max(1, best - radius), min(len(lines), best + radius)
+    excerpt = "\n".join(lines[lo - 1:hi])
+    if len(excerpt) > hard_cap:
+        excerpt = excerpt[:hard_cap]
+    label = ("%s  [EXCERPT lines %d-%d of %d -- the rest of the file is unchanged and NOT "
+             "shown; write the diff against these exact bytes]" % (fpath, lo, hi, len(lines)))
+    return (label, excerpt)
 
 def propose_patch(fault):
     if _BRAIN_STUB:
@@ -331,6 +392,45 @@ def propose_patch(fault):
         r = type("R", (), {})()
         r.text, r.ok, r.provider, r.model, r.error_kind = "NObugfix", False, "none", "brain-error", type(e).__name__
     return r  # caller reads .text/.ok/.provider/.model
+
+
+# ── MAINT-B4-6: whole-file rewrite fallback (11 Aug 2026) ────────────────────────
+# Tier 2 on the server proved the deferred risk real: real-brain unified diffs still
+# slip against exact bytes ("patch did not apply cleanly", run 07:10Z). Fallback:
+# when a diff fails to APPLY (and only then), re-ask the brain for the COMPLETE
+# corrected file and diff it mechanically ourselves. Single file, size-capped,
+# stub-safe (rehearsal stubs never reach it), and the full gate suite still judges
+# the result — this changes how a fix is EXPRESSED, never what may ship.
+def propose_rewrite(fault):
+    if _BRAIN_STUB:
+        return None, "stub mode: rewrite fallback not exercised"
+    files = _candidate_files(fault, max_files=1)
+    if not files:
+        return None, "no single candidate file to rewrite"
+    path, content = files[0]
+    import ai_provider
+    sys_p = ("You are a careful maintenance engineer. Your earlier unified diff did not "
+             "apply. Return the COMPLETE corrected contents of the single file shown -- "
+             "the whole file, start to finish, with ONLY the minimal change needed to "
+             "resolve the fault. No commentary, no fences, no diff markers: file text only.")
+    msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\n\n### FILE: %s\n%s" % (
+        fault.get("ref"), fault.get("title", ""), fault.get("detail", ""), path, content)}]
+    try:
+        r = ai_provider.complete(msg, task="sonnet", max_tokens=4000, system=sys_p)
+    except Exception as e:
+        return None, "rewrite brain call failed (%s)" % type(e).__name__
+    text = (r.text or "").strip()
+    if not r.ok or not text or "NObugfix" in text:
+        return None, "brain declined a rewrite"
+    if text.startswith("```"):
+        text = text.strip("`\n")
+        text = text.split("\n", 1)[1] if "\n" in text else text
+    if len(text) > 3 * len(content) + 2000 or len(text) < len(content) // 3:
+        return None, "rewrite size wildly off (%d vs %d) -- refused" % (len(text), len(content))
+    if text == content.strip():
+        return None, "rewrite identical to original -- no change proposed"
+    return {"path": path, "text": text + ("\n" if not text.endswith("\n") else ""),
+            "source": "%s/%s" % (r.provider, r.model)}, "ok"
 
 
 # ── gates: run the REAL suite in a throwaway worktree ────────────────────────────
@@ -436,8 +536,14 @@ def main():
             ap = subprocess.run(["git", "apply", "--3way", patch], cwd=work,
                                 capture_output=True, text=True, timeout=60)
             if ap.returncode != 0:
-                item["outcome"] = "patch did not apply cleanly -> escalate"
-                report["actions"].append(item); continue
+                rw, why_rw = propose_rewrite(f)
+                if not rw:
+                    item["outcome"] = "patch did not apply cleanly; rewrite fallback: %s -> escalate" % why_rw
+                    report["actions"].append(item); continue
+                # MAINT-B4-6: write the full corrected file; the mechanical diff is ours now.
+                open(os.path.join(work, rw["path"]), "w", encoding="utf-8").write(rw["text"])
+                item["source"] = rw["source"]
+                item["via"] = "rewrite-fallback"
             gates = run_gates(work)
             item["gates"] = [{"g": n, "ok": ok} for n, ok, _ in gates]
             green = all(ok for _, ok, _ in gates)
