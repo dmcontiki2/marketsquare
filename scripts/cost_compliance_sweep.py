@@ -352,8 +352,10 @@ def live_spend():
         return [(INFO, "Live spend: set MS_BEA_URL + MS_API_KEY to pull /admin/ai-spend/summary (endpoint staged 11 Jun)")]
     try:
         import urllib.request
+        # UA-EDGE-1: Cloudflare refuses UA-less requests to our own edge (error 1010).
         req = urllib.request.Request(url.rstrip("/") + "/admin/ai-spend/summary",
-                                     headers={"X-Api-Key": key})
+                                     headers={"X-Api-Key": key,
+                                              "User-Agent": "TrustSquare-CostSweep/1.0 (dmcontiki2@gmail.com)"})
         data = json.loads(urllib.request.urlopen(req, timeout=15).read())
         out = [(INFO, f"Live spend today ${data.get('today_usd', 0):.2f} · 7-day ${data.get('week_usd', 0):.2f} · "
                       f"ceilings user=${data.get('daily_user_ceiling_usd', 0)} platform=${data.get('daily_platform_ceiling_usd', 0)}")]

@@ -43,7 +43,10 @@ DEFAULT_REMOTE = os.environ.get("MS_REMOTE", "origin")
 
 
 def _http(method, url, headers=None, timeout=25):
-    req = urllib.request.Request(url, method=method, headers=headers or {})
+    # UA-EDGE-1: Cloudflare refuses UA-less requests to our own edge (error 1010).
+    _h = dict(headers or {})
+    _h.setdefault("User-Agent", "TrustSquare-DeployWeb/1.0 (dmcontiki2@gmail.com)")
+    req = urllib.request.Request(url, method=method, headers=_h)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read().decode("utf-8", "replace")

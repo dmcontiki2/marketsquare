@@ -108,9 +108,15 @@ def maint_key():
             pass
     return ""
 
+# UA-EDGE-1 (11 Aug 2026): Cloudflare's managed rules BLOCK a UA-less request with
+# error 1010 ("banned browser signature") BEFORE it reaches the origin -- so the queue
+# read returned 403 and the agent said "failing safe, doing nothing" while looking green.
+# Every call to OUR OWN edge must name itself. Same header the regression ledger uses.
+UA_HEADER = {"User-Agent": "TrustSquare-MaintenanceAgent/1.0 (dmcontiki2@gmail.com)"}
+
 def api(method, path, key, body=None):
-    req = urllib.request.Request(BASE + path, method=method,
-                                 headers={"X-Maint-Key": key, "Content-Type": "application/json"})
+    hdrs = dict(UA_HEADER); hdrs.update({"X-Maint-Key": key, "Content-Type": "application/json"})
+    req = urllib.request.Request(BASE + path, method=method, headers=hdrs)
     data = json.dumps(body).encode() if body is not None else None
     with urllib.request.urlopen(req, data=data, timeout=30) as r:
         return json.loads(r.read().decode() or "null")

@@ -47,8 +47,10 @@ def main():
     for n in names: print("  -", n)
     body = json.dumps({"images": [b for _, b in imgs], "city": CITY,
                        "suburb": SUBURB, "seller_email": SELLER_EMAIL}).encode()
+    # UA-EDGE-1: Cloudflare refuses UA-less requests to our own edge (error 1010).
     req = urllib.request.Request(BEA + "/listings/batch-cards", data=body,
-                                 headers={"Content-Type": "application/json"})
+                                 headers={"Content-Type": "application/json",
+                                          "User-Agent": "TrustSquare-CollectionsValidation/1.0 (dmcontiki2@gmail.com)"})
     with urllib.request.urlopen(req, timeout=120) as r:
         result = json.loads(r.read().decode())
     result["_photo_order"] = names

@@ -2024,5 +2024,70 @@ def rg_live_ops_dashboard():
     return out
 
 
+@entry("RG-0053", "Our own tooling names itself to our own edge -- a UA-less call never reaches the origin",
+       LOCKED, scope="every repo script that calls OUR edge (MS_BEA_URL / trustsquare.co): maintenance_agent, "
+                     "fault_reconcile, cost_compliance_sweep, deploy_web, run_collections_validation -- the whole class",
+       fixed_on="2026-08-11",
+       ref="UA-EDGE-1, maintenance session 11 Aug 2026. The maintenance loop read NOTHING for an "
+           "unknown number of runs: GET /admin/faults returned 403 with Cloudflare error 1010 "
+           "('banned browser signature') because urllib sends no User-Agent, so the request died "
+           "at the edge before the origin or the maint key were ever consulted. The agent then "
+           "correctly said 'failing safe, doing nothing' and exited 0 -- a GREEN-LOOKING NO-OP, the "
+           "worst failure mode for an unattended nightly run. Adding the same UA header the ledger "
+           "has always used turned 403 into 200 and 7 queued faults appeared. Class-level, not "
+           "instance: every script that talks to our own edge now names itself. Third-party callers "
+           "(peer_review, golden_openai_v1 -> api.openai.com) are out of scope -- not our edge.")
+def rg_own_tooling_sends_user_agent():
+    out = []
+    callers = ("scripts/maintenance_agent.py", "scripts/fault_reconcile.py",
+               "scripts/cost_compliance_sweep.py", "deploy_web.py",
+               "run_collections_validation.py")
+    seen = 0
+    for f in callers:
+        c = repo_file(f)
+        if c is None:
+            continue
+        seen += 1
+        if "urllib.request.Request" in c and "User-Agent" not in c:
+            out.append((FAIL, f + " calls our edge without a User-Agent -- Cloudflare will refuse it "
+                               "with error 1010 and the caller will read nothing (UA-EDGE-1)"))
+    if seen == 0:
+        return [(INFO, "running outside the repo -- UA-EDGE-1 source checks skipped")]
+
+    # Live half: the maintenance agent's exact header set must actually read the queue.
+    import urllib.request as _u, urllib.error as _e
+    _require_net()
+    key = ""
+    for kp in (os.path.join(REPO, ".secrets", "ms_maint_key.txt"), "/var/www/marketsquare/.env"):
+        try:
+            t = open(kp, encoding="utf-8").read()
+            if kp.endswith(".env"):
+                for ln in t.splitlines():
+                    if ln.strip().startswith("MS_MAINT_KEY="):
+                        key = ln.split("=", 1)[1].strip()
+            elif t.strip():
+                key = t.strip()
+            if key:
+                break
+        except OSError:
+            pass
+    if not key:
+        out.append((INFO, "no maint key on this machine -- live half of UA-EDGE-1 not probed here"))
+        return out
+    hdrs = {"User-Agent": "TrustSquare-MaintenanceAgent/1.0 (dmcontiki2@gmail.com)",
+            "X-Maint-Key": key, "Content-Type": "application/json"}
+    try:
+        code = _u.urlopen(_u.Request(BASE + "/admin/faults?status=new", headers=hdrs),
+                          timeout=TIMEOUT).getcode()
+    except _e.HTTPError as ex:
+        code = ex.code
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+    if code != 200:
+        out.append((FAIL, "the maintenance agent's own header set gets HTTP %d on /admin/faults -- "
+                          "the loop is reading nothing again (UA-EDGE-1)" % code))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

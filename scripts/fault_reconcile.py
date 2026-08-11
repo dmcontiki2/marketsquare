@@ -55,9 +55,13 @@ DEPLOY_REF = "2026-08-05 releases"
 SKIP_STATUSES = {"verified", "closed", "rejected", "duplicate", "not-a-fault"}
 
 
+# UA-EDGE-1 (11 Aug 2026): a UA-less call to our own edge is refused by Cloudflare
+# (error 1010) before the origin ever sees it. Name ourselves on every request.
+UA_HEADER = {"User-Agent": "TrustSquare-FaultReconcile/1.0 (dmcontiki2@gmail.com)"}
+
 def call(method, path, body=None, key=""):
     req = urllib.request.Request(BASE + path, method=method,
-        headers={"X-Maint-Key": key, "Content-Type": "application/json"},
+        headers=dict(UA_HEADER, **{"X-Maint-Key": key, "Content-Type": "application/json"}),
         data=json.dumps(body).encode() if body is not None else None)
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode())
