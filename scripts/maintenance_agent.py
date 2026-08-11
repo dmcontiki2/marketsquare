@@ -136,7 +136,22 @@ REFUSE_TRUST_CORE = (
     "auth", "login", "password", "session", "token", "kyc", "id number", "identity",
     "anonym", "reveal", "seller_email", "schema", "migration", "database", "drop table", "safety",
 )
-REFUSE_MARKERS = REFUSE_LEGAL_COSTLY if PRELAUNCH else (REFUSE_LEGAL_COSTLY + REFUSE_TRUST_CORE)
+# GUARD-SPLIT-1 (11 Aug 2026, from David's "I do need autonomous fixing pre-launch").
+# MAINT_PHASE was doing TWO unrelated jobs on one switch:
+#   (1) the DESIGN LANE  -- prelaunch implements micro design changes instead of batching
+#       them. This is the autonomy David actually asked for. Still keyed to MAINT_PHASE.
+#   (2) the TRUST CORE   -- prelaunch dropped identity/auth/kyc/schema/safety refusals
+#       ENTIRELY. Nobody asked for that; it rode along.
+# The 9 Aug ruling justified (2) on the premise of "no real users/sellers/money". That
+# premise has expired: three real people with real addresses are filing faults, Maroushka
+# has a live listing (335) with 8 real photos, and RG-0045 asserts that no endpoint may
+# ever return seller identity -- anonymity IS the product. Leaking a real seller is
+# irreversible; batching a dark-mode toggle is not. So the two are now separate levers and
+# the trust core defaults ON in BOTH phases.
+# To restore the old all-or-nothing prelaunch behaviour: MAINT_TRUST_CORE_GUARD=0 (explicit,
+# logged in the run banner, never a silent default).
+TRUST_CORE_GUARD = os.environ.get("MAINT_TRUST_CORE_GUARD", "1").strip() != "0"
+REFUSE_MARKERS = REFUSE_LEGAL_COSTLY + (REFUSE_TRUST_CORE if TRUST_CORE_GUARD else ())
 def is_refused(fault):
     hay = ((fault.get("title") or "") + " " + (fault.get("detail") or "") + " " +
            (fault.get("page_url") or "")).lower()
@@ -372,7 +387,10 @@ def main():
     os.makedirs(STATE, exist_ok=True)
     mode = "LIVE" if LIVE else ("SHADOW (kill switch ON, --live not passed)" if KILL
                                 else "SHADOW (kill switch OFF — default, cannot commit)")
-    say("run %s  mode=%s  phase=%s  rate<=%d/h" % (now(), mode, MAINT_PHASE, MAX_SHIPS_PER_HOUR))
+    say("run %s  mode=%s  phase=%s  trust-core=%s  rate<=%d/h"
+        % (now(), mode, MAINT_PHASE,
+           "GUARDED" if TRUST_CORE_GUARD else "OFF (MAINT_TRUST_CORE_GUARD=0)",
+           MAX_SHIPS_PER_HOUR))
     key = maint_key()
     if not _FAULTS_FILE and not key:
         # a key is required ONLY for the live API path; a synthetic --faults-file

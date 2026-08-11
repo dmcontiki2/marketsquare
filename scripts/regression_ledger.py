@@ -2260,5 +2260,54 @@ def rg_maintenance_agent_reaches_brain():
 
 
 
+@entry("RG-0056", "The trust core is refused in EVERY phase -- autonomy is never bought with anonymity",
+       LOCKED, scope="scripts/maintenance_agent.py REFUSE_MARKERS -- both phases, prelaunch and "
+                     "postlaunch; the identity/auth/kyc/schema/safety marker class entire",
+       fixed_on="2026-08-11",
+       ref="GUARD-SPLIT-1, 11 Aug 2026, from David's 'I do need autonomous fixing pre-launch'. "
+           "MAINT_PHASE was doing two unrelated jobs on one switch: (1) the DESIGN LANE -- "
+           "prelaunch implements micro design changes instead of batching them, which is the "
+           "autonomy actually wanted; and (2) the TRUST CORE -- prelaunch dropped the "
+           "identity/anonym/reveal/seller_email/auth/kyc/schema/safety refusals ENTIRELY. "
+           "Nobody asked for (2); it rode along on the same flag. The 9 Aug ruling justified it "
+           "on the premise of 'no real users/sellers/money'. That premise had expired: three "
+           "real people are filing faults from real addresses and Maroushka has a live listing "
+           "(335) with 8 real photos, while RG-0045 asserts no endpoint may ever return seller "
+           "identity. Leaking a real seller is irreversible; batching a dark-mode toggle is not. "
+           "Evidence: the B4 storm run at MAINT_PHASE=prelaunch BEFORE the split failed 2/6 -- "
+           "SYN-ANON ('the listing showed the seller_email to everyone') and SYN-SAFETY both "
+           "routed PATH_B instead of escalating. After the split, the same storm at "
+           "prelaunch passes 6/6 with the banner reading 'phase=prelaunch trust-core=GUARDED'. "
+           "The old all-or-nothing behaviour is still reachable, but only by setting "
+           "MAINT_TRUST_CORE_GUARD=0 explicitly, which the run banner then prints.")
+def rg_trust_core_guarded_in_every_phase():
+    agent = repo_file("scripts/maintenance_agent.py")
+    if agent is None:
+        return [(INFO, "running outside the repo -- GUARD-SPLIT-1 is a source assertion, skipped")]
+    out = []
+    if "REFUSE_LEGAL_COSTLY if PRELAUNCH else" in agent:
+        out.append((FAIL, "the trust core is welded to MAINT_PHASE again -- arming prelaunch "
+                          "would silently stop refusing identity/auth/kyc/schema/safety "
+                          "(GUARD-SPLIT-1)"))
+    if "TRUST_CORE_GUARD = " not in agent or "MAINT_TRUST_CORE_GUARD" not in agent:
+        out.append((FAIL, "the explicit trust-core lever is gone -- the guard is no longer a "
+                          "separate, stated decision (GUARD-SPLIT-1)"))
+    if 'os.environ.get("MAINT_TRUST_CORE_GUARD", "1")' not in agent:
+        out.append((FAIL, "the trust-core guard no longer DEFAULTS ON -- an unset variable must "
+                          "never be the permissive case (GUARD-SPLIT-1)"))
+    if "trust-core=%s" not in agent:
+        out.append((FAIL, "the run banner no longer states the trust-core setting -- a dropped "
+                          "guard must never be silent (GUARD-SPLIT-1)"))
+    for marker in ("anonym", "seller_email", "identity", "kyc", "safety"):
+        if '"%s"' % marker not in agent:
+            out.append((FAIL, "trust-core marker %r has been removed from the refuse list "
+                              "(GUARD-SPLIT-1)" % marker))
+    if not out:
+        out.append((INFO, "trust core refused in both phases; MAINT_TRUST_CORE_GUARD=0 is the "
+                          "only way off and it announces itself"))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

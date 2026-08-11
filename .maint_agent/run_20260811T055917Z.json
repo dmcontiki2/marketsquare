@@ -1,0 +1,49 @@
+{
+  "run": "2026-08-11T05:59:17Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 6,
+  "actions": [
+    {
+      "ref": "TS-0030",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "I took time to go add the heic photos omitted previously, when saving changes at",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0027",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "Regarding Properties: Rental properties and For Sale properties should not be in",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0024",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "Tried to list a property using the AI coach, it told me the AI coach was unavail",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0021",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "We need to review these services, for value added, which AI is best for each and",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0018",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "If we dont use this, can we remove it?",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0006",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "This photo is a duplicate (too close to the first image of the advert)",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    }
+  ]
+}
