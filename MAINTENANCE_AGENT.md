@@ -102,9 +102,10 @@ the questions no design session can answer honestly from an armchair.
    recurrence counts itself.
 3. Decide Path A (mechanical → fix now) or Path B (design change → dossier, batched).
 4. Fix, add the tripwire, ship through the normal gates.
-5. `GET /admin/faults/{id}/retest-draft`, read it, then `POST .../retest-send` once David
-   approves. Fault moves to `awaiting-retest`.
-6. The tester's confirmation — and only that — moves it to `verified`.
+5. Verify the fix on named machine evidence (AIK-VERIFY-1) and set `verified`. Then
+   `GET /admin/faults/{id}/close-draft`, read it, and `POST .../close-send` once David
+   approves — the send CLOSES the fault (NO-RETEST-1, 11 Aug 2026: there are no retests).
+6. The reporter owes us nothing further; a "still broken" reply always reopens.
 
 **What the month must produce (the agent's real requirements, measured not guessed):**
 | Evidence | The design question it settles |
@@ -133,6 +134,14 @@ words in substance: after a fix, the AI must also TEST it and then declare it fi
 - The dashboard's honest ladder stays: open (amber) → fix shipped · retest (middle) →
   verified/closed (green) — only the *who* of verification changed, never the *whether*.
 - Tooling: RECONCILE_FAULTS.bat / scripts/fault_reconcile.py applies this to the queue.
+
+**NO-RETEST-1 — completes AIK-VERIFY-1 (David's ruling, 11 Aug 2026).** There are no
+retests at all: "retest won't work for a customer's complaint — it needs to be
+fixed/verified/validated and closed with a response to the person." The courtesy letter is
+now a CLOSURE letter — fixed -> verified (machine evidence) -> closed-with-response in one
+lane (`close-draft`/`close-send`); the retest-wait status is retired (migrations/011) and
+the dashboard chips read "awaiting close" / "fix shipped · to close". A reporter's
+"still broken" still reopens — their word outranks our evidence. Ledger RG-0048.
 
 ## Build batches (each rides a normal deploy; each leaves tripwires)
 - **B1b — In-app tester intake (DONE, 5 Aug 2026):** app_faults + POST /app/fault + auto-ACK
@@ -197,4 +206,11 @@ changes then to be measured against more stringent guidelines with a designer ap
     same evidence (FEEDBACK.md's link column already does this). A Maintenance
     NOT-A-FAULT adjudication that reveals a wish/preference routes back as a new F-row.
     Recurrence counts and theme votes stay visible to both. Reporter replies: Maintenance
-    owns retest letters (TS-nnnn faults); Feedback owns suggestion acknowledgements.
+    owns closure letters (TS-nnnn faults); Feedback owns suggestion acknowledgements.
+
+**AMENDMENT — 11 Aug 2026 (session):** OPEN item (1) of the LAUNCH BOUNDARY REDRAW is closed:
+the stringent design-change guidelines are written — see `DESIGN_CHANGE_GUIDELINES.md` (ten
+pass/fail criteria + dossier template + the gate line). Item (2), binding the designer role,
+remains OPEN and is David's decision; until bound, David is the gate by default per that doc.
+B3 escalation brief machinery: `scripts/escalation_brief.py` (stage-7 format, one-tick actions).
+B4 Tier-2: `migrations/011_maint_b4_tier2.py` runs the server-side rehearsal on the next deploy.

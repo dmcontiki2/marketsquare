@@ -1846,6 +1846,37 @@ def rg_maint_agent_failsafe():
     return out
 
 
+@entry("RG-0049", "A brain failure DEGRADES the maintenance agent -- it never kills the run",
+       LOCKED, scope="scripts/maintenance_agent.py classify()/propose_patch()/main() -- every ai_provider call guarded; per-fault errors escalate and the queue continues",
+       fixed_on="2026-08-11",
+       ref="MAINT-B4-5 (11 Aug 2026). Found by the local mechanics test of migration 011: "
+           "classify() guarded the IMPORT of ai_provider but not the CALL, so a missing dependency "
+           "(httpx), a network blip or a bad key crashed the whole run mid-queue -- later faults got "
+           "NOTHING, not even escalation. The agent's contract is degrade-not-die: brain trouble "
+           "routes to the batched design lane or escalates; a poisoned fault can never kill the "
+           "queue. Source-level so it holds offline.")
+def rg_maint_brain_degrades():
+    import os, re
+    out = []
+    f = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "scripts", "maintenance_agent.py")
+    try:
+        src = open(f, encoding="utf-8").read()
+    except OSError:
+        return [(INFO, "maintenance_agent.py not present (running outside the repo) -- check skipped")]
+    for m in re.finditer(r"=\s*ai_provider\.complete\(", src):
+        back = src[max(0, m.start() - 400):m.start()]
+        if "try:" not in back.split("def ")[-1]:
+            out.append((FAIL, "an ai_provider.complete() call is not guarded by try/except -- "
+                              "a brain failure would crash the run again"))
+            break
+    if "agent error mid-fix" not in src:
+        out.append((FAIL, "per-fault mid-fix guard lost -- one poisoned fault could kill the queue"))
+    if "brain call failed" not in src:
+        out.append((FAIL, "classify() call-failure degradation lost"))
+    return out
+
+
 @entry("RG-0047", "The blur ceiling judges the PAINTED OUTPUT, never just the boxes",
        LOCKED, scope="bea_main.py PHOTO-MEASURE-1 — _anon_blur_until_clean, both accepted-image exits, ALL upload gates that route through it",
        fixed_on="2026-08-10",
@@ -1893,6 +1924,38 @@ def rg_photo_measure():
     if body.count("_anon_painted_fraction(_pristine, img) > _ANON_MAX_BLUR_FRAC") < 2:
         out.append((FAIL, "the output gates no longer share the ONE ceiling "
                           "(_ANON_MAX_BLUR_FRAC) -- a second constant will drift"))
+    return out
+
+
+@entry("RG-0048", "There are no retests: a complaint closes with a response, never a wait on the reporter",
+       LOCKED, scope="the whole fault lane — bea_main.py statuses/letter/routes, dashboard REPORT chips, ts_report.js promise copy",
+       fixed_on="2026-08-11",
+       ref="NO-RETEST-1, David 11 Aug 2026: 'retest won't work for a customer's complaint — it "
+           "needs to be fixed/verified/validated and closed with a response to the person.' "
+           "Completes AIK-VERIFY-1 (people report, machines verify). The retest-wait status, "
+           "the 'please retest' letter and the retest-draft/retest-send routes are retired; "
+           "close-draft/close-send sends the closure letter and CLOSES the fault, stamping "
+           "verified_at. Legacy rows migrated by migrations/011_no_retest_status.py. A "
+           "reporter's 'still broken' reply always reopens — their word outranks our evidence.")
+def rg_no_retests():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "running outside the repo — NO-RETEST-1 source checks skipped")]
+    if "awaiting" + "-retest" in src:
+        out.append((FAIL, "the retired retest-wait status is back in bea_main.py (NO-RETEST-1)"))
+    if "/retest-" in src:
+        out.append((FAIL, "a /retest- route is back in bea_main.py (NO-RETEST-1)"))
+    if '"/admin/faults/{fid}/close-send"' not in src:
+        out.append((FAIL, "close-send is gone — a fault can no longer be closed with a response"))
+    if "def _fault_close_email" not in src:
+        out.append((FAIL, "the closure letter builder is gone from bea_main.py"))
+    js = repo_file("ts_report.js")
+    if js is not None and "retest" in js.lower():
+        out.append((FAIL, "ts_report.js promises the tester a retest again (NO-RETEST-1)"))
+    dash = repo_file("dashboard.server.html")
+    if dash is not None and "awaiting retest" in dash:
+        out.append((FAIL, "the dashboard chip reads 'awaiting retest' again (NO-RETEST-1)"))
     return out
 
 

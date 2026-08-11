@@ -1,0 +1,10 @@
+[Unit]
+Description=Maintenance Agent 3x/day (B2 cadence: morning, midday, evening)
+
+[Timer]
+OnCalendar=*-*-* 05,11,17:20:00 UTC
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

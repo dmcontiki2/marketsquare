@@ -37,6 +37,19 @@ def test_auto_reply_gate_not_gmail_only():
     assert 'and (bool(os.getenv("RESEND_API_KEY")) or bool(GMAIL_APP_PASSWORD))' in src, \
         "auto-reply gate regressed to Gmail-only (Resend is the launch path)"
 
+def test_escalation_brief_wired():
+    # B3 (11 Aug 2026): the safety/legal/cost brief. Three properties must hold:
+    # (1) categories come FROM the agent (import, not copy) so a new refuse marker
+    #     can never silently miss the brief; (2) the one-tick format survives;
+    # (3) the selftest exists so the format is provable offline.
+    src = _read(os.path.join("scripts", "escalation_brief.py"))
+    assert "from maintenance_agent import REFUSE_LEGAL_COSTLY, REFUSE_TRUST_CORE" in src, \
+        "brief no longer imports the agent's refuse markers -- category drift now possible"
+    assert "TICK: reply" in src, "one-tick action line lost from the brief format"
+    assert "never block" in src, "the reports-inform-never-block contract line lost"
+    assert "--selftest" in src, "brief selftest entry point lost"
+
+
 if __name__ == "__main__":
     failed = 0
     for name, fn in sorted({k: v for k, v in list(globals().items())

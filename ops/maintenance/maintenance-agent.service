@@ -1,0 +1,13 @@
+[Unit]
+Description=MarketSquare Maintenance Agent (Path A autonomous fix loop, MAINTENANCE_AGENT.md B2)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/marketsquare-src
+Environment=PYTHONPATH=/opt/marketsquare-src
+# MAINTENANCE_AGENT_ENABLED + MAINT_PHASE come ONLY from the drop-in David creates
+# at arming time (MAINT_ARMING_RUNBOOK.md). Without it, --live is inert and every
+# run is SHADOW — the unit alone cannot arm anything (LIVE requires BOTH, by construction).
+ExecStart=/usr/bin/python3 scripts/maintenance_agent.py --live

@@ -148,7 +148,12 @@ def classify(fault):
              "feature. If unsure, answer DESIGN.")
     msg = [{"role": "user", "content": "TITLE: %s\nDETAIL: %s\nPAGE: %s" % (
         fault.get("title", ""), fault.get("detail", ""), fault.get("page_url", ""))}]
-    r = ai_provider.complete(msg, task="haiku", max_tokens=8, system=sys_p)
+    try:
+        r = ai_provider.complete(msg, task="haiku", max_tokens=8, system=sys_p)
+    except Exception as e:
+        # MAINT-B4-5: a brain CALL failure (missing dep, network, key) must degrade
+        # exactly like an unavailable brain -- batched design lane, never a crash.
+        return "PATH_B", "brain call failed (%s) -- defaulting to the batched design lane" % type(e).__name__
     verdict = (r.text or "").strip().upper()
     src = "%s/%s" % (r.provider, r.model)        # the IDENTIFIED source, logged
     if not r.ok:
@@ -209,7 +214,12 @@ def propose_patch(fault):
         r = type("R", (), {})()
         r.text, r.ok, r.provider, r.model, r.error_kind = (diff or "NObugfix"), bool(diff), "stub", "rehearsal", ""
         return r
-    import ai_provider
+    try:
+        import ai_provider
+    except Exception:
+        r = type("R", (), {})()
+        r.text, r.ok, r.provider, r.model, r.error_kind = "NObugfix", False, "none", "unavailable", "import"
+        return r
     files = _candidate_files(fault)
     if files:
         ctx = "\n\n".join("### FILE: %s\n%s" % (p, c) for p, c in files)
@@ -229,7 +239,13 @@ def propose_patch(fault):
             "Reply with ONLY the unified diff, or exactly NObugfix." % (
                 fault.get("ref"), fault.get("title", ""), fault.get("detail", ""),
                 fault.get("page_url", ""), ctx)}]
-    r = ai_provider.complete(msg, task="sonnet", max_tokens=2000, system=sys_p)
+    try:
+        r = ai_provider.complete(msg, task="sonnet", max_tokens=2000, system=sys_p)
+    except Exception as e:
+        # MAINT-B4-5: same degradation contract as classify -- a failed call is a
+        # DECLINED fix (escalates to a human), never a crashed queue.
+        r = type("R", (), {})()
+        r.text, r.ok, r.provider, r.model, r.error_kind = "NObugfix", False, "none", "brain-error", type(e).__name__
     return r  # caller reads .text/.ok/.provider/.model
 
 
@@ -300,7 +316,11 @@ def main():
 
     for f in faults:
         ref = f.get("ref") or ("TS-%04d" % f.get("id", 0))
-        lane, why = classify(f)
+        try:
+            lane, why = classify(f)
+        except Exception as e:
+            # MAINT-B4-5: classification can never kill the queue -- escalate and move on.
+            lane, why = "ESCALATE", "agent error during classify (%s) -- escalated, run continues" % type(e).__name__
         item = {"ref": ref, "lane": lane, "why": why, "title": (f.get("title") or "")[:80]}
 
         if lane in ("ESCALATE", "PATH_B"):
@@ -310,7 +330,11 @@ def main():
             report["actions"].append(item); say("%s -> %s (%s)" % (ref, lane, why)); continue
 
         # ── PATH_A: propose, gate, and (only if fully armed) ship ───────────────────
-        r = propose_patch(f)
+        try:
+            r = propose_patch(f)
+        except Exception as e:
+            item["outcome"] = "agent error during propose (%s) -> escalate for a human" % type(e).__name__
+            report["actions"].append(item); say("%s -> propose error (%s)" % (ref, type(e).__name__)); continue
         item["source"] = "%s/%s" % (r.provider, r.model)      # identified, every time
         if not r.ok or "NObugfix" in (r.text or "") or not _looks_like_patch(r.text):
             item["outcome"] = "brain declined a small mechanical fix -> escalate for a human"
@@ -359,6 +383,13 @@ def main():
             item["outcome"] = ("SHIPPED + VERIFIED (%s)" % ev["evidence"]) if ev["ok"] \
                               else "SHIPPED, verify probe inconclusive -> left fix-shipped, not verified"
             report["actions"].append(item); say("%s -> %s" % (ref, item["outcome"]))
+        except Exception as e:
+            # MAINT-B4-5: one poisoned fault (git timeout, probe error, API hiccup)
+            # can never kill the queue. Escalate this fault, keep going.
+            item["outcome"] = "agent error mid-fix (%s) -> escalate for a human" % type(e).__name__
+            if item not in report["actions"]:
+                report["actions"].append(item)
+            say("%s -> mid-fix error (%s), queue continues" % (ref, type(e).__name__))
         finally:
             subprocess.run(["git", "worktree", "remove", "--force", work], cwd=REPO,
                            capture_output=True, timeout=60)
