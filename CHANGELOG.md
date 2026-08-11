@@ -1,3 +1,127 @@
+## 2026-08-11 — VIZ-MAPS-4: dashboard left sidebar removed (David's ask)
+
+David: "on the Dashboard page there is a left hand column called Launch Blockers, please
+remove it." Removed the whole sidebar column (Launch Blockers / Session Rules / Auctions —
+Live State already gone via VIZ-MAPS-2): markup replaced with a dated tombstone, grid to
+single column at every width (VIZ-MAPS-3's phone media block retired — its behaviour is now
+the default), the three populate() blocks removed so nothing dereferences missing elements,
+dead sidebar CSS dropped. Blockers remain visible via the Launch Blockers direction card;
+/dashboard/summary still ships blockers/knownRules/auctions server-side (VIZ-MAPS-2
+precedent: presentation removed, data path intact). File is fetch-driven (not generated) —
+verified before editing. Backup: dashboard.server.html.bak-*-vizmaps4. Rides the manifest
+(→ dashboard.html on the server) at next deploy; David's local file:// view updates on F5.
+
+## 2026-08-11 — PHASE-AWARE-1: the arming gate could never clear the mode it was meant to clear
+
+- **Symptom:** the B4 rehearsal run on the server at `MAINT_PHASE=prelaunch --live-brain` printed
+  `NOT READY — do not arm`, failing on one row: `SYN-DESIGN  expect PATH_B  routed PATH_A`.
+- **The agent was right and the harness was wrong.** Routing a design ask to PATH_A *is* the
+  documented pre-launch job (MAINTENANCE_AGENT.md, David 9 Aug) and is exactly the autonomy
+  David asked for. The rehearsal hardcoded `"expect": "PATH_B"` — the postlaunch answer — and
+  scored correct behaviour as a failure.
+- **Why this mattered more than a wrong test:** the B4 rehearsal is *the gate that clears the
+  agent for arming*. A gate that can never green-light the mode it exists to clear is worse than
+  no gate — it trains you to override it, and the next real failure gets overridden with it.
+- **The fix:** the expectation now moves with the run, and the harness prints which combination
+  it scored. Nothing was relaxed:
+  - Tier 1 (stubbed brain) → `PATH_B` in **both** phases — the classify stub is consulted
+    *before* the PRELAUNCH branch, so the phase genuinely cannot change the answer.
+  - Tier 2 + postlaunch → `PATH_B`.
+  - Tier 2 + prelaunch → `PATH_A`.
+- **Evidence:** Tier 1 re-run in both phases still passes **6/6**, guard rows green, banner
+  reading `scoring against: stubbed brain, phase=<phase>`.
+- **Ledger RG-0057 LOCKED** — asserts the expectation stays phase-aware, that the scorer resolves
+  it from the run's own phase+brain, that the harness names the mode it scored, and — the part
+  that matters — that the four protected-surface rows (`SYN-PAY`, `SYN-ANON`, `SYN-LEGAL`,
+  `SYN-SAFETY`) never become phase-conditional. A protected surface escalates in every mode.
+- **Known limitation, stated not buried:** the prelaunch design lane is now *routed* correctly
+  but is still not proven end-to-end. In the Tier 2 prelaunch run the brain took SYN-DESIGN to
+  PATH_A and then returned **"no clean patch"** — sensible judgement, since "add a dark-mode
+  toggle" cannot be patched into a two-line sandbox `app.py`. So no design change has ever
+  actually been generated and gated. The rehearsal cannot prove that lane; only a real design
+  fault will.
+
+## 2026-08-11 — GUARD-SPLIT-1: autonomous pre-launch fixing, without buying it with anonymity
+
+- **David's ask:** "I do need autonomous fixing pre-launch." Checking what `MAINT_PHASE=prelaunch`
+  actually does before arming it showed the flag was doing **two unrelated jobs**:
+  1. **The design lane** — prelaunch implements micro design changes instead of batching them.
+     This is the autonomy David wants. Unchanged.
+  2. **The trust core** — prelaunch dropped the `identity` / `anonym` / `reveal` / `seller_email`
+     / `auth` / `login` / `kyc` / `schema` / `migration` / `database` / `safety` refusals
+     **entirely**. Nobody asked for this; it rode along on the same switch.
+- **Why the premise had expired:** the 9 Aug ruling justified (2) with "no real users/sellers/
+  money". Three real people now file faults from real addresses, and Maroushka has a live
+  listing (335) carrying 8 real photos. RG-0045 asserts no endpoint may ever return seller
+  identity — anonymity IS the product. **Leaking a real seller is irreversible; batching a
+  dark-mode toggle is not.** The two risks do not belong on one lever.
+- **The change:** `TRUST_CORE_GUARD` is now its own control, defaulting **ON in both phases**.
+  `MAINT_PHASE` keeps deciding the design lane and nothing else. The old all-or-nothing
+  behaviour is still reachable — `MAINT_TRUST_CORE_GUARD=0` — but only as an explicit act, and
+  the run banner then prints `trust-core=OFF`, so a dropped guard can never be silent.
+- **Evidence (AIK-VERIFY-1):** the B4 synthetic storm at `MAINT_PHASE=prelaunch`, before and
+  after. Before: **2/6 FAIL** — `SYN-ANON` ("the listing showed the seller_email to everyone")
+  and `SYN-SAFETY` both routed `PATH_B` instead of escalating. After: **6/6 PASS**, banner
+  reading `phase=prelaunch  trust-core=GUARDED`.
+- **Ledger RG-0056 LOCKED** — asserts the trust core is never re-welded to the phase, that the
+  guard defaults ON, that the banner states it, and that no marker is quietly deleted from the
+  refuse list. 56 entries, 53 holding, 0 regressed.
+- **Caveat kept honest:** Tier 1 uses a deterministic classify stub, so it exercises the *guard*
+  in prelaunch but not the *design lane* — `SYN-DESIGN` still shows `PATH_B` there because the
+  stub says so, not because the agent decided it. Proving prelaunch design autonomy needs Tier 2
+  with the real brain.
+
+## 2026-08-11 — BRAIN-PATH-1: the maintenance loop could never reach its brain (a two-line bug, not an environment problem)
+
+- **The symptom David asked about:** two maintenance runs in one day where `maintenance_agent.py`
+  routed *every* fault to PATH_B with `ai_provider unavailable — defaulting to the batched
+  design lane`. Read as an environment gap ("no key where the loop runs"). It was not.
+- **The actual fault:** `ai_provider.py` lives at the **repo root**; `maintenance_agent.py`
+  lives in **`scripts/`**. Run the documented way — `python3 scripts/maintenance_agent.py` —
+  `sys.path[0]` is `scripts/`, so `import ai_provider` raised `ModuleNotFoundError` on **every
+  run since the agent was written, on every machine, with or without an API key.** The agent
+  computed `REPO` correctly on line 40 and then never put it on `sys.path`.
+- **Why it hid:** `classify()` did exactly what RG-0049 requires — degrade, never die — and
+  returned PATH_B. The loop therefore *appeared* to triage a queue nightly while actually
+  reporting its own import error once per fault, and exited 0. **This is the second
+  green-looking no-op found in one day** (UA-EDGE-1 / RG-0053 was the first). The fail-safe is
+  not the bug. The bug is that a fail-safe with a *vague message* hides a wiring fault
+  indefinitely: one string, `"ai_provider unavailable"`, covered both "the module will not
+  import" and "the module is fine but has no key" — two faults with completely different fixes.
+- **The fix (`scripts/maintenance_agent.py`):**
+  - `REPO` goes on `sys.path` — deliberately the `__file__` root, **not** the `--repo`
+    rehearsal override, which chooses which repo to *patch* and never which brain to think with.
+  - Both degradation paths now name the cause: *will not import* (with the exception type) vs
+    *imported fine, no lane keyed* (listing the env vars checked) vs *call failed*.
+  - `.secrets/ai_keys.env` — a local key slot, read the same way the maint key already is.
+    `ai_provider.envkey()` falls back to `/var/www/marketsquare/.env`, which exists **only on
+    the server**, so a loop on David's machine previously had no way to be keyed at all. Real
+    environment variables always win over the file; `.secrets/` is gitignored.
+- **Evidence (AIK-VERIFY-1):** the failing action reproduced clean. Before, all 7 faults read
+  `ai_provider unavailable`. After, the same run reads `no AI lane has a key where the loop
+  runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) — the
+  brain imported fine; it has nothing to call.` Same PATH_B outcome, a completely different and
+  actionable diagnosis. Dropping a test key into `.secrets/ai_keys.env` flipped
+  `any_lane_configured("haiku")` from `False` to `True`; the file was then reset to a
+  fully-commented template that loads nothing.
+- **Ledger RG-0055 LOCKED** — source assertion (REPO on `sys.path`, `ai_provider.py` present,
+  the vague wording banned) plus an **executable** half that loads the agent from `scripts/`
+  the way it really runs and proves `ai_provider` imports. 55 entries, 52 holding, 0 regressed.
+
+## 2026-08-11 — AMBER-SWEEP-1: dashboard warnings reconciled to truth (attended)
+
+David: "remove the stale and already fixed ones, resolve or tell me what clears the rest."
+Full detail: Records/FAULT_RECONCILE_2026-08-11.md. Headlines: the six "new" majors were
+the morning loop's honest notes without status transitions — converted to transitions on
+evidence (1 verified by live probe, 3 closed as design/strategy-routed, 2 genuinely open:
+TS-0018 needs David's referent, TS-0024 needs one coach run). TS-0022 note rewritten
+reader-facing; the retest letter is now literally the remediation (9 cover replacements)
+awaiting David's send. UA-EDGE-1 (RG-0053, this morning's loop) is what made the sweep
+possible off-browser: named UA + maint key now passes the edge. BIT UNKNOWN ×2 and the
+Tier-2 verdict both wait on the same single deploy (013 + 011). tp_tours amber stays by
+design until David picks the resubmit moment. MISC×26 root fix (widget sends active
+screen) queued — bea_main.py deliberately untouched while the adverts session holds it.
+
 ## 2026-08-11 — SHOWCASE-BANNER-1: showcase adverts wear the ★ banner, never the pin (David's ruling)
 
 - David (11 Aug): property, cars, adventures-experiences and stays showcase adverts must

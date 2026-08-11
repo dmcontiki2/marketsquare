@@ -5,6 +5,199 @@
 
 ## Current Session
 
+- SUPER-AFRICA rulings (David, 11 Aug): ZW/Harare pricing and fares in **USD** ("riders in
+  dollars") — the ZW ladder seeder, journey-map fares and COPY blocks build in USD when
+  replication reaches ZW. Zambia scope still open. Also 11 Aug: VIZ-MAPS-4 applied to BOTH
+  dashboards (dashboard.server.html + the local sibling dashboard.html David actually opens
+  — the "still see the column" mystery was the second file). TS-0018 closed on David's
+  referent. D8 verified fully done; D10 scheduled for 1 Sep 09:00; D9 post-launch.
+
+- **SHOWCASE-BANNER-1 (11 Aug, David's call after the 002 conflict was raised):** showcase
+  trios get the ★ SUPER ADVERT banner via super_example=1, and the new showcase=1 flag
+  excludes them from SUPER-PIN-1 pinning in every sort (server + client) — real sellers
+  keep top billing. migrations/014 marks live rows; creators born-marked; LIST-002 in the
+  register; RG-0052 LOCKED. Rides next deploy.
+
+- **PHASE-AWARE-1 — the arming gate was scoring the wrong mode.** The B4 rehearsal hardcoded the
+  postlaunch answer for SYN-DESIGN, so running it in prelaunch (the mode David wants to arm)
+  scored correct PATH_A routing as FAIL and printed "NOT READY". The agent was right; the
+  harness was wrong. Expectations now track the run's phase+brain and the harness states which
+  combination it scored. **RG-0057 LOCKED**, including an assertion that the four
+  protected-surface rows can never become phase-conditional.
+- **Confirmed live on the server, prelaunch, real brain:** banner read
+  `phase=prelaunch  trust-core=GUARDED`, SYN-MECH reached shadow-green, and all four protected
+  surfaces escalated (paystack/card, identity/anonym/seller_email, legal/popia/eula, safety).
+  GUARD-SPLIT-1 does what it was built to do — full pre-launch autonomy with the trust core
+  still refused.
+- **Outstanding before arming:** re-run Tier 2 prelaunch to get a true verdict (routing will now
+  score correctly), and note that `static/maint/b4_tier2.json` is still **404** — migration 011
+  writes it from `post_deploy.sh` on a *deploy*, and only `main` has been pushed.
+- **Known gap, deliberately not papered over:** the prelaunch design lane is routed but never
+  proven end-to-end. Tier 2 took SYN-DESIGN to PATH_A and the brain returned "no clean patch" —
+  correct judgement for an unpatchable synthetic, but it means no design change has yet been
+  generated and gated by machine. Only a real design fault will settle that.
+
+## 11 Aug 2026 — DATA & PARTNERS card corrected + per-partner activation brief (PARTNER-LINKS-1)
+
+David asked what activating the four DATA & PARTNERS toggles actually needs. Answer, per lane:
+
+- **Signed-operator photos** (`data_ops`) — internal, no vendor, no key, R0. Blocked on
+  **paper, not code**: the Featured Operator Showcase Agreement is still a DRAFT (21 Jun) and
+  no operator has signed. Then build upload+render, then flip. [D] counsel sign-off.
+- **Google Places** (`data_places`) — **CLOSED**, not pending. Out by David's 1 Aug ruling
+  after a silent ~$360 bill. No activation path; row kept as a tombstone so it cannot return
+  by accident. Link now points at the billing console.
+- **Flights — Travelpayouts / Aviasales** (`data_flights`) — **the only lane with runway.**
+  Account live (partner 758984), `TRAVELPAYOUTS_TOKEN` live on the server (re-verified 5 Aug),
+  EULA v1.11 §6.1A live, R0 cost, no money through the till. Remaining gap is *entirely our
+  own code*: fare-cache adapter (empty `{}` = no fare, NOT an error) → Expedition fare UI with
+  the indicative/agency caveat + click-out disclosure → token joins the live probes → flip.
+  Tours shelf (~8% vs 1.1–1.3%) still blocked on the 5 Aug review decline — resubmit moment
+  is David's (OPEN_LOOPS D10).
+- **Mapbox** (`data_mapbox`) — optional; the only row that adds a paid metered dependency,
+  for prettier tiles and no trust gain. Recommendation: leave off.
+
+**Cross-cutting finding:** none of the four flags has consumer code. They are wiring-only
+placeholders — flipping one changes nothing on the live site. No session should report
+"activated" on the strength of a flag flip alone.
+
+Dashboard patched both sides (links, corrected vendor, OUT/KEY-LIVE badges, TO-ACTIVATE
+tooltips), locked as RG-0050, ledger green (50 · 47 holding · 0 regressed · exit 0).
+Unshipped — rides the next `deploy` ref publish.
+
+- **NO-RETEST-1 (11 Aug, David's ruling):** there are no retests — a complaint is fixed by
+  us, verified by us on named machine evidence, and CLOSED with a letter to the reporter.
+  Retest-wait status retired; `close-draft`/`close-send` replace the retest routes (the send
+  closes + stamps verified_at); dashboard chip now "awaiting close"; ACK/widget copy no
+  longer promise a retest ask. migrations/012 moves the 1 parked live row to 'fixed'.
+  Ledger RG-0048 LOCKED. Awaiting next deploy; then close-draft → David approves → send.
+- Pre-existing tripwire failure observed (not this change): adventures_na/bw/mz/ke_map.html
+  carry no REPORT widget (test_widget_is_wired_into_every_tester_page red).
+
+- **Maintenance loop, 11 Aug (daily run):** the loop's own intake was broken and reporting
+  green — `UA-EDGE-1`. Cloudflare refused every UA-less call from our tooling (error 1010)
+  before it reached the origin, so `maintenance_agent.py` read an empty queue and exited 0.
+  Fixed for the whole class (5 scripts that call our edge now send a User-Agent); verified
+  by reproducing the failing action clean (403 → 200, 7 faults appeared). **RG-0053 LOCKED**,
+  with a live half so a silent re-break turns the ledger red. Committed, not deployed —
+  NIGHTLY-SHIP-1 carries it through the gates.
+- **Fault queue after the fix is readable again: 30 total · 7 new · 19 verified · 2 duplicate
+  · 1 closed · 1 stale `awaiting-retest` (TS-0022 — status retired by NO-RETEST-1/migrations
+  012; row not touched by this session, flagged for `fault_reconcile`).** All 7 new are
+  severity=major: TS-0001, TS-0006, TS-0018, TS-0021, TS-0024, TS-0027, TS-0030.
+- **None of the 7 were fixed this session — and the reason is itself a finding.** The shadow
+  agent routed all 7 to PATH_B with `why: "ai_provider unavailable -- defaulting to the
+  batched design lane"`. That is RG-0049 degradation working as designed (a brain failure
+  degrades, never kills), but it means **the queue is currently classified by the fallback,
+  not by judgement** — no fault reached "gates GREEN, patch ready", so per the loop's strict
+  contract nothing was applied. The brain binding needs an ai_provider lane reachable from
+  wherever the loop runs, or the 3×/day sessions will keep binning real faults as design work.
+- Escalation brief: none written — no safety / legal / cost items in the last 24h.
+
+- **Maintenance loop, 11 Aug (second run today):** ledger green before and after — **54
+  entries, 51 holding, 0 regressed, 3 open** (RG-0003, RG-0004, RG-0029, all pre-existing
+  and unchanged). Escalation brief: none written — no safety/legal/cost items in 24h.
+- **Fixed: CV-GUARD-1 — the seller CV blanked on an empty roster or an off-city card.**
+  `openSellerCV` dereferenced `s.headline`/`s.trustScore` with `SELLERS` empty, and `l.trust`
+  twice in its markup after having already guarded `l` one line above for the arithmetic.
+  `renderProfilePreview` had the same `SELLERS[0]` deref plus an unguarded `CATS[s.cat].icon`.
+  RG-0031 missed both because it scoped to "the openDetail call graph" and these are **sibling
+  entry points** — same class, different door. Verified by reproducing the failing action
+  clean: `scripts/repro_cv_guard.js` gives **3/3 CRASH (exit 1)** on the pre-fix backup and
+  **3/3 pass (exit 0)** on the fix. **RG-0054 LOCKED.**
+- **Verified: TS-0001** ("the 15 matching list button doesnt work") — fixed 5 Aug, but the
+  row was never updated and sat in `new` for six days. Live-probed the deployed asset
+  (`GET /static/ms.js`, HTTP 200, 1,056,818 bytes, contains `upBox.onclick`) and moved to
+  `verified`. Queue hygiene, not new work — worth watching that fixes get their row closed.
+- **Fault queue: 30 total · 6 new · 20 verified · 2 duplicate · 1 closed · 1 stale
+  `awaiting-retest` (TS-0022, status retired by NO-RETEST-1 — still not touched, still for
+  `fault_reconcile`).** The 6 new all now carry an honest `fix_note` saying what the loop did
+  and, more importantly, what it deliberately did **not** claim, so next session does not
+  re-triage them from scratch: TS-0006 and TS-0027 are Path B design calls; TS-0021 is a
+  model-selection question that is David's by standing rule; TS-0024's root cause was never
+  established (though all three AI lanes read available from `/flags` and the breaker is
+  empty, so the likely single-vendor cause is structurally closed by RG-0032); **TS-0018
+  needs one sentence from David** — "if we dont use this, can we remove it?" has no referent
+  in the text and removal is irreversible, so the loop will not guess.
+- **Standing finding, now twice in one day: the brain is not reachable from where the loop
+  runs.** Both runs today had `maintenance_agent.py` route every fault to PATH_B with
+  `ai_provider unavailable -- defaulting to the batched design lane`. That is RG-0049
+  degrading correctly rather than dying, but the effect is that **real mechanical faults get
+  binned as design work** and nothing ever reaches "gates GREEN, patch ready". Everything
+  fixed today was found by Claude reading the queue directly, not by the harness's triage.
+  Until an `ai_provider` lane is reachable from the loop's environment, the 3×/day scheduled
+  sessions are doing shadow bookkeeping, not triage — this is the B2b binding gap, and it is
+  the single thing most worth closing before the launch rush.
+
+- MAINT-CLOSE-1 (11 Aug, attended): Maintenance Agent open items CLOSED to the arming line —
+  MAINT-B4-5 degrade-not-die fix (RG-0049 locked, ledger green), migration 011 ships the server
+  Tier-2 rehearsal on next deploy (verdict → static/maint/b4_tier2.json, reviewer-gated), B3
+  escalation brief machinery + tripwire, DESIGN_CHANGE_GUIDELINES.md (boundary-redraw item 1
+  closed; item 2 designer binding = David), maintenance-loop scheduled daily 07:31, arming
+  runbook + 3×/day server timer staged. Committed for NIGHTLY-SHIP-1; David's one-word /tsl
+  ships it sooner. OPEN for David: arm after Tier-2 READY; bind the designer role.
+
+- **LIVE-FLAGS-1 + SERVER-BIT-1 (11 Aug, David):** dashboard now self-refreshing — Launch
+  Switch card polls /flags (20s + focus); BIT heartbeat moves ON the server (manifest
+  ops/bit/ + migrations/013 systemd timer, 15 min, localhost, detect-only). No human, no
+  deploy in the refresh loop. Ledger RG-0051. Rides next deploy.
+- **Converged with parallel maint session ff8ec95:** my migration renumbered 011→012;
+  torn adventures_ke_map.html restored from HEAD (widget back, tripwire green);
+  RG-0048/0049/0050/0051 all coexist, ledger fully green.
+- **Second clobber, class-closed:** the journey-map rebuild lane rewrote all five
+  adventures maps again 06:09 (widget lost, +new c2c page). No code generator exists —
+  the runbook drives rebuilds, so the standing rule now lives in
+  JOURNEY_PHOTO_RUNBOOK.md; all five pages re-patched, intake tests ALL PASS. The
+  deploy gate blocks any future widget-less rebuild from shipping.
+
+- Kenya photo run: 29/32 — Days 1-6 COMPLETE (balloon dawn, cheetah watchtower, Mara crossing, bush breakfast, Oloololo sundowner all in). Map rebuilt with 29 embedded. Overnight session ended when the Higgsfield tab renderer froze (~03:30); root-caused a CSS-vs-screenshot coordinate-space trap first (runbook updated — big lesson banked). REMAINING: 3 shots (d7_start bush airstrip / d7_sight Nairobi connection / d7_finish Cape Town home) ≈ 15 min in a fresh tab, then 21 flight-leg shots NA/BW/MZ, then supervised photos DONE → next phase: /tsl deploy + server seed --apply + replicate ZW/EG.
+
+- David's 4 map points DONE: off-line pins fixed (seg-through-stops, all Kenya days + bookends), airport continuity stitched (d7 ends CPT/JNB with own pins+photos — KE's 3 airport stills still pending generation), heritage layer live on all 5 maps, TP static links on flight days (marker 758984; strip-on-claim rule canon'd). Ledger RG-0025 strengthened with ke page.
+
+- **GUARD-SPLIT-1 — pre-launch autonomy is now available without dropping the trust core.**
+  `MAINT_PHASE` was controlling both the design lane (the autonomy David wants) and the
+  identity/auth/kyc/schema/safety refusals (which nobody asked to drop). Split them:
+  `TRUST_CORE_GUARD` defaults ON in **both** phases; `MAINT_PHASE` now only decides whether
+  design changes are implemented or batched. **RG-0056 LOCKED.**
+- **Why now:** the 9 Aug "no real users/sellers/money" premise has expired — three real
+  reporters, and Maroushka's live listing 335 with 8 real photos. Evidence: the B4 storm at
+  prelaunch failed **2/6** before the split (SYN-ANON and SYN-SAFETY routed PATH_B instead of
+  escalating) and passes **6/6** after, banner reading `phase=prelaunch trust-core=GUARDED`.
+- **B4 Tier 2 PASSED on the server, 06:45 UTC** — first time the brain has ever answered
+  (`brain[anthropic/claude-haiku-4-5-20251001]`), real model's patch gated green end-to-end,
+  commit withheld. The earlier 06:42 "NOT READY" was invalid: the server was still on 9cc3725,
+  one commit behind BRAIN-PATH-1, so it re-ran the import bug.
+- **Arming is now David's single act, and the config to use is `MAINT_PHASE=prelaunch` with the
+  trust-core guard left at its default.** Two items still outstanding before the runbook's own
+  gate is satisfied: `static/maint/b4_tier2.json` returns **404** (migration 011 has never run —
+  it fires from `post_deploy.sh` on a *deploy*, and only `main` has been pushed), and Tier 2 has
+  not yet been run in prelaunch mode to prove the design lane actually routes PATH_A.
+
+- **BRAIN-PATH-1 — the "brain unreachable" finding was a two-line bug, not an environment gap.**
+  `ai_provider.py` is at the repo root, `maintenance_agent.py` is in `scripts/`, and the agent
+  never put `REPO` on `sys.path` — so `import ai_provider` had failed on **every run, on every
+  machine, since the agent was written**, keys or no keys. RG-0049 degradation then binned every
+  fault as PATH_B and exited 0. **Second green-looking no-op found in one day** (UA-EDGE-1 was
+  the first): both times a correct fail-safe with a vague message hid a plain wiring fault.
+- **Fixed:** `REPO` on `sys.path` (the `__file__` root, not the `--repo` rehearsal override);
+  degradation messages now distinguish *will not import* / *no key* / *call failed*; and
+  `.secrets/ai_keys.env` added as the local key slot, since `ai_provider.envkey()` only falls
+  back to `/var/www/marketsquare/.env`, which exists on the server alone. **RG-0055 LOCKED**,
+  with an executable half that loads the agent from `scripts/` and proves the import.
+- **Still keyless, and now honestly so.** The loop reports: `no AI lane has a key where the loop
+  runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) — the
+  brain imported fine; it has nothing to call.` **One key in `.secrets/ai_keys.env` (gitignored,
+  template already in place) turns the loop's triage on — that is David's act, and the only
+  thing still outstanding.** Worth knowing before doing it: autonomous triage has never actually
+  run, so its first real outing should be watched rather than left to a 2 a.m. schedule.
+
+- AMBER-SWEEP-1 (11 Aug, attended): fault queue reconciled on evidence — 6 new → 2 (TS-0018
+  awaits David's referent; TS-0024 awaits one coach run), 3 design/strategy items closed &
+  routed, TS-0030 verified by live probe, TS-0022 retest letter = 9-cover replacement request
+  drafted awaiting David's send. Remaining ambers all have named clearers: one deploy (BIT ×2 +
+  Tier-2), David's tp_tours resubmit moment, Maroushka's re-uploads. Details in
+  Records/FAULT_RECONCILE_2026-08-11.md.
+
 - SUPER-AFRICA-1 Kenya pilot BUILT locally (ticket in CHANGE_REGISTER 2026-08-10): ladder seeder + 24 KE COPY blocks + journey map + prompt packs + KE wiring + 7 OPEN-market launch entries. Next: (1) supervised Higgsfield run — 114 advert photos (SUPER_LADDER_PROMPTS.md) + 25 journey photos (JOURNEY_HIGGSFIELD_PROMPTS.md §Kenya); (2) /tsl deploy + server --apply + diag; (3) replicate to ZW/AO/EG + extend NA/MZ/BW. Harare currency decision pending (USD vs ZWL).
 
 - Kenya photo run: 8/32 claimed and QC'd (fly-in day COMPLETE: CPT departure, Rift window, JKIA arrival, Karen cottage; Day 2: matatu street, rhino-and-skyline flagship, Karen Blixen farmhouse, nyama choma). Map rebuilt after each batch. Pace ~4-5 min/photo incl. QC (queue slower than 26 Jul's 60s). Next: d2_over (coffee-garden cottage dawn), then Days 3-7 (24 photos), then 21 flight-leg shots NA/BW/MZ.
