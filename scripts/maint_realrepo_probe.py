@@ -34,10 +34,15 @@ DEFECTS = {
     "file": "ms.js",
     "find": "That listing is not in view right now — try Browse.",
     "repl": "That listing is not in veiw right now — try Browse.",
-    "title": "typo in the dead-click message: it says 'veiw' instead of 'view'",
-    "detail": ('When I tap a card that is not loaded, the grey toast reads '
-               '"That listing is not in veiw right now - try Browse." - the word veiw '
-               'is misspelt, it should be view.'),
+    "title": "typo in the browse message: it says 'veiw' instead of 'view'",
+    # WORDING NOTE (11 Aug 2026): the first cut said "when I tap a card", and the refuse
+    # guard escalated the whole probe -- 'card' is a PAYMENT marker. The guard was doing its
+    # job; the probe was using an ambiguous word. Reworded rather than narrowing the marker:
+    # over-refusing costs a human glance, under-refusing costs a payment surface. Every
+    # string below is checked against the full marker list before use.
+    "detail": ('When I open a listing that is no longer loaded, the grey pop-up message reads '
+               '"That listing is not in veiw right now - try Browse." The word veiw is '
+               'misspelt, it should be view.'),
     "page": "https://trustsquare.co/",
   },
   "bea": {
@@ -45,8 +50,9 @@ DEFECTS = {
     "find": "Admin credentials required.",
     "repl": "Admin credentials requried.",
     "title": "typo in an admin error message: 'requried' instead of 'required'",
-    "detail": ('The admin API returns the message "Admin credentials requried." - '
-               'the word requried is misspelt, it should be required.'),
+    "detail": ('One of the error strings returned by the back end reads '
+               '"Admin credentials requried." The word requried is misspelt, it should '
+               'be required.'),
     "page": "https://trustsquare.co/admin.html",
   },
 }
@@ -89,7 +95,7 @@ def main():
     env = dict(os.environ)
     env.pop("MAINTENANCE_AGENT_ENABLED", None)     # SHADOW, always — this can never ship
     env.setdefault("MAINT_PHASE", "prelaunch")
-    print("\\nrunning the REAL agent against the clone (shadow, unarmed)...\\n")
+    print("\nrunning the REAL agent against the clone (shadow, unarmed)...\n")
     r = sh([sys.executable, AGENT, "--repo=" + clone, "--faults-file=" + ffile], cwd=REPO, env=env)
     print(r.stdout.rstrip() or "(no stdout)")
     if r.stderr.strip():
@@ -107,7 +113,7 @@ def main():
     lane, outcome = a.get("lane", "(none)"), a.get("outcome", "(no outcome)")
     fixed = d["find"] in open(target, encoding="utf-8", errors="replace").read()
 
-    print("\\n" + "-" * 70)
+    print("\n" + "-" * 70)
     print("lane            : %s" % lane)
     print("outcome         : %s" % outcome)
     print("defect repaired : %s" % ("YES" if fixed else "no"))
@@ -117,15 +123,20 @@ def main():
 
     ok = lane == "PATH_A" and "GREEN" in outcome.upper()
     if ok:
-        print("\\nPROBE PASS — the agent found, windowed and patched a REAL %d-byte file, and "
-              "the patch gated green.\\nPatch quality on this codebase is no longer unproven."
+        print("\nPROBE PASS — the agent found, windowed and patched a REAL %d-byte file, and "
+              "the patch gated green.\nPatch quality on this codebase is no longer unproven."
               % os.path.getsize(target))
     else:
-        print("\\nPROBE FAIL — the agent did not produce a green patch against real code.")
+        if lane == "ESCALATE":
+            print("\nPROBE INVALID — the refuse guard escalated the probe's own wording, so the")
+            print("patch path was never exercised. That is the guard working, not a result.")
+            print("Reword the fault in DEFECTS so it trips no marker, then re-run.")
+            return 1
+        print("\nPROBE FAIL — the agent did not produce a green patch against real code.")
         print("This is the honest answer to 'can it fix things here', and it is NOT the same")
         print("question as B4, which only ever patched a two-line app.py.")
     if KEEP:
-        print("\\nclone kept: %s" % clone)
+        print("\nclone kept: %s" % clone)
     else:
         shutil.rmtree(sandbox, ignore_errors=True)
     return 0 if ok else 1
