@@ -74,7 +74,7 @@ def embed(path):
 
 DEFAULT_OV = {"ends": "🚩 Start &amp; finish", "over": "🛏️ Overnight stays",
               "food": "🍽️ Food &amp; dishes", "view": "🏔️ Viewpoints",
-              "sight": "📍 Sights", "route": "〰️ Route", "towns": "◉ Towns"}
+              "sight": "📍 Sights", "route": "〰️ Route", "towns": "◉ Towns", "her": "🏛️ Heritage sites"}
 
 
 def build(spec_path):
@@ -95,7 +95,7 @@ def build(spec_path):
                 stop["ph"] = placeholder(stop)
                 missing += 1
 
-    data = {"days": spec["days"], "towns": spec.get("towns", [])}
+    data = {"days": spec["days"], "towns": spec.get("towns", []), "her": spec.get("heritage", [])}
     cfg = {
         "unit": spec.get("unit", "Day"),
         "s1": spec.get("stat1_icon", "🥾"),

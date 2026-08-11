@@ -89,3 +89,9 @@ warm_videos.sh             | warm_videos.sh
 
 # ── SCOREBOARD-1 (3 Aug 2026): silent scoreboard agent (nightly lane probes) ──
 ai_scoreboard.py           | ai_scoreboard.py
+
+# ── BIT self-test agent (SERVER-BIT-1, 11 Aug 2026) — server runs its own heartbeat ──
+ops/bit/bit_cycle.py         | bit/bit_cycle.py
+ops/bit/bit_runner.py        | bit/bit_runner.py
+ops/bit/bit_mitigator.py     | bit/bit_mitigator.py
+ops/bit/bit_registry.json    | bit/bit_registry.json

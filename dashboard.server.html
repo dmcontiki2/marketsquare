@@ -558,7 +558,7 @@
   </div>
   <div class="om-blk omf-people" style="left:20px;top:222px;width:180px;z-index:5">
     <h3>Testers ×3</h3><div class="om-role">David · Maroushka · David&nbsp;Jnr — REPORT tab</div>
-    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-t-filed"><span class="om-dot"></span>filed total <span class="om-v">—</span></span><span class="om-chip a" id="om-t-retest"><span class="om-dot"></span>awaiting retest <span class="om-v">—</span></span></div>
+    <div class="om-chips omc-ncr"><span class="om-chip g" id="om-t-filed"><span class="om-dot"></span>filed total <span class="om-v">—</span></span><span class="om-chip a" id="om-t-retest" title="Fixed but not yet verified &amp; closed with a letter — NO-RETEST-1: testers are never asked to retest"><span class="om-dot"></span>awaiting close <span class="om-v">—</span></span></div>
     <div class="om-chips omc-traffic"><span class="om-chip nw"><span class="om-dot"></span>reports/day <span class="om-v">—</span></span></div>
   </div>
   <div class="om-blk omf-people" style="left:20px;top:334px;width:180px">
@@ -651,7 +651,7 @@
     <div class="om-chips omc-switches"><span class="om-chip o"><span class="om-dot"></span>test mode</span></div>
   </div>
   <div class="om-blk omf-ext" style="left:1040px;top:376px;width:180px">
-    <h3>Resend</h3><div class="om-role">outbound mail (acks, retest letters)</div>
+    <h3>Resend</h3><div class="om-role">outbound mail (acks, closure letters)</div>
     <div class="om-chips omc-traffic"><span class="om-chip g" id="om-mailsent"><span class="om-dot"></span>auto-sent 30d <span class="om-v">—</span></span></div>
     <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>free tier</span></div>
   </div>
@@ -670,7 +670,7 @@
       <span class="om-chip r" id="om-f-blocker"><span class="om-dot"></span>blockers <span class="om-v">—</span></span>
       <span class="om-chip a" id="om-f-major"><span class="om-dot"></span>major <span class="om-v">—</span></span>
       <span class="om-chip g" id="om-f-minor"><span class="om-dot"></span>minor <span class="om-v">—</span></span>
-      <span class="om-chip a" id="om-f-retest" title="Fix shipped, waiting for the tester's outside confirmation — the honest state between 'we fixed it' and 'it is fixed'"><span class="om-dot"></span>fix shipped &middot; retest <span class="om-v">—</span></span>
+      <span class="om-chip a" id="om-f-retest" title="Fix shipped, awaiting our own verification and the closure letter to the reporter (NO-RETEST-1: testers are never asked to retest)"><span class="om-dot"></span>fix shipped &middot; to close <span class="om-v">—</span></span>
       <span class="om-chip g" id="om-f-closed"><span class="om-dot"></span>closed <span class="om-v">—</span></span>
       <span class="om-chip g" id="om-f-recur"><span class="om-dot"></span>recur ≥3 <span class="om-v">—</span></span>
     </div>
@@ -722,6 +722,12 @@
   #launch-switch-view .ls-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
   #launch-switch-view .ls-row:last-child{border-bottom:none}
   #launch-switch-view .ls-nm{font-size:13.5px;font-weight:600;color:var(--text)}
+  /* PARTNER-LINKS-1: partner homepage jump-off + lane-status badge */
+  #launch-switch-view .ls-link{display:inline-block;margin-left:6px;padding:0 5px;border:1px solid var(--border);border-radius:5px;font-size:10.5px;font-weight:700;line-height:15px;color:var(--accent);text-decoration:none;vertical-align:1px;opacity:.75}
+  #launch-switch-view .ls-link:hover{opacity:1;border-color:var(--accent);background:rgba(255,255,255,.05)}
+  #launch-switch-view .ls-badge{display:inline-block;margin-left:6px;padding:0 5px;border-radius:5px;font-size:9.5px;font-weight:800;letter-spacing:.4px;vertical-align:1px;text-transform:uppercase}
+  #launch-switch-view .ls-badge.out{background:rgba(220,80,80,.16);color:#ff9b9b;border:1px solid rgba(220,80,80,.45)}
+  #launch-switch-view .ls-badge.rdy{background:rgba(230,180,60,.14);color:#ffd479;border:1px solid rgba(230,180,60,.42)}
   #launch-switch-view .ls-ds{font-size:11px;color:var(--muted);margin-top:1px}
   #launch-switch-view .ls-sw{position:relative;width:44px;height:25px;flex:0 0 auto}
   #launch-switch-view .ls-sw input{opacity:0;width:0;height:0;position:absolute}
@@ -844,16 +850,20 @@ Implication: sellers occasionally see 'please use a different photo' rather than
    <div class="ls-grp-h">Data &amp; partners (back-end rollout)</div>
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: showcase photos come from the free pipeline only.
 ON: signed-operator photos (showcase agreements) render.
-Implication: contract-dependent imagery — flip per signed agreement."><div class="ls-nm">Signed-operator photos</div><div class="ls-ds">keepable images from showcase agreements</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_ops" onchange="lsRender()"><span class="ls-sl"></span></label></div>
-   <div class="ls-row"><div class="ls-tip" data-tip="OFF: no Google Places calls — $0.
-ON: live ratings, prices, hours and photos from Google Places.
-Implication: PAID API — needs key + budget; watch the cost card after flipping."><div class="ls-nm">Google Places — live data</div><div class="ls-ds">ratings, prices, hours, live photos</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_places" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+TO ACTIVATE: (1) counsel signs off the Featured Operator Showcase Agreement (still DRAFT), (2) at least one operator signs, (3) build the upload + render path — no code reads this flag yet.
+Implication: contract-dependent imagery, flip per signed agreement. No external vendor, no key, no cost."><div class="ls-nm">Signed-operator photos<a class="ls-link" href="https://trustsquare.co/static/agency-import-guide.html" target="_blank" rel="noopener noreferrer" title="Open the operator onboarding guide in a new tab">↗</a></div><div class="ls-ds">keepable images from showcase agreements · internal — no external vendor</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_ops" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div class="ls-tip" data-tip="RETIRED — do NOT re-enable. Google Places/Maps is OUT for MarketSquare by David’s ruling (1 Aug 2026) after a silent ~$360 scraping bill.
+The row stays visible so the lane cannot return by accident and the billing console stays one click away.
+TO ACTIVATE: nothing — this lane is closed. Reversing it is David’s call alone."><div class="ls-nm">Google Places<span class="ls-badge out">out</span><a class="ls-link" href="https://console.cloud.google.com/google/maps-apis/" target="_blank" rel="noopener noreferrer" title="Open the Google Maps Platform console in a new tab">↗</a></div><div class="ls-ds">RETIRED 1 Aug 2026 — silent ~$360 bill · do not re-enable</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_places" onchange="lsRender()"><span class="ls-sl"></span></label></div>
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: no flight pricing anywhere.
-ON: real fares via Amadeus in the Expedition tier.
-Implication: PAID API — needs key; Expedition tier only."><div class="ls-nm">Flights (Amadeus)</div><div class="ls-ds">Expedition tier — real fares</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_flights" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+ON: indicative ZAR fares from our own Aviasales fare cache in the Expedition tier.
+AMADEUS IS DEAD — its self-service portal shut 17 Jul 2026; Travelpayouts/Aviasales replaced it (TP-FLIGHTS-1, 1 Aug 2026). Partner ID 758984; TRAVELPAYOUTS_TOKEN live on the server, re-verified 5 Aug.
+TO ACTIVATE: (1) build the fare-cache adapter (empty {} = no fare, NOT an error), (2) build the Expedition fare UI with the “indicative — confirm with agency” caveat + per-click-out affiliate disclosure, (3) then flip. Flipping it today does nothing — no code reads this flag yet.
+Implication: R0 cost, commission flows IN, no money through the till — introduction-model safe."><div class="ls-nm">Flights — Travelpayouts / Aviasales<a class="ls-link" href="https://www.travelpayouts.com/" target="_blank" rel="noopener noreferrer" title="Open Travelpayouts in a new tab">↗</a></div><div class="ls-ds">Expedition tier — indicative ZAR fares · key LIVE, adapter not built<span class="ls-badge rdy">key live</span></div></div><label class="ls-sw"><input type="checkbox" id="ls_d_flights" onchange="lsRender()"><span class="ls-sl"></span></label></div>
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: maps run on free OSM/Leaflet (already good).
 ON: Mapbox render upgrade.
-Implication: optional polish that adds a paid dependency — fine to leave OFF."><div class="ls-nm">Mapbox upgrade <span style="color:var(--muted);font-weight:600">(optional)</span></div><div class="ls-ds">OSM/Leaflet already free</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_mapbox" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+TO ACTIVATE: create a Mapbox account, set MAPBOX_TOKEN on the server, swap the Leaflet tile layer, then flip.
+Implication: optional polish that adds a paid dependency for no trust gain — fine to leave OFF."><div class="ls-nm">Mapbox upgrade <span style="color:var(--muted);font-weight:600">(optional)</span><a class="ls-link" href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" title="Open Mapbox in a new tab">↗</a></div><div class="ls-ds">OSM/Leaflet already free</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_mapbox" onchange="lsRender()"><span class="ls-sl"></span></label></div>
  </div>
  <div class="ls-card ls-grp" id="ls-gPlan">
    <div class="ls-grp-h">Per-planner verified (granular)</div>
@@ -940,6 +950,15 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
  window.lsSet=function(m){ S.mode=m; applyDom(); visual(); lsSave(); };
  window.lsRender=function(){ readDom(); visual(); lsSave(); };
  applyDom(); visual();
+ // LIVE-FLAGS-1 (11 Aug 2026, David): the switch card must tell the truth WITHOUT a human
+ // reload — flags flip live via POST /admin/flags (no deploy involved); only this card's
+ // display was stale. Poll while the Launch view is showing + refresh on window focus.
+ if(!window._lsPoll){
+   window._lsPoll=setInterval(function(){ var v=document.getElementById('launch-switch-view');
+     if(v && v.style.display!=='none') lsLoad(); }, 20000);
+   window.addEventListener('focus', function(){ var v=document.getElementById('launch-switch-view');
+     if(v && v.style.display!=='none') lsLoad(); });
+ }
 })();
 </script>
 <!-- ── END LAUNCH SWITCH VIEW ── -->
@@ -1647,9 +1666,10 @@ function switchView(view) {
       }).then(function(d){
         var rows = d.faults || d.items || (Array.isArray(d) ? d : []);
         var open = rows.filter(function(x){ return ['closed','verified','rejected','not-a-fault'].indexOf(x.status) < 0 && !x.dup_of; });
-        // FIXED-HONESTY-1 (5 Aug 2026, David): 'fixed' = shipped but unconfirmed — out of
-        // the amber severity counts, into the retest chip. Only a tester's confirmation
-        // (verified/closed) makes green; untouched and shipped are no longer lumped together.
+        // FIXED-HONESTY-1 (5 Aug) + NO-RETEST-1 (11 Aug 2026, David): 'fixed' = shipped but
+        // not yet verified & closed — out of the amber severity counts, into the 'awaiting
+        // close' chip. We verify on machine evidence and close with a letter; testers are
+        // never asked to retest. 'awaiting-retest' below is legacy-row tolerance only.
         var active = open.filter(function(x){ return x.status !== 'awaiting-retest' && x.status !== 'fixed'; });
         var sev = function(s){ return active.filter(function(x){ return (x.severity||'minor') === s; }).length; };
         var nb = sev('blocker'), nm = sev('major');

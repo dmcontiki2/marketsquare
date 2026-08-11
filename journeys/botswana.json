@@ -11,7 +11,7 @@
  "stat1_icon": "🛶",
  "stat2_icon": "⏱",
  "route_summary": "<b>Whole route</b> · 7 days · fly-in from Joburg (~1 000 km) + delta-to-pan overland · ✈ JNB ⇄ Maun return fares on request via your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or drive it.</span>",
- "legend": "<b>On safari</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🦓 Wildlife</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "legend": "<b>On safari</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🦓 Wildlife</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🦓 Wildlife",
   "route": "〰️ Safari route"
@@ -56,7 +56,7 @@
    "ascent": "2 hr",
    "mode": "air",
    "color": "#128293",
-   "summary": "Under two hours from Joburg to Maun — thin cached route, return fares on request from your travel agency.",
+   "summary": "Under two hours from Joburg to Maun — thin cached route, return fares on request from your travel agency.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MUB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -26.1392,
@@ -69,6 +69,10 @@
     [
      -19.9726,
      23.4311
+    ],
+    [
+     -19.9833,
+     23.4167
     ]
    ],
    "stops": [
@@ -502,11 +506,15 @@
    "ascent": "Full day",
    "mode": "air",
    "color": "#6b7d99",
-   "summary": "Back off the salt to Maun and the afternoon flight south — fares on request from your travel agency.",
+   "summary": "Back off the salt to Maun and the afternoon flight south — fares on request from your travel agency.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=MUB&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -20.215,
      26.185
+    ],
+    [
+     -20.7,
+     25.3
     ],
     [
      -19.9726,
@@ -547,5 +555,25 @@
     }
    ]
   }
+ ],
+ "heritage": [
+  [
+   "Okavango Delta (UNESCO)",
+   -19.28,
+   22.9,
+   "The inland delta that never reaches the sea — ten thousand green islands."
+  ],
+  [
+   "Chobe National Park",
+   -17.83,
+   25.05,
+   "Africa's greatest elephant concentrations along the Chobe riverfront."
+  ],
+  [
+   "Makgadikgadi Pans",
+   -20.7,
+   25.3,
+   "A salt pan so large it is visible from orbit."
+  ]
  ]
 }

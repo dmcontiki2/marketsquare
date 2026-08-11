@@ -139,7 +139,7 @@ words in substance: after a fix, the AI must also TEST it and then declare it fi
 retests at all: "retest won't work for a customer's complaint — it needs to be
 fixed/verified/validated and closed with a response to the person." The courtesy letter is
 now a CLOSURE letter — fixed -> verified (machine evidence) -> closed-with-response in one
-lane (`close-draft`/`close-send`); the retest-wait status is retired (migrations/011) and
+lane (`close-draft`/`close-send`); the retest-wait status is retired (migrations/012) and
 the dashboard chips read "awaiting close" / "fix shipped · to close". A reporter's
 "still broken" still reopens — their word outranks our evidence. Ledger RG-0048.
 

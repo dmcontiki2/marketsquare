@@ -44,7 +44,7 @@ def test_intake_endpoint_present():
     src = _read("bea_main.py")
     assert '@app.post("/app/fault")' in src, "the tester intake endpoint is gone"
     assert '@app.get("/admin/faults")' in src, "the maintenance queue endpoint is gone"
-    assert '@app.post("/admin/faults/{fid}/retest-send")' in src, "the retest letter path is gone"
+    assert '@app.post("/admin/faults/{fid}/close-send")' in src, "the closure letter path is gone"
 
 def test_intake_is_fail_closed():
     src = _read("bea_main.py")
@@ -64,13 +64,18 @@ def test_every_fault_gets_a_reference_and_ack():
     assert "_send_system_email" in src[src.find("Auto-ACK"):src.find("Auto-ACK") + 1200], \
         "the ACK no longer uses the Resend-first send path"
 
-def test_retest_letter_asks_for_confirmation():
+def test_close_letter_closes_with_a_response():
+    """NO-RETEST-1 (David, 11 Aug 2026): there are no retests. A complaint is fixed,
+    verified on named machine evidence, and CLOSED with a letter telling the reporter
+    what changed. Their 'still broken' reply always reopens."""
     src = _read("bea_main.py")
-    i = src.find("def _fault_retest_email")
-    assert i > 0, "the retest letter builder is gone"
-    blk = src[i:i + 1400]
-    assert "What was changed" in blk, "the retest letter no longer states what was fixed"
-    assert "repeat the steps" in blk, "the retest letter no longer asks the tester to retest"
+    i = src.find("def _fault_close_email")
+    assert i > 0, "the closure letter builder is gone"
+    blk = src[i:i + 1600]
+    assert "What was changed" in blk, "the closure letter no longer states what was fixed"
+    assert "closed" in blk, "the closure letter no longer tells the reporter it is closed"
+    assert "awaiting-retest" not in src, "the retired retest-wait status is back (NO-RETEST-1)"
+    assert "/retest-" not in src, "a retest route is back in bea_main.py (NO-RETEST-1)"
 
 def test_reporter_widget_is_first_party_and_flag_gated():
     js = _read("ts_report.js")

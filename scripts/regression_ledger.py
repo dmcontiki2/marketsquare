@@ -1013,7 +1013,7 @@ def rg_terms_edge_matches_origin():
 def rg_no_third_party_script_on_surface():
     BANNED = ("tp-em.com", "NTU3Mzkx.js")
     PAGES = ["/"] + ["/static/adventures_%s_map.html" % m
-                     for m in ("reserve", "us", "uk", "au", "na", "bw", "mz", "c2c", "de")]
+                     for m in ("reserve", "us", "uk", "au", "na", "bw", "mz", "c2c", "de", "ke")]
     out = []
     for p in PAGES:
         try:
@@ -1935,7 +1935,7 @@ def rg_photo_measure():
            "Completes AIK-VERIFY-1 (people report, machines verify). The retest-wait status, "
            "the 'please retest' letter and the retest-draft/retest-send routes are retired; "
            "close-draft/close-send sends the closure letter and CLOSES the fault, stamping "
-           "verified_at. Legacy rows migrated by migrations/011_no_retest_status.py. A "
+           "verified_at. Legacy rows migrated by migrations/012_no_retest_status.py. A "
            "reporter's 'still broken' reply always reopens — their word outranks our evidence.")
 def rg_no_retests():
     out = []
@@ -1956,6 +1956,71 @@ def rg_no_retests():
     dash = repo_file("dashboard.server.html")
     if dash is not None and "awaiting retest" in dash:
         out.append((FAIL, "the dashboard chip reads 'awaiting retest' again (NO-RETEST-1)"))
+    return out
+
+
+@entry("RG-0050", "The partner card names the partner we ACTUALLY have, and every partner is one click away",
+       LOCKED, scope="dashboard.html + dashboard.server.html — the DATA & PARTNERS (back-end rollout) card, all four lanes",
+       fixed_on="2026-08-11",
+       ref="PARTNER-LINKS-1. The recurring class is dashboard-vs-backend DRIFT: bea_main.py's "
+           "partner tuple was corrected to Travelpayouts on 1 Aug 2026 (TP-FLIGHTS-1) when Amadeus "
+           "died 17 Jul, but BOTH dashboards still read 'Flights (Amadeus)' ten days later — David "
+           "read a dead vendor off his own switch panel. A partner name that lies is worse than a "
+           "missing one: it sends the operator to a supplier that cannot be bought. Locked here so "
+           "any future vendor swap must update the switch card in the same session as the backend. "
+           "Also asserts the ↗ homepage link on every lane (no partner is un-findable) and that the "
+           "Google Places tombstone keeps its OUT marking — a retired lane must never look flippable.")
+def rg_partner_card_truth():
+    out = []
+    for name in ("dashboard.html", "dashboard.server.html"):
+        src = repo_file(name)
+        if src is None:
+            out.append((INFO, "running outside the repo — %s checks skipped" % name))
+            continue
+        # 1. dead vendors must not be named as live lanes
+        if "Flights (Amadeus)" in src:
+            out.append((FAIL, "%s: the dead Amadeus label is back on the flights lane (PARTNER-LINKS-1)" % name))
+        if "travelpayouts.com" not in src:
+            out.append((FAIL, "%s: the Travelpayouts link is gone from the flights lane" % name))
+        # 2. every partner lane keeps a clickable homepage
+        if src.count('class="ls-link"') < 4:
+            out.append((FAIL, "%s: only %d of 4 partner lanes carry a homepage link"
+                              % (name, src.count('class="ls-link"'))))
+        # 3. the Google Places tombstone stays marked OUT
+        i = src.find('id="ls_d_places"')
+        if i < 0:
+            out.append((FAIL, "%s: the Google Places row is gone — the tombstone must stay visible" % name))
+        else:
+            row = src[max(0, src.rfind('<div class="ls-row">', 0, i)):i]
+            if "ls-badge out" not in row:
+                out.append((FAIL, "%s: Google Places lost its OUT badge — a closed lane must never look flippable" % name))
+            if "RETIRED" not in row:
+                out.append((FAIL, "%s: Google Places no longer reads RETIRED (silent ~$360 bill, David 1 Aug 2026)" % name))
+    return out
+
+@entry("RG-0051", "The ops dashboard tells the truth by itself: no human, no deploy in the refresh loop",
+       LOCKED, scope="dashboard.server.html launch-switch card + the server-side BIT heartbeat lane (manifest + migrations/013)",
+       fixed_on="2026-08-11",
+       ref="LIVE-FLAGS-1 + SERVER-BIT-1, David 11 Aug 2026: the dashboard must update live when "
+           "flags/BIT change — waiting for a human won't work after launch. Two rots covered: "
+           "(1) the Launch Switch card fetched /flags only on tab-switch — now polls while "
+           "visible + on focus; (2) bit_status.json was only posted when something ran "
+           "bit_cycle.py by hand (the */15 task from 27 Jun was never created) — the agent now "
+           "ships in the live root (/bit/) and migrations/013 installs a systemd timer running "
+           "it every 15 min against localhost, inside the origin gate, mitigation OFF.")
+def rg_live_ops_dashboard():
+    out = []
+    dash = repo_file("dashboard.server.html")
+    if dash is None:
+        return [(INFO, "running outside the repo — LIVE-FLAGS-1/SERVER-BIT-1 source checks skipped")]
+    if "LIVE-FLAGS-1" not in dash or "window._lsPoll" not in dash:
+        out.append((FAIL, "the Launch Switch card no longer polls /flags — a flag flip goes stale until a human reloads (LIVE-FLAGS-1)"))
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is not None and "ops/bit/bit_cycle.py" not in man:
+        out.append((FAIL, "the BIT agent left the deploy manifest — the server heartbeat dies on next clean deploy (SERVER-BIT-1)"))
+    mig = repo_file("migrations/013_install_bit_timer.py")
+    if mig is None:
+        out.append((FAIL, "migrations/013_install_bit_timer.py is gone — nothing installs the BIT timer (SERVER-BIT-1)"))
     return out
 
 

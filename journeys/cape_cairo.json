@@ -11,7 +11,7 @@
  "stat1_icon": "🚂",
  "stat2_icon": "🕓",
  "route_summary": "<b>Whole route</b> · 6 legs · ~12 000 km · rails to the Indian Ocean, wings over the Rift, the Nile home. Benchmark: the real thing runs 32 days from ±US$50 000 pp. &nbsp;<span class=\"hint\">Tap a leg to ride it.</span>",
- "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px\">🚂 rail — solid · ✈️ flight — dashed · 🛳️ Nile — dotted</div><div style=\"color:#cdd8e8\">no railway runs north of Dar es Salaam</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
+ "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px\">🚂 rail — solid · ✈️ flight — dashed · 🛳️ Nile — dotted</div><div style=\"color:#cdd8e8\">no railway runs north of Dar es Salaam</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
  "overlays": {
   "route": "🚂✈️🛳️ Route",
   "view": "🏔️ Viewpoints",
@@ -657,5 +657,37 @@
    ],
    "mode": "nile"
   }
+ ],
+ "heritage": [
+  [
+   "Robben Island (UNESCO)",
+   -33.806,
+   18.366,
+   "The island prison where Nelson Mandela spent 18 years."
+  ],
+  [
+   "Victoria Falls (UNESCO)",
+   -17.925,
+   25.858,
+   "Mosi-oa-Tunya — the smoke that thunders."
+  ],
+  [
+   "Abu Simbel (UNESCO)",
+   22.337,
+   31.625,
+   "Ramses II's rock temples, moved block by block above the rising lake."
+  ],
+  [
+   "Karnak & Luxor (UNESCO)",
+   25.7188,
+   32.6573,
+   "The greatest temple complex of the ancient world."
+  ],
+  [
+   "Pyramids of Giza (UNESCO)",
+   29.9792,
+   31.1342,
+   "The last surviving wonder of the ancient world, at the end of the line."
+  ]
  ]
 }

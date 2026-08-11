@@ -27,6 +27,23 @@ Real operators from David's research — these go into CityLauncher agency pools
 - Fares are **indicative cached data** → "confirm with agency" copy (supplier-fallback doctrine). Flat cost only if Duffel refresh is ever added (capped) — no ad-valorem costs, ever.
 - Tours programs (GYG/Viator/Booking.com etc.) remain BLOCKED pending re-review (OPEN_LOOPS D10) — do not resubmit unchanged.
 
+
+## 3b. Travelpayouts LINKS doctrine (11 Aug 2026 — answers David's placement questions)
+- **Why links are safe where the loader was not:** the 3-4 Aug breach vector was a third-party
+  SCRIPT (remote code tp-em.com could change at will, running in our page, no SRI/CSP). A plain
+  affiliate `<a href>` executes nothing — it is inert text until a user chooses to click out.
+  RG-0025's own ref sanctions this: "Affiliate revenue continues via plain affiliate LINKS,
+  which need no script." Rules: build-time static only, `rel="noopener nofollow sponsored"`,
+  never rendered from third-party data, always beside agency-books-it copy.
+- **Where they live now:** flight-bookend day summaries on the four fly-in journey maps
+  (KE/NA/BW/MZ, days 1 & 7), marker 758984. Referral clicks visible in the TP dashboard.
+- **Showcase vs claimed (the agency conflict David flagged):** TP links exist ONLY while a tour
+  is an unclaimed showcase demo. THE RULE: when an agency claims a map/listing, our TP links are
+  STRIPPED from their copy — their page sells their product; we never skim referrals off a
+  partner's surface. (Enforcement lands with the claiming flow; recorded here as design canon.)
+- **Heritage sites on user/agency maps:** YES — public heritage pins are factual, value-adding
+  and SO-1b-accurate; they stay on claimed maps unless the agency asks otherwise.
+
 ## 4. Live fare snapshot — CPT ⇄ NBO return, ZAR (Data API, 10 Aug 2026)
 R8,864 (TAAG, 1 stop) · R9,496 (1 stop) · R12,676 (Kenya Airways, 1 stop) · R12,865 · R12,971 · R13,264 (Ethiopian). Cheapest ~R8,900, median ~R12,900. No non-stop in cache this pull. Used on the Kenya map as "indicative return from ~R8,900".
 

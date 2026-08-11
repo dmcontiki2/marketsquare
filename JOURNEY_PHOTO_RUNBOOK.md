@@ -146,3 +146,16 @@ stamp. Single-country tours still just need un-gating + a country listing.
 - Aircraft prompts: Nano Banana Pro likes putting FLAMES on wingtips/engines. Add "no flames,
   no fire, no engine glow, winglets clean and unlit" to every aircraft shot; zoom-inspect the
   wings before accepting (first d1_start render had a burning winglet — caught at QC, 2 credits).
+
+## Coordinate-space lesson — 10/11 Aug 2026 overnight run (CRITICAL, do not relearn)
+- Chrome-extension CLICKS are in **CSS-pixel space**, screenshots are downscaled. When David's
+  window scaling/size changes mid-session, screenshot-derived coordinates silently miss — clicks
+  land on gallery tiles behind the translucent prompt bar (symptoms: whole-page ctrl+a selection,
+  typed prompts vanishing, accidental tile/profile/video-page navigation).
+- FIX: get true coordinates from the DOM: `javascript_tool` →
+  `document.querySelector('[contenteditable="true"]').getBoundingClientRect()` (same for the
+  Generate button). Verify focus landed with `window.getSelection()` (expect IN-EDITOR), and
+  ALWAYS verify the prompt text via JS (`textContent.includes(...)`) BEFORE clicking Generate.
+- The prompt editor is a controlled React editor: `execCommand` insertText does NOT work.
+- After ~5h continuous use the tab's renderer froze (CDP timeouts) — start each photo session
+  with a fresh tab/Chrome restart rather than pushing a stale one.

@@ -67,6 +67,15 @@ J.towns.forEach(function(t){
 
 function groupFor(t){ return (t==='start'||t==='finish') ? G.ends : (G[t]||G.sight); }
 
+/* Heritage sites layer (SUPER-AFRICA-1, 11 Aug 2026) — public heritage named accurately (SO-1b).
+   Spec-driven: J.her = [[name, lat, lng, blurb?], ...]; absent = layer never created. */
+const herG=L.layerGroup();
+(J.her||[]).forEach(function(h){
+  herG.addLayer(L.marker([h[1],h[2]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#6d28d9"><span>\ud83c\udfdb\ufe0f</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
+    .bindPopup('<div class="pk"><div class="b"><h3>\ud83c\udfdb\ufe0f '+h[0]+'</h3><p>'+(h[3]||'Public heritage site \u2014 worth the detour.')+'</p></div></div>'));
+});
+
+
 var sel='all';
 
 function redraw(){
@@ -109,10 +118,11 @@ var rt=document.createElement('button');rt.setAttribute('data-k','all');rt.inner
 J.days.forEach(function(d){var b=document.createElement('button');b.setAttribute('data-k',d.day);b.innerHTML='<b>'+CFG.unit+' '+d.day+'</b><span>'+d.title+'</span>';b.onclick=function(){showDay(d.day);};tabs.appendChild(b);});
 
 /* everything on by default, then the tick-boxes are the user's control */
-[G.ends,G.over,G.food,G.view,G.sight,routeG,townG].forEach(function(l){l.addTo(map);});
+[G.ends,G.over,G.food,G.view,G.sight,routeG,townG,herG].forEach(function(l){l.addTo(map);});
 var ov={};
 ov[CFG.ov.ends]=G.ends; ov[CFG.ov.over]=G.over; ov[CFG.ov.food]=G.food;
 ov[CFG.ov.view]=G.view; ov[CFG.ov.sight]=G.sight; ov[CFG.ov.route]=routeG; ov[CFG.ov.towns]=townG;
+if(J.her&&J.her.length){ov[CFG.ov.her]=herG;}
 var _isMob=window.innerWidth<=640;
 var layerCtl=L.control.layers(null,ov,{collapsed:false}).addTo(map);
 

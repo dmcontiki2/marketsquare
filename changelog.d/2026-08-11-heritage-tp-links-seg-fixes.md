@@ -1,0 +1,2 @@
+### SUPER-AFRICA-1 — heritage layer, TP links, route-geometry QA (11 Aug 2026)
+- All 5 journey maps: 🏛️ heritage overlay (spec-driven, SO-1b-accurate). Kenya/NA/BW/MZ: flight-day TP deep links (static, marker 758984 — links-not-scripts doctrine, RG-0025-sanctioned). Kenya segs rebuilt through every stop (Day-6 off-line pin fixed); bookend days stitched so journeys visibly end at the home airport. RG-0025 surface += ke map. Claimed-map link-strip rule + heritage-on-user-maps policy in research canon §3b.

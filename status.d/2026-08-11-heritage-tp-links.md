@@ -1,0 +1,1 @@
+- David's 4 map points DONE: off-line pins fixed (seg-through-stops, all Kenya days + bookends), airport continuity stitched (d7 ends CPT/JNB with own pins+photos — KE's 3 airport stills still pending generation), heritage layer live on all 5 maps, TP static links on flight days (marker 758984; strip-on-claim rule canon'd). Ledger RG-0025 strengthened with ke page.

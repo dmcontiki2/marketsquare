@@ -546,6 +546,12 @@
   #launch-switch-view .ls-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
   #launch-switch-view .ls-row:last-child{border-bottom:none}
   #launch-switch-view .ls-nm{font-size:13.5px;font-weight:600;color:var(--text)}
+  /* PARTNER-LINKS-1: partner homepage jump-off + lane-status badge */
+  #launch-switch-view .ls-link{display:inline-block;margin-left:6px;padding:0 5px;border:1px solid var(--border);border-radius:5px;font-size:10.5px;font-weight:700;line-height:15px;color:var(--accent);text-decoration:none;vertical-align:1px;opacity:.75}
+  #launch-switch-view .ls-link:hover{opacity:1;border-color:var(--accent);background:rgba(255,255,255,.05)}
+  #launch-switch-view .ls-badge{display:inline-block;margin-left:6px;padding:0 5px;border-radius:5px;font-size:9.5px;font-weight:800;letter-spacing:.4px;vertical-align:1px;text-transform:uppercase}
+  #launch-switch-view .ls-badge.out{background:rgba(220,80,80,.16);color:#ff9b9b;border:1px solid rgba(220,80,80,.45)}
+  #launch-switch-view .ls-badge.rdy{background:rgba(230,180,60,.14);color:#ffd479;border:1px solid rgba(230,180,60,.42)}
   #launch-switch-view .ls-ds{font-size:11px;color:var(--muted);margin-top:1px}
   #launch-switch-view .ls-sw{position:relative;width:44px;height:25px;flex:0 0 auto}
   #launch-switch-view .ls-sw input{opacity:0;width:0;height:0;position:absolute}
@@ -598,10 +604,10 @@
  </div>
  <div class="ls-card ls-grp" id="ls-gData">
    <div class="ls-grp-h">Data &amp; partners (back-end rollout)</div>
-   <div class="ls-row"><div><div class="ls-nm">Signed-operator photos</div><div class="ls-ds">keepable images from showcase agreements</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_ops" onchange="lsRender()"><span class="ls-sl"></span></label></div>
-   <div class="ls-row"><div><div class="ls-nm">Google Places — live data</div><div class="ls-ds">ratings, prices, hours, live photos</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_places" onchange="lsRender()"><span class="ls-sl"></span></label></div>
-   <div class="ls-row"><div><div class="ls-nm">Flights (Amadeus)</div><div class="ls-ds">Expedition tier — real fares</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_flights" onchange="lsRender()"><span class="ls-sl"></span></label></div>
-   <div class="ls-row"><div><div class="ls-nm">Mapbox upgrade <span style="color:var(--muted);font-weight:600">(optional)</span></div><div class="ls-ds">OSM/Leaflet already free</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_mapbox" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Signed-operator photos<a class="ls-link" href="https://trustsquare.co/static/agency-import-guide.html" target="_blank" rel="noopener noreferrer" title="Open the operator onboarding guide in a new tab">↗</a></div><div class="ls-ds">keepable images from showcase agreements · internal — no external vendor</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_ops" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Google Places<span class="ls-badge out">out</span><a class="ls-link" href="https://console.cloud.google.com/google/maps-apis/" target="_blank" rel="noopener noreferrer" title="Open the Google Maps Platform console in a new tab">↗</a></div><div class="ls-ds">RETIRED 1 Aug 2026 — silent ~$360 bill · do not re-enable</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_places" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Flights — Travelpayouts / Aviasales<a class="ls-link" href="https://www.travelpayouts.com/" target="_blank" rel="noopener noreferrer" title="Open Travelpayouts in a new tab">↗</a></div><div class="ls-ds">Expedition tier — indicative ZAR fares · key LIVE, adapter not built<span class="ls-badge rdy">key live</span></div></div><label class="ls-sw"><input type="checkbox" id="ls_d_flights" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <div class="ls-row"><div><div class="ls-nm">Mapbox upgrade <span style="color:var(--muted);font-weight:600">(optional)</span><a class="ls-link" href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" title="Open Mapbox in a new tab">↗</a></div><div class="ls-ds">OSM/Leaflet already free</div></div><label class="ls-sw"><input type="checkbox" id="ls_d_mapbox" onchange="lsRender()"><span class="ls-sl"></span></label></div>
  </div>
  <div class="ls-card ls-grp" id="ls-gPlan">
    <div class="ls-grp-h">Per-planner verified (granular)</div>

@@ -52,3 +52,9 @@ RG-0025-safe); `test_widget_is_wired_into_every_tester_page` green again. (2) PG
 `strftime` 38→39 in bea_main.py — that file is the ADVERTS session's in-flight edit, not touched
 here (collision discipline); flagged flat for that session to write portably before the nightly's
 strict gate holds it.
+
+**GIT-LOCK-2 rider.** This session's own commit proved a gap in GIT-LOCK-1: the commit succeeded
+but left a stale `.git/HEAD.lock` (FUSE blocks unlink from the sandbox) — same class as
+index.lock, would block the next writer. `git_unlock.bat` extended from the instance to the
+class: clears index.lock, HEAD.lock and packed-refs.lock, same no-git.exe-running guard. The
+residue self-heals at the next bat-path git write (05:45 nightly at the latest).

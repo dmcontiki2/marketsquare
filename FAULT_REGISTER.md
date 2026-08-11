@@ -33,13 +33,15 @@ that triggers Path B design-change dossiers.
 | **In-app tester report (the REPORT tab)** | **`app_faults`** | **`TS-nnnn`, in the ACK; the `BIN-nnn` code is assigned at triage** |
 | The app's own error log | (B1, still to wire) | n/a — the app reports itself |
 
-Status ladder for `app_faults`: `new -> triaged -> fixing -> fixed -> awaiting-retest ->
-verified -> closed`, plus `rejected` and `duplicate`. **`awaiting-retest` is the honest
-state**: we have shipped a fix and written to the tester, but nobody has yet confirmed it
-from the outside. AIK-VERIFY-1 (David, 5 Aug 2026, supersedes the sentence that stood here):
-**machine evidence may verify** — the AI reproduces the failing action clean (or a
-tripwire/probe covers it), names the evidence in fix_note, and sets `verified`. People
-report; machines verify. A tester's "still broken" always reopens.
+Status ladder for `app_faults`: `new -> triaged -> fixing -> fixed -> verified -> closed`,
+plus `rejected` and `duplicate`. NO-RETEST-1 (David, 11 Aug 2026, completes AIK-VERIFY-1
+of 5 Aug): **there are no retests.** A complaint is fixed by us, VERIFIED by us on named
+machine evidence (reproduced-clean, tripwire, or live probe — named in fix_note), and
+CLOSED with a letter telling the reporter what changed
+(`/admin/faults/{id}/close-draft` -> David approves -> `close-send`; the send closes and
+stamps verified_at). The retest-wait status is retired — legacy rows migrated by
+migrations/012. People report; machines verify; the reporter's "still broken" always
+reopens — their word outranks our evidence.
 
 ## Open incidents
 | Code | Opened | Source | Summary | Recur | Status | Fix / tripwire |

@@ -164,3 +164,6 @@ Wed 08/05/2026  5:30:02.52  clean - nothing to commit
  create mode 100644 ROTATE_SECRETS.bat
  create mode 100644 scripts/rotate_secrets.py
 Sat 08/08/2026  5:30:03.12  committed 4 change(s)
+[main 6d790de] Nightly checkpoint Tue 08/11/2026  5:30:02.19 (auto, no deploy)
+ 1 file changed, 5 insertions(+)
+Tue 08/11/2026  5:30:02.27  committed 1 change(s)

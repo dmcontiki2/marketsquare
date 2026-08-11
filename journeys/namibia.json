@@ -11,7 +11,7 @@
  "stat1_icon": "🚙",
  "stat2_icon": "⏱",
  "route_summary": "<b>Whole route</b> · 7 days · fly-in from Joburg (~1 460 km) + ~1 900 km self-drive · ✈ indicative return JNB ⇄ WDH from ~R5,200 (direct), booked by your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or drive it.</span>",
- "legend": "<b>On the road</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏜️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "legend": "<b>On the road</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏜️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🏜️ Viewpoints",
   "route": "〰️ Driving route"
@@ -56,7 +56,7 @@
    "ascent": "2 hr",
    "mode": "air",
    "color": "#128293",
-   "summary": "Two hours over the Kalahari — indicative return JNB ⇄ WDH from ~R5,200 (direct, cached 10 Aug 2026); your travel agency confirms and books it.",
+   "summary": "Two hours over the Kalahari — indicative return JNB ⇄ WDH from ~R5,200 (direct, cached 10 Aug 2026); your travel agency confirms and books it.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=WDH\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -26.1392,
@@ -69,6 +69,10 @@
     [
      -22.4799,
      17.4709
+    ],
+    [
+     -22.56,
+     17.065
     ]
    ],
    "stops": [
@@ -476,7 +480,7 @@
    "ascent": "Full day",
    "mode": "air",
    "color": "#6b7d99",
-   "summary": "The long gravel south to Hosea Kutako, drop the keys, and the evening flight back to Joburg.",
+   "summary": "The long gravel south to Hosea Kutako, drop the keys, and the evening flight back to Joburg.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=WDH&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -19.182,
@@ -521,5 +525,31 @@
     }
    ]
   }
+ ],
+ "heritage": [
+  [
+   "Namib Sand Sea (UNESCO)",
+   -24.75,
+   15.35,
+   "The world's only coastal fog desert — 300 m star dunes on the oldest desert on earth."
+  ],
+  [
+   "Twyfelfontein rock engravings (UNESCO)",
+   -20.593,
+   14.372,
+   "Thousands of animals chipped into red sandstone six thousand years ago."
+  ],
+  [
+   "Cape Cross Seal Reserve",
+   -21.77,
+   13.955,
+   "A hundred thousand Cape fur seals on one headland."
+  ],
+  [
+   "Etosha National Park",
+   -19.18,
+   15.92,
+   "The great white pan — waterholes that draw everything to them."
+  ]
  ]
 }

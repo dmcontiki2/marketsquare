@@ -263,7 +263,7 @@
         '<h3 style="color:' + NAVY + ';font-size:17px;margin:10px 0 6px">Logged as ' + ref + '</h3>' +
         '<p style="font-size:13px;color:#64748b;line-height:1.65;margin:0 auto;max-width:340px">' +
         (acked ? 'A confirmation is on its way to your inbox. ' : '') +
-        'We will fix it and then email you what changed, so you can retest and confirm it is right. ' +
+        'We will fix it, test and verify it ourselves, then email you what changed when it is closed. ' +
         'Nothing more is needed from you.</p>'));
       var okb = el('button', 'width:100%;border:none;border-radius:9px;padding:13px;font:inherit;' +
                              'font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;color:#fff;' +

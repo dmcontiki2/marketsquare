@@ -11,7 +11,7 @@
  "stat1_icon": "🚙",
  "stat2_icon": "⏱",
  "route_summary": "<b>Whole route</b> · 7 days · fly-in from Cape Town (~4 100 km) + ~950 km overland · ✈ indicative return CPT ⇄ NBO from ~R8,900, booked by your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or drive it.</span>",
- "legend": "<b>On the road</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🌋 Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "legend": "<b>On the road</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🌋 Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🌋 Viewpoints",
   "route": "〰️ Driving route"
@@ -56,15 +56,11 @@
    "ascent": "5 hr",
    "mode": "air",
    "color": "#128293",
-   "summary": "Five hours up the spine of Africa — indicative return from ~R8,900 (cached fare, 10 Aug 2026); your travel agency confirms, books and tickets it.",
+   "summary": "Five hours up the spine of Africa — indicative return from ~R8,900 (cached fare, 10 Aug 2026); your travel agency confirms, books and tickets it.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=CPT&destination_iata=NBO\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -33.9715,
      18.6021
-    ],
-    [
-     -24.0,
-     26.0
     ],
     [
      -12.0,
@@ -73,6 +69,10 @@
     [
      -1.3192,
      36.9278
+    ],
+    [
+     -1.332,
+     36.72
     ]
    ],
    "stops": [
@@ -123,6 +123,10 @@
    "summary": "Lion and rhino against a skyline of cranes and towers — then coffee country in Karen by dark.",
    "seg": [
     [
+     -1.332,
+     36.72
+    ],
+    [
      -1.286,
      36.817
     ],
@@ -133,6 +137,10 @@
     [
      -1.34,
      36.71
+    ],
+    [
+     -1.35,
+     36.75
     ],
     [
      -1.332,
@@ -208,6 +216,10 @@
      36.351
     ],
     [
+     -0.77,
+     36.4
+    ],
+    [
      -0.78,
      36.36
     ]
@@ -275,6 +287,14 @@
     [
      -0.894,
      36.322
+    ],
+    [
+     -0.88,
+     36.31
+    ],
+    [
+     -0.303,
+     36.08
     ],
     [
      -0.366,
@@ -427,8 +447,16 @@
      35.15
     ],
     [
+     -1.51,
+     35.1
+    ],
+    [
      -1.53,
      35.03
+    ],
+    [
+     -1.5,
+     35.08
     ],
     [
      -1.5,
@@ -490,8 +518,12 @@
    "ascent": "7 hr",
    "mode": "air",
    "color": "#6b7d99",
-   "summary": "A grass strip, a twelve-seater to Nairobi, and the evening flight south — home with red dust still on your boots.",
+   "summary": "A grass strip, a twelve-seater to Nairobi, and the evening flight south — home with red dust still on your boots.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=NBO&destination_iata=CPT\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
+    [
+     -1.5,
+     35.1
+    ],
     [
      -1.49,
      35.15
@@ -499,14 +531,6 @@
     [
      -1.3192,
      36.9278
-    ],
-    [
-     -12.0,
-     32.0
-    ],
-    [
-     -24.0,
-     26.0
     ],
     [
      -33.9715,
@@ -543,5 +567,49 @@
     }
    ]
   }
+ ],
+ "heritage": [
+  [
+   "Nairobi National Park",
+   -1.373,
+   36.858,
+   "The only national park inside a capital city — lion, rhino and giraffe against the skyline."
+  ],
+  [
+   "Nairobi National Museum",
+   -1.274,
+   36.815,
+   "Kenya's flagship museum — cradle-of-mankind fossils and the history of the railway that built a nation."
+  ],
+  [
+   "Karen Blixen Museum",
+   -1.34,
+   36.71,
+   "The 'Out of Africa' farmhouse at the foot of the Ngong Hills."
+  ],
+  [
+   "Great Rift Valley viewpoint",
+   -1.03,
+   36.59,
+   "The escarpment lip where the valley floor drops 600 m and runs to the horizon."
+  ],
+  [
+   "Hell's Gate National Park",
+   -0.894,
+   36.322,
+   "Red basalt gorges, geothermal steam and cycling among zebra."
+  ],
+  [
+   "Lake Nakuru National Park",
+   -0.366,
+   36.083,
+   "UNESCO-listed Rift soda lake — flamingo shallows and rhino meadows."
+  ],
+  [
+   "Maasai Mara National Reserve",
+   -1.49,
+   35.14,
+   "Kenya's great grassland — big cats, the migration and the Mara river crossings."
+  ]
  ]
 }

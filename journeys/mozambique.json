@@ -11,7 +11,7 @@
  "stat1_icon": "⛵",
  "stat2_icon": "⏱",
  "route_summary": "<b>Whole route</b> · 7 days · fly-in from Joburg + the coast north to the stone island · ✈ JNB ⇄ Maputo return from ~R3,200 (direct), booked by your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or sail it.</span>",
- "legend": "<b>On the coast</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏝️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "legend": "<b>On the coast</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏝️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🏝️ Viewpoints",
   "route": "〰️ Coastal route"
@@ -56,7 +56,7 @@
    "ascent": "1 hr",
    "mode": "air",
    "color": "#128293",
-   "summary": "An hour over the Lebombo mountains — indicative return JNB ⇄ Maputo from ~R3,200 (direct, cached 10 Aug 2026); your travel agency confirms and books it.",
+   "summary": "An hour over the Lebombo mountains — indicative return JNB ⇄ Maputo from ~R3,200 (direct, cached 10 Aug 2026); your travel agency confirms and books it.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MPM\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -26.1392,
@@ -69,6 +69,10 @@
     [
      -25.9208,
      32.5726
+    ],
+    [
+     -25.9692,
+     32.5732
     ]
    ],
    "stops": [
@@ -502,10 +506,14 @@
    "ascent": "Full day",
    "mode": "air",
    "color": "#6b7d99",
-   "summary": "Across the island bridge to Nampula and the flight south — fares on request from your travel agency (thin cached route); your travel agency books it.",
+   "summary": "Across the island bridge to Nampula and the flight south — fares on request from your travel agency (thin cached route); your travel agency books it.&nbsp;<a href=\"https://www.aviasales.com/?marker=758984&origin_iata=APL&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"color:#7fd1ff;font-weight:600;\">Check live fares ↗</a> <span style=\"opacity:.75\">(indicative — your agency confirms &amp; books)</span>",
    "seg": [
     [
      -15.036,
+     40.735
+    ],
+    [
+     -15.034,
      40.735
     ],
     [
@@ -547,5 +555,25 @@
     }
    ]
   }
+ ],
+ "heritage": [
+  [
+   "Island of Mozambique (UNESCO)",
+   -15.034,
+   40.735,
+   "The old coral-stone island capital — four centuries of Swahili, Arab and Portuguese trade."
+  ],
+  [
+   "Bazaruto Archipelago National Park",
+   -21.7,
+   35.45,
+   "Dune islands, turquoise flats and dugong sanctuary."
+  ],
+  [
+   "Maputo railway station",
+   -25.966,
+   32.57,
+   "One of the world's great stations — wrought iron and a dome by the school of Eiffel."
+  ]
  ]
 }

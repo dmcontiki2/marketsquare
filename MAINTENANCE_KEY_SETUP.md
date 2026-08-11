@@ -16,11 +16,11 @@ endpoints and nothing else:
 |---|---|
 | `GET /admin/faults` | read the queue, including screenshots and detail |
 | `PUT /admin/faults/{id}` | set fault code, bin, severity, status, mark duplicates |
-| `GET /admin/faults/{id}/retest-draft` | read the letter before it goes |
-| `POST /admin/faults/{id}/retest-send` | send it |
+| `GET /admin/faults/{id}/close-draft` | read the closure letter before it goes |
+| `POST /admin/faults/{id}/close-send` | send it — the send closes the fault (NO-RETEST-1) |
 
 A tripwire (`test_maintenance_key_opens_faults_and_nothing_else`) fails the pre-deploy check
-if that list ever grows. The comparison is constant-time. The retest letter can only ever
+if that list ever grows. The comparison is constant-time. The closure letter can only ever
 mail the address already on the fault row, so this key cannot be aimed at an arbitrary
 recipient. Your dashboard is unaffected — the ordinary admin paths still work.
 

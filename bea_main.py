@@ -16311,7 +16311,11 @@ def _fault_now() -> str:
 
 FAULT_BINS = ("AUTH", "LIST", "TRUST", "INTRO", "BROWSE", "ADV", "MAIL", "PERF", "COPY", "MISC")
 FAULT_SEVERITIES = ("blocker", "major", "minor")
-FAULT_STATUSES = ("new", "triaged", "fixing", "fixed", "awaiting-retest",
+# NO-RETEST-1 (David, 11 Aug 2026): there are no retests. A complaint is fixed by us,
+# VERIFIED by us on named machine evidence (AIK-VERIFY-1), and CLOSED with a letter to
+# the reporter. The retest-wait status is retired (legacy rows migrated by migrations/012);
+# a reporter's "still broken" still reopens — their word outranks our evidence.
+FAULT_STATUSES = ("new", "triaged", "fixing", "fixed",
                   "verified", "closed", "rejected", "duplicate")
 _FAULT_IP_HITS = {}          # ip -> [count, window_start_epoch]   (in-process, per worker)
 _FAULT_MAX_PER_IP = 20       # per 10 minutes
@@ -16361,7 +16365,7 @@ def _require_maint(x_maint_key: str = Header(default=None),
     flags, deploys, the lifecycle sweep and the ledger. This one opens the fault queue
     and nothing else, so a leak costs us a complaint list, not the platform. (Precedent:
     SEC-1, 23 Jul 2026 — a leaked key had to be demoted after the fact. Cheaper to scope
-    it up front.) The retest letter can only ever mail the address already on the fault
+    it up front.) The closure letter can only ever mail the address already on the fault
     row, so this key cannot be pointed at an arbitrary recipient.
 
     Accepts, in order: MS_MAINT_KEY (the scoped one), then the ordinary admin paths so
@@ -16535,7 +16539,7 @@ async def app_fault_file(
             body = ("Thank you — your report is logged as <b>" + ref + "</b> and is in the fix "
                     "queue.<br><br><i>&ldquo;" + (title.replace("<", "&lt;")) + "&rdquo;</i>"
                     "<br><br>You don&rsquo;t need to do anything further. When it is fixed we will "
-                    "write to you with what changed, so you can retest and confirm it is right.")
+                    "test and verify it ourselves, then write to you with what changed and close it.")
             html = _lc_email_html("Report " + ref + " received", body, "Back to TrustSquare")
             ack_sent = _send_system_email(reporter_email,
                                           "TrustSquare " + ref + " — we have your report", html) == "sent"
@@ -16657,25 +16661,27 @@ def admin_fault_update(fid: int, upd: _FaultUpdate, _admin=Depends(_require_main
     return dict(row)
 
 
-def _fault_retest_email(row) -> dict:
-    """The 'fixed — please retest' letter. One shape, so every tester gets the same
-    courtesy: what they reported, what changed, what to do to confirm it."""
+def _fault_close_email(row) -> dict:
+    """The 'fixed, verified and closed' letter (NO-RETEST-1, David 11 Aug 2026). We fix,
+    we verify on named machine evidence, we close — the reporter owes us nothing. Their
+    word still outranks ours: one more report quoting the ref reopens the thread."""
     ref = row["ref"] or ("TS-%04d" % row["id"])
     fix = (row["fix_note"] or "").strip() or "The fault you reported has been corrected."
     body = ("You reported this on " + (row["filed_at"] or "")[:10] + ":<br>"
             "<i>&ldquo;" + (row["title"] or "").replace("<", "&lt;") + "&rdquo;</i><br><br>"
             "<b>What was changed</b><br>" + fix.replace("<", "&lt;").replace("\n", "<br>") + "<br><br>"
-            "<b>What we&rsquo;d like from you</b><br>Please open the app, repeat the steps that failed, "
-            "and tell us whether it now behaves. If it still misbehaves, report it again from the same "
-            "button and quote " + ref + " — that keeps it on the same thread.<br><br>"
+            "<b>Where it stands</b><br>We have tested the fix ourselves and verified it on the "
+            "live app, so this report is now <b>closed</b>. Nothing more is needed from you.<br><br>"
+            "If it ever misbehaves again, report it from the same button and quote " + ref +
+            " — that reopens it on the same thread.<br><br>"
             "Thank you for finding it. Reports like yours are the reason launch will be steadier.")
     return {"to": row["reporter_email"],
-            "subject": "TrustSquare " + ref + " — fixed, please retest",
-            "html": _lc_email_html(ref + " is fixed", body, "Open TrustSquare")}
+            "subject": "TrustSquare " + ref + " — fixed, verified and closed",
+            "html": _lc_email_html(ref + " is fixed and closed", body, "Open TrustSquare")}
 
 
-@app.get("/admin/faults/{fid}/retest-draft")
-def admin_fault_retest_draft(fid: int, _admin=Depends(_require_maint)):
+@app.get("/admin/faults/{fid}/close-draft")
+def admin_fault_close_draft(fid: int, _admin=Depends(_require_maint)):
     """Draft only — David reads this before anything is sent (his approval gate)."""
     conn = database.get_db()
     try:
@@ -16684,12 +16690,14 @@ def admin_fault_retest_draft(fid: int, _admin=Depends(_require_maint)):
         conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="No such fault.")
-    return _fault_retest_email(row)
+    return _fault_close_email(row)
 
 
-@app.post("/admin/faults/{fid}/retest-send")
-def admin_fault_retest_send(fid: int, _admin=Depends(_require_maint)):
-    """Send the approved retest letter and move the fault to awaiting-retest."""
+@app.post("/admin/faults/{fid}/close-send")
+def admin_fault_close_send(fid: int, _admin=Depends(_require_maint)):
+    """Send the approved closure letter and CLOSE the fault (NO-RETEST-1). Stamps
+    verified_at if triage never did; the retest_sent_at column is reused as the
+    letter-sent stamp (schema kept — renaming a live column buys nothing)."""
     conn = database.get_db()
     try:
         row = conn.execute("SELECT * FROM app_faults WHERE id = ?", (fid,)).fetchone()
@@ -16699,14 +16707,15 @@ def admin_fault_retest_send(fid: int, _admin=Depends(_require_maint)):
         raise HTTPException(status_code=404, detail="No such fault.")
     if not row["reporter_email"]:
         raise HTTPException(status_code=400, detail="No reporter address on this fault.")
-    msg = _fault_retest_email(row)
+    msg = _fault_close_email(row)
     sent = _send_system_email(msg["to"], msg["subject"], msg["html"])
     if sent == "sent":
         conn = database.get_db()
         try:
-            conn.execute("UPDATE app_faults SET status = 'awaiting-retest', "
+            conn.execute("UPDATE app_faults SET status = 'closed', "
+                         "verified_at = COALESCE(verified_at, ?), "
                          "retest_sent_at = ?, updated_at = ? WHERE id = ?",
-                         (_fault_now(), _fault_now(), fid))
+                         (_fault_now(), _fault_now(), _fault_now(), fid))
             conn.commit()
         finally:
             conn.close()
