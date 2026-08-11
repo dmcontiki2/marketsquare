@@ -5,6 +5,24 @@
 
 ## Current Session
 
+- SUPER-AFRICA-1 Kenya pilot BUILT locally (ticket in CHANGE_REGISTER 2026-08-10): ladder seeder + 24 KE COPY blocks + journey map + prompt packs + KE wiring + 7 OPEN-market launch entries. Next: (1) supervised Higgsfield run — 114 advert photos (SUPER_LADDER_PROMPTS.md) + 25 journey photos (JOURNEY_HIGGSFIELD_PROMPTS.md §Kenya); (2) /tsl deploy + server --apply + diag; (3) replicate to ZW/AO/EG + extend NA/MZ/BW. Harare currency decision pending (USD vs ZWL).
+
+- Kenya photo run: 8/32 claimed and QC'd (fly-in day COMPLETE: CPT departure, Rift window, JKIA arrival, Karen cottage; Day 2: matatu street, rhino-and-skyline flagship, Karen Blixen farmhouse, nyama choma). Map rebuilt after each batch. Pace ~4-5 min/photo incl. QC (queue slower than 26 Jul's 60s). Next: d2_over (coffee-garden cottage dawn), then Days 3-7 (24 photos), then 21 flight-leg shots NA/BW/MZ.
+
+- Kenya photo run: 24/32 — Days 1-5 COMPLETE. Day 5 additions: wheatlands road, Narok market, Maasai adumu (all-anonymous framing), elephant family + skyline giraffe, Milky Way tented camp. Map rebuilt, 24 embedded. Remaining: Day 6 (balloon dawn, big cats, river crossing, bush breakfast, sundowner finish = 5), Day 7 fly home (3), then 21 flight-leg shots. Queue steady ~100s; David's 20-min slow-stop rule in force (not yet needed).
+
+- Kenya photo run: 19/32 — Days 1-4 COMPLETE (fly-in, Nairobi, Naivasha, Hell's Gate/Nakuru). Map rebuilt, 19 embedded. Standing instruction from David: on a slow stop, wait 20 min (2×10-min sleeps) then resume. Remaining: Day 5 (Mara road, 5), Day 6 (herds, 5), Day 7 (fly home, 3), then 21 flight-leg shots.
+
+- Kenya photo run: 14/32 — Days 1-3 COMPLETE (fly-in, Nairobi, Great Rift/Naivasha). Two species/artifact QC catches so far (burning winglet; bald eagle regenerated as correct African fish eagle). Map rebuilt, 14 embedded. Remaining: Day 4 (Hell's Gate/Nakuru, 5), Day 5 (Mara road, 5), Day 6 (herds/balloon, 5), Day 7 (fly home, 3), then 21 NA/BW/MZ flight-leg shots.
+
+- Kenya photo run: 10/32 claimed, QC'd, embedded (Days 1-2 COMPLETE + d3_start tea-country escarpment road). Higgsfield queue running slow today (~90-110s/render vs runbook's 60s — their shared GPU pool at Sunday peak, not our side; 26 Jul precedent, recovers on its own). One mid-run viewport resize threw coordinate clicks — recovered; lesson: verify prompt-in-box via screenshot before every Generate. Remaining: d3_view/sight/food/over, Days 4-7 (17), then 21 flight-leg shots NA/BW/MZ. Resume any session: fresh `date +%s` claim floor, then the runbook loop.
+
+- Kenya photo run LIVE: 2/32 claimed (d1_start CPT departure, d1_view Rift-from-window — both QC'd, map rebuilt with them embedded). Loop debugged end-to-end (see runbook 10 Aug lessons: lightbox/Download traps, aircraft flame artifact). Resume: continue the same session loop — next up d1_sight (JKIA arrival); floor timestamp /tmp/claim_floor.txt; ~30 × ~2.5 min remaining, then 21 flight-leg shots for NA/BW/MZ.
+
+- SUPER-AFRICA-1 addendum: Kenya map upgraded to 7-day FLY-IN safari (CPT⇄NBO bookends, real ~R8,900 indicative fare from live Data API, RG-0025 clean). SUPER_AFRICA_RESEARCH.md canon started (advisories, operators, TP rules). Photo count now 32 journey + 114 advert prompts. OPEN for David: (1) Zambia in scope? (2) AO sequencing given Luanda L3 advisory. (3) Harare currency (USD vs ZiG).
+
+- SUPER-AFRICA-1: Angola OUT (David). NA/BW/MZ maps upgraded to 7-day fly-in (existing photos intact, real fares, RG-0025 clean). Fares snapshot cached for ZW/EG. NEXT: supervised Higgsfield run — Kenya 32 first, then 21 flight-leg shots; needs Downloads grant + Higgsfield in Chrome. Open: Zambia scope, Harare currency.
+
 ## 2026-08-10 — PHOTO-MEASURE-1 ready to ship
 Maroushka's 10 Aug retest (TS-0028/29/30) diagnosed from live evidence: blur ceiling was
 judging boxes while the painter painted more (feather+capsule) — output-diff gate now guards

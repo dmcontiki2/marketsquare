@@ -41,6 +41,7 @@ adventures_bw_map.html      | static/adventures_bw_map.html
 adventures_mz_map.html      | static/adventures_mz_map.html
 adventures_c2c_map.html     | static/adventures_c2c_map.html
 adventures_de_map.html      | static/adventures_de_map.html
+adventures_ke_map.html      | static/adventures_ke_map.html
 adventures_za_map.html      | static/adventures_za_map.html
 
 # ── Data files the BEA reads at boot / on request ────────────────────────────

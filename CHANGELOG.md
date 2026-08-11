@@ -1,3 +1,20 @@
+### SUPER-AFRICA-1 — Kenya (Nairobi) pilot: 3-tier super-advert ladders (10 Aug 2026)
+- NEW `scripts/seed_super_ladder_global.py` — seeds 3 supers per (country, category) with evidence-true persona ladders (a/b/c · T60/T80/T92-96). Kenya pilot: 24 listings, 24 personas, researched real KSh prices (Jiji, BuyRentKenya, safari operators, 10 Aug 2026). Fixture-DB rehearsal green: inserts, geo, personas, credentials, country backfill, idempotent rerun.
+- NEW `journeys/kenya.json` → `adventures_ke_map.html` (Leaflet, 5 days, 25 stops, RG-0025 clean) + deploy_manifest line. JOURNEY_HIGGSFIELD_PROMPTS.md regenerated (136 prompts / 5 journeys).
+- NEW `SUPER_LADDER_PROMPTS.md` via `scripts/make_super_prompt_pack.py` — 114 advert photo prompts generated from the seeder spec (no drift).
+- ms.js: KE flag/currency (KSh)/map wired. regression_ledger.py: nairobi CITY_CCY/CITY_COUNTRY + KSh in SYMBOLS.
+- waves_policy.json: Nairobi, Cairo, Harare, Luanda, Windhoek, Maputo, Maun added as OPEN markets (unarmed).
+- NOT deployed — awaits photos (supervised Higgsfield run) then /tsl.
+
+### SUPER-AFRICA-1 — Kenya map: flight bookends + research canon (10 Aug 2026, later)
+- Kenya journey now 7-day fly-in safari: CPT⇄NBO air days bookend the circuit, real indicative return fare (~R8,900, Aviasales Data API 10 Aug) as build-time text — RG-0025 clean. 32 stops, prompts regenerated (143 total).
+- NEW SUPER_AFRICA_RESEARCH.md (advisories/operators/TP rules/fare snapshot/bookend pattern). Luanda waves note carries the L3 advisory flag. Open for David: Zambia in or out of scope.
+
+### SUPER-AFRICA-1 — Angola out · bookends on NA/BW/MZ · fares cached (10 Aug 2026)
+- Angola removed from expansion scope (David). Waves policy now 11 cities.
+- NA/BW/MZ journeys now 7-day fly-in products (photos preserved, real JNB fares where cached, agency-card fallback on thin routes, RG-0025 clean). FARES_SNAPSHOT_2026-08-10.json caches all remaining gateway fares for ZW/EG replication.
+- Photo queue: Kenya 32 first, then 21 flight-leg shots. 111/164 done.
+
 ## 2026-08-10 — PHOTO-MEASURE-1: the blur ceiling now judges the PAINTED OUTPUT (TS-0028/0029), + edit-path upload errors unsilenced (TS-0030)
 
 Maroushka retested on the current build the morning of 10 Aug and filed three photo faults in

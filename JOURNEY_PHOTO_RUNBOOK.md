@@ -130,3 +130,19 @@ Result after next deploy: NA map shows on the Namibia listings; Cape to Cairo ma
 the SA listings, beside the reserve tour. To add a future multi-country tour: drop sup_<r>_*
 photos, add its ADV_TOUR_MAP entry, add a COUNTRIES+COPY row (operator country) and a tour
 stamp. Single-country tours still just need un-gating + a country listing.
+
+## State refresh — 10 Aug 2026 (SUPER-AFRICA-1)
+- NA / BW / MZ / C2C ground sets ALL COMPLETE since the 26 Jul notes. `photo_status.py` is the truth: **111/164**.
+- NEW in the queue: **Kenya 32** (whole journey, priority — David 10 Aug) and **21 flight-leg shots** (f1_/f2_* × NA/BW/MZ — the new fly-in bookend days; their maps are live-presentable with placeholders meanwhile).
+- Prompts as ever in JOURNEY_HIGGSFIELD_PROMPTS.md (164, regenerated 10 Aug). Same process, same guards — nothing about the method changed. Angola REMOVED from expansion scope (David, 10 Aug); no AO journey will be queued.
+
+## Two new UI lessons — 10 Aug 2026 Kenya run (do not relearn)
+- **Download leaves the lightbox OPEN.** Clicking the prompt bar next lands INSIDE the lightbox
+  (opens an on-image comment box; typed text goes nowhere). After every Download: wait for the
+  hf_*.png to actually appear in Downloads (poll, ~5-20 s), THEN close via the top-right X —
+  Escape does not always close it — and only then touch the prompt bar.
+- **The lightbox side-panel remembers its last tab.** If it opens on Comments, there is NO
+  Download button — click Info first; Download lives at the bottom of the Info tab.
+- Aircraft prompts: Nano Banana Pro likes putting FLAMES on wingtips/engines. Add "no flames,
+  no fire, no engine glow, winglets clean and unlit" to every aircraft shot; zoom-inspect the
+  wings before accepting (first d1_start render had a burning winglet — caught at QC, 2 credits).

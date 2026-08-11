@@ -3,15 +3,15 @@
  "out": "adventures_bw_map.html",
  "photo_dir": "assets/journey/bwa",
  "title": "Botswana — Delta, River &amp; Salt",
- "pill": "★ BOTSWANA · 5-DAY SAFARI",
+ "pill": "★ BOTSWANA · 7-DAY FLY-IN SAFARI",
  "h1": "Botswana, water to salt",
- "sub": "Five days from a flooded delta to a dry white pan — tap a day to travel it: the channels, the herds, the food, where you sleep.",
- "cap": "Illustrative 5-day safari circuit · real Botswanan towns shown for bearing; camps &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery.",
+ "sub": "Seven days door to door — fly in from Joburg, five days from the delta channels to the great salt pan, and fly home. Tap a day to fly or drive it.",
+ "cap": "Illustrative 5-day safari circuit · real Botswanan towns shown for bearing; camps &amp; food generic (SO-1b). A demo a real tour operator could publish as their own — free to claim and replace with their product. AI imagery. Flight fares are indicative cached data (Aviasales, 10 Aug 2026) — flights booked by your travel agency, never through MarketSquare.",
  "unit": "Day",
  "stat1_icon": "🛶",
  "stat2_icon": "⏱",
- "route_summary": "<b>Whole route</b> · 5 days · delta, river and salt pan. &nbsp;<span class=\"hint\">Tap a day to travel it.</span>",
- "legend": "<b>On safari</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🦓 Wildlife</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "route_summary": "<b>Whole route</b> · 7 days · fly-in from Joburg (~1 000 km) + delta-to-pan overland · ✈ JNB ⇄ Maun return fares on request via your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or drive it.</span>",
+ "legend": "<b>On safari</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🦓 Wildlife</div><div>📍 Sight</div><div>🍽️ Food</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🦓 Wildlife",
   "route": "〰️ Safari route"
@@ -51,6 +51,67 @@
  "days": [
   {
    "day": 1,
+   "title": "Fly in from Joburg",
+   "dist": "1 000 km",
+   "ascent": "2 hr",
+   "mode": "air",
+   "color": "#128293",
+   "summary": "Under two hours from Joburg to Maun — thin cached route, return fares on request from your travel agency.",
+   "seg": [
+    [
+     -26.1392,
+     28.246
+    ],
+    [
+     -22.5,
+     25.5
+    ],
+    [
+     -19.9726,
+     23.4311
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -26.1392,
+     "lng": 28.246,
+     "type": "start",
+     "icon": "🛫",
+     "name": "O.R. Tambo · departure",
+     "blurb": "A prop-heavy departure board and safari duffels on every shoulder — Maun is where the tar ends.",
+     "photo": "f1_start.jpg"
+    },
+    {
+     "lat": -22.5,
+     "lng": 25.5,
+     "type": "view",
+     "icon": "✈️",
+     "name": "The pans from the window",
+     "blurb": "White salt to the curve of the earth on one side, the green smudge of the delta beginning on the other.",
+     "photo": "f1_view.jpg"
+    },
+    {
+     "lat": -19.9726,
+     "lng": 23.4311,
+     "type": "sight",
+     "icon": "🛬",
+     "name": "Maun · arrival",
+     "blurb": "Twelve-seaters queuing on the apron like taxis — the busiest bush-plane airport in Africa.",
+     "photo": "f1_sight.jpg"
+    },
+    {
+     "lat": -19.9833,
+     "lng": 23.4167,
+     "type": "over",
+     "icon": "🛏️",
+     "name": "River guesthouse · Maun",
+     "blurb": "A shady stoep above the Thamalakane, fish eagles calling the afternoon through.",
+     "photo": "f1_over.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
    "title": "Into the delta by mokoro",
    "dist": "90 km",
    "ascent": "3 hr",
@@ -127,7 +188,7 @@
    ]
   },
   {
-   "day": 2,
+   "day": 3,
    "title": "Predator country",
    "dist": "70 km",
    "ascent": "Full day",
@@ -204,7 +265,7 @@
    ]
   },
   {
-   "day": 3,
+   "day": 4,
    "title": "North to the marsh",
    "dist": "180 km",
    "ascent": "5 hr",
@@ -281,7 +342,7 @@
    ]
   },
   {
-   "day": 4,
+   "day": 5,
    "title": "The great river",
    "dist": "160 km",
    "ascent": "4 hr",
@@ -358,7 +419,7 @@
    ]
   },
   {
-   "day": 5,
+   "day": 6,
    "title": "Out onto the salt",
    "dist": "310 km",
    "ascent": "5 hr",
@@ -431,6 +492,58 @@
      "name": "Journey's end · the pan",
      "blurb": "Bedrolls on the salt, no tent, no tree, no sound — just the whole sky.",
      "photo": "d5_finish.jpg"
+    }
+   ]
+  },
+  {
+   "day": 7,
+   "title": "Off the pan, fly home",
+   "dist": "250 km road + 1 000 km air",
+   "ascent": "Full day",
+   "mode": "air",
+   "color": "#6b7d99",
+   "summary": "Back off the salt to Maun and the afternoon flight south — fares on request from your travel agency.",
+   "seg": [
+    [
+     -20.215,
+     26.185
+    ],
+    [
+     -19.9726,
+     23.4311
+    ],
+    [
+     -26.1392,
+     28.246
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -20.7,
+     "lng": 25.3,
+     "type": "start",
+     "icon": "🚙",
+     "name": "Off the salt, back west",
+     "blurb": "The vehicle the only vertical thing for an hour, then the first cattle posts and the smell of rain.",
+     "photo": "f2_start.jpg"
+    },
+    {
+     "lat": -19.9726,
+     "lng": 23.4311,
+     "type": "sight",
+     "icon": "✈️",
+     "name": "Maun · departures",
+     "blurb": "Sand out of the boots, a last look at the bush-plane ballet, boarding for Johannesburg.",
+     "photo": "f2_sight.jpg"
+    },
+    {
+     "lat": -26.1392,
+     "lng": 28.246,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Johannesburg · home",
+     "blurb": "Mokoro-calm in the blood and salt in the camera bag — go siame, Botswana.",
+     "photo": "f2_finish.jpg"
     }
    ]
   }

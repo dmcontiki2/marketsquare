@@ -1,0 +1,1 @@
+- SUPER-AFRICA-1: Angola OUT (David). NA/BW/MZ maps upgraded to 7-day fly-in (existing photos intact, real fares, RG-0025 clean). Fares snapshot cached for ZW/EG. NEXT: supervised Higgsfield run — Kenya 32 first, then 21 flight-leg shots; needs Downloads grant + Higgsfield in Chrome. Open: Zambia scope, Harare currency.

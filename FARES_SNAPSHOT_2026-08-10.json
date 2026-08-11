@@ -1,0 +1,43 @@
+{
+ "pulled": "2026-08-10",
+ "currency": "ZAR",
+ "routes": {
+  "JNB-WDH": {
+   "cheapest": 5197,
+   "median": 5422,
+   "direct_from": 5197,
+   "n": 19
+  },
+  "JNB-MUB": {},
+  "JNB-MPM": {
+   "cheapest": 3225,
+   "median": 3477,
+   "direct_from": 3225,
+   "n": 15
+  },
+  "JNB-VNX": {
+   "cheapest": 9821,
+   "median": 10549,
+   "direct_from": 12483,
+   "n": 6
+  },
+  "JNB-HRE": {
+   "cheapest": 3072,
+   "median": 3697,
+   "direct_from": 3072,
+   "n": 11
+  },
+  "JNB-CAI": {
+   "cheapest": 7171,
+   "median": 8093,
+   "direct_from": null,
+   "n": 4
+  },
+  "CPT-CAI": {
+   "cheapest": 12896,
+   "median": 14371,
+   "direct_from": null,
+   "n": 14
+  }
+ }
+}

@@ -2129,8 +2129,8 @@ const ADV_ACC_TYPE_LABELS = {
   boutique_hotel:'🏨 Boutique Hotel', self_catering:'🍳 Self-Catering',
   unique_stays:'🌳 Unique Stays', caravan_camping:'🚐 Caravan & Camping',
 };
-const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', BW:'🇧🇼', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', DE:'🇩🇪', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
-const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', US:'$', CA:'CA$', GB:'£', DE:'€', EU:'€', AU:'A$', NZ:'NZ$' };
+const ADV_COUNTRY_FLAGS = { ZA:'🇿🇦', NA:'🇳🇦', MZ:'🇲🇿', BW:'🇧🇼', KE:'🇰🇪', US:'🇺🇸', CA:'🇨🇦', GB:'🇬🇧', DE:'🇩🇪', EU:'🇪🇺', AU:'🇦🇺', NZ:'🇳🇿', ALL:'🌍' };
+const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', KE:'KSh', US:'$', CA:'CA$', GB:'£', DE:'€', EU:'€', AU:'A$', NZ:'NZ$' };
 // PER-COUNTRY-MAP (25 Jul 2026, David): each super-adventure country shows its OWN interactive
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
@@ -2140,9 +2140,11 @@ const ADV_COUNTRY_MAP = {
   GB: { file:'adventures_uk_map.html?v=8',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html?v=8',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
-  NA: { file:'adventures_na_map.html?v=9',      title:'🗺️ Drive the route',           blurb:'Five days from the red dunes to the great waterhole — tap a day, then the pins: the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
-  BW: { file:'adventures_bw_map.html?v=8',      title:'🗺️ Explore the delta',        blurb:'Delta, river and salt pan in five days — tap a day, then the pins: the mokoro channels, the predators, the elephant herds and the open pan.' },
-  MZ: { file:'adventures_mz_map.html?v=8',      title:'🗺️ Sail the coast',           blurb:'Capital, coast and archipelago — tap a day, then the pins: the dhows, the reefs, the sandbanks and the island stone town.' },
+  NA: { file:'adventures_na_map.html?v=11',      title:'🗺️ Drive the route',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), the red dunes to the great waterhole, and home. Tap a day, then the pins: the flights, the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
+  BW: { file:'adventures_bw_map.html?v=10',      title:'🗺️ Explore the delta',        blurb:'Seven days door to door — fly in from Joburg, the mokoro channels to the open salt pan, and home. Tap a day, then the pins: the flights, the delta, the predators, the elephant herds and the pan.' },
+  MZ: { file:'adventures_mz_map.html?v=10',      title:'🗺️ Sail the coast',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), dhows, reefs and the stone island, and home. Tap a day, then the pins: the flights, the dhows, the sandbanks and the island stone town.' },
+  // KE added 10 Aug 2026 (SUPER-AFRICA-1 Kenya pilot):
+  KE: { file:'adventures_ke_map.html?v=2',      title:'🗺️ Drive the circuit',        blurb:'Seven days door to door — fly in from Cape Town (indicative return fares shown), five days from capital to the great herds, and fly home. Tap a day, then the pins: the flights, the Rift, the lakes, the balloons and where you sleep.' },
   DE: { file:'adventures_de_map.html?v=8',      title:'🗺️ Walk the route',            blurb:'The five-day Bavarian Alps trek — tap a day to walk it: the towns, the peaks, the huts and the lakeside finish.' },
 };
 

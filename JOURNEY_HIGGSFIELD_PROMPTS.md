@@ -16,16 +16,20 @@ and shrinks them automatically and replaces the placeholder tiles. No other chan
 
 ---
 
-## Botswana, water to salt  (25 photos)
+## Botswana, water to salt  (32 photos)
 
 - **photo_dir:** `assets/journey/bwa`
-- **output:** `botswana_journey.html`
+- **output:** `adventures_bw_map.html`
 
 ### Style block — paste FIRST into every prompt in this journey
 > Photorealistic editorial safari photography, Botswana — Okavango channels, mopane woodland and white salt pan, warm golden-hour light and dust, deep navy and warm amber accents (#0c1a2e / #C8873A), shallow depth of field where appropriate. NO identifiable human faces (people from behind, in silhouette, or in shadow only), no readable text, no logos, no watermarks, aspect ratio 3:2, high detail, natural colour.
 
 | File | Prompt (after style block) |
 |---|---|
+| `f1_start.jpg` | O.R. Tambo · departure — A prop-heavy departure board and safari duffels on every shoulder — Maun is where the tar ends. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f1_view.jpg` | The pans from the window — White salt to the curve of the earth on one side, the green smudge of the delta beginning on the other. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `f1_sight.jpg` | Maun · arrival — Twelve-seaters queuing on the apron like taxis — the busiest bush-plane airport in Africa. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f1_over.jpg` | River guesthouse · Maun — A shady stoep above the Thamalakane, fish eagles calling the afternoon through. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
 | `d1_start.jpg` | Maun · safari town — Dusty frontier town where every second vehicle is a converted game-viewer and every pilot is twenty-four. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `d1_view.jpg` | The delta from the air — An inland delta that never reaches the sea — silver channels braided through ten thousand green islands. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `d1_sight.jpg` | Poled through the papyrus — Standing in the stern with a long pole, reed tips brushing past, frogs the size of a thumbnail on the stems. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
@@ -51,13 +55,16 @@ and shrinks them automatically and replaces the placeholder tiles. No other chan
 | `d5_sight.jpg` | Meerkats at their burrow — A habituated colony that will stand on your shoulder for a better view, entirely on their own terms. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `d5_food.jpg` | Last supper on the salt — A table, white cloth and lanterns set out on the open pan; grilled meats, cold wine, and a full 360° sunset. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `d5_finish.jpg` | Journey's end · the pan — Bedrolls on the salt, no tent, no tree, no sound — just the whole sky. Wide closing shot with a sense of arrival and completion, golden light. |
+| `f2_start.jpg` | Off the salt, back west — The vehicle the only vertical thing for an hour, then the first cattle posts and the smell of rain. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f2_sight.jpg` | Maun · departures — Sand out of the boots, a last look at the bush-plane ballet, boarding for Johannesburg. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f2_finish.jpg` | Johannesburg · home — Mokoro-calm in the blood and salt in the camera bag — go siame, Botswana. Wide closing shot with a sense of arrival and completion, golden light. |
 
 ---
 
-## Cape to Cairo, by rail  (31 photos)
+## Cape to Cairo — rail, wings &amp; the Nile  (38 photos)
 
 - **photo_dir:** `assets/journey/c2c`
-- **output:** `cape_to_cairo_journey.html`
+- **output:** `adventures_c2c_map.html`
 
 ### Style block — paste FIRST into every prompt in this journey
 > Photorealistic editorial rail-travel photography, Africa end to end — grand stations, sleeper-car interiors in brass and teak, Karoo, Zambezi, savanna and Nile desert, cinematic warm light, deep navy and warm amber accents (#0c1a2e / #C8873A), shallow depth of field where appropriate. NO identifiable human faces (people from behind, in silhouette, or in shadow only), no readable text, no logos, no watermarks, aspect ratio 3:2, high detail, natural colour.
@@ -69,45 +76,101 @@ and shrinks them automatically and replaces the placeholder tiles. No other chan
 | `l1_view.jpg` | Through the winelands — Whitewashed gables, vineyards in rows, and a wall of blue mountains the train has to find a way through. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `l1_sight.jpg` | Victorian halt on the plateau — A perfectly preserved railway village on the empty Karoo — gaslamps, a double-storey verandah, one street. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `l1_over.jpg` | First night in the sleeper — Berth made up while you dine; the rhythm of rail joints and a lit lamp somewhere far out on the plain. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `l1_bread.jpg` | Roosterkoek at the halt — Griddle bread off the coals at a Victorian siding — split, buttered and eaten hot with apricot jam. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l2_start.jpg` | Dawn on the Karoo — Pink light on flat-topped hills, windmills, sheep, and not one other vehicle. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `l2_food.jpg` | Karoo lamb, slow-roasted — Lamb raised on wild aromatic scrub, so the meat arrives pre-seasoned — served pink with pumpkin fritters. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l2_sight.jpg` | The Big Hole — A 200 m crater dug by hand by fifty thousand men with picks and buckets, now filled with green water. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `l2_view.jpg` | Highveld grassland — Grass to the horizon in every direction, thunderheads stacking up in the afternoon. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `l2_over.jpg` | Second night, rolling north — Dinner in the dining car under lamplight, then the long climb onto the highveld in the dark. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `l2_potjie.jpg` | Potjie under the stars — Lamb, potatoes and sweet wine simmered for hours in a three-legged pot beside the line, under a sky thick with stars. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l3_start.jpg` | Jacaranda capital — Purple streets in spring, union buildings on the ridge, and the last big-city platform for a while. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `l3_food.jpg` | Biltong & braai on board — Air-dried spiced beef sliced thin as a snack, then flame-grilled steak and coiled farm sausage for dinner. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l3_sight.jpg` | The smoke that thunders — A kilometre-wide curtain dropping 100 m into a gorge; the spray column is visible 50 km away. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `l3_view.jpg` | The bridge over the gorge — A 1905 steel arch spanning the chasm — the original dream of this whole railway, and the point it stalled. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `l3_over.jpg` | Colonial hotel by the falls — Verandahs, ceiling fans, high tea, warthogs on the lawn and permanent thunder in the background. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `l3_bream.jpg` | Zambezi bream by the river — Whole bream off the coals at the water's edge, lemon-buttered, with the spray of the falls drifting over. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l4_start.jpg` | Onto the long line — The famous cross-continental service: two nights, one train, minimal fuss. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `l4_view.jpg` | Game from the window — The line runs through a national park — giraffe, elephant and buffalo from the dining-car window at walking pace. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `l4_food.jpg` | Grilled meat & maize — Charcoal-grilled goat and beef with stiff maize porridge and a fierce tomato-chilli relish, eaten with hands. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l4_sight.jpg` | Spice port on the ocean — Indian Ocean harbour thick with the smell of clove, cardamom and cinnamon from the islands offshore. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `l4_over.jpg` | Harbour-side rooms — Carved doors, a courtyard, call to prayer at dusk and dhows on the water at first light. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
-| `l5_start.jpg` | Northbound — Rail, road and river stitched together — the one leg where the dream of a single line still has gaps. Wide establishing shot with a clear sense of departure and journey ahead. |
-| `l5_view.jpg` | Where two Niles meet — Blue water from the highlands and white water from the lakes joining in one visible seam. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
-| `l5_sight.jpg` | Desert pyramids — Steep, narrow pyramids in golden sand — smaller than Egypt's, and often entirely empty of people. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
-| `l5_food.jpg` | Slow-cooked beans & flatbread — Fava beans stewed overnight with cumin, lemon and olive oil, scooped up with hot flatbread — breakfast for a continent. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
-| `l5_over.jpg` | Nubian village on the river — Blue and ochre houses, palm-shaded courtyards, and the Nile running fast and green below. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
-| `l6_start.jpg` | The Nile sleeper — Boarding at dusk with the river turning copper; dinner served in the cabin as the palms slide past. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `l4_chai.jpg` | Chai na mandazi at dawn — Sweet, gingery tea and warm fried dough as the miombo woodland slides past — Tanzania's answer to breakfast in bed. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `l5_crater.jpg` | Ngorongoro Crater rim — Sundowners on the lip of the world's largest unbroken caldera, the game grazing two thousand feet below. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `l5_migration.jpg` | Serengeti · the Great Migration — A million wildebeest and zebra on the move — often called the greatest show on earth. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `l5_gorilla.jpg` | Gorillas of the Volcanoes — One quiet hour with a mountain gorilla family in the bamboo forests of Rwanda. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `l5_injera.jpg` | Injera in Addis Ababa — Sour flatbread piled with spiced stews and lentils, eaten by hand from one shared platter. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `l5_coffee.jpg` | Coffee, born in Ethiopia — The ceremony: green beans roasted at your feet, pounded, brewed three times — coffee in the country that gave it to the world. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `l5_lalibela.jpg` | Lalibela, carved from rock — Eleven medieval churches chiselled straight down into the mountain, still in daily use. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `l5_abusimbel.jpg` | Abu Simbel colossi — Ramses II at twenty metres, rescued stone by stone above Lake Nasser. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `l6_cruise.jpg` | Casting off at Aswan — Three slow nights on the river — dinner on deck as the palms slide by and the banks turn copper. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `l6_sight.jpg` | Temple city at dawn — Avenues of stone rams, hypostyle halls of vast painted columns, cut sharp by early light. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `l6_food.jpg` | Rice, lentils & fried onion — The great street dish — rice, lentils and macaroni under spiced tomato sauce, vinegar and crisp onions. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `l6_view.jpg` | The green Nile valley — A ribbon of intense green a few kilometres wide with hard desert on both edges — the whole country in one view. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `l6_food2.jpg` | Mint tea in sight of the tombs — Sweet mint tea on a rooftop with the three pyramids filling the skyline behind the cups. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `l6_start.jpg` | The night sleeper to Cairo — Boarding at dusk with the river turning copper — dinner served in the cabin as the palms slide by. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
 | `l6_finish.jpg` | Journey's end · Cairo — Ten thousand kilometres, one continent, and a last look back down the line from the Giza plateau. Wide closing shot with a sense of arrival and completion, golden light. |
 
 ---
 
-## Mozambique, down the coast  (25 photos)
+## Kenya, city to savannah  (32 photos)
+
+- **photo_dir:** `assets/journey/ken`
+- **output:** `adventures_ke_map.html`
+
+### Style block — paste FIRST into every prompt in this journey
+> Photorealistic editorial travel photography, shallow depth of field where appropriate. NO identifiable human faces (people from behind, in silhouette, or in shadow only), no readable text, no logos, no watermarks, aspect ratio 3:2, high detail, natural colour.
+
+| File | Prompt (after style block) |
+|---|---|
+| `d1_start.jpg` | Cape Town International · departure — Table Mountain out the left window as you climb, the Cape Flats falling away — next stop, the equator. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d1_view.jpg` | The Rift from seat 23A — The Great Rift's lakes glinting silver below, thunderheads stacked over the escarpments — Africa end to end from ten kilometres up. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d1_sight.jpg` | Jomo Kenyatta International · arrival — Karibu Kenya — a stamp, warm equatorial evening air, and a driver holding a board with your lodge's name. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d1_over.jpg` | Arrival night · Karen cottage — Lamplight, a pot of chai and the smell of rain on red earth — asleep before the jet lag notices. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `d2_start.jpg` | Nairobi · departure — Matatus in full graffiti colour, hawkers with the morning papers, and the park gate twenty minutes from the towers. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d2_sight.jpg` | Nairobi National Park · dawn drive — The only national park on earth inside a capital — black rhino grazing while the city hums on the horizon. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d2_view.jpg` | Karen Blixen Museum — The farmhouse at the foot of the Ngong Hills where 'Out of Africa' began — lawns, verandahs and old coffee ghosts. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d2_food.jpg` | Nyama choma lunch — Goat and beef straight off the grill, cut at the table with kachumbari and ugali — Kenya's great shared meal. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `d2_over.jpg` | Coffee-garden cottage · Karen — A stone cottage under old trees in coffee country, log fire lit at seven, colobus monkeys in the canopy at dawn. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `d3_start.jpg` | Out of the highlands — Up through eucalyptus and tea-green shambas to the lip of the escarpment. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d3_view.jpg` | Great Rift Valley viewpoint — The floor drops six hundred metres and the valley runs unbroken to the horizon, volcano cones floating in the haze. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d3_sight.jpg` | Lake Naivasha by boat — Fish eagles calling from dead acacias, pelicans in formation, and hippo eyes everywhere in the papyrus shallows. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d3_food.jpg` | Lakeside tilapia lunch — Whole tilapia fried crisp, lemon and chilli, eaten at a plank table with the lake glittering behind. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `d3_over.jpg` | Lakeshore tented camp — Canvas under yellow-barked acacias; after dark the hippos come ashore to mow the lawn around the tents. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `d4_start.jpg` | Hell's Gate · cycling the gorge — Ride a dirt road between red basalt walls, zebra and warthog trotting alongside — the gorge that inspired a lion king. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d4_sight.jpg` | Geothermal vents & towers — Steam hissing from the rock, a lone volcanic plug rising from the valley floor like a chimney. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d4_food.jpg` | Chai & mandazi · Nakuru — Sweet milky chai and warm mandazi doughnuts at a formica table — the mid-journey ritual of every Kenyan road. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `d4_view.jpg` | Lake Nakuru · flamingos & rhino — A soda lake ringed pink at the shallows, white rhino grazing the shoreline meadows below a fever-tree forest. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d4_over.jpg` | Ridge lodge above the lake — Rooms along a cliff line with the whole lake below — baboons on the lawn at six, eagles at eye level all day. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `d5_start.jpg` | South through the wheatlands — Big-sky farming country rolling toward Narok, combines raising dust on the horizon. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d5_food.jpg` | Narok market stop — Pyramids of avocados and red onions, shuka cloth snapping in the wind, the last town before the grass takes over. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `d5_sight.jpg` | Maasai homestead visit — Red shukas against green grass, beadwork with a meaning for every colour, and a jumping dance you will be invited to lose. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d5_view.jpg` | First game drive · Mara plains — Elephant families in the croton thickets, giraffe on the skyline, and grass to the curve of the earth. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d5_over.jpg` | Tented camp by the river — Lantern-lit canvas above a bend in the river; hippos grumbling below and a lion somewhere north, twice, before sleep. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
+| `d6_start.jpg` | Dawn balloon over the Mara — Lift off in the dark, sunrise from a basket, shadows of hot-air balloons drifting over waking herds. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d6_view.jpg` | Big cats on the hunt — A cheetah using a termite mound as a watchtower; lion cubs in the grass pretending not to be seen. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `d6_sight.jpg` | Mara River crossing — Wildebeest massing at the bank, dust and spray and crocodiles — the migration's great gamble, August to October. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d6_food.jpg` | Bush breakfast on the plains — Eggs and sausages off a tailgate grill, Kenyan AA coffee from an enamel pot, zebra grazing a respectful distance away. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
+| `d6_finish.jpg` | Journey's end · escarpment sundowner — A camp chair on the Oloololo edge, the whole Mara going gold below — asante sana, and one more night of lion song. Wide closing shot with a sense of arrival and completion, golden light. |
+| `d7_start.jpg` | Bush airstrip · the Mara — A grass strip mown out of the savannah, a twelve-seater bouncing in, and one last low turn over the herds on climb-out. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `d7_sight.jpg` | Nairobi connection — Across town to Jomo Kenyatta, one last plate of nyama choma in the terminal, and the board flips to CAPE TOWN. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `d7_finish.jpg` | Cape Town · home — Table Mountain rising out the window on approach — asante sana, Kenya; the photos will take weeks to sort. Wide closing shot with a sense of arrival and completion, golden light. |
+
+---
+
+## Mozambique, down the coast  (32 photos)
 
 - **photo_dir:** `assets/journey/moz`
-- **output:** `mozambique_journey.html`
+- **output:** `adventures_mz_map.html`
 
 ### Style block — paste FIRST into every prompt in this journey
 > Photorealistic editorial travel photography, Mozambique Indian Ocean coast — turquoise water, dhow sails, coral-stone and whitewash, bright tropical light with deep navy and warm amber accents (#0c1a2e / #C8873A), shallow depth of field where appropriate. NO identifiable human faces (people from behind, in silhouette, or in shadow only), no readable text, no logos, no watermarks, aspect ratio 3:2, high detail, natural colour.
 
 | File | Prompt (after style block) |
 |---|---|
+| `f1_start.jpg` | O.R. Tambo · departure — The shortest hop of the lot — barely time for coffee before the descent begins. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f1_view.jpg` | The Lebombo range from above — The lowveld patchwork giving way to green hills, then the flat silver of the bay. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `f1_sight.jpg` | Maputo · arrival — Sea air through the terminal doors, Portuguese on the tannoy, prawns already on your mind. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f1_over.jpg` | Guesthouse in the old city — A tiled courtyard behind a heavy door, ceiling fans and the evening call of the city. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
 | `d1_start.jpg` | Maputo · arrival — Wide jacaranda avenues, Mediterranean balconies and Indian Ocean humidity in equal measure. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `d1_sight.jpg` | The iron market — A cast-iron market hall shipped out in pieces a century ago, still stacked with chillies, cashews and fish. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `d1_food.jpg` | Peri-peri prawns — Giant prawns split, drowned in garlic, lemon and fierce bird's-eye chilli, grilled hot — with cold beer and rough bread. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
@@ -133,19 +196,26 @@ and shrinks them automatically and replaces the placeholder tiles. No other chan
 | `d5_view.jpg` | The long causeway — A three-kilometre single-lane bridge to the mainland, best walked at sunset. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
 | `d5_food.jpg` | Spiced coconut curry — Fish curry heavy with coconut, cinnamon and clove — Arab, Indian and Portuguese cooking in one pot. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `d5_finish.jpg` | Journey's end · the island — Sundowners on a fort wall built in 1558, dhows coming home below. Wide closing shot with a sense of arrival and completion, golden light. |
+| `f2_start.jpg` | Across the three-kilometre bridge — Off the stone island on the long low bridge, then baobab country rolling toward Nampula. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f2_sight.jpg` | Nampula · departures — A last pastel de nata in the terminal and sand shaken from every bag. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f2_finish.jpg` | Johannesburg · home — Salt on your skin and dhow sails in your camera roll — kanimambo, Moçambique. Wide closing shot with a sense of arrival and completion, golden light. |
 
 ---
 
-## Namibia, end to end  (23 photos)
+## Namibia, end to end  (30 photos)
 
 - **photo_dir:** `assets/journey/nam`
-- **output:** `namibia_journey.html`
+- **output:** `adventures_na_map.html`
 
 ### Style block — paste FIRST into every prompt in this journey
 > Photorealistic editorial travel photography, Namibia — red Sossusvlei dunes, gravel plains and Atlantic fog, hard clean desert light with long shadows, deep navy and warm amber accents (#0c1a2e / #C8873A), shallow depth of field where appropriate. NO identifiable human faces (people from behind, in silhouette, or in shadow only), no readable text, no logos, no watermarks, aspect ratio 3:2, high detail, natural colour.
 
 | File | Prompt (after style block) |
 |---|---|
+| `f1_start.jpg` | O.R. Tambo · departure — Boarding for the desert — the highveld falling away, the Kalahari turning apricot below. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f1_view.jpg` | The Kalahari from above — Red dune-streets in parallel lines to the horizon, a single farm light every hundred kilometres. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
+| `f1_sight.jpg` | Hosea Kutako · pick up the 4x4 — Heat shimmer on the apron, keys to a kitted twin-cab, two spare wheels and a fridge in the back. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f1_over.jpg` | Windhoek · first night — Jacaranda streets and a first braai under a highland sky — the gravel starts tomorrow. Warm inviting accommodation shot at dusk or night, lamplight, no people visible or only distant silhouettes. |
 | `d1_start.jpg` | Windhoek · departure — Highland capital, jacaranda streets, a last flat white before the gravel begins. Wide establishing shot with a clear sense of departure and journey ahead. |
 | `d1_food.jpg` | Roadside grill stop — Flame-grilled beef cut straight onto brown paper with a fist of coarse salt and chilli — the country's favourite roadside lunch. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `d1_view.jpg` | Dune country, first light — Rust-red dunes 300 m tall, knife-edge crests, a dead white pan cracked like old porcelain. Wide landscape shot, strong depth, dramatic natural light, human figures tiny or absent. |
@@ -169,10 +239,13 @@ and shrinks them automatically and replaces the placeholder tiles. No other chan
 | `d5_sight.jpg` | Floodlit waterhole — Elephant, rhino and lion take turns at the same water through the night; you just sit still and let it come. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
 | `d5_food.jpg` | Braai under the thorn trees — Game fillet and boerewors over hardwood coals, dust settling, the pan glowing pink behind. Close, appetising food photography — shallow depth of field, steam or char visible, hands only if anyone appears, natural setting behind. |
 | `d5_finish.jpg` | Journey's end · the waterhole — Last night: a chair, a cold beer, and whatever chooses to walk out of the dark. Wide closing shot with a sense of arrival and completion, golden light. |
+| `f2_start.jpg` | The long road south — Four hundred kilometres of straight gravel and mirage — one last kudu crossing at dusk speed. Wide establishing shot with a clear sense of departure and journey ahead. |
+| `f2_sight.jpg` | Hosea Kutako · drop the keys — Dust off the twin-cab, one last biltong stop in the terminal, boarding for Johannesburg. Characterful detail or mid shot of the landmark or subject, strong sense of place. |
+| `f2_finish.jpg` | Johannesburg · home — Red dust in the tread and ten thousand photos of dunes — tot siens, Namibia. Wide closing shot with a sense of arrival and completion, golden light. |
 
 ---
 
-**Total: 104 photos across 4 journeys.**
+**Total: 164 photos across 5 journeys.**
 
 Suggested order — do one journey per overnight run so a bad style lock costs one set,
 not four. Generate, then re-run the builder and check the map before starting the next.

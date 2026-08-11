@@ -188,14 +188,16 @@ CITY_CCY = {
     "centurion": "R", "midrand": "R", "sandton": "R",
     "new york": "$", "london": "£", "sydney": "A$",
     "maun": "P",   # Botswana Pula — Okavango super market demo_stay_bw_1 (added 29 Jul 2026)
+    "nairobi": "KSh",  # Kenyan Shilling — SUPER-AFRICA-1 Kenya pilot (added 10 Aug 2026)
 }
 CITY_COUNTRY = {
     "pretoria": "ZA", "johannesburg": "ZA", "cape town": "ZA", "durban": "ZA",
     "centurion": "ZA", "midrand": "ZA", "sandton": "ZA",
     "new york": "US", "london": "GB", "sydney": "AU",
     "maun": "BW",   # Maun is in Botswana (added 29 Jul 2026)
+    "nairobi": "KE",  # Nairobi is in Kenya — SUPER-AFRICA-1 (added 10 Aug 2026)
 }
-SYMBOLS = ("A$", "CA$", "NZ$", "N$", "MT", "R", "$", "£", "€")
+SYMBOLS = ("KSh", "A$", "CA$", "NZ$", "N$", "MT", "R", "$", "£", "€")
 
 
 def symbol_of(price):
