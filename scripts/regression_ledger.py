@@ -2192,5 +2192,73 @@ def rg_seller_cv_guards():
 
 
 
+@entry("RG-0055", "The maintenance loop can actually reach its brain -- a degraded run names WHY",
+       LOCKED, scope="scripts/maintenance_agent.py -- the brain binding itself (classify + "
+                     "propose_patch), on every machine the loop runs on",
+       fixed_on="2026-08-11",
+       ref="BRAIN-PATH-1, maintenance session 11 Aug 2026. ai_provider.py lives at the REPO "
+           "ROOT; maintenance_agent.py lives in scripts/. Run the documented way -- "
+           "`python3 scripts/maintenance_agent.py` -- sys.path[0] is scripts/, so "
+           "`import ai_provider` raised ModuleNotFoundError on EVERY run since the agent was "
+           "written, on EVERY machine, with or without an API key. classify() then did exactly "
+           "what it is built to do (RG-0049: degrade, never die) and routed every fault to "
+           "PATH_B with 'ai_provider unavailable'. Net effect: the loop appeared to triage a "
+           "queue nightly while actually reporting its own import error once per fault, and "
+           "exited 0. This is the SECOND instance of that shape in one day -- UA-EDGE-1 "
+           "(RG-0053) was a green-looking no-op too. The fail-safe is not the bug; the bug is "
+           "that a fail-safe with a vague message hides a wiring fault indefinitely. "
+           "Fix: REPO goes on sys.path (the __file__ root, NOT the --repo rehearsal override, "
+           "which chooses which repo to PATCH and never which brain to think with), and both "
+           "degradation paths now distinguish 'will not import' from 'imported fine, no key' "
+           "from 'call failed'. Evidence: before the fix the run report read 'ai_provider "
+           "unavailable' for all 7 faults; after it, 'no AI lane has a key where the loop runs "
+           "(checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) "
+           "-- the brain imported fine; it has nothing to call.' Same PATH_B outcome, a "
+           "completely different and actionable diagnosis.")
+def rg_maintenance_agent_reaches_brain():
+    agent = repo_file("scripts/maintenance_agent.py")
+    if agent is None:
+        return [(INFO, "running outside the repo -- BRAIN-PATH-1 is a source+exec assertion, skipped")]
+    out = []
+    if "sys.path.insert(0, REPO)" not in agent:
+        out.append((FAIL, "maintenance_agent.py no longer puts REPO on sys.path -- `import "
+                          "ai_provider` will fail and every fault silently becomes PATH_B "
+                          "(BRAIN-PATH-1)"))
+    if repo_file("ai_provider.py") is None:
+        out.append((FAIL, "ai_provider.py is gone from the repo root -- the brain binding is "
+                          "broken (BRAIN-PATH-1)"))
+    if "ai_provider unavailable" in agent:
+        out.append((FAIL, "a degradation message still says only 'ai_provider unavailable' -- "
+                          "that wording cannot distinguish a wiring fault from a missing key, "
+                          "which is exactly how this hid for weeks (BRAIN-PATH-1)"))
+
+    # Executable half: actually load the agent the way it is run and prove the brain imports.
+    import subprocess
+    probe = (
+        "import importlib.util, sys, os\n"
+        "spec = importlib.util.spec_from_file_location('ma', 'maintenance_agent.py')\n"
+        "m = importlib.util.module_from_spec(spec)\n"
+        "sys.argv = ['maintenance_agent.py']\n"
+        "spec.loader.exec_module(m)\n"
+        "import ai_provider\n"
+        "print('BRAIN_OK')\n"
+    )
+    try:
+        r = subprocess.run([sys.executable, "-c", probe],
+                           cwd=os.path.join(REPO, "scripts"),
+                           capture_output=True, text=True, timeout=60)
+        if "BRAIN_OK" not in (r.stdout or ""):
+            out.append((FAIL, "loading maintenance_agent.py from scripts/ leaves ai_provider "
+                              "unimportable: %s (BRAIN-PATH-1)"
+                              % ((r.stderr or "").strip().splitlines() or ["no stderr"])[-1][:160]))
+        else:
+            out.append((INFO, "brain import proven by execution from scripts/ -- the loop can "
+                              "reach ai_provider"))
+    except Exception as ex:
+        out.append((INFO, "could not run the BRAIN-PATH-1 exec probe here (%s)" % type(ex).__name__))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

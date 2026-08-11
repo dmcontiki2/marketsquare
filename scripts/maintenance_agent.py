@@ -38,6 +38,16 @@ import os, sys, json, re, subprocess, tempfile, shutil, time, urllib.request, ur
 from datetime import datetime, timezone
 
 REPO   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# BRAIN-PATH-1 (11 Aug 2026). The brain lives at the REPO ROOT (ai_provider.py); this script
+# lives in scripts/. Run as `python3 scripts/maintenance_agent.py`, sys.path[0] is scripts/,
+# so `import ai_provider` raised ModuleNotFoundError on EVERY run, on EVERY machine, with or
+# without an API key -- and classify() dutifully degraded every fault to PATH_B. The loop
+# looked like it was triaging; it was reporting its own import error 7 times a night.
+# Same shape as UA-EDGE-1: a correct fail-safe hiding a plain bug behind a green exit code.
+# Deliberately the __file__ root, NOT the --repo override: that override picks which repo to
+# PATCH (rehearsal sandbox), never which brain to think with.
+if REPO not in sys.path:
+    sys.path.insert(0, REPO)
 BASE   = os.environ.get("MS_BEA_URL", "http://localhost:8000")
 STATE  = os.path.join(REPO, ".maint_agent")            # rate-limit ledger + run reports
 KILL   = os.environ.get("MAINTENANCE_AGENT_ENABLED", "0").strip() == "1"
@@ -66,6 +76,48 @@ _FAULTS_FILE = _arg("--faults-file")                 # synthetic queue instead o
 _BRAIN_STUB  = os.environ.get("MAINT_BRAIN_STUB")    # canned patches for a keyless rehearsal
 if _BRAIN_STUB:
     LIVE = False   # a stubbed brain can NEVER ship — rehearsal is shadow, always
+
+def _load_local_ai_keys():
+    """BRAIN-PATH-1, second half. ai_provider.envkey() reads os.environ then
+    /var/www/marketsquare/.env -- that .env exists only ON THE SERVER, so a loop running on
+    David's machine has no way to be keyed at all. The repo already has exactly one blessed
+    place for local secrets (.secrets/, gitignored at .gitignore:141, already holding
+    ms_maint_key.txt), so read the same way rather than inventing a second convention.
+
+    File: .secrets/ai_keys.env -- KEY=VALUE per line, # comments allowed. ONE key is enough.
+    Never overrides a variable already set in the real environment, so a properly-provisioned
+    host always wins. Silent when the file is absent: this is a convenience, not a requirement.
+    """
+    path = os.path.join(REPO, ".secrets", "ai_keys.env")
+    loaded = []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k, v = k.strip(), v.strip().strip('"').strip("'")
+                if k and v and not os.environ.get(k):
+                    os.environ[k] = v
+                    loaded.append(k)
+    except OSError:
+        return []
+    return loaded
+
+
+_AI_KEYS_LOADED = _load_local_ai_keys()
+
+
+def _LANE_KEY_NAMES():
+    """The env var names a lane can be keyed by -- read from ai_provider so this message
+    can never drift from the real lane table (BRAIN-PATH-1)."""
+    try:
+        import ai_provider
+        return list(ai_provider._LANE_KEYS.values())
+    except Exception:
+        return [("ANTHROPIC_API_KEY",), ("OPENAI_API_KEY",), ("SCALEWAY_API_KEY", "FAILOVER_API_KEY")]
+
 
 def now(): return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 def say(m): print("[maint] " + m, flush=True)
@@ -146,8 +198,18 @@ def classify(fault):
     # brain classifies the remainder; DEFAULT to Path B (batched, safe) on any doubt.
     try:
         import ai_provider
+    except Exception as e:
+        return "PATH_B", ("ai_provider will not import (%s: %s) -- batched design lane. "
+                          "This is a WIRING fault, not a verdict on the fault." % (type(e).__name__, e))
+    # A configured lane is not the same thing as an importable module. Say which is missing,
+    # so a run report never again reads 'unavailable' for two unrelated reasons (BRAIN-PATH-1).
+    try:
+        if not ai_provider.any_lane_configured("haiku"):
+            return "PATH_B", ("no AI lane has a key where the loop runs (checked: %s) -- batched "
+                              "design lane. The brain imported fine; it has nothing to call."
+                              % ", ".join(sorted(sum(map(list, _LANE_KEY_NAMES()), []))))
     except Exception:
-        return "PATH_B", "ai_provider unavailable -- defaulting to the batched design lane"
+        pass
     sys_p = ("You triage a software fault for a marketplace. Answer ONE word: "
              "MECHANICAL if it is a copy/config/flag/logic bug fixable by a small code "
              "edit; DESIGN if it asks for new UI, a new flow, a layout change, or a "
@@ -222,9 +284,10 @@ def propose_patch(fault):
         return r
     try:
         import ai_provider
-    except Exception:
+    except Exception as e:
         r = type("R", (), {})()
-        r.text, r.ok, r.provider, r.model, r.error_kind = "NObugfix", False, "none", "unavailable", "import"
+        r.text, r.ok, r.provider, r.model = "NObugfix", False, "none", "unavailable"
+        r.error_kind = "import:%s" % type(e).__name__      # BRAIN-PATH-1: name it, never just 'import'
         return r
     files = _candidate_files(fault)
     if files:
