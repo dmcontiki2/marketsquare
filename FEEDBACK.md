@@ -43,3 +43,14 @@
   left as-is since the guided sell flow (sf) is the live path — flag if it ever resurfaces.
 
 - 2026-08-05: TS-0007..TS-0013 (Maroushka, via the in-app REPORT tab — the fault lane, not this register): censor sprawl capped, parking type added, credential-decision emails, coach mentions credentials, HEIC supported, agent-hub uploader confirmed shipped. Dispositions in CHANGELOG (fixback-ts-batch) and app_faults.
+
+- 2026-08-11: **F-011** (David Jnr, verbal via David — voice-of-customer lane): photo upload
+  sequencing is "too difficult" — wants to BATCH-upload in any order, then sort online: pick the
+  cover ("first and most important photo"), then arrange the rest, with the AI's suggested order
+  offered. David's concern: consistency/quality. Reframe adopted for the dossier: consistency
+  belongs to the OUTPUT (default AI order + cover rules + publish gates), freedom to the INPUT
+  (any upload order; one tap accepts the AI's order; drag to adjust). Theme evidence: 2nd+
+  independent photo-pipeline friction report (Maroushka's cover complaints TS-0022/28/29/30,
+  duplicate-photo judgement TS-0006, HEIC silence TS-0030). Routed: design-change item →
+  DESIGN_BACKLOG.md dossier DCB-001 (designer gate = David until bound). Cross-link: accuracy
+  half of the same conversation filed as fault TS-0031 (Maintenance lane).

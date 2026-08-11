@@ -17,6 +17,25 @@ REG  = json.load(open(os.path.join(ROOT, "bit_registry.json")))
 BASE = REG["_meta"]["base_url"]
 for i,a in enumerate(sys.argv):
     if a=="--base" and i+1<len(sys.argv): BASE=sys.argv[i+1]
+
+# ── SERVER-BIT-2 (11 Aug 2026): vantage-point fixes ─────────────────────────────
+# The cycle now runs ON the box against BEA uvicorn (localhost:8000), inside the
+# pre-launch origin gate. Three surfaces are composed by nginx, not the BEA, so they
+# need their own addressing from here:
+#   /              -> the static shell nginx serves from disk        -> read the file
+#   /static/ms.js  -> nginx static                                   -> read the file
+#   /ai/functions  -> nginx proxy to the AdvertAgent service (:8002) -> ask it directly
+# Each check still tests the REAL artifact; only the address changed.
+LIVE   = os.environ.get("MS_LIVE", "/var/www/marketsquare")
+AABASE = os.environ.get("BIT_AA_BASE", "http://localhost:8002")
+
+def _disk_for(path):
+    if path == "/":
+        return os.path.join(LIVE, "index.html")
+    if path.startswith("/static/"):
+        return os.path.join(LIVE, path.lstrip("/"))
+    return None
+
 VERBOSE = "--verbose" in sys.argv
 AS_JSON = "--json" in sys.argv
 
@@ -50,12 +69,21 @@ def c_http_json_count(b):
 
 def c_http_shell(b):
     st, body = _get(b["path"])
-    if st != 200: return False, f"HTTP {st}"
+    via = "http"
+    if st != 200:
+        # SERVER-BIT-2: the shell is nginx's route, not the BEA's — from inside the
+        # gate read the exact file nginx serves. Same assertions, same meaning
+        # (a truncated or torn deploy still fails on size/contains).
+        fp = _disk_for(b["path"])
+        if fp and os.path.isfile(fp):
+            body = open(fp, "rb").read(); via = "disk"
+        else:
+            return False, f"HTTP {st}"
     txt = body.decode("utf-8","replace"); n=len(body)
     e=b["expect"]
-    if not (e["min_bytes"] < n < e["max_bytes"]): return False, f"size={n}"
+    if not (e["min_bytes"] < n < e["max_bytes"]): return False, f"size={n} ({via})"
     miss=[s for s in e["contains"] if s not in txt]
-    return (not miss), (f"size={n} ok" if not miss else f"missing {miss}")
+    return (not miss), (f"size={n} ok ({via})" if not miss else f"missing {miss} ({via})")
 
 def c_http_status(b):
     st, _ = _get(b["path"], headers=b.get("headers"))
@@ -73,6 +101,17 @@ def c_no_demo_bleed(b):
 def _feature_ids():
     # Pull advertised AI feature ids from the live FEA bundle (ms.js / AI_FNS payload).
     # Source of truth = whatever the BEA serves to feed AI_FNS. Try /ai/functions, fall back to scraping ms.js.
+    # SERVER-BIT-2: /ai/functions is served by the AdvertAgent service (nginx-proxied
+    # in production, :8002 on the box) — ask it directly first; its silence is a REAL
+    # failure of the AI panel, exactly what these BITs exist to catch.
+    try:
+        import urllib.request as _u
+        with _u.urlopen(AABASE.rstrip("/") + "/ai/functions", timeout=10) as _r:
+            j = json.loads(_r.read().decode("utf-8", "replace"))
+            ids = [f["id"] for f in (j if isinstance(j, list) else j.get("functions", [])) if "id" in f]
+            if ids: return ids, "advertagent:/ai/functions"
+    except Exception:
+        pass
     for p in ("/ai/functions","/ai-functions","/static/ms.js"):
         st, body = _get(p)
         if st==200 and body:
@@ -86,6 +125,9 @@ def _feature_ids():
             ids=re.findall(r'\bid["\']?\s*[:=]\s*["\']([a-z0-9_]+)["\']', txt)
             ids=[i for i in dict.fromkeys(ids) if len(i)>3][:30]
             if ids: return ids, p
+    # No disk scrape: ms.js interpolates feature ids at runtime, so the file holds no
+    # literal list. If the AdvertAgent probe above was silent, /ai/functions is down in
+    # production too (nginx proxies to that same service) — the FAIL is real.
     return [], None
 
 def c_ai_example_contract(b):

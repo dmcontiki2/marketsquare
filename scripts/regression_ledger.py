@@ -2414,5 +2414,49 @@ def rg_fix_agent_sees_real_source():
 
 
 
+@entry("RG-0059", "Every run states the code it is actually running -- a stale box cannot pass for a test",
+       LOCKED, scope="scripts/maintenance_agent.py run banner; every run on every machine, "
+                     "including the B4 rehearsal",
+       fixed_on="2026-08-11",
+       ref="STALE-CODE-1, 11 Aug 2026. TWICE in one day a run was read as a valid test while "
+           "the server was on an older commit: the B4 Tier 2 'NOT READY' at 06:42 (server on "
+           "9cc3725, one commit behind BRAIN-PATH-1) and the 0/2 live run at 08:10 (server on "
+           "127b6a6, one behind CAND-FIX-1). Both times `git pull` said 'Already up to date' -- "
+           "which is TRUE and useless, because it reports the box against the mirror, not "
+           "against the fix you just wrote and have not pushed. Both times the only tell was a "
+           "stale wording in the output, caught by eye; the second time the result was "
+           "identical to the previous run, which is exactly how a stale test passes for a real "
+           "one. The banner now prints the short SHA, a DIRTY-WORKTREE marker and the subject "
+           "line, so the code under test is stated before anyone reasons about the result. It "
+           "reads SELF_REPO -- the agent's own checkout captured before any --repo override -- "
+           "because the question is 'which agent is running', never 'which sandbox is being "
+           "patched'. Verified: the rehearsal now prints 'code c758b83 DIRTY-WORKTREE "
+           "maintenance-loop: CAND-FIX-1...' rather than the temp sandbox's SHA.")
+def rg_run_states_its_own_code():
+    a = repo_file("scripts/maintenance_agent.py")
+    if a is None:
+        return [(INFO, "running outside the repo -- STALE-CODE-1 is a source assertion, skipped")]
+    out = []
+    if "_code_stamp" not in a:
+        out.append((FAIL, "the run no longer states which commit it is executing -- a stale box "
+                          "will pass for a real test again (STALE-CODE-1)"))
+        return out
+    if "SELF_REPO" not in a:
+        out.append((FAIL, "the code stamp no longer pins to the agent's own checkout; a --repo "
+                          "override will make it report the sandbox instead (STALE-CODE-1)"))
+    if "DIRTY-WORKTREE" not in a:
+        out.append((FAIL, "the code stamp no longer flags uncommitted changes -- 'it works here' "
+                          "cannot be distinguished from 'it is committed' (STALE-CODE-1)"))
+    i = a.find("SELF_REPO = REPO")
+    j = a.find("_repo_override")
+    if i < 0 or (j > 0 and i > j):
+        out.append((FAIL, "SELF_REPO is captured after the --repo override, so the stamp can "
+                          "report the rehearsal sandbox as the running agent (STALE-CODE-1)"))
+    if not out:
+        out.append((INFO, "every run names its commit, its dirtiness and its subject line"))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

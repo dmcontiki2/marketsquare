@@ -48,6 +48,9 @@ REPO   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # PATCH (rehearsal sandbox), never which brain to think with.
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
+# The agent's OWN checkout, captured before any --repo override. STALE-CODE-1 asks
+# "which agent code is running?", which is never the sandbox the rehearsal patches.
+SELF_REPO = REPO
 BASE   = os.environ.get("MS_BEA_URL", "http://localhost:8000")
 STATE  = os.path.join(REPO, ".maint_agent")            # rate-limit ledger + run reports
 KILL   = os.environ.get("MAINTENANCE_AGENT_ENABLED", "0").strip() == "1"
@@ -117,6 +120,24 @@ def _LANE_KEY_NAMES():
         return list(ai_provider._LANE_KEYS.values())
     except Exception:
         return [("ANTHROPIC_API_KEY",), ("OPENAI_API_KEY",), ("SCALEWAY_API_KEY", "FAILOVER_API_KEY")]
+
+
+def _code_stamp():
+    """Which commit is this run actually executing? (STALE-CODE-1)"""
+    try:
+        env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=SELF_REPO, env=env,
+                             capture_output=True, text=True, timeout=15).stdout.strip()
+        if not sha:
+            return "unknown (not a git checkout)"
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                               cwd=SELF_REPO, env=env, capture_output=True, text=True,
+                               timeout=20).stdout.strip()
+        subj = subprocess.run(["git", "log", "-1", "--format=%s"], cwd=SELF_REPO, env=env,
+                              capture_output=True, text=True, timeout=15).stdout.strip()
+        return "%s%s  %s" % (sha, "  DIRTY-WORKTREE" if dirty else "", subj[:64])
+    except Exception as e:
+        return "unknown (%s)" % type(e).__name__
 
 
 def now(): return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -491,6 +512,13 @@ def main():
         % (now(), mode, MAINT_PHASE,
            "GUARDED" if TRUST_CORE_GUARD else "OFF (MAINT_TRUST_CORE_GUARD=0)",
            MAX_SHIPS_PER_HOUR))
+    # STALE-CODE-1 (11 Aug 2026). Twice in one day a run was read as a real test when the
+    # box was actually on an older commit -- once for BRAIN-PATH-1, once for CAND-FIX-1 --
+    # because `git pull` says "Already up to date" whether or not the fix was ever pushed.
+    # Both times the only tell was a stale wording in the output, spotted by eye. The run
+    # now states the code it IS: an unexpected SHA or a dirty tree is visible immediately,
+    # before anyone reasons about the result.
+    say("code    %s" % _code_stamp())
     key = maint_key()
     if not _FAULTS_FILE and not key:
         # a key is required ONLY for the live API path; a synthetic --faults-file
