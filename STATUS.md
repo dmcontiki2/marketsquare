@@ -5,6 +5,77 @@
 
 ## Current Session
 
+- **STALE-CODE-1 — two of today's runs tested older code and looked like valid tests.** `git
+  pull` says "Already up to date" whether or not the fix was pushed, and the 08:10 live run
+  returned output identical to the previous one. Every run now prints
+  `code <sha> [DIRTY-WORKTREE] <subject>` before anything else, pinned to the agent's own
+  checkout rather than the rehearsal sandbox. **RG-0059 LOCKED.**
+- Sixth green-looking no-op of the day, and the reason the count matters: every one of them
+  passed its own check. The ledger and the "name the cause" discipline are what caught them,
+  not the automation.
+
+- **Correction to today's earlier read: the agent's three `no clean patch` results were RIGHT.**
+  TS-0031 is a UX/confidence-policy change that its own row says is blocked awaiting information
+  from the reporter; TS-0024 is an unanswered question with no reproducible defect. Neither is
+  mechanically patchable. The queue contains no mechanical faults, so 0/2 is the correct output,
+  not a failure.
+- **What is still genuinely unproven, and why B4 cannot settle it:** both rehearsal tiers patch a
+  two-line sandbox `app.py`. The real application is `ms.js` at 1.07 MB and `bea_main.py` at
+  907 KB. CAND-FIX-1 made those files visible to the brain for the first time today — nothing has
+  yet tested whether a patch written against a windowed excerpt of a million-byte file actually
+  applies and gates green.
+- **`scripts/maint_realrepo_probe.py` added** — clones the repo, seeds one known mechanical
+  defect into a real file, runs the real agent in shadow, and reports whether the defect was
+  repaired. Shadow by construction (temp clone + the kill switch stripped from the environment),
+  so it can never ship. Run: `python3 scripts/maint_realrepo_probe.py [--target bea] [--keep]`.
+- **This is the last open question before the timer is a reasonable idea.** Spine proven, guard
+  proven in both phases, B4 Tier 2 PASS, brain reachable — but the agent has still never written
+  a line of code into a file this codebase actually contains.
+
+- **First real-repo probe run: INVALID, not failed.** The refuse guard escalated it on the word
+  `card` — the probe's fault text said "when I tap a card" (a listing card); `card` is a payment
+  marker. The patch path was never reached, so the run says nothing about patch quality.
+- **Checked before changing anything:** across all 30 live faults, substring matching differs
+  from word-boundary matching exactly once (`anonym` in "anonymity" — correct anyway), and the
+  standalone word `card` appears zero times. The guard is not misbehaving; the probe was.
+- **Did not narrow the marker to make the probe pass.** Over-refusing costs a human glance;
+  under-refusing costs a payment surface. Reworded the probe instead, and its wording is now
+  verified against the full marker list before use — both targets clean. The probe also now
+  reports ESCALATE as **INVALID** rather than FAIL, so a guard hit can never be misread as a
+  patch-quality verdict.
+- **Still unanswered, and still the last open question: can the agent patch a 1 MB file?**
+  Three attempts today; none has yet reached the patch path against real code.
+
+- **SERVER-BIT-2:** first live boards read 5/8 degraded — all 3 FEA fails were
+  vantage-point artifacts (nginx/AdvertAgent surfaces vs uvicorn), production fine.
+  Runner fixed both copies (disk shell fallback + AdvertAgent :8002 enumeration);
+  expect 8/8 one cycle after the next deploy. Stale root bit/ flagged for /housekeep.
+
+- **First armed live run happened (07:58 UTC): `mode=LIVE, phase=prelaunch,
+  trust-core=GUARDED`. 2 faults, 2 × "no clean patch", nothing shipped.** Safe, and the guard
+  and gates behaved — but 0/2 is not a working agent, and the reason was structural.
+- **CAND-FIX-1 — the fix agent could never see real code.** `_candidate_files` dropped any file
+  over 12,000 bytes, and every file this app lives in is far over it (ms.js 1.07 MB, bea_main.py
+  907 KB, marketsquare.html 405 KB). Worse, it ranked the agent's own `.maint_agent/run_*.json`
+  reports as the top candidates for TS-0024, because they quote the fault title — the brain was
+  handed its own exhaust to patch. Fixed: noise excluded before ranking, oversized files
+  windowed to a real excerpt with the true line range. **RG-0058 LOCKED.** ms.js now yields
+  lines 3626-3766 where it previously yielded nothing.
+- **Where the agent actually stands:** spine proven, guard proven in both phases, B4 Tier 2
+  PASS in prelaunch (6/6). Patch generation against this codebase remains **unproven** — one
+  synthetic typo is still the only patch the brain has ever written, and the structural blocker
+  was only removed after the first armed run exposed it. The next live run is the real test.
+- **Not yet armed on the timer.** The 07:58 run was hand-driven with David watching, which is
+  exactly how it should have gone: it found a blocker no rehearsal could, because the synthetic
+  sandbox has a 2-line `app.py` and the real repo has a 16,425-line one.
+
+- MAINT-B4-6 (11 Aug, attended): first server Tier-2 verdict = honest NOT READY (routing 6/6
+  PASS with the real brain; only patch-APPLY failed). Rewrite fallback built + proven offline
+  (via: rewrite-fallback → gates green → shadow-held); migration 015 re-runs Tier 2 next
+  deploy. BIT timer live (UNKNOWN → degraded 5/8); B-FEA-* fails = one mis-aimed probe base
+  (localhost:8000 has no FEA) — BIT-AIM-1 work order queued for the loop, not patched blind.
+  Arming still OFF, still David's paste, now waiting only on 015's verdict.
+
 - SUPER-AFRICA rulings (David, 11 Aug): ZW/Harare pricing and fares in **USD** ("riders in
   dollars") — the ZW ladder seeder, journey-map fares and COPY blocks build in USD when
   replication reaches ZW. Zambia scope still open. Also 11 Aug: VIZ-MAPS-4 applied to BOTH

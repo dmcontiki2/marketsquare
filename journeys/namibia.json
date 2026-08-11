@@ -82,7 +82,7 @@
      "type": "start",
      "icon": "🛫",
      "name": "O.R. Tambo · departure",
-     "blurb": "Boarding for the desert — the highveld falling away, the Kalahari turning apricot below.",
+     "blurb": "Boarding for the desert — the highveld falling away, the Kalahari turning apricot below.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=WDH\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_start.jpg"
     },
     {
@@ -100,7 +100,7 @@
      "type": "sight",
      "icon": "🛬",
      "name": "Hosea Kutako · pick up the 4x4",
-     "blurb": "Heat shimmer on the apron, keys to a kitted twin-cab, two spare wheels and a fridge in the back.",
+     "blurb": "Heat shimmer on the apron, keys to a kitted twin-cab, two spare wheels and a fridge in the back.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=WDH\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_sight.jpg"
     },
     {
@@ -511,7 +511,7 @@
      "type": "sight",
      "icon": "✈️",
      "name": "Hosea Kutako · drop the keys",
-     "blurb": "Dust off the twin-cab, one last biltong stop in the terminal, boarding for Johannesburg.",
+     "blurb": "Dust off the twin-cab, one last biltong stop in the terminal, boarding for Johannesburg.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=WDH&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_sight.jpg"
     },
     {
@@ -520,7 +520,7 @@
      "type": "finish",
      "icon": "🏁",
      "name": "Johannesburg · home",
-     "blurb": "Red dust in the tread and ten thousand photos of dunes — tot siens, Namibia.",
+     "blurb": "Red dust in the tread and ten thousand photos of dunes — tot siens, Namibia.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=WDH&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_finish.jpg"
     }
    ]

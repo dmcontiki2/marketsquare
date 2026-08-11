@@ -82,7 +82,7 @@
      "type": "start",
      "icon": "🛫",
      "name": "O.R. Tambo · departure",
-     "blurb": "A prop-heavy departure board and safari duffels on every shoulder — Maun is where the tar ends.",
+     "blurb": "A prop-heavy departure board and safari duffels on every shoulder — Maun is where the tar ends.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MUB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_start.jpg"
     },
     {
@@ -100,7 +100,7 @@
      "type": "sight",
      "icon": "🛬",
      "name": "Maun · arrival",
-     "blurb": "Twelve-seaters queuing on the apron like taxis — the busiest bush-plane airport in Africa.",
+     "blurb": "Twelve-seaters queuing on the apron like taxis — the busiest bush-plane airport in Africa.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MUB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_sight.jpg"
     },
     {
@@ -541,7 +541,7 @@
      "type": "sight",
      "icon": "✈️",
      "name": "Maun · departures",
-     "blurb": "Sand out of the boots, a last look at the bush-plane ballet, boarding for Johannesburg.",
+     "blurb": "Sand out of the boots, a last look at the bush-plane ballet, boarding for Johannesburg.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=MUB&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_sight.jpg"
     },
     {
@@ -550,7 +550,7 @@
      "type": "finish",
      "icon": "🏁",
      "name": "Johannesburg · home",
-     "blurb": "Mokoro-calm in the blood and salt in the camera bag — go siame, Botswana.",
+     "blurb": "Mokoro-calm in the blood and salt in the camera bag — go siame, Botswana.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=MUB&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_finish.jpg"
     }
    ]

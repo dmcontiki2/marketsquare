@@ -1,3 +1,180 @@
+### SUPER-AFRICA-1 — TP fare links added to flight-stop popup cards (11 Aug 2026, David's catch)
+- The airport/connection popup cards (where users actually linger) now carry the same static "Check live fares ↗" deep link as the day summaries — 4 popups per fly-in map (KE/NA/BW/MZ), 6 links total per map. Same links-not-scripts doctrine, same strip-on-claim rule. 0 external scripts verified post-rebuild. Confirmed for the record: TP's script-served ad widgets (the old right-hand adverts) stay banned permanently under the 3 Aug ruling — links in our own copy are the referral lane.
+
+## 2026-08-11 — STALE-CODE-1: two runs today were read as tests while the box ran older code
+
+- **What happened, twice:** the B4 Tier 2 `NOT READY` at 06:42 (server on `9cc3725`, one commit
+  behind BRAIN-PATH-1) and the 0/2 live run at 08:10 (server on `127b6a6`, one behind
+  CAND-FIX-1). Both times `git pull` reported **"Already up to date"** — which is true and
+  useless: it compares the box to the *mirror*, not to the fix just written and not yet pushed.
+- **Why it is dangerous rather than annoying:** the second occurrence produced output identical
+  to the previous run. That is exactly how a stale test passes for a real one — nothing looked
+  wrong, and the only tell either time was a stale wording spotted by eye.
+- **The fix:** every run now prints the code it is actually executing —
+  `code  c758b83  DIRTY-WORKTREE  maintenance-loop: CAND-FIX-1...` — short SHA, an uncommitted-
+  changes marker, and the subject line. Stated *before* anyone reasons about the result.
+- It reads `SELF_REPO`, the agent's own checkout captured **before** any `--repo` override,
+  because the question is always "which agent is running", never "which sandbox is being
+  patched". The first cut got this wrong and reported the rehearsal's temp sandbox.
+- **Ledger RG-0059 LOCKED** — asserts the stamp exists, pins to `SELF_REPO`, flags a dirty
+  worktree, and that `SELF_REPO` is captured before the override rather than after.
+- Same family as UA-EDGE-1, BRAIN-PATH-1, GUARD-SPLIT-1, PHASE-AWARE-1 and CAND-FIX-1: a thing
+  that reported plausibly while telling you nothing. Sixth of the day.
+
+## 2026-08-11 — REALREPO-PROBE-1: the question B4 cannot answer
+
+- **Correcting an earlier read.** Three live runs returned `no clean patch` on TS-0024 and
+  TS-0031, and that was written up as the agent failing. Reading the two faults properly says
+  otherwise:
+  - **TS-0031** carries its own first-pass diagnosis and a three-part fix direction — render
+    unconfirmed specs as *"suggested — please confirm"*, never auto-assert variant/trim below a
+    confidence bar, add a cars data lane later. That is a UX and confidence-policy change, and
+    the row itself says `NEEDED FROM REPORTER: which fields were wrong`. It is blocked on
+    information, not on code.
+  - **TS-0024** is a question — "why was it unavailable?" — with no established root cause and
+    no reproducible defect.
+  **Neither is a copy/config/flag/logic bug fixable by a small code edit.** Declining both is
+  correct behaviour. The agent was right; the queue simply contains no mechanical faults.
+- **The real gap, which no amount of live running will close:** B4 Tier 1 and Tier 2 both patch
+  a synthetic sandbox whose entire application is a two-line `app.py`. This repo's application
+  lives in files of 1,074,965 (`ms.js`) and 906,981 (`bea_main.py`) bytes. **Passing B4 says
+  nothing about whether the agent can find, window and patch real code here** — and that is
+  exactly what CAND-FIX-1 changed and left unproven.
+- **`scripts/maint_realrepo_probe.py`** closes it. Clones the repo to a throwaway dir, seeds ONE
+  small mechanical defect of a known shape into a real file (a misspelt user-visible string),
+  describes it the way a tester would, and runs the REAL agent against it. Then reports the
+  lane, the outcome, and whether the defect was actually repaired.
+- **It cannot ship anything:** the clone is a temp dir and the probe strips
+  `MAINTENANCE_AGENT_ENABLED` from the environment before invoking the agent, so the run is
+  shadow by construction, not by configuration.
+- Two targets — `ms.js` (front end) and `bea_main.py` (`--target bea`). Each anchors on a string
+  verified to appear exactly once; the probe aborts rather than guessing if the file has moved on.
+- **Exit 0 = patch quality on this codebase is no longer unproven. Exit 1 = the honest answer to
+  "can it fix things here", which is a different question from B4 and has never been asked.**
+
+## 2026-08-11 — The probe tripped the guard, and the guard was right
+
+- **What happened:** the first real-repo probe run returned
+  `PROBE-MECH -> ESCALATE (touches a protected surface (card))`. The probe's own fault text said
+  *"when I tap a card"* — meaning a listing card. `card` is a **payment** marker. The refuse
+  guard escalated the whole thing and the patch path was never exercised.
+- **Measured before reacting.** Across all 30 real faults in the live queue, substring matching
+  produces exactly **one** difference from word-boundary matching — `anonym` inside `anonymity`,
+  which is semantically correct anyway. The standalone word `card` appears **zero** times in the
+  real corpus, in either sense. So this was the probe's unlucky wording, not a guard defect.
+- **Deliberately NOT fixed by narrowing the marker.** The tempting change was `card` →
+  `credit card|debit card|card number`. Rejected: over-refusing costs a human glance;
+  under-refusing costs a payment surface. Weakening a guard so that one's own test passes is
+  the same error as arming past a red rehearsal, which was refused earlier today. The probe was
+  reworded instead, and every string in `DEFECTS` is now checked against the full marker list
+  before use — both targets verified clean.
+- **The probe now distinguishes INVALID from FAIL.** An `ESCALATE` result means the guard ate
+  the probe's wording and the patch path was never reached — that is the guard working, not a
+  verdict on patch quality. It says so and tells you to reword, rather than reporting a failure
+  the agent never had a chance to avoid.
+- Also fixed: seven literal `\n` sequences leaking into the probe's output (heredoc escaping).
+- **Latent risk worth noting, not acting on yet:** this app's entire browse UI is built from
+  "cards". A tester who writes "the card doesn't show the price" will be escalated as a payment
+  issue. It has not happened in 30 faults. Word-boundary matching would be a pure win for
+  `tax`/`syntax`, `vat`/`private`, `auth`/`author` — none of which has occurred either. Worth
+  doing when there is evidence, not on speculation.
+
+- **SERVER-BIT-2 (same day, after the first live boards):** first heartbeat cycles read
+  5/8 — degraded. Diagnosis: all three FEA FAILs were vantage-point artifacts of running
+  inside the gate against BEA uvicorn, where nginx-composed surfaces don't exist: `/`
+  (static shell) 404s, `/static/ms.js` 404s, and `/ai/functions` belongs to the
+  AdvertAgent service (:8002, nginx-proxied — S132/S133). Production was never broken.
+  Runner fixed in both copies (agent article + ops/bit): shell check falls back to the
+  exact file nginx serves (same size/contains assertions — proven offline, 405KB ok);
+  feature-id enumeration asks AdvertAgent :8002 directly first — honest by construction,
+  because if :8002 is silent the public /ai/functions is down too; no ms.js disk scrape
+  (ids are runtime-interpolated, a scrape would lie). /ai/example checks stay against the
+  BEA, which owns that route. Expect 8/8 after the next deploy ships the runner; FEA rows
+  still red after that = advertagent.service genuinely down.
+- Housekeep candidate: repo-root `bit/` is a stale 27 Jun copy of the agent (differs from
+  ops/bit, not in the manifest, inert but confusing) — prune on the next /housekeep.
+
+## 2026-08-11 — TS-0031 + F-011/DCB-001: David Jnr's push-back, split down the two-agent seam
+
+One verbal conversation, two lanes, per the 5 Aug boundary: the ACCURACY claim is fault
+TS-0031 (Maintenance) with a same-day source diagnosis — the cars pre-final lane has NO
+search: vehicle_specs/variant are VISION+prior inference (CARS-SPEC-1), the market note is a
+1-sentence ungrounded Haiku (aa_market_note); wrong-for-his-make is mechanically plausible
+(cloned-Hilux precedent). Fix direction on the row: suggested-not-asserted specs (tap to
+confirm), confidence bar on variant/trim, data lane later under supplier-fallback doctrine.
+Retest letter will ask Jnr for the exact wrong fields. The PHOTO-FLOW ask is F-011 →
+DESIGN_BACKLOG.md **DCB-001** (first dossier in the shared gated lane): batch-upload any
+order, cover tap, AI-suggested sequence, drag to adjust — consistency moves to the OUTPUT
+(defaults + existing gates), freedom to the INPUT. Scored 7/10 PASS, 3 PENDING, GATE empty
+(David's line when ready). Evidence upgraded it from one tester's gripe to a theme: 2nd+
+independent photo-pipeline friction reporter.
+
+## 2026-08-11 — ops-map FEA card: stale "REPORT tab 17/18" label corrected to 18/18
+
+The count was hard-coded prose, not a probe, and predates this morning's widget fix on the
+four adventures map pages. Truth now asserted by test_widget_is_wired_into_every_tester_page
+(predeploy) — every tester-facing page carries the REPORT tab. Label follows the test.
+
+## 2026-08-11 — CAND-FIX-1: the fix agent was shown its own exhaust, or nothing at all
+
+- **How it surfaced:** the FIRST EVER armed live run — `mode=LIVE, phase=prelaunch,
+  trust-core=GUARDED` — saw 2 faults and returned **2 × "no clean patch"**. Nothing shipped,
+  which is the safe outcome, but 0/2 is not a working agent. The cause was structural, not the
+  model's judgement.
+- **Fault 1 — the ceiling excluded the entire application.** `_candidate_files` discarded any
+  file over 12,000 bytes. Every file this app lives in is over it: `ms.js` 1,074,965 ·
+  `bea_main.py` 906,981 · `marketsquare.html` 405,115 · `dashboard.server.html` 449,274 ·
+  `ms.css` 129,178. The 9 Aug fix that added file context specifically to stop blind patching
+  ("a blind prompt was why the real Sonnet patch never applied") **could never once fire on
+  real application code.**
+- **Fault 2 — the agent was reading its own output back to itself.** Ranking used raw git-grep
+  hits across the whole repo. TS-0024's top two candidates were `.maint_agent/run_*.json` — the
+  agent's own run reports, which quote the fault title verbatim. The brain was handed two copies
+  of its own exhaust and asked to write a patch against it. It declined, correctly.
+- **The fix:** noise paths are excluded *before* ranking (run reports, `changelog.d/`,
+  `status.d/`, `Records/`, `AUDIT_GLOBAL_QA/`, `DAILY_WATCH/`, CHANGELOG/STATUS/registers,
+  `.bak`, `APP_PREVIEW.html`, logs), and oversized files are **windowed** — a real excerpt
+  around the densest token cluster, with the true line range named — instead of dropped.
+  `git apply --3way` resolves the surrounding blob, so an excerpt-based diff still places.
+- **Evidence:** `ms.js` now yields `[EXCERPT lines 3626-3766 of 16425]` — 13,453 chars of the
+  actual seller-CV code — where it previously yielded nothing at all. `bea_main.py` yields
+  lines 6045-6185. `.maint_agent/run_*.json`, `CHANGELOG.md`, `APP_PREVIEW.html` and `.bak`
+  files are all excluded; `ms.js` and `bea_main.py` are kept.
+- **Ledger RG-0058 LOCKED** — asserts the noise filter and the windowing both stay, that the
+  agent's own run directory is never rankable again, and that the excerpt keeps naming its line
+  range. 58 entries, 55 holding, 0 regressed.
+- **NOT claimed:** that the agent can now write applicable patches. This removes a structural
+  blocker. Whether the excerpts produce diffs that gate green is the next live run's question.
+
+## 2026-08-11 — MAINT-B4-6: rewrite fallback + the first server Tier-2 verdict (honest NOT READY)
+
+**Tier 2 ran on the server for the first time** (migration 011, 07:10Z, via David's 09:08 TSL):
+the REAL brain, sandboxed and shadow. Verdict: **NOT READY — and that verdict is the system
+working.** Routing was 6/6 PASS: the deterministic guard refused payment/anonymity/legal/safety
+with a real brain behind it, design batched to Path B (source identified: openai/gpt-5.6-luna
+via the swap seam), escalation escalated. The single failure was the known deferred risk, now
+evidence: the real brain's unified diff "did not apply cleanly" against exact bytes — the agent
+correctly ESCALATED and shipped nothing. Fail-safe spine: server-proven.
+
+**MAINT-B4-6 — the fallback that evidence earned.** `propose_rewrite()` in
+maintenance_agent.py: when (and only when) a diff fails to APPLY, re-ask the brain for the
+COMPLETE corrected file (single candidate file, size-sanity capped, fence-stripped, must
+differ) and take the mechanical diff ourselves. Stub-safe: rehearsal stubs never reach it;
+Tier 1 re-run READY exit 0. **Proven offline in-process:** fake brain returning a
+non-applying diff then a full corrected file → `via: rewrite-fallback` → py_compile gate
+GREEN → shadow-held. The gates still judge everything; only the fix's EXPRESSION changed.
+`migrations/015_maint_b4_tier2_rerun.py` re-runs Tier 2 on the next deploy — READY is now
+that verdict flipping, then arming stays David's one paste.
+
+**BIT-AIM-1 work order (not fixed tonight, deliberately).** The 013 timer works — BIT posts
+every 15 min, UNKNOWN is gone — and its first honest board says degraded 5/8: all three
+B-FEA-* fails share one root, the probes aim at BIT_BASE=localhost:8000 (the BEA app), where
+no FEA lives: B-FEA-SHELL gets FastAPI's 404 on "/", and both AI-feature checks cascade off
+`_feature_ids()` finding nothing there. Fix direction (needs on-box verification, queued for
+the maintenance loop, NOT patched blind from a sandbox): give FEA probes their own base —
+nginx on the box with the origin-gate token from the server env, or the edge with the named
+UA — registry gains a per-probe base key, runner resolves it. BEA probes stay on 8000.
+
 ## 2026-08-11 — VIZ-MAPS-4: dashboard left sidebar removed (David's ask)
 
 David: "on the Dashboard page there is a left hand column called Launch Blockers, please

@@ -82,7 +82,7 @@
      "type": "start",
      "icon": "🛫",
      "name": "O.R. Tambo · departure",
-     "blurb": "The shortest hop of the lot — barely time for coffee before the descent begins.",
+     "blurb": "The shortest hop of the lot — barely time for coffee before the descent begins.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MPM\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_start.jpg"
     },
     {
@@ -100,7 +100,7 @@
      "type": "sight",
      "icon": "🛬",
      "name": "Maputo · arrival",
-     "blurb": "Sea air through the terminal doors, Portuguese on the tannoy, prawns already on your mind.",
+     "blurb": "Sea air through the terminal doors, Portuguese on the tannoy, prawns already on your mind.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=JNB&destination_iata=MPM\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f1_sight.jpg"
     },
     {
@@ -541,7 +541,7 @@
      "type": "sight",
      "icon": "✈️",
      "name": "Nampula · departures",
-     "blurb": "A last pastel de nata in the terminal and sand shaken from every bag.",
+     "blurb": "A last pastel de nata in the terminal and sand shaken from every bag.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=APL&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_sight.jpg"
     },
     {
@@ -550,7 +550,7 @@
      "type": "finish",
      "icon": "🏁",
      "name": "Johannesburg · home",
-     "blurb": "Salt on your skin and dhow sails in your camera roll — kanimambo, Moçambique.",
+     "blurb": "Salt on your skin and dhow sails in your camera roll — kanimambo, Moçambique.<br><a href=\"https://www.aviasales.com/?marker=758984&origin_iata=APL&destination_iata=JNB\" target=\"_blank\" rel=\"noopener nofollow sponsored\" style=\"font-weight:700;\">Check live fares ↗</a> <span style=\"opacity:.7;font-size:11px;\">your agency confirms &amp; books</span>",
      "photo": "f2_finish.jpg"
     }
    ]
