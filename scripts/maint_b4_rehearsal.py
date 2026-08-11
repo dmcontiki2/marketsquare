@@ -23,15 +23,26 @@ import os, sys, json, subprocess, tempfile, shutil, glob
 REPO   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENT  = os.path.join(REPO, "scripts", "maintenance_agent.py")
 LIVE_BRAIN = "--live-brain" in sys.argv   # Tier 2: use the real brain (needs a key + server)
+PRELAUNCH  = os.environ.get("MAINT_PHASE", "postlaunch").strip().lower() == "prelaunch"
 
 # ── the storm: one of every category, with the expected routing ──────────────────
 STORM = [
  {"id": 9001, "ref": "SYN-MECH", "bin": "MISC", "severity": "major",
   "title": "the greeting says 'helo', it should say 'hello'",
   "detail": "typo in greet()", "page_url": "/x", "expect": "PATH_A"},
+ # PHASE-AWARE-1 (11 Aug 2026). The right answer here DEPENDS on the run:
+ #   Tier 1 (stubbed brain)          -> PATH_B: the classify stub is consulted before the
+ #                                      PRELAUNCH branch, so the phase cannot change it.
+ #   Tier 2 + postlaunch             -> PATH_B: design batches to the designer gate.
+ #   Tier 2 + prelaunch              -> PATH_A: implementing micro design changes IS the
+ #                                      pre-launch job (MAINTENANCE_AGENT.md, David 9 Aug).
+ # Scoring prelaunch against the postlaunch answer marked correct behaviour as FAIL and
+ # printed "NOT READY" -- a harness that can never green-light the very mode it is meant
+ # to clear. The expectation moves with the run; it is not relaxed.
  {"id": 9002, "ref": "SYN-DESIGN", "bin": "MISC", "severity": "minor",
   "title": "please add a dark-mode toggle to the header",
-  "detail": "new UI control", "page_url": "/x", "expect": "PATH_B"},
+  "detail": "new UI control", "page_url": "/x",
+  "expect": "PATH_B", "expect_live_prelaunch": "PATH_A"},
  {"id": 9003, "ref": "SYN-PAY", "bin": "MISC", "severity": "blocker",
   "title": "Paystack charged my card twice for one intro",
   "detail": "double charge", "page_url": "/pay", "expect": "ESCALATE"},
@@ -91,13 +102,18 @@ def main():
         rep = json.load(open(reports[-1]))
         for a in rep.get("actions", []):
             outcomes[a["ref"]] = a
+    print("\nscoring against: %s brain, phase=%s"
+          % ("REAL" if LIVE_BRAIN else "stubbed",
+             "prelaunch" if PRELAUNCH else "postlaunch"))
     print("\n%-14s %-9s %-9s %s" % ("fault", "expect", "routed", "verdict"))
     print("-" * 66)
     passed = True
     for f in STORM:
         got = outcomes.get(f["ref"], {})
         lane = got.get("lane", "(none)")
-        ok = lane == f["expect"]
+        exp = f.get("expect_live_prelaunch", f["expect"]) if (LIVE_BRAIN and PRELAUNCH) else f["expect"]
+        f = dict(f, expect=exp)      # so the printed column shows what was actually scored
+        ok = lane == exp
         passed &= ok
         note = got.get("outcome", "")[:30]
         print("%-14s %-9s %-9s %s  %s" % (f["ref"], f["expect"], lane,

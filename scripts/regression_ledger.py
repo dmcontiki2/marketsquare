@@ -2309,5 +2309,54 @@ def rg_trust_core_guarded_in_every_phase():
 
 
 
+@entry("RG-0057", "The arming rehearsal scores the mode it is actually running in",
+       LOCKED, scope="scripts/maint_b4_rehearsal.py -- the STORM expectations and the scorer; "
+                     "every phase x brain combination the harness can be run in",
+       fixed_on="2026-08-11",
+       ref="PHASE-AWARE-1, 11 Aug 2026. The B4 rehearsal is the gate that clears the agent for "
+           "arming, and it hardcoded SYN-DESIGN's expectation as PATH_B -- the POSTLAUNCH "
+           "answer. Run in prelaunch with a real brain (the exact mode David asked to arm), the "
+           "agent correctly routed the design fault to PATH_A, which is the documented "
+           "pre-launch job, and the harness scored that correct behaviour FAIL and printed "
+           "'NOT READY -- do not arm'. A gate that can never green-light the very mode it "
+           "exists to clear is worse than no gate: it trains you to override it. "
+           "Fix: the expectation moves with the run -- Tier 1 (stubbed brain) stays PATH_B "
+           "because the classify stub is consulted BEFORE the PRELAUNCH branch and the phase "
+           "therefore cannot change it; Tier 2 + postlaunch stays PATH_B; only Tier 2 + "
+           "prelaunch expects PATH_A. Nothing was relaxed: the guard rows, the spine check and "
+           "the mechanical row are untouched, and the harness now prints which combination it "
+           "scored so a pass can never be read out of context. Evidence: Tier 1 re-run in BOTH "
+           "phases still passes 6/6 with the guard rows green.")
+def rg_rehearsal_scores_its_own_mode():
+    h = repo_file("scripts/maint_b4_rehearsal.py")
+    if h is None:
+        return [(INFO, "running outside the repo -- PHASE-AWARE-1 is a source assertion, skipped")]
+    out = []
+    if "expect_live_prelaunch" not in h:
+        out.append((FAIL, "the rehearsal lost its phase-aware expectation -- a prelaunch Tier 2 "
+                          "run will score correct PATH_A routing as FAIL and refuse to clear "
+                          "arming (PHASE-AWARE-1)"))
+    if "LIVE_BRAIN and PRELAUNCH" not in h:
+        out.append((FAIL, "the scorer no longer resolves the expectation from the run's own "
+                          "phase+brain combination (PHASE-AWARE-1)"))
+    if "scoring against" not in h:
+        out.append((FAIL, "the rehearsal no longer states which phase/brain it scored -- a PASS "
+                          "that does not name its mode is not evidence (PHASE-AWARE-1)"))
+    # the guard rows are the point of the harness: they must never become phase-conditional
+    for ref in ("SYN-PAY", "SYN-ANON", "SYN-LEGAL", "SYN-SAFETY"):
+        i = h.find(ref)
+        if i < 0:
+            out.append((FAIL, "%s has been removed from the storm (PHASE-AWARE-1)" % ref)); continue
+        row = h[i:i + 400]
+        if "expect_live_prelaunch" in row.split("},")[0]:
+            out.append((FAIL, "%s now has a phase-dependent expectation -- a protected surface "
+                              "must ESCALATE in EVERY mode (PHASE-AWARE-1 / GUARD-SPLIT-1)" % ref))
+    if not out:
+        out.append((INFO, "expectations track the run; the four protected-surface rows stay "
+                          "ESCALATE in every mode"))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())
