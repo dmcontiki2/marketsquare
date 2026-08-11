@@ -388,6 +388,7 @@ async function loadLiveListings(retryCount) {
           isLive: true,
           service_class: l.service_class || null,
           super_example: l.super_example || 0,   // SUPER-1: red-corner exemplar flag
+          showcase: l.showcase || 0,   // SHOWCASE-BANNER-1 (11 Aug 2026): banner without the pin
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
           propType, beds, baths, garages, listingType, furnished, pets, features,
@@ -3441,7 +3442,7 @@ function renderGrid(){
   }
   // Placeholders always go last — push "Coming soon" cards to the end
   filtered.sort((a,b)=>{
-    const asup=a.super_example?0:1, bsup=b.super_example?0:1;   // SUPER-PIN-1: exemplars always first
+    const asup=(a.super_example&&!a.showcase)?0:1, bsup=(b.super_example&&!b.showcase)?0:1;   // SUPER-PIN-1 + SHOWCASE-BANNER-1: exemplars pin first, showcase demos never pin
     if(asup!==bsup) return asup-bsup;
     const aph=String(a.id).startsWith('ph_')?1:0;
     const bph=String(b.id).startsWith('ph_')?1:0;
@@ -3730,8 +3731,16 @@ function openSellerCV(sellerIdx,listingId){
     if (l && l.isLive) { openBEASellerProfile(l); return; }
   }
   const idx = (sellerIdx == null) ? 0 : sellerIdx;
-  const s=(SELLERS.find(x=>x.idx===idx))||SELLERS[idx]||SELLERS[0],l=findListing(listingId); // resolve by idx FIELD, not array position (DEMO-LISTER-1: unindexed entries spliced mid-array broke position=idx)
-  const cvScore=s.trustScore!=null?s.trustScore:(l?l.trust:0);
+  let s=(SELLERS.find(x=>x.idx===idx))||SELLERS[idx]||SELLERS[0],l=findListing(listingId); // resolve by idx FIELD, not array position (DEMO-LISTER-1: unindexed entries spliced mid-array broke position=idx)
+  // CV-GUARD-1 (TS-0006 / TS-0021, 11 Aug 2026). RG-0031 taught openDetail never to
+  // dereference a listing it did not find. openSellerCV is the SIBLING entry point that was
+  // missed, and it crashed on BOTH halves -- which is why two testers saw two error strings:
+  //   s undefined (SELLERS empty on a cold / live-only load) -> "reading 'headline'"    [TS-0021]
+  //   l undefined (findListing missed: LISTINGS holds only the ACTIVE city) -> "l.trust" [TS-0006]
+  // The line below ALREADY guarded l for cvScore, then the markup dereferenced it raw twice.
+  // Neither absence is exceptional, so neither may throw: fall back, never blank-screen.
+  if(!s) s={ headline:'', cat:'', about:'', stats:[], creds:[], tags:[], avail:[], portfolio:[], region:'' };
+  const cvScore=s.trustScore!=null?s.trustScore:((l&&l.trust!=null)?l.trust:0);
   const t=trustTier(cvScore);
   const introAccepted = acceptedIntros.has(`${idx}-${listingId}`);
   const active=document.querySelector('.screen.active');
@@ -3747,8 +3756,8 @@ function openSellerCV(sellerIdx,listingId){
       <div class="cv-headline">${s.headline}</div>
       <div class="cv-cat">${s.cat} · ${regionLabel} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
-        <div><div class="cv-trust-num" style="color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45);">${l.trust}</div><div class="cv-trust-label" style="display:inline-block;background:rgba(0,0,0,.28);color:#fff;border-radius:10px;padding:2px 9px;">${t.label}</div>${fspark(l)}</div>
-        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${l.trust}%;background:${t.c};"></div></div>
+        <div><div class="cv-trust-num" style="color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45);">${cvScore}</div><div class="cv-trust-label" style="display:inline-block;background:rgba(0,0,0,.28);color:#fff;border-radius:10px;padding:2px 9px;">${t.label}</div>${l?fspark(l):''}</div>
+        <div class="cv-trust-bar"><div class="cv-trust-fill" style="width:${cvScore}%;background:${t.c};"></div></div>
         <div style="font-size:11px;color:rgba(255,255,255,.65);text-align:right;font-weight:400;">Trust<br>Score</div>
       </div>
       <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:8px;line-height:1.5;font-weight:400;">Score is built from: verified credentials · completed introductions · response rate · buyer ratings · years active. Verified by TrustSquare — not self-reported.</div>
@@ -3933,7 +3942,7 @@ function openDetail(id){
         <span class="model-badge ${m}" style="position:static;font-size:10px;padding:3px 8px;">${isCommit?'⏳ Commitment':'👥 Soft Queue'}</span>
         ${l.feat?'<span style="font-size:10px;font-weight:700;color:var(--accent);">★ FEATURED</span>':''}${fspark(l)}
       </div>
-      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;margin-bottom:6px;">★ SUPER ADVERT — the benchmark listing for this category</div>':''}
+      ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.05em;font-family:Syne,sans-serif;margin-bottom:6px;">★ SUPER ADVERT — '+(l.showcase?'showcase listing, free for a real seller to claim':'the benchmark listing for this category')+'</div>':''}
       <div class="dtitle">${l.title||(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${l.area}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||l.country.toUpperCase()}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
@@ -4859,13 +4868,18 @@ function switchDashTab(tab){
 }
 
 function renderProfilePreview(){
-  const s = SELLERS[0];
+  // CV-GUARD-1 (11 Aug 2026): same class as openSellerCV above. SELLERS can be empty on a
+  // live-only / cold load -- the openCVEdit fix further down already paid for this exact
+  // lesson ("SELLERS[0] threw and the button died silently") but this sibling kept the raw
+  // deref. A missing profile now renders a prompt; it never throws.
+  const s = (typeof SELLERS!=='undefined' && SELLERS && SELLERS[0]) ? SELLERS[0] : null;
   const el = document.getElementById('dash-profile-preview');
   if(!el) return;
+  if(!s){ el.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;font-size:12px;color:var(--text-3);">Your seller profile is not set up yet &mdash; tap Edit to add your headline.</div>'; return; }
   const photo = SELLER_PHOTOS[0];
   const avatarInner = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Your photo">`
-    : `<span style="font-size:22px;">${CATS[s.cat].icon}</span>`;
+    : `<span style="font-size:22px;">${(CATS[s.cat]||{icon:'📦'}).icon}</span>`;
   el.innerHTML = `
     <div style="background:var(--navy);border-radius:var(--r);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;">
       <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;">
@@ -4878,7 +4892,7 @@ function renderProfilePreview(){
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      ${s.stats.map(st=>`
+      ${(s.stats||[]).map(st=>`
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;text-align:center;">
           <div style="font-size:18px;font-weight:700;color:var(--navy);font-family:'Inter',sans-serif;">${st.val}</div>
           <div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:500;">${st.label}</div>

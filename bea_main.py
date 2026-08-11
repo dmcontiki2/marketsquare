@@ -235,6 +235,11 @@ def run_migrations(conn):
     if "suburb" not in cols:
         conn.execute("ALTER TABLE listings ADD COLUMN suburb TEXT")
         conn.execute("UPDATE listings SET suburb = 'Central' WHERE suburb IS NULL")
+    if "showcase" not in cols:
+        # SHOWCASE-BANNER-1 (11 Aug 2026, David): showcase demo adverts carry the
+        # star SUPER ADVERT banner (super_example=1) but must NEVER pin above real
+        # sellers -- this flag is the pin-exclusion the sorts read.
+        conn.execute("ALTER TABLE listings ADD COLUMN showcase INTEGER")
 
     intro_cols = [r[1] for r in conn.execute("PRAGMA table_info(intro_requests)").fetchall()]
     if "buyer_name" not in intro_cols:
@@ -2379,14 +2384,16 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         # SUPER-PIN-1 (20 Jul 2026, David): super_example exemplars are LIVE LAUNCH
         # fixtures — always the first listing in every view, the measuring stick
         # every lister checks against. Every sort variant pins them first.
-        "newest":     "ORDER BY COALESCE(super_example,0) DESC, created_at DESC",
-        "price_asc":  "ORDER BY COALESCE(super_example,0) DESC, (price_num IS NULL), price_num ASC",
-        "price_desc": "ORDER BY COALESCE(super_example,0) DESC, (price_num IS NULL), price_num DESC",
-        "trust":      "ORDER BY COALESCE(super_example,0) DESC, COALESCE(trust_score,0) DESC, created_at DESC",
+        # SHOWCASE-BANNER-1 (11 Aug 2026, David): showcase demos share the banner
+        # but NOT the pin — the (1-showcase) factor keeps real sellers on top.
+        "newest":     "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC",
+        "price_asc":  "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num ASC",
+        "price_desc": "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num DESC",
+        "trust":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, COALESCE(trust_score,0) DESC, created_at DESC",
         # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
-        "smart":      "ORDER BY COALESCE(super_example,0) DESC, (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+        "smart":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
     }
-    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY COALESCE(super_example,0) DESC, created_at DESC")
+    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC")
 
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)

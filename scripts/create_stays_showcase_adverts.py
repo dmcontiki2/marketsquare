@@ -8,7 +8,9 @@ property 315-317, cars 318-320, adventures-experiences 321-323, stays 3xx-3xx.
 
 Rules honoured (every one of these was learned the hard way — see CHANGELOG
 EMAIL-SHOWCASE-1/2/3 and migrations 002/003/004):
-- NORMAL demo adverts (super_example=0). SUPER-PIN-1 pins super rows to the top
+- SUPERSEDED 11 Aug 2026 (SHOWCASE-BANNER-1, David): now super_example=1 AND
+  showcase=1 — the star banner WITHOUT the pin (every sort excludes showcase rows
+  from pinning, server + client). History of the old rule: SUPER-PIN-1 pins super rows to the top
   of EVERY sort, so a super showcase advert would outrank real sellers. The
   29 Jul mark_showcase_supers.py run was reversed by migration 002 for exactly
   this reason; do not re-introduce it.
@@ -149,7 +151,7 @@ for title, price, price_num, suburb, photo, lat, lng, trust, blurb in ADVERTS:
         "photo_urls": json.dumps(gallery),
         "thumb_url": gallery[0], "medium_url": None,
         "listing_lat": lat, "listing_lng": lng,
-        "super_example": 0, "trust_score": trust,
+        "super_example": 1, "showcase": 1, "trust_score": trust,
         "seller_email": SELLER, "claim_status": "claimed",
         "created_at": now, "updated_at": now, "published_at": now,
         "view_count": 0, "listing_status": "live",

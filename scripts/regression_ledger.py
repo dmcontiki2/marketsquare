@@ -2024,6 +2024,42 @@ def rg_live_ops_dashboard():
     return out
 
 
+@entry("RG-0052", "Showcase adverts wear the banner but never steal the pin from real sellers",
+       LOCKED, scope="every sort surface: bea_main.py _sort_map (all variants + fallback) and the ms.js comparator; both showcase creators",
+       fixed_on="2026-08-11",
+       ref="SHOWCASE-BANNER-1, David 11 Aug 2026 — resolves the SO-1/SUPER-PIN-1 tension that "
+           "flip-flopped twice (29 Jul mark_showcase_supers ON; 2 Aug migration 002 OFF after "
+           "pinned demo rows outranked real sellers; creators then baked super_example=0). "
+           "Resolution: super_example=1 gives showcase demos the star banner; the new "
+           "listings.showcase flag excludes them from pinning in EVERY sort, server and "
+           "client. migrations/014 marks the live trios (seller LIKE %showcase%); both "
+           "creator scripts now write super_example=1 + showcase=1 so future trios are "
+           "born correct. Public feeds ship the boolean via SELECT * (RG-0045-safe: "
+           "_strip_seller_identity is a blocklist and showcase is not identity).")
+def rg_showcase_banner_not_pin():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "running outside the repo — SHOWCASE-BANNER-1 checks skipped")]
+    n = bea.count("(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC")
+    if n < 6:
+        out.append((FAIL, "server sort pins raw super_example again in %d/6 variants — "
+                          "showcase demos will outrank real sellers (SHOWCASE-BANNER-1)" % (6 - n)))
+    js = repo_file("ms.js")
+    if js is not None:
+        if "(a.super_example&&!a.showcase)?0:1" not in js:
+            out.append((FAIL, "ms.js comparator pins raw super_example again (SHOWCASE-BANNER-1)"))
+        if "showcase: l.showcase || 0" not in js:
+            out.append((FAIL, "ms.js mapper dropped the showcase field — the client cannot exclude the pin"))
+    for f in ("scripts/create_stays_showcase_adverts.py", "scripts/create_email_showcase_adverts.py"):
+        c = repo_file(f)
+        if c is not None and '"showcase": 1' not in c:
+            out.append((FAIL, f + " no longer births showcase adverts marked — the LIST-001 class recurs"))
+    if repo_file("migrations/014_showcase_banner.py") is None:
+        out.append((FAIL, "migrations/014_showcase_banner.py is gone — live trios never get marked"))
+    return out
+
+
 @entry("RG-0053", "Our own tooling names itself to our own edge -- a UA-less call never reaches the origin",
        LOCKED, scope="every repo script that calls OUR edge (MS_BEA_URL / trustsquare.co): maintenance_agent, "
                      "fault_reconcile, cost_compliance_sweep, deploy_web, run_collections_validation -- the whole class",
@@ -2087,6 +2123,73 @@ def rg_own_tooling_sends_user_agent():
         out.append((FAIL, "the maintenance agent's own header set gets HTTP %d on /admin/faults -- "
                           "the loop is reading nothing again (UA-EDGE-1)" % code))
     return out
+
+
+@entry("RG-0054", "openSellerCV and the profile preview never dereference a seller or listing they did not find",
+       LOCKED, scope="ms.js -- openSellerCV + renderProfilePreview, the two sibling entry points RG-0031 "
+                     "missed. Class: any card whose seller roster is empty or whose listing is outside "
+                     "the ACTIVE city (LISTINGS only ever holds one city)",
+       fixed_on="2026-08-11",
+       ref="CV-GUARD-1, maintenance session 11 Aug 2026. RG-0031 taught openDetail never to dereference "
+           "a listing it did not find, and scoped itself to 'the whole openDetail call graph'. "
+           "openSellerCV is a SIBLING entry point that was not in that graph and kept the raw derefs: "
+           "it read s.trustScore / s.headline with SELLERS empty (cold or live-only load) and l.trust "
+           "twice in its markup after having ALREADY guarded l one line earlier for cvScore -- the "
+           "author knew l could be missing and guarded only the arithmetic, not the render. "
+           "renderProfilePreview carried the same const s = SELLERS[0] deref plus an unguarded "
+           "CATS[s.cat].icon, even though the openCVEdit fix directly below it had already paid for "
+           "that exact lesson ('SELLERS[0] threw and the button died silently'). "
+           "Evidence: scripts/repro_cv_guard.js reproduces all three crashes against the pre-fix file "
+           "(3/3 CRASH, exit 1) and passes against the fixed one (3/3, exit 0). "
+           "NOT claimed: this is the source of the TS-0006 / TS-0021 console tails. TS-0021's tail names "
+           "'headline', but s.trustScore is read first, so an undefined s reports 'trustScore' -- that "
+           "tail came from somewhere still unidentified. The crash class fixed here is real and proven "
+           "on its own evidence; the fault attribution is not.")
+def rg_seller_cv_guards():
+    src = repo_file("ms.js")
+    if src is None:
+        return [(INFO, "running outside the repo -- CV-GUARD-1 is a source assertion, skipped")]
+    out = []
+
+    start = src.find("function openSellerCV(sellerIdx,listingId){")
+    if start < 0:
+        out.append((FAIL, "openSellerCV has gone missing from ms.js -- CV-GUARD-1 cannot be asserted"))
+        return out
+    nxt = src.find("\nfunction ", start + 40)
+    fn = src[start:nxt if nxt > 0 else len(src)]
+    if "${l.trust}" in fn:
+        out.append((FAIL, "openSellerCV dereferences l.trust raw again -- an off-city card is a "
+                          "blank screen for that buyer (CV-GUARD-1)"))
+    if "if(!s) s={" not in fn:
+        out.append((FAIL, "openSellerCV no longer falls back when the seller roster is empty -- "
+                          "s.trustScore/s.headline will throw on a cold load (CV-GUARD-1)"))
+    if "${fspark(l)}" in fn:
+        out.append((FAIL, "openSellerCV passes an unchecked l to fspark(), which dereferences it "
+                          "(CV-GUARD-1)"))
+
+    rstart = src.find("function renderProfilePreview(){")
+    if rstart < 0:
+        out.append((FAIL, "renderProfilePreview has gone missing from ms.js -- CV-GUARD-1 cannot be asserted"))
+    else:
+        rnxt = src.find("\nfunction ", rstart + 30)
+        rfn = src[rstart:rnxt if rnxt > 0 else len(src)]
+        if "const s = SELLERS[0];" in rfn:
+            out.append((FAIL, "renderProfilePreview reads SELLERS[0] raw again -- the dashboard "
+                              "profile card throws on a cold load (CV-GUARD-1)"))
+        if "CATS[s.cat].icon" in rfn:
+            out.append((FAIL, "renderProfilePreview indexes CATS with an unvetted category -- an "
+                              "unknown cat throws on .icon (CV-GUARD-1)"))
+        if "if(!s){" not in rfn:
+            out.append((FAIL, "renderProfilePreview lost its missing-profile branch (CV-GUARD-1)"))
+
+    if repo_file("scripts/repro_cv_guard.js") is None:
+        out.append((FAIL, "scripts/repro_cv_guard.js is gone -- the fix kept its evidence tool or it "
+                          "is not verifiable (CV-GUARD-1)"))
+    else:
+        out.append((INFO, "evidence tool present: node scripts/repro_cv_guard.js "
+                          "[<file>] -- exit 0 = guarded, exit 1 = crashes"))
+    return out
+
 
 
 if __name__ == "__main__":

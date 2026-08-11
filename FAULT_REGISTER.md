@@ -49,5 +49,6 @@ reopens — their word outranks our evidence.
 | TRUST-001 | 2026-07-28 | David (tester) | Base-40 missing from seller panel; self-heal wrote base-less scores (40→5) | 3 | CLOSED 29 Jul | _trust_math + test_trust_base40.py (deploy gate) |
 | TRUST-002 | 2026-07-28 | David (tester) | LM credential cap drift: ledger 100 vs feed 85 | 2 | CLOSED 29 Jul | LM-uncapped in _trust_math + case/listings-sync heal fixes |
 | LIST-001 | 2026-07-29 | David (tester) | Showcase adverts unmarked as SUPER (SO-1) | 1 | CLOSED 29 Jul | one-shot applied + ladder seed; all 9 verified live (banners + ledgers 60/81/96 · 60/80/92 · 90) |
+| LIST-002 | 2026-08-11 | David (tester) | Showcase trios (property/cars/adventures-exp/stays) unmarked again — LIST-001 class recurrence (creators baked super_example=0 after migration 002's pin concern) | 2 | CLOSED 11 Aug | SHOWCASE-BANNER-1: banner WITHOUT the pin — migrations/014 + showcase flag + sort exclusion (server+client) + creators born-marked; RG-0052 |
 | MAIL-001 | 2026-07-28 | E2E test | Resend 403 — root domain never verified | 1 | CLOSED 28 Jul | FROM → mail.trustsquare.co (canon in LAUNCH_EMAILS.md) |
 | PERF-001 | 2026-07-22 | Pulse | Homepage load over 3s (AMBER) | 1 | OPEN | unassigned — candidate for first autonomous fix |

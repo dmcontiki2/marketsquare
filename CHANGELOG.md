@@ -1,3 +1,255 @@
+## 2026-08-11 — SHOWCASE-BANNER-1: showcase adverts wear the ★ banner, never the pin (David's ruling)
+
+- David (11 Aug): property, cars, adventures-experiences and stays showcase adverts must
+  carry the Super Advert flag. This collided with his 2 Aug ruling (migration 002 removed
+  the flag because SUPER-PIN-1 pins flagged rows above REAL sellers in every sort — the
+  flag drives banner AND pin). David chose: **banner without the pin.**
+- Mechanics: new `listings.showcase` flag (boot column-adder + migration). super_example=1
+  gives showcase demos the ★ SUPER ADVERT banner; every sort now excludes showcase rows
+  from pinning — server `_sort_map` (all 5 variants + fallback: pin term is
+  `super_example*(1-showcase)`) and the ms.js comparator. Real exemplars still pin first;
+  real sellers outrank every demo. Detail-page ribbon reads "showcase listing, free for a
+  real seller to claim" instead of "the benchmark listing" on showcase rows.
+- **migrations/014_showcase_banner.py** marks the live trios (seller LIKE %showcase%,
+  printed to the deploy log, sanity-capped, idempotent). Both creator scripts now write
+  `super_example=1, showcase=1` so future trios are born correct — the LIST-001 class
+  (recurred today as LIST-002, register updated) cannot come back silently: **RG-0052
+  LOCKED** asserts the sort exclusion on both surfaces, the mapper field, the creators
+  and the migration. Feeds ship the boolean via SELECT * (RG-0045-safe: identity
+  blocklist untouched).
+
+## 11 Aug 2026 — PARTNER-LINKS-1: the DATA & PARTNERS card stops lying (attended, David)
+
+- **Fault David found by reading his own switch panel:** the Launch Switch "DATA & PARTNERS
+  (back-end rollout)" card still offered **"Flights (Amadeus)"** — a vendor whose self-service
+  portal shut **17 Jul 2026**. `bea_main.py` had been corrected to Travelpayouts on 1 Aug
+  (TP-FLIGHTS-1); **both dashboards were never updated** and drifted for ten days. Class:
+  dashboard-vs-backend drift on vendor identity.
+- **Second finding, worse than the label:** all four flags (`data_ops`, `data_places`,
+  `data_flights`, `data_mapbox`) are **dark switches with no consumer code anywhere** — they
+  appear only in the schema, `/flags` read/write, the infra panel and the dashboard UI.
+  Flipping any of them today changes nothing a user would see. Recorded so no session
+  reports "activated" after a flip.
+- **Change (dashboard.html + dashboard.server.html):** each partner row now carries a `↗`
+  homepage link (Travelpayouts · Mapbox · Google Maps Platform console · our own operator
+  onboarding guide); `Flights (Amadeus)` → `Flights — Travelpayouts / Aviasales`; Google
+  Places carries a red **OUT** badge + `RETIRED 1 Aug 2026 — silent ~$360 bill`; flights
+  carries an amber **KEY LIVE** badge; all four tooltips rewritten to spell out their own
+  TO ACTIVATE steps so the answer lives on the switch. New `.ls-link` / `.ls-badge` CSS.
+- **Method:** boundary-safe Python patch — walk BACK from each checkbox id to *its own*
+  `ls-row`, with guards (one row / one checkbox / one name cell per slice, size must GROW).
+  A first attempt used a regex with `.*?` across rows; it silently swallowed 3,151 chars of
+  the Maintenance group. Caught by the shrink check, restored from backup byte-identical
+  (md5 match), redone. **Lesson: never regex across sibling rows in these dashboards.**
+- **Verified:** ls-row 9/9 and 13/13, checkbox 9/9 and 13/13, `</div>` 336/336 and 486/486
+  identical before→after; 0 non-partner labels lost; `node --check` 8/8 local + 14/14 server
+  inline blocks clean; tails intact. Backups `*.bak-partnerlinks-20260811-055029`.
+- **Locked as `RG-0050`** — "The partner card names the partner we ACTUALLY have, and every
+  partner is one click away." Proven both ways: **10 FAILs** when pointed at the pre-patch
+  backups, **0** on the patched files. Ledger after: 50 entries · 47 holding · 0 REGRESSED ·
+  3 open · exit 0.
+- **Deliverable:** `Data & Partners — Activation per Partner (11 Aug 2026) — nice.docx`
+  (Professional Navy) — per-partner activation steps, owner-tagged [D]/[C].
+- **Not shipped:** `dashboard.server.html` is in the deploy manifest; rides the next publish
+  of the `deploy` ref. David's trigger.
+
+## 2026-08-11 — NO-RETEST-1: there are no retests — fix, verify, close with a response (David's ruling)
+
+- David's ruling (11 Aug): "retest won't work for a customer's complaint — it needs to be
+  fixed/verified/validated and closed with a response to the person." Completes AIK-VERIFY-1
+  (5 Aug: people report, machines verify) by retiring the retest lane entirely.
+- **bea_main.py:** the retest-wait status removed from FAULT_STATUSES; the "fixed — please
+  retest" letter is now the CLOSURE letter ("fixed, verified and closed": what changed,
+  nothing needed from you, one more report quoting the ref reopens the thread);
+  `/admin/faults/{id}/retest-draft|retest-send` renamed `close-draft|close-send`; the send
+  now CLOSES the fault, stamping verified_at if triage never did (retest_sent_at column
+  reused as the letter stamp — schema unchanged). The ACK email and ts_report.js success
+  copy no longer promise a retest ask: "we will test and verify it ourselves, then write
+  to you with what changed and close it."
+- **Dashboard REPORT chips:** "awaiting retest" → "awaiting close"; "fix shipped · retest"
+  → "fix shipped · to close"; Resend role now "closure letters". Counting logic unchanged
+  (legacy-status tolerance kept in the filters).
+- **migrations/012_no_retest_status.py:** one-shot moves any live row parked in the retired
+  status back to 'fixed' (awaiting close) so it exits through close-send. The Ops Map
+  showed exactly 1 such row on 11 Aug.
+- **Tripwires:** test_tester_intake.py asserts close-send exists and the retest state/routes
+  stay gone (test_close_letter_closes_with_a_response); ledger **RG-0048 LOCKED** covers
+  bea_main.py + ts_report.js + the dashboard label. David's approval gate on the letter is
+  untouched: draft first, send only on his word.
+- Docs aligned: FAULT_REGISTER.md ladder, MAINTENANCE_AGENT.md steps 5–6 + NO-RETEST-1
+  note, MAINTENANCE_KEY_SETUP.md endpoint table.
+- NOT DEPLOYED in this session — rides the next `deploy` ref publish; after deploy, the one
+  parked fault gets close-draft → David approves → close-send.
+- Observed while testing (pre-existing, NOT this change): test_widget_is_wired_into_every_tester_page
+  fails — adventures_na/bw/mz/ke_map.html ship without the REPORT widget.
+
+## 2026-08-11 — UA-EDGE-1: the maintenance loop was reading NOTHING (green-looking no-op), fixed at class level
+
+- **The fault (found by the daily maintenance loop, on itself):** `scripts/maintenance_agent.py`
+  intake returned `HTTP Error 403: Forbidden` on `GET /admin/faults?status=new`. Not the
+  reviewer gate and not a bad key — **Cloudflare error 1010, "banned browser signature"**:
+  `urllib` sends no `User-Agent`, so the request was refused AT THE EDGE before the origin
+  or the maint key were ever consulted.
+- **Why it mattered more than a 403 usually does:** the agent then did exactly what it is
+  built to do — `"intake FAILED -- nothing read; failing safe, doing nothing."` — and
+  **exited 0**. An unattended nightly run therefore looked GREEN while processing an empty
+  queue. Faults sat unread; nothing said so. Silent no-ops are the one failure mode an
+  autonomous loop cannot afford.
+- **The fix (class, not instance):** every repo script that calls OUR OWN edge now names
+  itself with a `User-Agent`, the same way `regression_ledger.py` always has (which is
+  precisely why the ledger kept working while the agent went blind):
+  `scripts/maintenance_agent.py` (`UA_HEADER` + `api()`), `scripts/fault_reconcile.py`,
+  `scripts/cost_compliance_sweep.py`, `deploy_web.py`, `run_collections_validation.py`.
+  Third-party callers (`peer_review.py`, `golden_openai_v1.py` → api.openai.com) are out of
+  scope — not our edge, not our Cloudflare rules.
+- **Evidence (AIK-VERIFY-1):** the failing action reproduced clean. Same key, same URL —
+  without UA `403 / "error code: 1010"`; with UA `200` and **7 queued faults returned**
+  (TS-0001, TS-0006, TS-0018, TS-0021, TS-0024, TS-0027, TS-0030). Run report
+  `.maint_agent/run_20260811T051107Z.json` (7 seen, 7 acted) vs the earlier same-session
+  report of the same run reading zero.
+- **RG-0053 LOCKED** — two halves so this cannot rot: source-side, none of the five
+  our-edge callers may construct a `urllib` Request without a `User-Agent`; live-side, the
+  maintenance agent's *exact* header set must still get HTTP 200 from
+  `/admin/faults?status=new`. If either goes, the ledger goes red instead of the loop going
+  quiet.
+- Ledger before **and** after: 0 REGRESSED. 53 entries · 50 holding · 3 open (RG-0003,
+  RG-0004, RG-0029 — all pre-existing, unchanged by this session).
+
+## 2026-08-11 — CV-GUARD-1: the seller CV crashed on an empty roster or an off-city card (maintenance loop, second run)
+
+- **Where it came from:** the daily maintenance loop, chasing the two console tails that
+  testers' fault reports carried with them — `undefined is not an object (evaluating
+  'l.trust')` (TS-0006, Safari/iPhone) and `Cannot read properties of undefined (reading
+  'headline')` (TS-0021, Chrome/Windows). Chasing a console tail rather than only the
+  sentence a tester typed is how this one surfaced at all.
+- **The fault:** `openSellerCV` dereferenced two things it had not proved existed.
+  `SELLERS` can be empty on a cold or live-only load, and `findListing()` misses whenever
+  the card is not in the ACTIVE city — `LISTINGS` only ever holds one city at a time.
+  Either absence blanked the seller CV screen with an uncaught throw.
+- **What makes it worth writing down:** the function had **already** guarded `l` one line
+  earlier — `const cvScore = s.trustScore!=null ? s.trustScore : (l ? l.trust : 0)` — and
+  then dereferenced `l.trust` raw twice in the markup below it. The author knew the listing
+  could be missing and guarded only the arithmetic, not the render. `renderProfilePreview`
+  carried the identical `const s = SELLERS[0]` deref plus an unguarded `CATS[s.cat].icon`,
+  sitting a few lines above an existing fix comment that had already paid for exactly this
+  lesson ("SELLERS[0] threw and the button died silently").
+- **Why RG-0031 did not already cover it:** RG-0031 scoped itself to "the whole openDetail
+  call graph". `openSellerCV` is a **sibling entry point**, not in that graph. Same class,
+  different door — the recurring shape CLAUDE.md rule 3 warns about.
+- **The fix (`ms.js`, +13 lines):** `openSellerCV` falls back to an empty seller skeleton
+  when the roster is empty, renders trust from the already-guarded `cvScore`, and only calls
+  `fspark(l)` when there is an `l`. `renderProfilePreview` renders a "profile not set up yet"
+  prompt instead of throwing, and tolerates an unknown category.
+- **Evidence (AIK-VERIFY-1):** `scripts/repro_cv_guard.js` — a new, permanent harness that
+  extracts the two functions from any `ms.js` you point it at and runs them against an empty
+  roster and a missing listing. Against the pre-fix backup: **3/3 CRASH, exit 1**. Against
+  the fixed file: **3/3 pass, exit 0**. The failing action, reproduced clean.
+- **Ledger RG-0054 LOCKED** — asserts both functions keep their guards and that the repro
+  tool stays with the fix. 54 entries, 51 holding, 0 regressed.
+- **Deliberately NOT claimed:** that this is the source of the TS-0006 / TS-0021 tails.
+  `s.trustScore` is read *before* `s.headline`, so an undefined seller in `openSellerCV`
+  would report `trustScore`, not `headline` — TS-0021's tail comes from somewhere still
+  unidentified (`formatDescJSON` was checked and cleared: its only caller wraps it in
+  try/catch). The crash class fixed here stands on its own evidence; the fault attribution
+  does not, so neither fault was advanced on the strength of it.
+- **TS-0001 closed out properly:** "the 15 matching list button doesnt work" was fixed on
+  5 Aug but the row was never updated, so it had been sitting in `new` for six days.
+  Verified this session by live probe of the DEPLOYED asset — `GET /static/ms.js` (HTTP 200,
+  1,056,818 bytes) contains `upBox.onclick = function () { goTo('wishlist'); }` — and moved
+  to `verified`.
+- Committed, not deployed. NIGHTLY-SHIP-1 carries it through the gates.
+
+## 2026-08-11 — MAINT-CLOSE-1: B3 + B4-Tier-2 lane + guidelines + scheduling — the loop is complete to the arming line
+
+Session goal (David): "start these open issues now and complete them" — the gap between the
+Maintenance Agent's design and a board that clears itself with nobody watching.
+
+**MAINT-B4-5 — degrade-not-die (a real class bug, found by rehearsing, fixed + locked RG-0049).**
+The local mechanics test of migration 011 crashed the agent: `classify()` guarded the IMPORT of
+ai_provider but not the CALL, so a missing dep (httpx), network blip or bad key killed the whole
+run mid-queue — later faults got NOTHING, not even escalation. Fixed at class level: every
+`ai_provider.complete()` call guarded (classify → design lane; propose → declined/escalate);
+per-fault try/except in main() so one poisoned fault can never kill the queue. Proven: Tier 1
+still READY exit 0; keyless Tier 2 now completes with all six faults actioned (SYN-MECH degrades
+to PATH_B instead of "(none)"). RG-0049 (source-level, offline-safe) locks it; full ledger green.
+
+**B4 Tier-2 lane — `migrations/011_maint_b4_tier2.py`.** The server-side rehearsal (real brain,
+patch quality — the one thing Tier 1 cannot prove) now rides the ONE deploy as a one-time
+migration: sandboxed + shadow (env strips MAINTENANCE_AGENT_ENABLED; MAINT_PHASE=postlaunch
+because B4 rehearses the LAUNCH posture), 540s timeout, verdict JSON → reviewer-gated
+`static/maint/b4_tier2.json` + full table in the deploy log. READY or NOT READY is DATA (exit 0
+either way — DW-030's lesson); only a failure-to-run retries. Mechanics proven locally end-to-end.
+
+**B3 — `scripts/escalation_brief.py` + tripwire.** Stage-7 format made machinery: ESCALATE items
+from the agent's own run reports, categorized against the agent's refuse markers IMPORTED (drift
+structurally impossible), each item = what → safest action (standing) → 2-3 options → ONE tick
+line ("reply `REF 1/2/3`"). Stdlib, no key, runs anywhere. Selftest (marker coverage + collector +
+format) green — and it caught its own first bug: categorizing on the outcome boilerplate
+("escalated (safety/legal/cost)") mislabelled everything LEGAL; categories now read ref/title/why
+only. Tripwire `test_escalation_brief_wired` added to test_maintenance_agent.py (predeploy-run).
+
+**Guidelines — `DESIGN_CHANGE_GUIDELINES.md` closes OPEN item (1) of the 5 Aug boundary redraw.**
+Ten pass/fail criteria (evidence ≥2 reports or recurrence ≥3; problem before solution; scope;
+consistency — the TS-0001/2/3 "looks like a control" class is the founding precedent;
+reversibility; measurement; mobile/a11y; batched-never-hotfixed; copy discipline; the recorded
+gate line). Dossier template included. Activates AT LAUNCH; pre-launch it is a checklist.
+Item (2) — binding the designer role — stays OPEN, David's decision; until bound, David is the gate.
+
+**Scheduling — the B2b cadence, both phases.** Pre-launch brain: Cowork scheduled task
+`maintenance-loop`, daily 07:31 (strict contract: ledger → shadow agent against the live queue →
+apply green fixes by hand-rules → AIK-VERIFY-1 evidence → escalation brief → fragments → commit;
+NIGHTLY-SHIP-1 ships). Post-arming cadence: `ops/maintenance/maintenance-agent.{service,timer}`
+(05:20/11:20/17:20 UTC) installed ONLY by `MAINT_ARMING_RUNBOOK.md` — one paste block, nothing to
+substitute, preconditions stated (b4_tier2.json ready:true + fresh backup), DISARM one-liner,
+push-auth dry-run check included. Arming remains David's single act.
+
+**What remains before the board clears itself:** next deploy runs 011 → read the Tier-2 verdict →
+if READY, David arms (one paste). Designer-role binding open (David). Nothing else in B1–B4 is unbuilt.
+
+**Rider — the gate caught two live items while this session was closing.** (1) Four adventures
+map pages (na/bw/mz/ke) had NO fault-report widget — a tester there had no way to report; wired
+`ts_report.js?v=5` before `</body>` on all four (same first-party pattern as the other 14 pages;
+RG-0025-safe); `test_widget_is_wired_into_every_tester_page` green again. (2) PG-READINESS flags
+`strftime` 38→39 in bea_main.py — that file is the ADVERTS session's in-flight edit, not touched
+here (collision discipline); flagged flat for that session to write portably before the nightly's
+strict gate holds it.
+
+**GIT-LOCK-2 rider.** This session's own commit proved a gap in GIT-LOCK-1: the commit succeeded
+but left a stale `.git/HEAD.lock` (FUSE blocks unlink from the sandbox) — same class as
+index.lock, would block the next writer. `git_unlock.bat` extended from the instance to the
+class: clears index.lock, HEAD.lock and packed-refs.lock, same no-git.exe-running guard. The
+residue self-heals at the next bat-path git write (05:45 nightly at the latest).
+
+## 2026-08-11 — LIVE-FLAGS-1 + SERVER-BIT-1: the dashboard tells the truth without a human (David's ruling)
+
+- David's ruling: the (design-tool) dashboard must update live when the BIT flags change —
+  "we need to find a way around [the deploy], this won't work after launch — to wait for
+  the human." Diagnosis: flags themselves always flipped live (POST /admin/flags, no
+  deploy); two DISPLAY lanes were stale.
+- **LIVE-FLAGS-1 (dashboard.server.html):** the Launch Switch card fetched /flags only on
+  tab-switch. Now polls every 20s while the Launch view is showing + refreshes on window
+  focus. BIT/Ops-map/health/apv3 cards already polled (60s/300s) — untouched.
+- **SERVER-BIT-1:** the BIT board (bit_status.json) was only POSTed when something ran
+  bit_cycle.py by hand — the */15 scheduled task specced 27 Jun (BACKLOG) was never
+  created, so the BIT lights froze between manual runs/deploys. Class fix: the SERVER runs
+  its own heartbeat. trustsquare-bit-agent's existing deploy/ units were reused, updated
+  for GATE-ENFORCE-1 (BIT_BASE=http://localhost:8000 — the proven inside-the-gate lane,
+  cf. fault_reconcile v2): agent copies ship via manifest (ops/bit/ -> live /bit/),
+  migrations/013 installs the systemd service+timer (15 min, Persistent, detect-only —
+  no BIT_APPLY, no token). Dashboard already polls GET /dashboard/bit every 60s, so
+  board-to-glass latency becomes <=16 min unattended, forever.
+- **Ledger RG-0051 LOCKED** asserts the poll marker, the manifest lines and migration 013.
+- **Two-writer convergence (same morning):** a parallel maint session committed ff8ec95
+  (RG-0049/0050, migrations/011_maint_b4_tier2, fault widget on the 4 adventures map
+  pages). Collisions resolved here: my no-retest migration renumbered 011→012 (all refs
+  updated); adventures_ke_map.html working copy had LOST its committed widget (torn write,
+  flagged by the pre-deploy scan) — restored byte-true from HEAD, widget test green again.
+  My RG-0048 and their RG-0049/0050 verified coexisting; full ledger green.
+- Still open from their flag: pre-deploy scan danger 'pg-readiness' (predates today).
+
+### SUPER-AFRICA-1 — heritage layer, TP links, route-geometry QA (11 Aug 2026)
+- All 5 journey maps: 🏛️ heritage overlay (spec-driven, SO-1b-accurate). Kenya/NA/BW/MZ: flight-day TP deep links (static, marker 758984 — links-not-scripts doctrine, RG-0025-sanctioned). Kenya segs rebuilt through every stop (Day-6 off-line pin fixed); bookend days stitched so journeys visibly end at the home airport. RG-0025 surface += ke map. Claimed-map link-strip rule + heritage-on-user-maps policy in research canon §3b.
+
 ### SUPER-AFRICA-1 — Kenya (Nairobi) pilot: 3-tier super-advert ladders (10 Aug 2026)
 - NEW `scripts/seed_super_ladder_global.py` — seeds 3 supers per (country, category) with evidence-true persona ladders (a/b/c · T60/T80/T92-96). Kenya pilot: 24 listings, 24 personas, researched real KSh prices (Jiji, BuyRentKenya, safari operators, 10 Aug 2026). Fixture-DB rehearsal green: inserts, geo, personas, credentials, country backfill, idempotent rerun.
 - NEW `journeys/kenya.json` → `adventures_ke_map.html` (Leaflet, 5 days, 25 stops, RG-0025 clean) + deploy_manifest line. JOURNEY_HIGGSFIELD_PROMPTS.md regenerated (136 prompts / 5 journeys).

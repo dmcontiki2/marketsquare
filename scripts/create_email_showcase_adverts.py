@@ -5,7 +5,9 @@ Insert the NINE adverts that the wave-1 agency-email phone cards depict, so ever
 "Click to view" lands on the exact advert shown on the card (?listing=<id> deep link).
 
 Rules honoured:
-- NORMAL demo adverts (super_example=0) — the pinned exemplar row stays at three.
+- SHOWCASE-BANNER-1 (11 Aug 2026, David): super_example=1 + showcase=1 — the star
+  banner WITHOUT the pin; the pinned exemplar row still stays at three because
+  every sort (server + client) excludes showcase rows from pinning.
 - Idempotent + dry-run-first + DB backup on apply (house pattern, cf. seed_super_global.py).
 - Rows are CLONED from an existing same-category exemplar so the insert always matches
   the live schema, then overridden field-by-field.
@@ -73,7 +75,7 @@ for tid, title, price, suburb, photo, trust, blurb, price_num in ADVERTS:
         "description": f"[photos:{photo}]{blurb}{FOOT}",
         "photo_urls": json.dumps([photo]),
         "thumb_url": photo, "medium_url": None,
-        "super_example": 0, "trust_score": trust,
+        "super_example": 1, "showcase": 1, "trust_score": trust,
         "seller_email": SELLER, "claim_status": "claimed",
         "created_at": now, "updated_at": now, "published_at": now,
         "view_count": 0, "boost_until": None, "suspension_reason": None,

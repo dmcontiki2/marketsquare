@@ -159,3 +159,14 @@ stamp. Single-country tours still just need un-gating + a country listing.
 - The prompt editor is a controlled React editor: `execCommand` insertText does NOT work.
 - After ~5h continuous use the tab's renderer froze (CDP timeouts) — start each photo session
   with a fresh tab/Chrome restart rather than pushing a stale one.
+
+
+## Standing rule — every rebuilt map page keeps the REPORT widget (11 Aug 2026)
+
+A map rebuild on 11 Aug dropped `<script src="/static/ts_report.js?v=5" defer></script>`
+from all five adventures maps (na/bw/mz/ke/c2c) — twice in one morning, once mid-write
+(torn ke caught by the pre-deploy scan). David's ruling (5 Aug) is that the REPORT tab
+belongs on EVERY page, and test_tester_intake derives that list from the deploy manifest,
+so the deploy gate goes RED and blocks the ship whenever a rebuild loses the line.
+When you rebuild ANY adventures_*_map.html: keep (or re-add) that script line just before
+</body>, and run `python3 test_tester_intake.py` before finishing the session.
