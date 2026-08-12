@@ -32,6 +32,21 @@ else
     say "seed: seed_super_global.py not on the box (manifest ships it) — skipped"
 fi
 
+# ── 1b. Idempotent 3-tier LADDER seed (SUPER-AFRICA-1, 12 Aug 2026) ──────────
+# Safe on every deploy: skips existing titles and any (country,category,tier)
+# whose sup_<cc>_<catkey>_<tier>_*.jpg photos are not yet in static/super
+# (media_push.bat carries those) — so it silently no-ops until media lands.
+if [ -f "$LIVE/seed_super_ladder_global.py" ]; then
+    say "ladder-seed: running seed_super_ladder_global.py --apply (idempotent)"
+    if (cd "$LIVE" && python3 seed_super_ladder_global.py --apply); then
+        say "ladder-seed: ok"
+    else
+        say "ladder-seed: FAILED (rc=$?) — run by hand: cd $LIVE && python3 seed_super_ladder_global.py --apply"
+    fi
+else
+    say "ladder-seed: seed_super_ladder_global.py not on the box (manifest ships it) — skipped"
+fi
+
 # ── 2. One-time migrations ───────────────────────────────────────────────────
 DONE_FILE="$LIVE/.migrations_done"
 touch "$DONE_FILE" 2>/dev/null || true
