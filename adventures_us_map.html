@@ -83,4 +83,12 @@ J.legs.forEach(function(d){var b=document.createElement('button');b.setAttribute
 showAll();
 </script>
 <script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script><script src="/static/ts_report.js?v=6" defer></script>
+
+<script id="heritage-layer-SUPERAFRICA1">
+/* Heritage sites layer — SUPER-AFRICA-1 (11 Aug 2026). First-party, spec: wonders.json. */
+try{var _herG=L.layerGroup();[[44.428,-110.5885,'Yellowstone National Park','np_001','Yellowstone is the world\'s first national park and one of the most geologically active places on Earth. It sit']].forEach(function(h){
+_herG.addLayer(L.marker([h[0],h[1]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#6d28d9"><span>\ud83c\udfdb\ufe0f</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
+.bindPopup('<b>\ud83c\udfdb\ufe0f '+h[2]+'</b><br>'+h[4]+'\u2026<br><a href="https://trustsquare.co/?wonder='+h[3]+'&from='+encodeURIComponent(location.pathname.split('/').pop())+'" target="_blank" rel="noopener" style="font-weight:700;">View heritage site in MarketSquare \u2197</a>'));});
+_herG.addTo(map);}catch(e){}
+</script>
 </body></html>

@@ -1,0 +1,1 @@
+- Heritage pins on all 9 maps now deep-link into the app's wonder views (WONDER-DEEPLINK-1 in ms.js + wonders.json ids on 14 journey pins + injected layer on reserve/US/UK/AU; DE = catalog gap). Awaiting David's release.bat click to make ALL map work live (his NA observation was live-vs-local). Remaining photos: BW 7 + MZ 7.

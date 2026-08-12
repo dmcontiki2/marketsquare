@@ -16422,3 +16422,30 @@ setInterval(function(){
   pre.src = next;
 }, 4000);
 /* ═══ end AGENT-SVC-1 FRONTEND ═══ */
+
+// WONDER-DEEPLINK-1 (11 Aug 2026, SUPER-AFRICA-1): journey-map heritage pins link into the app.
+// A static map page opens trustsquare.co/?wonder=<id> — on boot we open that wonder's detail view.
+(function(){
+  try{
+    var wid = new URLSearchParams(location.search).get('wonder');
+    if(!wid) return;
+    var tries = 0;
+    var t = setInterval(function(){
+      tries++;
+      if (typeof openWonderDetail === 'function' && document.readyState !== 'loading') {
+        clearInterval(t); try{ openWonderDetail(wid, null); }catch(e){}
+        // Back-to-map chip (only for our own static map pages — pattern-validated, no open redirect)
+        try{
+          var frm = new URLSearchParams(location.search).get('from');
+          if (frm && /^adventures_[a-z0-9_]+_map\.html$/.test(frm)) {
+            var chip = document.createElement('a');
+            chip.href = '/static/' + frm;
+            chip.textContent = '\u2190 Back to the journey map';
+            chip.setAttribute('style','position:fixed;left:14px;bottom:14px;z-index:99999;background:#0c1a2e;color:#fff;font:600 13px/1 Helvetica,Arial,sans-serif;padding:10px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.35);box-shadow:0 2px 10px rgba(0,0,0,.35);text-decoration:none;');
+            document.body.appendChild(chip);
+          }
+        }catch(e){}
+      } else if (tries > 60) { clearInterval(t); }
+    }, 500);
+  }catch(e){}
+})();

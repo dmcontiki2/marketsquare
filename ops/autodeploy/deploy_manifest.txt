@@ -78,6 +78,7 @@ agency_import_guide.html   | static/agency-import-guide.html
 agents_as_a_service.html   | static/agents-as-a-service.html
 assets/legal-must-haves/legal-cards.js | static/legal-must-haves/legal-cards.js
 scripts/seed_super_global.py | seed_super_global.py
+scripts/seed_super_ladder_global.py | seed_super_ladder_global.py
 ops/autodeploy/deploy_router.py | deploy_router.py
 warm_videos.sh             | warm_videos.sh
 

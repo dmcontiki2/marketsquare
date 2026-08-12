@@ -1,0 +1,2 @@
+### SUPER-AFRICA-1 — round trip closed: wonder view now offers "← Back to the journey map" (11 Aug 2026)
+- Heritage links open the app in a new tab (map tab preserved) AND now carry &from=<mapfile>; WONDER-DEEPLINK-1 renders a fixed "← Back to the journey map" chip in the wonder view, pattern-validated against adventures_*_map.html only (no open-redirect surface). Applied to the 5 journey maps (template) + 4 legacy injected layers; ms.js node --check clean.

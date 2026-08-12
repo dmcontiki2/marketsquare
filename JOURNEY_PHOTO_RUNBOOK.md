@@ -170,3 +170,13 @@ belongs on EVERY page, and test_tester_intake derives that list from the deploy 
 so the deploy gate goes RED and blocks the ship whenever a rebuild loses the line.
 When you rebuild ANY adventures_*_map.html: keep (or re-add) that script line just before
 </body>, and run `python3 test_tester_intake.py` before finishing the session.
+
+## The invisible click-eater — SOLVED (11 Aug 2026 evening)
+The "stale DOM / clicks vanish / typed prompts go nowhere" failures were Higgsfield's
+**Supercomputer upgrade MODAL** (`.supercomputer-upgrade-plan-modal`, fixed inset-0) appearing
+over the whole page — every click hit the invisible overlay. ONE Escape closes it. Diagnose in
+seconds with JS: `document.elementFromPoint(x,y)` — if the element chain shows the modal, Escape
+and continue. Also: verify the editor got focus (`document.activeElement`) and the prompt landed
+(`textContent.includes(...)`) BEFORE every Generate; get all click targets from
+`getBoundingClientRect()` ÷ 1.3604 (send-space = CSS ÷ scale; recalibrate scale per session with
+a JS click-listener probe).

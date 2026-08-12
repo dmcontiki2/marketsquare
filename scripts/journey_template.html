@@ -72,7 +72,7 @@ function groupFor(t){ return (t==='start'||t==='finish') ? G.ends : (G[t]||G.sig
 const herG=L.layerGroup();
 (J.her||[]).forEach(function(h){
   herG.addLayer(L.marker([h[1],h[2]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#6d28d9"><span>\ud83c\udfdb\ufe0f</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
-    .bindPopup('<div class="pk"><div class="b"><h3>\ud83c\udfdb\ufe0f '+h[0]+'</h3><p>'+(h[3]||'Public heritage site \u2014 worth the detour.')+'</p></div></div>'));
+    .bindPopup('<div class="pk"><div class="b"><h3>\ud83c\udfdb\ufe0f '+h[0]+'</h3><p>'+(h[3]||'Public heritage site \u2014 worth the detour.')+(h[4]?'<br><a href="https://trustsquare.co/?wonder='+h[4]+'&from='+encodeURIComponent(location.pathname.split('/').pop())+'" target="_blank" rel="noopener" style="font-weight:700;">View heritage site in MarketSquare \u2197</a>':'')+'</p></div></div>'));
 });
 
 

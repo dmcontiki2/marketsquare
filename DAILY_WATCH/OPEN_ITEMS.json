@@ -1,30 +1,30 @@
 {
-  "next_id": 38,
+  "next_id": 40,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "INFO",
       "source": "audit VERSION-KEY",
       "status": "OPEN"
     },
     "DW-002": {
       "first_seen": "2026-08-02",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "INFO",
       "source": "audit DEMO-PLACEHOLDERS",
       "status": "OPEN"
     },
     "DW-003": {
       "first_seen": "2026-08-02",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "consolidation",
       "status": "OPEN"
     },
     "DW-004": {
       "first_seen": "2026-08-02",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "consolidation",
       "status": "OPEN"
@@ -39,7 +39,7 @@
     },
     "DW-006": {
       "first_seen": "2026-08-02",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "run_daily_checks deploy_drift",
       "status": "OPEN"
@@ -54,21 +54,21 @@
     },
     "DW-008": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "audit MSJS-DRIFT",
       "status": "OPEN"
     },
     "DW-009": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "cost sweep",
       "status": "OPEN"
     },
     "DW-010": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
       "status": "OPEN"
@@ -83,18 +83,18 @@
     },
     "DW-012": {
       "first_seen": "2026-08-03",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "INFO",
       "source": "Monday deep scan coverage",
       "status": "OPEN"
     },
     "DW-013": {
       "first_seen": "2026-08-04",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "smoke_test parity + RG-0027 side-effect",
       "status": "OPEN",
-      "note": "check passing since 2026-08-08 (2nd day) - awaiting David's close"
+      "note": "parity HOLDS (both instruments 29/39) but smoke is NO LONGER all-green - caused by DW-038 + DW-039, not a parity break"
     },
     "DW-014": {
       "first_seen": "2026-08-04",
@@ -114,11 +114,11 @@
     },
     "DW-016": {
       "first_seen": "2026-08-04",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "watch alert path",
       "status": "OPEN",
-      "note": "check passing since 2026-08-08 (2nd day) - awaiting David's close"
+      "note": "check passing since 2026-08-08 (5th day) - awaiting David's close"
     },
     "DW-017": {
       "first_seen": "2026-08-05",
@@ -146,57 +146,57 @@
     },
     "DW-020": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "ssh sensors + smoke + run_daily_checks",
       "status": "OPEN",
-      "note": "check passing since 2026-08-08 (2nd day) - awaiting David's close; NEW caveat DW-034 (needs load_sandbox_ssh.sh first)"
+      "note": "check passing since 2026-08-08 (5th day) - awaiting David's close; caveat DW-034 still applies"
     },
     "DW-021": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "cost sweep",
       "status": "OPEN"
     },
     "DW-022": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "self-heartbeat",
       "status": "OPEN"
     },
     "DW-023": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "gate verification post-DW-019",
       "status": "OPEN"
     },
     "DW-024": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "ledger self-audit (Stays session)",
       "status": "OPEN"
     },
     "DW-025": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "RG-0025 scope gap (Stays session)",
       "status": "OPEN"
     },
     "DW-026": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "deploy post-mortem (silent no-op ship)",
       "status": "OPEN",
       "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open"
     },
     "DW-028": {
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "first_seen": "2026-08-07",
       "sev": "MEDIUM",
       "source": "ledger/probe network blindness (permanent fix)",
@@ -204,76 +204,93 @@
     },
     "DW-027": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "HIGH",
       "source": "TS-0022 doctrine collision (Maroushka x3)",
       "status": "OPEN"
     },
     "DW-029": {
       "first_seen": "2026-08-07",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "production secrets exposed in a chat transcript",
       "status": "OPEN"
     },
     "DW-030": {
       "first_seen": "2026-08-08",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "migration chain",
-      "status": "OPEN"
+      "status": "OPEN",
+      "note": "check passing since 2026-08-08 (3rd day) - awaiting David's close"
     },
     "DW-031": {
       "first_seen": "2026-08-08",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "live verification (Stays last mile)",
       "status": "OPEN",
-      "note": "check passing since 2026-08-09 (1st day) - awaiting David's close"
+      "note": "check passing since 2026-08-09 (4th day) - awaiting David's close"
     },
     "DW-032": {
       "first_seen": "2026-08-08",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "AI-watch (vendor pricing)",
-      "status": "OPEN"
+      "status": "OPEN",
+      "note": "PREMISE DISSOLVED 2026-08-11 - Anthropic cancelled the 1 Sep increase; $2/$10 is now permanent. Awaiting David's close"
     },
     "DW-033": {
       "first_seen": "2026-08-09",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "AI-watch (rival list prices)",
       "status": "OPEN"
     },
     "DW-034": {
       "first_seen": "2026-08-09",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "run_daily_checks false 'unreachable'",
       "status": "OPEN"
     },
     "DW-035": {
       "first_seen": "2026-08-10",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "Monday deep static scan",
       "status": "OPEN"
     },
     "DW-036": {
       "first_seen": "2026-08-11",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "MEDIUM",
       "source": "release state (NEW today)",
-      "status": "OPEN"
+      "status": "OPEN",
+      "note": "release SHIPPED (fd3188f, HEAD == origin/deploy); drift now comes from UNCOMMITTED working-tree edits"
     },
     "DW-037": {
       "first_seen": "2026-08-11",
-      "last_seen": "2026-08-11",
+      "last_seen": "2026-08-12",
       "sev": "LOW",
       "source": "watch output ergonomics",
       "status": "OPEN"
+    },
+    "DW-038": {
+      "first_seen": "2026-08-12",
+      "last_seen": "2026-08-12",
+      "sev": "HIGH",
+      "source": "smoke_test + server-side edge probe (NEW today)",
+      "status": "OPEN"
+    },
+    "DW-039": {
+      "first_seen": "2026-08-12",
+      "last_seen": "2026-08-12",
+      "sev": "MEDIUM",
+      "source": "smoke_test vs ledger RG-0054 contradiction (NEW today)",
+      "status": "OPEN"
     }
   },
-  "last_run": "2026-08-11",
+  "last_run": "2026-08-12",
   "last_verdict": "AMBER"
 }

@@ -531,13 +531,15 @@
    "Namib Sand Sea (UNESCO)",
    -24.75,
    15.35,
-   "The world's only coastal fog desert — 300 m star dunes on the oldest desert on earth."
+   "The world's only coastal fog desert — 300 m star dunes on the oldest desert on earth.",
+   "un_050"
   ],
   [
    "Twyfelfontein rock engravings (UNESCO)",
    -20.593,
    14.372,
-   "Thousands of animals chipped into red sandstone six thousand years ago."
+   "Thousands of animals chipped into red sandstone six thousand years ago.",
+   "un_049"
   ],
   [
    "Cape Cross Seal Reserve",
@@ -549,7 +551,8 @@
    "Etosha National Park",
    -19.18,
    15.92,
-   "The great white pan — waterholes that draw everything to them."
+   "The great white pan — waterholes that draw everything to them.",
+   "np_012"
   ]
  ]
 }

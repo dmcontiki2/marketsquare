@@ -663,31 +663,36 @@
    "Robben Island (UNESCO)",
    -33.806,
    18.366,
-   "The island prison where Nelson Mandela spent 18 years."
+   "The island prison where Nelson Mandela spent 18 years.",
+   "un_014"
   ],
   [
    "Victoria Falls (UNESCO)",
    -17.925,
    25.858,
-   "Mosi-oa-Tunya — the smoke that thunders."
+   "Mosi-oa-Tunya — the smoke that thunders.",
+   "un_010"
   ],
   [
    "Abu Simbel (UNESCO)",
    22.337,
    31.625,
-   "Ramses II's rock temples, moved block by block above the rising lake."
+   "Ramses II's rock temples, moved block by block above the rising lake.",
+   "un_023"
   ],
   [
    "Karnak & Luxor (UNESCO)",
    25.7188,
    32.6573,
-   "The greatest temple complex of the ancient world."
+   "The greatest temple complex of the ancient world.",
+   "ar_017"
   ],
   [
    "Pyramids of Giza (UNESCO)",
    29.9792,
    31.1342,
-   "The last surviving wonder of the ancient world, at the end of the line."
+   "The last surviving wonder of the ancient world, at the end of the line.",
+   "un_008"
   ]
  ]
 }
