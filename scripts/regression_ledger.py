@@ -2458,5 +2458,64 @@ def rg_run_states_its_own_code():
 
 
 
+@entry("RG-0060", "The AI Coach front door ANSWERS -- 'unavailable' can never again be silent",
+       LOCKED, scope="POST /advert-agent/coach live gate -- the whole 'AI Coach unavailable' "
+                     "class (TS-0024); zero-spend probe: an unregistered email is refused 401 "
+                     "BEFORE any model call or Tuppence charge",
+       fixed_on="2026-08-12",
+       ref="TS-0024 (7 Aug 2026): 'AI coach was unavailable. Why?' The structural cause -- "
+           "endpoints gated on ONE vendor's key -- was closed by RG-0032 on 5 Aug, but nobody "
+           "had driven the coach end-to-end since, so 'fixed' rested on reading code. 12 Aug "
+           "2026 maintenance loop reproduced the failing action clean on live: POST "
+           "/advert-agent/coach, category Property, HTTP 200 in 10.0s with real coaching JSON "
+           "(title+description suggestions, 4 trust_score_actions, free_used flip). That "
+           "one-time run cost 1T + one Haiku call, so it cannot be the standing assertion. "
+           "This probe is the zero-cost form: a valid-shaped request for an UNREGISTERED email "
+           "must answer 401 'Unrecognised account' -- proof the endpoint is served, "
+           "any_lane_configured() passed, and the refusal happened BEFORE spend. 503 here IS "
+           "the tester's fault back; 422 means the probe body drifted from AACoachRequest and "
+           "the assertion itself needs repair, not weakening.")
+def rg_ai_coach_front_door():
+    out = []
+    try:
+        flags = _json("/flags")
+        active = ((flags.get("ai_provider") or {}).get("active") or "").strip()
+        if not active:
+            out.append((FAIL, "/flags names no active AI lane -- the coach cannot be expected "
+                              "to answer; the lane wiring itself has regressed (TS-0024)"))
+            return out
+    except Exception as ex:
+        return [(FAIL, "/flags unreadable while probing the coach gate: " + repr(ex)[:120])]
+    body = json.dumps({"email": "rg0060-probe@invalid.trustsquare.co",
+                       "category": "Property", "fields": {"title": "ledger probe"},
+                       "photo_slots_completed": []}).encode("utf-8")
+    _require_net()
+    hdrs = dict(UA)
+    hdrs["Content-Type"] = "application/json"
+    req = urllib.request.Request(BASE + "/advert-agent/coach", data=body, headers=hdrs,
+                                 method="POST")
+    try:
+        code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+    except urllib.error.HTTPError as e:
+        code = e.code
+    except Exception as ex:
+        raise ProbeOffline(repr(ex)[:140])
+    if code == 503:
+        out.append((FAIL, "the coach gate answered 503 with lane '%s' active -- the exact "
+                          "TS-0024 fault is BACK: configured lanes but a refusing gate" % active))
+    elif code == 422:
+        out.append((FAIL, "the probe body no longer matches AACoachRequest (422) -- fix THIS "
+                          "assertion, it can no longer see the gate"))
+    elif code != 401:
+        out.append((FAIL, "unregistered-email coach probe answered %d, expected 401 -- the "
+                          "front door is not refusing the way the zero-spend proof relies on"
+                          % code))
+    if not out:
+        out.append((INFO, "lane '%s' active; unregistered probe refused 401 before any spend "
+                          "-- the coach front door answers" % active))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

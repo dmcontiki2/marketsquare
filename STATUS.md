@@ -5,6 +5,16 @@
 
 ## Current Session
 
+- DAY-RUN HANDOFF (12 Aug, David at work): Chrome got MINIMIZED as David left → extension clicks blank → photo run PAUSED at 157/164 (only MZ's 7 flight-legs left; then Kenya's 114 advert stills). Everything not needing the browser is DONE and COMMITTED (ce80ce1): ladder seeder ships via manifest + post_deploy.sh auto-runs it every deploy (no-ops until KE media lands — proven-safe pattern copied from seed_super_global). RESUME RECIPE (any session, the moment Chrome is visible): fresh claim floor `date +%s`, JS-calibrate click scale (runbook 11 Aug lesson), then the loop — MZ prompts in JOURNEY_HIGGSFIELD_PROMPTS.md §Mozambique (f1_/f2_), advert prompts in SUPER_LADDER_PROMPTS.md. EVENING SEQUENCE for David: (1) restore Chrome + say 'continue' → I finish MZ 7 (+as many advert stills as the evening allows); (2) media_push.bat (carries sup_ke_* to server); (3) release.bat (or grant .secrets/gh_push_token.txt and I publish) → engine deploys → post_deploy auto-seeds Kenya's 24 ladder listings → I verify live (ledger + diag) and report. Angola OUT; ZW/EG builds still awaiting Harare-currency + Zambia decisions.
+
+- TWO JOURNEYS FULLY PHOTOGRAPHED TONIGHT: Kenya 32/32 and Namibia 30/30 — both maps rebuilt 0-pending (Kenya: CPT-to-CPT complete arc; Namibia: O.R. Tambo gate, Kalahari window, key handover, jacaranda braai, gravel kudu, terminal farewell, Joburg night grid). Root cause of all "unclickable page" failures found and runbooked: Higgsfield's upgrade MODAL overlay (one Escape clears it) + per-session click-scale calibration via JS rects. 13 photos QC'd-and-claimed this session, zero rejects. REMAINING: BW 7 + MZ 7 flight-legs → then ALL journey photography done; next milestones: David's release.bat click (deploy), Kenya 114 advert stills, ZW/EG builds (awaiting Harare currency + Zambia decisions).
+
+- KENYA JOURNEY PHOTOS COMPLETE: 32/32 — the full 7-day fly-in safari (CPT departure to CPT homecoming) shot, QC'd and embedded; adventures_ke_map.html rebuilt 0-pending. Root cause of last night's "unclickable page": Higgsfield's Supercomputer upgrade MODAL overlaying everything (one Escape closes it — runbook updated mentally, formal note below). Next in this session: 21 flight-leg shots (NA f1/f2, BW, MZ), David's 20-min slow-stop rule armed.
+
+- Heritage pins on all 9 maps now deep-link into the app's wonder views (WONDER-DEEPLINK-1 in ms.js + wonders.json ids on 14 journey pins + injected layer on reserve/US/UK/AU; DE = catalog gap). Awaiting David's release.bat click to make ALL map work live (his NA observation was live-vs-local). Remaining photos: BW 7 + MZ 7.
+
+- BOTSWANA JOURNEY PHOTOS COMPLETE: 32/32 — bookends shot tonight (prop-gate sunrise, salt-vs-delta window, Maun bush-plane ballet, Thamalakane stoep with a CORRECT fish eagle, dawn pan exit, boot-dust boarding, thunderhead homecoming). Map rebuilt 0-pending. THREE journeys now fully photographed (KE 32, NA 30, BW 32). LAST remaining: Mozambique's 7 flight-legs — then the entire journey fleet is photo-complete. Deploy still awaiting David's release.bat click.
+
 - **STALE-CODE-1 — two of today's runs tested older code and looked like valid tests.** `git
   pull` says "Already up to date" whether or not the fix was pushed, and the 08:10 live run
   returned output identical to the previous one. Every run now prints

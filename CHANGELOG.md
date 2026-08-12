@@ -1,3 +1,51 @@
+## 2026-08-11 - SSH lockout was ISP IP rotation, not a dead server (SSH-IP-ROTATION-1)
+
+**Symptom.** `ssh root@178.104.73.239` timed out from David's PowerShell. Port 22 also timed
+out from the Cowork sandbox, which made it look like the box was down.
+
+**It was not down.** `GET https://trustsquare.co/health` returned 200
+(`TrustSquare BEA 1.3.1`) throughout. Server uptime on reconnect: 75 days. All three services
+(marketsquare, advertagent, citylauncher) active, disk 44%. Nothing had crashed.
+
+**Cause.** The Hetzner Cloud Firewall `trustsquare-origin-lockdown` (ORIGIN-LOCKDOWN-1, 4 Aug)
+allows TCP 22 from David's IP ONLY. His ISP had rotated him to a new address, so his own SSH
+was refused by his own firewall. Deny-all inbound means a refused source gets a timeout, not a
+rejection - which is exactly what a dead box looks like. That ambiguity is what cost the time.
+
+**Also found - the rule label had drifted from the rule.** The rule was named
+`SSH - David only (197.185.169.80)` while the source box actually contained `197.185.142.142`.
+Two different stale addresses, neither current. A label that disagrees with its own rule is
+worse than no label; it sends the next reader looking in the wrong place.
+
+**Fix applied** (David's call, offered against the wider-range and single-IP alternatives):
+`197.185.155.69` ADDED alongside `197.185.142.142` on the port 22 rule - both /32, nothing
+widened. Label corrected to `SSH - David only (.142.142 + .155.69, updated 11 Aug 2026)`.
+Ports 80/443 (Cloudflare edge ranges) untouched.
+
+**Verified after the change.** SSH returns `ubuntu-4gb-nbg1-1`. Full regression ledger run:
+every LOCKED fix holding, 3 known defects still open - RG-0028 (origin refuses direct 80/443)
+still passes, so the lockdown was not weakened.
+
+**Operational fact worth keeping.** The Cowork sandbox egresses via David's public IP - the
+sandbox regained SSH the instant the rule applied. So sandbox SSH has been dead since 4 Aug
+whenever David's IP rotated, and it recovers automatically with this same fix. Session-based
+SSH work and David's own SSH share one dependency.
+
+**Recurrence.** This WILL happen again on the next rotation. Diagnosis order for next time is
+in ACCESS_CHEATSHEET.md: check /health first - if it is 200, the server is fine and it is the
+firewall. Deliberately NOT ledgered: an assertion pinned to a rotating IP would fail by design
+and train us to ignore red.
+
+### SUPER-AFRICA-1 — heritage pins now click through to the app's wonder views, on ALL nine maps (11 Aug 2026)
+- WONDER-DEEPLINK-1 in ms.js: `trustsquare.co/?wonder=<id>` opens that wonder's in-app detail view on boot (30s tolerant retry; no-op without the param). node --check clean.
+- Journey maps (KE/NA/BW/MZ/C2C): heritage entries carry wonders.json ids where the catalog has the site (14 linked: Mara, Nakuru, Namib Sand Sea, Twyfelfontein, Etosha, Okavango, Chobe, Ilha, Bazaruto, Robben, Vic Falls, Abu Simbel, Karnak, Giza) — popup gains "View heritage site in MarketSquare ↗". Sites absent from the catalog (Nairobi NP, museums, Hell's Gate, Cape Cross, Makgadikgadi, Maputo station) stay informational pins.
+- Legacy hand-built maps (reserve/US/UK/AU): idempotent first-party inline heritage layer injected from wonders.json (Cradle of Humankind, Yellowstone, Stonehenge, Great Barrier Reef + Daintree) with the same in-app links. DE skipped — no Bavarian sites in wonders.json (catalog gap, candidate additions: Neuschwanstein, Zugspitze). Pre-existing single script tag on legacy maps is the known unpkg Leaflet exception; injected block is inline first-party — RG-0025 unaffected.
+- TP links on legacy maps deliberately deferred: they ride the fly-in bookend pattern, which those maps get at spec migration.
+- NOTE: David's "heritage missing on Namibia" was live-vs-local — all of today's + yesterday's map work is LOCAL until release.bat publishes the deploy ref.
+
+### SUPER-AFRICA-1 — round trip closed: wonder view now offers "← Back to the journey map" (11 Aug 2026)
+- Heritage links open the app in a new tab (map tab preserved) AND now carry &from=<mapfile>; WONDER-DEEPLINK-1 renders a fixed "← Back to the journey map" chip in the wonder view, pattern-validated against adventures_*_map.html only (no open-redirect surface). Applied to the 5 journey maps (template) + 4 legacy injected layers; ms.js node --check clean.
+
 ### SUPER-AFRICA-1 — TP fare links added to flight-stop popup cards (11 Aug 2026, David's catch)
 - The airport/connection popup cards (where users actually linger) now carry the same static "Check live fares ↗" deep link as the day summaries — 4 popups per fly-in map (KE/NA/BW/MZ), 6 links total per map. Same links-not-scripts doctrine, same strip-on-claim rule. 0 external scripts verified post-rebuild. Confirmed for the record: TP's script-served ad widgets (the old right-hand adverts) stay banned permanently under the 3 Aug ruling — links in our own copy are the referral lane.
 

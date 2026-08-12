@@ -1,0 +1,21 @@
+{
+  "run": "2026-08-12T05:33:57Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 2,
+  "actions": [
+    {
+      "ref": "TS-0031",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "Cars pre-final: AI-added vehicle details inaccurate for the tester's make (David",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    },
+    {
+      "ref": "TS-0024",
+      "lane": "PATH_B",
+      "why": "no AI lane has a key where the loop runs (checked: ANTHROPIC_API_KEY, FAILOVER_API_KEY, OPENAI_API_KEY, SCALEWAY_API_KEY) -- batched design lane. The brain imported fine; it has nothing to call.",
+      "title": "Tried to list a property using the AI coach, it told me the AI coach was unavail",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    }
+  ]
+}
