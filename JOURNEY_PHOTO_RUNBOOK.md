@@ -180,3 +180,14 @@ and continue. Also: verify the editor got focus (`document.activeElement`) and t
 (`textContent.includes(...)`) BEFORE every Generate; get all click targets from
 `getBoundingClientRect()` ÷ 1.3604 (send-space = CSS ÷ scale; recalibrate scale per session with
 a JS click-listener probe).
+
+## Session-bridge lessons — 12 Aug 2026 morning
+- **Higgsfield NSFW false-positives:** "travellers from behind climbing airstairs" got flagged
+  (Credits refunded, no charge). Avoid "from behind climbing/boarding" phrasing on people shots —
+  use "passengers at a distance walking toward the aircraft steps". If flagged: reword, never repeat verbatim.
+- **The extension needs OUR tab as Chrome's front tab.** Background/minimized = clicks blank
+  (probe: JS mousedown listener). After any Chrome restart: fresh tab, empirical scale probe
+  (some windows are 1:1, some ÷1.3604), JS rects for all targets, lightbox check via elementFromPoint.
+- Stray typing risk: a leftover lightbox routes typed text into its COMMENT textarea — always
+  elementFromPoint-check the editor before typing; clear any textarea it landed in (12 Aug: 559
+  chars caught and cleared, nothing submitted).
