@@ -59,12 +59,56 @@ SKIP_STATUSES = {"verified", "closed", "rejected", "duplicate", "not-a-fault"}
 # (error 1010) before the origin ever sees it. Name ourselves on every request.
 UA_HEADER = {"User-Agent": "TrustSquare-FaultReconcile/1.0 (dmcontiki2@gmail.com)"}
 
+# GATE-COOKIE-1 (13 Aug 2026): the armed origin gate (migration 016) 401s the
+# maint-key lane at nginx; carry the ts_review credential like the ledger does,
+# never widen the gate. Same convention as maintenance_agent.py. RG-0064.
+_REVIEW = {"cookie": None, "tried": False}
+
+def _review_cookie():
+    if _REVIEW["tried"]:
+        return _REVIEW["cookie"] or ""
+    _REVIEW["tried"] = True
+    code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
+    if not code:
+        try:
+            code = open(os.path.join(REPO, ".secrets", "review_code.txt"),
+                        encoding="utf-8").read().strip()
+        except OSError:
+            code = ""
+    if not code:
+        return ""
+    try:
+        req = urllib.request.Request(BASE + "/review/login",
+                                     data=json.dumps({"code": code}).encode(),
+                                     headers=dict(UA_HEADER, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        body = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+        tok = (json.loads(body).get("token") or "").strip()
+        _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
+    except Exception:
+        _REVIEW["cookie"] = None
+    return _REVIEW["cookie"] or ""
+
 def call(method, path, body=None, key=""):
-    req = urllib.request.Request(BASE + path, method=method,
-        headers=dict(UA_HEADER, **{"X-Maint-Key": key, "Content-Type": "application/json"}),
-        data=json.dumps(body).encode() if body is not None else None)
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode())
+    hdrs = dict(UA_HEADER, **{"X-Maint-Key": key, "Content-Type": "application/json"})
+    data = json.dumps(body).encode() if body is not None else None
+    try:
+        req = urllib.request.Request(BASE + path, method=method, headers=hdrs, data=data)
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403):
+            raise
+        ck = _review_cookie()
+        if not ck:
+            raise
+        req2 = urllib.request.Request(BASE + path, method=method,
+                                      headers=dict(hdrs, **{"Cookie": ck}), data=data)
+        try:
+            with urllib.request.urlopen(req2, timeout=30) as r:
+                return json.loads(r.read().decode())
+        except Exception:
+            raise e
 
 
 def main():

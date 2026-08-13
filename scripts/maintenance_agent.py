@@ -202,12 +202,64 @@ def maint_key():
 # Every call to OUR OWN edge must name itself. Same header the regression ledger uses.
 UA_HEADER = {"User-Agent": "TrustSquare-MaintenanceAgent/1.0 (dmcontiki2@gmail.com)"}
 
+# GATE-COOKIE-1 (13 Aug 2026): GATE-ENFORCE-2 armed auth_request on the nginx
+# catch-all this morning (migration 016, David's ruling closing DW-023/RG-0029) and
+# the exempt list -- 007 unchanged -- never carried the maint-key lane, so remote
+# intake/heartbeat 401'd at the ORIGIN before the app ever saw X-Maint-Key (proven
+# 13:17Z run: "intake FAILED (HTTP Error 401)"). The sanctioned adaptation is the
+# ledger's, verbatim doctrine from GATE-ENFORCE-1: CARRY THE REVIEW CREDENTIAL,
+# never punch a hole in the gate. Same code file, same login lane, same once-per-run
+# cache as regression_ledger._review_cookie; on any failure the caller sees the
+# original 401 and the existing fail-safe machinery does its job. RG-0064.
+_REVIEW = {"cookie": None, "tried": False}
+
+def _review_cookie():
+    if _REVIEW["tried"]:
+        return _REVIEW["cookie"] or ""
+    _REVIEW["tried"] = True
+    code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
+    if not code:
+        try:
+            code = open(os.path.join(REPO, ".secrets", "review_code.txt"),
+                        encoding="utf-8").read().strip()
+        except OSError:
+            code = ""
+    if not code:
+        return ""
+    try:
+        req = urllib.request.Request(BASE + "/review/login",
+                                     data=json.dumps({"code": code}).encode(),
+                                     headers=dict(UA_HEADER, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        body = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+        tok = (json.loads(body).get("token") or "").strip()
+        _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
+        if _REVIEW["cookie"]:
+            say("gate: review credential minted -- calls ride through the armed gate")
+    except Exception:
+        _REVIEW["cookie"] = None
+    return _REVIEW["cookie"] or ""
+
 def api(method, path, key, body=None):
     hdrs = dict(UA_HEADER); hdrs.update({"X-Maint-Key": key, "Content-Type": "application/json"})
-    req = urllib.request.Request(BASE + path, method=method, headers=hdrs)
     data = json.dumps(body).encode() if body is not None else None
-    with urllib.request.urlopen(req, data=data, timeout=30) as r:
-        return json.loads(r.read().decode() or "null")
+    try:
+        req = urllib.request.Request(BASE + path, method=method, headers=hdrs)
+        with urllib.request.urlopen(req, data=data, timeout=30) as r:
+            return json.loads(r.read().decode() or "null")
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403):
+            raise
+        ck = _review_cookie()
+        if not ck:
+            raise
+        hdrs2 = dict(hdrs); hdrs2["Cookie"] = ck
+        req2 = urllib.request.Request(BASE + path, method=method, headers=hdrs2)
+        try:
+            with urllib.request.urlopen(req2, data=data, timeout=30) as r:
+                return json.loads(r.read().decode() or "null")
+        except Exception:
+            raise e
 
 def open_faults(key):
     if _FAULTS_FILE:

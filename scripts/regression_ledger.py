@@ -2732,5 +2732,52 @@ def rg_no_third_party_images():
     return out
 
 
+@entry("RG-0064", "The B2b lanes ride THROUGH the armed gate -- credentialed, never exempted",
+       LOCKED, scope="the remote maint-lane class entire: maintenance_agent.py api() (intake GET, "
+                     "fault PUTs, heartbeat POST) and fault_reconcile.py call(); plus the inverse -- "
+                     "anonymous /admin/* must STAY refused at the origin, whatever else gets fixed",
+       fixed_on="2026-08-13",
+       ref="GATE-COOKIE-1. Migration 016 armed auth_request on the nginx catch-all (~05:4x 13 Aug, "
+           "David's ruling closing DW-023/RG-0029); the exempt list -- 007 unchanged -- never carried "
+           "the maint-key lane, so the 13:17Z maintenance run 401'd at the ORIGIN before the app saw "
+           "X-Maint-Key and failed safe ('nothing read'). Latent since 7 Aug: the gap never bit while "
+           "007 was a green no-op. Fix carries the ts_review credential exactly as this ledger's _get "
+           "does (mint once per run from .secrets/review_code.txt, retry on 401/403) -- the gate "
+           "config is UNTOUCHED; widening the exempt list was deliberately refused unattended. "
+           "Reproduced clean 13:24Z: 1 seen, 1 acted, heartbeat received_at 13:24:46Z on the live card.")
+def rg_maint_lane_through_gate():
+    out = []
+    seen_any_src = False
+    for f in ("scripts/maintenance_agent.py", "scripts/fault_reconcile.py"):
+        c = repo_file(f)
+        if c is None:
+            continue
+        seen_any_src = True
+        if "_review_cookie" not in c or "(401, 403)" not in c:
+            out.append((FAIL, f + " lost the GATE-COOKIE-1 credential fallback -- remote runs will "
+                              "401 at the origin and the B2b loop goes dark again"))
+    try:
+        sc = _status("/admin/faults?status=new")
+        if sc not in (401, 403):
+            out.append((FAIL, "anonymous /admin/faults answers %s -- the admin lane is EXPOSED; "
+                              "the gate was widened instead of credentialed" % sc))
+    except ProbeOffline as ex:
+        out.append((INFO, "origin unreachable (%s) -- inverse guard not proven this run" % ex))
+    key = (repo_file(".secrets/ms_maint_key.txt") or "").strip()
+    ck = _review_cookie() if key else ""
+    if key and ck:
+        try:
+            req = urllib.request.Request(BASE + "/admin/faults?status=new",
+                                         headers=dict(UA, **{"X-Maint-Key": key, "Cookie": ck}))
+            body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+            json.loads(body)
+        except Exception as ex:
+            out.append((FAIL, "credentialed intake read failed (%r) -- the B2b lane is dark; "
+                              "13:17Z 13 Aug is what that looks like" % ex))
+    elif seen_any_src:
+        out.append((INFO, "maint key or review code unavailable -- credentialed half not proven this run"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
