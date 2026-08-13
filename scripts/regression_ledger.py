@@ -2517,5 +2517,66 @@ def rg_ai_coach_front_door():
 
 
 
+@entry("RG-0061", "The +1 page tells the truth about the B2b agent -- readiness is reported, never recalled",
+       OPEN, scope="the whole MAINT-DASH-1 lane: agent heartbeat POST -> /dashboard/maint "
+                   "store -> +1 page card; facts only, no key material, no web arming surface",
+       ref="MAINT-DASH-1, 12 Aug 2026. David: 'put this in the ops dashboard as a switch for "
+           "launch.' The honest form is a truth card, not a switch: the brain key is a "
+           "gitignored file and MAINTENANCE_AGENT_ENABLED is env on the machine that runs the "
+           "loop -- David's acts; a web toggle could only lie or hazard. The loop posts its own "
+           "heartbeat after every real run (rehearsals deliberately never post), the server "
+           "stores whitelisted FACTS (RG-0042 rule), the card renders keyed/armed/stale in "
+           "colour. OPEN until the lane is proven end-to-end live: the endpoint deployed AND "
+           "the first real heartbeat recorded -- then READY TO LOCK. Added same-session as the "
+           "build (RG-0029's lesson: the unasserted fix is invisible when it rots).")
+def rg_maint_dash_lane():
+    out = []
+    a = repo_file("bea_main.py")
+    if a is not None:
+        if 'def dashboard_maint_post' not in a or '_MAINT_HB_FIELDS' not in a:
+            out.append((FAIL, "the heartbeat store or its facts-only whitelist is gone from "
+                              "bea_main.py (MAINT-DASH-1)"))
+        elif 'def dashboard_maint_post(payload: dict = Body(...), _admin=Depends(_require_maint))' not in a:
+            out.append((FAIL, "POST /dashboard/maint no longer rides the maintenance "
+                              "credential -- anyone could stamp the readiness card (MAINT-DASH-1)"))
+    m = repo_file("scripts/maintenance_agent.py")
+    if m is not None:
+        if "_post_heartbeat" not in m:
+            out.append((FAIL, "the loop no longer posts its heartbeat -- the +1 card will "
+                              "quietly freeze at the last truth (MAINT-DASH-1)"))
+        elif "rehearsal run -- synthetic faults never stamp the dashboard" not in m:
+            out.append((FAIL, "the rehearsal guard is gone -- a B4 synthetic storm can stamp "
+                              "the production card as a real run (MAINT-DASH-1)"))
+    d = repo_file("dashboard.server.html")
+    if d is not None:
+        if 'id="maint-card"' not in d or "maintRender" not in d:
+            out.append((FAIL, "the +1 page no longer carries the B2b readiness card "
+                              "(MAINT-DASH-1)"))
+        else:
+            i = d.find('id="maint-card"')
+            j = d.find("</script>", i)
+            if "ls-sw" in d[i:j if j > 0 else i + 4000]:
+                out.append((FAIL, "a toggle appeared inside the B2b card -- the no-web-arming "
+                                  "design decision has been violated (MAINT-DASH-1)"))
+    try:
+        hb = _json("/dashboard/maint")
+        if not hb.get("received_at"):
+            out.append((FAIL, "endpoint live but NO real heartbeat recorded yet -- the lane is "
+                              "not proven end-to-end; passes after the next maintenance run"))
+        elif "brain_keyed" not in hb:
+            out.append((FAIL, "heartbeat recorded without brain_keyed -- the card cannot state "
+                              "the one fact the launch checklist needs"))
+        else:
+            out.append((INFO, "live heartbeat %s -- brain %s, %s" %
+                        (hb.get("run", "?"), "KEYED:" + str(hb.get("brain_lane") or "?")
+                         if hb.get("brain_keyed") else "KEYLESS",
+                         "ARMED" if hb.get("armed") else "shadow")))
+    except urllib.error.HTTPError as e:
+        out.append((FAIL, "GET /dashboard/maint answered %d -- the endpoint has not reached "
+                          "the live server yet (ships with the next deploy)" % e.code))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

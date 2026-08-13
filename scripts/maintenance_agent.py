@@ -504,6 +504,42 @@ def record_ship(recent, ships):
     open(ships, "w").write(" ".join(str(t) for t in (recent + [time.time()])))
 
 # ── one run ───────────────────────────────────────────────────────────────────────
+def _post_heartbeat(report, mode, key):
+    """MAINT-DASH-1 (12 Aug 2026): after every completed REAL run, tell the dashboard
+    the truth about the loop -- brain keyed or not, armed or not, what was seen and done.
+    Facts only (lane NAMES, never a key value). Fail-SOFT in the RG-0049 spirit: a dead
+    dashboard can never hurt the run it is reporting on. Rehearsals (--faults-file) do
+    NOT post -- a synthetic storm must never stamp the production card as a real run."""
+    if _FAULTS_FILE:
+        say("heartbeat skipped (rehearsal run -- synthetic faults never stamp the dashboard)")
+        return
+    if not key:
+        return
+    names = []
+    for entry in _LANE_KEY_NAMES():
+        if isinstance(entry, (list, tuple)):
+            names.extend(entry)
+        else:
+            names.append(entry)
+    keyed = [n for n in names if os.environ.get(n)]
+    lanes = {}
+    for a in report.get("actions", []):
+        lanes[a.get("lane", "?")] = lanes.get(a.get("lane", "?"), 0) + 1
+    hb = {"run": report.get("run"), "mode": mode, "phase": MAINT_PHASE,
+          "armed": KILL, "live": LIVE,
+          "brain_keyed": bool(keyed),
+          "brain_lane": (keyed[0].replace("_API_KEY", "").lower() if keyed else ""),
+          "seen": report.get("seen", 0), "acted": len(report.get("actions", [])),
+          "lanes": lanes, "code": _code_stamp()}
+    try:
+        api("POST", "/dashboard/maint", key, hb)
+        say("heartbeat -> /dashboard/maint (brain %s, %s)"
+            % ("KEYED:" + hb["brain_lane"] if keyed else "KEYLESS",
+               "ARMED" if KILL else "shadow"))
+    except Exception as e:
+        say("heartbeat POST failed (%s) -- run unaffected, dashboard will show stale" % e)
+
+
 def main():
     os.makedirs(STATE, exist_ok=True)
     mode = "LIVE" if LIVE else ("SHADOW (kill switch ON, --live not passed)" if KILL
@@ -619,6 +655,7 @@ def main():
     path = os.path.join(STATE, "run_%s.json" % datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
     open(path, "w").write(json.dumps(report, indent=2))
     say("report -> %s  (%d seen, %d acted)" % (path, report["seen"], len(report["actions"])))
+    _post_heartbeat(report, mode, key)
     return 0
 
 # ── AIK-VERIFY-1: reproduce the failing action against the live surface ──────────

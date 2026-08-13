@@ -16593,6 +16593,50 @@ def app_faults_mine(email: str, x_review_token: str = Header(default=None),
     return [dict(r) for r in rows]
 
 
+# ── MAINT-DASH-1 (12 Aug 2026, David: "put this in the ops dashboard as a switch
+# for launch"). The B2b agent's launch-readiness on the +1 page, told by the LOOP
+# ITSELF -- no human, no deploy in the refresh (RG-0051 rule). The POST rides the
+# maintenance credential the loop already holds; the GET is open like /dashboard/bit.
+# FACTS ONLY by whitelist: lane NAMES and counters, never key material (RG-0042 rule).
+# The brain key and MAINTENANCE_AGENT_ENABLED remain file/env acts on the machine that
+# runs the loop -- there is deliberately NO write surface here that could arm anything.
+_MAINT_HB_FIELDS = ("run", "mode", "phase", "armed", "live", "brain_keyed",
+                    "brain_lane", "seen", "acted", "lanes", "code")
+
+@app.post("/dashboard/maint")
+def dashboard_maint_post(payload: dict = Body(...), _admin=Depends(_require_maint)):
+    """The maintenance loop posts its heartbeat here after every completed run."""
+    import json as _json, os as _os, datetime as _dt
+    try:
+        hb = {k: (dict(payload) or {}).get(k) for k in _MAINT_HB_FIELDS}
+        hb["received_at"] = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "maint_status.json")
+        tmp = p + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            _json.dump(hb, fh)
+        _os.replace(tmp, p)
+        return {"ok": True, "stored": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="bad maint payload: " + str(e)[:120]) from e
+
+
+@app.get("/dashboard/maint")
+def dashboard_maint_get():
+    """Latest maintenance-loop heartbeat for the +1 page card. No auth (obscure URL,
+    same posture as /dashboard/bit); the payload is facts-only by the POST whitelist."""
+    import json as _json, os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "maint_status.json")
+    if not _os.path.exists(p):
+        return {"state": "unknown", "note": "no maintenance-loop heartbeat recorded yet"}
+    try:
+        with open(p, encoding="utf-8") as fh:
+            return _json.load(fh)
+    except Exception:
+        return {"state": "unknown", "note": "maint_status.json unreadable"}
+
+
 @app.get("/admin/faults")
 def admin_faults(status: str = "", bin: str = "", limit: int = 100,
                  _admin=Depends(_require_maint)):

@@ -780,6 +780,57 @@
 
   
 
+<!-- MAINT-DASH-1 (12 Aug 2026, David: "put this in the ops dashboard as a switch for launch")
+      B2b Maintenance Agent launch-readiness, reported by the LOOP ITSELF on every real run
+      (RG-0051 rule: no human, no deploy in the refresh). Deliberately NOT a toggle: the brain
+      key is a gitignored file and ARM is MAINTENANCE_AGENT_ENABLED on the machine that runs
+      the loop -- David's acts. A web switch here could only lie or hazard, so this card shows
+      the truth instead. -->
+ <div class="ls-card" id="maint-card">
+   <div class="ls-h ls-tip" data-tip="What this is: the B2b Maintenance Agent's own heartbeat, posted by the loop after every real run.
+Brain key AMBER: the agent cannot classify faults itself - everything routes to the design backlog until ONE key line is pasted in .secrets/ai_keys.env on the loop's machine.
+ARM stays SHADOW until you set MAINTENANCE_AGENT_ENABLED=1 after the B4 rehearsal signs READY - both are your acts on your machine, which is why this card has no switch to flip.">&#129302; Maintenance Agent (B2b) <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">&mdash; launch readiness</span></div>
+   <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">The loop reports itself here after every run &mdash; no human in the refresh. Key + ARM are file/env acts on the loop&rsquo;s machine, so this card is truth, not a toggle.</div>
+   <div id="maint-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading heartbeat&hellip;</div></div>
+ </div>
+ <script>
+ /* MAINT-DASH-1 -- renderer for the B2b readiness card. Open GET, same posture as /dashboard/bit. */
+ window.maintRender = function(d){
+   var box=document.getElementById('maint-rows'); if(!box) return;
+   function row(color,label,state,detail){
+     return '<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
+       +'<span style="width:9px;height:9px;border-radius:50%;background:'+color+';flex:0 0 auto;"></span>'
+       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+label+'</div>'
+       +'<div style="font-size:10.5px;color:var(--muted)">'+detail+'</div></div>'
+       +'<span style="font-size:10.5px;font-weight:700;color:'+color+';flex:0 0 auto">'+state+'</span></div>';
+   }
+   if(!d || d.state==='unknown' || !d.received_at){
+     box.innerHTML=row('#6b7280','Loop heartbeat','NONE YET',(d&&d.note)||'appears after the next maintenance run reaches this server');
+     return;
+   }
+   var G='#22c55e', A='#eab308', R='#ef4444', B='#3b82f6', h='';
+   var ageH=(Date.now()-Date.parse(d.received_at))/36e5;
+   var fresh=isFinite(ageH)&&ageH<36;
+   h+=row(fresh?G:R,'Loop heartbeat',fresh?'OK':'STALE',
+          'last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
+          +(fresh?'':' &middot; nothing reported for '+Math.round(ageH)+'h - is the daily session running?'));
+   h+=row(d.brain_keyed?G:A,'Brain key (on the loop&rsquo;s machine)',d.brain_keyed?'KEYED':'NO KEY',
+          d.brain_keyed?('lane: '+(d.brain_lane||'?')+' &mdash; the agent can classify faults itself')
+                       :'every fault routes to the design backlog &mdash; paste ONE line in .secrets/ai_keys.env');
+   h+=row(d.armed?(d.live?G:B):A,'Arming (MAINTENANCE_AGENT_ENABLED)',d.armed?(d.live?'ARMED &middot; LIVE':'ARMED (idle)'):'SHADOW',
+          d.armed?('phase: '+(d.phase||'?')+' &mdash; autonomous fixes within gates')
+                 :'rehearsing, cannot commit &mdash; arm only after the B4 storm signs READY (your act, on your machine)');
+   if(d.code) h+='<div style="font-size:10px;color:var(--muted);padding:7px 0 0">code '+String(d.code).slice(0,90)+'</div>';
+   box.innerHTML=h;
+ };
+ window.maintLoad = function(){
+   fetch((window._apv2B||'')+'/dashboard/maint').then(function(r){return r.json();})
+    .then(window.maintRender)
+    .catch(function(){ window.maintRender(null); });
+ };
+ maintLoad(); setInterval(maintLoad, 300000);
+ </script>
+
  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
    <div style="font-size:22px;font-weight:800;color:var(--text)">🚀 Launch Switch</div>
    <div style="font-size:11px;color:var(--muted)">one flag, flipped live — saved to the server</div>
