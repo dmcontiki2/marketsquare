@@ -1,5 +1,5 @@
 {
- "next_id": 42,
+ "next_id": 43,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -303,6 +303,13 @@
    "source": "gate scope vs documented intent (NEW today)",
    "status": "OPEN",
    "last_seen": "2026-08-13"
+  },
+  "DW-042": {
+   "first_seen": "2026-08-13",
+   "last_seen": "2026-08-13",
+   "sev": "HIGH",
+   "source": "deploy engine stall",
+   "status": "OPEN"
   }
  },
  "last_run": "2026-08-13",
