@@ -2621,5 +2621,35 @@ def rg_maint_dash_lane():
 
 
 
+
+
+@entry("RG-0062", "Every rebuilt adventures map keeps the REPORT widget -- fixed in the TEMPLATE, not the output",
+       LOCKED, fixed_on="2026-08-13", scope="the whole map-rebuild class: scripts/journey_template.html now "
+                   "carries the ts_report.js line, so build_journey.py cannot drop it from any "
+                   "adventures_*_map.html again (na/bw/mz/c2c/ke and every future journey)",
+       ref="Third occurrence of this class: 11 Aug dropped it from all five maps twice (David's "
+           "5 Aug ruling: REPORT tab on EVERY page), 13 Aug the MZ rebuild dropped it again and "
+           "test_tester_intake caught na/bw/c2c/ke missing it too from post-fix rebuilds. The "
+           "11 Aug fix patched the OUTPUT files; every later rebuild regenerated from the "
+           "unfixed template and re-lost the line. 13 Aug: the line moved INTO "
+           "journey_template.html (the one source every rebuild copies), outputs re-verified, "
+           "all 16 tester-intake tests green. The deploy gate (test_tester_intake) remains the "
+           "shipping backstop; this entry asserts the template so the class dies at the root.")
+def rg_template_report_widget():
+    out = []
+    line = 'ts_report.js'
+    t = repo_file("scripts/journey_template.html")
+    if t is not None and line not in t:
+        out.append((FAIL, "journey_template.html lost the ts_report.js line -- the next map "
+                          "rebuild ships without the REPORT widget (RG-0062)"))
+    for f in ("adventures_na_map.html", "adventures_bw_map.html", "adventures_mz_map.html",
+              "adventures_c2c_map.html", "adventures_ke_map.html"):
+        m = repo_file(f)
+        if m is not None and m.count('<script src="/static/ts_report.js') != 1:
+            out.append((FAIL, f + " does not carry exactly one ts_report.js include -- a "
+                              "rebuild or hand edit broke the standing rule (RG-0062)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
