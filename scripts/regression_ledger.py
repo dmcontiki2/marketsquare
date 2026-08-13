@@ -2528,7 +2528,7 @@ def rg_ai_coach_front_door():
            "stores whitelisted FACTS (RG-0042 rule), the card renders keyed/armed/stale in "
            "colour. OPEN until the lane is proven end-to-end live: the endpoint deployed AND "
            "the first real heartbeat recorded -- then READY TO LOCK. Added same-session as the "
-           "build (RG-0029's lesson: the unasserted fix is invisible when it rots).")
+           "build (RG-0029's lesson: the unasserted fix is invisible when it rots). 13 Aug: relocated at David's direction from a standalone card into the ls-gMaint group as a status ROW -- assertion follows the row id; the no-toggle promise now scopes to the row.")
 def rg_maint_dash_lane():
     out = []
     a = repo_file("bea_main.py")
@@ -2549,12 +2549,12 @@ def rg_maint_dash_lane():
                               "the production card as a real run (MAINT-DASH-1)"))
     d = repo_file("dashboard.server.html")
     if d is not None:
-        if 'id="maint-card"' not in d or "maintRender" not in d:
+        if 'id="maint-b2b-row"' not in d or "maintRender" not in d:
             out.append((FAIL, "the +1 page no longer carries the B2b readiness card "
                               "(MAINT-DASH-1)"))
         else:
-            i = d.find('id="maint-card"')
-            j = d.find("</script>", i)
+            i = d.find('id="maint-b2b-row"')
+            j = d.find("Trust &amp; privacy rails", i)
             if "ls-sw" in d[i:j if j > 0 else i + 4000]:
                 out.append((FAIL, "a toggle appeared inside the B2b card -- the no-web-arming "
                                   "design decision has been violated (MAINT-DASH-1)"))

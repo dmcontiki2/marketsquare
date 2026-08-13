@@ -780,53 +780,28 @@
 
   
 
-<!-- MAINT-DASH-1 (12 Aug 2026, David: "put this in the ops dashboard as a switch for launch")
-      B2b Maintenance Agent launch-readiness, reported by the LOOP ITSELF on every real run
-      (RG-0051 rule: no human, no deploy in the refresh). Deliberately NOT a toggle: the brain
-      key is a gitignored file and ARM is MAINTENANCE_AGENT_ENABLED on the machine that runs
-      the loop -- David's acts. A web switch here could only lie or hazard, so this card shows
-      the truth instead. -->
- <div class="ls-card" id="maint-card">
-   <div class="ls-h ls-tip" data-tip="What this is: the B2b Maintenance Agent's own heartbeat, posted by the loop after every real run.
-Brain key AMBER: the agent cannot classify faults itself - everything routes to the design backlog until ONE key line is pasted in .secrets/ai_keys.env on the loop's machine.
-ARM stays SHADOW until you set MAINTENANCE_AGENT_ENABLED=1 after the B4 rehearsal signs READY - both are your acts on your machine, which is why this card has no switch to flip.">&#129302; Maintenance Agent (B2b) <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">&mdash; launch readiness</span></div>
-   <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">The loop reports itself here after every run &mdash; no human in the refresh. Key + ARM are file/env acts on the loop&rsquo;s machine, so this card is truth, not a toggle.</div>
-   <div id="maint-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading heartbeat&hellip;</div></div>
- </div>
+<!-- MAINT-DASH-1 renderer — feeds the B2b row in the Maintenance group above -->
  <script>
- /* MAINT-DASH-1 -- renderer for the B2b readiness card. Open GET, same posture as /dashboard/bit. */
  window.maintRender = function(d){
-   var box=document.getElementById('maint-rows'); if(!box) return;
-   function row(color,label,state,detail){
-     return '<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
-       +'<span style="width:9px;height:9px;border-radius:50%;background:'+color+';flex:0 0 auto;"></span>'
-       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+label+'</div>'
-       +'<div style="font-size:10.5px;color:var(--muted)">'+detail+'</div></div>'
-       +'<span style="font-size:10.5px;font-weight:700;color:'+color+';flex:0 0 auto">'+state+'</span></div>';
+   var ds=document.getElementById('maint-b2b-ds'), st=document.getElementById('maint-b2b-st');
+   if(!ds||!st) return;
+   function chip(bg,fg,txt){return '<span class="ls-badge" style="background:'+bg+';color:'+fg+'">'+txt+'</span>';}
+   var GR=['rgba(16,185,129,.16)','#6ee7b7'], AM=['rgba(230,180,60,.14)','#ffd479'],
+       RD=['rgba(220,80,80,.16)','#ff9b9b'], GY=['#26303f','#7c8aa0'], BL=['rgba(59,130,246,.15)','#93c5fd'];
+   if(!d||!d.received_at){
+     ds.innerHTML='no heartbeat yet &mdash; appears after the next maintenance run';
+     st.innerHTML=chip(GY[0],GY[1],'NO DATA'); return;
    }
-   if(!d || d.state==='unknown' || !d.received_at){
-     box.innerHTML=row('#6b7280','Loop heartbeat','NONE YET',(d&&d.note)||'appears after the next maintenance run reaches this server');
-     return;
-   }
-   var G='#22c55e', A='#eab308', R='#ef4444', B='#3b82f6', h='';
-   var ageH=(Date.now()-Date.parse(d.received_at))/36e5;
-   var fresh=isFinite(ageH)&&ageH<36;
-   h+=row(fresh?G:R,'Loop heartbeat',fresh?'OK':'STALE',
-          'last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
-          +(fresh?'':' &middot; nothing reported for '+Math.round(ageH)+'h - is the daily session running?'));
-   h+=row(d.brain_keyed?G:A,'Brain key (on the loop&rsquo;s machine)',d.brain_keyed?'KEYED':'NO KEY',
-          d.brain_keyed?('lane: '+(d.brain_lane||'?')+' &mdash; the agent can classify faults itself')
-                       :'every fault routes to the design backlog &mdash; paste ONE line in .secrets/ai_keys.env');
-   h+=row(d.armed?(d.live?G:B):A,'Arming (MAINTENANCE_AGENT_ENABLED)',d.armed?(d.live?'ARMED &middot; LIVE':'ARMED (idle)'):'SHADOW',
-          d.armed?('phase: '+(d.phase||'?')+' &mdash; autonomous fixes within gates')
-                 :'rehearsing, cannot commit &mdash; arm only after the B4 storm signs READY (your act, on your machine)');
-   if(d.code) h+='<div style="font-size:10px;color:var(--muted);padding:7px 0 0">code '+String(d.code).slice(0,90)+'</div>';
-   box.innerHTML=h;
+   var ageH=(Date.now()-Date.parse(d.received_at))/36e5, fresh=isFinite(ageH)&&ageH<36;
+   ds.innerHTML='last run '+(d.run||d.received_at)+' &middot; seen '+(d.seen||0)+' &middot; acted '+(d.acted||0)
+     +(d.brain_keyed?(' &middot; lane '+(d.brain_lane||'?')):' &middot; paste ONE line in .secrets/ai_keys.env to key the brain');
+   st.innerHTML=(fresh?'':chip(RD[0],RD[1],'STALE '+Math.round(ageH)+'H'))
+     +(d.brain_keyed?chip(GR[0],GR[1],'KEYED'):chip(AM[0],AM[1],'NO KEY'))
+     +(d.armed?(d.live?chip(GR[0],GR[1],'ARMED'):chip(BL[0],BL[1],'ARMED&middot;IDLE')):chip(AM[0],AM[1],'SHADOW'));
  };
  window.maintLoad = function(){
    fetch((window._apv2B||'')+'/dashboard/maint').then(function(r){return r.json();})
-    .then(window.maintRender)
-    .catch(function(){ window.maintRender(null); });
+    .then(window.maintRender).catch(function(){ window.maintRender(null); });
  };
  maintLoad(); setInterval(maintLoad, 300000);
  </script>
@@ -857,6 +832,12 @@ Implication: purely visual — no cost, no data exposure."><div class="ls-nm">Sh
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: the REPORT tab is hidden and the intake refuses (fail-closed).
 ON: testers file faults with screenshots and get a TS-number + acknowledgement email.
 Implication: feeds the Maintenance loop; testers only — safe to leave ON pre-launch."><div class="ls-nm">Tester fault reporting</div><div class="ls-ds">the REPORT tab on every page &middot; testers only &middot; works during launch mode</div></div><label class="ls-sw"><input type="checkbox" id="ls_m_fault" onchange="lsRender()"><span class="ls-sl"></span></label></div>
+   <!-- MAINT-DASH-1 (12 Aug, relocated 13 Aug: David expected it IN this group) — B2b readiness,
+        reported by the loop itself after every real run. Status chips, deliberately NOT a toggle:
+        the brain key is a gitignored file and ARM is env on the loop's machine — David's acts. -->
+   <div class="ls-row" id="maint-b2b-row"><div class="ls-tip" data-tip="What: the B2b Maintenance Agent's own heartbeat, posted after every real run (rehearsals never post).
+NO KEY: the agent's brain cannot classify — every fault routes to the design backlog until ONE line is pasted in .secrets/ai_keys.env on the machine that runs the loop.
+SHADOW: rehearsing, cannot commit. Arm with MAINTENANCE_AGENT_ENABLED=1 only after the B4 rehearsal signs READY. Both are your acts on your machine — that is why this row reports instead of toggling."><div class="ls-nm">&#129302; Maintenance agent (B2b)</div><div class="ls-ds" id="maint-b2b-ds">waiting for heartbeat&hellip;</div></div><div id="maint-b2b-st" style="flex:0 0 auto;display:flex;gap:5px;align-items:center"><span class="ls-badge" style="background:#26303f;color:#7c8aa0">&hellip;</span></div></div>
 
    <div class="ls-grp-h" style="margin-top:14px">Trust &amp; privacy rails</div>
    <div class="ls-row"><div class="ls-tip" data-tip="OFF: an accepted intro exchanges the parties' REAL email addresses (legacy) — an irreversible disclosure.
