@@ -3,3 +3,4 @@
 # done. Remove a line and the migration runs on the next deploy. (Mechanism: DEFER-1,
 # born from DW-030 — five migrations sat dead behind one failing script for 3 days.)
 005_prelaunch_server_side_gate.py    # gate posture undecided: arming = Basic Auth on documents + password for testers  (007 ACTIVATED 13 Aug 2026, David's ruling — close DW-023/RG-0029; 005 remains a separate document-gate decision)
+007_review_gate_enforce.py           # SUPERSEDED by 016 (13 Aug 2026): find_site refused rc 3 — enabled+available are duplicate files, not symlinks; 007 kept failing FIRST in the chain and blocking 016. Deferred so the chain reaches 016, which applies the same gate with the fixed lookup + functional idempotency.

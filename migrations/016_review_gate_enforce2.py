@@ -35,17 +35,25 @@ MARK = "GATE-ENFORCE-1"
 def say(m): print("[016_gate] " + m, flush=True)
 
 def find_site():
-    cands = []
-    for pat in ("/etc/nginx/sites-enabled/*", "/etc/nginx/sites-available/*", "/etc/nginx/conf.d/*.conf"):
-        cands.extend(glob.glob(pat))
-    hits = {}
-    for c in cands:
-        if not os.path.isfile(c): continue
-        try: t = open(c, encoding="utf-8", errors="replace").read()
-        except Exception: continue
-        if "trustsquare.co" in t and "server_name" in t and "127.0.0.1:8000" in t:
-            hits.setdefault(os.path.realpath(c), c)
-    return list(hits.items())
+    """nginx SERVES sites-enabled; sites-available is inventory. On this box the two are
+    DUPLICATE REAL FILES (not symlinks), so realpath dedup saw two candidates and 007
+    refused rc 3 (13 Aug deploy log, twice). Rule: sites-enabled candidates win outright;
+    the other dirs are consulted only when enabled yields nothing. A refusal now means
+    multiple ENABLED matches -- a real ambiguity, not the copy-vs-symlink artifact."""
+    def _hits(pats):
+        out = {}
+        for pat in pats:
+            for c in glob.glob(pat):
+                if not os.path.isfile(c): continue
+                try: t = open(c, encoding="utf-8", errors="replace").read()
+                except Exception: continue
+                if "trustsquare.co" in t and "server_name" in t and "127.0.0.1:8000" in t:
+                    out.setdefault(os.path.realpath(c), c)
+        return list(out.items())
+    en = _hits(["/etc/nginx/sites-enabled/*"])
+    if en:
+        return en
+    return _hits(["/etc/nginx/sites-available/*", "/etc/nginx/conf.d/*.conf"])
 
 HDRS = ("proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; "
         "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;")
@@ -126,6 +134,10 @@ def main():
     if r.returncode != 0:
         say("reload FAILED — restoring backup"); say((r.stderr or "")[:400])
         shutil.copyfile(backup, real); subprocess.run(["nginx", "-s", "reload"]); return 6
+    twin = "/etc/nginx/sites-available/" + os.path.basename(real)
+    if os.path.isfile(twin) and os.path.realpath(twin) != os.path.realpath(real):
+        say("NOTE: %s is a duplicate REAL file (not a symlink) and is now STALE vs sites-enabled." % twin)
+        say("      nginx serves sites-enabled; consider symlinking at the next /housekeep.")
     say("GATE LIVE — functionally verified in the new conf. Data API now requires the review cookie;")
     say("exempt: login/verify, health, payment webhook, email-inbound, intro-relay, acme.")
     say("Rollback: cp %s %s && nginx -t && nginx -s reload" % (backup, real))

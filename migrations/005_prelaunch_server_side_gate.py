@@ -64,23 +64,25 @@ DOCS  = ["= /", "= /rental.html", "= /dashboard.html", "= /admin.html", "= /comm
 def say(m): print("[005_gate] " + m, flush=True)
 
 def find_site():
-    cands = []
-    for pat in ("/etc/nginx/sites-enabled/*", "/etc/nginx/sites-available/*", "/etc/nginx/conf.d/*.conf"):
-        cands.extend(glob.glob(pat))
-    hits = []
-    for c in cands:
-        if not os.path.isfile(c):
-            continue
-        try:
-            t = open(c, encoding="utf-8", errors="replace").read()
-        except Exception:
-            continue
-        if "server_name" in t and "trustsquare.co" in t and "location = /" in t:
-            hits.append((os.path.realpath(c), c))
-    uniq = {}
-    for real, c in hits:
-        uniq.setdefault(real, c)
-    return list(uniq.items())
+    # Enabled-first (13 Aug 2026): sites-enabled + sites-available are duplicate REAL
+    # files on this box, which made the old flat scan refuse rc 3 (007's failure mode).
+    def _hits(pats):
+        uniq = {}
+        for pat in pats:
+            for c in glob.glob(pat):
+                if not os.path.isfile(c):
+                    continue
+                try:
+                    t = open(c, encoding="utf-8", errors="replace").read()
+                except Exception:
+                    continue
+                if "server_name" in t and "trustsquare.co" in t and "location = /" in t:
+                    uniq.setdefault(os.path.realpath(c), c)
+        return list(uniq.items())
+    en = _hits(["/etc/nginx/sites-enabled/*"])
+    if en:
+        return en
+    return _hits(["/etc/nginx/sites-available/*", "/etc/nginx/conf.d/*.conf"])
 
 def get_password():
     p = (os.environ.get("MS_PRELAUNCH_PASS") or "").strip()
