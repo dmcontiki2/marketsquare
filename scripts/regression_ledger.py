@@ -2561,7 +2561,7 @@ def rg_ai_coach_front_door():
 
 
 @entry("RG-0061", "The +1 page tells the truth about the B2b agent -- readiness is reported, never recalled",
-       OPEN, scope="the whole MAINT-DASH-1 lane: agent heartbeat POST -> /dashboard/maint "
+       LOCKED, fixed_on="2026-08-13", scope="the whole MAINT-DASH-1 lane: agent heartbeat POST -> /dashboard/maint "
                    "store -> +1 page card; facts only, no key material, no web arming surface",
        ref="MAINT-DASH-1, 12 Aug 2026. David: 'put this in the ops dashboard as a switch for "
            "launch.' The honest form is a truth card, not a switch: the brain key is a "
