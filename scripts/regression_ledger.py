@@ -2299,6 +2299,10 @@ def rg_maintenance_agent_reaches_brain():
                               "reach ai_provider"))
     except Exception as ex:
         out.append((INFO, "could not run the BRAIN-PATH-1 exec probe here (%s)" % type(ex).__name__))
+    if "_ensure_brain_deps" not in agent:
+        out.append((FAIL, "the httpx bootstrap is gone -- a fresh sandbox passes the import "
+                          "proof and still loses its brain at the first real call "
+                          "(BRAIN-DEPS-1, 13 Aug: proven ModuleNotFoundError mid-run)"))
     return out
 
 

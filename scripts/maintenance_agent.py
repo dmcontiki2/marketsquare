@@ -504,6 +504,29 @@ def record_ship(recent, ships):
     open(ships, "w").write(" ".join(str(t) for t in (recent + [time.time()])))
 
 # ── one run ───────────────────────────────────────────────────────────────────────
+def _ensure_brain_deps():
+    """BRAIN-DEPS-1 (13 Aug 2026): ai_provider lazily imports httpx INSIDE its lane
+    calls, so a fresh sandbox passes the import proof (RG-0055) and still loses its
+    brain at the FIRST REAL CALL -- proven 13 Aug: ModuleNotFoundError mid-run, the
+    fault degraded to PATH_B by default instead of by judgement. One guarded, quiet
+    install attempt; on any failure the existing degradation machinery (RG-0049)
+    takes over -- this must never kill a run."""
+    try:
+        import httpx  # noqa: F401
+        return
+    except ImportError:
+        pass
+    try:
+        import subprocess as _sp, sys as _sys
+        _sp.run([_sys.executable, "-m", "pip", "install", "--break-system-packages",
+                 "-q", "httpx"], capture_output=True, timeout=180)
+        import httpx  # noqa: F401
+        say("brain deps: httpx was missing -- installed for this run")
+    except Exception as e:
+        say("brain deps: httpx unavailable (%s) -- brain calls degrade per RG-0049"
+            % type(e).__name__)
+
+
 def _post_heartbeat(report, mode, key):
     """MAINT-DASH-1 (12 Aug 2026): after every completed REAL run, tell the dashboard
     the truth about the loop -- brain keyed or not, armed or not, what was seen and done.
@@ -555,6 +578,7 @@ def main():
     # now states the code it IS: an unexpected SHA or a dirty tree is visible immediately,
     # before anyone reasons about the result.
     say("code    %s" % _code_stamp())
+    _ensure_brain_deps()
     key = maint_key()
     if not _FAULTS_FILE and not key:
         # a key is required ONLY for the live API path; a synthetic --faults-file
