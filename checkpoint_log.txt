@@ -167,3 +167,7 @@ Sat 08/08/2026  5:30:03.12  committed 4 change(s)
 [main 6d790de] Nightly checkpoint Tue 08/11/2026  5:30:02.19 (auto, no deploy)
  1 file changed, 5 insertions(+)
 Tue 08/11/2026  5:30:02.27  committed 1 change(s)
+[main bcb5432] Nightly checkpoint Thu 08/13/2026  5:30:02.89 (auto, no deploy)
+ 1 file changed, 53 insertions(+)
+ create mode 100644 scripts/claim_super.py
+Thu 08/13/2026  5:30:02.97  committed 1 change(s)

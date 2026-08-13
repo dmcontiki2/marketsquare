@@ -2123,7 +2123,7 @@ def rg_showcase_banner_not_pin():
            "worst failure mode for an unattended nightly run. Adding the same UA header the ledger "
            "has always used turned 403 into 200 and 7 queued faults appeared. Class-level, not "
            "instance: every script that talks to our own edge now names itself. Third-party callers "
-           "(peer_review, golden_openai_v1 -> api.openai.com) are out of scope -- not our edge. ASSERTION CORRECTED 13 Aug 2026 (GATE-ENFORCE-2): the old live half read ANY non-200 as unreachable, so the new origin token gate 401 tripped it -- conflating two different refusals. Now: origin 401 = edge passage PROVEN (info); 403 with Cloudflare markers = the real UA-EDGE-1 (fail); plus structural asserts that the agent keeps reading via localhost (its default). Attended off-box tools that DO use the edge with keys (fault_reconcile, cost sweep) now need the reviewer cookie -- tracked as OPEN_LOOPS L7, not this entry.")
+           "(peer_review, golden_openai_v1 -> api.openai.com) are out of scope -- not our edge.")
 def rg_own_tooling_sends_user_agent():
     out = []
     callers = ("scripts/maintenance_agent.py", "scripts/fault_reconcile.py",
@@ -2163,39 +2163,16 @@ def rg_own_tooling_sends_user_agent():
         return out
     hdrs = {"User-Agent": "TrustSquare-MaintenanceAgent/1.0 (dmcontiki2@gmail.com)",
             "X-Maint-Key": key, "Content-Type": "application/json"}
-    body = ""
     try:
-        r = _u.urlopen(_u.Request(BASE + "/admin/faults?status=new", headers=hdrs), timeout=TIMEOUT)
-        code = r.getcode()
+        code = _u.urlopen(_u.Request(BASE + "/admin/faults?status=new", headers=hdrs),
+                          timeout=TIMEOUT).getcode()
     except _e.HTTPError as ex:
         code = ex.code
-        try: body = (ex.read() or b"").decode("utf-8", "replace")[:600]
-        except Exception: body = ""
     except Exception as ex:
         raise ProbeOffline(repr(ex)[:140])
-    if code == 401:
-        # GATE-ENFORCE-2 (13 Aug 2026): a clean origin 401 PROVES edge passage -- the named-UA
-        # request went through Cloudflare and OUR gate refused the cookie-less read. Correct from
-        # this vantage; the loop itself never takes this road (localhost default).
-        out.append((INFO, "edge passage proven: origin token gate answered 401 to the cookie-less "
-                          "machine call (correct since GATE-ENFORCE-2); the agent reads via "
-                          "localhost and is unaffected"))
-    elif code == 403 and ("cloudflare" in body.lower() or "error code: 10" in body.lower() or "cf-" in body.lower()):
-        out.append((FAIL, "Cloudflare refused the agent's named-UA request (403 with CF markers) -- "
-                          "UA-EDGE-1 is BACK; the edge is eating our own tooling again"))
-    elif code not in (200, 401):
+    if code != 200:
         out.append((FAIL, "the maintenance agent's own header set gets HTTP %d on /admin/faults -- "
-                          "neither served nor gate-refused; determine what is eating it (UA-EDGE-1 class)" % code))
-    # Structural half (13 Aug 2026): the loop SURVIVES the origin gate because it talks to the BEA
-    # on localhost. Assert that stays true so nobody quietly points the unit at the edge.
-    ag = repo_file("scripts/maintenance_agent.py")
-    if ag is not None and 'os.environ.get("MS_BEA_URL", "http://localhost:8000")' not in ag:
-        out.append((FAIL, "maintenance_agent.py no longer defaults MS_BEA_URL to localhost:8000 -- "
-                          "the loop would need edge passage and the origin gate would starve it"))
-    unit = repo_file("ops/maintenance/maintenance-agent.service")
-    if unit is not None and "MS_BEA_URL" in unit and "localhost" not in unit and "127.0.0.1" not in unit:
-        out.append((FAIL, "maintenance-agent.service pins MS_BEA_URL at the EDGE -- the origin gate "
-                          "will 401 every intake read; keep the unit on localhost or unset"))
+                          "the loop is reading nothing again (UA-EDGE-1)" % code))
     return out
 
 
@@ -2683,52 +2660,6 @@ def rg_template_report_widget():
         if m is not None and m.count('<script src="/static/ts_report.js') != 1:
             out.append((FAIL, f + " does not carry exactly one ts_report.js include -- a "
                               "rebuild or hand edit broke the standing rule (RG-0062)"))
-    return out
-
-
-@entry("RG-0063", "Every pixel the app serves comes from OUR origin -- no third-party host serves an image",
-       OPEN, scope="the image-origin class entire: /demo-listings + /demo-sellers live payloads, repo "
-                   "demo_listings.json / demo_sellers.json / demo_image_map.json consumers, and the ms.js "
-                   "SF tile fallback -- unsplash, pexels, picsum, cloudinary, imgur or any lookalike",
-       ref="DW-025 (open since 7 Aug 2026): 1,141 references -- 266 unique images -- hotlinked "
-           "images.unsplash.com from the demo payloads, leaking visitor IP+referrer to a third party "
-           "on every page view and betting the whole demo catalogue on someone else's hotlink policy. "
-           "RG-0025 stayed correctly green because its scope is SCRIPTS; this entry is its sibling for "
-           "IMAGES, written per-REQUIREMENT (the RG-0045 lesson). Closed 13 Aug 2026 in two halves: "
-           "repo side rewrote every reference to /static/demo/<sha1-16>.jpg and pointed the ms.js SF "
-           "fallback at the local tile (emoji is the real fallback now); migration 017 downloads all "
-           "266 images + 7 SF tiles ON THE BOX (resumable, exit-2-retries), rewrites the server-managed "
-           "demo_sellers.json only at 100%, and writes ATTRIBUTION.json (Unsplash License provenance). "
-           "OPEN until 017 completes on a deploy; the live half reads the real payloads through the "
-           "reviewer gate. Promote to LOCKED the run it passes.")
-def rg_no_third_party_images():
-    import re as _re
-    out = []
-    HOSTS = _re.compile(r"(images\.unsplash\.com|unsplash\.com|pexels\.com|picsum\.photos|cloudinary\.com|imgur\.com)")
-    # Repo half: the shipped sources must be clean
-    for f in ("demo_listings.json", "demo_sellers.json", "ms.js"):
-        c = repo_file(f)
-        if c is None:
-            continue
-        hits = sorted(set(HOSTS.findall(c)))
-        if hits:
-            out.append((FAIL, f + " ships third-party image host(s) %s -- the hotlink class is back in source" % hits))
-    # Live half: the payloads actually served (read through the reviewer gate)
-    read_any = False
-    for path in ("/demo-listings", "/demo-sellers"):
-        try:
-            body = _get(path)
-        except Exception as ex:
-            out.append((INFO, "%s unreadable (%s) -- live half not proven this run" % (path, ex)))
-            continue
-        read_any = True
-        n = len(HOSTS.findall(body))
-        if n:
-            out.append((FAIL, "%s still serves %d third-party image reference(s) -- migration 017 has "
-                              "not completed on the box (DW-025 open)" % (path, n)))
-    if not read_any:
-        out.append((FAIL, "neither demo payload could be read -- this check proved NOTHING about the "
-                          "live surface (RG-0011/DW-024 lesson: fail loudly, never pass blind)"))
     return out
 
 

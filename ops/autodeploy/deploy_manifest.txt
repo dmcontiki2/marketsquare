@@ -47,6 +47,7 @@ adventures_za_map.html      | static/adventures_za_map.html
 # ── Data files the BEA reads at boot / on request ────────────────────────────
 wonders.json               | wonders.json
 demo_listings.json         | demo_listings.json
+demo_image_map.json        | demo_image_map.json
 #  NOTE: demo_sellers.json is SERVER-MANAGED (single source lives only on the box,
 #  by deliberate design — see CLAUDE.md). It is intentionally NOT listed here.
 

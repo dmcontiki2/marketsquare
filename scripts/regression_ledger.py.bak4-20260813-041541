@@ -2686,51 +2686,5 @@ def rg_template_report_widget():
     return out
 
 
-@entry("RG-0063", "Every pixel the app serves comes from OUR origin -- no third-party host serves an image",
-       OPEN, scope="the image-origin class entire: /demo-listings + /demo-sellers live payloads, repo "
-                   "demo_listings.json / demo_sellers.json / demo_image_map.json consumers, and the ms.js "
-                   "SF tile fallback -- unsplash, pexels, picsum, cloudinary, imgur or any lookalike",
-       ref="DW-025 (open since 7 Aug 2026): 1,141 references -- 266 unique images -- hotlinked "
-           "images.unsplash.com from the demo payloads, leaking visitor IP+referrer to a third party "
-           "on every page view and betting the whole demo catalogue on someone else's hotlink policy. "
-           "RG-0025 stayed correctly green because its scope is SCRIPTS; this entry is its sibling for "
-           "IMAGES, written per-REQUIREMENT (the RG-0045 lesson). Closed 13 Aug 2026 in two halves: "
-           "repo side rewrote every reference to /static/demo/<sha1-16>.jpg and pointed the ms.js SF "
-           "fallback at the local tile (emoji is the real fallback now); migration 017 downloads all "
-           "266 images + 7 SF tiles ON THE BOX (resumable, exit-2-retries), rewrites the server-managed "
-           "demo_sellers.json only at 100%, and writes ATTRIBUTION.json (Unsplash License provenance). "
-           "OPEN until 017 completes on a deploy; the live half reads the real payloads through the "
-           "reviewer gate. Promote to LOCKED the run it passes.")
-def rg_no_third_party_images():
-    import re as _re
-    out = []
-    HOSTS = _re.compile(r"(images\.unsplash\.com|unsplash\.com|pexels\.com|picsum\.photos|cloudinary\.com|imgur\.com)")
-    # Repo half: the shipped sources must be clean
-    for f in ("demo_listings.json", "demo_sellers.json", "ms.js"):
-        c = repo_file(f)
-        if c is None:
-            continue
-        hits = sorted(set(HOSTS.findall(c)))
-        if hits:
-            out.append((FAIL, f + " ships third-party image host(s) %s -- the hotlink class is back in source" % hits))
-    # Live half: the payloads actually served (read through the reviewer gate)
-    read_any = False
-    for path in ("/demo-listings", "/demo-sellers"):
-        try:
-            body = _get(path)
-        except Exception as ex:
-            out.append((INFO, "%s unreadable (%s) -- live half not proven this run" % (path, ex)))
-            continue
-        read_any = True
-        n = len(HOSTS.findall(body))
-        if n:
-            out.append((FAIL, "%s still serves %d third-party image reference(s) -- migration 017 has "
-                              "not completed on the box (DW-025 open)" % (path, n)))
-    if not read_any:
-        out.append((FAIL, "neither demo payload could be read -- this check proved NOTHING about the "
-                          "live surface (RG-0011/DW-024 lesson: fail loudly, never pass blind)"))
-    return out
-
-
 if __name__ == "__main__":
     sys.exit(main())

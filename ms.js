@@ -14855,7 +14855,7 @@ var SF_IMG = function(key, unsplashId){
   // self-hosted first (upload sf_cat_<key>.jpg to /static to satisfy the
   // no-hotlink production rule); Unsplash fallback until then; emoji under it
   return {own:'/static/sf_cat_'+key+'.jpg',
-          fall:'https://images.unsplash.com/photo-'+unsplashId+'?q=70&w=640&auto=format&fit=crop'};
+          fall:'/static/sf_cat_'+key+'.jpg' /* DW-025: never a third-party pixel; emoji is the real fallback (unsplashId kept for provenance/migration 017) */};
 };
 var SF_TILE_IMGS = {
   Property:   SF_IMG('property','1613490493576-7fde63acd811'),

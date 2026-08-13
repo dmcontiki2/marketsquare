@@ -1,0 +1,14 @@
+{
+  "run": "2026-08-13T03:34:26Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 1,
+  "actions": [
+    {
+      "ref": "TS-0031",
+      "lane": "PATH_B",
+      "why": "brain call failed (ModuleNotFoundError) -- defaulting to the batched design lane",
+      "title": "Cars pre-final: AI-added vehicle details inaccurate for the tester's make (David",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    }
+  ]
+}
