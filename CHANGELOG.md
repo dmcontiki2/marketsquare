@@ -1,3 +1,59 @@
+## 2026-08-13 — MAINT-DASH-1: B2b launch-readiness card on the +1 page
+
+- David: "put this in the ops dashboard as a switch for launch." Honest form shipped as a
+  TRUTH CARD, not a switch: the brain key is a gitignored file and MAINTENANCE_AGENT_ENABLED
+  is env on the loop's machine — David's acts; a web toggle could only lie or hazard, so the
+  card deliberately has no control surface.
+- Server: POST /dashboard/maint (maintenance credential, facts-only whitelist — lane NAMES,
+  never key material, RG-0042 rule) → maint_status.json; open GET mirrors /dashboard/bit.
+- Agent: _post_heartbeat() after every completed REAL run — brain keyed?/lane, armed?, mode,
+  phase, seen/acted, lane counts, code stamp. Fail-SOFT (RG-0049 spirit): proven live — 404
+  from the not-yet-deployed endpoint absorbed, run unaffected, exit 0. Rehearsal runs
+  (--faults-file) never post: a synthetic storm must not stamp the production card.
+- Dashboard (+1 page): 🤖 Maintenance Agent (B2b) card above the Launch Switch — three
+  colour rows (heartbeat fresh/stale 36h, brain KEYED/NO KEY with the one-line .secrets/
+  ai_keys.env remedy, ARMED/SHADOW) + LS-TIPS-1 hover explainer. JS node-checked.
+- Ledger RG-0061 added OPEN same-session (RG-0029's unasserted-fix lesson): pins the POST
+  credential, whitelist, rehearsal guard, no-toggle design, and end-to-end liveness — goes
+  READY TO LOCK after the next deploy + first real heartbeat. Ledger: 61 entries, 57
+  holding, 0 regressed, exit 0. Ships via NIGHTLY-SHIP-1; no deploy from this session.
+
+## 2026-08-12 — maintenance-loop: TS-0024 + TS-0022 verified, RG-0060 tripwire added
+
+- Pre-run ledger green (59 entries, 56 holding, 3 open). Shadow agent run 05:33Z: 2 faults
+  seen, both PATH_B — the sandbox brain has NO AI lane key (4th consecutive run; the loop's
+  brain-by-hand is this session, per PRE-LAUNCH MONTH).
+- **TS-0024** (AI coach unavailable, Maroushka, 7 Aug) → **verified** (LIST-024). Named
+  evidence: failing action reproduced clean on live — POST /advert-agent/coach, Property,
+  HTTP 200 in 10.0s, full coaching JSON (cost: 1T from David's wallet, balance 366T, one
+  Haiku call). Class pinned by NEW ledger entry **RG-0060**: zero-spend probe (unregistered
+  email → 401 before any model call) proves the coach front door answers whenever /flags
+  names an active lane; 503 there is the tester's fault back.
+- **TS-0022** (over-blurred covers, sat at `fixed` since 11 Aug) → **verified**. Named
+  evidence: RG-0047 (painted-output blur ceiling) + RG-0044 (refuse-not-ruin) both green on
+  today's live runs. Reporter's 9 legacy covers remain her optional re-uploads.
+- **TS-0031** (Cars AI specs inaccurate) left in **Path B** — genuine design change
+  (suggested-not-asserted specs UI + confidence bar), designer gate applies; awaiting
+  reporter's which-fields detail. Not a refused surface, just not mechanical.
+- Close-send letters for TS-0024/TS-0022 NOT sent — that press stays David's.
+- Post-run ledger green: 60 entries, 57 holding, 0 regressed, 3 open (RG-0003/0004/0029).
+  Escalation brief: none in 24h. No push, no deploy (NIGHTLY-SHIP-1 carries the commit).
+
+## 2026-08-12 — Emergency Launch Plan delivered (ELP-1)
+
+David requested an evidence-based emergency launch plan. Delivered as
+`EMERGENCY_LAUNCH_PLAN_2026-08-12.docx` (NICE format, 17 pp, 3 charts) +
+`EMERGENCY_LAUNCH_GATEBOARD_2026-08-12.html` (companion visual), from tonight's
+ledger run (59 · 56 LOCKED holding · 0 regressed), live checks and a three-agent
+repo audit. Structure: six measurable gates read Tue 25 Aug → soft launch Fri 28 Aug,
+public Tue 1 Sep; else Plan B = 5-week dual-AI audit cycle (GPT-5.6 standing Auditor +
+European lane/Mistral), new hard date Mon 5 Oct. Key rulings requested from David this
+week: gate posture (closes RG-0029/DW-023), ROTATE_SECRETS run, D7, G6 payments
+posture, D11 send. Maintenance agent ruled NOT a launch gate — launch rides the
+hand-run loop; arming stays proof-gated (D12). Audit also surfaced, unadjudicated:
+reviewer code plaintext in 3 git-tracked files, /users/{email} SELECT * (B4 class),
+RG-0027 blind to the disabled Cloudflare rule — queued into the 13–15 Aug closure sprint.
+
 ## 2026-08-11 - SSH lockout was ISP IP rotation, not a dead server (SSH-IP-ROTATION-1)
 
 **Symptom.** `ssh root@178.104.73.239` timed out from David's PowerShell. Port 22 also timed

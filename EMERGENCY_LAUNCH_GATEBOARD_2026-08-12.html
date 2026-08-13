@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Emergency Launch Gate Board · 12 Aug 2026</title>
+<style>
+:root{--navy:#1F3864;--blue:#2F5496;--lblue:#EAF0FA;--gray:#D9D9D9;--mut:#595959;
+--red:#B02418;--redf:#FBE4E2;--amb:#C55A11;--ambf:#FFF4E5;--grn:#538135;--grnf:#E7F2E3}
+body{font-family:Calibri,Segoe UI,sans-serif;color:#262626;margin:24px;background:#fff;max-width:1080px}
+h1{color:var(--navy);font-size:26px;margin:0 0 2px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.rule{border-bottom:3px solid var(--navy);margin:6px 0 18px}
+.legend{display:flex;gap:18px;font-size:12.5px;margin:10px 0 18px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:13px;height:13px;border-radius:3px;display:inline-block}
+.timeline{display:flex;gap:6px;margin:14px 0 22px;flex-wrap:wrap}
+.tl{flex:1;min-width:110px;border-radius:8px;padding:10px 12px;color:#fff;font-size:12.5px;line-height:1.35}
+.tl b{display:block;font-size:13.5px}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-bottom:20px}
+th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:12.5px}
+td{border:1px solid var(--gray);padding:7px 10px;vertical-align:top}
+tr:nth-child(even) td{background:var(--lblue)}
+.st{font-weight:bold;text-align:center;border-radius:4px;white-space:nowrap}
+.RED{background:var(--redf)!important;color:var(--red)}
+.AMBER{background:var(--ambf)!important;color:var(--amb)}
+.GREEN{background:var(--grnf)!important;color:var(--grn)}
+.SET{background:var(--lblue)!important;color:var(--blue)}
+.call{border-left:5px solid var(--red);background:var(--redf);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13.5px;margin:16px 0}
+.call.good{border-color:var(--grn);background:var(--grnf)}
+h2{color:var(--blue);font-size:17px;margin:22px 0 8px}
+.foot{color:var(--mut);font-size:11.5px;margin-top:18px}
+</style></head><body>
+<h1>MarketSquare — Emergency Launch Gate Board</h1>
+<div class="sub">Companion visual to EMERGENCY_LAUNCH_PLAN_2026-08-12.docx · evidence as of the 12 Aug evening ledger run</div>
+<div class="rule"></div>
+
+<div class="timeline">
+<div class="tl" style="background:var(--red)"><b>13–15 Aug</b>Security closure sprint (RG-0029, rotations, reviewer code)</div>
+<div class="tl" style="background:var(--amb)"><b>15–18 Aug</b>Independent AI audit sweep + fix findings</div>
+<div class="tl" style="background:var(--blue)"><b>18–21 Aug</b>Scope freeze · email proofs · D7</div>
+<div class="tl" style="background:var(--grn)"><b>19–25 Aug</b>Green soak: ledger + watch streak</div>
+<div class="tl" style="background:var(--navy)"><b>Tue 25 Aug</b>GATE DAY — six gates, ten minutes</div>
+<div class="tl" style="background:#7FA5D8"><b>Fri 28 Aug</b>SOFT LAUNCH</div>
+<div class="tl" style="background:var(--grn)"><b>Tue 1 Sep</b>PUBLIC · else Plan B → 5 Oct</div>
+</div>
+
+<div class="legend">
+<span><span class="dot" style="background:var(--grn)"></span>Green — passing tonight</span>
+<span><span class="dot" style="background:var(--amb)"></span>Amber — work scheduled, achievable</span>
+<span><span class="dot" style="background:var(--red)"></span>Red — blocker until acted on</span>
+<span><span class="dot" style="background:var(--blue)"></span>Posture set by the plan</span>
+</div>
+
+<h2>The six gates — read on Tuesday 25 August</h2>
+<table>
+<tr><th style="width:110px">Gate</th><th>Pass condition</th><th style="width:80px">Class</th><th style="width:88px">Tonight</th></tr>
+<tr><td><b>G1 Security</b></td><td>RG-0029 LOCKED on live · secrets rotated (DW-029) · reviewer code rotated + purged · /users/{email} allowlisted + probed · RG-0027 sees "off" · DW-025 ruled · independent AI sweep = zero HIGH</td><td>BLOCKER</td><td class="st RED">RED</td></tr>
+<tr><td><b>G2 Stability</b></td><td>Ledger green 7 straight days incl. RG-0052 · smoke 39/39 (DW-038 fixed) · 0 HIGH security items on watch</td><td>BLOCKER</td><td class="st AMBER">AMBER</td></tr>
+<tr><td><b>G3 Email</b></td><td>D7 ruled · one staged test wave delivered · three transactional delivery proofs</td><td>BLOCKER</td><td class="st AMBER">AMBER</td></tr>
+<tr><td><b>G4 Scope freeze</b></td><td>From Mon 18 Aug fixes only — Africa ladders, CityLauncher revive, Mapbox all OUT</td><td>DISCIPLINE</td><td class="st GREEN">READY</td></tr>
+<tr><td><b>G5 Agent posture</b></td><td>Launch UNARMED on the hand-run loop · arming only after Tier-2 READY + real-repo probe + 7-day clean shadow</td><td>DISCIPLINE</td><td class="st SET">SET</td></tr>
+<tr><td><b>G6 Payments</b></td><td>CIPC/Paystack live + one real-card E2E · OR pre-revenue soft-launch ruling recorded</td><td>RULING</td><td class="st AMBER">OPEN</td></tr>
+</table>
+
+<div class="call"><b>The five decisions only David can make — this week:</b>
+(1) gate-posture ruling → RG-0029 closes same day · (2) ROTATE_SECRETS.bat + 5 browser rotations (~30 min) ·
+(3) D7: wait-for-launch or preview bypass · (4) CIPC/Paystack status → G6 · (5) D11 "send". Everything else is Claude's to execute.</div>
+
+<h2>Security record, 2–12 Aug</h2>
+<table>
+<tr><th>Item</th><th>What</th><th style="width:150px">Found by</th><th style="width:120px">State</th></tr>
+<tr><td>B1 · 2–3 Aug</td><td>Third-party script shipped on the ID-upload page (TP Drive)</td><td>David</td><td class="st GREEN">FIXED</td></tr>
+<tr><td>B2 · 4 Aug</td><td>Origin reachable behind the WAF (Host-header bypass)</td><td>GPT-5.6 Peer</td><td class="st GREEN">FIXED</td></tr>
+<tr><td>B3 · 4 Aug</td><td>Admin JWT weak-fallback secret</td><td>Peer question</td><td class="st GREEN">FIXED</td></tr>
+<tr><td>B4 · 8 Aug</td><td>/listings leaked two real seller e-mails</td><td>Our ledger (RG-0045)</td><td class="st GREEN">FIXED</td></tr>
+<tr><td>DW-023 / RG-0029</td><td>Origin token gate not enforcing — anon 200s on /wonders, /flags, /demo-sellers (migration 007 deferred, awaiting posture ruling)</td><td>Daily watch</td><td class="st RED">OPEN · day 6</td></tr>
+<tr><td>DW-029</td><td>Production secret set reached a chat transcript — rotation tool ready, unrun</td><td>Daily watch</td><td class="st AMBER">OPEN · day 6</td></tr>
+<tr><td>DW-025</td><td>1,141 third-party image hotlinks served to every visitor</td><td>Daily watch</td><td class="st AMBER">OPEN · day 6</td></tr>
+</table>
+<div class="call good"><b>Pattern worth keeping:</b> three of the four breaches were found by outside eyes. The dual-AI auditor lane
+(GPT-5.6 standing Peer + a European model — Mistral) starts this week under BOTH plans.</div>
+
+<div class="foot">Sources: scripts/regression_ledger.py run 12 Aug (59 entries · 56 LOCKED holding · 0 regressed) · DAILY_WATCH/OPEN_ITEMS.md ·
+migrations/DEFERRED.txt · OPEN_LOOPS.md · full detail and Plan B in the Word report. Built by Claude Fable 5.</div>
+</body></html>

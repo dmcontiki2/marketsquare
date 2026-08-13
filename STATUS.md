@@ -5,6 +5,24 @@
 
 ## Current Session
 
+- MAINT-DASH-1 (13 Aug): B2b launch-readiness is now ON the +1 page — truth card above the
+  Launch Switch, fed by the loop's own heartbeat (POST /dashboard/maint, maint-key gated,
+  facts only). Shows brain KEYED/NO KEY (the ai_keys.env gap goes visible in amber), ARMED/
+  SHADOW, heartbeat freshness. No web arming surface by design. RG-0061 OPEN → locks after
+  next deploy + first heartbeat (tomorrow's 05:33 run). David's two acts stay: paste ONE
+  key line in .secrets/ai_keys.env before the ~22 Aug B4 rehearsal; arm only after B4 READY.
+
+- MIDDAY HANDOFF (12 Aug): MZ f1_start twice NSFW-false-flagged (credits refunded both times, reword rule now in runbook); Chrome tab-front + coordinate lessons banked. STATE: 157/164 journey photos (only MZ f1_start..f2_finish remain), all code/deploy wiring COMMITTED (ce80ce1) incl. post_deploy ladder-seed. FRESH SESSION RECIPE: connect Projects+Downloads, Chrome front-tab on Higgsfield, date +%s floor, JS-calibrate, run MZ 7 (reworded f1_start first), rebuild MZ map, then SUPER_LADDER_PROMPTS.md 114. EVENING (David): media_push.bat → release.bat (or token) → post_deploy auto-seeds KE → verify ledger+live. Open decisions: Harare currency, Zambia scope.
+
+- MAINTENANCE LOOP 12 Aug: queue 31 rows → 23 verified / 5 closed / 1 new / 2 dup.
+  TS-0024 (AI coach) and TS-0022 (blur covers) both promoted to VERIFIED on named machine
+  evidence (AIK-VERIFY-1); closure letters await David's close-send press. New ledger
+  tripwire RG-0060 locks the 'AI Coach unavailable' class at zero probe cost (unregistered
+  email → 401 before spend). Ledger green 60/57/0-regressed. TS-0031 stays Path B (design:
+  suggested-not-asserted car specs), needs reporter's field detail. STANDING GAP, 4th run:
+  shadow agent has no AI key in the sandbox — every fault PATH_Bs mechanically; fine while
+  the daily session is the brain, but B2b arming needs the key provisioned (David's act).
+
 - DAY-RUN HANDOFF (12 Aug, David at work): Chrome got MINIMIZED as David left → extension clicks blank → photo run PAUSED at 157/164 (only MZ's 7 flight-legs left; then Kenya's 114 advert stills). Everything not needing the browser is DONE and COMMITTED (ce80ce1): ladder seeder ships via manifest + post_deploy.sh auto-runs it every deploy (no-ops until KE media lands — proven-safe pattern copied from seed_super_global). RESUME RECIPE (any session, the moment Chrome is visible): fresh claim floor `date +%s`, JS-calibrate click scale (runbook 11 Aug lesson), then the loop — MZ prompts in JOURNEY_HIGGSFIELD_PROMPTS.md §Mozambique (f1_/f2_), advert prompts in SUPER_LADDER_PROMPTS.md. EVENING SEQUENCE for David: (1) restore Chrome + say 'continue' → I finish MZ 7 (+as many advert stills as the evening allows); (2) media_push.bat (carries sup_ke_* to server); (3) release.bat (or grant .secrets/gh_push_token.txt and I publish) → engine deploys → post_deploy auto-seeds Kenya's 24 ladder listings → I verify live (ledger + diag) and report. Angola OUT; ZW/EG builds still awaiting Harare-currency + Zambia decisions.
 
 - TWO JOURNEYS FULLY PHOTOGRAPHED TONIGHT: Kenya 32/32 and Namibia 30/30 — both maps rebuilt 0-pending (Kenya: CPT-to-CPT complete arc; Namibia: O.R. Tambo gate, Kalahari window, key handover, jacaranda braai, gravel kudu, terminal farewell, Joburg night grid). Root cause of all "unclickable page" failures found and runbooked: Higgsfield's upgrade MODAL overlay (one Escape clears it) + per-session click-scale calibration via JS rects. 13 photos QC'd-and-claimed this session, zero rejects. REMAINING: BW 7 + MZ 7 flight-legs → then ALL journey photography done; next milestones: David's release.bat click (deploy), Kenya 114 advert stills, ZW/EG builds (awaiting Harare currency + Zambia decisions).
