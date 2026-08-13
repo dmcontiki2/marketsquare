@@ -32,6 +32,7 @@ Durable "do it later" (not active) stays in **BACKLOG.md → Deferred items**. N
 | L6 | **BIT-AIM-1: FEA probes mis-aimed** — BIT board live (13's timer works) but degraded 5/8: B-FEA-SHELL/EXAMPLE/CONTRACT all fail because BIT_BASE=localhost:8000 carries no FEA. Per-probe base needed (nginx+gate-token on box, or edge+named-UA). | [C] | Tomorrow's maintenance loop (or attended): registry per-probe base + runner resolve + verify on the 15-min board. | 2026-08-11 | changelog.d 2026-08-11-b4-6 |
 | L2 | **git-on-FUSE stale .lock files** every commit — worked around via `_to_delete/`, needs a real fix. | [C] | Diagnose root cause + permanent fix in an attended session (not urgent). | 2026-07-23 | STATUS.md S150 |
 | L3 | **SCOREBOARD-1 shipped-not-live** — agent + guards + nightly wiring in repo (7/7 tests); probes OFF until enabled. | [D] | Next deploy carries it, then run `enable_scoreboard.bat` once. | 2026-08-03 | CHANGELOG SCOREBOARD-1 |
+| L7 | **Tooling-through-the-gate** — GATE-ENFORCE-2 (13 Aug) raises the origin token gate; on-box/edge tooling reading data endpoints anonymously (maintenance-loop intake, server smoke data probes) will 401. UA-EDGE-1's sibling. Ledger already fixed (reads via reviewer cookie). | [C] | Next attended loop: point on-box tools at 127.0.0.1:8000 (or cookie them) + re-aim smoke; verify loop intake green. | 2026-08-13 | changelog.d 2026-08-13-gate-enforce-activated |
 
 ## ⚪ DECISIONS AWAITING DAVID / COUNSEL — ranked
 

@@ -2,5 +2,4 @@
 # honestly. post_deploy.sh skips these LOUDLY on every deploy; they are never marked
 # done. Remove a line and the migration runs on the next deploy. (Mechanism: DEFER-1,
 # born from DW-030 — five migrations sat dead behind one failing script for 3 days.)
-005_prelaunch_server_side_gate.py    # gate posture undecided: arming = Basic Auth on documents + password for testers
-007_review_gate_enforce.py           # API gate = the same posture decision; defers with 005 until David rules
+005_prelaunch_server_side_gate.py    # gate posture undecided: arming = Basic Auth on documents + password for testers  (007 ACTIVATED 13 Aug 2026, David's ruling — close DW-023/RG-0029; 005 remains a separate document-gate decision)

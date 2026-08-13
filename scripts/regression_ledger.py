@@ -125,14 +125,57 @@ def _require_net():
         raise ProbeOffline(_NET["why"])
 
 
+_REVIEW = {"cookie": None, "tried": False}
+
+def _review_cookie():
+    """ts_review cookie so BODY probes read through the origin gate (GATE-ENFORCE-1,
+    migration 007 activated 13 Aug 2026, David's ruling closing DW-023/RG-0029).
+    Body probes assert PAYLOAD truths; gate POSTURE is RG-0029's job via _status(),
+    which stays anonymous. Code comes from MS_REVIEW_CODE or .secrets/review_code.txt
+    (gitignored); login happens ONCE per run (rate limit is 8/10min). Returns "" when
+    unavailable -- entries then see the raw 401 and fail loudly rather than pass blind
+    (the RG-0011/DW-024 lesson, unchanged)."""
+    if _REVIEW["tried"]:
+        return _REVIEW["cookie"] or ""
+    _REVIEW["tried"] = True
+    code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
+    if not code:
+        try:
+            _p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                              ".secrets", "review_code.txt")
+            code = open(_p, encoding="utf-8").read().strip()
+        except Exception:
+            code = ""
+    if not code:
+        return ""
+    try:
+        req = urllib.request.Request(BASE + "/review/login",
+                                     data=json.dumps({"code": code}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        tok = (json.loads(body).get("token") or "").strip()
+        _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
+    except Exception:
+        _REVIEW["cookie"] = None
+    return _REVIEW["cookie"] or ""
+
+
 def _get(path):
     if path not in _cache:
         _require_net()
         req = urllib.request.Request(BASE + path, headers=UA)
         try:
             _cache[path] = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
-        except urllib.error.HTTPError:
-            raise
+        except urllib.error.HTTPError as e:
+            ck = _review_cookie() if e.code in (401, 403) else ""
+            if not ck:
+                raise
+            req2 = urllib.request.Request(BASE + path, headers=dict(UA, **{"Cookie": ck}))
+            try:
+                _cache[path] = urllib.request.urlopen(req2, timeout=TIMEOUT).read().decode("utf-8", "replace")
+            except Exception:
+                raise e
         except Exception as ex:
             raise ProbeOffline(repr(ex)[:140])
     return _cache[path]
