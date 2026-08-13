@@ -1,7 +1,8 @@
-# Global QA audit — 2026-08-12 (14.0s)
+# Global QA audit — 2026-08-13 (9.9s)
 
-**3 findings** (0 new vs previous run)
+**4 findings** (3 new vs previous run)
 
-- **INFO** [demo] `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
-- **INFO** [drift] `MSJS-DRIFT` — live ms.js (v460, 1058541B) != repo ms.js (1059958B) — expected while a deploy is staged; CRITICAL if it persists after deploying
-- **INFO** [drift] `VERSION-KEY` — repo html pins ms.js v436, live pins v460 (deploy pending)
+- **CRITICAL** [endpoints] 🆕 `EP-/demo-listings` — /demo-listings unreachable: HTTP Error 401: Unauthorized
+- **CRITICAL** [endpoints] 🆕 `EP-/demo-sellers` — /demo-sellers unreachable: HTTP Error 401: Unauthorized
+- **CRITICAL** [demo] 🆕 `DEMO-FETCH` — demo feeds unreadable: HTTP Error 401: Unauthorized
+- **INFO** [drift] `VERSION-KEY` — repo html pins ms.js v437, live pins v468 (deploy pending)

@@ -1,3 +1,145 @@
+## 2026-08-13 — RG-0061 LOCKED: first B2b heartbeat live
+
+- Deploy v463 (David-triggered, driven via ms-deploy) shipped the relocated row; agent run 03:05Z posted the first real heartbeat (KEYLESS, SHADOW, PATH_B 1). GET /dashboard/maint serves it. RG-0061 promoted OPEN → LOCKED same session; ledger green 61/58.
+
+## 2026-08-13 — DW-023 CLOSED: the origin token gate is LIVE and LOCKED (GATE-ENFORCE-2 done)
+
+David's ruling executed end-to-end. Migration 016 applied the nginx auth_request gate
+(enabled-first lookup after 007's rc-3 duplicate-file refusal; functional idempotency).
+Live-verified: anon /wonders /flags /demo-sellers /listings = 401; /health, documents,
+/static all 200; /review/login alive (405 to GET). **RG-0029 promoted LOCKED,
+fixed_on 2026-08-13** — the six-day "unasserted fix" gap is now machinery-guarded
+forever. Ledger: 62 entries · 60 holding · 0 regressed · exit 0.
+
+Collateral handled in the same session, not left for tomorrow:
+- RG-0045 + every body probe reads THROUGH the gate via one-shot reviewer login
+  (_review_cookie; code in gitignored .secrets/review_code.txt). Payload assertions
+  stay strong; posture probes stay anonymous.
+- RG-0053 briefly regressed — its live half read the gate's 401 as "unreachable".
+  ASSERTION CORRECTED + STRENGTHENED: origin 401 = edge passage proven; 403 with
+  Cloudflare markers = the real UA-EDGE-1; structural asserts keep the maintenance
+  agent on localhost (its default — the loop was never edge-dependent, so the gate
+  cannot starve it).
+- OPEN_LOOPS L7 narrowed: remaining tail = attended off-box tools (fault_reconcile,
+  cost sweep) need the reviewer cookie when next used; server smoke data probes need
+  cookie or localhost vantage. Tester impact: none (365-day cookies).
+
+Observations for the register, not fixed tonight: (1) release.bat pressed twice with
+changes on disk produced NO commit and no visible error — likely deploy-lock backoff
+during the concurrent BRAIN-DEPS-1 session; the CLAUDE.md PowerShell trio was the
+working lane; worth one attended look at the bat's refusal reporting. (2) DW-023
+itself closes with evidence on the next 06:30 daily watch, which will now read 401s.
+005 (document Basic Auth) remains a deliberate open decision, David's.
+
+## 2026-08-13 — Journey photos 164/164 · report-widget class fix (RG-0062)
+
+Mozambique's final 7 flight-leg photos generated, QC'd and claimed (f1_start passed
+with the reworded prompt after two prior NSFW false-flags; f1_view and f1_over also
+needed rewording — the classifier flagged plain landscapes; all wordings banked in
+status.d/2026-08-13-mz-run-prompts.md). **All 164 journey photos across 5 journeys are
+now on disk** — the set that began 26 Jul is complete. adventures_mz_map.html rebuilt:
+32 embedded / 0 pending. The rebuild dropped the ts_report.js line AGAIN (3rd
+occurrence of the class), and test_tester_intake caught na/bw/c2c/ke missing it too;
+root-caused this time INTO scripts/journey_template.html so no future rebuild can lose
+it — asserted by new LOCKED ledger entry RG-0062. All 16 tester-intake tests green,
+ledger green. Browser-run lesson banked: JS-dispatched clicks (coordinate-free) are
+immune to the window resize/scale flips that broke three coordinate calibrations in
+one morning.
+
+## 2026-08-13 — Real root cause from the deploy log: 007 rc 3, duplicate conf files (GATE-ENFORCE-2c)
+
+David's SSH paste settled it: 007 never no-opped — it FAILED rc 3 on both deploys:
+"multiple candidate site files, refusing to guess: sites-enabled/marketsquare,
+sites-available/marketsquare". The two are duplicate REAL files (not the Debian
+symlink), so realpath dedup saw two candidates. Failing FIRST in the chain, 007 also
+blocked 016 from ever running. The conf itself is clean — no stale marker, no
+fragments, catch-all matches the anchor at sites-enabled/marketsquare:169 — so the
+earlier marker hypothesis is WITHDRAWN; a clean apply awaits.
+
+Fixes, riding the next click: (1) 016 find_site is now ENABLED-FIRST (nginx serves
+sites-enabled; available is inventory) and notes the stale duplicate after applying;
+(2) 007 re-deferred in DEFERRED.txt as SUPERSEDED so it stops breaking the chain;
+(3) 005 gets the same enabled-first lookup so David's future document-gate ruling
+does not replay this failure. Box observation for /housekeep: sites-available copy
+will be stale post-apply; symlink it someday. (Also on the box, unrelated: a second
+app "snaptax" on :8090 shares this nginx.)
+
+## 2026-08-13 — 007 no-opped GREEN; migration 016 asserts the thing, not the label (GATE-ENFORCE-2b)
+
+The 05:0x deploy carried the 007 activation and the chain ran PAST it (proof: migration
+015 executed — /static/maint/b4_tier2.json now exists) yet the gate did not rise:
+anonymous /wonders answers 200 at the ORIGIN, cache-busted, so this is not CDN staleness.
+Only one rc-0 path in 007 fits: its idempotency test is `if "GATE-ENFORCE-1" in text` —
+a MARKER check — and the marker evidently sits in the server conf (leftover of the 5–7 Aug
+SSH-era work DW-020 planned) with no functional gate beneath it. 007 recorded itself done
+and will never run again. The exact green-no-op class STATUS.md logged six times on 11 Aug.
+
+Fix shipped: **migrations/016_review_gate_enforce2.py** — identical block and safety rails
+to 007, but idempotency is FUNCTIONAL (`auth_request /_review_gate` inside the catch-all),
+a stale marker is reported loudly and overridden, and pre-existing PARTIAL gate fragments
+trigger a precise-inventory REFUSAL (rc 7) instead of duplicate-location nginx breakage.
+Verified locally: py_compile clean, dry-run clean, repo-conf simulation = would apply
+(functional absent, collisions none, anchor exactly once).
+
+Rides David's next release click. Then: anon-401 verification → RG-0029 READY TO LOCK →
+promote. If 016 refuses with rc 7, the deploy log's inventory line is the next input —
+one SSH paste (ACCESS_CHEATSHEET §4) and the conf gets one manual reconciliation.
+
+## 2026-08-13 — DW-025 close built: every pixel from OUR origin (IMG-SELFHOST-1)
+
+David asked what closing the 1,141-hotlink item takes; answer: 266 unique images.
+Built the full close in one pass, deploy-ready:
+
+- **Repo side (done, verified):** all 1,101 demo_listings.json + 40 demo_sellers.json
+  references rewritten to /static/demo/<sha1-16>.jpg (textual, JSON-parse verified);
+  ms.js SF tile fallback now points at the LOCAL tile — a missing file degrades to
+  the emoji, never to a third-party call (node --check green); demo_image_map.json
+  (266 URLs + 7 SF tiles, Unsplash-License provenance) added to the deploy manifest.
+- **Server side (rides next deploy): migrations/017_selfhost_demo_images.py** —
+  downloads all 266 + 7 tiles ON THE BOX (named UA, byte-sanity checks, 6-min budget,
+  exit-2 resumes next deploy), harvests any extra URLs in the server-managed live
+  demo_sellers.json, rewrites that file to local paths only at 100% (.bak first),
+  writes static/demo/ATTRIBUTION.json.
+- **Ledger: RG-0063 (OPEN)** — the image-origin class, RG-0025's sibling for images,
+  per-requirement: repo sources grepped for unsplash/pexels/picsum/cloudinary/imgur,
+  live payloads read THROUGH the reviewer gate. Tonight's run: exit 0, entry open with
+  exact live counts (1101 + 40) — flips READY TO LOCK when 017 completes.
+
+Interim note: since GATE-ENFORCE-2 the payloads are 401 to anonymous callers, so the
+leak is reviewer-only until launch — the close removes it entirely plus the breakage
+risk. Backups: demo_listings/demo_sellers/ms.js/deploy_manifest .bak-20260813-041425.
+
+## 2026-08-13 — IMG-SELFHOST-1 run 1: 244/273 landed; 017 hardened for the rest
+
+David's press carried the close live: /demo-listings now serves 1,101 LOCAL refs and 0
+unsplash; sample images + SF tiles answer 200. Run 1 left 29/273 missing — scattered
+mid-run, rate-limit shaped (0.15s pacing was too eager) — so the live demo_sellers.json
+rewrite correctly held (100% gate) and 017 exited 2 to resume. Hardened for run 2:
+0.5s pacing + 1.5s failure backoff + attempt tracking (.fetch_attempts.json) + a LAST
+RUNG that fills any URL dead on two separate runs with a copy of a landed neighbour
+(named in the log, recorded in ATTRIBUTION.json "stand_ins") so payload paths can never
+dangle and the 100% gate stays reachable. Reviewer-visible cost right now: ~29 broken
+demo images until the next deploy completes the set. RG-0063 stays OPEN, counting.
+
+## 2026-08-13 — BRAIN-DEPS-1: keyed brain live; loop self-heals its httpx dependency
+
+- David pasted the Anthropic key (.secrets/ai_keys.env, slot pre-uncommented; verified filled without reading it). First keyed run: brain[anthropic/haiku] classified TS-0031 = DESIGN → PATH_B by judgement — agreeing with the manual triage. Dashboard chip now KEYED green.
+- Found at first call: ai_provider lazily imports httpx inside lane calls — fresh sandboxes pass the import proof but lose the brain at the first REAL call (ModuleNotFoundError, degraded per RG-0049). Fix: _ensure_brain_deps() in maintenance_agent.py — one guarded quiet pip install, fail-soft. Proven by uninstall→run→reinstalled-by-agent+clean classify.
+- RG-0055 strengthened (not weakened): now also fails if the bootstrap disappears. Ledger green.
+- Ops note: cold-sandbox first run can take ~3 min (httpx download) — run the agent detached and poll; a foreground bash call gets killed at the ~3-min cap.
+
+## 2026-08-13 — Why three release presses did nothing: release.bat commits NOTHING (BAT-NAMING-1)
+
+Three of this morning's five presses produced no commit, no push of pending work, and
+a green-looking "RELEASE PUBLISHED" banner. Root cause is naming, and the error was
+Claude's: project shorthand says "David's release.bat click", but release.bat is the
+push-only lane — its own header says "commit manually before running this". The
+auto-commit lane is deploy_marketsquare.bat (git_unlock → autobump → fold fragments →
+gates/lock → COMMIT → push main → push deploy). The presses "succeeded" at pushing an
+unchanged HEAD while the session's files sat modified on disk. Standing correction:
+say and use deploy_marketsquare.bat; treat release.bat as advanced/manual. Queued
+improvement (attended, CRLF-safe): a dirty-tree warning in release.bat, or retire it.
+
 ## 2026-08-13 — MAINT-DASH-1 relocated: B2b readiness row inside the Maintenance group
 
 - David: the readiness view belongs IN the "Maintenance (pre-launch testers)" switch group,

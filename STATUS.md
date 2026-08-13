@@ -5,6 +5,66 @@
 
 ## Current Session
 
+- SUPER-RUN STATE (13 Aug, live counter — updated as the run advances): journey photos
+  **164/164 COMPLETE** (MZ final 7 claimed this morning; map rebuilt 32/32 embedded;
+  RG-0062 locks the report-widget class in journey_template.html). Kenya super stills:
+  **advexp a+b+c + advacc a COMPLETE (32/114)** — Naivasha, Nairobi NP, Maasai Mara sets all in
+  assets/super/. RESUME RECIPE for the 82 remaining: /tmp/super_queue.json rebuilds from
+  SUPER_LADDER_PROMPTS.md (make_super_prompt_pack extraction in this session's log);
+  next item = index 32 (sup_ke_advacc_b_1_exterior); advacc sets are 8 shots (exterior/room/bed/view/bath/dining/setting/sunrise). Method that works: JS-dispatched clicks
+  ONLY (coordinate-free — window resizes don't matter): focus editor via .focus(),
+  ctrl+a + type action, verify textContent, JS-click Generate, poll 70s in 10s waits,
+  JS-click newest tile (left<480, top>50, w>250), verify lightbox text has the SHOT
+  phrase + LISTING name, JS-click Download, bash-poll Downloads for hf_*.png newer than
+  per-image floor, `python3 scripts/claim_super.py --since <floor> <name.jpg>` (new
+  helper, same hard guard as claim_photos). NSFW rewords banked in
+  status.d/2026-08-13-mz-run-prompts.md. EVENING (David): media_push.bat → release.bat
+  — post_deploy seeds whatever tiers have full photo sets on disk (proven no-op-safe).
+
+- **DW-023 / RG-0029 CLOSED (David's ruling, executed 13 Aug):** origin token gate
+  LIVE via migration 016 (007 superseded — rc-3 duplicate-file refusal found via
+  David's SSH paste of the deploy log). Anon data reads 401; health/documents/static
+  open; testers unaffected. RG-0029 LOCKED; RG-0053 assertion corrected (edge-401 =
+  passage proven, agent on localhost by default); ledger 62 · 60 holding · 0
+  regressed · exit 0. Uncommitted closing edits (ledger, fragments, L7) ride the
+  nightly checkpoint. Remaining named tail: L7 (attended off-box tools + smoke
+  vantage need the reviewer cookie). 005 document-gate decision still David's.
+
+- MORNING WRAP (13 Aug, photo session): journeys **164/164 DONE** (MZ 7 claimed, 3 NSFW
+  false-flags beaten by reword; map rebuilt 32/32; RG-0062 LOCKED — report widget now
+  lives in journey_template.html so rebuilds can't drop it; intake tests 16/16).
+  Kenya supers **32/114 on disk**: advexp a/b/c (24) + advacc a (8). Committed through
+  24/114 (8691602); the final 8 + this note are UNCOMMITTED working tree — a stale
+  .git/index.lock from a concurrent audit-loop writer blocks sandbox commits and FUSE
+  blocks its deletion. SELF-HEALS: any git-writing .bat (deploy/commit/nightly) clears
+  it via git_unlock.bat first — tonight's release will sweep these files in. NOTHING
+  IS LOST. Resume the 82 remaining: fresh session, "continue" — recipe in
+  2026-08-13-super-run-state.md (next = idx 32, sup_ke_advacc_b_1_exterior).
+  Credits: ~544 left of 610 (66 spent incl. 3 refunded flags). EVENING unchanged:
+  media_push.bat → release.bat → post_deploy seeds full-set tiers → verify ledger+live.
+
+- **Evening handoff (morning session, Claude):** DW-023/RG-0029 CLOSED + LOCKED (gate
+  live, verified, ledger green at lock time). DW-025: 244/273 images self-hosted;
+  /demo-listings fully local; 29 rate-limit stragglers + live demo_sellers.json rewrite
+  ride migration 017 run 2 (hardened: 0.5s pacing, backoff, attempt-tracked stand-in
+  rung) — ON the deploy ref via the Kenya session's sweep commit 8691602. **Server did
+  NOT act on that ref for 10+ min this morning — diagnose the deploy timer/log FIRST
+  tonight** (paste in the scheduled task). RG-0063 OPEN, correctly counting 40 sellers
+  refs live. **Bat lesson (Claude's error, owned): release.bat does NOT commit — it
+  pushes existing HEAD silently; three presses burned. Tonight and henceforth:
+  deploy_marketsquare.bat (gates + folds + auto-commits + publishes).** Tonight 17:45:
+  scheduled session runs DW-029 rotation (ROTATE_SECRETS.bat + 5 vendor dashboards,
+  one-at-a-time install-verify) then finishes DW-025 and locks RG-0063. Also noted for
+  the register: /admin/deploy hook now sits behind the reviewer gate (L7 family).
+
+- **DW-025 close BUILT (David's ask, same session as the RG-0029 lock):** repo fully
+  de-hotlinked (1,141 refs → local paths; ms.js fallback neutralized), migration 017
+  downloads 266 images + 7 SF tiles server-side (resumable) and localizes the live
+  demo_sellers.json at 100%; RG-0063 OPEN guards the class through the gate. Ledger
+  63 entries · 60 holding · 0 regressed · exit 0. Rides David's next release press —
+  no urgency (gate hides payloads pre-launch), but one press closes it today; brief
+  window of broken demo images (reviewers only, ~2-4 min) while 017 fetches.
+
 - **DW-023 / RG-0029 closure in flight (David's ruling, 13 Aug):** migration 007
   activated via DEFER-1 line removal; ledger `_get()` now logs in as a reviewer and
   reads through the gate (payload assertions stay strong, posture stays anonymous);
