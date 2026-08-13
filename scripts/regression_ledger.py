@@ -2779,5 +2779,34 @@ def rg_maint_lane_through_gate():
     return out
 
 
+@entry("RG-0065", "The maint lane answers on the KEY ALONE -- the exemption is the belt, the cookie the brace",
+       OPEN, scope="origin-side: migration 018's two exempt locations (/admin/faults*, /dashboard/maint) "
+                   "and ONLY those -- the other /admin/* routes (login, users, flags, deploy-file...) "
+                   "must STAY gated; RG-0064's inverse guard holds the refusal side",
+       ref="GATE-EXEMPT-MAINT-1, David's ruling 13 Aug ('lets fix both'): remove the B2b lane's "
+           "credential dependency on the review gate. Scoped after a route audit -- every "
+           "/admin/faults* route and the /dashboard/maint POST carry Depends(_require_maint), "
+           "constant-time, fails closed (bea_main.py:16366); GET /dashboard/maint is no-auth by "
+           "documented design and merely regains its pre-gate posture. 018 rides the next "
+           "successful deploy (engine stalled all day -- DW-042); until it lands, keyed-no-cookie "
+           "intake 401s at nginx and this entry is EXPECTED open -- GATE-COOKIE-1 keeps the loop "
+           "alive meanwhile. Promote to LOCKED the run it passes.")
+def rg_maint_key_alone():
+    out = []
+    key = (repo_file(".secrets/ms_maint_key.txt") or "").strip()
+    if not key:
+        out.append((INFO, "maint key unavailable outside the repo -- key-alone lane not proven this run"))
+        return out
+    try:
+        req = urllib.request.Request(BASE + "/admin/faults?limit=1",
+                                     headers=dict(UA, **{"X-Maint-Key": key}))
+        body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        json.loads(body)
+    except Exception as ex:
+        out.append((FAIL, "keyed-no-cookie intake refused (%r) -- migration 018 has not landed "
+                          "on the box (deploy engine, DW-042)" % ex))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
