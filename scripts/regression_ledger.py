@@ -3171,6 +3171,43 @@ def rg_gate_credential_cached_and_honest():
     return out
 
 
+@entry("RG-0072", "The drift monitor compares CONTENT, never the server's own cache-buster bump",
+       LOCKED, scope="check_deploy_drift.py, BOTH sides of the comparison, for every manifest file "
+                     "carrying a `?v=N` reference -- today marketsquare.html->index.html (8 refs) and "
+                     "dashboard.server.html->dashboard.html (6). The sibling of DRIFT-CRLF-1: same "
+                     "class (compare content, not a transport artefact), different artefact",
+       fixed_on="2026-08-14",
+       ref="DRIFT-CACHEBUST-1. Cost a scheduled session to 'diagnose the stalled deploy engine' that "
+           "was never stalled. server_deploy.sh:170-186 rewrites the SERVED index.html in place "
+           "(sed -i, monotonic ?v= bump) so browsers actually fetch a new build -- by DESIGN the served "
+           "file differs from its source. check_deploy_drift.py md5'd local vs served, so those two "
+           "files reported drift on EVERY deploy, for ever, and no amount of re-deploying could clear "
+           "it: 14 Aug's release logged 'DEPLOY DRIFT: 2 file(s) local-ahead' twice and waited out two "
+           "server ticks for a condition that cannot go clean. Fix: normalise `?v=[0-9]+` -> `?v=N` on "
+           "both sides before hashing (locally in _md5, and on the box via sed before md5sum), exactly "
+           "as DRIFT-CRLF-1 normalises line endings. Proven with a two-file stand-in differing ONLY in "
+           "the bump: raw md5 differed, normalised md5 matched. A real drift -- genuinely stale content "
+           "-- still reports, because only the bump is neutralised.",
+       )
+def rg0072():
+    out = []
+    src_path = os.path.join(REPO, "check_deploy_drift.py") if REPO else None
+    if not src_path or not os.path.exists(src_path):
+        return [(INFO, "check_deploy_drift.py not readable from here -- source half not proven this run")]
+    body = open(src_path, encoding="utf-8", errors="replace").read()
+    if "_CACHEBUST_RE" not in body or "?v=N" not in body:
+        out.append((FAIL, "local md5 no longer neutralises the cache-buster -- phantom drift is back "
+                          "and the 'stalled engine' hunt starts again"))
+    else:
+        out.append((INFO, "local side normalises ?v=N before hashing"))
+    if "sed -E 's/" not in body or "md5sum" not in body:
+        out.append((FAIL, "remote md5 no longer normalises the cache-buster before hashing -- "
+                          "the two sides are being compared on different bytes again"))
+    else:
+        out.append((INFO, "remote side normalises ?v=N before hashing"))
+    return out
+
+
 @entry("RG-0071", "A killed maintenance run still leaves a RECORD -- the queue is never read into silence",
        LOCKED, scope="scripts/maintenance_agent.py main() -- every host the loop runs on, and "
                      "every fault in every run: the incremental report flush, the --only "

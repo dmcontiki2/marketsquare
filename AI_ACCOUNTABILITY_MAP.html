@@ -88,6 +88,7 @@ deterministic guards, a second vendor lane, economic absorbers. Humans own
 <div class="stat"><b>2</b>GREEN &mdash; retryable</div>
 <div class="stat good"><b>14 / 14</b>keep humans off the per-item path</div>
 <div class="stat"><b>4</b>human interface roles</div>
+<div class="stat good"><b>DO&rarr;CHECK</b>QC stage &mdash; ai_qc.py</div>
 </div>
 </header>
 <main>
@@ -407,6 +408,67 @@ missing. Amber-topped rules are new in v2 and encode the correction.</p>
 <div class="rule newrule"><span class="rid2">PR-7</span><h4>THE EXCEPTION RATE IS THE TRIGGER, NEVER THE VOLUME</h4><p>A human interface role engages when the exception RATE crosses a threshold, or when the exception CLASS is legal, financial, partner or infrastructural. Rising volume is the design working, and must never pull a human in.</p></div>
 <div class="rule newrule"><span class="rid2">PR-8</span><h4>THE +1 LANE IS A CONTROL, NOT JUST A SPARE</h4><p>The designated swap-out provider sits idle in normal operation. On RED surfaces, run it as a second opinion and treat DISAGREEMENT -- not low confidence -- as the exception signal. Dormant failover capacity becomes a live, throughput-preserving control.</p></div>
 </div>
+
+<h2>7 &nbsp;PR-9 &mdash; the DO &rarr; CHECK pipeline (QC, not QA)</h2>
+<div class="corr">
+<h3>QC gates the item. QA audits the system. We had QA and no QC.</h3>
+<p>Every AI call was single-shot: one model, one answer, straight to the user. The machinery
+around it &mdash; regression ledger, global QA audit, BIT, golden-set eval &mdash; is all
+<strong>QA</strong>: it audits the <em>process</em>, periodically and by sample, and
+<strong>never looks at an individual answer</strong>. Which is exactly why more of it would
+never have caught the individual bad one.</p>
+<p>The missing stage is <strong>QC</strong>: per-item, in-line inspection of the artefact. The
+doer is the engineer; the checker is the inspector. They must not be the same mind &mdash; and
+in a serial AI chain that has to be enforced <em>structurally</em>, because a model asked to
+check its own work tends to ratify it. Module: <code>ai_qc.py</code>, self-testing with no
+API keys.</p>
+</div>
+
+<h3 style="color:#12283F;font-size:16px;margin:26px 0 8px">The eight constraints</h3>
+<p class="sub">Each makes a known industry failure structurally impossible. Dropping any one
+from the register fails <code>ai_accountability_check.py</code>.</p>
+<table>
+<thead><tr><th style="width:44px">#</th><th style="width:270px">Constraint</th><th>The failure it prevents</th></tr></thead>
+<tbody>
+<tr><td class="lid">1</td><td><strong>No spec, no run</strong></td><td>A checker without written acceptance criteria re-does the task with an opinion and its verdicts drift. QCSpec is mandatory; criteria phrased as taste (&#x27;well written&#x27;, &#x27;appropriate&#x27;) are refused at validate().</td></tr>
+<tr><td class="lid">2</td><td><strong>The checker never sees the doer&#x27;s reasoning</strong></td><td>Shown a rationale, the checker grades the argument instead of the artefact and a confident explanation buys a pass. The harness builds the checker prompt from (input, spec, artefact) only -- there is no parameter through which reasoning could arrive.</td></tr>
+<tr><td class="lid">3</td><td><strong>Different lane by default; correlation declared, never hidden</strong></td><td>A model checking its own output tends to ratify it, and same-family models share blind spots. Checker binds cross-vendor; with one lane configured the verdict is stamped independence=&#x27;correlated&#x27; rather than pretending to independence it does not have.</td></tr>
+<tr><td class="lid">4</td><td><strong>The checker is cheaper than the doer, not bigger</strong></td><td>Judging against explicit criteria is easier than generating. A heavyweight checker doubles cost and latency for no gain and makes the chain the bottleneck -- the classic serial-pipeline death, and the exact throughput objection that rules humans out.</td></tr>
+<tr><td class="lid">5</td><td><strong>Bounded retries, then escalate</strong></td><td>DO -&gt; CHECK -&gt; REDO with no cap burns money and may never converge. max_attempts enforced; exhaustion sets escalate=True and routes to the owning interface role.</td></tr>
+<tr><td class="lid">6</td><td><strong>The checker is itself checked -- seeded defects</strong></td><td>A checker that passes everything looks perfect and is blind. Every spec carries canaries -- known-bad artefacts it MUST reject, on the specific criterion they violate. This is the known-defect sample from an industrial inspection line, and the only honest answer to &#x27;who checks the checker&#x27;.</td></tr>
+<tr><td class="lid">7</td><td><strong>Lot traceability</strong></td><td>Every verdict records doer lane/model, checker lane/model, spec id@version, attempt and failed criteria, so a bad batch can be traced and recalled rather than guessed at.</td></tr>
+<tr><td class="lid">8</td><td><strong>Fail closed</strong></td><td>An unavailable checker, unparseable JSON, or a citation of criteria that do not exist all return passed=False with escalate=True. A checker that cannot speak is never a pass.</td></tr>
+</tbody></table>
+
+<h3 style="color:#12283F;font-size:16px;margin:26px 0 8px">Where to wire it, in order</h3>
+<table>
+<thead><tr><th>Surface</th><th>Spec</th><th>Doer</th><th>Checker</th><th>Why this one</th></tr></thead>
+<tbody>
+<tr><td class="lid">AS-02</td><td><strong>ANON</strong></td>
+<td>redact identity from agency copy and photos</td><td class="act">ADVERSARIAL -- try to RECOVER identity from the redacted output; success means the redaction failed</td><td>Highest value, lowest risk, defends the intro fee which is the entire till. The adversarial form is strictly stronger than criteria-matching, and only a machine can run it on every item.</td></tr>
+<tr><td class="lid">AS-09</td><td><strong>LISTING</strong></td>
+<td>draft the listing from photos</td><td class="act">no contact details, no real business named (SO-1), required fields present, claims match the photos</td><td>Highest volume, consumer-law exposure once money moves, and the criteria are cleanly objective.</td></tr>
+<tr><td class="lid">AS-03</td><td><strong>MODERATION</strong></td>
+<td>judge buyer-visible imagery</td><td class="act">sampled cross-check of ACCEPTS (the false accept is the expensive error, and an accept is never appealed by anyone)</td><td>RED and high throughput. Rejects get appealed and self-correct; accepts are silent, so the checker must look where nobody complains.</td></tr>
+<tr><td class="lid">AS-01</td><td><strong>KYC</strong></td>
+<td>extract and match identity document</td><td class="act">document integrity, name-match logic, no extraction the image cannot support</td><td>RED, and the false-accept is the expensive error.</td></tr>
+<tr><td class="lid">AS-05</td><td><strong>GRADE</strong></td>
+<td>grade card condition</td><td class="act">is the grade supported by visible evidence in the photos, and is the estimate framing present</td><td>Clears an AMBER warn and defuses the collectables reputational risk.</td></tr>
+<tr><td class="lid">AS-08</td><td><strong>MAILCLASS</strong></td>
+<td>classify inbound mail and draft a reply</td><td class="act">legal/billing boundary only -- was anything with legal or money characteristics classified away from it</td><td>Narrow, cheap, and it is precisely the Klarna failure mode.</td></tr>
+</tbody></table>
+
+<h3 style="color:#12283F;font-size:16px;margin:26px 0 8px">Serial and parallel catch different things</h3>
+<table>
+<thead><tr><th></th><th>PR-8 &mdash; parallel / ensemble</th><th>PR-9 &mdash; serial DO &rarr; CHECK</th></tr></thead>
+<tbody>
+<tr><td class="lid">Shape</td><td>Two doers, same task, compare</td><td>One doer, then an inspector with a different job</td></tr>
+<tr><td class="lid">Detects</td><td><strong>Variance</strong> &mdash; where the models disagree</td><td><strong>Non-conformance</strong> &mdash; where the artefact misses spec</td></tr>
+<tr><td class="lid">Blind to</td><td><strong>Correlated error</strong> &mdash; both wrong the same way</td><td>Anything the spec does not name</td></tr>
+<tr><td class="lid">Cost</td><td>Two full doer calls</td><td>One doer + one cheap checker call</td></tr>
+<tr><td class="lid">Best for</td><td>RED surfaces where uncertainty should widen a range</td><td>Surfaces with objective, writable acceptance criteria</td></tr>
+</tbody></table>
+
 </main>
 <footer>
 Built 14 Aug 2026. Prompted by <em>&ldquo;Companies Put AI In Charge. Now They&rsquo;re Paying

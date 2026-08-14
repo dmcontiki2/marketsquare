@@ -191,9 +191,49 @@ def check_incentive_register(reg):
 def check_rules_present(reg):
     out = []
     ids = {r.get("id") for r in reg.get("predesign_rules", [])}
-    for want in ("PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6", "PR-7", "PR-8"):
+    for want in ("PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6", "PR-7", "PR-8", "PR-9"):
         if want not in ids:
             out.append((FAIL, "pre-design rule %s has gone missing from the register" % want))
+    return out
+
+
+def check_qc_pipeline(reg):
+    """PR-9. QC gates the item; QA audits the system. MarketSquare had QA and no QC.
+    Assert the DO -> CHECK pattern is declared, that its module is on disk, and that its
+    eight constraints are all still named -- losing one silently is how a checker quietly
+    becomes a rubber stamp."""
+    out = []
+    qc = reg.get("qc_pipeline")
+    if not qc:
+        out.append((FAIL, "no qc_pipeline declared -- PR-9 requires a DO -> CHECK stage"))
+        return out
+    mod = qc.get("module", "")
+    if not mod:
+        out.append((FAIL, "qc_pipeline names no module"))
+    elif not os.path.exists(os.path.join(REPO, mod)):
+        out.append((FAIL, "qc_pipeline module %s is not on disk -- the pattern is a claim, "
+                          "not a mechanism" % mod))
+    ns = {c.get("n") for c in qc.get("constraints", [])}
+    for want in range(1, 9):
+        if want not in ns:
+            out.append((FAIL, "QC constraint %d has gone missing -- each one exists to make an "
+                              "industry failure mode structurally impossible" % want))
+    for c in qc.get("constraints", []):
+        if not (c.get("failure_prevented") or "").strip():
+            out.append((FAIL, "QC constraint %s names no failure it prevents -- a rule with no "
+                              "reason gets deleted by the next session" % c.get("n")))
+    if not qc.get("candidates"):
+        out.append((WARN, "no QC candidate surfaces named -- the pattern exists but is wired "
+                          "to nothing"))
+    reds = {s.get("id") for s in reg.get("surfaces", []) if s.get("class") == "RED"}
+    covered = {c.get("surface") for c in qc.get("candidates", [])}
+    for rid in sorted(reds - covered):
+        surf = next((s for s in reg.get("surfaces", []) if s.get("id") == rid), {})
+        if surf.get("throughput") == "low":
+            continue          # AS-11 the maintenance agent has mechanical gates instead
+        if (surf.get("ai_check") or "").startswith("Not an AI decision"):
+            continue          # AS-04 is deterministic by design -- nothing generated to inspect
+        out.append((WARN, "%s is RED and has no DO -> CHECK spec named (PR-9)" % rid))
     return out
 
 
@@ -208,6 +248,7 @@ def main():
         ("exception ownership (interface roles)", check_exception_ownership(reg)),
         ("PR-7 triggers are exception-rate based", check_triggers_are_rate_based(reg)),
         ("AMBER build queue", check_amber_gaps(reg, strict)),
+        ("PR-9 DO -> CHECK pipeline (QC, not QA)", check_qc_pipeline(reg)),
         ("Dragon Tail test", check_incentive_register(reg)),
         ("pre-design rules", check_rules_present(reg)),
     )

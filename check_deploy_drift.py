@@ -14,7 +14,7 @@
 #
 # NON-FATAL BY DESIGN (same rule as predeploy_check.py): always exits 0 so it can
 # never break a loop run. --json emits a machine-readable blob for the loop.
-import os, sys, json, hashlib, subprocess
+import os, sys, json, hashlib, subprocess, re
 
 HERE   = os.path.dirname(os.path.abspath(__file__))
 SERVER = os.environ.get("MS_SERVER", "msdeploy@178.104.73.239")  # read-only md5 reads; matches the daily-loop SSH user
@@ -44,6 +44,8 @@ FILEMAP = {
     "demo_sellers.json":      "demo_sellers.json",
 }
 
+_CACHEBUST_RE = re.compile(rb"\?v=[0-9]+")
+
 def _md5(path):
     """md5 of the file with CRLF normalised to LF (DRIFT-CRLF-1, 3 Aug 2026).
 
@@ -56,14 +58,22 @@ def _md5(path):
     h = hashlib.md5()
     with open(path, "rb") as f:
         data = f.read()
-    h.update(data.replace(b"\r\n", b"\n"))
+    data = data.replace(b"\r\n", b"\n")
+    data = _CACHEBUST_RE.sub(b"?v=N", data)   # DRIFT-CACHEBUST-1
+    h.update(data)
     return h.hexdigest()
 
 def _server_md5s(remote_paths):
     """One SSH round-trip: md5sum every served file. Returns {remote_path: md5}."""
     quoted = " ".join(remote_paths)
+    # DRIFT-CACHEBUST-1 (14 Aug 2026): server_deploy.sh rewrites `?v=N` in the SERVED
+    # index.html (sed -i, monotonic bump) so a raw md5sum of the served file can NEVER
+    # equal the source's. Normalise the cache-buster on the box before hashing, exactly
+    # as DRIFT-CRLF-1 normalises line endings, so we compare CONTENT not the bump.
     cmd = ["ssh", "-o", "ConnectTimeout=15", "-o", "BatchMode=yes", SERVER,
-           f"cd {REMOTE} && md5sum {quoted} 2>/dev/null"]
+           f"cd {REMOTE} && for f in {quoted}; do "
+           f"printf '%s %s\\n' \"$(sed -E 's/\\?v=[0-9]+/?v=N/g' \"$f\" 2>/dev/null | md5sum | cut -d' ' -f1)\" \"$f\"; "
+           f"done 2>/dev/null"]
     try:
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=40)
     except Exception as e:

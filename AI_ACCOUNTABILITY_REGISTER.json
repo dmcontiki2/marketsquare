@@ -1,6 +1,6 @@
 {
   "doc": "AI ACCOUNTABILITY REGISTER -- MarketSquare",
-  "version": 2,
+  "version": 3,
   "created": "2026-08-14",
   "supersedes": "HUMAN_SEAM_REGISTER v1 (14 Aug 2026), which wrongly proposed human takeover of throughput surfaces",
   "design_premise": "MarketSquare is AI-first BY DESIGN, not by cost-cutting. AI was chosen for the high-throughput judgement surfaces -- photo triage, moderation, grading, classification, drafting -- because those are exactly where machine speed, consistency and tirelessness beat human judgement. Putting a human on a throughput surface does not make it safer: it throttles the business AND it decays, because a reviewer at high volume rubber-stamps within days. A human seam on a throughput path is a control that LOOKS like a control. Humans are therefore NOT the fallback for AI tasks. Humans own INTERFACES -- the boundaries where MarketSquare meets a party that can compel it: the law, the machine, the partner organisation.",
@@ -389,6 +389,102 @@
       "id": "PR-8",
       "rule": "THE +1 LANE IS A CONTROL, NOT JUST A SPARE",
       "detail": "The designated swap-out provider sits idle in normal operation. On RED surfaces, run it as a second opinion and treat DISAGREEMENT -- not low confidence -- as the exception signal. Dormant failover capacity becomes a live, throughput-preserving control."
+    },
+    {
+      "id": "PR-9",
+      "rule": "EVERY RED SURFACE RUNS DO -> CHECK, AND THE CHECKER IS CHECKED",
+      "detail": "The doer produces, an independent cheaper checker inspects the artefact against a written spec, and seeded defects prove the checker can still see. QC gates the item; QA audits the system -- MarketSquare had QA and no QC, and QA cannot catch an individual bad answer because it never looks at individual answers."
     }
-  ]
+  ],
+  "qc_pipeline": {
+    "pattern": "DO -> CHECK, serial, in-line, per item",
+    "module": "ai_qc.py",
+    "qc_not_qa": "QA audits the PROCESS -- periodic, sampled, preventive. MarketSquare already had it: regression_ledger.py, audit_global_qa.py, BIT, the golden-set eval. QC inspects the PRODUCT -- per item, in-line, detective. MarketSquare had NONE. QA cannot gate an item because it does not look at items, which is why adding more QA never catches the individual bad answer. The doer is the engineer; the checker is the inspector, and they must not be the same mind.",
+    "constraints": [
+      {
+        "n": 1,
+        "rule": "No spec, no run",
+        "failure_prevented": "A checker without written acceptance criteria re-does the task with an opinion and its verdicts drift. QCSpec is mandatory; criteria phrased as taste ('well written', 'appropriate') are refused at validate()."
+      },
+      {
+        "n": 2,
+        "rule": "The checker never sees the doer's reasoning",
+        "failure_prevented": "Shown a rationale, the checker grades the argument instead of the artefact and a confident explanation buys a pass. The harness builds the checker prompt from (input, spec, artefact) only -- there is no parameter through which reasoning could arrive."
+      },
+      {
+        "n": 3,
+        "rule": "Different lane by default; correlation declared, never hidden",
+        "failure_prevented": "A model checking its own output tends to ratify it, and same-family models share blind spots. Checker binds cross-vendor; with one lane configured the verdict is stamped independence='correlated' rather than pretending to independence it does not have."
+      },
+      {
+        "n": 4,
+        "rule": "The checker is cheaper than the doer, not bigger",
+        "failure_prevented": "Judging against explicit criteria is easier than generating. A heavyweight checker doubles cost and latency for no gain and makes the chain the bottleneck -- the classic serial-pipeline death, and the exact throughput objection that rules humans out."
+      },
+      {
+        "n": 5,
+        "rule": "Bounded retries, then escalate",
+        "failure_prevented": "DO -> CHECK -> REDO with no cap burns money and may never converge. max_attempts enforced; exhaustion sets escalate=True and routes to the owning interface role."
+      },
+      {
+        "n": 6,
+        "rule": "The checker is itself checked -- seeded defects",
+        "failure_prevented": "A checker that passes everything looks perfect and is blind. Every spec carries canaries -- known-bad artefacts it MUST reject, on the specific criterion they violate. This is the known-defect sample from an industrial inspection line, and the only honest answer to 'who checks the checker'."
+      },
+      {
+        "n": 7,
+        "rule": "Lot traceability",
+        "failure_prevented": "Every verdict records doer lane/model, checker lane/model, spec id@version, attempt and failed criteria, so a bad batch can be traced and recalled rather than guessed at."
+      },
+      {
+        "n": 8,
+        "rule": "Fail closed",
+        "failure_prevented": "An unavailable checker, unparseable JSON, or a citation of criteria that do not exist all return passed=False with escalate=True. A checker that cannot speak is never a pass."
+      }
+    ],
+    "candidates": [
+      {
+        "surface": "AS-02",
+        "spec": "ANON",
+        "doer": "redact identity from agency copy and photos",
+        "checker": "ADVERSARIAL -- try to RECOVER identity from the redacted output; success means the redaction failed",
+        "why_first": "Highest value, lowest risk, defends the intro fee which is the entire till. The adversarial form is strictly stronger than criteria-matching, and only a machine can run it on every item."
+      },
+      {
+        "surface": "AS-09",
+        "spec": "LISTING",
+        "doer": "draft the listing from photos",
+        "checker": "no contact details, no real business named (SO-1), required fields present, claims match the photos",
+        "why_first": "Highest volume, consumer-law exposure once money moves, and the criteria are cleanly objective."
+      },
+      {
+        "surface": "AS-03",
+        "spec": "MODERATION",
+        "doer": "judge buyer-visible imagery",
+        "checker": "sampled cross-check of ACCEPTS (the false accept is the expensive error, and an accept is never appealed by anyone)",
+        "why_first": "RED and high throughput. Rejects get appealed and self-correct; accepts are silent, so the checker must look where nobody complains."
+      },
+      {
+        "surface": "AS-01",
+        "spec": "KYC",
+        "doer": "extract and match identity document",
+        "checker": "document integrity, name-match logic, no extraction the image cannot support",
+        "why_first": "RED, and the false-accept is the expensive error."
+      },
+      {
+        "surface": "AS-05",
+        "spec": "GRADE",
+        "doer": "grade card condition",
+        "checker": "is the grade supported by visible evidence in the photos, and is the estimate framing present",
+        "why_first": "Clears an AMBER warn and defuses the collectables reputational risk."
+      },
+      {
+        "surface": "AS-08",
+        "spec": "MAILCLASS",
+        "doer": "classify inbound mail and draft a reply",
+        "checker": "legal/billing boundary only -- was anything with legal or money characteristics classified away from it",
+        "why_first": "Narrow, cheap, and it is precisely the Klarna failure mode."
+      }
+    ]
+  }
 }
