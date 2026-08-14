@@ -18,7 +18,11 @@ guard that actually matters. Copies (the mount blocks unlink), so originals stay
 import glob, json, os, shutil, sys, time
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DL = next(iter(glob.glob("/sessions/*/mnt/Downloads")), None)
+# DOWNLOAD SINK (GRANT-KILL-1, 14 Aug 2026): prefer _incoming inside the always-mounted
+# Projects tree so a per-session Downloads grant is never needed. Falls back to the old
+# Downloads mount when it happens to be present.
+DL = next((p for p in [os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_incoming")]
+           if os.path.isdir(p)), None) or next(iter(glob.glob("/sessions/*/mnt/Downloads")), None)
 LOG = os.path.join(REPO, "journeys", ".claimed_downloads")
 
 

@@ -125,7 +125,54 @@ def _require_net():
         raise ProbeOffline(_NET["why"])
 
 
-_REVIEW = {"cookie": None, "tried": False}
+_REVIEW = {"cookie": None, "tried": False, "rate_limited": False}
+
+# GATE-CACHE-1 (14 Aug 2026). /review/login is rate-limited 8 per 10 min. Every PROCESS
+# minted its own token, so one maintenance session (ledger before + the agent + per-fault
+# rehearsals + ledger after) burned the whole allowance in minutes -- after which every
+# gated body probe read 401 and this ledger printed "13 previously-fixed issue(s) HAVE
+# COME BACK". Proven self-inflicted the same morning: a bare POST /review/login answered
+# 429 "Too many attempts" while the site itself was fine. A FALSE red is worse than no
+# answer: it invites the next session to "fix" what is not broken and it blocks a deploy
+# for nothing. Two halves, both required:
+#   1. the minted token is CACHED ON DISK (.secrets/, gitignored, mode 0600) and shared by
+#      every process, so a session logs in ONCE instead of once per run; and
+#   2. a 429 is named as a CREDENTIAL failure, so affected entries go UNVERIFIED (blind,
+#      exit 2) instead of REGRESSION (exit 1).
+# The RG-0011/DW-024 rule is untouched -- a probe still never passes blind. It just no
+# longer fails loudly AND wrongly.
+_REVIEW_CACHE = os.path.join(REPO, ".secrets", "review_cookie.json")
+_REVIEW_CACHE_TTL = 12 * 3600          # the token itself lives 365d; re-mint daily anyway
+
+
+def _cookie_from_cache():
+    try:
+        d = json.load(open(_REVIEW_CACHE, encoding="utf-8"))
+        if d.get("base") == BASE and time.time() < float(d.get("exp", 0)):
+            return (d.get("cookie") or "").strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _cookie_to_cache(cookie, ttl=None):
+    # FUSE on this mount blocks unlink, so invalidation writes exp=0 in place.
+    try:
+        os.makedirs(os.path.dirname(_REVIEW_CACHE), exist_ok=True)
+        fd = os.open(_REVIEW_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump({"base": BASE, "cookie": cookie,
+                       "exp": time.time() + (_REVIEW_CACHE_TTL if ttl is None else ttl)}, fh)
+    except Exception:
+        pass
+
+
+def _invalidate_review_cookie():
+    """A cached token the origin REJECTS is worse than none: expire it so the next
+    process mints fresh rather than re-presenting a dead credential."""
+    _REVIEW["cookie"] = None
+    _cookie_to_cache("", ttl=-1)
+
 
 def _review_cookie():
     """ts_review cookie so BODY probes read through the origin gate (GATE-ENFORCE-1,
@@ -138,6 +185,10 @@ def _review_cookie():
     if _REVIEW["tried"]:
         return _REVIEW["cookie"] or ""
     _REVIEW["tried"] = True
+    cached = _cookie_from_cache()                      # GATE-CACHE-1: one login per session
+    if cached:
+        _REVIEW["cookie"] = cached
+        return cached
     code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
     if not code:
         try:
@@ -156,6 +207,12 @@ def _review_cookie():
         body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
         tok = (json.loads(body).get("token") or "").strip()
         _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
+        if _REVIEW["cookie"]:
+            _cookie_to_cache(_REVIEW["cookie"])
+    except urllib.error.HTTPError as e:
+        _REVIEW["cookie"] = None
+        if e.code == 429:                              # GATE-CACHE-1: named, not guessed
+            _REVIEW["rate_limited"] = True
     except Exception:
         _REVIEW["cookie"] = None
     return _REVIEW["cookie"] or ""
@@ -170,10 +227,19 @@ def _get(path):
         except urllib.error.HTTPError as e:
             ck = _review_cookie() if e.code in (401, 403) else ""
             if not ck:
+                if e.code in (401, 403) and _REVIEW["rate_limited"]:
+                    # GATE-CACHE-1: we could not obtain the credential, so we did not
+                    # read the payload. That is BLIND (UNVERIFIED, exit 2), never RED.
+                    raise ProbeOffline("gate credential rate-limited (429 at /review/login) "
+                                       "-- gated read not attempted; blind, not a regression")
                 raise
             req2 = urllib.request.Request(BASE + path, headers=dict(UA, **{"Cookie": ck}))
             try:
                 _cache[path] = urllib.request.urlopen(req2, timeout=TIMEOUT).read().decode("utf-8", "replace")
+            except urllib.error.HTTPError as e2:
+                if e2.code in (401, 403):
+                    _invalidate_review_cookie()        # a rejected token never gets reused
+                raise e
             except Exception:
                 raise e
         except Exception as ex:
@@ -492,11 +558,19 @@ def rg_health():
 
 
 @entry("RG-0011", "Country codes are ISO 3166-1 and map filenames match their code",
-       LOCKED, scope="ALL markets", fixed_on="2026-07-29",
+       OPEN, scope="ALL markets",
        ref="MAP_NAMING_CANON.md. Found 26 Jul: GB points at adventures_uk_map.html and ZA at "
            "adventures_reserve_map.html, and ADV_COUNTRY_FLAGS carries EU and LL which are not "
            "countries (LL is in flags but not currency). Every lookup keyed on listing.country "
-           "has to special-case these, which is how per-country bugs get born.")
+           "has to special-case these, which is how per-country bugs get born. "
+           "DEMOTED LOCKED -> OPEN 14 Aug 2026 (DW-024): it was marked LOCKED on 29 Jul on the "
+           "strength of a filename regex that matched ZERO of the 9 real rows, because it demanded "
+           "the closing quote right after .html while every row carries ?v=NNN. The regex is fixed "
+           "now, and with it fixed the entry FAILS honestly: GB still points at adventures_uk_map.html "
+           "and ZA at adventures_reserve_map.html. Nothing regressed today — this debt was never paid; "
+           "it was hidden. Per David's rule the assertion was repaired rather than weakened, and the "
+           "false LOCKED was withdrawn rather than left reporting ok. Re-lock only when both filenames "
+           "match their ISO code on disk.")
 def rg_iso_codes_and_filenames():
     import re
     fe = repo_file("ms.js")
@@ -514,7 +588,15 @@ def rg_iso_codes_and_filenames():
         for k in re.findall(r"(?:^|[{,])\s*([A-Z]{2,3}):", m.group(1)):
             if k not in ISO and k not in SENTINELS:
                 out.append((FAIL, f"{table} contains {k!r}, which is not an ISO 3166-1 country code"))
-    for key, slug in re.findall(r"^\s*(?://\s*)?([A-Z]{2}): \{ file:'adventures_([a-z0-9]+)_map\.html'", fe, re.M):
+    # DW-024 FIX 14 Aug 2026: this pattern demanded the closing quote immediately after
+    # .html, but every real row carries a ?v=NNN cache-buster (RG-0012 already tolerated
+    # one). It therefore matched 0 rows out of 9 and reported "ok" from 29 Jul — a green
+    # light that was lying, and the two debts it exists to catch were among the 9 it missed.
+    _rows = re.findall(r"^\s*(?://\s*)?([A-Z]{2}): \{ file:'adventures_([a-z0-9]+)_map\.html(?:\?v=\d+)?'", fe, re.M)
+    if not _rows:
+        out.append((FAIL, "map-filename pattern matched 0 rows in ms.js — the check cannot see the table "
+                          "it exists to police (this is the DW-024 vacuous-assertion class, not an empty table)"))
+    for key, slug in _rows:
         if slug != key.lower():
             out.append((FAIL, f"map key {key} points at adventures_{slug}_map.html "
                               f"(canon: adventures_{key.lower()}_map.html)"))
@@ -2903,6 +2985,236 @@ def rg_fix_agent_aims_real():
     except Exception as ex:
         out.append((FAIL, "functional half crashed (%r) -- the aiming property is UNPROVEN "
                           "this run" % ex))
+    return out
+
+
+@entry("RG-0068", "No assertion on this board may pass by matching NOTHING -- a vacuous check is a lying check",
+       LOCKED, scope="the vacuous-assertion class entire: every ledger pattern that is supposed to "
+                     "find rows in a real table. Seeded from the two known instances (RG-0011's map-filename "
+                     "regex, which matched 0 of 9 rows and reported ok from 29 Jul to 14 Aug) and generalised "
+                     "so a NEW pattern that silently matches nothing trips this entry instead of going green.",
+       fixed_on="2026-08-14",
+       ref="LEDGER-META-1, born from DW-024. David's framing: a green light that lies costs more than any "
+           "red, because every other colour on the board is discounted once one of them is known to be "
+           "decorative. RG-0011 sat LOCKED and passing for 16 days while the two debts it existed to catch "
+           "(GB -> adventures_uk_map.html, ZA -> adventures_reserve_map.html) sat untouched in the very "
+           "rows it could not see. This entry makes that failure mode self-reporting: each guarded pattern "
+           "below must match at least one thing in the live source, or this entry goes red and names it. "
+           "Add a line here whenever a new ledger entry leans on a findall/search over a real table.")
+def rg_no_vacuous_patterns():
+    """Every pattern here MUST find something. Zero matches = the check has gone blind."""
+    import re as _re
+    out = []
+    fe = repo_file("ms.js")
+    if fe is None:
+        return [(INFO, "ms.js not present (running outside the repo) -- meta-check skipped")]
+    GUARDED = [
+        ("RG-0011 map-filename rows",
+         r"^\s*(?://\s*)?([A-Z]{2}): \{ file:'adventures_([a-z0-9]+)_map\.html(?:\?v=\d+)?'", fe, 9),
+        ("RG-0011 ADV_COUNTRY_FLAGS table",
+         r"ADV_COUNTRY_FLAGS\s*=\s*\{([^}]*)\}", fe, 1),
+        ("RG-0011 ADV_COUNTRY_CURRENCY table",
+         r"ADV_COUNTRY_CURRENCY\s*=\s*\{([^}]*)\}", fe, 1),
+        ("RG-0012 ADV_TOUR_MAP table",
+         r"ADV_TOUR_MAP\s*=\s*\{([^}]*)\}", fe, 1),
+    ]
+    for name, pat, hay, expect_at_least in GUARDED:
+        n = len(_re.findall(pat, hay, _re.M | _re.S))
+        if n == 0:
+            out.append((FAIL, "%s matches ZERO things -- the assertion leaning on it is VACUOUS "
+                              "and would report ok while seeing nothing (DW-024 class)" % name))
+        elif n < expect_at_least:
+            out.append((FAIL, "%s matches only %d row(s), expected at least %d -- the pattern has "
+                              "gone partially blind" % (name, n, expect_at_least)))
+    if not out:
+        out.append((INFO, "all %d guarded patterns still match real rows -- no assertion is running blind"
+                    % len(GUARDED)))
+    return out
+
+
+@entry("RG-0069", "The pre-deploy gate can PROVE the database from ANY session -- the proof never rides on a key that lives on one desk",
+       OPEN, scope="the whole 'gate cannot prove, so it says REVIEW forever' class: tsl_gate.py "
+                   "check_db and every session that runs it (David's desktop, the cloud sandbox, "
+                   "the nightly task). Covers the primary DB's presence, byte size and integrity, "
+                   "plus redis. NOT scoped to one machine -- that was precisely the defect.",
+       ref="TSL-DBPROOF-1, 14 Aug 2026. The gate's only DB transport was ssh msdeploy@, and the "
+           "private key stays on David's machine by design (and must never enter a cloud session). "
+           "So every gate run from anywhere else printed 'could not prove the databases healthy this "
+           "run' and returned REVIEW -- not because anything was wrong, but because nothing COULD be "
+           "proven. A gate that can never go green is a gate people learn to wave through, which is "
+           "the opposite of what it is for. Fix: bea_main.py _tsl_dbproof publishes a facts-only db "
+           "block on /health (the one endpoint nginx leaves open anonymously post GATE-ENFORCE-1) -- "
+           "presence, bytes, integrity verdict, redis ping; no paths, no schema, no counts, no "
+           "customer data. integrity_check is a full scan so it is cached (TSL_DBPROOF_TTL_SEC, "
+           "default 900s); presence and size are a live stat, which is what actually catches the "
+           "zero-byte case. The whole block is individually guarded and can never raise, because a "
+           "throwing /health would make the deploy engine auto-roll-back a good ship. tsl_gate now "
+           "reads HTTPS first and keeps SSH as a second opinion; REVIEW is reserved for BOTH "
+           "transports failing, which is a real cannot-prove. OPEN until the server carrying the db "
+           "block is live -- it flips to READY TO LOCK on the next deploy.")
+def rg_gate_proves_db_without_key():
+    out = []
+    # Repo half: the gate must prefer the credential-free transport.
+    g = repo_file("tsl_gate.py")
+    if g is not None:
+        for needle, why in (("def check_db_http", "the HTTPS proof path"),
+                            ("MS_HEALTH_URL", "the overridable health URL"),
+                            ("def check_db_ssh", "SSH demoted to fallback")):
+            if needle not in g:
+                out.append((FAIL, "tsl_gate.py lost %s -- the gate is back to proving the DB "
+                                  "only from David's desk" % why))
+    b = repo_file("bea_main.py")
+    if b is not None and "_tsl_dbproof" not in b:
+        out.append((FAIL, "bea_main.py lost _tsl_dbproof -- /health no longer publishes the "
+                          "credential-free DB proof"))
+
+    # Live half: the proof must actually be readable, anonymously, and be true.
+    h = _json("/health")
+    db = h.get("db")
+    if not isinstance(db, dict):
+        out.append((FAIL, "live /health carries no db block -- the gate still cannot prove the "
+                          "database without the SSH key"))
+        return out
+    if db.get("primary_present") is not True:
+        out.append((FAIL, "live /health says the primary DB is not present (%r)"
+                    % (db.get("reason"),)))
+    szn = db.get("primary_bytes")
+    if not isinstance(szn, int) or szn <= 0:
+        out.append((FAIL, "live /health reports primary_bytes=%r -- a zero-byte primary DB is "
+                          "the exact case this gate exists to catch" % (szn,)))
+    integ = str(db.get("integrity") or "").lower()
+    if integ not in ("ok", "unknown", "noread"):
+        out.append((FAIL, "live /health reports integrity=%r -- the primary DB is CORRUPT"
+                    % (db.get("integrity"),)))
+    if not out:
+        out.append((INFO, "DB proven over anonymous HTTPS: %d bytes, integrity %s, redis %s"
+                    % (szn, db.get("integrity"), db.get("redis"))))
+    return out
+
+
+@entry("RG-0070", "One session logs in ONCE -- a rate-limited gate credential reads BLIND, never RED",
+       LOCKED, scope="the gate-credential class entire: scripts/regression_ledger.py and "
+                     "scripts/maintenance_agent.py -- every process in a session that reads "
+                     "through the armed origin gate. Both halves: the shared on-disk token "
+                     "cache (cause) and the 429 -> UNVERIFIED demotion (consequence)",
+       fixed_on="2026-08-14",
+       ref="Self-inflicted and proven the same morning (maintenance-loop run, 14 Aug): the "
+           "ledger ran green at 05:33, then the agent plus four per-fault rehearsal runs each "
+           "minted their own ts_review token, exhausting the 8-per-10-min allowance; the next "
+           "ledger run printed '13 previously-fixed issue(s) HAVE COME BACK. Do not deploy "
+           "over this.' with every failure reading 'check crashed: <HTTPError 401>'. A bare "
+           "POST /review/login answered 429 'Too many attempts' while the site was healthy -- "
+           "so the board was false-red, the most expensive failure mode this ledger has: it "
+           "invites the next session to fix what is not broken and blocks a deploy for "
+           "nothing. GATE-CACHE-1 fixes the class at both ends: the token is cached in "
+           ".secrets/review_cookie.json (gitignored, 0600, 12h, keyed on BASE) so a session "
+           "logs in once instead of once per process, and a 429 is NAMED so affected entries "
+           "raise ProbeOffline -> UNVERIFIED (exit 2, blind) instead of REGRESSION (exit 1). "
+           "A cookie the origin rejects is expired in place (FUSE blocks unlink) so a dead "
+           "token is never re-presented. RG-0011/DW-024 is untouched -- nothing passes blind.")
+def rg_gate_credential_cached_and_honest():
+    out = []
+    for fn in ("scripts/regression_ledger.py", "scripts/maintenance_agent.py"):
+        c = repo_file(fn)
+        if c is None:
+            out.append((FAIL, "%s unreadable -- the shared-credential guarantee is UNPROVEN" % fn))
+            continue
+        if "_cookie_from_cache" not in c or "_cookie_to_cache" not in c:
+            out.append((FAIL, "%s no longer shares the on-disk review token -- every process "
+                              "mints its own again and a busy session re-burns the 8/10min "
+                              "allowance (GATE-CACHE-1 cause half)" % fn))
+        if "review_cookie.json" not in c:
+            out.append((FAIL, "%s lost the shared cache path -- the two lanes can no longer "
+                              "reuse one login" % fn))
+        if 'e.code == 429' not in c:
+            out.append((FAIL, "%s no longer recognises a 429 at /review/login -- a rate-limited "
+                              "credential can read as an app fault again" % fn))
+    led = repo_file("scripts/regression_ledger.py") or ""
+    if 'rate-limited (429 at /review/login)' not in led or "raise ProbeOffline" not in led:
+        out.append((FAIL, "the ledger no longer demotes a rate-limited gate read to blind -- "
+                          "false REGRESSIONS (exit 1) return, the exact 14 Aug failure"))
+    if "_invalidate_review_cookie" not in led:
+        out.append((FAIL, "the ledger no longer expires a REJECTED token -- a dead credential "
+                          "would be re-presented from cache by every later process"))
+    # Functional half: the cache round-trips, and an expired entry is not served.
+    try:
+        import importlib.util as _ilu
+        _sp = _ilu.spec_from_file_location("_rl_gc",
+                                           os.path.join(REPO, "scripts", "regression_ledger.py"))
+        _rl = _ilu.module_from_spec(_sp); _sp.loader.exec_module(_rl)
+        _keep = None
+        try:
+            _keep = open(_rl._REVIEW_CACHE, encoding="utf-8").read()
+        except Exception:
+            pass
+        try:
+            _rl._cookie_to_cache("ts_review=RG0070PROBE")
+            if _rl._cookie_from_cache() != "ts_review=RG0070PROBE":
+                out.append((FAIL, "the token cache does not round-trip -- sharing is nominal only"))
+            _rl._cookie_to_cache("ts_review=RG0070PROBE", ttl=-1)
+            if _rl._cookie_from_cache():
+                out.append((FAIL, "an EXPIRED cache entry is still served -- invalidation is a "
+                                  "no-op and a rejected token would live on"))
+        finally:
+            if _keep is not None:
+                try:
+                    _fd = os.open(_rl._REVIEW_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+                    with os.fdopen(_fd, "w", encoding="utf-8") as _fh:
+                        _fh.write(_keep)
+                except Exception:
+                    pass
+    except Exception as ex:
+        out.append((FAIL, "functional half crashed (%r) -- the cache property is UNPROVEN this "
+                          "run" % ex))
+    if not out:
+        out.append((INFO, "one login per session, shared on disk; a 429 reads blind, not red"))
+    return out
+
+
+@entry("RG-0071", "A killed maintenance run still leaves a RECORD -- the queue is never read into silence",
+       LOCKED, scope="scripts/maintenance_agent.py main() -- every host the loop runs on, and "
+                     "every fault in every run: the incremental report flush, the --only "
+                     "selector and the MAINT_TIME_BUDGET_S stop. The sibling of BRAIN-DEPS-2 "
+                     "(background reaping); this is the FOREGROUND half",
+       fixed_on="2026-08-14",
+       ref="Found by losing runs to it, 14 Aug: the Cowork sandbox hard-caps ONE bash call at "
+           "~178 s, and a single PATH_A fault on a megabyte file (window + brain + worktree on "
+           "FUSE + the 46 s gate ledger, whose own subprocess timeout is 240 s) does not fit. "
+           "Three runs were killed mid-gate and each wrote NOTHING -- no report, no heartbeat, "
+           "no trace that the queue had been read at all, which is indistinguishable from a "
+           "loop that never ran. The guards are untouched; only the bookkeeping changed: the "
+           "run report is flushed after EVERY fault (and at each early-exit lane), so a kill "
+           "costs at most the fault in flight; --only=REF drives the queue one fault per "
+           "invocation on a capped host; MAINT_TIME_BUDGET_S stops cleanly BEFORE starting a "
+           "fault that cannot finish and names the remainder DEFERRED rather than dropping "
+           "them. Proven the same session: --only=TS-0032 completed inside the cap, wrote its "
+           "report and posted the heartbeat (/dashboard/maint run 2026-08-14T06:01:28Z).")
+def rg_maint_run_leaves_a_record():
+    out = []
+    c = repo_file("scripts/maintenance_agent.py")
+    if c is None:
+        out.append((FAIL, "maintenance_agent.py unreadable -- the record guarantee is UNPROVEN"))
+        return out
+    for needle, why in (
+            ("def _flush", "the incremental report flush"),
+            ('_arg("--only"', "the --only queue selector"),
+            ("MAINT_TIME_BUDGET_S", "the wall-clock budget"),
+            ('"DEFERRED"', "the DEFERRED lane (unexamined faults are named, not dropped)"),
+            ("_flush(); continue", "flushing on the early-exit lanes")):
+        if needle not in c:
+            out.append((FAIL, "maintenance_agent.py lost %s -- a killed run can vanish "
+                              "silently again (HOST-CAP-1)" % why))
+    # The flush must happen INSIDE the fault loop, not only at the end -- that was the bug.
+    _body = c.split("for _i, f in enumerate(faults):", 1)
+    if len(_body) != 2:
+        out.append((FAIL, "the fault loop no longer carries its index -- the budget stop and "
+                          "the DEFERRED remainder cannot work"))
+    elif _body[1].count("_flush()") < 4:
+        out.append((FAIL, "fewer than four flush points inside the fault loop -- the early-exit "
+                          "lanes are writing nothing again"))
+    if not out:
+        out.append((INFO, "report flushed per fault; --only and time budget present; deferred "
+                          "faults named"))
     return out
 
 

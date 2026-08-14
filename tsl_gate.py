@@ -399,10 +399,102 @@ def _ssh_read(remote_cmd, timeout=40):
     return r.stdout, None
 
 
+# --- TSL-DBPROOF-1 ------------------------------------------------------------
+# The DB proof used to ride ONLY on ssh msdeploy@. That key lives on David's
+# machine by design (and must never enter a cloud session), so every gate run
+# from anywhere else returned REVIEW forever — "could not prove the databases
+# healthy" — which is not a fault, it is a missing transport. A gate that cannot
+# ever go green teaches people to ignore it.
+#
+# So the primary transport is now HTTPS /health, which the server answers with a
+# facts-only db block (see bea_main.py _tsl_dbproof). No credentials, readable
+# from ANY session. SSH stays as an optional second opinion; REVIEW is now
+# reserved for the case where BOTH transports fail — a real "cannot prove".
+HEALTH_URL = os.environ.get("MS_HEALTH_URL", "https://trustsquare.co/health")
+
+
+def _http_dbproof(timeout=20):
+    """Read the credential-free db proof off /health. Returns (dict, err)."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(
+            HEALTH_URL, headers={"User-Agent": "tsl-gate/1.0"})
+        raw = urllib.request.urlopen(req, timeout=timeout).read()
+        doc = json.loads(raw.decode("utf-8", "replace"))
+    except Exception as e:
+        return None, "%s: %s" % (type(e).__name__, str(e)[:90])
+    if doc.get("status") != "ok":
+        return None, "/health status=%r" % doc.get("status")
+    db = doc.get("db")
+    if not isinstance(db, dict):
+        return None, "/health carries no db block (server predates TSL-DBPROOF-1)"
+    return db, None
+
+
+def check_db_http():
+    """Primary DB proof over HTTPS. Returns (verdict, lines) or (None, lines)
+    when the proof is simply not available and SSH should be tried."""
+    db, err = _http_dbproof()
+    if err:
+        return None, ["    - /health dbproof   : unavailable (%s)" % err]
+
+    lines, danger, review = [], [], []
+    present = db.get("primary_present")
+    szn = db.get("primary_bytes")
+    integ = (db.get("integrity") or "unknown")
+
+    if present is False:
+        danger.append("PRIMARY db not present on the server (%s)"
+                      % (db.get("reason") or "no reason given"))
+        lines.append("    - primary db        [NOT PRESENT]")
+    elif not isinstance(szn, int) or szn <= 0:
+        danger.append("PRIMARY db is %s bytes" % szn)
+        lines.append("    - primary db        [ZERO/UNKNOWN BYTES - PRIMARY]")
+    elif str(integ).lower() == "ok":
+        lines.append("    - primary db        [ok, %d bytes, integrity ok]%s"
+                     % (szn, " (cached)" if db.get("cached") else ""))
+    elif str(integ).lower() in ("unknown", "noread"):
+        review.append("integrity could not be read (%s)"
+                      % (db.get("reason") or "no reason given"))
+        lines.append("    - primary db        [%d bytes, integrity UNKNOWN]" % szn)
+    else:
+        danger.append("PRIMARY db integrity_check = %s" % integ)
+        lines.append("    - primary db        [INTEGRITY: %s]" % integ)
+
+    rd = db.get("redis")
+    if rd == "PONG":
+        lines.append("    - redis             [ok, PONG]")
+    elif rd in (None, "unknown"):
+        lines.append("    - redis             [not readable - not gated]")
+    else:
+        review.append("redis did not answer PONG (%s)" % rd)
+        lines.append("    - redis             [%s]" % rd)
+
+    verdict = "DANGER" if danger else ("REVIEW" if review else "ok")
+    for d in danger:
+        lines.append("    !! " + d)
+    for r in review:
+        lines.append("    >> " + r)
+    lines.append("    -- proved over HTTPS /health (no credentials needed)")
+    return verdict, lines
+
+
 def check_db():
-    """Live databases, read-only. Returns (verdict, lines). verdict in
-    ok | REVIEW | DANGER. Unreachable = REVIEW (in strict, that blocks:
-    the gate exists to *prove* the DB, and it could not)."""
+    """Live databases, read-only. HTTPS /health is the primary transport; SSH is
+    the fallback/second opinion. REVIEW only when NEITHER can prove the DB."""
+    v, lines = check_db_http()
+    if v is not None:
+        return v, lines
+    http_lines = lines
+    v2, ssh_lines = check_db_ssh()
+    if v2 == "REVIEW" and ssh_lines and "UNREACHABLE" in " ".join(ssh_lines):
+        # Both transports down: that IS a genuine cannot-prove.
+        return "REVIEW", http_lines + ssh_lines
+    return v2, http_lines + ssh_lines
+
+
+def check_db_ssh():
+    """The original SSH proof, now the fallback. Read-only, msdeploy@ user."""
     lines = []
     # One round-trip: discover *.db, integrity-check each, ping redis.
     remote = (

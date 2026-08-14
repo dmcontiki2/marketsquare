@@ -35,7 +35,12 @@ MODEL_RE = re.compile(r"claude-([a-z]+)[-0-9a-z.]*")
 # with "claude-"). Skipped in model_discipline() so they don't raise spurious "unknown model
 # family" warnings. e.g. claude-mem (the memory plugin) and its claude-mem.db data file.
 KNOWN_NON_MODELS = {"mem"}
+# .maint_agent = the maintenance agent's own run exhaust (JSON transcripts of what it
+# considered). Reading an agent's notes about a model as a call site is the same
+# category error as reading a price card as one -- DW-009, 14 Aug 2026. .lintenv is
+# the vendored eslint tree installed by scripts/deep_scan.py.
 SKIP_DIRS = {"node_modules", "__pycache__", ".git", "archive", "_CCP_STAGED",
+             ".maint_agent", ".lintenv",
              ".ruff_cache", ".claude", "Kronberg", "Obsidian", "Records"}
 # GOLDEN_EVAL_*.json/.html (produced by failover/eval_golden_set.py, 18 Jul 2026) are
 # frozen one-off benchmark snapshots — a "reference ceiling" Sonnet lane exists ONLY to
@@ -202,6 +207,17 @@ def model_discipline(root: Path):
                 if re.search(r'"in"\s*:\s*[\d.]+', lookahead) and re.search(r'"out"\s*:\s*[\d.]+', lookahead):
                     findings.append((INFO, f"{rel}:{line} Sonnet pricing-table entry (per-MTok rate card) — reference data, not a call site"))
                     continue
+            # DW-009 FIX 14 Aug 2026. This WARNed daily on dashboard.server.html for a
+            # model name inside a DISPLAY LABEL — the +1 page's vendor-lane diagram draws
+            # Anthropic's lane captioned  models:'claude-haiku-4.5 · claude-sonnet-4.6'.
+            # It is text painted on a picture, not a call site: nothing is dispatched, no
+            # token is spent, and "downgrading" it to Haiku would make the diagram lie
+            # about what the vendor offers. Same false-positive family as the price-card
+            # and registry exemptions above. Skip label/caption assignments in UI files.
+            if re.search(r"\b(?:models|label|caption|title|name|note|desc|text|placeholder)\s*:\s*['\"]", ltxt) \
+               and rel.endswith((".html", ".js")):
+                findings.append((INFO, f"{rel}:{line} model name inside a UI display label — text on a diagram, not a call site (DW-009)"))
+                continue
             if fam == "opus":
                 findings.append((CRIT, f"{rel}:{line} uses OPUS ({m.group(0)}) — cost model rejected Opus"))
             elif fam == "sonnet":

@@ -1,3 +1,243 @@
+## 2026-08-14 — SUPER-AFRICA-1: Kenya super-advert stills complete (114/114)
+
+Finished the Kenya super-advert photo ladders — the final 54 stills generated, brand-checked and
+claimed into `assets/super/`. All 9 Kenya tiers (adventures experiences, adventures accommodation,
+cars, property, tutors, local market, collectables, services) now hold complete photo sets, which is
+the condition `post_deploy` seeds on.
+
+Verified: 114/114 expected filenames present, no missing, no extras, no duplicate content, all valid
+JPEGs. Three frames rejected and re-shot on brand grounds (a visible face; two collage compositions).
+
+Also landed this session:
+- **GRANT-KILL-1** — `claim_super.py` / `claim_photos.py` now claim from `MarketSquare/_incoming`
+  inside the always-mounted Projects tree, retiring the per-session Downloads folder grant that had
+  been stalling every photo run at image 1. New canon: `PREFLIGHT_GRANTS.md`.
+- **DUP-CLAIM-1** — `claim_super.py` refuses any candidate whose content hash already exists in
+  `assets/super`, catching the failure where a Download that doesn't fire makes Chrome re-save the
+  previous image under a new "(1)" filename.
+
+## 2026-08-14 — maintenance-loop: GATE-CACHE-1 + HOST-CAP-1 (the loop's own two faults)
+
+Queue: 3 new (TS-0031/0032/0033), 0 fix-shipped, 23 verified. No app fault reached
+"gates GREEN, patch ready", so no application code was touched. Both fixes this session
+are to the maintenance machinery itself — found by the loop failing in its own two ways.
+
+**GATE-CACHE-1 — one session logs in ONCE; a rate-limited credential reads BLIND, not RED.**
+`/review/login` allows 8 logins per 10 minutes and every PROCESS minted its own ts_review
+token (ledger-before, the agent, each per-fault run). One session exhausted the allowance,
+after which every gated body probe read 401 and the ledger printed *"13 previously-fixed
+issue(s) HAVE COME BACK. Do not deploy over this."* while the site was healthy — a bare
+POST /review/login answered 429 "Too many attempts". False red is the most expensive
+failure this board has: it invites the next session to fix what is not broken and blocks a
+deploy for nothing. Fixed at both ends in `scripts/regression_ledger.py` and
+`scripts/maintenance_agent.py`: the token is cached in `.secrets/review_cookie.json`
+(gitignored, 0600, 12h, keyed on BASE) so a session logs in once instead of once per
+process; and a 429 is NAMED, so affected entries raise ProbeOffline → UNVERIFIED (exit 2,
+blind) instead of REGRESSION (exit 1). A token the origin rejects is expired in place
+(FUSE blocks unlink) so a dead credential is never re-presented. RG-0011/DW-024 is
+untouched — nothing passes blind. Ledger **RG-0070**.
+
+**HOST-CAP-1 — a killed run still leaves a record.** The sibling of BRAIN-DEPS-2: that
+fixed the background half (the sandbox reaps detached processes); this is the foreground
+half. The Cowork sandbox hard-caps one bash call at ~178s, and a single PATH_A fault on a
+megabyte file (window + brain + worktree on FUSE + the 46s gate ledger, whose own
+subprocess timeout is 240s) does not fit. Three runs were killed mid-gate and each wrote
+NOTHING — no report, no heartbeat, no trace the queue had been read, which is
+indistinguishable from a loop that never ran. Guards untouched; bookkeeping only: the run
+report is flushed after every fault and at each early-exit lane, so a kill costs at most
+the fault in flight; `--only=REF` drives the queue one fault per invocation on a capped
+host; `MAINT_TIME_BUDGET_S` stops cleanly BEFORE starting a fault that cannot finish and
+names the remainder DEFERRED rather than dropping it. Ledger **RG-0071**.
+
+Fault dispositions (shadow, nothing shipped): TS-0031 → PATH_B, design backlog (AI-added
+vehicle details — left, as the contract requires). TS-0032 → PATH_A, brain declined a
+clean patch → escalated for a human. TS-0033 → not completed; every attempt exceeded the
+host cap mid-gate. TS-0032/TS-0033 look like one class: selecting a city (Maun, Sydney)
+shows the right count, then the adventures page reverts and shows other countries'
+adventures. Ledger green before (70/0 regressed) and after (71 entries, 0 regressed,
+6 open). Heartbeat posted: /dashboard/maint run 2026-08-14T06:01:28Z.
+
+## 2026-08-14 — LYING-CHECKS-1: six instruments repaired, five red cards go green
+
+David's challenge, attended: "why so much issues?" then "remove those six". The answer was
+that most of the register was not faults, and the sharpest cluster was instruments that had
+stopped telling the truth. Fixed in one session.
+
+- **DW-024 / RG-0011 (the worst class)** — the map-filename regex demanded the closing quote
+  right after `.html` while all 9 real rows carry `?v=NNN`, so it matched ZERO rows and
+  reported "ok" from 29 Jul. Regex fixed; a zero-match now FAILS loudly; the false LOCKED was
+  WITHDRAWN rather than left green — RG-0011 is honestly OPEN and names both hidden debts
+  (ZA -> adventures_reserve_map.html, GB -> adventures_uk_map.html). Assertion repaired, never
+  weakened, per David's standing rule.
+- **RG-0068 (LEDGER-META-1), NEW + LOCKED** — "no assertion on this board may pass by matching
+  NOTHING". Guards 4 patterns; goes red if any matches zero. The class fix, so DW-024 cannot recur.
+- **DW-039** — smoke_test.py:145 asserted the ABSENCE of code that locked fix RG-0054 had
+  legitimately introduced. Now asserts the guard itself. Smoke 29/39 -> 30/39.
+- **DW-040 (+ merged DW-002)** — audit_global_qa.py now carries the ledger's reviewer cookie on
+  every GET and HEAD, so the armed gate no longer blinds our own instrument. Audit went from
+  5 findings incl. 3 CRITICAL to 3 findings, all INFO.
+- **DW-001** — VERSION-KEY fires only when the bytes ALSO differ; the server's monotonic `?v=`
+  bump records as VERSION-KEY-BENIGN instead of crying drift daily.
+- **DW-034** — run_daily_checks.py now seeds the CREDENTIAL (not just the host key) and, where it
+  cannot, says "NO CREDENTIAL LOADED - this is NOT an outage" at SEV-4 with a machine-readable
+  `credential_loaded` flag. Proven by deleting the key and running cold.
+- **DW-009** — the finding was wrong: dashboard.server.html:1133 is a DISPLAY LABEL on the +1
+  page's vendor-lane diagram, not a call site; downgrading it would have made the diagram lie
+  about what Anthropic offers. Sweep now exempts UI label/caption assignments, plus `.maint_agent`
+  run exhaust and `.lintenv`. Warnings 3 -> 2 (both remaining are the genuine DW-021 items).
+- **DW-012 — scripts/deep_scan.py, NEW** — the Monday lane owns its own tooling at last: pip for
+  ruff/vulture/pylint, eslint@9 into a gitignored `.lintenv` (global npm is refused EACCES).
+  4/4 tools ran (ruff 0.16.3, vulture 2.16, pylint 4.0.7, eslint 9.39.5); 175 findings,
+  0 crash-class; no cyclic-import/undefined-variable in the five core Python files; no errors
+  in ms.js. A tool that cannot install is reported UNAVAILABLE with its reason, never dropped.
+
+Register: 33 open -> 13. Coverage map: 18 green / 5 blue / 5 amber / 6 red / 2 grey.
+Ledger: 69 entries, 63 LOCKED all holding, 0 REGRESSED, exit 0.
+
+Also this session: the daily-watch task prompt was amended — the watch now CLOSES an item the
+day its check re-passes (the "awaiting David's close" limbo is abolished) and reports real
+issues only, with everything else collapsed to one counted line.
+
+## 2026-08-14 — TSL-DBPROOF-1: the pre-deploy gate can prove the database from any session
+
+**The defect (class, not instance).** `/TSL`'s pre-deploy gate had exactly one transport for
+proving the live database healthy: `ssh msdeploy@`. That private key lives on David's machine
+by design, and must never enter a cloud session. So every gate run anywhere but his desktop —
+cloud sandbox, and any future runner — printed *"could not prove the databases healthy this
+run"* and returned **REVIEW**. Not because anything was wrong: because nothing *could* be
+proven. A gate that can never go green is a gate people learn to wave through, which is the
+opposite of what it is for.
+
+**The fix.**
+
+- `bea_main.py` — new `_tsl_dbproof()` publishes a **facts-only** `db` block on `/health`, the
+  one endpoint nginx leaves open anonymously after GATE-ENFORCE-1: `primary_present`,
+  `primary_bytes`, `integrity`, `redis`. No paths, no schema, no counts, no customer data.
+  `integrity_check` is a full-file scan so it is cached (`TSL_DBPROOF_TTL_SEC`, default 900s);
+  presence and size are a live `stat`, which is what actually catches the zero-byte case.
+  Every probe is individually guarded and the whole block **can never raise** — a throwing
+  `/health` would make the deploy engine auto-roll-back a perfectly good ship.
+- `tsl_gate.py` — `check_db()` now reads HTTPS `/health` first (`check_db_http`, overridable
+  via `MS_HEALTH_URL`) and keeps the original SSH probe as a second opinion
+  (`check_db_ssh`). **REVIEW is now reserved for both transports failing** — a real
+  cannot-prove — rather than being the permanent resting state of every non-desktop run.
+- The key still never leaves David's machine. The proof simply stopped depending on it.
+
+**Ledger.** `RG-0069` added, state **OPEN** — it asserts the repo half (gate prefers the
+credential-free transport, `/health` publishes the block) *and* the live half (the block is
+readable anonymously and reports a present, non-zero, integral primary DB). It flips to
+READY TO LOCK the moment the server carrying this change is live.
+
+**Observed, not chased:** one ledger run during this session reported 13 regressions; the two
+runs immediately after, and every run since, report 0 REGRESSED / 63 holding. Logged here so
+it is not lost — if it recurs it wants a ledger entry of its own.
+
+## 2026-08-13 — GATE-TRUTH-1: a wrong reviewer code no longer reads as "Connection error" (RG-0066)
+
+Maroushka tried to sign in to fix her photo-blur re-uploads (D11/TS-0022) and got
+"Connection error. Please try again." — the same day GATE-ENFORCE-2 armed the origin
+catch-all. Root cause reproduced anonymously: the gate screen falls through from
+/review/login to POST /admin/login, which now answers **nginx HTML 401** at the origin;
+the script's `r.json()` throws and the catch mislabels every unrecognised entry —
+wrong code, stale code, rate-limit — as a network failure. Not the old BEA-down class
+(BACKLOG 27 Jun): /health green, BEA v1.3.1 up throughout; it is the 5 Aug "401 that
+ate David's first report" class in a new spot.
+
+Fix (marketsquare.html gate script, +16 lines, node --check green):
+- `_adminLogin` parses text-first; a gate-refused 401/403 with a non-JSON body now says
+  **"Incorrect reviewer code. Please check it and try again."**; JSON answers keep their
+  detail; only a real network throw says "Connection error".
+- /review/login 429 now says "wait 10 minutes" (limit is 8 tries/10 min/IP); 503 says
+  reviewer access is off.
+
+Ledger: **RG-0066 OPEN** (live half: served index.html carries the GATE-TRUTH-1 marker;
+repo half: source keeps the branch). EXPECTED open until the ref lands — the deploy
+engine is stalled (DW-042); this ships with tonight's revival. Rollback:
+marketsquare.html.bak-gatetruth-20260813.
+
+Maroushka's unblock needs NO deploy: /review/login is live and healthy (verified —
+wrong code answers clean JSON 401). She needs the current reviewer code re-sent and,
+if she has been retrying, a 10-minute wait before entering it.
+
+## 2026-08-13 — GATE-EXEMPT-MAINT-1: migration 018 + BRAIN-DEPS-2 (David: "lets fix both")
+
+Both follow-ups from the 13:24Z maintenance loop, done same day on David's ruling.
+
+**1. Migration 018 (migrations/018_gate_exempt_maint_lane.py)** removes the B2b lane's
+credential dependency at the origin: exempts `location ^~ /admin/faults` and
+`location = /dashboard/maint` from the review gate — and ONLY those; the other /admin/*
+routes (login, users, flags, deploy-file…) stay gated. Scoped after a route audit: every
+/admin/faults* route and the /dashboard/maint POST carry Depends(_require_maint)
+(constant-time key compare, fails closed, bea_main.py:16366) — 007's machine-to-machine
+doctrine verbatim, "exempting them at nginx removes no protection". GET /dashboard/maint
+is no-auth by documented design and merely regains its pre-gate public posture.
+016's proven skeleton throughout (enabled-first find_site, functional idempotency,
+collision refusal, no-gate early exit, backup + nginx -t + reload with auto-restore);
+transform proven against a synthetic post-016 conf before commit (gate detected, single
+anchor, both lines land, idempotent re-run). Rides the next successful deploy — engine
+stalled (DW-042), so likely tonight's revival or NIGHTLY-SHIP-1. RG-0065 OPEN watches it:
+keyed-no-cookie intake currently 401s (expected); flips READY TO LOCK the run 018 lands.
+GATE-COOKIE-1 stays in both consumers — belt (018) and braces (cookie) — so the loop
+survives either lane failing.
+
+**2. BRAIN-DEPS-2 (scheduled task amended via the task system):** maintenance-loop step 2
+now runs the agent FOREGROUND (timeout_ms=600000) with an httpx pre-check/install, and
+notes the agent self-mints the review credential. Supersedes BRAIN-DEPS-1's detached
+pattern — the Cowork sandbox reaps background processes at the bash-call boundary
+(setsid included; proven twice 13 Aug, log frozen at the banner). Heartbeat-confirm GET
+carries the review cookie until 018 lands.
+
+## 2026-08-13 — DW-025 CLOSED: 273/273 self-hosted, RG-0063 LOCKED (IMG-SELFHOST-1 done)
+
+David's evening press completed the class: migration 017 run 3 filled the 29 dead
+source URLs via the stand-in rung (attempts=2 → copy of a landed neighbour, each named
+in /static/demo/ATTRIBUTION.json), rewrote the live demo_sellers.json (0 unsplash /
+40 local, verified through the gate), and recorded itself done. Finding worth keeping:
+those 29 were corrupt in the SEED DATA (truncated params, mangled photo IDs) — broken
+on the live site all along; the self-host work exposed then repaired them, so the demo
+catalogue is now BETTER than before, not just independent. RG-0063 LOCKED. Also
+corrected today: the morning "deploy engine stall" was Claude's SAST/UTC comparison
+error — engine healthy throughout (2-min ticks verified on the box). Day's tally:
+DW-023 closed (RG-0029 LOCKED), DW-025 closed (RG-0063 LOCKED), BAT-NAMING-1
+documented (release.bat commits nothing — use deploy_marketsquare.bat). DW-029
+rotation runs tonight 17:45 (scheduled, rotation-only).
+
+## 2026-08-13 — The agent patches REAL code: probe PASS on bea_main.py and ms.js (RG-0067)
+
+David's challenge — "how will we know the agent can work autonomously if we leave the live
+test till after launch?" — answered by running the test, not describing it. Thirteen
+real-repo probe runs in one sitting; four environment defects and three pipeline defects
+found, fixed, and locked:
+
+- PROBE-KEYS-1/2: the gitignored .secrets never reached the probe clone — brain keyless
+  (PATH_B by default), then gate probes blind. Clone now provisioned like the real repo.
+- WINDOW-AIM-1: the excerpt window aimed at the densest cluster of ANY token — generic
+  words outgunned the distinctive one (defect at line 122, brain shown 1158-1298; sonnet's
+  NObugfix was CORRECT). Rare tokens (≤2, then ≤8 hit lines) now steer; common ones pad.
+- PROBE-EXHAUST-1: the probe harness itself ranked as the patch target — it quotes faults
+  verbatim, so the brain was shown the seed DEFINITION, where the misspelling is correct.
+  CAND-FIX-1's "own exhaust" class, new costume. Harnesses excluded from ranking.
+- PATCH-FENCE-1 + --recount: sonnet fences its diffs and miscounts hunk headers; written
+  verbatim to .proposed.patch = "corrupt patch at the closing fence". THE root of the
+  MAINT-B4-6 "diffs slip" class. Fences stripped; git apply --recount --3way (proven by
+  hand: rc=0, typo fixed).
+- WINDOW-SPLICE-1: the rewrite fallback demanded "the COMPLETE file" while showing an
+  excerpt labeled "the rest is NOT shown" — impossible; sonnet echoed the block. Windowed
+  rewrites now ask for the corrected BLOCK and splice by line range under a bytes-match
+  guard (also kills the latent garbage-filename write: rw path was the LABEL).
+- PATCH-EVIDENCE-1: apply failures now keep the failing diff + git's stderr in the run
+  report — "did not apply" was undiagnosable for two days.
+- GATE-CREDS-1 (launch-critical): gate worktrees carry TRACKED files only — no .secrets —
+  so from the moment 016 armed the origin gate, the ledger GATE crashed 401-red for EVERY
+  patch, however perfect. The arming didn't just break intake (GATE-COOKIE-1); it silently
+  blocked the entire fix pipeline's gate step. Worktrees now get the repo's .secrets.
+
+Evidence: PROBE PASS both targets — bea_main.py (909,256 B) and ms.js (1,060,023 B) found,
+windowed, patched, gates green, commit correctly withheld by shadow. "Patch quality on this
+codebase is no longer unproven" — the last open question before the timer (STATUS.md, 11
+Aug) is answered for both real-file classes. RG-0067 locks the whole pipeline with
+deterministic no-API assertions.
+
 ## 2026-08-13 — maintenance-loop: GATE-COOKIE-1 — the B2b lanes ride the armed gate (RG-0064)
 
 The 13:17Z maintenance run died at intake: GET /admin/faults answered 401 from nginx —

@@ -9,7 +9,11 @@ Exact count match or nothing. Names must exist in SUPER_LADDER_PROMPTS.md."""
 import glob, os, shutil, sys, time, re
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DL = next(iter(glob.glob("/sessions/*/mnt/Downloads")), None)
+# DOWNLOAD SINK (GRANT-KILL-1, 14 Aug 2026): prefer _incoming inside the always-mounted
+# Projects tree so a per-session Downloads grant is never needed. Falls back to the old
+# Downloads mount when it happens to be present.
+DL = next((p for p in [os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_incoming")]
+           if os.path.isdir(p)), None) or next(iter(glob.glob("/sessions/*/mnt/Downloads")), None)
 LOG = os.path.join(REPO, "journeys", ".claimed_downloads")
 PACK = os.path.join(REPO, "SUPER_LADDER_PROMPTS.md")
 
@@ -41,11 +45,33 @@ def main(argv):
         for p in fresh:
             print(f"   unclaimed: {os.path.basename(p)[:40]}")
         return 1
+    # DUP-CLAIM GUARD (14 Aug 2026): a failed Download re-saves the PREVIOUS image as
+    # "name (1).png" -- a new basename, so the log guard misses it. Refuse any candidate
+    # whose content hash already exists in assets/super. Content, not filename, is truth.
+    import hashlib
+    def h(p):
+        return hashlib.md5(open(p, "rb").read()).hexdigest()
+    existing = {}
+    for fn in os.listdir(pdir):
+        fp = os.path.join(pdir, fn)
+        if os.path.isfile(fp):
+            existing.setdefault(h(fp), fn)
+    for s in fresh:
+        d = h(s)
+        if d in existing:
+            print(f"ERROR duplicate content -- {os.path.basename(s)[:34]} is byte-identical to "
+                  f"already-claimed {existing[d]}. The Download almost certainly did not fire. "
+                  f"Claiming NOTHING.")
+            return 1
     with open(LOG, "a") as log:
         for s, name in zip(fresh, names):
             shutil.copyfile(s, os.path.join(pdir, name))
             log.write(os.path.basename(s) + "\n")
             print(f"  OK {os.path.basename(s)[:34]} -> super/{name}")
+            try:
+                os.remove(s)   # consume, so _incoming never accumulates stale candidates
+            except OSError:
+                pass
     return 0
 
 

@@ -1,0 +1,302 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — Human Seam Map</title>
+<style>
+:root{--navy:#12283F;--ink:#1B2A38;--rule:#D8DEE5;--paper:#F7F9FB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+font:16px/1.55 "Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:34px 40px 30px}
+header h1{margin:0 0 6px;font-size:30px;letter-spacing:-.4px}
+header p{margin:0;opacity:.85;max-width:900px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+border-radius:8px;padding:9px 15px;font-size:14px}
+.stat b{font-size:20px;display:block;line-height:1.2}
+main{padding:34px 40px 60px;max-width:1500px;margin:0 auto}
+h2{font-size:20px;color:var(--navy);margin:44px 0 6px;padding-bottom:9px;
+border-bottom:2px solid var(--navy)}
+h2:first-of-type{margin-top:0}
+.sub{margin:0 0 20px;color:#5A6C7D;font-size:14.5px;max-width:1000px}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin:0 0 22px;font-size:13.5px}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{width:15px;height:15px;border-radius:4px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.card{background:#fff;border:1px solid var(--rule);border-left:6px solid var(--fg);
+border-radius:9px;padding:16px 18px 14px;box-shadow:0 1px 3px rgba(18,40,63,.07)}
+.chead{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.cls{background:var(--fg);color:#fff;font-size:11px;font-weight:700;letter-spacing:.8px;
+padding:3px 9px;border-radius:4px}
+.cid{font-size:12px;color:#7B8A99;font-weight:600;letter-spacing:.5px}
+.chip{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.6px;
+padding:3px 9px;border-radius:11px}
+.built{background:#E8F5EE;color:#1E6B45;border:1px solid #B7DEC9}
+.open{background:#FDECEA;color:#B3261E;border:1px solid #F2C2BC}
+.card h4{margin:0 0 3px;font-size:16.5px;color:var(--navy)}
+.file{font:12px/1.4 ui-monospace,Consolas,monospace;color:#7B8A99;margin-bottom:11px;
+word-break:break-all}
+dl{margin:0}
+dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:#8494A3;
+font-weight:700;margin-top:9px}
+dd{margin:1px 0 0;font-size:13.8px}
+dd.role{color:var(--navy);font-weight:600}
+dd.trig{background:var(--bg);border-radius:5px;padding:6px 9px;margin-top:3px;font-size:13.4px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);
+border-radius:9px;overflow:hidden;font-size:13.8px}
+th{background:var(--navy);color:#fff;text-align:left;padding:11px 13px;font-size:12px;
+text-transform:uppercase;letter-spacing:.7px}
+td{padding:11px 13px;border-top:1px solid var(--rule);vertical-align:top}
+tr:nth-child(even) td{background:#FBFCFD}
+.lid{font-weight:700;color:#B26A00;white-space:nowrap}
+.act{color:var(--navy);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:15px}
+.rule{background:#fff;border:1px solid var(--rule);border-top:4px solid var(--navy);
+border-radius:9px;padding:15px 18px}
+.rid{font-size:11.5px;font-weight:700;color:#B26A00;letter-spacing:1px}
+.rule h4{margin:3px 0 7px;font-size:15.5px;color:var(--navy)}
+.rule p{margin:0;font-size:13.8px;color:#3C4C5C}
+footer{padding:26px 40px 44px;color:#7B8A99;font-size:13px;max-width:1500px;margin:0 auto}
+footer code{background:#EDF1F5;padding:2px 6px;border-radius:4px}
+</style></head><body>
+<header>
+<h1>MarketSquare — Human Seam Map</h1>
+<p>Every place an AI decides something on a user&rsquo;s behalf, with the seam a human will one
+day stand in. Cut while it is still empty, because MarketSquare starts at zero humans by design
+and has no bench to recall. Derived from <code>HUMAN_SEAM_REGISTER.json</code>; asserted by
+<code>scripts/human_seam_check.py</code>.</p>
+<div class="stats">
+<div class="stat"><b>14</b>AI decision surfaces</div>
+<div class="stat"><b>5</b>RED — irreversible</div>
+<div class="stat"><b>7</b>AMBER — recoverable</div>
+<div class="stat"><b>2</b>GREEN — retryable</div>
+<div class="stat"><b>9 / 14</b>seams built</div>
+<div class="stat"><b>6</b>incentive leaks tracked</div>
+</div>
+</header>
+<main>
+<h2>1 &nbsp;The seam register</h2>
+<p class="sub">Class is set by what a wrong answer costs, not by how clever the model is.
+RED means a refund cannot undo it.</p>
+<div class="legend">
+<span><i class="sw" style="background:#B3261E"></i> RED — irreversible harm to a person or to the trust promise</span>
+<span><i class="sw" style="background:#B26A00"></i> AMBER — money, ranking or reputation; recoverable at a cost in trust</span>
+<span><i class="sw" style="background:#1E6B45"></i> GREEN — cosmetic or retryable</span>
+</div>
+<div class="grid">
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">HS-01</span><span class="chip open">SEAM OPEN</span></div>
+  <h4>KYC identity verification</h4>
+  <div class="file">bea_main.py:_sonnet_verify_identity</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether an ID document matches the claimed name</dd>
+    <dt>Cost of a wrong answer</dt><dd>False accept lets a fraudster wear a verified badge; false reject locks an honest seller out with no appeal path</dd>
+    <dt>Machine fallback today</dt><dd>AI seam + circuit breaker; lane swap on outage</dd>
+    <dt>Human role at the seam</dt><dd class="role">Verification reviewer (part-time, remote)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">ANY false accept discovered, OR &gt;2% appeal rate on rejects, OR &gt;40 verifications/week</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">HS-02</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Agency import anonymisation</h4>
+  <div class="file">bea_main.py:_anon_ai_rewrite/_anon_photo_scan/_anon_refine_regions</div>
+  <dl>
+    <dt>Decides</dt><dd>Which copy and which photo regions carry identity and must be removed</dd>
+    <dt>Cost of a wrong answer</dt><dd>A leaked phone number destroys the anonymity guarantee AND bypasses the intro fee -- the business model itself</dd>
+    <dt>Machine fallback today</dt><dd>Confidence gate; below-threshold held for manual review; nothing auto-publishes; first N imports spot-checked</dd>
+    <dt>Human role at the seam</dt><dd class="role">Import spot-checker (already assumed in the spec -- currently David)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Second agency onboarded, OR &gt;20 imports/week, OR any leak found in production</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">HS-03</span><span class="chip open">SEAM OPEN</span></div>
+  <h4>Photo moderation / orientation</h4>
+  <div class="file">bea_main.py:_vision_orient_image (MODERATION-1)</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether buyer-visible imagery is acceptable</dd>
+    <dt>Cost of a wrong answer</dt><dd>Degrading or unlawful imagery reaching buyers; or an honest seller silently censored</dd>
+    <dt>Machine fallback today</dt><dd>Refuse rather than blur-to-ruin (RG-0040/0044/0047); judged by bytes not declared type</dd>
+    <dt>Human role at the seam</dt><dd class="role">Trust &amp; safety reviewer (shared with HS-01)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">First refusal appeal, OR any reported image that passed, OR &gt;100 uploads/day</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">HS-04</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Tuppence charging on AI delivery</h4>
+  <div class="file">bea_main.py ai_spend_holds / charge-on-delivery</div>
+  <dl>
+    <dt>Decides</dt><dd>When a user&#x27;s Tuppence is spent</dd>
+    <dt>Cost of a wrong answer</dt><dd>Charging for a service not delivered -- the fastest possible way to lose a founding seller</dd>
+    <dt>Machine fallback today</dt><dd>Charge on delivery only (RG-0033); spend reserved before dispatch (RG-0037); daily ceilings</dd>
+    <dt>Human role at the seam</dt><dd class="role">Billing dispute handler (David until volume forces otherwise)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">First disputed charge, OR &gt;3 refunds/week</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">HS-11</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Maintenance agent (self-modifying code)</h4>
+  <div class="file">scripts/maintenance_agent.py</div>
+  <dl>
+    <dt>Decides</dt><dd>Classifies faults, proposes and (when armed) ships code patches</dd>
+    <dt>Cost of a wrong answer</dt><dd>An autonomous agent shipping to the live site is the single highest-blast-radius surface in the system</dd>
+    <dt>Machine fallback today</dt><dd>Default OFF; shadow mode; MAX_SHIPS_PER_HOUR; ledger+predeploy+BIT gates; server auto-rollback; REFUSE_LEGAL_COSTLY / REFUSE_TRUST_CORE force escalation</dd>
+    <dt>Human role at the seam</dt><dd class="role">David (TOTAL AUTONOMY ruling 29 Jul 2026 retired the per-change veto in favour of mechanical gates)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">REVIEW: the no-veto ruling is correct only while the mechanical gates are provably complete. Any gate that stops asserting re-arms the veto.</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-05</span><span class="chip open">SEAM OPEN</span></div>
+  <h4>Card condition grading</h4>
+  <div class="file">bea_main.py:grade_card_condition</div>
+  <dl>
+    <dt>Decides</dt><dd>Graded condition (Near Mint..Damaged) which drives price</dd>
+    <dt>Cost of a wrong answer</dt><dd>Buyer receives a card worse than graded -- collectables communities punish this publicly and permanently</dd>
+    <dt>Machine fallback today</dt><dd>None declared -- the grade is emitted as fact</dd>
+    <dt>Human role at the seam</dt><dd class="role">Collectables moderator (a founding seller, paid in Tuppence)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">BUILD NOW: any grade above a value threshold must carry &#x27;AI-assisted estimate, not a certified grade&#x27; and a dispute route</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-06</span><span class="chip open">SEAM OPEN</span></div>
+  <h4>Price check / fair-price opinion</h4>
+  <div class="file">bea_main.py:ai_price_check</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether a listed price is fair</dd>
+    <dt>Cost of a wrong answer</dt><dd>A confident wrong price anchors a seller low (lost money) or high (dead listing)</dd>
+    <dt>Machine fallback today</dt><dd>None declared</dd>
+    <dt>Human role at the seam</dt><dd class="role">Category advisor / partnered agency</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">BUILD NOW: label as opinion with a range, never a number presented as fact</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-07</span><span class="chip open">SEAM OPEN</span></div>
+  <h4>Investor yield estimate</h4>
+  <div class="file">bea_main.py:ai_yield_calc</div>
+  <dl>
+    <dt>Decides</dt><dd>Yield estimate on a property</dd>
+    <dt>Cost of a wrong answer</dt><dd>Reads as financial advice; regulatory and reputational exposure well beyond the listing</dd>
+    <dt>Machine fallback today</dt><dd>None declared</dd>
+    <dt>Human role at the seam</dt><dd class="role">Escalate to partnered agent -- this is precisely the introduction MarketSquare sells</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">BUILD NOW: disclaimer + agency hand-off on every yield output</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-08</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Email triage and reply drafting</h4>
+  <div class="file">bea_main.py:_classify_email</div>
+  <dl>
+    <dt>Decides</dt><dd>Classification (support/billing/legal/spam) + drafts a reply</dd>
+    <dt>Cost of a wrong answer</dt><dd>A legal notice classified as spam. This is the Klarna failure exactly: volume handled, complexity missed</dd>
+    <dt>Machine fallback today</dt><dd>Classification only; escalation_brief.py renders LEGAL/MONEY/COST/TRUST for David</dd>
+    <dt>Human role at the seam</dt><dd class="role">Support agent</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">HARD RULE: nothing classified legal/billing ever auto-sends. Human seam at &gt;30 inbound/day</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-09</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Listing draft / rewrite from photos</h4>
+  <div class="file">bea_main.py:listing_draft_from_photos, ai_listing_rewrite</div>
+  <dl>
+    <dt>Decides</dt><dd>The title and description a buyer reads</dd>
+    <dt>Cost of a wrong answer</dt><dd>Misdescription is a consumer-law problem, not a copy problem, once money moves</dd>
+    <dt>Machine fallback today</dt><dd>Seller reviews and publishes -- the human seam is the SELLER and it already exists</dd>
+    <dt>Human role at the seam</dt><dd class="role">Seller (already in the loop) + copy reviewer at scale</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Only if drafts ever auto-publish. They must not.</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-10</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Trust score guidance</h4>
+  <div class="file">bea_main.py:trust_score_guidance</div>
+  <dl>
+    <dt>Decides</dt><dd>How a seller should raise their trust score</dd>
+    <dt>Cost of a wrong answer</dt><dd>Teaches sellers to farm the rubric -- see the incentive register, IL-02</dd>
+    <dt>Machine fallback today</dt><dd>Published rubric; no signal self-reported without verification</dd>
+    <dt>Human role at the seam</dt><dd class="role">Trust framework owner (David)</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Any signal earnable without evidence going live</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">HS-13</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Wishlist matcher</h4>
+  <div class="file">bea_main.py:MATCHER/run_match_job</div>
+  <dl>
+    <dt>Decides</dt><dd>Which listings match a wishlist and get pushed</dd>
+    <dt>Cost of a wrong answer</dt><dd>Bad matches train buyers to ignore notifications permanently</dd>
+    <dt>Machine fallback today</dt><dd>Deterministic keyword matcher today; AI socket is hot-swappable</dd>
+    <dt>Human role at the seam</dt><dd class="role">None needed</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Before swapping the deterministic matcher for AI, run BOTH in parallel and compare -- do not switch off the old one</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#1E6B45;--bg:#E8F5EE">
+  <div class="chead"><span class="cls">GREEN</span><span class="cid">HS-12</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Search interpretation</h4>
+  <div class="file">bea_main.py:search_interpret</div>
+  <dl>
+    <dt>Decides</dt><dd>Turns free text into a query -- shapes what a buyer sees</dd>
+    <dt>Cost of a wrong answer</dt><dd>Buyer sees the wrong things and retries; invisible failure if it silently hides a category</dd>
+    <dt>Machine fallback today</dt><dd>Deterministic keyword path underneath</dd>
+    <dt>Human role at the seam</dt><dd class="role">None needed</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Zero-result rate above 15% sustained</dd>
+  </dl>
+</div>
+<div class="card" style="--fg:#1E6B45;--bg:#E8F5EE">
+  <div class="chead"><span class="cls">GREEN</span><span class="cid">HS-14</span><span class="chip built">SEAM BUILT</span></div>
+  <h4>Market note / advert coach</h4>
+  <div class="file">bea_main.py:aa_market_note, aa_coach</div>
+  <dl>
+    <dt>Decides</dt><dd>Coaching and market commentary shown to the seller</dd>
+    <dt>Cost of a wrong answer</dt><dd>Generic advice; seller ignores it</dd>
+    <dt>Machine fallback today</dt><dd>Charged 1T after first free use, so a bad one costs the seller money</dd>
+    <dt>Human role at the seam</dt><dd class="role">None needed</dd>
+    <dt>Trigger to fill it</dt><dd class="trig">Refund rate on coach charges above 5%</dd>
+  </dl>
+</div>
+</div>
+
+<h2>2 &nbsp;The Dragon Tail test — incentive leaks</h2>
+<p class="sub">Dragon Tail never malfunctioned. It gave independent economic agents perfect
+information and was surprised when they used it perfectly. For every surface where a third
+party can see platform-internal information: if this actor optimises purely for themselves,
+what emerges?</p>
+<table>
+<thead><tr><th>ID</th><th>Surface</th><th>Actor</th><th>If they optimise for themselves</th>
+<th>Defence today</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td class="lid">IL-01</td><td><strong>GET /tuppence/balance?email= is a public read</strong></td>
+<td>Anyone</td><td>Enumerate emails, profile who is spending, target high-balance sellers</td><td>Masked only by the pre-launch edge gate, which LIFTS AT LAUNCH</td>
+<td class="act">Authenticate before launch. This is a launch blocker, not a nice-to-have.</td></tr>
+<tr><td class="lid">IL-02</td><td><strong>Trust score rubric fully published, tiers and thresholds public (Gold 90+ = featured priority)</strong></td>
+<td>Sellers</td><td>Farm the cheapest points to hit 90 without becoming more trustworthy; referral lane is the obvious vector (specced, evidence_required varies)</td><td>Defence is &#x27;no signal self-reported without verification, none client-modifiable&#x27;</td>
+<td class="act">Before referrals go live, they need evidence. Publishing the rubric is right -- publishing an unverified signal is not.</td></tr>
+<tr><td class="lid">IL-03</td><td><strong>Boost lowers the match threshold 60 -&gt; 45 and sorts boosted-first</strong></td>
+<td>Sellers with Tuppence</td><td>Boost weak listings to reach buyers they should not reach; buyers learn boosted results are worse and stop trusting the feed</td><td>Thresholds live in code but are inferable from behaviour</td>
+<td class="act">Boost should raise VISIBILITY, never lower RELEVANCE. Decouple the two. Add a ledger entry.</td></tr>
+<tr><td class="lid">IL-04</td><td><strong>Intro costs the seller 1T, 2T if boosted -- pay-to-be-reachable</strong></td>
+<td>Sellers and buyers</td><td>Sellers suppress boost to pay less and become less reachable; buyers with Trust &lt;20 or in cooldown route around the platform</td><td>LM-T1 first-intro idempotency, LM-15 trust gate, LM-F3 7-day cooldown</td>
+<td class="act">Watch for the emergent case: any incentive that makes a seller LESS reachable works against the only thing the till charges for.</td></tr>
+<tr><td class="lid">IL-05</td><td><strong>Anonymisation is the only thing standing between an agency and a free bypass of the intro fee</strong></td>
+<td>Partnered agencies</td><td>Probe the anonymiser for the copy pattern that survives it</td><td>RG-0038, RG-0045, confidence gate, spot-checks</td>
+<td class="act">Treat anonymiser bypass as an adversarial-testing target, not a QA case. The agency is an independent economic agent, exactly like a DoorDash driver.</td></tr>
+<tr><td class="lid">IL-06</td><td><strong>super_example exemplars pinned first in every sort</strong></td>
+<td>Real sellers</td><td>Conclude the platform favours its own demos and disengage</td><td>RG-0052 asserts the banner shows and the pin is not stolen from real sellers</td>
+<td class="act">Holding. Re-check the moment real listing volume passes demo volume.</td></tr>
+</tbody></table>
+
+<h2>3 &nbsp;Pre-design rules</h2>
+<p class="sub">Canon. <code>human_seam_check.py</code> fails if any of these six goes missing
+from the register.</p>
+<div class="rules">
+<div class="rule"><span class="rid">PR-1</span><h4>PARALLEL RUN, NEVER A SWITCH-OVER</h4><p>No AI surface replaces a working mechanism without both running side by side and their outputs compared under real load. Applies most directly to HS-13 (deterministic matcher -&gt; AI). This is the single rule that would have saved both companies in the video.</p></div>
+<div class="rule"><span class="rid">PR-2</span><h4>THE SEAM IS BUILT EMPTY</h4><p>Every RED and AMBER surface declares its human role and its measurable trigger BEFORE a human exists. Klarna had a bench to rehire; MarketSquare has none, so the seam must be pre-cut.</p></div>
+<div class="rule"><span class="rid">PR-3</span><h4>NEVER REMOVE THE FALLBACK AND ADD THE AI IN THE SAME CHANGE</h4><p>Yum mandated Dragon Tail AND centralised the DoorDash contract simultaneously, so the franchise lost the AI&#x27;s replacement and its own manual tools at once. One change at a time; the old lane stays until the new one has proven itself in production.</p></div>
+<div class="rule"><span class="rid">PR-4</span><h4>RUN THE DRAGON TAIL TEST ON EVERY NEW INFORMATION SURFACE</h4><p>Before exposing any platform-internal signal to sellers, buyers, agencies or affiliates, write down what a purely self-interested actor does with it. If the answer is unknown, it is not ready to ship.</p></div>
+<div class="rule"><span class="rid">PR-5</span><h4>NO PUBLIC CLAIM THE MACHINERY CANNOT YET HONOUR</h4><p>Klarna&#x27;s real loss was narrative: it went to the public market on an AI-first thesis and reversed within ten weeks. MarketSquare&#x27;s copy must never promise a capability that is currently a hope. Vendor-neutral AI copy (RG-0035) is the same discipline -- extend it to capability claims.</p></div>
+<div class="rule"><span class="rid">PR-6</span><h4>HIRING HUMANS IS A PLANNED MILESTONE, NOT A RETREAT</h4><p>Because MarketSquare is AI-first BY DESIGN rather than by cost-cutting, adding humans at a declared trigger is the design working, not the design failing. Say so in advance, publicly and internally, so the first hire never reads as a Klarna-style U-turn.</p></div>
+</div>
+</main>
+<footer>
+Built 14 Aug 2026 from <em>&ldquo;Companies Put AI In Charge. Now They&rsquo;re Paying For
+It&rdquo;</em> (House of El: AI). Canon: <code>AI_FAILURE_PREDESIGN.md</code>,
+<code>HUMAN_SEAM_REGISTER.json</code>, <code>scripts/human_seam_check.py</code>.
+</footer>
+</body></html>

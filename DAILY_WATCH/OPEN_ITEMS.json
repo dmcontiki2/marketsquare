@@ -3,31 +3,38 @@
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "INFO",
    "source": "audit VERSION-KEY",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-002": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "INFO",
    "source": "audit DEMO-PLACEHOLDERS",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-002** MERGED 2026-08-14 into DW-040 \u2014 duplicate symptom, not a separate fault. 'Demo-placeholder count not measurable' is caused entirely by the audit's anonymous fetch being 401'd by the armed gate, which IS DW-040. One cause, one row. The placeholder measurement resumes the moment DW-040 teac"
   },
   "DW-003": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "consolidation",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-003** MOVED 2026-08-14 to OPEN_LOOPS.md as loop L8 \u2014 it is a PROJECT, not a fault. 'No external uptime monitor exists' has no failing check behind it; nothing is broken, something is unbuilt. A fault register tracks things that regressed; OPEN_LOOPS tracks things to build, which is where David "
   },
   "DW-004": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "consolidation",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-004** RECLASSIFIED 2026-08-14 \u2014 not a fault, a POSTURE David chose. The autonomous fixer is paused on his 2 Aug instruction; queue.json and staged.json have read [] every day since. Verifying it daily is right; calling a deliberate decision an open issue is not. It now lives as a GREY 'accepted"
   },
   "DW-005": {
    "first_seen": "2026-08-02",
@@ -39,7 +46,7 @@
   },
   "DW-006": {
    "first_seen": "2026-08-02",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "run_daily_checks deploy_drift",
    "status": "OPEN"
@@ -54,21 +61,22 @@
   },
   "DW-008": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "audit MSJS-DRIFT",
    "status": "OPEN"
   },
   "DW-009": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "cost sweep",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "OPEN"
@@ -83,18 +91,21 @@
   },
   "DW-012": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "INFO",
    "source": "Monday deep scan coverage",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-013": {
    "first_seen": "2026-08-04",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "smoke_test parity + RG-0027 side-effect",
-   "status": "OPEN",
-   "note": "parity HOLDS (both instruments 29/39) but smoke is NO LONGER all-green - caused by DW-038 + DW-039, not a parity break"
+   "status": "CLOSED",
+   "note": "parity HOLDS (both instruments 29/39) but smoke is NO LONGER all-green - caused by DW-038 + DW-039, not a parity break",
+   "closed": "2026-08-14",
+   "evidence": "cron smoke **29/39** == sandbox **29 OK / 10 FAIL of 39**; health **ok / v1.3.1** on both; spend **$0.00 today** on both against the $100 ceiling. The 10 failures are NOT this row \u2014 they are tracked as DW-038 (9, edge blocks the instrument) and DW-039 (1, stale assertion), both still OPEN."
   },
   "DW-014": {
    "first_seen": "2026-08-04",
@@ -114,11 +125,13 @@
   },
   "DW-016": {
    "first_seen": "2026-08-04",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "watch alert path",
-   "status": "OPEN",
-   "note": "check passing since 2026-08-08 (5th day) - awaiting David's close"
+   "status": "CLOSED",
+   "note": "check passing since 2026-08-08 (5th day) - awaiting David's close",
+   "closed": "2026-08-14",
+   "evidence": "today's SSH session confirms /etc/marketsquare/resend.watch.conf present, `-rw-r----- root:msdeploy`, 74B, `test -r` = READABLE; delivery proven 5 Aug 2026 (Resend accepted id **77de9576**)."
   },
   "DW-017": {
    "first_seen": "2026-08-05",
@@ -146,25 +159,29 @@
   },
   "DW-020": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "ssh sensors + smoke + run_daily_checks",
-   "status": "OPEN",
-   "note": "check passing since 2026-08-08 (5th day) - awaiting David's close; caveat DW-034 still applies"
+   "status": "CLOSED",
+   "note": "check passing since 2026-08-08 (5th day) - awaiting David's close; caveat DW-034 still applies",
+   "closed": "2026-08-14",
+   "evidence": "SSH as msdeploy after load_sandbox_ssh.sh; fea_integrity_check **ok, alerts []** (2 baseline-refresh notes); subscription_monitor **35 UP / 15 HELD / 1 PLANNED, 0 DOWN/DEGRADED**; orchestrator cron + queue/staged read; disk **45% used, 41G free**."
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN"
   },
   "DW-022": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "self-heartbeat",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-022** MERGED 2026-08-14 into DW-003 \u2014 a property, not a defect. 'The watch is desktop-bound, so a closed app is a blind day' is a true structural statement with no fix of its own; the actual fix is the external uptime monitor, which is DW-003. It stays visible as an AMBER card on the coverage m"
   },
   "DW-023": {
    "first_seen": "2026-08-07",
@@ -175,28 +192,31 @@
   },
   "DW-024": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "ledger self-audit (Stays session)",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-025": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "RG-0025 scope gap (Stays session)",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14",
+   "evidence": "migration **017_selfhost_demo_images** is APPLIED on the box (present in `/var/www/marketsquare/.migrations_done`) and sibling assertion **RG-0063** \u2014 'every pixel the app serves comes from OUR origin: no unsplash, pexels, picsum, cloudinary, imgur or lookalike' \u2014 is **LOCKED (fixed 2026-08-13) and PASSING** in today's ledger run (exit 0). The 40 third-party refs on /demo-sellers are gone. The ass"
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN",
    "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open"
   },
   "DW-028": {
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "first_seen": "2026-08-07",
    "sev": "MEDIUM",
    "source": "ledger/probe network blindness (permanent fix)",
@@ -204,29 +224,31 @@
   },
   "DW-027": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "TS-0022 doctrine collision (Maroushka x3)",
    "status": "OPEN"
   },
   "DW-029": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
    "status": "OPEN"
   },
   "DW-030": {
    "first_seen": "2026-08-08",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "migration chain",
-   "status": "OPEN",
-   "note": "check passing since 2026-08-08 (3rd day) - awaiting David's close"
+   "status": "CLOSED",
+   "note": "check passing since 2026-08-08 (3rd day) - awaiting David's close",
+   "closed": "2026-08-14",
+   "evidence": "`.migrations_done` lists **016 AND 017 applied**; 007 still deferred LOUDLY as superseded (recorded with reason in DEFERRED.txt); nothing halted across four real ships; disk 45%/41G free."
   },
   "DW-031": {
    "first_seen": "2026-08-08",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "live verification (Stays last mile)",
    "status": "OPEN",
@@ -234,36 +256,41 @@
   },
   "DW-032": {
    "first_seen": "2026-08-08",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "AI-watch (vendor pricing)",
-   "status": "OPEN",
-   "note": "PREMISE DISSOLVED 2026-08-11 - Anthropic cancelled the 1 Sep increase; $2/$10 is now permanent. Awaiting David's close"
+   "status": "CLOSED",
+   "note": "PREMISE DISSOLVED 2026-08-11 - Anthropic cancelled the 1 Sep increase; $2/$10 is now permanent. Awaiting David's close",
+   "closed": "2026-08-14",
+   "evidence": "Anthropic announced **10 Aug 2026** that the 1 Sep increase to $3/$15 will NOT proceed; Claude Sonnet 5's **$2/$10 is the standard price** (gurufocus, BigGo Finance, AI CERTs, techjournal.org, explainx.ai). Two stale tracker pages still print the reversion (digitalapplied.com, benchlm.ai) \u2014 recorded here so the contradiction can never resurface as a scare. Month spend at close: $0.00 today, 0.0% o"
   },
   "DW-033": {
    "first_seen": "2026-08-09",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "AI-watch (rival list prices)",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-033** RECLASSIFIED 2026-08-14 \u2014 never a fault. 'OpenAI's Luna -80% / Terra -20% list cuts stand; keep the full field on file' is a REFERENCE NOTE with no action and no deadline, retained per David's model-selection rule. Its home is the AI-watch record and CLAUDE.md's model-selection section, b"
   },
   "DW-034": {
    "first_seen": "2026-08-09",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "run_daily_checks false 'unreachable'",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-035": {
    "first_seen": "2026-08-10",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "Monday deep static scan",
    "status": "OPEN"
   },
   "DW-036": {
    "first_seen": "2026-08-11",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "release state (NEW today)",
    "status": "OPEN",
@@ -271,47 +298,53 @@
   },
   "DW-037": {
    "first_seen": "2026-08-11",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "LOW",
    "source": "watch output ergonomics",
-   "status": "OPEN"
+   "status": "RECLASSIFIED",
+   "closed": "2026-08-14",
+   "disposition": "**DW-037** RECLASSIFIED 2026-08-14 \u2014 never a fault. 'Emit the commit block in PowerShell syntax' is a standing PREFERENCE, and it was honoured every single day it sat here. Its correct home is the instruction, not a defect list: it is now written into the trustsquare-daily-watch task prompt (Phase C"
   },
   "DW-038": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
    "status": "OPEN"
   },
   "DW-039": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "MEDIUM",
    "source": "smoke_test vs ledger RG-0054 contradiction (NEW today)",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14"
   },
   "DW-040": {
    "first_seen": "2026-08-13",
    "sev": "MEDIUM",
    "source": "audit vs armed gate (NEW today)",
-   "status": "OPEN",
-   "last_seen": "2026-08-13"
+   "status": "CLOSED",
+   "last_seen": "2026-08-14",
+   "closed": "2026-08-14"
   },
   "DW-041": {
    "first_seen": "2026-08-13",
    "sev": "MEDIUM",
    "source": "gate scope vs documented intent (NEW today)",
    "status": "OPEN",
-   "last_seen": "2026-08-13"
+   "last_seen": "2026-08-14"
   },
   "DW-042": {
    "first_seen": "2026-08-13",
-   "last_seen": "2026-08-13",
+   "last_seen": "2026-08-14",
    "sev": "HIGH",
    "source": "deploy engine stall",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-14",
+   "evidence": "`marketsquare-deploy.timer` live, last fired **04:51 UTC**, **ExecStart exit 0/SUCCESS**, ticking every ~2 min; the box PLACED ref **a6c40c9** at **13:37 UTC 13 Aug** (live index.html mtime and /opt/marketsquare-src refs/heads mtime agree); migration **017 completed** \u2014 the very work the stall interrupted; live ms.js **v468 -> v470**, ms.css **v305 -> v334**."
   }
  },
- "last_run": "2026-08-13",
+ "last_run": "2026-08-14",
  "last_verdict": "AMBER"
 }

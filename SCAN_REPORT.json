@@ -1,103 +1,1615 @@
 {
-  "schema_version": 1,
-  "report_type": "weekly_discovery_scan",
-  "generated_at": "2026-07-27T04:40:18Z",
-  "generated_by": "sensor(merged-daily-loop) Monday deep scan",
-  "scan_scope": [
-    "bea_main.py",
-    "auth.py",
-    "database.py",
-    "storage.py",
-    "payments.py",
-    "estate_agents.py",
-    "launch_redemption.py",
-    "ms.js",
-    "marketsquare.html (inline)",
-    "marketsquare_admin.html (inline)"
+ "schema_version": 2,
+ "report_type": "deep_static_scan",
+ "generated_at": "2026-08-14T05:46:20Z",
+ "generated_by": "scripts/deep_scan.py (DW-012/DW-035 fix, 14 Aug 2026)",
+ "scan_scope": {
+  "python": [
+   "bea_main.py",
+   "auth.py",
+   "database.py",
+   "storage.py",
+   "payments.py"
   ],
-  "tools": [
-    "ruff 0.15+ (F,E9,B)",
-    "vulture 2.x (min-confidence 80)",
-    "pylint cyclic-import+undefined-variable",
-    "node --check (JS structural proxy; eslint not in sandbox)"
+  "javascript": [
+   "ms.js"
   ],
-  "totals": {
-    "found_this_week": 3,
-    "fixed_this_week": 3,
-    "still_open": 3,
-    "note": "3 lint hits new (SCAN-28 B905 x1, SCAN-29 B904 x2), all LOW/auto-ship; prior open set SCAN-25/26/27-JS all confirmed fixed. B008 22 (FastAPI arg-default FP, +6 vs 16 from new admin/infra endpoints). Zero crash-class."
+  "repo_wide": [
+   "ruff",
+   "vulture"
+  ]
+ },
+ "tools": [
+  "ruff ruff 0.16.3",
+  "vulture vulture 2.16",
+  "pylint pylint 4.0.7",
+  "eslint v9.39.5"
+ ],
+ "tools_unavailable": [],
+ "totals": {
+  "found": 175,
+  "new_since_last": 0,
+  "crash_class": 0
+ },
+ "severity_breakdown": {
+  "LOW": 166,
+  "MEDIUM": 9
+ },
+ "findings": [
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "ai_breaker.py",
+   "line": 22,
+   "msg": "`json` imported but unused",
+   "new": false
   },
-  "severity_breakdown": {
-    "CRIT": 0,
-    "HIGH": 0,
-    "MED": 0,
-    "LOW": 3
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "ai_provider.py",
+   "line": 15,
+   "msg": "`json` imported but unused",
+   "new": false
   },
-  "open_issues": [
-    {
-      "id": "SCAN-28",
-      "severity": "LOW",
-      "file": "bea_main.py:12201",
-      "summary": "ruff B905 zip(ids,results) without strict= in /admin/services-status (admin_services_status). Behaviour-neutral (results = gather over ids, same length). Non-gated admin infra diagnostic -> auto-ship."
-    },
-    {
-      "id": "SCAN-29",
-      "severity": "LOW",
-      "file": "bea_main.py:15943,15959",
-      "summary": "ruff B904 x2 in /admin/deploy-file (admin_deploy_file, MS_DEPLOY_KEY channel): raise HTTPException(400 base64 / 500 write-failed) inside except lack 'from None'/'from exc'. Behaviour-neutral exception chaining; admin/deploy infra, security-class, neither gate -> auto-ship."
-    }
-  ],
-  "false_positives_reconfirmed": [
-    {
-      "tool": "ruff B008",
-      "count": 22,
-      "reason": "FastAPI File/Depends/Body arg-default idiom (+6 vs prior 16 from new admin/infra endpoints)"
-    },
-    {
-      "tool": "vulture",
-      "id": "family",
-      "count": 2,
-      "file": "bea_main.py:2312,2423",
-      "reason": "getaddrinfo wrapper params (line-drifted from :2214/:2315)"
-    },
-    {
-      "tool": "eslint",
-      "id": "tshLoad",
-      "note": "eslint not available in sandbox this run; node --check ms.js clean as structural proxy; warn-class no-undef/no-unused unchanged historically"
-    }
-  ],
-  "history": [
-    {
-      "week_of": "2026-07-06",
-      "found": 0,
-      "fixed": 3,
-      "open": 0
-    },
-    {
-      "week_of": "2026-07-13",
-      "found": 3,
-      "fixed": 0,
-      "open": 3
-    },
-    {
-      "week_of": "2026-07-20",
-      "found": 3,
-      "fixed": 3,
-      "open": 3
-    },
-    {
-      "scan_date": "2026-07-27T04:40:18Z",
-      "found": 3,
-      "fixed": 3,
-      "still_open": 3,
-      "note": "prior open SCAN-25/26/27-JS all fixed; new SCAN-28 (B905) + SCAN-29 (B904 x2), all LOW/auto-ship; crash-class clean"
-    }
-  ],
-  "health_at_scan": {
-    "bea": "ok v1.3.1",
-    "smoke": "40/40",
-    "spend": "$0.00/$100 (0.0%)",
-    "subs": "34up/15held/1standby/1planned 0 issues"
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "ai_scoreboard.py",
+   "line": 37,
+   "msg": "`sys` imported but unused",
+   "new": false
   },
-  "scan_date": "2026-07-27T04:40:18Z"
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "ai_service_tiers.py",
+   "line": 26,
+   "msg": "`typing.Iterable` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "apply_bit_panel.py",
+   "line": 6,
+   "msg": "`re` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "archive/session_dashboard.py",
+   "line": 8,
+   "msg": "`webbrowser` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "archive/session_dashboard.py",
+   "line": 155,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 3905,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 4056,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 4620,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 4676,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 4705,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 5573,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 5607,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 6262,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 8563,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 8609,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 8627,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 9548,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 9971,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 10028,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 11207,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13211,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13283,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13301,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13421,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13510,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13510,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13526,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13526,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 13664,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 14312,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16536,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16690,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16690,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16725,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16757,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16818,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 16831,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 17742,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 17825,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 17841,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "claude_mem_digest.py",
+   "line": 106,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "claude_mem_digest.py",
+   "line": 107,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "claude_mem_digest.py",
+   "line": 112,
+   "msg": "Loop control variable `investigated` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "claude_mem_healthcheck.py",
+   "line": 22,
+   "msg": "`datetime.timedelta` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "data_audit.py",
+   "line": 13,
+   "msg": "`re` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/01-collectables/inserts/ractions_insert.py",
+   "line": 1,
+   "msg": "`math` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/02-heritage/ui-source/heritage_inserts2.py",
+   "line": 1,
+   "msg": "`math` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "feature-videos/02-heritage/ui-source/heritage_inserts2.py",
+   "line": 51,
+   "msg": "Local variable `fields_y` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/02-heritage/ui-source/route_map.py",
+   "line": 1,
+   "msg": "`math` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "feature-videos/02-heritage/ui-source/route_map.py",
+   "line": 71,
+   "msg": "Local variable `a` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/inserts_fixed_02jul/renderer/render_insert.py",
+   "line": 27,
+   "msg": "`math` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/production-kit/inserts.py",
+   "line": 1,
+   "msg": "`math` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "feature-videos/production-kit/inserts.py",
+   "line": 2,
+   "msg": "`PIL.ImageFilter` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 2566,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 2694,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 3010,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 3066,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 4350,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 7582,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 8725,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 8739,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 9133,
+   "msg": "Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 9133,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 9145,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 9206,
+   "msg": "Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B008",
+   "sev": "LOW",
+   "file": "main.py",
+   "line": 9797,
+   "msg": "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "marketing/src/build_set.py",
+   "line": 248,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "marketing/src/build_set.py",
+   "line": 254,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "migrations/005_prelaunch_server_side_gate.py",
+   "line": 122,
+   "msg": "Local variable `head` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "migrations/017_selfhost_demo_images.py",
+   "line": 70,
+   "msg": "Loop control variable `k` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "mount_guard.py",
+   "line": 139,
+   "msg": "Loop control variable `mnt` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "mount_guard.py",
+   "line": 139,
+   "msg": "Loop control variable `head` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "ops/autodeploy/deploy_router.py",
+   "line": 94,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "orchestration_v2/prevent.py",
+   "line": 51,
+   "msg": "Local variable `last` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "run_collections_validation.py",
+   "line": 65,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/audit_global_qa.py",
+   "line": 8,
+   "msg": "`sys` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/audit_global_qa.py",
+   "line": 119,
+   "msg": "Loop control variable `n` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "scripts/audit_global_qa.py",
+   "line": 192,
+   "msg": "Local variable `mc` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "scripts/claim_photos.py",
+   "line": 65,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/claim_super.py",
+   "line": 9,
+   "msg": "`time` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B905",
+   "sev": "LOW",
+   "file": "scripts/claim_super.py",
+   "line": 67,
+   "msg": "`zip()` without an explicit `strict=` parameter",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "scripts/cost_compliance_sweep.py",
+   "line": 387,
+   "msg": "Local variable `sanctioned` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/diag_super.py",
+   "line": 16,
+   "msg": "`json` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 100,
+   "msg": "Loop control variable `nd` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `ot` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `nt` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `cat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `ou` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `nu` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `op` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `npc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `osub` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `nsub` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/expand_adventure_super_photos.py",
+   "line": 111,
+   "msg": "Loop control variable `nd` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/fault_reconcile.py",
+   "line": 111,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "scripts/fault_reconcile.py",
+   "line": 123,
+   "msg": "Local variable `skip` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/fault_reconcile.py",
+   "line": 145,
+   "msg": "Loop control variable `st` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/fault_reconcile.py",
+   "line": 145,
+   "msg": "Loop control variable `sev` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/fault_reconcile.py",
+   "line": 145,
+   "msg": "Loop control variable `t` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/fix_super_sellers.py",
+   "line": 59,
+   "msg": "Loop control variable `cat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/golden_openai_v1.py",
+   "line": 6,
+   "msg": "`sys` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F841",
+   "sev": "MEDIUM",
+   "file": "scripts/golden_openai_v1.py",
+   "line": 15,
+   "msg": "Local variable `m` is assigned to but never used",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/maint_realrepo_probe.py",
+   "line": 22,
+   "msg": "`re` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/maintenance_agent.py",
+   "line": 262,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/make_super_prompt_pack.py",
+   "line": 130,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/make_super_prompt_pack.py",
+   "line": 133,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 178,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 180,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 194,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 207,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F541",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 1198,
+   "msg": "f-string without any placeholders",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 2191,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B904",
+   "sev": "LOW",
+   "file": "scripts/regression_ledger.py",
+   "line": 2596,
+   "msg": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/rotate_secrets.py",
+   "line": 24,
+   "msg": "`json` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 235,
+   "msg": "Loop control variable `cur` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `cname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `rlabel` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `rname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `lat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 303,
+   "msg": "Loop control variable `lng` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 340,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 340,
+   "msg": "Loop control variable `cur` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `cname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `city` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `rlabel` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `rname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `lat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `lng` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `cat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `title` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `price` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `nph` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_global.py",
+   "line": 346,
+   "msg": "Loop control variable `tid` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 250,
+   "msg": "Loop control variable `cur` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `cname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `city` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `rl` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `rn` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `lat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `lng` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 309,
+   "msg": "Loop control variable `pname` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 310,
+   "msg": "Loop control variable `earned` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 310,
+   "msg": "Loop control variable `pending` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 323,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 323,
+   "msg": "Loop control variable `cur` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `cc` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `city` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `rl` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `rn` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `lat` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `lng` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `tcode` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `title` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `price` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 329,
+   "msg": "Loop control variable `nph` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/seed_super_ladder_global.py",
+   "line": 330,
+   "msg": "Loop control variable `tid` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "B007",
+   "sev": "LOW",
+   "file": "scripts/supers_ladder_seed.py",
+   "line": 86,
+   "msg": "Loop control variable `title` not used within loop body",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "scripts/tuppence_purge.py",
+   "line": 6,
+   "msg": "`re` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "test_ai_breaker.py",
+   "line": 3,
+   "msg": "`importlib` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "test_ai_scoreboard.py",
+   "line": 16,
+   "msg": "`tempfile` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F811",
+   "sev": "MEDIUM",
+   "file": "test_ai_scoreboard.py",
+   "line": 115,
+   "msg": "Redefinition of unused `tempfile` from line 16: `tempfile` redefined here",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "test_ai_service_tiers.py",
+   "line": 9,
+   "msg": "`copy` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "test_estate_agents.py",
+   "line": 3,
+   "msg": "`sqlite3` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "ruff",
+   "code": "F401",
+   "sev": "LOW",
+   "file": "tsl_gate.py",
+   "line": 43,
+   "msg": "`time` imported but unused",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "archive/session_dashboard.py",
+   "line": 8,
+   "msg": "unused import 'webbrowser'",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "bea_main.py",
+   "line": 10436,
+   "msg": "unused variable 'newurl'",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "feature-videos/production-kit/inserts.py",
+   "line": 68,
+   "msg": "unsatisfiable 'ternary' condition",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "marketing/src/build_posters.py",
+   "line": 38,
+   "msg": "unsatisfiable 'ternary' condition",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "marketing/src/build_set.py",
+   "line": 201,
+   "msg": "unsatisfiable 'ternary' condition",
+   "new": false
+  },
+  {
+   "tool": "vulture",
+   "code": "DEAD",
+   "sev": "LOW",
+   "file": "test_ai_breaker.py",
+   "line": 111,
+   "msg": "unused variable 'sys_'",
+   "new": false
+  }
+ ]
 }

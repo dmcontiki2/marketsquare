@@ -16,19 +16,60 @@ FINDINGS = []
 def add(sev, area, fid, msg):
     FINDINGS.append({"sev": sev, "area": area, "id": fid, "msg": msg})
 
+# ── DW-040 FIX 14 Aug 2026: ride the armed gate instead of being blinded by it ──
+# GATE-ENFORCE-2 (migration 016) makes the origin 401 anonymous data reads. This audit
+# fetched anonymously, so from 13 Aug it fired 3 CRITICALs ("HTTP 401") that were the
+# INSTRUMENT going blind, not the app failing -- and it took DW-002's placeholder count
+# with it. The ledger already solved this; the same path is ported here verbatim.
+_REVIEW = {"tried": False, "cookie": None}
+
+def _review_cookie():
+    """ts_review=<token> for the reviewer gate, or '' if no code is available."""
+    if _REVIEW["tried"]:
+        return _REVIEW["cookie"] or ""
+    _REVIEW["tried"] = True
+    code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
+    if not code:
+        for cand in (os.path.join(REPO, ".secrets", "review_code.txt"),):
+            try:
+                code = open(cand, encoding="utf-8").read().strip()
+                break
+            except Exception:
+                code = ""
+    if not code:
+        return ""
+    try:
+        req = urllib.request.Request(BASE + "/review/login",
+                                     data=json.dumps({"code": code}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        body = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        tok = (json.loads(body).get("token") or "").strip()
+        _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
+    except Exception:
+        _REVIEW["cookie"] = None
+    return _REVIEW["cookie"] or ""
+
+def _hdrs():
+    h = dict(UA)
+    c = _review_cookie()
+    if c:
+        h["Cookie"] = c
+    return h
+
 def get(url, timeout=20, binary=False):
-    req = urllib.request.Request(url, headers=UA)
+    req = urllib.request.Request(url, headers=_hdrs())
     d = urllib.request.urlopen(req, timeout=timeout).read()
     return d if binary else d.decode("utf-8", errors="replace")
 
 def head_ok(url, timeout=12):
     try:
-        req = urllib.request.Request(url, headers=UA, method="HEAD")
+        req = urllib.request.Request(url, headers=_hdrs(), method="HEAD")
         r = urllib.request.urlopen(req, timeout=timeout)
         return 200 <= r.status < 400
     except Exception:
         try:  # some hosts refuse HEAD
-            req = urllib.request.Request(url, headers=UA)
+            req = urllib.request.Request(url, headers=_hdrs())
             r = urllib.request.urlopen(req, timeout=timeout)
             return 200 <= r.status < 400
         except Exception:
@@ -161,9 +202,22 @@ def audit_drift():
                 "CRITICAL if it persists after deploying")
     except Exception as e:
         add("MEDIUM", "drift", "MSJS-FETCH", f"served ms.js unreadable: {e}")
+    # DW-001 FIX 14 Aug 2026: the server bumps ?v= MONOTONICALLY on live index.html by
+    # design, so a bare number gap is the normal state and this fired every single day
+    # since 2 Aug while meaning nothing. Fire only when the CONTENT also differs -- i.e.
+    # when MSJS-DRIFT already proved there is real, shipped-but-unpublished difference.
     lv = re.search(r"ms\.js\?v=(\d+)", open(os.path.join(REPO, "marketsquare.html"), encoding="utf-8").read())
+    _content_differs = any(f["id"] == "MSJS-DRIFT" for f in FINDINGS)
     if lv and lv.group(1) != v:
-        add("INFO", "drift", "VERSION-KEY", f"repo html pins ms.js v{lv.group(1)}, live pins v{v} (deploy pending)")
+        if _content_differs:
+            add("INFO", "drift", "VERSION-KEY",
+                f"repo html pins ms.js v{lv.group(1)}, live pins v{v} AND the bytes differ "
+                "(see MSJS-DRIFT) — a real deploy is staged")
+        else:
+            add("INFO", "drift", "VERSION-KEY-BENIGN",
+                f"repo html pins ms.js v{lv.group(1)}, live pins v{v}, but the served bytes are "
+                "IDENTICAL to the repo — this is the server's monotonic ?v= bump, not drift. "
+                "Recorded, not raised (DW-001).")
 
 # ── run + report ─────────────────────────────────────────────────────────────
 def main():

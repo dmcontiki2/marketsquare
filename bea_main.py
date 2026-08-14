@@ -1976,9 +1976,92 @@ class IntroRequest(BaseModel):
 
 # ── HEALTH ───────────────────────────────────────────────────
 
+# --- TSL-DBPROOF-1 ------------------------------------------------------------
+# /health is the ONE endpoint nginx leaves open anonymously (GATE-ENFORCE-1) —
+# the deploy engine's own health check depends on it. The /TSL pre-deploy gate
+# needs to PROVE the primary database is healthy, and its only transport used to
+# be SSH as msdeploy@ — a key that lives on David's machine by design. That made
+# the gate return REVIEW forever from any session that is not his desktop: not
+# because anything was wrong, but because nothing could be proven.
+#
+# So the proof moves here, where any caller can read it with no credentials.
+# FACTS ONLY: presence, byte size, integrity verdict, redis ping. No paths, no
+# schema, no counts, no customer data.
+#
+# HARD RULE: this block may NEVER raise. If /health throws, the deploy engine's
+# post-deploy check fails and it AUTO-ROLLS-BACK a perfectly good ship. Every
+# probe is individually guarded and returns null with a reason instead.
+#
+# integrity_check is a full-file scan, so it is cached (default 15 min); size and
+# presence are a cheap stat and are read live on every call.
+_TSL_DBPROOF_CACHE = {"at": 0.0, "integrity": None, "redis": None}
+_TSL_DBPROOF_TTL = int(os.environ.get("TSL_DBPROOF_TTL_SEC", "900"))
+
+
+def _tsl_dbproof():
+    """Non-sensitive, credential-free proof of primary-DB health. Never raises."""
+    import time as _t
+    out = {"primary_present": None, "primary_bytes": None,
+           "integrity": None, "redis": None, "reason": None}
+    try:
+        try:
+            from database import DB_PATH as _dbp
+        except Exception:
+            _dbp = "/var/www/marketsquare/marketsquare.db"
+
+        # presence + size: cheap, always live — this is the zero-byte guard
+        try:
+            out["primary_bytes"] = os.path.getsize(_dbp)
+            out["primary_present"] = True
+        except Exception as e:
+            out["primary_present"] = False
+            out["reason"] = "stat failed: %s" % type(e).__name__
+            return out
+
+        now = _t.time()
+        fresh = (now - _TSL_DBPROOF_CACHE["at"]) < _TSL_DBPROOF_TTL
+        if fresh and _TSL_DBPROOF_CACHE["integrity"] is not None:
+            out["integrity"] = _TSL_DBPROOF_CACHE["integrity"]
+            out["redis"] = _TSL_DBPROOF_CACHE["redis"]
+            out["cached"] = True
+            return out
+
+        # integrity_check: full scan, hence the cache above
+        try:
+            import sqlite3 as _sq
+            _c = _sq.connect("file:%s?mode=ro" % _dbp, uri=True, timeout=5)
+            try:
+                _r = _c.execute("PRAGMA integrity_check;").fetchone()
+                out["integrity"] = (_r[0] if _r else "noread")
+            finally:
+                _c.close()
+        except Exception as e:
+            out["integrity"] = "unknown"
+            out["reason"] = "integrity probe failed: %s" % type(e).__name__
+
+        try:
+            import redis as _rd
+            out["redis"] = "PONG" if _rd.Redis(
+                host="127.0.0.1", socket_connect_timeout=2).ping() else "NOPING"
+        except Exception:
+            out["redis"] = "unknown"
+
+        _TSL_DBPROOF_CACHE.update({"at": now, "integrity": out["integrity"],
+                                   "redis": out["redis"]})
+        out["cached"] = False
+    except Exception as e:  # belt and braces: /health must never fail
+        out["reason"] = "dbproof crashed: %s" % type(e).__name__
+    return out
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.1"}
+    body = {"status": "ok", "service": "TrustSquare BEA", "version": "1.3.1"}
+    try:
+        body["db"] = _tsl_dbproof()
+    except Exception:
+        body["db"] = {"reason": "unavailable"}
+    return body
 
 
 @app.get("/ops/selfcheck")

@@ -1,0 +1,14 @@
+{
+  "run": "2026-08-14T05:40:27Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 1,
+  "actions": [
+    {
+      "ref": "TS-0031",
+      "lane": "PATH_B",
+      "why": "brain[anthropic/claude-haiku-4-5-20251001]=DESIGN\n\nTHIS REQUIRES NEW UI/",
+      "title": "Cars pre-final: AI-added vehicle details inaccurate for the tester's make (David",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    }
+  ]
+}

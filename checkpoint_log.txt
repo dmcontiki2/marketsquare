@@ -171,3 +171,14 @@ Tue 08/11/2026  5:30:02.27  committed 1 change(s)
  1 file changed, 53 insertions(+)
  create mode 100644 scripts/claim_super.py
 Thu 08/13/2026  5:30:02.97  committed 1 change(s)
+[main 7667da2] Nightly checkpoint Fri 08/14/2026  5:30:06.01 (auto, no deploy)
+ 13 files changed, 3193 insertions(+), 29 deletions(-)
+ create mode 100644 changelog.d/2026-08-13-agent-real-patch.md
+ create mode 100644 changelog.d/2026-08-13-dw025-closed.md
+ create mode 100644 changelog.d/2026-08-13-gate-truth-login.md
+ create mode 100644 scripts/regression_ledger.py.bak5-20260813-134026
+ create mode 100644 status.d/2026-08-13-agent-real-patch.md
+ create mode 100644 status.d/2026-08-13-dw025-closed.md
+ create mode 100644 status.d/2026-08-13-gate-truth-login.md
+ create mode 100644 status.d/2026-08-13-super-run-state.md
+Fri 08/14/2026  5:30:06.15  committed 13 change(s)

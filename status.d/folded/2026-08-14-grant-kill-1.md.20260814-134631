@@ -1,0 +1,9 @@
+
+- **Moderation lesson (14 Aug 2026):** the tutors ladder trips Higgsfield's child-safety filter on
+  the listing name itself ("Primary & High School Homework Coach") -- generation returns
+  "Failed / Credits refunded", no image, no charge. Reword: describe the SCENE with no school-age
+  reference ("a tidy home study desk prepared for a private tutoring session ... empty room,
+  nobody present") and verify on the scene phrase rather than the listing name. The busy/lightbox
+  guard caught this correctly -- it refused to download and threw MISMATCH rather than claiming
+  the previous image. Applies to all 9 tutors shots; the "session" shots additionally need
+  adult hands only, never a pupil.

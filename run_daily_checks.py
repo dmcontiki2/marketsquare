@@ -31,8 +31,37 @@ def _seed_transport():
     except Exception:
         pass  # transport stays as-is; the drift check will report honestly
 
+def _seed_credential():
+    """DW-034 FIX 14 Aug 2026: seed the PRIVATE key, not just the host key.
+
+    DW-015 taught this runner to seed the host key, which fixed 'Host key verification
+    failed'. It never seeded the credential, so in a fresh sandbox the drift check came
+    back 'unreachable - Permission denied (publickey)' and raised a SEV-3 that was
+    indistinguishable from a genuine lockout. It cried wolf five days running, and the
+    identical text is what cost a day on DW-020. Two changes, together:
+      1. self-heal  — copy the gitignored key into place exactly as load_sandbox_ssh.sh
+         does, so the common case simply works;
+      2. if that is impossible, say so in words no one can mistake for an outage.
+    Returns True if a usable credential is now in place.
+    """
+    dest = os.path.expanduser("~/.ssh/id_ed25519")
+    if os.path.exists(dest):
+        return True
+    src = os.path.join(HERE, "ssh_hetzner_key")
+    if not os.path.exists(src):
+        return False
+    try:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(src, "rb") as f_in, open(dest, "wb") as f_out:
+            f_out.write(f_in.read())
+        os.chmod(dest, 0o600)
+        return True
+    except Exception:
+        return False
+
 def main():
     _seed_transport()
+    _have_cred = _seed_credential()
     as_json = "--json" in sys.argv
     try:
         man = json.load(open(MANIFEST, encoding="utf-8"))
@@ -62,14 +91,23 @@ def main():
         if c.get("fold_key"):
             folds[c["fold_key"]] = blob
         if status in (c.get("flag_statuses") or []):
+            _line = blob.get("line", f"{cid}: {status}")
+            _sev = c.get("severity_when_flagged", "SEV-3")
+            if status == "unreachable" and not _have_cred:
+                # DW-034: never let a missing credential wear the costume of an outage.
+                _line = ("NO CREDENTIAL LOADED - this is NOT an outage. The Hetzner private key "
+                         "is not in ~/.ssh/id_ed25519 and ssh_hetzner_key is not in the project "
+                         "folder, so the server could not be contacted. Run setup_sandbox_ssh.ps1 "
+                         "once from PowerShell. Original check text: " + _line)
+                _sev = "SEV-4"
             brief_lines.append({"section": c.get("brief_section", ""),
-                                "severity": c.get("severity_when_flagged", "SEV-3"),
-                                "text": blob.get("line", f"{cid}: {status}")})
+                                "severity": _sev, "text": _line})
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "ran": [k for k, v in results.items() if v.get("status") not in ("disabled", "skipped")],
         "flagged": [b["text"] for b in brief_lines],
+        "credential_loaded": _have_cred,   # DW-034: lets any caller tell 'no key' from 'server down'
         "checks": results, "deploy_drift": folds.get("deploy_drift"),
         "findings_fold": folds, "brief_lines": brief_lines,
     }

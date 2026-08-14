@@ -1,0 +1,15 @@
+{
+  "run": "2026-08-14T06:01:28Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 1,
+  "actions": [
+    {
+      "ref": "TS-0032",
+      "lane": "PATH_A",
+      "why": "brain[anthropic/claude-haiku-4-5-20251001]=MECHANICAL",
+      "title": "selecting Botswana, Maun i can see one adventure, going into the adventures it t",
+      "source": "anthropic/claude-sonnet-4-6",
+      "outcome": "brain declined a small mechanical fix -> escalate for a human"
+    }
+  ]
+}

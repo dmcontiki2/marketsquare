@@ -76,6 +76,8 @@ if _repo_override:
     REPO = os.path.abspath(_repo_override)          # operate on a SANDBOX repo
     STATE = os.path.join(REPO, ".maint_agent")
 _FAULTS_FILE = _arg("--faults-file")                 # synthetic queue instead of the live API
+_ONLY = _arg("--only", "")                           # HOST-CAP-1: drive the queue one ref at a time
+_BUDGET_S = float(os.environ.get("MAINT_TIME_BUDGET_S", "0") or 0)   # 0 = no budget (default)
 _BRAIN_STUB  = os.environ.get("MAINT_BRAIN_STUB")    # canned patches for a keyless rehearsal
 if _BRAIN_STUB:
     LIVE = False   # a stubbed brain can NEVER ship — rehearsal is shadow, always
@@ -211,12 +213,46 @@ UA_HEADER = {"User-Agent": "TrustSquare-MaintenanceAgent/1.0 (dmcontiki2@gmail.c
 # never punch a hole in the gate. Same code file, same login lane, same once-per-run
 # cache as regression_ledger._review_cookie; on any failure the caller sees the
 # original 401 and the existing fail-safe machinery does its job. RG-0064.
-_REVIEW = {"cookie": None, "tried": False}
+_REVIEW = {"cookie": None, "tried": False, "rate_limited": False}
+
+# GATE-CACHE-1 (14 Aug 2026): /review/login allows 8 logins per 10 min and EVERY process
+# minted its own -- ledger-before + this agent + each per-fault run -- so one session
+# exhausted the allowance and the gated reads then 401'd for a reason that had nothing to
+# do with the app. Same cache file, same doctrine as regression_ledger._cookie_from_cache:
+# log in once per session, share the token on disk (.secrets/, gitignored, 0600).
+_REVIEW_CACHE = os.path.join(REPO, ".secrets", "review_cookie.json")
+_REVIEW_CACHE_TTL = 12 * 3600
+
+
+def _cookie_from_cache():
+    try:
+        d = json.load(open(_REVIEW_CACHE, encoding="utf-8"))
+        if d.get("base") == BASE and time.time() < float(d.get("exp", 0)):
+            return (d.get("cookie") or "").strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _cookie_to_cache(cookie, ttl=None):
+    try:
+        os.makedirs(os.path.dirname(_REVIEW_CACHE), exist_ok=True)
+        fd = os.open(_REVIEW_CACHE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump({"base": BASE, "cookie": cookie,
+                       "exp": time.time() + (_REVIEW_CACHE_TTL if ttl is None else ttl)}, fh)
+    except Exception:
+        pass
+
 
 def _review_cookie():
     if _REVIEW["tried"]:
         return _REVIEW["cookie"] or ""
     _REVIEW["tried"] = True
+    cached = _cookie_from_cache()                      # GATE-CACHE-1: one login per session
+    if cached:
+        _REVIEW["cookie"] = cached
+        return cached
     code = (os.environ.get("MS_REVIEW_CODE") or "").strip()
     if not code:
         try:
@@ -235,7 +271,14 @@ def _review_cookie():
         tok = (json.loads(body).get("token") or "").strip()
         _REVIEW["cookie"] = ("ts_review=" + tok) if tok else None
         if _REVIEW["cookie"]:
+            _cookie_to_cache(_REVIEW["cookie"])
             say("gate: review credential minted -- calls ride through the armed gate")
+    except urllib.error.HTTPError as e:
+        _REVIEW["cookie"] = None
+        if e.code == 429:
+            _REVIEW["rate_limited"] = True
+            say("gate: /review/login RATE-LIMITED (429) -- credential unavailable, this run "
+                "is blind at the gate, not evidence that anything is broken (GATE-CACHE-1)")
     except Exception:
         _REVIEW["cookie"] = None
     return _REVIEW["cookie"] or ""
@@ -687,10 +730,48 @@ def main():
     faults = open_faults(key)
     if faults is None:
         return 0
+    # HOST-CAP-1 (14 Aug 2026). BRAIN-DEPS-2 fixed the BACKGROUND half of this problem
+    # (the sandbox reaps detached processes at the bash-call boundary); this is the
+    # FOREGROUND half, found the same way -- by losing two runs to it. The Cowork sandbox
+    # also hard-caps a single call at ~178 s, and one PATH_A fault on a megabyte file
+    # (window + brain + worktree on FUSE + the full 46 s gate ledger) does not fit. Killed
+    # mid-gate the run wrote NOTHING: no report, no heartbeat, no record that the queue was
+    # ever read. Two knobs, no change to any guard:
+    #   --only=REF            drive the queue one fault per invocation
+    #   MAINT_TIME_BUDGET_S=N stop cleanly BEFORE starting a fault that cannot finish
+    # and the report is now written after EVERY fault, so a kill can cost at most the one
+    # fault in flight. Deferred faults are named in the report -- never silently dropped.
+    if _ONLY:
+        want = {r.strip().upper() for r in _ONLY.split(",") if r.strip()}
+        faults = [f for f in faults
+                  if (f.get("ref") or ("TS-%04d" % f.get("id", 0))).upper() in want]
+        say("--only=%s -- %d fault(s) selected" % (_ONLY, len(faults)))
     report = {"run": now(), "mode": mode, "seen": len(faults), "actions": []}
+    _t0 = time.time()
+    _report_path = os.path.join(STATE,
+                                "run_%s.json" % datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
 
-    for f in faults:
+    def _flush():
+        try:
+            open(_report_path, "w").write(json.dumps(report, indent=2))
+        except Exception as e:
+            say("report write failed (%s) -- run continues" % type(e).__name__)
+
+    for _i, f in enumerate(faults):
         ref = f.get("ref") or ("TS-%04d" % f.get("id", 0))
+        if _BUDGET_S and (time.time() - _t0) > _BUDGET_S:
+            for g in faults[_i:]:
+                gref = g.get("ref") or ("TS-%04d" % g.get("id", 0))
+                report["actions"].append({"ref": gref, "lane": "DEFERRED",
+                                          "why": "time budget %.0fs reached before this fault "
+                                                 "was started" % _BUDGET_S,
+                                          "title": (g.get("title") or "")[:80],
+                                          "outcome": "deferred to the next invocation "
+                                                     "(HOST-CAP-1) -- not examined"})
+            say("time budget %.0fs reached -- %d fault(s) deferred, run closing cleanly"
+                % (_BUDGET_S, len(faults) - _i))
+            _flush()
+            break
         try:
             lane, why = classify(f)
         except Exception as e:
@@ -702,18 +783,18 @@ def main():
             # neither is autonomously fixed: escalate = report+safest; path_b = design backlog.
             item["outcome"] = "escalated (safety/legal/cost)" if lane == "ESCALATE" \
                               else "routed to design backlog (batched, designer gate)"
-            report["actions"].append(item); say("%s -> %s (%s)" % (ref, lane, why)); continue
+            report["actions"].append(item); say("%s -> %s (%s)" % (ref, lane, why)); _flush(); continue
 
         # ── PATH_A: propose, gate, and (only if fully armed) ship ───────────────────
         try:
             r = propose_patch(f)
         except Exception as e:
             item["outcome"] = "agent error during propose (%s) -> escalate for a human" % type(e).__name__
-            report["actions"].append(item); say("%s -> propose error (%s)" % (ref, type(e).__name__)); continue
+            report["actions"].append(item); say("%s -> propose error (%s)" % (ref, type(e).__name__)); _flush(); continue
         item["source"] = "%s/%s" % (r.provider, r.model)      # identified, every time
         if not r.ok or "NObugfix" in (r.text or "") or not _looks_like_patch(r.text):
             item["outcome"] = "brain declined a small mechanical fix -> escalate for a human"
-            report["actions"].append(item); say("%s -> no clean patch (%s)" % (ref, item["source"])); continue
+            report["actions"].append(item); say("%s -> no clean patch (%s)" % (ref, item["source"])); _flush(); continue
 
         work = tempfile.mkdtemp(prefix="maint_")
         try:
@@ -813,9 +894,10 @@ def main():
             subprocess.run(["git", "worktree", "remove", "--force", work], cwd=REPO,
                            capture_output=True, timeout=60)
             shutil.rmtree(work, ignore_errors=True)
+            _flush()          # HOST-CAP-1: a kill costs at most the fault in flight
 
-    path = os.path.join(STATE, "run_%s.json" % datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
-    open(path, "w").write(json.dumps(report, indent=2))
+    path = _report_path
+    _flush()
     say("report -> %s  (%d seen, %d acted)" % (path, report["seen"], len(report["actions"])))
     _post_heartbeat(report, mode, key)
     return 0

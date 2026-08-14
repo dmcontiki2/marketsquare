@@ -142,7 +142,11 @@ check("initLMHomeTile guard",   "DEMO_MODE ? LISTINGS.filter" in ms_js)
 
 # 9. Seller profile safety (in ms.js)
 print("\n[9] Seller profile safety")
-check("No bare cvScore ref",       "${cvScore}" not in ms_js)
+# DW-039 FIX 14 Aug 2026: this demanded "${cvScore}" be ABSENT. Locked fix RG-0054
+# legitimately rewrote openSellerCV to compute a guarded value and then interpolate
+# it -- the interpolation is safe BECAUSE of the guard -- so the old line asserted the
+# absence of correct code and reported a false red for 3 days. Assert the guard itself.
+check("cvScore is guarded",       "const cvScore=s.trustScore!=null?" in ms_js)
 check("sellerIdx null-safe IIFE",  "(function(){var sidStr=" in ms_js)
 check("openBEASellerProfile trust","l.trust" in ms_js)
 
