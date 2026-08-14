@@ -1,0 +1,394 @@
+{
+  "doc": "AI ACCOUNTABILITY REGISTER -- MarketSquare",
+  "version": 2,
+  "created": "2026-08-14",
+  "supersedes": "HUMAN_SEAM_REGISTER v1 (14 Aug 2026), which wrongly proposed human takeover of throughput surfaces",
+  "design_premise": "MarketSquare is AI-first BY DESIGN, not by cost-cutting. AI was chosen for the high-throughput judgement surfaces -- photo triage, moderation, grading, classification, drafting -- because those are exactly where machine speed, consistency and tirelessness beat human judgement. Putting a human on a throughput surface does not make it safer: it throttles the business AND it decays, because a reviewer at high volume rubber-stamps within days. A human seam on a throughput path is a control that LOOKS like a control. Humans are therefore NOT the fallback for AI tasks. Humans own INTERFACES -- the boundaries where MarketSquare meets a party that can compel it: the law, the machine, the partner organisation.",
+  "what_catches_a_wrong_answer": [
+    {
+      "rank": 1,
+      "mechanism": "Deterministic guard",
+      "note": "Bounds, schema, allow-list, idempotency. Cheapest and most reliable. Costs no throughput."
+    },
+    {
+      "rank": 2,
+      "mechanism": "Second AI lane, different vendor -- DISAGREEMENT is the exception signal",
+      "note": "The +1 provider slot already exists for failover and sits idle in normal operation. On RED surfaces it can double as an adversarial checker: run both lanes, and treat DISAGREEMENT -- not low confidence -- as the exception. Preserves throughput, uses AI's strength to police AI, and turns dormant failover capacity into a live control."
+    },
+    {
+      "rank": 3,
+      "mechanism": "Economic absorber",
+      "note": "Refund, reserve, or insurance so a wrong answer costs money rather than trust. Money is recoverable; trust is not."
+    },
+    {
+      "rank": 4,
+      "mechanism": "AI-run appeal route",
+      "note": "The appeal is itself handled by AI. Only the residue -- the cases the appeal cannot close -- reaches a human interface role."
+    },
+    {
+      "rank": 5,
+      "mechanism": "Human interface role",
+      "note": "LAST, and only for exceptions whose CLASS is legal, financial, partner or infrastructural. Never for throughput."
+    }
+  ],
+  "human_roles": [
+    {
+      "id": "R1",
+      "role": "Legal & Regulatory Interface",
+      "owns": "What the AI is ALLOWED to say and do. POPIA / consumer law / financial-advice boundary, EULA and disclosure wording, dispute-of-record, counsel and regulator liaison, tax and VAT classification of affiliate income.",
+      "why_human": "The counterparty is a legal system. It requires a named accountable person, signatures, and standing to answer a regulator. No AI can hold that standing.",
+      "touches": "exceptions_only",
+      "hire_trigger": "First regulator or counsel interaction that recurs; or first consumer-law dispute reaching formal stage; or launch in a second jurisdiction."
+    },
+    {
+      "id": "R2",
+      "role": "Infrastructure / Server Administration",
+      "owns": "Hetzner host, deploy ref and rollback, backups and restore proofs, SSL, DNS, secret and key custody, breaker Restore after a T3 vendor ban, disk and cost ceilings.",
+      "why_human": "The counterparty is physical and financial infrastructure with irreversible failure modes and credentials that must never sit in an agent's hands. Also the one lane where the maintenance agent cannot be its own safety net.",
+      "touches": "exceptions_only",
+      "hire_trigger": "When David is the single point of failure for a restore -- i.e. before the first period he is unreachable for >24h with live sellers on the platform."
+    },
+    {
+      "id": "R3",
+      "role": "Business & Partner Interface",
+      "owns": "Agency contracts and onboarding, Paystack, Travelpayouts, founding-seller relationships, partner escalations, commercial terms.",
+      "why_human": "The counterparty is another human organisation that negotiates, builds trust over time, and will not transact with a bot on terms.",
+      "touches": "exceptions_only",
+      "hire_trigger": "Beyond roughly 5-8 active partner organisations, or the first partner who requires a named account contact in contract."
+    },
+    {
+      "id": "R4",
+      "role": "Accountable Principal (David)",
+      "owns": "Non-delegable signature: spend above cap, legal sign-off, launch gate, arming autonomy levels, reversing a design ruling.",
+      "why_human": "Accountability cannot be delegated to a system that cannot be held accountable.",
+      "touches": "exceptions_only",
+      "hire_trigger": "Never delegated. Deputised only by formal appointment."
+    }
+  ],
+  "classes": {
+    "RED": "Irreversible harm to a person or to the trust promise. A refund cannot undo it.",
+    "AMBER": "Money, ranking or reputation. Recoverable, but it costs trust to recover.",
+    "GREEN": "Cosmetic or retryable. The user retries."
+  },
+  "surfaces": [
+    {
+      "id": "AS-01",
+      "surface": "KYC identity verification",
+      "file": "bea_main.py:_sonnet_verify_identity",
+      "decides": "Whether an ID document matches the claimed name",
+      "class": "RED",
+      "throughput": "high",
+      "cost_of_wrong": "False accept gives a fraudster a verified badge; false reject locks an honest seller out",
+      "ai_check": "SECOND LANE. Run the +1 vendor on the same document; disagreement routes to appeal. A human reading IDs at volume is slower AND less consistent than either lane.",
+      "deterministic_guard": "Name-match normalisation, document-type allow-list, SSRF-safe fetch (RG-0036)",
+      "exception_route": "AI appeal on reject; unresolved rejects and every false-accept discovered -> R1 Legal",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R1",
+      "trigger": "Disagreement rate between lanes >3%, OR any false accept found in production",
+      "built": false
+    },
+    {
+      "id": "AS-02",
+      "surface": "Agency import anonymisation",
+      "file": "bea_main.py:_anon_ai_rewrite/_anon_photo_scan/_anon_refine_regions",
+      "decides": "Which copy and photo regions carry identity and must be removed",
+      "class": "RED",
+      "throughput": "high",
+      "cost_of_wrong": "A leaked contact detail destroys the anonymity guarantee and bypasses the intro fee -- the business model itself",
+      "ai_check": "SECOND LANE on the redaction decision plus an adversarial re-read: a separate pass whose only job is to try to RECOVER identity from the anonymised output. If it can, the redaction failed. This is machine-speed red-teaming, impossible for a human at volume.",
+      "deterministic_guard": "Regex sweep for phone/email/URL patterns after AI redaction -- belt and braces, near-zero cost",
+      "exception_route": "Below-threshold held; nothing auto-publishes; contract-level leaks -> R3 Partner, legal exposure -> R1",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R3",
+      "trigger": "Adversarial pass recovers identity on any item, OR a leak found in production",
+      "built": true
+    },
+    {
+      "id": "AS-03",
+      "surface": "Photo moderation / orientation",
+      "file": "bea_main.py:_vision_orient_image (MODERATION-1)",
+      "decides": "Whether buyer-visible imagery is acceptable",
+      "class": "RED",
+      "throughput": "high",
+      "cost_of_wrong": "Unlawful or degrading imagery reaching buyers; or an honest seller silently censored",
+      "ai_check": "SECOND LANE on refusals only (the expensive error is the false accept, so cross-check the accepts on a sampled basis). Refuse rather than blur-to-ruin (RG-0040/0044/0047).",
+      "deterministic_guard": "Judged by bytes not declared type; blur ceiling judges the painted output",
+      "exception_route": "AI appeal on refusal; unlawful-content class -> R1 Legal (reporting duty is a legal act, not a moderation act)",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R1",
+      "trigger": "Any reportable-content class detected, OR appeal overturn rate >10%",
+      "built": false
+    },
+    {
+      "id": "AS-04",
+      "surface": "Tuppence charging on AI delivery",
+      "file": "bea_main.py ai_spend_holds",
+      "decides": "When a user's Tuppence is spent",
+      "class": "RED",
+      "throughput": "high",
+      "cost_of_wrong": "Charging for a service not delivered",
+      "ai_check": "Not an AI decision -- deterministic by design, which is correct",
+      "deterministic_guard": "Charge on delivery only (RG-0033); spend reserved before dispatch (RG-0037); daily ceilings",
+      "exception_route": "Auto-refund on non-delivery (economic absorber); systemic billing faults -> R2, disputes of record -> R1",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R4",
+      "trigger": "Refund rate >2% sustained, OR any charge without delivery",
+      "built": true
+    },
+    {
+      "id": "AS-05",
+      "surface": "Card condition grading",
+      "file": "bea_main.py:grade_card_condition",
+      "decides": "Graded condition driving price",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "Buyer receives a card worse than graded; collectables communities punish this permanently",
+      "ai_check": "SECOND LANE above a value threshold; disagreement widens the stated range rather than escalating. AI grades far more consistently than a human grader, who drifts within a single session.",
+      "deterministic_guard": "NOT YET BUILT -- the grade is emitted as fact. Needs 'AI-assisted estimate, not a certified grade' framing plus a value threshold",
+      "exception_route": "Economic absorber: dispute route with refund. Only contract-level disputes -> R1",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R4",
+      "trigger": "BUILD NOW: estimate framing + dispute route. Then: dispute rate >1% of graded sales",
+      "built": false
+    },
+    {
+      "id": "AS-06",
+      "surface": "Price check / fair-price opinion",
+      "file": "bea_main.py:ai_price_check",
+      "decides": "Whether a listed price is fair",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "A confident wrong price anchors a seller low or kills the listing high",
+      "ai_check": "Emit a RANGE from a second lane rather than a single number -- disagreement between lanes IS the honest uncertainty, expressed to the user instead of hidden",
+      "deterministic_guard": "NOT YET BUILT -- sanity bounds against comparable listings on the platform",
+      "exception_route": "None needed; it is advisory by construction once framed as a range",
+      "human_touches": "none",
+      "exception_owner": "-",
+      "trigger": "BUILD NOW: range not number, labelled opinion",
+      "built": false
+    },
+    {
+      "id": "AS-07",
+      "surface": "Investor yield estimate",
+      "file": "bea_main.py:ai_yield_calc",
+      "decides": "Yield estimate on a property",
+      "class": "AMBER",
+      "throughput": "medium",
+      "cost_of_wrong": "Reads as financial advice -- regulatory exposure well beyond the listing",
+      "ai_check": "Deterministic arithmetic with AI only assembling the inputs. The maths must never be a model output.",
+      "deterministic_guard": "NOT YET BUILT -- computed yield, disclosed formula, disclaimer",
+      "exception_route": "Hand off to partnered agency -- which IS the Tuppence introduction. The exception is the product.",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R1",
+      "trigger": "BUILD NOW: disclaimer + agency hand-off. R1 owns the financial-advice boundary wording.",
+      "built": false
+    },
+    {
+      "id": "AS-08",
+      "surface": "Email triage and reply drafting",
+      "file": "bea_main.py:_classify_email",
+      "decides": "Classification and draft reply",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "A legal notice classified as spam -- the Klarna failure exactly: volume handled, complexity missed",
+      "ai_check": "CLASS-ASYMMETRIC ROUTING: err deliberately toward legal/billing. A false legal flag costs one read; a missed legal notice costs a default judgement. Second lane on anything touching the legal/billing boundary.",
+      "deterministic_guard": "Keyword tripwires (summons, notice, chargeback, regulator, POPIA) force the legal class regardless of model output",
+      "exception_route": "escalation_brief.py renders LEGAL/MONEY/COST/TRUST; legal -> R1, partner -> R3, infra -> R2",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R1",
+      "trigger": "HARD RULE: nothing classified legal or billing auto-sends, at any volume",
+      "built": true
+    },
+    {
+      "id": "AS-09",
+      "surface": "Listing draft / rewrite from photos",
+      "file": "bea_main.py:listing_draft_from_photos, ai_listing_rewrite",
+      "decides": "The title and description a buyer reads",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "Misdescription is a consumer-law problem once money moves",
+      "ai_check": "The SELLER is the check, and it is the right one -- they alone know the item. Already in the loop.",
+      "deterministic_guard": "Never auto-publish",
+      "exception_route": "Consumer-law complaints -> R1",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R1",
+      "trigger": "Only if drafts ever auto-publish. They must not.",
+      "built": true
+    },
+    {
+      "id": "AS-10",
+      "surface": "Trust score guidance",
+      "file": "bea_main.py:trust_score_guidance",
+      "decides": "How a seller raises their trust score",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "Teaches sellers to farm the rubric (see IL-02)",
+      "ai_check": "Not needed -- the risk is in the RUBRIC, not the guidance",
+      "deterministic_guard": "No signal self-reported without evidence; none client-modifiable",
+      "exception_route": "Rubric design is R4's call",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R4",
+      "trigger": "Any signal earnable without evidence going live",
+      "built": true
+    },
+    {
+      "id": "AS-11",
+      "surface": "Maintenance agent (self-modifying code)",
+      "file": "scripts/maintenance_agent.py",
+      "decides": "Classifies faults, proposes and ships code patches",
+      "class": "RED",
+      "throughput": "low",
+      "cost_of_wrong": "Highest blast radius in the system -- an autonomous agent shipping to the live site",
+      "ai_check": "Mechanical gates, not a human veto: regression ledger + predeploy + BIT + server auto-rollback. REFUSE_LEGAL_COSTLY / REFUSE_TRUST_CORE force escalation.",
+      "deterministic_guard": "Default OFF; shadow mode; MAX_SHIPS_PER_HOUR; scoped msdeploy SSH user",
+      "exception_route": "Refuse-marker classes -> R1 (legal/cost) or R2 (infra/schema/auth)",
+      "human_touches": "exceptions_only",
+      "exception_owner": "R2",
+      "trigger": "STANDING CONDITION: any gate that stops asserting re-arms the veto",
+      "built": true
+    },
+    {
+      "id": "AS-12",
+      "surface": "Search interpretation",
+      "file": "bea_main.py:search_interpret",
+      "decides": "Turns free text into a query",
+      "class": "GREEN",
+      "throughput": "high",
+      "cost_of_wrong": "Buyer retries; silent failure if it hides a category",
+      "ai_check": "Deterministic keyword path underneath",
+      "deterministic_guard": "Fallback to keyword search on model failure",
+      "exception_route": "None",
+      "human_touches": "none",
+      "exception_owner": "-",
+      "trigger": "Zero-result rate >15% sustained",
+      "built": true
+    },
+    {
+      "id": "AS-13",
+      "surface": "Wishlist matcher",
+      "file": "bea_main.py:MATCHER/run_match_job",
+      "decides": "Which listings match a wishlist",
+      "class": "AMBER",
+      "throughput": "high",
+      "cost_of_wrong": "Bad matches train buyers to ignore notifications permanently",
+      "ai_check": "PARALLEL RUN when the AI matcher replaces the deterministic one -- both run, outputs compared under real load, old lane stays up",
+      "deterministic_guard": "Deterministic keyword matcher is the incumbent",
+      "exception_route": "None",
+      "human_touches": "none",
+      "exception_owner": "-",
+      "trigger": "Do not switch off the deterministic lane until the AI lane has beaten it in production",
+      "built": true
+    },
+    {
+      "id": "AS-14",
+      "surface": "Market note / advert coach",
+      "file": "bea_main.py:aa_market_note, aa_coach",
+      "decides": "Coaching and market commentary",
+      "class": "GREEN",
+      "throughput": "high",
+      "cost_of_wrong": "Generic advice, ignored -- but it is charged 1T so a bad one costs the seller",
+      "ai_check": "Not needed",
+      "deterministic_guard": "First use free",
+      "exception_route": "Economic absorber: refund",
+      "human_touches": "none",
+      "exception_owner": "-",
+      "trigger": "Refund rate on coach charges >5%",
+      "built": true
+    }
+  ],
+  "incentive_register": {
+    "test": "THE DRAGON TAIL TEST. Dragon Tail never malfunctioned and no missing human would have caught it. Nobody modelled how two independently optimising systems would interact. For every surface where a third party can see platform-internal information: if this actor optimises purely for themselves, what emerges? This is a SYSTEMS-MODELLING question, not a staffing one -- which is why it survives the AI-first design intact.",
+    "leaks": [
+      {
+        "id": "IL-01",
+        "surface": "GET /tuppence/balance?email= is a public read",
+        "actor": "Anyone",
+        "if_they_optimise": "Enumerate emails, profile spenders, target high-balance sellers",
+        "today": "Masked only by the pre-launch edge gate, which LIFTS AT LAUNCH",
+        "action": "Authenticate before launch. Launch blocker. Owner: R2."
+      },
+      {
+        "id": "IL-02",
+        "surface": "Trust rubric fully published; Gold 90+ earns featured priority",
+        "actor": "Sellers",
+        "if_they_optimise": "Farm the cheapest points to 90 without becoming more trustworthy; referrals (evidence_required varies) are the vector",
+        "today": "No signal self-reported without verification",
+        "action": "Referrals need evidence before the lane goes live. Owner: R4."
+      },
+      {
+        "id": "IL-03",
+        "surface": "Boost lowers the match threshold 60 -> 45 and sorts boosted-first",
+        "actor": "Sellers with Tuppence",
+        "if_they_optimise": "Boost weak listings to reach buyers they should not; buyers learn boosted results are worse and stop trusting the feed",
+        "today": "Thresholds inferable from behaviour",
+        "action": "Boost raises VISIBILITY, never lowers RELEVANCE. Decouple. Owner: R4."
+      },
+      {
+        "id": "IL-04",
+        "surface": "Intro costs the seller 1T, 2T if boosted -- pay to be reachable",
+        "actor": "Sellers and buyers",
+        "if_they_optimise": "Sellers suppress boost to pay less and become less reachable; gated buyers route around the platform",
+        "today": "LM-T1 idempotency, LM-15 trust gate, LM-F3 cooldown",
+        "action": "Any incentive making a seller LESS reachable works against the only thing the till charges for. Owner: R4."
+      },
+      {
+        "id": "IL-05",
+        "surface": "Anonymisation is all that stands between an agency and a free bypass of the intro fee",
+        "actor": "Partnered agencies",
+        "if_they_optimise": "Probe the anonymiser for the copy pattern that survives it",
+        "today": "RG-0038, RG-0045, confidence gate, spot-checks",
+        "action": "Adversarial AI re-read (AS-02) is the right control -- machine-speed red-teaming, continuous. Owner: R3."
+      },
+      {
+        "id": "IL-06",
+        "surface": "super_example exemplars pinned first in every sort",
+        "actor": "Real sellers",
+        "if_they_optimise": "Conclude the platform favours its own demos and disengage",
+        "today": "RG-0052",
+        "action": "Holding. Re-check when real listing volume passes demo volume. Owner: R4."
+      }
+    ]
+  },
+  "predesign_rules": [
+    {
+      "id": "PR-1",
+      "rule": "PARALLEL RUN, NEVER A SWITCH-OVER",
+      "detail": "No mechanism is replaced without both running side by side and compared under real load. The parallel lane is AI-versus-AI or AI-versus-deterministic -- never AI-versus-human, which cannot keep pace and so proves nothing."
+    },
+    {
+      "id": "PR-2",
+      "rule": "AI IS POLICED BY AI; HUMANS OWN INTERFACES",
+      "detail": "A wrong AI answer is caught by a deterministic guard, a second vendor lane, or an economic absorber. Humans are not the fallback for AI tasks -- they own the boundaries where MarketSquare meets the law (R1), the machine (R2), a partner organisation (R3), or must sign (R4)."
+    },
+    {
+      "id": "PR-3",
+      "rule": "NEVER REMOVE THE FALLBACK AND ADD THE NEW LANE IN THE SAME CHANGE",
+      "detail": "Yum mandated Dragon Tail AND centralised the DoorDash contract at once, so the franchise lost the AI's replacement and its own tools simultaneously. One change at a time."
+    },
+    {
+      "id": "PR-4",
+      "rule": "RUN THE DRAGON TAIL TEST ON EVERY NEW INFORMATION SURFACE",
+      "detail": "Before exposing any platform-internal signal to sellers, buyers, agencies or affiliates, write down what a purely self-interested actor does with it. Systems modelling, not staffing."
+    },
+    {
+      "id": "PR-5",
+      "rule": "NO PUBLIC CLAIM THE MACHINERY CANNOT YET HONOUR",
+      "detail": "Klarna's most expensive loss was narrative. Extend the vendor-neutral copy discipline (RG-0035) to capability claims."
+    },
+    {
+      "id": "PR-6",
+      "rule": "A HUMAN IN A THROUGHPUT PATH IS A DEFECT, NOT A CONTROL",
+      "detail": "It throttles the business and it decays -- a reviewer at volume rubber-stamps within days, leaving a control that only looks like one. If a design puts a human on a per-item path, the design is wrong. human_seam_check.py fails it."
+    },
+    {
+      "id": "PR-7",
+      "rule": "THE EXCEPTION RATE IS THE TRIGGER, NEVER THE VOLUME",
+      "detail": "A human interface role engages when the exception RATE crosses a threshold, or when the exception CLASS is legal, financial, partner or infrastructural. Rising volume is the design working, and must never pull a human in."
+    },
+    {
+      "id": "PR-8",
+      "rule": "THE +1 LANE IS A CONTROL, NOT JUST A SPARE",
+      "detail": "The designated swap-out provider sits idle in normal operation. On RED surfaces, run it as a second opinion and treat DISAGREEMENT -- not low confidence -- as the exception signal. Dormant failover capacity becomes a live, throughput-preserving control."
+    }
+  ]
+}

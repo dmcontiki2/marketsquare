@@ -1,0 +1,417 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare &mdash; AI Accountability Map</title>
+<style>
+:root{--navy:#12283F;--ink:#1B2A38;--rule:#D8DEE5;--paper:#F7F9FB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:34px 40px 30px}
+header h1{margin:0 0 8px;font-size:30px;letter-spacing:-.4px}
+header p{margin:0 0 6px;opacity:.88;max-width:980px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:9px 15px;font-size:14px}
+.stat b{font-size:20px;display:block;line-height:1.2}
+.stat.good{background:rgba(120,220,170,.16);border-color:rgba(120,220,170,.4)}
+main{padding:34px 40px 60px;max-width:1520px;margin:0 auto}
+h2{font-size:20px;color:var(--navy);margin:46px 0 6px;padding-bottom:9px;border-bottom:2px solid var(--navy)}
+h2:first-of-type{margin-top:0}
+.sub{margin:0 0 20px;color:#5A6C7D;font-size:14.5px;max-width:1040px}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin:0 0 22px;font-size:13.5px}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{width:15px;height:15px;border-radius:4px;display:inline-block}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:15px;margin-bottom:8px}
+.role{background:#fff;border:1px solid var(--rule);border-top:4px solid var(--navy);border-radius:9px;padding:15px 18px}
+.rid{font-size:12px;font-weight:800;color:#B26A00;letter-spacing:1.2px}
+.role h4{margin:2px 0 9px;font-size:16px;color:var(--navy)}
+.role p{margin:0 0 7px;font-size:13.4px;color:#3C4C5C}
+.role .hire{background:#EAF0FA;border-radius:5px;padding:7px 9px;margin-bottom:0}
+.ladder{display:flex;flex-direction:column;gap:9px}
+.rung{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--rule);border-radius:9px;padding:13px 17px;border-left:6px solid #1E6B45}
+.rung.human{border-left-color:#B26A00;background:#FFFCF6}
+.rank{background:var(--navy);color:#fff;width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 27px;margin-top:2px}
+.rung.human .rank{background:#B26A00}
+.rung h4{margin:0 0 3px;font-size:15px;color:var(--navy)}
+.rung p{margin:0;font-size:13.5px;color:#3C4C5C}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(375px,1fr));gap:16px}
+.card{background:#fff;border:1px solid var(--rule);border-left:6px solid var(--fg);border-radius:9px;padding:16px 18px 13px;box-shadow:0 1px 3px rgba(18,40,63,.07);display:flex;flex-direction:column}
+.chead{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.cls{background:var(--fg);color:#fff;font-size:11px;font-weight:700;letter-spacing:.8px;padding:3px 9px;border-radius:4px}
+.cid{font-size:12px;color:#7B8A99;font-weight:600;letter-spacing:.5px}
+.tp{margin-left:auto;color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.7px;padding:3px 8px;border-radius:11px}
+.card h4{margin:0 0 3px;font-size:16.5px;color:var(--navy)}
+.file{font:12px/1.4 ui-monospace,Consolas,monospace;color:#7B8A99;margin-bottom:10px;word-break:break-all}
+dl{margin:0;flex:1}
+dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:#8494A3;font-weight:700;margin-top:9px}
+dd{margin:1px 0 0;font-size:13.6px}
+dd.trig{background:var(--bg);border-radius:5px;padding:6px 9px;margin-top:3px;font-size:13.3px}
+dd.warnbox{background:#FFF4E0;border-left:3px solid #B26A00;border-radius:0 5px 5px 0;padding:5px 9px;margin-top:3px}
+.cfoot{margin-top:13px;padding-top:10px;border-top:1px solid var(--rule);display:flex;gap:8px;align-items:center}
+.chip{font-size:10px;font-weight:700;letter-spacing:.6px;padding:4px 10px;border-radius:11px}
+.hnone{background:#E8F5EE;color:#1E6B45;border:1px solid #B7DEC9}
+.hexc{background:#EAF0FA;color:#2F5496;border:1px solid #BFD2EE}
+.hbad{background:#FDECEA;color:#B3261E;border:1px solid #F2C2BC}
+.own{margin-left:auto;background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:4px 9px;border-radius:4px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);border-radius:9px;overflow:hidden;font-size:13.7px}
+th{background:var(--navy);color:#fff;text-align:left;padding:11px 13px;font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+td{padding:11px 13px;border-top:1px solid var(--rule);vertical-align:top}
+tr:nth-child(even) td{background:#FBFCFD}
+.lid{font-weight:700;color:#B26A00;white-space:nowrap}
+.act{color:var(--navy);font-weight:600}
+.mut{color:#7B8A99;font-size:12.5px}
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:15px}
+.rule{background:#fff;border:1px solid var(--rule);border-top:4px solid var(--navy);border-radius:9px;padding:15px 18px}
+.rule.newrule{border-top-color:#B26A00;background:#FFFCF6}
+.rid2{font-size:11.5px;font-weight:700;color:#B26A00;letter-spacing:1px}
+.rule h4{margin:3px 0 7px;font-size:15.5px;color:var(--navy)}
+.rule p{margin:0;font-size:13.7px;color:#3C4C5C}
+.corr{background:#fff;border:1px solid var(--rule);border-left:6px solid #B26A00;border-radius:9px;padding:18px 22px;margin-bottom:8px}
+.corr h3{margin:0 0 8px;font-size:17px;color:var(--navy)}
+.corr p{margin:0 0 9px;font-size:14.3px;color:#3C4C5C}
+.corr p:last-child{margin-bottom:0}
+footer{padding:26px 40px 44px;color:#7B8A99;font-size:13px;max-width:1520px;margin:0 auto}
+code{background:#EDF1F5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+header code{background:rgba(255,255,255,.15);color:#fff}
+</style></head><body>
+<header>
+<h1>MarketSquare &mdash; AI Accountability Map</h1>
+<p>AI-first <em>by design</em>. AI owns the high-throughput judgement surfaces because that is
+where machine speed and consistency win. Wrong answers are caught by <strong>machines</strong> &mdash;
+deterministic guards, a second vendor lane, economic absorbers. Humans own
+<strong>interfaces</strong>: the law, the machine, the partner, the signature.</p>
+<p>Derived from <code>AI_ACCOUNTABILITY_REGISTER.json</code> &middot; asserted by
+<code>scripts/ai_accountability_check.py</code> &middot; v2, supersedes the Human Seam Map</p>
+<div class="stats">
+<div class="stat"><b>14</b>AI decision surfaces</div>
+<div class="stat"><b>12</b>high-throughput</div>
+<div class="stat"><b>5</b>RED &mdash; irreversible</div>
+<div class="stat"><b>7</b>AMBER &mdash; recoverable</div>
+<div class="stat"><b>2</b>GREEN &mdash; retryable</div>
+<div class="stat good"><b>14 / 14</b>keep humans off the per-item path</div>
+<div class="stat"><b>4</b>human interface roles</div>
+</div>
+</header>
+<main>
+
+<h2>1 &nbsp;The correction this map encodes</h2>
+<div class="corr">
+<h3>A human in a throughput path is a defect, not a control</h3>
+<p>The obvious reading of the Pizza&nbsp;Hut and Klarna failures is &ldquo;put a human back
+where the AI decides.&rdquo; On a high-volume surface that is wrong twice over. It caps the
+business at one person&rsquo;s rate &mdash; <em>and</em> the control decays: a reviewer at 500
+photos a day is rubber-stamping by day three. That leaves a control which only <em>looks</em>
+like a control, which is worse than none, because it is trusted. AI has no such failure mode:
+item 500 is judged exactly like item 1.</p>
+<p><strong>Klarna does not contradict this.</strong> Their error was capability mismatch &mdash;
+AI put on emotionally-charged, multi-step resolution it could not do, for cost reasons, while
+claiming quality. MarketSquare&rsquo;s AI surfaces are classification, extraction, comparison
+and drafting at volume: the things AI genuinely does better.</p>
+<p><strong>Pizza Hut does not either.</strong> Dragon Tail&rsquo;s failure was not a missing
+shift manager &mdash; it was that nobody modelled how two independently optimising systems
+would interact once the AI changed the information environment. That is systems modelling, and
+it would have failed with a human in the chair.</p>
+</div>
+
+<h2>2 &nbsp;What catches a wrong answer</h2>
+<p class="sub">Ranked by how well each preserves throughput. A human appears <strong>last</strong>,
+and only for exceptions whose class is legal, financial, partner or infrastructural.</p>
+<div class="ladder">
+<div class="rung machine">
+<span class="rank">1</span><div><h4>Deterministic guard</h4><p>Bounds, schema, allow-list, idempotency. Cheapest and most reliable. Costs no throughput.</p></div></div>
+<div class="rung machine">
+<span class="rank">2</span><div><h4>Second AI lane, different vendor -- DISAGREEMENT is the exception signal</h4><p>The +1 provider slot already exists for failover and sits idle in normal operation. On RED surfaces it can double as an adversarial checker: run both lanes, and treat DISAGREEMENT -- not low confidence -- as the exception. Preserves throughput, uses AI&#x27;s strength to police AI, and turns dormant failover capacity into a live control.</p></div></div>
+<div class="rung machine">
+<span class="rank">3</span><div><h4>Economic absorber</h4><p>Refund, reserve, or insurance so a wrong answer costs money rather than trust. Money is recoverable; trust is not.</p></div></div>
+<div class="rung machine">
+<span class="rank">4</span><div><h4>AI-run appeal route</h4><p>The appeal is itself handled by AI. Only the residue -- the cases the appeal cannot close -- reaches a human interface role.</p></div></div>
+<div class="rung human">
+<span class="rank">5</span><div><h4>Human interface role</h4><p>LAST, and only for exceptions whose CLASS is legal, financial, partner or infrastructural. Never for throughput.</p></div></div>
+</div>
+
+<h2>3 &nbsp;The four human interface roles</h2>
+<p class="sub">Humans own boundaries where MarketSquare meets a party that can compel it &mdash;
+a party requiring a named, accountable person. Each role owns <strong>exceptions</strong>,
+never throughput.</p>
+<div class="roles">
+<div class="role"><span class="rid">R1</span><h4>Legal &amp; Regulatory Interface</h4>
+<p class="owns"><strong>Owns:</strong> What the AI is ALLOWED to say and do. POPIA / consumer law / financial-advice boundary, EULA and disclosure wording, dispute-of-record, counsel and regulator liaison, tax and VAT classification of affiliate income.</p>
+<p class="why"><strong>Why human:</strong> The counterparty is a legal system. It requires a named accountable person, signatures, and standing to answer a regulator. No AI can hold that standing.</p>
+<p class="hire"><strong>Hire trigger:</strong> First regulator or counsel interaction that recurs; or first consumer-law dispute reaching formal stage; or launch in a second jurisdiction.</p></div>
+<div class="role"><span class="rid">R2</span><h4>Infrastructure / Server Administration</h4>
+<p class="owns"><strong>Owns:</strong> Hetzner host, deploy ref and rollback, backups and restore proofs, SSL, DNS, secret and key custody, breaker Restore after a T3 vendor ban, disk and cost ceilings.</p>
+<p class="why"><strong>Why human:</strong> The counterparty is physical and financial infrastructure with irreversible failure modes and credentials that must never sit in an agent&#x27;s hands. Also the one lane where the maintenance agent cannot be its own safety net.</p>
+<p class="hire"><strong>Hire trigger:</strong> When David is the single point of failure for a restore -- i.e. before the first period he is unreachable for &gt;24h with live sellers on the platform.</p></div>
+<div class="role"><span class="rid">R3</span><h4>Business &amp; Partner Interface</h4>
+<p class="owns"><strong>Owns:</strong> Agency contracts and onboarding, Paystack, Travelpayouts, founding-seller relationships, partner escalations, commercial terms.</p>
+<p class="why"><strong>Why human:</strong> The counterparty is another human organisation that negotiates, builds trust over time, and will not transact with a bot on terms.</p>
+<p class="hire"><strong>Hire trigger:</strong> Beyond roughly 5-8 active partner organisations, or the first partner who requires a named account contact in contract.</p></div>
+<div class="role"><span class="rid">R4</span><h4>Accountable Principal (David)</h4>
+<p class="owns"><strong>Owns:</strong> Non-delegable signature: spend above cap, legal sign-off, launch gate, arming autonomy levels, reversing a design ruling.</p>
+<p class="why"><strong>Why human:</strong> Accountability cannot be delegated to a system that cannot be held accountable.</p>
+<p class="hire"><strong>Hire trigger:</strong> Never delegated. Deputised only by formal appointment.</p></div>
+</div>
+
+<h2>4 &nbsp;The surface register</h2>
+<p class="sub">Class is set by what a wrong answer costs, not by how clever the model is.
+RED means a refund cannot undo it. Every card names its machine-side check first.</p>
+<div class="legend">
+<span><i class="sw" style="background:#B3261E"></i> RED &mdash; irreversible harm to a person or the trust promise</span>
+<span><i class="sw" style="background:#B26A00"></i> AMBER &mdash; money, ranking, reputation</span>
+<span><i class="sw" style="background:#1E6B45"></i> GREEN &mdash; cosmetic or retryable</span>
+<span><i class="sw" style="background:#FFF4E0;border:1px solid #B26A00"></i> amber-shaded guard = not yet built</span>
+</div>
+<div class="grid">
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">AS-01</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>KYC identity verification</h4>
+  <div class="file">bea_main.py:_sonnet_verify_identity</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether an ID document matches the claimed name</dd>
+    <dt>Cost of a wrong answer</dt><dd>False accept gives a fraudster a verified badge; false reject locks an honest seller out</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>SECOND LANE. Run the +1 vendor on the same document; disagreement routes to appeal. A human reading IDs at volume is slower AND less consistent than either lane.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Name-match normalisation, document-type allow-list, SSRF-safe fetch (RG-0036)</dd>
+    <dt>Exception route</dt><dd>AI appeal on reject; unresolved rejects and every false-accept discovered -&gt; R1 Legal</dd>
+    <dt>Trigger</dt><dd class="trig">Disagreement rate between lanes &gt;3%, OR any false accept found in production</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R1</span></div>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">AS-02</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Agency import anonymisation</h4>
+  <div class="file">bea_main.py:_anon_ai_rewrite/_anon_photo_scan/_anon_refine_regions</div>
+  <dl>
+    <dt>Decides</dt><dd>Which copy and photo regions carry identity and must be removed</dd>
+    <dt>Cost of a wrong answer</dt><dd>A leaked contact detail destroys the anonymity guarantee and bypasses the intro fee -- the business model itself</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>SECOND LANE on the redaction decision plus an adversarial re-read: a separate pass whose only job is to try to RECOVER identity from the anonymised output. If it can, the redaction failed. This is machine-speed red-teaming, impossible for a human at volume.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Regex sweep for phone/email/URL patterns after AI redaction -- belt and braces, near-zero cost</dd>
+    <dt>Exception route</dt><dd>Below-threshold held; nothing auto-publishes; contract-level leaks -&gt; R3 Partner, legal exposure -&gt; R1</dd>
+    <dt>Trigger</dt><dd class="trig">Adversarial pass recovers identity on any item, OR a leak found in production</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R3</span></div>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">AS-03</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Photo moderation / orientation</h4>
+  <div class="file">bea_main.py:_vision_orient_image (MODERATION-1)</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether buyer-visible imagery is acceptable</dd>
+    <dt>Cost of a wrong answer</dt><dd>Unlawful or degrading imagery reaching buyers; or an honest seller silently censored</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>SECOND LANE on refusals only (the expensive error is the false accept, so cross-check the accepts on a sampled basis). Refuse rather than blur-to-ruin (RG-0040/0044/0047).</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Judged by bytes not declared type; blur ceiling judges the painted output</dd>
+    <dt>Exception route</dt><dd>AI appeal on refusal; unlawful-content class -&gt; R1 Legal (reporting duty is a legal act, not a moderation act)</dd>
+    <dt>Trigger</dt><dd class="trig">Any reportable-content class detected, OR appeal overturn rate &gt;10%</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R1</span></div>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">AS-04</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Tuppence charging on AI delivery</h4>
+  <div class="file">bea_main.py ai_spend_holds</div>
+  <dl>
+    <dt>Decides</dt><dd>When a user&#x27;s Tuppence is spent</dd>
+    <dt>Cost of a wrong answer</dt><dd>Charging for a service not delivered</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Not an AI decision -- deterministic by design, which is correct</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Charge on delivery only (RG-0033); spend reserved before dispatch (RG-0037); daily ceilings</dd>
+    <dt>Exception route</dt><dd>Auto-refund on non-delivery (economic absorber); systemic billing faults -&gt; R2, disputes of record -&gt; R1</dd>
+    <dt>Trigger</dt><dd class="trig">Refund rate &gt;2% sustained, OR any charge without delivery</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R4</span></div>
+</div>
+<div class="card" style="--fg:#B3261E;--bg:#FDECEA">
+  <div class="chead"><span class="cls">RED</span><span class="cid">AS-11</span>
+    <span class="tp" style="background:#8494A3">LOW THROUGHPUT</span></div>
+  <h4>Maintenance agent (self-modifying code)</h4>
+  <div class="file">scripts/maintenance_agent.py</div>
+  <dl>
+    <dt>Decides</dt><dd>Classifies faults, proposes and ships code patches</dd>
+    <dt>Cost of a wrong answer</dt><dd>Highest blast radius in the system -- an autonomous agent shipping to the live site</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Mechanical gates, not a human veto: regression ledger + predeploy + BIT + server auto-rollback. REFUSE_LEGAL_COSTLY / REFUSE_TRUST_CORE force escalation.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Default OFF; shadow mode; MAX_SHIPS_PER_HOUR; scoped msdeploy SSH user</dd>
+    <dt>Exception route</dt><dd>Refuse-marker classes -&gt; R1 (legal/cost) or R2 (infra/schema/auth)</dd>
+    <dt>Trigger</dt><dd class="trig">STANDING CONDITION: any gate that stops asserting re-arms the veto</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R2</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-05</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Card condition grading</h4>
+  <div class="file">bea_main.py:grade_card_condition</div>
+  <dl>
+    <dt>Decides</dt><dd>Graded condition driving price</dd>
+    <dt>Cost of a wrong answer</dt><dd>Buyer receives a card worse than graded; collectables communities punish this permanently</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>SECOND LANE above a value threshold; disagreement widens the stated range rather than escalating. AI grades far more consistently than a human grader, who drifts within a single session.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd class="warnbox">NOT YET BUILT -- the grade is emitted as fact. Needs &#x27;AI-assisted estimate, not a certified grade&#x27; framing plus a value threshold</dd>
+    <dt>Exception route</dt><dd>Economic absorber: dispute route with refund. Only contract-level disputes -&gt; R1</dd>
+    <dt>Trigger</dt><dd class="trig">BUILD NOW: estimate framing + dispute route. Then: dispute rate &gt;1% of graded sales</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R4</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-06</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Price check / fair-price opinion</h4>
+  <div class="file">bea_main.py:ai_price_check</div>
+  <dl>
+    <dt>Decides</dt><dd>Whether a listed price is fair</dd>
+    <dt>Cost of a wrong answer</dt><dd>A confident wrong price anchors a seller low or kills the listing high</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Emit a RANGE from a second lane rather than a single number -- disagreement between lanes IS the honest uncertainty, expressed to the user instead of hidden</dd>
+    <dt>&#9881; Deterministic guard</dt><dd class="warnbox">NOT YET BUILT -- sanity bounds against comparable listings on the platform</dd>
+    <dt>Exception route</dt><dd>None needed; it is advisory by construction once framed as a range</dd>
+    <dt>Trigger</dt><dd class="trig">BUILD NOW: range not number, labelled opinion</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hnone">NO HUMAN PATH</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-07</span>
+    <span class="tp" style="background:#5A6C7D">MEDIUM THROUGHPUT</span></div>
+  <h4>Investor yield estimate</h4>
+  <div class="file">bea_main.py:ai_yield_calc</div>
+  <dl>
+    <dt>Decides</dt><dd>Yield estimate on a property</dd>
+    <dt>Cost of a wrong answer</dt><dd>Reads as financial advice -- regulatory exposure well beyond the listing</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Deterministic arithmetic with AI only assembling the inputs. The maths must never be a model output.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd class="warnbox">NOT YET BUILT -- computed yield, disclosed formula, disclaimer</dd>
+    <dt>Exception route</dt><dd>Hand off to partnered agency -- which IS the Tuppence introduction. The exception is the product.</dd>
+    <dt>Trigger</dt><dd class="trig">BUILD NOW: disclaimer + agency hand-off. R1 owns the financial-advice boundary wording.</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R1</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-08</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Email triage and reply drafting</h4>
+  <div class="file">bea_main.py:_classify_email</div>
+  <dl>
+    <dt>Decides</dt><dd>Classification and draft reply</dd>
+    <dt>Cost of a wrong answer</dt><dd>A legal notice classified as spam -- the Klarna failure exactly: volume handled, complexity missed</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>CLASS-ASYMMETRIC ROUTING: err deliberately toward legal/billing. A false legal flag costs one read; a missed legal notice costs a default judgement. Second lane on anything touching the legal/billing boundary.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Keyword tripwires (summons, notice, chargeback, regulator, POPIA) force the legal class regardless of model output</dd>
+    <dt>Exception route</dt><dd>escalation_brief.py renders LEGAL/MONEY/COST/TRUST; legal -&gt; R1, partner -&gt; R3, infra -&gt; R2</dd>
+    <dt>Trigger</dt><dd class="trig">HARD RULE: nothing classified legal or billing auto-sends, at any volume</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R1</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-09</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Listing draft / rewrite from photos</h4>
+  <div class="file">bea_main.py:listing_draft_from_photos, ai_listing_rewrite</div>
+  <dl>
+    <dt>Decides</dt><dd>The title and description a buyer reads</dd>
+    <dt>Cost of a wrong answer</dt><dd>Misdescription is a consumer-law problem once money moves</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>The SELLER is the check, and it is the right one -- they alone know the item. Already in the loop.</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Never auto-publish</dd>
+    <dt>Exception route</dt><dd>Consumer-law complaints -&gt; R1</dd>
+    <dt>Trigger</dt><dd class="trig">Only if drafts ever auto-publish. They must not.</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R1</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-10</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Trust score guidance</h4>
+  <div class="file">bea_main.py:trust_score_guidance</div>
+  <dl>
+    <dt>Decides</dt><dd>How a seller raises their trust score</dd>
+    <dt>Cost of a wrong answer</dt><dd>Teaches sellers to farm the rubric (see IL-02)</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Not needed -- the risk is in the RUBRIC, not the guidance</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>No signal self-reported without evidence; none client-modifiable</dd>
+    <dt>Exception route</dt><dd>Rubric design is R4&#x27;s call</dd>
+    <dt>Trigger</dt><dd class="trig">Any signal earnable without evidence going live</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hexc">HUMAN: EXCEPTIONS ONLY</span><span class="own">R4</span></div>
+</div>
+<div class="card" style="--fg:#B26A00;--bg:#FFF4E0">
+  <div class="chead"><span class="cls">AMBER</span><span class="cid">AS-13</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Wishlist matcher</h4>
+  <div class="file">bea_main.py:MATCHER/run_match_job</div>
+  <dl>
+    <dt>Decides</dt><dd>Which listings match a wishlist</dd>
+    <dt>Cost of a wrong answer</dt><dd>Bad matches train buyers to ignore notifications permanently</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>PARALLEL RUN when the AI matcher replaces the deterministic one -- both run, outputs compared under real load, old lane stays up</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Deterministic keyword matcher is the incumbent</dd>
+    <dt>Exception route</dt><dd>None</dd>
+    <dt>Trigger</dt><dd class="trig">Do not switch off the deterministic lane until the AI lane has beaten it in production</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hnone">NO HUMAN PATH</span></div>
+</div>
+<div class="card" style="--fg:#1E6B45;--bg:#E8F5EE">
+  <div class="chead"><span class="cls">GREEN</span><span class="cid">AS-12</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Search interpretation</h4>
+  <div class="file">bea_main.py:search_interpret</div>
+  <dl>
+    <dt>Decides</dt><dd>Turns free text into a query</dd>
+    <dt>Cost of a wrong answer</dt><dd>Buyer retries; silent failure if it hides a category</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Deterministic keyword path underneath</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>Fallback to keyword search on model failure</dd>
+    <dt>Exception route</dt><dd>None</dd>
+    <dt>Trigger</dt><dd class="trig">Zero-result rate &gt;15% sustained</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hnone">NO HUMAN PATH</span></div>
+</div>
+<div class="card" style="--fg:#1E6B45;--bg:#E8F5EE">
+  <div class="chead"><span class="cls">GREEN</span><span class="cid">AS-14</span>
+    <span class="tp" style="background:#12283F">HIGH THROUGHPUT</span></div>
+  <h4>Market note / advert coach</h4>
+  <div class="file">bea_main.py:aa_market_note, aa_coach</div>
+  <dl>
+    <dt>Decides</dt><dd>Coaching and market commentary</dd>
+    <dt>Cost of a wrong answer</dt><dd>Generic advice, ignored -- but it is charged 1T so a bad one costs the seller</dd>
+    <dt>&#9881; Machine check &mdash; AI side</dt><dd>Not needed</dd>
+    <dt>&#9881; Deterministic guard</dt><dd>First use free</dd>
+    <dt>Exception route</dt><dd>Economic absorber: refund</dd>
+    <dt>Trigger</dt><dd class="trig">Refund rate on coach charges &gt;5%</dd>
+  </dl>
+  <div class="cfoot"><span class="chip hnone">NO HUMAN PATH</span></div>
+</div>
+</div>
+
+<h2>5 &nbsp;The Dragon Tail test &mdash; incentive leaks</h2>
+<p class="sub">Dragon Tail never malfunctioned, and no missing human would have caught it. Nobody
+modelled how two independently optimising systems would interact. This is a systems-modelling
+question, not a staffing one &mdash; which is exactly why it survives the AI-first design intact.</p>
+<table>
+<thead><tr><th>ID</th><th>Surface / actor</th><th>If they optimise for themselves</th>
+<th>Defence today</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td class="lid">IL-01</td><td><strong>GET /tuppence/balance?email= is a public read</strong><br><span class="mut">Anyone</span></td>
+<td>Enumerate emails, profile spenders, target high-balance sellers</td><td>Masked only by the pre-launch edge gate, which LIFTS AT LAUNCH</td><td class="act">Authenticate before launch. Launch blocker. Owner: R2.</td></tr>
+<tr><td class="lid">IL-02</td><td><strong>Trust rubric fully published; Gold 90+ earns featured priority</strong><br><span class="mut">Sellers</span></td>
+<td>Farm the cheapest points to 90 without becoming more trustworthy; referrals (evidence_required varies) are the vector</td><td>No signal self-reported without verification</td><td class="act">Referrals need evidence before the lane goes live. Owner: R4.</td></tr>
+<tr><td class="lid">IL-03</td><td><strong>Boost lowers the match threshold 60 -&gt; 45 and sorts boosted-first</strong><br><span class="mut">Sellers with Tuppence</span></td>
+<td>Boost weak listings to reach buyers they should not; buyers learn boosted results are worse and stop trusting the feed</td><td>Thresholds inferable from behaviour</td><td class="act">Boost raises VISIBILITY, never lowers RELEVANCE. Decouple. Owner: R4.</td></tr>
+<tr><td class="lid">IL-04</td><td><strong>Intro costs the seller 1T, 2T if boosted -- pay to be reachable</strong><br><span class="mut">Sellers and buyers</span></td>
+<td>Sellers suppress boost to pay less and become less reachable; gated buyers route around the platform</td><td>LM-T1 idempotency, LM-15 trust gate, LM-F3 cooldown</td><td class="act">Any incentive making a seller LESS reachable works against the only thing the till charges for. Owner: R4.</td></tr>
+<tr><td class="lid">IL-05</td><td><strong>Anonymisation is all that stands between an agency and a free bypass of the intro fee</strong><br><span class="mut">Partnered agencies</span></td>
+<td>Probe the anonymiser for the copy pattern that survives it</td><td>RG-0038, RG-0045, confidence gate, spot-checks</td><td class="act">Adversarial AI re-read (AS-02) is the right control -- machine-speed red-teaming, continuous. Owner: R3.</td></tr>
+<tr><td class="lid">IL-06</td><td><strong>super_example exemplars pinned first in every sort</strong><br><span class="mut">Real sellers</span></td>
+<td>Conclude the platform favours its own demos and disengage</td><td>RG-0052</td><td class="act">Holding. Re-check when real listing volume passes demo volume. Owner: R4.</td></tr>
+</tbody></table>
+
+<h2>6 &nbsp;Pre-design rules</h2>
+<p class="sub">Canon. <code>ai_accountability_check.py</code> fails if any of the eight goes
+missing. Amber-topped rules are new in v2 and encode the correction.</p>
+<div class="rules">
+<div class="rule"><span class="rid2">PR-1</span><h4>PARALLEL RUN, NEVER A SWITCH-OVER</h4><p>No mechanism is replaced without both running side by side and compared under real load. The parallel lane is AI-versus-AI or AI-versus-deterministic -- never AI-versus-human, which cannot keep pace and so proves nothing.</p></div>
+<div class="rule"><span class="rid2">PR-2</span><h4>AI IS POLICED BY AI; HUMANS OWN INTERFACES</h4><p>A wrong AI answer is caught by a deterministic guard, a second vendor lane, or an economic absorber. Humans are not the fallback for AI tasks -- they own the boundaries where MarketSquare meets the law (R1), the machine (R2), a partner organisation (R3), or must sign (R4).</p></div>
+<div class="rule"><span class="rid2">PR-3</span><h4>NEVER REMOVE THE FALLBACK AND ADD THE NEW LANE IN THE SAME CHANGE</h4><p>Yum mandated Dragon Tail AND centralised the DoorDash contract at once, so the franchise lost the AI&#x27;s replacement and its own tools simultaneously. One change at a time.</p></div>
+<div class="rule"><span class="rid2">PR-4</span><h4>RUN THE DRAGON TAIL TEST ON EVERY NEW INFORMATION SURFACE</h4><p>Before exposing any platform-internal signal to sellers, buyers, agencies or affiliates, write down what a purely self-interested actor does with it. Systems modelling, not staffing.</p></div>
+<div class="rule"><span class="rid2">PR-5</span><h4>NO PUBLIC CLAIM THE MACHINERY CANNOT YET HONOUR</h4><p>Klarna&#x27;s most expensive loss was narrative. Extend the vendor-neutral copy discipline (RG-0035) to capability claims.</p></div>
+<div class="rule newrule"><span class="rid2">PR-6</span><h4>A HUMAN IN A THROUGHPUT PATH IS A DEFECT, NOT A CONTROL</h4><p>It throttles the business and it decays -- a reviewer at volume rubber-stamps within days, leaving a control that only looks like one. If a design puts a human on a per-item path, the design is wrong. human_seam_check.py fails it.</p></div>
+<div class="rule newrule"><span class="rid2">PR-7</span><h4>THE EXCEPTION RATE IS THE TRIGGER, NEVER THE VOLUME</h4><p>A human interface role engages when the exception RATE crosses a threshold, or when the exception CLASS is legal, financial, partner or infrastructural. Rising volume is the design working, and must never pull a human in.</p></div>
+<div class="rule newrule"><span class="rid2">PR-8</span><h4>THE +1 LANE IS A CONTROL, NOT JUST A SPARE</h4><p>The designated swap-out provider sits idle in normal operation. On RED surfaces, run it as a second opinion and treat DISAGREEMENT -- not low confidence -- as the exception signal. Dormant failover capacity becomes a live, throughput-preserving control.</p></div>
+</div>
+</main>
+<footer>
+Built 14 Aug 2026. Prompted by <em>&ldquo;Companies Put AI In Charge. Now They&rsquo;re Paying
+For It&rdquo;</em> (House of El: AI), corrected by David&rsquo;s design intent the same day.
+Canon: <code>AI_ACCOUNTABILITY_PREDESIGN.md</code>, <code>AI_ACCOUNTABILITY_REGISTER.json</code>,
+<code>scripts/ai_accountability_check.py</code>.
+</footer>
+</body></html>

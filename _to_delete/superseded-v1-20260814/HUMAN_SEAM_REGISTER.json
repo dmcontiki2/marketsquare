@@ -1,0 +1,265 @@
+{
+  "doc": "HUMAN SEAM REGISTER -- MarketSquare",
+  "created": "2026-08-14",
+  "why": "Klarna could re-hire the 700 people it fired. MarketSquare starts at zero humans, so it has no bench to fall back to. The seam where a human will one day stand must therefore be DESIGNED and TESTED while it is still empty. Every AI decision surface below declares: what a wrong answer costs, the machine fallback that exists today, the human role that takes over when the machine is not enough, and the MEASURABLE trigger that says the seam must now be filled.",
+  "classes": {
+    "RED": "Irreversible harm to a person or to the trust promise. A wrong answer cannot be undone by a refund.",
+    "AMBER": "Money, ranking or reputation. Recoverable, but it costs real trust to recover.",
+    "GREEN": "Cosmetic or retryable. A wrong answer is an annoyance, the user retries."
+  },
+  "surfaces": [
+    {
+      "id": "HS-01",
+      "surface": "KYC identity verification",
+      "file": "bea_main.py:_sonnet_verify_identity",
+      "decides": "Whether an ID document matches the claimed name",
+      "class": "RED",
+      "cost_of_wrong": "False accept lets a fraudster wear a verified badge; false reject locks an honest seller out with no appeal path",
+      "machine_fallback": "AI seam + circuit breaker; lane swap on outage",
+      "human_role": "Verification reviewer (part-time, remote)",
+      "trigger": "ANY false accept discovered, OR >2% appeal rate on rejects, OR >40 verifications/week",
+      "seam_built": false
+    },
+    {
+      "id": "HS-02",
+      "surface": "Agency import anonymisation",
+      "file": "bea_main.py:_anon_ai_rewrite/_anon_photo_scan/_anon_refine_regions",
+      "decides": "Which copy and which photo regions carry identity and must be removed",
+      "class": "RED",
+      "cost_of_wrong": "A leaked phone number destroys the anonymity guarantee AND bypasses the intro fee -- the business model itself",
+      "machine_fallback": "Confidence gate; below-threshold held for manual review; nothing auto-publishes; first N imports spot-checked",
+      "human_role": "Import spot-checker (already assumed in the spec -- currently David)",
+      "trigger": "Second agency onboarded, OR >20 imports/week, OR any leak found in production",
+      "seam_built": true
+    },
+    {
+      "id": "HS-03",
+      "surface": "Photo moderation / orientation",
+      "file": "bea_main.py:_vision_orient_image (MODERATION-1)",
+      "decides": "Whether buyer-visible imagery is acceptable",
+      "class": "RED",
+      "cost_of_wrong": "Degrading or unlawful imagery reaching buyers; or an honest seller silently censored",
+      "machine_fallback": "Refuse rather than blur-to-ruin (RG-0040/0044/0047); judged by bytes not declared type",
+      "human_role": "Trust & safety reviewer (shared with HS-01)",
+      "trigger": "First refusal appeal, OR any reported image that passed, OR >100 uploads/day",
+      "seam_built": false
+    },
+    {
+      "id": "HS-04",
+      "surface": "Tuppence charging on AI delivery",
+      "file": "bea_main.py ai_spend_holds / charge-on-delivery",
+      "decides": "When a user's Tuppence is spent",
+      "class": "RED",
+      "cost_of_wrong": "Charging for a service not delivered -- the fastest possible way to lose a founding seller",
+      "machine_fallback": "Charge on delivery only (RG-0033); spend reserved before dispatch (RG-0037); daily ceilings",
+      "human_role": "Billing dispute handler (David until volume forces otherwise)",
+      "trigger": "First disputed charge, OR >3 refunds/week",
+      "seam_built": true
+    },
+    {
+      "id": "HS-05",
+      "surface": "Card condition grading",
+      "file": "bea_main.py:grade_card_condition",
+      "decides": "Graded condition (Near Mint..Damaged) which drives price",
+      "class": "AMBER",
+      "cost_of_wrong": "Buyer receives a card worse than graded -- collectables communities punish this publicly and permanently",
+      "machine_fallback": "None declared -- the grade is emitted as fact",
+      "human_role": "Collectables moderator (a founding seller, paid in Tuppence)",
+      "trigger": "BUILD NOW: any grade above a value threshold must carry 'AI-assisted estimate, not a certified grade' and a dispute route",
+      "seam_built": false
+    },
+    {
+      "id": "HS-06",
+      "surface": "Price check / fair-price opinion",
+      "file": "bea_main.py:ai_price_check",
+      "decides": "Whether a listed price is fair",
+      "class": "AMBER",
+      "cost_of_wrong": "A confident wrong price anchors a seller low (lost money) or high (dead listing)",
+      "machine_fallback": "None declared",
+      "human_role": "Category advisor / partnered agency",
+      "trigger": "BUILD NOW: label as opinion with a range, never a number presented as fact",
+      "seam_built": false
+    },
+    {
+      "id": "HS-07",
+      "surface": "Investor yield estimate",
+      "file": "bea_main.py:ai_yield_calc",
+      "decides": "Yield estimate on a property",
+      "class": "AMBER",
+      "cost_of_wrong": "Reads as financial advice; regulatory and reputational exposure well beyond the listing",
+      "machine_fallback": "None declared",
+      "human_role": "Escalate to partnered agent -- this is precisely the introduction MarketSquare sells",
+      "trigger": "BUILD NOW: disclaimer + agency hand-off on every yield output",
+      "seam_built": false
+    },
+    {
+      "id": "HS-08",
+      "surface": "Email triage and reply drafting",
+      "file": "bea_main.py:_classify_email",
+      "decides": "Classification (support/billing/legal/spam) + drafts a reply",
+      "class": "AMBER",
+      "cost_of_wrong": "A legal notice classified as spam. This is the Klarna failure exactly: volume handled, complexity missed",
+      "machine_fallback": "Classification only; escalation_brief.py renders LEGAL/MONEY/COST/TRUST for David",
+      "human_role": "Support agent",
+      "trigger": "HARD RULE: nothing classified legal/billing ever auto-sends. Human seam at >30 inbound/day",
+      "seam_built": true
+    },
+    {
+      "id": "HS-09",
+      "surface": "Listing draft / rewrite from photos",
+      "file": "bea_main.py:listing_draft_from_photos, ai_listing_rewrite",
+      "decides": "The title and description a buyer reads",
+      "class": "AMBER",
+      "cost_of_wrong": "Misdescription is a consumer-law problem, not a copy problem, once money moves",
+      "machine_fallback": "Seller reviews and publishes -- the human seam is the SELLER and it already exists",
+      "human_role": "Seller (already in the loop) + copy reviewer at scale",
+      "trigger": "Only if drafts ever auto-publish. They must not.",
+      "seam_built": true
+    },
+    {
+      "id": "HS-10",
+      "surface": "Trust score guidance",
+      "file": "bea_main.py:trust_score_guidance",
+      "decides": "How a seller should raise their trust score",
+      "class": "AMBER",
+      "cost_of_wrong": "Teaches sellers to farm the rubric -- see the incentive register, IL-02",
+      "machine_fallback": "Published rubric; no signal self-reported without verification",
+      "human_role": "Trust framework owner (David)",
+      "trigger": "Any signal earnable without evidence going live",
+      "seam_built": true
+    },
+    {
+      "id": "HS-11",
+      "surface": "Maintenance agent (self-modifying code)",
+      "file": "scripts/maintenance_agent.py",
+      "decides": "Classifies faults, proposes and (when armed) ships code patches",
+      "class": "RED",
+      "cost_of_wrong": "An autonomous agent shipping to the live site is the single highest-blast-radius surface in the system",
+      "machine_fallback": "Default OFF; shadow mode; MAX_SHIPS_PER_HOUR; ledger+predeploy+BIT gates; server auto-rollback; REFUSE_LEGAL_COSTLY / REFUSE_TRUST_CORE force escalation",
+      "human_role": "David (TOTAL AUTONOMY ruling 29 Jul 2026 retired the per-change veto in favour of mechanical gates)",
+      "trigger": "REVIEW: the no-veto ruling is correct only while the mechanical gates are provably complete. Any gate that stops asserting re-arms the veto.",
+      "seam_built": true
+    },
+    {
+      "id": "HS-12",
+      "surface": "Search interpretation",
+      "file": "bea_main.py:search_interpret",
+      "decides": "Turns free text into a query -- shapes what a buyer sees",
+      "class": "GREEN",
+      "cost_of_wrong": "Buyer sees the wrong things and retries; invisible failure if it silently hides a category",
+      "machine_fallback": "Deterministic keyword path underneath",
+      "human_role": "None needed",
+      "trigger": "Zero-result rate above 15% sustained",
+      "seam_built": true
+    },
+    {
+      "id": "HS-13",
+      "surface": "Wishlist matcher",
+      "file": "bea_main.py:MATCHER/run_match_job",
+      "decides": "Which listings match a wishlist and get pushed",
+      "class": "AMBER",
+      "cost_of_wrong": "Bad matches train buyers to ignore notifications permanently",
+      "machine_fallback": "Deterministic keyword matcher today; AI socket is hot-swappable",
+      "human_role": "None needed",
+      "trigger": "Before swapping the deterministic matcher for AI, run BOTH in parallel and compare -- do not switch off the old one",
+      "seam_built": true
+    },
+    {
+      "id": "HS-14",
+      "surface": "Market note / advert coach",
+      "file": "bea_main.py:aa_market_note, aa_coach",
+      "decides": "Coaching and market commentary shown to the seller",
+      "class": "GREEN",
+      "cost_of_wrong": "Generic advice; seller ignores it",
+      "machine_fallback": "Charged 1T after first free use, so a bad one costs the seller money",
+      "human_role": "None needed",
+      "trigger": "Refund rate on coach charges above 5%",
+      "seam_built": true
+    }
+  ],
+  "incentive_register": {
+    "test": "THE DRAGON TAIL TEST. Dragon Tail never malfunctioned. It gave independent economic agents perfect information and was surprised when they used it perfectly. For every surface where a third party can see platform-internal information, ask: if this actor optimises purely for themselves, what emerges? Then check the emergent behaviour is one MarketSquare can survive.",
+    "leaks": [
+      {
+        "id": "IL-01",
+        "surface": "GET /tuppence/balance?email= is a public read",
+        "actor": "Anyone",
+        "if_they_optimise": "Enumerate emails, profile who is spending, target high-balance sellers",
+        "today": "Masked only by the pre-launch edge gate, which LIFTS AT LAUNCH",
+        "action": "Authenticate before launch. This is a launch blocker, not a nice-to-have."
+      },
+      {
+        "id": "IL-02",
+        "surface": "Trust score rubric fully published, tiers and thresholds public (Gold 90+ = featured priority)",
+        "actor": "Sellers",
+        "if_they_optimise": "Farm the cheapest points to hit 90 without becoming more trustworthy; referral lane is the obvious vector (specced, evidence_required varies)",
+        "today": "Defence is 'no signal self-reported without verification, none client-modifiable'",
+        "action": "Before referrals go live, they need evidence. Publishing the rubric is right -- publishing an unverified signal is not."
+      },
+      {
+        "id": "IL-03",
+        "surface": "Boost lowers the match threshold 60 -> 45 and sorts boosted-first",
+        "actor": "Sellers with Tuppence",
+        "if_they_optimise": "Boost weak listings to reach buyers they should not reach; buyers learn boosted results are worse and stop trusting the feed",
+        "today": "Thresholds live in code but are inferable from behaviour",
+        "action": "Boost should raise VISIBILITY, never lower RELEVANCE. Decouple the two. Add a ledger entry."
+      },
+      {
+        "id": "IL-04",
+        "surface": "Intro costs the seller 1T, 2T if boosted -- pay-to-be-reachable",
+        "actor": "Sellers and buyers",
+        "if_they_optimise": "Sellers suppress boost to pay less and become less reachable; buyers with Trust <20 or in cooldown route around the platform",
+        "today": "LM-T1 first-intro idempotency, LM-15 trust gate, LM-F3 7-day cooldown",
+        "action": "Watch for the emergent case: any incentive that makes a seller LESS reachable works against the only thing the till charges for."
+      },
+      {
+        "id": "IL-05",
+        "surface": "Anonymisation is the only thing standing between an agency and a free bypass of the intro fee",
+        "actor": "Partnered agencies",
+        "if_they_optimise": "Probe the anonymiser for the copy pattern that survives it",
+        "today": "RG-0038, RG-0045, confidence gate, spot-checks",
+        "action": "Treat anonymiser bypass as an adversarial-testing target, not a QA case. The agency is an independent economic agent, exactly like a DoorDash driver."
+      },
+      {
+        "id": "IL-06",
+        "surface": "super_example exemplars pinned first in every sort",
+        "actor": "Real sellers",
+        "if_they_optimise": "Conclude the platform favours its own demos and disengage",
+        "today": "RG-0052 asserts the banner shows and the pin is not stolen from real sellers",
+        "action": "Holding. Re-check the moment real listing volume passes demo volume."
+      }
+    ]
+  },
+  "predesign_rules": [
+    {
+      "id": "PR-1",
+      "rule": "PARALLEL RUN, NEVER A SWITCH-OVER",
+      "detail": "No AI surface replaces a working mechanism without both running side by side and their outputs compared under real load. Applies most directly to HS-13 (deterministic matcher -> AI). This is the single rule that would have saved both companies in the video."
+    },
+    {
+      "id": "PR-2",
+      "rule": "THE SEAM IS BUILT EMPTY",
+      "detail": "Every RED and AMBER surface declares its human role and its measurable trigger BEFORE a human exists. Klarna had a bench to rehire; MarketSquare has none, so the seam must be pre-cut."
+    },
+    {
+      "id": "PR-3",
+      "rule": "NEVER REMOVE THE FALLBACK AND ADD THE AI IN THE SAME CHANGE",
+      "detail": "Yum mandated Dragon Tail AND centralised the DoorDash contract simultaneously, so the franchise lost the AI's replacement and its own manual tools at once. One change at a time; the old lane stays until the new one has proven itself in production."
+    },
+    {
+      "id": "PR-4",
+      "rule": "RUN THE DRAGON TAIL TEST ON EVERY NEW INFORMATION SURFACE",
+      "detail": "Before exposing any platform-internal signal to sellers, buyers, agencies or affiliates, write down what a purely self-interested actor does with it. If the answer is unknown, it is not ready to ship."
+    },
+    {
+      "id": "PR-5",
+      "rule": "NO PUBLIC CLAIM THE MACHINERY CANNOT YET HONOUR",
+      "detail": "Klarna's real loss was narrative: it went to the public market on an AI-first thesis and reversed within ten weeks. MarketSquare's copy must never promise a capability that is currently a hope. Vendor-neutral AI copy (RG-0035) is the same discipline -- extend it to capability claims."
+    },
+    {
+      "id": "PR-6",
+      "rule": "HIRING HUMANS IS A PLANNED MILESTONE, NOT A RETREAT",
+      "detail": "Because MarketSquare is AI-first BY DESIGN rather than by cost-cutting, adding humans at a declared trigger is the design working, not the design failing. Say so in advance, publicly and internally, so the first hire never reads as a Klarna-style U-turn."
+    }
+  ]
+}
