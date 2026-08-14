@@ -424,16 +424,26 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({current_pin: _tempPin, new_pin: newPin})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
-        hideGate();
-      }
-      else { changeErr.textContent=d.detail||'PIN change failed.'; changeErr.style.display='block'; }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
+          hideGate();
+        }
+        else if(d && d.detail){ changeErr.textContent=d.detail; changeErr.style.display='block'; }
+        else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-2 (14 Aug 2026): GATE-TRUTH-1 patched the LOGIN path in this file on
+             13 Aug and left the change-PIN path parsing blind. Same origin gate, same throw,
+             same misleading message -- the fix was applied per-path, not per-class. */
+          changeErr.textContent='Locked by the pre-launch gate. Open https://trustsquare.co/ first, enter the reviewer code, then retry.';
+          changeErr.style.display='block';
+        }
+        else { changeErr.textContent='PIN change failed ('+r.status+').'; changeErr.style.display='block'; }
+      });
     })
-    .catch(function(){ changeErr.textContent='Connection error.'; changeErr.style.display='block'; });
+    .catch(function(){ changeErr.textContent='Network error \u2014 the browser could not reach '+BEA+'.'; changeErr.style.display='block'; });
   };
 })();
 </script>
@@ -1656,7 +1666,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <div class="adv-country-sheet-bg" id="adv-country-sheet" onclick="closeAdvCountrySheet(event)">
   <div class="adv-country-sheet">
     <div style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Browse Adventures in</div>
-    <div class="adv-country-option active" id="adv-co-ZA" onclick="selectAdvCountry('ZA','South Africa','🇿🇦')">
+    <div class="adv-country-option" id="adv-co-ZA" onclick="selectAdvCountry('ZA','South Africa','🇿🇦')">
       <span>🇿🇦</span><span>South Africa</span><span class="adv-co-check">✓</span>
     </div>
     <div class="adv-country-option" id="adv-co-NA" onclick="selectAdvCountry('NA','Namibia','🇳🇦')">
@@ -1664,6 +1674,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     </div>
     <div class="adv-country-option" id="adv-co-MZ" onclick="selectAdvCountry('MZ','Mozambique','🇲🇿')">
       <span>🇲🇿</span><span>Mozambique</span><span class="adv-co-check">✓</span>
+    </div>
+    <div class="adv-country-option" id="adv-co-KE" onclick="selectAdvCountry('KE','Kenya','🇰🇪')">
+      <span>🇰🇪</span><span>Kenya</span><span class="adv-co-check">✓</span>
+    </div>
+    <div class="adv-country-option" id="adv-co-BW" onclick="selectAdvCountry('BW','Botswana','🇧🇼')">
+      <span>🇧🇼</span><span>Botswana</span><span class="adv-co-check">✓</span>
     </div>
     <div class="adv-country-option" id="adv-co-US" onclick="selectAdvCountry('US','United States','🇺🇸')">
       <span>🇺🇸</span><span>United States</span><span class="adv-co-check">✓</span>
@@ -1686,7 +1702,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="adv-country-option" id="adv-co-NZ" onclick="selectAdvCountry('NZ','New Zealand','🇳🇿')">
       <span>🇳🇿</span><span>New Zealand</span><span class="adv-co-check">✓</span>
     </div>
-    <div class="adv-country-option" id="adv-co-ALL" onclick="selectAdvCountry('ALL','All countries','🌍')">
+    <div class="adv-country-option active" id="adv-co-ALL" onclick="selectAdvCountry('ALL','All countries','🌍')">
       <span>🌍</span><span>All countries</span><span class="adv-co-check">✓</span>
     </div>
   </div>
@@ -2715,6 +2731,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div id="sob-attest-wrap" style="display:none;margin-top:14px;">
         <div style="font-weight:700;font-size:13px;color:rgba(200,135,58,.9);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;">Confirm your vehicle details</div>
         <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;">Buyers only see details you have confirmed. Edit anything that isn't right before confirming its section.</div>
+        <!-- SPEC-PROVENANCE-1 (TS-0031, 14 Aug 2026): the tester was told the AI "searches and
+             populates" these fields. It does not: there is no lookup in this lane -- make, model
+             and variant are READ OFF THE PHOTOS (CARS-SPEC-1 vision + model prior), which is
+             exactly why an uncommon variant can come back confidently wrong. Saying so at the
+             moment of attestation is the honest half of that fault; whether to ground the lane in
+             real vehicle data is David's design call (BACKLOG). -->
+        <div style="font-size:11px;color:rgba(251,191,36,.75);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;">⚠️ These were read from your photos &mdash; nothing was looked up in a vehicle database. On less common models the AI can be confidently wrong, so please check every figure against your own papers before confirming.</div>
         <div id="sob-attest-sections"></div>
         <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:12px;">
           <input type="checkbox" id="sob-attest-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">

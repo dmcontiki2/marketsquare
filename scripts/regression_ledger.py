@@ -2867,7 +2867,8 @@ def rg_maint_lane_through_gate():
 
 
 @entry("RG-0065", "The maint lane answers on the KEY ALONE -- the exemption is the belt, the cookie the brace",
-       OPEN, scope="origin-side: migration 018's two exempt locations (/admin/faults*, /dashboard/maint) "
+       LOCKED, fixed_on="2026-08-14",
+       scope="origin-side: migration 018's two exempt locations (/admin/faults*, /dashboard/maint) "
                    "and ONLY those -- the other /admin/* routes (login, users, flags, deploy-file...) "
                    "must STAY gated; RG-0064's inverse guard holds the refusal side",
        ref="GATE-EXEMPT-MAINT-1, David's ruling 13 Aug ('lets fix both'): remove the B2b lane's "
@@ -2877,7 +2878,9 @@ def rg_maint_lane_through_gate():
            "documented design and merely regains its pre-gate posture. 018 rides the next "
            "successful deploy (engine stalled all day -- DW-042); until it lands, keyed-no-cookie "
            "intake 401s at nginx and this entry is EXPECTED open -- GATE-COOKIE-1 keeps the loop "
-           "alive meanwhile. Promote to LOCKED the run it passes.")
+           "alive meanwhile. PROMOTED 14 Aug 2026 21:5x: migration 018 landed on the box and "
+           "the keyed-no-cookie intake answered -- the belt now holds on its own, the cookie is "
+           "the brace. Locked so the exemption cannot silently widen or disappear.")
 def rg_maint_key_alone():
     out = []
     key = (repo_file(".secrets/ms_maint_key.txt") or "").strip()
@@ -2896,7 +2899,8 @@ def rg_maint_key_alone():
 
 
 @entry("RG-0066", "The pre-launch gate tells the TRUTH -- a wrong reviewer code can never read as a connection error",
-       OPEN, scope="the gate-screen failure-message class entire: wrong reviewer code (fallthrough to the "
+       LOCKED, fixed_on="2026-08-14",
+       scope="the gate-screen failure-message class entire: wrong reviewer code (fallthrough to the "
                    "origin-gated /admin/login nginx HTML 401), rate-limit 429, reviewer-access-off 503 -- "
                    "index.html as served live, plus the repo marketsquare.html source half",
        ref="GATE-TRUTH-1, 13 Aug 2026. Hours after GATE-ENFORCE-2 armed the catch-all, anonymous "
@@ -2904,8 +2908,8 @@ def rg_maint_key_alone():
            "every unrecognised gate entry -- including Maroushka's, same day -- surfaced as a fake "
            "'Connection error. Please try again.'. Fix: gate script parses text-first, names the "
            "refusal ('Incorrect reviewer code'), surfaces 429/503 in words. EXPECTED open while the "
-           "deploy engine is stalled (DW-042); promote to LOCKED the run the marker reads off the "
-           "live document.")
+           "deploy engine is stalled (DW-042). PROMOTED 14 Aug 2026: the marker now reads off the "
+           "live document -- a wrong reviewer code says so in words. Locked.")
 def rg_gate_truth():
     out = []
     try:
@@ -3033,7 +3037,8 @@ def rg_no_vacuous_patterns():
 
 
 @entry("RG-0069", "The pre-deploy gate can PROVE the database from ANY session -- the proof never rides on a key that lives on one desk",
-       OPEN, scope="the whole 'gate cannot prove, so it says REVIEW forever' class: tsl_gate.py "
+       LOCKED, fixed_on="2026-08-14",
+       scope="the whole 'gate cannot prove, so it says REVIEW forever' class: tsl_gate.py "
                    "check_db and every session that runs it (David's desktop, the cloud sandbox, "
                    "the nightly task). Covers the primary DB's presence, byte size and integrity, "
                    "plus redis. NOT scoped to one machine -- that was precisely the defect.",
@@ -3171,6 +3176,44 @@ def rg_gate_credential_cached_and_honest():
     return out
 
 
+@entry("RG-0073", "Every country we have listings for is REACHABLE in the picker -- shipping a market is not the same as being able to browse it",
+       LOCKED, scope="the Adventures country picker in marketsquare.html against the countries "
+                     "actually present in live /listings. Asserts the INVARIANT (a market with "
+                     "listings has a way in), not a hardcoded country list -- so it stays true "
+                     "when the next market ships instead of rotting like the list it replaces",
+       fixed_on="2026-08-14",
+       ref="COUNTRY-FILTER-1. Kenya's 24 super listings went live on 14 Aug with no picker row: "
+           "reachable only under 'All countries', invisible to anyone browsing by country. "
+           "Botswana had sat in the same state since July -- ADV_COUNTRY_FLAGS/CURRENCY carried "
+           "BW and KE (ms.js:2133-2134) while the sheet never gained the rows. The seeder, the "
+           "photos, the media push and the deploy all succeeded; the market was simply "
+           "unbrowsable. This guard closes the loop between 'seeded' and 'reachable'.")
+def rg0073():
+    out = []
+    if not REPO:
+        return [(INFO, "repo not readable from here -- picker check skipped")]
+    hp = os.path.join(REPO, "marketsquare.html")
+    if not os.path.exists(hp):
+        return [(INFO, "marketsquare.html not present -- picker check skipped")]
+    html = open(hp, encoding="utf-8", errors="replace").read()
+    rows = set(re.findall(r'id="adv-co-([A-Z]{2}|ALL)"', html))
+    try:
+        live = _json("/listings?limit=500")
+    except Exception as ex:
+        return [(INFO, "live listings unreadable (%r) -- picker checked against source only" % ex)]
+    if not isinstance(live, list):
+        return [(INFO, "unexpected /listings shape -- picker check inconclusive")]
+    have = {str(l.get("country") or "").upper() for l in live if l.get("country")}
+    have = {c for c in have if len(c) == 2}
+    missing = sorted(have - rows)
+    if missing:
+        out.append((FAIL, "listings exist for %s but the picker has no row -- that market is "
+                          "unbrowsable except under 'All countries'" % ", ".join(missing)))
+    else:
+        out.append((INFO, "every country with listings has a picker row (%d countries)" % len(have)))
+    return out
+
+
 @entry("RG-0072", "The drift monitor compares CONTENT, never the server's own cache-buster bump",
        LOCKED, scope="check_deploy_drift.py, BOTH sides of the comparison, for every manifest file "
                      "carrying a `?v=N` reference -- today marketsquare.html->index.html (8 refs) and "
@@ -3252,6 +3295,315 @@ def rg_maint_run_leaves_a_record():
     if not out:
         out.append((INFO, "report flushed per fault; --only and time budget present; deferred "
                           "faults named"))
+    return out
+
+
+@entry("RG-0074", "Every copy of the admin-gate script branches on r.status BEFORE parsing, so a "
+       "gate refusal can never again be reported as 'Connection error'",
+       LOCKED, scope="ALL admin-gate copies: marketsquare.html, dashboard.server.html, "
+                     "dashboard.html, marketsquare_admin.html, archive/session_dashboard_live.html",
+       fixed_on="2026-08-14",
+       ref="GATE-TRUTH-2. David, 14 Aug 2026: 'we are back at this recurring nightmare.' This "
+           "asserts the mechanism of the RECURRENCE, not of any one instance. The gate script was "
+           "written once in May 2026 (e0e4446) and COPIED into five files. Every fix since landed "
+           "in whichever copy was in front of the person fixing it -- GATE-TRUTH-1 patched "
+           "marketsquare.html on 13 Aug and left four copies calling r.json() blind. Meanwhile "
+           "migrations/016 made the origin answer an nginx HTML 401 on /admin/login (deliberately "
+           "NOT exempt, per migrations/018), so the blind parse threw and the .catch labelled "
+           "EVERY distinct refusal -- gate lock, wrong password, 503 unset secret, genuine network "
+           "failure -- with one identical sentence. A message that erases the difference between "
+           "four faults guarantees the next one is diagnosed from zero, which is exactly why this "
+           "kept coming back. The same collision has now been patched five times in five places "
+           "(GATE-COOKIE-1, GATE-CACHE-1, GATE-CREDS-1, DW-040, GATE-TRUTH-1) and never as a "
+           "class. Verified 14 Aug: all four remaining copies patched, node --check clean on "
+           "28 script blocks.")
+def rg_gate_truth_all_copies():
+    out = []
+    copies = ("marketsquare.html", "dashboard.server.html", "dashboard.html",
+              "marketsquare_admin.html", "archive/session_dashboard_live.html")
+    seen = 0
+    for rel in copies:
+        c = repo_file(rel)
+        if c is None or "/admin/login" not in c or "showLoginError" not in c:
+            continue
+        seen += 1
+        # Scope to the GATE fetches only. An earlier draft of this assertion matched any
+        # blind r.json() in the file and flagged loadBIT() -- an unrelated data card. A check
+        # that cries wolf gets muted, which is the same failure it exists to prevent.
+        for route in ("/admin/login", "/admin/change-pin", "/admin/verify"):
+            i = 0
+            while True:
+                i = c.find(route, i)
+                if i < 0:
+                    break
+                window = c[i:i + 700]          # the fetch and its immediate .then chain
+                if ".then(function(r){ return r.json(); })" in window:
+                    out.append((FAIL, "%s parses the %s response before checking r.status -- "
+                                      "a gate refusal will surface as a fake connection error "
+                                      "again (GATE-TRUTH-2)" % (rel, route)))
+                i += len(route)
+        if "GATE-TRUTH" not in c:
+            out.append((FAIL, "%s carries an admin gate with no GATE-TRUTH status branch" % rel))
+        elif "r.status === 401" not in c:
+            out.append((FAIL, "%s names GATE-TRUTH but has no 401 branch -- the marker has "
+                              "drifted away from the mechanism it is supposed to guarantee" % rel))
+    if seen == 0:
+        out.append((FAIL, "no admin-gate copy found at all -- this assertion has lost its "
+                          "subject and would pass vacuously (see RG-0068)"))
+    if not out:
+        out.append((INFO, "all %d admin-gate copies branch on status before parsing" % seen))
+    return out
+
+
+@entry("RG-0075", "The admin-gate script has ONE source, not five hand-maintained copies",
+       OPEN, scope="marketsquare.html, dashboard.server.html, dashboard.html, "
+                   "marketsquare_admin.html, archive/session_dashboard_live.html",
+       fixed_on="",
+       ref="The root cause behind RG-0074 is duplication, not any one file. Five hand-maintained "
+           "copies of the same 40 lines is why four separate gate fixes each had to be applied "
+           "again per consumer, and why the dashboard -- the fifth consumer -- received none of "
+           "them. EXPECTED TO FAIL until the gate script is one file included by every surface. "
+           "The moment it passes, promote to LOCKED.")
+def rg_gate_script_single_source():
+    out = []
+    copies = [r for r in ("marketsquare.html", "dashboard.server.html", "dashboard.html",
+                          "marketsquare_admin.html", "archive/session_dashboard_live.html")
+              if "adminGateSubmit" in (repo_file(r) or "")]
+    if len(copies) > 1:
+        out.append((FAIL, "the gate script is duplicated across %d files (%s) -- one shared "
+                          "source would have made GATE-TRUTH-1 fix all of them on 13 Aug"
+                    % (len(copies), ", ".join(copies))))
+    else:
+        out.append((INFO, "READY TO LOCK -- the gate script has a single source"))
+    return out
+
+
+@entry("RG-0076", "A file:// dashboard says so BEFORE a password is typed, and never asks the "
+       "browser to do something CORS forbids",
+       LOCKED, scope="dashboard.server.html, dashboard.html, marketsquare_admin.html",
+       fixed_on="2026-08-14",
+       ref="GATE-ORIGIN-1. The second face of the same recurring fault: a file:// page has origin "
+           "'null', which is not in the BEA's ALLOWED_ORIGINS (bea_main.py:133), so the pre-flight "
+           "is refused and fetch REJECTS -- producing a symptom byte-identical to the origin gate "
+           "refusing. No password can ever work from there. STATUS.md:379 records that the local "
+           "sibling is the copy David actually opens ('the still see the column mystery was the "
+           "second file'), so this is a documented habit, not an accident. Two defects fixed: the "
+           "gate hardcoded BEA absolute while _apv3B in the SAME FILE already did the file:// "
+           "check correctly, and nothing warned until after a failed round-trip. Now the gate "
+           "detects the protocol at render and names the problem with the working URL.")
+def rg_gate_origin_aware():
+    out = []
+    for rel in ("dashboard.server.html", "dashboard.html", "marketsquare_admin.html"):
+        c = repo_file(rel)
+        if c is None or "adminGateSubmit" not in c:
+            continue
+        if "var BEA = 'https://trustsquare.co';" in c:
+            out.append((FAIL, "%s hardcodes BEA absolute -- a served page makes every gate call a "
+                              "needless cross-origin request (GATE-ORIGIN-1)" % rel))
+        if "GATE-ORIGIN-1" not in c:
+            out.append((FAIL, "%s has no file:// origin guard -- it will ask for a password it "
+                              "can never accept" % rel))
+        elif "location.protocol === 'file:'" not in c:
+            out.append((FAIL, "%s names GATE-ORIGIN-1 but no longer tests the protocol" % rel))
+    if not out:
+        out.append((INFO, "the gate is origin-aware and warns before asking for a credential"))
+    return out
+
+
+@entry("RG-0077", "The EULA users ACCEPT is byte-identical to the EULA the site PUBLISHES, "
+       "and both disclose the Platform's own AI use",
+       LOCKED, scope="eula_clean.html (source), terms.html (published), ms.js _EULA_HTML "
+                     "(in-app acceptance modal) -- ALL markets",
+       fixed_on="2026-08-14",
+       ref="EULA-FORK-1. Found 14 Aug 2026: the EULA lived in three hand-maintained copies and "
+           "they had forked. terms.html was v1.12; eula_clean.html and the ms.js literal -- the "
+           "copy a user actually clicks Accept on -- were still v1.11 and missing SS6.1B Partner "
+           "Content entirely. So the agreement being accepted was not the agreement being "
+           "published, and nothing on disk compared them. Same shape as CHANGELOG-COLLISION-1 and "
+           "STATUS-COLLISION-1: N hand-maintained copies of one truth, no comparator. Fixed by "
+           "scripts/eula_sync.py -- eula_clean.html is the source, it is the ONE writer of the "
+           "other two, --check exits 1 on drift. v1.13 adds the up-front AI disclosure, SS7.7 "
+           "(design/build, generated imagery, demo listings, provenance markers, upload rule) and "
+           "the SS8.3 no-AI-training commitment. This entry asserts BOTH halves: the copies stay "
+           "identical, and the AI disclosure stays in. Source-side by design -- /terms is behind "
+           "the reviewer gate, so a live fetch would prove nothing anonymously.")
+def rg_eula_one_source_and_ai_disclosed():
+    out = []
+    src = repo_file("eula_clean.html")
+    if src is None:
+        return [(INFO, "not run from the repo -- EULA copies are a source-side check")]
+
+    # 1. one truth, three copies
+    terms = repo_file("terms.html") or ""
+    msjs  = repo_file("ms.js") or ""
+    start = "<p><strong>TrustSquare</strong></p>"
+    endp  = ("· Republic of South Africa · Country Schedules: United Kingdom · "
+             "United States · Australia</em></p>\n")
+    i, j = terms.find(start), terms.find(endp)
+    if i == -1 or j == -1:
+        out.append((FAIL, "terms.html has no recognisable EULA body -- anchors gone"))
+    elif terms[i:j + len(endp)] != src:
+        out.append((FAIL, "terms.html EULA body has drifted from eula_clean.html -- the published "
+                          "terms are not the source (run scripts/eula_sync.py)"))
+
+    key = 'const _EULA_HTML = "'
+    k = msjs.find(key)
+    if k == -1:
+        out.append((FAIL, "ms.js has no _EULA_HTML literal -- the in-app acceptance modal has no "
+                          "text, or was renamed"))
+    else:
+        p = k + len(key)
+        while p < len(msjs):
+            if msjs[p] == "\\":
+                p += 2
+                continue
+            if msjs[p] == '"':
+                break
+            p += 1
+        try:
+            embedded = json.loads(msjs[k + len(key) - 1:p + 1])
+        except Exception as e:
+            embedded = None
+            out.append((FAIL, "ms.js _EULA_HTML is not a parseable string literal (%s)" % e))
+        if embedded is not None and embedded != src:
+            out.append((FAIL, "the in-app EULA users ACCEPT differs from eula_clean.html -- "
+                              "users are agreeing to text the site does not publish "
+                              "(run scripts/eula_sync.py)"))
+
+    # 2. the AI disclosure is present and stays present
+    for needle, what in (
+        ("Up-front disclosure", "the up-front AI disclosure block"),
+        ("7.7 Disclosure of the Platform's Own Use of Artificial Intelligence", "Section 7.7"),
+        ("fine-tuning, or evaluation of artificial intelligence", "the SS8.3 no-AI-training commitment"),
+    ):
+        if needle not in src:
+            out.append((FAIL, "%s has been removed from the EULA -- the Platform no longer "
+                              "declares its own AI use" % what))
+
+    # 3. the sync tool itself still exists
+    if repo_file("scripts/eula_sync.py") is None:
+        out.append((FAIL, "scripts/eula_sync.py is gone -- the EULA has no single writer again"))
+
+    if not out:
+        out.append((INFO, "one EULA body across source, published page and acceptance modal; "
+                          "AI use disclosed up front, in SS7.7 and in SS8.3"))
+    return out
+
+
+@entry("RG-0078", "A category tile never promises a number its own page will not show",
+       LOCKED, scope="the tile-vs-grid agreement class entire: renderCatCounts() against the "
+                     "destination grid for EVERY category, borderless or city-scoped. Adventures "
+                     "is the borderless one today (BORDERLESS_CATS); the invariant is written so "
+                     "the next borderless category inherits it instead of re-filing the fault",
+       fixed_on="2026-08-14",
+       ref="TS-0032 (Maun) and TS-0033 (Sydney) -- two testers, opposite ends of the world, one "
+           "fault: pick a city, the Adventures tile reads '1 listing' / '2 listings', tap it and "
+           "the page shows every adventure on the platform. In the reporter's words, 'it reverts "
+           "away from Botswana and shows me many adventures.' Neither surface was wrong alone: "
+           "renderCatCounts() filtered every category to activeCity, while renderAdvGrid() has no "
+           "city filter BY DESIGN (the 28 Jun ruling that travel-planning categories are not local "
+           "to the buyer; COUNTRY-FILTER-1 then made advCountry=ALL the default, which made the "
+           "gap plainly visible rather than causing it). They disagreed, and the tile was the "
+           "liar -- it counted a set the grid can never show. BORDERLESS-COUNT-1 gives both "
+           "readers one predicate: a borderless category's tile skips the city filter and applies "
+           "the SAME country predicate the grid uses, in both count branches (live and the "
+           "placeholder fallback). Evidence: scripts/repro_borderless_count.js reproduces the "
+           "testers' exact numbers against the pre-fix file (Sydney tile 2 / grid 6, Maun tile 1 / "
+           "grid 6, exit 1) and passes against the fixed one (6/6, and 2/2 with the picker "
+           "narrowed to AU, exit 0). NOTE: fixed in source and asserted here; it reaches the "
+           "reporters when the nightly deploy ships it -- which is why both faults were set "
+           "fix-shipped, not verified.")
+def rg_tile_never_lies_about_its_page():
+    out = []
+    js = repo_file("ms.js")
+    if js is None:
+        out.append((FAIL, "ms.js unreadable -- the tile/grid agreement is UNPROVEN"))
+        return out
+    if "BORDERLESS_CATS" not in js or "function isBorderlessCat" not in js:
+        out.append((FAIL, "ms.js lost the borderless-category predicate -- the Adventures tile is "
+                          "back to counting a city-sized set the grid will not show (TS-0032/33)"))
+    # BOTH count branches must exempt it: the fault hid in the one nobody was looking at.
+    if js.count("isBorderlessCat") < 3:
+        out.append((FAIL, "fewer than both renderCatCounts branches consult isBorderlessCat -- the "
+                          "placeholder-fallback branch is city-scoping Adventures again"))
+    # The grid half of the contract: renderAdvGrid must still have NO city filter, or the
+    # fix has been "corrected" from the wrong end and the 28 Jun ruling is broken.
+    _g = js.split("function renderAdvGrid()", 1)
+    if len(_g) != 2:
+        out.append((FAIL, "renderAdvGrid is gone -- the borderless grid this tile is matched to "
+                          "no longer exists"))
+    else:
+        _body = _g[1][:4000]
+        if "activeCity" in _body:
+            out.append((FAIL, "renderAdvGrid now filters by activeCity -- Adventures has been "
+                              "quietly pinned to the buyer's city, against the 28 Jun ruling"))
+    # Functional half: the repro is the evidence, so it must exist AND still pass.
+    import shutil, subprocess                       # local, as elsewhere on this board
+    _repro = os.path.join(REPO, "scripts", "repro_borderless_count.js")
+    if not os.path.exists(_repro):
+        out.append((FAIL, "scripts/repro_borderless_count.js is gone -- RG-0078's named evidence "
+                          "no longer exists and this entry is an opinion"))
+    elif shutil.which("node"):
+        try:
+            _p = subprocess.run(["node", _repro, os.path.join(REPO, "ms.js")],
+                                capture_output=True, text=True, timeout=60)
+            if _p.returncode != 0:
+                out.append((FAIL, "repro_borderless_count.js FAILS against ms.js: %s"
+                            % (_p.stdout or _p.stderr or "")[-300:]))
+            else:
+                out.append((INFO, "repro passes: the tile number survives the tap "
+                                  "(node scripts/repro_borderless_count.js)"))
+        except Exception as ex:
+            out.append((FAIL, "repro could not be run (%r) -- agreement UNPROVEN this run" % ex))
+    else:
+        out.append((INFO, "node absent on this machine -- source half checked, repro not run"))
+    return out
+
+
+@entry("RG-0079", "Where a machine-written fact CAME FROM is stated where the seller signs for it",
+       LOCKED, scope="the cars pre-final attestation block in marketsquare.html (sob-attest-wrap) -- "
+                     "the screen where the seller personally warrants AI-inferred vehicle details. "
+                     "The class: any surface that asks a human to attest to something a model "
+                     "produced must say how it was produced, at that moment, not in a help page",
+       fixed_on="2026-08-14",
+       ref="TS-0031 (David Jnr, relayed): the pre-final stage added his vehicle's details wrong and "
+           "he doubted the 'AI searches and populates' explanation. He was right about the "
+           "mechanism -- there is NO lookup in this lane; make, model and variant are read off his "
+           "photos by vision plus a model prior (CARS-SPEC-1), and the market note is an ungrounded "
+           "one-sentence Haiku, so an uncommon variant can be confidently wrong. The screen asked "
+           "him to warrant 'I have personally verified every detail above' while saying nothing "
+           "about where the details came from, which is how a seller signs for a guess. "
+           "SPEC-PROVENANCE-1 states it in place: read from your photos, nothing looked up in a "
+           "vehicle database, check every figure against your own papers. Whether to GROUND the "
+           "lane in real vehicle data is a design/cost decision and is David's -- recorded in "
+           "BACKLOG.md 14 Aug, deliberately not decided by an agent.")
+def rg_attestation_states_provenance():
+    out = []
+    h = repo_file("marketsquare.html")
+    if h is None:
+        out.append((FAIL, "marketsquare.html unreadable -- the provenance line is UNPROVEN"))
+        return out
+    if "SPEC-PROVENANCE-1" not in h:
+        out.append((FAIL, "the SPEC-PROVENANCE-1 marker is gone from marketsquare.html"))
+    _w = h.split('id="sob-attest-wrap"', 1)
+    if len(_w) != 2:
+        out.append((FAIL, "the cars attestation block (sob-attest-wrap) is gone -- the screen this "
+                          "entry guards no longer exists"))
+        return out
+    block = _w[1][:3000]
+    if "read from your photos" not in block.lower():
+        out.append((FAIL, "the attestation block no longer says the specs were read from the "
+                          "seller's photos -- a seller can again warrant a machine guess with no "
+                          "idea it was one (TS-0031)"))
+    if "nothing was looked up" not in block.lower():
+        out.append((FAIL, "the attestation block no longer denies a database lookup -- the exact "
+                          "false impression TS-0031 was filed about"))
+    # The attestation itself must still be there: provenance ADDS to it, never replaces it.
+    if "personally verified every detail" not in block:
+        out.append((FAIL, "the seller attestation text is gone -- provenance must be added "
+                          "alongside the warranty, never instead of it"))
+    if not out:
+        out.append((INFO, "provenance stated where the seller signs: photos, not a lookup"))
     return out
 
 
