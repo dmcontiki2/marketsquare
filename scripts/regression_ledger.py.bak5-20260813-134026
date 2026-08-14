@@ -2687,7 +2687,7 @@ def rg_template_report_widget():
 
 
 @entry("RG-0063", "Every pixel the app serves comes from OUR origin -- no third-party host serves an image",
-       LOCKED, fixed_on="2026-08-13", scope="the image-origin class entire: /demo-listings + /demo-sellers live payloads, repo "
+       OPEN, scope="the image-origin class entire: /demo-listings + /demo-sellers live payloads, repo "
                    "demo_listings.json / demo_sellers.json / demo_image_map.json consumers, and the ms.js "
                    "SF tile fallback -- unsplash, pexels, picsum, cloudinary, imgur or any lookalike",
        ref="DW-025 (open since 7 Aug 2026): 1,141 references -- 266 unique images -- hotlinked "
@@ -2700,12 +2700,7 @@ def rg_template_report_widget():
            "266 images + 7 SF tiles ON THE BOX (resumable, exit-2-retries), rewrites the server-managed "
            "demo_sellers.json only at 100%, and writes ATTRIBUTION.json (Unsplash License provenance). "
            "OPEN until 017 completes on a deploy; the live half reads the real payloads through the "
-           "reviewer gate. LOCKED 13 Aug 2026 (evening): 273/273 on the box -- 244 fetched clean, "
-           "29 filled by the stand-in rung because their SOURCE URLs were dead all along (truncated "
-           "params like q=8, mangled photo IDs -- seed-data corruption, so those 29 demo cards were "
-           "broken on the live site BEFORE this work; the self-host exposed then repaired them). "
-           "Live demo_sellers.json rewritten (0 unsplash / 40 local, verified through the gate); "
-           "every substitution named in /static/demo/ATTRIBUTION.json. DW-025 closed.")
+           "reviewer gate. Promote to LOCKED the run it passes.")
 def rg_no_third_party_images():
     import re as _re
     out = []
@@ -2810,99 +2805,6 @@ def rg_maint_key_alone():
     except Exception as ex:
         out.append((FAIL, "keyed-no-cookie intake refused (%r) -- migration 018 has not landed "
                           "on the box (deploy engine, DW-042)" % ex))
-    return out
-
-
-@entry("RG-0066", "The pre-launch gate tells the TRUTH -- a wrong reviewer code can never read as a connection error",
-       OPEN, scope="the gate-screen failure-message class entire: wrong reviewer code (fallthrough to the "
-                   "origin-gated /admin/login nginx HTML 401), rate-limit 429, reviewer-access-off 503 -- "
-                   "index.html as served live, plus the repo marketsquare.html source half",
-       ref="GATE-TRUTH-1, 13 Aug 2026. Hours after GATE-ENFORCE-2 armed the catch-all, anonymous "
-           "POST /admin/login began answering nginx HTML 401; the gate script's r.json() threw and "
-           "every unrecognised gate entry -- including Maroushka's, same day -- surfaced as a fake "
-           "'Connection error. Please try again.'. Fix: gate script parses text-first, names the "
-           "refusal ('Incorrect reviewer code'), surfaces 429/503 in words. EXPECTED open while the "
-           "deploy engine is stalled (DW-042); promote to LOCKED the run the marker reads off the "
-           "live document.")
-def rg_gate_truth():
-    out = []
-    try:
-        doc = _get("/")
-        if "GATE-TRUTH-1" not in doc:
-            out.append((FAIL, "live index.html lacks the GATE-TRUTH-1 branch -- an unrecognised "
-                              "gate entry still reads as a fake 'Connection error'"))
-    except Exception as ex:
-        out.append((FAIL, "could not read the live document (%r)" % ex))
-    src = repo_file("marketsquare.html")
-    if src is not None and "Incorrect reviewer code. Please check it and try again." not in src:
-        out.append((FAIL, "repo marketsquare.html lost the truthful gate branch"))
-    return out
-
-
-@entry("RG-0067", "The fix agent can AIM at real code -- window, fences, exhaust and gate credentials hold",
-       LOCKED, scope="the real-file patch pipeline entire: _window aiming (rare-token tiers), "
-                     "_strip_fences + git apply --recount --3way, harness/exhaust exclusion "
-                     "(_is_noise), WINDOW-SPLICE-1 guard, GATE-CREDS-1 worktree secrets -- "
-                     "every application file; bea_main.py (909 KB) and ms.js (1.06 MB) proven",
-       fixed_on="2026-08-13",
-       ref="Real-repo probe runs 4-13 (13 Aug): four environment defects and three pipeline "
-           "defects found and fixed in one session. Keyless clone (PROBE-KEYS-1/2); window "
-           "aimed at generic-token clusters while the defect sat elsewhere (WINDOW-AIM-1: "
-           "lines 1158-1298 shown, defect at 122; rare2/rare8 tiers now steer); the probe "
-           "harness ranked as the patch target because it quotes faults verbatim "
-           "(PROBE-EXHAUST-1); sonnet's diffs arrived fenced with miscounted hunk headers and "
-           "were written VERBATIM to .proposed.patch ('corrupt patch at the closing fence' -- "
-           "PATCH-FENCE-1 + --recount, the root of the whole MAINT-B4-6 'diffs slip' class); "
-           "the rewrite lane demanded a COMPLETE file while showing an excerpt that said the "
-           "rest is not shown (WINDOW-SPLICE-1, spliced by line range under a bytes-match "
-           "guard); and gate worktrees carried no .secrets, so from the moment 016 armed the "
-           "origin gate the ledger GATE crashed 401-red for EVERY patch, however perfect "
-           "(GATE-CREDS-1 -- the launch-critical one). PATCH-EVIDENCE-1 now keeps every "
-           "failing diff + git's words. Evidence: PROBE PASS both targets, gates green, "
-           "shadow-held. 'Patch quality on this codebase is no longer unproven.'")
-def rg_fix_agent_aims_real():
-    out = []
-    c = repo_file("scripts/maintenance_agent.py")
-    if c is None:
-        return out
-    for needle, why in (
-            ("rare2 or rare8 or marks", "WINDOW-AIM-1 rare-token tiering"),
-            ("def _strip_fences", "PATCH-FENCE-1 fence stripping"),
-            ('"--recount", "--3way"', "the recounted apply"),
-            ("maint_realrepo_probe.py", "PROBE-EXHAUST-1 harness exclusion"),
-            ("window bytes moved under", "the WINDOW-SPLICE-1 guard"),
-            ("GATE-CREDS-1", "worktree secrets provisioning")):
-        if needle not in c:
-            out.append((FAIL, "maintenance_agent.py lost %s -- the real-file patch pipeline "
-                              "is back to pre-13-Aug blindness" % why))
-    try:
-        import importlib.util as _ilu
-        _sp = _ilu.spec_from_file_location("_ma_rg66",
-                                           os.path.join(REPO, "scripts", "maintenance_agent.py"))
-        _ma = _ilu.module_from_spec(_sp); _sp.loader.exec_module(_ma)
-        body = (repo_file("bea_main.py") or "").replace("Admin credentials required.",
-                                                        "Admin credentials requried.", 1)
-        if "requried" in body:
-            w = _ma._window("bea_main.py", body,
-                            ["requried", "required", "Admin credentials requried.",
-                             "admin", "message", "error"])
-            if not (w and "requried" in w[1]):
-                out.append((FAIL, "_window no longer aims at the distinctive token -- "
-                                  "WINDOW-AIM-1 regressed (the brain would be shown the "
-                                  "wrong lines again)"))
-        else:
-            out.append((INFO, "seed anchor string gone from bea_main.py -- update RG-0066's "
-                              "functional seed"))
-        if not _ma._is_noise("scripts/maint_realrepo_probe.py"):
-            out.append((FAIL, "_is_noise no longer excludes the probe harness -- the brain can "
-                              "be handed the fault's own definition again"))
-        st = _ma._strip_fences("```diff\n--- a/x\n+++ b/x\n```")
-        if st.startswith("```") or st.endswith("```"):
-            out.append((FAIL, "_strip_fences no longer strips fences -- 'corrupt patch at the "
-                              "closing fence' returns"))
-    except Exception as ex:
-        out.append((FAIL, "functional half crashed (%r) -- the aiming property is UNPROVEN "
-                          "this run" % ex))
     return out
 
 

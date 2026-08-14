@@ -364,8 +364,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({code: pw})
     })
-    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(r){
+      if(r.ok) return r.json();
+      /* GATE-TRUTH-1: report what the server said — a gate 429/503 is not a network failure */
+      if(r.status === 429){ showLoginError('Too many attempts. Please wait 10 minutes, then try again.'); return {handled:true}; }
+      if(r.status === 503){ showLoginError('Reviewer access is switched off right now. Please contact support.'); return {handled:true}; }
+      return null;
+    })
     .then(function(d){
+      if(d && d.handled){ return; }
       if(d && d.token){ sessionStorage.setItem('ms_review_token', d.token); hideGate(); return; }
       _adminLogin(pw);   /* not a reviewer code — fall through to team/master admin login */
     })
@@ -377,15 +384,24 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({password: pw})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
-        hideGate();
-      }
-      else if(d.must_change_pin){ showChangePINScreen(d.name, pw); }
-      else { showLoginError(d.detail || 'Incorrect password or PIN.'); }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          if(d.email){ localStorage.setItem('ms_user_email', d.email); localStorage.setItem('ms_aa_email', d.email); }
+          hideGate();
+        }
+        else if(d && d.must_change_pin){ showChangePINScreen(d.name, pw); }
+        else if(d && d.detail){ showLoginError(d.detail); }
+        else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-1 (13 Aug 2026): the origin gate (GATE-ENFORCE-2) refuses anonymous
+             /admin/login with an nginx HTML 401 before the app can answer. Without this branch
+             every wrong reviewer code surfaced as a fake "Connection error". */
+          showLoginError('Incorrect reviewer code. Please check it and try again.');
+        }
+        else { showLoginError('Sign-in failed (' + r.status + '). Please try again.'); }
+      });
     })
     .catch(function(){ showLoginError('Connection error. Please try again.'); });
   }

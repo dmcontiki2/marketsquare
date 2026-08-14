@@ -399,7 +399,14 @@ def _is_noise(p):
     if os.path.basename(p) in ("CHANGELOG.md", "STATUS.md", "CHANGE_REGISTER.md",
                                "OPEN_LOOPS.md", "FAULT_REGISTER.md", "APP_PREVIEW.html"):
         return True
-    return ".bak" in p or p.endswith((".log", ".lock"))
+    # PROBE-EXHAUST-1 (13 Aug 2026, real-repo probe run 8): the test harnesses QUOTE
+    # faults verbatim by design (seed dicts, storm fixtures), so ranking them hands the
+    # brain the fault's own DEFINITION as the thing to patch -- the rewrite lane showed
+    # sonnet the probe's seed entry, where the misspelling is CORRECT, and sonnet rightly
+    # changed nothing. Same class as ranking run reports (CAND-FIX-1), new costume.
+    if os.path.basename(p) in ("maint_realrepo_probe.py", "maint_b4_rehearsal.py"):
+        return True
+    return ".bak" in p or p.endswith((".log", ".lock", ".new"))
 
 
 def _window(fpath, body, toks, radius=70, hard_cap=16000):
@@ -407,15 +414,26 @@ def _window(fpath, body, toks, radius=70, hard_cap=16000):
     range named. The bytes are exact, so a diff written against them applies -- and the
     agent applies with `git apply --3way`, which resolves the surrounding blob anyway."""
     lines = body.split("\n")
-    marks = []
     low = [t.lower() for t in toks[:14] if len(t) >= 4]
-    for i, ln in enumerate(lines, 1):
-        l = ln.lower()
-        if any(t in l for t in low):
-            marks.append(i)
-    if not marks:
+    # WINDOW-AIM-1 (13 Aug 2026, real-repo probe run 5): the old aim marked every line
+    # containing ANY token and took the densest cluster -- so generic tokens ("admin",
+    # "message", "required") outgunned the one DISTINCTIVE token and the brain was shown
+    # lines 1158-1298 while the seeded defect sat at line 122. Sonnet's NObugfix was
+    # correct; the aim was wrong. Now: tokens that are RARE in this file (<= 8 hit
+    # lines) steer the window; common tokens only pad the cluster. No rare token ->
+    # old behavior unchanged.
+    per_tok = {}
+    for t in set(low):
+        hits_t = [i for i, ln in enumerate(lines, 1) if t in ln.lower()]
+        if hits_t:
+            per_tok[t] = hits_t
+    if not per_tok:
         return None
-    best = max(marks, key=lambda L: sum(1 for m in marks if abs(m - L) <= radius))
+    rare2 = sorted({i for t, ls in per_tok.items() if len(ls) <= 2 for i in ls})
+    rare8 = sorted({i for t, ls in per_tok.items() if len(ls) <= 8 for i in ls})
+    marks = sorted({i for ls in per_tok.values() for i in ls})
+    aim = rare2 or rare8 or marks  # rarest evidence steers; ties broken by density below
+    best = max(aim, key=lambda L: sum(1 for m in aim if abs(m - L) <= radius))
     lo, hi = max(1, best - radius), min(len(lines), best + radius)
     excerpt = "\n".join(lines[lo - 1:hi])
     if len(excerpt) > hard_cap:
@@ -423,6 +441,17 @@ def _window(fpath, body, toks, radius=70, hard_cap=16000):
     label = ("%s  [EXCERPT lines %d-%d of %d -- the rest of the file is unchanged and NOT "
              "shown; write the diff against these exact bytes]" % (fpath, lo, hi, len(lines)))
     return (label, excerpt)
+
+def _strip_fences(text):
+    """PATCH-FENCE-1 (13 Aug 2026): sonnet wraps diffs in ```diff fences; written
+    verbatim to .proposed.patch they are 'corrupt patch at line N' -- N being the
+    CLOSING fence -- and the whole MAINT-B4-6 'diffs slip' class falls out of exactly
+    this. Strip leading/trailing fences only; never touch the body."""
+    t = (text or "").strip()
+    if t.startswith("```"):
+        t = t.strip("`\n")
+        t = t.split("\n", 1)[1] if "\n" in t else t
+    return t
 
 def propose_patch(fault):
     if _BRAIN_STUB:
@@ -482,10 +511,28 @@ def propose_rewrite(fault):
         return None, "no single candidate file to rewrite"
     path, content = files[0]
     import ai_provider
-    sys_p = ("You are a careful maintenance engineer. Your earlier unified diff did not "
-             "apply. Return the COMPLETE corrected contents of the single file shown -- "
-             "the whole file, start to finish, with ONLY the minimal change needed to "
-             "resolve the fault. No commentary, no fences, no diff markers: file text only.")
+    # WINDOW-SPLICE-1 (13 Aug 2026, real-repo probe runs 7-8): for WINDOWED large files
+    # the old prompt was impossible -- it demanded "the COMPLETE file, start to finish"
+    # while the excerpt label said "the rest is NOT shown", and sonnet safely returned
+    # the block unchanged ("rewrite identical to original"). Worse, rw["path"] was the
+    # LABEL string, so an "applied" rewrite would have written an excerpt to a
+    # garbage-named file. Now: parse the label, ask for the corrected BLOCK, and the
+    # applier splices it by line range under a bytes-must-match guard.
+    span = None
+    m = re.match(r"^(.*?)\s+\[EXCERPT lines (\d+)-(\d+) of (\d+)", path)
+    if m:
+        path, lo, hi = m.group(1), int(m.group(2)), int(m.group(3))
+        span = (lo, hi)
+        sys_p = ("You are a careful maintenance engineer. Your earlier unified diff did not "
+                 "apply. The block below is lines %d-%d of %s. Return the corrected text of "
+                 "EXACTLY this block -- the same lines, start to finish, with ONLY the "
+                 "minimal change needed to resolve the fault. No commentary, no fences, no "
+                 "diff markers: block text only." % (lo, hi, path))
+    else:
+        sys_p = ("You are a careful maintenance engineer. Your earlier unified diff did not "
+                 "apply. Return the COMPLETE corrected contents of the single file shown -- "
+                 "the whole file, start to finish, with ONLY the minimal change needed to "
+                 "resolve the fault. No commentary, no fences, no diff markers: file text only.")
     msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\n\n### FILE: %s\n%s" % (
         fault.get("ref"), fault.get("title", ""), fault.get("detail", ""), path, content)}]
     try:
@@ -502,7 +549,8 @@ def propose_rewrite(fault):
         return None, "rewrite size wildly off (%d vs %d) -- refused" % (len(text), len(content))
     if text == content.strip():
         return None, "rewrite identical to original -- no change proposed"
-    return {"path": path, "text": text + ("\n" if not text.endswith("\n") else ""),
+    return {"path": path, "span": span, "orig_block": content,
+            "text": text + ("\n" if not text.endswith("\n") else ""),
             "source": "%s/%s" % (r.provider, r.model)}, "ok"
 
 
@@ -671,17 +719,55 @@ def main():
         try:
             subprocess.run(["git", "worktree", "add", "--detach", work], cwd=REPO,
                            capture_output=True, text=True, timeout=60)
+            # GATE-CREDS-1 (13 Aug 2026): worktrees carry TRACKED files only, so the
+            # gate suite's live-probe half (regression ledger) ran credential-less and
+            # crashed 401-red against the armed origin gate -- every patch, however
+            # perfect, gated red from the moment 016 armed. Give the throwaway worktree
+            # the same .secrets the real repo runs with; removed in the finally below.
+            _sec_src = os.path.join(REPO, ".secrets")
+            if os.path.isdir(_sec_src):
+                shutil.copytree(_sec_src, os.path.join(work, ".secrets"), dirs_exist_ok=True)
             patch = os.path.join(work, ".proposed.patch")
-            open(patch, "w").write(r.text)
-            ap = subprocess.run(["git", "apply", "--3way", patch], cwd=work,
+            _pt = _strip_fences(r.text)
+            open(patch, "w").write(_pt + ("" if _pt.endswith("\n") else "\n"))
+            # PATCH-FENCE-1 + --recount (13 Aug 2026): models fence their diffs and
+            # miscount hunk headers; verbatim write + strict apply WAS the 'diffs
+            # slip' class. Proven by hand: fenced+miscounted -> corrupt at the closing
+            # fence; stripped + --recount --3way -> rc=0 and the seeded typo fixed.
+            ap = subprocess.run(["git", "apply", "--recount", "--3way", patch], cwd=work,
                                 capture_output=True, text=True, timeout=60)
             if ap.returncode != 0:
+                # PATCH-EVIDENCE-1 (13 Aug 2026): 'did not apply' with no artifact was
+                # undiagnosable for two days -- keep the failing diff and git's words.
+                try:
+                    os.makedirs(STATE, exist_ok=True)
+                    _fp = os.path.join(STATE, "failed_%s_%s.patch"
+                                       % (ref, datetime.now(timezone.utc).strftime("%H%M%S")))
+                    shutil.copyfile(patch, _fp)
+                    item["apply_error"] = (ap.stderr or ap.stdout or "")[:300]
+                    item["failed_patch"] = _fp
+                except Exception:
+                    pass
                 rw, why_rw = propose_rewrite(f)
                 if not rw:
                     item["outcome"] = "patch did not apply cleanly; rewrite fallback: %s -> escalate" % why_rw
                     report["actions"].append(item); continue
-                # MAINT-B4-6: write the full corrected file; the mechanical diff is ours now.
-                open(os.path.join(work, rw["path"]), "w", encoding="utf-8").write(rw["text"])
+                # MAINT-B4-6 / WINDOW-SPLICE-1: whole small file, or splice the corrected
+                # block into the real file by the window's line range -- guarded: the block
+                # we showed the brain must still match the worktree bytes exactly.
+                _tgt = os.path.join(work, rw["path"])
+                if rw.get("span"):
+                    _lo, _hi = rw["span"]
+                    _body = open(_tgt, encoding="utf-8", errors="replace").read()
+                    _ls = _body.split("\n")
+                    if "\n".join(_ls[_lo - 1:_hi]) != rw["orig_block"]:
+                        item["outcome"] = ("rewrite splice refused: window bytes moved under "
+                                           "us -> escalate for a human")
+                        report["actions"].append(item); continue
+                    _new = _ls[:_lo - 1] + rw["text"].rstrip("\n").split("\n") + _ls[_hi:]
+                    open(_tgt, "w", encoding="utf-8").write("\n".join(_new))
+                else:
+                    open(_tgt, "w", encoding="utf-8").write(rw["text"])
                 item["source"] = rw["source"]
                 item["via"] = "rewrite-fallback"
             gates = run_gates(work)

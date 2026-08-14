@@ -74,6 +74,30 @@ def main():
     sh(["git", "config", "user.email", "probe@trustsquare.co"], cwd=clone)
     sh(["git", "config", "user.name", "Real-repo probe"], cwd=clone)
 
+    # PROBE-KEYS-1 (13 Aug 2026, 4th attempt): .secrets/ is gitignored, so the clone's
+    # agent found no brain key and degraded PROBE-MECH to PATH_B by default -- the
+    # BRAIN-DEPS-1 disease in a new costume; the patch path was never reached (INVALID,
+    # not FAIL). Provision the clone with the SOURCE repo's key file so the brain can
+    # actually be asked. Shadow is untouched: the kill switch is still stripped below.
+    # PROBE-KEYS-1 + PROBE-KEYS-2 (13 Aug 2026): .secrets/ is gitignored, so the bare
+    # clone had no brain key (runs degraded PATH_B by default) and -- run 10 -- no review
+    # code, so the regression-ledger GATE went red on 12 gate-401 probe crashes and the
+    # verdict said GATES RED for a perfect patch. Provision the same three secrets the
+    # real repo runs with; missing ones are named, not guessed.
+    _sec = os.path.join(clone, ".secrets")
+    _prov = []
+    for _f in ("ai_keys.env", "review_code.txt", "ms_maint_key.txt"):
+        _srcf = os.path.join(REPO, ".secrets", _f)
+        if os.path.isfile(_srcf):
+            os.makedirs(_sec, exist_ok=True)
+            shutil.copyfile(_srcf, os.path.join(_sec, _f))
+            _prov.append(_f)
+    if _prov:
+        print("clone provisioned with: " + ", ".join(_prov))
+    else:
+        print("NOTE: no .secrets/* in the source repo -- brain dark and gate probes blind; "
+              "expect PATH_B / GATES RED, verdict INVALID for patch quality")
+
     target = os.path.join(clone, d["file"])
     src = open(target, encoding="utf-8", errors="replace").read()
     n = src.count(d["find"])
