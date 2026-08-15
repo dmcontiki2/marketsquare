@@ -85,3 +85,24 @@ with Claude. Cross-check candidate for the second-vendor roving auditor
   VAT R2.3m/R120k thresholds eff. 1 Apr 2026; CIPC AR + IRP6 basics.
 - UNVERIFIED (needs direct contact): Paddle acceptance of Tuppence model; SBC eligibility;
   exact zero-rating treatment with MoR counterparty; platform-operator VAT impact.
+
+
+## Re-verification log
+**15 Aug 2026 — deep+wide sweep (full detail: GLOBAL_PAYMENT_RAILS_2026-08-15.docx):**
+- Stripe SA: still closed to SA-registered businesses (unchanged). F4 MoR ruling stands; Paddle still the lean.
+- Paddle ZA seller support CONFIRMED at source (ZA absent from their unsupported list). AUP bar on
+  "payment services" reconfirmed — the S1 Tuppence pre-check remains THE gate.
+- FIELD WIDENED: Polar.sh and Dodo Payments both verified accepting ZA sellers (5%+$0.50 / ~4%+$0.40)
+  — credible fallbacks if Paddle balks; FastSpring (games/virtual-goods pedigree) also open to ZA.
+- NEW FACT: Paystack ZA can accept international cards WORLDWIDE (ZAR settlement only) once
+  "international payments" is activated — but "mobile wallet businesses" are INELIGIBLE and digital
+  products get extra scrutiny. Apply with Tuppence positioned as a prepaid fee for a defined
+  introduction/AI service, never a wallet. Request intl activation in the same breath as KYC completion.
+- Peach Payments (ZA) multi-currency pricing (settle ZAR/USD) noted as a stay-home lane;
+  PayPal ZA works but ~7-8% all-in with SARB 30-day withdrawal rule — trust button only.
+**15 Aug 2026, later same day — VERIFIED IN DASHBOARD (live account 1777715, Live/Approved):**
+'Accept international payments' is ALREADY ENABLED on the ZA Paystack account — Phase 0 of the
+worldwide sequence is DONE, no request needed. Worldwide card acceptance (Visa/MC/Amex) is live,
+ZAR settlement, 2.9% + R1 (VAT excl.). Noted for David: 2FA not yet set up (banner showing);
+Apple Pay checkbox available but unticked; Paystack reverses fraudulent intl transactions from
+balance — credit-on-verified-webhook discipline stays essential.

@@ -34,7 +34,7 @@
 
 | # | Item | Area |
 |---|---|---|
-| B1 | **Payments live mode — the one true external gate** — the launch special requires $40/$100 paid plans in launch month, so a live PSP must exist at launch. Unblocked-in-principle: CIPC reg done (2026/340128/07) · patent-pending once the provisional is filed (A7) · mechanism publicly disclosed on trustsquare.co. ACTION NOW: submit Paystack live application AND run the alternative PSP application in parallel — first to approve wins; then paste `sk_live_` + webhook secret into `.env` (was L7) and build A6 card-on-file. | Payments |
+| B1 | ~~Payments live mode — the one true external gate~~ ✅ CLEARED 15 Aug 2026 — Paystack business 1777715 is LIVE + Approved with international payments enabled (worldwide Visa/MC/Amex, ZAR settlement, 2.9%+R1 VAT excl.) and Apple Pay enabled (redirect checkout — no domain setup needed). Verified in dashboard this session. The LAST launch blocker — zero remain. Residual go-live pastes moved to A10; A6 card-on-file unaffected. | Payments |
 
 ---
 
@@ -47,6 +47,7 @@
 | A1 | [LEGAL-REQUIRED artifact] **Privacy Policy page** — draft + publish trustsquare.co/privacy (POPIA + EULA §9.1). AI-draft → David approves → publish. (was L4) | Legal |
 | A2 | [LEGAL-REQUIRED mechanics] **POPIA consent timing** — wire consent capture at signup / magic-link entry; outreach opt-out already engine-enforced (opted_out sync + one-email rule). (was L6) | Legal |
 | A3 | **EULA finalisation** — fill remaining `[COUNSEL REQUIRED]` sections with best-effort founder-approved text so the EULA exists and is deliverable at launch; counsel review itself moved to O1. (was L1) | Legal |
+| A10 | ~~Arm the Paystack webhook lane~~ ✅ ARMED 15 Aug 2026 — PAYSTACK_WEBHOOK_SECRET installed via add_paystack_webhook_key.bat; **regression ledger RG-0091 LOCKED and passing live** (anonymous garbage POST → 400 Invalid-signature: route up, gate not eating webhooks, signature enforced). David bought 1T successfully same day. Sole residue: detached-credit E2E counts as proven only if that buy closed the tab before returning — else one smallest-pack buy with tab-close proves it. Paystack 2FA deferred by David to near-launch (reminder scheduled 27 Aug). | Payments |
 | A4 | **Company reg number into EULA §2 + app footer** — number EXISTS: Trustsquare (Pty) Ltd 2026/340128/07; insert + display (ECTA s43 expects it shown). (was L2) | Legal |
 | A5 | **support@trustsquare.co mailbox** — plan ready in SUPPORT_MAILBOX_SETUP.md: Cloudflare route → Brevo SMTP from support@ → one BEA env/code edit → verify SPF/DKIM. EULA §5.4/6.5/6.6/7.x/13/14/15 depend on it. (was L3a) | Ops |
 | A6 | **Card-on-file at signup — enforce what the copy promises** — zero-amount auth / R1 refundable tokenization at onboarding, store token for upgrades. Gated by B1 going live; copy-ahead-of-code acceptable pre-launch only. (was L10) | Onboarding |

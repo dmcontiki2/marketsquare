@@ -3936,5 +3936,59 @@ def rg_edge_cache_document_leak():
     return out
 
 
+@entry("RG-0091", "Paystack's anonymous webhook POST reaches BEA and is signature-enforced -- the edge never eats the money lane and never accepts an unsigned credit",
+       LOCKED, fixed_on="2026-08-15",
+       scope="the live edge + the /payment/webhook route + the HMAC check, all markets. BLIND SPOT "
+             "by design: an unset PAYSTACK_WEBHOOK_SECRET and a wrong signature both answer 400, so "
+             "this entry cannot see the secret's presence server-side -- the A10 detached-credit E2E "
+             "(buy, close tab before returning, credit still lands) is the other half of the proof",
+       ref="WEBHOOK-ARM-1, 15 Aug 2026: PAYSTACK_WEBHOOK_SECRET installed via "
+           "add_paystack_webhook_key.bat (resend-key pattern) after B1 cleared; Live Webhook URL "
+           "verified in the Paystack dashboard as https://trustsquare.co/payment/webhook. This "
+           "entry exists because GATE-ENFORCE-1/2 arm an origin catch-all: if the gate ever "
+           "swallows Paystack's anonymous POSTs (403), the reliable credit path dies SILENTLY -- "
+           "buyers who close the browser pay real money and never get Tuppence. 400 "
+           "Invalid-signature is the healthy answer to a garbage probe.")
+def rg_paystack_webhook_lane():
+    out = []
+    bea = repo_file("bea_main.py"); pay = repo_file("payments.py")
+    if bea is not None and ('@app.post("/payment/webhook")' not in bea
+                            or "verify_webhook_signature" not in bea):
+        out.append((FAIL, "bea_main.py lost the /payment/webhook route or its signature check"))
+    if pay is not None and "PAYSTACK_WEBHOOK_SECRET" not in pay:
+        out.append((FAIL, "payments.py no longer reads PAYSTACK_WEBHOOK_SECRET"))
+    _require_net()
+    try:
+        req = urllib.request.Request(BASE + "/payment/webhook",
+                                     data=b'{"event":"rg0091.probe"}',
+                                     headers=dict(UA, **{"Content-Type": "application/json",
+                                                         "X-Paystack-Signature": "rg0091-garbage"}))
+        try:
+            code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            code = he.code
+        if code == 403:
+            out.append((FAIL, "edge/origin gate answered 403 to an anonymous webhook POST -- "
+                              "Paystack's charge.success events are being EATEN; credits silently "
+                              "depend on the buyer returning to the app"))
+        elif code == 404:
+            out.append((FAIL, "/payment/webhook is 404 -- the route is gone"))
+        elif code == 200:
+            out.append((FAIL, "webhook accepted a garbage-signed POST (200) -- signature "
+                              "enforcement lost; anyone could mint Tuppence"))
+        elif code >= 500:
+            out.append((FAIL, "/payment/webhook answers %d -- handler is crashing" % code))
+        elif code != 400:
+            out.append((INFO, "unexpected but non-fatal status %d (400 expected)" % code))
+    except ProbeOffline:
+        raise
+    except Exception as ex:
+        out.append((INFO, "webhook probe inconclusive (%r)" % ex))
+    if not out:
+        out.append((INFO, "anonymous garbage POST correctly refused 400 Invalid-signature"))
+    return out
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

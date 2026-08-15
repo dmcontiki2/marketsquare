@@ -45,3 +45,5 @@ A superseded ruling is marked SUPERSEDED-BY, never deleted.
 *Seeded 15 Aug 2026 from this session plus standing canon — NOT exhaustive. Sessions append
 as rulings are made; older rulings get added when they surface (that they must surface at all
 is the failure this file ends).*
+
+| RUL-019 | 2026-08-15 | **WORLDWIDE LAUNCH SCOPE — GO.** Payments verified worldwide-capable (Paystack intl enabled + Apple Pay, verified in dashboard): the launch proceeds with WORLDWIDE reach, not ZA-only; last BACKLOG launch blocker (B1) cleared same session. Launch DATES unchanged (RUL-001). Money-path go-live still requires the A10 env pastes (sk_live + webhook secret, David) | BACKLOG.md B1 row + A10 · FINANCE_CANON.md Re-verification log · GLOBAL_PAYMENT_RAILS_2026-08-15.docx · status.d 15 Aug fragments |

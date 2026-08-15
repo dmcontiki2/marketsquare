@@ -5,6 +5,49 @@
 
 ## Current Session
 
+## 2026-08-15 — Money-path status corrected + webhook arm tool built
+David confirmed REAL purchases settled to FNB -> sk_live is live (S111 sk_test note is STALE).
+Verified in Paystack dashboard: Live Webhook URL already https://trustsquare.co/payment/webhook.
+Only unknown: PAYSTACK_WEBHOOK_SECRET on server (no probe exists; endpoint 400s identically
+either way). Built add_paystack_webhook_key.bat (resend-key pattern: presence check first, then
+ssh paste + restart; Claude never sees the key). A10 narrowed accordingly. E2E proof pending:
+smallest-pack buy with tab closed before return must still credit. 2FA on Paystack still Disabled.
+
+## 2026-08-15 — Webhook lane ARMED + RG-0091 LOCKED · money path effectively complete
+David installed PAYSTACK_WEBHOOK_SECRET via add_paystack_webhook_key.bat and bought 1T live.
+New ledger entry RG-0091 (LOCKED, passing): anonymous garbage POST to /payment/webhook answers
+400 — route up, origin gate does NOT eat Paystack webhooks, signature enforced. Blind spot named
+in the entry: secret presence itself is externally invisible; detached-credit E2E (tab closed
+before return) is the remaining half-proof unless David's 1T buy already did so.
+David DEFERRED Paystack 2FA to near-launch (his call, 15 Aug) — one-time reminder scheduled
+Thu 27 Aug 09:00, two days before gate-down (RUL-001). STILL PENDING: one deploy_marketsquare.bat
+run to ship today's BACKLOG/ledger/fragments so the ops dashboard blockers card reads zero.
+
+## 2026-08-15 — Paystack international payments: ALREADY ENABLED (verified)
+Checked live dashboard (account 1777715, Live/Approved): 'Accept international payments' ticked.
+Phase 0 of GLOBAL_PAYMENT_RAILS sequence complete without action. Open David-only items spotted:
+set up 2FA on Paystack (banner active); decide on enabling Apple Pay checkbox (helps intl buyers).
+UPDATE same day: David ENABLED Apple Pay in the dashboard (terms accepted, confirmation modal seen).
+No further setup needed — payments.py uses transaction/initialize (redirect/hosted checkout), which
+gets Apple Pay automatically; domain registration/.well-known only applies to inline integrations.
+Unverified until tried: a real checkout from an iPhone/Safari on the live site. Apple Pay has
+per-currency minimum transaction amounts — low-value Tuppence packs may not show the button.
+
+## 2026-08-15 — Global payment rails re-verified (deep+wide)
+David asked (again) for worldwide payment options beyond Paystack/Africa. Full memo:
+GLOBAL_PAYMENT_RAILS_2026-08-15.docx; FINANCE_CANON.md gained a Re-verification log section.
+Headlines: F4 (MoR, lean Paddle) survives; Paddle ZA support confirmed at source; Polar.sh and
+Dodo Payments verified as ZA-seller fallbacks; Paystack itself can take international cards
+worldwide (ZAR settlement) once intl payments activated — but wallet businesses are ineligible,
+so Tuppence positioning (prepaid fee for defined service) decides eligibility everywhere.
+Awaiting David: adopt Phase 0/1/2 sequence -> RULINGS.md entry.
+
+## 2026-08-15 — Last launch blocker (B1) CLEARED · RUL-019 worldwide scope GO
+B1 done: Paystack live + intl + Apple Pay, verified in dashboard. Dashboard blockers card will
+show zero after next deploy (BACKLOG.md ships via manifest). NEW A10 (David, ~10 min): paste
+sk_live keys + PAYSTACK_WEBHOOK_SECRET into server env, then one real-card E2E + FNB settlement
+check. Until A10, app transacts in test mode — account live, money-in not yet.
+
 - **PG-RATCHET-PRECISION-1 (15 Aug 2026) — the fourth "guard measuring the wrong thing" in two days,
   and the one that was silently blocking every unattended release.** `nightly_ship.bat` runs with
   `PREDEPLOY_MODE=strict`, and `predeploy_check.py` ends `if danger: if MODE=='strict': return 1`.
