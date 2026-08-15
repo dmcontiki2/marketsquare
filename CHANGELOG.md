@@ -1,3 +1,10 @@
+## 2026-08-15 — OPS-SWEEP-1: amber/red email reports + reply-driven Fix lane
+David's ask: less work, no dropped balls. The server now (once the next deploy lands) sweeps
+health/services/resources/faults/SSL every 15 min and emails David the moment anything goes
+amber or red — reply FIX to queue it for Fable's morning run, REVIEW to hold it for a session,
+REPORT for a full report. Cockpit gained the Report & Fix card. Watching needs no laptop; only
+fixing does. Detail: CHANGE_REGISTER.md OPS-SWEEP-1.
+
 ## 2026-08-15 — NCR-GREEN-1 addendum: the reported advert was the garden service
 David identified TS-0034's advert as listing 268 (garden service) — photos 1 and 3 were the
 same staged scene (human-identical; perceptual hash read them 123/256 apart, a lesson filed

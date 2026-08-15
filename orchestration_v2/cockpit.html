@@ -79,6 +79,24 @@ h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)
 })();
 </script>
 
+<h2>Report &amp; Fix — the Fable lane <span style="font-weight:600;color:var(--teal)">(OPS-SWEEP-1 · 15 Aug 2026)</span></h2>
+<div style="background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:18px">
+  <div style="font-size:13.5px;margin-bottom:9px"><b>The server watches; you read email; Fable does the work.</b>
+  Every 15 minutes the box sweeps the same feeds these chips read (health, services, resources, faults, SSL).
+  The moment anything goes <b style="color:var(--amber)">amber</b> or <b style="color:#c0392b">red</b> — or recovers —
+  you get one compact email. No laptop, no browser, no login needed for the watching half.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <a href="mailto:fable@trustsquare.co?subject=REPORT&body=REPORT" style="text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;background:var(--navy);color:#fff">&#128231; Email me the full report now</a>
+  </div>
+  <div style="font-size:12.5px;color:var(--muted);line-height:2">
+    Reply <span class="cmd">FIX TS-nnnn</span> — queued for Fable's next Cowork run (weekdays 07:45; the laptop must be on and Cowork open).<br>
+    Reply <span class="cmd">REVIEW TS-nnnn</span> — held for your next session, nothing happens until you sit down with Fable.<br>
+    Reply <span class="cmd">REPORT</span> — full report inside 15 minutes, change or no change.
+  </div>
+  <div class="note" style="margin-top:9px">Fixes needing a browser or Higgsfield wait for you by design — the per-session
+  grants that stopped unattended photo runs are the same fence here. Ships with the deploy carrying <span class="cmd">migrations/020</span>.</div>
+</div>
+
 <h2>Build progress</h2>
 <div class="phases">
   <div class="ph done"><div class="pn">PHASE 0</div><div class="pt">Design</div><span class="st">✓ approved</span></div>

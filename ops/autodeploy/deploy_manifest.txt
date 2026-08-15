@@ -97,3 +97,5 @@ ops/bit/bit_cycle.py         | bit/bit_cycle.py
 ops/bit/bit_runner.py        | bit/bit_runner.py
 ops/bit/bit_mitigator.py     | bit/bit_mitigator.py
 ops/bit/bit_registry.json    | bit/bit_registry.json
+scripts/ops_sweep.py | ops_sweep.py
+orchestration_v2/cockpit.html | orchestrator/v2/cockpit.html

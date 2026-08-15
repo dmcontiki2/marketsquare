@@ -38,6 +38,8 @@ A superseded ruling is marked SUPERSEDED-BY, never deleted.
 
 | RUL-016 | 2026-08-15 | Cars spec lane stays DECLARED + SELLER-ATTESTED (TS-0031 closed): VISION-inferred specs remain with the SPEC-PROVENANCE-1 attestation screen as the fix; grounding against an external vehicle-spec source and dropping the AI market note both DECLINED for now — revisit post-launch if wrong-spec reports recur | BACKLOG.md 14-Aug cars row · app_faults TS-0031 fix_note · FAULT_REGISTER.md LIST-003 note |
 
+| RUL-017 | 2026-08-15 | Report & Fix lane (OPS-SWEEP-1): amber/red ops states are EMAILED to David as they appear, with reply commands FIX (queue for Fable's pickup run) / REVIEW (hold for a session) / REPORT. Refines RUL-013's pre-launch quiet: an FYI + opt-in lane at David's request — autonomy, gates and the no-deploy-without-the-ref doctrine unchanged | scripts/ops_sweep.py · migrations/020_ops_sweep_cron.py · orchestration_v2/cockpit.html Report & Fix card · deploy_manifest ops_sweep + cockpit lines |
+
 *Seeded 15 Aug 2026 from this session plus standing canon — NOT exhaustive. Sessions append
 as rulings are made; older rulings get added when they surface (that they must surface at all
 is the failure this file ends).*

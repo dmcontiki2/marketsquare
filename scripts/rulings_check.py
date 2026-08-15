@@ -41,6 +41,12 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-017": [
+   ("scripts/ops_sweep.py", ["OPS-SWEEP-1", "FIX", "REVIEW"], []),
+   ("migrations/020_ops_sweep_cron.py", ["ops_sweep"], []),
+   ("orchestration_v2/cockpit.html", ["Report &amp; Fix"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["ops_sweep.py", "cockpit.html"], []),
+ ],
  "RUL-016": [
    ("BACKLOG.md", ["DECIDED 15 Aug (David): (a)"], []),
    ("FAULT_REGISTER.md", ["CLOSED 15 Aug (letter sent)"], []),
