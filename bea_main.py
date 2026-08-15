@@ -11254,7 +11254,10 @@ def dashboard_summary():
             "id": "dir_blockers",
             "project": "TrustSquare",
             "title": "Launch Blockers",
-            "colour": "#ef4444",
+            # DASH-COLOUR-1 (15 Aug 2026): state-driven, per David's colour doctrine (4 Aug) --
+            # red ONLY when blockers exist; green when clear. A permanently-red card cried wolf
+            # the day the LAST blocker (B1) was cleared.
+            "colour": ("#ef4444" if blockers else "#10b981"),
             "items": (blockers or ["No blockers recorded"])[:4],
             "prompt": blockers_prompt,
             "desktop": blockers_prompt,
