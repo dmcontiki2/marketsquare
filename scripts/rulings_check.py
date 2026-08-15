@@ -41,6 +41,15 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-016": [
+   ("BACKLOG.md", ["DECIDED 15 Aug (David): (a)"], []),
+   ("FAULT_REGISTER.md", ["CLOSED 15 Aug (letter sent)"], []),
+ ],
+ "RUL-015": [
+   ("ACCESS_CHEATSHEET.md", ["never grant admin"], []),
+   ("dashboard.server.html", ["admin-gate-input"], []),
+   ("marketsquare_admin.html", ["admin-gate-input"], []),
+ ],
  "RUL-014": [
    ("bea_main.py", ["GATE-EMAIL-1", "/review/request-link"], []),
    ("marketsquare.html", ["gate-email-input", "GATE-COOKIE-2"], []),
