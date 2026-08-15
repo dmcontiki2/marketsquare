@@ -4,7 +4,10 @@ Every prompt ends with: "Absolutely no text, letters, numbers or writing anywher
 Use the REFERENCE button with the named anchor image so the item stays identical.
 SWAP RULE (learned 15 Aug, VERSIONED-PHOTO-1): never swap same-filename — /static/ ships
 immutable 1-year cache headers, so clients keep the old photo forever. Save the replacement
-under a NEW versioned name (…_v2.jpg) and update the listing's photo_urls to match.
+under a NEW versioned name (…_v2.jpg) and update EVERY store the app reads — ALL THREE:
+(1) photo_urls JSON, (2) the [photos:...] prefix inside description (the FEA viewer reads THIS),
+(3) thumb_url/medium_url if the swapped photo is the thumb. Then purge. VERIFY AT THE USER-VISIBLE
+LAYER — open the listing the way a user does; a fix verified only at origin is not verified.
 PARITY RULE (SO-2, 15 Aug): every prompt with any person carries "clean, well-kept workwear,
 nobody identifiable, no face, no bare skin" — never one person neat and another dirty anywhere
 in the app. Prefer hands-and-tool framing.
