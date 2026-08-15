@@ -5,6 +5,9 @@
 
 ## Current Session
 
+- Correction: the CDN document-leak OPEN entry is **RG-0083** (RG-0082 was concurrently taken
+  by the AI-spend-attribution entry). Ship record references to "RG-0082 opened" = RG-0083.
+
 - **GATE-EMAIL-1 LIVE (15 Aug ~08:05 UTC, /tsl):** email-linked gate entry shipped and proven
   live end-to-end; RG-0081 LOCKED. Allowlist seeded (David x2 + 3 testers) at
   /var/www/marketsquare/review_emails.txt — edit live, no restart. Rollback tag

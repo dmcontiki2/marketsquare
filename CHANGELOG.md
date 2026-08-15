@@ -1,3 +1,13 @@
+## 2026-08-15 — Correction: the edge-cache document-leak entry is RG-0083, not RG-0082
+
+Second same-morning ID race: the concurrent session registered its own RG-0082 (AI spend
+attribution) while the /tsl session was writing the CDN document-leak entry under the same
+number. The leak entry is renumbered **RG-0083** (its content unchanged); earlier mentions of
+"RG-0082 opened" in today's ship record and commit 933eea6's message refer to what is now
+RG-0083. Sibling of the morning's RG-0080/0081 race — two sessions numbering from the same
+board; compile-style fragments cannot collide but ledger IDs can. Watch item: next-free-ID
+should be taken at WRITE time, not planning time.
+
 ## 2026-08-15 — /tsl: GATE-EMAIL-1 SHIPPED · RG-0081 LOCKED · RG-0082 opened (edge-cache doc leak, pre-existing)
 
 Guarded ship of the email-linked gate, David's word via /tsl. Gate: CM=ok DB=ok after fragment

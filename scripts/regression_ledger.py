@@ -3895,7 +3895,7 @@ def rg_failover_consults_baseline():
 
 
 
-@entry("RG-0082", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
+@entry("RG-0083", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
        OPEN, scope="the index document at / (and any gated HTML the edge caches). The DATA side "
                    "already holds: /wonders and /listings answer 401 anonymously -- this entry is "
                    "about the HTML shell alone",
