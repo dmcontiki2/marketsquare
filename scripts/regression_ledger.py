@@ -3697,7 +3697,7 @@ def rg_attestation_states_provenance():
 
 
 @entry("RG-0081", "The gate opens on an EMAILED LINK, not a memorised code -- and a valid cookie is never re-challenged",
-       OPEN, scope="the gate-entry lane entire: /review/request-link + /review/enter at the app AND "
+       LOCKED, fixed_on="2026-08-15", scope="the gate-entry lane entire: /review/request-link + /review/enter at the app AND "
                    "exempt at the origin (migration 019), the marketsquare.html email-first gate screen, "
                    "and the GATE-COOKIE-2 cookie-first verify. The code path /review/login must ALSO "
                    "stay alive (break-glass) -- losing it is a failure of this entry, not a success",
@@ -3710,7 +3710,7 @@ def rg_attestation_states_provenance():
            "Containment deliberately UNCHANGED: origin lockdown RG-0028, armed catch-all GATE-ENFORCE-2, "
            "per-IP rate limit; claim email+IP logged; tokens NOT hard-bound to claim IP (tester ISPs "
            "rotate -- a hard bind would re-create the lockouts). EXPECTED open until migration 019 "
-           "rides a deploy; the moment the live half answers, promote to LOCKED.")
+           "rides a deploy; the moment the live half answers, promote to LOCKED. PROMOTED 15 Aug 2026 ~08:0x UTC: migration 019 rode the /tsl ship; live off-list request-link answered {ok:true}, garbage /review/enter bounced 302 -> /?gate=expired, /wonders + /listings still 401 anonymous. Locked so the email door, the break-glass code path and the cookie-first verify can never silently part ways.")
 def rg_gate_email_link():
     out = []
     # Repo half: both sides of the lane exist in source
@@ -3892,6 +3892,45 @@ def rg_failover_consults_baseline():
         out.append((INFO, "failover order+cost come from the baseline; off-base serving alerts"))
     return out
 
+
+
+
+@entry("RG-0082", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
+       OPEN, scope="the index document at / (and any gated HTML the edge caches). The DATA side "
+                   "already holds: /wonders and /listings answer 401 anonymously -- this entry is "
+                   "about the HTML shell alone",
+       ref="Found 15 Aug 2026 during the GATE-EMAIL-1 /tsl verify: anonymous GET / answered 200 "
+           "with cf-cache-status: HIT, age 20 -- the regression ledger's own cookie-bearing fetch "
+           "had primed Cloudflare with the 200 document seconds earlier, and the edge then served "
+           "it to ANYONE (the origin auth_request is never consulted on a HIT). Origin gate is "
+           "INTACT (fresh-path and API probes refuse). Class predates GATE-EMAIL-1 -- it has been "
+           "true since GATE-ENFORCE-2 armed on 13 Aug whenever any cookie-holder loaded the page. "
+           "Exposure: app HTML shell only (client gate screen still locks the view; every data "
+           "call 401s). Fixes, either lane: (a) Cloudflare cache rule -- bypass cache on "
+           "text/html for trustsquare.co (DAVID's console, one rule); or (b) origin sends "
+           "Cache-Control: private, no-store on the gated document (one nginx/BEA migration). "
+           "Post-launch note: the gate drops 29 Aug (RUL-001) and caching the public document "
+           "becomes DESIRABLE -- whichever fix ships must be reversible on launch day.")
+def rg_edge_cache_document_leak():
+    out = []
+    try:
+        req = urllib.request.Request(BASE + "/?rg0082=" + str(int(time.time())), headers=dict(UA))
+        try:
+            r = urllib.request.urlopen(req, timeout=TIMEOUT)
+            code, hdrs, body = r.getcode(), r.headers, r.read(200000).decode("utf-8", "replace")
+        except urllib.error.HTTPError as he:
+            code, hdrs, body = he.code, he.headers, ""
+        if code == 200 and ("admin-gate" in body or "GATE-EMAIL-1" in body):
+            cc = (hdrs.get("Cache-Control") or "").lower()
+            if "no-store" not in cc and "private" not in cc:
+                out.append((FAIL, "anonymous cookie-less GET / answers 200 with the app document "
+                                  "and no private/no-store -- the edge can (and does) hand the "
+                                  "gated shell to the public once any cookie-holder primes it"))
+    except Exception as ex:
+        out.append((INFO, "anonymous document probe inconclusive (%r)" % ex))
+    if not out:
+        out.append((INFO, "gated document refuses anonymously or forbids shared caching"))
+    return out
 
 
 if __name__ == "__main__":
