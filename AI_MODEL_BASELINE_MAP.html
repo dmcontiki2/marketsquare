@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — AI Model Baseline &amp; Swap Routes</title>
+<style>
+:root{--navy:#12283F;--ink:#1B2A38;--rule:#D8DEE5;--paper:#F7F9FB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:34px 40px 30px}
+header h1{margin:0 0 8px;font-size:30px;letter-spacing:-.4px}
+header p{margin:0 0 6px;opacity:.88;max-width:1000px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:9px 15px;font-size:14px}
+.stat b{font-size:20px;display:block;line-height:1.2}
+.stat.bad{background:rgba(255,140,130,.18);border-color:rgba(255,140,130,.45)}
+main{padding:34px 40px 60px;max-width:1560px;margin:0 auto}
+h2{font-size:20px;color:var(--navy);margin:46px 0 6px;padding-bottom:9px;border-bottom:2px solid var(--navy)}
+h2:first-of-type{margin-top:0}
+.sub{margin:0 0 20px;color:#5A6C7D;font-size:14.5px;max-width:1060px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);border-radius:9px;overflow:hidden;font-size:13.6px}
+th{background:var(--navy);color:#fff;text-align:left;padding:11px 13px;font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+td{padding:10px 13px;border-top:1px solid var(--rule);vertical-align:top}
+td.c{text-align:center}
+code{font:12px/1.4 ui-monospace,Consolas,monospace;background:#EDF1F5;padding:2px 5px;border-radius:4px;display:inline-block}
+th.tier{background:#2F5496;text-transform:none;font-size:14px;width:80px;vertical-align:middle}
+td.env{background:#F2F5F8;font-size:12.5px;color:#42566A;width:150px}
+td.base,td.ok,td.blk{width:20%}
+td.base{background:#EAF0FA;border-left:4px solid #2F5496}
+td.ok{background:#E8F5EE;border-left:4px solid #1E6B45}
+td.blk{background:#FDECEA;border-left:4px solid #B3261E}
+.amt{display:block;font-size:17px;font-weight:700;color:var(--navy);margin-top:5px}
+.tag{display:inline-block;margin-top:4px;font-size:9.5px;font-weight:800;letter-spacing:.7px;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,.07)}
+td.base .tag{background:#2F5496;color:#fff} td.ok .tag{background:#1E6B45;color:#fff} td.blk .tag{background:#B3261E;color:#fff}
+tr.r1 td{background:#F4FAF6} tr.r2 td{background:#FFFDF5} tr.r3 td{background:#FEF6F5}
+tr.r3 .rid{color:#B3261E} tr.r2 .rid{color:#B26A00} tr.r1 .rid{color:#1E6B45}
+.rid{font-weight:800;white-space:nowrap}
+.v{font-size:13px}
+tr.sevH td{background:#FDECEA} tr.sevM td{background:#FFF4E0}
+td.sev{font-weight:800} tr.sevH .sev{color:#B3261E} tr.sevM .sev{color:#B26A00}
+.eqt{display:flex;gap:14px;background:#fff;border:1px solid var(--rule);border-left:6px solid #2F5496;border-radius:9px;padding:13px 17px;margin-bottom:9px}
+.eqt .n{background:var(--navy);color:#fff;width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 27px;margin-top:2px}
+.eqt h4{margin:0 0 3px;font-size:15px;color:var(--navy);letter-spacing:.5px}
+.eqt p{margin:0;font-size:13.5px;color:#3C4C5C}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.rule{background:#fff;border:1px solid var(--rule);border-left:6px solid #B26A00;border-radius:9px;padding:15px 19px;margin-bottom:14px}
+.rule h3{margin:0 0 7px;font-size:16px;color:var(--navy)}
+.rule p{margin:0;font-size:14px;color:#3C4C5C}
+footer{padding:26px 40px 44px;color:#7B8A99;font-size:13px;max-width:1560px;margin:0 auto}
+</style></head><body>
+<header>
+<h1>AI Model Baseline &amp; Swap Routes</h1>
+<p>The fixed baseline: the approved model per tier <strong>and its cost envelope</strong>. A model-id
+register alone would pass every day while cost drifted &mdash; the biggest movers are image caps,
+probe resolution and <code>max_tokens</code>, none of which is a model change.</p>
+<p>Baseline v1.0 against price card 2026-08-01.1 &middot;
+asserted by <code>scripts/ai_baseline_check.py</code></p>
+<div class="stats">
+<div class="stat"><b>$0.03842</b>worst case, any tier, one call</div>
+<div class="stat"><b>1.25x</b>failover cost tolerance</div>
+<div class="stat"><b>9</b>routes a model can change by</div>
+<div class="stat bad"><b>7</b>of those are UNAUDITED</div>
+<div class="stat bad"><b>6</b>need no deploy at all</div>
+<div class="stat bad"><b>5</b>HIGH drift findings today</div>
+</div>
+</header>
+<main>
+
+<h2>1 &nbsp;The baseline &mdash; approved model and cost envelope per tier</h2>
+<p class="sub">Figures are the <strong>worst case per call</strong> inside the envelope, priced from
+<code>ai_price_card.json</code>. Per-Mtok price is not the test &mdash; token shapes differ, so a
+lane can be cheaper per token and dearer per call.</p>
+<table>
+<thead><tr><th>Tier</th><th>Cost envelope</th><th>anthropic</th><th>openai</th><th>scaleway</th></tr></thead>
+<tbody>
+<tr><th class="tier">haiku</th>
+<td class="env">4,000 in · 1,800 out<br>
+0 img @ 0px</td>
+<td class="base"><code>claude-haiku-4-5-20251001</code>
+    <span class="amt">$0.01300</span><span class="tag">BASELINE</span></td><td class="ok"><code>gpt-5.6-luna</code>
+    <span class="amt">$0.00296</span><span class="tag">AUTO-FAILOVER OK</span></td><td class="blk"><code>mistral-medium-3.5-128b</code>
+    <span class="amt">$0.02252</span><span class="tag">BLOCKED 1.73x</span></td></tr>
+<tr><th class="tier">sonnet</th>
+<td class="env">4,000 in · 1,400 out<br>
+1 img @ 1344px</td>
+<td class="base"><code>claude-sonnet-4-6</code>
+    <span class="amt">$0.03842</span><span class="tag">BASELINE</span></td><td class="ok"><code>gpt-5.6-terra</code>
+    <span class="amt">$0.02841</span><span class="tag">AUTO-FAILOVER OK</span></td><td class="ok"><code>mistral-medium-3.5-128b</code>
+    <span class="amt">$0.02219</span><span class="tag">AUTO-FAILOVER OK</span></td></tr>
+<tr><th class="tier">vision</th>
+<td class="env">2,000 in · 2,000 out<br>
+10 img @ 1344px</td>
+<td class="base"><code>claude-haiku-4-5-20251001</code>
+    <span class="amt">$0.03006</span><span class="tag">BASELINE</span></td><td class="ok"><code>gpt-5.6-luna</code>
+    <span class="amt">$0.00641</span><span class="tag">AUTO-FAILOVER OK</span></td><td class="blk"><code>mistral-medium-3.5-128b</code>
+    <span class="amt">$0.05208</span><span class="tag">BLOCKED 1.73x</span></td></tr>
+<tr><th class="tier">triage</th>
+<td class="env">2,500 in · 400 out<br>
+0 img @ 0px</td>
+<td class="base"><code>claude-haiku-4-5-20251001</code>
+    <span class="amt">$0.00450</span><span class="tag">BASELINE</span></td><td class="ok"><code>gpt-5.6-luna</code>
+    <span class="amt">$0.00098</span><span class="tag">AUTO-FAILOVER OK</span></td><td class="blk"><code>mistral-medium-3.5-128b</code>
+    <span class="amt">$0.00780</span><span class="tag">BLOCKED 1.73x</span></td></tr>
+</tbody></table>
+<div class="rule" style="margin-top:18px">
+<h3>The result this produces, which nothing checks today</h3>
+<p><strong>Scaleway is 1.73&times; the baseline on the haiku, vision and triage tiers</strong> &mdash;
+outside the 1.25&times; tolerance &mdash; but <strong>0.58&times; on the sonnet tier</strong>, where
+mistral-medium undercuts Sonnet. So it is a legitimate automatic failover target for
+<em>one</em> tier and a silent 73% cost rise on the other three. Right now the fallback chain is the
+insertion order of a Python dict literal at <code>ai_provider.py:197</code> and consults no price at all.</p>
+</div>
+
+<h2>2 &nbsp;Every route a model can change by</h2>
+<p class="sub">Green = properly gated. Amber = by design, needs a constraint. Red = the drift routes.</p>
+<table>
+<thead><tr><th>ID</th><th>Route</th><th>Control</th><th>Deploy?</th><th>Audited?</th><th>Speed</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr class="r3"><td class="rid">R1</td>
+<td><strong>POST /admin/flags {ai_active}</strong></td><td>admin JWT, 3-string whitelist</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c"><b>NO</b></td>
+<td>instant (10s cache bust)</td><td class="v">HIGHEST RISK -- instant, platform-wide, unlogged</td></tr>
+<tr class="r2"><td class="rid">R2</td>
+<td><strong>POST /admin/flags {ai_active_override} -- time-decaying pin</strong></td><td>admin JWT, TTL 24h</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c"><b>NO</b></td>
+<td>instant</td><td class="v">RG-0019 deliberately does NOT trip on a pin, so a pin is an unrecorded lane change by design</td></tr>
+<tr class="r2"><td class="rid">R3</td>
+<td><strong>Automatic breaker failover (T1/T2/T3)</strong></td><td>none on cost</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c">yes</td>
+<td>automatic</td><td class="v">By design, and correct for continuity -- but it must be constrained to cost-approved lanes</td></tr>
+<tr class="r2"><td class="rid">R4</td>
+<td><strong>AI_DRILL_BAN env + systemd drop-in</strong></td><td>server root</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c"><b>NO</b></td>
+<td>restart</td><td class="v">Bans a lane exactly like a T3 trip, writes no state, redirects all traffic silently</td></tr>
+<tr class="r2"><td class="rid">R5</td>
+<td><strong>AI_ACTIVE env in /etc/environment</strong></td><td>server root</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c"><b>NO</b></td>
+<td>restart</td><td class="v">Outranked at 22 call sites by the DB switch; still governs boot constants and any caller omitting provider=</td></tr>
+<tr class="r1"><td class="rid">R6</td>
+<td><strong>Edit TASK_MODEL in ai_provider.py</strong></td><td>code review + RG-0016/RG-0018</td>
+<td class="c">deploy</td>
+<td class="c">yes</td>
+<td>deploy</td><td class="v">The best-governed route. RG-0018 fails if the new model has no price-card entry</td></tr>
+<tr class="r3"><td class="rid">R7</td>
+<td><strong>Change an image cap or max_tokens at a call site</strong></td><td>NONE</td>
+<td class="c">deploy</td>
+<td class="c"><b>NO</b></td>
+<td>deploy</td><td class="v">NOT A MODEL CHANGE AT ALL, and the cheapest way to move cost. 896-&gt;1344 did 2.2x with a code comment</td></tr>
+<tr class="r2"><td class="rid">R8</td>
+<td><strong>golden_pass.json placed on the server</strong></td><td>file placement</td>
+<td class="c"><b>no deploy</b></td>
+<td class="c"><b>NO</b></td>
+<td>file copy</td><td class="v">Opens the scoreboard quality gate for a new lane with no code change</td></tr>
+<tr class="r3"><td class="rid">R9</td>
+<td><strong>Scoreboard becomes flip DETERMINANT (planned, not built)</strong></td><td>none yet</td>
+<td class="c">deploy</td>
+<td class="c"><b>NO</b></td>
+<td>n/a</td><td class="v">Today advisory only and the return value is discarded. THIS IS THE AUTOMATION DAVID&#x27;S RULING FORBIDS -- keep it advisory</td></tr>
+</tbody></table>
+
+<h2>3 &nbsp;What "equivalent swap-out" has to mean</h2>
+<p class="sub">All five, or it is not equivalent and it needs R4 approval.</p>
+<div class="eqt"><span class="n">1</span><div><h4>REGISTERED</h4><p>The candidate model has an entry on ai_price_card.json. No price, no swap.</p></div></div>
+<div class="eqt"><span class="n">2</span><div><h4>CAPABLE</h4><p>gate_by_tier passes for the exact tier -- the gate tuple is (model, tier, prompt version, effort, sampling), never a model-wide boolean.</p></div></div>
+<div class="eqt"><span class="n">3</span><div><h4>AFFORDABLE</h4><p>Worst-case cost per CALL within the envelope is &lt;= baseline worst case x tolerance. Note: per-Mtok price is NOT the test -- token shapes differ.</p></div></div>
+<div class="eqt"><span class="n">4</span><div><h4>GOLDEN</h4><p>Passes the golden set on the LIVE seam, not on the dead failover/ package.</p></div></div>
+<div class="eqt"><span class="n">5</span><div><h4>RECORDED</h4><p>The change is written with actor, prior value, new value, reason and timestamp. Today POST /admin/flags writes NONE of these.</p></div></div>
+
+<h2>4 &nbsp;Drift already present, found while building this</h2>
+<table>
+<thead><tr><th>ID</th><th>Finding</th><th>Where</th><th>Effect</th><th>Sev</th></tr></thead>
+<tbody>
+<tr class="sevH"><td class="rid">D1</td>
+<td><strong>_MODEL_PRICE[&#x27;haiku&#x27;] = (0.80,4.00) vs price card (1.00,5.00)</strong></td><td><code>bea_main.py:1440</code></td>
+<td>every haiku row in ai_spend_log is 20-25% low, and _check_cost_ceiling sums that table -- so the daily rails are 20-25% looser than intended</td><td class="c sev">HIGH</td></tr>
+<tr class="sevH"><td class="rid">D2</td>
+<td><strong>_TS_AI_MODELS[&#x27;vision&#x27;] = claude-sonnet-4-6, but TASK_MODEL[&#x27;anthropic&#x27;][&#x27;vision&#x27;] = claude-haiku-4-5</strong></td><td><code>bea_main.py:1505 vs ai_provider.py:46</code></td>
+<td>if `import ai_provider` throws, every vision call silently upgrades to Sonnet -- 3x input, 3x output price. Exactly the silent drift this baseline exists to stop</td><td class="c sev">HIGH</td></tr>
+<tr class="sevH"><td class="rid">D3</td>
+<td><strong>_log_ai_spend records the INTENDED lane, not the lane that answered; _token_cost is keyed on tier, not model</strong></td><td><code>bea_main.py:1671-1674, 1449-1454</code></td>
+<td>after any failover, spend is attributed to the wrong lane and costed at Anthropic&#x27;s rates. Post-failover cost figures are wrong by construction</td><td class="c sev">HIGH</td></tr>
+<tr class="sevH"><td class="rid">D4</td>
+<td><strong>POST /admin/flags changes the live lane for every AI feature with no log line and no audit row</strong></td><td><code>bea_main.py:13663-13701</code></td>
+<td>a lane change is undetectable after the fact. Its neighbour POST /admin/ai-restore 15 lines earlier DOES log</td><td class="c sev">HIGH</td></tr>
+<tr class="sevH"><td class="rid">D5</td>
+<td><strong>Fallback chain order is the insertion order of a Python dict literal; no cost check anywhere in complete()</strong></td><td><code>ai_provider.py:197, 236-238</code></td>
+<td>an outage moves traffic to the next lane with nothing asking its price</td><td class="c sev">HIGH</td></tr>
+<tr class="sevM"><td class="rid">D6</td>
+<td><strong>Batch-card lister forwards up to 10 client images with NO resize</strong></td><td><code>bea_main.py:15983</code></td>
+<td>the largest uncontrolled input-token surface in the app -- input size is set by the caller</td><td class="c sev">MEDIUM</td></tr>
+<tr class="sevM"><td class="rid">D7</td>
+<td><strong>ai_scoreboard FALLBACK_PRICE has scaleway at (0.40,2.00) vs card EUR 1.5/7.5, and ai_price_card.json is NOT in the deploy manifest</strong></td><td><code>ai_scoreboard.py:75; ops/autodeploy/deploy_manifest.txt</code></td>
+<td>if the card was never hand-placed on the server, the scoreboard ranks scaleway as cheapest on every tier -- ~4.3x understated</td><td class="c sev">MEDIUM</td></tr>
+<tr class="sevM"><td class="rid">D8</td>
+<td><strong>AdvertAgent is entirely outside the perimeter -- no seam, 10 hardcoded claude-sonnet-4-6 sites, unregistered claude-opus-4-6 rate row, no downscale, max_searches to 20 at $0.01</strong></td><td><code>AdvertAgent/service/advert_agent.py:33-38, 115-649, 785-794</code></td>
+<td>none of this baseline reaches it</td><td class="c sev">MEDIUM</td></tr>
+</tbody></table>
+
+<h2>5 &nbsp;Pinned constants &mdash; the cost drivers that are not models</h2>
+<p class="sub">Changing any of these moves cost with every model id untouched. The 896&rarr;1344 probe
+change on 11 Jul 2026 raised anon-scan input tokens ~2.2&times; across four call sites and is recorded
+only as an inline code comment.</p>
+<div class="two">
+<table><thead><tr><th>Pinned constant</th><th>Value</th></tr></thead><tbody><tr><td>vision probe max px</td><td class='c'><b>1344</b></td></tr>
+<tr><td>orient probe max px</td><td class='c'><b>512</b></td></tr>
+<tr><td>vision draft max side</td><td class='c'><b>1568</b></td></tr>
+<tr><td>vision draft max photos</td><td class='c'><b>12</b></td></tr>
+<tr><td>batch cards max images</td><td class='c'><b>10</b></td></tr>
+<tr><td>grade photo limit</td><td class='c'><b>3</b></td></tr>
+<tr><td>anon refine max regions</td><td class='c'><b>8</b></td></tr>
+<tr><td>anon scan max regions</td><td class='c'><b>12</b></td></tr>
+<tr><td>max_tokens ceiling — haiku tier</td><td class='c'><b>1800</b></td></tr>
+<tr><td>max_tokens ceiling — sonnet tier</td><td class='c'><b>1400</b></td></tr>
+<tr><td>max_tokens ceiling — vision tier</td><td class='c'><b>2000</b></td></tr>
+<tr><td>max_tokens ceiling — triage tier</td><td class='c'><b>400</b></td></tr></tbody></table>
+<div>
+<div class="rule"><h3>Why the envelope, not just the model</h3>
+<p>The same model at 10 uncapped client images costs several times the same model at 10 images
+capped to 1344px. A register that pinned only the model id would have reported &ldquo;no change&rdquo;
+throughout. That is the specific failure this baseline is built to prevent.</p></div>
+<div class="rule" style="border-left-color:#B3261E"><h3>The batch-card lister has no resize</h3>
+<p><code>bea_main.py:15983</code> takes up to 10 client images and forwards them <em>as received</em>.
+It is the largest uncontrolled input-token surface in the app &mdash; the caller sets the cost.</p></div>
+</div>
+</div>
+</main>
+<footer>
+Built 14 Aug 2026 from David&rsquo;s ruling that AI model selection cannot be automated while a silent
+change can move profit from good to very bad. Canon: <code>AI_BASELINE.json</code>,
+<code>scripts/ai_baseline_check.py</code>, <code>ai_price_card.json</code>.
+</footer>
+</body></html>

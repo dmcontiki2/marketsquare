@@ -45,6 +45,7 @@ def find_site():
         for pat in pats:
             for c in glob.glob(pat):
                 if not os.path.isfile(c): continue
+                if os.path.basename(c).find(".bak") != -1: continue   # NGINX-BAK-LOOP-1
                 try: t = open(c, encoding="utf-8", errors="replace").read()
                 except Exception: continue
                 if "trustsquare.co" in t and "server_name" in t and "127.0.0.1:8000" in t:
@@ -122,7 +123,10 @@ def main():
     new = ANCHOR.sub(lambda m: BLOCK, text, count=1)
     if not FUNCTIONAL.search(new):
         say("FAILED: substitution did not produce a functional gate"); return 4
-    backup = real + ".bak-gate2-" + TS
+    # NGINX-BAK-LOOP-1: backup goes OUTSIDE the globbed directory (see 018).
+    _bakdir = "/root/nginx-site-backups"
+    os.makedirs(_bakdir, exist_ok=True)
+    backup = os.path.join(_bakdir, os.path.basename(real) + ".bak-gate2-" + TS)
     shutil.copyfile(real, backup); say("backup: " + backup)
     open(real, "w", encoding="utf-8").write(new)
     t = subprocess.run(["nginx", "-t"], capture_output=True, text=True)

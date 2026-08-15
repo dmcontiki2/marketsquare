@@ -60,10 +60,40 @@ A single global chain is wrong because capability differs — **vision is the co
 (8 of 22 features need it: photo orient/draft, anon scans, vision-draft, card grading, KYC).
 Each task tier gets its own ordered chain; the circuit breaker trips per provider·task.
 
-    text-fast   (haiku tier):   anthropic → openai → mistral-small → hosted-open (Kimi/DeepSeek/Qwen) → karoo-qwen
-    text-reason (sonnet tier):  anthropic → openai → mistral-large → hosted-open → karoo
-    vision      :               anthropic → openai → mistral-small(pixtral) → qwen3-vl (hosted → karoo)
-    triage      :               anthropic → openai → deterministic rules (already exists for search)
+    text-fast   (haiku tier):   openai → anthropic → mistral-small(scaleway EU) → grok(4th, capped) → hosted-open → karoo-qwen
+    text-reason (sonnet tier):  openai → anthropic → mistral-large(scaleway EU) → grok(4th, capped) → hosted-open → karoo
+    vision      :               openai → anthropic → mistral-small(pixtral, scaleway EU) → qwen3-vl (hosted → karoo)
+    triage      :               openai → anthropic → deterministic rules (already exists for search)
+
+**Standing lane = OPENAI (David's ruling, 14 Aug 2026).** The reason is VENDOR INDEPENDENCE, not
+price: Anthropic supplies the guidance layer — Claude authored most of this codebase and acts as the
+CEO/COO-level advisor — so having the same vendor also perform the outsourced production work makes
+judgement and execution a single correlated dependency. This extends Addendum 1's auditor-independence
+argument from REVIEW to EXECUTION, and supersedes "Staying with Claude" as the STANDING LANE only;
+Claude remains the guidance/harness layer, which was never the thing being procured. The 2026-08-01.1
+funnel independently ranks gpt-5.6-luna first on haiku, triage and vision (+78/78/79%, golden set
+passed) — cost supports the ruling, it is not the reason for it. Full detail: decision note Addendum 11.
+
+**Grok slot (David's ruling, 14 Aug 2026) — FOURTH, text tiers only, hard-capped.** Grok 4.6
+(released 12 Aug 2026) ties GPT-5.6 Sol on Intelligence Index (61) at $2/$6 against Sol's $5/$30,
+so on cost-per-capability it argues against the OPENAI slot, not Scaleway's. It is placed fourth
+anyway and Scaleway's EU slot is untouched, because Scaleway is not in this chain for capability
+or price — Addendum 1 put it there for EU JURISDICTION. Promoting a third US provider above it
+would leave three US lanes before any non-US one, and a T3 account action (ban, suspension, key
+revocation — the class that "won't self-heal") is precisely the failure that hits all three at once.
+Diversity of jurisdiction is the point of the tail, not diversity of vendor.
+
+- **NOT in the vision chain.** Vision is the binding constraint (8 of 22 features). Sources
+  conflict on Grok 4.6's vision support — some document jpg/png image input plainly, one analysis
+  records vision/audio/video as unmentioned in the 4.6 disclosures. Unresolved = not eligible.
+- **HARD CONTEXT CAP, mandatory before any wiring.** Past 200K tokens xAI rebills the ENTIRE
+  request at $4/M in and $12/M output — retroactively, not marginally. Any Grok adapter must
+  refuse or truncate before 200K; an uncapped lane is unbudgetable by design (see the pricing rule
+  in the decision note, Addendum 10).
+- **EU residency unconfirmed** — availability in the EU is not data residency. Verify processing
+  location and retention before Grok carries anything jurisdiction-sensitive.
+- **Not wired before launch** (Addendum 4: don't change tools mid-design). This is a recorded
+  placement and a trial candidate, not a provisioned lane.
 
 Every chain ends in a **deterministic, zero-AI fallback** where one exists (search
 interpret, market notes can degrade to templates) — the platform must limp, not die,

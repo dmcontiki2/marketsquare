@@ -337,3 +337,90 @@ David's ruling, recorded in-session after the EU-availability survey:
    any Moonshot model, capturing first-party price on sight. On sight: record price
    here + Model Register funnel per Addendum 9 (price triggers EVALUATION, never a
    switch); the golden-set gate still stands before any lane use.
+
+---
+
+## Addendum 10 (14 Aug 2026) — Grok placed FOURTH; and the retroactive-repricing rule
+
+**David's ruling, in-session:** Grok goes in as a **fourth** text-tier lane. Scaleway's EU slot is
+NOT demoted. David's words on the pricing discovery: *"I did not know about the retroactive cost
+change and that is actually a very bad feature."*
+
+**What was weighed.** Grok 4.6 (xAI, released 12 Aug 2026) is $2/M in, $6/M out with Intelligence
+Index 61 — a tie with GPT-5.6 Sol, which lists at $5/M / $30/M. On cost-per-capability the honest
+comparison is therefore against the **OpenAI slot**, not Scaleway's; Scaleway does not compete on
+capability or price and never did. It is fourth regardless, because the tail of the chain exists
+for **jurisdictional diversity**: promoting a third US provider above the EU lane would put three
+US lanes ahead of any non-US one, and the T3 class (ban / suspension / key revocation, which by
+definition "won't self-heal") is exactly the event that takes all three together. Vendor diversity
+is not the same as jurisdiction diversity, and only the second one survives a T3.
+
+**NEW STANDING RULE — retroactive repricing disqualifies a lane from carrying uncapped work.**
+A generalisation of the existing bar on percentage-of-value costs (1 Aug 2026), and it applies to
+every future vendor, not to Grok specifically:
+
+> A price that can re-rate work ALREADY PERFORMED is unbudgetable in the same way a
+> percentage-of-value cost is. Marginal tiering is fine — cross a threshold, pay more for what
+> follows. Retroactive tiering is not: xAI rebills the ENTIRE request at $4/$12 once a prompt
+> passes 200K tokens, so the last token can double the cost of the first. Any lane with a
+> retroactive cliff may be used ONLY behind a hard cap that makes the cliff unreachable. No cap,
+> no lane. The adapter refuses or truncates; it never discovers the cliff by paying for it.
+
+**Conditions on the Grok slot** (all must clear before it is wired, none before launch —
+Addendum 4 stands, don't change tools mid-design):
+
+1. Hard context cap below 200K, enforced in the adapter, asserted by a test.
+2. Vision support settled. Sources conflict — some document jpg/png image input; one analysis
+   records vision/audio/video as unmentioned in the 4.6 disclosures. Vision is the binding
+   constraint (8 of 22 features), so unresolved means NOT in the vision chain.
+3. EU data residency verified, or Grok never carries jurisdiction-sensitive work. Availability
+   in the EU is not residency.
+
+**Also noted, unrelated to Grok:** Claude Sonnet 5's $2/M input is INTRODUCTORY through
+31 Aug 2026 and becomes $3/M on 1 Sep 2026. That moves the primary lane's baseline ~2.5 weeks
+from this ruling — budget from $3, not $2.
+
+**Claude's declared bias:** Anthropic is Claude's own vendor and its recommendation was stated
+with that on the record, per CLAUDE.md's model-selection rule. The recommendation given was: trial
+Grok as a fourth lane, leave Scaleway, do not wire before launch — and if the trial holds, the
+case to make afterwards is Grok displacing OpenAI on cost-per-capability. David took the placement.
+
+---
+
+## Addendum 11 (14 Aug 2026) — STANDING LANE MOVES TO OPENAI; and blockers that were only ever analysis
+
+**David's ruling, in-session.** The standing lane becomes **OpenAI**. This supersedes Addendum 1's
+"Staying with Claude" **as the standing lane only** — Claude remains the guidance/harness layer,
+which was never the thing being procured.
+
+**The reason is independence, not price.** David's words: this "will also ensure we don't use
+Anthropic as the CEO/COO/Guidance and also then outsource our work to Anthropic." Claude authored
+most of this codebase and advises at CEO/COO level; letting the same vendor also perform the
+production work makes judgement and execution one correlated dependency. Addendum 1 already accepted
+this logic for REVIEW — "Claude auditing Claude has correlated blind spots… a second-vendor auditor
+breaks that correlation" — and this ruling extends the identical argument to EXECUTION. It is the
+stronger case, and it stands with or without the cost numbers.
+
+**Cost independently agrees but did not drive it.** The 2026-08-01.1 funnel ranks gpt-5.6-luna first
+on haiku (+78%), triage (+78%) and vision (+79%), all golden-set passed.
+
+**Noted exception, recorded not relitigated:** the sonnet tier reads +25% (gpt-5.6-terra vs
+claude-sonnet-4-6), below the 30% materiality bar. It moves anyway, because a WHOLE-LANE independence
+ruling is a different decision class from a per-tier procurement switch. The 30% anti-jitter bar
+continues to govern per-tier procurement moves — it is not weakened by this.
+
+**AMENDMENT — the $50/90d absolute floor is a POST-LAUNCH test, not a pre-launch gate.**
+David's ruling, and he is right on the mechanics: that floor requires spend-log volumes, which by
+definition cannot exist before launch. Applied pre-launch it is not a test that can be passed or
+failed — it is a permanent block. His framing: these were "discussions that then became hammers to
+keep us pegged" — analysis that hardened into a secondary requirement. From first revenue onward the
+floor applies as written; before that it is INFORMATIONAL and never blocks. Recorded on the card
+(`ai_price_card.json` → `policy.anti_jitter`), so the rule travels with the data as Addendum 8 intends.
+
+**Standing principle taken from this exchange:** an analysis output is not a requirement. A gate that
+cannot be satisfied in the current phase is a blocker masquerading as rigour, and it should be
+phase-scoped when written — the same fault class as a guard asserting an implementation detail rather
+than an invariant (see DRIFT-CACHEBUST-1 and the stale maint-scope guard, both 14 Aug).
+
+**Resulting order:** 1. OpenAI (standing) · 2. Anthropic · 3. Scaleway EU · 4. Grok (capped, text
+tiers only, not wired pre-launch).

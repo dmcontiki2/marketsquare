@@ -1,288 +1,298 @@
 {
-  "_doc": "THE MODEL REGISTER — single source of AI price AND capability truth (Live-Values Doctrine Addendum 7 + Decision-Gate Process Addendum 8, David 31 Jul 2026). No document, decision or tool may cite an AI price or capability score that is not on this card. Update = re-verify against live sources, bump verified_at, note the source. RG-0018 (freshness/coverage) and RG-0019 (live-switch match) enforce it. Prices per MILLION tokens. v3: the seven Peer validation corrections adopted (Addendum 9) — effort-matched capability, gate tuples per tier, first-party sources, EUR-native budgeting, absolute materiality floor, executable rails specified for P2a.",
-  "version": "2026-08-01.1",
-  "verified_at": "2026-08-01",
-  "active_lane": "anthropic",
-  "policy": {
-    "funnel": [
-      "1. VALUE PROPOSES: rank models per task tier by value score = AA index points per (USD per 1k calls, mid shape). Pure economics, no sentiment.",
-      "2. FLOOR: a model below the tier's capability floor is out regardless of price.",
-      "3. FITNESS DISPOSES: the golden set (at a PINNED effort level) is a binary accept/reject on OUR use cases — it never re-ranks. Cheapest passer wins the tier; if #1 fails, try #2 — never lower the bar.",
-      "4. TRIGGERS ONLY: the funnel convenes on measured failure, forced exit (ban / deprecation / repricing), or a deliberate review — sitting models are not re-auditioned continuously (Addendum 3)."
-    ],
-    "anti_jitter": {
-      "min_cost_delta_pct": 30,
-      "min_sustained_days": 30,
-      "min_card_refreshes": 2,
-      "rule": "A PROCUREMENT switch requires REAL added or lost value: >=30% sustained cost saving at an equal-or-better gate result, or a measured capability regression on our tasks — held across >=2 card refreshes (>=30 days). 'Two cents cheaper today' NEVER moves production. FAILOVER switches (T1-T3) are exempt: they are ops, not procurement, and follow the P2 breaker + recovery doctrine (dropouts auto-recover, bans manual). CORRECTION 5: the relative bar alone is insufficient — a switch also requires a projected ABSOLUTE net saving >= $50 over 90 days AFTER evaluation, migration and shadow-period costs (amendable; requires spend-log volume data to compute — until volumes exist this floor is formally UNMET).",
-      "min_net_saving_usd_90d": 50
-    },
-    "update_triggers": [
-      "SCHEDULED: card older than 45 days -> RG-0018 RED (blocks until re-verified).",
-      "MANUAL SWITCH: dashboard Activate/Restore changes the live lane -> RG-0019 RED until active_lane on this card matches live /flags. Update the card the same working day.",
-      "AUTO-REPLACE: a P2 breaker fail-over -> alert fires now; when P2b adds the breaker block to /flags, RG-0019 extends to compare it too.",
-      "GOLDEN SET RUN: eval completed -> update that model's golden_set block the same day (pin the effort level tested).",
-      "VENDOR EVENT: repricing / deprecation / ban notice -> re-verify affected entries immediately (T4b/T6 class)."
-    ],
-    "capability_floor": "Per tier, the floor IS the golden set: drafts an honest listing, honors anonymity rules, valid JSON, no invention. AA index is the independent capability axis for RANKING; the golden set is the ACCEPTANCE gate — both are required, neither substitutes for the other.",
-    "effort_matching": "CORRECTION 1 (Peer validation 31 Jul): a value ranking is DECISION-GRADE only where the AA score's effort mode matches the production effort AND the golden set + token profile were run at that same effort. Mismatched scores are shown as INDICATIVE (*) and cannot authorize a switch. Cards must store: effort, reasoning/output budgets, measured token distributions (from spend log), effort-matched benchmark where one exists.",
-    "gate_tuple_rule": "CORRECTION 3: a gate pass is the tuple (model, task tier, prompt/eval version, effort/reasoning budget, sampling params) — never a model-wide boolean. The funnel may only select a model for a tier where that exact tuple passed. Recorded per model under gate_by_tier.",
-    "cost_rails_required": "CORRECTION 2 (P2a REQUIREMENT): rails must be EXECUTABLE, not reconciliation practice. Per task: max request count, max retries, max fallback attempts, input/output/reasoning token budgets, currency budget — with the maximum possible charge computable BEFORE dispatch. Ships with the P2a breaker build.",
-    "eur_budget_rule": "CORRECTION 6: Scaleway costs are an EUR ESTIMATE until billed consumption is observed. Budgets and alerts for EUR lanes are set IN EUR; the FX conversion is for cross-provider comparison only. Free-tier monthly cap and expiry to be recorded when found; post-credit marginal rate = the listed EUR prices.",
-    "source_rule": "CORRECTION 7: every price entry needs a FIRST-PARTY source URL and captured price text; third-party pages are discovery only, never authoritative. invoice_reconciled flips true only when billed consumption matches the card rate.",
-    "governing_switch_policy": "CORRECTION 4 — DAVID'S RULING (Addendum 9): Option 2, cost-first AFTER qualification. Addendum 3 is expressly NARROWED, not repealed: a price move alone triggers EVALUATION (golden set, effort-matched), never a switch; a switch requires qualification + both materiality bars + the sustained hold. Stability remains the default state; value, once proven and material, may change it."
+ "_doc": "THE MODEL REGISTER — single source of AI price AND capability truth (Live-Values Doctrine Addendum 7 + Decision-Gate Process Addendum 8, David 31 Jul 2026). No document, decision or tool may cite an AI price or capability score that is not on this card. Update = re-verify against live sources, bump verified_at, note the source. RG-0018 (freshness/coverage) and RG-0019 (live-switch match) enforce it. Prices per MILLION tokens. v3: the seven Peer validation corrections adopted (Addendum 9) — effort-matched capability, gate tuples per tier, first-party sources, EUR-native budgeting, absolute materiality floor, executable rails specified for P2a.",
+ "version": "2026-08-01.1",
+ "verified_at": "2026-08-01",
+ "active_lane": "openai",
+ "policy": {
+  "funnel": [
+   "1. VALUE PROPOSES: rank models per task tier by value score = AA index points per (USD per 1k calls, mid shape). Pure economics, no sentiment.",
+   "2. FLOOR: a model below the tier's capability floor is out regardless of price.",
+   "3. FITNESS DISPOSES: the golden set (at a PINNED effort level) is a binary accept/reject on OUR use cases — it never re-ranks. Cheapest passer wins the tier; if #1 fails, try #2 — never lower the bar.",
+   "4. TRIGGERS ONLY: the funnel convenes on measured failure, forced exit (ban / deprecation / repricing), or a deliberate review — sitting models are not re-auditioned continuously (Addendum 3)."
+  ],
+  "anti_jitter": {
+   "min_cost_delta_pct": 30,
+   "min_sustained_days": 30,
+   "min_card_refreshes": 2,
+   "rule": "A PROCUREMENT switch requires REAL added or lost value: >=30% sustained cost saving at an equal-or-better gate result, or a measured capability regression on our tasks — held across >=2 card refreshes (>=30 days). 'Two cents cheaper today' NEVER moves production. FAILOVER switches (T1-T3) are exempt: they are ops, not procurement, and follow the P2 breaker + recovery doctrine (dropouts auto-recover, bans manual). CORRECTION 5: the relative bar alone is insufficient — a switch also requires a projected ABSOLUTE net saving >= $50 over 90 days AFTER evaluation, migration and shadow-period costs (amendable). DAVID'S AMENDMENT 14 Aug 2026: this floor is a POST-LAUNCH test. It requires spend-log volumes, which by definition cannot exist pre-launch, so applying it before first revenue makes it a permanent blocker rather than a test -- the exact 'analysis that hardened into a secondary requirement' this process was meant to avoid. It applies from first revenue onward; before that it is INFORMATIONAL and never blocks..",
+   "min_net_saving_usd_90d": 50,
+   "min_net_saving_usd_90d_applies_from": "first-revenue (post-launch); pre-launch this floor is NOT a blocker"
   },
-  "fx": {
-    "EUR_USD": 1.1,
-    "as_of": "2026-07-31",
-    "buffer_pct": 5,
-    "note": "Approximate rate + buffer for EUR lanes (a USD rail cannot hard-bound unbuffered EUR spend)."
-  },
-  "providers": {
-    "anthropic": {
-      "models": {
-        "claude-haiku-4-5-20251001": {
-          "in": 1.0,
-          "out": 5.0,
-          "ccy": "USD",
-          "source": "platform.claude.com/docs/en/about-claude/pricing (FIRST-PARTY, captured 1 Aug 2026: '$1 / MTok in, $5 / MTok out')",
-          "aa_index": {
-            "score": 29.58,
-            "variant": "Haiku 4.5 (Reasoning)",
-            "source": "benchmarklist.com AA v4.1 leaderboard",
-            "date": "2026-07-31",
-            "caveat": "benchmarked in reasoning mode; app runs default",
-            "effort": "reasoning",
-            "effort_matched": false
-          },
-          "golden_set": {
-            "status": "production",
-            "detail": "months live, prompts tuned (Addendum 4)",
-            "date": "2026-07-18"
-          },
-          "gate": "production",
-          "source_kind": "first-party",
-          "invoice_reconciled": false,
-          "production_effort": "default (non-reasoning)",
-          "budget_ccy": "USD",
-          "token_profile": null,
-          "budgets": null,
-          "gate_by_tier": {
-            "haiku": {
-              "status": "production",
-              "prompt_version": "not yet versioned — record at next eval",
-              "effort": "default (non-reasoning)",
-              "date": "2026-07-18"
-            },
-            "vision": {
-              "status": "production",
-              "prompt_version": "not yet versioned — record at next eval",
-              "effort": "default (non-reasoning)",
-              "date": "2026-07-18"
-            },
-            "triage": {
-              "status": "production",
-              "prompt_version": "not yet versioned — record at next eval",
-              "effort": "default (non-reasoning)",
-              "date": "2026-07-18"
-            }
-          }
-        },
-        "claude-sonnet-4-6": {
-          "in": 3.0,
-          "out": 15.0,
-          "ccy": "USD",
-          "source": "platform.claude.com/docs/en/about-claude/pricing (FIRST-PARTY, captured 1 Aug 2026: '$3 / MTok in, $15 / MTok out')",
-          "aa_index": {
-            "score": 47.21,
-            "variant": "Sonnet 4.6 (Adaptive Reasoning, Max Effort)",
-            "source": "benchmarklist.com AA v4.1 leaderboard",
-            "date": "2026-07-31",
-            "caveat": "max-effort score; app runs default effort",
-            "effort": "adaptive reasoning, max",
-            "effort_matched": false
-          },
-          "golden_set": {
-            "status": "production",
-            "detail": "quality-ceiling reference for advert copy",
-            "date": "2026-07-18"
-          },
-          "gate": "production",
-          "note": "Paid 5T deep-dives + agency scan only. Sonnet 5 intro $2/$10 ends 31 Aug 2026 — dated upgrade decision, not automatic.",
-          "source_kind": "first-party",
-          "invoice_reconciled": false,
-          "production_effort": "default",
-          "budget_ccy": "USD",
-          "token_profile": null,
-          "budgets": null,
-          "gate_by_tier": {
-            "sonnet": {
-              "status": "production",
-              "prompt_version": "not yet versioned — record at next eval",
-              "effort": "default",
-              "date": "2026-07-18"
-            }
-          }
-        }
-      }
-    },
-    "scaleway": {
-      "models": {
-        "mistral-medium-3.5-128b": {
-          "in": 1.5,
-          "out": 7.5,
-          "ccy": "EUR",
-          "source": "scaleway.com pricing page (fetched 31 Jul 2026) — STANDS as live value; console rate UNOBSERVABLE while the free tier nets billing to EUR 0 (Cost Manager verified 31 Jul: 2026 usage EUR 0.12, free-tier credit -0.12). Reconciliation confirms the rate when real priced consumption appears.",
-          "aa_index": {
-            "score": 29.95,
-            "variant": "Mistral Medium 3.5",
-            "source": "benchmarklist.com AA v4.1 leaderboard",
-            "date": "2026-07-31",
-            "caveat": "parity with Haiku 4.5 (29.58) — independently confirms the 18 Jul golden-set parity",
-            "effort": "default",
-            "effort_matched": true
-          },
-          "golden_set": {
-            "status": "passed",
-            "detail": "11/11 JSON incl. 2/2 vision (small sample)",
-            "date": "2026-07-18"
-          },
-          "gate": "golden-set-passed",
-          "note": "CORRECTION of 18 Jul '40% of Haiku' (likely inherited mistral-small's card): ~1.65x Haiku at listed rates. Role: CONTINUITY/JURISDICTION standby, not a cheap lane. FREE TIER exists and absorbed all 2026 usage — monthly cap still to be recorded.",
-          "source_kind": "first-party",
-          "invoice_reconciled": false,
-          "production_effort": "default (instruct)",
-          "budget_ccy": "EUR",
-          "token_profile": null,
-          "budgets": null,
-          "free_tier": {
-            "exists": true,
-            "monthly_cap": null,
-            "expiry": null,
-            "note": "absorbed all 2026 usage (EUR 0.12 credited); cap/expiry to record; post-credit marginal rate = listed EUR prices"
-          },
-          "gate_by_tier": {
-            "haiku": {
-              "status": "passed",
-              "prompt_version": "18-Jul eval set (pre-versioning)",
-              "effort": "default (instruct)",
-              "date": "2026-07-18",
-              "caveat": "20-call sample; vision 2/2 only"
-            },
-            "sonnet": {
-              "status": "passed",
-              "prompt_version": "18-Jul eval set (pre-versioning)",
-              "effort": "default (instruct)",
-              "date": "2026-07-18",
-              "caveat": "20-call sample; vision 2/2 only"
-            },
-            "vision": {
-              "status": "passed",
-              "prompt_version": "18-Jul eval set (pre-versioning)",
-              "effort": "default (instruct)",
-              "date": "2026-07-18",
-              "caveat": "20-call sample; vision 2/2 only"
-            },
-            "triage": {
-              "status": "passed",
-              "prompt_version": "18-Jul eval set (pre-versioning)",
-              "effort": "default (instruct)",
-              "date": "2026-07-18",
-              "caveat": "20-call sample; vision 2/2 only"
-            }
-          }
-        }
-      }
-    },
-    "openai": {
-      "models": {
-        "gpt-5.6-luna": {
-          "in": 0.2,
-          "out": 1.2,
-          "ccy": "USD",
-          "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026; 80% cut 30 Jul)",
-          "aa_index": {
-            "score": 51.24,
-            "variant": "Luna (max effort)",
-            "source": "benchmarklist.com AA v4.1 leaderboard",
-            "date": "2026-07-31",
-            "caveat": "51.24 at MAX effort but 33 at LOW — the golden set MUST pin the effort level we would run",
-            "effort": "max",
-            "effort_matched": false
-          },
-          "golden_set": {
-            "status": "passed",
-            "detail": "GS-OAI-V1 (1 Aug 2026): 8/8 on production prompts incl. 2-photo real vision draft (read the 9ct hallmark, flagged it unverified) and full anonymity scrub; search-interpret passes ONLY at reasoning_effort=none",
-            "date": "2026-08-01"
-          },
-          "gate": "golden-set-passed",
-          "source_kind": "first-party",
-          "invoice_reconciled": false,
-          "production_effort": "reasoning_effort=\"none\" (pinned by GS-OAI-V1 — default effort FAILED the 120-token search-interpret budget: 100% reasoning burn)",
-          "budget_ccy": "USD",
-          "token_profile": null,
-          "budgets": null,
-          "gate_by_tier": {
-            "haiku": {
-              "status": "passed",
-              "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
-              "effort": "reasoning_effort=\"none\"",
-              "date": "2026-08-01",
-              "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
-            },
-            "vision": {
-              "status": "passed",
-              "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
-              "effort": "reasoning_effort=\"none\"",
-              "date": "2026-08-01",
-              "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
-            },
-            "triage": {
-              "status": "passed",
-              "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
-              "effort": "reasoning_effort=\"none\"",
-              "date": "2026-08-01",
-              "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
-            }
-          }
-        },
-        "gpt-5.6-terra": {
-          "in": 2.0,
-          "out": 12.0,
-          "ccy": "USD",
-          "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026)",
-          "aa_index": {
-            "score": 54.95,
-            "variant": "Terra (max effort)",
-            "source": "benchmarklist.com AA v4.1 leaderboard",
-            "date": "2026-07-31",
-            "caveat": "max-effort score",
-            "effort": "max",
-            "effort_matched": false
-          },
-          "golden_set": {
-            "status": "passed",
-            "detail": "GS-OAI-V1 (1 Aug 2026): 3/3 sonnet-tier tasks — hard anonymity scrub, comps-bounded price check (no invention), photo anonymiser scan",
-            "date": "2026-08-01"
-          },
-          "gate": "golden-set-passed",
-          "source_kind": "first-party",
-          "invoice_reconciled": false,
-          "production_effort": "reasoning_effort=\"none\" (seam pins all gpt-5 lanes; Terra passed its tasks with near-zero burn at default too)",
-          "budget_ccy": "USD",
-          "token_profile": null,
-          "budgets": null,
-          "gate_by_tier": {
-            "sonnet": {
-              "status": "passed",
-              "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
-              "effort": "reasoning_effort=\"none\"",
-              "date": "2026-08-01",
-              "caveat": "3-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
-            }
-          }
-        }
-      }
-    }
+  "update_triggers": [
+   "SCHEDULED: card older than 45 days -> RG-0018 RED (blocks until re-verified).",
+   "MANUAL SWITCH: dashboard Activate/Restore changes the live lane -> RG-0019 RED until active_lane on this card matches live /flags. Update the card the same working day.",
+   "AUTO-REPLACE: a P2 breaker fail-over -> alert fires now; when P2b adds the breaker block to /flags, RG-0019 extends to compare it too.",
+   "GOLDEN SET RUN: eval completed -> update that model's golden_set block the same day (pin the effort level tested).",
+   "VENDOR EVENT: repricing / deprecation / ban notice -> re-verify affected entries immediately (T4b/T6 class)."
+  ],
+  "capability_floor": "Per tier, the floor IS the golden set: drafts an honest listing, honors anonymity rules, valid JSON, no invention. AA index is the independent capability axis for RANKING; the golden set is the ACCEPTANCE gate — both are required, neither substitutes for the other.",
+  "effort_matching": "CORRECTION 1 (Peer validation 31 Jul): a value ranking is DECISION-GRADE only where the AA score's effort mode matches the production effort AND the golden set + token profile were run at that same effort. Mismatched scores are shown as INDICATIVE (*) and cannot authorize a switch. Cards must store: effort, reasoning/output budgets, measured token distributions (from spend log), effort-matched benchmark where one exists.",
+  "gate_tuple_rule": "CORRECTION 3: a gate pass is the tuple (model, task tier, prompt/eval version, effort/reasoning budget, sampling params) — never a model-wide boolean. The funnel may only select a model for a tier where that exact tuple passed. Recorded per model under gate_by_tier.",
+  "cost_rails_required": "CORRECTION 2 (P2a REQUIREMENT): rails must be EXECUTABLE, not reconciliation practice. Per task: max request count, max retries, max fallback attempts, input/output/reasoning token budgets, currency budget — with the maximum possible charge computable BEFORE dispatch. Ships with the P2a breaker build.",
+  "eur_budget_rule": "CORRECTION 6: Scaleway costs are an EUR ESTIMATE until billed consumption is observed. Budgets and alerts for EUR lanes are set IN EUR; the FX conversion is for cross-provider comparison only. Free-tier monthly cap and expiry to be recorded when found; post-credit marginal rate = the listed EUR prices.",
+  "source_rule": "CORRECTION 7: every price entry needs a FIRST-PARTY source URL and captured price text; third-party pages are discovery only, never authoritative. invoice_reconciled flips true only when billed consumption matches the card rate.",
+  "governing_switch_policy": "CORRECTION 4 — DAVID'S RULING (Addendum 9): Option 2, cost-first AFTER qualification. Addendum 3 is expressly NARROWED, not repealed: a price move alone triggers EVALUATION (golden set, effort-matched), never a switch; a switch requires qualification + both materiality bars + the sustained hold. Stability remains the default state; value, once proven and material, may change it.",
+  "standing_lane_ruling": {
+   "date": "2026-08-14",
+   "by": "David",
+   "lane": "openai",
+   "primary_reason": "VENDOR INDEPENDENCE, not price. Anthropic supplies the guidance layer (Claude authored most of this codebase and acts as CEO/COO-level advisor); having the same vendor also perform the outsourced production work creates a single correlated dependency across both judgement and execution. This extends Addendum 1's auditor-independence rationale from REVIEW to EXECUTION.",
+   "supporting": "The 2026-08-01.1 funnel independently ranks gpt-5.6-luna first on haiku, triage and vision at +78/78/79% cost delta, all passing the golden set. Cost supports the ruling; it is not the reason for it.",
+   "noted_exception": "sonnet tier reads +25% (gpt-5.6-terra vs claude-sonnet-4-6), below the 30% materiality bar. Moved anyway as part of a WHOLE-LANE independence ruling, which is a different decision class from a per-tier procurement switch. The 30% bar continues to govern per-tier procurement moves.",
+   "supersedes": "Addendum 1's 'Staying with Claude' as the STANDING LANE. Claude remains the guidance/harness layer; that was never the thing being procured."
   }
+ },
+ "fx": {
+  "EUR_USD": 1.1,
+  "as_of": "2026-07-31",
+  "buffer_pct": 5,
+  "note": "Approximate rate + buffer for EUR lanes (a USD rail cannot hard-bound unbuffered EUR spend)."
+ },
+ "providers": {
+  "anthropic": {
+   "models": {
+    "claude-haiku-4-5-20251001": {
+     "in": 1.0,
+     "out": 5.0,
+     "ccy": "USD",
+     "source": "platform.claude.com/docs/en/about-claude/pricing (FIRST-PARTY, captured 1 Aug 2026: '$1 / MTok in, $5 / MTok out')",
+     "aa_index": {
+      "score": 29.58,
+      "variant": "Haiku 4.5 (Reasoning)",
+      "source": "benchmarklist.com AA v4.1 leaderboard",
+      "date": "2026-07-31",
+      "caveat": "benchmarked in reasoning mode; app runs default",
+      "effort": "reasoning",
+      "effort_matched": false
+     },
+     "golden_set": {
+      "status": "production",
+      "detail": "months live, prompts tuned (Addendum 4)",
+      "date": "2026-07-18"
+     },
+     "gate": "production",
+     "source_kind": "first-party",
+     "invoice_reconciled": false,
+     "production_effort": "default (non-reasoning)",
+     "budget_ccy": "USD",
+     "token_profile": null,
+     "budgets": null,
+     "gate_by_tier": {
+      "haiku": {
+       "status": "production",
+       "prompt_version": "not yet versioned — record at next eval",
+       "effort": "default (non-reasoning)",
+       "date": "2026-07-18"
+      },
+      "vision": {
+       "status": "production",
+       "prompt_version": "not yet versioned — record at next eval",
+       "effort": "default (non-reasoning)",
+       "date": "2026-07-18"
+      },
+      "triage": {
+       "status": "production",
+       "prompt_version": "not yet versioned — record at next eval",
+       "effort": "default (non-reasoning)",
+       "date": "2026-07-18"
+      }
+     }
+    },
+    "claude-sonnet-4-6": {
+     "in": 3.0,
+     "out": 15.0,
+     "ccy": "USD",
+     "source": "platform.claude.com/docs/en/about-claude/pricing (FIRST-PARTY, captured 1 Aug 2026: '$3 / MTok in, $15 / MTok out')",
+     "aa_index": {
+      "score": 47.21,
+      "variant": "Sonnet 4.6 (Adaptive Reasoning, Max Effort)",
+      "source": "benchmarklist.com AA v4.1 leaderboard",
+      "date": "2026-07-31",
+      "caveat": "max-effort score; app runs default effort",
+      "effort": "adaptive reasoning, max",
+      "effort_matched": false
+     },
+     "golden_set": {
+      "status": "production",
+      "detail": "quality-ceiling reference for advert copy",
+      "date": "2026-07-18"
+     },
+     "gate": "production",
+     "note": "Paid 5T deep-dives + agency scan only. Sonnet 5 intro $2/$10 ends 31 Aug 2026 — dated upgrade decision, not automatic.",
+     "source_kind": "first-party",
+     "invoice_reconciled": false,
+     "production_effort": "default",
+     "budget_ccy": "USD",
+     "token_profile": null,
+     "budgets": null,
+     "gate_by_tier": {
+      "sonnet": {
+       "status": "production",
+       "prompt_version": "not yet versioned — record at next eval",
+       "effort": "default",
+       "date": "2026-07-18"
+      }
+     }
+    }
+   }
+  },
+  "scaleway": {
+   "models": {
+    "mistral-medium-3.5-128b": {
+     "in": 1.5,
+     "out": 7.5,
+     "ccy": "EUR",
+     "source": "scaleway.com pricing page (fetched 31 Jul 2026) — STANDS as live value; console rate UNOBSERVABLE while the free tier nets billing to EUR 0 (Cost Manager verified 31 Jul: 2026 usage EUR 0.12, free-tier credit -0.12). Reconciliation confirms the rate when real priced consumption appears.",
+     "aa_index": {
+      "score": 29.95,
+      "variant": "Mistral Medium 3.5",
+      "source": "benchmarklist.com AA v4.1 leaderboard",
+      "date": "2026-07-31",
+      "caveat": "parity with Haiku 4.5 (29.58) — independently confirms the 18 Jul golden-set parity",
+      "effort": "default",
+      "effort_matched": true
+     },
+     "golden_set": {
+      "status": "passed",
+      "detail": "11/11 JSON incl. 2/2 vision (small sample)",
+      "date": "2026-07-18"
+     },
+     "gate": "golden-set-passed",
+     "note": "CORRECTION of 18 Jul '40% of Haiku' (likely inherited mistral-small's card): ~1.65x Haiku at listed rates. Role: CONTINUITY/JURISDICTION standby, not a cheap lane. FREE TIER exists and absorbed all 2026 usage — monthly cap still to be recorded.",
+     "source_kind": "first-party",
+     "invoice_reconciled": false,
+     "production_effort": "default (instruct)",
+     "budget_ccy": "EUR",
+     "token_profile": null,
+     "budgets": null,
+     "free_tier": {
+      "exists": true,
+      "monthly_cap": null,
+      "expiry": null,
+      "note": "absorbed all 2026 usage (EUR 0.12 credited); cap/expiry to record; post-credit marginal rate = listed EUR prices"
+     },
+     "gate_by_tier": {
+      "haiku": {
+       "status": "passed",
+       "prompt_version": "18-Jul eval set (pre-versioning)",
+       "effort": "default (instruct)",
+       "date": "2026-07-18",
+       "caveat": "20-call sample; vision 2/2 only"
+      },
+      "sonnet": {
+       "status": "passed",
+       "prompt_version": "18-Jul eval set (pre-versioning)",
+       "effort": "default (instruct)",
+       "date": "2026-07-18",
+       "caveat": "20-call sample; vision 2/2 only"
+      },
+      "vision": {
+       "status": "passed",
+       "prompt_version": "18-Jul eval set (pre-versioning)",
+       "effort": "default (instruct)",
+       "date": "2026-07-18",
+       "caveat": "20-call sample; vision 2/2 only"
+      },
+      "triage": {
+       "status": "passed",
+       "prompt_version": "18-Jul eval set (pre-versioning)",
+       "effort": "default (instruct)",
+       "date": "2026-07-18",
+       "caveat": "20-call sample; vision 2/2 only"
+      }
+     }
+    }
+   }
+  },
+  "openai": {
+   "models": {
+    "gpt-5.6-luna": {
+     "in": 0.2,
+     "out": 1.2,
+     "ccy": "USD",
+     "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026; 80% cut 30 Jul)",
+     "aa_index": {
+      "score": 51.24,
+      "variant": "Luna (max effort)",
+      "source": "benchmarklist.com AA v4.1 leaderboard",
+      "date": "2026-07-31",
+      "caveat": "51.24 at MAX effort but 33 at LOW — the golden set MUST pin the effort level we would run",
+      "effort": "max",
+      "effort_matched": false
+     },
+     "golden_set": {
+      "status": "passed",
+      "detail": "GS-OAI-V1 (1 Aug 2026): 8/8 on production prompts incl. 2-photo real vision draft (read the 9ct hallmark, flagged it unverified) and full anonymity scrub; search-interpret passes ONLY at reasoning_effort=none",
+      "date": "2026-08-01"
+     },
+     "gate": "golden-set-passed",
+     "source_kind": "first-party",
+     "invoice_reconciled": false,
+     "production_effort": "reasoning_effort=\"none\" (pinned by GS-OAI-V1 — default effort FAILED the 120-token search-interpret budget: 100% reasoning burn)",
+     "budget_ccy": "USD",
+     "token_profile": null,
+     "budgets": null,
+     "gate_by_tier": {
+      "haiku": {
+       "status": "passed",
+       "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
+       "effort": "reasoning_effort=\"none\"",
+       "date": "2026-08-01",
+       "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
+      },
+      "vision": {
+       "status": "passed",
+       "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
+       "effort": "reasoning_effort=\"none\"",
+       "date": "2026-08-01",
+       "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
+      },
+      "triage": {
+       "status": "passed",
+       "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
+       "effort": "reasoning_effort=\"none\"",
+       "date": "2026-08-01",
+       "caveat": "8-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
+      }
+     }
+    },
+    "gpt-5.6-terra": {
+     "in": 2.0,
+     "out": 12.0,
+     "ccy": "USD",
+     "source": "developers.openai.com/api/docs/models (verified 31 Jul 2026)",
+     "aa_index": {
+      "score": 54.95,
+      "variant": "Terra (max effort)",
+      "source": "benchmarklist.com AA v4.1 leaderboard",
+      "date": "2026-07-31",
+      "caveat": "max-effort score",
+      "effort": "max",
+      "effort_matched": false
+     },
+     "golden_set": {
+      "status": "passed",
+      "detail": "GS-OAI-V1 (1 Aug 2026): 3/3 sonnet-tier tasks — hard anonymity scrub, comps-bounded price check (no invention), photo anonymiser scan",
+      "date": "2026-08-01"
+     },
+     "gate": "golden-set-passed",
+     "source_kind": "first-party",
+     "invoice_reconciled": false,
+     "production_effort": "reasoning_effort=\"none\" (seam pins all gpt-5 lanes; Terra passed its tasks with near-zero burn at default too)",
+     "budget_ccy": "USD",
+     "token_profile": null,
+     "budgets": null,
+     "gate_by_tier": {
+      "sonnet": {
+       "status": "passed",
+       "prompt_version": "production prompts, bea_main.py 31-Jul build (GS-OAI-V1)",
+       "effort": "reasoning_effort=\"none\"",
+       "date": "2026-08-01",
+       "caveat": "3-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
+      }
+     }
+    }
+   }
+  }
+ }
 }

@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MarketSquare — AI Challenger Board</title>
+<style>
+:root{--navy:#12283F;--ink:#1B2A38;--rule:#D8DEE5;--paper:#F7F9FB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:34px 40px 30px}
+header h1{margin:0 0 8px;font-size:30px} header p{margin:0 0 6px;opacity:.88;max-width:1000px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:9px 15px;font-size:14px}
+.stat b{font-size:20px;display:block;line-height:1.2}
+.stat.bad{background:rgba(255,140,130,.18);border-color:rgba(255,140,130,.45)}
+.stat.good{background:rgba(120,220,170,.16);border-color:rgba(120,220,170,.4)}
+main{padding:34px 40px 60px;max-width:1400px;margin:0 auto}
+h2{font-size:20px;color:var(--navy);margin:44px 0 6px;padding-bottom:9px;border-bottom:2px solid var(--navy)}
+h2:first-of-type{margin-top:0}
+h3{font-size:16px;color:var(--navy);margin:24px 0 7px;text-transform:uppercase;letter-spacing:1px}
+.env{font-size:12px;color:#7B8A99;text-transform:none;letter-spacing:0;font-weight:400}
+.sub{margin:0 0 18px;color:#5A6C7D;font-size:14.5px;max-width:1040px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);border-radius:9px;overflow:hidden;font-size:13.6px;margin-bottom:6px}
+th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+td{padding:9px 12px;border-top:1px solid var(--rule)}
+th.n,td.n{text-align:right}
+code{font:12.5px ui-monospace,Consolas,monospace;background:#EDF1F5;padding:2px 6px;border-radius:4px}
+.lane{font-size:11px;color:#7B8A99;margin-left:6px}
+.st{font-weight:700;font-size:12.5px}
+tr.base td{background:#EAF0FA} tr.base .st{color:#2F5496}
+tr.blk td{background:#FFF4E0} tr.blk .st{color:#B26A00}
+tr.dear td{background:#FDECEA} tr.dear .st{color:#B3261E}
+tr.weak td{background:#F7F4FB} tr.weak .st{color:#6B4E9E}
+tr.chal td{background:#E8F5EE} tr.chal .st{color:#1E6B45}
+.warn{display:block;font-size:10px;color:#B26A00;font-weight:700}
+.lock{background:#fff;border:1px solid var(--rule);border-left:6px solid #B3261E;border-radius:9px;padding:14px 18px;margin-bottom:10px}
+.lock h4{margin:0 0 5px;font-size:15px;color:var(--navy)}
+.lock p{margin:0;font-size:13.6px;color:#3C4C5C}
+.key{background:#fff;border:1px solid var(--rule);border-left:6px solid #2F5496;border-radius:9px;padding:17px 21px;margin-bottom:14px}
+.key h3{margin:0 0 7px;font-size:17px;text-transform:none;letter-spacing:0}
+.key p{margin:0 0 9px;font-size:14.2px;color:#3C4C5C} .key p:last-child{margin:0}
+footer{padding:26px 40px 44px;color:#7B8A99;font-size:13px;max-width:1400px;margin:0 auto}
+</style></head><body>
+<header>
+<h1>AI Challenger Board</h1>
+<p><strong>Automatic challenge, manual decision.</strong> The ruling forbids automating the model
+switch. It does not forbid automating the challenge &mdash; and if the review is manual too, then
+inertia becomes the decision, taken by default every day. This board never switches anything.</p>
+<p>Value = AA index points per USD of worst-case cost inside each tier&rsquo;s envelope &middot;
+price card 2026-08-01.1 &middot; procurement bar 30% saving at equal-or-better capability</p>
+<div class="stats">
+<div class="stat good"><b>7.6&times;</b>Luna&rsquo;s value vs the haiku baseline</div>
+<div class="stat"><b>51.24</b>Luna AA index</div>
+<div class="stat"><b>29.58</b>Haiku AA index (baseline)</div>
+<div class="stat bad"><b>4</b>lane/tiers blocked by PROCESS, not merit</div>
+<div class="stat bad"><b>3</b>structural locks on the incumbent</div>
+</div>
+</header>
+<main>
+
+<h2>1 &nbsp;Answering the three questions</h2>
+<div class="key">
+<h3>1. Is OpenAI substantially lower? &nbsp;&mdash;&nbsp; Yes, and it is also <em>better</em>.</h3>
+<p><code>gpt-5.6-luna</code> is <strong>77&ndash;79% cheaper</strong> than the baseline on the haiku,
+vision and triage tiers <em>and</em> scores <strong>51.24 against Haiku&rsquo;s 29.58</strong>. It
+even outscores <code>claude-sonnet-4-6</code> (47.21) at roughly a thirteenth of the price. It passed
+the golden set on 1 Aug 2026 &mdash; 8/8 on production prompts including a two-photo real case.</p>
+</div>
+<div class="key" style="border-left-color:#B26A00">
+<h3>2. Are the Scaleway options substantially higher capability? &nbsp;&mdash;&nbsp; No &mdash; but with one caveat in your favour.</h3>
+<p><code>mistral-medium-3.5-128b</code> scores <strong>29.95 against Haiku&rsquo;s 29.58</strong> &mdash;
+a 1.25% edge, not a substantial one &mdash; while costing <strong>73% more</strong> on three of four
+tiers. As a value lane it is worse than the baseline.</p>
+<p><strong>The caveat matters though:</strong> Haiku&rsquo;s score carries
+<code>effort_matched: false</code> &mdash; it was benchmarked in reasoning mode while the app runs
+default &mdash; whereas Mistral&rsquo;s is <code>effort_matched: true</code>. So Haiku&rsquo;s 29.58 is
+<strong>flattered relative to how it actually runs</strong>, and Mistral&rsquo;s modest edge is
+probably a real one. Any decision here must re-score at production effort, not trust the leaderboard.</p>
+<p>And note what the ONE-MODEL row does: one model across four tiers means Scaleway is
+<strong>1.73&times; dearer</strong> on haiku/vision/triage and a <strong>37% capability drop</strong> on
+sonnet (29.95 vs 47.21). The card&rsquo;s own words: <em>&ldquo;CONTINUITY/JURISDICTION standby, not a
+cheap lane.&rdquo;</em> It is EU insurance, priced as insurance. It should never be judged as value.</p>
+</div>
+<div class="key" style="border-left-color:#B3261E">
+<h3>3. Does Anthropic stay there even after upgrades? &nbsp;&mdash;&nbsp; Yes. Structurally.</h3>
+<p>Not by anyone&rsquo;s decision &mdash; by the composition of three individually sensible rules.
+See section 3.</p>
+</div>
+
+<h2>2 &nbsp;The board, per tier</h2>
+<p class="sub">Cost is worst case inside the tier envelope. Value is AA index points per dollar.
+Nothing here switches anything.</p>
+<h3>haiku &nbsp;<span class="env">4,000 in · 1,800 out · 0 img @ 0px</span></h3>
+<table><thead><tr><th>Model</th><th class="n">Worst $/call</th><th class="n">AA index</th>
+<th class="n">Value (AA per $)</th><th class="n">vs baseline</th><th>Status</th></tr></thead>
+<tbody><tr class="blk"><td><code>gpt-5.6-luna</code> <span class="lane">openai</span></td>
+<td class="n">$0.00296</td><td class="n">51.24<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>17,311</b></td>
+<td class="n">+77%</td><td class="st">BLOCKED BY PROCESS</td></tr>
+<tr class="base"><td><code>claude-haiku-4-5-20251001</code> <span class="lane">anthropic</span></td>
+<td class="n">$0.01300</td><td class="n">29.58<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>2,275</b></td>
+<td class="n">&mdash;</td><td class="st">BASELINE</td></tr>
+<tr class="dear"><td><code>mistral-medium-3.5-128b</code> <span class="lane">scaleway</span></td>
+<td class="n">$0.02252</td><td class="n">29.95</td><td class="n"><b>1,330</b></td>
+<td class="n">-73%</td><td class="st">dearer</td></tr></tbody></table>
+<h3>sonnet &nbsp;<span class="env">4,000 in · 1,400 out · 1 img @ 1344px</span></h3>
+<table><thead><tr><th>Model</th><th class="n">Worst $/call</th><th class="n">AA index</th>
+<th class="n">Value (AA per $)</th><th class="n">vs baseline</th><th>Status</th></tr></thead>
+<tbody><tr class="blk"><td><code>gpt-5.6-terra</code> <span class="lane">openai</span></td>
+<td class="n">$0.02841</td><td class="n">54.95<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>1,934</b></td>
+<td class="n">+26%</td><td class="st">BLOCKED BY PROCESS</td></tr>
+<tr class="weak"><td><code>mistral-medium-3.5-128b</code> <span class="lane">scaleway</span></td>
+<td class="n">$0.02219</td><td class="n">29.95</td><td class="n"><b>1,350</b></td>
+<td class="n">+42%</td><td class="st">cheaper, weaker</td></tr>
+<tr class="base"><td><code>claude-sonnet-4-6</code> <span class="lane">anthropic</span></td>
+<td class="n">$0.03842</td><td class="n">47.21<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>1,229</b></td>
+<td class="n">&mdash;</td><td class="st">BASELINE</td></tr></tbody></table>
+<h3>vision &nbsp;<span class="env">2,000 in · 2,000 out · 10 img @ 1344px</span></h3>
+<table><thead><tr><th>Model</th><th class="n">Worst $/call</th><th class="n">AA index</th>
+<th class="n">Value (AA per $)</th><th class="n">vs baseline</th><th>Status</th></tr></thead>
+<tbody><tr class="blk"><td><code>gpt-5.6-luna</code> <span class="lane">openai</span></td>
+<td class="n">$0.00641</td><td class="n">51.24<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>7,990</b></td>
+<td class="n">+79%</td><td class="st">BLOCKED BY PROCESS</td></tr>
+<tr class="base"><td><code>claude-haiku-4-5-20251001</code> <span class="lane">anthropic</span></td>
+<td class="n">$0.03006</td><td class="n">29.58<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>984</b></td>
+<td class="n">&mdash;</td><td class="st">BASELINE</td></tr>
+<tr class="dear"><td><code>mistral-medium-3.5-128b</code> <span class="lane">scaleway</span></td>
+<td class="n">$0.05208</td><td class="n">29.95</td><td class="n"><b>575</b></td>
+<td class="n">-73%</td><td class="st">dearer</td></tr></tbody></table>
+<h3>triage &nbsp;<span class="env">2,500 in · 400 out · 0 img @ 0px</span></h3>
+<table><thead><tr><th>Model</th><th class="n">Worst $/call</th><th class="n">AA index</th>
+<th class="n">Value (AA per $)</th><th class="n">vs baseline</th><th>Status</th></tr></thead>
+<tbody><tr class="blk"><td><code>gpt-5.6-luna</code> <span class="lane">openai</span></td>
+<td class="n">$0.00098</td><td class="n">51.24<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>52,286</b></td>
+<td class="n">+78%</td><td class="st">BLOCKED BY PROCESS</td></tr>
+<tr class="base"><td><code>claude-haiku-4-5-20251001</code> <span class="lane">anthropic</span></td>
+<td class="n">$0.00450</td><td class="n">29.58<span class="warn" title="benchmarked at a different effort level than production">not effort-matched</span></td><td class="n"><b>6,573</b></td>
+<td class="n">&mdash;</td><td class="st">BASELINE</td></tr>
+<tr class="dear"><td><code>mistral-medium-3.5-128b</code> <span class="lane">scaleway</span></td>
+<td class="n">$0.00780</td><td class="n">29.95</td><td class="n"><b>3,842</b></td>
+<td class="n">-73%</td><td class="st">dearer</td></tr></tbody></table>
+
+<h2>3 &nbsp;Why the incumbent cannot currently be displaced</h2>
+<p class="sub">Each of these is defensible on its own. Anti-jitter prevents thrash; not re-auditioning
+sitting models saves money; advisory-not-automatic respects the ruling. Together they compose into
+permanent incumbency &mdash; an outcome none of them intended.</p>
+<div class="lock"><h4>The absolute switch floor is <em>formally UNMET</em></h4><p><code>min_net_saving_usd_90d: 50</code> needs spend-log volume that does not exist yet. A floor that cannot be computed cannot be cleared.</p></div>
+<div class="lock"><h4>Sitting models are never re-auditioned</h4><p>Funnel step 4: &ldquo;sitting models are not re-auditioned continuously.&rdquo; The incumbent never takes the test, so it can never fail it.</p></div>
+<div class="lock"><h4>The cheapest, highest-scoring lane cannot enter</h4><p><code>openai</code> is absent from <code>GOLDEN_PASS</code> in <code>ai_scoreboard.py</code> by design, pending a server-key golden run. It is excluded from the ranking however cheap or capable it is.</p></div>
+<div class="lock"><h4>The only cost ranking is discarded</h4><p><code>bea_main.py:17900</code> calls <code>ai_scoreboard.run_nightly()</code> and throws the return value away. Nothing reads it, and it is spend-gated off by default.</p></div>
+<div class="key" style="border-left-color:#1E6B45;margin-top:16px">
+<h3>The fix, consistent with the ruling</h3>
+<p>The ruling forbids automating the <strong>switch</strong>. It does not forbid automating the
+<strong>challenge</strong>. Separate them: the board runs on a 30-day cadence and surfaces the case;
+the incumbent is re-auditioned every 90 days at its production effort level; a lane marked BLOCKED BY
+PROCESS carries a named owner and a date. The decision stays yours &mdash; but silence stops being
+one of the answers.</p>
+</div>
+</main>
+<footer>
+Built 14 Aug 2026 · <code>scripts/ai_challenger_board.py</code> (never switches, only surfaces) ·
+<code>AI_BASELINE.json</code> v1.1 · figures from <code>ai_price_card.json</code>, the register that
+declares itself the single source of AI price and capability truth.
+</footer>
+</body></html>

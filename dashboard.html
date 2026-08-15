@@ -285,7 +285,11 @@
 </div>
 <script>
 (function(){
-  var BEA = 'https://trustsquare.co';
+  /* GATE-ORIGIN-1 (14 Aug 2026): relative when served, absolute only from file://.
+     _apv3B two thousand lines below already did this; the gate did not, so a served page
+     made every gate call a needless cross-origin request. */
+  var BEA = (location.protocol === 'file:') ? 'https://trustsquare.co' : '';
+  var BEA_ABS = 'https://trustsquare.co';
   var gate        = document.getElementById('admin-gate');
   var loginScreen = document.getElementById('gate-login-screen');
   var changeScreen= document.getElementById('gate-change-screen');
@@ -298,6 +302,31 @@
     gate.style.display = 'flex';
     loginScreen.style.display = 'block';
     changeScreen.style.display = 'none';
+    /* GATE-ORIGIN-1 (14 Aug 2026): a file:// page has origin "null", which is not in the
+       BEA's ALLOWED_ORIGINS, so the pre-flight is refused and fetch REJECTS. No password can
+       ever work from here. STATUS.md:379 records that the local sibling is the copy David
+       actually opens, so this is a documented habit, not an accident -- say so up front
+       instead of failing after a round-trip. */
+    if(location.protocol === 'file:'){
+      var w = document.getElementById('gate-origin-warn');
+      if(!w){
+        w = document.createElement('div');
+        w.id = 'gate-origin-warn';
+        w.style.cssText = 'margin:0 0 14px;padding:12px 14px;border-radius:10px;'
+          + 'background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.5);'
+          + 'color:#fbbf24;font-size:13px;line-height:1.5;text-align:left';
+        w.innerHTML = '<b>This page is open from a local file.</b><br>'
+          + 'The dashboard cannot sign in from a <code>file://</code> path \u2014 the browser '
+          + 'blocks it before the request leaves (origin <code>null</code> is not allowed by the '
+          + 'server\u2019s CORS list). No password will work here.<br><br>'
+          + 'Open <a href="' + BEA_ABS + '/dashboard.html" style="color:#fbbf24;font-weight:700">'
+          + BEA_ABS + '/dashboard.html</a> instead \u2014 entering the reviewer code at '
+          + '<a href="' + BEA_ABS + '/" style="color:#fbbf24;font-weight:700">' + BEA_ABS + '/</a> first.';
+        if(loginScreen.firstChild) loginScreen.insertBefore(w, loginScreen.firstChild);
+        else loginScreen.appendChild(w);
+      }
+      w.style.display = 'block';
+    }
     setTimeout(function(){ if(inp) inp.focus(); }, 100);
   }
   function hideGate(){
@@ -320,9 +349,15 @@
   var stored = sessionStorage.getItem('ms_admin_token');
   if(stored){
     fetch(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}})
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); showGate(); }
+      .then(function(r){
+        return r.text().then(function(t){
+          var d = null; try { d = JSON.parse(t); } catch(e) {}
+          if(d && d.valid){ hideGate(); return; }
+          /* GATE-TRUTH-2: an nginx HTML 401 is the GATE refusing, not the token expiring.
+             Dropping the token here logged people out of a still-valid session, silently. */
+          if(!d && (r.status === 401 || r.status === 403)){ showGate(); return; }
+          sessionStorage.removeItem('ms_admin_token'); showGate();
+        });
       })
       .catch(function(){ showGate(); });
   } else {
@@ -338,18 +373,32 @@
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({password: pw})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        hideGate();
-      } else if(d.must_change_pin){
-        showChangePINScreen(d.name, pw);
-      } else {
-        showLoginError(d.detail || 'Incorrect password or PIN.');
-      }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          hideGate();
+        }
+        else if(d && d.must_change_pin){ showChangePINScreen(d.name, pw); }
+        else if(d && d.detail){ showLoginError(d.detail); }
+        else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-2 (14 Aug 2026) — the dashboard copy of GATE-TRUTH-1.
+             The origin gate (GATE-ENFORCE-2, migrations/016) refuses anonymous /admin/login
+             with an nginx HTML 401 before the app ever sees it; /admin/login is deliberately
+             NOT on the exempt list (migrations/018). The old code called r.json() blind, the
+             parse threw, and the .catch mislabelled EVERY refusal as a network failure. That
+             single wrong message is why this fault kept being re-diagnosed from zero. */
+          showLoginError('Locked by the pre-launch gate. Open https://trustsquare.co/ first, ' +
+                         'enter the reviewer code, then reload this page in the same browser.');
+        }
+        else if(r.status === 503){
+          showLoginError('Server auth not configured (503) \u2014 MS_ADMIN_PASSWORD or MS_JWT_SECRET is unset on the box.');
+        }
+        else { showLoginError('Sign-in failed (' + r.status + '). Please try again.'); }
+      });
     })
-    .catch(function(){ showLoginError('Connection error. Please try again.'); });
+    .catch(function(){ showLoginError('Network error \u2014 the browser could not reach ' + BEA + '. If this page was opened from a file:// path, open it from https://trustsquare.co/ instead (CORS allows that origin only).'); });
   };
 
   window.adminGateChangePIN = function(){
@@ -374,15 +423,25 @@
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({current_pin: _tempPin, new_pin: newPin})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        hideGate();
-      } else {
-        changeErr.textContent = d.detail || 'PIN change failed. Please try again.';
-        changeErr.style.display = 'block';
-      }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          hideGate();
+        } else if(d && d.detail){
+          changeErr.textContent = d.detail;
+          changeErr.style.display = 'block';
+        } else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-2: the change-PIN path was left blind by GATE-TRUTH-1, which only
+             patched the login path in this file. Same origin gate, same blind parse. */
+          changeErr.textContent = 'Locked by the pre-launch gate. Open https://trustsquare.co/ first, enter the reviewer code, then retry.';
+          changeErr.style.display = 'block';
+        } else {
+          changeErr.textContent = 'PIN change failed (' + r.status + '). Please try again.';
+          changeErr.style.display = 'block';
+        }
+      });
     })
     .catch(function(){
       changeErr.textContent = 'Connection error. Please try again.';

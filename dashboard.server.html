@@ -203,7 +203,11 @@
 </div>
 <script>
 (function(){
-  var BEA = 'https://trustsquare.co';
+  /* GATE-ORIGIN-1 (14 Aug 2026): relative when served, absolute only from file://.
+     _apv3B two thousand lines below already did this; the gate did not, so a served page
+     made every gate call a needless cross-origin request. */
+  var BEA = (location.protocol === 'file:') ? 'https://trustsquare.co' : '';
+  var BEA_ABS = 'https://trustsquare.co';
   var gate        = document.getElementById('admin-gate');
   var loginScreen = document.getElementById('gate-login-screen');
   var changeScreen= document.getElementById('gate-change-screen');
@@ -216,6 +220,31 @@
     gate.style.display = 'flex';
     loginScreen.style.display = 'block';
     changeScreen.style.display = 'none';
+    /* GATE-ORIGIN-1 (14 Aug 2026): a file:// page has origin "null", which is not in the
+       BEA's ALLOWED_ORIGINS, so the pre-flight is refused and fetch REJECTS. No password can
+       ever work from here. STATUS.md:379 records that the local sibling is the copy David
+       actually opens, so this is a documented habit, not an accident -- say so up front
+       instead of failing after a round-trip. */
+    if(location.protocol === 'file:'){
+      var w = document.getElementById('gate-origin-warn');
+      if(!w){
+        w = document.createElement('div');
+        w.id = 'gate-origin-warn';
+        w.style.cssText = 'margin:0 0 14px;padding:12px 14px;border-radius:10px;'
+          + 'background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.5);'
+          + 'color:#fbbf24;font-size:13px;line-height:1.5;text-align:left';
+        w.innerHTML = '<b>This page is open from a local file.</b><br>'
+          + 'The dashboard cannot sign in from a <code>file://</code> path \u2014 the browser '
+          + 'blocks it before the request leaves (origin <code>null</code> is not allowed by the '
+          + 'server\u2019s CORS list). No password will work here.<br><br>'
+          + 'Open <a href="' + BEA_ABS + '/dashboard.html" style="color:#fbbf24;font-weight:700">'
+          + BEA_ABS + '/dashboard.html</a> instead \u2014 entering the reviewer code at '
+          + '<a href="' + BEA_ABS + '/" style="color:#fbbf24;font-weight:700">' + BEA_ABS + '/</a> first.';
+        if(loginScreen.firstChild) loginScreen.insertBefore(w, loginScreen.firstChild);
+        else loginScreen.appendChild(w);
+      }
+      w.style.display = 'block';
+    }
     setTimeout(function(){ if(inp) inp.focus(); }, 100);
   }
   function hideGate(){
@@ -242,9 +271,15 @@
   var stored = sessionStorage.getItem('ms_admin_token');
   if(stored){
     fetch(BEA + '/admin/verify', {headers:{'X-Admin-Token': stored}})
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); showGate(); }
+      .then(function(r){
+        return r.text().then(function(t){
+          var d = null; try { d = JSON.parse(t); } catch(e) {}
+          if(d && d.valid){ hideGate(); return; }
+          /* GATE-TRUTH-2: an nginx HTML 401 is the GATE refusing, not the token expiring.
+             Dropping the token here logged people out of a still-valid session, silently. */
+          if(!d && (r.status === 401 || r.status === 403)){ showGate(); return; }
+          sessionStorage.removeItem('ms_admin_token'); showGate();
+        });
       })
       .catch(function(){ showGate(); });
   } else {
@@ -260,18 +295,32 @@
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({password: pw})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        hideGate();
-      } else if(d.must_change_pin){
-        showChangePINScreen(d.name, pw);
-      } else {
-        showLoginError(d.detail || 'Incorrect password or PIN.');
-      }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          hideGate();
+        }
+        else if(d && d.must_change_pin){ showChangePINScreen(d.name, pw); }
+        else if(d && d.detail){ showLoginError(d.detail); }
+        else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-2 (14 Aug 2026) — the dashboard copy of GATE-TRUTH-1.
+             The origin gate (GATE-ENFORCE-2, migrations/016) refuses anonymous /admin/login
+             with an nginx HTML 401 before the app ever sees it; /admin/login is deliberately
+             NOT on the exempt list (migrations/018). The old code called r.json() blind, the
+             parse threw, and the .catch mislabelled EVERY refusal as a network failure. That
+             single wrong message is why this fault kept being re-diagnosed from zero. */
+          showLoginError('Locked by the pre-launch gate. Open https://trustsquare.co/ first, ' +
+                         'enter the reviewer code, then reload this page in the same browser.');
+        }
+        else if(r.status === 503){
+          showLoginError('Server auth not configured (503) \u2014 MS_ADMIN_PASSWORD or MS_JWT_SECRET is unset on the box.');
+        }
+        else { showLoginError('Sign-in failed (' + r.status + '). Please try again.'); }
+      });
     })
-    .catch(function(){ showLoginError('Connection error. Please try again.'); });
+    .catch(function(){ showLoginError('Network error \u2014 the browser could not reach ' + BEA + '. If this page was opened from a file:// path, open it from https://trustsquare.co/ instead (CORS allows that origin only).'); });
   };
 
   window.adminGateChangePIN = function(){
@@ -296,15 +345,25 @@
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({current_pin: _tempPin, new_pin: newPin})
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.token){
-        sessionStorage.setItem('ms_admin_token', d.token);
-        hideGate();
-      } else {
-        changeErr.textContent = d.detail || 'PIN change failed. Please try again.';
-        changeErr.style.display = 'block';
-      }
+    .then(function(r){
+      return r.text().then(function(t){
+        var d = null; try { d = JSON.parse(t); } catch(e) {}
+        if(d && d.token){
+          sessionStorage.setItem('ms_admin_token', d.token);
+          hideGate();
+        } else if(d && d.detail){
+          changeErr.textContent = d.detail;
+          changeErr.style.display = 'block';
+        } else if(r.status === 401 || r.status === 403){
+          /* GATE-TRUTH-2: the change-PIN path was left blind by GATE-TRUTH-1, which only
+             patched the login path in this file. Same origin gate, same blind parse. */
+          changeErr.textContent = 'Locked by the pre-launch gate. Open https://trustsquare.co/ first, enter the reviewer code, then retry.';
+          changeErr.style.display = 'block';
+        } else {
+          changeErr.textContent = 'PIN change failed (' + r.status + '). Please try again.';
+          changeErr.style.display = 'block';
+        }
+      });
     })
     .catch(function(){
       changeErr.textContent = 'Connection error. Please try again.';
@@ -728,7 +787,8 @@
   window._apv2=window._apv2||{providers:[]};</script>
   <div class="ls-card" id="ai-prov-card-v3" style="position:relative">
     <button type="button" class="ms-viz-btn" onclick="msVizOpen('ai')" title="See how the AI providers interface with the app">&#128506;&#65039; Visual</button>
-    <div class="ls-h">&#128268; AI Providers <span id="apv3-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
+    <div class="ls-h">&#128268; AI Providers <span style="font-size:10px;font-weight:800;letter-spacing:.5px;color:#22c55e;background:#22c55e18;border:1px solid #22c55e55;border-radius:9px;padding:2px 7px;margin-left:6px">BASE &rarr; FAILOVER &rarr; SAFETY NET</span> <span id="apv3-sub" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— registry</span></div>
+    <div id="apv3-rolebar" style="display:none"></div>
     <div id="apv3-pin" style="display:none;font-size:12px;margin:-2px 0 8px;padding:7px 10px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);"></div>
     <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px;padding-right:92px">Pin = manual precedence for a limited time; when it expires the standing lane resumes automatically. Standing-lane changes go through the Model Register process, not this card.</div>
     <div id="apv3-rows" style="display:flex;flex-direction:column;"><div style="color:var(--muted);font-size:12px;padding:8px 0">Loading registry&hellip;</div></div>
@@ -2303,6 +2363,16 @@ function luShowUser(u){
 window._apv3B = (location.protocol==='file:' ? 'https://trustsquare.co' : '');
 window._apv3Tok = function(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } };
 window._apv3 = {active:'anthropic', standing:'anthropic', override:null, ttl:24, providers:[], funnel:null};
+/* LANE-ROLES-1 (David's ruling, 14 Aug 2026) — AI_BASELINE.json v2.0.
+   OpenAI is the BASE usage model; Anthropic is the AUTO-FAILOVER and remains the DESIGN/guidance
+   tool; Scaleway is the ban/outage SAFETY NET, cost-exempt by role and alert-on-use.
+   Multiples are worst-case-per-call vs the base lane, from the same envelope the baseline pins. */
+window._apv3Roles = {
+  openai:    {rank:1, role:'BASE',          tag:'BASE',      colour:'#22c55e', mult:'1.00x', note:'David\u2019s selection \u2014 cheapest and highest-scoring on the volume tiers'},
+  anthropic: {rank:2, role:'AUTO-FAILOVER', tag:'FAILOVER',  colour:'#3b82f6', mult:'4.4\u20134.7x', note:'Continuity on a dropout \u2014 dearer by design. Also the DESIGN/guidance tool'},
+  scaleway:  {rank:3, role:'SAFETY NET',    tag:'LAST RESORT',colour:'#f59e0b', mult:'7.6\u20138.1x', note:'Bans and jurisdiction only. Cost-exempt by role \u2014 reaching it must ALERT and be time-boxed'}
+};
+window._apv3PendingFlip = true;  /* set false once OPENAI_API_KEY is on the server and the live-seam golden run passes */
 /* Back-compat shims (DASH-AIPROV-2): the Infrastructure/services card was built on v2's
    globals — keep them alive so removing the v2 script never strands another card again. */
 window._apv2B = window._apv3B; window._apv2Tok = window._apv3Tok; window._apv2 = window._apv3;
@@ -2317,17 +2387,26 @@ window.apv3Render = function(){
     } else pin.style.display='none';
   }
   var h='';
-  (d.providers||[]).forEach(function(p){
+  var R=window._apv3Roles||{};
+  var provs=(d.providers||[]).slice().sort(function(a,b){
+    return ((R[a.id]||{}).rank||9)-((R[b.id]||{}).rank||9); });
+  provs.forEach(function(p){
     var active=(p.id===d.active), avail=!!p.available;
+    var role=R[p.id]||{};
     var st = active?['#22c55e','ACTIVE'+(d.override&&d.override.provider===p.id?' (PIN)':'')]:(avail?['#22c55e','STANDBY']:['#6b7280','DISABLED — no key']);
     var models=p.models?('fast '+(p.models.haiku||'—').split('-20')[0]+' &middot; reason '+(p.models.sonnet||'—')):'';
     h+='<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
       +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';opacity:'+(active?'1':(avail?'.55':'.6'))+';flex:0 0 auto;"></span>'
-      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+p.label+' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(p.jurisdiction||'')+'</span></div>'
-      +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+models+'</div></div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+p.label
+      +(role.tag?(' <span style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:9px;background:'+role.colour+'22;color:'+role.colour+';border:1px solid '+role.colour+'66;vertical-align:1px">'+role.tag+'</span>'):'')
+      +' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(p.jurisdiction||'')+'</span></div>'
+      +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+models+'</div>'
+      +(role.note?('<div style="font-size:10px;color:var(--muted);opacity:.8;margin-top:2px">'+role.mult+' vs base &middot; '+role.note+'</div>'):'')
+      +'</div>'
       +'<span style="font-size:10.5px;font-weight:700;color:'+(active?'#22c55e':(avail?'var(--text)':'var(--muted)'))+';flex:0 0 auto">'+st[1]+'</span>'
       +'<button type="button" onclick="apv3Test(\''+p.id+'\')" '+(avail?'':'disabled ')+'style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:'+(avail?'pointer':'not-allowed')+';font-family:inherit;opacity:'+(avail?'1':'.4')+'">Test</button>'
       +(avail&&!(d.override&&d.override.provider===p.id)?('<button type="button" onclick="apv3Pin(\''+p.id+'\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit">Pin '+(d.ttl||24)+'h</button>'):'')
+      +(avail&&p.id!==d.standing?('<button type="button" onclick="aiProvPick(\''+p.id+'\')" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid #22c55e66;background:#22c55e18;color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Make standing</button>'):'')
       +'</div>';
   });
   box.innerHTML=h||'<div style="color:var(--muted);font-size:12px">Registry unavailable.</div>';
@@ -2344,6 +2423,24 @@ window.apv3Render = function(){
     } else fb.innerHTML='<span style="opacity:.6">No funnel snapshot on the server yet (scripts/price_truth.py --snapshot, then deploy).</span>';
   }
   var sub=document.getElementById('apv3-sub'); if(sub) sub.textContent='— active: '+d.active+(d.override?' (pinned)':'')+' · standing: '+d.standing;
+  /* LANE-ROLES-1: say plainly whether the serving lane is the one the baseline designates. */
+  var rb=document.getElementById('apv3-rolebar');
+  if(rb){
+    var wantBase='openai', on=(d.active===wantBase);
+    if(window._apv3PendingFlip){
+      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.45);color:var(--text)';
+      rb.innerHTML='&#9888;&#65039; <b>Baseline says BASE = openai</b>, live standing lane is <b>'+d.standing+'</b>. '
+        +'The flip is <b>pending preconditions</b>: server key, live-seam golden run, spend attribution fix. '
+        +'<span style="opacity:.75">Manual override below stays available at all times.</span>';
+    } else if(!on){
+      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);color:var(--text)';
+      rb.innerHTML='&#128308; <b>Serving on '+d.active+'</b>, not the base lane. '
+        +(d.active==='scaleway'?'That is the SAFETY NET at ~8x base cost &mdash; time-box it.':'Cost is above baseline while this holds.');
+    } else {
+      rb.style.cssText='display:block;font-size:12px;margin:-2px 0 10px;padding:8px 11px;border-radius:8px;background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.35);color:var(--text)';
+      rb.innerHTML='&#9989; Serving on the <b>base lane</b> (openai). Failover order: openai &rarr; anthropic &rarr; scaleway.';
+    }
+  }
 };
 window.apv3Load = function(){
   fetch(window._apv3B+'/flags').then(function(r){return r.json();}).then(function(f){

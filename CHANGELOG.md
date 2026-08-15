@@ -1,3 +1,208 @@
+## 2026-08-14 — Standing AI lane moves to OpenAI (independence ruling)
+
+New order: **1. OpenAI (standing) · 2. Anthropic · 3. Scaleway EU · 4. Grok** (capped, text tiers
+only, not wired pre-launch).
+
+The driver is vendor independence rather than cost: Anthropic supplies the guidance layer, and having
+the same vendor perform the outsourced production work makes judgement and execution a single
+correlated dependency. This extends the existing auditor-independence rationale from review to
+execution. Cost independently agrees — the 1 Aug funnel ranks gpt-5.6-luna first on haiku, triage and
+vision at +78/78/79% with the golden set passed — but was not the reason.
+
+Also amended: the `$50/90d` absolute-saving floor now applies from first revenue rather than
+pre-launch. It requires spend volumes that cannot exist before launch, so as a pre-launch gate it was
+unpassable by construction.
+
+`ai_price_card.json` `active_lane` → `openai`; chains reordered in `AI_SWAP_ARCHITECTURE.md`; full
+reasoning in decision note Addendum 11. The live `/flags` lane still needs the admin flip — RG-0019
+will read red until it does, which is the guard working.
+
+## 2026-08-14 — BORDERLESS-COUNT-1 + SPEC-PROVENANCE-1: the tester queue cleared to zero new
+
+**BORDERLESS-COUNT-1 (TS-0032 Maun, TS-0033 Sydney) — a tile that promised what its page would not show.**
+Two testers at opposite ends of the world filed the same fault: pick a city, the Adventures tile
+reads "1 listing" / "2 listings", tap it and the page shows every adventure on the platform —
+"it reverts away from Botswana and shows me many adventures."
+
+Neither surface was wrong alone. `renderCatCounts()` filtered EVERY category to `activeCity`,
+while `renderAdvGrid()` has no city filter by design — Adventures is deliberately borderless
+(the 28 Jun ruling that travel-planning categories are not local to the buyer; COUNTRY-FILTER-1
+then made `advCountry=ALL` the default, which exposed the gap rather than causing it). They
+disagreed, and the tile was the liar: it counted a set the grid can never show.
+
+Fix: `BORDERLESS_CATS` / `isBorderlessCat()` declared next to `normCat`, and BOTH count branches
+(live counts and the placeholder fallback) now skip the city filter for a borderless category and
+apply the SAME country predicate the grid uses. Evidence: `scripts/repro_borderless_count.js`
+reproduces the testers' exact numbers against the pre-fix file (Sydney tile 2 / grid 6, Maun tile
+1 / grid 6, exit 1) and passes against the fixed one (6/6; 2/2 with the picker narrowed to AU,
+exit 0). **RG-0078** locks it and re-runs that repro on every ledger pass — including the grid
+half, so nobody "fixes" this from the wrong end by pinning Adventures back to the buyer's city.
+
+**SPEC-PROVENANCE-1 (TS-0031, David Jnr, relayed).** He reported the cars pre-final stage added
+his vehicle's details wrong and doubted the "AI searches and populates" explanation. He was right
+about the mechanism: there is no lookup in that lane — make, model and variant are read off his
+photos by vision plus a model prior (CARS-SPEC-1), and the market note is an ungrounded
+one-sentence Haiku, so an uncommon variant can come back confidently wrong. The screen asked him
+to warrant "I have personally verified every detail above" while saying nothing about where the
+details came from — that is how a seller ends up signing for a guess. The attestation block now
+states it in place: read from your photos, nothing looked up in a vehicle database, check every
+figure against your own papers. **RG-0079** locks it, including that the warranty text stays —
+provenance is added alongside the attestation, never instead of it.
+
+Whether to GROUND the cars lane in real vehicle data is a design and cost decision, so it was not
+taken by an agent: recorded in BACKLOG.md (14 Aug) with the three options and the fault left
+`triaged`, not closed.
+
+**Also:** RG-0065 (migration 018 landed — the maint lane answers on the key alone), RG-0066
+(GATE-TRUTH-1 live — a wrong reviewer code says so in words) and RG-0069 (TSL-DBPROOF-1 — the DB
+proves itself over anonymous HTTPS) all read "READY TO LOCK" and were promoted to LOCKED as their
+own entries instructed. Queue: **0 new** (was 3) — 2 fixed, 1 triaged.
+
+## 2026-08-14 — Grok 4.6 placed as a fourth text lane; retroactive-repricing rule added
+
+Grok 4.6 ties GPT-5.6 Sol on Intelligence Index at roughly a third of the blended cost, so it is a
+real candidate — but it enters at slot four, and Scaleway's EU slot is untouched. Scaleway is in the
+chain for jurisdiction, not capability; promoting a third US provider above it would put three US
+lanes ahead of any non-US one, and a T3 account action takes all three together.
+
+Text tiers only. Vision support is contested in the sources and vision is the binding constraint
+(8 of 22 features), so Grok is not in the vision chain. Nothing is wired before launch.
+
+New standing rule, generalised beyond this vendor: **a price that can re-rate work already performed
+is unbudgetable.** xAI rebills the entire request at $4/$12 past 200K tokens, so the last token can
+double the cost of the first. Marginal tiering is acceptable; retroactive tiering is only usable
+behind a hard cap that makes the cliff unreachable.
+
+Recorded in `AI_VENDOR_STRATEGY_DECISION_2026-07-11.md` Addendum 10 and the chains in
+`AI_SWAP_ARCHITECTURE.md`.
+
+## 2026-08-14 — GATE-TRUTH-2: the admin gate stops lying about why it refused
+
+**Fault (recurring).** The dashboard unlock page showed *"Connection error. Please try again."*
+with the server healthy throughout (`/health` 200 in 0.34s).
+
+**Root cause of the RECURRENCE, not of the instance.** The gate script was written once in
+May 2026 (`e0e4446`) and **copied into five files**. Every fix since landed in whichever copy was
+in front of the person fixing it — GATE-TRUTH-1 patched `marketsquare.html` on 13 Aug and left
+four copies calling `r.json()` blind, *and left the change-PIN path blind inside the file it did
+patch*. Meanwhile `migrations/016` made the origin answer an nginx **HTML** 401 on `/admin/login`
+(deliberately not exempt, per `migrations/018`), so the blind parse threw and the `.catch`
+labelled **every** distinct refusal — gate lock, wrong password, 503 unset secret, genuine network
+failure — with one identical sentence. **A message that erases the difference between four faults
+guarantees the next one is diagnosed from zero.** That is why it kept coming back.
+
+**Fix.** Status-first branching on every gate fetch (`/admin/login`, `/admin/verify`,
+`/admin/change-pin`) in all five copies: read `r.status` before parsing, and name the actual
+refusal — gate lock (with the reviewer-code instruction), wrong credential, 503 unset secret, or a
+genuine network error naming the origin and the `file://` CORS trap.
+
+**Locked.** `RG-0074` (LOCKED) asserts every copy branches on status before parsing, scoped to the
+gate routes only. `RG-0075` (OPEN, expected to fail) asserts the script has a single source — the
+duplication is the real root cause and stays visible until it is fixed.
+
+**Also.** `/admin/verify` was dropping a still-valid session on an HTML 401 — the gate refusing was
+being read as the token expiring. Fixed in the same pass.
+
+Files: `marketsquare.html`, `dashboard.server.html`, `dashboard.html`, `marketsquare_admin.html`,
+`archive/session_dashboard_live.html`, `scripts/regression_ledger.py`. Not deployed — `/fix` does
+not ship to production.
+
+## 2026-08-14 — GATE-ORIGIN-1: the dashboard stops asking for a password it cannot accept
+
+**Second face of the same fault.** With GATE-TRUTH-2 in place the gate finally named its failure
+honestly — and the honest name was *"the browser could not reach trustsquare.co"*. That is the
+`file://` path: origin `null` is not in `ALLOWED_ORIGINS` (`bea_main.py:133`), the pre-flight is
+refused, `fetch` rejects. **No password can ever work from there**, and the old message had been
+hiding that behind the same sentence it used for the gate lock.
+
+`STATUS.md:379` records that the local sibling is the copy David actually opens — a documented
+habit, not an accident. So the fix is not "tell him afterwards", it is "do not ask".
+
+**Two defects fixed.** The gate hardcoded `BEA` absolute while `_apv3B`, two thousand lines below
+in the same file, already did the `file://` check correctly — so a served page was making every
+gate call a needless cross-origin request. And nothing warned until after a failed round-trip.
+
+Now the gate detects `location.protocol` at render, explains that the browser blocks it before the
+request leaves, and links the working URL.
+
+**Locked.** `RG-0076` asserts both halves: no hardcoded absolute `BEA`, and a live protocol test.
+
+Files: `dashboard.server.html`, `dashboard.html`, `marketsquare_admin.html`,
+`scripts/regression_ledger.py`. Not deployed.
+
+## 14 August 2026 — EULA v1.13: AI disclosure up front, and the three-way EULA fork closed (EULA-FORK-1)
+
+**Why.** David: "we will have to declare in our EULA up front that we use AI in the app,
+designed with it, and did use it to create photos for demos and for demo listings."
+Everything we produce is watermarked/provenance-marked; the exposure is not the marker,
+it is an undisclosed method.
+
+**Found while doing it — the EULA had silently forked into three copies.**
+`terms.html` was v1.12. `eula_clean.html` (the nominal source) and the `_EULA_HTML`
+literal inside `ms.js` — **the copy a user actually clicks Accept on** — were both still
+v1.11 and missing §6.1B Partner Content entirely. Users were accepting an agreement the
+site did not publish. Nothing detected it because nothing compared them. Same shape as
+CHANGELOG-COLLISION-1 and STATUS-COLLISION-1: N hand-maintained copies of one truth, no
+comparator.
+
+**Fixed — machinery, not memory.**
+- `scripts/eula_sync.py` — `eula_clean.html` is now the SOURCE and this is the ONE writer
+  of `terms.html` and the `ms.js` literal. Idempotent, timestamped backups, refuses rather
+  than guesses if an anchor is missing. `--check` exits 1 on drift.
+- All three copies are now byte-identical (100,775 bytes) and at v1.13.
+- Regression ledger **RG-0077** (LOCKED) asserts both halves: the copies stay identical,
+  and the AI disclosure stays in. Source-side by design — /terms sits behind the reviewer
+  gate, so an anonymous live fetch would prove nothing.
+
+**EULA v1.13 content (14 August 2026), added to the shared body:**
+- **Up-front AI disclosure block**, placed before §1 Definitions — AI was used to design
+  and build the Platform and this Agreement; AI image/video generation produced the
+  demonstration and marketing imagery; the Platform uses AI in operation and offers
+  optional paid AI features. States plainly that none of it changes the user's rights,
+  and points to §§8.3, 7.6, 5.5, 7.7.
+- **New §7.7 — Disclosure of the Platform's Own Use of Artificial Intelligence**:
+  design/build under human direction with undiluted Operator accountability; AI-generated
+  imagery depicts imagined subjects, not real people or properties; demonstration listings
+  appear only in demo mode behind the persistent "Demo mode" banner and cannot be
+  transacted on; provenance markers (visible credit, C2PA content credentials, invisible
+  watermarks) are never stripped or defeated; and a user-facing rule that AI-generated or
+  AI-altered media must not misrepresent what is listed (enhancement yes, generation no).
+- **New §8.3 bullet** — Your Content is never sold, licensed or supplied to any third party
+  for training, fine-tuning or evaluating AI/ML models, and is never used to train a model
+  for use outside the Platform. In-Platform processing under §§7.6/7.7 is expressly not
+  external training material.
+
+**Verification.** `node --check ms.js` passes. All three bodies compared byte-for-byte and
+identical. `scripts/eula_sync.py --check` clean. `check_canon_pointers.py` ALL IN LINE.
+Full regression ledger run: no regressions, RG-0077 green.
+
+**State.** On disk only — **not deployed**. `ms.js` and `terms.html` are both in
+`deploy_manifest.txt`, so the next `deploy` push ships the new acceptance modal and the
+published page together. `canon.yml` and `LEGAL_VERSIONS.md` bumped to v1.13; the A6
+counsel review remains open and now also covers §7.7 and the §8.3 commitment.
+
+## 2026-08-14 — COUNTRY-FILTER-1: adventures borderless by default, filterable on request
+
+Kenya's 24 super listings shipped with no row in the Adventures country picker, so the market was
+only reachable under "All countries". Botswana had been in the same state since July.
+
+- Kenya and Botswana rows added (the two countries with live listings and no way in)
+- `advCountry` now defaults to `ALL` — borderless is the default, matching the 28 Jun ruling that
+  travel-planning categories are not local to the buyer. It previously defaulted to `ZA`, which
+  pinned every user to South Africa while the browse grid ignored the picker entirely
+- `renderGrid()` now honours the country filter for adventures rows, as `renderAdvGrid()` already did
+- The choice persists across reloads instead of resetting
+
+No backend change: Branch C still returns every adventure regardless of city. The picker narrows
+what was returned; it is not a precondition for reach.
+
+**RG-0073** locks the invariant — every country present in live `/listings` must have a picker row —
+so the next market to ship can't repeat this.
+
+Also: the tester-intake maint-scope guard was asserting the pre-GATE-EXEMPT-MAINT-1 scope and
+failing on correct code, putting DANGER on every deploy. Rewritten to assert the ruled scope
+(`/admin/faults*` + `/dashboard/maint`, exactly). All 17 guards pass.
+
 ## 2026-08-14 — DRIFT-CACHEBUST-1: the deploy engine was never stalled
 
 `check_deploy_drift.py` compared the md5 of each local manifest file against the copy served on the

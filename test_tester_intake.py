@@ -164,10 +164,19 @@ def test_maintenance_key_opens_faults_and_nothing_else():
     src = _read("bea_main.py")
     assert "def _require_maint" in src, "the scoped maintenance credential is gone"
     guarded = re.findall(r"@app\.(?:get|post|put|delete)\(\"([^\"]+)\"\)\s*\n(?:async )?def [^\n]*\n?[^\n]*Depends\(_require_maint\)", src)
-    stray = [r for r in guarded if not r.startswith("/admin/faults")]
+    # GATE-EXEMPT-MAINT-1 (David's ruling, 13 Aug 2026; migration 018, live 14 Aug): the maint
+    # lane's scope is the fault endpoints PLUS the maintenance dashboard -- "and ONLY those"
+    # (RG-0065). This guard asserted the pre-ruling scope, so it failed on CORRECT code and put
+    # DANGER on every deploy; a verdict that is always wrong is how a real one gets waved through.
+    # It stays strict: the allowlist is exact, and anything outside it still fails.
+    MAINT_SCOPE_EXACT = {"/dashboard/maint"}
+    MAINT_SCOPE_PREFIX = ("/admin/faults",)
+    stray = [r for r in guarded
+             if r not in MAINT_SCOPE_EXACT and not r.startswith(MAINT_SCOPE_PREFIX)]
     assert not stray, "MS_MAINT_KEY now opens endpoints outside the fault lane: " + ", ".join(stray)
-    assert src.count("Depends(_require_maint)") == 4, \
-        "expected exactly 4 maintenance-scoped endpoints, found %d" % src.count("Depends(_require_maint)")
+    assert src.count("Depends(_require_maint)") == 5, \
+        "expected exactly 5 maintenance-scoped endpoints (4x /admin/faults + /dashboard/maint), found %d" \
+        % src.count("Depends(_require_maint)")
     i = src.find('@app.post("/admin/flags")')
     assert "Depends(_require_admin)" in src[i:i + 200], \
         "the launch switches must stay on the FULL admin credential, never the scoped one"

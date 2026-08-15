@@ -5,6 +5,155 @@
 
 ## Current Session
 
+- **STANDING LANE MOVES TO OPENAI (David's ruling, 14 Aug 2026 — Addendum 11).** Resulting order:
+  **1. OpenAI (standing) · 2. Anthropic · 3. Scaleway EU · 4. Grok** (capped, text tiers only, not
+  wired pre-launch). The reason is INDEPENDENCE, not price — David's words: this "will also ensure
+  we don't use Anthropic as the CEO/COO/Guidance and also then outsource our work to Anthropic."
+  Claude authored most of this codebase and advises at CEO/COO level; the same vendor also doing the
+  production work makes judgement and execution one correlated dependency. Addendum 1 already
+  accepted that logic for REVIEW ("Claude auditing Claude has correlated blind spots"); this extends
+  it to EXECUTION. Supersedes "Staying with Claude" as the STANDING LANE only — Claude remains the
+  guidance/harness layer, which was never the thing being procured. Cost independently agrees
+  (funnel: gpt-5.6-luna first on haiku/triage/vision at +78/78/79%, golden-set passed) but did not
+  drive it. Sonnet's +25% is below the 30% bar and moves anyway as part of a whole-lane ruling —
+  a different decision class from per-tier procurement, which the 30% bar still governs.
+- **The $50/90d absolute floor is now a POST-LAUNCH test, not a pre-launch gate.** It requires
+  spend-log volumes that cannot exist before launch, so applied pre-launch it was never a test —
+  it was a permanent block. David: these were "discussions that then became hammers to keep us
+  pegged." From first revenue it applies as written; before that it is informational and never
+  blocks. Amended on the card so the rule travels with the data (Addendum 8's own design).
+- **Standing principle worth keeping:** an analysis output is not a requirement, and a gate that
+  cannot be satisfied in the current phase is a blocker masquerading as rigour. Same fault class as
+  a guard asserting an implementation detail instead of an invariant — DRIFT-CACHEBUST-1 and the
+  stale maint-scope guard, both found the same day.
+- **LIVE — flip applied and verified 14 Aug 2026, 20:05 UTC.** `POST /admin/flags` needs a JWT from
+  a dashboard login, which Claude will not perform on David's behalf, so the change went in as a
+  direct write to `launch_switches.ai_active` on the box — database backed up first
+  (`marketsquare.db.bak-lane-20260814-200544`), no credential typed, displayed or handled by anyone.
+  The provider cache is ~10s and the lane is DB-backed by design ("Page-4 switchable, no restart"),
+  so it took effect without a restart. Verified from the app's own `GET /flags`, not from the row
+  written: **active=openai · standing=openai · override=null**. Record and live now agree and
+  **RG-0019 reads green** ("live standing lane 'openai' == register — record is current"); RG-0018
+  green too (card 13d old, 5 priced / 5 wired). Rollback = same write with 'anthropic', or restore
+  the printed .bak-lane file.
+
+- **Tester queue cleared to zero new (14 Aug, evening).** TS-0032 + TS-0033 were one fault:
+  the Adventures tile counted city-scoped listings while the Adventures page is borderless by
+  design, so the number never survived the tap. Fixed at class level (**BORDERLESS-COUNT-1**,
+  RG-0078) with `scripts/repro_borderless_count.js` as named evidence — it reproduces the
+  testers' exact numbers (Sydney 2→6, Maun 1→6) against the pre-fix file and passes against the
+  fixed one. Both rows set **fixed**, not verified: the fix is in source and gated, and reaches
+  the reporters on the next nightly deploy. TS-0031 (cars AI vehicle details) is **triaged**:
+  its honest half shipped (**SPEC-PROVENANCE-1**, RG-0079 — the attestation screen now says the
+  specs were read from photos, not looked up), while whether to ground the lane in real vehicle
+  data is David's call and sits in BACKLOG.md with three options. RG-0065, RG-0066 and RG-0069
+  promoted OPEN → LOCKED, as each entry instructed, now that they pass.
+- **Not mine, flagged:** the ledger's last run went red on **RG-0019** (live AI lane is
+  `anthropic`, `ai_price_card.json` records `openai`). That file was edited at 21:59 by a
+  concurrent session — my 21:56 run was green — so it is in-flight work on the model register,
+  not a fault in this session's changes. Left untouched deliberately rather than raced; the
+  register needs the switch reason recorded by whoever made the switch.
+
+- **Grok placed FOURTH in the swap chains; retroactive-repricing becomes a standing rule
+  (David's ruling, 14 Aug 2026 — Addendum 10).** Grok 4.6 (xAI, 12 Aug) is $2/$6 with Intelligence
+  Index 61, tying GPT-5.6 Sol at $5/$30 — so on cost-per-capability the honest comparison is the
+  OPENAI slot, not Scaleway's. Placed fourth anyway and Scaleway's EU slot left alone, because the
+  tail of the chain exists for JURISDICTIONAL diversity: three US lanes ahead of any non-US one
+  would all fall to a single T3 account action, the class that by definition won't self-heal.
+  Text tiers only — vision is the binding constraint (8 of 22 features) and Grok 4.6's vision
+  support is contested in the sources, so it is NOT in the vision chain. Not wired before launch
+  (Addendum 4 stands). Verified against the live field by search, not from training memory.
+- **NEW RULE, generalised from David's reaction ("that is actually a very bad feature"):** a price
+  that can re-rate work ALREADY PERFORMED is unbudgetable in the same way a percentage-of-value
+  cost is. xAI rebills the ENTIRE request at $4/$12 once a prompt passes 200K tokens — the last
+  token can double the cost of the first. Marginal tiering is fine; retroactive tiering is not.
+  Any such lane may be used ONLY behind a hard cap that makes the cliff unreachable — no cap, no
+  lane, and the adapter refuses or truncates rather than discovering the cliff by paying for it.
+  Applies to every future vendor, not to Grok specifically.
+- **Timely, unrelated:** Claude Sonnet 5's $2/M input is INTRODUCTORY through 31 Aug 2026 and
+  becomes $3/M on 1 Sep — the primary lane's baseline moves in ~2.5 weeks. Budget from $3.
+
+### GATE-TRUTH-2 — the recurring "Connection error" on the dashboard gate is closed at class level
+
+The message was the fault. Five copies of one gate script, four gate fixes applied per-consumer
+instead of per-class, and an origin gate that answers HTML where the script expected JSON. Every
+refusal read identically, so every occurrence was diagnosed fresh.
+
+- All five copies now branch on `r.status` before parsing, on all three gate routes.
+- `RG-0074` LOCKED — a sixth copy, or a regression in any existing one, trips red.
+- `RG-0075` OPEN — the duplication itself. Expected to fail until the gate script is one file.
+- `/admin/verify` no longer discards a valid session when the gate refuses.
+
+**Immediate workaround for David while this is undeployed:** open `https://trustsquare.co/`,
+enter the reviewer code, then open the dashboard in the same browser.
+
+**Not deployed.** Needs a `/ship` or `/TSL` run to reach the live dashboard.
+
+- **EULA v1.13 — AI disclosure written, three-way EULA fork closed (EULA-FORK-1).** Added an
+  up-front AI disclosure block before §1, a new §7.7 (built with AI; AI-generated demo/marketing
+  imagery; demo listings are not offerings; C2PA/invisible provenance markers never stripped; no
+  misrepresenting AI uploads) and a new §8.3 bullet that Your Content is never supplied for
+  external AI-model training. Found en route: `terms.html` was v1.12 while `eula_clean.html` and
+  the `ms.js` **acceptance-modal** copy were still v1.11 without §6.1B — users were accepting text
+  the site did not publish. `scripts/eula_sync.py` is now the one writer (`eula_clean.html` =
+  source, `--check` exits 1 on drift); RG-0077 LOCKED asserts the copies stay identical and the AI
+  disclosure stays in. All three copies byte-identical at 100,775 bytes; ledger clean; canon
+  pointers in line. **On disk, not deployed** — `ms.js` + `terms.html` ship on the next `deploy`
+  push. Open for David: the §8.3 no-external-training commitment is a genuine business constraint
+  (escape valve already in §8.3: change requires individual notice + fresh consent), and A6 counsel
+  review now also covers §7.7.
+
+- **MAINTENANCE AGENT ARMED (14 Aug 2026) — D12 closed, and a trap in its ship path closed with
+  it.** All three preconditions proven before arming, not assumed: `b4_tier2.json` reads READY;
+  `OPENAI_API_KEY` is present in the live `.env` (so `classify()` takes a real AI lane instead of
+  degrading every fault to PATH_B — the mechanism behind TS-0031's four identical verdicts, which
+  was a SANDBOX key gap, not a server one); and push auth now returns PUSH_AUTH_OK. Timer live,
+  05:20/11:20/17:20 UTC, first run 05:21 UTC 15 Aug, `MAINT_PHASE=prelaunch`.
+- **SHIP-PUSH-GUARD-1 — found while arming, fixed before the first unattended run.** The agent
+  captured the `git push` result and DISCARDED it (`maintenance_agent.py:875`). Arming initially
+  produced `PUSH AUTH MISSING`, and on that footing every run would have: committed the fix to a
+  throwaway worktree, failed to push in silence, counted a ship against the rate limit, had
+  `aik_verify` correctly find nothing live, marked the fault **"fix-shipped"**, then force-removed
+  the worktree — orphaning the commit. Fixes made, work binned, register reporting success. Exactly
+  David's complaint ("faults don't get done up to deploy and live") about to be automated 3×/day.
+  Now: a non-zero push aborts the ship, preserves the work on a real `maint-unshipped/<ref>-<ts>`
+  branch, marks the fault **escalated** with the push error, and records NO ship. Push auth was
+  also fixed for real (ed25519 deploy key with write access; `/root/.ssh/config` via base64 because
+  PowerShell mangles quotes and newlines in SSH payloads three separate ways — see lesson below).
+- **PowerShell → SSH quoting, the sibling of the cmd `for /f` lesson:** double-quoted payloads get
+  expanded LOCALLY (`$(...)` ran `grep` on the laptop); empty `""` arguments are DROPPED, leaving
+  bash with an unbalanced quote; and `printf "a\nb"` newlines do not survive, which wrote an SSH
+  config whose line 1 was a bare `Host`. Rule: single-quote the payload, avoid empty-string args,
+  and for any multi-line file send base64 and pipe through `base64 -d` — no spaces, quotes or
+  newlines for PowerShell to touch.
+
+- **COUNTRY-FILTER-1 (14 Aug 2026) — David's ruling honoured: borderless AND filterable, both.**
+  The two were never in tension; they are different layers. Branch C (`bea_main.py`, David 28 Jun)
+  still returns every adventure regardless of city, so a Kenyan lodge stays discoverable from
+  Pretoria — untouched, no backend change. The picker is now an EXPLICIT narrowing on top. What was
+  actually broken: `advCountry` defaulted to `'ZA'` (ms.js:2108), which delivered NEITHER — pinned
+  to one country and unfilterable — so South African adventures appeared under every selection.
+  Four changes: (1) Kenya and Botswana rows added to the picker (marketsquare.html) — both had
+  live listings and no way in; deliberately NOT adding TZ/ZW/UG/RW/ET, which would return empty;
+  (2) default is now `ALL` with the tick moved off ZA, so borderless is what you get until you
+  choose; (3) `renderGrid()` now applies the country filter to adventures rows — `renderAdvGrid()`
+  always did, `renderGrid()` never did, which is why the browse grid ignored the picker entirely;
+  (4) the choice persists in `localStorage` (`ms_adv_country`) instead of resetting to ZA on every
+  reload. `node --check` green.
+- **RG-0073 locks the INVARIANT, not a country list.** Kenya's 24 listings went live with no picker
+  row — reachable only under "All countries". Botswana had been in that state since July, with
+  `ADV_COUNTRY_FLAGS`/`CURRENCY` carrying both codes while the sheet never gained the rows. Seeder,
+  photos, media push and deploy all succeeded; the market was simply unbrowsable. The new entry
+  compares the picker against the countries actually present in live `/listings`, so it stays true
+  when the NEXT market ships rather than rotting like the hardcoded list it replaces. Passing: 9
+  countries with listings, 9 reachable.
+- **Stale maint-scope guard repaired (test_tester_intake.py).** It asserted the PRE-ruling scope
+  (`/admin/faults` only, count 4) and so failed on correct code, putting **DANGER** on every deploy
+  — the same class as DRIFT-CACHEBUST-1: a check written against an implementation detail that
+  legitimately moved. Now asserts the scope David actually ruled (RG-0065): `/admin/faults*` PLUS
+  `/dashboard/maint`, exact allowlist, count 5 — still strict, anything outside still fails. All 17
+  intake guards pass. That verdict should read clean on the next deploy instead of crying wolf.
+
 - **DRIFT-CACHEBUST-1 (14 Aug 2026) — the "stalled deploy engine" was never stalled; the drift
   monitor could not go clean BY CONSTRUCTION.** Every release logged
   `DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: dashboard.html, marketsquare.html`,

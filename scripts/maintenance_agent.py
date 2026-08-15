@@ -872,7 +872,30 @@ def main():
             msg = "maint-agent %s via %s: %s" % (ref, item["source"], item["title"])
             subprocess.run(["git", "add", "-A"], cwd=work, timeout=30)
             subprocess.run(["git", "commit", "-m", msg], cwd=work, capture_output=True, timeout=30)
-            subprocess.run(["git", "push", "origin", "HEAD:deploy"], cwd=work, capture_output=True, timeout=120)
+            # SHIP-PUSH-GUARD-1 (14 Aug 2026): the push result was captured and DISCARDED.
+            # With push auth missing (as it was the moment the agent was first armed) every
+            # run committed to a throwaway worktree, failed to push in silence, counted a
+            # ship against the rate limit, then force-removed the worktree at the end of the
+            # loop -- orphaning the commit. The fault was left "fix-shipped": the register
+            # said done, the site never changed, and the work was unrecoverable. Never again:
+            # a push that did not happen is not a ship, and the work is kept on a real branch.
+            _push = subprocess.run(["git", "push", "origin", "HEAD:deploy"],
+                                   cwd=work, capture_output=True, timeout=120, text=True)
+            if _push.returncode != 0:
+                _err = ((_push.stderr or "") + (_push.stdout or "")).strip().splitlines()
+                _err = _err[-1][:160] if _err else "rc=%d" % _push.returncode
+                _salvage = "maint-unshipped/%s-%s" % (ref, time.strftime("%Y%m%d-%H%M%S"))
+                subprocess.run(["git", "branch", _salvage], cwd=work,
+                               capture_output=True, timeout=30)
+                api("PUT", "/admin/faults/%d" % f["id"], key,
+                    {"status": "escalated",
+                     "fix_note": "maint-agent: fix built and gated GREEN but PUSH FAILED (%s). "
+                                 "Work preserved on branch %s -- NOT shipped, NOT verified."
+                                 % (_err, _salvage)})
+                item["outcome"] = ("PUSH FAILED (%s) -> escalated; work kept on %s. "
+                                   "No ship recorded." % (_err, _salvage))
+                report["actions"].append(item); say("%s -> %s" % (ref, item["outcome"]))
+                continue
             record_ship(recent, ships)
             # AIK-VERIFY-1: prove it live, then and only then mark verified.
             ev = aik_verify(f, key)

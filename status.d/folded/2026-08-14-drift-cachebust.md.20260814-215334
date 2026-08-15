@@ -1,0 +1,24 @@
+
+- **MAINTENANCE AGENT ARMED (14 Aug 2026) — D12 closed, and a trap in its ship path closed with
+  it.** All three preconditions proven before arming, not assumed: `b4_tier2.json` reads READY;
+  `OPENAI_API_KEY` is present in the live `.env` (so `classify()` takes a real AI lane instead of
+  degrading every fault to PATH_B — the mechanism behind TS-0031's four identical verdicts, which
+  was a SANDBOX key gap, not a server one); and push auth now returns PUSH_AUTH_OK. Timer live,
+  05:20/11:20/17:20 UTC, first run 05:21 UTC 15 Aug, `MAINT_PHASE=prelaunch`.
+- **SHIP-PUSH-GUARD-1 — found while arming, fixed before the first unattended run.** The agent
+  captured the `git push` result and DISCARDED it (`maintenance_agent.py:875`). Arming initially
+  produced `PUSH AUTH MISSING`, and on that footing every run would have: committed the fix to a
+  throwaway worktree, failed to push in silence, counted a ship against the rate limit, had
+  `aik_verify` correctly find nothing live, marked the fault **"fix-shipped"**, then force-removed
+  the worktree — orphaning the commit. Fixes made, work binned, register reporting success. Exactly
+  David's complaint ("faults don't get done up to deploy and live") about to be automated 3×/day.
+  Now: a non-zero push aborts the ship, preserves the work on a real `maint-unshipped/<ref>-<ts>`
+  branch, marks the fault **escalated** with the push error, and records NO ship. Push auth was
+  also fixed for real (ed25519 deploy key with write access; `/root/.ssh/config` via base64 because
+  PowerShell mangles quotes and newlines in SSH payloads three separate ways — see lesson below).
+- **PowerShell → SSH quoting, the sibling of the cmd `for /f` lesson:** double-quoted payloads get
+  expanded LOCALLY (`$(...)` ran `grep` on the laptop); empty `""` arguments are DROPPED, leaving
+  bash with an unbalanced quote; and `printf "a\nb"` newlines do not survive, which wrote an SSH
+  config whose line 1 was a bare `Host`. Rule: single-quote the payload, avoid empty-string args,
+  and for any multi-line file send base64 and pipe through `base64 -d` — no spaces, quotes or
+  newlines for PowerShell to touch.
