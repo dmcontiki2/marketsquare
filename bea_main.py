@@ -1435,18 +1435,68 @@ _AI_COST = {
     "sonnet_rewrite": 0.0150,
 }
 
-# Real list prices, USD per 1,000,000 tokens (input, output). Update if Anthropic re-prices.
-_MODEL_PRICE = {
-    "haiku":          (0.80,  4.00),
-    "sonnet":         (3.00, 15.00),
-    "sonnet_vision":  (3.00, 15.00),
-    "sonnet_rewrite": (3.00, 15.00),
-    "opus":           (15.00, 75.00),
+# Real list prices, USD per 1,000,000 tokens (input, output) — keyed by MODEL ID and
+# sourced from ai_price_card.json at boot (P6, 15 Aug 2026), so this table can never
+# disagree with the register. The old table was keyed on TIER with Anthropic's prices,
+# which was wrong for every call once the base lane moved to OpenAI (AI_LANE_GUIDANCE
+# P6 / baseline drift D1+D3). EUR lanes are converted at the baseline's buffered rate.
+_PRICE_CARD_FX = 1.155   # EUR->USD incl. 5% buffer — AI_BASELINE.json fx_multiplier_eur_lanes
+_MODEL_PRICE_FALLBACK = {
+    # embedded copy of ai_price_card.json 2026-08-01.1 (+sol addendum 15 Aug) for hosts
+    # where the card file is absent (it is not in the deploy manifest — drift D7)
+    "claude-haiku-4-5-20251001": (1.00, 5.00),
+    "claude-sonnet-4-6":         (3.00, 15.00),
+    "gpt-5.6-luna":              (0.20, 1.20),
+    "gpt-5.6-terra":             (2.00, 12.00),
+    "gpt-5.6-sol":               (5.00, 30.00),
+    "mistral-medium-3.5-128b":   (1.5 * 1.155, 7.5 * 1.155),   # card lists EUR — converted
+    # legacy, outside the register (AdvertAgent perimeter — drift D8):
+    "opus":                      (15.00, 75.00),
 }
 
-def _token_cost(model_key: str, in_tok: int, out_tok: int) -> float:
-    """Exact USD cost from real token counts (C2). Falls back to the flat estimate."""
-    price = _MODEL_PRICE.get(model_key)
+def _load_model_prices():
+    """MODEL-keyed price table read from ai_price_card.json; card wins, embedded
+    fallback fills any model the card does not carry. Never raises."""
+    try:
+        import json as _json
+        _p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_price_card.json")
+        with open(_p, encoding="utf-8") as _fh:
+            _card = _json.load(_fh)
+        _out = {}
+        for _lane, _pd in (_card.get("providers") or {}).items():
+            for _mid, _m in (_pd.get("models") or {}).items():
+                _fx = _PRICE_CARD_FX if (_m.get("ccy") == "EUR") else 1.0
+                _out[_mid] = (float(_m["in"]) * _fx, float(_m["out"]) * _fx)
+        if _out:
+            return {**_MODEL_PRICE_FALLBACK, **_out}
+    except Exception as _e:
+        _log.warning("ai_price_card.json unreadable (%s) — using embedded price fallback", _e)
+    return dict(_MODEL_PRICE_FALLBACK)
+
+_MODEL_PRICE = _load_model_prices()
+
+# Legacy TIER keys still arrive from call sites; resolve them to the model the serving
+# (or active) lane maps for that task tier. Exact when the caller states the serving
+# lane; the intended-lane guess only remains for callers that pass neither.
+_TIER_TO_TASK = {"haiku": "haiku", "sonnet": "sonnet", "sonnet_vision": "vision",
+                 "sonnet_rewrite": "sonnet", "vision": "vision", "triage": "triage",
+                 "design": "design"}
+
+def _tier_model(model_key: str, prov: str | None = None) -> str:
+    """Legacy tier key -> model id via the given (or active) lane's TASK_MODEL row."""
+    try:
+        import ai_provider as _ap
+        _prov = prov or _ts_active_provider()
+        _task = _TIER_TO_TASK.get(model_key, model_key)
+        return _ap.TASK_MODEL.get(_prov, {}).get(_task) or model_key
+    except Exception:
+        return model_key
+
+def _token_cost(model_key: str, in_tok: int, out_tok: int, provider: str | None = None) -> float:
+    """Exact USD cost from real token counts (C2/P6). model_key may be a MODEL ID
+    (preferred) or a legacy tier key, resolved via the serving lane's model map.
+    Falls back to the flat estimate only when no price is known at all."""
+    price = _MODEL_PRICE.get(model_key) or _MODEL_PRICE.get(_tier_model(model_key, provider))
     if not price:
         return _AI_COST.get(model_key, 0.0023)
     in_rate, out_rate = price
@@ -1501,8 +1551,11 @@ try:
     _TS_AI_MODELS   = _ts_ai.TASK_MODEL.get(_TS_AI_PROVIDER, _ts_ai.TASK_MODEL["anthropic"])
 except Exception:
     _TS_AI_PROVIDER = "anthropic"
+    # Import-failure fallback ONLY (seam unreachable => this path speaks raw Anthropic).
+    # D2 fix (15 Aug 2026): vision was claude-sonnet-4-6 here vs haiku in the seam - an
+    # import failure silently tripled every vision call's price. Now matches the seam row.
     _TS_AI_MODELS   = {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
-                       "vision":"claude-sonnet-4-6","triage":"claude-haiku-4-5-20251001"}
+                       "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"}
 # Endpoint + key resolve from the active provider (today = Anthropic; the URL/headers helper
 # below is the single place the wire protocol lives, so a swap changes it here, not in 15 bodies).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
@@ -1650,27 +1703,40 @@ async def _fire_webhook(url: str, payload: dict):
 
 
 def _log_ai_spend(email: str, endpoint: str, model_key: str,
-                  in_tok: int | None = None, out_tok: int | None = None):
+                  in_tok: int | None = None, out_tok: int | None = None,
+                  provider: str | None = None, model: str | None = None):
     """Background task: log AI call cost + trigger alert check if threshold crossed.
     Non-blocking — called via background_tasks.add_task() after every AI call.
     Never raises — log errors only.
 
     C2 (Session 97): real token counts -> exact cost via _MODEL_PRICE, cost_is_real=1.
     No tokens (legacy sites) -> flat _AI_COST estimate, cost_is_real=0. Backward compatible.
+
+    P6 (15 Aug 2026 — AI_LANE_GUIDANCE, baseline drift D3): call sites that hold the
+    AIResult pass provider= and model= — the lane and model that ACTUALLY answered — so
+    a failover is attributed to the serving lane and costed at that lane's price. With
+    OpenAI as base, a sustained failover to Anthropic is a ~4.4x cost event on the haiku
+    tier; before this fix it was attributed to the intended lane and costed at the wrong
+    rate, i.e. invisible. Callers passing neither keep intended-lane attribution (an
+    honest guess, wrong exactly when a mid-call failover occurred).
     """
     try:
+        if provider:
+            _prov = provider            # serving lane, straight from AIResult.provider
+        else:
+            try:
+                _prov = _ts_active_provider()   # legacy caller: INTENDED lane
+            except Exception:
+                _prov = 'anthropic'
+        _mid = model or _tier_model(model_key, _prov)   # model that answered (or lane's map)
         if in_tok is not None or out_tok is not None:
             it, ot = int(in_tok or 0), int(out_tok or 0)
-            cost = _token_cost(model_key, it, ot)
+            cost = _token_cost(_mid, it, ot, _prov)
             is_real = 1
         else:
             it, ot = 0, 0
             cost = _AI_COST.get(model_key, 0.0023)
             is_real = 0
-        try:
-            _prov = _ts_active_provider()   # P1: provider attribution — signature & call sites unchanged
-        except Exception:
-            _prov = 'anthropic'
         conn = database.get_db()
         try:
             conn.execute(
@@ -1683,9 +1749,74 @@ def _log_ai_spend(email: str, endpoint: str, model_key: str,
             _maybe_fire_spend_alert(conn)
         finally:
             conn.close()
+        _maybe_fire_lane_alert(_prov, endpoint, email or '')   # AL-1/AL-2, AI_BASELINE alert_rules
         _settle_hold(email or '')   # C1-RES: real spend recorded — release the reservation
     except Exception as exc:
         _log.error("_log_ai_spend failed: %s", exc)
+
+
+# ── AL-1 / AL-2 — lane alert rules (AI_BASELINE.json alert_rules, 15 Aug 2026) ──────
+# AL-1: the serving lane is not the base lane for >60 min — a sustained failover is a
+#       re-pricing event (anthropic is 4.4x base on haiku). AL-2: the SAFETY NET lane
+#       serves at all — cost-exempt by role, but reaching it must alert and be time-boxed.
+# Heartbeat/probe rows are excluded: they exercise every lane by design.
+_LANE_ALERT = {"base": None, "safety": None, "offbase_since": None,
+               "last_al1": 0.0, "last_al2": 0.0}
+
+def _lane_alert_roles():
+    """(base_lane, safety_net_lane) from AI_BASELINE.json; RUL-002 literals if absent."""
+    if _LANE_ALERT["base"] is None:
+        base_lane, safety = "openai", "scaleway"
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "AI_BASELINE.json"), encoding="utf-8") as _fh:
+                _b = json.load(_fh)
+            base_lane = _b.get("baseline_lane") or base_lane
+            for _ln, _r in (_b.get("lane_roles") or {}).items():
+                if _r.get("cost_exempt"):
+                    safety = _ln
+        except Exception:
+            pass
+        _LANE_ALERT["base"], _LANE_ALERT["safety"] = base_lane, safety
+    return _LANE_ALERT["base"], _LANE_ALERT["safety"]
+
+def _maybe_fire_lane_alert(prov: str, endpoint: str, email: str = ""):
+    """Never raises; at most one webhook per rule per hour."""
+    try:
+        if endpoint == "/breaker/heartbeat" or (email or "").startswith("system:"):
+            return
+        import time as _t
+        base_lane, safety = _lane_alert_roles()
+        now = _t.time()
+        payload = None
+        if prov == safety and (now - _LANE_ALERT["last_al2"]) > 3600:
+            _LANE_ALERT["last_al2"] = now
+            _log.error("AL-2: SAFETY NET lane %r served %s — cost-exempt by role, but an "
+                       "unnoticed week here is an ~8x cost event nobody approved", prov, endpoint)
+            payload = {"alert": "ai_lane_al2_safety_net", "serving": prov,
+                       "endpoint": endpoint, "rule": "AL-2: safety net serving at all"}
+        if prov != base_lane:
+            if _LANE_ALERT["offbase_since"] is None:
+                _LANE_ALERT["offbase_since"] = now
+            elif (now - _LANE_ALERT["offbase_since"]) > 3600 and (now - _LANE_ALERT["last_al1"]) > 3600:
+                _LANE_ALERT["last_al1"] = now
+                _log.error("AL-1: serving lane %r off-base (base=%r) for >60 min — a sustained "
+                           "failover is a re-pricing event", prov, base_lane)
+                payload = payload or {"alert": "ai_lane_al1_offbase_60m", "serving": prov,
+                                      "base": base_lane, "endpoint": endpoint,
+                                      "rule": "AL-1: off-base >60 minutes"}
+        else:
+            _LANE_ALERT["offbase_since"] = None   # base lane served — the failover has ended
+        if payload and N8N_WEBHOOK_AI_ALERT:
+            import asyncio as _aio
+            try:
+                _loop = _aio.get_event_loop()
+                if _loop.is_running():
+                    _loop.create_task(_fire_webhook(N8N_WEBHOOK_AI_ALERT, payload))
+            except Exception:
+                pass  # alert failure must never affect user response
+    except Exception as exc:
+        _log.error("_maybe_fire_lane_alert failed: %s", exc)
 
 
 def _maybe_fire_spend_alert(conn):
@@ -3774,7 +3905,8 @@ def _vision_orient_image(img):
         it, ot = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE (moved from the caller): tokens are spent
         # even when the answer is 'none' and no rotation happens.
-        _log_ai_spend("", "/listings/photo:orient", "haiku", it, ot)
+        _log_ai_spend("", "/listings/photo:orient", "haiku", it, ot,
+                      provider=_sr.provider, model=_sr.model)
         # PIL.rotate is COUNTER-CLOCKWISE for positive angles.
         if "ccw" in ans:
             return (img.rotate(90, expand=True), True, it, ot)
@@ -3831,10 +3963,11 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     import base64 as _b64
     probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
     pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-    scan, _it, _ot = _anon_photo_scan(
+    scan, _it, _ot, _svd = _anon_photo_scan(
         _b64.b64encode(pbuf.getvalue()).decode(), _ts_active_provider(), category or "")
     if _it is not None or _ot is not None:
-        _log_ai_spend(spend_who, "/listings/photo#anon-scan", "sonnet_vision", _it, _ot)
+        _log_ai_spend(spend_who, "/listings/photo#anon-scan", "sonnet_vision", _it, _ot,
+                      provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
     if not scan:   # no key / provider down / unparseable verdict — FAIL CLOSED
         raise HTTPException(status_code=503,
             detail="Photo safety check unavailable — please try again in a minute")
@@ -5705,7 +5838,8 @@ async def aa_market_note(req: dict, background_tasks: BackgroundTasks):
             raise RuntimeError("active AI provider returned no result")
         text = (_res.text or "").strip()
         background_tasks.add_task(_log_ai_spend, _email, "/advert-agent/market-note", "haiku",
-                                  _res.in_tokens, _res.out_tokens)
+                                  _res.in_tokens, _res.out_tokens,
+                                  provider=_res.provider, model=_res.model)
         return {"response": text, "_provider": _res.provider, "_model": _res.model, **_report_stamp()}
     except Exception as exc:
         _log.error("aa_market_note failed: %s", exc)
@@ -5837,7 +5971,8 @@ async def listing_draft_from_photos(req: dict, background_tasks: BackgroundTasks
         ai = json.loads(text)
         _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, "", "/listings/draft-from-photos",
-                                  "haiku", _in, _out)
+                                  "haiku", _in, _out,
+                                  provider=_sr.provider, model=_sr.model)
         caps = [{"slot": str(c.get("slot",""))[:40], "caption": str(c.get("caption",""))[:90]}
                 for c in (ai.get("captions") or []) if c.get("caption")]
         return {"captions": caps,
@@ -5906,7 +6041,8 @@ async def listing_draft_from_photo(req: dict, background_tasks: BackgroundTasks)
         ai = json.loads(text)
         _in, _out = _sr.in_tokens, _sr.out_tokens
         background_tasks.add_task(_log_ai_spend, email, "/listings/draft-from-photo",
-                                  "haiku", _in, _out)
+                                  "haiku", _in, _out,
+                                  provider=_sr.provider, model=_sr.model)
         out = dict(draft)
         for k in ("title", "category", "condition", "price", "description"):
             v = (ai.get(k) or "").strip() if isinstance(ai.get(k), str) else ai.get(k)
@@ -6237,7 +6373,8 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
         conn.commit()
     conn.close()
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku", _co_in, _co_out)
+    background_tasks.add_task(_log_ai_spend, req.email, "/advert-agent/coach", "haiku", _co_in, _co_out,
+                              provider=_sr.provider, model=_sr.model)
     return {"coaching_json": coaching_json, "tuppence_remaining": tuppence_remaining, "free_used": free_used}
 
 
@@ -7237,10 +7374,11 @@ def search_interpret(req: SearchInterpretIn):
             model_used, it, ot = r.model, r.in_tokens, r.out_tokens
         conn.execute(
             "INSERT OR REPLACE INTO search_interpret_cache (query_norm, params_json, model, cost_usd) VALUES (?,?,?,?)",
-            (qn, json.dumps(params), model_used, _token_cost("haiku", it or 0, ot or 0) if not SEARCH_AI_DRYRUN else 0.0))
+            (qn, json.dumps(params), model_used, _token_cost(model_used, it or 0, ot or 0) if not SEARCH_AI_DRYRUN else 0.0))
         conn.commit()
         if not SEARCH_AI_DRYRUN:
-            _log_ai_spend("", "/search/interpret", "haiku", it, ot)
+            _log_ai_spend("", "/search/interpret", "haiku", it, ot,
+                          provider=r.provider, model=r.model)
         return {"enabled": True, "params": params, "cached": False}
     except Exception:
         return {"enabled": True, "fallback": True}
@@ -9731,7 +9869,8 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
     guidance["current_score"] = current_score
     guidance["score_target"]  = score_target
     guidance["points_needed"] = points_needed
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku", _g_in, _g_out)
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/guidance", "haiku", _g_in, _g_out,
+                              provider=_sr.provider, model=_sr.model)
     return guidance
 
 
@@ -9895,6 +10034,7 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
             raise RuntimeError("AI call failed (no content/usage)")   # was resp.raise_for_status()
         comment = _sr.text.strip()
         _uc_in, _uc_out = _sr.in_tokens, _sr.out_tokens   # C2
+        _uc_prov, _uc_model = _sr.provider, _sr.model     # P6 serving-lane attribution
     except Exception as exc:
         _log.warning("upload-comment Haiku call failed: %s", exc)
         comment = (
@@ -9902,8 +10042,10 @@ async def trust_score_upload_comment(req: UploadCommentRequest, background_tasks
             + (f"Next: {next_suggestion['name']} (+{next_suggestion['points']} pts)." if next_suggestion else "")
         )
         _uc_in, _uc_out = None, None   # API failed — flat estimate
+        _uc_prov, _uc_model = None, None
 
-    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku", _uc_in, _uc_out)
+    background_tasks.add_task(_log_ai_spend, req.email, "/trust-score/upload-comment", "haiku", _uc_in, _uc_out,
+                              provider=_uc_prov, model=_uc_model)
     return {"comment": comment, "signal_pts": signal_pts, "next_signal": next_suggestion}
 
 
@@ -10555,7 +10697,8 @@ If you cannot read the document clearly, set confidence below 0.5 and explain in
                     result.get("confidence", 0) >= 0.75 and
                     result.get("document_appears_genuine", True))
         _log_ai_spend(email, "/users/verify-identity", "sonnet_vision",
-                      getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None))
+                      getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None),
+                      provider=getattr(_sr, "provider", None), model=getattr(_sr, "model", None))
         return {
             "verified": bool(verified),
             "confidence": float(result.get("confidence", 0)),
@@ -11708,6 +11851,165 @@ def review_verify(x_review_token: str = Header(default=None), ts_review: str = C
         raise HTTPException(status_code=401, detail="Wrong scope.")
     return {"valid": True, "scope": "review"}
 
+# ── GATE-EMAIL-1 (15 Aug 2026, David's ruling) — email-linked gate entry ──────
+# Testers enter their EMAIL, not a code: if it is on the reviewer allowlist we
+# email a one-time link; clicking it sets the SAME ts_review cookie the code
+# path sets (same review-scope JWT, same 365-day life, same nginx auth_request
+# enforcement). The reviewer-code path (/review/login) stays live as break-glass
+# — an email outage must never lock the gate entirely.
+#   * Allowlist: env MS_REVIEW_EMAILS (comma-separated) first, else one-per-line
+#     file /var/www/marketsquare/review_emails.txt. Re-read on every call so
+#     adding or revoking a tester is a file edit, no restart (the exact
+#     _review_code_hash pattern).
+#   * No enumeration: /review/request-link always answers ok; an off-list email
+#     is logged server-side and no mail leaves.
+#   * Single-use: each link carries a jti; a claimed jti is refused for the rest
+#     of its 30-minute life (in-memory — a restart clears the set, acceptable at
+#     this token life; the link expiry itself is the backstop).
+#   * Containment UNCHANGED: origin lockdown (RG-0028), the nginx gate
+#     (GATE-ENFORCE-2) and the 8/10-min per-IP rate limit all stay. Claim email
+#     + IP are logged on every entry (per-person audit trail). Tokens are
+#     deliberately NOT hard-bound to the claim IP: tester ISPs rotate addresses
+#     (David's own has, three times on record) and a hard bind would re-create
+#     the exact lockouts this change exists to end.
+_REVIEW_EMAILS_FILE = "/var/www/marketsquare/review_emails.txt"
+_REVIEW_LINK_MIN    = 30      # emailed link lives 30 minutes, works once
+_review_link_used   = {}      # jti -> exp epoch (single-use memory)
+
+def _review_emails():
+    """Lower-cased reviewer email allowlist. Env first, then file; re-read every call."""
+    env = os.environ.get("MS_REVIEW_EMAILS", "").strip()
+    raw = env.replace(",", "\n") if env else ""
+    if not raw:
+        try:
+            with open(_REVIEW_EMAILS_FILE, "r") as _f:
+                raw = _f.read()
+        except Exception:
+            return set()
+    out = set()
+    for ln in raw.splitlines():
+        ln = ln.strip().lower()
+        if ln and not ln.startswith("#") and "@" in ln:
+            out.add(ln)
+    return out
+
+def _send_review_link_email(to_email: str, link: str) -> str:
+    """Email the one-time gate access link. Mirrors _send_login_email's proven
+    transport (Resend -> Gmail SMTP fallback, RESEND-FROM-1 + MAIL-FALLBACK-1
+    lessons kept). Returns 'sent' | 'failed' | 'dry'."""
+    subject = "Your TrustSquare access link"
+    html = (
+        "<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+        "<h2 style='color:#0c1a2e'>Open TrustSquare</h2>"
+        "<p>Tap the button to open the TrustSquare preview. This link works once "
+        "and expires in " + str(_REVIEW_LINK_MIN) + " minutes; after that your "
+        "browser stays signed in.</p>"
+        "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+        "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Open TrustSquare &rarr;</a></p>"
+        "<p style='color:#6b7280;font-size:12px'>If you didn't request this, you can ignore this email.</p>"
+        "</div>"
+    )
+    key = os.getenv("RESEND_API_KEY", "")
+    if key:
+        try:
+            import httpx
+            r = httpx.post("https://api.resend.com/emails",
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
+                      "to": [to_email], "subject": subject, "html": html},
+                timeout=20)
+            if r.status_code in (200, 201):
+                return "sent"
+            _log.error("review-link email (resend) HTTP %s: %s -- falling back to Gmail SMTP",
+                       r.status_code, r.text[:200])
+        except Exception as exc:
+            _log.error("review-link email (resend) failed: %s -- falling back to Gmail SMTP", exc)
+    if GMAIL_APP_PASSWORD:
+        try:
+            msg = EmailMessage()
+            msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.set_content("Open TrustSquare: " + link + "  (works once, expires in "
+                            + str(_REVIEW_LINK_MIN) + " minutes)")
+            msg.add_alternative(html, subtype="html")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+                server.starttls()
+                server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                server.send_message(msg)
+            return "sent"
+        except Exception as exc:
+            _log.error("review-link email (smtp) failed: %s", exc)
+            return "failed"
+    return "dry"
+
+class _ReviewLinkRequest(_BaseModel):
+    email: str
+
+@app.post("/review/request-link")
+def review_request_link(req: _ReviewLinkRequest, request: Request):
+    """Email a one-time gate access link to an allowlisted reviewer. Always
+    answers ok (no enumeration). Shares the reviewer per-IP rate limit."""
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    if not _review_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes.")
+    email = (req.email or "").strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if email not in _review_emails():
+        _log.warning("review-link request for OFF-LIST %s from %s -- no mail sent", email, ip)
+        return {"ok": True}
+    tok = _pyjwt.encode(
+        {"scope": "review-link", "email": email, "jti": uuid.uuid4().hex,
+         "exp": datetime.now(timezone.utc) + timedelta(minutes=_REVIEW_LINK_MIN),
+         "iat": datetime.now(timezone.utc)},
+        _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    status = _send_review_link_email(email, APP_URL + "/review/enter?t=" + tok)
+    _log.info("review-link %s to %s (requested from %s)", status.upper(), email, ip)
+    return {"ok": True}
+
+@app.get("/review/enter")
+def review_enter(request: Request, t: str = ""):
+    """Claim an emailed gate link: validate, burn the jti, set the ts_review
+    cookie exactly as /review/login does, land on the app. Any refusal bounces
+    to /?gate=expired where the gate screen explains and offers a fresh link."""
+    from fastapi.responses import RedirectResponse
+    ip = (request.headers.get("x-forwarded-for")
+          or (request.client.host if request.client else "?")).split(",")[0].strip()
+    def _bounce(reason):
+        _log.warning("review-enter refused (%s) from %s", reason, ip)
+        return RedirectResponse(url="/?gate=expired", status_code=302)
+    if not t:
+        return _bounce("no token")
+    try:
+        payload = _pyjwt.decode(t, _REVIEW_SECRET, algorithms=[_JWT_ALGO])
+    except _pyjwt.ExpiredSignatureError:
+        return _bounce("expired")
+    except _pyjwt.InvalidTokenError:
+        return _bounce("invalid")
+    if payload.get("scope") != "review-link":
+        return _bounce("wrong scope")
+    jti = payload.get("jti") or ""
+    _now = datetime.now(timezone.utc).timestamp()
+    for _k in [k for k, v in _review_link_used.items() if v < _now]:
+        _review_link_used.pop(_k, None)
+    if not jti or jti in _review_link_used:
+        return _bounce("already used")
+    _review_link_used[jti] = float(payload.get("exp") or (_now + _REVIEW_LINK_MIN * 60))
+    email = (payload.get("email") or "?").lower()
+    token = _pyjwt.encode(
+        {"scope": "review",
+         "exp": datetime.now(timezone.utc) + timedelta(days=_REVIEW_TOKEN_DAYS),
+         "iat": datetime.now(timezone.utc)},
+        _REVIEW_SECRET, algorithm=_JWT_ALGO)
+    resp = RedirectResponse(url="/", status_code=302)
+    resp.set_cookie("ts_review", token, max_age=_REVIEW_TOKEN_DAYS*24*3600,
+                    httponly=True, secure=True, samesite="lax", path="/")
+    _log.info("review-enter OK for %s from %s", email, ip)
+    return resp
+
+
 # ── SELF-SERVE MAGIC-LINK SIGN-IN (buyers + returning users) ───────────────
 # One email box, no passwords. We email a signed, short-lived link; clicking it
 # proves inbox ownership and signs the person in — creating the account on first
@@ -12242,7 +12544,8 @@ def _anon_ai_rewrite(title: str, desc: str, provider: str, category: str = "", w
         d = m.group(2).strip().strip("*").strip()
         if desc.strip() and not d:   # model dropped the body — distrust it
             return False, title, desc, None, None
-        _log_ai_spend(who, "/agencies/import#anonymise", "haiku", res.in_tokens, res.out_tokens)
+        _log_ai_spend(who, "/agencies/import#anonymise", "haiku", res.in_tokens, res.out_tokens,
+                      provider=res.provider, model=res.model)
         return True, (t or title), d, res.in_tokens, res.out_tokens
     except Exception:
         return False, title, desc, None, None
@@ -12442,7 +12745,8 @@ def _anon_photo_fetch(src):
 
 def _anon_photo_scan(jpeg_b64, provider, category=""):
     """ONE seam-routed vision call → verdict dict or None (None = hold the photo).
-    Returns (scan|None, in_tokens, out_tokens). Never raises."""
+    Returns (scan|None, in_tokens, out_tokens, served|None) where served =
+    (provider, model) that ACTUALLY answered (P6 spend attribution). Never raises."""
     try:
         import ai_provider as _ap
         res = _ap.complete(
@@ -12453,7 +12757,7 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
             task="sonnet", max_tokens=1400, provider=provider)   # Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
         if not res.ok:
             _log.warning("anon photo scan: provider returned not-ok (provider=%s)", provider)
-            return None, None, None
+            return None, None, None, None
         text = (res.text or "").strip()
         if text.startswith("```"):
             text = text.strip("`").lstrip("json").strip()
@@ -12466,10 +12770,10 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
                 v = json.JSONDecoder().raw_decode(text[text.index("{"):])[0]
             except Exception:
                 _log.warning("anon photo scan unparseable (first 120): %r", text[:120])
-                return None, res.in_tokens, res.out_tokens
+                return None, res.in_tokens, res.out_tokens, (res.provider, res.model)
         verdict = str(v.get("verdict", "")).lower().strip()
         if verdict not in ("clean", "redact", "reject"):
-            return None, res.in_tokens, res.out_tokens
+            return None, res.in_tokens, res.out_tokens, (res.provider, res.model)
         regs = []
         for rg in (v.get("regions") or [])[:12]:
             try:
@@ -12489,10 +12793,10 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
                  "fits": (v.get("fits_category")
                           if isinstance(v.get("fits_category"), bool) else None),
                  "flag": _flag if _flag == "inappropriate" else "none"},
-                res.in_tokens, res.out_tokens)
+                res.in_tokens, res.out_tokens, (res.provider, res.model))
     except Exception as _sexc:
         _log.warning("anon photo scan failed: %r", _sexc)
-        return None, None, None
+        return None, None, None, None
 
 def _anon_capsule_geom(gray, bx0, by0, bx1, by1):
     """Estimate the printed-text strip inside an axis-aligned character box.
@@ -12743,7 +13047,8 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
                 task="sonnet", max_tokens=120, provider=provider)
             if res.in_tokens is not None or res.out_tokens is not None:
                 _log_ai_spend(spend_who, endpoint + "#refine", "sonnet_vision",
-                              res.in_tokens, res.out_tokens)
+                              res.in_tokens, res.out_tokens,
+                              provider=res.provider, model=res.model)
             if not res.ok:
                 out.append(rough); continue
             _t = (res.text or "").strip()
@@ -12820,10 +13125,11 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         # UNBLURRED (David, 11 Jul 2026: no needless patches).
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-        v, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
-                                       provider, category)
+        v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                             provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot)
+            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if not v:
             return None, labels
         if v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
@@ -12863,10 +13169,11 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
         img, _n = _anon_photo_redact(img, _big)
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-        v, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
-                                       provider, category)
+        v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                             provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot)
+            _log_ai_spend(spend_who, endpoint, "sonnet_vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if v and v["verdict"] == "clean" and v["confidence"] >= _ANON_PHOTO_CONF:
             # PHOTO-MEASURE-1: same output-truth ceiling on the last-resort rung.
             if _replace_on and _anon_painted_fraction(_pristine, img) > _ANON_MAX_BLUR_FRAC:
@@ -12893,9 +13200,10 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
             held += 1; notes.append("held:ai-ceiling"); continue
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-        scan, _it, _ot = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(agent, "/agencies/import#photo-scan", "sonnet_vision", _it, _ot)
+            _log_ai_spend(agent, "/agencies/import#photo-scan", "sonnet_vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if not scan:
             held += 1; notes.append("held:scan-failed"); continue
         # MODERATION PARITY (David, 5 Aug 2026, asking "does the API agencies upload get
@@ -13558,6 +13866,7 @@ class _FlagsUpdate(BaseModel):
     tuppence_burn_enabled: Optional[bool] = None
     ai_active:             Optional[str]  = None  # AI provider seam: 'anthropic' | 'openai' | 'scaleway' (Page-4 switch)
     ai_active_override:    Optional[str]  = None  # MANUAL PIN: provider = pin (TTL decay) | '' = unpin (1 Aug 2026)
+    reason:                Optional[str]  = None  # free-text WHY for the audit row (D4, 15 Aug 2026) - never a launch_switches column
     fault_report:          Optional[bool] = None  # MAINT-B1b: in-app tester fault intake visible
     intro_relay:           Optional[bool] = None  # INTRO-RELAY-1: masked-alias introductions (dark until CF rail is live)
     account_binding:       Optional[bool] = None  # ACCOUNT-BIND-1: charges bound to the proven session
@@ -13662,8 +13971,16 @@ def get_flags():
 
 @app.post("/admin/flags")
 def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
-    """Admin (JWT) — flip the launch switch. Writes the singleton row, returns full state."""
+    """Admin (JWT) — flip the launch switch. Writes the singleton row, returns full state.
+
+    D4 fix (15 Aug 2026, AI_LANE_GUIDANCE): this route changes the live AI lane for every
+    feature and used to write NO log line and NO audit row — its neighbour /admin/ai-restore
+    logs. Every field change now writes an admin_audit row (actor, prior, new, reason, ts)
+    and lane/pin changes also write a log line. AL-3: a pin (ai_active_override) records
+    actor and reason here, because RG-0019 deliberately does not trip on a pin.
+    """
     data = upd.dict(exclude_unset=True)
+    _reason = (data.pop("reason", None) or "").strip()[:400]
     sets, vals = [], []
     for k, v in data.items():
         if k == "mode":
@@ -13692,11 +14009,43 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
             sets.append(k + " = ?"); vals.append(1 if v else 0)
     conn = database.get_db()
     try:
+        prior = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+        prior = dict(prior) if prior else {}
         if sets:
             sets.append("updated_at = datetime('now')")
             conn.execute("UPDATE launch_switches SET " + ", ".join(sets) + " WHERE id = 1", vals)
             conn.commit()
         row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+        # D4: the change is RECORDED — actor, prior value, new value, reason, timestamp.
+        try:
+            _actor = str((_admin or {}).get("name") or (_admin or {}).get("sub") or "admin")[:80]
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS admin_audit ("
+                " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                " ts TEXT NOT NULL DEFAULT (datetime('now')),"
+                " actor TEXT NOT NULL, action TEXT NOT NULL, field TEXT NOT NULL,"
+                " prior TEXT, new TEXT, reason TEXT)")
+            _newrow = dict(row) if row else {}
+            for _k, _v in data.items():
+                _old = prior.get(_k)
+                _new = _newrow.get(_k, _v)
+                conn.execute(
+                    "INSERT INTO admin_audit (actor, action, field, prior, new, reason) "
+                    "VALUES (?,?,?,?,?,?)",
+                    (_actor, "POST /admin/flags", _k,
+                     None if _old is None else str(_old),
+                     None if _new is None else str(_new), _reason or None))
+                if _k == "ai_active":
+                    _log.warning("AI lane STANDING change via /admin/flags: %r -> %r by %s (reason: %s)",
+                                 prior.get("ai_active"), _v, _actor, _reason or "none given")
+                elif _k == "ai_active_override":
+                    # AL-3: a pin is an unrecorded lane change everywhere else - record it HERE.
+                    _log.warning("AI lane PIN via /admin/flags: %r (prior pin %r) by %s (reason: %s)",
+                                 _v or "UNPIN", prior.get("ai_active_override"), _actor,
+                                 _reason or "none given")
+            conn.commit()
+        except Exception as _aex:
+            _log.error("admin_audit write failed (change APPLIED, record incomplete): %s", _aex)
     finally:
         conn.close()
     return _flags_payload(dict(row) if row else {})
@@ -14546,7 +14895,8 @@ async def vision_draft(
             "Identifying information was detected in photos and removed from this listing to protect seller anonymity."
         )
 
-    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision", _vd_in, _vd_out)
+    background_tasks.add_task(_log_ai_spend, _ve_email, "/listings/vision-draft", "sonnet_vision", _vd_in, _vd_out,
+                              provider=_sr.provider, model=_sr.model)
     return {
         "draft": draft,
         "warnings": all_warnings,
@@ -14816,7 +15166,8 @@ async def ai_listing_rewrite(listing_id: int, email: str, ts_user: str = Cookie(
         _rw_in, _rw_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(email, "/listings/ai-rewrite", "haiku", _rw_in, _rw_out)
+        _log_ai_spend(email, "/listings/ai-rewrite", "haiku", _rw_in, _rw_out,
+                      provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         # Strip markdown fences if model adds them
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
@@ -14919,7 +15270,8 @@ async def ai_seller_audit(listing_id: int, email: str, ts_user: str = Cookie(def
         _au_in, _au_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(email, "/listings/ai-audit", "haiku", _au_in, _au_out)
+        _log_ai_spend(email, "/listings/ai-audit", "haiku", _au_in, _au_out,
+                      provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
@@ -15636,7 +15988,8 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
         cc.close()
 
     # C3 — log real AI spend for this paid call (was previously unlogged).
-    _log_ai_spend(email, "/listings/ai-price-check", "sonnet", _pc_in, _pc_out)
+    _log_ai_spend(email, "/listings/ai-price-check", "sonnet", _pc_in, _pc_out,
+                  provider=_sr.provider, model=_sr.model)
 
     _log.info("ai-price-check: listing #%d buyer=%s verdict=%s verified=%s flag=%s charged=1T",
               listing_id, email, verdict, verified,
@@ -15890,6 +16243,7 @@ async def ai_yield_calc(listing_id: int, email: str,
             provider=_ts_active_provider(), timeout=20)
         raw = _sr.text.strip()
         _yc_in, _yc_out = _sr.in_tokens, _sr.out_tokens   # C2/C3
+        _yc_prov, _yc_model = _sr.provider, _sr.model     # P6 serving-lane attribution
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
         result = json.loads(raw)
@@ -15904,6 +16258,7 @@ async def ai_yield_calc(listing_id: int, email: str,
                           f"purchase at R{monthly_rent:,.0f}/month.")
         sa_yield_benchmark = "SA residential benchmark: ~7-10% gross (varies by city)."
         _yc_in, _yc_out = None, None   # narration failed — flat estimate
+        _yc_prov, _yc_model = None, None
 
     # DELIVER-THEN-CHARGE: a real, computed yield was produced — charge now.
     if _charge and _charge > 0:
@@ -15920,7 +16275,8 @@ async def ai_yield_calc(listing_id: int, email: str,
         remaining = _current_tuppence(email)
 
     # C3 — log real AI spend for this paid call (was previously unlogged).
-    _log_ai_spend(email, "/listings/yield-calc", "haiku", _yc_in, _yc_out)
+    _log_ai_spend(email, "/listings/yield-calc", "haiku", _yc_in, _yc_out,
+                  provider=_yc_prov, model=_yc_model)
 
     _log.info("ai-yield-calc: listing #%d email=%s gross=%.1f%% charged=1T",
               listing_id, email, gross)
@@ -16047,7 +16403,8 @@ async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(de
         _bc_in, _bc_out = _sr.in_tokens, _sr.out_tokens
         # P2 — Tuppence covers the revenue side; log token spend so the cost
         # dashboard sees it too (sweep 12 Jun 2026)
-        _log_ai_spend(req.seller_email, "/listings/batch-cards", "sonnet_vision", _bc_in, _bc_out)
+        _log_ai_spend(req.seller_email, "/listings/batch-cards", "sonnet_vision", _bc_in, _bc_out,
+                      provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         raw = _re_match.sub(r"^```(?:json)?\s*", "", raw)
         raw = _re_match.sub(r"\s*```$", "", raw)
@@ -16269,7 +16626,8 @@ async def _classify_email(from_addr: str, subject: str, body: str) -> dict:
         _cl_in, _cl_out = _sr.in_tokens, _sr.out_tokens
         # P2 wrapper — log spend HERE with real tokens (moved from the caller's
         # flat-estimate log; cost_is_real=1 on the dashboard).
-        _log_ai_spend(from_addr, "/email/inbound", "haiku", _cl_in, _cl_out)
+        _log_ai_spend(from_addr, "/email/inbound", "haiku", _cl_in, _cl_out,
+                      provider=_sr.provider, model=_sr.model)
         raw = _sr.text.strip()
         if raw.startswith("```"):
             raw = raw.strip("`")
@@ -17233,7 +17591,8 @@ def grade_card_condition(photo_urls=None, thumb_url=None, medium_url=None, timeo
         it, ot = _sr.in_tokens, _sr.out_tokens
         result["in_tokens"], result["out_tokens"] = it, ot
         # P2 wrapper — log real token spend (platform attribution; batch grading).
-        _log_ai_spend("", "grade_card_condition", "sonnet_vision", it, ot)
+        _log_ai_spend("", "grade_card_condition", "sonnet_vision", it, ot,
+                      provider=_sr.provider, model=_sr.model)
         raw = (_sr.text or "").strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
@@ -17939,7 +18298,8 @@ async def _ts_breaker_heartbeat():
                     ai_provider.complete, [{"role": "user", "content": "ping"}],
                     task=_t, max_tokens=8, provider=_p, probe=True, timeout=20)
                 _log_ai_spend("system:heartbeat", "/breaker/heartbeat", _t,
-                              _r.in_tokens, _r.out_tokens)
+                              _r.in_tokens, _r.out_tokens,
+                              provider=_r.provider, model=_r.model)
             except Exception as _hb_e:
                 print("HEARTBEAT-1 error: %s" % _hb_e)
     asyncio.get_running_loop().create_task(_hb_loop())

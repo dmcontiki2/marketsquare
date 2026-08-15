@@ -179,6 +179,28 @@ def check_prices_against_card(base):
                                       "ceiling are computed from this table, so the rails are "
                                       "off by the same margin"
                                 % (key, pair[0], pair[1], model, want_in, want_out)))
+    # P6 (15 Aug 2026): the live table is MODEL-keyed and loaded from the card at boot
+    # (_load_model_prices). Verify (a) the loader binding still exists and (b) the embedded
+    # fallback table agrees with the card model-by-model -- the fallback serves on any host
+    # where the card file is absent (it is not in the deploy manifest, drift D7).
+    if src:
+        fb = _dict_literal(src, "_MODEL_PRICE_FALLBACK")
+        if "_MODEL_PRICE = _load_model_prices()" in src or fb:
+            if "_MODEL_PRICE = _load_model_prices()" not in src:
+                out.append((FAIL, "_MODEL_PRICE_FALLBACK exists but _MODEL_PRICE no longer "
+                                  "loads from ai_price_card.json -- the code table can "
+                                  "disagree with the register again"))
+            fx = float(base.get("fx_multiplier_eur_lanes") or 1.155)
+            for mdl, pair in (fb or {}).items():
+                if mdl not in flat:
+                    continue          # legacy keys outside the register (e.g. opus / drift D8)
+                want_in, want_out, ccy = flat[mdl]
+                mult = fx if ccy == "EUR" else 1.0
+                if abs(pair[0] - want_in * mult) > 1e-6 or abs(pair[1] - want_out * mult) > 1e-6:
+                    out.append((FAIL, "PRICE DRIFT: _MODEL_PRICE_FALLBACK[%r] = (%.4f, %.4f) but "
+                                      "the card says (%.4f, %.4f)%s"
+                                % (mdl, pair[0], pair[1], want_in * mult, want_out * mult,
+                                   " (EUR x%.3f)" % fx if ccy == "EUR" else "")))
     for tier, td in base["tiers"].items():
         for lane, ld in td["lanes"].items():
             if ld["model"] not in flat:

@@ -1,3 +1,113 @@
+## 2026-08-15 — SPEND-GUARD-1: no unattended loop holds a metered key; Fable arrangement time-boxed
+
+The first implementation of RUL-013 routed the pre-launch fix lane at `claude-fable-5` through
+`ANTHROPIC_API_KEY` — per-token usage credits, driven by an unattended loop three times a day. That
+was wrong and is removed: no anthropic `design` row in the seam, no `provider="anthropic"` in any live
+agent call. No spend was incurred; the server holds no Anthropic key and the agent had not run.
+
+Fable still resolves pre-launch design requests, but in a Cowork session on the subscription — an
+unattended process cannot use a subscription, only a session can.
+
+The arrangement is time-boxed: it **ends 1 Sep 2026** and does not renew. From then, design work
+returns to the allocated design agent or its swap option (`design` tier: openai `gpt-5.6-sol`,
+scaleway standby). `rulings_check.py` asserts the expiry wording persists.
+
+**RG-0080** locks the invariant — a loop nobody is watching never spends per-token — and also checks a
+non-Anthropic design lane remains, so post-1-Sep work has somewhere to go.
+
+## 2026-08-15 — OPENAI-BASE-P6: spend attribution fixed, lane change audited, failover cost-gated
+
+Scheduled pickup of the 14 Aug lane ruling (RUL-002). Found on arrival: the flip was ALREADY LIVE
+(active=standing=openai since 14 Aug 20:05 UTC, key present — `available.openai:true` at /flags),
+so P1 and P5 were done and P6 had become the open hole: with OpenAI as base, a failover to
+Anthropic was invisible in the spend log and costed at the wrong rate.
+
+**P6 landed (bea_main.py):** `_MODEL_PRICE` is now MODEL-keyed and loaded from `ai_price_card.json`
+at boot (embedded fallback for card-less hosts), so code can never disagree with the register —
+this also closes D1 (haiku was priced 0.80/4.00 vs the card's 1.00/5.00; every daily ceiling was
+20-25% loose). `_log_ai_spend` takes `provider=`/`model=` and every one of the 24 call sites now
+passes the SERVING lane from the AIResult (helper `_anon_photo_scan` returns it as a 4th element).
+`_token_cost` resolves legacy tier keys via the serving lane's TASK_MODEL row. D2 closed: the
+import-failure vision id dropped sonnet→haiku.
+
+**D4 closed:** `POST /admin/flags` now writes a `_log.warning` for lane/pin changes plus an
+`admin_audit` row (actor from JWT, prior, new, optional `reason` field, timestamp) for every field.
+AL-3 satisfied: a pin records who and why. **D5 closed:** `ai_provider.complete()` builds its
+fallback chain from AI_BASELINE.json failover order, cost-filters per tier (tolerance 6.0x,
+safety net cost-exempt by role) — never dict insertion order. **AL-1/AL-2** implemented in
+`_maybe_fire_lane_alert` (off-base >60 min / safety-net serving at all; webhook + log, 1/h,
+heartbeats excluded).
+
+**RG-0018 healed:** `gpt-5.6-sol` (design tier, RUL-013) added to the price card at $5/$30 —
+web-verified 15 Aug (openrouter.ai, layer3labs.io; unchanged in the 30 Jul Terra/Luna cut), matches
+STATUS Addendum 10. AI_BASELINE.json v2.0 gains the `design` tier (envelope DECLARED 12k/4k, no
+caller until 1 Sep). `ai_baseline_check.py`: 6 FAIL → 0 FAIL (1 deliberate WARN: the import-failure
+fallback names Anthropic ids — functionally right, that path speaks the raw Anthropic protocol).
+Checker extended to verify the model-keyed table against the card.
+
+**Ledger:** RG-0082/0083/0084 LOCKED (serving-lane attribution / audited lane change / baseline-
+consulting failover). Run green start-to-finish delta: 1 REGRESSED → 0.
+
+**P2/P3 NOT DONE — the honest remainder:** `scripts/golden_seam_v2.py` built (same 8 golden
+prompts THROUGH `ai_provider.complete(provider="openai", probe=True)` — exercises the message
+translation, the `reasoning_effort="none"` pin and max_completion_tokens handling that GS-OAI-V1's
+raw vendor calls bypassed). It refuses to run without the production key; this sandbox has neither
+the key nor OpenAI egress. One run on the Hetzner box → then add `openai` to GOLDEN_PASS (P3).
+GOLDEN_PASS deliberately NOT touched. All changes repo-side, NOT deployed; the live box still runs
+the pre-P6 accounting until the next /ship.
+
+## 2026-08-15 — maintenance-loop: clean run, empty queue
+
+- Regression ledger green before and after (every LOCKED fix holding; 4 known defects open, unchanged).
+- Shadow maintenance agent ran foreground (BRAIN-DEPS-2): 0 faults seen, 0 acted. Heartbeat confirmed on /dashboard/maint (run 2026-08-15T05:33:47Z, brain KEYED:anthropic, shadow).
+- Queue: new 0 / fix-shipped 0 / verified 23 / escalated 0. No patches to apply, nothing to verify — no code changes this run.
+- Escalation brief written (Records/ESCALATION_BRIEF_2026-08-15.md): 2 informational items, both TS-0032 brain=MECHANICAL notes for David's tick.
+
+## 2026-08-15 — GATE-EMAIL-1: the gate opens on an emailed link, not a memorised code (RUL-014, RG-0081)
+
+David's ruling: "email linked and not with a code, like normal apps" — too many testers locked
+out. Confirmed NOT a new request: the magic-link machinery has existed since ACCOUNT-BIND-1
+(5 Aug) and the magic-link auth refactor sits in BACKLOG; what was never built is the GATE
+using it. Root cause of the lockout class was never the cookie (365-day, valid) — the gate
+script's sessionStorage short-circuit re-challenged every new tab session, and one mistyped
+code read as "locked out".
+
+Two-pronged fix:
+- **GATE-COOKIE-2** (marketsquare.html): the gate screen now asks /review/verify cookie-first —
+  a tester holding a valid cookie is never re-challenged at all.
+- **Email-linked entry**: gate screen asks for an EMAIL; `POST /review/request-link` (allowlist
+  file `/var/www/marketsquare/review_emails.txt`, re-read per call, no enumeration, shared
+  per-IP rate limit) mails a one-time link; `GET /review/enter` burns the single-use jti
+  (30-min life) and sets the SAME ts_review cookie the code path sets. Transport mirrors
+  _send_login_email (Resend -> Gmail, RESEND-FROM-1 + MAIL-FALLBACK-1 lessons kept).
+- **Migration 019**: exempts the two endpoints at the origin (016/018 skeleton: functional
+  idempotency, collision refusal, backup + nginx -t auto-restore) and seeds the allowlist
+  (David x2, Maroushka miconradie1@, Maurice conradiedm@, Marietjie marietjie.marais59@).
+
+Containment UNCHANGED by design: origin lockdown (RG-0028), armed catch-all (GATE-ENFORCE-2),
+per-IP rate limit, code path alive as break-glass. Claim email+IP logged per entry. Tokens
+deliberately NOT hard-bound to claim IP — tester ISPs rotate (David's own, three times on
+record); a hard bind would re-create the lockouts this ends.
+
+Ledger: **RG-0081 OPEN** (repo half green now; live half EXPECTED failing until 019 rides a
+deploy — then promote to LOCKED). Rulings: **RUL-014** registered + rulings_check reflections.
+Rollbacks: bea_main.py.bak-gateemail-20260815-075832, marketsquare.html.bak-gateemail-20260815-075930.
+Other gate-script copies (dashboard*, admin) deliberately untouched — admin-password doors,
+not tester doors (RG-0075 single-source refactor remains the standing answer there).
+
+## 2026-08-15 — DRIFT-FILEMAP-1: the drift monitor now compares what actually ships
+
+The 07:22 release confirmed DRIFT-CACHEBUST-1 live — drift fell from two files to one and the
+tester-intake guard went clean, clearing that half of the standing DANGER verdict.
+
+The remaining `dashboard.html` row was a separate fault: the drift map compared local
+`dashboard.html` against the served `dashboard.html`, which is built from `dashboard.server.html`.
+Different source file, so it could never match. Corrected, and RG-0072 now cross-checks the drift map
+against the deploy manifest so a mis-mapping fails the same day. `demo_sellers.json` is recorded as a
+known server-owned exception — migration 017 writes it live and the deploy never places it.
+
+Remaining DANGER contributor is PG-readiness (`strftime` 38 → 40), which is a real finding.
+
 ## 2026-08-14 — Standing AI lane moves to OpenAI (independence ruling)
 
 New order: **1. OpenAI (standing) · 2. Anthropic · 3. Scaleway EU · 4. Grok** (capped, text tiers

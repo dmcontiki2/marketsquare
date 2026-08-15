@@ -214,3 +214,50 @@ pass/fail criteria + dossier template + the gate line). Item (2), binding the de
 remains OPEN and is David's decision; until bound, David is the gate by default per that doc.
 B3 escalation brief machinery: `scripts/escalation_brief.py` (stage-7 format, one-tick actions).
 B4 Tier-2: `migrations/011_maint_b4_tier2.py` runs the server-side rehearsal on the next deploy.
+
+---
+
+## RUL-013 — Fault-resolution operating model, both phases (David, 15 Aug 2026)
+
+Extends RUL-005 (total autonomy, no veto) by naming WHO resolves what, and WHEN David is involved
+at all. It inherits RUL-005's condition unchanged: **any gate that stops asserting re-arms the veto.**
+
+### PRE-LAUNCH (now → 1 Sep 2026)
+- **The agent does NOT surface failures or reports to David.** Testers are the fault source; AI
+  resolves without him. A run that finds nothing he must read is the intended outcome, not a
+  degraded one.
+- **Escalations route to the FIX AGENT (Fable)** under the standing pre-approvals in
+  STANDING_ORDERS.md, with laptop resources open to it.
+- Unchanged and NOT delegated: the deterministic REFUSE guard. Legal, currently-costly and
+  trust-core surfaces stop for a human in EVERY phase (maintenance_agent.py REFUSE_MARKERS).
+  Autonomy is over the fixable class, never over the refuse class.
+
+### POST-LAUNCH (from 1 Sep 2026)
+- Fault source becomes **user complaints** rather than testers.
+- **Maintenance agent handles most.**
+- **Fix agent handles 98% of the remainder.**
+- **David on STANDBY for the residual ~2%, for the FIRST TWO MONTHS**, with Claude's support.
+  After that window the standby expectation is reviewed, not assumed.
+
+### KNOWN GAP — the Fable hand-off is not yet wireable (stated 15 Aug 2026, honestly)
+The intent is recorded; the mechanism is not built, and this note exists so no session assumes it is:
+
+1. **There is no Fable lane in the product.** `ai_active` accepts only `anthropic|openai|scaleway`
+   (bea_main.py:13675) and no Fable provider exists in the register. "Give it to Fable" today means
+   a Cowork session running `/fix`, not a server-side hand-off.
+2. **The server agent cannot summon a session.** It runs unattended at 05:20/11:20/17:20 UTC; a
+   Cowork session is started by David. So an ESCALATE item waits for a session either way — the
+   change is that it waits for FABLE'S session rather than for David's attention.
+3. **"Laptop resources open" cannot be granted unattended.** Folder, app and browser grants are
+   per-session and human-gated — the fault that stalled the 13 Aug photo run at image 1 of 54.
+   An unattended run can never hold them.
+
+**What would close the gap, in order:** (a) a Fable entry in the provider register with its own key,
+so escalations can be dispatched server-side rather than waiting for a human-started session;
+(b) an escalation queue the fix agent drains on start, so a session picks up everything waiting
+rather than only what David remembers; (c) `preflight` run at the START of any session expected to
+do fix work, so grants exist before they are needed rather than after.
+
+Until (a) and (b) exist, PRE-LAUNCH behaviour in practice is: the agent fixes the PATH_A class
+autonomously and silently as ruled, and the ESCALATE class accumulates for the next fix session.
+That is a real improvement on David reading every report — but it is not yet "AI fixes it without me".

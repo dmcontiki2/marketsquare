@@ -315,6 +315,31 @@ def open_faults(key):
     except Exception as e:
         say("intake FAILED (%s) -- nothing read; failing safe, doing nothing." % e); return None
 
+# ── RUL-013: the PRE-LAUNCH fix lane is Fable ────────────────────────────────────
+# David's ruling 15 Aug 2026: pre-launch, tester reports are DESIGN REQUESTS and Fable resolves
+# them without him. Implemented as a task tier, not a hardcoded model, so the seam stays portable
+# (AI_PROVIDER_SEAM) and post-launch reverts by flipping MAINT_PHASE -- no code change at launch.
+# SAFETY: the server timer has no ANTHROPIC_API_KEY, so Fable is unreachable there. This falls
+# back to the normal reasoning tier rather than emptying the chain, which would break every
+# unattended run. A run says which lane it actually used; it never pretends to be Fable.
+def _fix_task():
+    """SPEND-GUARD-1 (David, 15 Aug 2026): NEVER route this agent at the Anthropic API key.
+
+    The first cut of RUL-013 sent pre-launch fixes to claude-fable-5 via ANTHROPIC_API_KEY.
+    That is metered usage-credit billing at $10/$50 per Mtok, fired by an UNATTENDED loop three
+    times a day with no human watching the meter -- David: "eats $ up in seconds... will bring us
+    to a screeching halt". It also contradicts the standing rule that Fable-via-credits is
+    "reserved for the most important work only" (decision note, 11 Jul).
+
+    Fable STILL resolves pre-launch design requests -- but in a COWORK SESSION on David's
+    subscription, where the tokens are already paid for. An unattended server process cannot use
+    a subscription; only a session can. So the agent proposes on its normal metered-but-cheap
+    lane, and Fable work happens where it costs nothing extra. The gap is the design, not a
+    limitation to close.
+    """
+    return "sonnet", None
+
+
 # ── classify: REFUSE | ESCALATE | PATH_B | PATH_A ────────────────────────────────
 def classify(fault):
     ref = is_refused(fault)
@@ -361,7 +386,8 @@ def classify(fault):
         return "PATH_A", "brain[%s]=MECHANICAL" % src
     if PRELAUNCH:
         # pre-launch: micro design corrections are the JOB, not a backlog -- implement them.
-        return "PATH_A", "brain[%s]=DESIGN -> pre-launch micro-change lane" % src
+        # RUL-013: in this phase a tester report IS a design REQUEST, resolved not batched.
+        return "PATH_A", "brain[%s]=DESIGN -> pre-launch design REQUEST (RUL-013), implemented" % src
     return "PATH_B", "brain[%s]=%s" % (src, verdict or "DESIGN")
 
 # ── brain: produce a unified-diff patch for a Path A fault ───────────────────────
@@ -530,7 +556,8 @@ def propose_patch(fault):
                 fault.get("ref"), fault.get("title", ""), fault.get("detail", ""),
                 fault.get("page_url", ""), ctx)}]
     try:
-        r = ai_provider.complete(msg, task="sonnet", max_tokens=2000, system=sys_p)
+        _t, _p = _fix_task()
+        r = ai_provider.complete(msg, task=_t, max_tokens=2000, system=sys_p, provider=_p)
     except Exception as e:
         # MAINT-B4-5: same degradation contract as classify -- a failed call is a
         # DECLINED fix (escalates to a human), never a crashed queue.
@@ -579,7 +606,8 @@ def propose_rewrite(fault):
     msg = [{"role": "user", "content": "FAULT %s\nTITLE: %s\nDETAIL: %s\n\n### FILE: %s\n%s" % (
         fault.get("ref"), fault.get("title", ""), fault.get("detail", ""), path, content)}]
     try:
-        r = ai_provider.complete(msg, task="sonnet", max_tokens=4000, system=sys_p)
+        _t, _p = _fix_task()
+        r = ai_provider.complete(msg, task=_t, max_tokens=4000, system=sys_p, provider=_p)
     except Exception as e:
         return None, "rewrite brain call failed (%s)" % type(e).__name__
     text = (r.text or "").strip()

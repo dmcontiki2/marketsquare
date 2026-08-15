@@ -256,6 +256,26 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         display:none;background:#7f1d1d;color:#fca5a5;
         border-radius:8px;padding:10px 14px;font-size:13px;
         margin-bottom:16px;text-align:center;"></div>
+      <!-- GATE-EMAIL-1 (15 Aug 2026): email-linked entry is the primary door;
+           the code/admin input survives below as break-glass + the admin sign-in. -->
+      <div id="gate-link-msg" style="display:none;border-radius:8px;padding:10px 14px;
+        font-size:13px;margin-bottom:16px;text-align:center;"></div>
+      <input id="gate-email-input" type="email" placeholder="Your email address"
+        autocomplete="email" inputmode="email"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:16px;
+          border-radius:10px;border:1.5px solid #1e293b;background:#0f172a;
+          color:#f1f5f9;outline:none;margin-bottom:12px;"
+        onkeydown="if(event.key==='Enter')gateRequestLink()"/>
+      <button id="gate-email-btn" onclick="gateRequestLink()" style="
+        width:100%;padding:14px;font-size:15px;font-weight:700;
+        background:#e63946;color:#fff;border:none;border-radius:10px;cursor:pointer;">
+        Email me my access link
+      </button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="gateToggleCode();return false;"
+           style="font-size:12px;color:#64748b;text-decoration:underline;">Have a code or admin password?</a>
+      </div>
+      <div id="gate-code-block" style="display:none;margin-top:14px;">
       <input id="admin-gate-input" type="password" placeholder="Enter password or PIN"
         autocomplete="current-password"
         style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:16px;
@@ -267,6 +287,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         background:#e63946;color:#fff;border:none;border-radius:10px;cursor:pointer;">
         Unlock
       </button>
+      </div>
       <div style="text-align:center;margin-top:20px;font-size:11px;color:#334155;">
         Pre-launch access only
       </div>
@@ -322,7 +343,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     gate.style.display = 'flex';
     loginScreen.style.display = 'block';
     changeScreen.style.display = 'none';
-    setTimeout(function(){ if(inp) inp.focus(); }, 100);
+    setTimeout(function(){ var e = document.getElementById('gate-email-input'); if(e) e.focus(); else if(inp) inp.focus(); }, 100);
   }
   function hideGate(){ gate.style.display = 'none'; _tempPin = null; }
   function showLoginError(msg){
@@ -338,9 +359,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
   }
 
   function _verifyReviewToken(){
+    /* GATE-COOKIE-2 (GATE-EMAIL-1, 15 Aug 2026): the ts_review cookie is HttpOnly and
+       rides every same-origin fetch on its own — so ALWAYS ask /review/verify, with the
+       sessionStorage token as a mere extra. The old `if(!rt){ showGate(); }` short-circuit
+       re-locked testers holding a perfectly valid 365-day cookie every time sessionStorage
+       died with the tab — THE recurring "locked out" class. */
     var rt = sessionStorage.getItem('ms_review_token');
-    if(!rt){ showGate(); return; }
-    fetch(BEA + '/review/verify', {headers:{'X-Review-Token': rt}})
+    fetch(BEA + '/review/verify', rt ? {headers:{'X-Review-Token': rt}} : {})
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_review_token'); showGate(); } })
       .catch(function(){ showGate(); });   /* fail-closed */
@@ -352,6 +377,50 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       .then(function(d){ if(d && d.valid){ hideGate(); } else { sessionStorage.removeItem('ms_admin_token'); _verifyReviewToken(); } })
       .catch(function(){ showGate(); });   /* fail-closed */
   } else { _verifyReviewToken(); } /* pre-launch gate RE-LOCKED — SERVER-validated review code or admin login required */
+
+  /* GATE-EMAIL-1 (15 Aug 2026): tester types an email; the server mails a one-time
+     link (/review/request-link); clicking it sets the ts_review cookie at /review/enter
+     and lands back here with the gate satisfied. Off-list emails learn nothing. */
+  var linkMsg = document.getElementById('gate-link-msg');
+  function showLinkMsg(msg, isErr){
+    linkMsg.textContent = msg;
+    linkMsg.style.background = isErr ? '#7f1d1d' : '#14532d';
+    linkMsg.style.color = isErr ? '#fca5a5' : '#86efac';
+    linkMsg.style.display = 'block';
+  }
+  window.gateToggleCode = function(){
+    var b = document.getElementById('gate-code-block');
+    var open = (b.style.display === 'block');
+    b.style.display = open ? 'none' : 'block';
+    if(!open){ setTimeout(function(){ if(inp) inp.focus(); }, 100); }
+  };
+  window.gateRequestLink = function(){
+    var em = (document.getElementById('gate-email-input').value || '').trim();
+    err.style.display = 'none';
+    if(!em || em.indexOf('@') < 1){ showLinkMsg('Please enter your email address.', true); return; }
+    var btn = document.getElementById('gate-email-btn');
+    btn.disabled = true;
+    fetch(BEA + '/review/request-link', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: em})
+    })
+    .then(function(r){
+      /* GATE-TRUTH-1 doctrine: branch on r.status BEFORE parsing */
+      if(r.status === 429){ showLinkMsg('Too many attempts. Please wait 10 minutes, then try again.', true); return null; }
+      if(!r.ok){ showLinkMsg('Request failed (' + r.status + '). Please try again.', true); return null; }
+      return r.json();
+    })
+    .then(function(d){
+      if(d && d.ok){ showLinkMsg('Link sent \u2014 check your email (and spam). It works once and expires in 30 minutes.', false); }
+    })
+    .catch(function(){ showLinkMsg('Connection error. Please try again.', true); })
+    .then(function(){ btn.disabled = false; });
+  };
+  if(/[?&]gate=expired\b/.test(location.search)){
+    showGate();
+    showLinkMsg('That access link has expired or was already used \u2014 enter your email for a fresh one.', true);
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+  }
 
   window.adminGateSubmit = function(){
     var pw = inp.value.trim();

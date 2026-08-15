@@ -33,7 +33,12 @@ FILEMAP = {
     "launch_redemption.py":   "launch_redemption.py",
     "marketsquare.html":      "index.html",
     "marketsquare_admin.html":"admin.html",
-    "dashboard.html":         "dashboard.html",
+    # DRIFT-FILEMAP-1 (15 Aug 2026): the SERVED dashboard.html is built from
+    # dashboard.server.html (deploy_manifest.txt:72), not from the local dashboard.html,
+    # which is a different file and is not deployed at all. Comparing the wrong source
+    # meant this row could NEVER match -- the same phantom-drift class as DRIFT-CACHEBUST-1,
+    # a different cause. Compare what actually ships.
+    "dashboard.server.html":  "dashboard.html",
     "ms.js":                  "static/ms.js",
     "ms.css":                 "static/ms.css",
     "privacy.html":           "privacy.html",

@@ -5,6 +5,148 @@
 
 ## Current Session
 
+- **SPEND-GUARD-1 (David, 15 Aug 2026) — Claude's error, caught by David within minutes.** The first
+  cut of RUL-013 routed the pre-launch fix lane at `claude-fable-5` via `ANTHROPIC_API_KEY`: metered
+  usage credits at $10/$50 per Mtok, fired by an UNATTENDED loop three times a day with nobody
+  watching the meter. David: "eats $ up in seconds... You will bring us to a screeching halt." It
+  also broke the standing rule that Fable-via-credits is "reserved for the most important work only"
+  (decision note, 11 Jul). **No spend occurred** — the server carries no `ANTHROPIC_API_KEY` and the
+  agent had not run since the edit. Removed on both sides: no anthropic `design` row in the seam, no
+  `provider="anthropic"` in any live agent call.
+- **The corrected design, which was David's point ("let us not break our design"):** Fable still
+  resolves pre-launch design requests — **in a Cowork session on the subscription**, where the tokens
+  are already paid for. An unattended server process cannot use a subscription; only a session can.
+  So the earlier "KNOWN GAP" is not a limitation to close, it IS the design. The agent proposes on
+  its normal lane; Fable work happens where it costs nothing extra.
+- **TIME-BOXED, and now asserted.** RUL-013's Fable arrangement **ENDS 1 Sep 2026 and does not renew
+  by default**. From 1 Sep, design work returns to the allocated design agent or its swapped-out
+  option — the `design` task tier (openai `gpt-5.6-sol`, scaleway `mistral-medium-3.5-128b` standby),
+  NOT Fable. `rulings_check.py` asserts the expiry wording survives, because a session in October
+  reading RUL-013 without it would treat a temporary arrangement as standing policy.
+- **RG-0080 locks the general invariant:** a loop nobody is watching never spends per-token. It
+  checks the seam has no anthropic design route, the agent pins no anthropic provider in a live call,
+  AND that a non-Anthropic design lane still exists so post-1-Sep work has somewhere to go. Sibling
+  of RUL-007: unbudgetable cost is barred whether it arrives as a percentage, a retroactive cliff,
+  or an autonomous loop holding a metered key — the third form found this week.
+- **Numbering note:** this entry was first written as RG-0074 and collided with the concurrent
+  session's RG-0074 (admin-gate status branching). Renumbered to RG-0080; theirs untouched. Two
+  sessions allocating ledger ids from the same file is a real collision surface — the same class as
+  CHANGELOG-COLLISION-1 and STATUS-COLLISION-1, and it has no compiler yet.
+
+### RULINGS.md born — decisions get the same machinery as fixes
+
+The launch date was reviewed several times in sessions and never reached the canon; the sweep
+read "launch date STILL NEEDED" as truth. Class-level fix, sibling of the regression ledger:
+
+- **RULINGS.md** — append-only register, seeded with 12 rulings incl. RUL-001 (launch
+  1 Sep / soft-public 29 Aug, fixed sequence).
+- **scripts/rulings_check.py** — asserts each ruling is REFLECTED where the next session
+  reads, and that repudiated wording is actually purged. First run found 3 genuine drifts
+  (BACKLOG still carried the repudiated 23/60 threshold after 2 months, and the provisional
+  01-Aug deadline) — all fixed same session. 12/12 reflected, exit 0.
+- Standing rule appended to Projects/CLAUDE.md: a ruling is not made until it is in the
+  register, same session. rulings_check runs alongside the regression ledger.
+
+- **RUL-013 recorded (David, 15 Aug 2026) — the fault-resolution operating model, both phases.**
+  PRE-LAUNCH (to 1 Sep): the maintenance agent does NOT surface failures or reports to David;
+  testers are the fault source and AI resolves without him; escalations route to the FIX AGENT
+  (Fable) under standing pre-approvals with laptop resources open. POST-LAUNCH: source becomes user
+  complaints; maintenance agent handles most; fix agent handles 98% of the remainder; David on
+  STANDBY for the residual ~2% for the FIRST TWO MONTHS, with Claude's support — reviewed after that
+  window, not assumed. Written to RULINGS.md and reflected in MAINTENANCE_AGENT.md;
+  `rulings_check.py` gained the assertion, so it is a guarantee rather than a note (13 rulings,
+  0 FAIL, 0 WARN).
+- **Extends RUL-005 and inherits its condition, which today made pointed reading.** RUL-005 replaced
+  the human veto with mechanical gates, on the express condition that "any gate that stops asserting
+  re-arms the veto". Three gates had silently stopped asserting: the drift monitor (permanent
+  phantom red, DRIFT-CACHEBUST-1 + DRIFT-FILEMAP-1), the tester-intake maint-scope guard (failing on
+  CORRECT code since the 13 Aug ruling), and the DANGER verdict they jointly produced on every
+  deploy. All three are honest again as of today — so the condition RUL-005 attaches to more
+  autonomy is satisfied NOW, but it was quietly unsatisfied for weeks while autonomy was assumed.
+- **Recorded honestly: the Fable hand-off is intent, not mechanism.** There is no Fable lane —
+  `ai_active` accepts only anthropic|openai|scaleway and no Fable provider exists in the register.
+  The server agent runs unattended and cannot summon a Cowork session, and per-session laptop grants
+  can never be held by an unattended run (the fault that stalled the photo run at image 1 of 54).
+  So pre-launch behaviour in PRACTICE is: PATH_A fixed autonomously and silently as ruled; the
+  ESCALATE class accumulates for the next fix session. Better than David reading every report — but
+  not yet "AI fixes it without me". Three concrete steps to close it are named in MAINTENANCE_AGENT.md
+  and the gap note is itself asserted, so it cannot vanish while the gap remains.
+- **NOT delegated in any phase:** the deterministic REFUSE guard. Legal, currently-costly and
+  trust-core surfaces still stop for a human. Autonomy is over the fixable class, never the refuse class.
+
+- **OPENAI-BASE-P6 (scheduled run):** Flip found ALREADY LIVE (openai standing since 14 Aug 20:05,
+  server key present). P6 spend attribution LANDED in source: model-keyed prices from the card
+  (D1), serving-lane attribution at all 24 spend sites (D3), vision import-fallback haiku (D2),
+  /admin/flags logged + admin_audit row + reason (D4, AL-3), failover chain baseline-ordered and
+  cost-gated (D5), AL-1/AL-2 alerts wired. RG-0018 healed (gpt-5.6-sol on the card, $5/$30,
+  web-verified; AI_BASELINE design tier added). ai_baseline_check 6 FAIL→0 FAIL; challenger board
+  clean; ledger 1 REGRESSED→0, RG-0082/0083/0084 LOCKED. **NOT deployed** — rides the next /ship.
+  **Open, needs David/server: P2** `python3 scripts/golden_seam_v2.py` ON THE BOX (refuses to fake
+  without the production key), then **P3** add openai to GOLDEN_PASS with the evidence line.
+  Working tree deliberately left uncommitted (a concurrent morning session's edits share it).
+
+## 2026-08-15 — maintenance-loop (automated)
+
+Clean run. Ledger green pre and post. Shadow agent: 0 seen / 0 acted; heartbeat posted
+(2026-08-15T05:33:47Z). Queue new 0, fix-shipped 0, verified 23. Escalation brief has 2
+informational TS-0032 items awaiting David's tick. No code changed.
+
+### LAUNCH DATE RULED (David, 15 Aug): full launch Mon 1 Sep, SOFT LAUNCH TO PUBLIC Fri 29 Aug
+
+Closes SUPER_LADDER's "launch date STILL NEEDED". LAUNCH_SPECIAL_DEADLINE must be re-set
+2026-08-01 -> 2026-09-01 (LAUNCH-DEADLINE-1). LAUNCH_BAR_2026-08-15.md v2 carries the full
+calendar: D-7 gate review Fri 22 Aug on the (yet unbuilt) gate-board; last ship 27 Aug;
+hold-posture fallback = slip one month (soft 28 Sep / full 1 Oct), bought once.
+
+CRITICAL consequence — the 29 Aug EXPOSURE EVENT: the gate coming down un-masks everything
+behind it at once. Hard-by-29-Aug list: authenticate GET /tuppence/balance (IL-01), rotate
+the transcript-exposed secrets + kill the 96315 reuse (L9/DW-029, tooling ready), ship the
+5-file deploy debt incl. GATE-TRUTH-2/GATE-ORIGIN-1. G6 (OpenAI flip) may be formally
+deferred if the 16 Aug session cannot land P1+P6+P2 cleanly — deferral with Anthropic
+re-pinned is a GREEN, rushing a lane flip into launch week is not.
+
+### Launch bar drafted + EU harness redundancy evaluated (15 Aug)
+
+- **LAUNCH_BAR_2026-08-15.md** — LAUNCH-GATES-1 finally drafted as G1-G8 with live state
+  (6 of 8 open/unknown today), the D-7 decision protocol, and the pre-declared soft-launch
+  month plan. Key finding: no bar existed to miss; no public date promise exists, so a slip
+  currently costs zero narrative — until the first wave email sends.
+- **EU_HARNESS_REDUNDANCY_2026-08-15.md** — DeepSeek Harness (MIT, 13 Aug) evaluated under
+  the Add.-6 models-vs-endpoints doctrine. Hosted DeepSeek API stays OUT; HARNESS-PILOT-1
+  proposed as a slip-month item: harness + EU-hosted open weights (Scaleway Paris) against
+  three closed maintenance faults, success bar 2/3 at <25% recorded cost. Closes the
+  PROJECT-layer gap: the app has 3 lanes, the build toolchain has 1 vendor.
+- Both need David's ratification. Neither is deployed anywhere.
+
+- **GATE-EMAIL-1 BUILT, awaiting deploy (15 Aug):** gate entry is now email-linked (one-time
+  30-min single-use link -> same ts_review cookie, 365d); reviewer code demoted to break-glass;
+  GATE-COOKIE-2 ends the sessionStorage re-challenge lockout class at the root. Migration 019
+  exempts /review/request-link + /review/enter at the origin and seeds the 5-email allowlist.
+  RG-0081 OPEN (live half flips it READY TO LOCK post-deploy); RUL-014 registered. NEXT: /tsl
+  on David's word, then send each tester their first link and promote RG-0081.
+
+- **DRIFT-FILEMAP-1 (15 Aug 2026) — the second half of the phantom-drift fault.** The 07:22 release
+  proved DRIFT-CACHEBUST-1 in the wild: the drift line fell from TWO files to ONE, marketsquare.html
+  cleared, and `Tester fault-intake guards: ok` replaced the standing DANGER from the stale
+  maint-scope guard. The residual `dashboard.html` was a DIFFERENT cause wearing the same face:
+  `check_deploy_drift.py` FILEMAP mapped local `dashboard.html` -> served `dashboard.html`, but the
+  served file is built from `dashboard.server.html` (deploy_manifest.txt:72). Local `dashboard.html`
+  is a separate file that is never deployed, so that row could not match no matter what shipped.
+  Fixed by comparing what actually ships.
+- **The guard now asserts the INVARIANT, not the instance.** RG-0072 gained a cross-check: every
+  file in the drift map must agree with the deploy manifest about where the served copy comes from.
+  A future mis-mapping goes red the same day instead of producing years of ignorable noise. Known
+  exception recorded in the check itself: `demo_sellers.json` is SERVER-OWNED (migration 017
+  rewrites it live, the deploy never places it), so "local ahead of live" is meaningless for it.
+- **Standing lesson, third instance in two days:** a monitor must compare the thing that actually
+  ships, in the form it actually ships in. DRIFT-CRLF-1 (line endings), DRIFT-CACHEBUST-1 (the
+  server's own ?v= rewrite) and now DRIFT-FILEMAP-1 (the wrong source file) are one fault class —
+  comparing an artefact of transport or build instead of content. Each produced a permanent red
+  that trained everyone to ignore the monitor.
+- **Still open and genuinely real:** PG-READINESS `strftime` 38 -> 40. It is the ONLY remaining
+  contributor to the DANGER verdict, and unlike the other two it is a true finding — two new
+  SQLite-specific calls that make the eventual Postgres move dearer.
+
 - **STANDING LANE MOVES TO OPENAI (David's ruling, 14 Aug 2026 — Addendum 11).** Resulting order:
   **1. OpenAI (standing) · 2. Anthropic · 3. Scaleway EU · 4. Grok** (capped, text tiers only, not
   wired pre-launch). The reason is INDEPENDENCE, not price — David's words: this "will also ensure

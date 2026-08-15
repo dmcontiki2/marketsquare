@@ -178,6 +178,35 @@
           "continuity_ok": false
         }
       }
+    },
+    "design": {
+      "_doc": "RUL-013 (15 Aug 2026): the post-1-Sep design lane. Deliberately NO anthropic entry (SPEND-GUARD-1: an unattended loop must never hold a metered key). Envelope DECLARED, not measured — no live caller exists yet; re-derive from real call shapes before first production traffic, alongside the golden run its gate requires.",
+      "envelope": {
+        "max_in_tokens": 12000,
+        "max_out_tokens": 4000,
+        "max_images": 0,
+        "max_image_px": 0
+      },
+      "baseline_lane": "openai",
+      "baseline_worst_case_usd": 0.18,
+      "lanes": {
+        "openai": {
+          "model": "gpt-5.6-sol",
+          "worst_case_usd": 0.18,
+          "multiple_of_baseline": 1.0,
+          "role": "BASE",
+          "failover_rank": 0,
+          "continuity_ok": true
+        },
+        "scaleway": {
+          "model": "mistral-medium-3.5-128b",
+          "worst_case_usd": 0.05544,
+          "multiple_of_baseline": 0.308,
+          "role": "SAFETY NET",
+          "failover_rank": 2,
+          "continuity_ok": true
+        }
+      }
     }
   },
   "pinned_constants": {
@@ -194,7 +223,8 @@
       "haiku": 1800,
       "sonnet": 1400,
       "vision": 2000,
-      "triage": 400
+      "triage": 400,
+      "design": 4000
     }
   },
   "known_drift_at_creation": [

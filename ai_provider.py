@@ -42,6 +42,15 @@ def envkey(*names):
 
 # abstract task tier -> per-provider model string (vendor names live HERE, not at call sites)
 TASK_MODEL = {
+    # "design" tier (RUL-013). SPEND-GUARD-1 (David, 15 Aug 2026): this tier deliberately has NO
+    # anthropic entry. Routing an UNATTENDED loop at claude-fable-5 means ANTHROPIC_API_KEY, i.e.
+    # metered usage credits at $10/$50 per Mtok fired three times a day with nobody watching the
+    # meter -- David: "eats $ up in seconds... will bring us to a screeching halt", and it breaks
+    # the standing rule that Fable-via-credits is "reserved for the most important work only"
+    # (decision note, 11 Jul). Fable still resolves pre-launch design requests -- in a COWORK
+    # SESSION on the subscription, where the tokens are already paid for. A server process cannot
+    # use a subscription; only a session can. Do not add an anthropic row here without David
+    # explicitly accepting per-token billing for autonomous runs.
     "anthropic": {"haiku":"claude-haiku-4-5-20251001","sonnet":"claude-sonnet-4-6",
                   "vision":"claude-haiku-4-5-20251001","triage":"claude-haiku-4-5-20251001"},
     # GPT-5.6 family (verified 31 Jul 2026 vs developers.openai.com/api/docs/models): Luna $0.20/$1.20,
@@ -50,12 +59,14 @@ TASK_MODEL = {
     # Vendor-doc gate UNCHANGED: golden-set eval before production traffic; OPENAI_API_KEY still
     # unprovisioned (David-only) — dashboard shows the lane DISABLED until the key lands. RG-0016.
     "openai":    {"haiku":"gpt-5.6-luna","sonnet":"gpt-5.6-terra",
-                  "vision":"gpt-5.6-luna","triage":"gpt-5.6-luna"},
+                  "vision":"gpt-5.6-luna","triage":"gpt-5.6-luna",
+                  "design":"gpt-5.6-sol"},
     # Scaleway EU (P1) — canon lives HERE per seam philosophy; deliberately ignores FAILOVER_MODEL_* env
     # (those belong to failover/ai_backends.py). Reasoning tier uses the non-thinking instruct variant
     # (qwen3.5-397b overthinks short tasks — live demo finding 17 Jul).
     "scaleway":  {"haiku":"mistral-medium-3.5-128b","sonnet":"mistral-medium-3.5-128b",
-                  "vision":"mistral-medium-3.5-128b","triage":"mistral-medium-3.5-128b"},
+                  "vision":"mistral-medium-3.5-128b","triage":"mistral-medium-3.5-128b",
+                  "design":"mistral-medium-3.5-128b"},
     # ONE-MODEL STANDBY (David's ruling, 18 Jul 2026): whole row = mistral-medium-3.5-128b.
     # Golden-set basis same day: 7/7 text + 2/2 vision (qwen3.6 failed vision JSON; qwen3-235b
     # failed 1/7 adverts). One standby = one behaviour to know. Prior row ids in CHANGELOG.
@@ -193,8 +204,54 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
     except Exception:
         return AIResult("",None,None,"scaleway",model,ok=False,error_kind="connection")
 
-# Fallback chain order = dict order: anthropic -> openai -> scaleway
+# NOTE (P6/D5, 15 Aug 2026): the fallback ORDER no longer comes from this dict's
+# insertion order — complete() ranks fallbacks by AI_BASELINE.json failover_rank and
+# filters them on cost (see _cost_approved_fallbacks below).
 ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway}
+
+# ── AI_BASELINE.json — failover order + cost approval (P6/D5, 15 Aug 2026) ─────────
+# Before this, an outage moved traffic to the next lane in the ADAPTERS dict literal
+# with nothing asking its price (baseline drift D5). Now the chain is the baseline's
+# declared failover order, and a lane priced beyond the continuity tolerance for a
+# tier is NOT an automatic failover target — unless its ROLE is cost-exempt (the
+# safety net: reached when the alternative is being down or banned, where price is
+# not the question; reaching it alerts upstream via AL-2 in bea_main).
+_BASELINE_CACHE = {"mtime": None, "data": None}
+_FAILOVER_ORDER_DEFAULT = ["openai", "anthropic", "scaleway"]   # RUL-002, 14 Aug 2026
+
+def _baseline():
+    """AI_BASELINE.json beside this file, cached on mtime. None when absent."""
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "AI_BASELINE.json")
+    try:
+        mt = os.path.getmtime(p)
+        if _BASELINE_CACHE["mtime"] != mt:
+            with open(p, encoding="utf-8") as fh:
+                _BASELINE_CACHE["data"] = json.load(fh)
+            _BASELINE_CACHE["mtime"] = mt
+    except Exception:
+        return None
+    return _BASELINE_CACHE["data"]
+
+def _cost_approved_fallbacks(task, exclude):
+    """Fallback lanes for one task tier: baseline failover order, cost-filtered.
+    A lane whose worst-case cost multiple exceeds failover_cost_tolerance is dropped
+    (a deliberate R2 decision only, never automatic) unless its role is cost-exempt.
+    Without the baseline file: the RUL-002 static order, unfiltered."""
+    b = _baseline()
+    if not b:
+        return [p for p in _FAILOVER_ORDER_DEFAULT if p != exclude and p in ADAPTERS]
+    tol = float(b.get("failover_cost_tolerance") or 6.0)
+    exempt = {ln for ln, r in (b.get("lane_roles") or {}).items() if r.get("cost_exempt")}
+    lanes = ((b.get("tiers") or {}).get(task) or {}).get("lanes") or {}
+    ranked = []
+    for ln in (b.get("failover_order") or _FAILOVER_ORDER_DEFAULT):
+        if ln == exclude or ln not in ADAPTERS:
+            continue
+        ld = lanes.get(ln)
+        if ld is not None and ln not in exempt and float(ld.get("multiple_of_baseline") or 0) > tol:
+            continue   # priced out of AUTOMATIC failover for this tier
+        ranked.append(ln)
+    return ranked
 
 # F1 fix (AI-SERVICES-AUDIT-1, 5 Aug 2026): the correct "is AI available at all" gate.
 # Endpoints must never gate on ONE vendor's key — the app must not need any single
@@ -233,7 +290,9 @@ def complete(messages, *, task="haiku", max_tokens=700, system=None, provider=No
         if probe and p == prov:
             return p not in _brk.drill_banned()   # probes bypass state gates, never the drill
         return _brk.allows(p, task)
-    chain = [prov] + ([p for p in ADAPTERS if p != prov] if allow_fallback else [])
+    # P6/D5: fallbacks ranked by the baseline's failover order and filtered on COST
+    # per tier — never the ADAPTERS dict insertion order.
+    chain = [prov] + (_cost_approved_fallbacks(task, prov) if allow_fallback else [])
     chain = [p for p in chain if ADAPTERS.get(p) and TASK_MODEL.get(p, {}).get(task)]
     open_chain = [p for p in chain if _allowed(p)]
     if not open_chain:

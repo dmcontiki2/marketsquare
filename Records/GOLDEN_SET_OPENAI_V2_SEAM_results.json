@@ -1,0 +1,6 @@
+{
+ "eval": "GS-OAI-V2-SEAM",
+ "status": "NOT RUN",
+ "why": "sandbox host has no OpenAI egress and no server key \u2014 this file is a placeholder, not a gate result. Run scripts/golden_seam_v2.py ON THE SERVER (P2).",
+ "date": "2026-08-15"
+}

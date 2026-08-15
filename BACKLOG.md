@@ -90,7 +90,7 @@
 | M2 | **Subscription flow test** — test Global wishlist tier subscribe/verify/activate | Buyer app |
 | M3 | **SA corporate tax rows B30:D30 in cost model** — fill once P&L is finalised | Cost model |
 | M4 | **Local Market — wishlist feed integration** — LM listings appearing in "For You" home screen feed with LM badge | Buyer app |
-| M5 | **Founding seller count** — currently 23/60, need 37 more before public launch | Content |
+| M5 | **Founding-seller pipeline** — 60 staged prospects PER CITY is the WAVE TRIGGER (RUL-003 / CC-003), never a public-launch threshold. Verified count currently unsourced — VITALS wiring needed | Content |
 | M6 | **Maroushka re-listings** — real founding seller content via admin tool | Admin |
 | M7 | **City selector bug audit** — verify geo selectors work on mobile Safari and Chrome Android | QA |
 | M8 | **Content / photo pass** — (1) Replace Unsplash category shopfront photos with royalty-free alternatives (Wikimedia Commons or Pexels API) — current hotlinking is outside Unsplash commercial terms and images are being quality-degraded. (2) Add `max-height` cap on `wd-hero` for desktop so Heritage hero images don't over-stretch on wide screens. (3) Review all `w=800&q=80` Unsplash params across the codebase. Do as a dedicated session before public launch. | Buyer app |
@@ -181,7 +181,7 @@
 | M1/M2 | Money-path proven in test mode — test-card top-up→webhook→Tuppence credit; subscription subscribe/verify/activate | ATTENDED | — | A |
 | S5 | Gate test/auto-approve payment endpoints behind a fail-closed prod flag | STAGE | Gate 2 | A (on `approve S5`) |
 | M0 | `GET /listings` pagination (`?page=&page_size=` + `total`) + FEA infinite scroll | ATTENDED | — | A/B |
-| M5/M6 | Reach 60 founding sellers (37 more from 23/60); real Maroushka content + interior photos for units 314/109/308 | CONTENT/OPS | — | Continuous (lead now) |
+| M5/M6 | Stage prospects toward the 60/city WAVE TRIGGER (RUL-003 — not a launch gate); real Maroushka content + interior photos for units 314/109/308 | CONTENT/OPS | — | Continuous (lead now) |
 | RM-5 | Revive CityLauncher ("the gem") — finish + first real run of the orchestration brain (durable dead-source memory, Sonnet checkpoint-strategist, server-side saturation scheduler, MX email-verify). OSM-first runs now; wide SERP scale waits on the parked Overpass blocker | ATTENDED | — | A |
 
 ### P1 — credible first impression + cost discipline
@@ -298,7 +298,7 @@ First parallel-subagent demo audit; the 3 HIGH + key MED were fixed in S122. Rem
 |---|---|---|
 | DDG-IP-1 | DuckDuckGo 403/connect-timeout from the Hetzner IP — source_health ladder cooling it (10m→24h); decide: drop ddg server-side or proxy. OSM + bing carrying. | LOW |
 | PLAYWRIGHT-1 | playwright not installed in server system python — browser-tier jobs (pool cap 4) cannot run; OSM-first unaffected. Install playwright + chromium when a browser-only source is needed. | MED |
-| LAUNCH-DEADLINE-1 | LAUNCH_SPECIAL_DEADLINE provisionally 2026-08-01 BOTH sides (BEA launch.conf + CityLauncher .env) — re-set to the true end-of-launch-month before LAUNCH_SPECIAL_ENABLED=1 / redemption flags flip. Same value both sides. | GATE |
+| LAUNCH-DEADLINE-1 | LAUNCH_SPECIAL_DEADLINE = **2026-09-01 per RUL-001** (ruled 15 Aug; soft-public 29 Aug; supersedes the provisional 01 Aug value) — apply BOTH sides (BEA launch.conf + CityLauncher .env) before LAUNCH_SPECIAL_ENABLED=1 / redemption flags flip. Same value both sides. | GATE |
 
 ## S130-flags resolved (7 Jun 2026, David decisions)
 | ID | Decision |

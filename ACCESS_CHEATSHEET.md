@@ -3,11 +3,18 @@
 Three separate doors, by the app's own design. There is NOT one shared password.
 
 ## 1. Marketplace (trustsquare.co) — you AND the four testers
-- Enter the reviewer code **TSR-86HV-ZR33** once. Lasts 14 days (cookie). Never re-type it.
-- If it "fails": it's a STALE BROWSER COOKIE, not the code/server (server returns 200 to the code).
-  Fix: brand-new incognito, or clear site data for trustsquare.co, then enter the code once.
-- There is an 8-attempts/10-min-per-IP brute-force limit. Heavy re-testing trips it; `systemctl
-  restart marketsquare.service` clears it. Normal use (enter once) never hits it.
+**GATE-EMAIL-1 (15 Aug 2026, ships with migration 019): the gate is now EMAIL-LINKED.**
+- Tester enters their EMAIL on the gate screen -> one-time access link lands in their inbox
+  (works once, expires in 30 min) -> click -> in, for 365 days (cookie). Nothing to remember.
+- Who gets a link: only emails in `/var/www/marketsquare/review_emails.txt` (server file,
+  one per line, re-read live — edit it to add/revoke a tester, no restart). Seeded: David x2,
+  Maroushka, Maurice, Marietjie. Off-list emails get a silent "ok" and no mail (no enumeration).
+- The reviewer code **TSR-86HV-ZR33** still works as BREAK-GLASS behind the "Have a code or
+  admin password?" link on the gate screen — an email outage can never seal the gate.
+- The old "locked out" class is also fixed at the root (GATE-COOKIE-2): the gate screen now
+  checks the cookie itself, so a tester with a valid cookie is never re-asked for anything.
+- The 8-attempts/10-min-per-IP limit covers link requests AND code tries. Heavy re-testing
+  trips it; `systemctl restart marketsquare.service` clears it.
 
 ## 2. Admin + Dashboard — your admin password ONLY (NOT the reviewer code)
 - These are exempt from the gate (GATE-EXEMPT-2). Open them directly, sign in with the admin password.

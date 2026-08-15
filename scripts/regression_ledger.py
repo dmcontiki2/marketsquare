@@ -3176,6 +3176,61 @@ def rg_gate_credential_cached_and_honest():
     return out
 
 
+@entry("RG-0080", "No unattended loop is ever routed at the metered Anthropic key -- and the Fable arrangement EXPIRES 1 Sep 2026",
+       LOCKED, scope="ai_provider.TASK_MODEL (no anthropic 'design' row) + maintenance_agent._fix_task(). "
+                     "Covers every autonomous caller, not just today's agent: the invariant is 'a loop "
+                     "nobody is watching never spends per-token'. Second half: the pre-launch Fable "
+                     "arrangement is TIME-BOXED to 1 Sep 2026 and does not renew by default",
+       fixed_on="2026-08-15",
+       ref="SPEND-GUARD-1, David 15 Aug 2026: 'do not use the Anthropic key which eats $ up in "
+           "seconds... You will bring us to a screeching halt.' Claude's error, caught within minutes: "
+           "the first cut of RUL-013 routed the pre-launch fix lane at claude-fable-5 via "
+           "ANTHROPIC_API_KEY -- metered credits at $10/$50 per Mtok fired by an unattended loop three "
+           "times a day with nobody watching the meter, also breaking the standing rule that "
+           "Fable-via-credits is 'reserved for the most important work only' (11 Jul). No spend "
+           "occurred: the server carries no ANTHROPIC_API_KEY and the agent had not run since the edit. "
+           "RUL-013 stands but is TIME-BOXED (David, same session): Fable resolves pre-launch design "
+           "requests in a COWORK SESSION on the subscription -- tokens already paid for, and an "
+           "unattended process cannot use a subscription, only a session can. FROM 1 SEP 2026 the "
+           "arrangement ENDS and design work returns to the allocated design agent or its swapped-out "
+           "option -- the 'design' task tier (openai gpt-5.6-sol, scaleway mistral-medium standby), "
+           "NOT Fable. The seam is unchanged by any of this, which was David's condition: 'let us not "
+           "break our design.' Sibling of RUL-007 -- unbudgetable cost is barred whether it arrives as "
+           "a percentage, a retroactive cliff, or an autonomous loop holding a metered key.")
+def rg0080():
+    out = []
+    if not REPO:
+        return [(INFO, "repo not readable -- spend guard not checked")]
+    ap = os.path.join(REPO, "ai_provider.py")
+    ma = os.path.join(REPO, "scripts", "maintenance_agent.py")
+    if not (os.path.exists(ap) and os.path.exists(ma)):
+        return [(INFO, "seam/agent not present -- skipped")]
+    a = open(ap, encoding="utf-8", errors="replace").read()
+    m = open(ma, encoding="utf-8", errors="replace").read()
+    anth = re.search(r'"anthropic":\s*\{(.*?)\}', a, re.S)
+    if anth and '"design"' in anth.group(1):
+        out.append((FAIL, "ai_provider has an anthropic 'design' entry again -- an unattended run "
+                          "would bill usage credits per token"))
+    else:
+        out.append((INFO, "seam has no anthropic design route"))
+    live = [l for l in m.splitlines()
+            if 'provider="anthropic"' in l and not l.lstrip().startswith("#")]
+    if live:
+        out.append((FAIL, "maintenance_agent pins provider=anthropic in %d live call(s)" % len(live)))
+    else:
+        out.append((INFO, "agent pins no anthropic provider in any live call"))
+    dsg = {p: bool(re.search(r'"%s":\s*\{(.*?)\}' % p, a, re.S) and
+                   '"design"' in re.search(r'"%s":\s*\{(.*?)\}' % p, a, re.S).group(1))
+           for p in ("openai", "scaleway")}
+    if not any(dsg.values()):
+        out.append((FAIL, "no non-Anthropic design lane remains -- post-1-Sep design work has "
+                          "nowhere to go"))
+    else:
+        out.append((INFO, "post-1-Sep design lane present: " +
+                          ", ".join(p for p, v in dsg.items() if v)))
+    return out
+
+
 @entry("RG-0073", "Every country we have listings for is REACHABLE in the picker -- shipping a market is not the same as being able to browse it",
        LOCKED, scope="the Adventures country picker in marketsquare.html against the countries "
                      "actually present in live /listings. Asserts the INVARIANT (a market with "
@@ -3248,6 +3303,39 @@ def rg0072():
                           "the two sides are being compared on different bytes again"))
     else:
         out.append((INFO, "remote side normalises ?v=N before hashing"))
+
+    # DRIFT-FILEMAP-1 (15 Aug 2026): normalising the bytes is only half of it -- the monitor must
+    # also compare the file that ACTUALLY SHIPS. It tracked local dashboard.html against the served
+    # dashboard.html, which is built from dashboard.server.html (manifest:72). Different source, so
+    # that row could never match: phantom drift again, different cause. The invariant is that the
+    # drift map and the deploy manifest agree about where each served file comes from.
+    SERVER_OWNED = {"demo_sellers.json"}   # written live by migration 017, never placed by deploy
+    try:
+        fm = dict(re.findall(r'"([^"]+)":\s*"([^"]+)",',
+                             body[body.index("FILEMAP = {"):body.index("}", body.index("FILEMAP = {"))]))
+        man = {}
+        mp = os.path.join(REPO, "ops", "autodeploy", "deploy_manifest.txt")
+        for line in open(mp, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if not line or line.startswith("#") or "|" not in line:
+                continue
+            s, d = [x.strip() for x in line.split("|", 1)]
+            man[s] = d
+        bad = []
+        for lsrc, rdest in fm.items():
+            if lsrc in SERVER_OWNED:
+                continue
+            if lsrc not in man:
+                bad.append("%s tracked but not in the manifest" % lsrc)
+            elif man[lsrc] != rdest:
+                bad.append("%s: drift->%s, manifest->%s" % (lsrc, rdest, man[lsrc]))
+        if bad:
+            out.append((FAIL, "drift map disagrees with the deploy manifest, so it is comparing "
+                              "files that never ship: " + "; ".join(bad)))
+        else:
+            out.append((INFO, "drift map agrees with the deploy manifest on every tracked file"))
+    except Exception as ex:
+        out.append((INFO, "manifest/FILEMAP cross-check skipped (%r)" % ex))
     return out
 
 
@@ -3605,6 +3693,205 @@ def rg_attestation_states_provenance():
     if not out:
         out.append((INFO, "provenance stated where the seller signs: photos, not a lookup"))
     return out
+
+
+
+@entry("RG-0081", "The gate opens on an EMAILED LINK, not a memorised code -- and a valid cookie is never re-challenged",
+       OPEN, scope="the gate-entry lane entire: /review/request-link + /review/enter at the app AND "
+                   "exempt at the origin (migration 019), the marketsquare.html email-first gate screen, "
+                   "and the GATE-COOKIE-2 cookie-first verify. The code path /review/login must ALSO "
+                   "stay alive (break-glass) -- losing it is a failure of this entry, not a success",
+       ref="GATE-EMAIL-1, David's ruling 15 Aug 2026: 'email linked and not with a code, like normal "
+           "apps' -- too many testers locked out. Root cause of the lockout class was never the cookie "
+           "(365 days, valid) but the gate script's sessionStorage short-circuit re-challenging every "
+           "new tab session, one mistype = 'locked out'. Fix is two-pronged: cookie-first verify "
+           "(GATE-COOKIE-2) ends re-challenges; the emailed one-time link (30 min, single-use jti, "
+           "allowlist file re-read per call, no enumeration) replaces the code for fresh entries. "
+           "Containment deliberately UNCHANGED: origin lockdown RG-0028, armed catch-all GATE-ENFORCE-2, "
+           "per-IP rate limit; claim email+IP logged; tokens NOT hard-bound to claim IP (tester ISPs "
+           "rotate -- a hard bind would re-create the lockouts). EXPECTED open until migration 019 "
+           "rides a deploy; the moment the live half answers, promote to LOCKED.")
+def rg_gate_email_link():
+    out = []
+    # Repo half: both sides of the lane exist in source
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "GATE-EMAIL-1" not in bea or "/review/request-link" not in bea:
+            out.append((FAIL, "bea_main.py lost the GATE-EMAIL-1 lane (request-link/enter endpoints)"))
+        if "def review_login" not in bea:
+            out.append((FAIL, "the break-glass code path /review/login is GONE -- email is now a "
+                              "single point of failure for the whole gate"))
+        html = repo_file("marketsquare.html") or ""
+        if "gate-email-input" not in html or "GATE-EMAIL-1" not in html:
+            out.append((FAIL, "marketsquare.html gate screen lost the email-first entry"))
+        if "GATE-COOKIE-2" not in html:
+            out.append((FAIL, "the cookie-first verify (GATE-COOKIE-2) is gone -- a valid 365-day "
+                              "cookie is being re-challenged every tab session again"))
+    # Live half: the two endpoints answer WITHOUT a cookie (exempt at the origin)
+    try:
+        req = urllib.request.Request(BASE + "/review/request-link",
+                                     data=json.dumps({"email": "rg-probe-offlist@example.invalid"}).encode(),
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     method="POST")
+        body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+        if json.loads(body).get("ok") is not True:
+            out.append((FAIL, "live /review/request-link answered but not {'ok': true} -- "
+                              "the no-enumeration contract broke"))
+    except Exception as ex:
+        out.append((FAIL, "live /review/request-link refused (%r) -- migration 019 has not landed "
+                          "(or the lane rotted): a tester cannot ask for a link" % ex))
+    try:
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **k): return None
+        op = urllib.request.build_opener(_NoRedirect)
+        req = urllib.request.Request(BASE + "/review/enter?t=garbage", headers=dict(UA))
+        try:
+            r = op.open(req, timeout=TIMEOUT)
+            code, loc = r.getcode(), ""
+        except urllib.error.HTTPError as he:
+            code, loc = he.code, (he.headers.get("Location") or "")
+        if code != 302 or "gate=expired" not in loc:
+            out.append((FAIL, "live /review/enter with a garbage token did not bounce 302 -> "
+                              "/?gate=expired (got %s -> %r) -- a dead link will confuse instead "
+                              "of explaining" % (code, loc)))
+    except Exception as ex:
+        out.append((FAIL, "live /review/enter unreachable (%r) -- migration 019 has not landed: "
+                          "an emailed link cannot be redeemed" % ex))
+    if not out:
+        out.append((INFO, "email-link lane answers end to end; code path intact as break-glass"))
+    return out
+
+
+@entry("RG-0082", "AI spend is attributed to the lane that ANSWERED and costed at that model's price -- a failover can never be invisible in the spend log",
+       LOCKED, scope="bea_main.py spend accounting entire: _MODEL_PRICE (model-keyed, loaded from "
+                     "ai_price_card.json, embedded fallback for card-less hosts), _token_cost "
+                     "(serving-lane tier resolution), _log_ai_spend (provider=/model= from the "
+                     "AIResult), and EVERY _log_ai_spend call site -- all lanes, all tiers. "
+                     "Repo-side assertions; the live half rides the next deploy",
+       fixed_on="2026-08-15",
+       ref="P6 of David's lane ruling (AI_LANE_GUIDANCE.md, 14 Aug 2026) -- the precondition that "
+           "made the others measurable, landed 15 Aug. Before: _MODEL_PRICE was keyed on TIER with "
+           "Anthropic's prices (haiku row 20-25% LOW vs the card -- every daily ceiling loose, "
+           "drift D1) and _log_ai_spend recorded the INTENDED lane (drift D3), so with OpenAI as "
+           "base a sustained failover to Anthropic (4.4x on haiku) would have been invisible and "
+           "mis-priced. Now: prices come from the register at boot so code can never disagree with "
+           "the card; every call site that holds the AIResult passes the SERVING provider+model; "
+           "the import-failure vision id dropped sonnet->haiku (drift D2).")
+def rg_spend_serving_lane():
+    src_b = repo_file("bea_main.py")
+    if src_b is None:
+        return [(INFO, "running outside the repo -- spend-attribution source check skipped")]
+    out = []
+    if "provider: str | None = None, model: str | None = None" not in src_b:
+        out.append((FAIL, "_log_ai_spend no longer accepts the serving provider/model -- "
+                          "attribution is back to the intended lane (drift D3 re-opened)"))
+    if "_MODEL_PRICE = _load_model_prices()" not in src_b:
+        out.append((FAIL, "_MODEL_PRICE no longer loads from ai_price_card.json -- the code "
+                          "price table can disagree with the register again (drift D1 re-opened)"))
+    if '"gpt-5.6-luna":' not in src_b.split("_MODEL_PRICE_FALLBACK", 1)[-1][:1200]:
+        out.append((FAIL, "_MODEL_PRICE_FALLBACK lost its model-id keys -- card-less hosts "
+                          "fall back to nothing"))
+    # the CLASS: every spend row states where it came from. Each _log_ai_spend call site
+    # (not the def) must carry a provider= kwarg within its statement window.
+    bare = 0
+    idx = 0
+    while True:
+        idx = src_b.find("_log_ai_spend", idx + 1)
+        if idx < 0:
+            break
+        window = src_b[idx:idx + 420]
+        if window.startswith("_log_ai_spend failed") or "def _log_ai_spend" in window[:20]:
+            continue
+        if src_b[max(0, idx - 4):idx].endswith("def "):
+            continue
+        _ls = src_b.rfind("\n", 0, idx) + 1
+        if "#" in src_b[_ls:idx]:
+            continue          # a comment MENTIONING the logger is not a call site
+        if "provider=" not in window and "provider =" not in window:
+            bare += 1
+    if bare:
+        out.append((FAIL, "%d _log_ai_spend call site(s) no longer state the serving lane -- "
+                          "those rows are guesses again" % bare))
+    if not out:
+        out.append((INFO, "every spend row is serving-lane attributed and card-priced in source"))
+    return out
+
+
+@entry("RG-0083", "A lane change via POST /admin/flags is LOGGED and AUDITED -- actor, prior value, new value, reason, timestamp; a pin records who and why",
+       LOCKED, scope="bea_main.py set_flags handler + admin_audit table + _FlagsUpdate.reason -- "
+                     "every field the route can flip, with lane (ai_active) and pin "
+                     "(ai_active_override, AL-3) also writing a log line. Repo-side assertions; "
+                     "live half rides the next deploy",
+       fixed_on="2026-08-15",
+       ref="Drift D4 of AI_BASELINE.json + the one gap AI_LANE_GUIDANCE said the dashboard could "
+           "not close: /admin/flags changed the live AI lane for every feature and wrote NO log "
+           "line and NO audit row, while its neighbour /admin/ai-restore fifteen lines earlier "
+           "logs. David called the missing accountability out explicitly. AL-3 lives here too: "
+           "RG-0019 deliberately does not trip on a pin, so the pin's actor+reason must be "
+           "recorded at the moment it is set or nothing else will notice.")
+def rg_admin_flags_audited():
+    src_b = repo_file("bea_main.py")
+    if src_b is None:
+        return [(INFO, "running outside the repo -- admin-flags audit source check skipped")]
+    out = []
+    m = src_b.find("def set_flags(")
+    blk = src_b[m:m + 6000] if m >= 0 else ""
+    if not blk:
+        out.append((FAIL, "set_flags handler is GONE"))
+    else:
+        if "_log.warning" not in blk:
+            out.append((FAIL, "set_flags writes no log line -- a lane change is undetectable "
+                              "after the fact again (drift D4 re-opened)"))
+        if "admin_audit" not in blk:
+            out.append((FAIL, "set_flags writes no admin_audit row -- actor/prior/new/reason "
+                              "are unrecorded again"))
+    if "CREATE TABLE IF NOT EXISTS admin_audit" not in src_b:
+        out.append((FAIL, "the admin_audit table creation is gone"))
+    if "reason:" not in src_b[src_b.find("class _FlagsUpdate"):src_b.find("class _FlagsUpdate") + 2500]:
+        out.append((FAIL, "_FlagsUpdate lost the reason field -- the WHY can no longer be recorded"))
+    if not out:
+        out.append((INFO, "lane changes are logged and audited in source (actor, prior, new, reason)"))
+    return out
+
+
+@entry("RG-0084", "The failover chain consults the BASELINE -- order and cost per tier, never dict insertion order -- and serving off-base ALERTS",
+       LOCKED, scope="ai_provider.py complete()/_cost_approved_fallbacks (all task tiers, all "
+                     "lanes; static RUL-002 order when AI_BASELINE.json is absent) + bea_main.py "
+                     "_maybe_fire_lane_alert wired into _log_ai_spend (AL-1 off-base >60min, AL-2 "
+                     "safety net at all; heartbeat probes excluded). Repo-side assertions; live "
+                     "half rides the next deploy",
+       fixed_on="2026-08-15",
+       ref="Drift D5 of AI_BASELINE.json: an outage moved traffic to the next lane in the ADAPTERS "
+           "dict literal with nothing asking its price. Now the chain is AI_BASELINE.json's "
+           "failover order, a lane priced beyond failover_cost_tolerance for a tier is excluded "
+           "from AUTOMATIC failover unless its role is cost-exempt (the scaleway safety net -- "
+           "reached when the alternative is being down or banned, where price is not the "
+           "question), and reaching the safety net or serving off-base fires the AL alerts David's "
+           "ruling specified. Alert rules AL-1/AL-2/AL-3 from AI_BASELINE.json alert_rules.")
+def rg_failover_consults_baseline():
+    out = []
+    ap_src = repo_file("ai_provider.py")
+    bea = repo_file("bea_main.py")
+    if ap_src is None or bea is None:
+        return [(INFO, "running outside the repo -- failover/alert source check skipped")]
+    if "_cost_approved_fallbacks" not in ap_src:
+        out.append((FAIL, "ai_provider.py lost _cost_approved_fallbacks -- the chain no longer "
+                          "consults cost (drift D5 re-opened)"))
+    body = ap_src[ap_src.find("def complete("):]
+    if "_cost_approved_fallbacks(task, prov)" not in body:
+        out.append((FAIL, "complete() no longer builds its chain through the cost gate"))
+    if "_maybe_fire_lane_alert" not in bea:
+        out.append((FAIL, "bea_main.py lost _maybe_fire_lane_alert -- AL-1/AL-2 are gone"))
+    elif bea.count("_maybe_fire_lane_alert(") < 2:
+        out.append((FAIL, "_maybe_fire_lane_alert exists but is no longer CALLED from "
+                          "_log_ai_spend -- the alerts can never fire"))
+    for marker in ("AL-1", "AL-2"):
+        if marker not in bea:
+            out.append((FAIL, "alert rule %s marker gone from bea_main.py" % marker))
+    if not out:
+        out.append((INFO, "failover order+cost come from the baseline; off-base serving alerts"))
+    return out
+
 
 
 if __name__ == "__main__":

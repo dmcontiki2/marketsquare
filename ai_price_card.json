@@ -291,6 +291,41 @@
        "caveat": "3-call sample; shadow period + executable rails (P2a) remain preconditions to any flip"
       }
      }
+    },
+    "gpt-5.6-sol": {
+     "in": 5.0,
+     "out": 30.0,
+     "ccy": "USD",
+     "source": "developers.openai.com model pricing via openrouter.ai/openai/gpt-5.6-sol + layer3labs.io/guides/gpt-5-6-pricing (web-verified 15 Aug 2026: '$5 / MTok in, $30 / MTok out'; unchanged in the 30 Jul Terra/Luna price cut). Matches STATUS.md Addendum 10 capture (14 Aug: 'GPT-5.6 Sol at $5/$30').",
+     "aa_index": {
+      "score": 61.0,
+      "variant": "GPT-5.6 Sol",
+      "source": "STATUS.md Addendum 10 (14 Aug 2026): Grok 4.6 Intelligence Index 61 'tying GPT-5.6 Sol'",
+      "date": "2026-08-14",
+      "caveat": "second-party capture, not read from the AA leaderboard directly; re-score at production effort before any procurement decision",
+      "effort": "unknown",
+      "effort_matched": false
+     },
+     "golden_set": {
+      "status": "not-run",
+      "detail": "design tier only (RUL-013) — no live caller until 1 Sep 2026; golden set required before production traffic",
+      "date": "2026-08-15"
+     },
+     "gate": "reserved",
+     "source_kind": "second-party",
+     "invoice_reconciled": false,
+     "production_effort": "api-default",
+     "budget_ccy": "USD",
+     "token_profile": null,
+     "budgets": null,
+     "gate_by_tier": {
+      "design": {
+       "status": "reserved — wired for the post-1-Sep design lane (RUL-013/SPEND-GUARD-1), no production traffic and no golden run yet",
+       "prompt_version": "n/a — no caller",
+       "effort": "api-default",
+       "date": "2026-08-15"
+      }
+     }
     }
    }
   }
