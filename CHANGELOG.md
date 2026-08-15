@@ -1,3 +1,13 @@
+## 2026-08-15 — Final ID for the CDN document-leak entry: RG-0090 (after three same-morning races)
+
+The concurrent session also claimed RG-0083 minutes after the last correction — three ID races
+in one morning (0080, 0082, 0083). The document-leak entry now sits at **RG-0090**, a
+deliberate out-of-reach jump; the register is append-only so the 0084–0089 gap is harmless and
+stays. All of today's references (RG-0082 in commit 933eea6's message, RG-0083 in the first
+correction) resolve to RG-0090. Standing watch item for the maintenance lane: concurrent
+sessions MUST take the next free ledger ID at the moment of write (re-read, then append in the
+same operation) or from session-reserved ranges — planning-time numbering has now failed 3x.
+
 ## 2026-08-15 — Correction: the edge-cache document-leak entry is RG-0083, not RG-0082
 
 Second same-morning ID race: the concurrent session registered its own RG-0082 (AI spend

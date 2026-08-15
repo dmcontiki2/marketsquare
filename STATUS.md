@@ -5,6 +5,9 @@
 
 ## Current Session
 
+- Final: CDN document-leak OPEN entry = **RG-0090** (0082 and 0083 were both taken by the
+  concurrent session mid-write; deliberate jump ends the leapfrog; 0084–0089 gap is by design).
+
 - Correction: the CDN document-leak OPEN entry is **RG-0083** (RG-0082 was concurrently taken
   by the AI-spend-attribution entry). Ship record references to "RG-0082 opened" = RG-0083.
 

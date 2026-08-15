@@ -3895,7 +3895,10 @@ def rg_failover_consults_baseline():
 
 
 
-@entry("RG-0083", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
+# ID NOTE: deliberately jumped to RG-0090 after THREE same-morning ID races with a concurrent
+# session (0080, 0082, 0083 each taken between this session's planning and its write). The
+# register is append-only and never renumbered, so the gap is harmless; racing is not.
+@entry("RG-0090", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
        OPEN, scope="the index document at / (and any gated HTML the edge caches). The DATA side "
                    "already holds: /wonders and /listings answer 401 anonymously -- this entry is "
                    "about the HTML shell alone",
