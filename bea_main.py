@@ -14022,17 +14022,22 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS admin_audit ("
                 " id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                " ts TEXT NOT NULL DEFAULT (datetime('now')),"
+                # PG-RATCHET-PRECISION-1: no SQLite-specific column default here -- the
+                # caller supplies a portable UTC stamp, so this DDL moves to Postgres
+                # unchanged. (Wording avoids the literal SQL token: the ratchet counts
+                # occurrences in source, comments included, so naming it would re-trip it.)
+                " ts TEXT NOT NULL,"
                 " actor TEXT NOT NULL, action TEXT NOT NULL, field TEXT NOT NULL,"
                 " prior TEXT, new TEXT, reason TEXT)")
+            _audit_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             _newrow = dict(row) if row else {}
             for _k, _v in data.items():
                 _old = prior.get(_k)
                 _new = _newrow.get(_k, _v)
                 conn.execute(
-                    "INSERT INTO admin_audit (actor, action, field, prior, new, reason) "
-                    "VALUES (?,?,?,?,?,?)",
-                    (_actor, "POST /admin/flags", _k,
+                    "INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) "
+                    "VALUES (?,?,?,?,?,?,?)",
+                    (_audit_ts, _actor, "POST /admin/flags", _k,
                      None if _old is None else str(_old),
                      None if _new is None else str(_new), _reason or None))
                 if _k == "ai_active":

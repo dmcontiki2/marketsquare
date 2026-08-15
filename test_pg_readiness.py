@@ -10,7 +10,13 @@ HERE = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__f
 BASE = os.path.join(HERE, "scripts", "pg_readiness_baseline.json")
 PATTERNS = {
     "datetime_now": r"datetime\('now'",
-    "strftime":     r"strftime\(",
+    # PG-RATCHET-PRECISION-1 (15 Aug 2026): was r"strftime\(" -- which also matched PYTHON's
+    # datetime.strftime(), a portable stdlib call with nothing to do with SQLite or the
+    # Postgres move. 25 of the 40 hits were Python. Adding ordinary date formatting anywhere
+    # in bea_main.py therefore tripped the ratchet, put DANGER on the pre-deploy scan, and in
+    # STRICT mode (nightly_ship) aborted the unattended release. The guard measured a regex,
+    # not the invariant. Negative lookbehind excludes the method call; bare strftime( is SQL.
+    "strftime":     r"(?<!\.)strftime\(",
     "julianday":    r"julianday\(",
     "insert_or":    r"INSERT OR (?:IGNORE|REPLACE)",
 }

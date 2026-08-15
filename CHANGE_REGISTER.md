@@ -456,3 +456,12 @@ in the HOOK (kept by David's choice); the snap clip itself is 100% the male voic
 - **Heritage layer (all 5 maps):** journey template + builder gained a spec-driven 🏛️ heritage pin layer with its own overlay toggle + legend line (SO-1b: public sites named accurately — UNESCO/parks on each route; 7 KE, 4 NA, 3 BW, 3 MZ, 5 C2C). Additive: specs without a heritage list render byte-identically.
 - **Travelpayouts LINKS wired (links-not-scripts doctrine):** static build-time deep links (marker 758984, rel=noopener nofollow sponsored) in the flight-day summaries of KE/NA/BW/MZ, beside agency-books-it copy. Sanctioned by RG-0025's own ref. NEW CANON in SUPER_AFRICA_RESEARCH §3b: links stripped when an agency claims a tour (never skim a partner's surface); heritage pins STAY on claimed maps. RG-0025 page list strengthened with adventures_ke_map.html.
 - Verified: 0 external scripts on all 5 rebuilt maps; photos preserved (140/164).
+
+## 2026-08-15 — NCR-GREEN-1: triage sweep, MISC refile, top-bin chip honesty (Cowork session)
+**Trigger:** David asked why the NCR & Feedback ambers and to make them green.
+**Data (live, via maint API on localhost — RECONCILE_FAULTS transport, no direct SQL writes):**
+- TS-0034 triaged: bin LIST, code LIST-003, recurrence of the TS-0006 duplicate-photo class. Root evidence: listing 267 (electrician showcase) — sup_svctech_2_cover.jpg is the same scene as sup_svctech_1_main.jpg (perceptual hash dist 30/256 + visual confirm). Replacement render queued HIGH in HIGGSFIELD_REGEN_QUEUE.md (same-filename swap, no DB change). TS-0006 given the class code for register coherence.
+- MISC ×26 → refiled into real bins (bin field only, minimal change): LIST 16 · MISC 6 · BROWSE 4 · TRUST 4 · ADV 2 · COPY 2. Six stay MISC honestly (TS-0014–0017 admin-console/ops-map layout, TS-0018/0021 context-free). Triage queue now 0 new.
+**Code (local only, NOT deployed):** dashboard.server.html om-topbin — amber only when MISC is the top bin (TOPBIN-HONESTY-1). Previously `top ? 'a' : 'g'`: amber whenever any fault had any bin, i.e. could never go green. NOTE the 1 Aug clobber precedent: deploy_bit_monitoring.bat's pre-pull will overwrite this if run before the next dashboard push.
+**Docs:** FAULT_REGISTER.md gains the LIST-003 row + refile note.
+**Still amber, honestly:** major ×2 — TS-0031 (cars spec provenance, decision is David's, options in BACKLOG.md 14 Aug) and TS-0034 (awaiting the Higgsfield render).

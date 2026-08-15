@@ -52,3 +52,10 @@ reopens — their word outranks our evidence.
 | LIST-002 | 2026-08-11 | David (tester) | Showcase trios (property/cars/adventures-exp/stays) unmarked again — LIST-001 class recurrence (creators baked super_example=0 after migration 002's pin concern) | 2 | CLOSED 11 Aug | SHOWCASE-BANNER-1: banner WITHOUT the pin — migrations/014 + showcase flag + sort exclusion (server+client) + creators born-marked; RG-0052 |
 | MAIL-001 | 2026-07-28 | E2E test | Resend 403 — root domain never verified | 1 | CLOSED 28 Jul | FROM → mail.trustsquare.co (canon in LAUNCH_EMAILS.md) |
 | PERF-001 | 2026-07-22 | Pulse | Homepage load over 3s (AMBER) | 1 | OPEN | unassigned — candidate for first autonomous fix |
+| LIST-003 | 2026-08-06 | David (tester) | Duplicate/near-identical photo in an advert's set (TS-0006; recurred 15 Aug as TS-0034 on listing 267 — sup_svctech_2_cover ≈ sup_svctech_1_main, hash-confirmed) | 2 | FIXED 15 Aug (awaiting close) | render generated (Nano Banana Pro, toolkit ref), swapped same-filename, hash-verified distinct (106/93/109 of 256), CDN purged. Class-level dedupe detection remains the Path B backlog item from TS-0006 |
+
+### Refile note (15 Aug 2026, Cowork session)
+The 26-row MISC backlog predated the taxonomy — refiled via the maint API into real bins
+(LIST 16 · BROWSE 4 · TRUST 4 · COPY 2 · ADV 2). Six rows stay MISC honestly: TS-0014–0017
+are admin-console/ops-map layout reports (no product bin fits), TS-0018/0021 lack context to
+bin. Top bin is now LIST — the register reads like a register.

@@ -1,3 +1,13 @@
+## 2026-08-15 — NCR-GREEN-1: dashboard ambers worked to ground truth
+Triage queue cleared (TS-0034 triaged as LIST-003, recurrence of the TS-0006 duplicate-photo
+class). MISC ×26 backlog refiled into real bins via the maint API — top bin now LIST ×16, six
+rows stay MISC honestly. TS-0034 FIXED same session on David's go: duplicate showcase photo on
+listing 267 replaced with a fresh SO-1-compliant Higgsfield render (same filename, no DB change),
+machine-verified distinct (perceptual hash 106/93/109 of 256) and CDN purged; awaiting close
+letter. dashboard.server.html top-bin chip made honest (amber only when MISC on top) — local,
+ships with next push. Full detail: CHANGE_REGISTER.md NCR-GREEN-1. Remaining major: TS-0031
+(cars spec provenance) — David's recorded decision.
+
 ## 2026-08-15 — Final ID for the CDN document-leak entry: RG-0090 (after three same-morning races)
 
 The concurrent session also claimed RG-0083 minutes after the last correction — three ID races

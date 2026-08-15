@@ -1754,7 +1754,9 @@ function switchView(view) {
         var bins = {};
         rows.forEach(function(x){ if(x.bin) bins[x.bin] = (bins[x.bin]||0) + 1; });
         var top = Object.keys(bins).sort(function(a,b){ return bins[b]-bins[a]; })[0];
-        fill('om-topbin', top ? (top + ' ×' + bins[top]) : 'none', top ? 'a' : 'g');
+        // TOPBIN-HONESTY-1 (15 Aug 2026): amber means an unclassified backlog (MISC on top),
+        // not "faults exist" — a real category on top is the register working as designed.
+        fill('om-topbin', top ? (top + ' ×' + bins[top]) : 'none', (top === 'MISC') ? 'a' : 'g');
         var mb = document.getElementById('om-maint-blk');
         if(mb) mb.classList.toggle('om-warnN', (nb + nm) > 0);
       }).catch(function(){

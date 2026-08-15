@@ -3,6 +3,17 @@ Model: Nano Banana Pro · 3:2 · house style: SA golden-hour, navy/amber accents
 Every prompt ends with: "Absolutely no text, letters, numbers or writing anywhere in the image."
 Use the REFERENCE button with the named anchor image so the item stays identical.
 
+## 0. DONE 15 Aug 2026 — Electrician second shot (replaces sup_svctech_2_cover.jpg) · 2 credits · FAULT TS-0034 / LIST-003
+**RUN COMPLETE 15 Aug 2026 ~14:30 — render generated, swapped live, hash-verified, CDN purged (see TS-0034 fix_note). No further action on item 0.**
+Reference: sup_svctech_3_toolkit.jpg (same kit, NOT the DB-board scene — that is the duplicate
+being removed). Prompt: "South African electrician in navy work overalls and beige leather
+gloves installing a modern white light switch on a warm cream plaster wall, screwdriver in
+hand, cable ends neatly stripped, golden-hour light through a nearby window, no face visible,
+photorealistic trade photography. Absolutely no text, letters, numbers or writing anywhere in
+the image."  → save as sup_svctech_2_cover.jpg (backup old first; same filename = no DB change,
+listing 267 photo_urls untouched). Then scp + chmod 644 + purge cache, machine-verify the three
+photos are distinct (perceptual hash), set TS-0034 → fixed.
+
 ## 1. HIGH — Tutor whiteboard (replaces sup_tutors_1_main.jpg) · 2 credits
 Reference: sup_tutors_2_desk.jpg (same room). Prompt: "Bright tutoring study room in a South
 African home, large whiteboard on the wall photographed at a steep oblique angle so the

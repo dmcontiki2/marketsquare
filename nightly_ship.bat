@@ -17,6 +17,16 @@ if not defined PYEXE ( where py >nul 2>&1 && set "PYEXE=py" )
 if not defined PYEXE ( echo %date% %time%  SKIP: python not on PATH>>"%LOG%" & exit /b 0 )
 
 :: Anything to ship? (read-only content compare — RG-0026 aware)
+:: MEDIA LANE (MEDIA-NIGHTLY-1, 15 Aug 2026) -- runs BEFORE the drift gate on purpose.
+:: Photos are git-ignored, so a changed image never makes the tree "ahead" and the drift
+:: check below exits 0 before anything ships. Media therefore had NO automated path to
+:: live at all: TS-0006/TS-0034 (duplicate photo, listing 267) stayed unpublished for that
+:: reason, not for want of a fix. media_push is HASH-GATED -- unchanged files upload
+:: nothing -- so this is a cheap no-op on most nights. Deliberately NON-FATAL: a media
+:: hiccup must never block a code release.
+call "%~dp0media_push.bat" <nul >>"%LOG%" 2>&1
+echo %date% %time%  media_push rc=%errorlevel%>>"%LOG%"
+
 set "DRIFTLINE="
 for /f "delims=" %%D in ('%PYEXE% "%~dp0check_deploy_drift.py" 2^>nul') do if not defined DRIFTLINE set "DRIFTLINE=%%D"
 echo %date% %time%  drift: %DRIFTLINE%>>"%LOG%"
