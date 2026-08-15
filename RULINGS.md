@@ -40,6 +40,8 @@ A superseded ruling is marked SUPERSEDED-BY, never deleted.
 
 | RUL-017 | 2026-08-15 | Report & Fix lane (OPS-SWEEP-1): amber/red ops states are EMAILED to David as they appear, with reply commands FIX (queue for Fable's pickup run) / REVIEW (hold for a session) / REPORT. Refines RUL-013's pre-launch quiet: an FYI + opt-in lane at David's request — autonomy, gates and the no-deploy-without-the-ref doctrine unchanged | scripts/ops_sweep.py · migrations/020_ops_sweep_cron.py · orchestration_v2/cockpit.html Report & Fix card · deploy_manifest ops_sweep + cockpit lines |
 
+| RUL-018 | 2026-08-15 | REPRESENTATION PARITY (SA sensitivity, David): never one demographic neat and another dirty/menial anywhere in the app's imagery. Prefer anonymous hands-and-tool framing; any visible person wears clean well-kept workwear, identical standard across every set. Prompts must encode it | STANDING_ORDERS.md SO-2 · HIGGSFIELD_REGEN_QUEUE.md parity rule · listing 268 photo 3 v3 |
+
 *Seeded 15 Aug 2026 from this session plus standing canon — NOT exhaustive. Sessions append
 as rulings are made; older rulings get added when they surface (that they must surface at all
 is the failure this file ends).*

@@ -128,7 +128,8 @@ def send_email(subject, html, key):
     req = urllib.request.Request("https://api.resend.com/emails",
         data=json.dumps({"from": FROM, "to": [TO], "reply_to": REPLY_TO,
                          "subject": subject, "html": html}).encode(),
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                 "User-Agent": "marketsquare-ops-sweep/1.0"})  # Resend edge 403s the default urllib UA
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.status
 

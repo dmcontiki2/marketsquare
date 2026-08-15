@@ -53,3 +53,25 @@ A public heritage/World-Heritage site (e.g. **Stonehenge, Avebury**) does **NOT*
 It is named and depicted **accurately** — Wikipedia info and reference imagery are fair to use — because it is public, famous and not ours to disguise.
 Only the **surrounding private specifics** are genericised: the tour operator, the vehicle/coach branding, the accommodation, and any nearby private business.
 Rule of thumb: *the monument is real; the business around it is a composite.* (Applied in the UK Adventures set: real Stonehenge/Avebury hero shots, fictional cream-and-green heritage coach + generic Georgian country-house stay.)
+
+## SO-2 · Representation parity in all exemplar imagery  (15 Aug 2026, David)
+South African market sensitivity, David's ruling verbatim in spirit: the app must never show
+one demographic neat and clean and another dirty or menial across a photo set, a listing, or
+the app as a whole — local users would rightly read it as racist and it would sink trust in
+the platform. Binding rules for every AI render, any category:
+
+- **Prefer anonymous framing** — hands-and-tool detail shots, from-behind-at-distance, or
+  no person at all (this also serves SO-1 anonymity). If nobody is identifiable, there is
+  nothing to compare.
+- **When any person IS visible: identical standard of dress and cleanliness** across the
+  set and across sets — clean, well-kept workwear for everyone, every trade, every skin tone.
+  Dirt, wear and "menial" styling are never attached to a person; a rusty wheelbarrow may be
+  weathered, the worker's clothes are clean.
+- **Prompts must encode it**: include "clean, well-kept workwear; nobody identifiable; no
+  bare skin" wording (see HIGGSFIELD_REGEN_QUEUE.md header) rather than trusting the model.
+- **At review, compare the SET, not the photo** — parity is a property of what sits side by
+  side in the viewer.
+
+_First applied:_ garden-service listing 268 photo 3 re-cut (v3) from an identifiable worker
+in dirty overalls to a hands-and-rake detail shot, after David caught the pairing risk
+against photo 2's neat presentation.

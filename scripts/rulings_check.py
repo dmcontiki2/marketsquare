@@ -41,6 +41,10 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-018": [
+   ("STANDING_ORDERS.md", ["SO-2", "Representation parity"], []),
+   ("HIGGSFIELD_REGEN_QUEUE.md", ["PARITY RULE"], []),
+ ],
  "RUL-017": [
    ("scripts/ops_sweep.py", ["OPS-SWEEP-1", "FIX", "REVIEW"], []),
    ("migrations/020_ops_sweep_cron.py", ["ops_sweep"], []),

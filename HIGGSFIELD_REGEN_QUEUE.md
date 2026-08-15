@@ -2,6 +2,12 @@
 Model: Nano Banana Pro · 3:2 · house style: SA golden-hour, navy/amber accents.
 Every prompt ends with: "Absolutely no text, letters, numbers or writing anywhere in the image."
 Use the REFERENCE button with the named anchor image so the item stays identical.
+SWAP RULE (learned 15 Aug, VERSIONED-PHOTO-1): never swap same-filename — /static/ ships
+immutable 1-year cache headers, so clients keep the old photo forever. Save the replacement
+under a NEW versioned name (…_v2.jpg) and update the listing's photo_urls to match.
+PARITY RULE (SO-2, 15 Aug): every prompt with any person carries "clean, well-kept workwear,
+nobody identifiable, no face, no bare skin" — never one person neat and another dirty anywhere
+in the app. Prefer hands-and-tool framing.
 
 ## 0. DONE 15 Aug 2026 — Electrician second shot (replaces sup_svctech_2_cover.jpg) · 2 credits · FAULT TS-0034 / LIST-003
 **RUN COMPLETE 15 Aug 2026 ~14:30 — render generated, swapped live, hash-verified, CDN purged (see TS-0034 fix_note). No further action on item 0.**

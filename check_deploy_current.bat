@@ -19,7 +19,7 @@ ssh %SERVER% "grep -q 'ai_active must be' %REMOTE%/main.py && echo    [OK] /admi
 
 echo.
 echo [3] Dashboard has the Page-4 AI Provider card?
-ssh %SERVER% "grep -q 'ai-prov-card' %REMOTE%/dashboard.html && echo    [OK] Page-4 AI Provider card present || echo    [MISSING] - run deploy_bit_monitoring.bat (ships dashboard.html)"
+ssh %SERVER% "grep -q 'ai-prov-card' %REMOTE%/dashboard.html && echo    [OK] Page-4 AI Provider card present || echo    [MISSING] - ship via the ONE deploy (dashboard.server.html rides the manifest)"
 
 echo.
 echo [4] Does the live BEA actually answer with the provider state?
