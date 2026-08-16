@@ -395,13 +395,15 @@ def rg_rendered_symbol_matches_market():
 
 
 @entry("RG-0003", "Non-Adventures listings have NO country field — currency is guessed from the price string",
-       OPEN, scope="Cars, Collectors, Property, Services, Tutors, local_market",
+       LOCKED, scope="Cars, Collectors, Property, Services, Tutors, local_market", fixed_on="2026-08-16",
        ref="THE STRUCTURAL CAUSE of the recurring currency faults. Adventures got a proper "
            "country->currency model; the other six categories never did. They rely on the "
            "price string already carrying a symbol, and formatZAR() turns anything unprefixed "
            "into Rand. It looks correct today only because every non-ZA demo listing happens "
            "to ship a pre-formatted symbol string. The first non-ZA seller who types a bare "
-           "number gets Rand. Fixing this class ONCE retires the whole recurring family.")
+           "number gets Rand. Fixing this class ONCE retires the whole recurring family. "
+           "LOCKED 16 Aug 2026: all 243 seed listings carry an explicit country by city "
+           "(London=GB, New York=US, Pretoria=ZA, Sydney=AU); live via the 09:04 Release.")
 def rg_non_adv_country_model():
     out = []
     missing = [l for l in listings()
@@ -416,9 +418,12 @@ def rg_non_adv_country_model():
 
 
 @entry("RG-0004", "A listing's city and its country agree",
-       OPEN, scope="ALL markets",
+       LOCKED, scope="ALL markets", fixed_on="2026-08-16",
        ref="Found 25 Jul: two Pretoria listings resolve to non-ZA countries, so the card shows "
-           "a Pretoria address priced in another currency. Either the city or the country is wrong.")
+           "a Pretoria address priced in another currency. Either the city or the country is wrong. "
+           "LOCKED 16 Aug 2026: the CITIES were wrong, not the countries — demo_stay_4 is the "
+           "Bazaruto villa (now Vilanculos, MZ), demo_stay_9 the Sossusvlei lodge (now Sesriem, "
+           "NA); CITY_CCY/CITY_COUNTRY extended per the Maun/Nairobi pattern; live via 09:04 Release.")
 def rg_city_country_agree():
     out = []
     for l in listings():
