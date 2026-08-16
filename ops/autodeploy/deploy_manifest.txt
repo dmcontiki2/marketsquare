@@ -100,6 +100,22 @@ ops/bit/bit_mitigator.py     | bit/bit_mitigator.py
 ops/bit/bit_registry.json    | bit/bit_registry.json
 scripts/ops_sweep.py | ops_sweep.py
 orchestration_v2/cockpit.html | orchestrator/v2/cockpit.html
+orchestration_v2/durability_map.html | orchestrator/v2/durability_map.html
+orchestration_v2/email_templates.html | orchestrator/v2/email_templates.html
+orchestration_v2/templates/adventures_accommodation_outreach.html | orchestrator/v2/templates/adventures_accommodation_outreach.html
+orchestration_v2/templates/adventures_experiences_outreach.html | orchestrator/v2/templates/adventures_experiences_outreach.html
+orchestration_v2/templates/agency_outreach.html | orchestrator/v2/templates/agency_outreach.html
+orchestration_v2/templates/cars_dealer_outreach.html | orchestrator/v2/templates/cars_dealer_outreach.html
+orchestration_v2/templates/collectors_dealer_outreach.html | orchestrator/v2/templates/collectors_dealer_outreach.html
+orchestration_v2/templates/collectors_outreach.html | orchestrator/v2/templates/collectors_outreach.html
+orchestration_v2/templates/property_outreach.html | orchestrator/v2/templates/property_outreach.html
+orchestration_v2/templates/service_company_outreach.html | orchestrator/v2/templates/service_company_outreach.html
+orchestration_v2/templates/services_casuals_outreach.html | orchestrator/v2/templates/services_casuals_outreach.html
+orchestration_v2/templates/services_technical_outreach.html | orchestrator/v2/templates/services_technical_outreach.html
+orchestration_v2/templates/tour_guide_outreach.html | orchestrator/v2/templates/tour_guide_outreach.html
+orchestration_v2/templates/travel_agency_outreach.html | orchestrator/v2/templates/travel_agency_outreach.html
+orchestration_v2/templates/tutor_institution_outreach.html | orchestrator/v2/templates/tutor_institution_outreach.html
+orchestration_v2/templates/tutors_outreach.html | orchestrator/v2/templates/tutors_outreach.html
 
 # ── DW-045 (16 Aug 2026): the smoke instrument rides the SAME deploy as the app,
 #    so the 01:30 cron sensor can never again grade with a retired assertion. ──

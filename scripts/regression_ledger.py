@@ -4158,5 +4158,42 @@ def rg_private_reads_need_key():
     return out
 
 
+
+@entry("RG-0095", "The orchestrator's three views are all DEPLOYED: cockpit, durability map and "
+       "email templates answer 401-behind-auth (served), never 404 (missing)",
+       LOCKED, fixed_on="2026-08-16",
+       scope="/orchestrator/v2/ lane. 401 anonymously = nginx serves the file behind basic auth "
+             "(correct); 404 = the file never shipped -- the exact fault found today",
+       ref="DURABILITY-404-1, 16 Aug 2026 (David: 'fix the Durability Map which is broken'). "
+           "cockpit.html linked durability_map.html but the file had NO deploy-manifest row, so "
+           "the live link 404'd since the page was born. Fixed by adding manifest rows for "
+           "durability_map.html, the new email_templates.html view (David's ask, same session) "
+           "and the 14 template snapshots it presents. The manifest-omission class: a repo file "
+           "a deployed page links to must itself be in the manifest.")
+def rg_orchestrator_views_deployed():
+    out = []
+    man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    if man is not None:
+        for f in ("durability_map.html", "email_templates.html", "templates/agency_outreach.html"):
+            if "orchestrator/v2/" + f not in man:
+                out.append((FAIL, "deploy manifest lost the row for orchestrator/v2/%s" % f))
+    _require_net()
+    for path in ("/orchestrator/v2/cockpit.html", "/orchestrator/v2/durability_map.html",
+                 "/orchestrator/v2/email_templates.html"):
+        req = urllib.request.Request(BASE + path, headers=UA)
+        try:
+            code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            code = he.code
+        if code == 404:
+            out.append((FAIL, path + " answers 404 -- the file is not deployed; a cockpit link "
+                              "is dead again (manifest-omission class)"))
+        elif code not in (200, 401):
+            out.append((FAIL, path + " answers %d -- expected 401 (behind basic auth) or 200" % code))
+    if not out:
+        out.append((INFO, "all three orchestrator views served (401-behind-auth as designed)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
