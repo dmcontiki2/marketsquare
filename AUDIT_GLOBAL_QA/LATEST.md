@@ -1,7 +1,6 @@
-# Global QA audit — 2026-08-15 (13.8s)
+# Global QA audit — 2026-08-16 (14.9s)
 
-**3 findings** (0 new vs previous run)
+**2 findings** (1 new vs previous run)
 
 - **INFO** [demo] `DEMO-PLACEHOLDERS` — 3 'coming soon' placeholder listings present (by design; verify they stay out of counts)
-- **INFO** [drift] `MSJS-DRIFT` — live ms.js (v474, 1060023B) != repo ms.js (1070419B) — expected while a deploy is staged; CRITICAL if it persists after deploying
-- **INFO** [drift] `VERSION-KEY` — repo html pins ms.js v438, live pins v474 AND the bytes differ (see MSJS-DRIFT) — a real deploy is staged
+- **INFO** [drift] 🆕 `VERSION-KEY-BENIGN` — repo html pins ms.js v439, live pins v483, but the served bytes are IDENTICAL to the repo — this is the server's monotonic ?v= bump, not drift. Recorded, not raised (DW-001).

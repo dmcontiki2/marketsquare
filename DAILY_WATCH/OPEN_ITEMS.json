@@ -1,5 +1,5 @@
 {
- "next_id": 47,
+ "next_id": 48,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -49,7 +49,9 @@
    "last_seen": "2026-08-15",
    "sev": "LOW",
    "source": "run_daily_checks deploy_drift",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-16",
+   "evidence": "run_daily_checks deploy_drift: clean - all 19 tracked files match live (releases f46c1a7 + 03aa9f0, 15 Aug evening); 3775309 ancestor of origin/deploy"
   },
   "DW-007": {
    "first_seen": "2026-08-03",
@@ -64,7 +66,9 @@
    "last_seen": "2026-08-15",
    "sev": "MEDIUM",
    "source": "audit MSJS-DRIFT",
-   "status": "OPEN"
+   "status": "CLOSED",
+   "closed": "2026-08-16",
+   "evidence": "audit 2026-08-16: MSJS-DRIFT absent; VERSION-KEY-BENIGN - live v483 served bytes IDENTICAL to repo (1,070,419B)"
   },
   "DW-009": {
    "first_seen": "2026-08-03",
@@ -76,10 +80,11 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "CC-002 open 67d (4/5 STAGED, Fable run 10 Jun) vs 7d threshold; siblings pass"
   },
   "DW-011": {
    "first_seen": "2026-08-03",
@@ -169,10 +174,11 @@
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "LOW",
    "source": "cost sweep",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Heartbeat lane bea_main.py:18280/18281 logs spend, no _check_cost_ceiling; only pre-existing warnings in today sweep"
   },
   "DW-022": {
    "first_seen": "2026-08-07",
@@ -209,32 +215,36 @@
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN",
-   "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open"
+   "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open",
+   "summary": "0-byte .git/HEAD.lock dated 2026-08-16 08:31 present (maintenance loop committed d10d8ac 06:29); asides 44->46; next-index-6.lock stands; RG-0015 index.lock-only"
   },
   "DW-028": {
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "first_seen": "2026-08-07",
    "sev": "MEDIUM",
    "source": "ledger/probe network blindness (permanent fix)",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Re-verified: anonymous /ops/selfcheck 401; ops API_KEY still not local; blocked"
   },
   "DW-027": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "HIGH",
    "source": "TS-0022 doctrine collision (Maroushka x3)",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Not re-checkable read-only (needs photo run); day 10 awaiting ruling"
   },
   "DW-029": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Not re-checked (task reads no secrets); day 10; rotation tooling ready"
   },
   "DW-030": {
    "first_seen": "2026-08-08",
@@ -248,11 +258,12 @@
   },
   "DW-031": {
    "first_seen": "2026-08-08",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "live verification (Stays last mile)",
    "status": "OPEN",
-   "note": "check passing since 2026-08-09 (4th day) - awaiting David's close"
+   "note": "check passing since 2026-08-09 (4th day) - awaiting David's close",
+   "summary": "Condition still unmet on technicality: HEAD 1 ahead by d10d8ac (06:29 maintenance bookkeeping, no deployable files); tree 12 entries watch exhaust; drift substance CLEAN today"
   },
   "DW-032": {
    "first_seen": "2026-08-08",
@@ -283,18 +294,20 @@
   },
   "DW-035": {
    "first_seen": "2026-08-10",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "LOW",
    "source": "Monday deep static scan",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Monday lane; today Sunday; carried 175 findings 0 crash-class"
   },
   "DW-036": {
    "first_seen": "2026-08-11",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "release state (NEW today)",
    "status": "OPEN",
-   "note": "release SHIPPED (fd3188f, HEAD == origin/deploy); drift now comes from UNCOMMITTED working-tree edits"
+   "note": "release SHIPPED (fd3188f, HEAD == origin/deploy); drift now comes from UNCOMMITTED working-tree edits",
+   "summary": "Substance shipped: 3775309 ancestor of origin/deploy; MSJS-DRIFT cleared (v483 byte-identical). Condition fails only on d10d8ac morning bookkeeping commit — unreachable at 06:30 as written"
   },
   "DW-037": {
    "first_seen": "2026-08-11",
@@ -307,10 +320,11 @@
   },
   "DW-038": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
-   "status": "OPEN"
+   "status": "OPEN",
+   "summary": "Day 5 identical: smoke 30/39, all 9 failures the UA-less-fetch cluster"
   },
   "DW-039": {
    "first_seen": "2026-08-12",
@@ -333,7 +347,8 @@
    "sev": "MEDIUM",
    "source": "gate scope vs documented intent (NEW today)",
    "status": "OPEN",
-   "last_seen": "2026-08-15"
+   "last_seen": "2026-08-16",
+   "summary": "Day 4 byte-identical: 401 on terms/privacy/eula/login/payment-test/demo-listings/demo-sellers/flags/wonders; 200 on / support static-ms.js health; RG-0081 emailed-link locked, scope unchanged"
   },
   "DW-042": {
    "first_seen": "2026-08-13",
@@ -346,37 +361,45 @@
   },
   "DW-043": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "sweep 0crit/2warn -> 2 CRITICAL/11 warn; all 11 new hits are reference documents (AI_BASELINE.json, AI_CHALLENGER_BOARD.html, AI_MODEL_BASELINE_MAP.html) not call sites; both criticals fire on the D8 defect DESCRIPTION quoting claude-opus-4-6. DW-009 false-positive family, wider file class."
+   "summary": "WORSE: 5 CRITICAL/13 WARN (was 2/11); sweep now fires CRITICAL at DEFENCE_COVERAGE_MAP.html:31/:90 and DAILY_WATCH/OPEN_ITEMS.json:353 — the register/map documenting DW-044; self-referential loop; zero new call sites"
   },
   "DW-044": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "cost perimeter (via DW-043)",
    "status": "OPEN",
-   "summary": "AdvertAgent/service/advert_agent.py outside the cost seam: line 35 claude-opus-4-6 rate row (15.00,75.00)/MTok + 11 hardcoded claude-sonnet-4-6 sites, no downscale. Documented by the attended session as D8. Exposure not spend (today $0.00, MTD $1.755565, 251 calls)."
+   "summary": "Re-verified: advert_agent.py MODEL_RATES still carries claude-opus-4-6 (15.00,75.00) + 11 sonnet sites outside ai_provider seam; not spending (today $0.00, MTD $1.76/251)"
   },
   "DW-045": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "HIGH",
    "source": "cron parity",
    "status": "OPEN",
-   "summary": "findings.cron.json (loop_date 2026-08-15, 01:30Z) smoke 29/39 vs session run 30/39. Cause proven: /var/www/marketsquare/smoke_test.py:145 still carries the pre-DW-039 assertion. health + spend fields agree exactly. Unattended sensor grading with a retired assertion."
+   "summary": "Day 2: cron (loop_date 2026-08-16) smoke 29/39 vs session 30/39; server smoke_test.py:145 stale assertion re-proven; smoke_test.py ABSENT from deploy_manifest.txt; health/spend parity exact"
   },
   "DW-046": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-15",
+   "last_seen": "2026-08-16",
    "sev": "MEDIUM",
    "source": "fea_integrity_check",
    "status": "OPEN",
-   "summary": "server integrity monitor ok -> ALERT: index bytes 400834->401847 (+1013); notes ms.js v441->v474, ms.css v305->v338. Cause identified: the 19:50 release 9074188. Stays in alert until --update-baseline, so it cannot flag the NEXT change."
+   "summary": "Day 2: still ALERT, delta grew +7152 (index 400834->407986); ms.js v441->v483 now byte-equal repo; ms.css v305->v347; cron logged HIGH again"
+  },
+  "DW-047": {
+   "first_seen": "2026-08-16",
+   "last_seen": "2026-08-16",
+   "sev": "LOW",
+   "source": "cost sweep",
+   "status": "OPEN",
+   "summary": "Sweep cannot classify model family claude-fable-5: WARN at scripts/maintenance_agent.py:328 and scripts/regression_ledger.py:3187 (watch/fix-agent tooling referencing RUL-013/RG-0080), not call sites. Instrument gap, not spend."
   }
  },
- "last_run": "2026-08-15",
+ "last_run": "2026-08-16",
  "last_verdict": "AMBER"
 }
