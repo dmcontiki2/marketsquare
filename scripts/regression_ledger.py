@@ -4231,5 +4231,57 @@ def rg_pin_spread_in_generator():
     return out
 
 
+
+@entry("RG-0097", "The Planner Lane ships DARK and whole: endpoints exist behind the "
+       "p_heritage flag (OFF answers 404, never 500), the renderer module + template are "
+       "deployed, and the offline selftest pipeline stays green",
+       LOCKED, fixed_on="2026-08-16",
+       scope="Phase A (heritage planner). Flag-dark by design until David flips "
+             "planners.heritage; this entry asserts DARKNESS + WHOLENESS, not the lit lane",
+       ref="Phase A build, 16 Aug 2026 (design: PLANNER_LANE_DESIGN_2026-08-16_rev2.docx). "
+           "journey_render.py extracted from build_journey.py -- 5/5 showcases rebuilt "
+           "byte-identical through the module. Coordinates/photos come only from "
+           "wonders.json (the AI picks ids + words at the everyday task tier via the seam). "
+           "planner_selftest.py proves validate->assemble->render(url)<300KB offline.")
+def rg_planner_lane_dark_and_whole():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        for needle in ('"/planner/heritage/compose"', '"/planner/map/{sid}"',
+                       '_planner_flag_on', 'assemble_heritage_spec'):
+            if needle not in bea:
+                out.append((FAIL, "bea_main.py lost %s -- the planner lane is broken in source" % needle))
+    for f, needle in (("journey_render.py", "def render_spec"),
+                      ("scripts/planner_selftest.py", "validate_heritage_plan"),
+                      ("migrations/022_planner_specs.py", "planner_specs"),
+                      ("ops/autodeploy/deploy_manifest.txt", "journey_render.py")):
+        t = repo_file(f)
+        if t is not None and needle not in t:
+            out.append((FAIL, "%s lost %r" % (f, needle)))
+    _require_net()
+    ck = _review_cookie()
+    key = ""
+    msjs = repo_file("ms.js") or ""
+    k = msjs.find("const API_KEY = '")
+    if k != -1:
+        key = msjs[k + len("const API_KEY = '"):msjs.find("'", k + len("const API_KEY = '"))]
+    if ck and key:
+        req = urllib.request.Request(BASE + "/planner/map/999999?email=rg0097@example.com",
+                                     headers=dict(UA, **{"Cookie": ck, "X-Api-Key": key}))
+        try:
+            code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            code = he.code
+        if code >= 500:
+            out.append((FAIL, "/planner/map answers %d -- the dark lane is CRASHING, not dark" % code))
+        elif code != 404:
+            out.append((INFO, "planner map answered %d (flag may be ON -- fine if David flipped it)" % code))
+    else:
+        out.append((INFO, "no credential for the live dark-probe -- source-side asserted"))
+    if not out:
+        out.append((INFO, "planner lane whole in source and dark-clean live (404)"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

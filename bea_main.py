@@ -18311,3 +18311,124 @@ async def _ts_breaker_heartbeat():
             except Exception as _hb_e:
                 print("HEARTBEAT-1 error: %s" % _hb_e)
     asyncio.get_running_loop().create_task(_hb_loop())
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PLANNER LANE · Phase A (16 Aug 2026, David: "Build phase A")
+# Design: PLANNER_LANE_DESIGN_2026-08-16_rev2.docx · flag-dark behind
+# launch_switches.p_heritage (planners.heritage) — OFF answers 404 as if absent.
+# FREE class: no Tuppence machinery is touched. The AI never writes coordinates:
+# it picks wonder IDs + words at the everyday task tier through the seam
+# (ai_provider.complete — no vendor names, the Model Register resolves the lane);
+# journey_render.assemble_heritage_spec builds the spec from wonders.json rows.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _planner_flag_on(name="p_heritage"):
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM launch_switches WHERE id = 1").fetchone()
+    finally:
+        conn.close()
+    return bool(dict(row).get(name, 0)) if row else False
+
+
+class PlannerComposeReq(BaseModel):
+    email: str
+    country: str
+    days: int = 3
+    interests: Optional[str] = None
+
+
+@app.post("/planner/heritage/compose")
+def planner_heritage_compose(req: PlannerComposeReq, _key: str = Depends(auth.require_api_key)):
+    """Compose a personal heritage journey (FREE class). Flag-dark until p_heritage=1."""
+    if not _planner_flag_on("p_heritage"):
+        raise HTTPException(status_code=404, detail="Not found")
+    import journey_render as _jr
+    days = max(1, min(int(req.days or 3), 5))
+    email = (req.email or "").strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=422, detail="A valid email is required")
+
+    conn = database.get_db()
+    try:
+        n = conn.execute("SELECT COUNT(*) AS c FROM planner_specs WHERE user_email=? "
+                         "AND created_at >= datetime('now','-1 day')", (email,)).fetchone()["c"]
+    finally:
+        conn.close()
+    if n >= 5:
+        raise HTTPException(status_code=429, detail="Daily planner limit reached — try again tomorrow")
+
+    cand = [w for w in _load_wonders()
+            if (req.country or "").strip().lower() in (w.get("country") or "").lower()]
+    if len(cand) < 3:
+        raise HTTPException(status_code=422, detail="Not enough heritage sites for that country yet")
+    cand = cand[:40]
+    wmap = {w["id"]: w for w in cand}
+    menu = "\n".join("%s | %s | %s | %s | %s,%s | %s" % (
+        w["id"], w["name"], w.get("type",""), w.get("region",""),
+        w["lat"], w["lon"], (w.get("description") or "")[:100]) for w in cand)
+
+    system = ("You are MarketSquare's heritage journey planner. Answer with STRICT JSON only — "
+              "no markdown, no fences, no commentary.")
+    ask = ('Plan a %d-day heritage journey in %s%s.\n'
+           'Choose ONLY from these sites (id | name | type | region | lat,lon | note):\n%s\n\n'
+           'Rules: 2-4 sites per day; never reuse a site; order days and sites so daily travel '
+           'is geographically sensible (group nearby sites on the same day).\n'
+           'Answer JSON exactly: {"title": str, "sub": str, "days": [{"title": str, '
+           '"summary": str, "stop_ids": [str]}]} with exactly %d entries in "days".'
+           ) % (days, req.country, (" focused on: %s" % req.interests) if req.interests else "", menu, days)
+
+    plan = None
+    last_err = "no attempt"
+    for attempt in (1, 2):
+        try:
+            r = ai_provider.complete([{"role": "user", "content": ask}],
+                                     task="haiku", system=system, max_tokens=1200, timeout=45)
+            raw = (r.text or "").strip()
+            if raw.startswith("```"):
+                raw = raw.strip("`").lstrip("json").strip()
+            plan = _jr.validate_heritage_plan(json.loads(raw), list(wmap.keys()), days)
+            break
+        except Exception as e:
+            last_err = str(e)[:200]
+            plan = None
+    if plan is None:
+        raise HTTPException(status_code=502,
+                            detail="The planner could not produce a valid journey (%s)" % last_err)
+
+    spec = _jr.assemble_heritage_spec(req.country, plan, wmap)
+    conn = database.get_db()
+    try:
+        cur = conn.execute("INSERT INTO planner_specs(user_email, kind, spec_json) VALUES(?,?,?)",
+                           (email, "heritage", json.dumps(spec, ensure_ascii=False)))
+        conn.commit()
+        sid = cur.lastrowid
+    finally:
+        conn.close()
+    return {"id": sid, "title": spec["title"], "days": len(spec["days"]),
+            "stops": sum(len(d["stops"]) for d in spec["days"]),
+            "map": "/planner/map/%d" % sid}
+
+
+@app.get("/planner/map/{sid}")
+def planner_map(sid: int, email: str, _key: str = Depends(auth.require_api_key)):
+    """Serve a personal journey map (media-as-URL — phone-light). Owner-only."""
+    if not _planner_flag_on("p_heritage"):
+        raise HTTPException(status_code=404, detail="Not found")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM planner_specs WHERE id=?", (sid,)).fetchone()
+    finally:
+        conn.close()
+    if not row or (row["user_email"] or "").lower() != (email or "").strip().lower():
+        raise HTTPException(status_code=404, detail="Not found")
+    import journey_render as _jr
+    tpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "journey_template.html")
+    try:
+        template = open(tpath, encoding="utf-8").read()
+    except OSError:
+        raise HTTPException(status_code=503, detail="Renderer template not deployed")
+    html, _f, _m = _jr.render_spec(json.loads(row["spec_json"]), template, media="url")
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(html)

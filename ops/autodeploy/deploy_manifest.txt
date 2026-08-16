@@ -99,6 +99,8 @@ ops/bit/bit_runner.py        | bit/bit_runner.py
 ops/bit/bit_mitigator.py     | bit/bit_mitigator.py
 ops/bit/bit_registry.json    | bit/bit_registry.json
 scripts/ops_sweep.py | ops_sweep.py
+journey_render.py             | journey_render.py
+scripts/journey_template.html | journey_template.html
 orchestration_v2/cockpit.html | orchestrator/v2/cockpit.html
 orchestration_v2/durability_map.html | orchestrator/v2/durability_map.html
 orchestration_v2/email_templates.html | orchestrator/v2/email_templates.html
