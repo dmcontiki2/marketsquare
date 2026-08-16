@@ -782,7 +782,7 @@ def rg_adv_screen_super_ribbon():
            "lock ONLY when no git.exe is running (so it can never race a live commit) and every committer "
            "calls it first. This asserts the INVARIANT: any .bat that git-commits must first clear a stale "
            "lock (call git_unlock.bat OR an inline del of .git/index.lock). A new unguarded committer trips "
-           "this red instead of silently reintroducing the whole class.")
+           "this red instead of silently reintroducing the whole class. WIDENED 16 Aug 2026 (DW-026 executed, GIT-LOCK-3): asserts the whole lock CLASS in both lanes -- git_unlock.bat keeps HEAD/packed-refs/next-index coverage plus the host sweep, scripts/git_unlock.py exists (sandbox rename-aside; FUSE blocks unlink), the deploy bat keeps its DW-026 abort -- and adds a LIVE tripwire: any stranded blocking lock >60 min or day-old next-index turns the ledger red the same day, instead of blocking a commit at 2 a.m. Assertion strengthened, never weakened.")
 def rg_git_writers_selfheal_lock():
     import glob
     if repo_file("commit.bat") is None:
@@ -807,6 +807,37 @@ def rg_git_writers_selfheal_lock():
         if not guarded:
             out.append((FAIL, base + " commits but never clears a stale .git/index.lock first "
                               "-- a leftover lock will block the next commit (recurring index.lock class)"))
+    # ── WIDENED 16 Aug 2026 (DW-026, GIT-LOCK-3): the CLASS, both lanes, live ──
+    ub = repo_file("git_unlock.bat") or ""
+    for marker in ("HEAD.lock", "packed-refs.lock", "next-index"):
+        if marker not in ub:
+            out.append((FAIL, "git_unlock.bat no longer clears " + marker +
+                              " -- the lock CLASS narrowed back to index.lock (GIT-LOCK-2/3 lost)"))
+    if repo_file(os.path.join("scripts", "git_unlock.py")) is None:
+        out.append((FAIL, "scripts/git_unlock.py missing -- the SANDBOX lane has no self-heal "
+                          "(FUSE blocks unlink there; rename-aside is the only cure)"))
+    dep = repo_file("deploy_marketsquare.bat") or ""
+    if dep and "DW-026" not in dep:
+        out.append((FAIL, "deploy_marketsquare.bat lost the DW-026 abort -- a failed commit "
+                          "would again publish the PREVIOUS commit as the deploy ref"))
+    _gd = os.path.join(REPO, ".git")
+    if os.path.isdir(_gd):
+        import glob as _g
+        _now = time.time()
+        for _p in [os.path.join(_gd, n) for n in ("index.lock", "HEAD.lock", "packed-refs.lock")]:
+            if os.path.exists(_p) and _now - os.path.getmtime(_p) > 3600:
+                out.append((FAIL, ".git/" + os.path.basename(_p) + " is STRANDED (>60 min, survived "
+                                  "every self-heal) -- the next committer will fail; clear it "
+                                  "(host: git_unlock.bat / sandbox: scripts/git_unlock.py)"))
+        _ni = [p for p in _g.glob(os.path.join(_gd, "next-index-*.lock")) if _now - os.path.getmtime(p) > 86400]
+        if _ni:
+            out.append((FAIL, str(len(_ni)) + " next-index-*.lock file(s) older than a day -- "
+                              "the class is accumulating again"))
+        _orph = len(_g.glob(os.path.join(_gd, "objects", "*", "tmp_obj_*")))
+        _aside = len(_g.glob(os.path.join(_gd, "stale_locks", "*"))) + len(_g.glob(os.path.join(_gd, "HEAD.lock.stale-*")))
+        if _orph or _aside:
+            out.append((INFO, str(_orph) + " tmp_obj orphan(s), " + str(_aside) +
+                              " aside(s) awaiting the host sweep (git_unlock.bat deletes both)"))
     out.append((INFO, str(checked) + " git-writing .bat(s); each must self-heal a stale index.lock"))
     return out
 

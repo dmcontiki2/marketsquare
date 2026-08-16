@@ -27,6 +27,14 @@ if not errorlevel 1 (
 )
 set RC=0
 for %%L in (index.lock HEAD.lock packed-refs.lock) do call :clearone %%L
+REM GIT-LOCK-3 (16 Aug 2026): next-index-*.lock joins the class, and the host
+REM sweep deletes what the SANDBOX could only rename aside (FUSE blocks unlink
+REM there; scripts/git_unlock.py renames stale locks into .git\stale_locks\),
+REM plus the orphaned loose-object temps failed FUSE unlinks leave behind.
+for %%F in (.git\next-index-*.lock) do del /f /q "%%F" >nul 2>&1
+if exist ".git\stale_locks" rd /s /q ".git\stale_locks" >nul 2>&1
+del /f /q ".git\HEAD.lock.stale-*" >nul 2>&1
+for /r ".git\objects" %%F in (tmp_obj_*) do del /f /q "%%F" >nul 2>&1
 exit /b %RC%
 
 :clearone
