@@ -298,6 +298,7 @@ CITY_CCY = {
     "new york": "$", "london": "£", "sydney": "A$",
     "maun": "P",   # Botswana Pula — Okavango super market demo_stay_bw_1 (added 29 Jul 2026)
     "nairobi": "KSh",  # Kenyan Shilling — SUPER-AFRICA-1 Kenya pilot (added 10 Aug 2026)
+    "vilanculos": "MT", "sesriem": "N$",  # MZ/NA stay gateways — RG-0004 city fix (added 16 Aug 2026)
 }
 CITY_COUNTRY = {
     "pretoria": "ZA", "johannesburg": "ZA", "cape town": "ZA", "durban": "ZA",
@@ -305,6 +306,7 @@ CITY_COUNTRY = {
     "new york": "US", "london": "GB", "sydney": "AU",
     "maun": "BW",   # Maun is in Botswana (added 29 Jul 2026)
     "nairobi": "KE",  # Nairobi is in Kenya — SUPER-AFRICA-1 (added 10 Aug 2026)
+    "vilanculos": "MZ", "sesriem": "NA",  # RG-0004 city fix (added 16 Aug 2026)
 }
 SYMBOLS = ("KSh", "A$", "CA$", "NZ$", "N$", "MT", "R", "$", "£", "€")
 
@@ -558,7 +560,7 @@ def rg_health():
 
 
 @entry("RG-0011", "Country codes are ISO 3166-1 and map filenames match their code",
-       OPEN, scope="ALL markets",
+       LOCKED, scope="ALL markets", fixed_on="2026-08-16",
        ref="MAP_NAMING_CANON.md. Found 26 Jul: GB points at adventures_uk_map.html and ZA at "
            "adventures_reserve_map.html, and ADV_COUNTRY_FLAGS carries EU and LL which are not "
            "countries (LL is in flags but not currency). Every lookup keyed on listing.country "
@@ -570,7 +572,10 @@ def rg_health():
            "and ZA at adventures_reserve_map.html. Nothing regressed today — this debt was never paid; "
            "it was hidden. Per David's rule the assertion was repaired rather than weakened, and the "
            "false LOCKED was withdrawn rather than left reporting ok. Re-lock only when both filenames "
-           "match their ISO code on disk.")
+           "match their ISO code on disk. RE-LOCKED 16 Aug 2026: GB -> adventures_gb_map.html "
+           "(uk content at the canon name; uk file kept for cached clients), ZA -> "
+           "adventures_za_map.html (RUL-021: David switched the Dinokeng supers to the 4-layer "
+           "pilot). Both filenames match their ISO code on disk and in ms.js.")
 def rg_iso_codes_and_filenames():
     import re
     fe = repo_file("ms.js")
@@ -4027,6 +4032,36 @@ def rg_legal_docs_public():
                           "is GATE-ENFORCE-1 rot (DW-023 class), not the RUL-020 exemption"))
     if not out:
         out.append((INFO, "legal docs open, gate still standing (/wonders %d anonymously)" % c))
+    return out
+
+
+@entry("RG-0093", "An infrastructure Test click answers PASS/FAIL AT THE ROW -- and a non-pass says WHY and what resolves it",
+       LOCKED, fixed_on="2026-08-16",
+       scope="dashboard.server.html (ships as dashboard.html) -- the +1 page Infrastructure card. "
+             "Source-half assertion: the verdict machinery exists and the Test path calls it. The "
+             "AI Providers card already answered visibly (apv3Test); this brings the infra card "
+             "to the same bar",
+       ref="INFRA-TEST-VERDICT-1, 16 Aug 2026, David: 'on the infrastructure i see nothing "
+           "happening when i use those test buttons... please add some visual indication of "
+           "PASS/FAIL, and if fail then we need a small explanation of why and what is needed "
+           "to resolve it.' Root cause: infraLoad re-rendered an identical row chip and wrote "
+           "'Checked <time>' to a side line -- a per-service re-probe whose result usually "
+           "equals the ambient status is invisible without a row-local verdict.")
+def rg_infra_test_verdict():
+    out = []
+    d = repo_file("dashboard.server.html")
+    if d is None:
+        return [(INFO, "repo not readable -- skipped")]
+    for needle, why in (
+        ('id="infra-res-', "the row-local verdict slot is gone"),
+        ("window.infraVerdict", "the verdict painter is gone"),
+        ("infra-why-", "the WHY/RESOLVE strip is gone"),
+        ("window.infraVerdict(one", "infraLoad no longer paints the verdict after a Test"),
+    ):
+        if needle not in d:
+            out.append((FAIL, why + " (%r missing from dashboard.server.html)" % needle))
+    if not out:
+        out.append((INFO, "Test paints PASS/FAIL at the row; non-pass carries why + resolve"))
     return out
 
 

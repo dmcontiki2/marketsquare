@@ -2203,11 +2203,12 @@ window.infraRender = function(d){
   var C={ok:['#22c55e','OK'],warn:['#eab308','WARN'],fail:['#ef4444','FAIL'],nokey:['#6b7280','NO KEY']};
   box.innerHTML=(d.services||[]).map(function(s){
     var st=C[s.status]||C.warn;
-    return '<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
+    return '<div id="infra-row-'+s.id+'" style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
       +'<span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+';flex:0 0 auto;"></span>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text)">'+s.label+' <span style="color:var(--muted);font-weight:400;font-size:11px">'+(s.kind||'')+(s.key?(' &middot; key '+s.key):'')+'</span></div>'
       +'<div style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.detail||'')+'</div></div>'
       +'<span style="font-size:10.5px;font-weight:700;color:'+st[0]+';flex:0 0 auto">'+st[1]+'</span>'
+      +'<span id="infra-res-'+s.id+'" style="font-size:10.5px;font-weight:700;flex:0 0 auto"></span>'
       +'<button type="button" onclick="infraLoad(&quot;'+s.id+'&quot;)" style="flex:0 0 auto;padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit">Test</button>'
       +'</div>';
   }).join('')||'<div style="color:var(--muted);font-size:12px">No checks returned.</div>';
@@ -2234,8 +2235,31 @@ window.infraFailLoud = function(msg){
     +'</div>';
   var out=document.getElementById('infra-out'); if(out) out.textContent=msg;
 };
+window.infraVerdict = function(id, s){
+  /* INFRA-TEST-VERDICT-1 (16 Aug 2026, David): a Test click must answer PASS/FAIL
+     AT THE ROW, and a non-pass must say WHY and WHAT RESOLVES it - not repaint
+     an identical chip while a tiny line elsewhere says "Checked". */
+  var slot=document.getElementById('infra-res-'+id); if(!slot) return;
+  var M={ok:['#22c55e','\u2713 PASS'],warn:['#eab308','\u25b3 WARN'],fail:['#ef4444','\u2717 FAIL'],nokey:['#6b7280','\u2014 NO KEY']};
+  var v=M[s.status]||M.warn;
+  slot.style.color=v[0]; slot.textContent=v[1];
+  var old=document.getElementById('infra-why-'+id); if(old&&old.parentNode) old.parentNode.removeChild(old);
+  if(s.status!=='ok'){
+    var row=document.getElementById('infra-row-'+id);
+    if(row&&row.parentNode){
+      var fix = s.status==='nokey' ? 'Resolve: set the key named above in the server env (secrets), restart BEA, then Test again. Dark-by-design feeds stay NO KEY until their launch flag flips.'
+              : s.status==='fail'  ? 'Resolve: verify the key is current and the provider is up (its status page); check outbound network from the server; then Test again.'
+              : 'Resolve: degraded, not down - usually self-heals. Test again to confirm; if it persists, read the BEA log for this service.';
+      var why=document.createElement('div'); why.id='infra-why-'+id;
+      why.style.cssText='padding:7px 10px;margin:2px 0 4px 19px;border-left:3px solid '+v[0]+';background:var(--surface2);border-radius:0 7px 7px 0;font-size:11px;line-height:1.5;color:var(--text)';
+      why.innerHTML='<b style="color:'+v[0]+'">Why:</b> '+(s.detail||'no detail returned by the probe')+'<br><b>'+fix+'</b>';
+      row.parentNode.insertBefore(why,row.nextSibling);
+    }
+  }
+};
 window.infraLoad = function(one){
-  var out=document.getElementById('infra-out'); if(out&&one) out.textContent='Re-testing '+one+'…';
+  var out=document.getElementById('infra-out'); if(out&&one) out.textContent='Re-testing '+one+'\u2026';
+  if(one){ var sl=document.getElementById('infra-res-'+one); if(sl){ sl.style.color='var(--muted)'; sl.textContent='testing\u2026'; } }
   fetch(window._apv2B+'/admin/services-status'+(one?('?service='+encodeURIComponent(one)):''),{headers:{'X-Admin-Token':window._apv2Tok()}})
    .then(function(r){ if(r.status===401){ window.infraAuthWait(); return null; } return r.json(); })
    .then(function(d){ if(!d) return;
@@ -2245,9 +2269,17 @@ window.infraLoad = function(one){
        cur.checked_at=d.checked_at; d=cur;
      }
      window._infraD=d; window.infraRender(d);
-     if(out) out.textContent='Checked '+(d.checked_at||'now');
+     if(one){
+       var s=null; (d.services||[]).forEach(function(x){ if(x.id===one) s=x; });
+       if(s){ window.infraVerdict(one,s); }
+       else { var s3=document.getElementById('infra-res-'+one); if(s3){ s3.style.color='#ef4444'; s3.textContent='\u2717 FAIL'; } }
+       if(out) out.textContent=(s&&s.status==='ok'?'\u2713 ':'\u2717 ')+(s?s.label:one)+' \u00b7 '+(s?(s.detail||s.status):'probe returned no result for this service')+' \u00b7 '+new Date().toLocaleTimeString();
+     } else if(out) out.textContent='Checked '+(d.checked_at||'now');
    })
-   .catch(function(e){ window.infraFailLoud('Check failed: '+e); });
+   .catch(function(e){
+     if(one){ var s2=document.getElementById('infra-res-'+one); if(s2){ s2.style.color='#ef4444'; s2.textContent='\u2717 FAIL'; } }
+     window.infraFailLoud('Check failed: '+e);
+   });
 };
 /* APV2-TESTALL-1 (22 Jul 2026): one-click sweep of every available AI provider */
 window.apv2TestAll = function(){
