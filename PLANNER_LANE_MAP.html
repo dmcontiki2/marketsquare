@@ -1,0 +1,77 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Planner Lane — architecture map</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;background:#f6f8fa;font-family:'Segoe UI',system-ui,sans-serif}</style></head>
+<body>
+<svg viewBox="0 0 1200 640" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:1200px;display:block;margin:0 auto">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5f6b78"/></marker></defs>
+<text x="600" y="34" text-anchor="middle" font-size="22" font-weight="800" fill="#0c1a2e">The Planner Lane — who writes, who renders, who earns</text>
+<text x="600" y="56" text-anchor="middle" font-size="12" fill="#5f6b78">Green = free/owned · Blue = the one renderer · Gold = Tuppence moments · Red-edged = paid feeds, Pro-gated (S3), hard-capped</text>
+
+<!-- User -->
+<rect x="30" y="100" width="200" height="86" rx="12" fill="#fff" stroke="#0c1a2e" stroke-width="2"/>
+<text x="130" y="130" text-anchor="middle" font-size="14" font-weight="800" fill="#0c1a2e">📱 User on phone</text>
+<text x="130" y="150" text-anchor="middle" font-size="11" fill="#5f6b78">taps a Planner feature</text>
+<text x="130" y="168" text-anchor="middle" font-size="11" fill="#b8860b" font-weight="700">pays 0 / 2T / 5T · fixed</text>
+
+<!-- Gate -->
+<rect x="290" y="100" width="200" height="86" rx="12" fill="#fff8e1" stroke="#d4af37" stroke-width="2"/>
+<text x="390" y="128" text-anchor="middle" font-size="13" font-weight="800" fill="#0c1a2e">🪙 /tuppence/ai-commit</text>
+<text x="390" y="147" text-anchor="middle" font-size="11" fill="#5f6b78">hold placed · S3 tier gate</text>
+<text x="390" y="165" text-anchor="middle" font-size="11" fill="#5f6b78">failed compose never charges</text>
+
+<!-- AI compose -->
+<rect x="550" y="88" width="230" height="110" rx="12" fill="#eef7f1" stroke="#538135" stroke-width="2"/>
+<text x="665" y="116" text-anchor="middle" font-size="13" font-weight="800" fill="#0c1a2e">🤖 AI writes the SPEC</text>
+<text x="665" y="135" text-anchor="middle" font-size="11" fill="#5f6b78">journeys schema: days · stops</text>
+<text x="665" y="152" text-anchor="middle" font-size="11" fill="#5f6b78">towns · heritage · overlays</text>
+<text x="665" y="170" text-anchor="middle" font-size="11" fill="#538135" font-weight="700">strict validator + geofence</text>
+<text x="665" y="187" text-anchor="middle" font-size="10.5" fill="#5f6b78">Haiku (free/2T) · Sonnet (5T)</text>
+
+<!-- Data column -->
+<rect x="840" y="60" width="330" height="64" rx="10" fill="#eef7f1" stroke="#538135" stroke-width="1.6"/>
+<text x="1005" y="85" text-anchor="middle" font-size="12" font-weight="800" fill="#0c1a2e">🌿 Owned &amp; open data — $0</text>
+<text x="1005" y="104" text-anchor="middle" font-size="10.5" fill="#5f6b78">heritage set · OSM · our listings · flights CACHE (parachute)</text>
+<rect x="840" y="136" width="330" height="64" rx="10" fill="#fff" stroke="#b3362e" stroke-width="1.8" stroke-dasharray="6,3"/>
+<text x="1005" y="160" text-anchor="middle" font-size="12" font-weight="800" fill="#b3362e">🔌 Paid feeds — Pro-only, capped</text>
+<text x="1005" y="179" text-anchor="middle" font-size="10.5" fill="#5f6b78">non-Google places · Mapbox · Duffel refresh $0.005 — flat, never ad-valorem</text>
+
+<!-- Renderer -->
+<rect x="420" y="270" width="360" height="112" rx="12" fill="#e8f0fe" stroke="#2F5496" stroke-width="2.4"/>
+<text x="600" y="298" text-anchor="middle" font-size="14" font-weight="800" fill="#0c1a2e">🗺️ journey_render.py — ONE renderer</text>
+<text x="600" y="318" text-anchor="middle" font-size="11" fill="#5f6b78">journey_template.html · layers · PIN-SPREAD inherited</text>
+<text x="600" y="337" text-anchor="middle" font-size="11" fill="#2F5496" font-weight="700">Mode A: embed → showcases (as today)</text>
+<text x="600" y="356" text-anchor="middle" font-size="11" fill="#2F5496" font-weight="700">Mode B: media-as-URL → personal maps &lt;300 KB</text>
+
+<!-- Outputs -->
+<rect x="120" y="450" width="280" height="96" rx="12" fill="#fff" stroke="#0c1a2e" stroke-width="2"/>
+<text x="260" y="478" text-anchor="middle" font-size="13" font-weight="800" fill="#0c1a2e">📂 My Journeys (My Space)</text>
+<text x="260" y="497" text-anchor="middle" font-size="11" fill="#5f6b78">GET /planner/map/{id} · owner-gated</text>
+<text x="260" y="515" text-anchor="middle" font-size="11" fill="#5f6b78">instant on phone · pinch &amp; tap</text>
+<text x="260" y="533" text-anchor="middle" font-size="11" fill="#5f6b78">share token later</text>
+
+<rect x="470" y="450" width="280" height="96" rx="12" fill="#fff8e1" stroke="#d4af37" stroke-width="2.4"/>
+<text x="610" y="478" text-anchor="middle" font-size="13" font-weight="800" fill="#0c1a2e">📜 Expedition Dossier</text>
+<text x="610" y="497" text-anchor="middle" font-size="11" fill="#5f6b78">printable brief · fares marked</text>
+<text x="610" y="515" text-anchor="middle" font-size="11" fill="#5f6b78">“indicative — confirm with agency”</text>
+<text x="610" y="533" text-anchor="middle" font-size="11" fill="#b8860b" font-weight="700">the artifact worth paying for</text>
+
+<rect x="820" y="450" width="330" height="96" rx="12" fill="#eef7f1" stroke="#538135" stroke-width="2.4"/>
+<text x="985" y="478" text-anchor="middle" font-size="13" font-weight="800" fill="#0c1a2e">🤝 Introduction → Travel Agency</text>
+<text x="985" y="497" text-anchor="middle" font-size="11" fill="#5f6b78">agency books &amp; takes the money —</text>
+<text x="985" y="515" text-anchor="middle" font-size="11" fill="#5f6b78">we are NEVER merchant of record (F4)</text>
+<text x="985" y="533" text-anchor="middle" font-size="11" fill="#538135" font-weight="700">the Tuppence seam · agencies stay partners</text>
+
+<!-- arrows -->
+<line x1="230" y1="143" x2="288" y2="143" stroke="#5f6b78" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="490" y1="143" x2="548" y2="143" stroke="#5f6b78" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="840" y1="92" x2="782" y2="120" stroke="#538135" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="840" y1="168" x2="782" y2="160" stroke="#b3362e" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#ar)"/>
+<line x1="665" y1="198" x2="612" y2="268" stroke="#5f6b78" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="520" y1="382" x2="300" y2="448" stroke="#5f6b78" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="600" y1="382" x2="608" y2="448" stroke="#5f6b78" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="750" y1="498" x2="818" y2="498" stroke="#d4af37" stroke-width="2.4" marker-end="url(#ar)"/>
+<text x="784" y="488" text-anchor="middle" font-size="10" fill="#b8860b" font-weight="700">hand over</text>
+
+<text x="600" y="600" text-anchor="middle" font-size="11" fill="#5f6b78">Flags already live (off): planners.heritage · planners.weekend · planners.expedition — Phase A ships dark, you flip the switch. · 16 Aug 2026</text>
+</svg>
+</body></html>
