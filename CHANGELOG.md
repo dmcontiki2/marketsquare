@@ -1,3 +1,49 @@
+## 2026-08-16 — Three-console close verified: no overwrites, no regression
+David closed three paused deploy consoles and asked for a damage check. Verdict: CLEAN.
+The pauses were terminal (finished/errored consoles awaiting a keypress) — the clicks
+created no commits and no pushes. Proof run: HEAD == origin/deploy == origin/main ==
+f5a25eb (09:17 release), tree spotless, linear history (all three morning sessions'
+commits present, none lost); server log "DEPLOY OK · live at f5a25eb9 · health ok", no
+rollback events; live ms.js byte-identical to repo; full regression ledger 89 entries
+0 REGRESSED (RG-0092/0094 live-verified); EULA 3 copies in sync; ops chips ALL GREEN.
+One loose end found and closed: RUL-021 (ZA 4-layer map, recorded by a concurrent
+session) lacked reflection assertions — added; rulings_check now 21/21, 0 WARN.
+
+## 2026-08-16 — Orchestrator: Email Templates view added · Durability Map 404 fixed
+David's ask: the pre-launch email waves need eyeballs on the templates. New third view on
+the Orchestration v2 page (next to Control Room and Durability Map): email_templates.html
+— all 14 templates as live scaled previews with context (agency vs individual lane,
+Trust-Score story 85/82/81/77/74, unsubscribe/launch-special/magic-link/Ruby-Spark chips,
+snapshot date) and click-through to the real template HTML. Snapshots copied from
+CityLauncher/emailer/templates (ZA canon; UK/US/AU localization layer separately in build).
+DURABILITY-404-1: the Durability Map was broken because durability_map.html never had a
+deploy-manifest row — the cockpit linked a file that never shipped. Manifest now carries
+durability_map.html + email_templates.html + the 14 template snapshots (16 rows).
+RG-0095 LOCKED: all three orchestrator views must answer 401-behind-auth, never 404.
+Cost model impact: none — static pages on the existing auth lane.
+
+## 2026-08-16 — GIT-LOCK-3: the stale-lock class gets its machinery (DW-026 executed)
+
+David's call-out, and he was right: stale .git leftovers were the RULE (17 CHANGELOG
+mentions, 44 accumulated HEAD.lock.stale-* asides, 4 next-index-*.lock, 480 orphaned
+tmp_obj files, and DW-026 sitting OPEN since 7 Aug with the fix already prescribed).
+The sandbox half of GIT-LOCK-1 had been left at "note it — do not force". Executed today:
+
+- **scripts/git_unlock.py (NEW)** — the sandbox lane's self-heal, twin of git_unlock.bat.
+  Key discovery: RENAME works on the FUSE mount where unlink is blocked (git's own
+  commits prove it). Stale lock-class files (>15 min, no live git) are renamed into
+  .git/stale_locks/; the host sweep deletes them. Ran it: 48 files healed on the spot.
+- **git_unlock.bat widened** — next-index-*.lock joins the class; host sweep now deletes
+  the stale_locks/ asides, HEAD.lock.stale-*, and tmp_obj orphans on every guarded run.
+- **RG-0015 widened (DW-026's ask)** — asserts the class in BOTH lanes (bat coverage,
+  py existence, deploy-bat DW-026 abort) plus a LIVE tripwire: a stranded blocking lock
+  >60 min or a day-old next-index turns the ledger red the SAME DAY. Strengthened, never
+  weakened.
+- **Projects CLAUDE.md GIT-LOCK section extended** — sandbox rule on the record: run
+  git_unlock.py before sandbox git writes; never rm a lock from the sandbox.
+- Deploy-bat abort: verified already present since 7 Aug (DW-026 first ask — done then).
+- DW-026 can close on tomorrow's watch: all three prescriptions now exist and are asserted.
+
 ## 2026-08-16 — RG-0003 + RG-0004 LOCKED (currency model class closed)
 
 The 09:04 Release shipped the seed fixes live; the ledger reported both READY TO LOCK

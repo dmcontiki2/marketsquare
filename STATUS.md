@@ -5,6 +5,14 @@
 
 ## Current Session
 
+## 2026-08-16 — GIT-LOCK-3 (session B)
+
+- DW-026 executed at last: RG-0015 widened to the lock class with a live tripwire,
+  scripts/git_unlock.py gives the sandbox a rename-aside self-heal (unlink is FUSE-blocked;
+  rename proven), git_unlock.bat sweeps asides + next-index + tmp_obj host-side.
+  48 stale files healed immediately. Process lesson on record in CLAUDE.md: tooling faults
+  get same-session ledger machinery, exactly like product faults.
+
 ## 2026-08-16 — RG-0003/0004 locked (session B)
 
 - Both promoted after the 09:04 Release took the seed live. Session B's three items all
