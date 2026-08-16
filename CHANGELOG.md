@@ -1,3 +1,30 @@
+## 2026-08-16 — Planner Lane Phase A BUILT (flag-dark)
+David: "Build phase A". Shipped dark behind planners.heritage (p_heritage, OFF):
+journey_render.py extracted from build_journey.py — ONE renderer, embed mode (CLI
+showcases, 5/5 rebuilt BYTE-IDENTICAL through the module) + media-as-URL mode
+(personal maps; selftest renders 190 KB vs 2.4 MB showcases, PIN-SPREAD inherited).
+Migration 022 planner_specs. POST /planner/heritage/compose (FREE class, app key,
+5/day velocity cap; AI picks wonder IDs + words at the everyday task tier via the
+seam — coordinates and photos come ONLY from wonders.json, geography cannot be
+hallucinated; failed compose returns 502, charges nothing, stores nothing) and
+GET /planner/map/{id} (owner-only, renders on demand). scripts/planner_selftest.py
+green: pipeline + 4/4 validator refusals. Manifest: journey_render.py +
+journey_template.html now deploy. RG-0097 LOCKED (dark + whole: flag-off answers
+404 never 500; source pieces present). Activation = David flips planners.heritage.
+Cost model impact: none while dark; lit = everyday-tier tokens only (~$0.01/compose,
+capped 5/user/day), zero feeds.
+
+## 2026-08-16 — Planner Lane designed (AI-written personal journey maps)
+David's go: design the paid-feature map lane now. PLANNER_LANE_DESIGN_2026-08-16.docx +
+PLANNER_LANE_MAP.html (Visuals): three planners on the existing flags (heritage FREE /
+weekend 2T / expedition 5T Pro), AI writes the journeys-schema spec (validator+geofence,
+failed compose never charges), ONE renderer refactored from build_journey.py with an
+embed mode (showcases) and a media-as-URL mode (<300KB personal maps for phones,
+PIN-SPREAD inherited), Dossier handoff = standard Introduction to a travel agency (F4
+honored). All costs flat+capped. Phases A/B/C; Phase A is flag-dark, ~3 sessions.
+Open David decisions listed §6 (none block Phase A). Cost model impact: designed-in —
+Phase C consumes the budgeted ~$140/mo feed stack, nothing new.
+
 ## 2026-08-16 — PIN-SPREAD-1 v2: overview keeps true geography (David's eyeball verdict)
 David's in-depth eyeball test: the full-tour view looked "too spread out — cards
 everywhere on the map". v2 gates the fan-out by zoom: at the overview zoom (captured at
