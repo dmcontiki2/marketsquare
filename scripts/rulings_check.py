@@ -41,6 +41,12 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-022": [
+   ("bea_main.py", ["def usd_to_zar_amount", "FX-LIVE-1"], ["tuppence * 36"]),
+   ("ms.js", ["function loadFX", "fxTopupLine"], []),
+   ("scripts/regression_ledger.py", ["RG-0098", "rg_fx_live"], []),
+   ("RULINGS.md", ["FOREX IS LIVE, FREE, KEYLESS"], []),
+ ],
  "RUL-021": [
    ("ms.js", ["adventures_za_map.html", "adventures_gb_map.html"], []),
    ("adventures_za_map.html", [], []),

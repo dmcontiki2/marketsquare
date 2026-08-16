@@ -5382,7 +5382,9 @@ def _payment_grants_allowed() -> bool:
 
 @app.post("/payment/initialize")
 def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
-    amount_rands = tuppence * 36
+    # FX-LIVE-1 (RUL-022): Tuppence is USD-canon ($2/T); the ZAR charge floats on
+    # the live rate (12h-cached, parachute-backed) — the R36 hardcode is retired.
+    amount_rands = usd_to_zar_amount(tuppence * 2)
     reference = f"ms_tuppence_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
         email=email,
@@ -7897,7 +7899,7 @@ def boost_stats(listing_id: int, seller_email: str):
 # Paystack only quotes ZAR. $5 USD ≈ R90 at typical rates; pricing reviewed
 # in cost model when activated. Currency conversion lives in payments helper.
 WISHLIST_GLOBAL_USD = 5
-WISHLIST_GLOBAL_ZAR = 90  # update from cost model when FX shifts
+WISHLIST_GLOBAL_ZAR = 90  # RETIRED by FX-LIVE-1 (16 Aug 2026): charge floats live from WISHLIST_GLOBAL_USD
 
 
 @app.post("/wishlist/subscription/initialize")
@@ -7907,10 +7909,12 @@ def init_global_subscription(buyer_token: str, email: str):
     Paystack reference and the resulting subscription row's paystack_ref."""
     if not buyer_token or len(buyer_token) < 8:
         raise HTTPException(status_code=400, detail="valid buyer_token required")
+    # FX-LIVE-1 (RUL-022): $5 canon; ZAR charge floats live (was fixed R90)
+    _glob_zar = usd_to_zar_amount(WISHLIST_GLOBAL_USD)
     reference = f"ms_wishlist_{uuid.uuid4().hex[:12]}"
     result = payments.initialize_payment(
         email=email,
-        amount_rands=WISHLIST_GLOBAL_ZAR,
+        amount_rands=_glob_zar,
         reference=reference,
         metadata={
             "wishlist_global": 1,
@@ -7923,7 +7927,7 @@ def init_global_subscription(buyer_token: str, email: str):
             "status": "ok",
             "reference": reference,
             "authorization_url": result["data"]["authorization_url"],
-            "amount_rands": WISHLIST_GLOBAL_ZAR,
+            "amount_rands": _glob_zar,
             "amount_usd": WISHLIST_GLOBAL_USD,
         }
     raise HTTPException(status_code=400, detail="Subscription initialization failed")
@@ -14934,32 +14938,74 @@ async def vision_draft(
 
 import time as _time
 
-_FX_CACHE = {"rate": None, "ts": 0.0}        # USD->ZAR, refreshed daily
+_FX_CACHE = {"rates": None, "ts": 0.0, "source": ""}  # USD-based rates, refreshed 12h
 _FX_TTL   = 60 * 60 * 12                      # 12h
-_FX_FALLBACK = 18.50                          # last-known; only if every feed fails
+_FX_SYMBOLS = ("ZAR", "GBP", "AUD", "EUR")
+_FX_FALLBACK_RATES = {"ZAR": 18.50, "GBP": 0.78, "AUD": 1.50, "EUR": 0.92}  # parachute ONLY
+_FX_SANITY = {"ZAR": (5, 50), "GBP": (0.4, 1.5), "AUD": (0.8, 3.0), "EUR": (0.5, 1.6)}
+_FX_FEEDS = (
+    ("frankfurter", "https://api.frankfurter.dev/v1/latest?base=USD&symbols=" + ",".join(_FX_SYMBOLS)),
+    ("er-api",      "https://open.er-api.com/v6/latest/USD"),
+)
 
-async def live_usd_zar() -> float:
-    """Live USD->ZAR mid-rate, cached 12h. Falls back to last-known on failure.
-    Free endpoints, no key — keeps the no-consumption-API stance."""
+def _fx_sane(rates):
+    return all(_FX_SANITY[s][0] < rates.get(s, 0) < _FX_SANITY[s][1] for s in _FX_SYMBOLS)
+
+async def live_fx() -> dict:
+    '''Live USD-based rates for ZAR/GBP/AUD/EUR, cached 12h. FX-LIVE-1 (16 Aug 2026,
+    RUL-022): free keyless feeds only (Frankfurter/ECB first, open.er-api second),
+    sanity-banded, parachute = last-known then static. No key, no subscription —
+    the supplier-fallback doctrine: no feed is ever load-bearing.'''
     now = _time.time()
-    if _FX_CACHE["rate"] and (now - _FX_CACHE["ts"]) < _FX_TTL:
-        return _FX_CACHE["rate"]
-    for url, getter in (
-        ("https://api.frankfurter.dev/v1/latest?base=USD&symbols=ZAR",
-         lambda j: j["rates"]["ZAR"]),
-        ("https://open.er-api.com/v6/latest/USD",
-         lambda j: j["rates"]["ZAR"]),
-    ):
+    if _FX_CACHE["rates"] and (now - _FX_CACHE["ts"]) < _FX_TTL:
+        return _FX_CACHE["rates"]
+    for name, url in _FX_FEEDS:
         try:
             async with httpx.AsyncClient(timeout=8) as c:
-                r = await c.get(url)
-                rate = float(getter(r.json()))
-                if 5 < rate < 50:                # sanity band
-                    _FX_CACHE.update(rate=rate, ts=now)
-                    return rate
+                j = (await c.get(url)).json()
+                rates = {s: float(j["rates"][s]) for s in _FX_SYMBOLS}
+                if _fx_sane(rates):
+                    _FX_CACHE.update(rates=rates, ts=now, source=name)
+                    return rates
         except Exception as exc:
             _log.warning("FX fetch failed (%s): %s", url, exc)
-    return _FX_CACHE["rate"] or _FX_FALLBACK
+    return _FX_CACHE["rates"] or dict(_FX_FALLBACK_RATES)
+
+def fx_rates_sync() -> dict:
+    '''Sync twin of live_fx for threadpool endpoints (the payment lane is sync def).
+    Same cache, same feeds, same parachute.'''
+    now = _time.time()
+    if _FX_CACHE["rates"] and (now - _FX_CACHE["ts"]) < _FX_TTL:
+        return _FX_CACHE["rates"]
+    for name, url in _FX_FEEDS:
+        try:
+            with httpx.Client(timeout=8) as c:
+                j = c.get(url).json()
+                rates = {s: float(j["rates"][s]) for s in _FX_SYMBOLS}
+                if _fx_sane(rates):
+                    _FX_CACHE.update(rates=rates, ts=now, source=name)
+                    return rates
+        except Exception as exc:
+            _log.warning("FX fetch failed (%s): %s", url, exc)
+    return _FX_CACHE["rates"] or dict(_FX_FALLBACK_RATES)
+
+def usd_to_zar_amount(usd: float) -> int:
+    '''Whole-rand charge amount from a USD-canon price (1T = $2, RUL-007 fixed
+    Tuppence pricing). Live rate, parachute-backed, never zero.'''
+    return max(1, round(usd * fx_rates_sync()["ZAR"]))
+
+async def live_usd_zar() -> float:
+    '''Back-compat wrapper for the price-integrity helpers: USD->ZAR only.'''
+    return (await live_fx())["ZAR"]
+
+
+@app.get("/api/fx")
+async def api_fx():
+    '''USD-based display rates for the client (FX-LIVE-1). Cached 12h server-side;
+    the client keeps static parachute values until this answers.'''
+    rates = await live_fx()
+    return {"base": "USD", "rates": rates, "ts": _FX_CACHE["ts"] or None,
+            "source": _FX_CACHE["source"] or "fallback"}
 
 
 # Categories for which a real collectible price feed (Scryfall) applies.

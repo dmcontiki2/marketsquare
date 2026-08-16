@@ -4283,5 +4283,52 @@ def rg_planner_lane_dark_and_whole():
     return out
 
 
+@entry("RG-0098", "Tuppence money maths floats on LIVE forex -- the R36/T and R90/$5 hardcodes "
+       "are retired and /api/fx serves sane keyless-feed rates",
+       OPEN, fixed_on="",
+       scope="FX-LIVE-1, all markets: server charge lane (/payment/initialize + the $5 global sub) "
+             "+ /api/fx + ms.js display labels (topup modal, AI pack, quantity picker, localPrice). "
+             "Feeds: Frankfurter/ECB then open.er-api, both keyless/free; static parachute only "
+             "when every feed is down",
+       ref="RUL-022, 16 Aug 2026: David -- forex must be LIVE actual values, free, no "
+           "subscription. USD stays canon ($2/T, $5 global); the ZAR debit floats on the "
+           "12h-cached live rate. The R36 hardcode was born at R18/$; at ~R16.2/$ today ZA "
+           "buyers were overpaying ~11%. EXPECTED TO FAIL live until the next deploy ships it -- "
+           "the moment /api/fx answers sanely, promote to LOCKED.")
+def rg_fx_live():
+    out = []
+    bea = repo_file("bea_main.py"); msjs = repo_file("ms.js")
+    if bea is not None:
+        if "tuppence * 36" in bea:
+            out.append((FAIL, "bea_main.py re-grew the R36/T hardcode in the charge lane"))
+        if "def usd_to_zar_amount" not in bea or '"/api/fx"' not in bea:
+            out.append((FAIL, "bea_main.py lost the FX-LIVE-1 helper or the /api/fx route"))
+    if msjs is not None:
+        if "(n*36)" in msjs or "(t*36)" in msjs:
+            out.append((FAIL, "ms.js re-grew a *36 display hardcode"))
+        if "function loadFX" not in msjs:
+            out.append((FAIL, "ms.js lost the loadFX live-rate loader"))
+    try:
+        j = json.loads(_get("/api/fx"))
+    except ProbeOffline:
+        raise
+    except Exception as exc:
+        out.append((FAIL, "/api/fx not answering live yet (%s) -- expected until the deploy ships"
+                    % type(exc).__name__))
+        return out
+    z = float(j.get("rates", {}).get("ZAR", 0))
+    missing = [s for s in ("ZAR", "GBP", "AUD", "EUR") if s not in j.get("rates", {})]
+    if not (5 < z < 50):
+        out.append((FAIL, "/api/fx ZAR rate %r outside the sanity band" % z))
+    elif j.get("source") == "fallback":
+        out.append((FAIL, "/api/fx answers but every live feed is down (parachute in use)"))
+    elif missing:
+        out.append((FAIL, "/api/fx missing symbols: %s" % ",".join(missing)))
+    else:
+        out.append((INFO, "READY TO LOCK -- /api/fx live and sane (ZAR %.2f via %s)"
+                    % (z, j.get("source", "?"))))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

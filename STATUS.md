@@ -5,6 +5,12 @@
 
 ## Current Session
 
+## 2026-08-16 — FX-LIVE-1 built (RUL-022)
+Live keyless forex wired through charge + display lanes (details: changelog.d same slug).
+On disk and verified (py_compile, node --check, pre-run ledger green); RIDES THE NEXT
+DEPLOY. RG-0098 OPEN → promote after deploy. A10 (sk_live + webhook pastes) still gates
+the money path.
+
 ## 2026-08-16 — Phase A of the Planner Lane is built and shipped DARK
 Heritage Planner end-to-end in the codebase: seam-composed (no model names), specs
 assembled only from wonders.json, rendered phone-light (190 KB) by the same template

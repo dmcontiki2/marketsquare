@@ -1155,21 +1155,47 @@ function updateTuppenceUI(){
   const hb=document.getElementById('tn-home-bal');          if(hb) hb.textContent=tuppence;  // LM-19: element removed but check defensively
   const d =document.getElementById('dash-tn');              if(d) d.textContent=tuppence;
 }
-// Local currency display — ZAR at R18/$1 (1T=$2, 1T=R36). Extend when live forex is added.
+// ── FX-LIVE-1 (16 Aug 2026, RUL-022): live forex via /api/fx — free keyless feed ──
+// USD is canon (1T=$2). Server caches 12h; statics below are the PARACHUTE only,
+// used until the first fetch lands or if every feed is down.
+var FX = { ZAR:18.5, GBP:0.78, AUD:1.5, EUR:0.92, ts:0, live:false };
+function loadFX(){
+  if(FX.live && (Date.now()-FX.ts) < 12*3600*1000) return;
+  fetch('/api/fx').then(function(r){return r.json();}).then(function(j){
+    if(j && j.rates && j.rates.ZAR > 5 && j.rates.ZAR < 50){
+      FX.ZAR=j.rates.ZAR; FX.GBP=j.rates.GBP||FX.GBP; FX.AUD=j.rates.AUD||FX.AUD;
+      FX.EUR=j.rates.EUR||FX.EUR; FX.ts=Date.now(); FX.live=(j.source!=='fallback');
+    }
+  }).catch(function(){/* parachute values stand */});
+}
+loadFX();
+function fxZarAmt(usd){ return Math.round(usd * FX.ZAR); }
+// Pay-moment honesty (David, 16 Aug): browse in your currency, but the card is
+// billed in ZAR by Paystack ZA — say so, with the ≈ local value where known.
+function fxLocalApprox(iso, usd){
+  var m={GB:['£','GBP'], AU:['A$','AUD'], DE:['€','EUR'], EU:['€','EUR']};
+  if(!m[iso]) return '';
+  var v=usd*FX[m[iso][1]];
+  return '≈ '+m[iso][0]+(v>=20?Math.round(v):v.toFixed(2));
+}
+function fxTopupLine(iso, usd){
+  if(iso==='ZA') return 'R'+fxZarAmt(usd).toLocaleString('en-ZA');
+  var la=fxLocalApprox(iso, usd);
+  return (la?la+' · ':'')+'billed as R'+fxZarAmt(usd).toLocaleString('en-ZA')+' — your bank converts';
+}
 function localPrice(usd) {
-  const zarRate = 18; // ZAR per USD — update to live rate when forex API is wired
-  return `$${usd} · R${usd * zarRate}`;
+  return `$${usd} · R${fxZarAmt(usd)}`;
 }
 let pendingTopUpAmount=0, pendingAIPackSessions=0;
 const topUpBundles={5:{zar:'R180',usd:'$10'},10:{zar:'R360',usd:'$20'},25:{zar:'R900',usd:'$50'}};
 function topUp(n){
   if(isOffline()){ showToast("You're offline - top-up needs a connection"); return; }
-  pendingTopUpAmount=n; pendingAIPackSessions=0;
+  pendingTopUpAmount=n; pendingAIPackSessions=0; loadFX();
   const usd=n*2, lp=localPrice(usd);
   document.getElementById('topup-modal-desc').textContent='Purchase '+n+' Tuppence ('+n+(n===1?' introduction).':' introductions).');
   document.getElementById('topup-bundle-label').textContent=n+'T · '+n+(n===1?' intro':' intros');
   var _tuIso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
-  document.getElementById('topup-zar-label').textContent=(_tuIso==='ZA')?('R'+(n*36)):'';
+  document.getElementById('topup-zar-label').textContent=fxTopupLine(_tuIso, usd);
   document.getElementById('topup-usd-label').textContent='$'+usd;
   document.getElementById('topup-modal').classList.add('open');
 }
@@ -1179,7 +1205,8 @@ function aaBuyAIPack(t, sessions){
   const usd=t*2;
   document.getElementById('topup-modal-desc').textContent='Top up '+t+'T — the AI Coach charges your wallet per use (first use free).';
   document.getElementById('topup-bundle-label').textContent=t+'T wallet top-up';
-  document.getElementById('topup-zar-label').textContent='R'+(t*36);
+  var _aaIso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
+  document.getElementById('topup-zar-label').textContent=fxTopupLine(_aaIso, usd);
   document.getElementById('topup-usd-label').textContent='$'+usd;
   document.getElementById('topup-modal').classList.add('open');
 }
@@ -1188,11 +1215,12 @@ function aaBuyPackFromWallet(){ aaBuyAIPack(5,40); }
 function tqVal(){ var el=document.getElementById('tq-qty'); var n=parseInt((el&&el.value||'1').replace(/\D/g,''),10); return (isNaN(n)||n<1)?1:Math.min(n,999); }
 // Locale-aware Tuppence price line (David, 15 Jul 2026): Tuppence is priced
 // in USD ($2 flat). ZA viewers also see rand; US viewers see just '$X' (never
-// a doubled dollar); other countries see USD only until live forex is wired.
+// a doubled dollar); other countries see USD + a live ≈ local value (FX-LIVE-1).
 function tqPriceLine(n){
   var usd=n*2, iso=(typeof activeCountry!=='undefined' && activeCountry && activeCountry.iso2)||'ZA';
-  if(iso==='ZA') return n+'T = $'+usd+' \u00b7 R'+(n*36).toLocaleString('en-ZA');
-  return n+'T = $'+usd;
+  if(iso==='ZA') return n+'T = $'+usd+' · R'+fxZarAmt(usd).toLocaleString('en-ZA');
+  var la=fxLocalApprox(iso, usd);
+  return n+'T = $'+usd+(la?' · '+la:'');
 }
 function tqPaint(){ var n=tqVal(); var el=document.getElementById('tq-qty'); if(el) el.value=n;
   var p=document.getElementById('tq-price'); if(p) p.textContent=tqPriceLine(n); }
