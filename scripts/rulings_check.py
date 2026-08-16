@@ -41,6 +41,11 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-021": [
+   ("ms.js", ["adventures_za_map.html", "adventures_gb_map.html"], []),
+   ("adventures_za_map.html", [], []),
+   ("adventures_gb_map.html", [], []),
+ ],
  "RUL-020": [
    ("migrations/021_open_legal_docs.py", ["RUL-020", "location = /terms"], []),
    ("scripts/regression_ledger.py", ["RG-0092", "rg_legal_docs_public"], []),
