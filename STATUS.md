@@ -5,6 +5,25 @@
 
 ## Current Session
 
+## 2026-08-16 — RUL-020 shipped (legal docs public) + TS-0035 visual corrected
+EULA decreed final & binding and RELEASED (RUL-020): /terms + /privacy exempted from the
+gate via migration 021, asserted by RG-0092. Dashboard AI Providers viz now shows the
+true order of use (OpenAI base → Anthropic failover → Scaleway last resort). TS-0035 to
+be marked verified after live check; both dashboard ambers clear with it.
+
+## 2026-08-16 — ledger opens (session B)
+
+- RG-0011 re-LOCKED (RUL-021: ZA=4-layer pilot, GB=canon name). RG-0003/0004 fixes in
+  demo_listings.json committed — live pass on next deploy, promote when READY TO LOCK.
+- RG-0075/0090 untouched here by agreement — main session owns them (dashboard.server.html
+  + nginx migration lane).
+- RG-0081 showed 429 on /review/request-link mid-morning — likely our own probe burst +
+  main-session gate work; re-check before treating as rot.
+
+- **INFRA-TEST-VERDICT-1 shipped to repo (16 Aug):** infrastructure Test buttons on the +1 page now
+  paint PASS/FAIL at the row with a Why/Resolve strip on any non-pass (David's ask, same session).
+  RG-0093 locked. Rides the next deploy after release bd3d958.
+
 ## 2026-08-16 — maintenance-loop
 
 - B2b daily run complete. Ledger GREEN pre+post. Queue: 1 seen / 0 fix-shipped / 0 verified (TS-0035 routed PATH_B design backlog — the AI-order visual is outdated, awaits designer gate).

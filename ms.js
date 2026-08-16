@@ -2164,9 +2164,9 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', KE:'KSh', US:'$
 // tour map on the detail page. Keyed by listing.country (which now survives normalization).
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
-  ZA: { file:'adventures_reserve_map.html?v=10', title:'🗺️ Explore the reserve',      blurb:'A Big Five reserve in Gauteng — tap the pins for photos: the lodge, the waterhole circuit, the sundowner spot and where the Big Five show up.' },
+  ZA: { file:'adventures_za_map.html?v=1', title:'🗺️ Plan the trip', blurb:'Pretoria to the Pilanesberg — switch the layers: the driving route, heritage stops, three bushveld stays and partner spots. Tap the pins for photos, prices and directions.' },
   US: { file:'adventures_us_map.html?v=10',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_uk_map.html?v=10',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  GB: { file:'adventures_gb_map.html?v=11',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
   AU: { file:'adventures_au_map.html?v=10',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
   NA: { file:'adventures_na_map.html?v=14',      title:'🗺️ Drive the route',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), the red dunes to the great waterhole, and home. Tap a day, then the pins: the flights, the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },

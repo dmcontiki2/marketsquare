@@ -35,6 +35,7 @@ support.html               | support.html
 adventures_reserve_map.html | static/adventures_reserve_map.html
 adventures_us_map.html      | static/adventures_us_map.html
 adventures_uk_map.html      | static/adventures_uk_map.html
+adventures_gb_map.html      | static/adventures_gb_map.html
 adventures_au_map.html      | static/adventures_au_map.html
 adventures_na_map.html      | static/adventures_na_map.html
 adventures_bw_map.html      | static/adventures_bw_map.html

@@ -1,3 +1,59 @@
+## 2026-08-16 — RUL-020: legal docs released to users · TS-0035 AI-order visual fixed
+David's decree recorded as RUL-020 (final and binding, not to be re-discussed): the EULA
+is released to users — no legal-review hold. migrations/021_open_legal_docs.py exempts
+/terms + /privacy from GATE-ENFORCE-1 at the origin (016-pattern safety: functional
+idempotency, collision refusal, nginx -t + restore). RG-0092 locks both halves: legal
+docs answer 200 anonymously AND /wonders stays gated. Closes DW-041.
+TS-0035 (David, in-app, major): dashboard AI Providers visual showed the PRE-FLIP order.
+msVizBuildAI corrected: fallback chain now openai → anthropic → scaleway; vendor lanes
+reordered OpenAI=BASE (top) / Anthropic=AUTO-FAILOVER (≤6× tolerance) / Scaleway=LAST
+RESORT (cost-exempt, alert+time-boxed); offline defaults no longer assume anthropic.
+Clears the faults.majors + triage-queue ambers once verified. rulings_check 20/20 green.
+Cost model impact: none — gate exemption + visual truth only.
+
+## 2026-08-16 — Ledger opens: currency model + map canon (RG-0003/0004/0011)
+
+Session split ruled by David (file-disjoint, main session concurrently on RG-0075/0090):
+this session took the three items whose files the main session was not touching.
+
+- **RG-0003 (fix shipped, live pass rides the next deploy):** all 243 no-country
+  non-Adventures listings in demo_listings.json now carry an explicit country by city
+  (London→GB, New York→US, Pretoria→ZA, Sydney→AU). The currency-guess-from-price-string
+  era ends at the data model.
+- **RG-0004 (fix shipped, live pass rides the next deploy):** the two Pretoria impostors
+  were mislabelled CITIES, not countries — demo_stay_4 is the Bazaruto villa (city now
+  Vilanculos, MZ), demo_stay_9 is the Sossusvlei lodge (city now Sesriem, NA). Ledger
+  CITY_CCY/CITY_COUNTRY extended (Maun/Nairobi pattern).
+- **RG-0011 (re-LOCKED):** map filenames match their ISO code — RUL-021: ZA → the 4-layer
+  Pilanesberg pilot at adventures_za_map.html (David's product call, Dinokeng supers switch);
+  GB → adventures_gb_map.html (uk content at the canon name, gb row added to the deploy
+  manifest, old files kept for cached clients).
+- **RG-0081 red during the run:** /review/request-link answered 429 — suspected probe-burst
+  rate limiting (3 ledger runs this session + main session deploying the gate lane same
+  morning). Re-checked after cooldown; see status fragment for the verdict.
+
+## 2026-08-16 — INFRA-TEST-VERDICT-1: the Infrastructure Test buttons answer at the row
+
+David (attended, mid-TSL): "on the infrastructure i see nothing happening when i use those test
+buttons, please add some visual indication of PASS/FAIL, and if fail then we need a small
+explanation of why and what is needed to resolve it."
+
+Root cause, not a dead button: `infraLoad(id)` did work — it re-probed `/admin/services-status?service=id`
+and re-rendered the rows — but a per-service re-probe usually returns the SAME status, so the row
+repainted identically and the only feedback was "Checked <time>" in a side line. The AI Providers
+card (apv3Test) already answered visibly; the infra card did not.
+
+Fix (dashboard.server.html, ships as dashboard.html):
+- Each infra row now carries a verdict slot (`infra-res-<id>`) and a stable row id.
+- New `window.infraVerdict`: paints ✓ PASS green / ✗ FAIL red / △ WARN amber / — NO KEY grey at
+  the row the moment the re-probe answers ("testing…" while in flight).
+- Any non-PASS inserts a "Why / Resolve" strip under the row: the probe's `detail` verbatim plus a
+  status-specific resolution line (nokey → set the named key + restart; fail → key/provider/network
+  from the server; warn → degraded-not-down guidance). The strip is removed and repainted per test.
+- The `infra-out` side line now carries ✓/✗ + label + detail + time instead of a bare "Checked".
+
+Asserted: **RG-0093** (LOCKED) — the verdict machinery must exist and the Test path must call it.
+
 ## 2026-08-16 — Maintenance loop (B2b daily run)
 
 - Regression ledger: GREEN before and after (every LOCKED fix holding; 5 known defects OPEN, incl. RG-0090 CDN-cached gated shell).
