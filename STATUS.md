@@ -5,6 +5,20 @@
 
 ## Current Session
 
+## 2026-08-16 — RG-0003/0004 locked (session B)
+
+- Both promoted after the 09:04 Release took the seed live. Session B's three items all
+  closed: RG-0003, RG-0004, RG-0011 (RUL-021).
+- KNOWN: a stale .git/index.lock (0 bytes, 09:08, FUSE — left by a failed git add in
+  session B) blocks commits until cleared host-side (del .git\index.lock or any .bat via
+  git_unlock.bat). Nightly self-heals if left.
+- RG-0094 red is main session's in-flight IL-01 (code committed, deploy pending) — theirs.
+
+## 2026-08-16 — IL-01 closed early (balance/history/user reads now key-gated)
+The 29 Aug exposure item with the hard date is DONE 13 days ahead: the money-display
+endpoints refuse keyless callers (RG-0094). Rest of the email-keyed class listed in the
+entry's scope note for the G2 floor sprint.
+
 ## 2026-08-16 — RUL-020 shipped (legal docs public) + TS-0035 visual corrected
 EULA decreed final & binding and RELEASED (RUL-020): /terms + /privacy exempted from the
 gate via migration 021, asserted by RG-0092. Dashboard AI Providers viz now shows the

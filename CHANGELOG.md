@@ -1,3 +1,16 @@
+## 2026-08-16 — RG-0003 + RG-0004 LOCKED (currency model class closed)
+
+The 09:04 Release shipped the seed fixes live; the ledger reported both READY TO LOCK
+and they are promoted in the same session. The recurring currency family (country-less
+listings + city/country contradictions) now has both halves locked: RG-0001/0002 on
+rendering, RG-0003/0004 on the data model. Four opens remain overall: RG-0075/0090
+(main session's lane) and none in this session's scope.
+
+## 2026-08-16 — Correction: IL-01 ledger entry is RG-0094 (not RG-0093)
+The IL-01 fragment folded at the 09:04 release citing RG-0093; a concurrent session
+(INFRA-TEST-VERDICT-1) had already taken that number. The private-reads entry shipped
+as RG-0094. No other content changes.
+
 ## 2026-08-16 — RUL-020: legal docs released to users · TS-0035 AI-order visual fixed
 David's decree recorded as RUL-020 (final and binding, not to be re-discussed): the EULA
 is released to users — no legal-review hold. migrations/021_open_legal_docs.py exempts
