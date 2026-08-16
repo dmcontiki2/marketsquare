@@ -246,7 +246,7 @@ function normCat(raw) {
 // ── API HELPERS ───────────────────────────────────────────
 async function apiGet(path) {
   try {
-    const res = await fetch(BEA_URL + path);
+    const res = await fetch(BEA_URL + path, {headers:{'X-Api-Key':API_KEY}});
     if (!res.ok) throw new Error('API error ' + res.status);
     return await res.json();
   } catch(e) {
@@ -929,7 +929,7 @@ async function _msInit(){
     try {
       const buyerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
       if (!buyerEmail || !BEA_ENABLED) return;
-      const res = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+      const res = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail), {headers:{'X-Api-Key':API_KEY}});
       if (!res.ok) return;
       const data = await res.json();
       if (data.balance > tuppence) {
@@ -4198,7 +4198,7 @@ async function tvsPriceCheck(id, tier){
   const email=localStorage.getItem('ms_aa_email')||localStorage.getItem('ms_user_email')||'';
   if(!email){ showToast('Sign in to use AI price tools'); return; }
   if(tier!=='0T'){
-    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email)); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
+    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}}); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
     const need=tier==='2T'?2:1;
     if(bal<need){ topUpShort(need-bal); return; }
     const msg=tier==='2T'
@@ -4240,7 +4240,7 @@ async function tvsYieldCalc(id, tier){
   const email=localStorage.getItem('ms_aa_email')||localStorage.getItem('ms_user_email')||'';
   if(!email){ showToast('Sign in to use the yield calculator'); return; }
   if(tier!=='0T'){
-    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email)); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
+    let bal=0; try{const br=await fetch(BEA_URL+'/tuppence/balance?email='+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}}); if(br.ok){const bd=await br.json(); bal=bd.balance||0;}}catch(_){ }
     const need=tier==='2T'?2:1;
     if(bal<need){ showToast('Insufficient Tuppence'); return; }
     const msg=tier==='2T'?'This premium yield uses a licensed data partner and costs 2T. Charged only if we compute a real yield. Proceed?':'This computes the real rental yield. 1T is charged only if a yield is produced (you may be asked for a figure). Proceed?';
@@ -4300,7 +4300,7 @@ async function buyerPriceCheck(id) {
   // Check balance
   let bal = 0;
   try {
-    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail), {headers:{'X-Api-Key':API_KEY}});
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
@@ -4454,7 +4454,7 @@ async function buyerYieldCalc(id) {
 
   let bal = 0;
   try {
-    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail));
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(buyerEmail), {headers:{'X-Api-Key':API_KEY}});
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
@@ -4624,7 +4624,7 @@ async function sbRunBatchAnalysis() {
   // Balance check
   let bal = 0;
   try {
-    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(sellerEmail));
+    const br = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(sellerEmail), {headers:{'X-Api-Key':API_KEY}});
     if (br.ok) { const bd = await br.json(); bal = bd.balance || 0; }
   } catch(_) {}
   if (bal < 1) {
@@ -8468,7 +8468,7 @@ async function sbDoPublish(){
   // EULA modal (fea-lm-eula-modal) — on acceptance we record it and retry.
   if(BEA_ENABLED){
     try{
-      const _ur=await fetch(BEA_URL+'/users/'+encodeURIComponent(email));
+      const _ur=await fetch(BEA_URL+'/users/'+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}});
       if(_ur.ok){
         const _ud=await _ur.json();
         if(!_ud.eula_accepted_at){
@@ -9691,7 +9691,7 @@ async function saveEditedListing() {
   // ── EULA gate — must accept before editing a live listing ─────────────────
   if (BEA_ENABLED) {
     try {
-      const _ur = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail));
+      const _ur = await fetch(BEA_URL + '/users/' + encodeURIComponent(sellerEmail), {headers:{'X-Api-Key':API_KEY}});
       if (_ur.ok) {
         const _ud = await _ur.json();
         if (!_ud.eula_accepted_at) {
@@ -13196,7 +13196,7 @@ function msInit(){
         if(td.signals && td.signals.length) msRenderLiveSignals(td.signals);
       }).catch(()=>{});
     // Also fetch full user for photo
-    fetch(BEA_URL+'/users/'+encodeURIComponent(email))
+    fetch(BEA_URL+'/users/'+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}})
       .then(r=>r.ok?r.json():null)
       .then(ud=>{
         if(!ud) return;
@@ -13433,7 +13433,7 @@ async function loadTransactionHistory(listId, moreId, reset) {
 
   try {
     const r = await fetch(BEA_URL + '/tuppence/history?email=' + encodeURIComponent(email) +
-      '&limit=' + PAGE + '&offset=' + st.offset);
+      '&limit=' + PAGE + '&offset=' + st.offset, {headers:{'X-Api-Key':API_KEY}});
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     st.total = d.total;

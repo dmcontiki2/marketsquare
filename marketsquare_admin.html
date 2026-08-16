@@ -3831,7 +3831,7 @@ async function devCheckBalance(email, res) {
 
   try {
     const [tResp, uResp] = await Promise.all([
-      fetch(`${BEA_URL}/tuppence/balance?email=${encodeURIComponent(email)}`),
+      fetch(`${BEA_URL}/tuppence/balance?email=${encodeURIComponent(email)}`, {headers:{'X-Api-Key':API_KEY}}),
       fetch(`${BEA_URL}/users/${encodeURIComponent(email)}`)
     ]);
     const tData = await tResp.json();
@@ -4239,7 +4239,7 @@ async function admAIAudit() {
 
 async function fetchTuppenceBalance(email) {
   try {
-    const r = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(email));
+    const r = await fetch(BEA_URL + '/tuppence/balance?email=' + encodeURIComponent(email), {headers:{'X-Api-Key':API_KEY}});
     if (r.ok) { const d = await r.json(); return d.balance || 0; }
   } catch(_) {}
   return 0;

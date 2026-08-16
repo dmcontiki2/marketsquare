@@ -4367,7 +4367,7 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     return {"message": "User created successfully"}
 
 @app.get("/users/{email}")
-def get_user(email: str):
+def get_user(email: str, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
@@ -6619,7 +6619,7 @@ async def aa_publish(
 # ── TUPPENCE BALANCE (public read) ───────────────────────────
 
 @app.get("/tuppence/balance")
-def get_tuppence_balance(email: str):
+def get_tuppence_balance(email: str, _key: str = Depends(auth.require_api_key)):
     """Return Tuppence balance for an email — sum of all transaction amounts.
     Used by the buyer app to sync dev-seeded balances without Paystack.
     """
@@ -16455,7 +16455,7 @@ async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(de
 
 
 @app.get("/tuppence/history")
-def get_tuppence_history(email: str, limit: int = 50, offset: int = 0):
+def get_tuppence_history(email: str, limit: int = 50, offset: int = 0, _key: str = Depends(auth.require_api_key)):
     """Return paginated tuppence transaction history with running balance."""
     conn = database.get_db()
     try:

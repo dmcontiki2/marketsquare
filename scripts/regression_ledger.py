@@ -4065,5 +4065,62 @@ def rg_infra_test_verdict():
     return out
 
 
+
+@entry("RG-0094", "Private user reads REQUIRE the app key: /tuppence/balance, /tuppence/history "
+       "and /users/{email} refuse a keyless caller and answer only with X-Api-Key",
+       LOCKED, fixed_on="2026-08-16",
+       scope="IL-01 CLASS fix, first tranche (the money pair + the PII record), all markets. "
+             "The remaining email-keyed open GETs (/listings/mine, /intros?buyer_email, "
+             "/advert-agent/status, /local-market/suspension/check, /users/{email}/subscription, "
+             "boost stats) are enumerated here for the G2 register work -- this entry asserts the "
+             "three shipped, not the whole class",
+       ref="David's ruling 16 Aug 2026: nobody may read another user's balance by guessing their "
+           "email -- 'not something we leave for future David and Claude'. Server: "
+           "Depends(auth.require_api_key) on the three defs. Client: every ms.js/admin call site "
+           "now sends X-Api-Key (6 balance + 1 history + 3 user-record sites + apiGet helper). "
+           "Probes run THROUGH the reviewer gate pre-29 Aug so they test the APP's enforcement, "
+           "which is exactly what remains when the gate drops.")
+def rg_private_reads_need_key():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        for fn in ("def get_tuppence_balance(email: str, _key: str = Depends(auth.require_api_key))",
+                   "def get_user(email: str, _key: str = Depends(auth.require_api_key))"):
+            if fn not in bea:
+                out.append((FAIL, "bea_main.py lost the key requirement on %s..." % fn[4:40]))
+        seg = bea.split("def get_tuppence_history", 1)
+        if len(seg) == 2 and "require_api_key" not in seg[1][:400]:
+            out.append((FAIL, "bea_main.py lost the key requirement on get_tuppence_history"))
+    _require_net()
+    ck = _review_cookie()
+    if not ck:
+        return out + [(INFO, "no reviewer credential obtainable -- app-level probe skipped (blind), "
+                             "source-side asserted above")]
+    key = ""
+    msjs = repo_file("ms.js") or ""
+    k = msjs.find("const API_KEY = '")
+    if k != -1:
+        key = msjs[k + len("const API_KEY = '"):msjs.find("'", k + len("const API_KEY = '"))]
+    def _code(hdrs):
+        req = urllib.request.Request(BASE + "/tuppence/balance?email=rg0094-probe@example.com",
+                                     headers=dict(UA, **hdrs))
+        try:
+            return urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            return he.code
+    c_anon = _code({"Cookie": ck})
+    if c_anon == 200:
+        out.append((FAIL, "balance answered 200 to a KEYLESS caller (through the gate) -- IL-01 "
+                          "is back; anyone can read balances by email once the gate drops"))
+    if key:
+        c_key = _code({"Cookie": ck, "X-Api-Key": key})
+        if c_key != 200:
+            out.append((FAIL, "balance answers %d WITH the app key -- the fix broke the app's own "
+                              "wallet display" % c_key))
+    if not out:
+        out.append((INFO, "keyless %d, keyed 200 -- private reads enforce the key" % c_anon))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
