@@ -1,3 +1,42 @@
+## 2026-08-16 — Maintenance loop (B2b daily run)
+
+- Regression ledger: GREEN before and after (every LOCKED fix holding; 5 known defects OPEN, incl. RG-0090 CDN-cached gated shell).
+- Shadow agent run 2026-08-16T06:29:35Z (SHADOW, kill switch OFF): 1 fault seen, 1 acted.
+  - TS-0035 "visual outdated — doesn't reflect current AI order of use" -> PATH_B (design backlog, designer gate). Left per contract: no gates-GREEN patch, nothing applied.
+- Heartbeat confirmed live on /dashboard/maint (received_at 2026-08-16T06:29:49Z, brain KEYED:anthropic).
+- Escalation brief: no escalations in the last 24h — no brief written.
+- No fixes shipped this session -> no fault-row updates, no new ledger entries (per AIK-VERIFY-1: entries accompany fixes only).
+
+## 2026-08-15 — AI token economics rev 2 (real cost base, safe-side provision)
+Rev 2 supersedes rev 1's fixed floor: real base $327.85/mo (Claude Max + Higgsfield +
+Hetzner actuals + Resend + domain), future full stack ~$467.85/mo with four 5T+ feed
+subscription placeholders. AI key provision $120/500 users ($0.24/user/mo, David's
+safe-side figure — his "$20×6=$100" corrected to $120). Provisioned carry: 19 free per
+Starter (vs 546 expected); break-even ~131/~187 sellers at launch mix. Cost model impact:
+YES — planning floor rises from $49 to $328-468/mo; per-user AI provision $0.24 added;
+places-lane placeholder is expressly NON-Google (David re-confirmed the 1 Aug Google-is-OUT ruling, 15 Aug); current file = AI_TOKEN_ECONOMICS_2026-08-15_rev3.docx.
+
+## 2026-08-15 — Global Launch Plan built on RUL-001/RUL-019 (worldwide scope)
+/start boot ran clean (mount whole; deploy 03aa9f0 "Release Sat 08/15 21:56" verified live —
+/health ok v1.3.1, origin/deploy == HEAD). Session then planned the worldwide launch:
+GLOBAL_LAUNCH_PLAN_2026-08-15.docx (NICE format) — payments Phase 0 done / Phase 1 Paddle
+pre-check at launch; auto-emailer localization + per-country email-law pass (CAN-SPAM postal
+footer, UK PECR ok, AU Spam Act consent records); CityLauncher beachheads NY/London/Sydney
+ACTIVE but under Gate-2 floor (63/60/57 prospects) → refresh-scrape ~25 Aug; agency anchor
+push per beachhead in soft window; EULA v1.13 with UK/US/AU Country Schedules VERIFIED LIVE
+on /terms (eula_sync --check in sync). No new ruling made — plan reflects existing RUL-001 +
+RUL-019. Cost model impact: none yet — Resend $20/mo activation stays on 27 Aug per B7; no
+new metered spend introduced.
+
+## 2026-08-15 — Maintenance + fix agents verified ready · AI token economics computed
+Both agent lanes proven live by direct evidence (server cron state + scheduled-task history +
+RG-0053), not by reading docs. AI_TOKEN_ECONOMICS_2026-08-15.docx: free-to-Starter carry ratio
+~546:1 mature / ~1,364:1 Year-1 / 136:1 stress; break-even Starter share 0.18% vs 25% modeled;
+fixed floor ≈ $48.68/mo ≈ 11 Starters. Tier truth reconfirmed from code: Free $0 / Starter $5
+(2T) / Pro $20 (10T) — the stale $0/$12/$20/$40/$100 note in CityLauncher STATUS S130 does not
+reflect the Simpler Model. Cost model impact: none — memo changes no prices; documents that S3
+enforcement already bounds free-tier AI cost at ~$0.01/run.
+
 ## 2026-08-15 — DASH-COLOUR-1: Launch Blockers card colour now state-driven
 The dashboard's Launch Blockers direction card was hard-coded red (#ef4444) even when empty —
 David read the red as an active blocker minutes after clearing the last one (a correct reading

@@ -41,6 +41,16 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-020": [
+   ("migrations/021_open_legal_docs.py", ["RUL-020", "location = /terms"], []),
+   ("scripts/regression_ledger.py", ["RG-0092", "rg_legal_docs_public"], []),
+   ("RULINGS.md", ["EULA FINAL & BINDING"], []),
+ ],
+ "RUL-019": [
+   ("BACKLOG.md", ["CLEARED 15 Aug 2026", "international payments enabled"], []),
+   ("FINANCE_CANON.md", ["Re-verification log", "GLOBAL_PAYMENT_RAILS_2026-08-15.docx"], []),
+   ("GLOBAL_LAUNCH_PLAN_2026-08-15.docx", [], []),
+ ],
  "RUL-018": [
    ("STANDING_ORDERS.md", ["SO-2", "Representation parity"], []),
    ("HIGGSFIELD_REGEN_QUEUE.md", ["PARITY RULE"], []),

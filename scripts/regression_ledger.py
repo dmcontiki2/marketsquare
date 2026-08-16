@@ -3990,5 +3990,45 @@ def rg_paystack_webhook_lane():
 
 
 
+
+@entry("RG-0092", "The legal documents are PUBLIC: anonymous /terms and /privacy answer 200 "
+       "with the real pages, while the reviewer gate still guards the rest",
+       LOCKED, fixed_on="2026-08-16",
+       scope="the live edge + nginx exempt list, all markets. Both halves asserted: the legal "
+             "docs are open AND the gate did not silently widen (/wonders stays non-200 "
+             "anonymously)",
+       ref="RUL-020, 16 Aug 2026: David's decree -- the EULA is final and binding and must be "
+           "available to users; no legal-review hold, not to be re-discussed. Mechanism: "
+           "migrations/021_open_legal_docs.py adds ungated location blocks for /terms and "
+           "/privacy above the GATE-ENFORCE-1 catch-all. Closes DAILY_WATCH DW-041.")
+def rg_legal_docs_public():
+    out = []
+    _require_net()
+    def _code(path):
+        req = urllib.request.Request(BASE + path, headers=UA)
+        try:
+            return urllib.request.urlopen(req, timeout=TIMEOUT).getcode(), ""
+        except urllib.error.HTTPError as he:
+            return he.code, ""
+    for path, needle in (("/terms", "Country Schedules"), ("/privacy", "")):
+        req = urllib.request.Request(BASE + path, headers=UA)
+        try:
+            body = urllib.request.urlopen(req, timeout=TIMEOUT).read().decode("utf-8", "replace")
+            if needle and needle not in body:
+                out.append((FAIL, path + " answers 200 but the page body lost %r -- wrong or "
+                                  "stub document served" % needle))
+        except urllib.error.HTTPError as he:
+            out.append((FAIL, "anonymous GET %s answers %d -- the legal documents are gated "
+                              "again; RUL-020 says they must be public (rerun "
+                              "migrations/021_open_legal_docs.py)" % (path, he.code)))
+    c, _ = _code("/wonders")
+    if c == 200:
+        out.append((FAIL, "anonymous /wonders answers 200 -- the gate itself has fallen, this "
+                          "is GATE-ENFORCE-1 rot (DW-023 class), not the RUL-020 exemption"))
+    if not out:
+        out.append((INFO, "legal docs open, gate still standing (/wonders %d anonymously)" % c))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

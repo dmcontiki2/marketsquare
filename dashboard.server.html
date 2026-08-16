@@ -1114,9 +1114,9 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
 
   /* ════════ 1 · AI PROVIDERS MAP ════════ */
   window.msVizBuildAI=function(){
-    var d=window._apv3||{active:'anthropic',standing:'anthropic',override:null,providers:[]};
+    var d=window._apv3||{active:'openai',standing:'openai',override:null,providers:[]};
     var avail={}; (d.providers||[]).forEach(function(p){avail[p.id]=!!p.available;});
-    if(!(d.providers||[]).length){avail={anthropic:true};}
+    if(!(d.providers||[]).length){avail={openai:true,anthropic:true,scaleway:true};}
     var groups=[
       {id:'listings',name:'LISTINGS &amp; ADVERTS',c:CAT.listings,items:[
         {n:'Advert coach &amp; super-adverts',t:['sonnet','haiku']},
@@ -1177,7 +1177,7 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
       {y:200,icon:'&#129517;',t:'Standing lane',d:'set by the Model Register process',c:'#3b82f6'},
       {y:295,icon:'&#128204;',t:'Pin override',d:'manual &middot; time-boxed &middot; auto-expires to standing',c:'#eab308'},
       {y:390,icon:'&#9889;',t:'Breaker',d:'auto-swap on bans &middot; 429 &middot; 5xx &middot; timeouts',c:'#ef4444'},
-      {y:485,icon:'&#128257;',t:'Fallback chain',d:'anthropic &rarr; openai &rarr; scaleway, one try per lane',c:'#10b981'}
+      {y:485,icon:'&#128257;',t:'Fallback chain',d:'openai &rarr; anthropic &rarr; scaleway, one try per lane',c:'#10b981'}
     ];
     seam.forEach(function(m){
       s+=box(640,m.y,260,72,m.c,'#111827',10);
@@ -1190,9 +1190,9 @@ window.lsSave=function(){ var body={mode:S.mode,fault_report:!!S.fault_report,ve
     /* vendor lanes (live-aware) */
     var act=d.override?d.override.provider:d.active;
     var lanes=[
-      {id:'anthropic',y:90, name:'Anthropic',models:'claude-haiku-4.5 &middot; claude-sonnet-4.6',note:'all four tiers &middot; production lane'},
-      {id:'openai',  y:290,name:'OpenAI',   models:'GPT-5.6 Luna &middot; GPT-5.6 Terra',       note:'adapter wired &middot; golden-set gated'},
-      {id:'scaleway',y:490,name:'Scaleway EU',models:'mistral-medium-3.5-128b (one model)',    note:'standby &middot; EU data residency'}
+      {id:'openai',  y:90, name:'OpenAI',   models:'GPT-5.6 Luna &middot; GPT-5.6 Terra',       note:'BASE lane &middot; value-ranked, golden-set gated'},
+      {id:'anthropic',y:290,name:'Anthropic',models:'claude-haiku-4.5 &middot; claude-sonnet-4.6',note:'AUTO-FAILOVER &middot; continuity, &le;6&times; cost tolerance'},
+      {id:'scaleway',y:490,name:'Scaleway EU',models:'mistral-medium-3.5-128b (one model)',    note:'LAST RESORT &middot; cost-exempt, alert + time-boxed &middot; EU residency'}
     ];
     lanes.forEach(function(L){
       var isAct=(L.id===act), isAv=!!avail[L.id];

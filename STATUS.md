@@ -5,6 +5,44 @@
 
 ## Current Session
 
+## 2026-08-16 — maintenance-loop
+
+- B2b daily run complete. Ledger GREEN pre+post. Queue: 1 seen / 0 fix-shipped / 0 verified (TS-0035 routed PATH_B design backlog — the AI-order visual is outdated, awaits designer gate).
+- Heartbeat posted and confirmed on /dashboard/maint. No escalations. No commits needed (no repo changes beyond fragments).
+
+## 2026-08-15 — Token economics rev 2: David's real cost base + safe-side AI provision
+David's actuals folded in: Claude $200+15%=$230, Higgsfield $39+15%=$44.85, Hetzner $32,
+plus four FUTURE 5T+ feed subscriptions (Cloudflare ~$20, Flights ~$30, Mapbox ~$50,
+non-Google places-type feed ~$40 — placeholders pending quotes). Safe-side AI key provision (David):
+$20×6=$120 per 500 users = $0.24/user/mo. New numbers: current floor $327.85/mo; future
+full stack ~$467.85/mo. Provisioned carry ratio: 1 Starter per ~19 free users (5% Starter
+share needed; model assumes 25%). Break-even ~131 sellers now / ~187 with full stack at
+launch mix ≈ 3.1 founding cities. Deliverable: AI_TOKEN_ECONOMICS_2026-08-15_rev3.docx is CURRENT (rev1/rev2 were locked
+open in Word mid-edit; rev3 supersedes both and rev 1's $49 floor). Google decision CLOSED
+same evening: David confirmed Google Maps/Places stays OUT (1 Aug ruling stands) — the
+budget slot is for a NON-GOOGLE equivalent (Foursquare/Geoapify/OSM-based), hard-capped.
+
+## 2026-08-15 — Global launch planned (worldwide, RUL-019) · EULA v1.13 confirmed live
+Deploy 03aa9f0 shipped and verified (health ok; /terms now serves v1.13 with UK/US/AU
+schedules — the "not yet deployed" note in LEGAL_VERSIONS is stale as of tonight).
+GLOBAL_LAUNCH_PLAN_2026-08-15.docx written: the only genuinely new work before 1 Sep is
+(1) UK/US/AU localization + email-law pass over the 14 outreach templates, and (2) a
+~25 Aug refresh-scrape of London/NY/Sydney (all under the 200/category Gate-2 floor:
+63/60/57) + KPI gate re-run. Everything else rides LAUNCH_BAR G1–G8. Beachhead first
+waves w/c 1 Sep, each individually David-approved at AWAITING_APPROVAL.
+
+## 2026-08-15 — Agents verified ready + AI token economics memo
+Maintenance lane VERIFIED WORKING: ops_sweep server cron live (/etc/cron.d/marketsquare-ops-sweep,
+*/15, last run 20:30 UTC today, all green except faults.majors+queue amber = TS-0035 new major,
+"visual outdated", arrived after this morning's agent run). Fix agent VERIFIED: maintenance-loop
+scheduled task enabled (daily 07:31, fired today 05:32), shadow run clean (seen 0 — TS-0035
+postdates it, tomorrow's run picks it up), intake lane proven by RG-0053 (ledger green tonight).
+Still SHADOW by design: kill switch MAINTENANCE_AGENT_ENABLED stays 0 until B4 synthetic-storm
+rehearsal signs READY (~22 Aug target). AI_TOKEN_ECONOMICS_2026-08-15.docx written, all inputs
+canon-sourced: one $5 Starter carries ~546 free users' AI cost at mature adoption (1,364 Yr-1,
+136 stress); ~11 Starters cover the $49/mo fixed floor; S3 already gates the only real leak.
+Follow-up: set monthly_income_usd in the AI-spend alert config after first revenue (post 1 Sep).
+
 ## 2026-08-15 — Money-path status corrected + webhook arm tool built
 David confirmed REAL purchases settled to FNB -> sk_live is live (S111 sk_test note is STALE).
 Verified in Paystack dashboard: Live Webhook URL already https://trustsquare.co/payment/webhook.

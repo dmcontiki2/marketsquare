@@ -1,0 +1,14 @@
+{
+  "run": "2026-08-16T06:29:35Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 1,
+  "actions": [
+    {
+      "ref": "TS-0035",
+      "lane": "PATH_B",
+      "why": "brain[anthropic/claude-haiku-4-5-20251001]=DESIGN\n\nTHIS REQUIRES UPDATING THE VISUAL",
+      "title": "Claude, this visual is outdated and dont reflect the current AI order of use",
+      "outcome": "routed to design backlog (batched, designer gate)"
+    }
+  ]
+}
