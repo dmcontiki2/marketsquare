@@ -4195,5 +4195,41 @@ def rg_orchestrator_views_deployed():
     return out
 
 
+
+@entry("RG-0096", "Generator-built journey maps carry PIN-SPREAD-1: overlapping pins fan out "
+       "on a circle with legs to their true spot -- the HMI never regresses to stacked pins",
+       LOCKED, fixed_on="2026-08-16",
+       scope="scripts/journey_template.html (the generator source) + every generated "
+             "adventures map on disk. Hand-built maps (za pilot, gb, au, us, reserve) are "
+             "STAGE 2, pending David's verdict on the generated five",
+       ref="PIN-SPREAD-1, 16 Aug 2026 (David's HMI ask: overlapping circles are hard to see "
+           "and click -- spread them elegantly around the circle). Implemented in the template "
+           "so every future generated map inherits it; five maps rebuilt (bw, c2c, ke, mz, na).")
+def rg_pin_spread_in_generator():
+    out = []
+    tpl = repo_file("scripts/journey_template.html")
+    if tpl is None:
+        return [(INFO, "not run from the repo -- source-side check only")]
+    if "PIN-SPREAD-1" not in tpl:
+        out.append((FAIL, "journey_template.html lost the PIN-SPREAD-1 block -- newly generated "
+                          "maps will stack pins again"))
+    import glob as _g
+    gen = [p for p in _g.glob(os.path.join(REPO, "adventures_*_map.html"))
+           if ".bak" not in p]
+    missing = []
+    for p in gen:
+        try:
+            body = open(p, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        if "build_journey.py" in body and "PIN-SPREAD-1" not in body:
+            missing.append(os.path.basename(p))
+    if missing:
+        out.append((FAIL, "generated map(s) missing PIN-SPREAD-1 (stale build): " + ", ".join(missing)))
+    if not out:
+        out.append((INFO, "template + generated maps all carry the spread"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -133,6 +133,58 @@ if(_isMob){var _cs=document.createElement('style');_cs.textContent='.legend-chip
 
 showAll();
 setTimeout(function(){map.invalidateSize();},250);
+
+/* ── PIN-SPREAD-1 (16 Aug 2026, David's HMI ruling): overlapping pins fan out ──
+   When two or more pins collide at the current zoom they spread evenly on a small
+   circle around their shared spot, each tethered to its TRUE location by a thin
+   dashed leg. Zoom in far enough that they no longer collide and they return home.
+   Popups/clicks untouched — each pin keeps its own identity. */
+(function(){
+  var css=document.createElement('style');
+  css.textContent='.ts-spread{transition:transform .28s ease}';
+  document.head.appendChild(css);
+  var LEGS=[];
+  function allPinMarkers(){
+    var ms=[];
+    var groups=[G.ends,G.over,G.food,G.view,G.sight].concat(typeof herG!=='undefined'?[herG]:[]);
+    groups.forEach(function(g){ if(!map.hasLayer(g)) return;
+      g.eachLayer(function(m){ if(m.getLatLng && m.options && m.options.interactive!==false){
+        if(!m._trueLL) m._trueLL=m.getLatLng(); ms.push(m); } }); });
+    return ms;
+  }
+  function clearSpread(ms){
+    LEGS.forEach(function(l){ map.removeLayer(l); }); LEGS=[];
+    (ms||allPinMarkers()).forEach(function(m){ if(m._trueLL) m.setLatLng(m._trueLL);
+      if(m._icon) m._icon.classList.remove('ts-spread'); });
+  }
+  function spreadPins(){
+    var ms=allPinMarkers(); clearSpread(ms);
+    var pts=ms.map(function(m){ return map.latLngToLayerPoint(m._trueLL); });
+    var R=34, used=[], clusters=[], i, j;
+    for(i=0;i<ms.length;i++){ if(used[i]) continue; var c=[i]; used[i]=true;
+      for(j=i+1;j<ms.length;j++){ if(used[j]) continue;
+        if(pts[i].distanceTo(pts[j])<R){ c.push(j); used[j]=true; } }
+      if(c.length>1) clusters.push(c); }
+    clusters.forEach(function(c){
+      var cx=0,cy=0; c.forEach(function(k){ cx+=pts[k].x; cy+=pts[k].y; });
+      cx/=c.length; cy/=c.length;
+      var r=Math.max(30, 14 + c.length*7);
+      c.forEach(function(k,n){
+        var a=-Math.PI/2 + n*2*Math.PI/c.length;
+        var ll=map.layerPointToLatLng(L.point(cx+r*Math.cos(a), cy+r*Math.sin(a)));
+        if(ms[k]._icon) ms[k]._icon.classList.add('ts-spread');
+        ms[k].setLatLng(ll);
+        var leg=L.polyline([ms[k]._trueLL, ll],
+          {color:'#0c1a2e',weight:1.2,opacity:.45,dashArray:'2,3',interactive:false}).addTo(map);
+        LEGS.push(leg);
+      });
+    });
+  }
+  var deb=null;
+  function queueSpread(){ clearTimeout(deb); deb=setTimeout(spreadPins,140); }
+  map.on('zoomstart', function(){ clearSpread(); });
+  map.on('zoomend overlayadd overlayremove layeradd layerremove', queueSpread);
+  map.whenReady(function(){ setTimeout(spreadPins,300); });
+})();
 </script>
-<script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script><script src="/static/ts_report.js?v=5" defer></script>
-</body></html>
+<script>(function(){var b=document.getElementById('backbtn');if(!b)return;if(window.self!==window.top)return;b.style.display='block';b.addEventListener('click',function(){if(history.length>1){history.back();return;}window.close();setTimeout(function(){if(!document.hidden&&location.protocol!=='file:'){location.href='https://trustsquare.co/';}},400);});})();</script><script src="/static/ts_report.js?v=5" defer></script></body></html>
