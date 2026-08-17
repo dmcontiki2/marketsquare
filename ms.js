@@ -2193,9 +2193,9 @@ const ADV_COUNTRY_CURRENCY = { ZA:'R', NA:'N$', MZ:'MT', BW:'P', KE:'KSh', US:'$
 // No entry => no map (safe default). Files ship to /static/ via deploy step 3c-*.
 const ADV_COUNTRY_MAP = {
   ZA: { file:'adventures_za_map.html?v=1', title:'🗺️ Plan the trip', blurb:'Pretoria to the Pilanesberg — switch the layers: the driving route, heritage stops, three bushveld stays and partner spots. Tap the pins for photos, prices and directions.' },
-  US: { file:'adventures_us_map.html?v=12',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
-  GB: { file:'adventures_gb_map.html?v=13',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
-  AU: { file:'adventures_au_map.html?v=12',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
+  US: { file:'adventures_us_map.html?v=13',      title:'🗺️ Ride the safari route',     blurb:'Yellowstone country — tap a leg, then the pins: the valleys and their herds, the geyser basins, and the timber lodge.' },
+  GB: { file:'adventures_gb_map.html?v=14',      title:'🗺️ Follow the heritage route', blurb:'Ancient Wessex — tap a leg, then the pins: the great stones, the chalk downland, the cathedral city and your country house.' },
+  AU: { file:'adventures_au_map.html?v=13',      title:'🗺️ Explore the reef day',      blurb:'The outer Great Barrier Reef off Queensland — tap a leg, then the pins: out to the ribbon reefs, the dive sites, and the island eco-stay.' },
   // NA un-gated 26 Jul 2026 — assets/journey/nam complete (23/23):
   NA: { file:'adventures_na_map.html?v=16',      title:'🗺️ Drive the route',           blurb:'Seven days door to door — fly in from Joburg (indicative fares shown), the red dunes to the great waterhole, and home. Tap a day, then the pins: the flights, the dunes, the Skeleton Coast, the desert elephants and where you sleep.' },
   BW: { file:'adventures_bw_map.html?v=15',      title:'🗺️ Explore the delta',        blurb:'Seven days door to door — fly in from Joburg, the mokoro channels to the open salt pan, and home. Tap a day, then the pins: the flights, the delta, the predators, the elephant herds and the pan.' },
