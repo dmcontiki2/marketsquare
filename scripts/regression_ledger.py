@@ -4331,5 +4331,50 @@ def rg_fx_live():
     return out
 
 
+
+@entry("RG-0099", "The management lanes can SEE a lockout: port 22 answers from the session "
+       "vantage, and the Cloudflare edge is not blocking the session's own IP",
+       LOCKED, fixed_on="2026-08-17",
+       scope="the session/David egress vantage (they share an IP). Detects the SSH-LOCKOUT-1 "
+             "class: a home power/router reset moves the IP outside BOTH allowlists (Hetzner "
+             "firewall SSH rule + Cloudflare PRELAUNCH GATE). Post-launch the CF half retires "
+             "with the gate; the SSH half stays for good",
+       ref="SSH-LOCKOUT-1, 17 Aug 2026: the blackout moved David's home IP; SSH timed out and "
+           "the site 403'd from the new IP while serving everyone else. Fixed by hand at both "
+           "panels; scripts/hetzner_fw_selfheal.py now heals both automatically when tokens are "
+           "provisioned. THIS entry is the tripwire: a red here names the runbook line instead "
+           "of a mystery morning.")
+def rg_management_lanes_reachable():
+    out = []
+    _require_net()
+    import socket
+    try:
+        s = socket.create_connection(("178.104.73.239", 22), timeout=6)
+        s.close()
+    except Exception as e:
+        out.append((FAIL, "port 22 unreachable from this vantage (%s) -- SSH-LOCKOUT-1 class: "
+                          "the home IP likely changed (power/router reset). Fix: run "
+                          "scripts/hetzner_fw_selfheal.py, or add the current IP at Hetzner > "
+                          "Firewalls > trustsquare-origin-lockdown" % type(e).__name__))
+    try:
+        req = urllib.request.Request(BASE + "/terms", headers=UA)
+        try:
+            code = urllib.request.urlopen(req, timeout=TIMEOUT).getcode()
+        except urllib.error.HTTPError as he:
+            code = he.code
+        if code == 403:
+            out.append((FAIL, "/terms answers 403 from the session's own IP -- the Cloudflare "
+                              "PRELAUNCH GATE is blocking us (stale allowlist). Fix: run "
+                              "scripts/hetzner_fw_selfheal.py (CF half), or add the current IP "
+                              "to the PRELAUNCH GATE rule in the Cloudflare dashboard"))
+    except ProbeOffline:
+        raise
+    except Exception:
+        pass
+    if not out:
+        out.append((INFO, "ssh:22 open and the edge serves this IP -- both management lanes clear"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -2272,13 +2272,16 @@ window.infraLoad = function(one){
      if(one){
        var s=null; (d.services||[]).forEach(function(x){ if(x.id===one) s=x; });
        if(s){ window.infraVerdict(one,s); }
-       else { var s3=document.getElementById('infra-res-'+one); if(s3){ s3.style.color='#ef4444'; s3.textContent='\u2717 FAIL'; } }
+       else { var s3=document.getElementById('infra-res-'+one); if(s3){ s3.style.color='#eab308'; s3.textContent='? CAN\u2019T TEST'; s3.title='The probe returned no result for this service \u2014 not a service failure. Test again; if it persists, read the BEA log.'; } }
        if(out) out.textContent=(s&&s.status==='ok'?'\u2713 ':'\u2717 ')+(s?s.label:one)+' \u00b7 '+(s?(s.detail||s.status):'probe returned no result for this service')+' \u00b7 '+new Date().toLocaleTimeString();
      } else if(out) out.textContent='Checked '+(d.checked_at||'now');
    })
    .catch(function(e){
-     if(one){ var s2=document.getElementById('infra-res-'+one); if(s2){ s2.style.color='#ef4444'; s2.textContent='\u2717 FAIL'; } }
-     window.infraFailLoud('Check failed: '+e);
+     /* FALSE-FAIL-1 (17 Aug 2026, David): a failed TEST REQUEST is not a failed
+        SERVICE. Transport/auth errors paint a neutral CAN'T-TEST verdict with the
+        real reason \u2014 red FAIL is reserved for a probe that RAN and failed. */
+     if(one){ var s2=document.getElementById('infra-res-'+one); if(s2){ s2.style.color='#eab308'; s2.textContent='? CAN\u2019T TEST'; s2.title='The dashboard could not reach the test endpoint (admin session missing/expired, or network) \u2014 NOT a service failure. Unlock the dashboard and Test again.'; } }
+     window.infraFailLoud('Could not run the test (not a service failure): '+e+' \u2014 unlock the dashboard (admin) or check your connection, then Test again.');
    });
 };
 /* APV2-TESTALL-1 (22 Jul 2026): one-click sweep of every available AI provider */
