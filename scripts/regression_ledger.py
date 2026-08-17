@@ -4326,7 +4326,7 @@ def rg_fx_live():
     elif missing:
         out.append((FAIL, "/api/fx missing symbols: %s" % ",".join(missing)))
     else:
-        out.append((INFO, "READY TO LOCK -- /api/fx live and sane (ZAR %.2f via %s)"
+        out.append((INFO, "/api/fx live and sane (ZAR %.2f via %s)"
                     % (z, j.get("source", "?"))))
     return out
 
