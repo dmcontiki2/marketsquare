@@ -125,6 +125,16 @@ from datetime import datetime, timezone, timedelta
 
 app = FastAPI(title="TrustSquare BEA", version="1.3.1")
 
+# DEPLOY-HOOK-1 (17 Aug 2026): authenticated HTTPS deploy trigger — see
+# ops/autodeploy/deploy_router.py. Fail-closed twice over: import-safe when the
+# file is absent (local dev), and the endpoint itself answers 503 until David
+# mints MS_DEPLOY_TOKEN on the server (add_deploy_token.bat).
+try:
+    from deploy_router import router as _deploy_router      # noqa: E402
+    app.include_router(_deploy_router)
+except ImportError:
+    pass  # router not deployed alongside — hook lane simply absent
+
 # S4 (audit · HIGH): CORS locked to TrustSquare origins only.
 # Previously allow_origins=["*"] + allow_origin_regex=".*" — any site could call the BEA
 # from a user's browser. Auth is X-Api-Key/email (allow_credentials stays False), and the
