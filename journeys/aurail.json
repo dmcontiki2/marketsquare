@@ -1,0 +1,276 @@
+{
+ "id": "aurail",
+ "out": "adventures_au_rail_map.html",
+ "photo_dir": "assets/journey/aurail",
+ "title": "The Ghan — Ocean to Ocean through the Red Centre",
+ "pill": "★ THE GHAN · ADELAIDE TO DARWIN THROUGH THE RED CENTRE",
+ "h1": "The Ghan — Ocean to Ocean",
+ "sub": "Adelaide to Darwin — 2,979 km through the Flinders, the red heart and the Top End, with off-train excursions at Marla, Alice and Katherine. Tap a leg to ride it.",
+ "cap": "Modelled on the real Ghan transcontinental service — real stops and excursions shown accurately with facts from public sources. The operator and package are a generic composite (SO-1b). Prices indicative (±) — booking is the agency's craft. Photos pending — AI imagery joins later.",
+ "unit": "Leg",
+ "stat1_icon": "🚂",
+ "stat2_icon": "🗓️",
+ "route_summary": "<b>Whole route</b> · 4 legs · 2,979 km · 3 nights aboard. <b>True price:</b> the real Ghan runs Gold service from ±A$3,300 pp all-inclusive, Platinum from ±A$7,500. This composite journey with excursions: ±A$5,900 pp — fares indicative, confirm with agency.",
+ "legend": "Modelled on the real Ghan transcontinental service — real stops and excursions shown accurately with facts from public s",
+ "overlays": {
+  "ends": "🚩 Board &amp; alight",
+  "over": "🛏️ Sleepers &amp; stopovers",
+  "food": "🍽️ Dining car",
+  "view": "🏔️ From the window",
+  "sight": "📍 Excursions &amp; calls",
+  "route": "〰️ The line",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "Adelaide",
+   -34.9285,
+   138.6007
+  ],
+  [
+   "Port Augusta",
+   -32.4936,
+   137.7743
+  ],
+  [
+   "Coober Pedy",
+   -29.0135,
+   134.7544
+  ],
+  [
+   "Alice Springs",
+   -23.698,
+   133.8807
+  ],
+  [
+   "Tennant Creek",
+   -19.6497,
+   134.1917
+  ],
+  [
+   "Katherine",
+   -14.465,
+   132.2635
+  ],
+  [
+   "Darwin",
+   -12.4634,
+   130.8456
+  ]
+ ],
+ "heritage": [
+  [
+   "Kakadu National Park",
+   -13.0,
+   132.5,
+   "Kakadu in Australia's Northern Territory is a dual UNESCO World Heritage Site recognised for both outstanding ",
+   "np_021"
+  ],
+  [
+   "Uluru-Kata Tjuta National Park",
+   -25.3444,
+   131.0369,
+   "At the spiritual heart of Australia rises Uluru — a colossal sandstone monolith 348 metres high and 9.4 kilome",
+   "np_014"
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Adelaide into the outback",
+   "dist": "1,100 km",
+   "ascent": "Day 1",
+   "mode": "rail",
+   "color": "#3b5ba5",
+   "summary": "North out of the vineyards, the Flinders Ranges purple at dusk, and the first outback night as the train runs into the red.",
+   "seg": [
+    [
+     -34.942,
+     138.586
+    ],
+    [
+     -32.4936,
+     137.7743
+    ],
+    [
+     -30.0,
+     136.5
+    ]
+   ],
+   "stops": [
+    {
+     "type": "start",
+     "icon": "🚩",
+     "name": "Adelaide Parklands — boarding",
+     "lat": -34.942,
+     "lng": 138.586,
+     "blurb": "Champagne on the platform as a kilometre of silver carriages waits to cross a continent."
+    },
+    {
+     "type": "view",
+     "icon": "⛰️",
+     "name": "The Flinders Ranges at dusk",
+     "lat": -32.4936,
+     "lng": 137.7743,
+     "blurb": "Ancient folded mountains turn purple beyond the saltbush as the dining car pours the Barossa."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "First night — into the red",
+     "lat": -30.0,
+     "lng": 136.5,
+     "blurb": "Your cabin made down, the train running steady into the true outback dark — no lights to the horizon."
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Marla dawn to Alice Springs",
+   "dist": "Red Centre",
+   "ascent": "Day 2",
+   "mode": "rail",
+   "color": "#C8873A",
+   "summary": "A campfire dawn at Marla, then south Australia gives way to the Territory — into Alice Springs, the heart of the continent.",
+   "seg": [
+    [
+     -27.3033,
+     133.6167
+    ],
+    [
+     -23.698,
+     133.8807
+    ],
+    [
+     -23.6797,
+     133.7108
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🌅",
+     "name": "Marla — outback sunrise",
+     "lat": -27.3033,
+     "lng": 133.6167,
+     "blurb": "The train pauses in the darkness; fires are lit beside the track and the desert dawn comes up over breakfast."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Alice Springs — the red heart",
+     "lat": -23.698,
+     "lng": 133.8807,
+     "blurb": "The town in the MacDonnell gap — an afternoon for the Desert Park, a camel ride, or the flight to Uluru."
+    },
+    {
+     "type": "view",
+     "icon": "🏜️",
+     "name": "Simpsons Gap — the West Macs",
+     "lat": -23.6797,
+     "lng": 133.7108,
+     "blurb": "A red cleft in the ranges holding permanent water — rock wallabies on the scree at sundown."
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Alice to Katherine — the long red run",
+   "dist": "1,200 km",
+   "ascent": "Day 3",
+   "mode": "rail",
+   "color": "#2e7d32",
+   "summary": "The centre rolls past all morning — the Devils Marbles off in the scrub — then the tropics begin and the gorge country of Katherine.",
+   "seg": [
+    [
+     -20.5833,
+     134.2667
+    ],
+    [
+     -14.3167,
+     132.4167
+    ],
+    [
+     -15.5,
+     132.8
+    ]
+   ],
+   "stops": [
+    {
+     "type": "sight",
+     "icon": "🪨",
+     "name": "Karlu Karlu — the Devils Marbles",
+     "lat": -20.5833,
+     "lng": 134.2667,
+     "blurb": "Giant granite spheres balanced on the plain — a sacred place of the Warumungu, glowing at first light."
+    },
+    {
+     "type": "view",
+     "icon": "🛶",
+     "name": "Nitmiluk Gorge cruise",
+     "lat": -14.3167,
+     "lng": 132.4167,
+     "blurb": "Off the train at Katherine for a cruise between hundred-metre sandstone walls — freshwater crocs on the banks."
+    },
+    {
+     "type": "food",
+     "icon": "🍽️",
+     "name": "Dinner crossing the tropics",
+     "lat": -15.5,
+     "lng": 132.8,
+     "blurb": "Barramundi and Territory beef as the light turns green and gold — the desert already a thousand kilometres behind."
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "Katherine to Darwin — the Top End finale",
+   "dist": "320 km",
+   "ascent": "Day 4",
+   "mode": "rail",
+   "color": "#b3362e",
+   "summary": "Through the Top End's woodland and river country, over the Elizabeth to the Timor Sea — ocean to ocean, complete.",
+   "seg": [
+    [
+     -13.2378,
+     131.1063
+    ],
+    [
+     -12.4634,
+     130.8456
+    ],
+    [
+     -12.47,
+     130.85
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🌴",
+     "name": "The Adelaide River country",
+     "lat": -13.2378,
+     "lng": 131.1063,
+     "blurb": "Floodplains, magnetic termite mounds and the big rivers of the Top End sliding past the window."
+    },
+    {
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Darwin — ocean to ocean",
+     "lat": -12.4634,
+     "lng": 130.8456,
+     "blurb": "The line ends at the Timor Sea — sunset on the waterfront, a continent crossed top to bottom."
+    },
+    {
+     "type": "food",
+     "icon": "🦐",
+     "name": "Stokes Hill Wharf — landfall dinner",
+     "lat": -12.47,
+     "lng": 130.85,
+     "blurb": "Chilli prawns and cold beer over the harbour where the journey ends."
+    }
+   ]
+  }
+ ]
+}

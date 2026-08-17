@@ -49,7 +49,15 @@
    -110.703
   ]
  ],
- "heritage": [],
+ "heritage": [
+  [
+   "Yellowstone National Park",
+   44.428,
+   -110.5885,
+   "Yellowstone is the world's first national park and one of the most geologically active places on Earth. It sit",
+   "np_001"
+  ]
+ ],
  "days": [
   {
    "day": 1,

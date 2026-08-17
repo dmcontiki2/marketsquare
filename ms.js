@@ -2211,6 +2211,9 @@ const ADV_COUNTRY_MAP = {
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
   c2c: { file:'adventures_c2c_map.html?v=18', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
+  usrail: { file:'adventures_us_rail_map.html?v=1', title:'🗺️ Ride the line', blurb:'Chicago to San Francisco on the storied Zephyr route — tap a leg, then the pins: the Mississippi, the Rockies\u2019 canyons, the desert dawn and Donner Pass down to the Bay.' },
+  gbrail: { file:'adventures_gb_rail_map.html?v=1', title:'🗺️ Ride the line', blurb:'London to the Hebridean sea — tap a leg, then the pins: York and Durham, the Northumberland coast, Rannoch Moor and the steam finale over Glenfinnan.' },
+  aurail: { file:'adventures_au_rail_map.html?v=1', title:'🗺️ Ride the line', blurb:'The Ghan, Adelaide to Darwin — tap a leg, then the pins: the Flinders at dusk, the Marla dawn, the red heart and the Top End finale.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE
@@ -2221,6 +2224,21 @@ const ADV_TOUR_EXTENSIONS = {
     { icon:'\u{1F3E8}', name:'Victoria Falls stopover', detail:'Two nights at a falls-view hotel above the gorge, with a helicopter flip over the Smoke that Thunders.', price:'+R18,500 pp' },
     { icon:'\u{1F686}', name:'Nile finale', detail:'Two extra nights aboard the private Nile sleeper, Luxor up to Cairo past the temples.', price:'+R6,500 pp / night' },
     { icon:'\u{1F377}', name:'Cape winelands pre-tour', detail:'A night in Franschhoek and a cellar lunch before you board at Cape Town.', price:'+R4,200 pp' },
+  ],
+  usrail: [
+    { icon:'\u{1F3DE}\u{FE0F}', name:'Yosemite finale', detail:'Two nights in Yosemite Valley after the crossing \u2014 granite walls, giant sequoia and the valley-floor shuttle from a heritage lodge.', price:'+US$980 pp' },
+    { icon:'\u{2668}\u{FE0F}', name:'Glenwood hot-springs stopover', detail:'An extra night at Glenwood Springs \u2014 the great hot-springs pool under the mountains, a walk from the platform.', price:'+US$240 pp' },
+    { icon:'\u{1F377}', name:'Napa winelands day', detail:'A chauffeured day through Napa\u2019s cellars and vineyard lunches before the city finale.', price:'+US$390 pp' },
+  ],
+  gbrail: [
+    { icon:'\u{1F682}', name:'Royal Scotsman taster night', detail:'One night aboard the legendary luxury sleeper \u2014 white-linen dining and a Highland siding under the stars.', price:'+\u00A31,950 pp' },
+    { icon:'\u{26F5}', name:'Skye day from Mallaig', detail:'Across the Sound by boat to the Isle of Skye \u2014 the Cuillin, a sea-loch lunch and the return sailing at dusk.', price:'+\u00A3140 pp' },
+    { icon:'\u{1F3F0}', name:'Edinburgh Castle evening', detail:'An after-hours castle visit and Old Town supper on the Royal Mile.', price:'+\u00A3165 pp' },
+  ],
+  aurail: [
+    { icon:'\u{1F3DC}\u{FE0F}', name:'Uluru excursion from Alice', detail:'Fly from Alice Springs for sunset and dawn at Uluru and Kata Tjuta \u2014 the heart of the heart, guided by Anangu voices.', price:'+A$690 pp' },
+    { icon:'\u{1F6F6}', name:'Nitmiluk gorge cruise', detail:'A dawn cruise between Nitmiluk\u2019s sandstone walls at Katherine \u2014 freshwater crocs and rock art.', price:'+A$120 pp' },
+    { icon:'\u{1F98E}', name:'Kakadu finale', detail:'Two nights in Kakadu after Darwin \u2014 Yellow Water billabong at dawn, rock-art galleries at Ubirr.', price:'+A$1,450 pp' },
   ],
   na: [
     { icon:'\u{1F388}', name:'Sossusvlei balloon safari', detail:'A dawn hot-air flight over the red dunes, ending with a champagne breakfast on the desert floor.', price:'+N$6,900 pp' },

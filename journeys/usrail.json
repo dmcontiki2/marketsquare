@@ -1,0 +1,337 @@
+{
+ "id": "usrail",
+ "out": "adventures_us_rail_map.html",
+ "photo_dir": "assets/journey/usrail",
+ "title": "The Great American Crossing — Chicago to San Francisco by Rail",
+ "pill": "★ THE GREAT AMERICAN CROSSING · COAST TO COAST BY RAIL",
+ "h1": "The Great American Crossing",
+ "sub": "Chicago to San Francisco on the storied Zephyr route — the plains, the Rockies' canyons, the desert and the Sierra, from the dome car and the dining car. Tap a leg to ride it.",
+ "cap": "Modelled on the real California Zephyr route — real stations, canyons and passes shown accurately with facts from public sources. The operator and package are a generic composite (SO-1b) — a demo a real rail-tour operator could publish. Prices indicative (±) — booking, availability and seats are the agency's craft. Photos pending — AI imagery joins later.",
+ "unit": "Leg",
+ "stat1_icon": "🚂",
+ "stat2_icon": "🗓️",
+ "route_summary": "<b>Whole route</b> · 5 legs · ~3,900 km · 2 nights aboard + 2 stopover nights. <b>True price:</b> the real Zephyr runs coach from ±US$150, roomette from ±US$1,100 pp; escorted luxury rail from ±US$6,000. This composite journey: ±US$6,900 pp all-in — fares indicative, confirm with agency.",
+ "legend": "Modelled on the real California Zephyr route — real stations, canyons and passes shown accurately with facts from public",
+ "overlays": {
+  "ends": "🚩 Board &amp; alight",
+  "over": "🛏️ Sleepers &amp; stopovers",
+  "food": "🍽️ Dining car",
+  "view": "🏔️ From the window",
+  "sight": "📍 Excursions &amp; calls",
+  "route": "〰️ The line",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "Chicago",
+   41.8781,
+   -87.6298
+  ],
+  [
+   "Omaha",
+   41.2565,
+   -95.9345
+  ],
+  [
+   "Denver",
+   39.7392,
+   -104.9903
+  ],
+  [
+   "Glenwood Springs",
+   39.5505,
+   -107.3248
+  ],
+  [
+   "Salt Lake City",
+   40.7608,
+   -111.891
+  ],
+  [
+   "Reno",
+   39.5296,
+   -119.8138
+  ],
+  [
+   "Sacramento",
+   38.5816,
+   -121.4944
+  ],
+  [
+   "San Francisco",
+   37.7749,
+   -122.4194
+  ]
+ ],
+ "heritage": [
+  [
+   "Yosemite National Park",
+   37.8651,
+   -119.5383,
+   "Yosemite is a place of extraordinary granite grandeur in the Sierra Nevada mountains of California. The Yosemi",
+   "np_002"
+  ],
+  [
+   "Mesa Verde National Park",
+   37.1838,
+   -108.4887,
+   "Mesa Verde in Colorado preserves the spectacular cliff dwellings of the Ancestral Puebloans, tucked into alcov",
+   "un_117"
+  ],
+  [
+   "Cahokia",
+   38.6539,
+   -90.0644,
+   "Cahokia, near present-day St Louis, was the largest pre-Columbian city north of Mexico, centred on a complex o",
+   "ar_032"
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "Chicago to the Mississippi and the plains",
+   "dist": "1,600 km",
+   "ascent": "Day 1-2",
+   "mode": "rail",
+   "color": "#3b5ba5",
+   "summary": "Out of Chicago's great hall and west across Illinois — the Mississippi crossing at sunset, then the long prairie night to Omaha and the Nebraska dawn.",
+   "seg": [
+    [
+     41.8787,
+     -87.6398
+    ],
+    [
+     40.8077,
+     -91.1129
+    ],
+    [
+     41.2565,
+     -95.9345
+    ]
+   ],
+   "stops": [
+    {
+     "type": "start",
+     "icon": "🚩",
+     "name": "Chicago Union Station — boarding",
+     "lat": 41.8787,
+     "lng": -87.6398,
+     "blurb": "Beneath the Great Hall's skylight the great western trains still depart — your sleeper waits on the lower level."
+    },
+    {
+     "type": "view",
+     "icon": "🌉",
+     "name": "The Mississippi crossing",
+     "lat": 40.8077,
+     "lng": -91.1129,
+     "blurb": "The train slows onto the high bridge at Burlington — America's river wide and slow beneath the dining car."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Roomette night — the prairie run",
+     "lat": 41.2565,
+     "lng": -95.9345,
+     "blurb": "Your first night in the roomette: beds made down while you dine, Nebraska rolling past in the dark."
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Denver and the Front Range climb",
+   "dist": "9,000 ft",
+   "ascent": "Day 2",
+   "mode": "rail",
+   "color": "#2e7d32",
+   "summary": "Denver at breakfast, then the astonishing climb — thirty tunnels up the Front Range to the Moffat Tunnel under the Continental Divide.",
+   "seg": [
+    [
+     39.7539,
+     -105.0
+    ],
+    [
+     39.9022,
+     -105.6447
+    ],
+    [
+     39.8868,
+     -105.7625
+    ]
+   ],
+   "stops": [
+    {
+     "type": "food",
+     "icon": "🍳",
+     "name": "Breakfast into Denver Union",
+     "lat": 39.7539,
+     "lng": -105.0,
+     "blurb": "Eggs and coffee as the Rockies fill the horizon — Denver's restored Union Station gleams beneath the mountains."
+    },
+    {
+     "type": "view",
+     "icon": "⛰️",
+     "name": "The Front Range tunnels",
+     "lat": 39.9022,
+     "lng": -105.6447,
+     "blurb": "The train coils up the wall of the Rockies through thirty tunnels — flatland to alpine in an hour, finishing under the Divide itself."
+    },
+    {
+     "type": "view",
+     "icon": "🏔️",
+     "name": "Winter Park & the high parks",
+     "lat": 39.8868,
+     "lng": -105.7625,
+     "blurb": "Out of the Moffat Tunnel into a bowl of ski country and high meadow — the roof of the route."
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "The canyons to Glenwood Springs",
+   "dist": "Byers · Gore · Glenwood",
+   "ascent": "Day 2",
+   "mode": "rail",
+   "color": "#C8873A",
+   "summary": "The afternoon every rail lover rides for — three canyons of the Colorado River seen only from the train, then a hot-springs evening at Glenwood.",
+   "seg": [
+    [
+     39.9583,
+     -106.5
+    ],
+    [
+     39.5505,
+     -107.3248
+    ],
+    [
+     39.5544,
+     -107.3225
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🏞️",
+     "name": "Gore Canyon — the wild Colorado",
+     "lat": 39.9583,
+     "lng": -106.5,
+     "blurb": "No road reaches here: whitewater a thousand feet below the window, canyon walls closing to the sky."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Glenwood Springs — hot-springs stopover",
+     "lat": 39.5505,
+     "lng": -107.3248,
+     "blurb": "Step off for the night: the world's largest hot-springs pool steams under the mountains a walk from the platform."
+    },
+    {
+     "type": "food",
+     "icon": "🍽️",
+     "name": "Dinner in the canyon dusk",
+     "lat": 39.5544,
+     "lng": -107.3225,
+     "blurb": "White tablecloths and canyon light — the dining car's best hour, or a grill on the springs terrace."
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "Ruby Canyon, the desert and the Sierra approach",
+   "dist": "1,300 km",
+   "ascent": "Day 3",
+   "mode": "rail",
+   "color": "#7b4fa6",
+   "summary": "Ruby Canyon's red walls at dawn, Utah's painted desert all day, Salt Lake in the night, and the Nevada basin run to Reno.",
+   "seg": [
+    [
+     39.1911,
+     -109.0522
+    ],
+    [
+     40.7608,
+     -111.891
+    ],
+    [
+     39.5296,
+     -119.8138
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🏜️",
+     "name": "Ruby Canyon at dawn",
+     "lat": 39.1911,
+     "lng": -109.0522,
+     "blurb": "Red sandstone walls catch first light on the Utah line — river, rock and not a road in sight."
+    },
+    {
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "Salt Lake City — the midnight call",
+     "lat": 40.7608,
+     "lng": -111.891,
+     "blurb": "The Mormon capital glitters against the Wasatch as the train pauses in the small hours."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Reno — the biggest little stopover",
+     "lat": 39.5296,
+     "lng": -119.8138,
+     "blurb": "Out of the desert night into Reno's neon — a stopover night before the Sierra day."
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "title": "Donner Pass and down to the Bay",
+   "dist": "Sea level",
+   "ascent": "Day 4",
+   "mode": "rail",
+   "color": "#b3362e",
+   "summary": "The Sierra Nevada by morning — snowsheds and thousand-foot drops over Donner Lake — then gold country, Sacramento, and the Pacific shore into San Francisco Bay.",
+   "seg": [
+    [
+     39.3167,
+     -120.3
+    ],
+    [
+     38.5816,
+     -121.4944
+    ],
+    [
+     37.7955,
+     -122.3937
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🌲",
+     "name": "Donner Pass — the Sierra crossing",
+     "lat": 39.3167,
+     "lng": -120.3,
+     "blurb": "The train hangs on the mountain wall above Donner Lake — the hardest-won miles in American railroading."
+    },
+    {
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "Sacramento — gold-rush capital",
+     "lat": 38.5816,
+     "lng": -121.4944,
+     "blurb": "Down through the gold country to the state capital and the great railway museum beside the tracks."
+    },
+    {
+     "type": "finish",
+     "icon": "🏁",
+     "name": "San Francisco Bay — journey's end",
+     "lat": 37.7955,
+     "lng": -122.3937,
+     "blurb": "The rails end at the water: across the bay, the city on its hills — one continent, coast to coast, behind you."
+    }
+   ]
+  }
+ ]
+}

@@ -58,6 +58,9 @@ COUNTRIES = [
     ("mz", "MZ", "Mozambique",     "Maputo", "Province", "Maputo City", -25.9692, 32.5732, "MT"),
     ("bw", "BW", "Botswana",       "Maun", "District", "North-West", -19.9833, 23.4167, "P"),
     ("c2c","ZA", "South Africa",   "Cape Town", "Province", "Western Cape", -33.9249, 18.4241, "R"),
+    ("usrail","US","United States", "Chicago", "State", "Illinois", 41.8787, -87.6231, "$"),
+    ("gbrail","GB","United Kingdom","London", "County", "Greater London", 51.5308, -0.1238, "\u00a3"),
+    ("aurail","AU","Australia",     "Adelaide","State", "South Australia", -34.9285, 138.6007, "A$"),
 ]
 CAT_KEY = {
     "adventures_experiences":   "advexp",
@@ -116,6 +119,12 @@ COPY = {
     ("mz","adventures_accommodation"): ("Beach Cabanas, Dune Lodges & Island Stays \u2014 En-Route","MT 4,200 / night","The stays down the coast \u2014 a reed-and-thatch cabana in the dunes, a whitewashed guesthouse above a working fishing beach, and a thatched lodge high on an island dune with ocean in three directions. Lamplight, sea breeze and fresh seafood each night."),
     ("bw","adventures_experiences"): ("Botswana \u2014 Water to Salt, Delta to Pans","P 95,000 / person","A five-day journey across Botswana \u2014 poled into the Okavango Delta by mokoro, predator country with wild dogs and lion, the reviving marsh channels, the great elephant river, and out onto the white Makgadikgadi salt pan. Fly-in transfers, luxury tented camps, guiding, park fees and all meals included."),
     ("bw","adventures_accommodation"): ("Delta Camps, River Lodges & Pans Sleep-outs \u2014 En-Route","P 12,000 / night","The stays along the route \u2014 canvas tents on a delta island, a floodplain deck where elephants pass, a thatch-and-timber river lodge, and a bedroll sleep-out on the open salt under the Milky Way. Lamplight, campfires and hearty dinners each night."),
+ ("usrail","adventures_experiences"): ("The Great American Crossing \u2014 Chicago to San Francisco by Rail","$6,900 / person","Coast to coast on the storied Zephyr route \u2014 the Mississippi at sunset, thirty tunnels up the Rockies, the canyons of the Colorado, Ruby Canyon\u2019s red dawn and Donner Pass down to San Francisco Bay. Two nights aboard in a roomette, two stopover nights, dome-car days and dining-car evenings. True price: the real Zephyr runs from \u00b1US$150 coach / \u00b1US$1,100 roomette; escorted luxury rail from \u00b1US$6,000."),
+ ("usrail","adventures_accommodation"): ("Roomettes, Hot-Springs & Bay Hotels \u2014 En-Route","$310 / night","The beds of the crossing \u2014 a roomette made down while you dine, a hot-springs hotel a walk from the Glenwood platform, Reno neon, and a bay-window San Francisco finale."),
+ ("gbrail","adventures_experiences"): ("The Great British Rail Journey \u2014 London to the Hebridean Sea","\u00a34,450 / person","Capital to the Isles \u2014 the East Coast racer to York and Durham, castles on the Northumberland coast, Edinburgh under the rock, the West Highland Line across Rannoch Moor and the Jacobite steam finale over Glenfinnan to Mallaig. True price: scheduled trains from \u00b1\u00a3420 all-in; the Royal Scotsman from \u00b1\u00a33,750 for two nights."),
+ ("gbrail","adventures_accommodation"): ("Railway Hotels, Sleepers & Highland Inns \u2014 En-Route","\u00a3260 / night","The beds of the journey \u2014 a grand Victorian railway hotel at York, an Old Town night under the Castle, a Highland inn beneath Ben Nevis and the harbour at Mallaig."),
+ ("aurail","adventures_experiences"): ("The Ghan \u2014 Ocean to Ocean through the Red Centre","A$5,900 / person","Adelaide to Darwin, 2,979 km \u2014 the Flinders purple at dusk, a campfire dawn at Marla, Alice Springs and the West Macs, Nitmiluk\u2019s gorge walls and the Top End finale at the Timor Sea. Three nights aboard, off-train excursions included. True price: the real Ghan runs Gold from \u00b1A$3,300 all-inclusive, Platinum from \u00b1A$7,500."),
+ ("aurail","adventures_accommodation"): ("Gold Cabins & Outback Stopovers \u2014 En-Route","A$340 / night","The beds of the crossing \u2014 a Gold twin cabin made down to the rhythm of the rails, an Alice Springs range-view room, and the option of a swag under the Milky Way."),
  ("c2c","adventures_experiences"): ("Cape to Cairo — The Great Rail Journey","R 245,000 / person","The great Cape to Cairo rail journey — ten thousand kilometres and one continent, from Table Mountain to the Giza plateau. Winelands and Karoo, the thundering falls and the Zambezi bridge, game from the dining-car window, spice ports and Nubian villages, temples at dawn and the pyramids at the end of the line. Brass-and-teak sleepers, white-linen dining and a new country almost every day."),
  ("c2c","adventures_accommodation"): ("Sleepers, Falls Hotels & Nile Stays — En-Route","R 6,500 / night","The stays along the line — a brass-and-teak sleeper cabin made up while you dine, a colonial hotel above the falls, carved harbour-side rooms on the Indian Ocean, a Nubian village on the green Nile and the Nile sleeper north to Cairo. A different bed, and a different country, most nights."),
 }
@@ -359,12 +368,13 @@ aligned = align_trust_to_seller(conn)
 conn.commit()
 print(f"Inserted {ins} listings; backfilled country on {backfilled}; aligned trust->seller on {aligned} (US/GB/AU/DE exemplars).")
 # per-tour map: stamp the route code on listings carrying that route's gallery photos
-tour_set = conn.execute(
-    "UPDATE listings SET tour='c2c' WHERE COALESCE(super_example,0)=1 "
-    "AND (COALESCE(thumb_url,'') LIKE '%sup_c2c_%' OR COALESCE(photo_urls,'') LIKE '%sup_c2c_%') "
-    "AND COALESCE(tour,'') <> 'c2c'").rowcount
-conn.commit()
-print(f"tour codes: set 'c2c' on {tour_set} listing(s).")
+for _route in ("c2c", "usrail", "gbrail", "aurail"):
+    tour_set = conn.execute(
+        f"UPDATE listings SET tour='{_route}' WHERE COALESCE(super_example,0)=1 "
+        f"AND (COALESCE(thumb_url,'') LIKE '%sup_{_route}_%' OR COALESCE(photo_urls,'') LIKE '%sup_{_route}_%') "
+        f"AND COALESCE(tour,'') <> '{_route}'").rowcount
+    conn.commit()
+    print(f"tour codes: set '{_route}' on {tour_set} listing(s).")
 try:
     for iso2 in ("ZA","US","GB","AU"):
         n = conn.execute("SELECT COUNT(*) FROM listings WHERE country=?", (iso2,)).fetchone()[0]

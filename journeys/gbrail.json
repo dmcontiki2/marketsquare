@@ -1,0 +1,304 @@
+{
+ "id": "gbrail",
+ "out": "adventures_gb_rail_map.html",
+ "photo_dir": "assets/journey/gbrail",
+ "title": "The Great British Rail Journey — London to the Hebridean Sea",
+ "pill": "★ THE GREAT BRITISH RAIL JOURNEY · CAPITAL TO THE ISLES",
+ "h1": "The Great British Rail Journey",
+ "sub": "London to Mallaig by the East Coast Main Line, the West Highland Line and the Jacobite steam finale — cathedrals, castles, moor and sea. Tap a leg to ride it.",
+ "cap": "Modelled on the real East Coast Main Line, West Highland Line and Jacobite steam service — real stations and views shown accurately with facts from public sources. The operator and package are a generic composite (SO-1b). Prices indicative (±) — booking is the agency's craft. Photos pending — AI imagery joins later.",
+ "unit": "Leg",
+ "stat1_icon": "🚂",
+ "stat2_icon": "🗓️",
+ "route_summary": "<b>Whole route</b> · 4 legs · ~1,000 km · 3 nights. <b>True price:</b> the scheduled trains run from ±£420 all-in; the luxury Royal Scotsman from ±£3,750 for two nights. This composite journey: ±£4,450 pp all-in — fares indicative, confirm with agency.",
+ "legend": "Modelled on the real East Coast Main Line, West Highland Line and Jacobite steam service — real stations and views shown",
+ "overlays": {
+  "ends": "🚩 Board &amp; alight",
+  "over": "🛏️ Sleepers &amp; stopovers",
+  "food": "🍽️ Dining car",
+  "view": "🏔️ From the window",
+  "sight": "📍 Excursions &amp; calls",
+  "route": "〰️ The line",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "London",
+   51.5074,
+   -0.1278
+  ],
+  [
+   "York",
+   53.96,
+   -1.0873
+  ],
+  [
+   "Durham",
+   54.7761,
+   -1.5733
+  ],
+  [
+   "Edinburgh",
+   55.9533,
+   -3.1883
+  ],
+  [
+   "Glasgow",
+   55.8642,
+   -4.2518
+  ],
+  [
+   "Fort William",
+   56.8198,
+   -5.1052
+  ],
+  [
+   "Mallaig",
+   57.0064,
+   -5.829
+  ]
+ ],
+ "heritage": [
+  [
+   "Edinburgh Old and New Towns",
+   55.9476,
+   -3.1916,
+   "Edinburgh's Old and New Towns together form one of the most striking historic cityscapes in Britain. The medie",
+   "un_077"
+  ],
+  [
+   "National Museum of Scotland",
+   55.9469,
+   -3.19,
+   "The National Museum of Scotland in Edinburgh brings together the nation's collections of art, science, nature ",
+   "nm_040"
+  ],
+  [
+   "British Museum",
+   51.52,
+   -0.13,
+   "The British Museum in London holds one of the world's greatest collections of human history and culture, with ",
+   "nm_001"
+  ],
+  [
+   "National Gallery, London",
+   51.5089,
+   -0.1283,
+   "The National Gallery on Trafalgar Square holds one of the greatest collections of Western European painting in",
+   "nm_046"
+  ],
+  [
+   "Westminster Abbey",
+   51.4994,
+   -0.1275,
+   "Westminster Abbey in London is one of the most significant religious buildings in Britain and the traditional ",
+   "un_137"
+  ],
+  [
+   "Tower of London",
+   51.5081,
+   -0.0761,
+   "The Tower of London is a historic fortress on the north bank of the Thames at the heart of the British capital",
+   "un_076"
+  ]
+ ],
+ "days": [
+  {
+   "day": 1,
+   "title": "London to York — the East Coast racer",
+   "dist": "300 km",
+   "ascent": "Day 1",
+   "mode": "rail",
+   "color": "#3b5ba5",
+   "summary": "Out of King's Cross on the fastest rails in Britain — cathedral country to York, the railway city, for the Minster and the great museum.",
+   "seg": [
+    [
+     51.5308,
+     -0.1238
+    ],
+    [
+     53.9599,
+     -1.0873
+    ],
+    [
+     53.9576,
+     -1.0932
+    ]
+   ],
+   "stops": [
+    {
+     "type": "start",
+     "icon": "🚩",
+     "name": "London King's Cross — boarding",
+     "lat": 51.5308,
+     "lng": -0.1238,
+     "blurb": "Under the great twin arches where the East Coast expresses have left for Scotland since 1852."
+    },
+    {
+     "type": "sight",
+     "icon": "⛪",
+     "name": "York Minster & the walls",
+     "lat": 53.9599,
+     "lng": -1.0873,
+     "blurb": "North Europe's largest Gothic cathedral above medieval streets — an evening walk on the city walls."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "York — railway-hotel night",
+     "lat": 53.9576,
+     "lng": -1.0932,
+     "blurb": "A grand Victorian railway hotel beside the station — and the National Railway Museum next door for the morning."
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "York to Edinburgh — castles and the sea",
+   "dist": "330 km",
+   "ascent": "Day 2",
+   "mode": "rail",
+   "color": "#2e7d32",
+   "summary": "Durham's cathedral on its rock, the Northumberland coast at the window, over the Royal Border Bridge into Edinburgh.",
+   "seg": [
+    [
+     54.7767,
+     -1.5757
+    ],
+    [
+     55.3925,
+     -1.6132
+    ],
+    [
+     55.9521,
+     -3.189
+    ]
+   ],
+   "stops": [
+    {
+     "type": "sight",
+     "icon": "🏰",
+     "name": "Durham — cathedral on the rock",
+     "lat": 54.7767,
+     "lng": -1.5757,
+     "blurb": "The Norman cathedral and castle rise over the Wear — the finest view from any railway in England."
+    },
+    {
+     "type": "view",
+     "icon": "🌊",
+     "name": "The Northumberland coast",
+     "lat": 55.3925,
+     "lng": -1.6132,
+     "blurb": "Castles and cold blue sea — Alnmouth, Bamburgh's outline, Holy Island across the sands."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Edinburgh — under the Castle",
+     "lat": 55.9521,
+     "lng": -3.189,
+     "blurb": "Waverley station sits in the garden valley below the Castle rock — the Old Town rises straight from the platform ends."
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Edinburgh to Fort William — the West Highland Line",
+   "dist": "Rannoch Moor",
+   "ascent": "Day 3",
+   "mode": "rail",
+   "color": "#C8873A",
+   "summary": "Across to Glasgow and up the most scenic railway in Britain — lochside, moor and mountain to the foot of Ben Nevis.",
+   "seg": [
+    [
+     55.8617,
+     -4.2583
+    ],
+    [
+     56.6857,
+     -4.5786
+    ],
+    [
+     56.8198,
+     -5.1052
+    ]
+   ],
+   "stops": [
+    {
+     "type": "food",
+     "icon": "🍽️",
+     "name": "Glasgow — a Highland breakfast",
+     "lat": 55.8617,
+     "lng": -4.2583,
+     "blurb": "Queen Street station and a proper breakfast before the line turns north along the Clyde."
+    },
+    {
+     "type": "view",
+     "icon": "🏞️",
+     "name": "Rannoch Moor — the empty miles",
+     "lat": 56.6857,
+     "lng": -4.5786,
+     "blurb": "The line floats on brushwood across a wilderness no road crosses — deer on the moor, weather rolling in."
+    },
+    {
+     "type": "over",
+     "icon": "🛏️",
+     "name": "Fort William — beneath Ben Nevis",
+     "lat": 56.8198,
+     "lng": -5.1052,
+     "blurb": "The Highland junction town under Britain's highest mountain — sleeper carriages idle at the platform."
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "title": "The steam finale — Fort William to Mallaig",
+   "dist": "67 km",
+   "ascent": "Day 4",
+   "mode": "rail",
+   "color": "#b3362e",
+   "summary": "The Jacobite steam train over the Glenfinnan Viaduct to the silver sands and the fishing quay at Mallaig, the Hebrides across the water.",
+   "seg": [
+    [
+     56.8762,
+     -5.4318
+    ],
+    [
+     56.9107,
+     -5.8398
+    ],
+    [
+     57.0064,
+     -5.829
+    ]
+   ],
+   "stops": [
+    {
+     "type": "view",
+     "icon": "🌉",
+     "name": "Glenfinnan Viaduct",
+     "lat": 56.8762,
+     "lng": -5.4318,
+     "blurb": "Twenty-one arches curving above the glen with Loch Shiel beyond — steam, whistle and the most famous railway view in the world."
+    },
+    {
+     "type": "view",
+     "icon": "🏖️",
+     "name": "The silver sands of Morar",
+     "lat": 56.9107,
+     "lng": -5.8398,
+     "blurb": "White shell-sand bays and turquoise water — the Hebridean light at the carriage window."
+    },
+    {
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Mallaig — journey's end",
+     "lat": 57.0064,
+     "lng": -5.829,
+     "blurb": "The rails end at the harbour wall: landed prawns on the quay, the Isle of Skye across the Sound."
+    }
+   ]
+  }
+ ]
+}

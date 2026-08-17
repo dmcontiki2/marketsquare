@@ -34,6 +34,9 @@ support.html               | support.html
 # ── Adventures interactive maps (served from /static/) ───────────────────────
 adventures_reserve_map.html | static/adventures_reserve_map.html
 adventures_us_map.html      | static/adventures_us_map.html
+adventures_us_rail_map.html | static/adventures_us_rail_map.html
+adventures_gb_rail_map.html | static/adventures_gb_rail_map.html
+adventures_au_rail_map.html | static/adventures_au_rail_map.html
 adventures_uk_map.html      | static/adventures_uk_map.html
 adventures_gb_map.html      | static/adventures_gb_map.html
 adventures_au_map.html      | static/adventures_au_map.html

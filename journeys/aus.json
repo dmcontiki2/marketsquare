@@ -49,7 +49,15 @@
    145.567
   ]
  ],
- "heritage": [],
+ "heritage": [
+  [
+   "Daintree National Park",
+   -16.17,
+   145.42,
+   "The Daintree is the world's oldest continuously surviving tropical rainforest at an estimated 180 million year",
+   "np_018"
+  ]
+ ],
  "days": [
   {
    "day": 1,
