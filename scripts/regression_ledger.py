@@ -4286,7 +4286,7 @@ def rg_planner_lane_dark_and_whole():
 
 @entry("RG-0098", "Tuppence money maths floats on LIVE forex -- the R36/T and R90/$5 hardcodes "
        "are retired and /api/fx serves sane keyless-feed rates",
-       OPEN, fixed_on="",
+       LOCKED, fixed_on="2026-08-17",
        scope="FX-LIVE-1, all markets: server charge lane (/payment/initialize + the $5 global sub) "
              "+ /api/fx + ms.js display labels (topup modal, AI pack, quantity picker, localPrice). "
              "Feeds: Frankfurter/ECB then open.er-api, both keyless/free; static parachute only "
