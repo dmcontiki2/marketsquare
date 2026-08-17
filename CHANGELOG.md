@@ -1,3 +1,65 @@
+## 2026-08-17 — SSH lockout diagnosed + fixed at the Hetzner panel (SSH-LOCKOUT-1)
+Post-blackout, port 22 timed out for BOTH David and the session while the site served
+normally. Root cause found in the Hetzner console Activities feed: the
+trustsquare-origin-lockdown Cloud Firewall (applied ~11 Aug, part of the G2 origin
+hardening) allowlists SSH to two of David's home IPs — and the blackout's router
+reboot moved him to a NEW IP (197.185.190.11; the Cowork sandbox shares his egress,
+which is why both lanes died together and why sessions ever had SSH at all). Fix,
+driven in David's Chrome with his go: ADDED .190.11 to the SSH rule (nothing removed),
+"Firewall rule added" confirmed, SSH verified restored, ops chips ALL GREEN.
+Standing lesson for the runbook: David's home IP is dynamic — after any
+power/router event, re-add the current IP at Hetzner > Firewalls >
+trustsquare-origin-lockdown (the Hetzner web console is the break-glass; deploys are
+pull-based and never depended on SSH). Consider a small stale-IP pruning pass with
+David later. Cost model impact: none.
+
+## 2026-08-17 — maintenance-loop: quiet run, ledger green, RG-0098 info tidied
+
+- Pre-run regression ledger: GREEN (every locked fix holding; RG-0075 and RG-0090 remain
+  the two known open defects, unchanged).
+- Shadow maintenance agent ran foreground (run 2026-08-17T05:32:59Z, brain KEYED anthropic,
+  SHADOW mode): fault queue 0 seen / 0 acted — nothing new, nothing fix-shipped awaiting
+  verification (queue totals: 26 verified, 7 closed, 2 duplicate, 0 open). Heartbeat
+  confirmed live at /dashboard/maint (this run's timestamp).
+- RG-0098 (FX-LIVE-1) found already promoted to LOCKED (fixed_on 2026-08-17) and passing
+  live (/api/fx ZAR 16.16 via frankfurter). Its check still printed the stale
+  "READY TO LOCK" info string from its OPEN days — misleading for any session reading the
+  run. Tidied the info string only (no assertion touched):
+  scripts/regression_ledger.py, .bak beside it, py_compile clean.
+- Escalation brief: no escalations in last 24h, no brief written.
+- Post-run ledger: GREEN, exit 0.
+
+## 2026-08-17 — Lockout prevention trio (David's asks after SSH-LOCKOUT-1)
+The blackout lockout turned out to be TWO stale allowlists: the Hetzner SSH rule AND
+the Cloudflare "PRELAUNCH GATE - block all except allowlisted IPs" WAF rule (found via
+David's Ray ID in Security Events; his new IP added to both by hand, verified: root
+200 / terms 200 / gated 401 / health 200 / ssh open). Preventions built:
+(1) scripts/hetzner_fw_selfheal.py v2 — self-heals BOTH allowlists from David's own
+machine (which by definition owns the new IP); additive only; needs two David-only
+tokens: .secrets/hetzner_token.txt (Cloud API r+w) and .secrets/cf_waf_token.txt
+(zone-scoped Firewall edit). Refuses safely with instructions until provided.
+(2) RG-0099 LOCKED — the tripwire: port-22 reach + CF-not-blocking-own-IP from the
+session vantage; a red names the exact fix line, no more mystery mornings.
+(3) FALSE-FAIL-1 on the dashboard infra card — a failed TEST REQUEST (auth/transport)
+now paints amber "? CAN'T TEST" with the honest reason; red FAIL is reserved for
+probes that RAN and failed (David's screenshot showed every row "failing" identically
+— that was a dead admin session, not thirteen dead services).
+OPEN QUESTION flagged for David: Security Analytics shows ~91k requests/24h with only
+4.19k mitigated — worth reading Top Statistics together; that volume is not our traffic.
+Cost model impact: none.
+
+## 2026-08-17 — COVERAGE-1: the 91k mystery closed at the root
+The mystery traffic was OURS: the /launch/ CityLauncher dashboard swept full /listings
+payloads for all 93 cities inside its 60-second refresh loop — ~40k requests and
+several GB per day from one open tab (referer-proven; the vestigial ph_ filter it
+looped for matches ZERO rows). Fix at the root per David ("close it now or it becomes
+a huge issue later"): BEA GET /listings/coverage returns every city's counts
+(total/demo/real) in one GROUP BY; the dashboard now makes ONE call per refresh with
+the old loop kept only as a fallback for a not-yet-deployed BEA. ~99% request cut,
+analytics noise gone, edge defenses no longer provoked. RG-0100 LOCKED (endpoint +
+no-sweep + live JSON). Cost model impact: POSITIVE — removes GBs/day of self-inflicted
+origin transfer.
+
 ## 2026-08-17 — RG-0098 promoted OPEN → LOCKED (live FX passing)
 The overnight verification run found FX-LIVE-1's assertion passing (/api/fx live and
 sane, ZAR 16.16 via frankfurter). Per the standing ledger rule the entry is promoted to
