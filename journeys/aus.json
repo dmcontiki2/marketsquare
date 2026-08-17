@@ -1,0 +1,224 @@
+{
+ "id": "aus",
+ "out": "adventures_au_map.html",
+ "photo_dir": "assets/journey/aus",
+ "title": "Great Barrier Reef Dive & Snorkel — MarketSquare",
+ "pill": "★ GREAT BARRIER REEF · DIVE & SNORKEL DAY",
+ "h1": "Great Barrier Reef Dive & Snorkel",
+ "sub": "A guided day on the outer reef off Tropical North Queensland — tap a leg to follow it: out to the ribbon reefs, the dive sites, and the island eco-stay.",
+ "cap": "The Great Barrier Reef, the Agincourt ribbon reefs and Michaelmas Cay are real, protected public places off Queensland, shown accurately with bearings and facts from public sources. The dive operator, vessel and island eco-stay are a generic composite (SO-1b) — a demo a real reef operator could publish. AI imagery. Marine sightings are never guaranteed.",
+ "unit": "Leg",
+ "stat1_icon": "🪸",
+ "stat2_icon": "⛴️",
+ "route_summary": "<b>Full reef day</b> · out from Port Douglas to the Agincourt ribbon reefs · coral gardens, turtles, reef sharks &amp; manta.",
+ "legend": "The Great Barrier Reef, the Agincourt ribbon reefs and Michaelmas Cay are real, protected public places off Queensland, shown accurately with bearings and facts from public sources. The dive operator, vessel and island eco-stay are a generic composite (SO-1b) — a demo a real reef operator could publish. AI imagery. Marine sightings are never guaranteed.",
+ "overlays": {
+  "ends": "🚩 Port &amp; return",
+  "over": "🛏️ Island eco-stay",
+  "food": "🍽️ On-board galley",
+  "view": "🤿 Dive &amp; snorkel sites",
+  "sight": "🪸 Reef &amp; wildlife",
+  "route": "〰️ Reef passage",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "Port Douglas",
+   -16.484,
+   145.466
+  ],
+  [
+   "Cairns",
+   -16.92,
+   145.77
+  ],
+  [
+   "Cape Tribulation",
+   -16.083,
+   145.466
+  ],
+  [
+   "Green Island",
+   -16.759,
+   145.972
+  ],
+  [
+   "Low Isles",
+   -16.383,
+   145.567
+  ]
+ ],
+ "heritage": [],
+ "days": [
+  {
+   "day": 1,
+   "title": "Out to the reef",
+   "dist": "⛵ 1 hr run",
+   "ascent": "Morning",
+   "mode": "drive",
+   "color": "#0e7490",
+   "summary": "Cast off from Port Douglas and run an hour across the blue to the outer edge of the Great Barrier Reef — the ribbon reefs on the very rim of the continental shelf.",
+   "seg": [
+    [
+     -16.4838,
+     145.4658
+    ],
+    [
+     -16.03,
+     145.86
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -16.4838,
+     "lng": 145.4658,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Port Douglas · cast off",
+     "blurb": "Morning departure from the marina — a briefing over the water as the mainland drops away and the reef line appears ahead.",
+     "photo": "leg1_01.jpg"
+    },
+    {
+     "lat": -16.03,
+     "lng": 145.86,
+     "type": "sight",
+     "icon": "🐠",
+     "name": "Agincourt Ribbon Reefs",
+     "blurb": "The outer edge of the Great Barrier Reef — clear ocean water over ribbon reefs that fall away into the deep blue, the base for the day's dives and snorkels.",
+     "photo": "leg1_02.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "The dive sites",
+   "dist": "🤿 Guided dives",
+   "ascent": "Midday",
+   "mode": "drive",
+   "color": "#0891b2",
+   "summary": "Into the water — colour-drenched coral gardens, a guided drift along the reef wall, and the cleaning station where the big animals gather.",
+   "seg": [
+    [
+     -16.05,
+     145.87
+    ],
+    [
+     -16.02,
+     145.885
+    ],
+    [
+     -16.062,
+     145.85
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -16.05,
+     "lng": 145.87,
+     "type": "sight",
+     "icon": "🪸",
+     "name": "Coral gardens",
+     "blurb": "Shallow bommies of staghorn and plate coral in every colour — the classic first snorkel, clownfish guarding their anemones.",
+     "photo": "leg2_01.jpg"
+    },
+    {
+     "lat": -16.02,
+     "lng": 145.885,
+     "type": "view",
+     "icon": "🤿",
+     "name": "The reef wall",
+     "blurb": "A guided dive down the ribbon-reef wall — sea fans, giant clams and white-tip reef sharks cruising along the drop-off.",
+     "photo": "leg2_02.jpg"
+    },
+    {
+     "lat": -16.062,
+     "lng": 145.85,
+     "type": "view",
+     "icon": "🐟",
+     "name": "Manta cleaning station",
+     "blurb": "A cleaning station where manta rays and turtles hover while cleaner wrasse tend them — one of the reef's great gathering points.",
+     "photo": "leg2_03.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Snorkel & sail home",
+   "dist": "🐢 Turtles",
+   "ascent": "Afternoon → dusk",
+   "mode": "drive",
+   "color": "#C8873A",
+   "summary": "The gentle end of the day — turtles on the bommies, a wheeling bait ball, a seabird sand cay, and a low-key island eco-stay with the reef at the doorstep.",
+   "seg": [
+    [
+     -16.04,
+     145.862
+    ],
+    [
+     -16.03,
+     145.892
+    ],
+    [
+     -16.6,
+     145.98
+    ],
+    [
+     -16.61,
+     145.985
+    ],
+    [
+     -16.611,
+     145.986
+    ]
+   ],
+   "stops": [
+    {
+     "lat": -16.04,
+     "lng": 145.862,
+     "type": "sight",
+     "icon": "🐢",
+     "name": "Turtle bommie",
+     "blurb": "Green and hawksbill turtles resting on the coral heads — often calm enough to drift quietly alongside as they rise to breathe.",
+     "photo": "leg3_01.jpg"
+    },
+    {
+     "lat": -16.03,
+     "lng": 145.892,
+     "type": "sight",
+     "icon": "🐠",
+     "name": "The bait ball",
+     "blurb": "A silver river of trevally and fusiliers wheeling over the reef — the whole school turning as one when a mackerel drives through.",
+     "photo": "leg3_02.jpg"
+    },
+    {
+     "lat": -16.6,
+     "lng": 145.98,
+     "type": "sight",
+     "icon": "🏖️",
+     "name": "Michaelmas Cay",
+     "blurb": "A tiny sand island on the reef and a protected seabird rookery — thousands of terns and boobies wheeling above the white sand.",
+     "photo": "leg3_03.jpg"
+    },
+    {
+     "lat": -16.61,
+     "lng": 145.985,
+     "type": "over",
+     "icon": "🏝️",
+     "name": "Reef Island Eco-Stay",
+     "blurb": "Where the trip ends — a low-impact island eco-stay of timber and canvas, the reef at the doorstep and no crowds. A generic composite, not a specific resort.",
+     "photo": "leg3_04.jpg"
+    },
+    {
+     "lat": -16.611,
+     "lng": 145.986,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Sundowner over the water",
+     "blurb": "The day's last snorkel, then a cold drink at the water's edge as the reef flat turns gold and the terns come in to roost.",
+     "photo": "leg3_05.jpg"
+    }
+   ]
+  }
+ ]
+}

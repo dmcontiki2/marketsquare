@@ -1,0 +1,237 @@
+{
+ "id": "usa",
+ "out": "adventures_us_map.html",
+ "photo_dir": "assets/journey/usa",
+ "title": "Yellowstone Country Big-Game Safari — MarketSquare",
+ "pill": "★ YELLOWSTONE COUNTRY · BIG-GAME SAFARI",
+ "h1": "Yellowstone Country Big-Game Safari",
+ "sub": "A guided wildlife drive through the world's first national park — tap a leg to ride it: the valleys and their herds, the geyser basins, and the timber lodge where you stay.",
+ "cap": "Yellowstone National Park, the Lamar and Hayden valleys, the Grand Canyon of the Yellowstone and Old Faithful are real, protected public places, shown accurately with bearings and facts from public sources. The operator, safari vehicle and lodge are a generic composite (SO-1b) — a demo a real Yellowstone-country operator could publish. AI imagery. Wildlife sightings are never guaranteed.",
+ "unit": "Leg",
+ "stat1_icon": "🦬",
+ "stat2_icon": "🚙",
+ "route_summary": "<b>Full safari loop</b> · Lamar &amp; Hayden valleys to the geyser basins · bison, wolves, grizzly, elk.",
+ "legend": "Yellowstone National Park, the Lamar and Hayden valleys, the Grand Canyon of the Yellowstone and Old Faithful are real, protected public places, shown accurately with bearings and facts from public sources. The operator, safari vehicle and lodge are a generic composite (SO-1b) — a demo a real Yellowstone-country operator could publish. AI imagery. Wildlife sightings are never guaranteed.",
+ "overlays": {
+  "ends": "🚩 Start &amp; finish",
+  "over": "🛏️ Timber lodge",
+  "food": "🍽️ Dining",
+  "view": "🏔️ Geyser basins &amp; views",
+  "sight": "🦬 Wildlife valleys",
+  "route": "〰️ Safari loop",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "Gardiner",
+   45.031,
+   -110.706
+  ],
+  [
+   "Cooke City",
+   45.021,
+   -109.928
+  ],
+  [
+   "Canyon Village",
+   44.736,
+   -110.492
+  ],
+  [
+   "West Yellowstone",
+   44.662,
+   -111.104
+  ],
+  [
+   "Mammoth",
+   44.976,
+   -110.703
+  ]
+ ],
+ "heritage": [],
+ "days": [
+  {
+   "day": 1,
+   "title": "Lamar Valley — the herds",
+   "dist": "🦬 Bison & wolves",
+   "ascent": "Dawn drive",
+   "mode": "drive",
+   "color": "#3b5ba5",
+   "summary": "First light in the Lamar — broad grasslands with the park's greatest concentration of wildlife, and the valley where the wolf packs hunt.",
+   "seg": [
+    [
+     44.898,
+     -110.238
+    ],
+    [
+     44.918,
+     -110.31
+    ],
+    [
+     44.916,
+     -110.408
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 44.898,
+     "lng": -110.238,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Lamar Valley · America's Serengeti",
+     "blurb": "Broad glacial grasslands where bison herds graze thousands strong and pronghorn run the flats — the richest wildlife-watching in Yellowstone.",
+     "photo": "leg1_01.jpg"
+    },
+    {
+     "lat": 44.918,
+     "lng": -110.31,
+     "type": "sight",
+     "icon": "🐺",
+     "name": "Slough Creek · wolf country",
+     "blurb": "Spotting-scope country at first light — the meadows where wolf-watchers gather to follow the Lamar packs and their pups.",
+     "photo": "leg1_02.jpg"
+    },
+    {
+     "lat": 44.916,
+     "lng": -110.408,
+     "type": "view",
+     "icon": "🫎",
+     "name": "Tower–Roosevelt",
+     "blurb": "Pine ridges and the Tower Fall overlook on the road to the north range — black bear, moose in the willows and elk along the river.",
+     "photo": "leg1_03.jpg"
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Hayden Valley & the Grand Canyon",
+   "dist": "🐻 Grizzly",
+   "ascent": "Midday",
+   "mode": "drive",
+   "color": "#1f6f52",
+   "summary": "South over Dunraven Pass to the park's other great valley and the coloured gorge that gave Yellowstone its name.",
+   "seg": [
+    [
+     44.66,
+     -110.47
+    ],
+    [
+     44.64,
+     -110.44
+    ],
+    [
+     44.7205,
+     -110.4993
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 44.66,
+     "lng": -110.47,
+     "type": "sight",
+     "icon": "🦌",
+     "name": "Hayden Valley",
+     "blurb": "Bison, elk and coyote on the Yellowstone River flats, steam drifting from the far bank — one of the best places in the park to glass for grizzly.",
+     "photo": "leg2_01.jpg"
+    },
+    {
+     "lat": 44.64,
+     "lng": -110.44,
+     "type": "sight",
+     "icon": "🐻",
+     "name": "Grizzly overlook",
+     "blurb": "Where the guides glass the tree line at dusk — grizzly and their cubs turning over the meadows above the river.",
+     "photo": "leg2_02.jpg"
+    },
+    {
+     "lat": 44.7205,
+     "lng": -110.4993,
+     "type": "sight",
+     "icon": "🏔️",
+     "name": "Grand Canyon of the Yellowstone",
+     "blurb": "Artist Point over the Lower Falls — a 300 m gorge of yellow and rose volcanic rock that gave the park and its river their name.",
+     "photo": "leg2_03.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Geyser basins & the lodge",
+   "dist": "♨️ Old Faithful",
+   "ascent": "Afternoon → night",
+   "mode": "drive",
+   "color": "#C8873A",
+   "summary": "West to the greatest field of geysers on earth, then back to the timber lodge for a fire under the stars.",
+   "seg": [
+    [
+     44.4605,
+     -110.8281
+    ],
+    [
+     44.5251,
+     -110.8382
+    ],
+    [
+     44.87,
+     -110.73
+    ],
+    [
+     44.735,
+     -110.49
+    ],
+    [
+     44.736,
+     -110.491
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 44.4605,
+     "lng": -110.8281,
+     "type": "sight",
+     "icon": "♨️",
+     "name": "Old Faithful",
+     "blurb": "The most famous geyser on earth — erupting to 55 m roughly every 90 minutes, at the heart of the densest concentration of geysers in the world.",
+     "photo": "leg3_01.jpg"
+    },
+    {
+     "lat": 44.5251,
+     "lng": -110.8382,
+     "type": "view",
+     "icon": "🌈",
+     "name": "Grand Prismatic Spring",
+     "blurb": "The largest hot spring in the United States — a 90 m pool ringed in bacterial bands of orange, gold and deep blue.",
+     "photo": "leg3_02.jpg"
+    },
+    {
+     "lat": 44.87,
+     "lng": -110.73,
+     "type": "sight",
+     "icon": "🫎",
+     "name": "Willow flats · moose",
+     "blurb": "Wet meadows where moose browse the willows in the low light — the quiet end of the day on the north road.",
+     "photo": "leg3_03.jpg"
+    },
+    {
+     "lat": 44.735,
+     "lng": -110.49,
+     "type": "over",
+     "icon": "🏠",
+     "name": "The Great Lodge · your stay",
+     "blurb": "A timber-and-stone retreat with a great stone hearth, elk over the mantel and a long porch on the pines. A generic composite, not a specific lodge.",
+     "photo": "leg3_04.jpg"
+    },
+    {
+     "lat": 44.736,
+     "lng": -110.491,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Firepit & big sky",
+     "blurb": "Where the day ends — a fire under the Milky Way, the guides' stories of the day's sightings, and the elk bugling in the dark.",
+     "photo": "leg3_05.jpg"
+    }
+   ]
+  }
+ ]
+}

@@ -4213,17 +4213,18 @@ def rg_pin_spread_in_generator():
     if "PIN-SPREAD-1" not in tpl:
         out.append((FAIL, "journey_template.html lost the PIN-SPREAD-1 block -- newly generated "
                           "maps will stack pins again"))
-    import glob as _g
-    gen = [p for p in _g.glob(os.path.join(REPO, "adventures_*_map.html"))
-           if ".bak" not in p]
+    import glob as _g, json as _j
     missing = []
-    for p in gen:
+    for sp in _g.glob(os.path.join(REPO, "journeys", "*.json")):
+        if ".bak" in sp: continue
         try:
-            body = open(p, encoding="utf-8", errors="replace").read()
-        except OSError:
-            continue
-        if "build_journey.py" in body and "PIN-SPREAD-1" not in body:
-            missing.append(os.path.basename(p))
+            spec = _j.load(open(sp, encoding="utf-8"))
+            outp = os.path.join(REPO, spec.get("out", spec["id"] + "_journey.html"))
+            body = open(outp, encoding="utf-8", errors="replace").read()
+        except Exception as e:
+            missing.append(os.path.basename(sp) + " (unreadable: %s)" % str(e)[:40]); continue
+        if "PIN-SPREAD-1" not in body:
+            missing.append(os.path.basename(outp))
     if missing:
         out.append((FAIL, "generated map(s) missing PIN-SPREAD-1 (stale build): " + ", ".join(missing)))
     if not out:

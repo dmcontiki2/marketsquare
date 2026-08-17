@@ -1,0 +1,252 @@
+{
+ "id": "gbr",
+ "out": "adventures_gb_map.html",
+ "photo_dir": "assets/journey/gbr",
+ "title": "Stonehenge & Wessex Heritage Tour — MarketSquare",
+ "pill": "★ WESSEX · STONEHENGE HERITAGE DAY",
+ "h1": "Stonehenge & Wessex Heritage Tour",
+ "sub": "A guided day out across ancient Wessex — tap a leg to follow it: the great stones, the chalk downland, the cathedral city, and the country house where you stay.",
+ "cap": "Stonehenge, Avebury, Silbury Hill, West Kennet Long Barrow, the Uffington White Horse and Salisbury Cathedral are real UNESCO World-Heritage and public sites, shown accurately with bearings and facts from public sources. The tour operator, vehicle and country-house stay are a generic composite (SO-1b) — a demo a real Wessex operator could publish for their own day out. AI imagery.",
+ "unit": "Leg",
+ "stat1_icon": "🗿",
+ "stat2_icon": "🚗",
+ "route_summary": "<b>Full day</b> · Salisbury Plain & the Marlborough Downs · Stonehenge, Avebury &amp; Salisbury.",
+ "legend": "Stonehenge, Avebury, Silbury Hill, West Kennet Long Barrow, the Uffington White Horse and Salisbury Cathedral are real UNESCO World-Heritage and public sites, shown accurately with bearings and facts from public sources. The tour operator, vehicle and country-house stay are a generic composite (SO-1b) — a demo a real Wessex operator could publish for their own day out. AI imagery.",
+ "overlays": {
+  "ends": "🚩 Start &amp; finish",
+  "over": "🛏️ Country house",
+  "food": "🍽️ Pubs &amp; tea",
+  "view": "🏔️ Chalk downland",
+  "sight": "🗿 Ancient stones &amp; sites",
+  "route": "〰️ Heritage route",
+  "towns": "◉ Towns",
+  "her": "🏛️ Heritage sites"
+ },
+ "towns": [
+  [
+   "Salisbury",
+   51.0688,
+   -1.7945
+  ],
+  [
+   "Amesbury",
+   51.172,
+   -1.777
+  ],
+  [
+   "Marlborough",
+   51.421,
+   -1.727
+  ],
+  [
+   "Devizes",
+   51.352,
+   -1.995
+  ],
+  [
+   "Warminster",
+   51.204,
+   -2.181
+  ],
+  [
+   "Andover",
+   51.209,
+   -1.48
+  ]
+ ],
+ "heritage": [],
+ "days": [
+  {
+   "day": 1,
+   "title": "The great stones",
+   "dist": "🗿 Stonehenge",
+   "ascent": "Morning",
+   "mode": "drive",
+   "color": "#3b5ba5",
+   "summary": "The day opens on Salisbury Plain at the most famous prehistoric monument in Europe, then the ceremonial Avenue and the builders' henge nearby.",
+   "seg": [
+    [
+     51.1789,
+     -1.8262
+    ],
+    [
+     51.181,
+     -1.823
+    ],
+    [
+     51.1917,
+     -1.7869
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 51.1789,
+     "lng": -1.8262,
+     "type": "start",
+     "icon": "🚩",
+     "name": "Stonehenge · the sarsen circle",
+     "blurb": "The most famous prehistoric monument in Europe — a ring of sarsen and bluestone raised on Salisbury Plain around 2500 BC and aligned to the solstice sun. A UNESCO World Heritage Site.",
+     "photo": "leg1_01.jpg"
+    },
+    {
+     "lat": 51.181,
+     "lng": -1.823,
+     "type": "view",
+     "icon": "🌄",
+     "name": "The Avenue & Heel Stone",
+     "blurb": "The ceremonial approach the builders walked — a low earthwork running to the outlying Heel Stone, where the midsummer sun rises over the circle."
+    },
+    {
+     "lat": 51.1917,
+     "lng": -1.7869,
+     "type": "sight",
+     "icon": "🪵",
+     "name": "Durrington Walls & Woodhenge",
+     "blurb": "A vast henge and the builders' village beside it — where the people who raised Stonehenge lived and feasted midwinter."
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "title": "Ancient Wessex",
+   "dist": "🪨 Avebury",
+   "ascent": "Midday",
+   "mode": "drive",
+   "color": "#1f6f52",
+   "summary": "North onto the Marlborough Downs — the greatest stone circle in the world, Europe's tallest prehistoric mound, a tomb you can enter, and Britain's oldest hill figure.",
+   "seg": [
+    [
+     51.4286,
+     -1.8541
+    ],
+    [
+     51.4156,
+     -1.8574
+    ],
+    [
+     51.4085,
+     -1.8511
+    ],
+    [
+     51.5783,
+     -1.5667
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 51.4286,
+     "lng": -1.8541,
+     "type": "sight",
+     "icon": "🪨",
+     "name": "Avebury · the great circle",
+     "blurb": "The largest stone circle in the world — so vast a village sits inside it. Older and greater in span than Stonehenge, ringed by a huge Neolithic bank and ditch. UNESCO World Heritage.",
+     "photo": "leg2_01.jpg"
+    },
+    {
+     "lat": 51.4156,
+     "lng": -1.8574,
+     "type": "sight",
+     "icon": "⛰️",
+     "name": "Silbury Hill",
+     "blurb": "The tallest prehistoric mound in Europe — 30 m of chalk raised by hand about 4,400 years ago, its purpose still unknown."
+    },
+    {
+     "lat": 51.4085,
+     "lng": -1.8511,
+     "type": "sight",
+     "icon": "🏛️",
+     "name": "West Kennet Long Barrow",
+     "blurb": "A 5,600-year-old chambered tomb you can still step inside — one of the largest and best-preserved Neolithic burial mounds in Britain.",
+     "photo": "leg2_03.jpg"
+    },
+    {
+     "lat": 51.5783,
+     "lng": -1.5667,
+     "type": "view",
+     "icon": "🏇",
+     "name": "Uffington White Horse",
+     "blurb": "A 3,000-year-old chalk-cut horse streaming across the downs — the oldest hill figure in Britain, best read from the ridgeway above.",
+     "photo": "leg2_04.jpg"
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "title": "Cathedral city & the country house",
+   "dist": "⛪ Salisbury",
+   "ascent": "Afternoon → dusk",
+   "mode": "drive",
+   "color": "#C8873A",
+   "summary": "South to the old hillfort and the cathedral with Britain's tallest spire, then the golden-hour drive across Cranborne Chase to a Georgian country house for the night.",
+   "seg": [
+    [
+     51.0933,
+     -1.8047
+    ],
+    [
+     51.0649,
+     -1.7975
+    ],
+    [
+     50.98,
+     -2.03
+    ],
+    [
+     51.082,
+     -1.86
+    ],
+    [
+     51.0828,
+     -1.8608
+    ]
+   ],
+   "stops": [
+    {
+     "lat": 51.0933,
+     "lng": -1.8047,
+     "type": "sight",
+     "icon": "🏰",
+     "name": "Old Sarum",
+     "blurb": "The great Iron-Age hillfort that became the first Salisbury — ramparts, a ruined royal castle and the footings of the original cathedral.",
+     "photo": "leg3_01.jpg"
+    },
+    {
+     "lat": 51.0649,
+     "lng": -1.7975,
+     "type": "sight",
+     "icon": "⛪",
+     "name": "Salisbury Cathedral",
+     "blurb": "Britain's tallest spire at 123 m, and home to one of only four surviving 1215 originals of Magna Carta, in a cathedral close little changed in 800 years.",
+     "photo": "leg3_02.jpg"
+    },
+    {
+     "lat": 50.98,
+     "lng": -2.03,
+     "type": "food",
+     "icon": "🦌",
+     "name": "Cranborne Chase · downland dusk",
+     "blurb": "A protected chalk landscape of ancient droves and fallow deer — the golden-hour run back, hares in the barley and red kites overhead.",
+     "photo": "leg3_03.jpg"
+    },
+    {
+     "lat": 51.082,
+     "lng": -1.86,
+     "type": "over",
+     "icon": "🏠",
+     "name": "The Country House · your stay",
+     "blurb": "Where the day ends — a Georgian manor of mellow stone, log fires, a walled garden and a long candle-lit table. A generic composite, not a specific hotel.",
+     "photo": "leg3_04.jpg"
+    },
+    {
+     "lat": 51.0828,
+     "lng": -1.8608,
+     "type": "finish",
+     "icon": "🏁",
+     "name": "Slow country morning",
+     "blurb": "Breakfast in the orangery before you set out — local eggs, garden fruit and a pot of proper tea.",
+     "photo": "leg3_05.jpg"
+    }
+   ]
+  }
+ ]
+}
