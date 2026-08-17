@@ -18488,3 +18488,26 @@ def planner_map(sid: int, email: str, _key: str = Depends(auth.require_api_key))
     html, _f, _m = _jr.render_spec(json.loads(row["spec_json"]), template, media="url")
     from fastapi.responses import HTMLResponse
     return HTMLResponse(html)
+
+
+@app.get("/listings/coverage")
+def listings_coverage():
+    """COVERAGE-1 (17 Aug 2026, David: close it now): per-city listing counts in ONE
+    call. Replaces the CityLauncher dashboard's 93-city /listings sweep (~40k req/day,
+    several GB — found while attributing the 91k-request mystery). Counts live rows;
+    is_demo split included so the dashboard can show real vs demo coverage."""
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT city, COUNT(*) AS n, "
+            "SUM(CASE WHEN COALESCE(is_demo,0)=1 THEN 1 ELSE 0 END) AS demo "
+            "FROM listings GROUP BY city").fetchall()
+    finally:
+        conn.close()
+    cities = {}
+    for r in rows:
+        if r["city"]:
+            cities[r["city"]] = {"total": r["n"], "demo": r["demo"] or 0,
+                                 "real": r["n"] - (r["demo"] or 0)}
+    from datetime import datetime as _dt
+    return {"cities": cities, "generated_at": _dt.utcnow().isoformat() + "Z"}

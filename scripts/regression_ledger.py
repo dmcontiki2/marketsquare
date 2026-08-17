@@ -4376,5 +4376,43 @@ def rg_management_lanes_reachable():
     return out
 
 
+
+@entry("RG-0100", "The CityLauncher dashboard reads coverage in ONE call: /listings/coverage "
+       "answers with per-city counts, and the dashboard source carries no bare city sweep",
+       LOCKED, fixed_on="2026-08-17",
+       scope="BEA /listings/coverage + CityLauncher dashboard/citylauncher.html (COVERAGE-1). "
+             "Guards the self-DDoS class: an open monitoring tab must never generate tens of "
+             "thousands of heavy origin hits per day",
+       ref="COVERAGE-1, 17 Aug 2026 (David: close it now or future-us inherits it). The 91k-"
+           "request mystery was the /launch/ dashboard sweeping full /listings payloads for 93 "
+           "cities inside a 60s refresh loop (~40k req + GBs/day from one tab). One aggregate "
+           "GROUP BY replaces the sweep; the old loop survives only as a fallback when the "
+           "coverage endpoint is absent.")
+def rg_coverage_one_call():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None and '"/listings/coverage"' not in bea:
+        out.append((FAIL, "bea_main.py lost /listings/coverage -- the dashboard will fall back "
+                          "to the 93-city sweep"))
+    try:
+        dash = open(os.path.join(REPO, "..", "CityLauncher", "dashboard", "citylauncher.html"),
+                    encoding="utf-8", errors="replace").read()
+        if "COVERAGE-1" not in dash:
+            out.append((FAIL, "CityLauncher dashboard lost the COVERAGE-1 path -- sweep is back"))
+    except OSError:
+        pass  # CityLauncher repo not mounted -- BEA half asserted above
+    _require_net()
+    body = _get("/listings/coverage")
+    try:
+        d = json.loads(body)
+        if not isinstance(d.get("cities"), dict) or not d["cities"]:
+            out.append((FAIL, "/listings/coverage answers but carries no cities dict"))
+    except Exception:
+        out.append((FAIL, "/listings/coverage did not answer valid JSON"))
+    if not out:
+        out.append((INFO, "coverage in one call (%d cities)" % len(d["cities"])))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
