@@ -1,5 +1,5 @@
 {
- "next_id": 48,
+ "next_id": 50,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -80,11 +80,11 @@
   },
   "DW-010": {
    "first_seen": "2026-08-03",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "MEDIUM",
    "source": "cc_age_check (Monday lane)",
    "status": "OPEN",
-   "summary": "CC-002 open 67d (4/5 STAGED, Fable run 10 Jun) vs 7d threshold; siblings pass"
+   "summary": "CC-002 open 68d (4/5 STAGED, Fable run 10 Jun) vs 7d threshold; siblings pass"
   },
   "DW-011": {
    "first_seen": "2026-08-03",
@@ -174,11 +174,11 @@
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "Heartbeat lane bea_main.py:18280/18281 logs spend, no _check_cost_ceiling; only pre-existing warnings in today sweep"
+   "summary": "Heartbeat lane bea_main.py:18336/18337 logs spend, no _check_cost_ceiling"
   },
   "DW-022": {
    "first_seen": "2026-08-07",
@@ -215,24 +215,24 @@
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN",
    "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open",
-   "summary": "0-byte .git/HEAD.lock dated 2026-08-16 08:31 present (maintenance loop committed d10d8ac 06:29); asides 44->46; next-index-6.lock stands; RG-0015 index.lock-only"
+   "summary": "0-byte .git/HEAD.lock dated 06:00 today, stranded by a SUCCESSFUL commit (3e20c9b); stale asides persist; RG-0015 still index-only"
   },
   "DW-028": {
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "first_seen": "2026-08-07",
    "sev": "MEDIUM",
    "source": "ledger/probe network blindness (permanent fix)",
    "status": "OPEN",
-   "summary": "Re-verified: anonymous /ops/selfcheck 401; ops API_KEY still not local; blocked"
+   "summary": "anonymous GET /ops/selfcheck -> 401; ops API_KEY still absent locally"
   },
   "DW-027": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "HIGH",
    "source": "TS-0022 doctrine collision (Maroushka x3)",
    "status": "OPEN",
@@ -240,7 +240,7 @@
   },
   "DW-029": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
    "status": "OPEN",
@@ -294,11 +294,11 @@
   },
   "DW-035": {
    "first_seen": "2026-08-10",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "LOW",
    "source": "Monday deep static scan",
    "status": "OPEN",
-   "summary": "Monday lane; today Sunday; carried 175 findings 0 crash-class"
+   "summary": "Monday re-run: 181 findings (was 175), 4 NEW all LOW ruff B007, 0 crash-class, 4/4 tools"
   },
   "DW-036": {
    "first_seen": "2026-08-11",
@@ -320,11 +320,11 @@
   },
   "DW-038": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
    "status": "OPEN",
-   "summary": "Day 5 identical: smoke 30/39, all 9 failures the UA-less-fetch cluster"
+   "summary": "Day 6: smoke 30/39, same 9-failure UA-less-fetch cluster; cron now grades identically (parity restored)"
   },
   "DW-039": {
    "first_seen": "2026-08-12",
@@ -361,43 +361,63 @@
   },
   "DW-043": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "MEDIUM",
    "source": "cost sweep",
-   "status": "OPEN",
-   "summary": "WORSE: 5 CRITICAL/13 WARN (was 2/11); sweep now fires CRITICAL at DEFENCE_COVERAGE_MAP.html:31/:90 and DAILY_WATCH/OPEN_ITEMS.json:353 — the register/map documenting DW-044; self-referential loop; zero new call sites"
+   "status": "CLOSED",
+   "summary": "WORSE: 5 CRITICAL/13 WARN (was 2/11); sweep now fires CRITICAL at DEFENCE_COVERAGE_MAP.html:31/:90 and DAILY_WATCH/OPEN_ITEMS.json:353 — the register/map documenting DW-044; self-referential loop; zero new call sites",
+   "closed": "2026-08-17",
+   "evidence": "sweep 2026-08-17: ZERO CRITICAL at watch files (map + register now WARN-fable); totals 5C/13W -> 3C/16W; residual: exemption unbuilt (DW-044 docs), fable WARNs -> DW-047"
   },
   "DW-044": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "MEDIUM",
    "source": "cost perimeter (via DW-043)",
    "status": "OPEN",
-   "summary": "Re-verified: advert_agent.py MODEL_RATES still carries claude-opus-4-6 (15.00,75.00) + 11 sonnet sites outside ai_provider seam; not spending (today $0.00, MTD $1.76/251)"
+   "summary": "advert_agent.py MODEL_RATES line 35 still carries the opus rate row + 11 sonnet sites outside the seam; $0.00 today, $1.76 MTD"
   },
   "DW-045": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "HIGH",
    "source": "cron parity",
-   "status": "OPEN",
-   "summary": "Day 2: cron (loop_date 2026-08-16) smoke 29/39 vs session 30/39; server smoke_test.py:145 stale assertion re-proven; smoke_test.py ABSENT from deploy_manifest.txt; health/spend parity exact"
+   "status": "CLOSED",
+   "summary": "Day 2: cron (loop_date 2026-08-16) smoke 29/39 vs session 30/39; server smoke_test.py:145 stale assertion re-proven; smoke_test.py ABSENT from deploy_manifest.txt; health/spend parity exact",
+   "closed": "2026-08-17",
+   "evidence": "cron loop_date 2026-08-17 smoke 30/39 == sandbox 30/39; health ok/1.3.1 both; spend $0.00/$100 both; smoke_test.py now in deploy_manifest.txt"
   },
   "DW-046": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "MEDIUM",
    "source": "fea_integrity_check",
    "status": "OPEN",
-   "summary": "Day 2: still ALERT, delta grew +7152 (index 400834->407986); ms.js v441->v483 now byte-equal repo; ms.css v305->v347; cron logged HIGH again"
+   "summary": "Day 3 still ALERT: index +7152 unchanged; notes ms.js v493 / ms.css v357 after the 05:57 release; cron logged HIGH again"
   },
   "DW-047": {
    "first_seen": "2026-08-16",
-   "last_seen": "2026-08-16",
+   "last_seen": "2026-08-17",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "Sweep cannot classify model family claude-fable-5: WARN at scripts/maintenance_agent.py:328 and scripts/regression_ledger.py:3187 (watch/fix-agent tooling referencing RUL-013/RG-0080), not call sites. Instrument gap, not spend."
+   "summary": "fable-family classification gap grew 2 -> 5 sites (coverage map :31/:93, register json :400, maintenance_agent.py:328, regression_ledger.py:3228)"
+  },
+  "DW-048": {
+   "first_seen": "2026-08-17",
+   "last_seen": "2026-08-17",
+   "sev": "HIGH",
+   "source": "cost sweep",
+   "status": "OPEN",
+   "summary": "bea_main.py:18399 planner_heritage_compose: unwrapped & unmetered Anthropic call (no ceiling, no spend log, no Tuppence); flag-dark today so $0 exposure until planners.heritage flips"
+  },
+  "DW-049": {
+   "first_seen": "2026-08-17",
+   "last_seen": "2026-08-17",
+   "sev": "MEDIUM",
+   "source": "audit instrument",
+   "status": "OPEN",
+   "summary": "audit MSJS-DRIFT/VERSION-KEY CRLF-blind: Windows release rewrote ms.js CRLF, raw byte-compare fired though git content identical (live == origin/deploy 7779366, DEPLOY OK 03:57:18Z); will escalate to a FALSE CRITICAL tomorrow"
   }
  },
  "last_run": "2026-08-16",
