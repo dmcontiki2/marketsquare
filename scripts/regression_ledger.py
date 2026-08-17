@@ -4391,8 +4391,8 @@ def rg_management_lanes_reachable():
 def rg_coverage_one_call():
     out = []
     bea = repo_file("bea_main.py")
-    if bea is not None and '"/listings/coverage"' not in bea:
-        out.append((FAIL, "bea_main.py lost /listings/coverage -- the dashboard will fall back "
+    if bea is not None and '"/listings-coverage"' not in bea:
+        out.append((FAIL, "bea_main.py lost /listings-coverage -- the dashboard will fall back "
                           "to the 93-city sweep"))
     try:
         dash = open(os.path.join(REPO, "..", "CityLauncher", "dashboard", "citylauncher.html"),
@@ -4402,13 +4402,13 @@ def rg_coverage_one_call():
     except OSError:
         pass  # CityLauncher repo not mounted -- BEA half asserted above
     _require_net()
-    body = _get("/listings/coverage")
+    body = _get("/listings-coverage")
     try:
         d = json.loads(body)
         if not isinstance(d.get("cities"), dict) or not d["cities"]:
-            out.append((FAIL, "/listings/coverage answers but carries no cities dict"))
+            out.append((FAIL, "/listings-coverage answers but carries no cities dict"))
     except Exception:
-        out.append((FAIL, "/listings/coverage did not answer valid JSON"))
+        out.append((FAIL, "/listings-coverage did not answer valid JSON"))
     if not out:
         out.append((INFO, "coverage in one call (%d cities)" % len(d["cities"])))
     return out

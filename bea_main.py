@@ -18490,7 +18490,7 @@ def planner_map(sid: int, email: str, _key: str = Depends(auth.require_api_key))
     return HTMLResponse(html)
 
 
-@app.get("/listings/coverage")
+@app.get("/listings-coverage")
 def listings_coverage():
     """COVERAGE-1 (17 Aug 2026, David: close it now): per-city listing counts in ONE
     call. Replaces the CityLauncher dashboard's 93-city /listings sweep (~40k req/day,
