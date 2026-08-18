@@ -166,14 +166,25 @@ setTimeout(function(){map.invalidateSize();},250);
         if(!m._trueLL) m._trueLL=m.getLatLng(); ms.push(m); } }); });
     return ms;
   }
+  /* PINSPREAD-GUARD-1 (18 Aug 2026): spreadPins adds/removes its own tether
+     legs, and those addTo/removeLayer calls fire the very layeradd/layerremove
+     events queueSpread listens for -- an infinite self-retrigger that made
+     clustered pins visibly bounce home-and-out ~3x/second (David caught it on
+     the US rail map, Leg 3). busy swallows the machinery's OWN synchronous
+     layer events; real triggers (leg redraw, layer toggles, zoom) still pass. */
+  var busy=false;
+  function _release(){ setTimeout(function(){ busy=false; },0); }
   function clearSpread(ms){
+    busy=true;
     LEGS.forEach(function(l){ map.removeLayer(l); }); LEGS=[];
     (ms||allPinMarkers()).forEach(function(m){ if(m._trueLL) m.setLatLng(m._trueLL);
       if(m._icon) m._icon.classList.remove('ts-spread'); });
+    _release();
   }
   function spreadPins(){
+    busy=true;
     var ms=allPinMarkers(); clearSpread(ms);
-    if(BASEZ!==null && map.getZoom()<=BASEZ) return; /* overview: true geography */
+    if(BASEZ!==null && map.getZoom()<=BASEZ){ _release(); return; } /* overview: true geography */
     var pts=ms.map(function(m){ return map.latLngToLayerPoint(m._trueLL); });
     var R=34, used=[], clusters=[], i, j;
     for(i=0;i<ms.length;i++){ if(used[i]) continue; var c=[i]; used[i]=true;
@@ -194,10 +205,11 @@ setTimeout(function(){map.invalidateSize();},250);
         LEGS.push(leg);
       });
     });
+    _release();
   }
   var BASEZ=null;
   var deb=null;
-  function queueSpread(){ clearTimeout(deb); deb=setTimeout(spreadPins,140); }
+  function queueSpread(){ if(busy) return; clearTimeout(deb); deb=setTimeout(spreadPins,140); }
   map.on('zoomstart', function(){ clearSpread(); });
   map.on('zoomend overlayadd overlayremove layeradd layerremove', queueSpread);
   map.whenReady(function(){ setTimeout(function(){ BASEZ=map.getZoom(); spreadPins(); },500); });

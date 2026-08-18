@@ -4483,5 +4483,39 @@ def rg_wonders_canon():
     return out
 
 
+
+@entry("RG-0103", "PIN-SPREAD cannot retrigger itself: the fan-out machinery is deaf to its own "
+       "layer events, so clustered pins never bounce",
+       LOCKED, fixed_on="2026-08-18",
+       scope="scripts/journey_template.html (the source) + all generator-built journey maps. "
+             "The class: any handler that mutates layers while subscribed to layeradd/layerremove",
+       ref="PINSPREAD-GUARD-1, 18 Aug 2026: spreadPins() adds dashed tether legs and clearSpread() "
+           "removes them; both fire the layeradd/layerremove events queueSpread listens for, so one "
+           "cluster past base zoom looped clear->spread every ~140ms forever -- pins visibly bounced "
+           "home-and-out ~3x/second with the .28s transition (David caught orange+green bouncing on "
+           "the US rail map Leg 3; a synthetic-hover probe froze the tab outright). Fix: busy flag "
+           "swallows the machinery's OWN synchronous layer events; redraw/toggle/zoom triggers pass. "
+           "Template is the single source -- an unguarded rebuild would resurrect the bounce in all "
+           "11 maps at once, hence this tripwire on template AND built artifacts.")
+def rg_pinspread_guard():
+    out = []
+    tpl = repo_file("scripts/journey_template.html")
+    if tpl is not None:
+        if "PINSPREAD-GUARD-1" not in tpl:
+            out.append((FAIL, "journey_template.html lost PINSPREAD-GUARD-1 -- next rebuild ships "
+                              "self-retriggering spread to every journey map"))
+        if "function queueSpread(){ clearTimeout" in tpl:
+            out.append((FAIL, "template queueSpread is unguarded again (no busy check)"))
+    for name in ("adventures_us_rail_map.html", "adventures_gb_rail_map.html",
+                 "adventures_au_rail_map.html", "adventures_ke_map.html"):
+        f = repo_file(name)
+        if f is None:
+            continue
+        if "spreadPins" in f and "PINSPREAD-GUARD-1" not in f:
+            out.append((FAIL, name + " carries PIN-SPREAD without the guard -- built from a stale "
+                               "template or hand-reverted; pins there can bounce"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
