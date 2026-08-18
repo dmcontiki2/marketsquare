@@ -117,7 +117,8 @@
      "name": "Chicago Union Station — boarding",
      "lat": 41.8787,
      "lng": -87.6398,
-     "blurb": "Beneath the Great Hall's skylight the great western trains still depart — your sleeper waits on the lower level."
+     "blurb": "Beneath the Great Hall's skylight the great western trains still depart — your sleeper waits on the lower level.",
+     "photo": "l1_start.jpg"
     },
     {
      "type": "view",
@@ -125,7 +126,8 @@
      "name": "The Mississippi crossing",
      "lat": 40.8077,
      "lng": -91.1129,
-     "blurb": "The train slows onto the high bridge at Burlington — America's river wide and slow beneath the dining car."
+     "blurb": "The train slows onto the high bridge at Burlington — America's river wide and slow beneath the dining car.",
+     "photo": "l1_view.jpg"
     },
     {
      "type": "over",
@@ -133,7 +135,8 @@
      "name": "Roomette night — the prairie run",
      "lat": 41.2565,
      "lng": -95.9345,
-     "blurb": "Your first night in the roomette: beds made down while you dine, Nebraska rolling past in the dark."
+     "blurb": "Your first night in the roomette: beds made down while you dine, Nebraska rolling past in the dark.",
+     "photo": "l1_over.jpg"
     }
    ]
   },
@@ -166,7 +169,8 @@
      "name": "Breakfast into Denver Union",
      "lat": 39.7539,
      "lng": -105.0,
-     "blurb": "Eggs and coffee as the Rockies fill the horizon — Denver's restored Union Station gleams beneath the mountains."
+     "blurb": "Eggs and coffee as the Rockies fill the horizon — Denver's restored Union Station gleams beneath the mountains.",
+     "photo": "l2_food.jpg"
     },
     {
      "type": "view",
@@ -174,7 +178,8 @@
      "name": "The Front Range tunnels",
      "lat": 39.9022,
      "lng": -105.6447,
-     "blurb": "The train coils up the wall of the Rockies through thirty tunnels — flatland to alpine in an hour, finishing under the Divide itself."
+     "blurb": "The train coils up the wall of the Rockies through thirty tunnels — flatland to alpine in an hour, finishing under the Divide itself.",
+     "photo": "l2_view.jpg"
     },
     {
      "type": "view",
@@ -182,7 +187,8 @@
      "name": "Winter Park & the high parks",
      "lat": 39.8868,
      "lng": -105.7625,
-     "blurb": "Out of the Moffat Tunnel into a bowl of ski country and high meadow — the roof of the route."
+     "blurb": "Out of the Moffat Tunnel into a bowl of ski country and high meadow — the roof of the route.",
+     "photo": "l2_view2.jpg"
     }
    ]
   },
@@ -215,7 +221,8 @@
      "name": "Gore Canyon — the wild Colorado",
      "lat": 39.9583,
      "lng": -106.5,
-     "blurb": "No road reaches here: whitewater a thousand feet below the window, canyon walls closing to the sky."
+     "blurb": "No road reaches here: whitewater a thousand feet below the window, canyon walls closing to the sky.",
+     "photo": "l3_view.jpg"
     },
     {
      "type": "over",
@@ -223,7 +230,8 @@
      "name": "Glenwood Springs — hot-springs stopover",
      "lat": 39.5505,
      "lng": -107.3248,
-     "blurb": "Step off for the night: the world's largest hot-springs pool steams under the mountains a walk from the platform."
+     "blurb": "Step off for the night: the world's largest hot-springs pool steams under the mountains a walk from the platform.",
+     "photo": "l3_over.jpg"
     },
     {
      "type": "food",
@@ -231,7 +239,8 @@
      "name": "Dinner in the canyon dusk",
      "lat": 39.5544,
      "lng": -107.3225,
-     "blurb": "White tablecloths and canyon light — the dining car's best hour, or a grill on the springs terrace."
+     "blurb": "White tablecloths and canyon light — the dining car's best hour, or a grill on the springs terrace.",
+     "photo": "l3_food.jpg"
     }
    ]
   },
@@ -264,7 +273,8 @@
      "name": "Ruby Canyon at dawn",
      "lat": 39.1911,
      "lng": -109.0522,
-     "blurb": "Red sandstone walls catch first light on the Utah line — river, rock and not a road in sight."
+     "blurb": "Red sandstone walls catch first light on the Utah line — river, rock and not a road in sight.",
+     "photo": "l4_view.jpg"
     },
     {
      "type": "sight",
@@ -272,7 +282,8 @@
      "name": "Salt Lake City — the midnight call",
      "lat": 40.7608,
      "lng": -111.891,
-     "blurb": "The Mormon capital glitters against the Wasatch as the train pauses in the small hours."
+     "blurb": "The Mormon capital glitters against the Wasatch as the train pauses in the small hours.",
+     "photo": "l4_sight.jpg"
     },
     {
      "type": "over",
@@ -280,7 +291,8 @@
      "name": "Reno — the biggest little stopover",
      "lat": 39.5296,
      "lng": -119.8138,
-     "blurb": "Out of the desert night into Reno's neon — a stopover night before the Sierra day."
+     "blurb": "Out of the desert night into Reno's neon — a stopover night before the Sierra day.",
+     "photo": "l4_over.jpg"
     }
    ]
   },
@@ -313,7 +325,8 @@
      "name": "Donner Pass — the Sierra crossing",
      "lat": 39.3167,
      "lng": -120.3,
-     "blurb": "The train hangs on the mountain wall above Donner Lake — the hardest-won miles in American railroading."
+     "blurb": "The train hangs on the mountain wall above Donner Lake — the hardest-won miles in American railroading.",
+     "photo": "l5_view.jpg"
     },
     {
      "type": "sight",
@@ -321,7 +334,8 @@
      "name": "Sacramento — gold-rush capital",
      "lat": 38.5816,
      "lng": -121.4944,
-     "blurb": "Down through the gold country to the state capital and the great railway museum beside the tracks."
+     "blurb": "Down through the gold country to the state capital and the great railway museum beside the tracks.",
+     "photo": "l5_sight.jpg"
     },
     {
      "type": "finish",
@@ -329,7 +343,8 @@
      "name": "San Francisco Bay — journey's end",
      "lat": 37.7955,
      "lng": -122.3937,
-     "blurb": "The rails end at the water: across the bay, the city on its hills — one continent, coast to coast, behind you."
+     "blurb": "The rails end at the water: across the bay, the city on its hills — one continent, coast to coast, behind you.",
+     "photo": "l5_finish.jpg"
     }
    ]
   }

@@ -33,10 +33,11 @@ Run `python3 scripts/photo_status.py` for the live count — the FILESYSTEM is t
 progress state, there is no separate ledger to drift.
 
 ## To resume (start here)
-1. Connect BOTH folders: `C:\Users\David\Projects` AND `C:\Users\David\Downloads`.
-   The Downloads grant is **per session** — a new session must ask for it again, and
-   David has to approve on the device. This is why an unattended overnight run is
-   NOT possible: a scheduled session cannot get that approval at 3 a.m.
+1. ~~Connect BOTH folders~~ **SUPERSEDED (GRANT-KILL-1 + David, 18 Aug 2026):** Chrome
+   now downloads into `MarketSquare\_incoming` inside the always-mounted Projects tree,
+   and claim_photos.py prefers that sink automatically. No Downloads grant needed —
+   the per-session-approval blocker is gone, so unattended overnight photo runs are
+   POSSIBLE again (generation still serialises ~1/min; credits still apply).
 2. `python3 scripts/photo_status.py --next 10`  -> the next filenames needed.
 3. Prompts: `JOURNEY_HIGGSFIELD_PROMPTS.md` (all 104, generated from the specs).
 4. Generate on higgsfield.ai/ai/image — model **Nano Banana Pro**, aspect **3:2**,

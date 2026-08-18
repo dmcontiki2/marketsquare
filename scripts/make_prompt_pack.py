@@ -22,6 +22,18 @@ STYLE = {
     "mozambique": ("Photorealistic editorial travel photography, Mozambique Indian Ocean coast — "
                    "turquoise water, dhow sails, coral-stone and whitewash, bright tropical light "
                    "with deep navy and warm amber accents (#0c1a2e / #C8873A)"),
+    "usrail": ("Photorealistic editorial rail-travel photography, the American West by train — "
+               "stainless-steel double-deck rail cars, observation-lounge glass, Mississippi "
+               "crossings, Rockies river canyons, high-desert dawn and Sierra snows, cinematic "
+               "warm light, deep navy and warm amber accents (#0c1a2e / #C8873A)"),
+    "gbrail": ("Photorealistic editorial rail-travel photography, Britain by train — brass-and-teak "
+               "Pullman carriages, cathedral-city stone, Northumberland coast, Rannoch Moor mist "
+               "and a steam viaduct finale, soft northern light, deep navy and warm amber accents "
+               "(#0c1a2e / #C8873A)"),
+    "aurail": ("Photorealistic editorial rail-travel photography, Australia end to end on The Ghan — "
+               "polished stainless sleeper cars, red-centre desert and ghost gums, Flinders dusk, "
+               "Top End monsoon green, cinematic warm light, deep navy and warm amber accents "
+               "(#0c1a2e / #C8873A)"),
     "cape_cairo": ("Photorealistic editorial rail-travel photography, Africa end to end — grand "
                    "stations, sleeper-car interiors in brass and teak, Karoo, Zambezi, savanna and "
                    "Nile desert, cinematic warm light, deep navy and warm amber accents "

@@ -105,7 +105,8 @@
      "name": "Adelaide Parklands — boarding",
      "lat": -34.942,
      "lng": 138.586,
-     "blurb": "Champagne on the platform as a kilometre of silver carriages waits to cross a continent."
+     "blurb": "Champagne on the platform as a kilometre of silver carriages waits to cross a continent.",
+     "photo": "l1_start.jpg"
     },
     {
      "type": "view",
@@ -113,7 +114,8 @@
      "name": "The Flinders Ranges at dusk",
      "lat": -32.4936,
      "lng": 137.7743,
-     "blurb": "Ancient folded mountains turn purple beyond the saltbush as the dining car pours the Barossa."
+     "blurb": "Ancient folded mountains turn purple beyond the saltbush as the dining car pours the Barossa.",
+     "photo": "l1_view.jpg"
     },
     {
      "type": "over",
@@ -121,7 +123,8 @@
      "name": "First night — into the red",
      "lat": -30.0,
      "lng": 136.5,
-     "blurb": "Your cabin made down, the train running steady into the true outback dark — no lights to the horizon."
+     "blurb": "Your cabin made down, the train running steady into the true outback dark — no lights to the horizon.",
+     "photo": "l1_over.jpg"
     }
    ]
   },
@@ -154,7 +157,8 @@
      "name": "Marla — outback sunrise",
      "lat": -27.3033,
      "lng": 133.6167,
-     "blurb": "The train pauses in the darkness; fires are lit beside the track and the desert dawn comes up over breakfast."
+     "blurb": "The train pauses in the darkness; fires are lit beside the track and the desert dawn comes up over breakfast.",
+     "photo": "l2_view.jpg"
     },
     {
      "type": "over",
@@ -162,7 +166,8 @@
      "name": "Alice Springs — the red heart",
      "lat": -23.698,
      "lng": 133.8807,
-     "blurb": "The town in the MacDonnell gap — an afternoon for the Desert Park, a camel ride, or the flight to Uluru."
+     "blurb": "The town in the MacDonnell gap — an afternoon for the Desert Park, a camel ride, or the flight to Uluru.",
+     "photo": "l2_over.jpg"
     },
     {
      "type": "view",
@@ -170,7 +175,8 @@
      "name": "Simpsons Gap — the West Macs",
      "lat": -23.6797,
      "lng": 133.7108,
-     "blurb": "A red cleft in the ranges holding permanent water — rock wallabies on the scree at sundown."
+     "blurb": "A red cleft in the ranges holding permanent water — rock wallabies on the scree at sundown.",
+     "photo": "l2_view2.jpg"
     }
    ]
   },
@@ -203,7 +209,8 @@
      "name": "Karlu Karlu — the Devils Marbles",
      "lat": -20.5833,
      "lng": 134.2667,
-     "blurb": "Giant granite spheres balanced on the plain — a sacred place of the Warumungu, glowing at first light."
+     "blurb": "Giant granite spheres balanced on the plain — a sacred place of the Warumungu, glowing at first light.",
+     "photo": "l3_sight.jpg"
     },
     {
      "type": "view",
@@ -211,7 +218,8 @@
      "name": "Nitmiluk Gorge cruise",
      "lat": -14.3167,
      "lng": 132.4167,
-     "blurb": "Off the train at Katherine for a cruise between hundred-metre sandstone walls — freshwater crocs on the banks."
+     "blurb": "Off the train at Katherine for a cruise between hundred-metre sandstone walls — freshwater crocs on the banks.",
+     "photo": "l3_view.jpg"
     },
     {
      "type": "food",
@@ -219,7 +227,8 @@
      "name": "Dinner crossing the tropics",
      "lat": -15.5,
      "lng": 132.8,
-     "blurb": "Barramundi and Territory beef as the light turns green and gold — the desert already a thousand kilometres behind."
+     "blurb": "Barramundi and Territory beef as the light turns green and gold — the desert already a thousand kilometres behind.",
+     "photo": "l3_food.jpg"
     }
    ]
   },
@@ -252,7 +261,8 @@
      "name": "The Adelaide River country",
      "lat": -13.2378,
      "lng": 131.1063,
-     "blurb": "Floodplains, magnetic termite mounds and the big rivers of the Top End sliding past the window."
+     "blurb": "Floodplains, magnetic termite mounds and the big rivers of the Top End sliding past the window.",
+     "photo": "l4_view.jpg"
     },
     {
      "type": "finish",
@@ -260,7 +270,8 @@
      "name": "Darwin — ocean to ocean",
      "lat": -12.4634,
      "lng": 130.8456,
-     "blurb": "The line ends at the Timor Sea — sunset on the waterfront, a continent crossed top to bottom."
+     "blurb": "The line ends at the Timor Sea — sunset on the waterfront, a continent crossed top to bottom.",
+     "photo": "l4_finish.jpg"
     },
     {
      "type": "food",
@@ -268,7 +279,8 @@
      "name": "Stokes Hill Wharf — landfall dinner",
      "lat": -12.47,
      "lng": 130.85,
-     "blurb": "Chilli prawns and cold beer over the harbour where the journey ends."
+     "blurb": "Chilli prawns and cold beer over the harbour where the journey ends.",
+     "photo": "l4_food.jpg"
     }
    ]
   }

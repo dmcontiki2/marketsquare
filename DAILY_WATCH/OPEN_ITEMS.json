@@ -1,5 +1,5 @@
 {
- "next_id": 50,
+ "next_id": 51,
  "items": {
   "DW-001": {
    "first_seen": "2026-08-02",
@@ -174,11 +174,11 @@
   },
   "DW-021": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "Heartbeat lane bea_main.py:18336/18337 logs spend, no _check_cost_ceiling"
+   "summary": "Heartbeat lane still logs spend with no _check_cost_ceiling — today bea_main.py:18345/18346 (_ts_breaker_heartbeat/_hb_loop)."
   },
   "DW-022": {
    "first_seen": "2026-08-07",
@@ -215,36 +215,36 @@
   },
   "DW-026": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "HIGH",
    "source": "deploy post-mortem (silent no-op ship)",
    "status": "OPEN",
    "note": "did not recur 2026-08-08 and 2026-08-09; class fix still open",
-   "summary": "0-byte .git/HEAD.lock dated 06:00 today, stranded by a SUCCESSFUL commit (3e20c9b); stale asides persist; RG-0015 still index-only"
+   "summary": "First clean day since the recurrence — NO new lock artefact today (newest aside 14 Aug). Debris + gap persist: stale asides at .git top level; RG-0015 entry text still names index.lock ONLY (ledger line 773) despite the GIT-LOCK-3 note."
   },
   "DW-028": {
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "first_seen": "2026-08-07",
    "sev": "MEDIUM",
    "source": "ledger/probe network blindness (permanent fix)",
    "status": "OPEN",
-   "summary": "anonymous GET /ops/selfcheck -> 401; ops API_KEY still absent locally"
+   "summary": "Re-verified: RG-0101's gzip probe hit /ops/selfcheck anonymously -> 401; still no ops API_KEY in .secrets. The key gap now blocks a live assertion (RG-0101), not just convenience."
   },
   "DW-027": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "HIGH",
    "source": "TS-0022 doctrine collision (Maroushka x3)",
    "status": "OPEN",
-   "summary": "Not re-checkable read-only (needs photo run); day 10 awaiting ruling"
+   "summary": "Not re-checkable by this read-only task (needs a photo run). Day 12 waiting on a ruling. RG-0047 (measurement half) LOCKED and holding."
   },
   "DW-029": {
    "first_seen": "2026-08-07",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "MEDIUM",
    "source": "production secrets exposed in a chat transcript",
    "status": "OPEN",
-   "summary": "Not re-checked (task reads no secrets); day 10; rotation tooling ready"
+   "summary": "Not re-checked — this task does not read secrets. Day 12. Rotation tooling ready; rotate-at-convenience stands."
   },
   "DW-030": {
    "first_seen": "2026-08-08",
@@ -320,11 +320,11 @@
   },
   "DW-038": {
    "first_seen": "2026-08-12",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "HIGH",
    "source": "smoke_test + server-side edge probe (NEW today)",
    "status": "OPEN",
-   "summary": "Day 6: smoke 30/39, same 9-failure UA-less-fetch cluster; cron now grades identically (parity restored)"
+   "summary": "Day 7 — condition identical. Smoke 30/39, same 9 UA-less-fetch failures. Cron grades the SAME 30/39 (parity holds). Real visitors unaffected."
   },
   "DW-039": {
    "first_seen": "2026-08-12",
@@ -371,11 +371,11 @@
   },
   "DW-044": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "MEDIUM",
    "source": "cost perimeter (via DW-043)",
    "status": "OPEN",
-   "summary": "advert_agent.py MODEL_RATES line 35 still carries the opus rate row + 11 sonnet sites outside the seam; $0.00 today, $1.76 MTD"
+   "summary": "Re-verified on disk: unchanged (file untouched since 11 Jul) — MODEL_RATES:35 still claude-opus-4-6 (15/75)/MTok + hardcoded sonnet sites outside the seam. Sweep grades sonnet sites INFO 'allowed, Tuppence-metered'; only the baseline-doc opus CRITICALs still surface the family. Not spending ($0.00 today; $1.76 MTD)."
   },
   "DW-045": {
    "first_seen": "2026-08-15",
@@ -389,37 +389,45 @@
   },
   "DW-046": {
    "first_seen": "2026-08-15",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "MEDIUM",
    "source": "fea_integrity_check",
    "status": "OPEN",
-   "summary": "Day 3 still ALERT: index +7152 unchanged; notes ms.js v493 / ms.css v357 after the 05:57 release; cron logged HIGH again"
+   "summary": "Day 4 — still ALERT: index 400834->407986 (+7152, unchanged); notes now ms.js v498 (1,074,812B), ms.css v362. Cron logged HIGH again. While in ALERT it cannot flag the NEXT change."
   },
   "DW-047": {
    "first_seen": "2026-08-16",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "LOW",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "fable-family classification gap grew 2 -> 5 sites (coverage map :31/:93, register json :400, maintenance_agent.py:328, regression_ledger.py:3228)"
+   "summary": "IMPROVED 5 -> 3 sites: fable WARNs now DEFENCE_COVERAGE_MAP.html:95, scripts/maintenance_agent.py:328, scripts/regression_ledger.py:3228. Instrument gap, not spend."
   },
   "DW-048": {
    "first_seen": "2026-08-17",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "HIGH",
    "source": "cost sweep",
    "status": "OPEN",
-   "summary": "bea_main.py:18399 planner_heritage_compose: unwrapped & unmetered Anthropic call (no ceiling, no spend log, no Tuppence); flag-dark today so $0 exposure until planners.heritage flips"
+   "summary": "Still CRITICAL, line moved 18399 -> 18408: planner_heritage_compose UNWRAPPED & UNMETERED Anthropic call. Flag-dark so $0 exposure NOW — unmetered the moment the flag flips."
   },
   "DW-049": {
    "first_seen": "2026-08-17",
-   "last_seen": "2026-08-17",
+   "last_seen": "2026-08-18",
    "sev": "MEDIUM",
    "source": "audit instrument",
    "status": "OPEN",
-   "summary": "audit MSJS-DRIFT/VERSION-KEY CRLF-blind: Windows release rewrote ms.js CRLF, raw byte-compare fired though git content identical (live == origin/deploy 7779366, DEPLOY OK 03:57:18Z); will escalate to a FALSE CRITICAL tomorrow"
+   "summary": "Predicted false CRITICAL did NOT fire — but only because a REAL deploy is staged (bea_main.py ahead). Instrument still untaught: no CRLF normalization in audit_global_qa.py; raw Δ16,552B ≈ 1 byte/line = pure CRLF (deploy_drift, which normalizes, says ms.js MATCHES live). Will fire falsely again once the staged deploy ships."
+  },
+  "DW-050": {
+   "first_seen": "2026-08-18",
+   "last_seen": "2026-08-18",
+   "sev": "LOW",
+   "source": "deploy_drift + git status",
+   "status": "OPEN",
+   "summary": "NEW — deploy staged, not shipped: bea_main.py local-ahead of live (uncommitted M bea_main.py; audit MSJS-DRIFT/VERSION-KEY read the same staging). Normal workflow — listed so it cannot silently age. Next: attended commit + /ship (or tonight's /TSL)."
   }
  },
- "last_run": "2026-08-16",
- "last_verdict": "AMBER"
+ "last_run": "2026-08-18",
+ "last_verdict": "AMBER — site green (health ok 0.36s, TLS 37d); smoke 30/39 (all 9 = DW-038 cluster); ledger 96/93 holding, 0 regressed, 3 open; sweep 3 crit/14 warn (no new class); spend $0.00 today, $1.76 MTD of $100; cron parity OK; 0 closed, 1 new (DW-050)"
 }

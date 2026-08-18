@@ -133,7 +133,8 @@
      "name": "London King's Cross — boarding",
      "lat": 51.5308,
      "lng": -0.1238,
-     "blurb": "Under the great twin arches where the East Coast expresses have left for Scotland since 1852."
+     "blurb": "Under the great twin arches where the East Coast expresses have left for Scotland since 1852.",
+     "photo": "l1_start.jpg"
     },
     {
      "type": "sight",
@@ -141,7 +142,8 @@
      "name": "York Minster & the walls",
      "lat": 53.9599,
      "lng": -1.0873,
-     "blurb": "North Europe's largest Gothic cathedral above medieval streets — an evening walk on the city walls."
+     "blurb": "North Europe's largest Gothic cathedral above medieval streets — an evening walk on the city walls.",
+     "photo": "l1_sight.jpg"
     },
     {
      "type": "over",
@@ -149,7 +151,8 @@
      "name": "York — railway-hotel night",
      "lat": 53.9576,
      "lng": -1.0932,
-     "blurb": "A grand Victorian railway hotel beside the station — and the National Railway Museum next door for the morning."
+     "blurb": "A grand Victorian railway hotel beside the station — and the National Railway Museum next door for the morning.",
+     "photo": "l1_over.jpg"
     }
    ]
   },
@@ -182,7 +185,8 @@
      "name": "Durham — cathedral on the rock",
      "lat": 54.7767,
      "lng": -1.5757,
-     "blurb": "The Norman cathedral and castle rise over the Wear — the finest view from any railway in England."
+     "blurb": "The Norman cathedral and castle rise over the Wear — the finest view from any railway in England.",
+     "photo": "l2_sight.jpg"
     },
     {
      "type": "view",
@@ -190,7 +194,8 @@
      "name": "The Northumberland coast",
      "lat": 55.3925,
      "lng": -1.6132,
-     "blurb": "Castles and cold blue sea — Alnmouth, Bamburgh's outline, Holy Island across the sands."
+     "blurb": "Castles and cold blue sea — Alnmouth, Bamburgh's outline, Holy Island across the sands.",
+     "photo": "l2_view.jpg"
     },
     {
      "type": "over",
@@ -198,7 +203,8 @@
      "name": "Edinburgh — under the Castle",
      "lat": 55.9521,
      "lng": -3.189,
-     "blurb": "Waverley station sits in the garden valley below the Castle rock — the Old Town rises straight from the platform ends."
+     "blurb": "Waverley station sits in the garden valley below the Castle rock — the Old Town rises straight from the platform ends.",
+     "photo": "l2_over.jpg"
     }
    ]
   },
@@ -231,7 +237,8 @@
      "name": "Glasgow — a Highland breakfast",
      "lat": 55.8617,
      "lng": -4.2583,
-     "blurb": "Queen Street station and a proper breakfast before the line turns north along the Clyde."
+     "blurb": "Queen Street station and a proper breakfast before the line turns north along the Clyde.",
+     "photo": "l3_food.jpg"
     },
     {
      "type": "view",
@@ -239,7 +246,8 @@
      "name": "Rannoch Moor — the empty miles",
      "lat": 56.6857,
      "lng": -4.5786,
-     "blurb": "The line floats on brushwood across a wilderness no road crosses — deer on the moor, weather rolling in."
+     "blurb": "The line floats on brushwood across a wilderness no road crosses — deer on the moor, weather rolling in.",
+     "photo": "l3_view.jpg"
     },
     {
      "type": "over",
@@ -247,7 +255,8 @@
      "name": "Fort William — beneath Ben Nevis",
      "lat": 56.8198,
      "lng": -5.1052,
-     "blurb": "The Highland junction town under Britain's highest mountain — sleeper carriages idle at the platform."
+     "blurb": "The Highland junction town under Britain's highest mountain — sleeper carriages idle at the platform.",
+     "photo": "l3_over.jpg"
     }
    ]
   },
@@ -280,7 +289,8 @@
      "name": "Glenfinnan Viaduct",
      "lat": 56.8762,
      "lng": -5.4318,
-     "blurb": "Twenty-one arches curving above the glen with Loch Shiel beyond — steam, whistle and the most famous railway view in the world."
+     "blurb": "Twenty-one arches curving above the glen with Loch Shiel beyond — steam, whistle and the most famous railway view in the world.",
+     "photo": "l4_view.jpg"
     },
     {
      "type": "view",
@@ -288,7 +298,8 @@
      "name": "The silver sands of Morar",
      "lat": 56.9107,
      "lng": -5.8398,
-     "blurb": "White shell-sand bays and turquoise water — the Hebridean light at the carriage window."
+     "blurb": "White shell-sand bays and turquoise water — the Hebridean light at the carriage window.",
+     "photo": "l4_view2.jpg"
     },
     {
      "type": "finish",
@@ -296,7 +307,8 @@
      "name": "Mallaig — journey's end",
      "lat": 57.0064,
      "lng": -5.829,
-     "blurb": "The rails end at the harbour wall: landed prawns on the quay, the Isle of Skye across the Sound."
+     "blurb": "The rails end at the harbour wall: landed prawns on the quay, the Isle of Skye across the Sound.",
+     "photo": "l4_finish.jpg"
     }
    ]
   }
