@@ -3576,7 +3576,7 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
     conn = database.get_db()
     _row = conn.execute("SELECT showcase FROM listings WHERE id = ?", (listing_id,)).fetchone()
     if _row and _row["showcase"]:
-        # RUL-023 (18 Aug 2026): showcase supers are admin-managed — the app key
+        # RUL-026 (18 Aug 2026): showcase supers are admin-managed — the app key
         # alone (public in ms.js) must never delete one.
         try:
             _require_admin_or_key(x_admin_token, x_admin_key)
@@ -18067,7 +18067,7 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                LEFT JOIN users u ON LOWER(u.email) = LOWER(l.seller_email)
                WHERE l.listing_status IN ('live','paused')
                  AND (l.is_demo = 0 OR l.is_demo IS NULL)
-                 AND (l.showcase = 0 OR l.showcase IS NULL)  -- RUL-023: showcase supers never fade
+                 AND (l.showcase = 0 OR l.showcase IS NULL)  -- RUL-026: showcase supers never fade
                  AND l.seller_email IS NOT NULL AND l.seller_email != ''"""
         ).fetchall()
         for c in cands:

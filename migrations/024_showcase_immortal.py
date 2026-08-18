@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""024_showcase_immortal.py — RUL-023 (18 Aug 2026): showcase supers never fade.
+"""024_showcase_immortal.py — RUL-026 (18 Aug 2026): showcase supers never fade.
 
 The lifecycle sweep had been treating showcase listings like user listings —
 fade warnings went out and some could fade/archive. The sweep + delete guards

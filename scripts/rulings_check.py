@@ -41,6 +41,11 @@ def _read(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-026": [
+   ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase adverts are admin-managed."], []),
+   ("migrations/024_showcase_immortal.py", ["RUL-026"], []),
+   ("scripts/regression_ledger.py", ["RG-0106", "rg_showcase_immortal"], []),
+ ],
  "RUL-022": [
    ("bea_main.py", ["def usd_to_zar_amount", "FX-LIVE-1"], ["tuppence * 36"]),
    ("ms.js", ["function loadFX", "fxTopupLine"], []),
