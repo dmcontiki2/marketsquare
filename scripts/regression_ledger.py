@@ -4517,5 +4517,35 @@ def rg_pinspread_guard():
     return out
 
 
+@entry("RG-0106", "Showcase supers are IMMORTAL -- the lifecycle sweep can never fade or archive "
+       "a showcase listing, and no non-admin path can delete one",
+       LOCKED, fixed_on="2026-08-18",
+       scope="the whole showcase class, all markets: _lifecycle_sweep candidate + archive "
+             "queries exclude showcase; both delete endpoints 403 non-admin showcase deletes "
+             "(app key alone and house seller email alone both refused). Repo-asserted now; "
+             "the live sweep carries the exemption from the first deploy after 18 Aug -- "
+             "migration 024 heals any already-faded/warned showcase on that same deploy",
+       ref="RUL-023, 18 Aug 2026: David -- 'the super demos should stay live and only be "
+           "deleted by admin users'. Fault: supers were born as real listings (showcase=1, "
+           "is_demo=0), so FADE-1 treated them as user listings and fade warnings reached "
+           "the house accounts.")
+def rg_showcase_immortal():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None:
+        if "RUL-023: showcase supers never fade" not in bea:
+            out.append((FAIL, "bea_main.py lost the sweep's showcase exemption"))
+        if bea.count("Showcase adverts are admin-managed.") < 2:
+            out.append((FAIL, "a delete endpoint lost its showcase admin guard"))
+        if "AND (showcase = 0 OR showcase IS NULL)" not in bea:
+            out.append((FAIL, "the archive step lost its showcase exclusion"))
+    mig = repo_file("migrations/024_showcase_immortal.py")
+    if mig is None:
+        out.append((INFO, "outside the repo -- source half not checked here"))
+    if not out:
+        out.append((INFO, "sweep exemption + admin-only deletes asserted in source"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())
