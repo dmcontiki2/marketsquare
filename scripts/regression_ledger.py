@@ -4445,5 +4445,43 @@ def rg_wonders_gzip():
     return out
 
 
+
+@entry("RG-0102", "ONE wonders catalog: the manifest-shipped root wonders.json is the only editable "
+       "copy, and it carries the 19 rail-expansion sites",
+       LOCKED, fixed_on="2026-08-18",
+       scope="the whole heritage catalog lane: repo root wonders.json (deploy manifest line "
+             "'wonders.json | wonders.json') vs the retired assets/wonders.json fork",
+       ref="WONDERS-CANON-1, 18 Aug 2026: the repo carried TWO files named wonders.json -- root "
+           "(300 entries, photo-verified schema, the one the manifest ships) and assets/ (332, "
+           "older schema, never shipped, quietly growing since May: 32 strays incl. duplicate "
+           "sites under new ids). The HERITAGE-RAIL-1 merge landed in the WRONG one and a deploy "
+           "shipped 300 while the session believed 351. Fix: root reconciled to 319 (300 + the 19 "
+           "approved rail sites only), strays quarantined in assets/wonders_pending_32.json for a "
+           "dedupe pass, assets/wonders.json RETIRED by rename. Live half is probe-limited while "
+           "the prelaunch gate 401s /wonders; the repo half is the tripwire.")
+def rg_wonders_canon():
+    out = []
+    w = repo_file("wonders.json")
+    if w is not None:
+        try:
+            cat = json.loads(w)
+            ids = {x.get("id") for x in cat}
+            rail = {"np_098","np_099","np_100","ar_047","nm_048","nm_049","un_143","nm_050",
+                    "un_144","ar_048","un_145","un_146","np_101","un_147","nm_051","np_102",
+                    "np_103","np_104","nm_052"}
+            if not rail <= ids:
+                out.append((FAIL, "root wonders.json lost %d rail-expansion sites" % len(rail - ids)))
+            if len(ids) != len(cat):
+                out.append((FAIL, "root wonders.json has duplicate ids"))
+            if len(cat) < 319:
+                out.append((FAIL, "root wonders.json shrank to %d entries (<319)" % len(cat)))
+        except Exception as e:
+            out.append((FAIL, "root wonders.json unparseable: %s" % e))
+        if os.path.exists(os.path.join(REPO, "assets", "wonders.json")):
+            out.append((FAIL, "assets/wonders.json EXISTS again -- the divergent-copy class is "
+                              "back; sessions will merge into the file the manifest never ships"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -27,9 +27,14 @@ def main():
 
     wonders = bea._load_wonders()
     print("[023_relink] catalog: %d wonders; live listings: %d" % (len(wonders), len(ids)))
-    if len(wonders) < 351:
-        print("[023_relink] REFUSE: catalog still has %d entries — expanded "
-              "wonders.json has not landed; retry next deploy" % len(wonders)); return 3
+    RAIL_IDS = {"np_098","np_099","np_100","ar_047","nm_048","nm_049","un_143",
+                "nm_050","un_144","ar_048","un_145","un_146","np_101","un_147",
+                "nm_051","np_102","np_103","np_104","nm_052"}
+    have = {w.get("id") for w in wonders}
+    if not RAIL_IDS <= have:
+        print("[023_relink] REFUSE: %d rail-expansion ids missing from catalog — "
+              "expanded wonders.json has not landed; retry next deploy"
+              % len(RAIL_IDS - have)); return 3
     if not APPLY:
         print("[023_relink] dry-run OK: would re-match %d live listings" % len(ids)); return 0
 
