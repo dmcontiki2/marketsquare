@@ -4414,5 +4414,36 @@ def rg_coverage_one_call():
     return out
 
 
+
+@entry("RG-0101", "GET /wonders travels gzipped -- the heritage catalog fetch is ~144 KB, not 485 KB",
+       OPEN, scope="every FastAPI JSON response over 1 KB (wonders, listings, selfcheck...); nginx "
+                   "static files are a separate lane and unaffected",
+       ref="WONDERS-GZIP-1, 18 Aug 2026: the catalog measured 485 KB raw / 332 sites (~1.5 KB per "
+           "site) and nothing compressed JSON anywhere (no gzip_types in the nginx conf, no app "
+           "middleware) -- found while confirming the rail-route heritage expansion (+19 sites) is "
+           "negligible for app delays. GZipMiddleware(minimum_size=1024) added to bea_main.py in the "
+           "same session the expansion merged. OPEN until it rides a deploy. The live probe cannot "
+           "read /wonders anonymously post-gate (401), so it judges /ops/selfcheck -- any FastAPI "
+           "response over 1 KB must carry Content-Encoding: gzip when asked. Promote when READY.")
+def rg_wonders_gzip():
+    out = []
+    bea = repo_file("bea_main.py")
+    if bea is not None and "GZipMiddleware" not in bea:
+        out.append((FAIL, "bea_main.py lost WONDERS-GZIP-1 (GZipMiddleware) -- the heritage catalog "
+                          "ships raw again and grows ~1.5 KB per site uncompressed"))
+    try:
+        req = urllib.request.Request(BASE + "/ops/selfcheck",
+                                     headers=dict(UA, **{"Accept-Encoding": "gzip"}))
+        resp = urllib.request.urlopen(req, timeout=TIMEOUT)
+        enc = resp.headers.get("Content-Encoding", "") or ""
+        body = resp.read()
+        if len(body) > 1024 and "gzip" not in enc:
+            out.append((FAIL, f"/ops/selfcheck answered {len(body)} B with no Content-Encoding: gzip "
+                              "-- WONDERS-GZIP-1 is not live"))
+    except Exception as e:
+        out.append((FAIL, f"could not probe live gzip via /ops/selfcheck: {e}"))
+    return out
+
+
 if __name__ == "__main__":
     sys.exit(main())

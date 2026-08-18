@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request, Header, Body, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
@@ -151,6 +152,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── WONDERS-GZIP-1 (18 Aug 2026) ──────────────────────────────────────────────
+# GET /wonders ships the whole heritage catalog (~485 KB raw, growing ~1.5 KB per
+# site) on every app boot, and neither nginx nor the app compressed JSON. This
+# middleware gzips any response over 1 KB for clients that accept it (all
+# browsers do): the catalog fetch drops to ~144 KB, and the heritage portfolio
+# can grow without moving the needle. Ledger RG-0101 asserts it stays on.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 # ── SELFCHECK-1 (David, 7 Aug 2026) ────────────────────────────────────────
 # A session cannot open an SSH tunnel to this box, so every "is that dependency
