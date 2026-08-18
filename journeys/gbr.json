@@ -11,7 +11,7 @@
  "stat1_icon": "🗿",
  "stat2_icon": "🚗",
  "route_summary": "<b>Full day</b> · Salisbury Plain & the Marlborough Downs · Stonehenge, Avebury &amp; Salisbury.",
- "legend": "Stonehenge, Avebury, Silbury Hill, West Kennet Long Barrow, the Uffington White Horse and Salisbury Cathedral are real UNESCO World-Heritage and public sites, shown accurately with bearings and facts from public sources. The tour operator, vehicle and country-house stay are a generic composite (SO-1b) — a demo a real Wessex operator could publish for their own day out. AI imagery.",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending",
  "overlays": {
   "ends": "🚩 Start &amp; finish",
   "over": "🛏️ Country house",

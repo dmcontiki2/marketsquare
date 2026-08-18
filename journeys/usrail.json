@@ -11,7 +11,7 @@
  "stat1_icon": "🚂",
  "stat2_icon": "🗓️",
  "route_summary": "<b>Whole route</b> · 5 legs · ~3,900 km · 2 nights aboard + 2 stopover nights. <b>True price:</b> the real Zephyr runs coach from ±US$150, roomette from ±US$1,100 pp; escorted luxury rail from ±US$6,000. This composite journey: ±US$6,900 pp all-in — fares indicative, confirm with agency.",
- "legend": "Modelled on the real California Zephyr route — real stations, canyons and passes shown accurately with facts from public",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending",
  "overlays": {
   "ends": "🚩 Board &amp; alight",
   "over": "🛏️ Sleepers &amp; stopovers",

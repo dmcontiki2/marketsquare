@@ -22,7 +22,8 @@ TYPE_BG = {"start": "#2e7d32", "finish": "#b91c1c", "over": "#0c1a2e",
 
 DEFAULT_OV = {"ends": "🚩 Start &amp; finish", "over": "🛏️ Overnight stays",
               "food": "🍽️ Food &amp; dishes", "view": "🏔️ Viewpoints",
-              "sight": "📍 Sights", "route": "〰️ Route", "towns": "◉ Towns", "her": "🏛️ Heritage sites"}
+              "sight": "📍 Sights", "route": "〰️ Route", "towns": "◉ Towns", "her": "🏛️ Heritage sites",
+              "proute": "🔵 Route", "stays": "🛏️ B&amp;B / Stays intros", "partners": "🤝 Partner referrals"}
 
 DAY_COLORS = ["#2e7d32", "#3b5ba5", "#C8873A", "#7b4fa6", "#b3362e"]
 
@@ -91,7 +92,8 @@ def render_spec(spec, template_html, media="embed", photo_dir=None):
                 else:
                     stop["ph"] = placeholder(stop); missing += 1
 
-    data = {"days": spec["days"], "towns": spec.get("towns", []), "her": spec.get("heritage", [])}
+    data = {"days": spec["days"], "towns": spec.get("towns", []), "her": spec.get("heritage", []),
+            "partners": spec.get("partners", [])}
     cfg = {
         "unit": spec.get("unit", "Day"),
         "s1": spec.get("stat1_icon", "🥾"),

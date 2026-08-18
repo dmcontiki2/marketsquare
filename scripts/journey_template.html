@@ -48,7 +48,7 @@
 const J   = {{DATA}};
 const CFG = {{CFG}};
 
-const COL={start:'#2e7d32',finish:'#b91c1c',over:'#0c1a2e',sight:'#1f6f52',food:'#C8873A',view:'#3b5ba5'};
+const COL={start:'#2e7d32',finish:'#b91c1c',over:'#1e7d34',sight:'#1f6f52',food:'#C8873A',view:'#3b5ba5'};
 
 const map=L.map('map',{scrollWheelZoom:false,gestureHandling:true,gestureHandlingOptions:{text:{touch:'Use two fingers to move the map',scroll:'Use ctrl + scroll to zoom the map',scrollMac:'Use ⌘ + scroll to zoom the map'}}});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenStreetMap'}).addTo(map);
@@ -71,7 +71,7 @@ function groupFor(t){ return (t==='start'||t==='finish') ? G.ends : (G[t]||G.sig
    Spec-driven: J.her = [[name, lat, lng, blurb?], ...]; absent = layer never created. */
 const herG=L.layerGroup();
 (J.her||[]).forEach(function(h){
-  herG.addLayer(L.marker([h[1],h[2]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#6d28d9"><span>\ud83c\udfdb\ufe0f</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
+  herG.addLayer(L.marker([h[1],h[2]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#d4a017"><span>\ud83c\udfdb\ufe0f</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
     .bindPopup('<div class="pk"><div class="b"><h3>\ud83c\udfdb\ufe0f '+h[0]+'</h3><p>'+(h[3]||'Public heritage site \u2014 worth the detour.')+(h[4]?'<br><a href="https://trustsquare.co/?wonder='+h[4]+'&from='+encodeURIComponent(location.pathname.split('/').pop())+'" target="_blank" rel="noopener" style="font-weight:700;">View heritage site in MarketSquare \u2197</a>':'')+'</p></div></div>'));
 });
 
@@ -79,7 +79,7 @@ const herG=L.layerGroup();
 var sel='all';
 
 function redraw(){
-  Object.keys(G).forEach(function(k){G[k].clearLayers();});
+  Object.keys(G).forEach(function(k){if(k!=='over')G[k].clearLayers();});  /* stays are journey-wide (LAYERS-4-1) */
   routeG.clearLayers();
   var bounds=[];
   J.days.forEach(function(d){
@@ -92,7 +92,7 @@ function redraw(){
     }));
     if(showAll||isSel){
       d.stops.forEach(function(s){
-        groupFor(s.type).addLayer(L.marker([s.lat,s.lng],{icon:pin(s)}).bindPopup(popup(s)));
+        if(s.type!=='over') groupFor(s.type).addLayer(L.marker([s.lat,s.lng],{icon:pin(s)}).bindPopup(popup(s)));
         bounds.push([s.lat,s.lng]);
       });
       d.seg.forEach(function(p){bounds.push(p);});
@@ -117,12 +117,25 @@ var tabs=document.getElementById('daytabs');
 var rt=document.createElement('button');rt.setAttribute('data-k','all');rt.innerHTML='<b>🗺️ Route</b><span>overview</span>';rt.onclick=showAll;tabs.appendChild(rt);
 J.days.forEach(function(d){var b=document.createElement('button');b.setAttribute('data-k',d.day);b.innerHTML='<b>'+CFG.unit+' '+d.day+'</b><span>'+d.title+'</span>';b.onclick=function(){showDay(d.day);};tabs.appendChild(b);});
 
-/* everything on by default, then the tick-boxes are the user's control */
-[G.ends,G.over,G.food,G.view,G.sight,routeG,townG,herG].forEach(function(l){l.addTo(map);});
+/* LAYERS-4-1 (17 Aug 2026): the RUL-021 pilot format — four PRODUCT layers, not
+   eight pin-type filters. Route = the journey's pins & lines; Heritage = free
+   pre-info; B&B/Stays = introductions (1T), journey-wide; Partner referrals =
+   link-out (pilot wording: pending). Towns stay ambient — always on, no tick. */
+const partG=L.layerGroup();
+(J.partners||[]).forEach(function(pr){
+  partG.addLayer(L.marker([pr[1],pr[2]],{icon:L.divIcon({className:'',html:'<div class="pin" style="background:#6d28d9"><span>\ud83e\udd1d</span></div>',iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28]})})
+    .bindPopup('<div class="pk"><div class="b"><h3>\ud83e\udd1d '+pr[0]+'</h3><p>'+(pr[3]||'')+'</p>'+(pr[4]?'<p><a href="'+pr[4]+'" target="_blank" rel="noopener">Visit partner \u2197</a></p>':'')+'</div></div>'));
+});
+J.days.forEach(function(d){d.stops.forEach(function(s){
+  if(s.type==='over') G.over.addLayer(L.marker([s.lat,s.lng],{icon:pin(s)}).bindPopup(popup(s)));
+});});
+const prodRoute=L.layerGroup([G.ends,G.food,G.view,G.sight,routeG]);
+[prodRoute,G.over,townG,herG,partG].forEach(function(l){l.addTo(map);});
 var ov={};
-ov[CFG.ov.ends]=G.ends; ov[CFG.ov.over]=G.over; ov[CFG.ov.food]=G.food;
-ov[CFG.ov.view]=G.view; ov[CFG.ov.sight]=G.sight; ov[CFG.ov.route]=routeG; ov[CFG.ov.towns]=townG;
+ov[CFG.ov.proute]=prodRoute;
 if(J.her&&J.her.length){ov[CFG.ov.her]=herG;}
+ov[CFG.ov.stays]=G.over;
+ov[CFG.ov.partners]=partG;
 var _isMob=window.innerWidth<=640;
 var layerCtl=L.control.layers(null,ov,{collapsed:false}).addTo(map);
 

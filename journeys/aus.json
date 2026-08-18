@@ -11,7 +11,7 @@
  "stat1_icon": "🪸",
  "stat2_icon": "⛴️",
  "route_summary": "<b>Full reef day</b> · out from Port Douglas to the Agincourt ribbon reefs · coral gardens, turtles, reef sharks &amp; manta.",
- "legend": "The Great Barrier Reef, the Agincourt ribbon reefs and Michaelmas Cay are real, protected public places off Queensland, shown accurately with bearings and facts from public sources. The dive operator, vessel and island eco-stay are a generic composite (SO-1b) — a demo a real reef operator could publish. AI imagery. Marine sightings are never guaranteed.",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending",
  "overlays": {
   "ends": "🚩 Port &amp; return",
   "over": "🛏️ Island eco-stay",

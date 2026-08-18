@@ -11,7 +11,7 @@
  "stat1_icon": "⛵",
  "stat2_icon": "⏱",
  "route_summary": "<b>Whole route</b> · 7 days · fly-in from Joburg + the coast north to the stone island · ✈ JNB ⇄ Maputo return from ~R3,200 (direct), booked by your travel agency. &nbsp;<span class=\"hint\">Tap a day to fly or sail it.</span>",
- "legend": "<b>On the coast</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏝️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending<br><b>On the coast</b><div>🚩 Start / 🏁 Finish</div><div>✈️ Flight legs</div><div>🛏️ Overnight stay</div><div>🏝️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real towns (for bearing)</div>",
  "overlays": {
   "view": "🏝️ Viewpoints",
   "route": "〰️ Coastal route"

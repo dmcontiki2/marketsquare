@@ -11,7 +11,7 @@
  "stat1_icon": "🚂",
  "stat2_icon": "🗓️",
  "route_summary": "<b>Whole route</b> · 4 legs · ~1,000 km · 3 nights. <b>True price:</b> the scheduled trains run from ±£420 all-in; the luxury Royal Scotsman from ±£3,750 for two nights. This composite journey: ±£4,450 pp all-in — fares indicative, confirm with agency.",
- "legend": "Modelled on the real East Coast Main Line, West Highland Line and Jacobite steam service — real stations and views shown",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending<br>Modelled on the real East Coast Main Line, West Highland Line and Jacobite steam service — real stations and views shown",
  "overlays": {
   "ends": "🚩 Board &amp; alight",
   "over": "🛏️ Sleepers &amp; stopovers",

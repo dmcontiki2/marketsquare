@@ -11,7 +11,7 @@
  "stat1_icon": "🚂",
  "stat2_icon": "🕓",
  "route_summary": "<b>Whole route</b> · 6 legs · ~12 000 km · rails to the Indian Ocean, wings over the Rift, the Nile home. Benchmark: the real thing runs 32 days from ±US$50 000 pp. &nbsp;<span class=\"hint\">Tap a leg to ride it.</span>",
- "legend": "<b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px\">🚂 rail — solid · ✈️ flight — dashed · 🛳️ Nile — dotted</div><div style=\"color:#cdd8e8\">no railway runs north of Dar es Salaam</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
+ "legend": "<b>Four layers</b><br><span style=\"color:#3b5ba5\">●</span> Route — the pins you travel between<br><span style=\"color:#d4a017\">●</span> Heritage sites — free pre-info<br><span style=\"color:#1e7d34\">●</span> B&B / Stays — introductions (1T)<br><span style=\"color:#6d28d9\">●</span> Partner referrals — link-out, pending<br><b>On the line</b><div>🚩 Start / 🏁 Finish</div><div>🛏️ Overnight stay</div><div>🏔️ Viewpoint</div><div>📍 Sight</div><div>🍽️ Food</div><div>🏛️ Heritage site</div><div style=\"margin-top:3px\">🚂 rail — solid · ✈️ flight — dashed · 🛳️ Nile — dotted</div><div style=\"color:#cdd8e8\">no railway runs north of Dar es Salaam</div><div style=\"margin-top:3px;color:#cdd8e8\">◉ real cities (for bearing)</div>",
  "overlays": {
   "route": "🚂✈️🛳️ Route",
   "view": "🏔️ Viewpoints",
