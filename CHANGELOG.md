@@ -1,3 +1,21 @@
+## 2026-08-17 — LAYERS-4-1: every journey map converted to the RUL-021 four-layer pilot format
+
+David's sequencing call: maps first, dossier-summary work second. The generator learned the
+approved ZA-pilot product format and all 11 spec-built maps were regenerated:
+- Four PRODUCT layers replace the eight pin-type tick-boxes: Route (journey pins+lines),
+  Heritage sites (free pre-info, pins now pilot-gold), B&B/Stays (introductions 1T — now
+  journey-wide, green, never day-refilled), Partner referrals (new spec-driven lane, purple,
+  link-out, "pending" per pilot wording; empty today by honest design). Towns ambient.
+- Legends rewritten across 11 specs to the pilot Four-layers wording (air/boat/steam hint
+  lines preserved where present). journey_render passes spec partners through; DEFAULT_OV
+  gains proute/stays/partners labels.
+- ms.js cache-busters bumped ×11. Untouched: adventures_za_map.html (IS the pilot),
+  de (no spec — legacy pipeline, follow-up), uk + reserve (superseded, cached-clients only).
+- Verified: outputs carry Four layers/partG/prodRoute + pilot colors; planner_selftest green
+  (tokens clean, pin-spread, validator refusals 4/4); node --check green. Rail maps still
+  photo-pending (0 embedded — pre-existing HIGGSFIELD queue, not a regression).
+- Backups: journey_template/journey_render .bak-layers4-*, specs journeys/*.json.bak-layers4.
+
 ## 2026-08-17 — SSH lockout diagnosed + fixed at the Hetzner panel (SSH-LOCKOUT-1)
 Post-blackout, port 22 timed out for BOTH David and the session while the site served
 normally. Root cause found in the Hetzner console Activities feed: the

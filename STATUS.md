@@ -5,6 +5,12 @@
 
 ## Current Session
 
+## 2026-08-17 — LAYERS-4-1 done (maps-first per David)
+All 11 generated journey maps now carry the four-layer pilot format (RUL-021); ms.js bumped;
+selftest green. Rides the next deploy with FX-LIVE-1 + DEPLOY-HOOK-1 (still awaiting David's
+deploy_marketsquare.bat click + add_deploy_token.bat). Next: dossier-summary blocks on super
+adverts (Adventures full, Stays/Services lighter) attaching the Expedition Dossier example.
+
 ## 2026-08-17 — The three Great Rail Journeys are LIVE as full trip products
 usrail / gbrail / aurail (a317e90c): generator maps with true-price benchmark lines,
 corridor heritage layers, rail-flavoured layer labels; six benchmark listings seeded
