@@ -1,3 +1,88 @@
+## 2026-08-18 — WONDERS-CANON-1: the two-catalog fork found and killed (corrects this morning's entry)
+
+- David's deploy landed gzip (verified live: 541 KB catalog travels as 149 KB) but served
+  300 sites, not 351 — the repo carried TWO files named wonders.json. Root (300, photo-
+  verified schema of 19 Jun, the one the manifest ships) and assets/ (332, older schema,
+  NEVER shipped, growing since May — its 32 strays include duplicate sites under second
+  ids: Stonehenge, British Museum, the Met). HERITAGE-RAIL-1 merged into the wrong one.
+- Fix at class level: root reconciled 300 -> 319 (the 19 approved rail sites only; zero
+  changes to the original 300 — verified field-identical). The 32 strays are quarantined
+  in assets/wonders_pending_32.json pending a dedupe pass (OPEN follow-up). The fork
+  assets/wonders.json is RETIRED by rename (.superseded-20260818). Ledger RG-0102 (LOCKED)
+  trips if the fork file ever reappears, if root loses a rail id, or shrinks below 319.
+- Migration 023's guard corrected: refuses on missing rail IDS (not a count tied to the
+  dead 351 figure). This morning's "332 -> 351" wording described the fork, not the truth:
+  the shipped catalog goes 300 -> 319 on the next deploy.
+
+## 2026-08-18 — RAIL-PHOTOS-1: all three super train trips fully photographed (39/39)
+
+The launch-city rail showcase is complete: usrail 15/15 (Chicago–San Francisco Zephyr),
+gbrail 12/12 (London–Mallaig), aurail 12/12 (The Ghan, Adelaide–Darwin). Nano Banana Pro,
+3:2, one-at-a-time per the runbook; claim-guard on every file; 5 rejects regenerated on
+sight (readable car lettering ×1, off-brief subjects ×4 — hotel/Edinburgh/Morar prompts
+needed the subject lifted above the rail style block; pack updated lesson). ~88 credits.
+All three maps rebuilt with photos embedded (0 pending); ms.js rail rows bumped to v=4.
+GRANT-KILL-1 completed by David: Chrome now downloads into MarketSquare\_incoming — no
+Downloads grant needed ever again; runbook updated (overnight photo runs feasible again).
+Rides the next deploy.
+
+## 2026-08-18 — maintenance-loop: queue drained, ledger green, no code change
+
+- B2b brain run 2026-08-18T05:33:32Z, mode SHADOW (kill switch OFF — the default;
+  arming stays David's act alone), phase postlaunch, trust-core GUARDED, brain
+  KEYED:anthropic. Code stamp 99202e7. Report: `.maint_agent/run_20260818T053332Z.json`
+  — 0 faults seen, 0 acted. Heartbeat POST landed and was read back from
+  `GET /dashboard/maint` (received_at 05:33:46Z), so the +1 page B2b readiness row is
+  current, not stale.
+- Fault register is fully drained: 35 rows total — 26 verified, 7 closed, 2 duplicate,
+  **0 new and 0 fix-shipped**. Nothing met the "SHADOW: gates GREEN, patch ready" bar,
+  so no patch was applied and no fault row was touched. Strict contract honoured:
+  no register rows in, no commits of code out.
+- Regression ledger green both sides of the session (exit 0 before and after): every
+  LOCKED fix holding, 3 known defects still open and expected — RG-0075 (admin-gate
+  script duplicated across 5 files), RG-0090 (gated index document cacheable at the
+  edge), RG-0101 (live gzip on /wonders unprovable from here: /ops/selfcheck 401).
+- Escalation brief: none written — no escalations in the last 24h.
+- Session note (not a product fault): probes to the origin using urllib's default
+  User-Agent answer 403 at the edge, including with a valid ts_review cookie. The
+  ledger's `_get` sends a named UA and reads through cleanly. Any future session
+  hand-probing the live site must send a real User-Agent or it will misread an edge
+  UA block as a gate failure.
+
+## 18 Aug 2026 — PRE-LAUNCH COST REVIEW Rev C (COST-REVC-1)
+
+Full re-costing 11 days before the gate comes down. `MarketSquare_Cost_Breakdown_v2_AIcosts.xlsx`
+gains nine Rev C sheets (627 formulas, recalculated clean); Rev A and Rev B sheets preserved
+unchanged. Backup: `.bak-20260818-065905-prerevc`.
+
+**New / restated cost lines**
+- HUMAN OPERATIONS — 3 people x 2 hrs/day (David's instruction). $1,690/mo at R150/hr, 7-day
+  roster. 78% of the fixed base and 5.2x the entire tech stack. Fully parameterised with a
+  rate/roster sensitivity grid. THE RATE IS CLAUDE'S PLACEHOLDER, NOT DAVID'S NUMBER.
+- ACCOUNTANT from MONTH 1 — R2,000 + R500 software = $154/mo (was $0 in Y1, R2k from Y2).
+- AI SWAP-OUT PROVISION — $40 x 7 models = $280 one-off at launch (supersedes $20/lane).
+- AI RUNNING COST restated onto the OpenAI base lane: metered API falls 60% (3-yr $10,317 -> $4,127).
+- HETZNER — actual bill $32/mo replaces the modelled EUR15.49 line; 2026 repricing documented.
+- POSTGRES — budgeted from month 7 at $22/mo (option B), 5 options priced. Launch stays SQLite.
+- SUBSCRIPTION REGISTER — 45 rows, every external dependency on-budget for the first time
+  (was 5 infra lines). 20 run at $0 on free tiers / open data.
+- CASH FLOW + CASH RESERVE — first monthly cash view of Year 1; recommended reserve $16,400.
+- FX — ZAR/USD 18.50 -> 16.21 (live). The model was 14% stale.
+
+**Business case impact:** Y1 costs $11,131 -> $35,735; margin 95.3% -> 84.8%; break-even
+131 -> 764 sellers (~2.2 -> ~13 founding cities); cash trough -$5,361 at month 6, positive
+from month 7. Survives a 75% ramp miss at 50.6% margin.
+
+**Findings raised:** Hetzner grandfathering is one rescale from +129% (RUL-025); CX43 gives 2x
+CPU/RAM for +EUR0.50 but must not be taken pre-launch; the Postgres descent rule has taken zero
+ground since the July ruling (53 -> 53 expressions, +1 added); 86% of AI spend is subscriptions,
+not metered API; external uptime monitor is still an open launch gate with no vendor.
+
+**Superseded:** `Cost_Breakdown_GlobalLaunch.xlsx` and the `3-Year Summary` sheet — banner added.
+
+Deliverable: `PRE_LAUNCH_COST_REVIEW_2026-08-18 — nice.docx` (Professional Navy house style).
+Rulings recorded: RUL-023, RUL-024, RUL-025.
+
 ## 2026-08-18 — Migration 023: relink wonders rides the deploy (HERITAGE-RAIL-1 follow-through)
 
 - Found while answering "where is relink_wonders.py": the root script is NOT in the

@@ -5,6 +5,43 @@
 
 ## Current Session
 
+## 2026-08-18 — Heritage catalog: canon fixed, one deploy click pending
+- Root wonders.json 300 -> 319 staged (WONDERS-CANON-1; fork retired; RG-0102 LOCKED).
+  gzip already live. On David's next deploy: 319 serves, migration 023 relinks, then
+  promote RG-0101. Follow-ups open: dedupe assets/wonders_pending_32.json; tester-intake
+  DANGER on 17 orchestration_v2 pages (blocking nightly strict gate since 17 Aug).
+
+## 2026-08-18 — Rail photos 39/39, maps whole
+usrail/gbrail/aurail photographed, rebuilt, embedded, bumped v=4 — the three-city rail
+showcase is visually complete on disk; ships with the next deploy. FX-LIVE-1 verified
+live (RG-0098 LOCKED by the maintenance loop; ZAR 16.18 via frankfurter). Still open:
+MS_DEPLOY_TOKEN mint (add_deploy_token.bat, David's click) · dossier-summary blocks next.
+
+## 2026-08-18 — Maintenance loop: nothing in the queue, nothing shipped
+- Fault register drained: 0 new, 0 fix-shipped (26 verified, 7 closed, 2 duplicate of 35).
+  No fixes owed, so no code change and no ledger entry added this run.
+- Ledger green before and after (exit 0). Open by design: RG-0075, RG-0090, RG-0101.
+- Brain heartbeat current on the +1 page (05:33:46Z, SHADOW, brain KEYED:anthropic).
+  Escalation brief: none — no escalations in 24h.
+- Carried from the morning sessions, unchanged by this run: heritage catalog 300 -> 319
+  staged and waiting on David's next deploy (then promote RG-0101); dedupe of
+  assets/wonders_pending_32.json; tester-intake DANGER on 17 orchestration_v2 pages.
+
+- **Cost model Rev C shipped (18 Aug).** Full pre-launch re-costing. Fixed cash base is now
+  **$2,176/mo** — 78% human operations, 7% accountant, 15% the entire technology estate.
+  Y1 margin restated 95.3% -> **84.8%**; break-even **764 sellers (~13 founding cities)**,
+  up from 131. Cash trough **-$5,361 at month 6**, positive from month 7. Recommended opening
+  reserve **$16,400 (R265,844)**.
+- **Awaiting David (3 decisions, all one cell on 'Assumptions Rev C'):** (1) the nominal hourly
+  rate + roster — the grid spans $800-$3,900/mo and moves the case more than everything else
+  combined; (2) whether the 3 people start at launch or month 7 (worth ~$10,100 of Y1 cost and
+  most of the cash trough); (3) whether to fund the reserve, and from where.
+- **New risk on the board (RUL-025):** the Hetzner production box is grandfathered at EUR15.49
+  and one rescale away from EUR35.49 permanently. Cost of the risk is only ~$278/yr — do NOT
+  migrate pre-launch.
+- **Unpaid debt surfaced:** the Postgres descent rule has taken zero ground since the 29 Jul
+  ruling — datetime('now') was 53 then and is 53 now, with one expression added since.
+
 ## 2026-08-18 — Heritage rail expansion staged
 - wonders.json 332 -> 351 (backup: assets/wonders.json.bak-railexp-20260818-064040) +
   WONDERS-GZIP-1 in bea_main.py (backup: bea_main.py.bak-gzip-20260818-063135). Both
