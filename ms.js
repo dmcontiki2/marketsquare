@@ -2211,9 +2211,9 @@ const ADV_COUNTRY_MAP = {
 // falls back to ADV_COUNTRY_MAP[country], so every existing country tour is unchanged.
 const ADV_TOUR_MAP = {
   c2c: { file:'adventures_c2c_map.html?v=20', title:'🗺️ Ride the line', blurb:'Cape to Cairo by rail — tap a leg, then the pins: grand stations, the thundering falls, game from the window, spice ports, temples at dawn and the pyramids at the end of the line.' },
-  usrail: { file:'adventures_us_rail_map.html?v=7', title:'🗺️ Ride the line', blurb:'Chicago to San Francisco on the storied Zephyr route — tap a leg, then the pins: the Mississippi, the Rockies\u2019 canyons, the desert dawn and Donner Pass down to the Bay.' },
-  gbrail: { file:'adventures_gb_rail_map.html?v=7', title:'🗺️ Ride the line', blurb:'London to the Hebridean sea — tap a leg, then the pins: York and Durham, the Northumberland coast, Rannoch Moor and the steam finale over Glenfinnan.' },
-  aurail: { file:'adventures_au_rail_map.html?v=7', title:'🗺️ Ride the line', blurb:'The Ghan, Adelaide to Darwin — tap a leg, then the pins: the Flinders at dusk, the Marla dawn, the red heart and the Top End finale.' },
+  usrail: { file:'adventures_us_rail_map.html?v=8', title:'🗺️ Ride the line', blurb:'Chicago to San Francisco on the storied Zephyr route — tap a leg, then the pins: the Mississippi, the Rockies\u2019 canyons, the desert dawn and Donner Pass down to the Bay.' },
+  gbrail: { file:'adventures_gb_rail_map.html?v=8', title:'🗺️ Ride the line', blurb:'London to the Hebridean sea — tap a leg, then the pins: York and Durham, the Northumberland coast, Rannoch Moor and the steam finale over Glenfinnan.' },
+  aurail: { file:'adventures_au_rail_map.html?v=8', title:'🗺️ Ride the line', blurb:'The Ghan, Adelaide to Darwin — tap a leg, then the pins: the Flinders at dusk, the Marla dawn, the red heart and the Top End finale.' },
 };
 
 // Optional paid extensions per tour. Surfaced as clearly-priced add-ons under the tour's ONE
