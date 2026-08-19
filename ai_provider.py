@@ -70,6 +70,13 @@ TASK_MODEL = {
     # ONE-MODEL STANDBY (David's ruling, 18 Jul 2026): whole row = mistral-medium-3.5-128b.
     # Golden-set basis same day: 7/7 text + 2/2 vision (qwen3.6 failed vision JSON; qwen3-235b
     # failed 1/7 adverts). One standby = one behaviour to know. Prior row ids in CHANGELOG.
+    # GEMINI CANARY (RUL-032, David 19 Aug 2026): photo anon SCAN/REFINE lane ONLY -- Gemini is
+    # grounding-trained (native boxes/masks), the capability the two general lanes lacked (RUL-031).
+    # sonnet tier only (the anon scan's tier); deliberately NOT in failover_order -- it is never an
+    # automatic failover target, and the VERIFY pass stays on the active lane (a weak scanner can
+    # never leak). Dark until GEMINI_API_KEY lands; goes hot only via PHOTO_SCAN_CANARY=1 after the
+    # photo eval set passes at 100% plate recall (Switch Test Plan). Model id: re-verify at key time.
+    "gemini":    {"sonnet":"gemini-3.7-flash"},
 }
 
 @dataclass
@@ -207,7 +214,31 @@ def _scaleway(messages, model, max_tokens, system, timeout=30):
 # NOTE (P6/D5, 15 Aug 2026): the fallback ORDER no longer comes from this dict's
 # insertion order — complete() ranks fallbacks by AI_BASELINE.json failover_rank and
 # filters them on cost (see _cost_approved_fallbacks below).
-ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway}
+def _gemini(messages, model, max_tokens, system, timeout=30):
+    """Gemini adapter via Google's OpenAI-compatible endpoint (RUL-032 canary).
+    Same translation + parity rules as _openai/_scaleway: 200-with-empty-text is a failure."""
+    import httpx
+    key=envkey("GEMINI_API_KEY")
+    if not key: return AIResult("",None,None,"gemini",model,ok=False,error_kind="unconfigured")
+    body={"model":model,"max_tokens":max_tokens,"messages":_to_openai_messages(messages,system)}
+    try:
+        with httpx.Client(timeout=timeout) as c:
+            r=c.post("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                     headers={"Authorization":"Bearer "+key,"content-type":"application/json"},
+                     json=body)
+        j=r.json()
+        text=(j.get("choices",[{}])[0].get("message",{}).get("content","") or "")
+        u=j.get("usage",{}) or {}
+        _ok = (r.status_code==200 and bool(text))
+        return AIResult(text, u.get("prompt_tokens"), u.get("completion_tokens"), "gemini", model,
+                        ok=_ok, status=r.status_code,
+                        error_kind="" if _ok else _classify(r.status_code, r.text[:300]))
+    except httpx.TimeoutException:
+        return AIResult("",None,None,"gemini",model,ok=False,error_kind="timeout")
+    except Exception:
+        return AIResult("",None,None,"gemini",model,ok=False,error_kind="connection")
+
+ADAPTERS={"anthropic":_anthropic,"openai":_openai,"scaleway":_scaleway,"gemini":_gemini}
 
 # ── AI_BASELINE.json — failover order + cost approval (P6/D5, 15 Aug 2026) ─────────
 # Before this, an outage moved traffic to the next lane in the ADAPTERS dict literal
@@ -259,7 +290,8 @@ def _cost_approved_fallbacks(task, exclude):
 # HEALTH is the breaker's question, answered per call inside complete().
 _LANE_KEYS = {"anthropic": ("ANTHROPIC_API_KEY",),
               "openai": ("OPENAI_API_KEY",),
-              "scaleway": ("SCALEWAY_API_KEY", "FAILOVER_API_KEY")}
+              "scaleway": ("SCALEWAY_API_KEY", "FAILOVER_API_KEY"),
+              "gemini": ("GEMINI_API_KEY",)}
 
 def configured_lanes():
     """Providers with a key present (env or server .env)."""

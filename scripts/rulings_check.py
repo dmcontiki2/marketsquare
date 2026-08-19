@@ -71,6 +71,17 @@ REFLECTIONS = {
                                      "rg_gate_admin_never_locked"], []),
    ("RULINGS.md", ["NOBODY ENTITLED TO ENTER MAY BE LOCKED OUT BY THEIR DEVICE"], []),
  ],
+ "RUL-031": [
+   ("RULINGS.md", ["NO MORE MICRO-FIXES TO THE ANON-BLUR MACHINERY"], []),
+   ("CHANGELOG.md", ["deliberately NOT re-patched"], []),
+ ],
+ "RUL-032": [
+   ("ai_provider.py", ["def _gemini", "GEMINI CANARY (RUL-032"], []),
+   ("bea_main.py", ["def _anon_scan_provider", "GEMINI-CANARY-1"], []),
+   ("scripts/eval_photo_anon.py", ["100% plate recall"], []),
+   ("scripts/regression_ledger.py", ["RG-0119", "rg_gemini_canary"], []),
+   ("AI_BASELINE.json", ["CANARY (photo scan/refine only)"], []),
+ ],
  "RUL-026": [
    ("bea_main.py", ["RUL-026: showcase supers never fade", "Showcase adverts are admin-managed."], []),
    ("migrations/024_showcase_immortal.py", ["RUL-026"], []),

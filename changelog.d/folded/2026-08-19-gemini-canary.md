@@ -1,0 +1,7 @@
+## 2026-08-19 — GEMINI-CANARY-1: grounding-class scanner for the photo-anon lane (RUL-031/032), dark until eval
+
+David ruled (RUL-031): no more micro-fixes to the blur machinery — after the 5/7/10 Aug fixes a fresh upload still published over-smeared, because both general-LLM lanes (anthropic pre-14 Aug, openai gpt-5.6-terra since) fail at box coordinates. Task-model mismatch, not vendor quality: the PIL painter and verify pass are fine; the boxes going in are not.
+
+From the full costed field (AI_PHOTO_COST_MODEL.xlsx, new "Pricing (Aug 2026) swap" sheet — terra $1,729/yr, Grok 4.1 Fast $155/yr but same failed class, Qwen3-VL $316/yr, local CV $0) David picked the **Gemini canary** (RUL-032): Gemini 3.7 Flash scans + refines (grounding-trained, ~0.13× base cost, $548/yr in canary shape), the active lane verifies every redaction — a weak scanner can never leak.
+
+Built dark: `_gemini` adapter + sonnet-tier row in ai_provider.py (NOT in failover_order); AI_BASELINE.json + ai_price_card.json carry the lane (baseline check 0 FAIL); `_anon_scan_provider()` in bea_main.py routes ONLY the initial scan + refine, armed by `PHOTO_SCAN_CANARY=1` + `GEMINI_API_KEY`; verify pass untouched by construction. Eval runner: scripts/eval_photo_anon.py — 100% plate recall required before any traffic. Tripwire RG-0119 (OPEN; also guards that the verifier can never route through the canary). Awaiting David: budget-capped GEMINI_API_KEY. Backups: `.bak-gemini-*`.

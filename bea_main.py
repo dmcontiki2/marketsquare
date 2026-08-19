@@ -4048,7 +4048,8 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
     pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
     scan, _it, _ot, _svd = _anon_photo_scan(
-        _b64.b64encode(pbuf.getvalue()).decode(), _ts_active_provider(), category or "")
+        _b64.b64encode(pbuf.getvalue()).decode(),
+        _anon_scan_provider(_ts_active_provider()), category or "")   # GEMINI-CANARY-1
     if _it is not None or _ot is not None:
         _log_ai_spend(spend_who, "/listings/photo#anon-scan", "sonnet_vision", _it, _ot,
                       provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
@@ -13623,6 +13624,22 @@ def _anon_refine_regions(img, regions, provider, category, spend_who, endpoint):
             out.append(rough)
     return out
 
+def _anon_scan_provider(default):
+    """GEMINI-CANARY-1 (RUL-032, David 19 Aug 2026): which lane does the photo-anon
+    SCAN and REFINE (the box-coordinate work both general-LLM lanes failed at,
+    RUL-031). Returns "gemini" ONLY when the canary is armed (PHOTO_SCAN_CANARY=1,
+    env or server .env) AND the key is present; otherwise the caller's lane.
+    The VERIFY pass never routes here -- it stays on the active lane, so a weak
+    scanner degrades to more verify rounds, never to a leak. Dark by default;
+    arm only after scripts/eval_photo_anon.py passes at 100% plate recall."""
+    try:
+        import ai_provider as _ap
+        if (_ap.envkey("PHOTO_SCAN_CANARY") or "0") == "1" and "gemini" in _ap.configured_lanes():
+            return "gemini"
+    except Exception:
+        pass
+    return default
+
 def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     """Apply redaction, then VERIFY by re-scanning the blurred output; accumulate
     any newly-boxed regions for up to 2 correction rounds. Added 11 Jul 2026 after
@@ -13639,8 +13656,8 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
     _replace_on = _anon_replace_enabled()   # read once — each read is a DB round-trip
     for _round in range(4):   # refine+blur+verify: initial + up to 3 corrections
         if regions:
-            regions = _anon_refine_regions(img, regions, provider, category,
-                                           spend_who, endpoint)   # tighten; may DROP not-found
+            regions = _anon_refine_regions(img, regions, _anon_scan_provider(provider), category,
+                                           spend_who, endpoint)   # tighten; may DROP not-found (GEMINI-CANARY-1: canary lane when armed)
         if regions:
             _acc.extend(regions)
             # PHOTO-REPLACE-1: measure BEFORE painting another layer. Each round

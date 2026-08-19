@@ -1,491 +1,505 @@
 {
-  "_doc": "AI BASELINE -- the fixed, known cost figure. David's ruling, 14 Aug 2026: model selection cannot be automated when a silent change can move profit from good to very bad. This file pins the approved model AND ITS COST ENVELOPE per task tier. The envelope matters as much as the model id: the same model at 10 uncapped images costs several times the same model at a capped resolution, so a pure model-id register would let cost drift with the id unchanged.",
-  "version": "2.0",
-  "created": "2026-08-14",
-  "baseline_lane": "openai",
-  "price_card_version": "2026-08-01.1",
-  "fx_multiplier_eur_lanes": 1.155,
-  "failover_cost_tolerance": 6.0,
-  "failover_rule": "Two different tests, deliberately. AUTO-FAILOVER (anthropic) must stay within the continuity tolerance of 6.0x base -- it is chosen for continuity, not price, but the cost of continuity must be bounded. LAST RESORT (scaleway) is COST-EXEMPT because it is reached when the alternative is being down or banned -- but reaching it must ALERT and be time-boxed. Note the consequence of putting the cheapest lane at the base: every failover is now a cost increase by definition. That is accepted; what is not acceptable is that it would currently be INVISIBLE in the spend log (D3).",
-  "equivalence_test": [
-    {
-      "n": 1,
-      "test": "REGISTERED",
-      "rule": "The candidate model has an entry on ai_price_card.json. No price, no swap."
-    },
-    {
-      "n": 2,
-      "test": "CAPABLE",
-      "rule": "gate_by_tier passes for the exact tier -- the gate tuple is (model, tier, prompt version, effort, sampling), never a model-wide boolean."
-    },
-    {
-      "n": 3,
-      "test": "AFFORDABLE",
-      "rule": "Worst-case cost per CALL within the envelope is <= baseline worst case x tolerance. Note: per-Mtok price is NOT the test -- token shapes differ."
-    },
-    {
-      "n": 4,
-      "test": "GOLDEN",
-      "rule": "Passes the golden set on the LIVE seam, not on the dead failover/ package."
-    },
-    {
-      "n": 5,
-      "test": "RECORDED",
-      "rule": "The change is written with actor, prior value, new value, reason and timestamp. Today POST /admin/flags writes NONE of these."
-    }
-  ],
-  "tiers": {
-    "haiku": {
-      "envelope": {
-        "max_in_tokens": 4000,
-        "max_out_tokens": 1800,
-        "max_images": 0,
-        "max_image_px": 0
-      },
-      "baseline_lane": "openai",
-      "baseline_worst_case_usd": 0.00296,
-      "lanes": {
-        "anthropic": {
-          "model": "claude-haiku-4-5-20251001",
-          "worst_case_usd": 0.013,
-          "multiple_of_baseline": 4.392,
-          "role": "AUTO-FAILOVER",
-          "failover_rank": 1,
-          "continuity_ok": true
-        },
-        "openai": {
-          "model": "gpt-5.6-luna",
-          "worst_case_usd": 0.00296,
-          "multiple_of_baseline": 1.0,
-          "role": "BASE",
-          "failover_rank": 0,
-          "continuity_ok": true
-        },
-        "scaleway": {
-          "model": "mistral-medium-3.5-128b",
-          "worst_case_usd": 0.022523,
-          "multiple_of_baseline": 7.609,
-          "role": "SAFETY NET",
-          "failover_rank": 2,
-          "continuity_ok": false
-        }
-      }
-    },
-    "sonnet": {
-      "envelope": {
-        "max_in_tokens": 4000,
-        "max_out_tokens": 1400,
-        "max_images": 1,
-        "max_image_px": 1344
-      },
-      "baseline_lane": "openai",
-      "baseline_worst_case_usd": 0.028413,
-      "lanes": {
-        "anthropic": {
-          "model": "claude-sonnet-4-6",
-          "worst_case_usd": 0.038419,
-          "multiple_of_baseline": 1.352,
-          "role": "AUTO-FAILOVER",
-          "failover_rank": 1,
-          "continuity_ok": true
-        },
-        "openai": {
-          "model": "gpt-5.6-terra",
-          "worst_case_usd": 0.028413,
-          "multiple_of_baseline": 1.0,
-          "role": "BASE",
-          "failover_rank": 0,
-          "continuity_ok": true
-        },
-        "scaleway": {
-          "model": "mistral-medium-3.5-128b",
-          "worst_case_usd": 0.022187,
-          "multiple_of_baseline": 0.781,
-          "role": "SAFETY NET",
-          "failover_rank": 2,
-          "continuity_ok": true
-        }
-      }
-    },
-    "vision": {
-      "envelope": {
-        "max_in_tokens": 2000,
-        "max_out_tokens": 2000,
-        "max_images": 10,
-        "max_image_px": 1344
-      },
-      "baseline_lane": "openai",
-      "baseline_worst_case_usd": 0.006413,
-      "lanes": {
-        "anthropic": {
-          "model": "claude-haiku-4-5-20251001",
-          "worst_case_usd": 0.030063,
-          "multiple_of_baseline": 4.688,
-          "role": "AUTO-FAILOVER",
-          "failover_rank": 1,
-          "continuity_ok": true
-        },
-        "openai": {
-          "model": "gpt-5.6-luna",
-          "worst_case_usd": 0.006413,
-          "multiple_of_baseline": 1.0,
-          "role": "BASE",
-          "failover_rank": 0,
-          "continuity_ok": true
-        },
-        "scaleway": {
-          "model": "mistral-medium-3.5-128b",
-          "worst_case_usd": 0.052085,
-          "multiple_of_baseline": 8.122,
-          "role": "SAFETY NET",
-          "failover_rank": 2,
-          "continuity_ok": false
-        }
-      }
-    },
-    "triage": {
-      "envelope": {
-        "max_in_tokens": 2500,
-        "max_out_tokens": 400,
-        "max_images": 0,
-        "max_image_px": 0
-      },
-      "baseline_lane": "openai",
-      "baseline_worst_case_usd": 0.00098,
-      "lanes": {
-        "anthropic": {
-          "model": "claude-haiku-4-5-20251001",
-          "worst_case_usd": 0.0045,
-          "multiple_of_baseline": 4.592,
-          "role": "AUTO-FAILOVER",
-          "failover_rank": 1,
-          "continuity_ok": true
-        },
-        "openai": {
-          "model": "gpt-5.6-luna",
-          "worst_case_usd": 0.00098,
-          "multiple_of_baseline": 1.0,
-          "role": "BASE",
-          "failover_rank": 0,
-          "continuity_ok": true
-        },
-        "scaleway": {
-          "model": "mistral-medium-3.5-128b",
-          "worst_case_usd": 0.007796,
-          "multiple_of_baseline": 7.955,
-          "role": "SAFETY NET",
-          "failover_rank": 2,
-          "continuity_ok": false
-        }
-      }
-    },
-    "design": {
-      "_doc": "RUL-013 (15 Aug 2026): the post-1-Sep design lane. Deliberately NO anthropic entry (SPEND-GUARD-1: an unattended loop must never hold a metered key). Envelope DECLARED, not measured — no live caller exists yet; re-derive from real call shapes before first production traffic, alongside the golden run its gate requires.",
-      "envelope": {
-        "max_in_tokens": 12000,
-        "max_out_tokens": 4000,
-        "max_images": 0,
-        "max_image_px": 0
-      },
-      "baseline_lane": "openai",
-      "baseline_worst_case_usd": 0.18,
-      "lanes": {
-        "openai": {
-          "model": "gpt-5.6-sol",
-          "worst_case_usd": 0.18,
-          "multiple_of_baseline": 1.0,
-          "role": "BASE",
-          "failover_rank": 0,
-          "continuity_ok": true
-        },
-        "scaleway": {
-          "model": "mistral-medium-3.5-128b",
-          "worst_case_usd": 0.05544,
-          "multiple_of_baseline": 0.308,
-          "role": "SAFETY NET",
-          "failover_rank": 2,
-          "continuity_ok": true
-        }
-      }
-    }
+ "_doc": "AI BASELINE -- the fixed, known cost figure. David's ruling, 14 Aug 2026: model selection cannot be automated when a silent change can move profit from good to very bad. This file pins the approved model AND ITS COST ENVELOPE per task tier. The envelope matters as much as the model id: the same model at 10 uncapped images costs several times the same model at a capped resolution, so a pure model-id register would let cost drift with the id unchanged.",
+ "version": "2.0",
+ "created": "2026-08-14",
+ "baseline_lane": "openai",
+ "price_card_version": "2026-08-19.1",
+ "fx_multiplier_eur_lanes": 1.155,
+ "failover_cost_tolerance": 6.0,
+ "failover_rule": "Two different tests, deliberately. AUTO-FAILOVER (anthropic) must stay within the continuity tolerance of 6.0x base -- it is chosen for continuity, not price, but the cost of continuity must be bounded. LAST RESORT (scaleway) is COST-EXEMPT because it is reached when the alternative is being down or banned -- but reaching it must ALERT and be time-boxed. Note the consequence of putting the cheapest lane at the base: every failover is now a cost increase by definition. That is accepted; what is not acceptable is that it would currently be INVISIBLE in the spend log (D3).",
+ "equivalence_test": [
+  {
+   "n": 1,
+   "test": "REGISTERED",
+   "rule": "The candidate model has an entry on ai_price_card.json. No price, no swap."
   },
-  "pinned_constants": {
-    "_doc": "Non-model cost drivers. Changing any of these changes cost with the model id untouched -- the 896->1344 change on 11 Jul 2026 raised anon-scan input tokens ~2.2x across four call sites and is recorded only as a code comment.",
-    "vision_probe_max_px": 1344,
-    "orient_probe_max_px": 512,
-    "vision_draft_max_side": 1568,
-    "vision_draft_max_photos": 12,
-    "batch_cards_max_images": 10,
-    "grade_photo_limit": 3,
-    "anon_refine_max_regions": 8,
-    "anon_scan_max_regions": 12,
-    "max_tokens_ceiling_by_tier": {
-      "haiku": 1800,
-      "sonnet": 1400,
-      "vision": 2000,
-      "triage": 400,
-      "design": 4000
-    }
+  {
+   "n": 2,
+   "test": "CAPABLE",
+   "rule": "gate_by_tier passes for the exact tier -- the gate tuple is (model, tier, prompt version, effort, sampling), never a model-wide boolean."
   },
-  "known_drift_at_creation": [
-    {
-      "id": "D1",
-      "what": "_MODEL_PRICE['haiku'] = (0.80,4.00) vs price card (1.00,5.00)",
-      "where": "bea_main.py:1440",
-      "effect": "every haiku row in ai_spend_log is 20-25% low, and _check_cost_ceiling sums that table -- so the daily rails are 20-25% looser than intended",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D2",
-      "what": "_TS_AI_MODELS['vision'] = claude-sonnet-4-6, but TASK_MODEL['anthropic']['vision'] = claude-haiku-4-5",
-      "where": "bea_main.py:1505 vs ai_provider.py:46",
-      "effect": "if `import ai_provider` throws, every vision call silently upgrades to Sonnet -- 3x input, 3x output price. Exactly the silent drift this baseline exists to stop",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D3",
-      "what": "_log_ai_spend records the INTENDED lane, not the lane that answered; _token_cost is keyed on tier, not model",
-      "where": "bea_main.py:1671-1674, 1449-1454",
-      "effect": "after any failover, spend is attributed to the wrong lane and costed at Anthropic's rates. Post-failover cost figures are wrong by construction",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D4",
-      "what": "POST /admin/flags changes the live lane for every AI feature with no log line and no audit row",
-      "where": "bea_main.py:13663-13701",
-      "effect": "a lane change is undetectable after the fact. Its neighbour POST /admin/ai-restore 15 lines earlier DOES log",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D5",
-      "what": "Fallback chain order is the insertion order of a Python dict literal; no cost check anywhere in complete()",
-      "where": "ai_provider.py:197, 236-238",
-      "effect": "an outage moves traffic to the next lane with nothing asking its price",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D6",
-      "what": "Batch-card lister forwards up to 10 client images with NO resize",
-      "where": "bea_main.py:15983",
-      "effect": "the largest uncontrolled input-token surface in the app -- input size is set by the caller",
-      "severity": "MEDIUM"
-    },
-    {
-      "id": "D7",
-      "what": "ai_scoreboard FALLBACK_PRICE has scaleway at (0.40,2.00) vs card EUR 1.5/7.5, and ai_price_card.json is NOT in the deploy manifest",
-      "where": "ai_scoreboard.py:75; ops/autodeploy/deploy_manifest.txt",
-      "effect": "if the card was never hand-placed on the server, the scoreboard ranks scaleway as cheapest on every tier -- ~4.3x understated",
-      "severity": "MEDIUM"
-    },
-    {
-      "id": "D8",
-      "what": "AdvertAgent is entirely outside the perimeter -- no seam, 10 hardcoded claude-sonnet-4-6 sites, unregistered claude-opus-4-6 rate row, no downscale, max_searches to 20 at $0.01",
-      "where": "AdvertAgent/service/advert_agent.py:33-38, 115-649, 785-794",
-      "effect": "none of this baseline reaches it",
-      "severity": "MEDIUM"
-    },
-    {
-      "id": "D9",
-      "what": "The incumbent lane cannot be displaced by any current mechanism",
-      "where": "ai_price_card.json policy.anti_jitter + funnel step 4; ai_scoreboard.py GOLDEN_PASS; bea_main.py:17900",
-      "effect": "Three independently sensible clauses compose into permanent incumbency: the absolute switch floor is 'formally UNMET' and cannot be computed; sitting models are never re-auditioned; and the cheapest, highest-scoring lane is absent from GOLDEN_PASS so it cannot enter the ranking. The scoreboard's return value is discarded. Nothing here was chosen -- it emerged.",
-      "severity": "HIGH"
-    },
-    {
-      "id": "D10",
-      "what": "With the cheapest lane as base, EVERY failover is a cost increase -- anthropic is 4.4x base on haiku",
-      "where": "AI_BASELINE.json lane multiples",
-      "effect": "Correct and accepted by design -- continuity is worth it -- but it makes D3 (spend attributed to the intended lane, costed by tier not model) far more serious: a sustained failover would quadruple haiku-tier cost and be INVISIBLE in the spend log. Fix D3 before the flip, not after.",
-      "severity": "HIGH"
-    }
-  ],
-  "swap_routes": [
-    {
-      "id": "R1",
-      "route": "POST /admin/flags {ai_active}",
-      "control": "admin JWT, 3-string whitelist",
-      "deploy_needed": false,
-      "audited": false,
-      "speed": "instant (10s cache bust)",
-      "verdict": "HIGHEST RISK -- instant, platform-wide, unlogged"
-    },
-    {
-      "id": "R2",
-      "route": "POST /admin/flags {ai_active_override} -- time-decaying pin",
-      "control": "admin JWT, TTL 24h",
-      "deploy_needed": false,
-      "audited": false,
-      "speed": "instant",
-      "verdict": "RG-0019 deliberately does NOT trip on a pin, so a pin is an unrecorded lane change by design"
-    },
-    {
-      "id": "R3",
-      "route": "Automatic breaker failover (T1/T2/T3)",
-      "control": "none on cost",
-      "deploy_needed": false,
-      "audited": true,
-      "speed": "automatic",
-      "verdict": "By design, and correct for continuity -- but it must be constrained to cost-approved lanes"
-    },
-    {
-      "id": "R4",
-      "route": "AI_DRILL_BAN env + systemd drop-in",
-      "control": "server root",
-      "deploy_needed": false,
-      "audited": false,
-      "speed": "restart",
-      "verdict": "Bans a lane exactly like a T3 trip, writes no state, redirects all traffic silently"
-    },
-    {
-      "id": "R5",
-      "route": "AI_ACTIVE env in /etc/environment",
-      "control": "server root",
-      "deploy_needed": false,
-      "audited": false,
-      "speed": "restart",
-      "verdict": "Outranked at 22 call sites by the DB switch; still governs boot constants and any caller omitting provider="
-    },
-    {
-      "id": "R6",
-      "route": "Edit TASK_MODEL in ai_provider.py",
-      "control": "code review + RG-0016/RG-0018",
-      "deploy_needed": true,
-      "audited": true,
-      "speed": "deploy",
-      "verdict": "The best-governed route. RG-0018 fails if the new model has no price-card entry"
-    },
-    {
-      "id": "R7",
-      "route": "Change an image cap or max_tokens at a call site",
-      "control": "NONE",
-      "deploy_needed": true,
-      "audited": false,
-      "speed": "deploy",
-      "verdict": "NOT A MODEL CHANGE AT ALL, and the cheapest way to move cost. 896->1344 did 2.2x with a code comment"
-    },
-    {
-      "id": "R8",
-      "route": "golden_pass.json placed on the server",
-      "control": "file placement",
-      "deploy_needed": false,
-      "audited": false,
-      "speed": "file copy",
-      "verdict": "Opens the scoreboard quality gate for a new lane with no code change"
-    },
-    {
-      "id": "R9",
-      "route": "Scoreboard becomes flip DETERMINANT (planned, not built)",
-      "control": "none yet",
-      "deploy_needed": true,
-      "audited": false,
-      "speed": "n/a",
-      "verdict": "Today advisory only and the return value is discarded. THIS IS THE AUTOMATION DAVID'S RULING FORBIDS -- keep it advisory"
-    }
-  ],
-  "incumbency_review": {
-    "_doc": "David's ruling forbids automating the SWITCH. It does not forbid automating the CHALLENGE -- and if the review is manual too, inertia becomes the decision, taken by default every day. So: automatic detection and surfacing, manual decision. scripts/ai_challenger_board.py never switches anything; it puts the numbers in front of David so silence stops being an answer.",
-    "challenger_board_cadence_days": 30,
-    "incumbent_reaudition_cadence_days": 90,
-    "rule_incumbent": "The sitting model is re-auditioned on the golden set every 90 days at the PINNED effort level it actually runs at in production. The price card's funnel step 4 says sitting models are not re-auditioned continuously -- correct, continuously is wasteful; never is worse, because a model that never takes the test can never fail it.",
-    "rule_blocked": "Any lane marked BLOCKED BY PROCESS must carry a named owner and a target date. A lane excluded for a process reason rather than a merit reason is a decision nobody made.",
-    "escalation": "A CHALLENGER that clears the 30% bar at equal-or-better capability is surfaced to R4. The board never acts."
+  {
+   "n": 3,
+   "test": "AFFORDABLE",
+   "rule": "Worst-case cost per CALL within the envelope is <= baseline worst case x tolerance. Note: per-Mtok price is NOT the test -- token shapes differ."
   },
-  "capability_note": {
-    "aa_index_caveat": "AA index scores are NOT like-for-like. claude-haiku-4-5 carries effort_matched=false (benchmarked in reasoning mode, the app runs default), while mistral-medium-3.5-128b carries effort_matched=true. Haiku's 29.58 is therefore FLATTERED relative to how it actually runs, so mistral's nominal +1.25% edge is probably a real, if modest, one. Any procurement decision must re-score at the production effort level, not accept the leaderboard number.",
-    "scaleway_role": "The card's own words: 'CONTINUITY/JURISDICTION standby, not a cheap lane.' It is one model across all four tiers (ONE-MODEL STANDBY, David 18 Jul 2026), so it is 1.73x DEARER than baseline on haiku/vision/triage and a 37% capability DROP on sonnet (29.95 vs 47.21). It is EU insurance, correctly priced as insurance -- it should never be judged as a value lane."
+  {
+   "n": 4,
+   "test": "GOLDEN",
+   "rule": "Passes the golden set on the LIVE seam, not on the dead failover/ package."
   },
-  "lane_roles": {
-    "openai": {
-      "role": "BASE",
-      "why": "David's selection, 14 Aug 2026. Cheapest AND highest-scoring on the tiers that carry the volume (AA 51.24 vs Haiku 29.58, 77-79% cheaper). Golden set 8/8 on production prompts, 1 Aug 2026.",
-      "cost_exempt": false
-    },
+  {
+   "n": 5,
+   "test": "RECORDED",
+   "rule": "The change is written with actor, prior value, new value, reason and timestamp. Today POST /admin/flags writes NONE of these."
+  }
+ ],
+ "tiers": {
+  "haiku": {
+   "envelope": {
+    "max_in_tokens": 4000,
+    "max_out_tokens": 1800,
+    "max_images": 0,
+    "max_image_px": 0
+   },
+   "baseline_lane": "openai",
+   "baseline_worst_case_usd": 0.00296,
+   "lanes": {
     "anthropic": {
-      "role": "AUTO-FAILOVER",
-      "why": "First failover on a T1/T2 dropout. Months live, prompts tuned, production gate. Dearer than base by design -- continuity is worth a cost spike, and the spike must be visible.",
-      "cost_exempt": false
+     "model": "claude-haiku-4-5-20251001",
+     "worst_case_usd": 0.013,
+     "multiple_of_baseline": 4.392,
+     "role": "AUTO-FAILOVER",
+     "failover_rank": 1,
+     "continuity_ok": true
+    },
+    "openai": {
+     "model": "gpt-5.6-luna",
+     "worst_case_usd": 0.00296,
+     "multiple_of_baseline": 1.0,
+     "role": "BASE",
+     "failover_rank": 0,
+     "continuity_ok": true
     },
     "scaleway": {
-      "role": "SAFETY NET (last resort, cost-exempt, alert-on-use)",
-      "why": "Ban and jurisdiction cover only (T3 / EU hosting). ONE-MODEL STANDBY. Never selected for value; reached only when both lanes above are unavailable. COST-EXEMPT by role: at 7.6-8.1x base on haiku/vision/triage it sits beyond the continuity tolerance, and that is correct -- a last resort is reached when the alternative is being DOWN or BANNED, where price is not the question. The tolerance therefore does not gate it; instead reaching it MUST raise an alert and be time-boxed, because an unnoticed week on the safety net is an 8x cost event nobody approved.",
-      "cost_exempt": true
+     "model": "mistral-medium-3.5-128b",
+     "worst_case_usd": 0.022523,
+     "multiple_of_baseline": 7.609,
+     "role": "SAFETY NET",
+     "failover_rank": 2,
+     "continuity_ok": false
     }
+   }
   },
-  "failover_order": [
-    "openai",
-    "anthropic",
-    "scaleway"
+  "sonnet": {
+   "envelope": {
+    "max_in_tokens": 4000,
+    "max_out_tokens": 1400,
+    "max_images": 1,
+    "max_image_px": 1344
+   },
+   "baseline_lane": "openai",
+   "baseline_worst_case_usd": 0.028413,
+   "lanes": {
+    "anthropic": {
+     "model": "claude-sonnet-4-6",
+     "worst_case_usd": 0.038419,
+     "multiple_of_baseline": 1.352,
+     "role": "AUTO-FAILOVER",
+     "failover_rank": 1,
+     "continuity_ok": true
+    },
+    "openai": {
+     "model": "gpt-5.6-terra",
+     "worst_case_usd": 0.028413,
+     "multiple_of_baseline": 1.0,
+     "role": "BASE",
+     "failover_rank": 0,
+     "continuity_ok": true
+    },
+    "scaleway": {
+     "model": "mistral-medium-3.5-128b",
+     "worst_case_usd": 0.022187,
+     "multiple_of_baseline": 0.781,
+     "role": "SAFETY NET",
+     "failover_rank": 2,
+     "continuity_ok": true
+    },
+    "gemini": {
+     "model": "gemini-3.7-flash",
+     "worst_case_usd": 0.0036,
+     "multiple_of_baseline": 0.127,
+     "role": "CANARY (photo scan/refine only)",
+     "failover_rank": null,
+     "continuity_ok": false,
+     "note": "RUL-032, 19 Aug 2026. NOT in failover_order -- never an automatic failover target. Serves ONLY the photo-anon scan/refine canary; verify pass stays on the active lane. Hot only after the photo eval set passes at 100% plate recall. worst_case = envelope 4000in/1400out at $0.375/$1.50 (out-price estimate, confirm first-party at key time)."
+    }
+   }
+  },
+  "vision": {
+   "envelope": {
+    "max_in_tokens": 2000,
+    "max_out_tokens": 2000,
+    "max_images": 10,
+    "max_image_px": 1344
+   },
+   "baseline_lane": "openai",
+   "baseline_worst_case_usd": 0.006413,
+   "lanes": {
+    "anthropic": {
+     "model": "claude-haiku-4-5-20251001",
+     "worst_case_usd": 0.030063,
+     "multiple_of_baseline": 4.688,
+     "role": "AUTO-FAILOVER",
+     "failover_rank": 1,
+     "continuity_ok": true
+    },
+    "openai": {
+     "model": "gpt-5.6-luna",
+     "worst_case_usd": 0.006413,
+     "multiple_of_baseline": 1.0,
+     "role": "BASE",
+     "failover_rank": 0,
+     "continuity_ok": true
+    },
+    "scaleway": {
+     "model": "mistral-medium-3.5-128b",
+     "worst_case_usd": 0.052085,
+     "multiple_of_baseline": 8.122,
+     "role": "SAFETY NET",
+     "failover_rank": 2,
+     "continuity_ok": false
+    }
+   }
+  },
+  "triage": {
+   "envelope": {
+    "max_in_tokens": 2500,
+    "max_out_tokens": 400,
+    "max_images": 0,
+    "max_image_px": 0
+   },
+   "baseline_lane": "openai",
+   "baseline_worst_case_usd": 0.00098,
+   "lanes": {
+    "anthropic": {
+     "model": "claude-haiku-4-5-20251001",
+     "worst_case_usd": 0.0045,
+     "multiple_of_baseline": 4.592,
+     "role": "AUTO-FAILOVER",
+     "failover_rank": 1,
+     "continuity_ok": true
+    },
+    "openai": {
+     "model": "gpt-5.6-luna",
+     "worst_case_usd": 0.00098,
+     "multiple_of_baseline": 1.0,
+     "role": "BASE",
+     "failover_rank": 0,
+     "continuity_ok": true
+    },
+    "scaleway": {
+     "model": "mistral-medium-3.5-128b",
+     "worst_case_usd": 0.007796,
+     "multiple_of_baseline": 7.955,
+     "role": "SAFETY NET",
+     "failover_rank": 2,
+     "continuity_ok": false
+    }
+   }
+  },
+  "design": {
+   "_doc": "RUL-013 (15 Aug 2026): the post-1-Sep design lane. Deliberately NO anthropic entry (SPEND-GUARD-1: an unattended loop must never hold a metered key). Envelope DECLARED, not measured \u2014 no live caller exists yet; re-derive from real call shapes before first production traffic, alongside the golden run its gate requires.",
+   "envelope": {
+    "max_in_tokens": 12000,
+    "max_out_tokens": 4000,
+    "max_images": 0,
+    "max_image_px": 0
+   },
+   "baseline_lane": "openai",
+   "baseline_worst_case_usd": 0.18,
+   "lanes": {
+    "openai": {
+     "model": "gpt-5.6-sol",
+     "worst_case_usd": 0.18,
+     "multiple_of_baseline": 1.0,
+     "role": "BASE",
+     "failover_rank": 0,
+     "continuity_ok": true
+    },
+    "scaleway": {
+     "model": "mistral-medium-3.5-128b",
+     "worst_case_usd": 0.05544,
+     "multiple_of_baseline": 0.308,
+     "role": "SAFETY NET",
+     "failover_rank": 2,
+     "continuity_ok": true
+    }
+   }
+  }
+ },
+ "pinned_constants": {
+  "_doc": "Non-model cost drivers. Changing any of these changes cost with the model id untouched -- the 896->1344 change on 11 Jul 2026 raised anon-scan input tokens ~2.2x across four call sites and is recorded only as a code comment.",
+  "vision_probe_max_px": 1344,
+  "orient_probe_max_px": 512,
+  "vision_draft_max_side": 1568,
+  "vision_draft_max_photos": 12,
+  "batch_cards_max_images": 10,
+  "grade_photo_limit": 3,
+  "anon_refine_max_regions": 8,
+  "anon_scan_max_regions": 12,
+  "max_tokens_ceiling_by_tier": {
+   "haiku": 1800,
+   "sonnet": 1400,
+   "vision": 2000,
+   "triage": 400,
+   "design": 4000
+  }
+ },
+ "known_drift_at_creation": [
+  {
+   "id": "D1",
+   "what": "_MODEL_PRICE['haiku'] = (0.80,4.00) vs price card (1.00,5.00)",
+   "where": "bea_main.py:1440",
+   "effect": "every haiku row in ai_spend_log is 20-25% low, and _check_cost_ceiling sums that table -- so the daily rails are 20-25% looser than intended",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D2",
+   "what": "_TS_AI_MODELS['vision'] = claude-sonnet-4-6, but TASK_MODEL['anthropic']['vision'] = claude-haiku-4-5",
+   "where": "bea_main.py:1505 vs ai_provider.py:46",
+   "effect": "if `import ai_provider` throws, every vision call silently upgrades to Sonnet -- 3x input, 3x output price. Exactly the silent drift this baseline exists to stop",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D3",
+   "what": "_log_ai_spend records the INTENDED lane, not the lane that answered; _token_cost is keyed on tier, not model",
+   "where": "bea_main.py:1671-1674, 1449-1454",
+   "effect": "after any failover, spend is attributed to the wrong lane and costed at Anthropic's rates. Post-failover cost figures are wrong by construction",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D4",
+   "what": "POST /admin/flags changes the live lane for every AI feature with no log line and no audit row",
+   "where": "bea_main.py:13663-13701",
+   "effect": "a lane change is undetectable after the fact. Its neighbour POST /admin/ai-restore 15 lines earlier DOES log",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D5",
+   "what": "Fallback chain order is the insertion order of a Python dict literal; no cost check anywhere in complete()",
+   "where": "ai_provider.py:197, 236-238",
+   "effect": "an outage moves traffic to the next lane with nothing asking its price",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D6",
+   "what": "Batch-card lister forwards up to 10 client images with NO resize",
+   "where": "bea_main.py:15983",
+   "effect": "the largest uncontrolled input-token surface in the app -- input size is set by the caller",
+   "severity": "MEDIUM"
+  },
+  {
+   "id": "D7",
+   "what": "ai_scoreboard FALLBACK_PRICE has scaleway at (0.40,2.00) vs card EUR 1.5/7.5, and ai_price_card.json is NOT in the deploy manifest",
+   "where": "ai_scoreboard.py:75; ops/autodeploy/deploy_manifest.txt",
+   "effect": "if the card was never hand-placed on the server, the scoreboard ranks scaleway as cheapest on every tier -- ~4.3x understated",
+   "severity": "MEDIUM"
+  },
+  {
+   "id": "D8",
+   "what": "AdvertAgent is entirely outside the perimeter -- no seam, 10 hardcoded claude-sonnet-4-6 sites, unregistered claude-opus-4-6 rate row, no downscale, max_searches to 20 at $0.01",
+   "where": "AdvertAgent/service/advert_agent.py:33-38, 115-649, 785-794",
+   "effect": "none of this baseline reaches it",
+   "severity": "MEDIUM"
+  },
+  {
+   "id": "D9",
+   "what": "The incumbent lane cannot be displaced by any current mechanism",
+   "where": "ai_price_card.json policy.anti_jitter + funnel step 4; ai_scoreboard.py GOLDEN_PASS; bea_main.py:17900",
+   "effect": "Three independently sensible clauses compose into permanent incumbency: the absolute switch floor is 'formally UNMET' and cannot be computed; sitting models are never re-auditioned; and the cheapest, highest-scoring lane is absent from GOLDEN_PASS so it cannot enter the ranking. The scoreboard's return value is discarded. Nothing here was chosen -- it emerged.",
+   "severity": "HIGH"
+  },
+  {
+   "id": "D10",
+   "what": "With the cheapest lane as base, EVERY failover is a cost increase -- anthropic is 4.4x base on haiku",
+   "where": "AI_BASELINE.json lane multiples",
+   "effect": "Correct and accepted by design -- continuity is worth it -- but it makes D3 (spend attributed to the intended lane, costed by tier not model) far more serious: a sustained failover would quadruple haiku-tier cost and be INVISIBLE in the spend log. Fix D3 before the flip, not after.",
+   "severity": "HIGH"
+  }
+ ],
+ "swap_routes": [
+  {
+   "id": "R1",
+   "route": "POST /admin/flags {ai_active}",
+   "control": "admin JWT, 3-string whitelist",
+   "deploy_needed": false,
+   "audited": false,
+   "speed": "instant (10s cache bust)",
+   "verdict": "HIGHEST RISK -- instant, platform-wide, unlogged"
+  },
+  {
+   "id": "R2",
+   "route": "POST /admin/flags {ai_active_override} -- time-decaying pin",
+   "control": "admin JWT, TTL 24h",
+   "deploy_needed": false,
+   "audited": false,
+   "speed": "instant",
+   "verdict": "RG-0019 deliberately does NOT trip on a pin, so a pin is an unrecorded lane change by design"
+  },
+  {
+   "id": "R3",
+   "route": "Automatic breaker failover (T1/T2/T3)",
+   "control": "none on cost",
+   "deploy_needed": false,
+   "audited": true,
+   "speed": "automatic",
+   "verdict": "By design, and correct for continuity -- but it must be constrained to cost-approved lanes"
+  },
+  {
+   "id": "R4",
+   "route": "AI_DRILL_BAN env + systemd drop-in",
+   "control": "server root",
+   "deploy_needed": false,
+   "audited": false,
+   "speed": "restart",
+   "verdict": "Bans a lane exactly like a T3 trip, writes no state, redirects all traffic silently"
+  },
+  {
+   "id": "R5",
+   "route": "AI_ACTIVE env in /etc/environment",
+   "control": "server root",
+   "deploy_needed": false,
+   "audited": false,
+   "speed": "restart",
+   "verdict": "Outranked at 22 call sites by the DB switch; still governs boot constants and any caller omitting provider="
+  },
+  {
+   "id": "R6",
+   "route": "Edit TASK_MODEL in ai_provider.py",
+   "control": "code review + RG-0016/RG-0018",
+   "deploy_needed": true,
+   "audited": true,
+   "speed": "deploy",
+   "verdict": "The best-governed route. RG-0018 fails if the new model has no price-card entry"
+  },
+  {
+   "id": "R7",
+   "route": "Change an image cap or max_tokens at a call site",
+   "control": "NONE",
+   "deploy_needed": true,
+   "audited": false,
+   "speed": "deploy",
+   "verdict": "NOT A MODEL CHANGE AT ALL, and the cheapest way to move cost. 896->1344 did 2.2x with a code comment"
+  },
+  {
+   "id": "R8",
+   "route": "golden_pass.json placed on the server",
+   "control": "file placement",
+   "deploy_needed": false,
+   "audited": false,
+   "speed": "file copy",
+   "verdict": "Opens the scoreboard quality gate for a new lane with no code change"
+  },
+  {
+   "id": "R9",
+   "route": "Scoreboard becomes flip DETERMINANT (planned, not built)",
+   "control": "none yet",
+   "deploy_needed": true,
+   "audited": false,
+   "speed": "n/a",
+   "verdict": "Today advisory only and the return value is discarded. THIS IS THE AUTOMATION DAVID'S RULING FORBIDS -- keep it advisory"
+  }
+ ],
+ "incumbency_review": {
+  "_doc": "David's ruling forbids automating the SWITCH. It does not forbid automating the CHALLENGE -- and if the review is manual too, inertia becomes the decision, taken by default every day. So: automatic detection and surfacing, manual decision. scripts/ai_challenger_board.py never switches anything; it puts the numbers in front of David so silence stops being an answer.",
+  "challenger_board_cadence_days": 30,
+  "incumbent_reaudition_cadence_days": 90,
+  "rule_incumbent": "The sitting model is re-auditioned on the golden set every 90 days at the PINNED effort level it actually runs at in production. The price card's funnel step 4 says sitting models are not re-auditioned continuously -- correct, continuously is wasteful; never is worse, because a model that never takes the test can never fail it.",
+  "rule_blocked": "Any lane marked BLOCKED BY PROCESS must carry a named owner and a target date. A lane excluded for a process reason rather than a merit reason is a decision nobody made.",
+  "escalation": "A CHALLENGER that clears the 30% bar at equal-or-better capability is surfaced to R4. The board never acts."
+ },
+ "capability_note": {
+  "aa_index_caveat": "AA index scores are NOT like-for-like. claude-haiku-4-5 carries effort_matched=false (benchmarked in reasoning mode, the app runs default), while mistral-medium-3.5-128b carries effort_matched=true. Haiku's 29.58 is therefore FLATTERED relative to how it actually runs, so mistral's nominal +1.25% edge is probably a real, if modest, one. Any procurement decision must re-score at the production effort level, not accept the leaderboard number.",
+  "scaleway_role": "The card's own words: 'CONTINUITY/JURISDICTION standby, not a cheap lane.' It is one model across all four tiers (ONE-MODEL STANDBY, David 18 Jul 2026), so it is 1.73x DEARER than baseline on haiku/vision/triage and a 37% capability DROP on sonnet (29.95 vs 47.21). It is EU insurance, correctly priced as insurance -- it should never be judged as a value lane."
+ },
+ "lane_roles": {
+  "openai": {
+   "role": "BASE",
+   "why": "David's selection, 14 Aug 2026. Cheapest AND highest-scoring on the tiers that carry the volume (AA 51.24 vs Haiku 29.58, 77-79% cheaper). Golden set 8/8 on production prompts, 1 Aug 2026.",
+   "cost_exempt": false
+  },
+  "anthropic": {
+   "role": "AUTO-FAILOVER",
+   "why": "First failover on a T1/T2 dropout. Months live, prompts tuned, production gate. Dearer than base by design -- continuity is worth a cost spike, and the spike must be visible.",
+   "cost_exempt": false
+  },
+  "scaleway": {
+   "role": "SAFETY NET (last resort, cost-exempt, alert-on-use)",
+   "why": "Ban and jurisdiction cover only (T3 / EU hosting). ONE-MODEL STANDBY. Never selected for value; reached only when both lanes above are unavailable. COST-EXEMPT by role: at 7.6-8.1x base on haiku/vision/triage it sits beyond the continuity tolerance, and that is correct -- a last resort is reached when the alternative is being DOWN or BANNED, where price is not the question. The tolerance therefore does not gate it; instead reaching it MUST raise an alert and be time-boxed, because an unnoticed week on the safety net is an 8x cost event nobody approved.",
+   "cost_exempt": true
+  },
+  "gemini": {
+   "role": "CANARY (photo scan/refine only)",
+   "why": "RUL-031/032: both general-LLM lanes failed at box coordinates (anthropic pre-14 Aug, openai since); Gemini is grounding-trained (native boxes + segmentation masks) at ~0.13x base cost. Canary design: it scans and refines, the active lane verifies every redaction -- a weak scanner degrades to more verify rounds, never to a leak.",
+   "cost_exempt": false
+  }
+ },
+ "failover_order": [
+  "openai",
+  "anthropic",
+  "scaleway"
+ ],
+ "procurement_bar_pct": 30.0,
+ "decision": {
+  "date": "2026-08-14",
+  "by": "David",
+  "ruling": "1. OpenAI becomes the BASE usage model. Anthropic becomes the AUTO-FAILOVER. Scaleway remains the SAFETY NET for bans and downtime. 2. GUIDANCE: Anthropic is the main DESIGN tool and the guidance layer (development, review, architecture -- this session); OpenAI is the base USAGE model (in-app runtime on trustsquare.co). The two are separate concerns and must not be conflated: the tool that helps build the app is not the tool that must run inside it at volume.",
+  "basis": "Value on the register: gpt-5.6-luna AA 51.24 at $0.20/$1.20 vs claude-haiku-4-5 AA 29.58 at $1.00/$5.00 -- cheaper AND higher-scoring, 7.6x the value per dollar. Luna also outscores claude-sonnet-4-6 (47.21) at a thirteenth of its price.",
+  "preconditions_not_yet_met": [
+   {
+    "id": "P1",
+    "what": "OPENAI_API_KEY provisioned in /etc/environment on the server",
+    "owner": "R4 (David -- a secret)",
+    "status": "NOT DONE"
+   },
+   {
+    "id": "P2",
+    "what": "Golden set re-run on the LIVE seam with the server key (RG-0016 requires it; GS-OAI-V1 ran on a sandbox key)",
+    "owner": "R2",
+    "status": "NOT DONE"
+   },
+   {
+    "id": "P3",
+    "what": "openai added to GOLDEN_PASS in ai_scoreboard.py (or golden_pass.json placed) once P2 passes",
+    "owner": "R2",
+    "status": "NOT DONE"
+   },
+   {
+    "id": "P4",
+    "what": "Shadow period at low traffic before the standing lane moves",
+    "owner": "R2",
+    "status": "NOT DONE"
+   },
+   {
+    "id": "P5",
+    "what": "ai_price_card.json active_lane updated to openai the SAME working day as the live flip -- earlier trips RG-0019 RED, later also trips it",
+    "owner": "R2",
+    "status": "NOT DONE"
+   },
+   {
+    "id": "P6",
+    "what": "_MODEL_PRICE keyed by MODEL not tier, and _log_ai_spend recording the SERVING lane (D1/D3) -- otherwise a failover to Anthropic is invisible in spend and costed wrongly",
+    "owner": "R2",
+    "status": "NOT DONE"
+   }
   ],
-  "procurement_bar_pct": 30.0,
-  "decision": {
-    "date": "2026-08-14",
-    "by": "David",
-    "ruling": "1. OpenAI becomes the BASE usage model. Anthropic becomes the AUTO-FAILOVER. Scaleway remains the SAFETY NET for bans and downtime. 2. GUIDANCE: Anthropic is the main DESIGN tool and the guidance layer (development, review, architecture -- this session); OpenAI is the base USAGE model (in-app runtime on trustsquare.co). The two are separate concerns and must not be conflated: the tool that helps build the app is not the tool that must run inside it at volume.",
-    "basis": "Value on the register: gpt-5.6-luna AA 51.24 at $0.20/$1.20 vs claude-haiku-4-5 AA 29.58 at $1.00/$5.00 -- cheaper AND higher-scoring, 7.6x the value per dollar. Luna also outscores claude-sonnet-4-6 (47.21) at a thirteenth of its price.",
-    "preconditions_not_yet_met": [
-      {
-        "id": "P1",
-        "what": "OPENAI_API_KEY provisioned in /etc/environment on the server",
-        "owner": "R4 (David -- a secret)",
-        "status": "NOT DONE"
-      },
-      {
-        "id": "P2",
-        "what": "Golden set re-run on the LIVE seam with the server key (RG-0016 requires it; GS-OAI-V1 ran on a sandbox key)",
-        "owner": "R2",
-        "status": "NOT DONE"
-      },
-      {
-        "id": "P3",
-        "what": "openai added to GOLDEN_PASS in ai_scoreboard.py (or golden_pass.json placed) once P2 passes",
-        "owner": "R2",
-        "status": "NOT DONE"
-      },
-      {
-        "id": "P4",
-        "what": "Shadow period at low traffic before the standing lane moves",
-        "owner": "R2",
-        "status": "NOT DONE"
-      },
-      {
-        "id": "P5",
-        "what": "ai_price_card.json active_lane updated to openai the SAME working day as the live flip -- earlier trips RG-0019 RED, later also trips it",
-        "owner": "R2",
-        "status": "NOT DONE"
-      },
-      {
-        "id": "P6",
-        "what": "_MODEL_PRICE keyed by MODEL not tier, and _log_ai_spend recording the SERVING lane (D1/D3) -- otherwise a failover to Anthropic is invisible in spend and costed wrongly",
-        "owner": "R2",
-        "status": "NOT DONE"
-      }
-    ],
-    "flip_sequence": [
-      "P1 provision key",
-      "P2 golden run on live seam",
-      "P3 open the gate",
-      "P6 fix spend attribution FIRST so the shadow period is measurable",
-      "P4 shadow at low traffic",
-      "flip launch_switches.ai_active to openai via POST /admin/flags",
-      "P5 update the card same day",
-      "re-run ai_baseline_check.py and ai_challenger_board.py"
-    ]
-  },
-  "alert_rules": [
-    {
-      "id": "AL-1",
-      "when": "the serving lane is not the base lane for more than 60 minutes",
-      "action": "alert R2 -- a sustained failover is a re-pricing event"
-    },
-    {
-      "id": "AL-2",
-      "when": "the serving lane is the SAFETY NET at all",
-      "action": "alert R2 immediately and time-box; 8x base cost on three tiers"
-    },
-    {
-      "id": "AL-3",
-      "when": "a pin (ai_active_override) is set",
-      "action": "record actor and reason; RG-0019 deliberately does not trip on a pin, so nothing else will notice"
-    }
+  "flip_sequence": [
+   "P1 provision key",
+   "P2 golden run on live seam",
+   "P3 open the gate",
+   "P6 fix spend attribution FIRST so the shadow period is measurable",
+   "P4 shadow at low traffic",
+   "flip launch_switches.ai_active to openai via POST /admin/flags",
+   "P5 update the card same day",
+   "re-run ai_baseline_check.py and ai_challenger_board.py"
   ]
+ },
+ "alert_rules": [
+  {
+   "id": "AL-1",
+   "when": "the serving lane is not the base lane for more than 60 minutes",
+   "action": "alert R2 -- a sustained failover is a re-pricing event"
+  },
+  {
+   "id": "AL-2",
+   "when": "the serving lane is the SAFETY NET at all",
+   "action": "alert R2 immediately and time-box; 8x base cost on three tiers"
+  },
+  {
+   "id": "AL-3",
+   "when": "a pin (ai_active_override) is set",
+   "action": "record actor and reason; RG-0019 deliberately does not trip on a pin, so nothing else will notice"
+  }
+ ]
 }

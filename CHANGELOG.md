@@ -1,3 +1,32 @@
+## 19 Aug 2026 — Introduction relay PROVEN live, end to end (RG-0118)
+
+Claude drove both sides of a real introduction through production, using David's Gmail for both
+parties (buyer `dmcontiki2+tsrelay@`, seller `dmcontiki2@`), a throwaway listing (#373, deleted
+after) and intro #123:
+
+1. Buyer signed in with the emailed **6-digit code** — SIGNIN-CODE-1 proven in production
+   (code-first email, from authenticated `hello@mail.trustsquare.co`, INBOX, seconds).
+2. Intro created and accepted; **both notes arrived** from `intro@mail.trustsquare.co` with
+   **`reply-to: intro-<hex>@relay.trustsquare.co`** — read off Gmail's own details panel via
+   the Chrome MCP, not inferred.
+3. A reply to the buyer's alias from the seller's real address was **forwarded through the
+   curtain in FOUR SECONDS**, sender still masked. No real address ever crossed.
+
+Findings (neither breaks the product): the Gmail **API** reply path ignores Reply-To (test
+artifact; human mail clients honor it); **hardening** — `intro@mail.trustsquare.co` is not
+receivable (no MX), so a client that ignores Reply-To hard-bounces; `users.id_verified` stays 0
+while `id_verified_at` is set — the gate keys on the timestamp, but the desynced boolean is a
+trap. RG-0118 (LOCKED) asserts flag, rail, stranger-refusal and the Reply-To pattern; ledger
+runs generate no mail.
+
+## 2026-08-19 — GEMINI-CANARY-1: grounding-class scanner for the photo-anon lane (RUL-031/032), dark until eval
+
+David ruled (RUL-031): no more micro-fixes to the blur machinery — after the 5/7/10 Aug fixes a fresh upload still published over-smeared, because both general-LLM lanes (anthropic pre-14 Aug, openai gpt-5.6-terra since) fail at box coordinates. Task-model mismatch, not vendor quality: the PIL painter and verify pass are fine; the boxes going in are not.
+
+From the full costed field (AI_PHOTO_COST_MODEL.xlsx, new "Pricing (Aug 2026) swap" sheet — terra $1,729/yr, Grok 4.1 Fast $155/yr but same failed class, Qwen3-VL $316/yr, local CV $0) David picked the **Gemini canary** (RUL-032): Gemini 3.7 Flash scans + refines (grounding-trained, ~0.13× base cost, $548/yr in canary shape), the active lane verifies every redaction — a weak scanner can never leak.
+
+Built dark: `_gemini` adapter + sonnet-tier row in ai_provider.py (NOT in failover_order); AI_BASELINE.json + ai_price_card.json carry the lane (baseline check 0 FAIL); `_anon_scan_provider()` in bea_main.py routes ONLY the initial scan + refine, armed by `PHOTO_SCAN_CANARY=1` + `GEMINI_API_KEY`; verify pass untouched by construction. Eval runner: scripts/eval_photo_anon.py — 100% plate recall required before any traffic. Tripwire RG-0119 (OPEN; also guards that the verifier can never route through the canary). Awaiting David: budget-capped GEMINI_API_KEY. Backups: `.bak-gemini-*`.
+
 ## 2026-08-19 — PHOTO-ORDER-1: seller controls photo order and the cover; edit-screen photo changes finally reach buyers
 
 Maroushka removed an over-blurred cover photo, uploaded a replacement, and it landed LAST with no way to move it to first (David, 19 Aug: "new users will just give up"). Four defects fixed as one lane:
