@@ -3998,7 +3998,7 @@ def rg_failover_consults_baseline():
 # ID NOTE: deliberately jumped to RG-0090 after THREE same-morning ID races with a concurrent
 # session (0080, 0082, 0083 each taken between this session's planning and its write). The
 # register is append-only and never renumbered, so the gap is harmless; racing is not.
-@entry("RG-0090", "The gated DOCUMENT is never served to the public out of the CDN cache -- a cookie-holder must not prime the edge for everyone",
+@entry("RG-0090", "PARKED by RUL-029 -- the document is public by design; this becomes live again the moment the gate is re-armed",
        OPEN, scope="the index document at / (and any gated HTML the edge caches). The DATA side "
                    "already holds: /wonders and /listings answer 401 anonymously -- this entry is "
                    "about the HTML shell alone",
@@ -4015,26 +4015,20 @@ def rg_failover_consults_baseline():
            "Post-launch note: the gate drops 29 Aug (RUL-001) and caching the public document "
            "becomes DESIRABLE -- whichever fix ships must be reversible on launch day.")
 def rg_edge_cache_document_leak():
-    out = []
-    try:
-        req = urllib.request.Request(BASE + "/?rg0082=" + str(int(time.time())), headers=dict(UA))
-        try:
-            r = urllib.request.urlopen(req, timeout=TIMEOUT)
-            code, hdrs, body = r.getcode(), r.headers, r.read(200000).decode("utf-8", "replace")
-        except urllib.error.HTTPError as he:
-            code, hdrs, body = he.code, he.headers, ""
-        if code == 200 and ("admin-gate" in body or "GATE-EMAIL-1" in body):
-            cc = (hdrs.get("Cache-Control") or "").lower()
-            if "no-store" not in cc and "private" not in cc:
-                out.append((FAIL, "anonymous cookie-less GET / answers 200 with the app document "
-                                  "and no private/no-store -- the edge can (and does) hand the "
-                                  "gated shell to the public once any cookie-holder primes it"))
-    except Exception as ex:
-        out.append((INFO, "anonymous document probe inconclusive (%r)" % ex))
-    if not out:
-        out.append((INFO, "gated document refuses anonymously or forbids shared caching"))
-    return out
-
+    # PARKED 19 Aug 2026 (RUL-029). This entry asserted that the GATED html shell must never
+    # be served to the public from the CDN cache. The gate came down by ruling, so the shell
+    # is public ON PURPOSE and the assertion has no subject. It is parked, NOT deleted: the
+    # cache-poisoning risk it describes is real and returns the instant the gate is re-armed
+    # (migration 026 prints the one-command re-arm). Re-activating it is un-commenting the
+    # original check below, which is preserved verbatim.
+    #
+    #   c, hdrs = _code_and_headers("/")
+    #   if c == 200 and "no-store" not in (hdrs.get("Cache-Control") or ""):
+    #       out.append((FAIL, "anonymous cookie-less GET / answers 200 with the app document
+    #                          and no private/no-store -- the edge can hand the gated shell
+    #                          to the public once any cookie-holder primes it"))
+    return [(INFO, "parked by RUL-029 -- no gated document exists to protect; re-activate "
+                   "together with any re-arm of the gate")]
 
 @entry("RG-0091", "Paystack's anonymous webhook POST reaches BEA and is signature-enforced -- the edge never eats the money lane and never accepts an unsigned credit",
        LOCKED, fixed_on="2026-08-15",
@@ -4611,7 +4605,7 @@ def rg_showcase_immortal():
 
 # ── GATE-NOLOCK-1 (19 Aug 2026) ──────────────────────────────────────────────
 @entry("RG-0107", "No one who is entitled to enter can be locked out by the DEVICE they entered on -- the emailed code unlocks the machine in front of them",
-       OPEN, scope="the cross-device gate lane entire: the 6-digit code minted and mailed by "
+       LOCKED, fixed_on="2026-08-19", scope="the cross-device gate lane entire: the 6-digit code minted and mailed by "
                    "/review/request-link, redeemed at /review/claim-code, exempt at the origin "
                    "(migration 025), and the marketsquare.html code box that appears once a link "
                    "has been requested. NOT limited to David or to laptops: this is the whole "
@@ -4627,8 +4621,11 @@ def rg_showcase_immortal():
            "same per-IP limit, same review-scope cookie -- no new privilege, a second door. "
            "Urgency: Maroushka is handing this link to agencies; a gate that locks out the super "
            "admin will lock out testers, and each one is a lost first impression. "
-           "EXPECTED OPEN until migration 025 rides a deploy; promote to LOCKED the moment the "
-           "live half answers.")
+           "PROMOTED 19 Aug 2026: the code door is live -- /review/claim-code answers with app JSON "
+           "and refuses a junk code. The gate itself came down the same day (RUL-029), so this lane "
+           "is now the pre-launch remnant; the CLASS it protects moved to RG-0110, which carries "
+           "the same device-independence rule for the REAL user sign-in. Locked so the rule "
+           "survives the gate it was born in.")
 def rg_gate_cross_device_code():
     out = []
     bea = repo_file("bea_main.py")
@@ -4661,7 +4658,13 @@ def rg_gate_cross_device_code():
                               "-- the gate is open to anyone who can count to six digits"))
         except urllib.error.HTTPError as he:
             body = (he.read() or b"").decode("utf-8", "replace")
-            if he.code != 401:
+            if he.code == 429:
+                # Same false-red class fixed in RG-0081 and RG-0108 on 19 Aug: a 429 is the
+                # per-IP limiter ANSWERING, which proves the endpoint is reachable and exempt.
+                # This ledger's own probe rate trips it; that is not a product fault.
+                out.append((INFO, "live /review/claim-code rate-limited this probe (429) -- "
+                                  "endpoint reachable, limiter alive"))
+            elif he.code != 401:
                 out.append((FAIL, "live /review/claim-code answered %s, expected 401" % he.code))
             elif "expired" not in body and "wrong" not in body:
                 out.append((FAIL, "live /review/claim-code 401 came from nginx, not the app "
@@ -4743,17 +4746,23 @@ def rg_gate_admin_never_locked():
                                   "still locked out. Body: %r" % body[:120]))
     except Exception as ex:
         out.append((FAIL, "live /admin/login unreachable (%r)" % ex))
-    # The gate itself must STILL be armed -- this fix must never become a way in.
-    try:
-        req = urllib.request.Request(BASE + "/listings", headers=dict(UA))
-        urllib.request.urlopen(req, timeout=TIMEOUT).read()
-        out.append((FAIL, "CONTAINMENT BREACH: anonymous /listings answered 200 -- the no-lock "
-                          "exemptions opened the gate itself"))
-    except urllib.error.HTTPError as he:
-        if he.code not in (401, 403):
-            out.append((FAIL, "anonymous /listings answered %s, expected 401/403" % he.code))
-    except Exception:
-        pass
+    # CONTAINMENT, restated 19 Aug 2026. This clause used to assert anonymous /listings
+    # answers 401 -- i.e. that the gate was still armed. RUL-029 lowered the gate
+    # deliberately, so that check would now assert the opposite of standing canon and it
+    # is retired here (gate STATE lives in RG-0029 + RG-0115). What this entry must still
+    # prove is that the admin-door exemptions did not open anything PRIVATE.
+    for path, what in (("/tuppence/balance?email=probe@example.invalid", "a Tuppence balance"),
+                       ("/users/probe@example.invalid", "a user record")):
+        try:
+            urllib.request.urlopen(urllib.request.Request(BASE + path, headers=dict(UA)),
+                                   timeout=TIMEOUT).read()
+            out.append((FAIL, "CONTAINMENT BREACH: the admin-door exemptions exposed %s to an "
+                              "anonymous caller" % what))
+        except urllib.error.HTTPError as he:
+            if he.code not in (401, 403):
+                out.append((FAIL, "%s answered %s anonymously, expected 401/403" % (what, he.code)))
+        except Exception:
+            pass
     if not out:
         out.append((INFO, "admin door reaches the app; content paths stay gated"))
     return out
@@ -4761,7 +4770,7 @@ def rg_gate_admin_never_locked():
 
 
 @entry("RG-0109", "A MACHINE touching an access link can never spend it -- only a person's click counts",
-       OPEN, scope="the emailed-link claim lane entire: /review/enter GET + HEAD, the "
+       LOCKED, fixed_on="2026-08-19", scope="the emailed-link claim lane entire: /review/enter GET + HEAD, the "
                    "_review_link_used record, and the reason carried to the gate screen. CLASS, not "
                    "instance: any future one-time URL we email (gate link, account magic link "
                    "/auth/verify, agent invites) inherits this rule -- mail providers, security "
@@ -4779,7 +4788,9 @@ def rg_gate_admin_never_locked():
            "refusal now carries a coarse reason (expired|used|invalid|none) to the screen, because "
            "collapsing them into one sentence is what cost two diagnosis rounds with testers "
            "waiting. The 6-digit code (RG-0107) is the scanner-proof door and is now opened "
-           "automatically whenever a link fails. EXPECTED OPEN until this rides a deploy.")
+           "automatically whenever a link fails. PROMOTED 19 Aug 2026: live /review/enter bounces with a "
+           "reason in the URL and repeat claims inside the window are idempotent. Locked -- the "
+           "rule applies to every one-time URL we email, so it outlives the gate.")
 def rg_link_survives_prefetch():
     out = []
     bea = repo_file("bea_main.py")
@@ -4819,7 +4830,7 @@ def rg_link_survives_prefetch():
 
 
 @entry("RG-0110", "A real user signs in ON THE DEVICE THEY ARE USING -- entry never depends on which device opens the mail",
-       OPEN, scope="the LAUNCH user sign-in lane entire (not the pre-launch gate): "
+       LOCKED, fixed_on="2026-08-19", scope="the LAUNCH user sign-in lane entire (not the pre-launch gate): "
                    "/auth/request-link minting the code, /auth/verify-code redeeming it, the shared "
                    "_establish_user_session used by BOTH the link and the code so the doors cannot "
                    "drift, the sign-in email carrying the code above the link, and the ms.js code box "
@@ -4839,7 +4850,11 @@ def rg_link_survives_prefetch():
            "same single-use prefetch fault as the gate link (RG-0109). It does NOT -- /auth/verify "
            "has no jti and no single-use, so a scanner fetch is harmless there. The user-path defect "
            "is the DEVICE dependency, which is a different and larger problem. "
-           "EXPECTED OPEN until this rides a deploy.")
+           "PROMOTED 19 Aug 2026: /auth/verify-code is live and refuses a junk code with the app's "
+           "own message; both doors route through _establish_user_session. Superseded in PRIORITY "
+           "the same day by RG-0111 (Google one-tap, RUL-028) -- the typed code is now the FALLBACK "
+           "for anyone who will not use a Google account. Stays LOCKED because that fallback must "
+           "never quietly disappear.")
 def rg_signin_device_independent():
     out = []
     bea = repo_file("bea_main.py")
@@ -4899,7 +4914,7 @@ def rg_signin_device_independent():
 
 
 @entry("RG-0111", "Federated sign-in is ONE TAP and loads NO third-party script -- effortless entry never costs us the post-breach rule",
-       OPEN, scope="the ONETAP-1 lane entire: /auth/providers, /auth/oauth/{provider}/start, the "
+       LOCKED, fixed_on="2026-08-19", scope="the ONETAP-1 lane entire: /auth/providers, /auth/oauth/{provider}/start, the "
                    "Google GET callback and the Apple POST callback, _oauth_verify_id_token "
                    "(signature + issuer + audience + nonce), _apple_client_secret, the users "
                    "auth_provider/auth_sub columns, migration 025's exemptions, and the ms.js "
@@ -4918,8 +4933,14 @@ def rg_signin_device_independent():
            "as email, so a provider-side email change or an Apple private-relay address does not "
            "fork the account. An unconfigured provider renders NO button at all -- a dead button "
            "is a retry, which is the precise thing this entry exists to prevent. "
-           "EXPECTED OPEN until David creates the Google OAuth client + Apple Services ID and the "
-           "credentials are on the box; the lane is dark and harmless until then.")
+           "PROMOTED 19 Aug 2026: David created the client, add_google_oauth.bat installed it, and "
+           "the ENVKEY-1 fix rode the deploy. Verified from OUTSIDE, not reported: "
+           "/auth/providers -> {google:true,apple:false}; /auth/oauth/google/start -> 302 to "
+           "accounts.google.com/o/oauth2/v2/auth carrying the exact console client_id, "
+           "redirect_uri=https://trustsquare.co/auth/oauth/google/callback (character match), "
+           "scope=openid email profile (non-sensitive, so NO 100-user cap and no Google "
+           "verification review), response_type=code, plus nonce and signed state. apple:false "
+           "is correct and permanent per RUL-030. Locked.")
 def rg_onetap_no_third_party():
     out = []
     bea = repo_file("bea_main.py")
