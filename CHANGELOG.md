@@ -1,3 +1,231 @@
+## 19 Aug 2026 — SIGNIN-CODE-1: zero-retry sign-in for real users (launch path, not the gate)
+
+**David's ruling, on the launch gate:** *"I need access for users with no effort... zero retries.
+How do I email 10000 people to help them after they tried a few times."* He is right, and he was
+right to reject the workaround: handing one tester a password proves the defect, not the fix.
+
+**The defect is the device, not the email.** A magic link signs in whichever device *opens the
+mail*. Mail overwhelmingly opens on a phone; the person is usually on a laptop. Every user that
+happens to is stranded mid-task with no self-service way out — and at launch scale there is no
+support channel that can rescue them one at a time.
+
+**Fix — the code leads, the link follows.** The sign-in email now carries a 6-digit code above the
+button. `POST /auth/verify-code` redeems it in the tab the person already has open: no device hop,
+no lost tab, no app switch, and nothing a mail scanner can spend. The link stays for people
+already reading mail on the device they want to use. 20 minutes, single use, 6-guess budget,
+per-IP rate limited.
+
+- `_establish_user_session` is now the **one** place a user session is created — both the link
+  (`/auth/verify`) and the code (`/auth/verify-code`) route through it, so the two doors cannot
+  silently drift apart.
+- `ms.js` reveals the code box inside the same panel as soon as the email is sent, wired so that
+  **every** caller of `requestSignInLink` inherits it — no sign-in surface is left link-only.
+- Migration 025 also exempts `/auth/verify-code`, so pre-launch testers get the same door.
+
+**What was already right, and worth stating plainly:** browsing needs no sign-in at all. Only
+**6 of 160 endpoints** require a user session, and all six are *actions* (making an intro, the
+seller AI tools). The zero-effort path already exists for everyone who is looking rather than
+acting; this fixes the single moment where identity is actually needed.
+
+**Correction on record.** An earlier note this session said the account magic link carried the
+same single-use prefetch fault as the gate link (RG-0109). It does not — `/auth/verify` has no
+`jti` and no single-use, so a scanner fetch is harmless there. The user-path defect is the device
+dependency, which is a different and larger problem.
+
+**Ledger.** RG-0110 added (OPEN until deployed), asserting the class: any future sign-in surface
+must offer the typed code, not a link alone.
+
+## 19 Aug 2026 — ONETAP-1: Google & Apple sign-in, one tap, zero third-party script
+
+**David's ruling (RUL-028):** *"We need the same effortless process Google and Apple has... Even a
+single retry will lose customers. For everyone."* Federated sign-in becomes the primary door; the
+email code/link is demoted to fallback.
+
+**Implemented as the server-side OAuth 2.0 / OIDC authorization-code redirect flow — deliberately
+NOT Google One Tap.** One Tap requires `accounts.google.com/gsi/client` inside our page, and
+RG-0025 records David's post-breach ruling that no third-party code runs on the app at all: a
+remote loader in `<head>` executed for every visitor regardless of the gate and was POSTing
+visited URLs off-box. A convenience feature does not get to reopen that. The redirect flow is
+still a single tap for anyone already signed in to their provider, and every check happens on our
+server.
+
+- `GET /auth/providers` — which lanes are live. The UI renders a button **only** for a live
+  provider, because a dead button *is* a retry.
+- `GET /auth/oauth/{provider}/start` — signed state + nonce, plain 302 to the provider.
+- `GET /auth/oauth/google/callback` and `POST /auth/oauth/apple/callback` (Apple uses
+  `form_post`), both funnelling into one `_oauth_complete`.
+- `_oauth_verify_id_token` verifies **signature (JWKS), issuer, audience, expiry and nonce**. An
+  unverified ID token is just a string the caller typed.
+- `_apple_client_secret` signs Apple's ES256 client-secret JWT from the `.p8`; returns `None` if
+  any piece is missing, so a half-configured lane is dark rather than broken.
+- Identity is keyed on the provider's stable `sub` (`users.auth_provider` / `auth_sub`) as well as
+  email, so a provider-side email change — or an Apple private-relay address — never forks an
+  account. Existing magic-link accounts link automatically on email match.
+- All doors still funnel through the single `_establish_user_session` from SIGNIN-CODE-1.
+- Migration 025 also exempts `/auth/providers` and the `/auth/oauth/` prefix, so the round trip
+  completes behind the pre-launch gate too.
+
+**Status: shipped dark.** No credentials on the box yet, so `/auth/providers` reports both false
+and no button renders. Email sign-in is untouched. `ONETAP_SETUP.md` carries the exact steps only
+David can do — including the two redirect URIs, which must match character for character.
+
+**Ledger.** RG-0111 holds two obligations together and treats both as the entry: one tap, *and*
+not one byte of Google or Apple JavaScript on any app page. It fails if either is lost — including
+if someone later disables signature verification to "make it work".
+
+## 19 Aug 2026 — MIGRATE-IMPORT-1: the migration chain had been stalled since 18 Aug, silently
+
+**The deploy log answered it in three lines:**
+
+```
+[post_deploy] migrations: running 023_relink_wonders_railexp.py
+[023_relink] REFUSE: cannot import main (No module named 'main')
+[post_deploy] migrations: 023 FAILED (rc=3) — NOT recorded; later migrations skipped this run.
+```
+
+`post_deploy` runs each migration as `(cd $LIVE && python3 /abs/path/NNN.py --apply)`. **Python
+puts the script's own directory on `sys.path[0]` — never the CWD** — so `import main` could never
+resolve, no matter what the working directory was. The file's own comment said *"CWD = live web
+root per the migrations contract"*: true, and useless, because Python doesn't consult CWD for a
+script invoked by path.
+
+`post_deploy` then `break`s, which is **correct** — migrations are order-dependent and must not
+run out of sequence — but it meant 023 blocked 024, 025 and 026 on every single deploy from
+18 Aug onward.
+
+**Fixed as a class, not an instance.** Both migrations that import the app (023, 024) now insert
+CWD into `sys.path` before importing. Proven by running 023 under `post_deploy`'s exact
+invocation: `import main` resolved where it had raised.
+
+---
+
+### Correction: "the deploy isn't reaching the server" was wrong
+
+The code was deploying the whole time — the log says `DEPLOY OK · now live at 9867f059 · health
+ok`. Only the **nginx-touching migrations** were stuck. This session asserted the stronger,
+wrong conclusion twice, on two flawed probes:
+
+1. `/admin/login` and `/review/claim-code` returning nginx HTML 401 was read as *old code*. It was
+   actually **migration 025 never having run** — a different fault with the same symptom.
+2. `/review/request-link` was probed with an `example.invalid` address. That address is **off the
+   reviewer allowlist**, so the endpoint returns a bare `{"ok":true}` and returns *before* it ever
+   reaches the `delivery` field the probe was looking for. The probe could never have shown new
+   code, whatever was deployed.
+
+Round 1 (GATE-NOLOCK-1) and round 2 (LINK-PREFETCH-1) have in fact been live since 03:36 UTC —
+`/review/claim-code` answers with app JSON, confirmed. Round 3 (SIGNIN-CODE-1, ONETAP-1) returns
+404 because it was committed after that deploy, exactly as expected.
+
+**Ledger.** RG-0116 asserts the import contract in source for every present and future
+main-importing migration, plus the chain's live effect. Also fixed RG-0081, which read a 429 from
+its own probe rate as *"migration 019 has not landed"* — a false red that has now fired twice.
+A 429 is the limiter answering, which proves reachability; RG-0108 already treated it that way.
+
+## 19 Aug 2026 — GATE-DOWN-1: the pre-launch gate comes down today (RUL-029)
+
+**David's ruling:** *"How else am I going to have confidence that we are ready for the soft launch
+if we cant give it to more people to test. We can not even give 3 people constant access to the
+app?"*
+
+The logic had inverted. The gate existed to protect an unfinished app, and had become the main
+thing preventing him from finding out whether the app *was* finished — a full day of this session
+went on repairing doors into something scheduled for deletion in ten days. **Launch dates are
+unchanged** (RUL-001: soft-to-public 29 Aug, full 1 Sep); only the gate moved.
+
+**Done as an nginx-only change, deliberately.** The deploy lane is not reaching the server, and
+this could not be allowed to wait on that fault. Both halves of the gate hang off one endpoint:
+
+- **server half** — nginx `auth_request /_review_gate` → now `return 200;`
+- **client half** — `marketsquare.html` shows the overlay unless `/review/verify` says
+  `{"valid":true}` → now answered by nginx directly
+
+So one config edit drops both, with no application deploy. `migrations/026_gate_down.py` carries
+the 019/025 safety skeleton — enabled-first site lookup, functional idempotency, refusal rather
+than guessing, backup outside the globbed directory, `nginx -t` with auto-restore, reload with
+auto-restore. `ops/GATE_DOWN_COMMAND.txt` has the single paste-able SSH command (the migration
+travels base64-inline, verified to reconstruct byte-identical) plus the verification curls.
+
+**Reversal is a file copy from the printed backup** — this is a lowered gate, not a demolished
+one. Cookies people already hold keep working either way, and every credential path (reviewer
+code, email link, 6-digit code, admin password) stays in the code, simply unused.
+
+**Ledger.** RG-0115 asserts *both* halves are down, because lowering only the server half leaves
+every visitor staring at the overlay — indistinguishable, from the user's side, from being locked
+out.
+
+## 19 Aug 2026 — gate lowered on the live box, verified, and the board reconciled
+
+`migrations/026_gate_down.py` applied to `/etc/nginx/sites-enabled/marketsquare`
+(backup `marketsquare.bak-gatedown-20260819-041800`). **Verified from outside**, not reported:
+
+- `/review/verify` → `{"valid":true,"scope":"review"}` — the client overlay half is down
+- `/listings`, `/wonders`, `/` → 200 anonymously — the server half is down
+- `/tuppence/balance`, `/tuppence/history`, `/users/{email}` → **401, app key still required**
+- `/dashboard.html` → **401**, still behind its own auth
+
+Lowering the review gate exposed **nothing private**. With the curtain gone, the app-key guards
+(RG-0094) are now the only line rather than the second — which is exactly why RG-0029 was
+repointed at them.
+
+**Two ledger entries reconciled, neither weakened:**
+
+- **RG-0029** asserted *"the gate ENFORCES at the origin"*. That premise expired by ruling, not by
+  rot. Repointed to assert the three things that matter now: private reads still refuse
+  anonymously, the dashboard stays shut, and every credential door (reviewer code, email link,
+  6-digit code, admin password) is still **in the source, unused rather than deleted** — a lowered
+  gate is not a demolished one, and it must stay re-armable.
+- **RG-0092** carried a second clause — *"and the gate did not silently widen"* — which would now
+  assert the opposite of standing canon. Retired with the reason recorded; it keeps the RUL-020
+  legal-docs promise it was written for.
+
+**A collision worth recording.** This session numbered the gate-down entry RG-0112 while a
+concurrent session had already committed RG-0112/0113/0114 for the Postgres ratchet. Theirs was
+first, so ours moved to **RG-0115**. The duplicate `@entry` silently shadowed a real assertion and
+surfaced as a phantom "REGRESSION" against their PG fix — which was intact all along (working tree
+verified byte-identical to their commit `08944fe`). Two sessions each taking `max+1` from their own
+read of the file will collide; the ledger needs a duplicate-ID guard, logged as a follow-up.
+
+**Board: 108 entries · 100 holding · 0 regressed.** RG-0115 promoted to LOCKED.
+
+## 19 August 2026 — PG-PORTABLE-1 + EMAIL-NOT-A-PAGE-1: the two guards that blocked the nightly for 15 days
+
+David asked why two faults were still red "at this point", and whether they had been
+buried in vague requests he'd missed. They had not been requests at all. Both were
+correctly detected on **4 August**, then printed into a scrolling pre-deploy scan block
+and appended to `deploy_audit.log` — 50 and 46 times. Manual deploys run in `warn` mode,
+which logs DANGER and proceeds (35 such runs between 14 and 19 Aug); only the 02:00
+`strict` nightly aborted, into a log, at 02:00, with nobody awake. Detection was never
+the problem. Escalation was.
+
+**PG-PORTABLE-1** — the pg-readiness ratchet read 54 against a baseline of 53. The growth
+was real, not a false positive: `_demand_match_and_compose` carried SQLite-only date
+arithmetic in both `UPDATE demand_tickets` statements and in the 90-day cool-down check.
+The caller now supplies portable UTC stamps in SQLite's own `'YYYY-MM-DD HH:MM:SS'` shape,
+so stored values are unchanged and the statements move to Postgres untouched. Surface
+count 53 → **49**; the baseline auto-tightened and was *not* re-baselined upward.
+
+Twice during the fix the ratchet stayed red because the new *comments* quoted the literal
+pattern the regex counts — the same trap paid for on 15 Aug. The comments no longer spell
+it out, and say why.
+
+**EMAIL-NOT-A-PAGE-1** — `test_widget_is_wired_into_every_tester_page` named 17 files and
+was both right and wrong, which is exactly why it sat unfixed. Three were real
+tester-reachable pages missing the fault widget (`orchestration_v2/cockpit.html`,
+`durability_map.html`, `email_templates.html`) — now wired. Fourteen were outreach **email
+bodies**, where `ts_report.js` cannot run and the tag would ship a `<script src=…>` inside
+an invitation. Split, not weakened: pages must carry the widget; email bodies must carry
+**no script at all** (stricter, RG-0025 aligned). Classification is structural — published
+under `templates/`, 600px email wrapper, zero `<script>` — and fails safe, treating anything
+ambiguous as a page. `NOT_TESTER_FACING` stays empty; David's 5 Aug ruling is untouched.
+
+**Ledger:** RG-0112, RG-0113 LOCKED. RG-0114 LOCKED is the class fix — it reads
+`deploy_audit.log` and turns the ledger red when any guard tag has been red on 8+
+consecutive scans, so a chronic warning surfaces in daylight instead of scrolling past.
+RG-0112's first draft failed on correct code (it banned a string repo-wide when its scope
+was one function); the assertion was corrected in the same session rather than tolerated.
+
+Strict-mode pre-deploy: **exit 0, verdict REVIEW**. Regression ledger: **exit 0, no regressions**.
+
 ## 19 Aug 2026 — LINK-PREFETCH-1 / GATE-WHY-1: a machine can no longer spend a tester's access link
 
 **The fault.** Maroushka opened the gate, asked for a link, clicked it, and was told the link had
